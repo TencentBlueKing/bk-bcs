@@ -30,6 +30,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/resource"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/resource/tresource"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tenant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
@@ -130,7 +131,13 @@ func (ng *NodeGroup) UpdateNodeGroup(
 		return nil, fmt.Errorf("nodegroup id or cluster id is empty")
 	}
 
-	err := cloudprovider.UpdateNodeGroupCloudAndModuleInfo(group.NodeGroupID, group.ConsumerID,
+	ctx, err := tenant.WithTenantIdByResourceForContext(context.Background(),
+		tenant.ResourceMetaData{ProjectId: group.ProjectID})
+	if err != nil {
+		return nil, err
+	}
+
+	err = cloudprovider.UpdateNodeGroupCloudAndModuleInfo(ctx, group.NodeGroupID, group.ConsumerID,
 		true, opt.Cluster.BusinessID)
 	if err != nil {
 		blog.Errorf("UpdateNodeGroup[%s] UpdateNodeGroupCloudAndModuleInfo failed: %v", cloudName, err)
@@ -295,7 +302,13 @@ func (ng *NodeGroup) UpdateAutoScalingOption(scalingOption *proto.ClusterAutoSca
 		return nil, err
 	}
 
-	err = cloudprovider.UpdateAutoScalingOptionModuleInfo(scalingOption.ClusterID)
+	ctx, err := tenant.WithTenantIdByResourceForContext(context.Background(),
+		tenant.ResourceMetaData{ProjectId: scalingOption.ProjectID})
+	if err != nil {
+		return nil, err
+	}
+
+	err = cloudprovider.UpdateAutoScalingOptionModuleInfo(ctx, scalingOption.ClusterID)
 	if err != nil {
 		blog.Errorf("UpdateAutoScalingOption update asOption moduleInfo failed: %v", err)
 		return nil, err

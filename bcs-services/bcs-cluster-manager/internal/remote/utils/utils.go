@@ -16,84 +16,86 @@ package utils
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
-	"time"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	gocache "github.com/patrickmn/go-cache"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/bk_user"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cache"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tenant"
 )
 
-var (
-	// DefaultTimeOut default timeout
-	DefaultTimeOut = time.Second * 60
-	// ErrServerNotInit server not init
-	ErrServerNotInit = errors.New("server not inited")
-)
+// GetGatewayAuthAndTenantInfo generate blueking gateway auth and tenant info, user is bkUserName
+func GetGatewayAuthAndTenantInfo(ctx context.Context, auth *types.AuthInfo, user string) (string, string, error) {
+	tenantId := tenant.GetTenantIdFromContext(ctx)
 
-// BkAccessToken bk app token
-type BkAccessToken struct {
-	AccessToken string `json:"access_token"`
-}
-
-// BkAppUser appCode/appSecret
-type BkAppUser struct {
-	BkAppCode   string `json:"bk_app_code"`
-	BkAppSecret string `json:"bk_app_secret"`
-}
-
-// AuthInfo auth user for gateway
-type AuthInfo struct {
-	BkAppUser
-	BkUserName  string `json:"bk_username,omitempty"`
-	AccessToken string `json:"access_token,omitempty"`
-}
-
-// BuildGateWayAuth generate blueking gateway auth
-func BuildGateWayAuth(auth *AuthInfo, user string) (string, error) {
-	if user != "" {
-		auth.BkUserName = user
+	if options.GetGlobalCMOptions().TenantConfig.EnableMultiTenantMode {
+		// 多租户模式下，优先使用传入的user，否则根据租户获取用户名
+		if user != "" {
+			auth.BkUserName = user
+		} else {
+			if auth.BkUserName != "" {
+				bkUserName, err := GetBkUserNameByTenantLoginName(ctx, tenantId, auth.BkUserName, true)
+				if err != nil {
+					return "", "", fmt.Errorf("get bkUserName by tenant failed: %v", err)
+				}
+				auth.BkUserName = bkUserName
+			}
+		}
+	} else {
+		// 非多租户模式，直接使用传入的user.否则直接使用auth bkUserName
+		if user != "" {
+			auth.BkUserName = user
+		}
 	}
+
 	userAuth, err := json.Marshal(auth)
 	if err != nil {
+		return "", "", err
+	}
+	return string(userAuth), tenantId, nil
+}
+
+const (
+	cacheBkUserTenantInfo = "cached_bkuser_tenant"
+)
+
+func buildCacheName(keyPrefix string, tenant, name string) string {
+	return fmt.Sprintf("%s_%v_%v", keyPrefix, tenant, name)
+}
+
+// GetBkUserNameByTenantLoginName get bkUserName by tenant login name
+func GetBkUserNameByTenantLoginName(ctx context.Context, tenantId, loginName string, useCache bool) (string, error) {
+	if !options.GetGlobalCMOptions().TenantConfig.EnableMultiTenantMode {
+		return loginName, nil
+	}
+
+	cacheName := buildCacheName(cacheBkUserTenantInfo, tenantId, loginName)
+	if useCache {
+		val, ok := cache.GetCache().Get(cacheName)
+		if ok && val != "" {
+			blog.Infof("GetBkUserNameByTenantLoginName cacheName:%s, cache exist %+v", cacheName, val)
+			if bkUserName, ok1 := val.(string); ok1 {
+				return bkUserName, nil
+			}
+		}
+	}
+
+	data, err := bk_user.GetBkUserClient().QueryUserInfoByTenantLoginName(ctx, tenantId, loginName)
+	if err != nil {
+		blog.Errorf("GetBkUserNameByTenantLoginName QueryUserInfoByTenantLoginName failed, err: %v", err)
 		return "", err
 	}
-	return string(userAuth), nil
-}
 
-// CommonClient client common section
-type CommonClient struct {
-	AppCode   string
-	AppSecret string
-	Server    string
-	Debug     bool
-}
-
-// BaseResponse baseResp
-type BaseResponse struct {
-	Code      int    `json:"code"`
-	Result    bool   `json:"result"`
-	Message   string `json:"message"`
-	RequestID string `json:"request_id,omitempty"`
-}
-
-// NewTokenAuth implementations of grpc credentials interface
-func NewTokenAuth(t string) *GrpcTokenAuth {
-	return &GrpcTokenAuth{
-		Token: t,
+	if useCache {
+		err = cache.GetCache().Add(cacheName, data[0].BkUsername, gocache.DefaultExpiration)
+		if err != nil {
+			blog.Errorf("GetBkUserNameByTenantLoginName cacheName:%s, cache failed %+v", cacheName, err)
+		}
 	}
-}
 
-// GrpcTokenAuth grpc token
-type GrpcTokenAuth struct {
-	Token string
-}
-
-// GetRequestMetadata convert http Authorization for grpc key
-func (t GrpcTokenAuth) GetRequestMetadata(ctx context.Context, in ...string) (map[string]string, error) {
-	return map[string]string{
-		"Authorization": fmt.Sprintf("Bearer %s", t.Token),
-	}, nil
-}
-
-// RequireTransportSecurity RequireTransportSecurity
-func (t GrpcTokenAuth) RequireTransportSecurity() bool {
-	return false
+	return data[0].BkUsername, nil
 }

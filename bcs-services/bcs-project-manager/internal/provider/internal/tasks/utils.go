@@ -14,7 +14,9 @@
 package tasks
 
 import (
+	"github.com/Tencent/bk-bcs/bcs-common/common/task"
 	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/provider/utils"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/provider/common/steps"
 )
@@ -47,7 +49,13 @@ func buildItsmQuotaSteps(itsmId string, info itsmData) []*types.Step { // nolint
 
 	// 2. 等待审批通过，审批通过后, 更新配额状态; 审批拒绝后, 更新配额申请状态
 	itsmApprove := steps.NewItsmApproveStep()
-	itsmApproveStep := itsmApprove.BuildStep(nil)
+
+	kvs := make([]task.KeyValue, 0)
+	kvs = append(kvs, task.KeyValue{
+		Key:   utils.ProjectCodeKey,
+		Value: info.projectCode,
+	})
+	itsmApproveStep := itsmApprove.BuildStep(kvs)
 	stepList = append(stepList, itsmApproveStep)
 
 	return stepList

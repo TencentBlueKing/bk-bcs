@@ -31,6 +31,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tenant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
@@ -1041,6 +1042,12 @@ func UpdateECKNodesToDBTask(taskID string, stepName string) error {
 	providerutils.SyncClusterInfoToPassCC(taskID, dependInfo.Cluster)
 
 	// sync cluster perms
+	ctx, err = tenant.WithTenantIdByResourceForContext(ctx, tenant.ResourceMetaData{
+		ProjectId:   dependInfo.Cluster.GetProjectID(),
+	})
+	if err != nil {
+		blog.Errorf("UpdateCreateClusterDBInfoTask WithTenantIdByResourceForContext failed: %v", err)
+	}
 	providerutils.AuthClusterResourceCreatorPerm(ctx, dependInfo.Cluster.ClusterID,
 		dependInfo.Cluster.ClusterName, dependInfo.Cluster.Creator)
 

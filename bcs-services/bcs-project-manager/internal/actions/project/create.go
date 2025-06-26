@@ -27,6 +27,7 @@ import (
 	pm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/stringx"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/tenant"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
 )
 
@@ -79,47 +80,56 @@ func (ca *CreateAction) Do(ctx context.Context, req *proto.CreateProjectRequest)
 }
 
 func (ca *CreateAction) createProject() error {
+	tenantId := tenant.GetTenantIdFromContext(ca.ctx)
+
 	p := &pm.Project{
-		ProjectID:   ca.req.ProjectID,
-		Name:        ca.req.Name,
-		ProjectCode: ca.req.ProjectCode,
-		ProjectType: ca.req.ProjectType,
-		UseBKRes:    ca.req.UseBKRes,
-		Description: ca.req.Description,
-		IsOffline:   ca.req.IsOffline,
-		Kind:        ca.req.Kind,
-		BusinessID:  ca.req.BusinessID,
-		DeployType:  ca.req.DeployType,
-		BGID:        ca.req.BGID,
-		BGName:      ca.req.BGName,
-		DeptID:      ca.req.DeptID,
-		DeptName:    ca.req.DeptName,
-		CenterID:    ca.req.CenterID,
-		CenterName:  ca.req.CenterName,
-		IsSecret:    ca.req.IsSecret,
-		Labels:      ca.req.Labels,
-		Annotations: ca.req.Annotations,
-		CreateTime:  time.Now().Format(time.RFC3339),
-		UpdateTime:  time.Now().Format(time.RFC3339),
+		ProjectID:         ca.req.ProjectID,
+		Name:              ca.req.Name,
+		TenantID:          tenantId,
+		TenantProjectCode: ca.req.ProjectCode,
+		ProjectType:       ca.req.ProjectType,
+		UseBKRes:          ca.req.UseBKRes,
+		Description:       ca.req.Description,
+		IsOffline:         ca.req.IsOffline,
+		Kind:              ca.req.Kind,
+		BusinessID:        ca.req.BusinessID,
+		DeployType:        ca.req.DeployType,
+		BGID:              ca.req.BGID,
+		BGName:            ca.req.BGName,
+		DeptID:            ca.req.DeptID,
+		DeptName:          ca.req.DeptName,
+		CenterID:          ca.req.CenterID,
+		CenterName:        ca.req.CenterName,
+		IsSecret:          ca.req.IsSecret,
+		Labels:            ca.req.Labels,
+		Annotations:       ca.req.Annotations,
+		CreateTime:        time.Now().Format(time.RFC3339),
+		UpdateTime:        time.Now().Format(time.RFC3339),
 	}
 	// 从 context 中获取 username
 	if authUser, err := middleware.GetUserFromContext(ca.ctx); err == nil {
 		p.Creator = authUser.GetUsername()
 		p.Managers = authUser.GetUsername()
 	}
+
+	if tenant.IsMultiTenantEnabled() {
+		p.ProjectCode = ca.generateProjectCode(p.TenantID, p.TenantProjectCode)
+	} else {
+		p.ProjectCode = ca.req.ProjectCode
+	}
+
 	return ca.model.CreateProject(ca.ctx, p)
 }
 
-func (ca *CreateAction) validate() error {
-	// check projectID、projectCode、name
-	projectID, projectCode, name := ca.req.ProjectID, ca.req.ProjectCode, ca.req.Name
+func (ca *CreateAction) checkProjectValidate(projectId, projectCode, name string) error {
 	if len(strings.TrimSpace(name)) == 0 {
 		return fmt.Errorf("name cannot contains only spaces")
 	}
-	if p, _ := ca.model.GetProjectByField(ca.ctx, &pm.ProjectField{ProjectID: projectID, ProjectCode: projectCode,
+
+	if p, _ := ca.model.GetProjectByField(ca.ctx, &pm.ProjectField{ProjectID: projectId, ProjectCode: projectCode,
 		Name: name}); p != nil {
-		if p.ProjectID == projectID {
-			return fmt.Errorf("projectID: %s is already exists", projectID)
+		if p.ProjectID == projectId {
+			return fmt.Errorf("projectID: %s is already exists", projectId)
 		}
 		if p.ProjectCode == projectCode {
 			return fmt.Errorf("projectCode: %s is already exists", projectCode)
@@ -128,5 +138,49 @@ func (ca *CreateAction) validate() error {
 			return fmt.Errorf("name: %s is already exists", name)
 		}
 	}
+
 	return nil
+}
+
+// validate validate create project request
+// projectCode 创建项目时 BCS接收的项目EnglishName 字段；后台自动识别
+// 单租户环境 tenant_project_code = projectCode = ca.req.projectCode 且 租户ID 默认是default
+// 多租户环境 tenant_project_code = ca.req.projectCode 且 projectCode = tenantID-tenantProjectCode
+func (ca *CreateAction) validate() error {
+	// 多租户环境下，projectId、projectCode、name 需要全局唯一 且 tenantProjectCode 租户下唯一
+	if tenant.IsMultiTenantEnabled() {
+		tenantId := tenant.GetTenantIdFromContext(ca.ctx)
+		projectID, projectCode, name := ca.req.ProjectID,
+			ca.generateProjectCode(tenantId, ca.req.ProjectCode), ca.req.Name
+
+		err := ca.checkProjectValidate(projectID, projectCode, name)
+		if err != nil {
+			return err
+		}
+
+		// 校验租户下 tenantProjectCode是否唯一
+		if tenantId != "" && ca.req.ProjectCode != "" {
+			p, _ := ca.model.GetProjectByField(ca.ctx, &pm.ProjectField{TenantID: tenantId,
+				TenantProjectCode: ca.req.ProjectCode})
+			if p != nil {
+				return fmt.Errorf("tenant %s tenantProjectCode: %s is already exists",
+					tenantId, ca.req.ProjectCode)
+			}
+		}
+
+		return nil
+	}
+
+	// check projectID、projectCode、name
+	projectID, projectCode, name := ca.req.ProjectID, ca.req.ProjectCode, ca.req.Name
+	err := ca.checkProjectValidate(projectID, projectCode, name)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (ca *CreateAction) generateProjectCode(tenantID, tenantProjectCode string) string {
+	return fmt.Sprintf("%s-%s", tenantID, tenantProjectCode)
 }

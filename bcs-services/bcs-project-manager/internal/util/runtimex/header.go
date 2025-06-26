@@ -34,6 +34,8 @@ func CustomHeaderMatcher(key string) (string, bool) {
 		return middleware.InnerClientHeaderKey, true
 	case middleware.CustomUsernameHeaderKey:
 		return middleware.CustomUsernameHeaderKey, true
+	case headerkey.TenantIdKey:
+		return headerkey.TenantIdKey, true
 	default:
 		return runtime.DefaultHeaderMatcher(key)
 	}

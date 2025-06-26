@@ -32,6 +32,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/azure/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tenant"
 )
 
 // errors
@@ -120,11 +121,18 @@ func (ng *NodeGroup) UpdateNodeGroup(group *proto.NodeGroup, opt *cloudprovider.
 		return nil, err
 	}
 
+	ctx, err := tenant.WithTenantIdByResourceForContext(context.Background(),
+		tenant.ResourceMetaData{ProjectId: group.ProjectID})
+	if err != nil {
+		blog.Errorf("WithTenantIdByResourceForContext failed: %v", err)
+		return nil, err
+	}
+
 	if group.NodeTemplate != nil && group.NodeTemplate.Module != nil &&
 		len(group.NodeTemplate.Module.ScaleOutModuleID) != 0 {
 		bkBizID, _ := strconv.Atoi(cluster.BusinessID)
 		bkModuleID, _ := strconv.Atoi(group.NodeTemplate.Module.ScaleOutModuleID)
-		group.NodeTemplate.Module.ScaleOutModuleName = cloudprovider.GetModuleName(bkBizID, bkModuleID)
+		group.NodeTemplate.Module.ScaleOutModuleName = cloudprovider.GetModuleName(ctx, bkBizID, bkModuleID)
 	}
 
 	return task, nil

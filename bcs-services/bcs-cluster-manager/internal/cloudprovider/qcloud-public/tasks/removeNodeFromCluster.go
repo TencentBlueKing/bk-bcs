@@ -25,6 +25,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud-public/business"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tenant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
@@ -131,6 +132,7 @@ func UpdateRemoveNodeDBInfoTask(taskID string, stepName string) error {
 		taskID, taskID, stepName, step.System, step.Status, step.Params)
 
 	// extract valid info
+	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
 	success := cloudprovider.ParseNodeIpOrIdFromCommonMap(state.Task.CommonParams,
 		cloudprovider.SuccessClusterNodeIDsKey.String(), ",")
 	bizIdStr := step.Params[cloudprovider.BKBizIDKey.String()]
@@ -151,6 +153,14 @@ func UpdateRemoveNodeDBInfoTask(taskID string, stepName string) error {
 	}
 
 	ctx := cloudprovider.WithTaskIDAndStepNameForContext(context.Background(), taskID, stepName)
+
+	ctx, err = tenant.WithTenantIdByResourceForContext(ctx, tenant.ResourceMetaData{
+		ClusterId: clusterID,
+	})
+	if err != nil {
+		blog.Errorf("UpdateRemoveNodeDBInfoTask[%s] WithTenantIdByResourceForContext failed: %v", taskID, err)
+	}
+
 	// trans host module by cloud nodes chargeType
 	biz, _ := strconv.Atoi(bizIdStr)
 	if len(terminateNodes) > 0 {

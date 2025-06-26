@@ -90,6 +90,12 @@ const (
 	RequestCheckQuotaStatusErr = commErr.AdditionErrorCode + 515
 	// RequestQuotaStatusErrMsg 检测额度状态异常信息
 	RequestQuotaStatusErrMsg = "check quota status error"
+	// TenantResourceCheckErr 租户校验失败
+	TenantResourceCheckErr = commErr.AdditionErrorCode + 516
+	// RequestBkUserErr 请求 bkuser api 异常
+	RequestBkUserErr = commErr.AdditionErrorCode + 517
+	// RequestBkUserErrMsg 请求 bkUser api 异常信息
+	RequestBkUserErrMsg = "request bkUser api error"
 	// NoPermissionErr 无权限
 	NoPermissionErr = 40403
 	// ProjectNotExistsErr 项目不存在

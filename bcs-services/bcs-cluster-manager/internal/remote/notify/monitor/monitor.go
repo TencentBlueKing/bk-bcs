@@ -22,8 +22,10 @@ import (
 
 	"github.com/parnurzeal/gorequest"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/notify"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tenant"
 )
 
 // 通过bk_monitor蓝鲸监控实现自定义metrics/事件上报
@@ -54,7 +56,7 @@ func (mn *MetricsNotify) Notify(ctx context.Context, message notify.MessageBody)
 		debug:      false,
 	}
 
-	return pushCustomDataToServer(server, []*eventMetricsBody{
+	return pushCustomDataToServer(ctx, server, []*eventMetricsBody{
 		{
 			metrics:   message.Metrics,
 			dimension: message.Dimension,
@@ -88,7 +90,7 @@ func (mn *EventsNotify) Notify(ctx context.Context, message notify.MessageBody) 
 		debug:      false,
 	}
 
-	return pushCustomDataToServer(server, []*eventMetricsBody{
+	return pushCustomDataToServer(ctx, server, []*eventMetricsBody{
 		{
 			eventName: message.EventName,
 			eventBody: message.EventBody,
@@ -98,7 +100,7 @@ func (mn *EventsNotify) Notify(ctx context.Context, message notify.MessageBody) 
 }
 
 // pushCustomDataToServer push custom data to server
-func pushCustomDataToServer(server serverConfig, customData []*eventMetricsBody) error {
+func pushCustomDataToServer(ctx context.Context, server serverConfig, customData []*eventMetricsBody) error {
 	const (
 		path = "/v2/push/"
 	)
@@ -112,6 +114,8 @@ func pushCustomDataToServer(server serverConfig, customData []*eventMetricsBody)
 	if server.timeout <= 0 {
 		server.timeout = time.Second * 60
 	}
+
+	tenantId := tenant.GetTenantIdFromContext(ctx)
 
 	reportItem := &ReportItems{
 		DataId:      server.dataId,
@@ -151,6 +155,7 @@ func pushCustomDataToServer(server serverConfig, customData []*eventMetricsBody)
 		Timeout(server.timeout).
 		Post(server.server+path).
 		Set("Content-Type", "application/json").
+		Set(common.BkTenantIdHeaderKey, tenantId).
 		Set("Accept", "application/json").
 		SetDebug(server.debug).
 		Send(reportItem).

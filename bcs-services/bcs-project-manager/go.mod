@@ -2,6 +2,11 @@ module github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager
 
 go 1.21
 
+replace (
+	github.com/Tencent/bk-bcs/bcs-common => github.com/evanlixin/bk-bcs/bcs-common v0.0.0-20250626092457-bb04116c4b34
+	github.com/Tencent/bk-bcs/bcs-services/pkg => github.com/evanlixin/bk-bcs/bcs-services/pkg v0.0.0-20250626092457-bb04116c4b34
+)
+
 require (
 	k8s.io/api v0.28.3
 	k8s.io/apimachinery v0.28.3
@@ -14,10 +19,11 @@ require (
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20250512085114-a9a56c48b6c5
 	github.com/Tencent/bk-bcs/bcs-common/common/task v0.0.0-20240619071101-df2f4bc5060b
 	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20240418123107-72b120390195
-	github.com/TencentBlueKing/iam-go-sdk v0.1.6
+	github.com/TencentBlueKing/iam-go-sdk v1.0.1
 	github.com/envoyproxy/protoc-gen-validate v1.0.4
 	github.com/go-micro/plugins/v4/registry/etcd v1.1.0
 	github.com/go-micro/plugins/v4/server/grpc v1.2.0
+	github.com/go-resty/resty/v2 v2.12.0
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/golang/glog v1.2.1
 	github.com/golang/protobuf v1.5.4
@@ -89,7 +95,6 @@ require (
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-playground/validator/v10 v10.19.0 // indirect
-	github.com/go-resty/resty/v2 v2.12.0 // indirect
 	github.com/go-sql-driver/mysql v1.7.1 // indirect
 	github.com/gobwas/httphead v0.1.0 // indirect
 	github.com/gobwas/pool v0.2.1 // indirect

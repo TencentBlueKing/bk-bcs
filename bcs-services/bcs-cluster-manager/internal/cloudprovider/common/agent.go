@@ -28,6 +28,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/nodeman"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tenant"
 )
 
 var (
@@ -172,6 +173,14 @@ func InstallGSEAgentTask(taskID string, stepName string) error { // nolint
 	}
 
 	ctx := cloudprovider.WithTaskIDAndStepNameForContext(context.Background(), taskID, stepName)
+	ctx, err = tenant.WithTenantIdByResourceForContext(ctx,
+		tenant.ResourceMetaData{ProjectId: dependInfo.Cluster.GetProjectID()})
+	if err != nil {
+		retErr := fmt.Errorf("WithTenantIdByResourceForContext %s failed", dependInfo.Cluster.GetProjectID())
+		blog.Errorf("InstallGSEAgentTask %s failed: %s", taskID, retErr.Error())
+		_ = state.UpdateStepFailure(start, stepName, retErr)
+		return retErr
+	}
 
 	// get apID from cloud list
 	clouds, err := nodeManClient.CloudList(context.Background())
@@ -258,7 +267,7 @@ func InstallGSEAgentTask(taskID string, stepName string) error { // nolint
 			ForceUpdateAgentId: true,
 		})
 	}
-	job, err := nodeManClient.JobInstall(nodeman.InstallAgentJob, hosts)
+	job, err := nodeManClient.JobInstall(ctx, nodeman.InstallAgentJob, hosts)
 	if err != nil {
 		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
 			fmt.Sprintf("install gse agent job failed [%s]", err))
@@ -273,7 +282,7 @@ func InstallGSEAgentTask(taskID string, stepName string) error { // nolint
 	ctx, cancel := context.WithTimeout(context.TODO(), 10*time.Minute)
 	defer cancel()
 	err = loop.LoopDoFunc(ctx, func() error {
-		detail, errLocal := nodeManClient.JobDetails(job.JobID)
+		detail, errLocal := nodeManClient.JobDetails(ctx, job.JobID)
 		if errLocal != nil {
 			blog.Errorf("InstallGSEAgentTask %s failed, get job detail err %s", taskID, errLocal.Error())
 			return errLocal

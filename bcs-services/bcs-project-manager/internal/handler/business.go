@@ -18,6 +18,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/actions/business"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/tenant"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
 )
 
@@ -36,6 +37,10 @@ func NewBusiness(model store.ProjectModel) *BusinessHandler {
 // GetBusiness implement for GetBusiness interface
 func (p *BusinessHandler) GetBusiness(ctx context.Context,
 	req *proto.GetBusinessRequest, resp *proto.GetBusinessResponse) error {
+
+	authUser := tenant.GetAuthAndTenantInfoFromCtx(ctx)
+	ctx = tenant.WithTenantIdFromContext(ctx, authUser.ResourceTenantId)
+
 	// 查询业务信息
 	ga := business.NewGetAction(p.model)
 	businessInfo, e := ga.Do(ctx, req)
@@ -50,6 +55,10 @@ func (p *BusinessHandler) GetBusiness(ctx context.Context,
 // ListBusiness query authorized business info list
 func (p *BusinessHandler) ListBusiness(ctx context.Context,
 	req *proto.ListBusinessRequest, resp *proto.ListBusinessResponse) error {
+
+	authUser := tenant.GetAuthAndTenantInfoFromCtx(ctx)
+	ctx = tenant.WithTenantIdFromContext(ctx, authUser.ResourceTenantId)
+
 	la := business.NewListAction(p.model)
 	biz, e := la.Do(ctx, req)
 	if e != nil {
@@ -62,6 +71,10 @@ func (p *BusinessHandler) ListBusiness(ctx context.Context,
 // GetBusinessTopology query business topology info
 func (p *BusinessHandler) GetBusinessTopology(ctx context.Context,
 	req *proto.GetBusinessTopologyRequest, resp *proto.GetBusinessTopologyResponse) error {
+
+	authUser := tenant.GetAuthAndTenantInfoFromCtx(ctx)
+	ctx = tenant.WithTenantIdFromContext(ctx, authUser.ResourceTenantId)
+
 	ga := business.NewGetTopologyAction(p.model)
 	if err := ga.Do(ctx, req, resp); err != nil {
 		return err

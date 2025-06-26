@@ -15,7 +15,6 @@ package cmdb
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"strconv"
@@ -29,6 +28,8 @@ import (
 	"github.com/patrickmn/go-cache"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/metrics"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/types"
+	rutils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
@@ -70,12 +71,6 @@ func NewCmdbClient(options Options) (*Client, error) {
 		return nil, nil
 	}
 
-	// gateway auth
-	auth, err := c.generateGateWayAuth()
-	if err != nil {
-		return nil, err
-	}
-	c.userAuth = auth
 	return c, nil
 }
 
@@ -119,33 +114,11 @@ type Client struct {
 	bkUserName  string
 	server      string
 	serverDebug bool
-	userAuth    string
 	cache       *cache.Cache
 }
 
-// generateGateWayAuth generate gateway auth
-func (c *Client) generateGateWayAuth() (string, error) {
-	if c == nil {
-		return "", ErrServerNotInit
-	}
-
-	// auth info
-	auth := &AuthInfo{
-		BkAppCode:   c.appCode,
-		BkAppSecret: c.appSecret,
-		BkUserName:  c.bkUserName,
-	}
-
-	userAuth, err := json.Marshal(auth)
-	if err != nil {
-		return "", err
-	}
-
-	return string(userAuth), nil
-}
-
 // FetchAllHostTopoRelationsByBizID fetch biz topo
-func (c *Client) FetchAllHostTopoRelationsByBizID(bizID int) ([]HostTopoRelation, error) {
+func (c *Client) FetchAllHostTopoRelationsByBizID(ctx context.Context, bizID int) ([]HostTopoRelation, error) {
 	if c == nil {
 		return nil, ErrServerNotInit
 	}
@@ -159,7 +132,7 @@ func (c *Client) FetchAllHostTopoRelationsByBizID(bizID int) ([]HostTopoRelation
 	blog.V(3).Infof("FetchAllHostTopoRelationsByBizID miss cache by bizID[%v]", bizID)
 
 	// get all hostTopo counts
-	counts, _, err := c.FindHostTopoRelation(bizID, Page{
+	counts, _, err := c.FindHostTopoRelation(ctx, bizID, Page{
 		Start: 0,
 		Limit: 1,
 	})
@@ -184,7 +157,7 @@ func (c *Client) FetchAllHostTopoRelationsByBizID(bizID int) ([]HostTopoRelation
 		go func(page Page) {
 			defer con.Done()
 			// find host topos
-			_, hostTopos, errLocal := c.FindHostTopoRelation(bizID, page) // nolint
+			_, hostTopos, errLocal := c.FindHostTopoRelation(ctx, bizID, page) // nolint
 			if errLocal != nil {
 				blog.Errorf("cmdb client FindHostTopoRelation %v failed, %s", bizID, err.Error())
 				return
@@ -207,7 +180,7 @@ func (c *Client) FetchAllHostTopoRelationsByBizID(bizID int) ([]HostTopoRelation
 }
 
 // FetchAllHostsByBizID get allHosts by bizID
-func (c *Client) FetchAllHostsByBizID(bizID int, cache bool) ([]HostData, error) {
+func (c *Client) FetchAllHostsByBizID(ctx context.Context, bizID int, cache bool) ([]HostData, error) {
 	if c == nil {
 		return nil, ErrServerNotInit
 	}
@@ -223,7 +196,7 @@ func (c *Client) FetchAllHostsByBizID(bizID int, cache bool) ([]HostData, error)
 	}
 
 	// get all host counts
-	counts, _, err := c.QueryHostByBizID(bizID, Page{
+	counts, _, err := c.QueryHostByBizID(ctx, bizID, Page{
 		Start: 0,
 		Limit: 1,
 	})
@@ -247,7 +220,7 @@ func (c *Client) FetchAllHostsByBizID(bizID int, cache bool) ([]HostData, error)
 		go func(page Page) {
 			defer con.Done()
 			// query hosts by biz
-			_, hosts, err := c.QueryHostByBizID(bizID, page) // nolint
+			_, hosts, err := c.QueryHostByBizID(ctx, bizID, page) // nolint
 			if err != nil {
 				blog.Errorf("cmdb client QueryHostByBizID %v failed, %s", bizID, err.Error())
 				return
@@ -273,58 +246,14 @@ func (c *Client) FetchAllHostsByBizID(bizID int, cache bool) ([]HostData, error)
 	return hostList, nil
 }
 
-// QueryHostInfoWithoutBiz query values string host info by field
-func (c *Client) QueryHostInfoWithoutBiz(field string, values []string, page Page) ([]HostDetailData, error) {
-	if c == nil {
-		return nil, ErrServerNotInit
-	}
-
-	// list_hosts_without_biz
-	var (
-		reqURL  = fmt.Sprintf("%s/api/c/compapi/v2/cc/list_hosts_without_biz/", c.server)
-		request = &ListHostsWithoutBizRequest{
-			Page:               page,
-			HostPropertyFilter: buildFilterConditionByStrValues(field, values),
-			Fields:             fieldHostDetailInfo,
-		}
-		respData = &ListHostsWithoutBizResponse{}
-	)
-
-	start := time.Now()
-	_, _, errs := gorequest.New().
-		Timeout(defaultTimeOut).
-		Post(reqURL).
-		Set("Content-Type", "application/json").
-		Set("Accept", "application/json").
-		Set("X-Bkapi-Authorization", c.userAuth).
-		SetDebug(c.serverDebug).
-		Send(request).
-		EndStruct(&respData)
-	if len(errs) > 0 {
-		metrics.ReportLibRequestMetric("cmdb", "QueryHostInfoWithoutBiz", "http", metrics.LibCallStatusErr, start)
-		blog.Errorf("call api QueryHostInfoWithoutBiz failed: %v", errs[0])
-		return nil, errs[0]
-	}
-	metrics.ReportLibRequestMetric("cmdb", "QueryHostInfoWithoutBiz", "http", metrics.LibCallStatusOK, start)
-
-	if !respData.Result {
-		blog.Errorf("call api QueryHostInfoWithoutBiz failed: %v", respData.Message)
-		return nil, errors.New(respData.Message)
-	}
-	// successfully request
-	blog.Infof("call api QueryHostInfoWithoutBiz with url(%s) successfully", reqURL)
-
-	return respData.Data.Info, nil
-}
-
 // QueryAllHostInfoWithoutBiz get all host info by ips
-func (c *Client) QueryAllHostInfoWithoutBiz(ips []string) ([]HostDetailData, error) {
+func (c *Client) QueryAllHostInfoWithoutBiz(ctx context.Context, ips []string) ([]HostDetailData, error) {
 	chunk := utils.SplitStringsChunks(ips, MaxLimits)
 	list := make([]HostDetailData, 0)
 
 	for _, v := range chunk {
 		// query hostInfoIp without biz
-		data, err := c.QueryHostInfoWithoutBiz(FieldHostIP, v, Page{Start: 0, Limit: MaxLimits})
+		data, err := c.QueryHostInfoWithoutBiz(ctx, FieldHostIP, v, Page{Start: 0, Limit: MaxLimits})
 		if err != nil {
 			return nil, err
 		}
@@ -334,589 +263,18 @@ func (c *Client) QueryAllHostInfoWithoutBiz(ips []string) ([]HostDetailData, err
 }
 
 // QueryAllHostInfoByAssetIdWithoutBiz get all host info by assetIds
-func (c *Client) QueryAllHostInfoByAssetIdWithoutBiz(assetIds []string) ([]HostDetailData, error) {
+func (c *Client) QueryAllHostInfoByAssetIdWithoutBiz(ctx context.Context, assetIds []string) ([]HostDetailData, error) {
 	chunk := utils.SplitStringsChunks(assetIds, MaxLimits)
 	list := make([]HostDetailData, 0)
 	for _, v := range chunk {
 		// // query hostInfoAssertId without biz
-		data, err := c.QueryHostInfoWithoutBiz(FieldAssetId, v, Page{Start: 0, Limit: MaxLimits})
+		data, err := c.QueryHostInfoWithoutBiz(ctx, FieldAssetId, v, Page{Start: 0, Limit: MaxLimits})
 		if err != nil {
 			return nil, err
 		}
 		list = append(list, data...)
 	}
 	return list, nil
-}
-
-// FindHostTopoRelation find host topo
-func (c *Client) FindHostTopoRelation(bizID int, page Page) (int, []HostTopoRelation, error) {
-	if c == nil {
-		return 0, nil, ErrServerNotInit
-	}
-
-	// find_host_topo_relation
-	var (
-		reqURL  = fmt.Sprintf("%s/api/c/compapi/v2/cc/find_host_topo_relation/", c.server)
-		request = &HostTopoRelationReq{
-			Page:    page,
-			BkBizID: bizID,
-		}
-		respData = &HostTopoRelationResp{}
-	)
-
-	start := time.Now()
-	_, _, errs := gorequest.New().
-		Timeout(defaultTimeOut).
-		Post(reqURL).
-		Set("Content-Type", "application/json").
-		Set("Accept", "application/json").
-		Set("X-Bkapi-Authorization", c.userAuth).
-		SetDebug(c.serverDebug).
-		Send(request).
-		EndStruct(&respData)
-	if len(errs) > 0 {
-		metrics.ReportLibRequestMetric("cmdb", "FindHostTopoRelation", "http", metrics.LibCallStatusErr, start)
-		blog.Errorf("call api FindHostTopoRelation failed: %v", errs[0])
-		return 0, nil, errs[0]
-	}
-	metrics.ReportLibRequestMetric("cmdb", "FindHostTopoRelation", "http", metrics.LibCallStatusOK, start)
-
-	if !respData.Result {
-		blog.Errorf("call api FindHostTopoRelation failed: %v", respData.Message)
-		return 0, nil, errors.New(respData.Message)
-	}
-	// successfully request
-	blog.Infof("call api FindHostTopoRelation with url(%s) successfully", reqURL)
-
-	if len(respData.Data.Data) > 0 {
-		return respData.Data.Count, respData.Data.Data, nil
-	}
-
-	return 0, nil, fmt.Errorf("call api FindHostTopoRelation failed")
-}
-
-// SearchCloudAreaByCloudID search cloudArea info by cloudID
-func (c *Client) SearchCloudAreaByCloudID(cloudID int) (*SearchCloudAreaInfo, error) {
-	cloudData, ok := GetCloudData(c.cache, cloudID)
-	if ok {
-		blog.Infof("SearchCloudAreaByCloudID hit cache by cloudID[%d]", cloudID)
-		return cloudData, nil
-	}
-	blog.V(3).Infof("SearchCloudAreaByCloudID miss cache by cloudID[%v]", cloudID)
-
-	// search_cloud_area
-	var (
-		reqURL  = fmt.Sprintf("%s/api/c/compapi/v2/cc/search_cloud_area/", c.server)
-		request = &SearchCloudAreaRequest{
-			Page: Page{
-				Start: 0,
-				Limit: MaxLimits,
-			},
-			Condition: BuildCloudAreaCondition(cloudID),
-		}
-		respData = &SearchCloudAreaResp{}
-	)
-
-	start := time.Now()
-	_, _, errs := gorequest.New().
-		Timeout(defaultTimeOut).
-		Post(reqURL).
-		Set("Content-Type", "application/json").
-		Set("Accept", "application/json").
-		Set("X-Bkapi-Authorization", c.userAuth).
-		SetDebug(c.serverDebug).
-		Send(request).
-		EndStruct(&respData)
-	if len(errs) > 0 {
-		metrics.ReportLibRequestMetric("cmdb", "SearchCloudAreaByCloudID", "http", metrics.LibCallStatusErr, start)
-		blog.Errorf("call api SearchCloudAreaByCloudID failed: %v", errs[0])
-		return nil, errs[0]
-	}
-	metrics.ReportLibRequestMetric("cmdb", "SearchCloudAreaByCloudID", "http", metrics.LibCallStatusOK, start)
-
-	if !respData.Result {
-		blog.Errorf("call api SearchCloudAreaByCloudID failed: %v", respData.Message)
-		return nil, errors.New(respData.Message)
-	}
-
-	// successfully request
-	blog.Infof("call api SearchCloudAreaByCloudID with url(%s) successfully", reqURL)
-
-	if len(respData.Data.Info) == 0 {
-		return nil, fmt.Errorf("SearchCloudAreaByCloudID not exist %v", cloudID)
-	}
-
-	err := SetCloudData(c.cache, cloudID, respData.Data.Info[0])
-	if err != nil {
-		blog.Errorf("SearchCloudAreaByCloudID[%v] SetCloudData failed: %v", cloudID, err)
-	}
-
-	return respData.Data.Info[0], nil
-}
-
-// QueryHostByBizID query host by bizID
-func (c *Client) QueryHostByBizID(bizID int, page Page) (int, []HostData, error) {
-	if c == nil {
-		return 0, nil, ErrServerNotInit
-	}
-
-	// list_biz_hosts
-	var (
-		reqURL  = fmt.Sprintf("%s/api/c/compapi/v2/cc/list_biz_hosts/", c.server)
-		request = &ListBizHostRequest{
-			Page:    page,
-			BKBizID: bizID,
-			Fields:  fieldHostIPSelectorInfo,
-		}
-		respData = &ListBizHostsResponse{}
-	)
-
-	start := time.Now()
-	_, _, errs := gorequest.New().
-		Timeout(defaultTimeOut).
-		Post(reqURL).
-		Set("Content-Type", "application/json").
-		Set("Accept", "application/json").
-		Set("X-Bkapi-Authorization", c.userAuth).
-		SetDebug(c.serverDebug).
-		Send(request).
-		EndStruct(&respData)
-	if len(errs) > 0 {
-		metrics.ReportLibRequestMetric("cmdb", "QueryHostByBizID", "http", metrics.LibCallStatusErr, start)
-		blog.Errorf("call api QueryHostNumByBizID failed: %v", errs[0])
-		return 0, nil, errs[0]
-	}
-	metrics.ReportLibRequestMetric("cmdb", "QueryHostByBizID", "http", metrics.LibCallStatusOK, start)
-
-	if !respData.Result {
-		blog.Errorf("call api QueryHostNumByBizID failed: %v", respData.Message)
-		return 0, nil, errors.New(respData.Message)
-	}
-	// successfully request
-	blog.Infof("call api QueryHostNumByBizID with url(%s) successfully", reqURL)
-
-	if len(respData.Data.Info) > 0 {
-		return respData.Data.Count, respData.Data.Info, nil
-	}
-
-	return 0, nil, fmt.Errorf("call api GetBS2IDByBizID failed")
-}
-
-// FindHostBizRelations query host biz relations by hostID
-func (c *Client) FindHostBizRelations(hostID []int) ([]HostBizRelations, error) {
-	if c == nil {
-		return nil, ErrServerNotInit
-	}
-
-	// find_host_biz_relations
-	var (
-		reqURL  = fmt.Sprintf("%s/api/c/compapi/v2/cc/find_host_biz_relations/", c.server)
-		request = &FindHostBizRelationsRequest{
-			BkHostID: hostID,
-		}
-		respData = &FindHostBizRelationsResponse{}
-	)
-
-	start := time.Now()
-	_, _, errs := gorequest.New().
-		Timeout(defaultTimeOut).
-		Post(reqURL).
-		Set("Content-Type", "application/json").
-		Set("Accept", "application/json").
-		Set("X-Bkapi-Authorization", c.userAuth).
-		SetDebug(c.serverDebug).
-		Send(request).
-		EndStruct(&respData)
-	if len(errs) > 0 {
-		metrics.ReportLibRequestMetric("cmdb", "FindHostBizRelations", "http", metrics.LibCallStatusErr, start)
-		blog.Errorf("call api FindHostBizRelations failed: %v", errs[0])
-		return nil, errs[0]
-	}
-	metrics.ReportLibRequestMetric("cmdb", "FindHostBizRelations", "http", metrics.LibCallStatusOK, start)
-
-	if !respData.Result {
-		blog.Errorf("call api FindHostBizRelations failed: %v", respData.Message)
-		return nil, errors.New(respData.Message)
-	}
-	// successfully request
-	blog.Infof("call api FindHostBizRelations with url(%s) successfully", reqURL)
-
-	return respData.Data, nil
-}
-
-// TransHostToRecycleModule trans host to recycleModule
-func (c *Client) TransHostToRecycleModule(bizID int, hostID []int) error {
-	if c == nil {
-		return ErrServerNotInit
-	}
-
-	// transfer_host_to_recyclemodule
-	var (
-		reqURL  = fmt.Sprintf("%s/api/c/compapi/v2/cc/transfer_host_to_recyclemodule/", c.server)
-		request = &TransHostToERecycleModuleRequest{
-			BkBizID:  bizID,
-			BkHostID: hostID,
-		}
-		respData = &TransHostToERecycleModuleResponse{}
-	)
-
-	start := time.Now()
-	_, _, errs := gorequest.New().
-		Timeout(defaultTimeOut).
-		Post(reqURL).
-		Set("Content-Type", "application/json").
-		Set("Accept", "application/json").
-		Set("X-Bkapi-Authorization", c.userAuth).
-		SetDebug(c.serverDebug).
-		Send(request).
-		EndStruct(&respData)
-	if len(errs) > 0 {
-		metrics.ReportLibRequestMetric("cmdb", "TransHostToRecycleModule", "http", metrics.LibCallStatusErr, start)
-		blog.Errorf("call api TransHostToRecycleModule failed: %v", errs[0])
-		return errs[0]
-	}
-	metrics.ReportLibRequestMetric("cmdb", "TransHostToRecycleModule", "http", metrics.LibCallStatusOK, start)
-
-	if !respData.Result {
-		blog.Errorf("call api TransHostToRecycleModule failed: %v", respData.Message)
-		return errors.New(respData.Message)
-	}
-	// successfully request
-	blog.Infof("call api TransHostToRecycleModule with url(%s) successfully", reqURL)
-
-	return nil
-}
-
-// GetBizInternalModule get biz recycle module info
-func (c *Client) GetBizInternalModule(ctx context.Context, bizID int) (*BizInternalModuleData, error) {
-	if c == nil {
-		return nil, ErrServerNotInit
-	}
-
-	language := i18n.LanguageFromCtx(ctx)
-	blog.Infof("cmdb client GetBizInternalModule language %s", language)
-
-	// get_biz_internal_module
-	var (
-		reqURL  = fmt.Sprintf("%s/api/c/compapi/v2/cc/get_biz_internal_module/", c.server)
-		request = &QueryBizInternalModuleRequest{
-			BizID: bizID,
-		}
-		respData = &QueryBizInternalModuleResponse{}
-	)
-
-	start := time.Now()
-	_, _, errs := gorequest.New().
-		Timeout(defaultTimeOut).
-		Post(reqURL).
-		Set("Content-Type", "application/json").
-		Set("Accept", "application/json").
-		Set("Blueking-Language", language).
-		Set("X-Bkapi-Authorization", c.userAuth).
-		SetDebug(c.serverDebug).
-		Send(request).
-		EndStruct(&respData)
-	if len(errs) > 0 {
-		metrics.ReportLibRequestMetric("cmdb", "GetBizInternalModule", "http", metrics.LibCallStatusErr, start)
-		return nil, errs[0]
-	}
-	metrics.ReportLibRequestMetric("cmdb", "GetBizInternalModule", "http", metrics.LibCallStatusOK, start)
-
-	if !respData.Result {
-		return nil, errors.New(respData.Message)
-	}
-
-	return &respData.Data, nil
-}
-
-// TransHostAcrossBiz trans host to other biz
-func (c *Client) TransHostAcrossBiz(hostInfo TransHostAcrossBizInfo) error {
-	if c == nil {
-		return ErrServerNotInit
-	}
-
-	// transfer_host_across_biz
-	var (
-		reqURL  = fmt.Sprintf("%s/api/c/compapi/v2/cc/transfer_host_across_biz/", c.server)
-		request = &TransferHostAcrossBizRequest{
-			SrcBizID:   hostInfo.SrcBizID,
-			BkHostID:   hostInfo.HostID,
-			DstBizID:   hostInfo.DstBizID,
-			BkModuleID: hostInfo.DstModuleID,
-		}
-		respData = &TransferHostAcrossBizResponse{}
-	)
-
-	start := time.Now()
-	_, _, errs := gorequest.New().
-		Timeout(defaultTimeOut).
-		Post(reqURL).
-		Set("Content-Type", "application/json").
-		Set("Accept", "application/json").
-		Set("X-Bkapi-Authorization", c.userAuth).
-		SetDebug(c.serverDebug).
-		Send(request).
-		EndStruct(&respData)
-	if len(errs) > 0 {
-		metrics.ReportLibRequestMetric("cmdb", "TransHostAcrossBiz", "http", metrics.LibCallStatusErr, start)
-		return errs[0]
-	}
-	metrics.ReportLibRequestMetric("cmdb", "TransHostAcrossBiz", "http", metrics.LibCallStatusOK, start)
-
-	if !respData.Result {
-		return errors.New(respData.Message)
-	}
-
-	return nil
-}
-
-// GetBusinessMaintainer get maintainers by bizID
-func (c *Client) GetBusinessMaintainer(bizID int) (*BusinessData, error) {
-	if c == nil {
-		return nil, ErrServerNotInit
-	}
-
-	// search_business
-	var (
-		reqURL  = fmt.Sprintf("%s/api/c/compapi/v2/cc/search_business/", c.server)
-		request = &SearchBusinessRequest{
-			Fields: []string{},
-			Condition: map[string]interface{}{
-				conditionBkBizID: bizID,
-			},
-		}
-		respData = &SearchBusinessResponse{}
-	)
-
-	start := time.Now()
-	_, _, errs := gorequest.New().
-		Timeout(defaultTimeOut).
-		Post(reqURL).
-		Set("Content-Type", "application/json").
-		Set("Accept", "application/json").
-		Set("X-Bkapi-Authorization", c.userAuth).
-		SetDebug(c.serverDebug).
-		Send(request).
-		EndStruct(&respData)
-	if len(errs) > 0 {
-		metrics.ReportLibRequestMetric("cmdb", "GetBusinessMaintainer", "http", metrics.LibCallStatusErr, start)
-		blog.Errorf("call api GetBS2IDByBizID failed: %v", errs[0])
-		return nil, errs[0]
-	}
-	metrics.ReportLibRequestMetric("cmdb", "GetBusinessMaintainer", "http", metrics.LibCallStatusOK, start)
-
-	if !respData.Result {
-		blog.Errorf("call api GetBS2IDByBizID failed: %v", respData.Message)
-		return nil, errors.New(respData.Message)
-	}
-	// successfully request
-	blog.Infof("call api GetBS2IDByBizID with url(%s) successfully", reqURL)
-
-	if len(respData.Data.Info) > 0 {
-		return &respData.Data.Info[0], nil
-	}
-
-	return nil, fmt.Errorf("call api GetBS2IDByBizID failed")
-}
-
-// GetBS2IDByBizID get bs2ID by bizID
-func (c *Client) GetBS2IDByBizID(bizID int64) (int, error) {
-	if c == nil {
-		return 0, ErrServerNotInit
-	}
-
-	// search_business
-	var (
-		reqURL  = fmt.Sprintf("%s/api/c/compapi/v2/cc/search_business/", c.server)
-		request = &SearchBusinessRequest{
-			Fields: []string{fieldBS2NameID},
-			Condition: map[string]interface{}{
-				conditionBkBizID: bizID,
-			},
-		}
-		respData = &SearchBusinessResponse{}
-	)
-
-	start := time.Now()
-	_, _, errs := gorequest.New().
-		Timeout(defaultTimeOut).
-		Post(reqURL).
-		Set("Content-Type", "application/json").
-		Set("Accept", "application/json").
-		Set("X-Bkapi-Authorization", c.userAuth).
-		SetDebug(c.serverDebug).
-		Send(request).
-		EndStruct(&respData)
-	if len(errs) > 0 {
-		metrics.ReportLibRequestMetric("cmdb", "GetBS2IDByBizID", "http", metrics.LibCallStatusErr, start)
-		blog.Errorf("call api GetBS2IDByBizID failed: %v", errs[0])
-		return 0, errs[0]
-	}
-	metrics.ReportLibRequestMetric("cmdb", "GetBS2IDByBizID", "http", metrics.LibCallStatusOK, start)
-
-	if !respData.Result {
-		blog.Errorf("call api GetBS2IDByBizID failed: %v", respData.Message)
-		return 0, errors.New(respData.Message)
-	}
-	// successfully request
-	blog.Infof("call api GetBS2IDByBizID with url(%s) successfully", reqURL)
-
-	if len(respData.Data.Info) > 0 {
-		return respData.Data.Info[0].BS2NameID, nil
-	}
-
-	return 0, fmt.Errorf("call api GetBS2IDByBizID failed")
-}
-
-// TransferHostToIdleModule transfer host to idle module
-func (c *Client) TransferHostToIdleModule(bizID int, hostID []int) error {
-	// transfer_host_to_idlemodule
-	var (
-		reqURL  = fmt.Sprintf("%s/api/c/compapi/v2/cc/transfer_host_to_idlemodule/", c.server)
-		request = &TransferHostToIdleModuleRequest{
-			BkBizID:  bizID,
-			BkHostID: hostID,
-		}
-		respData = &TransferHostToIdleModuleResponse{}
-	)
-
-	start := time.Now()
-	_, _, errs := gorequest.New().
-		Timeout(defaultTimeOut).
-		Post(reqURL).
-		Set("Content-Type", "application/json").
-		Set("Accept", "application/json").
-		Set("X-Bkapi-Authorization", c.userAuth).
-		SetDebug(c.serverDebug).
-		Send(request).
-		EndStruct(&respData)
-	if len(errs) > 0 {
-		metrics.ReportLibRequestMetric("cmdb", "TransferHostToIdleModule", "http", metrics.LibCallStatusErr, start)
-		blog.Errorf("call api TransferHostToIdleModule failed: %v", errs[0])
-		return errs[0]
-	}
-	metrics.ReportLibRequestMetric("cmdb", "TransferHostToIdleModule", "http", metrics.LibCallStatusOK, start)
-
-	if !respData.Result || respData.Code != 0 {
-		blog.Errorf("call api TransferHostToIdleModule failed: %v", respData)
-		return fmt.Errorf("call api TransferHostToIdleModule failed: %v", respData)
-	}
-	blog.Infof("call api TransferHostToIdleModule with url(%s) successfully", reqURL)
-
-	return nil
-}
-
-// TransferHostToResourceModule transfer host to resource module
-func (c *Client) TransferHostToResourceModule(bizID int, hostID []int) error {
-	// transfer_host_to_resourcemodule
-	var (
-		reqURL  = fmt.Sprintf("%s/api/c/compapi/v2/cc/transfer_host_to_resourcemodule/", c.server)
-		request = &TransferHostToResourceModuleRequest{
-			BkBizID:  bizID,
-			BkHostID: hostID,
-		}
-		respData = &TransferHostToResourceModuleResponse{}
-	)
-
-	start := time.Now()
-	_, _, errs := gorequest.New().
-		Timeout(defaultTimeOut).
-		Post(reqURL).
-		Set("Content-Type", "application/json").
-		Set("Accept", "application/json").
-		Set("X-Bkapi-Authorization", c.userAuth).
-		SetDebug(c.serverDebug).
-		Send(request).
-		EndStruct(&respData)
-	if len(errs) > 0 {
-		metrics.ReportLibRequestMetric("cmdb", "TransferHostToResourceModule", "http", metrics.LibCallStatusErr, start)
-		blog.Errorf("call api TransferHostToResourceModule failed: %v", errs[0])
-		return errs[0]
-	}
-	metrics.ReportLibRequestMetric("cmdb", "TransferHostToResourceModule", "http", metrics.LibCallStatusOK, start)
-
-	if !respData.Result || respData.Code != 0 {
-		blog.Errorf("call api TransferHostToResourceModule failed: %v", respData)
-		return fmt.Errorf("call api TransferHostToResourceModule failed: %v", respData)
-	}
-	blog.Infof("call api TransferHostToResourceModule with url(%s) successfully", reqURL)
-
-	return nil
-}
-
-// DeleteHost delete host
-func (c *Client) DeleteHost(hostID []int) error {
-	hostIDs := []string{}
-	for _, v := range hostID {
-		hostIDs = append(hostIDs, strconv.Itoa(v))
-	}
-
-	// delete_host
-	var (
-		reqURL  = fmt.Sprintf("%s/api/c/compapi/v2/cc/delete_host/", c.server)
-		request = &DeleteHostRequest{
-			BkHostID: strings.Join(hostIDs, ","),
-		}
-		respData = &DeleteHostResponse{}
-	)
-
-	start := time.Now()
-	_, _, errs := gorequest.New().
-		Timeout(defaultTimeOut).
-		Post(reqURL).
-		Set("Content-Type", "application/json").
-		Set("Accept", "application/json").
-		Set("X-Bkapi-Authorization", c.userAuth).
-		SetDebug(c.serverDebug).
-		Send(request).
-		EndStruct(&respData)
-	if len(errs) > 0 {
-		metrics.ReportLibRequestMetric("cmdb", "DeleteHost", "http", metrics.LibCallStatusErr, start)
-		blog.Errorf("call api DeleteHost failed: %v", errs[0])
-		return errs[0]
-	}
-	metrics.ReportLibRequestMetric("cmdb", "DeleteHost", "http", metrics.LibCallStatusOK, start)
-
-	if !respData.Result || respData.Code != 0 {
-		blog.Errorf("call api DeleteHost failed: %v", respData)
-		return fmt.Errorf("call api DeleteHost failed: %v", respData)
-	}
-	blog.Infof("call api DeleteHost with url(%s) successfully", reqURL)
-
-	return nil
-}
-
-// SearchBizInstTopo search biz inst topo
-func (c *Client) SearchBizInstTopo(bizID int) ([]SearchBizInstTopoData, error) {
-	// search_biz_inst_topo
-	var (
-		reqURL   = fmt.Sprintf("%s/api/c/compapi/v2/cc/search_biz_inst_topo?bk_biz_id=%d", c.server, bizID)
-		respData = &SearchBizInstTopoResponse{}
-	)
-
-	start := time.Now()
-	_, _, errs := gorequest.New().
-		Timeout(defaultTimeOut).
-		Get(reqURL).
-		Set("Content-Type", "application/json").
-		Set("Accept", "application/json").
-		Set("X-Bkapi-Authorization", c.userAuth).
-		SetDebug(c.serverDebug).
-		EndStruct(&respData)
-	if len(errs) > 0 {
-		metrics.ReportLibRequestMetric("cmdb", "SearchBizInstTopo", "http", metrics.LibCallStatusErr, start)
-		blog.Errorf("call api SearchBizInstTopo failed: %v", errs[0])
-		return nil, errs[0]
-	}
-	metrics.ReportLibRequestMetric("cmdb", "SearchBizInstTopo", "http", metrics.LibCallStatusOK, start)
-
-	if !respData.Result || respData.Code != 0 {
-		blog.Errorf("call api SearchBizInstTopo failed: %v", respData)
-		return nil, fmt.Errorf("call api SearchBizInstTopo failed: %v", respData)
-	}
-	blog.Infof("call api SearchBizInstTopo with url(%s) successfully", reqURL)
-
-	return respData.Data, nil
 }
 
 // ListTopology list topology
@@ -940,7 +298,7 @@ func (c *Client) ListTopology(ctx context.Context, bizID int, filterInter bool, 
 	// internalModules.ReplaceName()
 
 	// search biz inst topo
-	topos, err := c.SearchBizInstTopo(bizID)
+	topos, err := c.SearchBizInstTopo(ctx, bizID)
 	if err != nil {
 		return nil, err
 	}
@@ -988,11 +346,792 @@ func (c *Client) ListTopology(ctx context.Context, bizID int, filterInter bool, 
 	return topo, nil
 }
 
-// TransferHostModule transfer host to module
-func (c *Client) TransferHostModule(bizID int, hostID []int, moduleID []int, isIncrement bool) error {
+// QueryHostInfoWithoutBiz query values string host info by field 没有业务ID的主机查询
+func (c *Client) QueryHostInfoWithoutBiz(ctx context.Context, field string, values []string,
+	page Page) ([]HostDetailData, error) {
+	if c == nil {
+		return nil, ErrServerNotInit
+	}
+
+	// list_hosts_without_biz
+	var (
+		reqURL  = fmt.Sprintf("%s/api/v3/hosts/list_hosts_without_app", c.server)
+		request = &ListHostsWithoutBizRequest{
+			Page:               page,
+			HostPropertyFilter: buildFilterConditionByStrValues(field, values),
+			Fields:             fieldHostDetailInfo,
+		}
+		respData = &ListHostsWithoutBizResponse{}
+	)
+
+	userAuth, tenant, err := rutils.GetGatewayAuthAndTenantInfo(ctx, &types.AuthInfo{
+		BkAppUser: types.BkAppUser{
+			BkAppCode:   c.appCode,
+			BkAppSecret: c.appSecret,
+		},
+		BkUserName: c.bkUserName,
+	}, "")
+	if err != nil {
+		return nil, err
+	}
+
+	start := time.Now()
+	_, _, errs := gorequest.New().
+		Timeout(defaultTimeOut).
+		Post(reqURL).
+		Set("Content-Type", "application/json").
+		Set("Accept", "application/json").
+		Set("X-Bkapi-Authorization", userAuth).
+		Set("X-Bk-Tenant-Id", tenant).
+		SetDebug(c.serverDebug).
+		Send(request).
+		EndStruct(&respData)
+	if len(errs) > 0 {
+		metrics.ReportLibRequestMetric("cmdb", "QueryHostInfoWithoutBiz", "http", metrics.LibCallStatusErr, start)
+		blog.Errorf("call api QueryHostInfoWithoutBiz failed: %v", errs[0])
+		return nil, errs[0]
+	}
+	metrics.ReportLibRequestMetric("cmdb", "QueryHostInfoWithoutBiz", "http", metrics.LibCallStatusOK, start)
+
+	if !respData.Result {
+		blog.Errorf("call api QueryHostInfoWithoutBiz failed: %v", respData.Message)
+		return nil, errors.New(respData.Message)
+	}
+	// successfully request
+	blog.Infof("call api QueryHostInfoWithoutBiz with url(%s) successfully", reqURL)
+
+	return respData.Data.Info, nil
+}
+
+// FindHostTopoRelation find host topo 获取主机拓扑关系
+func (c *Client) FindHostTopoRelation(ctx context.Context, bizID int, page Page) (int, []HostTopoRelation, error) {
+	if c == nil {
+		return 0, nil, ErrServerNotInit
+	}
+
+	// find_host_topo_relation
+	var (
+		reqURL  = fmt.Sprintf("%s/api/v3/host/topo/relation/read", c.server)
+		request = &HostTopoRelationReq{
+			Page:    page,
+			BkBizID: bizID,
+		}
+		respData = &HostTopoRelationResp{}
+	)
+
+	userAuth, tenant, err := rutils.GetGatewayAuthAndTenantInfo(ctx, &types.AuthInfo{
+		BkAppUser: types.BkAppUser{
+			BkAppCode:   c.appCode,
+			BkAppSecret: c.appSecret,
+		},
+		BkUserName: c.bkUserName,
+	}, "")
+	if err != nil {
+		return 0, nil, err
+	}
+
+	start := time.Now()
+	_, _, errs := gorequest.New().
+		Timeout(defaultTimeOut).
+		Post(reqURL).
+		Set("Content-Type", "application/json").
+		Set("Accept", "application/json").
+		Set("X-Bkapi-Authorization", userAuth).
+		Set("X-Bk-Tenant-Id", tenant).
+		SetDebug(c.serverDebug).
+		Send(request).
+		EndStruct(&respData)
+	if len(errs) > 0 {
+		metrics.ReportLibRequestMetric("cmdb", "FindHostTopoRelation", "http", metrics.LibCallStatusErr, start)
+		blog.Errorf("call api FindHostTopoRelation failed: %v", errs[0])
+		return 0, nil, errs[0]
+	}
+	metrics.ReportLibRequestMetric("cmdb", "FindHostTopoRelation", "http", metrics.LibCallStatusOK, start)
+
+	if !respData.Result {
+		blog.Errorf("call api FindHostTopoRelation failed: %v", respData.Message)
+		return 0, nil, errors.New(respData.Message)
+	}
+	// successfully request
+	blog.Infof("call api FindHostTopoRelation with url(%s) successfully", reqURL)
+
+	if len(respData.Data.Data) > 0 {
+		return respData.Data.Count, respData.Data.Data, nil
+	}
+
+	return 0, nil, fmt.Errorf("call api FindHostTopoRelation failed")
+}
+
+// SearchCloudAreaByCloudID search cloudArea info by cloudID 查询管控区域
+func (c *Client) SearchCloudAreaByCloudID(ctx context.Context, cloudID int) (*SearchCloudAreaInfo, error) {
+	cloudData, ok := GetCloudData(c.cache, cloudID)
+	if ok {
+		blog.Infof("SearchCloudAreaByCloudID hit cache by cloudID[%d]", cloudID)
+		return cloudData, nil
+	}
+	blog.V(3).Infof("SearchCloudAreaByCloudID miss cache by cloudID[%v]", cloudID)
+
+	// search_cloud_area
+	var (
+		reqURL  = fmt.Sprintf("%s/api/v3/findmany/cloudarea", c.server)
+		request = &SearchCloudAreaRequest{
+			Page: Page{
+				Start: 0,
+				Limit: MaxLimits,
+			},
+			Condition: BuildCloudAreaCondition(cloudID),
+		}
+		respData = &SearchCloudAreaResp{}
+	)
+
+	userAuth, tenant, err := rutils.GetGatewayAuthAndTenantInfo(ctx, &types.AuthInfo{
+		BkAppUser: types.BkAppUser{
+			BkAppCode:   c.appCode,
+			BkAppSecret: c.appSecret,
+		},
+		BkUserName: c.bkUserName,
+	}, "")
+	if err != nil {
+		return nil, err
+	}
+
+	start := time.Now()
+	_, _, errs := gorequest.New().
+		Timeout(defaultTimeOut).
+		Post(reqURL).
+		Set("Content-Type", "application/json").
+		Set("Accept", "application/json").
+		Set("X-Bkapi-Authorization", userAuth).
+		Set("X-Bk-Tenant-Id", tenant).
+		SetDebug(c.serverDebug).
+		Send(request).
+		EndStruct(&respData)
+	if len(errs) > 0 {
+		metrics.ReportLibRequestMetric("cmdb", "SearchCloudAreaByCloudID", "http", metrics.LibCallStatusErr, start)
+		blog.Errorf("call api SearchCloudAreaByCloudID failed: %v", errs[0])
+		return nil, errs[0]
+	}
+	metrics.ReportLibRequestMetric("cmdb", "SearchCloudAreaByCloudID", "http", metrics.LibCallStatusOK, start)
+
+	if !respData.Result {
+		blog.Errorf("call api SearchCloudAreaByCloudID failed: %v", respData.Message)
+		return nil, errors.New(respData.Message)
+	}
+
+	// successfully request
+	blog.Infof("call api SearchCloudAreaByCloudID with url(%s) successfully", reqURL)
+
+	if len(respData.Data.Info) == 0 {
+		return nil, fmt.Errorf("SearchCloudAreaByCloudID not exist %v", cloudID)
+	}
+
+	err = SetCloudData(c.cache, cloudID, respData.Data.Info[0])
+	if err != nil {
+		blog.Errorf("SearchCloudAreaByCloudID[%v] SetCloudData failed: %v", cloudID, err)
+	}
+
+	return respData.Data.Info[0], nil
+}
+
+// QueryHostByBizID query host by bizID 查询业务下主机
+func (c *Client) QueryHostByBizID(ctx context.Context, bizID int, page Page) (int, []HostData, error) {
+	if c == nil {
+		return 0, nil, ErrServerNotInit
+	}
+
+	// list_biz_hosts
+	var (
+		reqURL  = fmt.Sprintf("%s/api/v3/hosts/app/%v/list_hosts", c.server, bizID)
+		request = &ListBizHostRequest{
+			Page:    page,
+			BKBizID: bizID,
+			Fields:  fieldHostIPSelectorInfo,
+		}
+		respData = &ListBizHostsResponse{}
+	)
+
+	userAuth, tenant, err := rutils.GetGatewayAuthAndTenantInfo(ctx, &types.AuthInfo{
+		BkAppUser: types.BkAppUser{
+			BkAppCode:   c.appCode,
+			BkAppSecret: c.appSecret,
+		},
+		BkUserName: c.bkUserName,
+	}, "")
+	if err != nil {
+		return 0, nil, err
+	}
+
+	start := time.Now()
+	_, _, errs := gorequest.New().
+		Timeout(defaultTimeOut).
+		Post(reqURL).
+		Set("Content-Type", "application/json").
+		Set("Accept", "application/json").
+		Set("X-Bkapi-Authorization", userAuth).
+		Set("X-Bk-Tenant-Id", tenant).
+		SetDebug(c.serverDebug).
+		Send(request).
+		EndStruct(&respData)
+	if len(errs) > 0 {
+		metrics.ReportLibRequestMetric("cmdb", "QueryHostByBizID", "http", metrics.LibCallStatusErr, start)
+		blog.Errorf("call api QueryHostNumByBizID failed: %v", errs[0])
+		return 0, nil, errs[0]
+	}
+	metrics.ReportLibRequestMetric("cmdb", "QueryHostByBizID", "http", metrics.LibCallStatusOK, start)
+
+	if !respData.Result {
+		blog.Errorf("call api QueryHostNumByBizID failed: %v", respData.Message)
+		return 0, nil, errors.New(respData.Message)
+	}
+	// successfully request
+	blog.Infof("call api QueryHostNumByBizID with url(%s) successfully", reqURL)
+
+	if len(respData.Data.Info) > 0 {
+		return respData.Data.Count, respData.Data.Info, nil
+	}
+
+	return 0, nil, fmt.Errorf("call api GetBS2IDByBizID failed")
+}
+
+// FindHostBizRelations query host biz relations by hostID 查询主机业务关系信息
+func (c *Client) FindHostBizRelations(ctx context.Context, hostID []int) ([]HostBizRelations, error) {
+	if c == nil {
+		return nil, ErrServerNotInit
+	}
+
+	// find_host_biz_relations
+	var (
+		reqURL  = fmt.Sprintf("%s/api/v3/hosts/modules/read", c.server)
+		request = &FindHostBizRelationsRequest{
+			BkHostID: hostID,
+		}
+		respData = &FindHostBizRelationsResponse{}
+	)
+
+	userAuth, tenant, err := rutils.GetGatewayAuthAndTenantInfo(ctx, &types.AuthInfo{
+		BkAppUser: types.BkAppUser{
+			BkAppCode:   c.appCode,
+			BkAppSecret: c.appSecret,
+		},
+		BkUserName: c.bkUserName,
+	}, "")
+	if err != nil {
+		return nil, err
+	}
+
+	start := time.Now()
+	_, _, errs := gorequest.New().
+		Timeout(defaultTimeOut).
+		Post(reqURL).
+		Set("Content-Type", "application/json").
+		Set("Accept", "application/json").
+		Set("X-Bkapi-Authorization", userAuth).
+		Set("X-Bk-Tenant-Id", tenant).
+		SetDebug(c.serverDebug).
+		Send(request).
+		EndStruct(&respData)
+	if len(errs) > 0 {
+		metrics.ReportLibRequestMetric("cmdb", "FindHostBizRelations", "http", metrics.LibCallStatusErr, start)
+		blog.Errorf("call api FindHostBizRelations failed: %v", errs[0])
+		return nil, errs[0]
+	}
+	metrics.ReportLibRequestMetric("cmdb", "FindHostBizRelations", "http", metrics.LibCallStatusOK, start)
+
+	if !respData.Result {
+		blog.Errorf("call api FindHostBizRelations failed: %v", respData.Message)
+		return nil, errors.New(respData.Message)
+	}
+	// successfully request
+	blog.Infof("call api FindHostBizRelations with url(%s) successfully", reqURL)
+
+	return respData.Data, nil
+}
+
+// GetBizInternalModule get biz recycle module info 查询业务的空闲机/故障机/待回收模块
+func (c *Client) GetBizInternalModule(ctx context.Context, bizID int) (*BizInternalModuleData, error) {
+	if c == nil {
+		return nil, ErrServerNotInit
+	}
+
+	language := i18n.LanguageFromCtx(ctx)
+	blog.Infof("cmdb client GetBizInternalModule language %s", language)
+
+	// get_biz_internal_module
+	var (
+		reqURL   = fmt.Sprintf("%s/api/v3/topo/internal/default/%v", c.server, bizID)
+		respData = &QueryBizInternalModuleResponse{}
+	)
+
+	userAuth, tenant, err := rutils.GetGatewayAuthAndTenantInfo(ctx, &types.AuthInfo{
+		BkAppUser: types.BkAppUser{
+			BkAppCode:   c.appCode,
+			BkAppSecret: c.appSecret,
+		},
+		BkUserName: c.bkUserName,
+	}, "")
+	if err != nil {
+		return nil, err
+	}
+
+	start := time.Now()
+	_, _, errs := gorequest.New().
+		Timeout(defaultTimeOut).
+		Get(reqURL).
+		Set("Content-Type", "application/json").
+		Set("Accept", "application/json").
+		Set("Blueking-Language", language).
+		Set("X-Bkapi-Authorization", userAuth).
+		Set("X-Bk-Tenant-Id", tenant).
+		SetDebug(c.serverDebug).
+		EndStruct(&respData)
+	if len(errs) > 0 {
+		metrics.ReportLibRequestMetric("cmdb", "GetBizInternalModule", "http", metrics.LibCallStatusErr, start)
+		return nil, errs[0]
+	}
+	metrics.ReportLibRequestMetric("cmdb", "GetBizInternalModule", "http", metrics.LibCallStatusOK, start)
+
+	if !respData.Result {
+		return nil, errors.New(respData.Message)
+	}
+
+	return &respData.Data, nil
+}
+
+// TransHostAcrossBiz trans host to other biz 跨业务转移主机
+func (c *Client) TransHostAcrossBiz(ctx context.Context, hostInfo TransHostAcrossBizInfo) error {
+	if c == nil {
+		return ErrServerNotInit
+	}
+
+	// transfer_host_across_biz
+	var (
+		reqURL  = fmt.Sprintf("%s/api/v3/hosts/modules/across/biz", c.server)
+		request = &TransferHostAcrossBizRequest{
+			SrcBizID:   hostInfo.SrcBizID,
+			BkHostID:   hostInfo.HostID,
+			DstBizID:   hostInfo.DstBizID,
+			BkModuleID: hostInfo.DstModuleID,
+		}
+		respData = &TransferHostAcrossBizResponse{}
+	)
+
+	userAuth, tenant, err := rutils.GetGatewayAuthAndTenantInfo(ctx, &types.AuthInfo{
+		BkAppUser: types.BkAppUser{
+			BkAppCode:   c.appCode,
+			BkAppSecret: c.appSecret,
+		},
+		BkUserName: c.bkUserName,
+	}, "")
+	if err != nil {
+		return err
+	}
+
+	start := time.Now()
+	_, _, errs := gorequest.New().
+		Timeout(defaultTimeOut).
+		Post(reqURL).
+		Set("Content-Type", "application/json").
+		Set("Accept", "application/json").
+		Set("X-Bkapi-Authorization", userAuth).
+		Set("X-Bk-Tenant-Id", tenant).
+		SetDebug(c.serverDebug).
+		Send(request).
+		EndStruct(&respData)
+	if len(errs) > 0 {
+		metrics.ReportLibRequestMetric("cmdb", "TransHostAcrossBiz", "http", metrics.LibCallStatusErr, start)
+		return errs[0]
+	}
+	metrics.ReportLibRequestMetric("cmdb", "TransHostAcrossBiz", "http", metrics.LibCallStatusOK, start)
+
+	if !respData.Result {
+		return errors.New(respData.Message)
+	}
+
+	return nil
+}
+
+// GetBusinessMaintainer get maintainers by bizID 查询业务
+func (c *Client) GetBusinessMaintainer(ctx context.Context, bizID int) (*BusinessData, error) {
+	if c == nil {
+		return nil, ErrServerNotInit
+	}
+
+	// search_business
+	var (
+		reqURL  = fmt.Sprintf("%s/api/v3/biz/search/default", c.server)
+		request = &SearchBusinessRequest{
+			Fields: []string{},
+			Condition: map[string]interface{}{
+				conditionBkBizID: bizID,
+			},
+		}
+		respData = &SearchBusinessResponse{}
+	)
+
+	userAuth, tenant, err := rutils.GetGatewayAuthAndTenantInfo(ctx, &types.AuthInfo{
+		BkAppUser: types.BkAppUser{
+			BkAppCode:   c.appCode,
+			BkAppSecret: c.appSecret,
+		},
+		BkUserName: c.bkUserName,
+	}, "")
+	if err != nil {
+		return nil, err
+	}
+
+	start := time.Now()
+	_, _, errs := gorequest.New().
+		Timeout(defaultTimeOut).
+		Post(reqURL).
+		Set("Content-Type", "application/json").
+		Set("Accept", "application/json").
+		Set("X-Bkapi-Authorization", userAuth).
+		Set("X-Bk-Tenant-Id", tenant).
+		SetDebug(c.serverDebug).
+		Send(request).
+		EndStruct(&respData)
+	if len(errs) > 0 {
+		metrics.ReportLibRequestMetric("cmdb", "GetBusinessMaintainer", "http", metrics.LibCallStatusErr, start)
+		blog.Errorf("call api GetBS2IDByBizID failed: %v", errs[0])
+		return nil, errs[0]
+	}
+	metrics.ReportLibRequestMetric("cmdb", "GetBusinessMaintainer", "http", metrics.LibCallStatusOK, start)
+
+	if !respData.Result {
+		blog.Errorf("call api GetBS2IDByBizID failed: %v", respData.Message)
+		return nil, errors.New(respData.Message)
+	}
+	// successfully request
+	blog.Infof("call api GetBS2IDByBizID with url(%s) successfully", reqURL)
+
+	if len(respData.Data.Info) > 0 {
+		return &respData.Data.Info[0], nil
+	}
+
+	return nil, fmt.Errorf("call api GetBS2IDByBizID failed")
+}
+
+// GetBS2IDByBizID get bs2ID by bizID 查询bkcc对应公司的二级业务ID
+func (c *Client) GetBS2IDByBizID(ctx context.Context, bizID int64) (int, error) {
+	if c == nil {
+		return 0, ErrServerNotInit
+	}
+
+	// search_business
+	var (
+		reqURL  = fmt.Sprintf("%s/api/v3/biz/search/default", c.server)
+		request = &SearchBusinessRequest{
+			Fields: []string{fieldBS2NameID},
+			Condition: map[string]interface{}{
+				conditionBkBizID: bizID,
+			},
+		}
+		respData = &SearchBusinessResponse{}
+	)
+
+	userAuth, tenant, err := rutils.GetGatewayAuthAndTenantInfo(ctx, &types.AuthInfo{
+		BkAppUser: types.BkAppUser{
+			BkAppCode:   c.appCode,
+			BkAppSecret: c.appSecret,
+		},
+		BkUserName: c.bkUserName,
+	}, "")
+	if err != nil {
+		return 0, err
+	}
+
+	start := time.Now()
+	_, _, errs := gorequest.New().
+		Timeout(defaultTimeOut).
+		Post(reqURL).
+		Set("Content-Type", "application/json").
+		Set("Accept", "application/json").
+		Set("X-Bkapi-Authorization", userAuth).
+		Set("X-Bk-Tenant-Id", tenant).
+		SetDebug(c.serverDebug).
+		Send(request).
+		EndStruct(&respData)
+	if len(errs) > 0 {
+		metrics.ReportLibRequestMetric("cmdb", "GetBS2IDByBizID", "http", metrics.LibCallStatusErr, start)
+		blog.Errorf("call api GetBS2IDByBizID failed: %v", errs[0])
+		return 0, errs[0]
+	}
+	metrics.ReportLibRequestMetric("cmdb", "GetBS2IDByBizID", "http", metrics.LibCallStatusOK, start)
+
+	if !respData.Result {
+		blog.Errorf("call api GetBS2IDByBizID failed: %v", respData.Message)
+		return 0, errors.New(respData.Message)
+	}
+	// successfully request
+	blog.Infof("call api GetBS2IDByBizID with url(%s) successfully", reqURL)
+
+	if len(respData.Data.Info) > 0 {
+		return respData.Data.Info[0].BS2NameID, nil
+	}
+
+	return 0, fmt.Errorf("call api GetBS2IDByBizID failed")
+}
+
+// TransHostToRecycleModule trans host to recycleModule 上交主机到业务的待回收模块
+func (c *Client) TransHostToRecycleModule(ctx context.Context, bizID int, hostID []int) error {
+	if c == nil {
+		return ErrServerNotInit
+	}
+
+	// transfer_host_to_recyclemodule
+	var (
+		reqURL  = fmt.Sprintf("%s/api/v3/hosts/modules/recycle", c.server)
+		request = &TransHostToERecycleModuleRequest{
+			BkBizID:  bizID,
+			BkHostID: hostID,
+		}
+		respData = &TransHostToERecycleModuleResponse{}
+	)
+
+	userAuth, tenant, err := rutils.GetGatewayAuthAndTenantInfo(ctx, &types.AuthInfo{
+		BkAppUser: types.BkAppUser{
+			BkAppCode:   c.appCode,
+			BkAppSecret: c.appSecret,
+		},
+		BkUserName: c.bkUserName,
+	}, "")
+	if err != nil {
+		return err
+	}
+
+	start := time.Now()
+	_, _, errs := gorequest.New().
+		Timeout(defaultTimeOut).
+		Post(reqURL).
+		Set("Content-Type", "application/json").
+		Set("Accept", "application/json").
+		Set("X-Bkapi-Authorization", userAuth).
+		Set("X-Bk-Tenant-Id", tenant).
+		SetDebug(c.serverDebug).
+		Send(request).
+		EndStruct(&respData)
+	if len(errs) > 0 {
+		metrics.ReportLibRequestMetric("cmdb", "TransHostToRecycleModule", "http", metrics.LibCallStatusErr, start)
+		blog.Errorf("call api TransHostToRecycleModule failed: %v", errs[0])
+		return errs[0]
+	}
+	metrics.ReportLibRequestMetric("cmdb", "TransHostToRecycleModule", "http", metrics.LibCallStatusOK, start)
+
+	if !respData.Result {
+		blog.Errorf("call api TransHostToRecycleModule failed: %v", respData.Message)
+		return errors.New(respData.Message)
+	}
+	// successfully request
+	blog.Infof("call api TransHostToRecycleModule with url(%s) successfully", reqURL)
+
+	return nil
+}
+
+// TransferHostToIdleModule transfer host to idle module 上交主机到业务的空闲机模块
+func (c *Client) TransferHostToIdleModule(ctx context.Context, bizID int, hostID []int) error {
+	// transfer_host_to_idlemodule
+	var (
+		reqURL  = fmt.Sprintf("%s/api/v3/hosts/modules/idle", c.server)
+		request = &TransferHostToIdleModuleRequest{
+			BkBizID:  bizID,
+			BkHostID: hostID,
+		}
+		respData = &TransferHostToIdleModuleResponse{}
+	)
+
+	userAuth, tenant, err := rutils.GetGatewayAuthAndTenantInfo(ctx, &types.AuthInfo{
+		BkAppUser: types.BkAppUser{
+			BkAppCode:   c.appCode,
+			BkAppSecret: c.appSecret,
+		},
+		BkUserName: c.bkUserName,
+	}, "")
+	if err != nil {
+		return err
+	}
+
+	start := time.Now()
+	_, _, errs := gorequest.New().
+		Timeout(defaultTimeOut).
+		Post(reqURL).
+		Set("Content-Type", "application/json").
+		Set("Accept", "application/json").
+		Set("X-Bkapi-Authorization", userAuth).
+		Set("X-Bk-Tenant-Id", tenant).
+		SetDebug(c.serverDebug).
+		Send(request).
+		EndStruct(&respData)
+	if len(errs) > 0 {
+		metrics.ReportLibRequestMetric("cmdb", "TransferHostToIdleModule", "http", metrics.LibCallStatusErr, start)
+		blog.Errorf("call api TransferHostToIdleModule failed: %v", errs[0])
+		return errs[0]
+	}
+	metrics.ReportLibRequestMetric("cmdb", "TransferHostToIdleModule", "http", metrics.LibCallStatusOK, start)
+
+	if !respData.Result || respData.Code != 0 {
+		blog.Errorf("call api TransferHostToIdleModule failed: %v", respData)
+		return fmt.Errorf("call api TransferHostToIdleModule failed: %v", respData)
+	}
+	blog.Infof("call api TransferHostToIdleModule with url(%s) successfully", reqURL)
+
+	return nil
+}
+
+// TransferHostToResourceModule transfer host to resource module 上交主机至资源池
+func (c *Client) TransferHostToResourceModule(ctx context.Context, bizID int, hostID []int) error {
+	// transfer_host_to_resourcemodule
+	var (
+		reqURL  = fmt.Sprintf("%s/api/v3/hosts/modules/resource", c.server)
+		request = &TransferHostToResourceModuleRequest{
+			BkBizID:  bizID,
+			BkHostID: hostID,
+		}
+		respData = &TransferHostToResourceModuleResponse{}
+	)
+
+	userAuth, tenant, err := rutils.GetGatewayAuthAndTenantInfo(ctx, &types.AuthInfo{
+		BkAppUser: types.BkAppUser{
+			BkAppCode:   c.appCode,
+			BkAppSecret: c.appSecret,
+		},
+		BkUserName: c.bkUserName,
+	}, "")
+	if err != nil {
+		return err
+	}
+
+	start := time.Now()
+	_, _, errs := gorequest.New().
+		Timeout(defaultTimeOut).
+		Post(reqURL).
+		Set("Content-Type", "application/json").
+		Set("Accept", "application/json").
+		Set("X-Bkapi-Authorization", userAuth).
+		Set("X-Bk-Tenant-Id", tenant).
+		SetDebug(c.serverDebug).
+		Send(request).
+		EndStruct(&respData)
+	if len(errs) > 0 {
+		metrics.ReportLibRequestMetric("cmdb", "TransferHostToResourceModule", "http", metrics.LibCallStatusErr, start)
+		blog.Errorf("call api TransferHostToResourceModule failed: %v", errs[0])
+		return errs[0]
+	}
+	metrics.ReportLibRequestMetric("cmdb", "TransferHostToResourceModule", "http", metrics.LibCallStatusOK, start)
+
+	if !respData.Result || respData.Code != 0 {
+		blog.Errorf("call api TransferHostToResourceModule failed: %v", respData)
+		return fmt.Errorf("call api TransferHostToResourceModule failed: %v", respData)
+	}
+	blog.Infof("call api TransferHostToResourceModule with url(%s) successfully", reqURL)
+
+	return nil
+}
+
+// DeleteHost delete host 删除主机
+func (c *Client) DeleteHost(ctx context.Context, hostID []int) error {
+	hostIDs := []string{}
+	for _, v := range hostID {
+		hostIDs = append(hostIDs, strconv.Itoa(v))
+	}
+
+	// delete_host
+	var (
+		reqURL  = fmt.Sprintf("%s/api/v3/hosts/batch", c.server)
+		request = &DeleteHostRequest{
+			BkHostID: strings.Join(hostIDs, ","),
+		}
+		respData = &DeleteHostResponse{}
+	)
+
+	userAuth, tenant, err := rutils.GetGatewayAuthAndTenantInfo(ctx, &types.AuthInfo{
+		BkAppUser: types.BkAppUser{
+			BkAppCode:   c.appCode,
+			BkAppSecret: c.appSecret,
+		},
+		BkUserName: c.bkUserName,
+	}, "")
+	if err != nil {
+		return err
+	}
+
+	start := time.Now()
+	_, _, errs := gorequest.New().
+		Timeout(defaultTimeOut).
+		Delete(reqURL).
+		Set("Content-Type", "application/json").
+		Set("Accept", "application/json").
+		Set("X-Bkapi-Authorization", userAuth).
+		Set("X-Bk-Tenant-Id", tenant).
+		SetDebug(c.serverDebug).
+		Send(request).
+		EndStruct(&respData)
+	if len(errs) > 0 {
+		metrics.ReportLibRequestMetric("cmdb", "DeleteHost", "http", metrics.LibCallStatusErr, start)
+		blog.Errorf("call api DeleteHost failed: %v", errs[0])
+		return errs[0]
+	}
+	metrics.ReportLibRequestMetric("cmdb", "DeleteHost", "http", metrics.LibCallStatusOK, start)
+
+	if !respData.Result || respData.Code != 0 {
+		blog.Errorf("call api DeleteHost failed: %v", respData)
+		return fmt.Errorf("call api DeleteHost failed: %v", respData)
+	}
+	blog.Infof("call api DeleteHost with url(%s) successfully", reqURL)
+
+	return nil
+}
+
+// SearchBizInstTopo search biz inst topo 查询业务实例拓扑
+func (c *Client) SearchBizInstTopo(ctx context.Context, bizID int) ([]SearchBizInstTopoData, error) {
+	// search_biz_inst_topo
+	var (
+		reqURL   = fmt.Sprintf("%s/api/v3/find/topoinst/biz/%d", c.server, bizID)
+		respData = &SearchBizInstTopoResponse{}
+	)
+
+	userAuth, tenant, err := rutils.GetGatewayAuthAndTenantInfo(ctx, &types.AuthInfo{
+		BkAppUser: types.BkAppUser{
+			BkAppCode:   c.appCode,
+			BkAppSecret: c.appSecret,
+		},
+		BkUserName: c.bkUserName,
+	}, "")
+	if err != nil {
+		return nil, err
+	}
+
+	start := time.Now()
+	_, _, errs := gorequest.New().
+		Timeout(defaultTimeOut).
+		Post(reqURL).
+		Set("Content-Type", "application/json").
+		Set("Accept", "application/json").
+		Set("X-Bkapi-Authorization", userAuth).
+		Set("X-Bk-Tenant-Id", tenant).
+		SetDebug(c.serverDebug).
+		EndStruct(&respData)
+	if len(errs) > 0 {
+		metrics.ReportLibRequestMetric("cmdb", "SearchBizInstTopo", "http", metrics.LibCallStatusErr, start)
+		blog.Errorf("call api SearchBizInstTopo failed: %v", errs[0])
+		return nil, errs[0]
+	}
+	metrics.ReportLibRequestMetric("cmdb", "SearchBizInstTopo", "http", metrics.LibCallStatusOK, start)
+
+	if !respData.Result || respData.Code != 0 {
+		blog.Errorf("call api SearchBizInstTopo failed: %v", respData)
+		return nil, fmt.Errorf("call api SearchBizInstTopo failed: %v", respData)
+	}
+	blog.Infof("call api SearchBizInstTopo with url(%s) successfully", reqURL)
+
+	return respData.Data, nil
+}
+
+// TransferHostModule transfer host to module 业务内主机转移模块
+func (c *Client) TransferHostModule(ctx context.Context, bizID int, hostID []int,
+	moduleID []int, isIncrement bool) error {
 	// transfer_host_module
 	var (
-		reqURL  = fmt.Sprintf("%s/api/c/compapi/v2/cc/transfer_host_module/", c.server)
+		reqURL  = fmt.Sprintf("%s/api/v3/hosts/modules", c.server)
 		request = &TransferHostModuleRequest{
 			BKBizID:     bizID,
 			BKHostID:    hostID,
@@ -1002,13 +1141,25 @@ func (c *Client) TransferHostModule(bizID int, hostID []int, moduleID []int, isI
 		respData = &BaseResponse{}
 	)
 
+	userAuth, tenant, err := rutils.GetGatewayAuthAndTenantInfo(ctx, &types.AuthInfo{
+		BkAppUser: types.BkAppUser{
+			BkAppCode:   c.appCode,
+			BkAppSecret: c.appSecret,
+		},
+		BkUserName: c.bkUserName,
+	}, "")
+	if err != nil {
+		return err
+	}
+
 	start := time.Now()
 	_, _, errs := gorequest.New().
 		Timeout(defaultTimeOut).
 		Post(reqURL).
 		Set("Content-Type", "application/json").
 		Set("Accept", "application/json").
-		Set("X-Bkapi-Authorization", c.userAuth).
+		Set("X-Bkapi-Authorization", userAuth).
+		Set("X-Bk-Tenant-Id", tenant).
 		SetDebug(c.serverDebug).
 		Send(request).
 		EndStruct(&respData)
@@ -1029,7 +1180,7 @@ func (c *Client) TransferHostModule(bizID int, hostID []int, moduleID []int, isI
 }
 
 // AddHostFromCmpy add host from cmpy
-func (c *Client) AddHostFromCmpy(svrIds []string, ips []string, assetIds []string) error {
+func (c *Client) AddHostFromCmpy(ctx context.Context, svrIds []string, ips []string, assetIds []string) error {
 	if c == nil {
 		return ErrServerNotInit
 	}
@@ -1045,13 +1196,25 @@ func (c *Client) AddHostFromCmpy(svrIds []string, ips []string, assetIds []strin
 		respData = &AddHostFromCmpyResp{}
 	)
 
+	userAuth, tenant, err := rutils.GetGatewayAuthAndTenantInfo(ctx, &types.AuthInfo{
+		BkAppUser: types.BkAppUser{
+			BkAppCode:   c.appCode,
+			BkAppSecret: c.appSecret,
+		},
+		BkUserName: c.bkUserName,
+	}, "")
+	if err != nil {
+		return err
+	}
+
 	start := time.Now()
 	_, _, errs := gorequest.New().
 		Timeout(defaultTimeOut).
 		Post(reqURL).
 		Set("Content-Type", "application/json").
 		Set("Accept", "application/json").
-		Set("X-Bkapi-Authorization", c.userAuth).
+		Set("X-Bkapi-Authorization", userAuth).
+		Set("X-Bk-Tenant-Id", tenant).
 		SetDebug(c.serverDebug).
 		Send(request).
 		EndStruct(&respData)
@@ -1073,7 +1236,7 @@ func (c *Client) AddHostFromCmpy(svrIds []string, ips []string, assetIds []strin
 }
 
 // SyncHostInfoFromCmpy update host info from cmpy
-func (c *Client) SyncHostInfoFromCmpy(bkCloudId int, bkHostIds []int64) error {
+func (c *Client) SyncHostInfoFromCmpy(ctx context.Context, bkCloudId int, bkHostIds []int64) error {
 	if c == nil {
 		return ErrServerNotInit
 	}
@@ -1089,13 +1252,25 @@ func (c *Client) SyncHostInfoFromCmpy(bkCloudId int, bkHostIds []int64) error {
 		respData = &SyncHostInfoFromCmpyResp{}
 	)
 
+	userAuth, tenant, err := rutils.GetGatewayAuthAndTenantInfo(ctx, &types.AuthInfo{
+		BkAppUser: types.BkAppUser{
+			BkAppCode:   c.appCode,
+			BkAppSecret: c.appSecret,
+		},
+		BkUserName: c.bkUserName,
+	}, "")
+	if err != nil {
+		return err
+	}
+
 	start := time.Now()
 	_, _, errs := gorequest.New().
 		Timeout(defaultTimeOut).
 		Post(reqURL).
 		Set("Content-Type", "application/json").
 		Set("Accept", "application/json").
-		Set("X-Bkapi-Authorization", c.userAuth).
+		Set("X-Bkapi-Authorization", userAuth).
+		Set("X-Bk-Tenant-Id", tenant).
 		SetDebug(c.serverDebug).
 		Send(request).
 		EndStruct(&respData)

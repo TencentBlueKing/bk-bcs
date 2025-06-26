@@ -52,7 +52,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/cache"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/constant"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/audit"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clientset"
 	conf "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/etcd"
@@ -120,7 +120,6 @@ func (p *ProjectService) Init() error {
 		p.initDiscovery,
 		p.initClientGroup,
 		p.initJwtClient,
-		p.initPermClient,
 		p.initMicro,
 		p.initHttpService,
 		p.initNamespaceManager,
@@ -283,10 +282,12 @@ func (p *ProjectService) initJwtClient() error {
 	return auth.SetJwtClient()
 }
 
+/*
 func (p *ProjectService) initPermClient() error {
 	logging.Info("init perm client")
 	return auth.InitPermClient()
 }
+*/
 
 // initMicro init micro service
 // NOCC:golint/fnsize(设计如此)
@@ -346,7 +347,7 @@ func (p *ProjectService) initMicro() error {
 		}),
 		microSvc.AfterStop(func() error {
 			// close audit client
-			component.GetAuditClient().Close()
+			audit.GetAuditClient().Close()
 			return nil
 		}),
 		microSvc.WrapHandler(
@@ -361,6 +362,7 @@ func (p *ProjectService) initMicro() error {
 			wrapper.NewAuthLogWrapper,
 			authWrapper.AuthorizationFunc,
 			wrapper.NewAuditWrapper,
+			wrapper.CheckUserResourceTenantAttrFunc,
 			micro.NewTracingWrapper(),
 		),
 	)

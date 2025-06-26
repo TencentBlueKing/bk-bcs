@@ -14,6 +14,7 @@
 package alarm
 
 import (
+	"context"
 	"errors"
 	"time"
 )
@@ -21,7 +22,7 @@ import (
 // AlarmInterface for alarm
 type AlarmInterface interface { // nolint
 	// ShieldHostAlarmConfig shield host alarm
-	ShieldHostAlarmConfig(user string, config *ShieldHost) error
+	ShieldHostAlarmConfig(ctx context.Context, user string, config *ShieldHost) error
 	// Name client name
 	Name() string
 }

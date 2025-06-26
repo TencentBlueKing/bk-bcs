@@ -31,6 +31,7 @@ import (
 	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tenant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
@@ -320,11 +321,17 @@ func generateNodeGroupFromAsgAndAsc(group *proto.NodeGroup, cloudNodeGroup *tke.
 		group.Area.BkCloudName = cloudAreaName
 	*/
 
+	ctx, err := tenant.WithTenantIdByResourceForContext(context.Background(),
+		tenant.ResourceMetaData{ProjectId: group.ProjectID})
+	if err != nil {
+		blog.Errorf("generateNodeGroupFromAsgAndAsc[%s] WithTenantIdByResourceForContext failed: %v",
+			group.NodeGroupID, err)
+	}
 	if group.NodeTemplate != nil && group.NodeTemplate.Module != nil &&
 		len(group.NodeTemplate.Module.ScaleOutModuleID) != 0 {
 		bkBizID, _ := strconv.Atoi(bkBizIDString)
 		bkModuleID, _ := strconv.Atoi(group.NodeTemplate.Module.ScaleOutModuleID)
-		group.NodeTemplate.Module.ScaleOutModuleName = cloudprovider.GetModuleName(bkBizID, bkModuleID)
+		group.NodeTemplate.Module.ScaleOutModuleName = cloudprovider.GetModuleName(ctx, bkBizID, bkModuleID)
 	}
 	return generateNodeGroupFromAsc(group, cloudNodeGroup, asc)
 }

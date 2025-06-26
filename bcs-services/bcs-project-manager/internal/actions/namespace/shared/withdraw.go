@@ -17,7 +17,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/itsm"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/itsm/v2"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
@@ -36,7 +36,7 @@ func (a *SharedNamespaceAction) WithdrawNamespace(ctx context.Context,
 	if err != nil || authUser.GetUsername() != namespace.Creator {
 		return errorx.NewReadableErr(errorx.PermDeniedErr, "仅提单人能撤回")
 	}
-	if err := itsm.WithdrawTicket(authUser.Username, namespace.ItsmTicketSN); err != nil {
+	if err := v2.WithdrawTicket(ctx, authUser.Username, namespace.ItsmTicketSN); err != nil {
 		return err
 	}
 	return a.model.DeleteNamespace(ctx, namespace.ProjectCode, namespace.ClusterID, namespace.Name)

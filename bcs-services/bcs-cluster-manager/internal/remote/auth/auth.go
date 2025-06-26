@@ -24,7 +24,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/utils"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/types"
 )
 
 var (
@@ -71,7 +71,7 @@ type ClientAuth struct {
 }
 
 // GetAccessToken get application access token
-func (auth *ClientAuth) GetAccessToken(app utils.BkAppUser) (string, error) {
+func (auth *ClientAuth) GetAccessToken(app types.BkAppUser) (string, error) {
 	if options.GetEditionInfo().IsCommunicationEdition() || options.GetEditionInfo().IsEnterpriseEdition() {
 		return auth.GetAccessTokenBySsm(app)
 	}
@@ -80,7 +80,7 @@ func (auth *ClientAuth) GetAccessToken(app utils.BkAppUser) (string, error) {
 }
 
 // GetAccessTokenBySsm by ssm for Communication/EnterpriseEdition
-func (auth *ClientAuth) GetAccessTokenBySsm(app utils.BkAppUser) (string, error) {
+func (auth *ClientAuth) GetAccessTokenBySsm(app types.BkAppUser) (string, error) {
 	if auth == nil {
 		return "", errServerNotInit
 	}
@@ -131,7 +131,7 @@ func (auth *ClientAuth) GetAccessTokenBySsm(app utils.BkAppUser) (string, error)
 }
 
 // GetAccessTokenByGateWay get application accessToken for interEdition
-func (auth *ClientAuth) GetAccessTokenByGateWay(app utils.BkAppUser) (string, error) {
+func (auth *ClientAuth) GetAccessTokenByGateWay(app types.BkAppUser) (string, error) {
 	if auth == nil {
 		return "", errServerNotInit
 	}

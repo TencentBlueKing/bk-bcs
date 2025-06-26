@@ -10,10 +10,11 @@
  * limitations under the License.
  */
 
-// Package itsm xxx
-package itsm
+// Package v2 xxx
+package v2
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -21,6 +22,7 @@ import (
 	"github.com/parnurzeal/gorequest"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/bkuser"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
@@ -55,7 +57,7 @@ type CreateCatalogData struct {
 }
 
 // CreateCatalog 创建服务目录，返回目录ID
-func CreateCatalog(data CreateCatalogReq) (uint32, error) {
+func CreateCatalog(ctx context.Context, data CreateCatalogReq) (uint32, error) {
 	itsmConf := config.GlobalConf.ITSM
 	// 默认使用网关访问，如果为外部版，则使用ESB访问
 	host := itsmConf.GatewayHost
@@ -73,8 +75,16 @@ func CreateCatalog(data CreateCatalogReq) (uint32, error) {
 			"desc":        data.Desc,
 		},
 	}
+
+	// auth headers
+	headers, err := bkuser.GetAuthHeader(ctx)
+	if err != nil {
+		logging.Error("CreateCatalog get auth header failed, %s", err.Error())
+		return 0, errorx.NewRequestITSMErr(err.Error())
+	}
+
 	// 请求API
-	body, err := component.Request(req, timeout, "", component.GetAuthHeader())
+	body, err := component.Request(req, timeout, "", headers)
 	if err != nil {
 		logging.Error("request create itsm catalog %v failed, error: %s", data.Name, err.Error())
 		return 0, errorx.NewRequestITSMErr(err.Error())
@@ -115,7 +125,7 @@ type ListCatalogsResp struct {
 }
 
 // ListCatalogs 获取服务目录列表
-func ListCatalogs() ([]Catalog, error) {
+func ListCatalogs(ctx context.Context) ([]Catalog, error) {
 	itsmConf := config.GlobalConf.ITSM
 	// 默认使用网关访问，如果为外部版，则使用ESB访问
 	host := itsmConf.GatewayHost
@@ -127,8 +137,16 @@ func ListCatalogs() ([]Catalog, error) {
 		Url:    reqURL,
 		Method: "GET",
 	}
+
+	// auth headers
+	headers, err := bkuser.GetAuthHeader(ctx)
+	if err != nil {
+		logging.Error("ListCatalogs get auth header failed, %s", err.Error())
+		return nil, errorx.NewRequestITSMErr(err.Error())
+	}
+
 	// 请求API
-	body, err := component.Request(req, timeout, "", component.GetAuthHeader())
+	body, err := component.Request(req, timeout, "", headers)
 	if err != nil {
 		logging.Error("request get itsm catalogs failed, error: %s", err.Error())
 		return nil, errorx.NewRequestITSMErr(err.Error())

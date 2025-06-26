@@ -23,9 +23,11 @@ import (
 	spb "google.golang.org/protobuf/types/known/structpb"
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
+	authutils "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
 )
 
 // CheckUserPermAction action for user perm
@@ -80,8 +82,12 @@ func (check *CheckUserPermAction) transToPerms(allow bool, url string) map[strin
 }
 
 func (check *CheckUserPermAction) checkUserPermByActionID() error {
+	user := auth.GetAuthAndTenantInfoFromCtx(check.ctx)
 	allow, applyUrl, err := CheckUserPermByActionID(check.ctx, check.iam, UserActionPerm{
-		User:     check.req.PermCtx.GetOperator(),
+		User: authutils.UserInfo{
+			BkUserName: check.req.PermCtx.GetOperator(),
+			TenantId:   user.ResourceTenantId,
+		},
 		ActionID: check.req.GetActionID(),
 		RelatedPermResource: RelatedPermResource{
 			ProjectID:      check.req.PermCtx.GetProjectId(),

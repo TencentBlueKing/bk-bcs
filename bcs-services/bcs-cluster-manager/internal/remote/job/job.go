@@ -23,6 +23,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/utils"
 )
 
@@ -47,15 +48,14 @@ func GetJobClient() *Client {
 
 // Client for job
 type Client struct {
-	utils.CommonClient
+	types.CommonClient
 	bkUserName string
-	userAuth   string
 }
 
 // NewJobClient create job client
 func NewJobClient(options Options) (*Client, error) {
 	c := &Client{
-		CommonClient: utils.CommonClient{
+		CommonClient: types.CommonClient{
 			AppCode:   options.AppCode,
 			AppSecret: options.AppSecret,
 			Server:    options.Server,
@@ -63,18 +63,6 @@ func NewJobClient(options Options) (*Client, error) {
 		},
 		bkUserName: options.BKUserName,
 	}
-
-	auth, err := utils.BuildGateWayAuth(&utils.AuthInfo{
-		BkAppUser: utils.BkAppUser{
-			BkAppCode:   options.AppCode,
-			BkAppSecret: options.AppSecret,
-		},
-		BkUserName: options.BKUserName,
-	}, "")
-	if err != nil {
-		return nil, err
-	}
-	c.userAuth = auth
 
 	return c, nil
 }
@@ -86,20 +74,28 @@ func (c *Client) ExecuteScript(ctx context.Context, paras ExecuteScriptParas) (u
 		path = fmt.Sprintf("%s/api/v3/fast_execute_script/", c.Server)
 	)
 
-	if options.GetEditionInfo().IsCommunicationEdition() {
-		path = fmt.Sprintf("%s/api/c/compapi/v2/jobv3/fast_execute_script/", c.Server)
-	}
-
 	req := transToBkJobExecuteScriptReq(paras)
 	resp := &FastExecuteScriptRsp{}
 
+	userAuth, tenant, err := utils.GetGatewayAuthAndTenantInfo(ctx, &types.AuthInfo{
+		BkAppUser: types.BkAppUser{
+			BkAppCode:   c.AppCode,
+			BkAppSecret: c.AppSecret,
+		},
+		BkUserName: c.bkUserName,
+	}, "")
+	if err != nil {
+		return 0, err
+	}
+
 	start := time.Now()
 	_, _, errs := gorequest.New().
-		Timeout(utils.DefaultTimeOut).
+		Timeout(types.DefaultTimeOut).
 		Post(path).
 		Set("Content-Type", "application/json").
 		Set("Accept", "application/json").
-		Set("X-Bkapi-Authorization", c.userAuth).
+		Set("X-Bkapi-Authorization", userAuth).
+		Set("X-Bk-Tenant-Id", tenant).
 		SetDebug(c.Debug).
 		Send(req).
 		EndStruct(&resp)
@@ -127,22 +123,30 @@ func (c *Client) GetJobStatus(ctx context.Context, job JobInfo) (int, error) {
 		path = fmt.Sprintf("%s/api/v3/get_job_instance_status/", c.Server)
 	)
 
-	if options.GetEditionInfo().IsCommunicationEdition() {
-		path = fmt.Sprintf("%s/api/c/compapi/v2/jobv3/get_job_instance_status/", c.Server)
-	}
-
 	resp := &GetJobInstanceStatusRsp{}
+
+	userAuth, tenant, err := utils.GetGatewayAuthAndTenantInfo(ctx, &types.AuthInfo{
+		BkAppUser: types.BkAppUser{
+			BkAppCode:   c.AppCode,
+			BkAppSecret: c.AppSecret,
+		},
+		BkUserName: c.bkUserName,
+	}, "")
+	if err != nil {
+		return 0, err
+	}
 
 	start := time.Now()
 	_, _, errs := gorequest.New().
-		Timeout(utils.DefaultTimeOut).
+		Timeout(types.DefaultTimeOut).
 		Get(path).
 		Query(fmt.Sprintf("bk_scope_type=%s", string(Biz))).
 		Query(fmt.Sprintf("bk_scope_id=%s", job.BizID)).
 		Query(fmt.Sprintf("job_instance_id=%v", job.JobID)).
 		Set("Content-Type", "application/json").
 		Set("Accept", "application/json").
-		Set("X-Bkapi-Authorization", c.userAuth).
+		Set("X-Bkapi-Authorization", userAuth).
+		Set("X-Bk-Tenant-Id", tenant).
 		SetDebug(c.Debug).
 		EndStruct(&resp)
 	if len(errs) > 0 {

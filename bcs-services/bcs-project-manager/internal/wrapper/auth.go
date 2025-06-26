@@ -169,10 +169,10 @@ func (r *resourceID) check() error {
 }
 
 // CheckUserPerm implementation for CheckUserPerm interface
-func CheckUserPerm(ctx context.Context, req server.Request, username string) (bool, error) {
-	logging.Info("CheckUserPerm: method/%s, username: %s", req.Method(), username)
+func CheckUserPerm(ctx context.Context, req server.Request, user middleauth.AuthUser) (bool, error) {
+	logging.Info("CheckUserPerm: method/%s, user: %s/%s", req.Method(), user.GetTenantId(), user.GetUsername())
 
-	if len(username) == 0 {
+	if len(user.GetUsername()) == 0 {
 		return false, errorx.NewReadableErr(errorx.PermDeniedErr, "用户名为空")
 	}
 	body := req.Body()
@@ -197,7 +197,7 @@ func CheckUserPerm(ctx context.Context, req server.Request, username string) (bo
 		return false, errorx.NewReadableErr(errorx.PermDeniedErr, "校验用户权限失败, 该操作不支持用户态权限")
 	}
 
-	allow, url, resources, err := callIAM(ctx, username, action, *resourceID)
+	allow, url, resources, err := callIAM(ctx, user, action, *resourceID)
 	if err != nil {
 		return false, errorx.NewReadableErr(errorx.PermDeniedErr, "校验用户权限失败")
 	}
@@ -212,8 +212,7 @@ func CheckUserPerm(ctx context.Context, req server.Request, username string) (bo
 	return allow, nil
 }
 
-func callIAM(ctx context.Context, username, action string, resourceID resourceID) (
-	bool, string, []authutils.ResourceAction, error) {
+func callIAM(ctx context.Context, user middleauth.AuthUser, action string, resourceID resourceID) (bool, string, []authutils.ResourceAction, error) {
 	var isSharedCluster bool
 	if resourceID.ClusterID != "" {
 		cluster, err := clustermanager.GetCluster(ctx, resourceID.ClusterID)
@@ -223,29 +222,39 @@ func callIAM(ctx context.Context, username, action string, resourceID resourceID
 		}
 		isSharedCluster = cluster.GetIsShared() && cluster.GetProjectID() != resourceID.ProjectID
 	}
+
+	projectIam, err := auth.GetProjectIamClient(user.GetTenantId())
+	if err != nil {
+		return false, "", nil, errorx.NewReadableErr(errorx.PermDeniedErr, "校验用户权限失败")
+	}
+	namespaceIam, err := auth.GetNamespaceIamClient(user.GetTenantId())
+	if err != nil {
+		return false, "", nil, errorx.NewReadableErr(errorx.PermDeniedErr, "校验用户权限失败")
+	}
+
 	switch action {
 	case project.CanViewProjectOperation:
-		return auth.ProjectIamClient.CanViewProject(username, resourceID.ProjectID)
+		return projectIam.CanViewProject(user.GetUsername(), resourceID.ProjectID)
 	case project.CanCreateProjectOperation:
-		return auth.ProjectIamClient.CanCreateProject(username)
+		return projectIam.CanCreateProject(user.GetUsername())
 	case project.CanEditProjectOperation:
-		return auth.ProjectIamClient.CanEditProject(username, resourceID.ProjectID)
+		return projectIam.CanEditProject(user.GetUsername(), resourceID.ProjectID)
 	case project.CanDeleteProjectOperation:
-		return auth.ProjectIamClient.CanDeleteProject(username, resourceID.ProjectID)
+		return projectIam.CanDeleteProject(user.GetUsername(), resourceID.ProjectID)
 	case namespace.CanViewNamespaceOperation:
-		return auth.NamespaceIamClient.CanViewNamespace(username,
+		return namespaceIam.CanViewNamespace(user.GetUsername(),
 			resourceID.ProjectID, resourceID.ClusterID, resourceID.Namespace, isSharedCluster)
 	case namespace.CanListNamespaceOperation:
-		return auth.NamespaceIamClient.CanListNamespace(username,
+		return namespaceIam.CanListNamespace(user.GetUsername(),
 			resourceID.ProjectID, resourceID.ClusterID, isSharedCluster)
 	case namespace.CanCreateNamespaceOperation:
-		return auth.NamespaceIamClient.CanCreateNamespace(username,
+		return namespaceIam.CanCreateNamespace(user.GetUsername(),
 			resourceID.ProjectID, resourceID.ClusterID, isSharedCluster)
 	case namespace.CanUpdateNamespaceOperation:
-		return auth.NamespaceIamClient.CanUpdateNamespace(username,
+		return namespaceIam.CanUpdateNamespace(user.GetUsername(),
 			resourceID.ProjectID, resourceID.ClusterID, resourceID.Namespace, isSharedCluster)
 	case namespace.CanDeleteNamespaceOperation:
-		return auth.NamespaceIamClient.CanDeleteNamespace(username,
+		return namespaceIam.CanDeleteNamespace(user.GetUsername(),
 			resourceID.ProjectID, resourceID.ClusterID, resourceID.Namespace, isSharedCluster)
 	default:
 		return false, "", nil, errorx.NewReadableErr(errorx.PermDeniedErr, "校验用户权限失败")

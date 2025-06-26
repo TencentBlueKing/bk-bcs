@@ -162,12 +162,14 @@ func (n *NodeManager) ListOsImage(provider string, opt *cloudprovider.CommonOpti
 }
 
 // GetExternalNodeByIP get specified Node by innerIP address
-func (n *NodeManager) GetExternalNodeByIP(ip string, opt *cloudprovider.GetNodeOption) (*proto.Node, error) {
+func (n *NodeManager) GetExternalNodeByIP(ip string,
+	opt *cloudprovider.GetNodeOption) (*proto.Node, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
 // ListExternalNodesByIP list node by IP set
-func (n *NodeManager) ListExternalNodesByIP(ips []string, opt *cloudprovider.ListNodesOption) ([]*proto.Node, error) {
+func (n *NodeManager) ListExternalNodesByIP(ips []string,
+	opt *cloudprovider.ListNodesOption) ([]*proto.Node, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 

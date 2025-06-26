@@ -22,7 +22,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
+	// "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
@@ -44,7 +44,7 @@ type CreateAction struct {
 	req   *cmproto.CreateNodeTemplateRequest
 	resp  *cmproto.CreateNodeTemplateResponse
 
-	project *bcsproject.Project
+	project *project.Project
 }
 
 // NewCreateAction create nodeTemplate action

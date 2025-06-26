@@ -898,7 +898,7 @@ func (ua *AddNodesAction) validate() error {
 	}
 
 	// check operator host permission
-	canUse := CheckUseNodesPermForUser(ua.cluster.BusinessID, ua.req.Operator, ua.req.Nodes)
+	canUse := CheckUseNodesPermForUser(ua.cluster.ProjectID, ua.cluster.BusinessID, ua.req.Operator, ua.req.Nodes)
 	if !canUse {
 		errMsg := fmt.Errorf("add nodes failed: user[%s] no perm to use nodes[%v] in bizID[%s]",
 			ua.req.Operator, ua.req.Nodes, ua.cluster.BusinessID)

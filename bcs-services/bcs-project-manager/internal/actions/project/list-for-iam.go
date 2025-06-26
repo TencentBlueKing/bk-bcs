@@ -23,6 +23,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
 	pm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/tenant"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
 )
 
@@ -50,7 +51,8 @@ func (la *ListForIAMAction) Do(ctx context.Context, req *proto.ListProjectsForIA
 	if err != nil {
 		return nil, errorx.NewDBErr(err.Error())
 	}
-	spaces, err := bkmonitor.ListSpaces()
+
+	spaces, err := bkmonitor.ListSpaces(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -86,6 +88,11 @@ func (la *ListForIAMAction) listProjects() ([]*pm.Project, int64, error) {
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{
 		"kind": "k8s",
 	})
+	if tenant.IsMultiTenantEnabled() {
+		tenantCond := operator.NewLeafCondition(operator.Eq, operator.M{"tenantId": tenant.GetTenantIdFromContext(la.ctx)})
+		cond = operator.NewBranchCondition(operator.And, cond, tenantCond)
+	}
+
 	// 查询所有开启了容器服务的项目
 	projects, total, err := la.model.ListProjects(la.ctx, cond, &page.Pagination{All: true})
 	if err != nil {

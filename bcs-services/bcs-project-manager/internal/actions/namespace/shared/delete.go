@@ -18,7 +18,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/actions/namespace/independent"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/itsm"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/itsm/v2"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	nsm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/namespace"
@@ -43,7 +43,7 @@ func (a *SharedNamespaceAction) DeleteNamespace(ctx context.Context,
 		Name:        req.GetNamespace(),
 		Creator:     username,
 	}
-	itsmResp, err := itsm.SubmitDeleteNamespaceTicket(username,
+	itsmResp, err := v2.SubmitDeleteNamespaceTicket(ctx, username,
 		req.GetProjectCode(), req.GetClusterID(), req.GetNamespace())
 	if err != nil {
 		logging.Error("itsm create ticket failed, err: %s", err.Error())

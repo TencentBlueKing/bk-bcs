@@ -30,6 +30,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tenant"
 )
 
 // CreateCCEClusterTask call huawei interface to create cluster
@@ -807,19 +808,25 @@ func UpdateCreateClusterDBInfoTask(taskID string, stepName string) error {
 		return retErr
 	}
 
+	ctx, err = tenant.WithTenantIdByResourceForContext(ctx,
+		tenant.ResourceMetaData{ProjectId: dependInfo.Cluster.GetProjectID()})
+	if err != nil {
+		blog.Errorf("UpdateCreateClusterDBInfoTask[%s] WithTenantIdByResourceForContext failed: %s", taskID, err)
+	}
+
 	// update module name
 	bkBizID, _ := strconv.Atoi(dependInfo.Cluster.GetBusinessID())
 	if dependInfo.Cluster.GetClusterBasicSettings().GetModule().GetMasterModuleID() != "" {
 		bkModuleID, _ := strconv.Atoi(dependInfo.Cluster.GetClusterBasicSettings().GetModule().GetMasterModuleID())
 		dependInfo.Cluster.
 			GetClusterBasicSettings().
-			GetModule().MasterModuleName = cloudprovider.GetModuleName(bkBizID, bkModuleID)
+			GetModule().MasterModuleName = cloudprovider.GetModuleName(ctx, bkBizID, bkModuleID)
 	}
 	if dependInfo.Cluster.GetClusterBasicSettings().GetModule().GetWorkerModuleID() != "" {
 		bkModuleID, _ := strconv.Atoi(dependInfo.Cluster.GetClusterBasicSettings().GetModule().GetWorkerModuleID())
 		dependInfo.Cluster.
 			GetClusterBasicSettings().
-			GetModule().WorkerModuleName = cloudprovider.GetModuleName(bkBizID, bkModuleID)
+			GetModule().WorkerModuleName = cloudprovider.GetModuleName(ctx, bkBizID, bkModuleID)
 	}
 
 	// delete passwd
@@ -842,6 +849,12 @@ func UpdateCreateClusterDBInfoTask(taskID string, stepName string) error {
 	providerutils.SyncClusterInfoToPassCC(taskID, dependInfo.Cluster)
 
 	// sync cluster perms
+	ctx, err = tenant.WithTenantIdByResourceForContext(ctx, tenant.ResourceMetaData{
+		ProjectId:   dependInfo.Cluster.GetProjectID(),
+	})
+	if err != nil {
+		blog.Errorf("UpdateCreateClusterDBInfoTask WithTenantIdByResourceForContext failed: %v", err)
+	}
 	providerutils.AuthClusterResourceCreatorPerm(ctx, dependInfo.Cluster.ClusterID,
 		dependInfo.Cluster.ClusterName, dependInfo.Cluster.Creator)
 

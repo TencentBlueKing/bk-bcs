@@ -36,6 +36,7 @@ import (
 	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tenant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
@@ -607,10 +608,10 @@ func UpdateEKSNodesToDBTask(taskID string, stepName string) error {
 	}
 	// previous step successful when retry task
 	if step == nil {
-		blog.Infof("UpdateNodesToDBTask[%s]: current step[%s] successful and skip", taskID, stepName)
+		blog.Infof("UpdateEKSNodesToDBTask[%s]: current step[%s] successful and skip", taskID, stepName)
 		return nil
 	}
-	blog.Infof("UpdateNodesToDBTask[%s]: task %s run step %s, system: %s, old state: %s, params %v",
+	blog.Infof("UpdateEKSNodesToDBTask[%s]: task %s run step %s, system: %s, old state: %s, params %v",
 		taskID, taskID, stepName, step.System, step.Status, step.Params)
 
 	// step login started here
@@ -624,7 +625,7 @@ func UpdateEKSNodesToDBTask(taskID string, stepName string) error {
 		CloudID:   cloudID,
 	})
 	if err != nil {
-		blog.Errorf("UpdateNodesToDBTask[%s]: GetClusterDependBasicInfo for cluster %s in task %s "+
+		blog.Errorf("UpdateEKSNodesToDBTask[%s]: GetClusterDependBasicInfo for cluster %s in task %s "+
 			"step %s failed, %s", taskID, clusterID, taskID, stepName, err.Error())
 		retErr := fmt.Errorf("get cloud/project information failed, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
@@ -635,11 +636,18 @@ func UpdateEKSNodesToDBTask(taskID string, stepName string) error {
 	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
 	err = updateNodeToDB(ctx, state, dependInfo, nodeGroupIDs)
 	if err != nil {
-		blog.Errorf("UpdateNodesToDBTask[%s] checkNodesGroupStatus[%s] failed: %v",
+		blog.Errorf("UpdateEKSNodesToDBTask[%s] checkNodesGroupStatus[%s] failed: %v",
 			taskID, clusterID, err)
-		retErr := fmt.Errorf("UpdateNodesToDBTask[%s] timeout|abnormal", clusterID)
+		retErr := fmt.Errorf("UpdateEKSNodesToDBTask[%s] timeout|abnormal", clusterID)
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
+	}
+
+	ctx, err = tenant.WithTenantIdByResourceForContext(ctx, tenant.ResourceMetaData{
+		ProjectId:   dependInfo.Cluster.GetProjectID(),
+	})
+	if err != nil {
+		blog.Errorf("UpdateEKSNodesToDBTask WithTenantIdByResourceForContext failed: %v", err)
 	}
 
 	// sync cluster perms
@@ -648,7 +656,7 @@ func UpdateEKSNodesToDBTask(taskID string, stepName string) error {
 
 	// update step
 	if err = state.UpdateStepSucc(start, stepName); err != nil {
-		blog.Errorf("UpdateNodesToDBTask[%s] task %s %s update to storage fatal",
+		blog.Errorf("UpdateEKSNodesToDBTask[%s] task %s %s update to storage fatal",
 			taskID, taskID, stepName)
 		return err
 	}

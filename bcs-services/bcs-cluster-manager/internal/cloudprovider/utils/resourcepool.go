@@ -39,7 +39,7 @@ func CreateResourcePoolAction(ctx context.Context, data *cloudprovider.CloudDepe
 		return err
 	}
 
-	err = cloudprovider.UpdateNodeGroupCloudAndModuleInfo(data.NodeGroup.NodeGroupID, consumerID,
+	err = cloudprovider.UpdateNodeGroupCloudAndModuleInfo(ctx, data.NodeGroup.NodeGroupID, consumerID,
 		true, data.Cluster.BusinessID)
 	if err != nil {
 		blog.Errorf("createNodeGroupAction[%s] UpdateNodeGroupCloudAndModuleInfo failed: %v", taskID, err)

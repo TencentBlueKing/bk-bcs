@@ -17,7 +17,10 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
 	middleauth "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
+	"go-micro.dev/v4/metadata"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 )
 
@@ -48,8 +51,50 @@ func GetUserFromCtx(ctx context.Context) string {
 	return authUser.GetUsername()
 }
 
-// GetRealUserFromCtx 通过 ctx 判断当前用户是否是真实用户
-func GetRealUserFromCtx(ctx context.Context) string {
+// GetHeaderTenantIdFromCtx 通过 ctx 获取当前请求的租户信息
+func GetHeaderTenantIdFromCtx(ctx context.Context) string {
+	md, ok := metadata.FromContext(ctx)
+	if !ok {
+		return ""
+	}
+	tenantId, _ := md.Get(common.BkTenantIdHeaderKey)
+	return tenantId
+}
+
+// GetAuthUserInfoFromCtx 通过 ctx 获取当前用户信息
+func GetAuthUserInfoFromCtx(ctx context.Context) middleauth.AuthUser {
 	authUser, _ := middleauth.GetUserFromContext(ctx)
-	return authUser.Username
+	return authUser
+}
+
+// UserInfoCtx 用户信息
+type UserInfoCtx struct {
+	Username         string
+	TenantId         string
+	ResourceTenantId string
+}
+
+// GetAuthAndTenantInfoFromCtx 通过 ctx 获取当前用户和租户信息
+func GetAuthAndTenantInfoFromCtx(ctx context.Context) UserInfoCtx {
+	authUser := GetAuthUserInfoFromCtx(ctx)
+
+	user := UserInfoCtx{
+		Username:         authUser.GetUsername(),
+		TenantId:         authUser.GetTenantId(),
+		ResourceTenantId: authUser.GetTenantId(),
+	}
+
+	// 兼容跨租户场景，不在租户的人员可以获取其他租户的资源
+	if options.GetGlobalCMOptions().TenantConfig.EnableMultiTenantMode {
+		headerTenantId := GetHeaderTenantIdFromCtx(ctx)
+		if headerTenantId != "" {
+			user.ResourceTenantId = headerTenantId
+		}
+	}
+
+	if user.ResourceTenantId == "" {
+		user.ResourceTenantId = utils.DefaultTenantId
+	}
+
+	return user
 }

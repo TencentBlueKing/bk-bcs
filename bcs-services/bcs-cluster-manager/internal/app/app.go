@@ -40,7 +40,6 @@ import (
 	commonutil "github.com/Tencent/bk-bcs/bcs-common/common/util"
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/discovery"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/header"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/i18n"
@@ -76,6 +75,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/alarm/tmp"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/audit"
 	ssmAuth "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/auth"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/bk_user"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cache"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cmdb"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
@@ -413,6 +413,17 @@ func (cm *ClusterManager) initRemoteClient() error { // nolint
 		return err
 	}
 
+	// init bkUser client
+	err = bk_user.SetBkUserClient(bk_user.Options{
+		AppCode:   cm.opt.BkUser.AppCode,
+		AppSecret: cm.opt.BkUser.AppSecret,
+		Server:    cm.opt.BkUser.Server,
+		Debug:     cm.opt.BkUser.Debug,
+	})
+	if err != nil {
+		return err
+	}
+
 	// init encrypt client
 	err = encrypt.SetEncryptClient(cm.opt.Encrypt)
 	if err != nil {
@@ -469,31 +480,6 @@ func (cm *ClusterManager) initBKOpsClient() error {
 	return nil
 }
 
-// init iam client for perm
-func (cm *ClusterManager) initIAMClient() error {
-	var err error
-	cm.iamClient, err = iam.NewIamClient(&iam.Options{
-		SystemID:    cm.opt.IAM.SystemID,
-		AppCode:     cm.opt.IAM.AppCode,
-		AppSecret:   cm.opt.IAM.AppSecret,
-		External:    cm.opt.IAM.External,
-		GateWayHost: cm.opt.IAM.GatewayServer,
-		IAMHost:     cm.opt.IAM.IAMServer,
-		BkiIAMHost:  cm.opt.IAM.BkiIAMServer,
-		Metric:      cm.opt.IAM.Metric,
-		Debug:       cm.opt.IAM.Debug,
-	})
-
-	if err != nil {
-		return err
-	}
-
-	// init perm client
-	auth.InitPermClient(cm.iamClient)
-
-	return nil
-}
-
 // init jwt client for perm
 func (cm *ClusterManager) initJWTClient() error {
 	return auth.InitJWTClient(cm.opt)
@@ -505,28 +491,45 @@ func (cm *ClusterManager) initCache() error {
 	return nil
 }
 
-// init client permissions
-func (cm *ClusterManager) initClientPermissions() error {
+// initAuthConfig init auth config
+func (cm *ClusterManager) initAuthConfig() error {
 	auth.ClientPermissions = make(map[string][]string, 0)
-	if len(cm.opt.Auth.ClientPermissions) == 0 {
-		return nil
+	if len(cm.opt.Auth.ClientPermissions) != 0 {
+		err := json.Unmarshal([]byte(cm.opt.Auth.ClientPermissions), &auth.ClientPermissions)
+		if err != nil {
+			return fmt.Errorf("parse ClientPermissions error: %s", err.Error())
+		}
 	}
 
-	err := json.Unmarshal([]byte(cm.opt.Auth.ClientPermissions), &auth.ClientPermissions)
-	if err != nil {
-		return fmt.Errorf("parse ClientPermissions error: %s", err.Error())
-	}
-	return nil
-}
-
-// init no auth method
-func (cm *ClusterManager) initNoAuthMethod() error {
 	if len(cm.opt.Auth.NoAuthMethod) == 0 {
 		return nil
 	}
 
 	methods := strings.Split(cm.opt.Auth.NoAuthMethod, ",")
 	auth.NoAuthMethod = append(auth.NoAuthMethod, methods...)
+	return nil
+}
+
+// initTenantConfig init tenant config
+func (cm *ClusterManager) initTenantConfig() error {
+	if !cm.opt.TenantConfig.EnableMultiTenantMode {
+		return nil
+	}
+
+	auth.TenantClientWhiteList = make(map[string][]string, 0)
+	if len(cm.opt.TenantConfig.ClientExemptTenant) != 0 {
+		err := json.Unmarshal([]byte(cm.opt.TenantConfig.ClientExemptTenant), &auth.TenantClientWhiteList)
+		if err != nil {
+			return fmt.Errorf("parse ClientExemptTenant error: %s", err.Error())
+		}
+	}
+
+	if len(cm.opt.TenantConfig.NoCheckTenantMethod) == 0 {
+		return nil
+	}
+
+	methods := strings.Split(cm.opt.TenantConfig.NoCheckTenantMethod, ",")
+	auth.NoCheckTenantMethod = append(auth.NoCheckTenantMethod, methods...)
 	return nil
 }
 
@@ -728,9 +731,9 @@ func (cm *ClusterManager) initDiscovery() {
 		if !discovery.UseServiceDiscovery() {
 			cm.projectDisc = discovery.NewModuleDiscovery(cm.opt.ProjectManager.Module, cm.microRegistry)
 			blog.Infof("init discovery for project manager successfully")
-			bcsproject.SetClientConfig(cm.clientTLSConfig, cm.projectDisc)
+			project.SetClientConfig(cm.clientTLSConfig, cm.projectDisc)
 		} else {
-			bcsproject.SetClientConfig(cm.clientTLSConfig, nil)
+			project.SetClientConfig(cm.clientTLSConfig, nil)
 		}
 	}
 }
@@ -1033,6 +1036,7 @@ func (cm *ClusterManager) initMicro() error { // nolint
 			authWrapper.AuthorizationFunc,
 			utils.NewAuditWrapper,
 			micro.NewTracingWrapper(),
+			auth.CheckUserResourceTenantAttrFunc,
 		),
 	)
 	microService.Init()
@@ -1118,10 +1122,7 @@ func (cm *ClusterManager) Init() error {
 	}
 	// init kube operator
 	cm.initK8SOperator()
-	// init IAM client
-	if err := cm.initIAMClient(); err != nil {
-		return err
-	}
+
 	// init cache
 	if err := cm.initCache(); err != nil {
 		return err
@@ -1132,13 +1133,13 @@ func (cm *ClusterManager) Init() error {
 		return err
 	}
 
-	// init client permissions
-	if err := cm.initClientPermissions(); err != nil {
+	// init auth config
+	if err := cm.initAuthConfig(); err != nil {
 		return err
 	}
 
 	// init no auth methods
-	if err := cm.initNoAuthMethod(); err != nil {
+	if err := cm.initTenantConfig(); err != nil {
 		return err
 	}
 

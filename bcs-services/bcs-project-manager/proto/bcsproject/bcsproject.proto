@@ -206,6 +206,14 @@ message Project {
     title: "annotations",
     description: "project的注解配置"
   }];
+  string tenantID = 17[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "tenantID",
+    description: "项目所属租户ID"
+  }];
+  string tenantProjectCode = 18[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "tenantProjectCode",
+    description: "项目english_name,单租户下tenantProjectCode=projectCode,多租户下tenantProjectCode=租户ID+projectCode"
+  }];
 }
 
 message CreateProjectRequest {
@@ -871,6 +879,18 @@ service Namespace {
       summary : "创建命名空间itsm回调"
     };
   }
+
+  rpc CreateNamespaceCallbackV4(SharedClusterNamespaceCallbackRequest) returns (SharedClusterNamespaceCallbackResponse) {
+    option (google.api.http) = {
+      post : "/bcsproject/v1/projects/sharedclusters/namespaces/callback/create"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "创建共享集群命名空间itsm回调"
+      summary : "创建共享集群命名空间itsm回调"
+    };
+  }
+
   rpc UpdateNamespace(UpdateNamespaceRequest) returns (UpdateNamespaceResponse) {
     option (google.api.http) = {
       put : "/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}"
@@ -891,6 +911,17 @@ service Namespace {
       summary : "更新命名空间 ITSM 回调"
     };
   }
+  rpc UpdateNamespaceCallbackV4(SharedClusterNamespaceCallbackRequest) returns (SharedClusterNamespaceCallbackResponse) {
+    option (google.api.http) = {
+      post : "/bcsproject/v1/projects/sharedclusters/namespaces/callback/update"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "更新共享集群命名空间itsm回调"
+      summary : "更新共享集群命名空间itsm回调"
+    };
+  }
+
   rpc GetNamespace(GetNamespaceRequest) returns (GetNamespaceResponse) {
     option (google.api.http) = {
       get : "/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}"
@@ -928,6 +959,17 @@ service Namespace {
       summary : "删除命名空间 ITSM 回调"
     };
   }
+  rpc DeleteNamespaceCallbackV4(SharedClusterNamespaceCallbackRequest) returns (SharedClusterNamespaceCallbackResponse) {
+    option (google.api.http) = {
+      post : "/bcsproject/v1/projects/sharedclusters/namespaces/callback/delete"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "删除共享集群命名空间itsm回调"
+      summary : "删除共享集群命名空间itsm回调"
+    };
+  }
+
   rpc SyncNamespace(SyncNamespaceRequest) returns (SyncNamespaceResponse) {
     option (google.api.http) = {
       post : "/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/sync"
@@ -1185,6 +1227,82 @@ message NamespaceCallbackResponse {
   }];
   string data = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "data", 
+    description: "返回详细信息, 可以为空"
+  }];
+  string requestID = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "request id",
+    description: "请求 ID"
+  }];
+  bool result = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "回调结果"
+  }];
+}
+
+message SharedClusterNamespaceCallbackRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "SharedClusterNamespaceCallbackRequest"
+      description : "共享集群命名空间itsm回调"
+    }
+  };
+
+  string title = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "title",
+    description: "ITSM 单据标题"
+  }];
+  string id = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "id",
+    description: "ITSM 单号ID"
+  }];
+  string status = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "status",
+    description: "ITSM 单据状态"
+  }];
+  bool approveResult = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "approve_result",
+    description: "单据审批结果"
+  }];
+  string ticketUrl = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "frontend_url",
+    description: "ITSM 单据链接"
+  }];
+  NamespaceFormData formData = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "form_data",
+    description: "ITSM 单据数据"
+  }];
+}
+
+message NamespaceFormData {
+  string title = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "ticket__title",
+    description: "ITSM 单据标题"
+  }];
+  string projectCode = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "PROJECT_CODE",
+    description: "项目Code"
+  }];
+  string clusterId = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "CLUSTER_ID",
+    description: "集群Id"
+  }];
+  string namespace = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "NAMESPACE",
+    description: "命名空间"
+  }];
+}
+
+message SharedClusterNamespaceCallbackResponse {
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description: "返回错误码"
+  }];
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description: "返回错误信息"
+  }];
+  string data = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "data",
     description: "返回详细信息, 可以为空"
   }];
   string requestID = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {

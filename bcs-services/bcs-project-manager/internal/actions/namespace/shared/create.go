@@ -27,7 +27,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/actions/namespace/independent"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/envs"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clientset"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/itsm"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/itsm/v2"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	nsm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/namespace"
@@ -94,7 +94,8 @@ func (a *SharedNamespaceAction) CreateNamespace(ctx context.Context,
 		return err
 	}
 	// memoryLimits.Value() return unit is byte， needs to be converted to Gi (divide 2^30)
-	itsmResp, err := itsm.SubmitCreateNamespaceTicket(username, req.GetProjectCode(), req.GetClusterID(), req.GetName(),
+	// TODO ITSM 传入 tenantID
+	itsmResp, err := v2.SubmitCreateNamespaceTicket(ctx, username, req.GetProjectCode(), req.GetClusterID(), req.GetName(),
 		int(cpuLimits.Value()), int(memoryLimits.Value()/int64(math.Pow(2, 30))))
 	if err != nil {
 		logging.Error("itsm create ticket failed, err: %s", err.Error())

@@ -50,6 +50,57 @@ const (
 	NamespaceScopedDelete string = "namespace_scoped_delete"
 )
 
+// GetProjectIamClient project iam client
+func GetProjectIamClient(tenantId string) (*project.BCSProjectPerm, error) {
+	iamClient, err := initPermClient(tenantId)
+	if err != nil {
+		return nil, err
+	}
+
+	return project.NewBCSProjectPermClient(iamClient), nil
+}
+
+// GetNamespaceIamClient namespace iam client
+func GetNamespaceIamClient(tenantId string) (*namespace.BCSNamespacePerm, error) {
+	iamClient, err := initPermClient(tenantId)
+	if err != nil {
+		return nil, err
+	}
+
+	return namespace.NewBCSNamespacePermClient(iamClient), nil
+}
+
+// GetPermManagerIamClient perm manager client
+func GetPermManagerIamClient(tenantId string) (*manager.PermManager, error) {
+	iamClient, err := initPermClient(tenantId)
+	if err != nil {
+		return nil, err
+	}
+
+	return manager.NewBCSPermManagerClient(iamClient), nil
+}
+
+func initPermClient(tenantId string) (bcsIAM.PermClient, error) {
+	opts := &bcsIAM.Options{
+		SystemID:    bcsIAM.SystemIDBKBCS,
+		AppCode:     config.GlobalConf.App.Code,
+		AppSecret:   config.GlobalConf.App.Secret,
+		External:    !config.GlobalConf.IAM.UseGWHost,
+		GateWayHost: config.GlobalConf.IAM.GatewayHost,
+		IAMHost:     config.GlobalConf.IAM.IAMHost,
+		BkiIAMHost:  config.GlobalConf.IAM.BKPaaSHost,
+		Metric:      false,
+		Debug:       config.GlobalConf.IAM.Debug,
+		TenantId:    tenantId,
+	}
+	cli, err := bcsIAM.NewIamClient(opts)
+	if err != nil {
+		return nil, err
+	}
+
+	return cli, nil
+}
+
 var (
 	// ProjectIamClient iam client for project
 	ProjectIamClient *project.BCSProjectPerm
@@ -81,14 +132,3 @@ func InitPermClient() error {
 	PermManagerClient = manager.NewBCSPermManagerClient(cli)
 	return nil
 }
-
-const (
-	// CreateAction xxx
-	CreateAction = "create"
-	// ViewAction xxx
-	ViewAction = "view"
-	// UpdateAction xxx
-	UpdateAction = "update"
-	// DeleteAction xxx
-	DeleteAction = "delete"
-)

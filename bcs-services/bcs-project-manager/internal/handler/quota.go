@@ -35,8 +35,8 @@ func NewProjectQuota(model store.ProjectModel) *ProjectQuotaHandler {
 // CreateProjectQuota implement for CreateProjectQuota interface 申请项目维度的资源额度
 func (p *ProjectQuotaHandler) CreateProjectQuota(ctx context.Context,
 	req *proto.CreateProjectQuotaRequest, resp *proto.ProjectQuotaResponse) error {
-	ca := aquota.NewCreateQuotaAction(p.model)
 
+	ca := aquota.NewCreateQuotaAction(p.model)
 	e := ca.Do(ctx, req, resp)
 	if e != nil {
 		return e

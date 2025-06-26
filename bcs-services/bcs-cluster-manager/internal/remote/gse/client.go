@@ -14,6 +14,7 @@
 package gse
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -25,17 +26,18 @@ import (
 	"github.com/parnurzeal/gorequest"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/metrics"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tenant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
 // Interface for gse api
 type Interface interface {
 	// GetAgentStatusV1 get agent status for version 1
-	GetAgentStatusV1(req *GetAgentStatusReq) (*GetAgentStatusResp, error)
+	GetAgentStatusV1(ctx context.Context, req *GetAgentStatusReq) (*GetAgentStatusResp, error)
 	// GetAgentStatusV2 get agent status for version 2
-	GetAgentStatusV2(req *GetAgentStatusReqV2) (*GetAgentStatusRespV2, error)
+	GetAgentStatusV2(ctx context.Context, req *GetAgentStatusReqV2) (*GetAgentStatusRespV2, error)
 	// GetHostsGseAgentStatus get hosts agent status
-	GetHostsGseAgentStatus(supplyAccount string, hosts []Host) ([]HostAgentStatus, error)
+	GetHostsGseAgentStatus(ctx context.Context, supplyAccount string, hosts []Host) ([]HostAgentStatus, error)
 }
 
 // GseClient global gse client
@@ -136,7 +138,8 @@ func (c *Client) generateGateWayAuth() (string, error) {
 
 // GetHostsGseAgentStatus get host agent status
 // nolint
-func (c *Client) GetHostsGseAgentStatus(supplyAccount string, hosts []Host) ([]HostAgentStatus, error) {
+func (c *Client) GetHostsGseAgentStatus(ctx context.Context, supplyAccount string,
+	hosts []Host) ([]HostAgentStatus, error) {
 	if c == nil {
 		return nil, ErrServerNotInit
 	}
@@ -180,7 +183,7 @@ func (c *Client) GetHostsGseAgentStatus(supplyAccount string, hosts []Host) ([]H
 				agentIDs = append(agentIDs, hosts[i].AgentID)
 			}
 
-			resp, err := c.GetAgentStatusV2(&GetAgentStatusReqV2{AgentIDList: agentIDs})
+			resp, err := c.GetAgentStatusV2(ctx, &GetAgentStatusReqV2{AgentIDList: agentIDs})
 			if err != nil {
 				blog.Errorf("GetHostsGseAgentStatus %v failed, %s", supplyAccount, err.Error())
 				return
@@ -235,7 +238,7 @@ func (c *Client) GetHostsGseAgentStatus(supplyAccount string, hosts []Host) ([]H
 }
 
 // GetAgentStatusV2 get host agent status by agentID
-func (c *Client) GetAgentStatusV2(req *GetAgentStatusReqV2) (*GetAgentStatusRespV2, error) {
+func (c *Client) GetAgentStatusV2(ctx context.Context, req *GetAgentStatusReqV2) (*GetAgentStatusRespV2, error) {
 	if c == nil {
 		return nil, ErrServerNotInit
 	}
@@ -245,6 +248,8 @@ func (c *Client) GetAgentStatusV2(req *GetAgentStatusReqV2) (*GetAgentStatusResp
 		respData = &GetAgentStatusRespV2{}
 	)
 
+	tenantId := tenant.GetTenantIdFromContext(ctx)
+
 	start := time.Now()
 	_, _, errs := gorequest.New().
 		Timeout(defaultTimeOut).
@@ -252,6 +257,7 @@ func (c *Client) GetAgentStatusV2(req *GetAgentStatusReqV2) (*GetAgentStatusResp
 		Set("Content-Type", "application/json").
 		Set("Accept", "application/json").
 		Set("X-Bkapi-Authorization", c.userAuth).
+		Set("X-Bk-Tenant-Id", tenantId).
 		SetDebug(c.serverDebug).
 		Send(req).
 		EndStruct(&respData)
@@ -279,7 +285,7 @@ func (c *Client) GetAgentStatusV2(req *GetAgentStatusReqV2) (*GetAgentStatusResp
 }
 
 // GetAgentStatusV1 get host agent status by cloud:ip
-func (c *Client) GetAgentStatusV1(req *GetAgentStatusReq) (*GetAgentStatusResp, error) {
+func (c *Client) GetAgentStatusV1(ctx context.Context, req *GetAgentStatusReq) (*GetAgentStatusResp, error) {
 	if c == nil {
 		return nil, ErrServerNotInit
 	}

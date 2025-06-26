@@ -33,6 +33,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/template"
 	cutils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/utils"
 	intercommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tenant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
@@ -258,9 +259,17 @@ func (ng *NodeGroup) updateNormalNodePool(
 			return err
 		}
 	*/
+
+	ctx, err := tenant.WithTenantIdByResourceForContext(context.Background(), tenant.ResourceMetaData{
+		ProjectId: dependInfo.Cluster.ProjectID,
+	})
+	if err != nil {
+		return err
+	}
+
 	// update bkCloudName
 	if group.Area != nil {
-		group.Area.BkCloudName = cloudprovider.GetBKCloudName(int(group.Area.BkCloudID))
+		group.Area.BkCloudName = cloudprovider.GetBKCloudName(ctx, int(group.Area.BkCloudID))
 	}
 
 	// module info
@@ -268,7 +277,7 @@ func (ng *NodeGroup) updateNormalNodePool(
 		len(group.NodeTemplate.Module.ScaleOutModuleID) != 0 {
 		bkBizID, _ := strconv.Atoi(dependInfo.Cluster.BusinessID)
 		bkModuleID, _ := strconv.Atoi(group.NodeTemplate.Module.ScaleOutModuleID)
-		group.NodeTemplate.Module.ScaleOutModuleName = cloudprovider.GetModuleName(bkBizID, bkModuleID)
+		group.NodeTemplate.Module.ScaleOutModuleName = cloudprovider.GetModuleName(ctx, bkBizID, bkModuleID)
 	}
 
 	// update imageName
@@ -724,7 +733,14 @@ func (ng *NodeGroup) UpdateAutoScalingOption(scalingOption *proto.ClusterAutoSca
 		return nil, err
 	}
 
-	err = cloudprovider.UpdateAutoScalingOptionModuleInfo(scalingOption.ClusterID)
+	ctx, err := tenant.WithTenantIdByResourceForContext(context.Background(), tenant.ResourceMetaData{
+		ProjectId: scalingOption.ProjectID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	err = cloudprovider.UpdateAutoScalingOptionModuleInfo(ctx, scalingOption.ClusterID)
 	if err != nil {
 		blog.Errorf("UpdateAutoScalingOption update asOption moduleInfo failed: %v", err)
 		return nil, err

@@ -16,12 +16,13 @@ package steps
 import (
 	"context"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/tenant"
 	"time"
 
 	common_task "github.com/Tencent/bk-bcs/bcs-common/common/task"
 	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/itsm"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/itsm/v2"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/provider/utils"
 )
@@ -56,9 +57,24 @@ func (s itsmApproveStep) DoWork(task *types.Task) error {
 		return fmt.Errorf("itsmApproveStep[%s] get itsmSn failed", task.TaskID)
 	}
 
+	step, ok := task.GetStep(s.Alias())
+	if !ok {
+		return fmt.Errorf("task[%s] step[%s] not exist", task.GetTaskID(), s.GetName())
+	}
+	projectCode, ok := step.GetParam(utils.ProjectCodeKey.String())
+	if !ok {
+		return fmt.Errorf("task[%s] step[%s] project empty", task.GetTaskID(), s.GetName())
+	}
+
+	ctx, err := tenant.WithTenantIdByResourceForContext(context.Background(),
+		tenant.ResourceMetaData{ProjectCode: projectCode})
+	if err != nil {
+		return err
+	}
+
 	// 查询单据状态，当前不会超时。后续可根据默认超时时间取消该单据(30天等)
-	err := common_task.LoopDoFunc(context.Background(), func() error {
-		ticket, err := itsm.ListTicketsApprovalResult([]string{sn})
+	err = common_task.LoopDoFunc(context.Background(), func() error {
+		ticket, err := v2.ListTicketsApprovalResult(ctx, []string{sn})
 		if err != nil {
 			logging.Error("itsmApproveStep[%s] ListTicketsApprovalResult failed: %v", task.GetTaskID(), err)
 			return nil
@@ -68,15 +84,15 @@ func (s itsmApproveStep) DoWork(task *types.Task) error {
 			task.GetTaskID(), sn, ticket[0].CurrentStatus, ticket[0].ApprovalResult)
 		// RUNNING（处理中）/FINISHED（已结束）/TERMINATED（被终止）/ SUSPENDED（被挂起）
 		switch ticket[0].CurrentStatus {
-		case itsm.RUNNING:
+		case v2.RUNNING:
 			return nil
-		case itsm.FINISHED:
+		case v2.FINISHED:
 			if ticket[0].ApprovalResult {
 				return common_task.ErrEndLoop
 			}
 
 			return fmt.Errorf("ticket sn[%s] approval result is false", sn)
-		case itsm.SUSPENDED, itsm.TERMINATED, itsm.REVOKED:
+		case v2.SUSPENDED, v2.TERMINATED, v2.REVOKED:
 			return fmt.Errorf("ticket sn[%s] status[%s] is not expected", sn, ticket[0].CurrentStatus)
 		default:
 		}
@@ -98,5 +114,11 @@ func (s itsmApproveStep) DoWork(task *types.Task) error {
 // BuildStep build step
 func (s itsmApproveStep) BuildStep(kvs []common_task.KeyValue, opts ...types.StepOption) *types.Step {
 	step := types.NewStep(s.GetName(), s.Alias(), opts...)
+
+	// build step paras
+	for _, v := range kvs {
+		step.AddParam(v.Key.String(), v.Value)
+	}
+
 	return step
 }

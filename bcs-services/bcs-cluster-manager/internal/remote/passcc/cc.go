@@ -27,7 +27,7 @@ import (
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/auth"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/utils"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/types"
 	iutils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
@@ -350,12 +350,12 @@ func (cc *ClientConfig) getAccessToken(clientAuth *auth.ClientAuth) (string, err
 	)
 
 	if clientAuth != nil {
-		appToken, err = clientAuth.GetAccessToken(utils.BkAppUser{
+		appToken, err = clientAuth.GetAccessToken(types.BkAppUser{
 			BkAppCode:   cc.appCode,
 			BkAppSecret: cc.appSecret,
 		})
 	} else {
-		appToken, err = auth.GetAccessClient().GetAccessToken(utils.BkAppUser{
+		appToken, err = auth.GetAccessClient().GetAccessToken(types.BkAppUser{
 			BkAppCode:   cc.appCode,
 			BkAppSecret: cc.appSecret,
 		})
@@ -363,7 +363,7 @@ func (cc *ClientConfig) getAccessToken(clientAuth *auth.ClientAuth) (string, err
 	if err != nil {
 		return "", err
 	}
-	token := utils.BkAccessToken{AccessToken: appToken}
+	token := types.BkAccessToken{AccessToken: appToken}
 
 	tokenStr, _ := json.Marshal(token)
 	return string(tokenStr), nil

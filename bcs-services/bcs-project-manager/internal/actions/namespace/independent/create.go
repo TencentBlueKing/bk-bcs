@@ -47,7 +47,7 @@ func (c *IndependentNamespaceAction) CreateNamespace(ctx context.Context,
 		return errorx.NewClusterErr(err.Error())
 	}
 
-	if err := iam.GrantNamespaceCreatorActions(creator, req.GetClusterID(), req.GetName()); err != nil {
+	if err := iam.GrantNamespaceCreatorActions(ctx, creator, req.GetClusterID(), req.GetName()); err != nil {
 		logging.Error("grant namespace %s/%s for creator %s permission failed, err: %s",
 			req.GetClusterID(), req.GetName(), authUser.Username, err.Error())
 	}

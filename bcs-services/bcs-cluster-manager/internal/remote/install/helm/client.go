@@ -87,6 +87,7 @@ func (hm *HelmClient) GetHelmManagerClient() (helmmanager.HelmManagerClient, fun
 	if err != nil {
 		return nil, nil, err
 	}
+
 	return cli.HelmManagerClient, conn, nil
 }
 

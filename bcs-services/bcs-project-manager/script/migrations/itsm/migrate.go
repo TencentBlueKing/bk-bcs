@@ -22,7 +22,9 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/itsm"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/constant"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/headerkey"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/itsm/v2"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
@@ -39,7 +41,6 @@ var (
 
 // InitServices 初始化BCS相关流程服务
 func InitServices() error {
-
 	if err := initDB(); err != nil {
 		fmt.Printf("init db failed, err: %s\n", err.Error())
 		return err
@@ -72,26 +73,28 @@ func initDB() error {
 
 // InitNamespaceITSMServices 初始化命名空间相关流程服务
 func InitNamespaceITSMServices() error {
+	ctx := context.WithValue(context.TODO(), headerkey.TenantIdKey, constant.SystemTenantId)
+
 	// 2. create itsm catalog
-	catalogID, err := createITSMCatalog()
+	catalogID, err := createITSMCatalog(ctx)
 	if err != nil {
 		return err
 	}
 	// 3. import namespace services
-	if err := importCreateNamespaceService(catalogID); err != nil {
+	if err := importCreateNamespaceService(ctx, catalogID); err != nil {
 		return err
 	}
-	if err := importUpdateNamespaceService(catalogID); err != nil {
+	if err := importUpdateNamespaceService(ctx, catalogID); err != nil {
 		return err
 	}
-	if err := importDeleteNamespaceService(catalogID); err != nil {
+	if err := importDeleteNamespaceService(ctx, catalogID); err != nil {
 		return err
 	}
 	return nil
 }
 
-func createITSMCatalog() (uint32, error) {
-	catalogs, err := itsm.ListCatalogs()
+func createITSMCatalog(ctx context.Context) (uint32, error) {
+	catalogs, err := v2.ListCatalogs(ctx)
 	if err != nil {
 		return 0, err
 	}
@@ -117,7 +120,7 @@ func createITSMCatalog() (uint32, error) {
 		return 0, fmt.Errorf("root catalog not found")
 	}
 	if parentID == 0 {
-		parentID, err = itsm.CreateCatalog(itsm.CreateCatalogReq{
+		parentID, err = v2.CreateCatalog(ctx, v2.CreateCatalogReq{
 			ProjectKey: "0",
 			ParentID:   rootID,
 			Name:       "蓝鲸容器管理平台",
@@ -128,7 +131,7 @@ func createITSMCatalog() (uint32, error) {
 		}
 	}
 	// create namespace catalog
-	catalogID, err := itsm.CreateCatalog(itsm.CreateCatalogReq{
+	catalogID, err := v2.CreateCatalog(ctx, v2.CreateCatalogReq{
 		ProjectKey: "0",
 		ParentID:   parentID,
 		Name:       "命名空间",
@@ -140,10 +143,10 @@ func createITSMCatalog() (uint32, error) {
 	return catalogID, nil
 }
 
-func importCreateNamespaceService(catalogID uint32) error {
+func importCreateNamespaceService(ctx context.Context, catalogID uint32) error {
 	// check whether the service has been imported before
 	// if not, import it, else update it.
-	serviceID, err := getServiceIDByName(catalogID, cm.ConfigCreateNamespaceItsmServiceName)
+	serviceID, err := getServiceIDByName(ctx, catalogID, cm.ConfigCreateNamespaceItsmServiceName)
 	if err != nil {
 		return err
 	}
@@ -165,7 +168,7 @@ func importCreateNamespaceService(catalogID uint32) error {
 	if err = json.Unmarshal([]byte(stringBuffer.String()), &mp); err != nil {
 		return err
 	}
-	importReq := itsm.ImportServiceReq{
+	importReq := v2.ImportServiceReq{
 		Key:             "request",
 		Name:            cm.ConfigCreateNamespaceItsmServiceName,
 		Desc:            cm.ConfigCreateNamespaceItsmServiceName,
@@ -181,14 +184,14 @@ func importCreateNamespaceService(catalogID uint32) error {
 	}
 	if serviceID == 0 {
 		logging.Info("service(name: %s) not found in itsm, creating", cm.ConfigCreateNamespaceItsmServiceName)
-		serviceID, err = itsm.ImportService(importReq)
+		serviceID, err = v2.ImportService(ctx, importReq)
 		if err != nil {
 			return err
 		}
 	} else {
 		logging.Info("service(name: %s, id: %d) found in itsm, updating",
 			cm.ConfigCreateNamespaceItsmServiceName, serviceID)
-		err = itsm.UpdateService(itsm.UpdateServiceReq{
+		err = v2.UpdateService(ctx, v2.UpdateServiceReq{
 			ID:               serviceID,
 			ImportServiceReq: importReq,
 		})
@@ -200,10 +203,10 @@ func importCreateNamespaceService(catalogID uint32) error {
 		strconv.Itoa(serviceID))
 }
 
-func importUpdateNamespaceService(catalogID uint32) error {
+func importUpdateNamespaceService(ctx context.Context, catalogID uint32) error {
 	// check whether the service has been imported before
 	// if not, import it, else update it.
-	serviceID, err := getServiceIDByName(catalogID, cm.ConfigUpdateNamespaceItsmServiceName)
+	serviceID, err := getServiceIDByName(ctx, catalogID, cm.ConfigUpdateNamespaceItsmServiceName)
 	if err != nil {
 		return err
 	}
@@ -225,7 +228,7 @@ func importUpdateNamespaceService(catalogID uint32) error {
 	if err = json.Unmarshal([]byte(stringBuffer.String()), &mp); err != nil {
 		return err
 	}
-	importReq := itsm.ImportServiceReq{
+	importReq := v2.ImportServiceReq{
 		Key:             "request",
 		Name:            cm.ConfigUpdateNamespaceItsmServiceName,
 		Desc:            cm.ConfigUpdateNamespaceItsmServiceName,
@@ -241,14 +244,14 @@ func importUpdateNamespaceService(catalogID uint32) error {
 	}
 	if serviceID == 0 {
 		logging.Info("service(name: %s) not found in itsm, creating", cm.ConfigUpdateNamespaceItsmServiceName)
-		serviceID, err = itsm.ImportService(importReq)
+		serviceID, err = v2.ImportService(ctx, importReq)
 		if err != nil {
 			return err
 		}
 	} else {
 		logging.Info("service(name: %s, id: %d) found in itsm, updating",
 			cm.ConfigUpdateNamespaceItsmServiceName, serviceID)
-		err = itsm.UpdateService(itsm.UpdateServiceReq{
+		err = v2.UpdateService(ctx, v2.UpdateServiceReq{
 			ID:               serviceID,
 			ImportServiceReq: importReq,
 		})
@@ -260,10 +263,10 @@ func importUpdateNamespaceService(catalogID uint32) error {
 		strconv.Itoa(serviceID))
 }
 
-func importDeleteNamespaceService(catalogID uint32) error {
+func importDeleteNamespaceService(ctx context.Context, catalogID uint32) error {
 	// check whether the service has been imported before
 	// if not, import it, else update it.
-	serviceID, err := getServiceIDByName(catalogID, cm.ConfigDeleteNamespaceItsmServiceName)
+	serviceID, err := getServiceIDByName(ctx, catalogID, cm.ConfigDeleteNamespaceItsmServiceName)
 	if err != nil {
 		return err
 	}
@@ -285,7 +288,7 @@ func importDeleteNamespaceService(catalogID uint32) error {
 	if err = json.Unmarshal([]byte(stringBuffer.String()), &mp); err != nil {
 		return err
 	}
-	importReq := itsm.ImportServiceReq{
+	importReq := v2.ImportServiceReq{
 		Key:             "request",
 		Name:            cm.ConfigDeleteNamespaceItsmServiceName,
 		Desc:            cm.ConfigDeleteNamespaceItsmServiceName,
@@ -302,14 +305,14 @@ func importDeleteNamespaceService(catalogID uint32) error {
 
 	if serviceID == 0 {
 		logging.Info("service(name: %s) not found in itsm, creating", cm.ConfigDeleteNamespaceItsmServiceName)
-		serviceID, err = itsm.ImportService(importReq)
+		serviceID, err = v2.ImportService(ctx, importReq)
 		if err != nil {
 			return err
 		}
 	} else {
 		logging.Info("service(name: %s, id: %d) found in itsm, updating",
 			cm.ConfigDeleteNamespaceItsmServiceName, serviceID)
-		err = itsm.UpdateService(itsm.UpdateServiceReq{
+		err = v2.UpdateService(ctx, v2.UpdateServiceReq{
 			ID:               serviceID,
 			ImportServiceReq: importReq,
 		})
@@ -321,8 +324,8 @@ func importDeleteNamespaceService(catalogID uint32) error {
 		strconv.Itoa(serviceID))
 }
 
-func getServiceIDByName(catalogID uint32, name string) (int, error) {
-	services, err := itsm.ListServices(catalogID)
+func getServiceIDByName(ctx context.Context, catalogID uint32, name string) (int, error) {
+	services, err := v2.ListServices(ctx, catalogID)
 	if err != nil {
 		return 0, err
 	}

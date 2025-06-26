@@ -12,6 +12,7 @@
 package cmdb
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -37,7 +38,7 @@ func TestCheckMaintainer(t *testing.T) {
 	_, e := svcConfig.LoadConfig("../../../" + constant.DefaultConfigPath)
 	assert.Nil(t, e)
 	svcConfig.GlobalConf.CMDB.Host = ts.URL
-	isMaintainer, err := IsMaintainer(username, bizID)
+	isMaintainer, err := IsMaintainer(context.Background(), username, bizID)
 	assert.Nil(t, err)
 	assert.True(t, isMaintainer)
 }

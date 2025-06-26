@@ -22,7 +22,7 @@ import (
 	"go-micro.dev/v4/server"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/auth"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component"
+	audit_client "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/audit"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/contextx"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
 )
@@ -268,7 +268,7 @@ func addAudit(ctx context.Context, req server.Request, rsp interface{}, startTim
 	}
 
 	// add audit
-	auditAction := component.GetAuditClient().R()
+	auditAction := audit_client.GetAuditClient().R()
 	if act.ActivityType == audit.ActivityTypeView {
 		// 查看类型不用记录 activity
 		auditAction.DisableActivity()

@@ -77,6 +77,10 @@ clientActionExemptPerm:
   clientActions:
   - clientID: test
     all: true
+clientActionExemptTenant:
+  clientActions:
+  - clientID: test
+    all: true
 cmdb:
   bkSupplierAccount: "tencent"
   host: "http://localhost:80"
@@ -95,3 +99,8 @@ taskConfig:
   workerCnt: ""
 sharedClusterConfig:
   annoKeyProjCode: ""
+enableMultiTenant: false
+bkUser:
+  host: ""
+  timeout: 10
+  debug: false

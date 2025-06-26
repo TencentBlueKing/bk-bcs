@@ -14,6 +14,7 @@ package utils
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 )
@@ -36,4 +37,28 @@ func (a *Authentication) GetRequestMetadata(context.Context, ...string) (
 // transport security.
 func (a *Authentication) RequireTransportSecurity() bool {
 	return !a.Insecure
+}
+
+// NewTokenAuth implementations of grpc credentials interface
+func NewTokenAuth(t string) *GrpcTokenAuth {
+	return &GrpcTokenAuth{
+		Token: t,
+	}
+}
+
+// GrpcTokenAuth grpc token
+type GrpcTokenAuth struct {
+	Token string
+}
+
+// GetRequestMetadata convert http Authorization for grpc key
+func (t GrpcTokenAuth) GetRequestMetadata(ctx context.Context, in ...string) (map[string]string, error) {
+	return map[string]string{
+		"Authorization": fmt.Sprintf("Bearer %s", t.Token),
+	}, nil
+}
+
+// RequireTransportSecurity RequireTransportSecurity
+func (t GrpcTokenAuth) RequireTransportSecurity() bool {
+	return false
 }

@@ -24,6 +24,7 @@ import (
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
@@ -35,7 +36,6 @@ import (
 type ListAction struct {
 	ctx   context.Context
 	model store.ClusterManagerModel
-	iam   iam.PermClient
 
 	req              *cmproto.ListCloudAccountRequest
 	resp             *cmproto.ListCloudAccountResponse
@@ -46,7 +46,6 @@ type ListAction struct {
 func NewListAction(model store.ClusterManagerModel, iam iam.PermClient) *ListAction {
 	return &ListAction{
 		model: model,
-		iam:   iam,
 	}
 }
 
@@ -112,10 +111,12 @@ func (la *ListAction) getAccountListPerm(accountList []string) {
 		return
 	}
 
+	user := auth.GetAuthAndTenantInfoFromCtx(la.ctx)
 	if la.req.ProjectID != "" && la.req.Operator != "" {
-		v3Perm, err := GetProjectAccountsV3Perm(la.iam, actions.PermInfo{
+		v3Perm, err := GetProjectAccountsV3Perm(actions.PermInfo{
 			ProjectID: la.req.ProjectID,
 			UserID:    la.req.Operator,
+			TenantID:  user.ResourceTenantId,
 		}, accountList)
 		if err != nil {
 			blog.Errorf("listCluster GetProjectAccountsV3Perm failed: %v", err.Error())

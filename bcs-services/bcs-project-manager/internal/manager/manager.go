@@ -17,9 +17,10 @@ import (
 	"context"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/itsm"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/itsm/v2"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
 	nsm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/namespace"
 )
 
@@ -67,7 +68,18 @@ func (n *NamespaceManager) SyncNamespaceItsmStatus() {
 		snList = append(snList, namespace.ItsmTicketSN)
 		nsMap[namespace.ItsmTicketSN] = namespace
 	}
-	tickets, err := itsm.ListTickets(snList)
+	if len(snList) == 0 {
+		return
+	}
+
+	// 多租户暂时不处理itsm，待租户方案确认后续再处理
+	if config.GlobalConf.EnableMultiTenant {
+		logging.Info("skip sync namespace itsm status for multi tenant mode")
+		return
+	}
+
+	// TODO: 获取TenantID
+	tickets, err := v2.ListTickets(n.ctx, snList)
 	if err != nil {
 		logging.Error("list namespace itsm tickets %v failed, err: %s", snList, err.Error())
 		return

@@ -23,6 +23,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cloudaccount"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cluster"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/project"
 	authutils "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
 	"go-micro.dev/v4/server"
@@ -66,7 +67,7 @@ func SkipClient(ctx context.Context, req server.Request, client string) bool {
 	return false
 }
 
-// 资源 ID
+// resourceID 资源ID
 type resourceID struct {
 	ProjectID   string `json:"projectID,omitempty"`
 	ClusterID   string `json:"clusterID,omitempty"`
@@ -124,10 +125,10 @@ func checkResourceID(resourceID *resourceID) error {
 }
 
 // CheckUserPerm check user perm
-func CheckUserPerm(ctx context.Context, req server.Request, username string) (bool, error) {
-	blog.Infof("CheckUserPerm: method/%s, username: %s", req.Method(), username)
+func CheckUserPerm(ctx context.Context, req server.Request, user middleware.AuthUser) (bool, error) {
+	blog.Infof("CheckUserPerm: method/%s, user: %s/%s", req.Method(), user.GetTenantId(), user.GetUsername())
 
-	if len(username) == 0 {
+	if len(user.GetUsername()) == 0 {
 		return false, errors.New("username is empty")
 	}
 	body := req.Body()
@@ -136,8 +137,9 @@ func CheckUserPerm(ctx context.Context, req server.Request, username string) (bo
 		return false, err
 	}
 
-	resourceID := &resourceID{}
-	if err = json.Unmarshal(b, resourceID); err != nil {
+	// parse resource id
+	resource := &resourceID{}
+	if err = json.Unmarshal(b, resource); err != nil {
 		return false, err
 	}
 
@@ -147,16 +149,16 @@ func CheckUserPerm(ctx context.Context, req server.Request, username string) (bo
 	}
 
 	// check resourceID
-	if err = checkResourceID(resourceID); err != nil {
+	if err = checkResourceID(resource); err != nil {
 		return false, fmt.Errorf("auth failed: err %s", err.Error())
 	}
 
-	allow, url, resources, err := callIAM(username, action, *resourceID)
+	allow, url, resources, err := callIAM(user, action, *resource)
 	if err != nil {
 		return false, err
 	}
 
-	blog.Infof("CheckUserPerm user[%s] allow[%v] url[%s] resources[%+v]", username, allow, url, resources)
+	blog.Infof("CheckUserPerm user[%v] allow[%v] url[%s] resources[%+v]", user, allow, url, resources)
 	if !allow && url != "" && resources != nil {
 		return false, &authutils.PermDeniedError{
 			Perms: authutils.PermData{
@@ -169,30 +171,45 @@ func CheckUserPerm(ctx context.Context, req server.Request, username string) (bo
 	return allow, nil
 }
 
-func callIAM(username, action string, resourceID resourceID) (bool, string, []authutils.ResourceAction, error) {
-	// related actions
+func callIAM(user middleware.AuthUser, action string, resourceID resourceID) (bool, string, []authutils.ResourceAction, error) {
+	// Iam client
+	projectIam, err := GetProjectIamClient(user.GetTenantId())
+	if err != nil {
+		return false, "", nil, err
+	}
+	clusterIam, err := GetClusterIamClient(user.GetTenantId())
+	if err != nil {
+		return false, "", nil, err
+	}
+	cloudAccountIam, err := GetCloudAccountIamClient(user.GetTenantId())
+	if err != nil {
+		return false, "", nil, err
+	}
+
 	switch action {
 	case cluster.CanCreateClusterOperation:
-		return ClusterIamClient.CanCreateCluster(username, resourceID.ProjectID)
+		return clusterIam.CanCreateCluster(user.GetUsername(), resourceID.ProjectID)
 	case cluster.CanManageClusterOperation:
-		return ClusterIamClient.CanManageCluster(username, resourceID.ProjectID, resourceID.ClusterID)
+		return clusterIam.CanManageCluster(user.GetUsername(), resourceID.ProjectID, resourceID.ClusterID)
 	case cluster.CanViewClusterOperation:
-		return ClusterIamClient.CanViewCluster(username, resourceID.ProjectID, resourceID.ClusterID)
+		return clusterIam.CanViewCluster(user.GetUsername(), resourceID.ProjectID, resourceID.ClusterID)
 	case cluster.CanDeleteClusterOperation:
-		return ClusterIamClient.CanDeleteCluster(username, resourceID.ProjectID, resourceID.ClusterID)
+		return clusterIam.CanDeleteCluster(user.GetUsername(), resourceID.ProjectID, resourceID.ClusterID)
 	case project.CanCreateProjectOperation:
-		return ProjectIamClient.CanCreateProject(username)
+		return projectIam.CanCreateProject(user.GetUsername())
 	case project.CanEditProjectOperation:
-		return ProjectIamClient.CanEditProject(username, resourceID.ProjectID)
+		return projectIam.CanEditProject(user.GetUsername(), resourceID.ProjectID)
 	case project.CanViewProjectOperation:
-		return ProjectIamClient.CanViewProject(username, resourceID.ProjectID)
+		return projectIam.CanViewProject(user.GetUsername(), resourceID.ProjectID)
 	case project.CanDeleteProjectOperation:
-		return ProjectIamClient.CanDeleteProject(username, resourceID.ProjectID)
+		return projectIam.CanDeleteProject(user.GetUsername(), resourceID.ProjectID)
 	case cloudaccount.CanManageCloudAccountOperation:
-		allow, url, err := CloudAccountIamClient.CanManageCloudAccount(username, resourceID.ProjectID, resourceID.AccountID)
+		allow, url, err := cloudAccountIam.CanManageCloudAccount(user.GetUsername(),
+			resourceID.ProjectID, resourceID.AccountID)
 		return allow, url, nil, err
 	case cloudaccount.CanUseCloudAccountOperation:
-		allow, url, err := CloudAccountIamClient.CanUseCloudAccount(username, resourceID.ProjectID, resourceID.AccountID)
+		allow, url, err := cloudAccountIam.CanUseCloudAccount(user.GetUsername(),
+			resourceID.ProjectID, resourceID.AccountID)
 		return allow, url, nil, err
 	default:
 		return false, "", nil, errors.New("permission denied")

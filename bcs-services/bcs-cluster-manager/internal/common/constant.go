@@ -633,6 +633,12 @@ const (
 	ForwardedForHeaderKey = "X-Forwarded-For"
 	// UserAgentHeaderKey is the header name of User-Agent.
 	UserAgentHeaderKey = "Grpcgateway-User-Agent"
+	// BkTenantIdHeaderKey is the header name of X-Bk-Tenant-Id.
+	BkTenantIdHeaderKey = "X-Bk-Tenant-Id"
+	// BkSystemTenantId system tenant id
+	BkSystemTenantId = "system"
+	// BkDefaultTenantId default tenant id
+	BkDefaultTenantId = "default"
 )
 
 const (

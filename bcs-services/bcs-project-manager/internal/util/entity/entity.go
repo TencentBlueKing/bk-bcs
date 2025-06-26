@@ -26,3 +26,9 @@ func (m M) GetString(key string) string {
 	}
 	return ""
 }
+
+// KeyValue xxx
+type KeyValue struct {
+	Key   string
+	Value string
+}

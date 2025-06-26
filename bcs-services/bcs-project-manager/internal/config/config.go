@@ -144,6 +144,11 @@ type ClientActionExemptPermConfig struct {
 	ClientActions []ClientActionsConfig `yaml:"clientActions" usage:"exempt perm for client id action"`
 }
 
+// ClientActionExemptTenantConfig 非用户态跳过指定租户检验
+type ClientActionExemptTenantConfig struct {
+	ClientActions []ClientActionsConfig `yaml:"clientActions" usage:"exempt tenant check for client id action"`
+}
+
 // CMDBConfig 请求的 CMDB 服务配置
 type CMDBConfig struct {
 	BKSupplierAccount string `yaml:"bkSupplierAccount" usage:"developer account"`
@@ -152,6 +157,13 @@ type CMDBConfig struct {
 	Proxy             string `yaml:"proxy" usage:"proxy"`
 	BKUsername        string `yaml:"bkUsername" usage:"username to operate"`
 	Debug             bool   `yaml:"debug" usage:"debug"`
+}
+
+// BkUserConfig 蓝鲸用户管理
+type BkUserConfig struct {
+	Host    string `yaml:"host" usage:"bk user host"`
+	Timeout int    `yaml:"timeout" usage:"request bkuser api timeout"`
+	Debug   bool   `yaml:"debug" usage:"debug"`
 }
 
 // BCSCCConfig 请求的 bcs cc 服务配置
@@ -188,26 +200,29 @@ type SharedClusterConfig struct {
 
 // ProjectConfig 项目的配置信息
 type ProjectConfig struct {
-	Etcd                       EtcdConfig                   `yaml:"etcd"`
-	Mongo                      MongoConfig                  `yaml:"mongo"`
-	Log                        LogConfig                    `yaml:"log"`
-	Swagger                    SwaggerConfig                `yaml:"swagger"`
-	Server                     ServerConfig                 `yaml:"server"`
-	Client                     ClientConfig                 `yaml:"client"`
-	JWT                        JWTConfig                    `yaml:"jwt"`
-	IAM                        IAMConfig                    `yaml:"iam"`
-	ITSM                       ITSMConfig                   `yaml:"itsm"`
-	Bkmonitor                  BkMonitorConfig              `yaml:"bkmonitor"`
-	ClientActionExemptPerm     ClientActionExemptPermConfig `yaml:"clientActionExemptPerm"`
-	CMDB                       CMDBConfig                   `yaml:"cmdb"`
-	BCSCC                      BCSCCConfig                  `yaml:"bcscc"`
-	App                        AppConfig                    `yaml:"app"`
-	BcsGateway                 BCSGatewayConfig             `yaml:"bcsGateway"`
-	ListForIAM                 ListForIAMConfig             `yaml:"listForIAM"`
-	TracingConfig              conf.TracingConfig           `yaml:"tracingConfig"`
-	RestrictAuthorizedProjects bool                         `yaml:"restrictAuthorizedProjects"`
-	TaskConfig                 TaskConfig                   `yaml:"taskConfig"`
-	SharedClusterConfig        SharedClusterConfig          `yaml:"sharedClusterConfig"`
+	Etcd                       EtcdConfig                     `yaml:"etcd"`
+	Mongo                      MongoConfig                    `yaml:"mongo"`
+	Log                        LogConfig                      `yaml:"log"`
+	Swagger                    SwaggerConfig                  `yaml:"swagger"`
+	Server                     ServerConfig                   `yaml:"server"`
+	Client                     ClientConfig                   `yaml:"client"`
+	JWT                        JWTConfig                      `yaml:"jwt"`
+	IAM                        IAMConfig                      `yaml:"iam"`
+	ITSM                       ITSMConfig                     `yaml:"itsm"`
+	Bkmonitor                  BkMonitorConfig                `yaml:"bkmonitor"`
+	ClientActionExemptPerm     ClientActionExemptPermConfig   `yaml:"clientActionExemptPerm"`
+	ClientActionExemptTenant   ClientActionExemptTenantConfig `yaml:"clientActionExemptTenant"`
+	CMDB                       CMDBConfig                     `yaml:"cmdb"`
+	BCSCC                      BCSCCConfig                    `yaml:"bcscc"`
+	BkUser                     BkUserConfig                   `yaml:"bkUser"`
+	App                        AppConfig                      `yaml:"app"`
+	BcsGateway                 BCSGatewayConfig               `yaml:"bcsGateway"`
+	ListForIAM                 ListForIAMConfig               `yaml:"listForIAM"`
+	TracingConfig              conf.TracingConfig             `yaml:"tracingConfig"`
+	RestrictAuthorizedProjects bool                           `yaml:"restrictAuthorizedProjects"`
+	TaskConfig                 TaskConfig                     `yaml:"taskConfig"`
+	SharedClusterConfig        SharedClusterConfig            `yaml:"sharedClusterConfig"`
+	EnableMultiTenant          bool                           `yaml:"enableMultiTenant"`
 }
 
 func (conf *ProjectConfig) initServerAddress() {

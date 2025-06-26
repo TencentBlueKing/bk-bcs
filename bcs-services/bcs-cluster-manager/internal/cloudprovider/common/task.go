@@ -26,6 +26,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/template"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tenant"
 )
 
 // RegisterCommonActions register common actions
@@ -103,6 +104,10 @@ func RunBKsopsJob(taskID string, stepName string) error {
 	constants := step.Params[cloudprovider.BkSopsConstantsKey.String()]
 	taskName := state.Task.CommonParams[cloudprovider.TaskNameKey.String()]
 
+	// tenant relative info
+	projectId := state.Task.GetProjectID()
+	tenantId := state.Task.CommonParams[cloudprovider.TenantIdKey.String()]
+
 	if bizID == "" || operator == "" || templateID == "" || taskName == "" || constants == "" {
 		errMsg := fmt.Sprintf("RunBKsopsJob[%s] validateParameter task[%s] step[%s] failed", taskID, taskID, stepName)
 		blog.Errorf(errMsg)
@@ -131,6 +136,20 @@ func RunBKsopsJob(taskID string, stepName string) error {
 
 	// inject taskID
 	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
+	ctx, err = tenant.WithTenantIdByResourceForContext(ctx, tenant.ResourceMetaData{
+		ProjectId: projectId,
+		TenantId:  tenantId,
+	})
+	if err != nil {
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
+			fmt.Sprintf("withTenantIdByResourceForContext failed [%s]", err))
+		if step.GetSkipOnFailed() {
+			_ = state.SkipFailure(start, stepName, err)
+			return nil
+		}
+		_ = state.UpdateStepFailure(start, stepName, err)
+		return err
+	}
 
 	timeOutCtx, cancel := context.WithTimeout(ctx, time.Minute*60)
 	defer cancel()
@@ -220,7 +239,7 @@ func ExecBkSopsTask(ctx context.Context, paras CreateBkSopsTaskParas) (string, e
 	}
 
 	err = loop.LoopDoFunc(ctx, func() error {
-		data, errGet := BKOpsClient.GetTaskStatus(getTaskStatusReq, &StartTaskRequest{})
+		data, errGet := BKOpsClient.GetTaskStatus(ctx, getTaskStatusReq, &StartTaskRequest{})
 		if errGet != nil {
 			blog.Errorf("RunBKsopsJob[%s] execBkSopsTask GetTaskStatus failed: %v", taskID, errGet)
 			return nil
@@ -246,7 +265,7 @@ func ExecBkSopsTask(ctx context.Context, paras CreateBkSopsTaskParas) (string, e
 	if err != nil {
 		blog.Errorf("RunBKsopsJob[%s] execBkSopsTask failed: %v", taskID, err)
 		if errors.Is(err, context.DeadlineExceeded) {
-			errLocal := BKOpsClient.OperateBkOpsTask(getTaskStatusReq, &OperateTaskRequest{Action: Revoke.String()})
+			errLocal := BKOpsClient.OperateBkOpsTask(ctx, getTaskStatusReq, &OperateTaskRequest{Action: Revoke.String()})
 			if errLocal != nil {
 				blog.Errorf("RunBKsopsJob[%s] OperateBkOpsTask[%s:%s] failed: %v", taskID,
 					getTaskStatusReq.BkBizID, getTaskStatusReq.TaskID, errLocal)
@@ -301,7 +320,7 @@ func createBkSopsTask(ctx context.Context, paras CreateBkSopsTaskParas) (*ResDat
 	)
 
 	err = retry.Do(func() error {
-		resp, err = BKOpsClient.CreateBkOpsTask(pathParas, createTaskReq)
+		resp, err = BKOpsClient.CreateBkOpsTask(ctx, pathParas, createTaskReq)
 		if err != nil {
 			return err
 		}
@@ -328,7 +347,7 @@ func startBkSopsTask(ctx context.Context, paras startBkSopsTaskParas) error {
 	}
 
 	var err = retry.Do(func() error {
-		_, errStart := BKOpsClient.StartBkOpsTask(startTaskReq, &StartTaskRequest{})
+		_, errStart := BKOpsClient.StartBkOpsTask(ctx, startTaskReq, &StartTaskRequest{})
 		if errStart != nil {
 			return errStart
 		}
