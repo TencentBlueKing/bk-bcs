@@ -35,6 +35,7 @@ import (
 	autils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	provider "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/google/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/auth"
@@ -255,6 +256,25 @@ func CheckUseNodesPermForUser(businessID string, user string, nodes []string) bo
 		return false
 	}
 	return canUseHosts(bizID, user, nodes)
+}
+
+// checkUserHasPerm check user has perm
+func checkUserHasPerm(businessID string, user string) bool {
+	bizID, err := strconv.Atoi(businessID)
+	if err != nil {
+		errMsg := fmt.Errorf("strconv BusinessID to int failed: %v", err)
+		blog.Errorf(errMsg.Error())
+		return false
+	}
+
+	// query biz hosts
+	businessData, err := cmdb.GetCmdbClient().GetBusinessMaintainer(bizID)
+	if err != nil {
+		blog.Errorf("getUserHasPermHosts GetBusinessMaintainer failed: %v", err)
+		return false
+	}
+
+	return utils.StringInSlice(user, strings.Split(businessData.BKBizMaintainer, ","))
 }
 
 func canUseHosts(bizID int, user string, hostIPList []string) bool {
@@ -737,7 +757,7 @@ func IsSupportAutoScale(store store.ClusterManagerModel, cls *proto.Cluster) boo
 		return false
 	}
 
-	if cls.Provider == common.GcpCloudProvider && cls.ManageType == common.ClusterManageTypeManaged {
+	if cls.Provider == common.GcpCloudProvider && cls.ExtraInfo[api.GKEClusterType] == api.Autopilot {
 		return false
 	}
 
@@ -884,6 +904,7 @@ func getClusterNodes(model store.ClusterManagerModel, cls *proto.Cluster) ([]*pr
 	return cmNodes, nil
 }
 
+// getClusterNodes for get cluster nodes
 func getClusterMasterNodes(model store.ClusterManagerModel, cls *proto.Cluster) ([]*proto.ClusterNode, error) {
 	if cls == nil || len(cls.GetMaster()) == 0 {
 		return nil, fmt.Errorf("cluster %s master nodes empty", cls.ClusterID)
@@ -897,6 +918,7 @@ func getClusterMasterNodes(model store.ClusterManagerModel, cls *proto.Cluster) 
 	return cmNodes, nil
 }
 
+// getCmNodeIps for get cm node ips
 func getCmNodeIps(cmNodes []*proto.ClusterNode) []string {
 	var ips = make([]string, 0)
 	for i := range cmNodes {
@@ -910,7 +932,6 @@ func getCmNodeIps(cmNodes []*proto.ClusterNode) []string {
 
 // checkHighAvailabilityMasterNodes for check master node number and zoneID
 func checkHighAvailabilityMasterNodes(cls *proto.Cluster, cloud *proto.Cloud, nodes []*proto.Node) error {
-
 	clsMgr, err := cloudprovider.GetClusterMgr(cloud.GetCloudProvider())
 	if err != nil {
 		blog.Errorf("checkHighAvailabilityMasterNodes[%s] failed: %v", cls.ClusterID, err)
@@ -918,4 +939,34 @@ func checkHighAvailabilityMasterNodes(cls *proto.Cluster, cloud *proto.Cloud, no
 	}
 
 	return clsMgr.CheckHighAvailabilityMasterNodes(cls, nodes, &cloudprovider.CheckHaMasterNodesOption{Cloud: cloud})
+}
+
+// clusterToClusterBasicInfo for convert cluster to clusterBasicInfo
+func clusterToClusterBasicInfo(cluster *proto.Cluster) *proto.ClusterBasicInfo {
+	return &proto.ClusterBasicInfo{
+		ClusterID:       cluster.ClusterID,
+		ClusterName:     cluster.ClusterName,
+		Provider:        cluster.Provider,
+		Region:          cluster.Region,
+		VpcID:           cluster.VpcID,
+		ProjectID:       cluster.ProjectID,
+		BusinessID:      cluster.BusinessID,
+		Environment:     cluster.Environment,
+		EngineType:      cluster.EngineType,
+		ClusterType:     cluster.ClusterType,
+		Labels:          cluster.Labels,
+		Creator:         cluster.Creator,
+		CreateTime:      cluster.CreateTime,
+		UpdateTime:      cluster.UpdateTime,
+		SystemID:        cluster.SystemID,
+		ManageType:      cluster.ManageType,
+		Status:          cluster.Status,
+		Updater:         cluster.Updater,
+		NetworkType:     cluster.NetworkType,
+		ModuleID:        cluster.ModuleID,
+		IsCommonCluster: cluster.IsCommonCluster,
+		Description:     cluster.Description,
+		ClusterCategory: cluster.ClusterCategory,
+		IsShared:        cluster.IsShared,
+	}
 }

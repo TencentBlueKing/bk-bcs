@@ -30,12 +30,14 @@ type MeshManagerModel interface {
 	Create(ctx context.Context, mesh *entity.MeshIstio) error
 	// Update updates an existing mesh
 	Update(ctx context.Context, meshID string, mesh entity.M) error
+	// SoftDelete soft deletes a mesh by its ID
+	SoftDelete(ctx context.Context, meshID string) error
 	// Delete deletes a mesh by its ID
 	Delete(ctx context.Context, meshID string) error
 	// List queries a list of meshes based on conditions and options
 	List(ctx context.Context, cond *operator.Condition, opt *utils.ListOption) (int64, []*entity.MeshIstio, error)
 	// Get gets a mesh by its ID
-	Get(ctx context.Context, meshID string) (*entity.MeshIstio, error)
+	Get(ctx context.Context, cond *operator.Condition) (*entity.MeshIstio, error)
 }
 
 // modelSet implements MeshManagerModel by embedding ModelMesh

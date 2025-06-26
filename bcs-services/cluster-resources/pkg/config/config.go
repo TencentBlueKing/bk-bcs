@@ -361,6 +361,7 @@ type SharedClusterConf struct {
 
 // MultiClusterConf 多集群相关配置
 type MultiClusterConf struct {
+	AllApiResources              bool                 `yaml:"allApiResources"`
 	EnabledQueryFromStorageKinds []string             `yaml:"enabledQueryFromStorageKinds"`
 	EnabledCountKinds            []string             `yaml:"enabledCountKinds"`
 	BlacklistForAPIServerQuery   []ProjectClusterConf `yaml:"blacklistForAPIServerQuery"`

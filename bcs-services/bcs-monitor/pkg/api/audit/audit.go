@@ -25,6 +25,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bcs"
 	bkbase "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bk_base"
 	bklog "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bk_log"
+	bkmonitor "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bk_monitor"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/k8sclient"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest"
@@ -92,7 +93,7 @@ func EnableAudit(c context.Context, req *EnableAuditReq) (*any, error) {
 			EsShards:              1,
 			StorageReplies:        0,
 			AllocationMinDays:     0,
-			DataLinkID:            2, // 固定链路
+			DataLinkID:            config.G.BKBase.AuditDataLinkID,
 		})
 		if derr != nil {
 			return nil, derr
@@ -108,6 +109,12 @@ func EnableAudit(c context.Context, req *EnableAuditReq) (*any, error) {
 		if err != nil {
 			return nil, err
 		}
+	}
+
+	// get topic from bkmonitor
+	topic, err := bkmonitor.MetadataQueryDataSource(c, config.G.BKMonitor.MetadataURL, audit.DataID)
+	if err != nil {
+		return nil, err
 	}
 
 	// ensure BKLogConfig is created
@@ -131,6 +138,9 @@ func EnableAudit(c context.Context, req *EnableAuditReq) (*any, error) {
 					},
 				},
 				Path: []string{"/etc/kubernetes/*.audit"},
+				ExtMeta: map[string]string{
+					"bk_bcs_cluster_id": rctx.ClusterId,
+				},
 			},
 		})
 		if err != nil {
@@ -144,14 +154,15 @@ func EnableAudit(c context.Context, req *EnableAuditReq) (*any, error) {
 		}
 	}
 
-	// ensure bkbase data id is created
-	err = bkbase.EnsureDataID(c, audit.ClusterID, bizID, audit.DataID)
+	// ensure bkbase data id
+	err = bkbase.ApplyDataID(c, bkbase.GenDataIDName(audit.ClusterID), bizID, audit.DataID,
+		topic.MQConfig.StorageConfig.Topic)
 	if err != nil {
 		return nil, err
 	}
 
-	// ensure bkbase databus is created
-	err = bkbase.EnsureDatabus(c, audit.ClusterID)
+	// ensure bkbase databus
+	err = bkbase.ApplyDatabus(c, bkbase.GenDatabusName(audit.ClusterID), bkbase.GenDataIDName(audit.ClusterID))
 	if err != nil {
 		return nil, err
 	}

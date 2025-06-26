@@ -14,6 +14,7 @@ COPY go.sum go.sum
 COPY cmd/    cmd/
 COPY pkg/    pkg/
 COPY proto/  proto/
+COPY third_party/ third_party/
 COPY vendor/  vendor/
 
 # Build
@@ -27,4 +28,7 @@ RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -mod vendor -a 
 FROM tencentos/tencentos4-minimal
 ENV GODEBUG=x509sha1=1
 WORKDIR /root
+# copy swagger
+COPY --from=builder /go/src/github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/third_party/swagger-ui/* /data/bcs/swagger/
+COPY --from=builder /go/src/github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/proto/bcs-mesh-manager/bcs-mesh-manager.swagger.json /data/bcs/swagger/bcs-mesh-manager.swagger.json
 COPY --from=builder /go/src/github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/bcs-mesh-manager /usr/local/bin/bcs-mesh-manager

@@ -22,7 +22,6 @@ import (
 	"github.com/imdario/mergo"
 	"gopkg.in/yaml.v2"
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
 	pointer "k8s.io/utils/pointer"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/common"
@@ -31,11 +30,19 @@ import (
 
 const (
 	valuesFile = "values.yaml"
+	// OtelTracingName 全链路追踪的名称
+	OtelTracingName = "otel-tracing"
+	// OtelTracingPath 全链路追踪的path
+	OtelTracingPath = "/v1/traces"
+	// OtelTracingTimeout 全链路追踪的timeout
+	OtelTracingTimeout = "10s"
+	// OtelTracingHeader 全链路追踪的header
+	OtelTracingHeader = "X-BK-TOKEN"
 )
 
 // GetConfigChartValues 从配置文件中获取istio安装的values
 // path目录中包含了以chartVersion命名的文件夹，文件夹中包含了values.yaml文件
-// 例如：./config/sample/istio/1.20/values.yaml
+// 例如：./config/sample/istio/1.20/base-values.yaml
 // 如果chartVersion中包含了小版本，但是没有对应的文件夹（例如：1.20.1的文件夹），则可以从1.20的文件夹中获取values
 func GetConfigChartValues(chartValuesPath, component, chartVersion string) (string, error) {
 	blog.Infof("GetConfigChartValues chartValuesPath: %s, component: %s, chartVersion: %s",
@@ -158,6 +165,9 @@ func GenIstiodValues(
 			Enabled:       pointer.Bool(true),
 			InjectionPath: pointer.String(fmt.Sprintf("/inject/cluster/%s/net/%s", primaryClusterName, installOption.NetworkID)),
 		}
+		if installValues.Pilot == nil {
+			installValues.Pilot = &common.IstiodPilotConfig{}
+		}
 		installValues.Pilot.ConfigMap = pointer.Bool(false)
 		if installValues.Telemetry == nil {
 			installValues.Telemetry = &common.IstiodTelemetryConfig{}
@@ -168,17 +178,13 @@ func GenIstiodValues(
 		installValues.Global.OmitSidecarInjectorConfigMap = pointer.Bool(true)
 	}
 	// proxy resource
-	err = GenIstiodValuesBySidecarResource(installOption, installValues)
+	err = GenIstiodValuesBySidecarResource(installOption.SidecarResourceConfig, installValues)
 	if err != nil {
 		blog.Errorf("gen istiod values by sidecar resource failed: %s", err)
 		return "", err
 	}
 	// 填充feature的参数配置
-	err = GenIstiodValuesByFeature(installOption.FeatureConfigs, installValues)
-	if err != nil {
-		blog.Errorf("gen istiod values by feature failed: %s", err)
-		return "", err
-	}
+	GenIstiodValuesByFeature(installOption.FeatureConfigs, installValues)
 
 	// 填充observability的参数配置
 	err = GenIstiodValuesByObservability(installOption.Version, installOption.ObservabilityConfig, installValues)
@@ -191,12 +197,6 @@ func GenIstiodValues(
 	if err != nil {
 		blog.Errorf("gen istiod values by high availability failed: %s", err)
 		return "", err
-	}
-
-	var valuesMap map[string]interface{}
-	if yamlErr := yaml.Unmarshal([]byte(values), &valuesMap); yamlErr != nil {
-		blog.Errorf("unmarshal istiod values failed: %s", yamlErr)
-		return "", yamlErr
 	}
 	customValues, err := yaml.Marshal(installValues)
 	if err != nil {
@@ -214,45 +214,110 @@ func GenIstiodValues(
 	return mergedValues, nil
 }
 
-// GenIstiodValuesBySidecarResource 根据sidecarResourceConfig生成istiod的values
-func GenIstiodValuesBySidecarResource(
-	installOption *common.IstioInstallOption,
-	installValues *common.IstiodInstallValues,
+// setResourceRequirement 通用的资源设置函数
+func setResourceRequirement(
+	resources **common.ResourceConfig,
+	resourceType v1.ResourceName,
+	value string,
+	isLimit bool,
 ) error {
-	if installOption.SidecarResourceConfig != nil {
-		if installOption.SidecarResourceConfig.CpuRequest != "" {
-			if installValues.Global == nil {
-				installValues.Global = &common.IstiodGlobalConfig{}
-			}
-			if installValues.Global.Proxy == nil {
-				installValues.Global.Proxy = &common.IstioProxyConfig{}
-			}
-			if installOption.SidecarResourceConfig.CpuRequest != "" {
-				installValues.Global.Proxy.Resources.Requests[v1.ResourceCPU] =
-					resource.MustParse(installOption.SidecarResourceConfig.CpuRequest)
-			}
-			if installOption.SidecarResourceConfig.CpuLimit != "" {
-				installValues.Global.Proxy.Resources.Limits[v1.ResourceCPU] =
-					resource.MustParse(installOption.SidecarResourceConfig.CpuLimit)
-			}
-			if installOption.SidecarResourceConfig.MemoryRequest != "" {
-				installValues.Global.Proxy.Resources.Requests[v1.ResourceMemory] =
-					resource.MustParse(installOption.SidecarResourceConfig.MemoryRequest)
-			}
-			if installOption.SidecarResourceConfig.MemoryLimit != "" {
-				installValues.Global.Proxy.Resources.Limits[v1.ResourceMemory] =
-					resource.MustParse(installOption.SidecarResourceConfig.MemoryLimit)
-			}
+	if value == "" {
+		return nil
+	}
+
+	// 初始化 Resources 结构
+	if *resources == nil {
+		*resources = &common.ResourceConfig{}
+	}
+
+	// 设置对应的资源值
+	if isLimit {
+		if (*resources).Limits == nil {
+			(*resources).Limits = &common.ResourceLimits{}
+		}
+		switch resourceType {
+		case v1.ResourceCPU:
+			(*resources).Limits.CPU = pointer.String(value)
+		case v1.ResourceMemory:
+			(*resources).Limits.Memory = pointer.String(value)
+		}
+	} else {
+		if (*resources).Requests == nil {
+			(*resources).Requests = &common.ResourceRequests{}
+		}
+		switch resourceType {
+		case v1.ResourceCPU:
+			(*resources).Requests.CPU = pointer.String(value)
+		case v1.ResourceMemory:
+			(*resources).Requests.Memory = pointer.String(value)
 		}
 	}
+
 	return nil
+}
+
+// applyResourceConfig 应用资源配置到指定的 Resources 对象
+func applyResourceConfig(
+	resources **common.ResourceConfig,
+	resourceConfig *meshmanager.ResourceConfig,
+) error {
+	if resourceConfig == nil {
+		return nil
+	}
+
+	// 设置 CPU 请求
+	cpuRequest := resourceConfig.CpuRequest.GetValue()
+	if err := setResourceRequirement(resources, v1.ResourceCPU, cpuRequest, false); err != nil {
+		return err
+	}
+
+	// 设置 CPU 限制
+	cpuLimit := resourceConfig.CpuLimit.GetValue()
+	if err := setResourceRequirement(resources, v1.ResourceCPU, cpuLimit, true); err != nil {
+		return err
+	}
+
+	// 设置内存请求
+	memoryRequest := resourceConfig.MemoryRequest.GetValue()
+	if err := setResourceRequirement(resources, v1.ResourceMemory, memoryRequest, false); err != nil {
+		return err
+	}
+
+	// 设置内存限制
+	memoryLimit := resourceConfig.MemoryLimit.GetValue()
+	if err := setResourceRequirement(resources, v1.ResourceMemory, memoryLimit, true); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// GenIstiodValuesBySidecarResource 根据sidecarResourceConfig生成istiod的values
+func GenIstiodValuesBySidecarResource(
+	sidecarResourceConfig *meshmanager.ResourceConfig,
+	installValues *common.IstiodInstallValues,
+) error {
+	if sidecarResourceConfig == nil {
+		return nil
+	}
+
+	// 初始化 Global.Proxy 结构
+	if installValues.Global == nil {
+		installValues.Global = &common.IstiodGlobalConfig{}
+	}
+	if installValues.Global.Proxy == nil {
+		installValues.Global.Proxy = &common.IstioProxyConfig{}
+	}
+
+	// 使用通用函数应用资源配置
+	return applyResourceConfig(&installValues.Global.Proxy.Resources, sidecarResourceConfig)
 }
 
 // GenIstiodValuesByFeature 根据featureConfigs生成istiod的values
 func GenIstiodValuesByFeature(
 	featureConfigs map[string]*meshmanager.FeatureConfig,
 	installValues *common.IstiodInstallValues,
-) error {
+) {
 	for featureName, featureConfig := range featureConfigs {
 		switch featureName {
 		case common.FeatureOutboundTrafficPolicy:
@@ -266,9 +331,11 @@ func GenIstiodValuesByFeature(
 			if installValues.MeshConfig == nil {
 				installValues.MeshConfig = &common.IstiodMeshConfig{}
 			}
-			installValues.MeshConfig.DefaultConfig = &common.DefaultConfig{
-				HoldApplicationUntilProxyStarts: pointer.Bool(featureConfig.Value == "true"),
+			if installValues.MeshConfig.DefaultConfig == nil {
+				installValues.MeshConfig.DefaultConfig = &common.DefaultConfig{}
 			}
+			// nolint:lll
+			installValues.MeshConfig.DefaultConfig.HoldApplicationUntilProxyStarts = pointer.Bool(featureConfig.Value == common.StringTrue)
 		case common.FeatureExitOnZeroActiveConnections:
 			if installValues.MeshConfig == nil {
 				installValues.MeshConfig = &common.IstiodMeshConfig{}
@@ -276,9 +343,11 @@ func GenIstiodValuesByFeature(
 			if installValues.MeshConfig.DefaultConfig == nil {
 				installValues.MeshConfig.DefaultConfig = &common.DefaultConfig{}
 			}
-			installValues.MeshConfig.DefaultConfig.ProxyMetadata = &common.ProxyMetadata{
-				ExitOnZeroActiveConnections: pointer.Bool(featureConfig.Value == "true"),
+			if installValues.MeshConfig.DefaultConfig.ProxyMetadata == nil {
+				installValues.MeshConfig.DefaultConfig.ProxyMetadata = &common.ProxyMetadata{}
 			}
+			// nolint:lll
+			installValues.MeshConfig.DefaultConfig.ProxyMetadata.ExitOnZeroActiveConnections = pointer.Bool(featureConfig.Value == common.StringTrue)
 		case common.FeatureIstioMetaDnsCapture:
 			if installValues.MeshConfig == nil {
 				installValues.MeshConfig = &common.IstiodMeshConfig{}
@@ -289,7 +358,8 @@ func GenIstiodValuesByFeature(
 			if installValues.MeshConfig.DefaultConfig.ProxyMetadata == nil {
 				installValues.MeshConfig.DefaultConfig.ProxyMetadata = &common.ProxyMetadata{}
 			}
-			installValues.MeshConfig.DefaultConfig.ProxyMetadata.IstioMetaDnsCapture = pointer.String(featureConfig.Value)
+			installValues.MeshConfig.DefaultConfig.ProxyMetadata.IstioMetaDnsCapture =
+				pointer.String(featureConfig.Value)
 		case common.FeatureIstioMetaDnsAutoAllocate:
 			if installValues.MeshConfig == nil {
 				installValues.MeshConfig = &common.IstiodMeshConfig{}
@@ -300,7 +370,8 @@ func GenIstiodValuesByFeature(
 			if installValues.MeshConfig.DefaultConfig.ProxyMetadata == nil {
 				installValues.MeshConfig.DefaultConfig.ProxyMetadata = &common.ProxyMetadata{}
 			}
-			installValues.MeshConfig.DefaultConfig.ProxyMetadata.IstioMetaDnsAutoAllocate = pointer.String(featureConfig.Value)
+			installValues.MeshConfig.DefaultConfig.ProxyMetadata.IstioMetaDnsAutoAllocate =
+				pointer.String(featureConfig.Value)
 		case common.FeatureIstioMetaHttp10:
 			if installValues.Pilot == nil {
 				installValues.Pilot = &common.IstiodPilotConfig{}
@@ -308,7 +379,7 @@ func GenIstiodValuesByFeature(
 			if installValues.Pilot.Env == nil {
 				installValues.Pilot.Env = make(map[string]string)
 			}
-			installValues.Pilot.Env["PILOT_HTTP10"] = featureConfig.Value
+			installValues.Pilot.Env[common.EnvPilotHTTP10] = featureConfig.Value
 		case common.FeatureExcludeIPRanges:
 			if installValues.Global == nil {
 				installValues.Global = &common.IstiodGlobalConfig{}
@@ -319,7 +390,7 @@ func GenIstiodValuesByFeature(
 			installValues.Global.Proxy.ExcludeIPRanges = pointer.String(featureConfig.Value)
 		}
 	}
-	return nil
+
 }
 
 // GenIstiodValuesByObservability 根据observabilityConfig生成istiod的values
@@ -332,14 +403,19 @@ func GenIstiodValuesByObservability(
 		return nil
 	}
 	if observabilityConfig.LogCollectorConfig != nil {
+		if installValues.MeshConfig == nil {
+			installValues.MeshConfig = &common.IstiodMeshConfig{}
+		}
 		// 日志采集配置，如果启用则配置，否则清空
-		if observabilityConfig.LogCollectorConfig.Enabled {
+		if observabilityConfig.LogCollectorConfig.Enabled.GetValue() {
 			installValues.MeshConfig.AccessLogFile = pointer.String(common.AccessLogFileStdout)
-			if observabilityConfig.LogCollectorConfig.AccessLogFormat != "" {
-				installValues.MeshConfig.AccessLogFormat = &observabilityConfig.LogCollectorConfig.AccessLogFormat
+			if observabilityConfig.LogCollectorConfig.AccessLogFormat.GetValue() != "" {
+				installValues.MeshConfig.AccessLogFormat =
+					pointer.String(observabilityConfig.LogCollectorConfig.AccessLogFormat.GetValue())
 			}
-			if observabilityConfig.LogCollectorConfig.AccessLogEncoding != "" {
-				installValues.MeshConfig.AccessLogEncoding = &observabilityConfig.LogCollectorConfig.AccessLogEncoding
+			if observabilityConfig.LogCollectorConfig.AccessLogEncoding.GetValue() != "" {
+				installValues.MeshConfig.AccessLogEncoding =
+					pointer.String(observabilityConfig.LogCollectorConfig.AccessLogEncoding.GetValue())
 			}
 		} else {
 			installValues.MeshConfig.AccessLogFile = nil
@@ -361,6 +437,7 @@ func GenIstiodValuesByObservability(
 }
 
 // GenIstiodValuesByTracing 根据tracingConfig生成istiod的values
+// nolint:funlen
 func GenIstiodValuesByTracing(
 	istioVersion string,
 	tracingConfig *meshmanager.TracingConfig,
@@ -369,31 +446,98 @@ func GenIstiodValuesByTracing(
 	if tracingConfig == nil {
 		return nil
 	}
-	// istio 1.21以上版本通过Telemetry API
-	if IsVersionSupported(istioVersion, "1.21") {
-		// TODO: 通过Telemetry API生成istiod的values
-		blog.Warnf("istio version %s is supported by Telemetry API, please set tracing config by Telemetry API", istioVersion)
-		return nil
-	}
 
-	// 关闭全链路追踪
-	if !tracingConfig.Enabled {
-		installValues.MeshConfig.EnableTracing = pointer.Bool(false)
-		return nil
-	}
-	installValues.MeshConfig.EnableTracing = pointer.Bool(true)
-
-	// istio 1.21以下版本通过Zipkin生成istiod的values
 	if installValues.MeshConfig == nil {
 		installValues.MeshConfig = &common.IstiodMeshConfig{}
 	}
-	if installValues.MeshConfig.DefaultConfig == nil {
-		installValues.MeshConfig.DefaultConfig = &common.DefaultConfig{}
+
+	// istio 1.21以上版本通过Telemetry API
+	if IsVersionSupported(istioVersion, ">=1.21") {
+		if tracingConfig.Enabled.GetValue() {
+			// 设置传统的 enableTracing 字段，即使在新版本中也可能需要
+			installValues.MeshConfig.EnableTracing = pointer.Bool(true)
+
+			// 设置采样率
+			if tracingConfig.TraceSamplingPercent.GetValue() != 0 {
+				if installValues.Pilot == nil {
+					installValues.Pilot = &common.IstiodPilotConfig{}
+				}
+				installValues.Pilot.TraceSampling = pointer.Float64(float64(tracingConfig.TraceSamplingPercent.GetValue()) / 100)
+			}
+
+			if installValues.MeshConfig.ExtensionProviders == nil {
+				installValues.MeshConfig.ExtensionProviders = []*common.ExtensionProvider{}
+			}
+			// 解析endpoint获取service、port和path
+			service, port, path, err := ParseOpenTelemetryEndpoint(tracingConfig.Endpoint.GetValue())
+			if err != nil {
+				blog.Errorf("parse endpoint %s failed: %s", tracingConfig.Endpoint.GetValue(), err)
+				return err
+			}
+			if path == "" {
+				blog.Warnf("path is empty, use default path: %s, endpoint: %s", OtelTracingPath, tracingConfig.Endpoint.GetValue())
+				path = OtelTracingPath
+			}
+			installValues.MeshConfig.ExtensionProviders = append(installValues.MeshConfig.ExtensionProviders,
+				&common.ExtensionProvider{
+					Name: pointer.String(OtelTracingName),
+					OpenTelemetry: &common.OpenTelemetryConfig{
+						Service: pointer.String(service),
+						Port:    pointer.Int32(port),
+						Http: &common.OpenTelemetryHttpConfig{
+							Path:    pointer.String(path),
+							Timeout: pointer.String(OtelTracingTimeout),
+							Headers: map[string]string{
+								OtelTracingHeader: tracingConfig.BkToken.GetValue(),
+							},
+						},
+					},
+				})
+			blog.Infof("istio version %s is supported by Telemetry API, set tracing config by Telemetry API", istioVersion)
+			return nil
+		}
+		installValues.MeshConfig.EnableTracing = pointer.Bool(false)
+		installValues.MeshConfig.ExtensionProviders = nil
+		// 清理旧版本的 TracingConfig 配置（如果存在）
+		if installValues.MeshConfig.DefaultConfig != nil {
+			installValues.MeshConfig.DefaultConfig.TracingConfig = nil
+		}
+		// 清理 TraceSampling 配置
+		if installValues.Pilot != nil {
+			installValues.Pilot.TraceSampling = nil
+		}
+		return nil
 	}
-	installValues.MeshConfig.DefaultConfig.TracingConfig = &common.TracingConfig{
-		Zipkin: &common.ZipkinConfig{
-			Address: pointer.String(tracingConfig.Endpoint),
-		},
+	// istio 1.21以下版本通过Zipkin生成istiod的values
+	if tracingConfig.Enabled.GetValue() {
+		installValues.MeshConfig.EnableTracing = pointer.Bool(true)
+
+		if installValues.MeshConfig.DefaultConfig == nil {
+			installValues.MeshConfig.DefaultConfig = &common.DefaultConfig{}
+		}
+		installValues.MeshConfig.DefaultConfig.TracingConfig = &common.TracingConfig{
+			Zipkin: &common.ZipkinConfig{
+				Address: pointer.String(tracingConfig.Endpoint.GetValue()),
+			},
+		}
+		// 采样率
+		if tracingConfig.TraceSamplingPercent.GetValue() != 0 {
+			if installValues.Pilot == nil {
+				installValues.Pilot = &common.IstiodPilotConfig{}
+			}
+			installValues.Pilot.TraceSampling = pointer.Float64(float64(tracingConfig.TraceSamplingPercent.GetValue()) / 100)
+		}
+	} else {
+		// 关闭全链路追踪
+		installValues.MeshConfig.EnableTracing = pointer.Bool(false)
+		// 清理旧版本的 TracingConfig 配置
+		if installValues.MeshConfig.DefaultConfig != nil {
+			installValues.MeshConfig.DefaultConfig.TracingConfig = nil
+		}
+		// 清理 TraceSampling 配置
+		if installValues.Pilot != nil {
+			installValues.Pilot.TraceSampling = nil
+		}
 	}
 	return nil
 }
@@ -410,15 +554,15 @@ func GenIstiodValuesByHighAvailability(
 	if installValues.Pilot == nil {
 		installValues.Pilot = &common.IstiodPilotConfig{}
 	}
-	installValues.Pilot.ReplicaCount = pointer.Int32(highAvailability.ReplicaCount)
+	installValues.Pilot.ReplicaCount = pointer.Int32(highAvailability.ReplicaCount.GetValue())
 
 	// HPA
-	if highAvailability.AutoscaleEnabled {
+	if highAvailability.AutoscaleEnabled.GetValue() {
 		installValues.Pilot.AutoscaleEnabled = pointer.Bool(true)
-		installValues.Pilot.AutoscaleMin = pointer.Int32(highAvailability.AutoscaleMin)
-		installValues.Pilot.AutoscaleMax = pointer.Int32(highAvailability.AutoscaleMax)
+		installValues.Pilot.AutoscaleMin = pointer.Int32(highAvailability.AutoscaleMin.GetValue())
+		installValues.Pilot.AutoscaleMax = pointer.Int32(highAvailability.AutoscaleMax.GetValue())
 		installValues.Pilot.CPU = &common.HPACPUConfig{
-			TargetAverageUtilization: pointer.Int32(highAvailability.TargetCPUAverageUtilizationPercent),
+			TargetAverageUtilization: pointer.Int32(highAvailability.TargetCPUAverageUtilizationPercent.GetValue()),
 		}
 	} else {
 		installValues.Pilot.AutoscaleEnabled = pointer.Bool(false)
@@ -426,44 +570,27 @@ func GenIstiodValuesByHighAvailability(
 
 	// pilot资源设置
 	if highAvailability.ResourceConfig != nil {
-		if highAvailability.ResourceConfig.CpuRequest != "" {
-			if installValues.Pilot.Resources == nil {
-				installValues.Pilot.Resources = &v1.ResourceRequirements{}
-			}
-			installValues.Pilot.Resources.Requests[v1.ResourceCPU] =
-				resource.MustParse(highAvailability.ResourceConfig.CpuRequest)
-		}
-		if highAvailability.ResourceConfig.CpuLimit != "" {
-			if installValues.Pilot.Resources == nil {
-				installValues.Pilot.Resources = &v1.ResourceRequirements{}
-			}
-			installValues.Pilot.Resources.Limits[v1.ResourceCPU] =
-				resource.MustParse(highAvailability.ResourceConfig.CpuLimit)
-		}
-		if highAvailability.ResourceConfig.MemoryRequest != "" {
-			if installValues.Pilot.Resources == nil {
-				installValues.Pilot.Resources = &v1.ResourceRequirements{}
-			}
-			installValues.Pilot.Resources.Requests[v1.ResourceMemory] =
-				resource.MustParse(highAvailability.ResourceConfig.MemoryRequest)
-		}
-		if highAvailability.ResourceConfig.MemoryLimit != "" {
-			if installValues.Pilot.Resources == nil {
-				installValues.Pilot.Resources = &v1.ResourceRequirements{}
-			}
-			installValues.Pilot.Resources.Limits[v1.ResourceMemory] =
-				resource.MustParse(highAvailability.ResourceConfig.MemoryLimit)
+		// 使用通用函数应用资源配置
+		if err := applyResourceConfig(&installValues.Pilot.Resources, highAvailability.ResourceConfig); err != nil {
+			return err
 		}
 	}
 	// 专属节点
 	if highAvailability.DedicatedNode != nil {
-		if highAvailability.DedicatedNode.Enabled {
+		if highAvailability.DedicatedNode.Enabled.GetValue() {
 			if installValues.Pilot.NodeSelector == nil {
 				installValues.Pilot.NodeSelector = make(map[string]string)
 			}
 			for k, v := range highAvailability.DedicatedNode.NodeLabels {
 				installValues.Pilot.NodeSelector[k] = v
 			}
+			// 增加容忍, 所有节点
+			if installValues.Pilot.Tolerations == nil {
+				installValues.Pilot.Tolerations = make([]v1.Toleration, 0)
+			}
+			installValues.Pilot.Tolerations = append(installValues.Pilot.Tolerations, v1.Toleration{
+				Operator: v1.TolerationOpExists,
+			})
 		} else {
 			installValues.Pilot.NodeSelector = nil
 		}

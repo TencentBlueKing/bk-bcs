@@ -1,6 +1,7 @@
 import { ref } from 'vue';
 
 import { getDisktypes } from '@/api/modules/cluster-manager';
+import $i18n from '@/i18n/i18n-setup';
 
 export type Disk = {
   id: string;
@@ -16,7 +17,12 @@ export type DiskItem = {
 };
 
 // 不同组件共用
-export const diskMap = ref<Record<string, string>>({});
+export const diskMap = ref<Record<string, string>>({
+  CLOUD_PREMIUM: $i18n.t('cluster.ca.nodePool.create.instanceTypeConfig.diskType.premium'),
+  CLOUD_SSD: $i18n.t('cluster.ca.nodePool.create.instanceTypeConfig.diskType.ssd'),
+  CLOUD_HSSD: $i18n.t('cluster.ca.nodePool.create.instanceTypeConfig.diskType.hssd'),
+  CLOUD_BSSD: $i18n.t('cluster.ca.nodePool.create.instanceTypeConfig.diskType.bssd'), // 通用型SSD云硬盘
+});
 
 export function useDisk() {
   const isLoading = ref(false);

@@ -85,6 +85,11 @@ const props = defineProps({
     type: String as PropType<'Namespaced'|'Cluster'>,
     default: '',
   },
+  // CRD资源分两种，普通和定制，customized 用来区分普通和定制
+  customized: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const emits = defineEmits(['cancel', 'confirm']);
@@ -119,6 +124,8 @@ const handleCreateResource = () => {
       kind: props.kind,
       crd: props.crd,
       formUpdate: props.formUpdate,
+      scope: props.scope,
+      customized: props.customized,
     },
   });
 };

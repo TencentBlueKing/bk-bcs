@@ -4,9 +4,15 @@
     kind="GameStatefulSet"
     type="crd"
     category="custom_objects"
-    :crd="crd"
+    :crd="`${resource}.${group}`"
     default-active-detail-type="yaml"
     :show-detail-tab="false"
+    :crd-options="{
+      group: group,
+      version: version,
+      resource: resource,
+      namespaced: namespaced,
+    }"
     scope="Namespaced">
     <template
       #default="{
@@ -214,9 +220,21 @@ export default defineComponent({
   name: 'GameStatefulSets',
   components: { BaseLayout, StatusIcon, LoadingIcon, sourceTableCell },
   props: {
-    crd: {
+    group: {
       type: String,
-      default: 'gamestatefulsets.tkex.tencent.com',
+      default: 'tkex.tencent.com',
+    },
+    version: {
+      type: String,
+      default: 'v1alpha1',
+    },
+    resource: {
+      type: String,
+      default: 'gamestatefulsets',
+    },
+    namespaced: {
+      type: Boolean,
+      default: true,
     },
   },
 });

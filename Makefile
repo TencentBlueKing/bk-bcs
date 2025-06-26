@@ -349,6 +349,10 @@ helm-manager:pre tongsuo
 mesh-manager:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-mesh-manager
 	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-mesh-manager ${PACKAGEPATH}/bcs-services
+	# swagger files
+	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-mesh-manager/swagger
+	cp -R ${BCS_SERVICES_PATH}/bcs-mesh-manager/third_party/swagger-ui ${PACKAGEPATH}/bcs-services/bcs-mesh-manager/swagger/
+	cp ${BCS_SERVICES_PATH}/bcs-mesh-manager/proto/bcs-mesh-manager/bcs-mesh-manager.swagger.json ${PACKAGEPATH}/bcs-services/bcs-mesh-manager/swagger/swagger-ui/bcs-mesh-manager.swagger.json
 	cd bcs-services/bcs-mesh-manager/ && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-mesh-manager/bcs-mesh-manager cmd/mesh-manager/main.go
 
 nodegroup-manager:pre
@@ -395,6 +399,12 @@ terraform-bkprovider:
 monitor-controller:
 	mkdir -p ${SCENARIOSPACKAGE}/bcs-monitor-controller
 	cd bcs-scenarios/bcs-monitor-controller && make manager && cd -
+
+
+image-proxy:pre
+	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
+	cp -R ${BCS_CONF_COMPONENT_PATH}/bcs-image-proxy ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
+	cd ${BCS_COMPONENT_PATH}/bcs-image-proxy && go mod tidy && go mod vendor && $(CGO_BUILD_FLAGS) go build -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-image-proxy/bcs-image-proxy ./main.go
 
 test: test-bcs-runtime
 
