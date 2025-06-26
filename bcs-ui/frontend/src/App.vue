@@ -39,7 +39,7 @@ import { bus } from '@/common/bus';
 import { BCS_UI_PREFIX } from '@/common/constant';
 import AiAssistant from '@/components/assistant/ai-assistant.vue';
 import { Preset } from '@/components/assistant/use-assistant-store';
-import { AiSendMsgFnInjectKey, useAppData } from '@/composables/use-app';
+import { AiSendMsgFnInjectKey } from '@/composables/use-app';
 import useCalcHeight from '@/composables/use-calc-height';
 import usePlatform from '@/composables/use-platform';
 import PermDialog from '@/views/app/apply-perm.vue';
@@ -47,9 +47,7 @@ import BkPaaSLogin from '@/views/app/login.vue';
 import Navigation from '@/views/app/navigation.vue';
 
 
-const { getUserInfo } = useAppData();
 const { config, getPlatformInfo, setDocumentTitle, setShortcutIcon } = usePlatform();
-const isLoading = ref(false);
 const applyPermRef = ref<any>(null);
 const loginRef = ref<any>(null);
 
@@ -152,9 +150,6 @@ onMounted(async () => {
   setTimeout(() => {
     observerNoticeEl();
   });
-  isLoading.value = true;
-  await getUserInfo();
-  isLoading.value = false;
   setDocumentTitle(config.i18n);
   setShortcutIcon(config.favicon);
 });

@@ -32,7 +32,7 @@ export function useNamespace() {
     )
       .catch(() => ({ data: [], web_annotations: [] }));
     namespaceData.value = data;
-    webAnnotations.value = _webAnnotations;
+    webAnnotations.value = _webAnnotations || { perms: {} };
     namespaceLoading.value = false;
     return data;
   }

@@ -41,7 +41,9 @@
           prop="updater"
           show-overflow-tooltip>
           <template #default="{ row }">
-            {{ row.updater || '--' }}
+            <bk-user-display-name v-if="row.updater" :user-id="row.updater">
+            </bk-user-display-name>
+            <span v-else>--</span>
           </template>
         </bcs-table-column>
         <bcs-table-column :label="$t('updateRecord.label.createTime')" prop="createTime" width="180">

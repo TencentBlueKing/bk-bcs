@@ -380,11 +380,11 @@
           v-if="isColumnRender('container_count')">
           <template #default="{ row }">
             <template v-if="['RUNNING', 'REMOVABLE'].includes(row.status)">
-              <LoadingIcon v-if="!nodeMetric[row.nodeName]" class="justify-end">
+              <LoadingIcon v-if="!nodeMetric[row.nodeName] && overviewsLoading" class="justify-end">
                 {{ `${$t('generic.status.loading')}...` }}
               </LoadingIcon>
               <span v-else>
-                {{nodeMetric[row.nodeName].container_count || '--'}}
+                {{nodeMetric[row.nodeName]?.container_count || '--'}}
               </span>
             </template>
             <span v-else>--</span>
@@ -400,11 +400,11 @@
           v-if="isColumnRender('pod_count')">
           <template #default="{ row }">
             <template v-if="['RUNNING', 'REMOVABLE'].includes(row.status)">
-              <LoadingIcon v-if="!nodeMetric[row.nodeName]" class="justify-end">
+              <LoadingIcon v-if="!nodeMetric[row.nodeName] && overviewsLoading" class="justify-end">
                 {{ `${$t('generic.status.loading')}...` }}
               </LoadingIcon>
               <span v-else>
-                {{nodeMetric[row.nodeName].pod_count || '--'}}
+                {{nodeMetric[row.nodeName]?.pod_count || '--'}}
               </span>
             </template>
             <span v-else>--</span>
@@ -486,19 +486,19 @@
           min-width="120">
           <template #default="{ row }">
             <template v-if="['RUNNING', 'REMOVABLE'].includes(row.status)">
-              <LoadingIcon v-if="!nodeMetric[row.nodeName]" class="justify-center">
+              <LoadingIcon v-if="!nodeMetric[row.nodeName] && overviewsLoading" class="justify-center">
                 {{ `${$t('generic.status.loading')}...` }}
               </LoadingIcon>
               <template v-else>
                 <RingCell
-                  :percent="nodeMetric[row.nodeName][item.prop]"
+                  :percent="nodeMetric[row.nodeName]?.[item.prop]"
                   :fill-color="item.color"
                   :key="row.nodeName"
                   v-bk-tooltips="{
                     disabled: !item.percent,
-                    content: nodeMetric[row.nodeName][`${item.prop}_tips`]
+                    content: nodeMetric[row.nodeName]?.[`${item.prop}_tips`]
                   }"
-                  v-if="nodeMetric[row.nodeName] && nodeMetric[row.nodeName][item.prop]" />
+                  v-if="nodeMetric[row.nodeName] && nodeMetric[row.nodeName]?.[item.prop]" />
                 <span v-bk-tooltips="{ content: $t('generic.msg.error.data') }" v-else>--</span>
               </template>
             </template>
@@ -1978,10 +1978,12 @@ export default defineComponent({
       });
       return newData;
     };
+    const overviewsLoading = ref(false);
     const handleGetNodeOverview = async () => {
       const data = curPageData.value.filter(item => !nodeMetric.value[item.nodeName]
         && ['RUNNING', 'REMOVABLE'].includes(item.status));
       const nodes = data.map(item => item.nodeName) as string[];
+      overviewsLoading.value = true;
       const result = await getAllNodeOverview({
         clusterId: localClusterId.value,
         nodes,
@@ -1989,6 +1991,7 @@ export default defineComponent({
       Object.keys(result).forEach((key) => {
         set(nodeMetric.value, key, formatMetricData(result[key]));
       });
+      overviewsLoading.value = false;
     };
     watch(curPageData, async () => {
       await handleGetNodeOverview();
@@ -2189,6 +2192,7 @@ export default defineComponent({
       handleStepSkip,
       handleHidePodDrain,
       handleSuccess,
+      overviewsLoading,
     };
   },
 });

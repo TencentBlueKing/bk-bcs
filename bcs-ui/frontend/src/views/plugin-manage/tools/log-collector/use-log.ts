@@ -137,7 +137,14 @@ export default function useLog() {
 
   const ruleList = ref<IRuleData[]>([]);
   async function logCollectorRules(params: { $clusterId: string }) {
-    const data = await aliasLogCollectorRules(params).catch(() => []);
+    const data = await aliasLogCollectorRules(params)
+      .then((data) => {
+        if (Array.isArray(data)) {
+          return data;
+        }
+        return [];
+      })
+      .catch(() => []);
     const ruleMap = data.reduce((pre, item) => {
       pre[item.id] = item;
       return pre;
@@ -209,7 +216,14 @@ export default function useLog() {
   }
 
   async function getLogCollectorClusterGroups($clusterId: string) {
-    const data = await logCollectorClusterGroups({ $clusterId }).catch(() => []);
+    const data = await logCollectorClusterGroups({ $clusterId })
+      .then((data) => {
+        if (Array.isArray(data)) {
+          return data;
+        }
+        return [];
+      })
+      .catch(() => []);
     return data as IClusterGroup[];
   }
 

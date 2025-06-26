@@ -9,7 +9,8 @@ replace (
 )
 
 require (
-	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20250520122750-18307f64fb0c
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20241212023042-2c0651f4eded
+	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20240418123107-72b120390195
 	github.com/dustin/go-humanize v1.0.0
 	github.com/go-chi/chi/v5 v5.0.8
 	github.com/go-chi/render v1.0.2

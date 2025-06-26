@@ -105,11 +105,13 @@
       <bcs-table-column :label="$t('k8s.namespace')" prop="namespace" show-overflow-tooltip></bcs-table-column>
       <bcs-table-column :label="$t('generic.label.updator')" prop="updateBy" width="130">
         <template #default="{ row }">
-          {{ row.updateBy || '--' }}
+          <bk-user-display-name v-if="row.updateBy" :user-id="row.updateBy">
+          </bk-user-display-name>
+          <span v-else>--</span>
         </template>
       </bcs-table-column>
       <bcs-table-column :label="$t('cluster.labels.updatedAt')" prop="updateTime" width="200"></bcs-table-column>
-      <bcs-table-column :label="$t('generic.label.action')" width="200">
+      <bcs-table-column :label="$t('generic.label.action')" width="220" fixed="right">
         <template #default="{ row }">
           <bcs-button
             text
@@ -176,6 +178,7 @@
                   {{$t('generic.button.update')}}
                 </li>
                 <li
+                  v-if="row.revision !== 0 "
                   class="bcs-dropdown-item"
                   v-authority="{
                     clickable: webAnnotationsPerms[row.iamNamespaceID]

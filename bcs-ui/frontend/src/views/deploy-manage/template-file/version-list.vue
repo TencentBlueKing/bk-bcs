@@ -33,7 +33,9 @@
       </bcs-table-column>
       <bcs-table-column :label="$t('generic.label.updator')" prop="creator">
         <template #default="{ row }">
-          {{ row.creator || '--' }}
+          <bk-user-display-name v-if="row.creator" :user-id="row.creator">
+          </bk-user-display-name>
+          <span v-else>--</span>
         </template>
       </bcs-table-column>
       <bcs-table-column :label="$t('generic.label.updatedAt')" prop="createAt">
@@ -41,7 +43,7 @@
           {{ formatTime(row.createAt * 1000, 'yyyy-MM-dd hh:mm:ss') }}
         </template>
       </bcs-table-column>
-      <bcs-table-column :label="$t('generic.label.action')" width="120">
+      <bcs-table-column :label="$t('generic.label.action')" width="140" fixed="right">
         <template #default="{ row }">
           <bcs-button
             text

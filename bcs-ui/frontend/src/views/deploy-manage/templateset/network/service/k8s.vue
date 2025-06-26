@@ -499,7 +499,11 @@
             </div>
             <div class="data-item">
               <p class="key">{{$t('generic.label.updator')}}：</p>
-              <p class="value">{{curService.updator ? curService.updator : '--'}}</p>
+              <p class="value">
+                <bk-user-display-name v-if="curService?.updator" :user-id="curService?.updator">
+                </bk-user-display-name>
+                <span v-else>--</span>
+              </p>
             </div>
             <div class="data-item">
               <p class="key">{{$t('deploy.templateset.sources')}}：</p>

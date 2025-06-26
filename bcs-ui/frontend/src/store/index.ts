@@ -66,7 +66,7 @@ if (['zh-CN', 'zh-cn', 'cn', 'zhCN', 'zhcn'].indexOf(lang) > -1) {
   lang = 'en-US';
 }
 
-type FeatureFlagKey = MenuID | 'k8s' | 'VCLUSTER' | 'BKAI' | 'IMPORTSOPSCLUSTER' | 'FEDERATION';
+type FeatureFlagKey = MenuID | 'k8s' | 'VCLUSTER' | 'BKAI' | 'IMPORTSOPSCLUSTER' | 'FEDERATION' | 'EnableMultiTenantMode';
 
 const store = new Vuex.Store<{
   featureFlags: Record<FeatureFlagKey, boolean>
@@ -75,7 +75,8 @@ const store = new Vuex.Store<{
   curNav: IMenu | Record<string, any>
   curNamespace: string
   user: {
-    username: string
+    username: string,
+    tenant_id: string,
   }
   openSideMenu: boolean
   isEn: boolean

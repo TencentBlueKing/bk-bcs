@@ -23,7 +23,9 @@
           @click="changeMode('yaml')">{{ $t('templateFile.button.yamlMode') }}</bk-button>
       </div>
       <div>{{ $t('templateFile.tag.latestUpdate') + ' : ' }}
-        {{ fileMetadata?.updator }}
+        <bk-user-display-name v-if="fileMetadata?.updator" :user-id="fileMetadata?.updator">
+        </bk-user-display-name>
+        <span v-else>--</span>
         {{ (fileMetadata?.updateAt && formatTime(fileMetadata.updateAt * 1000, 'yyyy-MM-dd hh:mm:ss')) || '--' }}</div>
     </template>
     <!-- 表单模式 & 源码模式 -->

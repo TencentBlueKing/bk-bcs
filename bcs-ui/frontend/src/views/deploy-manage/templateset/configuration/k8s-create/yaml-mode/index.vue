@@ -503,7 +503,11 @@
                                     </bcs-popover>
                                 </td>
                                 <td>{{versionData.updated}}</td>
-                                <td>{{versionData.updator}}</td>
+                                <td>
+                                    <bk-user-display-name v-if="versionData?.updator" :user-id="versionData?.updator">
+                                    </bk-user-display-name>
+                                    <span v-else>--</span>
+                                </td>
                                 <td>
                                     <a href="javascript:void(0);" class="bk-text-button" @click.stop.prevent="getTemplateByVersion(versionData.show_version_id)">{{$t('deploy.templateset.load')}}</a>
                                     <a href="javascript:void(0);" class="bk-text-button" @click.stop.prevent="exportTemplateByVersion(versionData.show_version_id)">{{$t('deploy.templateset.export')}}</a>

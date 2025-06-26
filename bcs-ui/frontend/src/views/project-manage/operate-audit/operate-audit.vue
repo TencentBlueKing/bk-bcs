@@ -80,7 +80,12 @@
               {{row.activityStatus}}
             </template>
           </bk-table-column>
-          <bk-table-column :label="$t('projects.operateAudit.operator')" prop="user"></bk-table-column>
+          <bk-table-column :label="$t('projects.operateAudit.operator')" prop="user">
+            <template #default="{ row }">
+              <bk-user-display-name v-if="row.user" :user-id="row.user"></bk-user-display-name>
+              <span v-else>--</span>
+            </template>
+          </bk-table-column>
           <bk-table-column :label="$t('cluster.create.label.desc')" prop="description" :show-overflow-tooltip="true" min-width="160">
             <template #default="{ row }">
               {{ row.description || '--' }}

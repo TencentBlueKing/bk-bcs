@@ -25,7 +25,10 @@
     <bk-table :data="data" v-bkloading="{ isLoading: loading }">
       <bk-table-column :label="$t('deploy.helm.username')">
         <template #default>
-          <span>{{user.username}}</span>
+          <template v-if="flagsMap.EnableMultiTenantMode && user.username">
+            <bk-user-display-name :user-id="user.username"></bk-user-display-name>
+          </template>
+          <span v-else>{{user.username}}</span>
         </template>
       </bk-table-column>
       <bk-table-column :label="$t('apiToken.text')" min-width="300">
@@ -232,7 +235,7 @@ import $bkMessage from '@/common/bkmagic';
 import { copyText, renderTemplate } from '@/common/util';
 import CodeEditor from '@/components/monaco-editor/new-editor.vue';
 import StatusIcon from '@/components/status-icon';
-import { useCluster } from '@/composables/use-app';
+import { useAppData, useCluster } from '@/composables/use-app';
 import fullScreen from '@/directives/full-screen';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
@@ -258,6 +261,8 @@ export default defineComponent({
     });
     // 用户信息
     const user = computed(() => $store.state.user);
+    // 特性开关
+    const { flagsMap } = useAppData();
     // 使用案例
     const projectID = computed(() => $store.getters.curProjectId);
     const projectCode = computed(() => $store.getters.curProjectCode);
@@ -472,6 +477,7 @@ export default defineComponent({
       shareBcsApiExample,
       BK_IAM_HOST: window.BK_IAM_HOST,
       hasSharedCluster,
+      flagsMap,
     };
   },
 });

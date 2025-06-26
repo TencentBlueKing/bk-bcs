@@ -38,6 +38,7 @@ import RequestQueue from './request-queue';
 
 import { VUEX_STROAGE_KEY } from '@/common/constant';
 import { random } from '@/common/util';
+import { useAppData } from '@/composables/use-app';
 
 // axios 实例
 const axiosInstance = axios.create({
@@ -46,12 +47,17 @@ const axiosInstance = axios.create({
   withCredentials: true,
 });
 
+const { user } = useAppData();
+
 /**
  * request interceptor
  */
 axiosInstance.interceptors.request.use((config) => {
   const storage = JSON.parse(localStorage.getItem(VUEX_STROAGE_KEY) || '{}');
   config.headers['X-BCS-Project-Code'] = storage?.curProject?.projectCode;
+  if (user.value.tenant_id) {
+    config.headers['X-Bk-Tenant-Id'] = user.value.tenant_id;
+  }
   const CSRFToken = cookie.parse(document.cookie).bcs_csrftoken;
   if (CSRFToken) {
     config.headers['X-CSRFToken'] = CSRFToken;

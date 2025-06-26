@@ -31,4 +31,5 @@ export default {
   cloud_account_manage: window.i18n.t('iam.actionMap.cloud_account_manage'),
   cloud_account_use: window.i18n.t('iam.actionMap.cloud_account_use'),
   cloud_account_create: window.i18n.t('iam.actionMap.cloud_account_create'),
+  namespace_scoped_deleted: window.i18n.t('iam.actionMap.namespace_scoped_delete'),
 };

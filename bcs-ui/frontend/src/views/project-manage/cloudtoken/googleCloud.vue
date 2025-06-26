@@ -89,6 +89,11 @@
         :label="$t('googleCloud.label.createdBy')"
         prop="account.creator"
         show-overflow-tooltip>
+        <template #default="{ row }">
+          <bk-user-display-name v-if="row.account?.creator" :user-id="row.account?.creator">
+          </bk-user-display-name>
+          <span v-else>--</span>
+        </template>
       </bcs-table-column>
       <bcs-table-column :label="$t('googleCloud.label.operate')" width="100" show-overflow-tooltip>
         <template #default="{ row }">

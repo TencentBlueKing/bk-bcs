@@ -119,7 +119,7 @@
         <bcs-table-column :label="$t('generic.label.version')" prop="latestVersion" width="160" show-overflow-tooltip></bcs-table-column>
         <bcs-table-column :label="$t('deploy.helm.latestUpdate')" prop="updateTime" width="200"></bcs-table-column>
         <bcs-table-column :label="$t('cluster.create.label.desc')" prop="latestDescription" show-overflow-tooltip></bcs-table-column>
-        <bcs-table-column :label="$t('generic.label.action')" width="180">
+        <bcs-table-column :label="$t('generic.label.action')" width="200" fixed="right">
           <template #default="{ row }">
             <bcs-button text @click="handleReleaseChart(row)">{{ $t('deploy.helm.install') }}</bcs-button>
             <bcs-button

@@ -58,7 +58,14 @@
           {{ row.description || '--' }}
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t('generic.label.createdBy1')" prop="creator"></bk-table-column>
+      <bk-table-column :label="$t('generic.label.createdBy1')" prop="creator">
+        <template #default="{ row }">
+          <template v-if="flagsMap.EnableMultiTenantMode && row.creator">
+            <bk-user-display-name :user-id="row.creator"></bk-user-display-name>
+          </template>
+          <span v-else>{{ row.creator || '--' }}</span>
+        </template>
+      </bk-table-column>
       <bk-table-column :label="$t('generic.label.action')" width="120">
         <template #default="{ row }">
           <bk-button
@@ -93,7 +100,7 @@ import ProjectCreate from './project-create.vue';
 import useProjects from './use-project';
 
 import { bus } from '@/common/bus';
-import { IProject } from '@/composables/use-app';
+import { IProject, useAppData } from '@/composables/use-app';
 import useDebouncedRef from '@/composables/use-debounce';
 import $router from '@/router';
 
@@ -103,6 +110,9 @@ export default defineComponent({
     ProjectCreate,
   },
   setup: () => {
+    // 特性开关
+    const { flagsMap } = useAppData();
+
     const { getProjectList } = useProjects();
     const pagination = ref({
       current: 1,
@@ -176,6 +186,7 @@ export default defineComponent({
       keyword,
       showCreateDialog,
       curProjectData,
+      flagsMap,
       handleGotoProject,
       handleEditProject,
       handleCreateProject,

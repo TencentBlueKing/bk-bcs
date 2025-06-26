@@ -72,7 +72,9 @@
       </bcs-table-column>
       <bcs-table-column :label="$t('generic.label.updator')" prop="updator">
         <template #default="{ row }">
-          {{ row.updator || '--' }}
+          <bk-user-display-name v-if="row.updator" :user-id="row.updator">
+          </bk-user-display-name>
+          <span v-else>--</span>
         </template>
       </bcs-table-column>
       <bcs-table-column :label="$t('generic.label.updatedAt')" prop="updateAt">
@@ -80,7 +82,7 @@
           {{ formatTime(row.updateAt * 1000, 'yyyy-MM-dd hh:mm:ss') }}
         </template>
       </bcs-table-column>
-      <bcs-table-column :label="$t('generic.label.action')" width="140">
+      <bcs-table-column :label="$t('generic.label.action')" width="180" fixed="right">
         <template #default="{ row }">
           <bcs-button text class="mr-[5px]" @click="editFile(row)">{{ $t('generic.button.edit') }}</bcs-button>
           <span v-bk-tooltips="{ content: $t('templateSet.tips.cantDeploy'), disabled: row.version, delay: 300 }">

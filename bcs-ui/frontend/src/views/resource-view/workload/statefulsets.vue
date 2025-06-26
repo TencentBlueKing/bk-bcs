@@ -6,7 +6,7 @@
         handleGetExtData, gotoDetail, handleSortChange,handleUpdateResource,handleDeleteResource,
         handleEnlargeCapacity, handleShowViewConfig, handleRestart, handleGotoUpdateRecord,
         handleRollback, clusterNameMap, goNamespace, isViewEditable, isClusterMode, sourceTypeMap,
-        resolveLink,
+        resolveLink, flagsMap
       }">
       <bk-table
         :data="curPageData"
@@ -79,7 +79,10 @@
         </bk-table-column>
         <bk-table-column :label="$t('generic.label.createdBy')">
           <template slot-scope="{ row }">
-            <span>{{handleGetExtData(row.metadata.uid, 'creator') || '--'}}</span>
+            <template v-if="flagsMap.EnableMultiTenantMode && handleGetExtData(row.metadata.uid, 'creator')">
+              <bk-user-display-name :user-id="handleGetExtData(row.metadata.uid, 'creator')"></bk-user-display-name>
+            </template>
+            <span v-else>{{handleGetExtData(row.metadata.uid, 'creator') || '--'}}</span>
           </template>
         </bk-table-column>
         <bk-table-column :label="$t('generic.label.source')" :show-overflow-tooltip="false">

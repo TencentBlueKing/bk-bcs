@@ -117,12 +117,19 @@
         <!-- 用户设置 -->
         <PopoverSelector class="ml-[4px]">
           <span class="flex items-center text-[#96A2B9] hover:text-[#d3d9e4]">
-            <span class="text-[14px]">{{user.username}}</span>
+            <bk-user-display-name class="text-[14px]" :user-id="user.username"></bk-user-display-name>
             <i class="ml-[4px] text-[12px] bk-icon icon-down-shape"></i>
           </span>
           <template #content>
             <ul>
-              <li class="bcs-dropdown-item" @click="handleGotoUserToken">{{ $t('blueking.apiToken') }}</li>
+              <li
+                :class="[
+                  'bcs-dropdown-item',
+                  !curProject.projectID ? 'cursor-not-allowed text-[#999] hover:!text-[#999]' : ''
+                ]"
+                @click="handleGotoUserToken">
+                {{ $t('blueking.apiToken') }}
+              </li>
               <li class="bcs-dropdown-item" @click="handleLogout">{{ $t('blueking.signOut') }}</li>
             </ul>
           </template>
@@ -161,6 +168,7 @@ import { releaseNote } from '@/api/modules/project';
 import { setCookie } from '@/common/util';
 import AiAssistantBtn from '@/components/assistant/ai-assistant-btn.vue';
 import BcsMd from '@/components/bcs-md/index.vue';
+import { useAppData } from '@/composables/use-app';
 import useCalcHeight from '@/composables/use-calc-height';
 import usePlatform from '@/composables/use-platform';
 import $i18n from '@/i18n/i18n-setup';
@@ -193,6 +201,9 @@ export default defineComponent({
         init();
       });
     };
+
+    // 特性开关
+    const { flagsMap } = useAppData();
 
     const { menusData: menus, leafMenus } = useMenu();
     const { config } = usePlatform();
@@ -342,7 +353,7 @@ export default defineComponent({
     };
     // 跳转用户token
     const handleGotoUserToken = () => {
-      if (route.value.name === 'token') return;
+      if (route.value.name === 'token' || !curProject.value.projectID) return;
       $router.push({
         name: 'token',
       });
@@ -409,6 +420,7 @@ export default defineComponent({
       showFeatures,
       user,
       showPreVersionBtn,
+      flagsMap,
       handleGoHome,
       handleChangeLang,
       handleGotoHelp,

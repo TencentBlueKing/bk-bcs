@@ -16,7 +16,13 @@
       <bcs-table-column :label="$t('templateSet.label.versionNo')" prop="version"></bcs-table-column>
       <!-- 被引用 -->
       <!-- <bcs-table-column></bcs-table-column> -->
-      <bcs-table-column :label="$t('generic.label.updator')" prop="updateBy"></bcs-table-column>
+      <bcs-table-column :label="$t('generic.label.updator')" prop="updateBy">
+        <template #default="{ row }">
+          <bk-user-display-name v-if="row.updateBy" :user-id="row.updateBy">
+          </bk-user-display-name>
+          <span v-else>--</span>
+        </template>
+      </bcs-table-column>
       <bcs-table-column :label="$t('generic.label.updatedAt')" prop="updateTime"></bcs-table-column>
       <bcs-table-column :label="$t('generic.label.action')" width="120">
         <template #default="{ row }">

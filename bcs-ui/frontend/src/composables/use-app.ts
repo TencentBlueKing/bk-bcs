@@ -1,5 +1,7 @@
 import { computed, InjectionKey, ref } from 'vue';
 
+import BkUserDisplayName from '@blueking/bk-user-display-name';
+
 import { featureFlags as featureFlagsApi } from '@/api/modules/project';
 import { userInfo } from '@/api/modules/user-manager';
 import { Preset } from '@/components/assistant/use-assistant-store';
@@ -147,6 +149,11 @@ export function useAppData() {
   const user = computed(() => $store.state.user);
   async function getUserInfo() {
     const data = await userInfo().catch(() => ({}));
+    // 多租户用户名展示组件配置
+    BkUserDisplayName.configure({
+      tenantId: data.tenant_id,
+      apiBaseUrl: `${window.BK_USER_HOST}/api/bk-user-web/prod`,
+    });
     $store.commit('updateUser', data);
     return data;
   }
@@ -158,6 +165,8 @@ export function useAppData() {
     PROJECT_LIST: false,
     AZURECLOUD: true,
     IMPORTSOPSCLUSTER: true,
+    PROJECTQUOTAS: false,
+    EnableMultiTenantMode: true, // 多租户模式
   };
   async function getFeatureFlags(params: { projectCode: string }) {
     const data = await featureFlagsApi(params).catch(() => ({}));

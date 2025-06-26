@@ -34,6 +34,7 @@ import ResourceView from './resource-view';// todo 有循环依赖
 
 import { clusterDetail } from '@/api/modules/cluster-manager';
 import cancelRequest from '@/common/cancel-request';
+import { useAppData } from '@/composables/use-app';
 import $store from '@/store';
 import useMenu from '@/views/app/use-menu';
 
@@ -133,6 +134,7 @@ VueRouter.prototype.back = () => {
   }
 };
 
+const { getUserInfo } = useAppData();
 const clusterPathPattern = new RegExp(`^${SITE_URL}/clusters/([^/]+)`); // 匹配 ${SITE_URL}/clusters/:clusterId
 
 router.beforeEach(async (to, from, next) => {
@@ -189,6 +191,10 @@ router.beforeEach(async (to, from, next) => {
   }
   // 取消上一个页面的请求
   await cancelRequest();
+  // 在最开始获取用户信息
+  if (!$store.state.user.username) {
+    await getUserInfo();
+  }
   // 校验路由是否开启
   const { validateRouteEnable, getNavByRoute } = useMenu();
   const result = await validateRouteEnable(to);

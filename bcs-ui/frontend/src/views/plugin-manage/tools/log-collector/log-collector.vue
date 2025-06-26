@@ -245,7 +245,13 @@
                 {{ row.description || '--' }}
               </template>
             </bcs-table-column>
-            <bcs-table-column :label="$t('generic.label.updator')" prop="updator"></bcs-table-column>
+            <bcs-table-column :label="$t('generic.label.updator')" prop="updator">
+              <template #default="{ row }">
+                <bk-user-display-name v-if="row.updator" :user-id="row.updator">
+                </bk-user-display-name>
+                <span v-else>--</span>
+              </template>
+            </bcs-table-column>
             <bcs-table-column
               :label="$t('cluster.labels.updatedAt')"
               sortable

@@ -19,7 +19,12 @@
             <div class="info">
               <svg class="logo"><use xlink:href="#biz-set-icon"></use></svg>
               <div class="title" :title="curTemplate.name">{{curTemplate.name || '--'}}</div>
-              <div class="creater" :title="curTemplate.creator">{{$t('generic.label.createdBy')}}：{{curTemplate.creator || '--'}}</div>
+              <div class="creater" :title="curTemplate.creator">
+                {{$t('generic.label.createdBy')}}：
+                <bk-user-display-name v-if="curTemplate.creator" :user-id="curTemplate.creator">
+                </bk-user-display-name>
+                <span v-else>--</span>
+              </div>
             </div>
             <div class="desc" :title="curTemplate.desc">
               <span>{{$t('plugin.tools.intro')}}：</span>

@@ -30,9 +30,17 @@
             <bk-button
               theme="danger"
               v-authority="{
-                clickable: pagePerms.deleteBtn.clickable,
+                actionId: 'namespace_scoped_deleted',
+                clickable: hasPerms,
                 content: pagePerms.deleteBtn.tip,
-                disablePerms: true
+                disablePerms: true,
+                resourceName: metadata.name,
+                permCtx: {
+                  resource_type: 'namespace',
+                  namespace: metadata.namespace,
+                  project_id: curProject.project_id,
+                  cluster_id: clusterId,
+                }
               }"
               @click="handleDeleteResource">{{$t('generic.button.delete')}}</bk-button>
           </template>
@@ -349,13 +357,14 @@ import EventTable from './bk-monitor-event.vue';
 import detailBasicList from './detail-basic';
 import useDetail from './use-detail';
 
+import { userPermsByAction } from '@/api/modules/user-manager';
 import $bkMessage from '@/common/bkmagic';
 import { timeFormat } from '@/common/util';
 import BcsLog from '@/components/bcs-log/log-dialog.vue';
 import Metric from '@/components/metric.vue';
 import CodeEditor from '@/components/monaco-editor/new-editor.vue';
 import StatusIcon from '@/components/status-icon';
-import { useCluster } from '@/composables/use-app';
+import { useCluster, useProject } from '@/composables/use-app';
 import useInterval from '@/composables/use-interval';
 import usePage from '@/composables/use-page';
 import useSearch from '@/composables/use-search';
@@ -427,6 +436,7 @@ export default defineComponent({
   setup(props, ctx) {
     const { clusterId } = toRefs(props);
     const { clusterNameMap, clusterMap } = useCluster();
+    const { curProject } = useProject();
     const updateStrategyMap = ref({
       RollingUpdate: $i18n.t('k8s.updateStrategy.rollingUpdate'),
       InplaceUpdate: $i18n.t('k8s.updateStrategy.inplaceUpdate'),
@@ -732,6 +742,21 @@ export default defineComponent({
       });
     };
 
+    // 删除按钮鉴权
+    const hasPerms = ref(false);
+    async function handelDelButtonPerms() {
+      if (!clusterId.value || !props.namespace || !curProject.value?.project_id) return;
+      const res = await userPermsByAction({
+        $actionId: 'namespace_scoped_deleted',
+        perm_ctx: {
+          cluster_id: clusterId.value,
+          namespace: props.namespace,
+          project_id: curProject.value?.project_id,
+        },
+      }).catch(() => ({}));
+      hasPerms.value = res.perms?.namespace_scoped_deleted;
+    };
+
     const loading = ref(true);
     onMounted(async () => {
       loading.value = true;
@@ -744,6 +769,7 @@ export default defineComponent({
       await Promise.all([
         handleGetWorkloadPods(),
         handleGetRSData(),
+        handelDelButtonPerms(),
       ]);
       loading.value = false;
       // 开启轮询
@@ -812,6 +838,8 @@ export default defineComponent({
       clusterNameMap,
       podStatusFilters,
       handleFilterChange,
+      curProject,
+      hasPerms,
     };
   },
 });

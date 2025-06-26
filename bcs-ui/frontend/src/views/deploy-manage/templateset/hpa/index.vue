@@ -77,7 +77,9 @@
           </bk-table-column>
           <bk-table-column :label="$t('generic.label.createdBy')" prop="creator" min-width="100">
             <template slot-scope="{ row }">
-              {{row.creator || '--'}}
+              <bk-user-display-name v-if="row.creator" :user-id="row.creator">
+              </bk-user-display-name>
+              <span v-else>--</span>
             </template>
           </bk-table-column>
           <bk-table-column :label="$t('generic.label.action')" prop="permissions">

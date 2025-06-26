@@ -59,7 +59,7 @@
           {{row.scopeName || '--'}}
         </template>
       </bcs-table-column>
-      <bcs-table-column :label="$t('generic.label.action')" width="160">
+      <bcs-table-column :label="$t('generic.label.action')" width="180" fixed="right">
         <template #default="{ row }">
           <span
             class="mr10"

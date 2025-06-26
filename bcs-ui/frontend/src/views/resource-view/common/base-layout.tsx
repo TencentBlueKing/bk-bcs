@@ -19,7 +19,7 @@ import $bkMessage from '@/common/bkmagic';
 import { bus } from '@/common/bus';
 import ContentHeader from '@/components/layout/Header.vue';
 import CodeEditor from '@/components/monaco-editor/new-editor.vue';
-import { useCluster } from '@/composables/use-app';
+import { useAppData, useCluster } from '@/composables/use-app';
 import useInterval from '@/composables/use-interval';
 import fullScreen from '@/directives/full-screen';
 import $i18n from '@/i18n/i18n-setup';
@@ -100,6 +100,9 @@ export default defineComponent({
       searchSelectValue,
       searchSelectKey,
     } = useSearch();
+
+    // 特性开关
+    const { flagsMap } = useAppData();
 
     const updateStrategyMap = ref({
       RollingUpdate: $i18n.t('k8s.updateStrategy.rollingUpdate'),
@@ -788,6 +791,7 @@ export default defineComponent({
       sourceTypeMap,
       applyURL,
       resolveLink,
+      flagsMap,
     };
   },
   render() {
@@ -930,6 +934,7 @@ export default defineComponent({
                 isClusterMode: this.isClusterMode,
                 sourceTypeMap: this.sourceTypeMap,
                 resolveLink: this.resolveLink,
+                flagsMap: this.flagsMap,
               })
           }
         </div>
