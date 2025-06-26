@@ -78,27 +78,6 @@ func (i *HandleNamespaceQuota) Steps() []*types.Step {
 
 	for key, reqListStr := range reqMap {
 		switch key {
-		case fedsteps.SubClusterForTaiji:
-			handleTaijiNamespaceStep := steps.NewHandleTaijiNamespaceStep().BuildStep([]task.KeyValue{
-				{Key: fedsteps.ParameterKey, Value: reqListStr},
-				{Key: fedsteps.HandleTypeKey, Value: i.opt.HandleType},
-				{Key: fedsteps.HostClusterIdKey, Value: i.opt.HostClusterId},
-			})
-			allSteps = append(allSteps, handleTaijiNamespaceStep)
-		case fedsteps.SubClusterForHunbu:
-			handleHunbuNamespaceStep := steps.NewHandleHunbuNamespaceStep().BuildStep([]task.KeyValue{
-				{Key: fedsteps.NamespaceKey, Value: i.opt.Namespace},
-				{Key: fedsteps.ParameterKey, Value: reqListStr},
-				{Key: fedsteps.HandleTypeKey, Value: i.opt.HandleType},
-			})
-			allSteps = append(allSteps, handleHunbuNamespaceStep)
-		case fedsteps.SubClusterForSuanli:
-			handleSuanliNamespaceStep := steps.NewHandleSuanliNamespaceStep().BuildStep([]task.KeyValue{
-				{Key: fedsteps.ParameterKey, Value: reqListStr},
-				{Key: fedsteps.HandleTypeKey, Value: i.opt.HandleType},
-				{Key: fedsteps.HostClusterIdKey, Value: i.opt.HostClusterId},
-			})
-			allSteps = append(allSteps, handleSuanliNamespaceStep)
 		case fedsteps.ClusterQuotaKey:
 			handleFederationNamespaceQuotaStep := steps.NewHandleFederationNamespaceQuotaStep().BuildStep([]task.KeyValue{
 				{Key: fedsteps.HandleTypeKey, Value: i.opt.HandleType},
@@ -107,13 +86,6 @@ func (i *HandleNamespaceQuota) Steps() []*types.Step {
 				{Key: fedsteps.ParameterKey, Value: reqListStr},
 			})
 			allSteps = append(allSteps, handleFederationNamespaceQuotaStep)
-		case fedsteps.SubClusterForNormal:
-			handleNormalNamespaceStep := steps.NewHandleNormalNamespaceStep().BuildStep([]task.KeyValue{
-				{Key: fedsteps.ParameterKey, Value: reqListStr},
-				{Key: fedsteps.NamespaceKey, Value: i.opt.Namespace},
-				{Key: fedsteps.HandleTypeKey, Value: i.opt.HandleType},
-			})
-			allSteps = append(allSteps, handleNormalNamespaceStep)
 		}
 	}
 

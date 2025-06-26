@@ -15895,6 +15895,165 @@ var _ interface {
 	ErrorName() string
 } = ListProjectClusterRespValidationError{}
 
+// Validate checks the field values on ListBusinessClusterReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ListBusinessClusterReq) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for BusinessID
+
+	// no validation rules for Operator
+
+	return nil
+}
+
+// ListBusinessClusterReqValidationError is the validation error returned by
+// ListBusinessClusterReq.Validate if the designated constraints aren't met.
+type ListBusinessClusterReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListBusinessClusterReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListBusinessClusterReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListBusinessClusterReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListBusinessClusterReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListBusinessClusterReqValidationError) ErrorName() string {
+	return "ListBusinessClusterReqValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListBusinessClusterReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListBusinessClusterReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListBusinessClusterReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListBusinessClusterReqValidationError{}
+
+// Validate checks the field values on ListBusinessClusterResp with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ListBusinessClusterResp) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ListBusinessClusterRespValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// ListBusinessClusterRespValidationError is the validation error returned by
+// ListBusinessClusterResp.Validate if the designated constraints aren't met.
+type ListBusinessClusterRespValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListBusinessClusterRespValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListBusinessClusterRespValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListBusinessClusterRespValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListBusinessClusterRespValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListBusinessClusterRespValidationError) ErrorName() string {
+	return "ListBusinessClusterRespValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListBusinessClusterRespValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListBusinessClusterResp.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListBusinessClusterRespValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListBusinessClusterRespValidationError{}
+
 // Validate checks the field values on ListClusterReq with the rules defined in
 // the proto definition for this message. If any rules are violated, an error
 // is returned.
@@ -16172,6 +16331,244 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ListClusterRespValidationError{}
+
+// Validate checks the field values on ListClusterV2Req with the rules defined
+// in the proto definition for this message. If any rules are violated, an
+// error is returned.
+func (m *ListClusterV2Req) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if utf8.RuneCountInString(m.GetProjectID()) > 100 {
+		return ListClusterV2ReqValidationError{
+			field:  "ProjectID",
+			reason: "value length must be at most 100 runes",
+		}
+	}
+
+	if utf8.RuneCountInString(m.GetBusinessID()) > 100 {
+		return ListClusterV2ReqValidationError{
+			field:  "BusinessID",
+			reason: "value length must be at most 100 runes",
+		}
+	}
+
+	if utf8.RuneCountInString(m.GetProvider()) > 32 {
+		return ListClusterV2ReqValidationError{
+			field:  "Provider",
+			reason: "value length must be at most 32 runes",
+		}
+	}
+
+	if utf8.RuneCountInString(m.GetRegion()) > 100 {
+		return ListClusterV2ReqValidationError{
+			field:  "Region",
+			reason: "value length must be at most 100 runes",
+		}
+	}
+
+	if utf8.RuneCountInString(m.GetVpcID()) > 32 {
+		return ListClusterV2ReqValidationError{
+			field:  "VpcID",
+			reason: "value length must be at most 32 runes",
+		}
+	}
+
+	// no validation rules for Environment
+
+	// no validation rules for EngineType
+
+	// no validation rules for ClusterType
+
+	if _, ok := _ListClusterV2Req_Status_InLookup[m.GetStatus()]; !ok {
+		return ListClusterV2ReqValidationError{
+			field:  "Status",
+			reason: "value must be in list [CREATING RUNNING DELETING FALURE INITIALIZATION DELETED ]",
+		}
+	}
+
+	if utf8.RuneCountInString(m.GetSystemID()) > 100 {
+		return ListClusterV2ReqValidationError{
+			field:  "SystemID",
+			reason: "value length must be at most 100 runes",
+		}
+	}
+
+	// no validation rules for IsCommonCluster
+
+	// no validation rules for ClusterID
+
+	// no validation rules for All
+
+	if m.GetOffset() < 0 {
+		return ListClusterV2ReqValidationError{
+			field:  "Offset",
+			reason: "value must be greater than or equal to 0",
+		}
+	}
+
+	if m.GetLimit() > 1000 {
+		return ListClusterV2ReqValidationError{
+			field:  "Limit",
+			reason: "value must be less than or equal to 1000",
+		}
+	}
+
+	return nil
+}
+
+// ListClusterV2ReqValidationError is the validation error returned by
+// ListClusterV2Req.Validate if the designated constraints aren't met.
+type ListClusterV2ReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListClusterV2ReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListClusterV2ReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListClusterV2ReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListClusterV2ReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListClusterV2ReqValidationError) ErrorName() string { return "ListClusterV2ReqValidationError" }
+
+// Error satisfies the builtin error interface
+func (e ListClusterV2ReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListClusterV2Req.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListClusterV2ReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListClusterV2ReqValidationError{}
+
+var _ListClusterV2Req_Status_InLookup = map[string]struct{}{
+	"CREATING":       {},
+	"RUNNING":        {},
+	"DELETING":       {},
+	"FALURE":         {},
+	"INITIALIZATION": {},
+	"DELETED":        {},
+	"":               {},
+}
+
+// Validate checks the field values on ListClusterV2Resp with the rules defined
+// in the proto definition for this message. If any rules are violated, an
+// error is returned.
+func (m *ListClusterV2Resp) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ListClusterV2RespValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// ListClusterV2RespValidationError is the validation error returned by
+// ListClusterV2Resp.Validate if the designated constraints aren't met.
+type ListClusterV2RespValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListClusterV2RespValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListClusterV2RespValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListClusterV2RespValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListClusterV2RespValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListClusterV2RespValidationError) ErrorName() string {
+	return "ListClusterV2RespValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListClusterV2RespValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListClusterV2Resp.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListClusterV2RespValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListClusterV2RespValidationError{}
 
 // Validate checks the field values on ExtraInfo with the rules defined in the
 // proto definition for this message. If any rules are violated, an error is returned.
@@ -42635,3 +43032,140 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = CustomDriverValidationError{}
+
+// Validate checks the field values on ClusterBasicInfo with the rules defined
+// in the proto definition for this message. If any rules are violated, an
+// error is returned.
+func (m *ClusterBasicInfo) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for ClusterID
+
+	// no validation rules for ClusterName
+
+	// no validation rules for Provider
+
+	// no validation rules for Region
+
+	// no validation rules for VpcID
+
+	// no validation rules for ProjectID
+
+	// no validation rules for BusinessID
+
+	// no validation rules for Environment
+
+	// no validation rules for EngineType
+
+	// no validation rules for ClusterType
+
+	// no validation rules for Labels
+
+	// no validation rules for Creator
+
+	// no validation rules for CreateTime
+
+	// no validation rules for UpdateTime
+
+	// no validation rules for SystemID
+
+	// no validation rules for ManageType
+
+	if _, ok := _ClusterBasicInfo_Status_InLookup[m.GetStatus()]; !ok {
+		return ClusterBasicInfoValidationError{
+			field:  "Status",
+			reason: "value must be in list [CREATING RUNNING DELETING FALURE INITIALIZATION]",
+		}
+	}
+
+	// no validation rules for Updater
+
+	if _, ok := _ClusterBasicInfo_NetworkType_InLookup[m.GetNetworkType()]; !ok {
+		return ClusterBasicInfoValidationError{
+			field:  "NetworkType",
+			reason: "value must be in list [underlay overlay ]",
+		}
+	}
+
+	// no validation rules for ModuleID
+
+	// no validation rules for IsCommonCluster
+
+	// no validation rules for Description
+
+	// no validation rules for ClusterCategory
+
+	// no validation rules for IsShared
+
+	return nil
+}
+
+// ClusterBasicInfoValidationError is the validation error returned by
+// ClusterBasicInfo.Validate if the designated constraints aren't met.
+type ClusterBasicInfoValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ClusterBasicInfoValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ClusterBasicInfoValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ClusterBasicInfoValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ClusterBasicInfoValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ClusterBasicInfoValidationError) ErrorName() string { return "ClusterBasicInfoValidationError" }
+
+// Error satisfies the builtin error interface
+func (e ClusterBasicInfoValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sClusterBasicInfo.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ClusterBasicInfoValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ClusterBasicInfoValidationError{}
+
+var _ClusterBasicInfo_Status_InLookup = map[string]struct{}{
+	"CREATING":       {},
+	"RUNNING":        {},
+	"DELETING":       {},
+	"FALURE":         {},
+	"INITIALIZATION": {},
+}
+
+var _ClusterBasicInfo_NetworkType_InLookup = map[string]struct{}{
+	"underlay": {},
+	"overlay":  {},
+	"":         {},
+}

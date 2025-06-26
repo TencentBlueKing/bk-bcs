@@ -241,7 +241,7 @@
               text
               :disabled="row.autoScaling.desiredSize === 0"
               @click="handleShowNodeManage(row)">
-              <div class="min-w-[80px] text-right">{{row.autoScaling.desiredSize}}</div>
+              <div class="min-w-[50px] text-right">{{row.autoScaling.desiredSize}}</div>
             </bcs-button>
           </template>
         </bcs-table-column>

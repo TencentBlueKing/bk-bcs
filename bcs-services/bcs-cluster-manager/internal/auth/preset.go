@@ -128,6 +128,8 @@ var ActionPermissions = map[string]string{
 	"ClusterManager.GetCluster":                   cluster.CanViewClusterOperation,
 	"ClusterManager.ListProjectCluster":           project.CanViewProjectOperation,
 	"ClusterManager.ListCluster":                  project.CanViewProjectOperation,
+	"ClusterManager.ListClusterV2":                "",
+	"ClusterManager.ListBusinessCluster":          "",
 	"ClusterManager.ListCommonCluster":            "",
 	"ClusterManager.CreateVirtualCluster":         cluster.CanCreateClusterOperation,
 	"ClusterManager.DeleteVirtualCluster":         cluster.CanDeleteClusterOperation,

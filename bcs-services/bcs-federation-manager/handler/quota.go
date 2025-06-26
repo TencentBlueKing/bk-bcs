@@ -17,17 +17,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strings"
 
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-federation-manager/internal/clients/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-federation-manager/internal/store"
-	fedtasks "github.com/Tencent/bk-bcs/bcs-services/bcs-federation-manager/internal/task/tasks"
-	trd "github.com/Tencent/bk-bcs/bcs-services/bcs-federation-manager/pkg/bcsapi/thirdparty-service"
 	federationmgr "github.com/Tencent/bk-bcs/bcs-services/bcs-federation-manager/proto/bcs-federation-manager"
 )
 
@@ -193,17 +189,17 @@ func (f *FederationManager) CreateFederationClusterNamespaceQuota(ctx context.Co
 			"clusterId: %s, namespace: %s, err: %s", req.ClusterId, req.Namespace, err.Error())
 	}
 
+	if fedClusterNamespace == nil {
+		blog.Errorf("federation namespace not found, clusterId: %s, namespace: %s", req.ClusterId, req.Namespace)
+		return fmt.Errorf("federation namespace not found, "+
+			"clusterId: %s, namespace: %s", req.ClusterId, req.Namespace)
+	}
+
 	// create quota
 	err = f.clusterCli.CreateNamespaceQuota(fedCluster.HostClusterID, req)
 	if err != nil {
 		blog.Errorf("CreateNamespaceQuota failed req: %+v, err: %s", req, err.Error())
 		return ErrReturn(resp, fmt.Sprintf("CreateNamespaceQuota failed, err: %s", err.Error()))
-	}
-
-	// build subQuotaInfos
-	err = f.taskUpdateQuotas(req, fedCluster, fedClusterNamespace)
-	if err != nil {
-		return ErrReturn(resp, fmt.Sprintf("CreateNamespaceQuota build task failed, err: %s", err.Error()))
 	}
 
 	resp.Code = IntToUint32Ptr(common.BcsSuccess)
@@ -236,6 +232,11 @@ func (f *FederationManager) UpdateFederationClusterNamespaceQuota(ctx context.Co
 	if err != nil {
 		return fmt.Errorf("get federation namespace failed, "+
 			"clusterId: %s, namespace: %s, err: %s", req.ClusterId, req.Namespace, err.Error())
+	}
+	if fedClusterNamespace == nil {
+		blog.Errorf("federation namespace not found, clusterId: %s, namespace: %s", req.ClusterId, req.Namespace)
+		return fmt.Errorf("federation namespace not found, "+
+			"clusterId: %s, namespace: %s", req.ClusterId, req.Namespace)
 	}
 	mcResourceQuota, err := f.clusterCli.GetMultiClusterResourceQuota(fedCluster.HostClusterID, req.Namespace, req.Name)
 	if err != nil {
@@ -276,181 +277,9 @@ func (f *FederationManager) UpdateFederationClusterNamespaceQuota(ctx context.Co
 		return ErrReturn(resp, fmt.Sprintf("UpdateNamespaceQuota failed, err: %s", err.Error()))
 	}
 
-	upload := &federationmgr.CreateFederationClusterNamespaceQuotaRequest{
-		ClusterId: req.ClusterId,
-		Namespace: req.Namespace,
-		QuotaList: []*federationmgr.Quota{req.Quota},
-		Operator:  req.Operator,
-	}
-	err = f.taskUpdateQuotas(upload, fedCluster, fedClusterNamespace)
-	if err != nil {
-		return ErrReturn(resp, fmt.Sprintf("UpdateNamespaceQuota build task failed, err: %s", err.Error()))
-	}
-
 	resp.Code = IntToUint32Ptr(common.BcsSuccess)
 	resp.Message = common.BcsSuccessStr
 	return nil
-}
-
-func (f *FederationManager) taskUpdateQuotas(req *federationmgr.CreateFederationClusterNamespaceQuotaRequest,
-	fedCluster *store.FederationCluster, namespace *v1.Namespace) error {
-
-	blog.Infof("taskUpdateQuotas request, req: %v, namespace: %v", req, namespace)
-	// 获取入参的子集群范围
-	subClusterIds := make([]string, 0)
-	if clusterRangeStr, ok := namespace.Annotations[cluster.FedNamespaceClusterRangeKey]; ok {
-		if len(clusterRangeStr) != 0 {
-			lower := strings.Split(clusterRangeStr, ",")
-			for _, sc := range lower {
-				subClusterId := strings.ToUpper(sc)
-				subClusterIds = append(subClusterIds, subClusterId)
-			}
-		}
-	}
-
-	forTaijiList, forSuanliList, err := f.initTaskUpdateQuotaParams(req, fedCluster, subClusterIds)
-	if err != nil {
-		return err
-	}
-	reqMap := make(map[string]string)
-	if len(forTaijiList) > 0 {
-		forTaijiListBytes, err := json.Marshal(forTaijiList)
-		if err != nil {
-			return fmt.Errorf("taskUpdateQuotas.Marshal failed,err: %s", err.Error())
-		}
-		reqMap[cluster.SubClusterForTaiji] = string(forTaijiListBytes)
-	}
-
-	if len(forSuanliList) > 0 {
-		forSuanliListBytes, err := json.Marshal(forSuanliList)
-		if err != nil {
-			return fmt.Errorf("taskUpdateQuotas.Marshal failed,err: %s", err.Error())
-		}
-		reqMap[cluster.SubClusterForSuanli] = string(forSuanliListBytes)
-	}
-
-	if len(reqMap) == 0 {
-		// 更新annotations中的状态
-		if namespace.Annotations[cluster.HostClusterNamespaceStatus] != cluster.NamespaceSuccess {
-			namespace.Annotations[cluster.HostClusterNamespaceStatus] = cluster.NamespaceSuccess
-			err := f.clusterCli.UpdateNamespace(fedCluster.HostClusterID, namespace)
-			if err != nil {
-				blog.Errorf("taskUpdateQuotas update namespace failed, HostClusterID %s, req %+v",
-					fedCluster.HostClusterID, req)
-				return err
-			}
-		}
-		blog.Errorf("taskUpdateQuotas taskParams is empty, HostClusterID %s, req %+v",
-			fedCluster.HostClusterID, req)
-	} else {
-		reqParameterBytes, err := json.Marshal(reqMap)
-		if err != nil {
-			return fmt.Errorf("taskUpdateQuotas.Marshal failed,err: %s", err.Error())
-		}
-		blog.Infof("taskUpdateQuotas reqParameterBytes is %s", string(reqParameterBytes))
-
-		// 更新quota
-		t, err := fedtasks.NewHandleNamespaceQuotaTask(
-			&fedtasks.HandleNamespaceQuotaOptions{
-				FedClusterId:  fedCluster.FederationClusterID,
-				HandleType:    cluster.UpdateKey,
-				HostClusterId: fedCluster.HostClusterID,
-				Namespace:     req.Namespace,
-				Parameter:     string(reqParameterBytes),
-			}).BuildTask(req.Operator)
-		if err != nil {
-			blog.Errorf(
-				"taskUpdateQuotas build task failed clusterId: %s, namespace: %s, body: %s, err: %s",
-				fedCluster.HostClusterID, req.Namespace, string(reqParameterBytes), err.Error())
-			return fmt.Errorf("taskUpdateQuotas failed, err: %s", err.Error())
-		}
-
-		if err = f.taskmanager.Dispatch(t); err != nil {
-			return fmt.Errorf("taskUpdateQuotas build task failed, err: %s", err.Error())
-		}
-	}
-
-	return nil
-}
-
-func (f *FederationManager) initTaskUpdateQuotaParams(req *federationmgr.CreateFederationClusterNamespaceQuotaRequest,
-	fedCluster *store.FederationCluster, subClusterIds []string) ([]*trd.UpdateQuotaInfoForTaijiRequest,
-	[]*trd.UpdateNamespaceForSuanliRequest, error) {
-
-	forTaijiList := make([]*trd.UpdateQuotaInfoForTaijiRequest, 0)
-	forSuanliList := make([]*trd.UpdateNamespaceForSuanliRequest, 0)
-	for _, subClusterId := range subClusterIds {
-		// 获取managedCluster 对象
-		managedCluster, err := f.clusterCli.GetManagedCluster(fedCluster.HostClusterID, subClusterId)
-		if err != nil {
-			blog.Errorf("initTaskUpdateQuotaParams failed, subClusterId: %s, err: %s", subClusterId, err.Error())
-			return nil, nil, err
-		}
-		// 判断managedCluster对象的labels的标识
-		switch managedCluster.Labels[cluster.ManagedClusterTypeLabel] {
-		case cluster.SubClusterForTaiji:
-			for _, quota := range req.QuotaList {
-				if val, ok := quota.Annotations[cluster.AnnotationSubClusterForTaiji]; ok {
-					quotaResources := make(map[string]string)
-					for _, k8SResource := range quota.ResourceList {
-						quotaResources[k8SResource.ResourceName] = k8SResource.ResourceQuantity
-					}
-					// 转换为taiji参数 GPUName
-					tjAttributes := make(map[string]string)
-					for k, v := range quota.Attributes {
-						if k == cluster.TaskGpuTypeKey {
-							tjAttributes[cluster.TaijiGPUNameKey] = v
-							continue
-						}
-						tjAttributes[k] = v
-					}
-					parameter := &trd.UpdateQuotaInfoForTaijiRequest{
-						Namespace: req.Namespace,
-						SubQuotaInfos: []*trd.NamespaceQuotaForTaiji{{
-							Name:              quota.Name,
-							SubQuotaLabels:    tjAttributes,
-							SubQuotaResources: quotaResources,
-							Location:          val,
-						}},
-						Location: val,
-						Operator: req.Operator,
-					}
-
-					forTaijiList = append(forTaijiList, parameter)
-				}
-			}
-		case cluster.SubClusterForSuanli:
-			for _, quota := range req.QuotaList {
-				if val, ok := quota.Annotations[cluster.AnnotationKeyInstalledPlatform]; ok {
-					if val != cluster.SubClusterForSuanli {
-						continue
-					}
-					quotaResources := make(map[string]string)
-					for _, k8SResource := range quota.ResourceList {
-						quotaResources[k8SResource.ResourceName] = k8SResource.ResourceQuantity
-					}
-
-					slAttributes := make(map[string]string)
-					for k, v := range quota.Attributes {
-						slAttributes[k] = v
-					}
-
-					parameter := &trd.UpdateNamespaceForSuanliRequest{
-						Namespace: req.Namespace,
-						SubQuotaInfos: []*trd.NamespaceQuotaForSuanli{{
-							Name:              quota.Name,
-							SubQuotaLabels:    slAttributes,
-							SubQuotaResources: quotaResources,
-						}},
-						Operator: req.Operator,
-					}
-
-					forSuanliList = append(forSuanliList, parameter)
-				}
-			}
-		}
-	}
-	return forTaijiList, forSuanliList, nil
 }
 
 // DeleteFederationClusterNamespaceQuota delete federation quota and sub quota
@@ -473,6 +302,18 @@ func (f *FederationManager) DeleteFederationClusterNamespaceQuota(ctx context.Co
 		return ErrReturn(resp,
 			fmt.Sprintf("DeleteFederationClusterNamespaceQuota.GetFederationCluster failed, clusterId: %s, "+
 				"err: %s", req.ClusterId, err.Error()))
+	}
+
+	// 查询是否已存在联邦集群命名空间
+	fedClusterNamespace, err := f.clusterCli.GetNamespace(fedCluster.HostClusterID, req.Namespace)
+	if err != nil {
+		return fmt.Errorf("get federation namespace failed, "+
+			"clusterId: %s, namespace: %s, err: %s", req.ClusterId, req.Namespace, err.Error())
+	}
+	if fedClusterNamespace == nil {
+		blog.Errorf("federation namespace not found, clusterId: %s, namespace: %s", req.ClusterId, req.Namespace)
+		return fmt.Errorf("federation namespace not found, "+
+			"clusterId: %s, namespace: %s", req.ClusterId, req.Namespace)
 	}
 
 	err = f.clusterCli.DeleteNamespaceQuota(fedCluster.HostClusterID, req.Namespace, req.Name)

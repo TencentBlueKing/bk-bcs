@@ -28,14 +28,14 @@ func (m *MeshManager) ListIstio(
 	req *meshmanager.ListIstioRequest,
 	resp *meshmanager.ListIstioResponse,
 ) error {
-	action := istioaction.NewListIstioAction(m.model)
+	action := istioaction.NewListIstioAction(m.opt.IstioConfig, m.model)
 	return action.Handle(ctx, req, resp)
 }
 
 // InstallIstio implements meshmanager.MeshManagerHandler
 func (m *MeshManager) InstallIstio(
 	ctx context.Context,
-	req *meshmanager.InstallIstioRequest,
+	req *meshmanager.IstioRequest,
 	resp *meshmanager.InstallIstioResponse,
 ) error {
 	action := istioaction.NewInstallIstioAction(m.opt.IstioConfig, m.model)
@@ -45,10 +45,10 @@ func (m *MeshManager) InstallIstio(
 // UpdateIstio implements meshmanager.MeshManagerHandler
 func (m *MeshManager) UpdateIstio(
 	ctx context.Context,
-	req *meshmanager.UpdateIstioRequest,
+	req *meshmanager.IstioRequest,
 	resp *meshmanager.UpdateIstioResponse,
 ) error {
-	action := istioaction.NewUpdateIstioAction(m.model)
+	action := istioaction.NewUpdateIstioAction(m.opt.IstioConfig, m.model)
 	return action.Handle(ctx, req, resp)
 }
 
@@ -75,15 +75,15 @@ func (m *MeshManager) ListIstioVersion(
 	}
 	// 输出版本
 	istioVersions := []*meshmanager.IstioVersion{}
-	for _, version := range istioConfig.IstioVersions {
-		if !version.Enabled {
+	for version, istioVersionConfig := range istioConfig.IstioVersions {
+		if !istioVersionConfig.Enabled {
 			continue
 		}
 		istioVersions = append(istioVersions, &meshmanager.IstioVersion{
-			Name:         version.Name,
-			Version:      version.Version,
-			ChartVersion: version.ChartVersion,
-			KubeVersion:  version.KubeVersion,
+			Name:         istioVersionConfig.Name,
+			Version:      version,
+			ChartVersion: istioVersionConfig.ChartVersion,
+			KubeVersion:  istioVersionConfig.KubeVersion,
 		})
 	}
 	resp.Data = &meshmanager.IstioVersionAndFeatures{
@@ -121,4 +121,14 @@ func buildFeaturesForVersion(
 		}
 	}
 	return features
+}
+
+// GetIstioDetail implements meshmanager.MeshManagerHandler
+func (m *MeshManager) GetIstioDetail(
+	ctx context.Context,
+	req *meshmanager.GetIstioDetailRequest,
+	resp *meshmanager.GetIstioDetailResponse,
+) error {
+	action := istioaction.NewGetIstioDetailAction(m.opt.IstioConfig, m.model)
+	return action.Handle(ctx, req, resp)
 }

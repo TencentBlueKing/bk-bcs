@@ -34,7 +34,7 @@ import (
 type InstallIstioAction struct {
 	istioConfig *options.IstioConfig
 	model       store.MeshManagerModel
-	req         *meshmanager.InstallIstioRequest
+	req         *meshmanager.IstioRequest
 	resp        *meshmanager.InstallIstioResponse
 }
 
@@ -49,7 +49,7 @@ func NewInstallIstioAction(istioConfig *options.IstioConfig, model store.MeshMan
 // Handle handles the install istio request
 func (i *InstallIstioAction) Handle(
 	ctx context.Context,
-	req *meshmanager.InstallIstioRequest,
+	req *meshmanager.IstioRequest,
 	resp *meshmanager.InstallIstioResponse,
 ) error {
 
@@ -79,21 +79,80 @@ func (i *InstallIstioAction) Handle(
 // Validate 验证请求参数
 func (i *InstallIstioAction) Validate() error {
 	// 必填字段
-	if i.req.ProjectCode == "" && i.req.ProjectID == "" {
+	if i.req.ProjectCode.GetValue() == "" && i.req.ProjectID.GetValue() == "" {
 		return fmt.Errorf("project is required")
 	}
 	if len(i.req.PrimaryClusters) == 0 {
 		return fmt.Errorf("clusters is required")
 	}
-	if i.req.Version == "" {
+	if i.req.Version.GetValue() == "" {
 		return fmt.Errorf("chart version is required")
 	}
 	if i.req.FeatureConfigs == nil {
 		return fmt.Errorf("feature configs is required")
 	}
+	// 检查resource参数（limit和request 合法，并且limit >= request）
+	if err := i.validateResource(i.req); err != nil {
+		blog.Errorf("validate resource failed, err: %s", err)
+		return err
+	}
 
-	// 检查集群版本
+	// 检查主从集群版本兼容性
+	allClusters := make([]string, 0, len(i.req.PrimaryClusters)+len(i.req.RemoteClusters))
+	allClusters = append(allClusters, i.req.PrimaryClusters...)
+	allClusters = append(allClusters, i.req.RemoteClusters...)
+	if err := utils.ValidateClusterVersion(
+		context.TODO(),
+		i.istioConfig,
+		allClusters,
+		i.req.Version.GetValue(),
+	); err != nil {
+		return err
+	}
 
+	// 检查集群中是否已经安装了istio
+	if err := utils.ValidateIstioInstalled(context.TODO(), allClusters); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (i *InstallIstioAction) validateResource(req *meshmanager.IstioRequest) error {
+	// 检查sidecar resource参数（limit和request 合法，并且limit >= request）
+	if req.SidecarResourceConfig == nil {
+		return nil
+	}
+	if err := utils.ValidateResourceLimit(
+		req.SidecarResourceConfig.CpuRequest.GetValue(),
+		req.SidecarResourceConfig.CpuLimit.GetValue(),
+	); err != nil {
+		return err
+	}
+	if err := utils.ValidateResourceLimit(
+		req.SidecarResourceConfig.MemoryRequest.GetValue(),
+		req.SidecarResourceConfig.MemoryLimit.GetValue(),
+	); err != nil {
+		return err
+	}
+	// 检查hpa中resource参数（limit和request 合法，并且limit >= request）
+	if req.HighAvailability == nil {
+		return nil
+	}
+	if req.HighAvailability.ResourceConfig == nil {
+		return nil
+	}
+	if err := utils.ValidateResourceLimit(
+		req.HighAvailability.ResourceConfig.CpuRequest.GetValue(),
+		req.HighAvailability.ResourceConfig.CpuLimit.GetValue(),
+	); err != nil {
+		return err
+	}
+	if err := utils.ValidateResourceLimit(
+		req.HighAvailability.ResourceConfig.MemoryRequest.GetValue(),
+		req.HighAvailability.ResourceConfig.MemoryLimit.GetValue(),
+	); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -114,7 +173,7 @@ func (i *InstallIstioAction) install(ctx context.Context) error {
 	meshIstio.MeshID = meshID
 	meshIstio.NetworkID = networkID
 
-	chartVersion, err := i.getIstioChartVersion(i.req.Version)
+	chartVersion, err := i.getIstioChartVersion(i.req.Version.GetValue())
 	if err != nil {
 		blog.Errorf("get istio chart version failed, err: %s", err)
 		return common.NewCodeMessageError(common.InnerErrorCode, "get istio chart version failed", err)
@@ -132,32 +191,31 @@ func (i *InstallIstioAction) install(ctx context.Context) error {
 
 	// 创建并开始任务
 	action := actions.NewIstioInstallAction(
-		&actions.IstioInstallOption{
-			Model:           i.model,
+		&common.IstioInstallOption{
 			ChartValuesPath: i.istioConfig.ChartValuesPath,
 			ChartRepo:       i.istioConfig.ChartRepo,
 			MeshID:          meshID,
 			NetworkID:       networkID,
 			ChartVersion:    chartVersion,
 
-			ProjectID:             i.req.ProjectID,
-			ProjectCode:           i.req.ProjectCode,
-			Name:                  i.req.Name,
-			Description:           i.req.Description,
-			Version:               i.req.Version,
-			ControlPlaneMode:      i.req.ControlPlaneMode,
-			ClusterMode:           i.req.ClusterMode,
+			ProjectID:             i.req.ProjectID.GetValue(),
+			ProjectCode:           i.req.ProjectCode.GetValue(),
+			Name:                  i.req.Name.GetValue(),
+			Description:           i.req.Description.GetValue(),
+			Version:               i.req.Version.GetValue(),
+			ControlPlaneMode:      i.req.ControlPlaneMode.GetValue(),
+			ClusterMode:           i.req.ClusterMode.GetValue(),
 			PrimaryClusters:       i.req.PrimaryClusters,
 			RemoteClusters:        i.req.RemoteClusters,
 			SidecarResourceConfig: i.req.SidecarResourceConfig,
 			HighAvailability:      i.req.HighAvailability,
-			LogCollectorConfig:    i.req.LogCollectorConfig,
-			TracingConfig:         i.req.TracingConfig,
+			ObservabilityConfig:   i.req.ObservabilityConfig,
 			FeatureConfigs:        i.req.FeatureConfigs,
 		},
+		i.model,
 	)
-	// 异步执行，5分钟超时
-	_, err = operation.GlobalOperator.Dispatch(action, 5*time.Minute)
+	// 异步执行，10分钟超时
+	_, err = operation.GlobalOperator.Dispatch(action, 10*time.Minute)
 	if err != nil {
 		blog.Errorf("dispatch istio install action failed, err: %s", err)
 		return common.NewCodeMessageError(common.InstallIstioErrorCode, "dispatch istio install action failed", err)
@@ -178,10 +236,8 @@ func (i *InstallIstioAction) getIstioChartVersion(version string) (string, error
 		return "", errors.New("istio config is nil")
 	}
 	// 根据版本获取最新的一个chartVersion
-	for _, istioVersion := range i.istioConfig.IstioVersions {
-		if version == istioVersion.Version {
-			return istioVersion.ChartVersion, nil
-		}
+	if i.istioConfig.IstioVersions[version] == nil {
+		return "", errors.New("version not found")
 	}
-	return "", errors.New("version not found")
+	return i.istioConfig.IstioVersions[version].ChartVersion, nil
 }

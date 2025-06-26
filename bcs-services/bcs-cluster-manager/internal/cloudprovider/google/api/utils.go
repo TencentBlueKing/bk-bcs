@@ -223,6 +223,7 @@ func GenerateNodePool(input *CreateNodePoolRequest) *container.NodePool {
 		nodePool.Config = &container.NodeConfig{
 			MachineType: input.NodePool.Config.MachineType,
 			Labels:      input.NodePool.Config.Labels,
+			Tags:        input.NodePool.Config.Tags,
 			Taints: func(t []*Taint) []*container.NodeTaint {
 				nt := make([]*container.NodeTaint, 0)
 				for _, v := range t {

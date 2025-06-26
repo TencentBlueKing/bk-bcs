@@ -552,6 +552,7 @@ func generateNodeConfig(nodeGroup *proto.NodeGroup) *api.NodeConfig {
 		Taints:      api.MapTaints(nodeGroup.NodeTemplate.Taints),
 		DiskSizeGb:  int64(diskSize),
 		DiskType:    template.SystemDisk.DiskType,
+		Tags:        nodeGroup.LaunchTemplate.NetworkTag,
 	}
 	if template.ImageInfo != nil {
 		conf.ImageType = template.ImageInfo.ImageName

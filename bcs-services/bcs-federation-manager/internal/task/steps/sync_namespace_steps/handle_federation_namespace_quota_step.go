@@ -156,16 +156,6 @@ func (s HandleFederationNamespaceQuotaStep) DoWork(t *types.Task) error {
 			retry.DelayType(retry.BackOffDelay), retry.MaxDelay(fedsteps.DefaultMaxDelay*time.Minute)); err != nil {
 			return err
 		}
-	case fedsteps.UpdateKey:
-
-		// waiting for request bcs-thirdparty-service taiji update nsquota api
-		if err := retry.Do(func() error {
-
-			return nil
-		}, retry.Attempts(fedsteps.DefaultAttemptTimes), retry.Delay(fedsteps.DefaultRetryDelay*time.Minute),
-			retry.DelayType(retry.BackOffDelay), retry.MaxDelay(fedsteps.DefaultMaxDelay*time.Minute)); err != nil {
-			return err
-		}
 	}
 
 	blog.Infof("taskId: %s, taskType: %s, taskName: %s result: %v\n", t.GetTaskID(), t.GetTaskType(),

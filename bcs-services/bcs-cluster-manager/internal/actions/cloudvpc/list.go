@@ -81,7 +81,7 @@ func (la *ListAction) listCloudVPC() error { // nolint
 		}
 
 		if la.req.BusinessID != "" && cloudVPCs[i].BusinessID != "" &&
-			!strings.EqualFold(la.req.BusinessID, cloudVPCs[i].BusinessID) {
+			!utils.StringInSlice(la.req.BusinessID, strings.Split(cloudVPCs[i].BusinessID, ",")) {
 			continue
 		}
 

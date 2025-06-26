@@ -58,24 +58,24 @@ func NewHelmClient(opts *types.Options) (*HelmClient, error) {
 		return nil, nil
 	}
 
-	helmClient := &HelmClient{
+	helmCli := &HelmClient{
 		opts: opts,
 	}
-	helmClient.ctx, helmClient.cancel = context.WithCancel(context.Background())
+	helmCli.ctx, helmCli.cancel = context.WithCancel(context.Background())
 
 	if !discovery.UseServiceDiscovery() {
-		helmClient.discovery = discovery.NewModuleDiscovery(opts.Module, opts.EtcdRegistry)
-		err := helmClient.discovery.Start()
+		helmCli.discovery = discovery.NewModuleDiscovery(opts.Module, opts.EtcdRegistry)
+		err := helmCli.discovery.Start()
 		if err != nil {
 			blog.Errorf("start discovery[%s] client failed: %v", types.ModuleHelmManager, err)
 			return nil, err
 		}
-		helmmanager.SetClientConfig(opts.ClientTLSConfig, helmClient.discovery)
+		helmmanager.SetClientConfig(opts.ClientTLSConfig, helmCli.discovery)
 	} else {
 		helmmanager.SetClientConfig(opts.ClientTLSConfig, nil)
 	}
 
-	return helmClient, nil
+	return helmCli, nil
 }
 
 // GetHelmManagerClient get helm client

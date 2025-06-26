@@ -256,7 +256,8 @@ func handleClusterMasterNodesData(ctx context.Context, clusterId string, nodes *
 }
 
 // handleClusterWorkerNodesData handle nodes data
-func handleClusterWorkerNodesData(ctx context.Context, clusterId string, nodes *business.InstanceList) ([]string, []string) {
+func handleClusterWorkerNodesData(ctx context.Context, clusterId string,
+	nodes *business.InstanceList) ([]string, []string) {
 	var (
 		failedNodeIds  = make([]string, 0)
 		successNodeIds = make([]string, 0)

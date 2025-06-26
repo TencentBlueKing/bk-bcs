@@ -61,6 +61,12 @@ export const multiClusterResources = viewRequest('post', '/multi_cluster_resourc
 export const multiClusterResourcesCRD = viewRequest('post', '/multi_cluster_resources/$crd/custom_objects');
 export const multiClusterCustomResourceDefinition = viewRequest('post', '/multi_cluster_resources/$crd');
 export const multiClusterResourcesCount = viewRequest('post', '/multi_cluster_resources_count');
+export const multiClusterAPIResources = viewRequest('post', '/multi_cluster_resources/fetch/api_resources'); // 更多资源
+export const multiClusterCustomResources = viewRequest('post', '/multi_cluster_resources/fetch/custom_resources'); // crd资源列表
+export const customResourceDetail = viewRequest('get', '/clusters/$clusterId/res_object/$name'); // 获取单个crd资源
+export const createCustomResource = viewRequest('post', '/clusters/$clusterId/res_object'); // 创建crd资源（源码模式）
+export const updateCustomResource = viewRequest('put', '/clusters/$clusterId/res_object'); // 更新crd资源（源码模式）
+export const deleteCRDResource = viewRequest('delete', '/clusters/$clusterId/res_object/$name'); // 删除crd资源
 
 // 模板文件
 const templateRequest = createRequest({

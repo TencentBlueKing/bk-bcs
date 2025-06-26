@@ -14,56 +14,68 @@ package entity
 
 // Field keys for mesh entity
 const (
-	// Basic mesh information
-	FieldKeyMeshID     = "meshID"
-	FieldKeyMeshName   = "meshName"
-	FieldKeyNetworkID  = "networkID"
-	FieldKeyStatus     = "status"
-	FieldKeyCreateTime = "createTime"
-	FieldKeyUpdateTime = "updateTime"
-	FieldKeyCreateBy   = "createBy"
-	FieldKeyUpdateBy   = "updateBy"
+	// ===== 基础信息 =====
+	FieldKeyMeshID        = "meshID"
+	FieldKeyMeshName      = "meshName"
+	FieldKeyNetworkID     = "networkID"
+	FieldKeyProjectID     = "projectID"
+	FieldKeyProjectCode   = "projectCode"
+	FieldKeyDescription   = "description"
+	FieldKeyChartVersion  = "chartVersion"
+	FieldKeyStatus        = "status"
+	FieldKeyStatusMessage = "statusMessage"
+	FieldKeyCreateTime    = "createTime"
+	FieldKeyUpdateTime    = "updateTime"
+	FieldKeyCreateBy      = "createBy"
+	FieldKeyUpdateBy      = "updateBy"
 
-	// Mesh metadata
-	FieldKeyChartVersion   = "chartVersion"
-	FieldKeyClusters       = "clusters"
+	// ===== Mesh 配置 =====
+	FieldKeyControlPlaneMode = "controlPlaneMode"
+	FieldKeyClusterMode      = "clusterMode"
+	FieldKeyPrimaryClusters  = "primaryClusters"
+	FieldKeyRemoteClusters   = "remoteClusters"
+	FieldKeyDifferentNetwork = "differentNetwork"
+
+	// ===== 特性配置 =====
 	FieldKeyFeatureConfigs = "featureConfigs"
 
-	// Feature configuration keys
-	FieldKeyMeshMode                = "meshMode"
-	FieldKeyEgressTrafficMode       = "egressTrafficMode"
-	FieldKeySidecarAutoInjection    = "sidecarAutoInjection"
-	FieldKeySidecarBypassIPs        = "sidecarBypassIPs"
-	FieldKeySidecarReadinessProbe   = "sidecarReadinessProbe"
-	FieldKeySidecarTerminationGrace = "sidecarTerminationGrace"
-	FieldKeyIngressGateway          = "ingressGateway"
-	FieldKeyEgressGateway           = "egressGateway"
-	FieldKeyMonitoring              = "monitoring"
-	FieldKeyTracing                 = "tracing"
-	FieldKeyLogging                 = "logging"
+	// ===== Sidecar 资源配置 =====
+	FieldKeySidecarResourceConfig = "sidecarResourceConfig"
+	FieldKeyCPURequest            = "cpuRequest"
+	FieldKeyCPULimit              = "cpuLimit"
+	FieldKeyMemoryRequest         = "memoryRequest"
+	FieldKeyMemoryLimit           = "memoryLimit"
 
-	// Sidecar configuration fields
-	FieldKeySidecarEnabled      = "enabled"
-	FieldKeySidecarResources    = "resources"
-	FieldKeySidecarBypassIPList = "ipList"
-	FieldKeySidecarGracePeriod  = "gracePeriod"
+	// ===== 高可用配置 =====
+	FieldKeyHighAvailability                   = "highAvailability"
+	FieldKeyAutoscaleEnabled                   = "autoscaleEnabled"
+	FieldKeyAutoscaleMin                       = "autoscaleMin"
+	FieldKeyAutoscaleMax                       = "autoscaleMax"
+	FieldKeyReplicaCount                       = "replicaCount"
+	FieldKeyTargetCPUAverageUtilizationPercent = "targetCPUAverageUtilizationPercent"
+	FieldKeyResourceConfig                     = "resourceConfig"
+	FieldKeyDedicatedNode                      = "dedicatedNode"
+	FieldKeyEnabled                            = "enabled"
+	FieldKeyNodeLabels                         = "nodeLabels"
 
-	// Common resource fields
-	FieldKeyCPURequest    = "cpuRequest"
-	FieldKeyCPULimit      = "cpuLimit"
-	FieldKeyMemoryRequest = "memoryRequest"
-	FieldKeyMemoryLimit   = "memoryLimit"
+	// ===== 可观测性配置 =====
+	FieldKeyObservabilityConfig  = "observabilityConfig"
+	FieldKeyMetricsConfig        = "metricsConfig"
+	FieldKeyLogCollectorConfig   = "logCollectorConfig"
+	FieldKeyTracingConfig        = "tracingConfig"
+	FieldKeyTraceSamplingPercent = "traceSamplingPercent"
 
-	// Common service fields
-	FieldKeyServiceType           = "type"
-	FieldKeyServicePorts          = "ports"
-	FieldKeyServicePortName       = "name"
-	FieldKeyServicePortPort       = "port"
-	FieldKeyServicePortTargetPort = "targetPort"
-	FieldKeyServicePortProtocol   = "protocol"
+	// ===== 日志收集配置 =====
+	FieldKeyAccessLogEncoding = "accessLogEncoding"
+	FieldKeyAccessLogFormat   = "accessLogFormat"
 
-	// Common deployment fields
-	FieldKeyDeploymentReplicas  = "replicas"
-	FieldKeyDeploymentImage     = "image"
-	FieldKeyDeploymentResources = "resources"
+	// ===== 链路追踪配置 =====
+	FieldKeyEndpoint = "endpoint"
+	FieldKeyBkToken  = "bkToken"
+
+	// ===== 特性配置字段 =====
+	FieldKeyName            = "name"
+	FieldKeyDefaultValue    = "defaultValue"
+	FieldKeyAvailableValues = "availableValues"
+	FieldKeySupportVersions = "supportVersions"
 )

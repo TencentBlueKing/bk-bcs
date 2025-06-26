@@ -124,8 +124,9 @@ func (m *ModelMeshIstio) Update(ctx context.Context, meshID string, entityM enti
 		return fmt.Errorf("meshID cannot be empty")
 	}
 
+	// If entityM is nil, do nothing
 	if entityM == nil {
-		return fmt.Errorf("mesh cannot be empty")
+		return nil
 	}
 
 	if err := m.ensureTable(ctx); err != nil {
@@ -195,18 +196,11 @@ func (m *ModelMeshIstio) Create(ctx context.Context, mesh *entity.MeshIstio) err
 }
 
 // Get gets a mesh by its ID
-func (m *ModelMeshIstio) Get(ctx context.Context, meshID string) (*entity.MeshIstio, error) {
-	if meshID == "" {
-		return nil, fmt.Errorf("meshID cannot be empty")
-	}
+func (m *ModelMeshIstio) Get(ctx context.Context, cond *operator.Condition) (*entity.MeshIstio, error) {
 
 	if err := m.ensureTable(ctx); err != nil {
 		return nil, err
 	}
-
-	cond := operator.NewLeafCondition(operator.Eq, operator.M{
-		entity.FieldKeyMeshID: meshID,
-	})
 
 	mesh := &entity.MeshIstio{}
 	if err := m.db.Table(m.tableName).Find(cond).One(ctx, mesh); err != nil {

@@ -226,7 +226,6 @@ var (
 	// LastClusterStatus xxx
 	LastClusterStatus ParamKey = "lastClusterStatus"
 
-	// Task Common Instance
 	// NodeDatasKey xxx
 	NodeDatasKey ParamKey = "nodeDatas"
 	// NodeIPsKey xxx

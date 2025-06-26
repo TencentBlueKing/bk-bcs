@@ -91,4 +91,7 @@ const (
 
 	// NetworkPolicyCalico for calico network policy
 	NetworkPolicyProviderCalico = "CALICO"
+
+	// GKEClusterType for GKE cluster type
+	GKEClusterType = "clusterType"
 )

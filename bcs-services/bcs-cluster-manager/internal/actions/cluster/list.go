@@ -1059,3 +1059,167 @@ func getSharedCluster(projectId string, bizId string, model store.ClusterManager
 
 	return clusters, nil
 }
+
+// ListBasicInfoAction list action for cluster basic info
+type ListBasicInfoAction struct {
+	ctx   context.Context
+	model store.ClusterManagerModel
+	req   *cmproto.ListClusterV2Req
+	resp  *cmproto.ListClusterV2Resp
+
+	clusterBasicInfoList []*cmproto.ClusterBasicInfo
+}
+
+// NewListBasicInfoAction create list action for cluster basic info
+func NewListBasicInfoAction(model store.ClusterManagerModel) *ListBasicInfoAction {
+	return &ListBasicInfoAction{
+		model: model,
+	}
+}
+
+// validate request validation
+func (la *ListBasicInfoAction) validate() error {
+	if err := la.req.Validate(); err != nil {
+		return err
+	}
+
+	// env
+	if len(la.req.Environment) > 0 {
+		_, ok := common.EnvironmentLookup[la.req.Environment]
+		if !ok {
+			return fmt.Errorf("request Environment invalid, must be [test/debug/prod]")
+		}
+	}
+
+	// engineType
+	if len(la.req.EngineType) > 0 {
+		_, ok := common.EngineTypeLookup[la.req.EngineType]
+		if !ok {
+			return fmt.Errorf("request EngineType invalid, must be [k8s/mesos]")
+		}
+	}
+
+	// clusterType
+	if len(la.req.ClusterType) > 0 {
+		_, ok := common.ClusterTypeLookup[la.req.ClusterType]
+		if !ok {
+			return fmt.Errorf("request ClusterType invalid, must be [federation/signal]")
+		}
+	}
+
+	return nil
+}
+
+// filterClusterBasicInfoList filter cluster list
+func (la *ListBasicInfoAction) filterClusterBasicInfoList() ([]*cmproto.Cluster, error) {
+	var (
+		clusterList []*cmproto.Cluster
+		err         error
+	)
+
+	conds := make([]*operator.Condition, 0)
+	condM := make(operator.M)
+
+	// filter
+	if len(la.req.ProjectID) != 0 {
+		condM["projectid"] = la.req.ProjectID
+	}
+	if len(la.req.BusinessID) != 0 {
+		condM["businessid"] = la.req.BusinessID
+	}
+	if len(la.req.Provider) != 0 {
+		condM["provider"] = la.req.Provider
+	}
+	if len(la.req.Region) != 0 {
+		condM["region"] = la.req.Region
+	}
+	if len(la.req.VpcID) != 0 {
+		condM["vpcid"] = la.req.VpcID
+	}
+	if len(la.req.Environment) != 0 {
+		condM["environment"] = la.req.Environment
+	}
+	if len(la.req.EngineType) != 0 {
+		condM["enginetype"] = la.req.EngineType
+	}
+	if len(la.req.ClusterType) != 0 {
+		condM["clustertype"] = la.req.ClusterType
+	}
+	if len(la.req.Status) != 0 {
+		condM["status"] = la.req.Status
+	}
+	if len(la.req.SystemID) != 0 {
+		condM["systemid"] = la.req.SystemID
+	}
+	if len(la.req.ClusterID) != 0 {
+		condM["clusterid"] = la.req.ClusterID
+	}
+	condCluster := operator.NewLeafCondition(operator.Eq, condM)
+	conds = append(conds, condCluster)
+
+	// if not all, filter deleted
+	if !la.req.All {
+		condStatus := operator.NewLeafCondition(operator.Ne, operator.M{"status": common.StatusDeleted})
+		conds = append(conds, condStatus)
+	}
+	branchCond := operator.NewBranchCondition(operator.And, conds...)
+
+	listOpt := &storeopt.ListOption{
+		Offset: int64(la.req.Offset),
+		Limit:  int64(la.req.Limit),
+	}
+	clusterList, err = la.model.ListCluster(la.ctx, branchCond, listOpt)
+	if err != nil && !errors.Is(err, drivers.ErrTableRecordNotFound) {
+		return nil, err
+	}
+
+	return clusterList, nil
+}
+
+// listCluster cluster list
+func (la *ListBasicInfoAction) listClusterBasicInfo() error {
+	clusterList, err := la.filterClusterBasicInfoList()
+	if err != nil {
+		return err
+	}
+
+	for i := range clusterList {
+		if clusterList[i].IsShared {
+			clusterList[i].IsShared = false
+		}
+
+		la.clusterBasicInfoList = append(la.clusterBasicInfoList, clusterToClusterBasicInfo(clusterList[i]))
+	}
+
+	return nil
+}
+
+// setResp resp body
+func (la *ListBasicInfoAction) setResp(code uint32, msg string) {
+	la.resp.Code = code
+	la.resp.Message = msg
+	la.resp.Result = (code == common.BcsErrClusterManagerSuccess)
+	la.resp.Data = la.clusterBasicInfoList
+}
+
+// Handle list cluster request
+func (la *ListBasicInfoAction) Handle(ctx context.Context, req *cmproto.ListClusterV2Req, resp *cmproto.ListClusterV2Resp) {
+	if req == nil || resp == nil {
+		blog.Errorf("list cluster failed, req or resp is empty")
+		return
+	}
+	la.ctx = ctx
+	la.req = req
+	la.resp = resp
+	// validate
+	if err := la.validate(); err != nil {
+		la.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
+		return
+	}
+	// list cluster
+	if err := la.listClusterBasicInfo(); err != nil {
+		la.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
+		return
+	}
+	la.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
+}

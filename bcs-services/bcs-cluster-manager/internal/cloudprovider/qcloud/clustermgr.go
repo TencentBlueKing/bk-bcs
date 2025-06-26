@@ -301,6 +301,20 @@ func checkIfWhiteImageOsNames(opt *cloudprovider.ClusterGroupOption) bool {
 		return false
 	}
 
+	// 获取镜像白名单
+	cloud, err := cloudprovider.GetCloudByProvider(cloudName)
+	if err != nil {
+		blog.Errorf("%s checkClusterOsNameInWhiteImages GetCloudByProvider failed: %v", cloudName, err)
+		return false
+	}
+
+	if len(cloud.ConfInfo.WhiteImageOsName) == 0 {
+		blog.Errorf("%s checkClusterOsNameInWhiteImages WhiteImageOsName is empty", cloudName)
+		return false
+	}
+
+	blog.Infof("checkClusterOsNameInWhiteImages whiteImageOsName: %v", cloud.ConfInfo.WhiteImageOsName)
+
 	cls, err := getCloudCluster(opt.Cluster.SystemID, &opt.CommonOption)
 	if err != nil {
 		blog.Errorf("%s checkIfWhiteImageOsNames[%s] getCloudCluster failed: %v",
@@ -313,7 +327,7 @@ func checkIfWhiteImageOsNames(opt *cloudprovider.ClusterGroupOption) bool {
 	if opt.Group != nil && opt.Group.NodeTemplate != nil && opt.Group.NodeTemplate.NodeOS != "" {
 		osName = opt.Group.NodeTemplate.NodeOS
 		blog.Infof("checkIfWhiteImageOsNames[%s] osName[%s]", opt.Cluster.ClusterID, osName)
-		return utils.StringInSlice(osName, utils.WhiteImageOsName)
+		return utils.StringInSlice(osName, cloud.ConfInfo.WhiteImageOsName)
 	}
 
 	if cls.ImageId != nil && *cls.ImageId != "" {
@@ -330,7 +344,7 @@ func checkIfWhiteImageOsNames(opt *cloudprovider.ClusterGroupOption) bool {
 	}
 
 	blog.Infof("checkIfWhiteImageOsNames[%s] osName[%s]", opt.Cluster.ClusterID, osName)
-	return utils.StringInSlice(osName, utils.WhiteImageOsName)
+	return utils.StringInSlice(osName, cloud.ConfInfo.WhiteImageOsName)
 }
 
 // clusterSupportNodeNum cluster support node num
