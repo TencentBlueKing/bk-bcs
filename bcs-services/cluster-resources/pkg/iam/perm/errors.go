@@ -58,6 +58,12 @@ func (e *IAMPermError) ApplyURL() (string, error) {
 }
 
 // NewIAMPermErr xxx
-func NewIAMPermErr(username, msg string, actionReqList []ActionResourcesRequest) error {
-	return &IAMPermError{Code: errcode.NoIAMPerm, Username: username, Msg: msg, ActionReqList: actionReqList}
+func NewIAMPermErr(username, msg string, actionReqList []ActionResourcesRequest, tenantID string) error {
+	return &IAMPermError{
+		Code:          errcode.NoIAMPerm,
+		Username:      username,
+		Msg:           msg,
+		ActionReqList: actionReqList,
+		TenantID:      tenantID,
+	}
 }
