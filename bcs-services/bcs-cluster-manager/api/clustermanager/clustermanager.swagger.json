@@ -623,6 +623,46 @@
         ]
       }
     },
+    "/clustermanager/v1/business/{businessID}/clusters": {
+      "get": {
+        "summary": "查询某个业务下的Cluster列表",
+        "description": "查询业务下的集群列表信息(目前仅支持业务ID)",
+        "operationId": "ClusterManager_ListBusinessCluster",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerListBusinessClusterResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "businessID",
+            "description": "业务ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "operator",
+            "description": "operator. 操作者(传参时获取该用户对应集群的权限信息,不传时仅获取集群列表信息)",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
     "/clustermanager/v1/cloud": {
       "get": {
         "summary": "查询Cloud列表",
@@ -6997,6 +7037,141 @@
         ]
       }
     },
+    "/clustermanager/v2/cluster": {
+      "get": {
+        "summary": "查询简化Cluster列表",
+        "description": "根据查询条件过滤简化Cluster列表，如果某项条件值为空，则忽略此条件。如果所有条件都为空，则默认查询所有集群",
+        "operationId": "ClusterManager_ListClusterV2",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerListClusterV2Resp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "description": "projectID. 项目ID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "businessID",
+            "description": "businessID. CMDB业务ID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "provider",
+            "description": "provider. 集群提供者，云模板ID，影响具体云设施管理流程",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "region",
+            "description": "region. 集群所在地域",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "vpcID",
+            "description": "vpcID. 集群私有网络id，云上集群填写",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "environment",
+            "description": "environment. 集群环境, 例如[prod, debug, test]",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "engineType",
+            "description": "engineType. 引擎类型，[k8s, mesos]，默认k8s",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "clusterType",
+            "description": "clusterType. 集群类型, 例如[federation, single], federation表示为联邦集群，single表示独立集群，默认为single",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "description": "status. 集群状态，可能状态CREATING，RUNNING，DELETING，FALURE，INITIALIZATION，DELETED",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "systemID",
+            "description": "systemID. cloudID过滤集群",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "isCommonCluster",
+            "description": "isCommonCluster. 是否为公共集群,默认false",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          },
+          {
+            "name": "clusterID",
+            "description": "clusterID. 集群ID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "all",
+            "description": "all. true时获取所有的集群信息,包括被软删除的集群; false时获取非DELETED状态的集群信息",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          },
+          {
+            "name": "offset",
+            "description": "offset. 查询偏移量",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "limit",
+            "description": "limit. 查询限制数量",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
     "/clustermanager/v2/cluster/{clusterID}/node": {
       "post": {
         "summary": "上架集群节点",
@@ -8558,7 +8733,7 @@
           "title": "diskPartition"
         }
       },
-      "title": "CloudDataDisk 云磁盘格式化数据, 对应CVM数据盘。应用于节点模版\r\n主要用于 CA 自动扩容节点并上架节点时重装系统，多块数据盘 mountTarget 不能重复\r\n上架已存在节点时, 用户需指定diskPartition参数区分设备"
+      "title": "CloudDataDisk 云磁盘格式化数据, 对应CVM数据盘。应用于节点模版\n主要用于 CA 自动扩容节点并上架节点时重装系统，多块数据盘 mountTarget 不能重复\n上架已存在节点时, 用户需指定diskPartition参数区分设备"
     },
     "clustermanagerCloudModuleFlag": {
       "type": "object",
@@ -9532,6 +9707,132 @@
         }
       },
       "title": "ClusterAutoScalingOption cluster autoScaler module parameter"
+    },
+    "clustermanagerClusterBasicInfo": {
+      "type": "object",
+      "properties": {
+        "clusterID": {
+          "type": "string",
+          "description": "BCS内部使用集群ID，格式为BCS-K8S-XXXXX",
+          "title": "clusterID"
+        },
+        "clusterName": {
+          "type": "string",
+          "description": "集群名称",
+          "title": "clusterName"
+        },
+        "provider": {
+          "type": "string",
+          "description": "集群云配置，为云类型ID",
+          "title": "provider"
+        },
+        "region": {
+          "type": "string",
+          "description": "集群区域信息",
+          "title": "region"
+        },
+        "vpcID": {
+          "type": "string",
+          "description": "集群所在vpc，部分环境下非必填",
+          "title": "vpcID"
+        },
+        "projectID": {
+          "type": "string",
+          "description": "集群所关联的项目ID",
+          "title": "projectID"
+        },
+        "businessID": {
+          "type": "string",
+          "description": "项目绑定的业务ID, 集群所关联的业务ID，该ID来源于CMDB",
+          "title": "businessID"
+        },
+        "environment": {
+          "type": "string",
+          "description": "集群所对应的环境信息，stag，debug，prod",
+          "title": "environment"
+        },
+        "engineType": {
+          "type": "string",
+          "description": "集群编排引擎，k8s、mesos",
+          "title": "engineType"
+        },
+        "clusterType": {
+          "type": "string",
+          "description": "集群类型，federation、single",
+          "title": "clusterType"
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "creator": {
+          "type": "string",
+          "description": "集群信息创建者",
+          "title": "creator"
+        },
+        "createTime": {
+          "type": "string"
+        },
+        "updateTime": {
+          "type": "string"
+        },
+        "systemID": {
+          "type": "string",
+          "description": "kubernetes集群在各云平台上资源ID",
+          "title": "systemID"
+        },
+        "manageType": {
+          "type": "string",
+          "description": "集群管理类型，公有云时生效，MANAGED_CLUSTER(云上托管集群)，INDEPENDENT_CLUSTER(独立集群，自行维护)",
+          "title": "manageType"
+        },
+        "status": {
+          "type": "string",
+          "description": "集群状态，可能状态CREATING，RUNNING，DELETING，FALURE，INITIALIZATION",
+          "title": "status"
+        },
+        "updater": {
+          "type": "string",
+          "description": "集群信息更新者",
+          "title": "updater"
+        },
+        "networkType": {
+          "type": "string",
+          "description": "集群网络类型，(underlay/overlay)",
+          "title": "networkType"
+        },
+        "moduleID": {
+          "type": "string",
+          "description": "集群模块ID(CA添加节点时模块转移 废弃)",
+          "title": "moduleID"
+        },
+        "isCommonCluster": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "是否为公共集群,默认false(废弃)",
+          "title": "isCommonCluster"
+        },
+        "description": {
+          "type": "string",
+          "description": "集群简要描述",
+          "title": "description"
+        },
+        "clusterCategory": {
+          "type": "string",
+          "description": "集群类别，主要用于区分该集群是否是自建、导入(builder/importer), 默认是自建",
+          "title": "clusterCategory"
+        },
+        "is_shared": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "是否为共享集群,默认false",
+          "title": "is_shared"
+        }
+      },
+      "description": "简化集群信息",
+      "title": "ClusterV2"
     },
     "clustermanagerClusterBasicSetting": {
       "type": "object",
@@ -14916,6 +15217,14 @@
           "$ref": "#/definitions/clustermanagerInstanceChargePrepaid",
           "description": "实例的计费模式。当instanceChargeType为包年包月时，设置续费策略",
           "title": "charge"
+        },
+        "networkTag": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "网络标记，标记代表应用于每个节点的防火墙规则",
+          "title": "networkTag"
         }
       },
       "title": "LaunchConfigure template for scaling node"
@@ -14954,6 +15263,43 @@
       "required": [
         "code",
         "message"
+      ]
+    },
+    "clustermanagerListBusinessClusterResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerClusterBasicInfo"
+          },
+          "description": "集群信息列表",
+          "title": "data"
+        }
+      },
+      "description": "查询某个项目下集群列表返回",
+      "title": "ListProjectClusterResp",
+      "required": [
+        "code",
+        "message",
+        "data"
       ]
     },
     "clustermanagerListCloudAccountPermResponse": {
@@ -15771,6 +16117,43 @@
       },
       "description": "查询集群列表返回",
       "title": "ListClusterResp",
+      "required": [
+        "code",
+        "message",
+        "data"
+      ]
+    },
+    "clustermanagerListClusterV2Resp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerClusterBasicInfo"
+          },
+          "description": "简化集群信息列表",
+          "title": "data"
+        }
+      },
+      "description": "查询集群列表返回",
+      "title": "ListClusterV2Resp",
       "required": [
         "code",
         "message",
@@ -21655,7 +22038,7 @@
           }
         }
       },
-      "title": "https://github.com/golang/protobuf/issues/1118\r\nhttps://pkg.go.dev/google.golang.org/protobuf/types/known/structpb#Struct"
+      "title": "https://github.com/golang/protobuf/issues/1118\nhttps://pkg.go.dev/google.golang.org/protobuf/types/known/structpb#Struct"
     },
     "clustermanagerWebAnnotationsV2": {
       "type": "object",
@@ -21773,7 +22156,7 @@
       "properties": {
         "type_url": {
           "type": "string",
-          "description": "A URL/resource name that uniquely identifies the type of the serialized\r\nprotocol buffer message. This string must contain at least\r\none \"/\" character. The last segment of the URL's path must represent\r\nthe fully qualified name of the type (as in\r\n`path/google.protobuf.Duration`). The name should be in a canonical form\r\n(e.g., leading \".\" is not accepted).\r\n\r\nIn practice, teams usually precompile into the binary all types that they\r\nexpect it to use in the context of Any. However, for URLs which use the\r\nscheme `http`, `https`, or no scheme, one can optionally set up a type\r\nserver that maps type URLs to message definitions as follows:\r\n\r\n* If no scheme is provided, `https` is assumed.\r\n* An HTTP GET on the URL must yield a [google.protobuf.Type][]\r\n  value in binary format, or produce an error.\r\n* Applications are allowed to cache lookup results based on the\r\n  URL, or have them precompiled into a binary to avoid any\r\n  lookup. Therefore, binary compatibility needs to be preserved\r\n  on changes to types. (Use versioned type names to manage\r\n  breaking changes.)\r\n\r\nNote: this functionality is not currently available in the official\r\nprotobuf release, and it is not used for type URLs beginning with\r\ntype.googleapis.com.\r\n\r\nSchemes other than `http`, `https` (or the empty scheme) might be\r\nused with implementation specific semantics."
+          "description": "A URL/resource name that uniquely identifies the type of the serialized\nprotocol buffer message. This string must contain at least\none \"/\" character. The last segment of the URL's path must represent\nthe fully qualified name of the type (as in\n`path/google.protobuf.Duration`). The name should be in a canonical form\n(e.g., leading \".\" is not accepted).\n\nIn practice, teams usually precompile into the binary all types that they\nexpect it to use in the context of Any. However, for URLs which use the\nscheme `http`, `https`, or no scheme, one can optionally set up a type\nserver that maps type URLs to message definitions as follows:\n\n* If no scheme is provided, `https` is assumed.\n* An HTTP GET on the URL must yield a [google.protobuf.Type][]\n  value in binary format, or produce an error.\n* Applications are allowed to cache lookup results based on the\n  URL, or have them precompiled into a binary to avoid any\n  lookup. Therefore, binary compatibility needs to be preserved\n  on changes to types. (Use versioned type names to manage\n  breaking changes.)\n\nNote: this functionality is not currently available in the official\nprotobuf release, and it is not used for type URLs beginning with\ntype.googleapis.com.\n\nSchemes other than `http`, `https` (or the empty scheme) might be\nused with implementation specific semantics."
         },
         "value": {
           "type": "string",
@@ -21781,7 +22164,7 @@
           "description": "Must be a valid serialized protocol buffer of the above specified type."
         }
       },
-      "title": "`Any` contains an arbitrary serialized protocol buffer message along with a\r\nURL that describes the type of the serialized message.\r\n\r\nProtobuf library provides support to pack/unpack Any values in the form\r\nof utility functions or additional generated methods of the Any type.\r\n\r\nExample 1: Pack and unpack a message in C++.\r\n\r\n    Foo foo = ...;\r\n    Any any;\r\n    any.PackFrom(foo);\r\n    ...\r\n    if (any.UnpackTo(\u0026foo)) {\r\n      ...\r\n    }\r\n\r\nExample 2: Pack and unpack a message in Java.\r\n\r\n    Foo foo = ...;\r\n    Any any = Any.pack(foo);\r\n    ...\r\n    if (any.is(Foo.class)) {\r\n      foo = any.unpack(Foo.class);\r\n    }\r\n\r\n Example 3: Pack and unpack a message in Python.\r\n\r\n    foo = Foo(...)\r\n    any = Any()\r\n    any.Pack(foo)\r\n    ...\r\n    if any.Is(Foo.DESCRIPTOR):\r\n      any.Unpack(foo)\r\n      ...\r\n\r\n Example 4: Pack and unpack a message in Go\r\n\r\n     foo := \u0026pb.Foo{...}\r\n     any, err := ptypes.MarshalAny(foo)\r\n     ...\r\n     foo := \u0026pb.Foo{}\r\n     if err := ptypes.UnmarshalAny(any, foo); err != nil {\r\n       ...\r\n     }\r\n\r\nThe pack methods provided by protobuf library will by default use\r\n'type.googleapis.com/full.type.name' as the type URL and the unpack\r\nmethods only use the fully qualified type name after the last '/'\r\nin the type URL, for example \"foo.bar.com/x/y.z\" will yield type\r\nname \"y.z\".\r\n\r\n\r\nJSON\r\n====\r\nThe JSON representation of an `Any` value uses the regular\r\nrepresentation of the deserialized, embedded message, with an\r\nadditional field `@type` which contains the type URL. Example:\r\n\r\n    package google.profile;\r\n    message Person {\r\n      string first_name = 1;\r\n      string last_name = 2;\r\n    }\r\n\r\n    {\r\n      \"@type\": \"type.googleapis.com/google.profile.Person\",\r\n      \"firstName\": \u003cstring\u003e,\r\n      \"lastName\": \u003cstring\u003e\r\n    }\r\n\r\nIf the embedded message type is well-known and has a custom JSON\r\nrepresentation, that representation will be embedded adding a field\r\n`value` which holds the custom JSON in addition to the `@type`\r\nfield. Example (for message [google.protobuf.Duration][]):\r\n\r\n    {\r\n      \"@type\": \"type.googleapis.com/google.protobuf.Duration\",\r\n      \"value\": \"1.212s\"\r\n    }"
+      "description": "`Any` contains an arbitrary serialized protocol buffer message along with a\nURL that describes the type of the serialized message.\n\nProtobuf library provides support to pack/unpack Any values in the form\nof utility functions or additional generated methods of the Any type.\n\nExample 1: Pack and unpack a message in C++.\n\n    Foo foo = ...;\n    Any any;\n    any.PackFrom(foo);\n    ...\n    if (any.UnpackTo(\u0026foo)) {\n      ...\n    }\n\nExample 2: Pack and unpack a message in Java.\n\n    Foo foo = ...;\n    Any any = Any.pack(foo);\n    ...\n    if (any.is(Foo.class)) {\n      foo = any.unpack(Foo.class);\n    }\n\n Example 3: Pack and unpack a message in Python.\n\n    foo = Foo(...)\n    any = Any()\n    any.Pack(foo)\n    ...\n    if any.Is(Foo.DESCRIPTOR):\n      any.Unpack(foo)\n      ...\n\n Example 4: Pack and unpack a message in Go\n\n     foo := \u0026pb.Foo{...}\n     any, err := ptypes.MarshalAny(foo)\n     ...\n     foo := \u0026pb.Foo{}\n     if err := ptypes.UnmarshalAny(any, foo); err != nil {\n       ...\n     }\n\nThe pack methods provided by protobuf library will by default use\n'type.googleapis.com/full.type.name' as the type URL and the unpack\nmethods only use the fully qualified type name after the last '/'\nin the type URL, for example \"foo.bar.com/x/y.z\" will yield type\nname \"y.z\".\n\n\nJSON\n====\nThe JSON representation of an `Any` value uses the regular\nrepresentation of the deserialized, embedded message, with an\nadditional field `@type` which contains the type URL. Example:\n\n    package google.profile;\n    message Person {\n      string first_name = 1;\n      string last_name = 2;\n    }\n\n    {\n      \"@type\": \"type.googleapis.com/google.profile.Person\",\n      \"firstName\": \u003cstring\u003e,\n      \"lastName\": \u003cstring\u003e\n    }\n\nIf the embedded message type is well-known and has a custom JSON\nrepresentation, that representation will be embedded adding a field\n`value` which holds the custom JSON in addition to the `@type`\nfield. Example (for message [google.protobuf.Duration][]):\n\n    {\n      \"@type\": \"type.googleapis.com/google.protobuf.Duration\",\n      \"value\": \"1.212s\"\n    }"
     },
     "protobufNullValue": {
       "type": "string",
@@ -21789,7 +22172,7 @@
         "NULL_VALUE"
       ],
       "default": "NULL_VALUE",
-      "description": "`NullValue` is a singleton enumeration to represent the null value for the\r\n`Value` type union.\r\n\r\n The JSON representation for `NullValue` is JSON `null`.\n\n - NULL_VALUE: Null value."
+      "description": "`NullValue` is a singleton enumeration to represent the null value for the\n`Value` type union.\n\n The JSON representation for `NullValue` is JSON `null`.\n\n - NULL_VALUE: Null value."
     },
     "runtimeError": {
       "type": "object",

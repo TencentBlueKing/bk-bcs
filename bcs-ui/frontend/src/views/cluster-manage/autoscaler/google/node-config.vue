@@ -260,6 +260,33 @@
               </a>
             </i18n>
           </bk-form-item>
+          <bk-form-item
+            :desc="{
+              allowHTML: true,
+              content: '#networkTagDesc',
+            }"
+            :label="$t('cluster.ca.nodePool.create.networkTag.title')">
+            <Values
+              :min-item="0"
+              :disabled="isEdit"
+              v-model="nodePoolConfig.launchTemplate.networkTag"
+              @change="v => nodePoolConfig.launchTemplate.networkTag = v">
+            </Values>
+            <div id="networkTagDesc">
+              <div>{{ $t('cluster.ca.nodePool.create.networkTag.desc') }}</div>
+              <div>
+                <i18n path="tke.button.goDetail">
+                  <template #0>
+                    <span
+                      class="text-[12px] text-[#699DF4] cursor-pointer"
+                      @click="openLink('https://cloud.google.com/vpc/docs/add-remove-network-tags?hl=zh-cn&authuser=1')">
+                      {{ $t('cluster.ca.nodePool.create.networkTag.link') }}
+                    </span>
+                  </template>
+                </i18n>
+              </div>
+            </div>
+          </bk-form-item>
           <bk-form-item :label="$t('dashboard.workload.container.dataDir')">
             <bcs-input disabled v-model="nodePoolConfig.nodeTemplate.dockerGraphPath"></bcs-input>
           </bk-form-item>
@@ -294,9 +321,10 @@ import $router from '@/router';
 import $store from '@/store/index';
 import Schema from '@/views/cluster-manage/autoscaler/resolve-schema';
 import { useClusterInfo } from '@/views/cluster-manage/cluster/use-cluster';
+import Values from '@/views/cluster-manage/components/values.vue';
 
 export default defineComponent({
-  components: { FormGroup },
+  components: { FormGroup, Values },
   props: {
     schema: {
       type: Object,
@@ -378,6 +406,7 @@ export default defineComponent({
         // 默认值
         isSecurityService: defaultValues.value.launchTemplate?.isSecurityService || true,
         isMonitorService: defaultValues.value.launchTemplate?.isMonitorService || true,
+        networkTag: defaultValues.value.launchTemplate?.networkTag || [],
       },
       nodeTemplate: {
         dataDisks: defaultValues.value.nodeTemplate?.dataDisks || [],
@@ -720,6 +749,12 @@ export default defineComponent({
       clusterDetailLoading.value = false;
     };
 
+    const openLink = (link: string) => {
+      if (!link) return;
+
+      window.open(link);
+    };
+
     onMounted(async () => {
       await handleGetClusterDetail(); // 优选获取集群详情信息
       handleGetOsImage();
@@ -768,6 +803,7 @@ export default defineComponent({
       showDataDisks,
       clusterAdvanceSettings,
       handleSetZoneData,
+      openLink,
     };
   },
 });

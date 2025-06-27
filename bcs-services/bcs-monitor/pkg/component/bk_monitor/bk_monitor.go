@@ -405,3 +405,47 @@ func GetClusterEventDataID(ctx context.Context, host, clusterID string) (*Cluste
 
 	return result.Data["K8SEvent"], nil
 }
+
+// MetadataQueryDataSourceResult 获取数据源
+type MetadataQueryDataSourceResult struct {
+	BaseResponse
+	Data DataSource `json:"data"`
+}
+
+// DataSource 数据源
+type DataSource struct {
+	BKDataID int `json:"bk_data_id"`
+	MQConfig struct {
+		StorageConfig struct {
+			Topic     string `json:"topic"`
+			Partition int    `json:"partition"`
+		} `json:"storage_config"`
+	} `json:"mq_config"`
+}
+
+// MetadataQueryDataSource 获取数据源
+func MetadataQueryDataSource(ctx context.Context, host string, dataID int) (*DataSource, error) {
+	authInfo, err := component.GetBKAPIAuthorization("")
+	if err != nil {
+		return nil, err
+	}
+
+	url := fmt.Sprintf("%s/metadata_query_data_source", host)
+	resp, err := component.GetClient().R().
+		SetContext(ctx).
+		SetHeader("X-Bkapi-Authorization", authInfo).
+		SetQueryParam("bk_data_id", strconv.Itoa(dataID)).
+		Get(url)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode() != http.StatusOK {
+		return nil, errors.Errorf("http code %d != 200, body: %s", resp.StatusCode(), resp.Body())
+	}
+	result := new(MetadataQueryDataSourceResult)
+	if err := json.Unmarshal(resp.Body(), result); err != nil {
+		return nil, err
+	}
+
+	return &result.Data, nil
+}

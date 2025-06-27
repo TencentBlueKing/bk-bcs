@@ -3,11 +3,18 @@
     :title="kind"
     :kind="kind"
     type="crd"
-    :crd="crd"
+    :crd="`${resource}.${group}`"
     category="custom_objects"
     default-active-detail-type="yaml"
     :show-detail-tab="false"
-    :scope="scope">
+    :scope="scope"
+    :crd-options="{
+      group: group,
+      version: version,
+      resource: resource,
+      namespaced: `${namespaced}` === 'true',
+    }"
+    customized>
     <template
       #default="{
         curPageData, pageConf, webAnnotations,
@@ -148,13 +155,25 @@ export default defineComponent({
       type: String,
       required: true,
     },
-    crd: {
-      type: String,
-      required: true,
-    },
     scope: {
       type: String,
       default: '',
+    },
+    group: {
+      type: String,
+      required: true,
+    },
+    version: {
+      type: String,
+      required: true,
+    },
+    resource: {
+      type: String,
+      required: true,
+    },
+    namespaced: {
+      type: [String, Boolean], // 刷新页面时namespaced为字符串
+      required: true,
     },
   },
 });

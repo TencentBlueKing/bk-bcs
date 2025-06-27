@@ -53,20 +53,30 @@ const (
 )
 
 const (
+	// StringTrue 字符串true
+	StringTrue = "true"
+	// StringFalse 字符串false
+	StringFalse = "false"
+)
+
+const (
 	// ControlPlaneModeHosting 托管控制面
 	ControlPlaneModeHosting = "hosting"
 	// ControlPlaneModeIndependent 独立控制面
 	ControlPlaneModeIndependent = "independent"
 
-	// MultiClusterModePrimaryRemote 主从结构
+	// MultiClusterModePrimaryRemote 主从架构
 	MultiClusterModePrimaryRemote = "primaryPemote"
-	// MultiClusterModeMultiPrimary 多主结构
+	// MultiClusterModeMultiPrimary 主从架构
 	MultiClusterModeMultiPrimary = "multiPrimary"
 
 	// AccessLogEncodingJSON 日志编码json
 	AccessLogEncodingJSON = "json"
 	// AccessLogEncodingTEXT 日志编码text
 	AccessLogEncodingTEXT = "text"
+
+	// EnvPilotHTTP10 是否开启HTTP1.0
+	EnvPilotHTTP10 = "PILOT_HTTP10"
 )
 
 // IstioStatus 控制面状态
@@ -78,7 +88,7 @@ const (
 	// IstioStatusInstalled 安装完成
 	IstioStatusInstalled = "installed"
 	// IstioStatusFailed 安装失败
-	IstioStatusFailed = "failed"
+	IstioStatusInstallFailed = "install-failed"
 	// IstioStatusUninstalling 卸载中
 	IstioStatusUninstalling = "uninstalling"
 	// IstioStatusUninstalled 卸载完成

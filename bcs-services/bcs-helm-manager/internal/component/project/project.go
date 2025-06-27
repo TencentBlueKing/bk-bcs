@@ -114,7 +114,7 @@ func ListNamespaces(ctx context.Context, projectCode, clusterID string) ([]*bcsp
 	if err != nil {
 		return nil, fmt.Errorf("ListNamespaces error: %s", err)
 	}
-	if p.Code != 0 || p.Data == nil {
+	if p.Code != 0 {
 		return nil, fmt.Errorf("ListNamespaces error, code: %d, message: %s, requestID: %s",
 			p.Code, p.GetMessage(), p.GetRequestID())
 	}

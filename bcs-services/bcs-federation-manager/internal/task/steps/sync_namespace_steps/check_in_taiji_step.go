@@ -121,8 +121,13 @@ func (s CheckInTaijiStep) DoWork(t *types.Task) error {
 		return fmt.Errorf("getKubeConfigForTaiji failed namespace: %s, err: %s", nsName, err.Error())
 	}
 
+	if resp == nil {
+		blog.Errorf("getKubeConfigForTaiji failed namespace: %s, resp is empty", nsName)
+		return fmt.Errorf("getKubeConfigForTaiji failed namespace: %s, resp is empty", nsName)
+	}
+
 	// 处理第三方服务返回的错误
-	if resp != nil && resp.Error != nil {
+	if resp.Error != nil {
 		// 当namespace未注册时，才去新增
 		if strings.Contains(resp.Error.Message, "namespace not register") {
 			// 创建taiji namespace
@@ -134,10 +139,11 @@ func (s CheckInTaijiStep) DoWork(t *types.Task) error {
 			blog.Infof("CheckInTaijiStep Success, taskId: %s, taskName: %s, namespace: %s, hostClusterId: %s",
 				t.GetTaskID(), step.GetName(), nsName, hostClusterID)
 			return nil
+		} else if resp.Error.Message != "SUCCESS" {
+			// 其他错误类型直接返回，不执行更新逻辑
+			blog.Errorf("getKubeConfigForTaiji returned unexpected error, namespace: %s, err: %s", nsName, resp.Error.Message)
+			return fmt.Errorf("thirdparty service error: %s", resp.Error.Message)
 		}
-		// 其他错误类型直接返回，不执行更新逻辑
-		blog.Errorf("getKubeConfigForTaiji returned unexpected error, namespace: %s, err: %s", nsName, resp.Error.Message)
-		return fmt.Errorf("thirdparty service error: %s", resp.Error.Message)
 	}
 
 	// 更新taiji namespace

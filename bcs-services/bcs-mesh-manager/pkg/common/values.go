@@ -65,16 +65,17 @@ type IstiodRemoteConfig struct {
 
 // IstiodPilotConfig pilot配置
 type IstiodPilotConfig struct {
-	Resources        *v1.ResourceRequirements `yaml:"resources,omitempty"`
-	AutoscaleEnabled *bool                    `yaml:"autoscaleEnabled,omitempty"`
-	AutoscaleMin     *int32                   `yaml:"autoscaleMin,omitempty"`
-	AutoscaleMax     *int32                   `yaml:"autoscaleMax,omitempty"`
-	ReplicaCount     *int32                   `yaml:"replicaCount,omitempty"`
-	TraceSampling    *float64                 `yaml:"traceSampling,omitempty"`
-	ConfigMap        *bool                    `yaml:"configMap,omitempty"`
-	CPU              *HPACPUConfig            `yaml:"cpu,omitempty"`
-	Env              map[string]string        `yaml:"env,omitempty"`
-	NodeSelector     map[string]string        `yaml:"nodeSelector,omitempty"`
+	Resources        *ResourceConfig   `yaml:"resources,omitempty"`
+	AutoscaleEnabled *bool             `yaml:"autoscaleEnabled,omitempty"`
+	AutoscaleMin     *int32            `yaml:"autoscaleMin,omitempty"`
+	AutoscaleMax     *int32            `yaml:"autoscaleMax,omitempty"`
+	ReplicaCount     *int32            `yaml:"replicaCount,omitempty"`
+	TraceSampling    *float64          `yaml:"traceSampling,omitempty"`
+	ConfigMap        *bool             `yaml:"configMap,omitempty"`
+	CPU              *HPACPUConfig     `yaml:"cpu,omitempty"`
+	Env              map[string]string `yaml:"env,omitempty"`
+	NodeSelector     map[string]string `yaml:"nodeSelector,omitempty"`
+	Tolerations      []v1.Toleration   `yaml:"tolerations,omitempty"`
 }
 
 // HPACPUConfig HPA cpu配置
@@ -100,8 +101,8 @@ type IstiodGlobalConfig struct {
 
 // IstioProxyConfig proxy配置
 type IstioProxyConfig struct {
-	ExcludeIPRanges *string                  `yaml:"excludeIPRanges,omitempty"`
-	Resources       *v1.ResourceRequirements `yaml:"resources,omitempty"`
+	ExcludeIPRanges *string         `yaml:"excludeIPRanges,omitempty"`
+	Resources       *ResourceConfig `yaml:"resources,omitempty"`
 }
 
 // IstiodMultiClusterConfig multiCluster配置
@@ -114,9 +115,30 @@ type IstiodMeshConfig struct {
 	OutboundTrafficPolicy *OutboundTrafficPolicy `yaml:"outboundTrafficPolicy,omitempty"`
 	DefaultConfig         *DefaultConfig         `yaml:"defaultConfig,omitempty"`
 	EnableTracing         *bool                  `yaml:"enableTracing,omitempty"`
+	ExtensionProviders    []*ExtensionProvider   `yaml:"extensionProviders,omitempty"`
 	AccessLogFile         *string                `yaml:"accessLogFile,omitempty"`
 	AccessLogFormat       *string                `yaml:"accessLogFormat,omitempty"`
 	AccessLogEncoding     *string                `yaml:"accessLogEncoding,omitempty"`
+}
+
+// ExtensionProvider 扩展提供者
+type ExtensionProvider struct {
+	Name          *string              `yaml:"name,omitempty"`
+	OpenTelemetry *OpenTelemetryConfig `yaml:"opentelemetry,omitempty"`
+}
+
+// OpenTelemetryConfig open telemetry配置
+type OpenTelemetryConfig struct {
+	Service *string                  `yaml:"service,omitempty"`
+	Port    *int32                   `yaml:"port,omitempty"`
+	Http    *OpenTelemetryHttpConfig `yaml:"http,omitempty"`
+}
+
+// OpenTelemetryHttpConfig http配置
+type OpenTelemetryHttpConfig struct {
+	Path    *string           `yaml:"path,omitempty"`
+	Timeout *string           `yaml:"timeout,omitempty"`
+	Headers map[string]string `yaml:"headers,omitempty"`
 }
 
 // OutboundTrafficPolicy 出站流量策略
@@ -146,4 +168,22 @@ type ProxyMetadata struct {
 	ExitOnZeroActiveConnections *bool   `yaml:"EXIT_ON_ZERO_ACTIVE_CONNECTIONS,omitempty"`
 	IstioMetaDnsCapture         *string `yaml:"ISTIO_META_DNS_CAPTURE,omitempty"`
 	IstioMetaDnsAutoAllocate    *string `yaml:"ISTIO_META_DNS_AUTO_ALLOCATE,omitempty"`
+}
+
+// ResourceConfig 自定义资源配置，用于正确的 YAML 序列化
+type ResourceConfig struct {
+	Limits   *ResourceLimits   `yaml:"limits,omitempty"`
+	Requests *ResourceRequests `yaml:"requests,omitempty"`
+}
+
+// ResourceLimits 资源限制
+type ResourceLimits struct {
+	CPU    *string `yaml:"cpu,omitempty"`
+	Memory *string `yaml:"memory,omitempty"`
+}
+
+// ResourceRequests 资源请求
+type ResourceRequests struct {
+	CPU    *string `yaml:"cpu,omitempty"`
+	Memory *string `yaml:"memory,omitempty"`
 }

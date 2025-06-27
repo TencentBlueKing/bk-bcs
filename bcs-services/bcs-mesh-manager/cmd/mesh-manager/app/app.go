@@ -340,6 +340,9 @@ func (s *Server) initHTTPService() error {
 	// init http server
 	smux := http.NewServeMux()
 	smux.Handle("/", router)
+	smux.Handle("/meshmanager/swagger/", http.StripPrefix("/meshmanager/swagger/",
+		http.FileServer(http.Dir("/data/bcs/swagger/"))),
+	)
 
 	httpAddress := net.JoinHostPort(s.opt.Address, strconv.Itoa(int(s.opt.HTTPPort)))
 

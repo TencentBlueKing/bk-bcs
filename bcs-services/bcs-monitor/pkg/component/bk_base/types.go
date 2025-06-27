@@ -43,9 +43,11 @@ const CreateDataIDBody = `{
 				"predefined": {
 					"dataId": %d,
 					"channel": {
+						"kind": "KafkaChannel",
 						"namespace": "%s",
 						"name": "%s"
-					}
+					},
+					"topic": "%s"
 				},
 				"eventType": "log"
 			}
@@ -202,7 +204,7 @@ const CreateDatabusBody = `{
 								}
 							}
 						],
-						"filter_rules": "False"
+						"filter_rules": "True"
 					}
 				],
 				"maintainers": [
