@@ -19,6 +19,7 @@ import (
 
 	"golang.org/x/sync/errgroup"
 	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions"
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	respUtil "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/resp"
@@ -131,6 +132,23 @@ func (h *Handler) FetchMultiClusterCustomResources(ctx context.Context,
 	// from api server
 	var query = NewAPIServerQuery(clusterNS, filter, viewQueryToQueryFilter(view.Filter))
 
+	// 获取 crd 信息，返回web anno
+	var clusterIDs []string
+	for _, v := range req.GetClusterNamespaces() {
+		clusterIDs = append(clusterIDs, v.ClusterID)
+	}
+	crdName := req.Resource + "." + req.Group
+	crdInfo, err := cli.GetClustersCRDInfoDirect(ctx, clusterIDs, crdName)
+	if err != nil {
+		if !errors.IsNotFound(err) {
+			return err
+		}
+
+		crdInfo = map[string]interface{}{
+			"kind": "",
+		}
+	}
+
 	var data map[string]interface{}
 	data, err = query.FetchPreferred(ctx, &schema.GroupVersionResource{
 		Group:    req.GetGroup(),
@@ -144,9 +162,7 @@ func (h *Handler) FetchMultiClusterCustomResources(ctx context.Context,
 	if err != nil {
 		return err
 	}
-	resp.WebAnnotations, err = web.NewAnnos(
-		web.NewFeatureFlag(featureflag.FormCreate, true),
-	).ToPbStruct()
+	resp.WebAnnotations, err = web.GenListCObjWebAnnos(ctx, data, crdInfo, "")
 	return err
 }
 
