@@ -89,7 +89,7 @@
             <bcs-button text :disabled="!row.version" @click="deployFile(row)">
               {{ $t('templateSet.button.deploy') }}</bcs-button>
           </span>
-          <PopoverSelector>
+          <PopoverSelector :on-show="(popover) => curPopover = popover">
             <span class="bcs-icon-more-btn"><i class="bcs-icon bcs-icon-more"></i></span>
             <template #content>
               <ul>
@@ -196,6 +196,8 @@ async function getTemplateSpace() {
     $id: props.templateSpace,
   });
 }
+
+const curPopover = ref<InstanceType<typeof PopoverSelector>>();
 
 // 获取空间下文件列表
 const fileLoading = ref(false);
@@ -310,6 +312,7 @@ function mangeFileVersion(file: IListTemplateMetadataItem) {
 
 // 克隆版本
 function cloneVersion(file: IListTemplateMetadataItem) {
+  curPopover.value?.hide?.();
   $router.push({
     name: 'addTemplateFile',
     params: {

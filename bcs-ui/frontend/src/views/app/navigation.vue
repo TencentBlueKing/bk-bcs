@@ -157,7 +157,6 @@
   </div>
 </template>
 <script lang="ts">
-import jsonp from 'jsonp';
 import { computed, defineComponent, onBeforeUnmount, onMounted, reactive, ref, toRef, watch } from 'vue';
 
 import PopoverSelector from '../../components/popover-selector.vue';
@@ -331,13 +330,23 @@ export default defineComponent({
       // 修改cookie
       setCookie('blueking_language', item.locale, window.BK_DOMAIN, expiresStr);
       // 修改用户管理语言
-      jsonp(
-        `${window.BK_USER_HOST}/api/c/compapi/v2/usermanage/fe_update_user_language/?language=${item.locale}`,
-        { param: 'callback', timeout: 100 },
-        () => {
-          $router.go(0);
-        },
-      );
+      try {
+        const url = `${window.BK_USER_HOST}/api/v3/open-web/tenant/current-user/language/`;
+        await fetch(url, {
+          method: 'PUT',
+          headers: {
+            'X-Bk-Tenant-Id': user.value.tenant_id,
+            'Content-type': 'application/json',
+          },
+          body: JSON.stringify({
+            language: item.locale,
+          }),
+          credentials: 'include',
+        });
+        $router.go(0);
+      } catch (err) {
+        console.error(err);
+      }
     };
     // 帮助文档
     const handleGotoHelp  = () => {

@@ -30,7 +30,7 @@
             <bk-button
               theme="danger"
               v-authority="{
-                actionId: 'namespace_scoped_deleted',
+                actionId: 'namespace_scoped_delete',
                 clickable: hasPerms,
                 content: pagePerms.deleteBtn.tip,
                 disablePerms: true,
@@ -747,14 +747,14 @@ export default defineComponent({
     async function handelDelButtonPerms() {
       if (!clusterId.value || !props.namespace || !curProject.value?.project_id) return;
       const res = await userPermsByAction({
-        $actionId: 'namespace_scoped_deleted',
+        $actionId: 'namespace_scoped_delete',
         perm_ctx: {
           cluster_id: clusterId.value,
           namespace: props.namespace,
           project_id: curProject.value?.project_id,
         },
       }).catch(() => ({}));
-      hasPerms.value = res.perms?.namespace_scoped_deleted;
+      hasPerms.value = res.perms?.namespace_scoped_delete;
     };
 
     const loading = ref(true);
