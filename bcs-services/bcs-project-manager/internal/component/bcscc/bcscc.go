@@ -343,7 +343,7 @@ func constructProjectData(p *pm.Project) map[string]interface{} {
 
 func requestCommonAndParse(req gorequest.SuperAgent) error {
 	// 获取返回数据
-	body, err := component.Request(req, timeout, "", component.GetAuthHeader())
+	body, err := component.Request(req, timeout, "", component.GetAuthAppHeader())
 	if err != nil {
 		logging.Error("request paas-cc error, data: %v, err: %v", req.Data, err)
 		return errorx.NewRequestBCSCCErr(err.Error())
@@ -365,7 +365,7 @@ func requestCommonAndParse(req gorequest.SuperAgent) error {
 func requestListNamespacesAndParse(req gorequest.SuperAgent) (*ListNamespaceData, error) {
 
 	// 获取返回数据
-	body, err := component.Request(req, timeout, "", component.GetAuthHeader())
+	body, err := component.Request(req, timeout, "", component.GetAuthAppHeader())
 	if err != nil {
 		logging.Error("request paas-cc error, data: %v, err: %v", req.Data, err)
 		return nil, errorx.NewRequestBCSCCErr(err.Error())

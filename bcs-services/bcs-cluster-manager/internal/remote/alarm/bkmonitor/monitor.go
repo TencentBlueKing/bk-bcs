@@ -14,6 +14,7 @@
 package bkmonitor
 
 import (
+	"context"
 	"errors"
 	"time"
 
@@ -23,6 +24,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/alarm"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/auth"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/utils"
 )
 
@@ -86,20 +88,20 @@ func (c *Client) getAccessToken(clientAuth *auth.ClientAuth) (string, error) {
 	}
 
 	if clientAuth != nil {
-		return clientAuth.GetAccessToken(utils.BkAppUser{
+		return clientAuth.GetAccessToken(types.BkAppUser{
 			BkAppCode:   c.appCode,
 			BkAppSecret: c.appSecret,
 		})
 	}
 
-	return auth.GetAccessClient().GetAccessToken(utils.BkAppUser{
+	return auth.GetAccessClient().GetAccessToken(types.BkAppUser{
 		BkAppCode:   c.appCode,
 		BkAppSecret: c.appSecret,
 	})
 }
 
 // ShieldHostAlarmConfig shield host alarm
-func (c *Client) ShieldHostAlarmConfig(user string, config *alarm.ShieldHost) error {
+func (c *Client) ShieldHostAlarmConfig(ctx context.Context, user string, config *alarm.ShieldHost) error {
 	if c == nil {
 		return alarm.ErrServerNotInit
 	}
@@ -109,7 +111,7 @@ func (c *Client) ShieldHostAlarmConfig(user string, config *alarm.ShieldHost) er
 	// 创建基于范围的屏蔽告警配置副本
 	scopeConfig := *config
 	scopeConfig.ShieldType = string(scope)
-	err := c.bkmonitorHostAlarmConfig(user, &scopeConfig)
+	err := c.bkmonitorHostAlarmConfig(ctx, user, &scopeConfig)
 	if err != nil {
 		return err
 	}
@@ -117,7 +119,7 @@ func (c *Client) ShieldHostAlarmConfig(user string, config *alarm.ShieldHost) er
 	// 创建基于维度的屏蔽告警配置副本
 	dimensionConfig := *config
 	dimensionConfig.ShieldType = string(dimension)
-	err = c.bkmonitorHostAlarmConfig(user, &dimensionConfig)
+	err = c.bkmonitorHostAlarmConfig(ctx, user, &dimensionConfig)
 	if err != nil {
 		return err
 	}
@@ -126,14 +128,14 @@ func (c *Client) ShieldHostAlarmConfig(user string, config *alarm.ShieldHost) er
 }
 
 // bkmonitorHostAlarmConfig shield host alarm
-func (c *Client) bkmonitorHostAlarmConfig(user string, config *alarm.ShieldHost) error { // nolint
+func (c *Client) bkmonitorHostAlarmConfig(ctx context.Context, user string, config *alarm.ShieldHost) error { // nolint
 	if c == nil {
 		return alarm.ErrServerNotInit
 	}
 
 	var (
 		reqURL   = "/add_shield"
-		respData = &utils.BaseResponse{}
+		respData = &types.BaseResponse{}
 	)
 
 	token, err := c.getAccessToken(nil)
@@ -142,8 +144,8 @@ func (c *Client) bkmonitorHostAlarmConfig(user string, config *alarm.ShieldHost)
 		return err
 	}
 
-	userAuth, err := utils.BuildGateWayAuth(&utils.AuthInfo{
-		BkAppUser: utils.BkAppUser{
+	userAuth, tanant, err := utils.GetGatewayAuthAndTenantInfo(ctx, &types.AuthInfo{
+		BkAppUser: types.BkAppUser{
 			BkAppCode:   c.appCode,
 			BkAppSecret: c.appSecret,
 		},
@@ -166,6 +168,7 @@ func (c *Client) bkmonitorHostAlarmConfig(user string, config *alarm.ShieldHost)
 		Set("Content-Type", "application/json").
 		Set("Accept", "application/json").
 		Set("X-Bkapi-Authorization", userAuth).
+		Set("X-Bk-Tenant-Id", tanant).
 		SetDebug(c.serverDebug).
 		Send(req).
 		EndStruct(&respData)

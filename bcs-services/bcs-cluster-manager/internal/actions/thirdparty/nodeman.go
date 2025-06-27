@@ -14,6 +14,8 @@ package thirdparty
 
 import (
 	"context"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/auth"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tenant"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
@@ -50,8 +52,11 @@ func (la *ListBKCloudAction) setResp(code uint32, msg string) {
 }
 
 func (la *ListBKCloudAction) listBKCloud() error {
+	user := auth.GetAuthAndTenantInfoFromCtx(la.ctx)
+	ctx := tenant.WithTenantIdFromContext(la.ctx, user.ResourceTenantId)
+
 	cli := nodeman.GetNodeManClient()
-	clouds, err := cli.CloudList(la.ctx)
+	clouds, err := cli.CloudList(ctx)
 	if err != nil {
 		blog.Errorf("list bk cloud failed, err %s", err.Error())
 		return err

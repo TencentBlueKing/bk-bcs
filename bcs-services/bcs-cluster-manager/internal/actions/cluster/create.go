@@ -293,7 +293,7 @@ func (ca *CreateAction) validate() error {
 	}
 
 	// check operator host permission
-	canUse := CheckUseNodesPermForUser(ca.req.BusinessID, ca.req.Creator, nodes)
+	canUse := CheckUseNodesPermForUser(ca.req.ProjectID, ca.req.BusinessID, ca.req.Creator, nodes)
 	if !canUse {
 		errMsg := fmt.Errorf("create cluster failed: user[%s] no perm to use nodes[%v] in bizID[%s]",
 			ca.req.Creator, nodes, ca.req.BusinessID)

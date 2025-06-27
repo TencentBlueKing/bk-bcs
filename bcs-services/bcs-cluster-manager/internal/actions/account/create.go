@@ -38,7 +38,6 @@ import (
 type CreateAction struct {
 	ctx   context.Context
 	model store.ClusterManagerModel
-	iam   iam.PermClient
 
 	cloud *cmproto.Cloud
 	req   *cmproto.CreateCloudAccountRequest
@@ -49,7 +48,6 @@ type CreateAction struct {
 func NewCreateAction(model store.ClusterManagerModel, iam iam.PermClient) *CreateAction {
 	return &CreateAction{
 		model: model,
-		iam:   iam,
 	}
 }
 
@@ -74,7 +72,13 @@ func (ca *CreateAction) createCloudAccount() error {
 		return err
 	}
 
-	err = cloudaccount.NewBCSAccountPermClient(ca.iam).AuthorizeResourceCreatorPerm(ca.req.Creator, authutils.ResourceInfo{
+	user := auth.GetAuthAndTenantInfoFromCtx(ca.ctx)
+
+	accountIam, err := auth.GetCloudAccountIamClient(user.ResourceTenantId)
+	if err != nil {
+		return err
+	}
+	err = accountIam.AuthorizeResourceCreatorPerm(ca.req.Creator, authutils.ResourceInfo{
 		Type: string(cloudaccount.SysCloudAccount),
 		ID:   accountID,
 		Name: ca.req.AccountName,

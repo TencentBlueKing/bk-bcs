@@ -26,6 +26,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/notify"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/notify/business"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/notify/server"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tenant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
@@ -64,8 +65,15 @@ func SendUserNotifyByTemplates(clsId, groupId, taskId string, isSuccess bool) er
 		return nil
 	}
 
+	ctx, err := tenant.WithTenantIdByResourceForContext(context.Background(), tenant.ResourceMetaData{
+		ProjectId: cls.ProjectID,
+	})
+	if err != nil {
+		return err
+	}
+
 	for i := range templates {
-		err = sendNotifyMessage(cls, group, task, templates[i], isSuccess)
+		err = sendNotifyMessage(ctx, cls, group, task, templates[i], isSuccess)
 		if err != nil {
 			blog.Errorf(err.Error())
 			continue
@@ -77,7 +85,7 @@ func SendUserNotifyByTemplates(clsId, groupId, taskId string, isSuccess bool) er
 	return nil
 }
 
-func sendNotifyMessage(cluster *proto.Cluster, group *proto.NodeGroup, task *proto.Task, // nolint
+func sendNotifyMessage(ctx context.Context, cluster *proto.Cluster, group *proto.NodeGroup, task *proto.Task, // nolint
 	nt *proto.NotifyTemplate, isSuccess bool) error {
 	if !nt.GetEnable() {
 		return fmt.Errorf("task[%s] notifyTemplate[%s] not enable", task.TaskID, nt.NotifyTemplateID)
@@ -180,7 +188,7 @@ func sendNotifyMessage(cluster *proto.Cluster, group *proto.NodeGroup, task *pro
 	}
 	blog.Infof("task[%s] notify render content: %s", task.TaskID, content)
 
-	err = server.SendMessageToServer(context.Background(), notify.NotifyType(nt.NotifyType),
+	err = server.SendMessageToServer(ctx, notify.NotifyType(nt.NotifyType),
 		config, notify.MessageBody{
 			Users:     nt.Receivers,
 			Content:   content,

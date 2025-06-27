@@ -10,10 +10,11 @@
  * limitations under the License.
  */
 
-// Package itsm xxx
-package itsm
+// Package v2 xxx
+package v2
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -21,6 +22,7 @@ import (
 	"github.com/parnurzeal/gorequest"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/bkuser"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
@@ -47,7 +49,7 @@ type Service struct {
 }
 
 // ListServices list itsm services by catalog id
-func ListServices(catalogID uint32) ([]Service, error) {
+func ListServices(ctx context.Context, catalogID uint32) ([]Service, error) {
 	itsmConf := config.GlobalConf.ITSM
 	// 默认使用网关访问，如果为外部版，则使用ESB访问
 	host := itsmConf.GatewayHost
@@ -59,9 +61,17 @@ func ListServices(catalogID uint32) ([]Service, error) {
 		Url:    reqURL,
 		Method: "GET",
 	}
+
+	// auth headers
+	headers, err := bkuser.GetAuthHeader(ctx)
+	if err != nil {
+		logging.Error("ListServices get auth header failed, %s", err.Error())
+		return nil, errorx.NewRequestITSMErr(err.Error())
+	}
+
 	// 请求API
 	proxy := ""
-	body, err := component.Request(req, timeout, proxy, component.GetAuthHeader())
+	body, err := component.Request(req, timeout, proxy, headers)
 	if err != nil {
 		logging.Error("request list itsm services in catalog %d failed, %s", catalogID, err.Error())
 		return nil, errorx.NewRequestITSMErr(err.Error())
@@ -119,7 +129,7 @@ type ImportServiceData struct {
 }
 
 // ImportService import itsm service
-func ImportService(data ImportServiceReq) (int, error) {
+func ImportService(ctx context.Context, data ImportServiceReq) (int, error) {
 	itsmConf := config.GlobalConf.ITSM
 	// 默认使用网关访问，如果为外部版，则使用ESB访问
 	host := itsmConf.GatewayHost
@@ -145,8 +155,16 @@ func ImportService(data ImportServiceReq) (int, error) {
 			"workflow":          data.Workflow,
 		},
 	}
+
+	// auth headers
+	headers, err := bkuser.GetAuthHeader(ctx)
+	if err != nil {
+		logging.Error("ImportService get auth header failed, %s", err.Error())
+		return 0, errorx.NewRequestITSMErr(err.Error())
+	}
+
 	// 请求API
-	body, err := component.Request(req, timeout, "", component.GetAuthHeader())
+	body, err := component.Request(req, timeout, "", headers)
 	if err != nil {
 		logging.Error("request import service %s failed, %s", data.Name, err.Error())
 		return 0, errorx.NewRequestITSMErr(err.Error())
@@ -171,7 +189,7 @@ type UpdateServiceReq struct {
 }
 
 // UpdateService update itsm service
-func UpdateService(data UpdateServiceReq) error {
+func UpdateService(ctx context.Context, data UpdateServiceReq) error {
 	itsmConf := config.GlobalConf.ITSM
 	// 默认使用网关访问，如果为外部版，则使用ESB访问
 	host := itsmConf.GatewayHost
@@ -198,8 +216,16 @@ func UpdateService(data UpdateServiceReq) error {
 			"workflow":          data.Workflow,
 		},
 	}
+
+	// auth headers
+	headers, err := bkuser.GetAuthHeader(ctx)
+	if err != nil {
+		logging.Error("ImportService get auth header failed, %s", err.Error())
+		return errorx.NewRequestITSMErr(err.Error())
+	}
+
 	// 请求API
-	body, err := component.Request(req, timeout, "", component.GetAuthHeader())
+	body, err := component.Request(req, timeout, "", headers)
 	if err != nil {
 		logging.Error("request update service %s failed, %s", data.Name, err.Error())
 		return errorx.NewRequestITSMErr(err.Error())

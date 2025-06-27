@@ -17,24 +17,59 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cloudaccount"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/project"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 )
 
-var (
-	// IAMClient iam client
-	IAMClient iam.PermClient
-	// ProjectIamClient project iam client
-	ProjectIamClient *project.BCSProjectPerm
-	// ClusterIamClient cluster iam client
-	ClusterIamClient *cluster.BCSClusterPerm
-	// CloudAccountIamClient cloudaccount iam client
-	CloudAccountIamClient *cloudaccount.BCSCloudAccountPerm
-)
+// GetProjectIamClient project iam client
+func GetProjectIamClient(tenantId string) (*project.BCSProjectPerm, error) {
+	iamClient, err := InitPermClient(tenantId)
+	if err != nil {
+		return nil, err
+	}
 
-// InitPermClient new a perm client
-func InitPermClient(iamClient iam.PermClient) {
-	IAMClient = iamClient
+	return project.NewBCSProjectPermClient(iamClient), nil
+}
 
-	ProjectIamClient = project.NewBCSProjectPermClient(iamClient)
-	ClusterIamClient = cluster.NewBCSClusterPermClient(iamClient)
-	CloudAccountIamClient = cloudaccount.NewBCSAccountPermClient(iamClient)
+// GetClusterIamClient cluster iam client
+func GetClusterIamClient(tenantId string) (*cluster.BCSClusterPerm, error) {
+	iamClient, err := InitPermClient(tenantId)
+	if err != nil {
+		return nil, err
+	}
+
+	return cluster.NewBCSClusterPermClient(iamClient), nil
+}
+
+// GetCloudAccountIamClient cloud account client
+func GetCloudAccountIamClient(tenantId string) (*cloudaccount.BCSCloudAccountPerm, error) {
+	iamClient, err := InitPermClient(tenantId)
+	if err != nil {
+		return nil, err
+	}
+
+	return cloudaccount.NewBCSAccountPermClient(iamClient), nil
+}
+
+// InitPermClient init perm client
+func InitPermClient(tenantId string) (iam.PermClient, error) {
+	var err error
+	iamClient, err := iam.NewIamClient(&iam.Options{
+		SystemID:    options.GetGlobalCMOptions().IAM.SystemID,
+		AppCode:     options.GetGlobalCMOptions().IAM.AppCode,
+		AppSecret:   options.GetGlobalCMOptions().IAM.AppSecret,
+		External:    options.GetGlobalCMOptions().IAM.External,
+		GateWayHost: options.GetGlobalCMOptions().IAM.GatewayServer,
+		IAMHost:     options.GetGlobalCMOptions().IAM.IAMServer,
+		BkiIAMHost:  options.GetGlobalCMOptions().IAM.BkiIAMServer,
+		Metric:      options.GetGlobalCMOptions().IAM.Metric,
+		Debug:       options.GetGlobalCMOptions().IAM.Debug,
+		TenantId:    tenantId,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return iamClient, nil
 }

@@ -28,6 +28,7 @@ import (
 	pm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/stringx"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/tenant"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
 )
 
@@ -66,7 +67,7 @@ func (ua *UpdateAction) Do(ctx context.Context, req *proto.UpdateProjectRequest)
 	if req.GetBusinessID() != "" && (oldProject.BusinessID == "" || oldProject.BusinessID == "0") {
 		// 开启容器服务
 		// 1. 在监控创建对应的容器项目空间
-		if err := bkmonitor.CreateSpace(p); err != nil {
+		if err := bkmonitor.CreateSpace(ctx, p); err != nil {
 			logging.Error("[ALARM-BK-MONITOR] create space for %s/%s in bkmonitor failed, err: %s",
 				p.ProjectID, p.ProjectCode, err.Error())
 		}
@@ -90,7 +91,7 @@ func (ua *UpdateAction) validate() error {
 		if !ok || authUser.Username == "" {
 			return errorx.NewAuthErr("invalid user")
 		}
-		if _, err := cmdb.IsMaintainer(authUser.Username, ua.req.BusinessID); err != nil {
+		if _, err := cmdb.IsMaintainer(ua.ctx, authUser.Username, ua.req.BusinessID); err != nil {
 			return err
 		}
 	}
@@ -101,6 +102,7 @@ func (ua *UpdateAction) validate() error {
 	if len(strings.TrimSpace(name)) == 0 {
 		return fmt.Errorf("name cannot contains only spaces")
 	}
+
 	// check name unique
 	if p, _ := ua.model.GetProjectByField(ua.ctx, &pm.ProjectField{Name: name}); p != nil {
 		// 如果是同一个项目，忽略名称校验
@@ -115,7 +117,7 @@ func (ua *UpdateAction) validate() error {
 func (ua *UpdateAction) updateProject(p *pm.Project) error {
 	p.UpdateTime = time.Now().Format(time.RFC3339)
 	// 从 context 中获取 username
-	if authUser, err := middleware.GetUserFromContext(ua.ctx); err == nil {
+	if authUser, err := tenant.GetAuthUserInfoFromCtx(ua.ctx); err == nil {
 		p.Updater = authUser.GetUsername()
 		// 更新管理员，并且去重
 		if ua.req.GetManagers() != "" {

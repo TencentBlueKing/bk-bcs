@@ -31,7 +31,7 @@ type IPSelector interface {
 	// GetBizModuleTopoData get topo modules by bizID
 	GetBizModuleTopoData(ctx context.Context, bizID int) (*BizInstanceTopoData, error)
 	// GetBizTopoHostData get host data by bizID
-	GetBizTopoHostData(bizID int, info []HostModuleInfo, filter HostFilter) ([]HostDetailInfo, error)
+	GetBizTopoHostData(ctx context.Context, bizID int, info []HostModuleInfo, filter HostFilter) ([]HostDetailInfo, error)
 }
 
 // NewIpSelector init ipSelector client
@@ -43,6 +43,7 @@ func NewIpSelector(cmdb *Client, gse gse.Interface) IPSelector {
 }
 
 type ipSelectorClient struct {
+	ctx  context.Context
 	cmdb *Client
 	gse  gse.Interface
 }
@@ -71,12 +72,12 @@ func (ipSelector *ipSelectorClient) GetBizModuleTopoData(ctx context.Context, bi
 }
 
 func (ipSelector *ipSelectorClient) GetBizTopoHostData(
-	bizID int, module []HostModuleInfo, filter HostFilter) ([]HostDetailInfo, error) {
+	ctx context.Context, bizID int, module []HostModuleInfo, filter HostFilter) ([]HostDetailInfo, error) {
 	if len(module) == 0 {
 		return nil, nil
 	}
 
-	hosts, err := GetBizHostDetailedData(ipSelector.cmdb, ipSelector.gse, bizID, module)
+	hosts, err := GetBizHostDetailedData(ctx, ipSelector.cmdb, ipSelector.gse, bizID, module)
 	if err != nil {
 		return nil, err
 	}
@@ -89,10 +90,10 @@ func (ipSelector *ipSelectorClient) GetBizTopoHostData(
 }
 
 // GetBizHostDetailedData xxx
-func GetBizHostDetailedData(cmdb *Client, gseCli gse.Interface, // nolint
+func GetBizHostDetailedData(ctx context.Context, cmdb *Client, gseCli gse.Interface, // nolint
 	bizID int, module []HostModuleInfo) ([]HostDetailInfo, error) {
 
-	hostTopos, err := cmdb.FetchAllHostTopoRelationsByBizID(bizID)
+	hostTopos, err := cmdb.FetchAllHostTopoRelationsByBizID(ctx, bizID)
 	if err != nil {
 		return nil, err
 	}
@@ -111,7 +112,7 @@ func GetBizHostDetailedData(cmdb *Client, gseCli gse.Interface, // nolint
 		}
 	}
 
-	hostData, err := cmdb.FetchAllHostsByBizID(bizID, true)
+	hostData, err := cmdb.FetchAllHostsByBizID(ctx, bizID, true)
 	if err != nil {
 		return nil, err
 	}
@@ -150,7 +151,7 @@ func GetBizHostDetailedData(cmdb *Client, gseCli gse.Interface, // nolint
 					OsType:  h.BKHostOsType,
 					AgentID: h.BkAgentID,
 				}
-				cloudArea, err := cmdb.SearchCloudAreaByCloudID(h.BKHostCloudID)
+				cloudArea, err := cmdb.SearchCloudAreaByCloudID(ctx, h.BKHostCloudID)
 				if err != nil {
 					blog.Errorf("GetAllBizHostTopos SearchCloudAreaByCloudID[%v] failed: %v", h.BKHostCloudID, err)
 					detailInfo.CloudArea.Name = gse.DefaultBkCloudName
@@ -166,7 +167,7 @@ func GetBizHostDetailedData(cmdb *Client, gseCli gse.Interface, // nolint
 	pool.Wait()
 
 	// get gse agent status
-	hostAgentStatus := GetHostAgentStatus(gseCli, hosts)
+	hostAgentStatus := GetHostAgentStatus(ctx, gseCli, hosts)
 
 	// append gse agent status
 	for i := range hosts {
@@ -190,7 +191,7 @@ func GetBizHostDetailedData(cmdb *Client, gseCli gse.Interface, // nolint
 }
 
 // GetHostAgentStatus by supplyName
-func GetHostAgentStatus(gseCli gse.Interface, hosts []HostDetailInfo) map[string]gse.HostAgentStatus {
+func GetHostAgentStatus(ctx context.Context, gseCli gse.Interface, hosts []HostDetailInfo) map[string]gse.HostAgentStatus {
 	supplyAccountHost := make(map[string][]HostDetailInfo, 0)
 	for _, host := range hosts {
 		if host.Ip == "" {
@@ -233,7 +234,7 @@ func GetHostAgentStatus(gseCli gse.Interface, hosts []HostDetailInfo) map[string
 				})
 			}
 
-			bkAgent, err := gseCli.GetHostsGseAgentStatus(account, gseHosts)
+			bkAgent, err := gseCli.GetHostsGseAgentStatus(ctx, account, gseHosts)
 			if err != nil {
 				blog.Errorf("GetHostsGseAgentStatus[%v] failed: %v", gseHosts, err)
 				return
@@ -295,7 +296,7 @@ func GetBizModuleTopoData(ctx context.Context, cli *Client, bizID int) (*BizInst
 		return nil, err
 	}
 
-	bizHostCnt, err := GetHostCountByObject(cli, bizID, Object{
+	bizHostCnt, err := GetHostCountByObject(ctx, cli, bizID, Object{
 		ObjectName: "biz",
 		ObjectID:   bizID,
 	})
@@ -326,7 +327,7 @@ func GetBizModuleTopoData(ctx context.Context, cli *Client, bizID int) (*BizInst
 			BKObjName:  set.BKObjName,
 			Expanded:   true,
 		}
-		hostCnt, err := GetHostCountByObject(cli, bizID, Object{
+		hostCnt, err := GetHostCountByObject(ctx, cli, bizID, Object{
 			ObjectName: set.BKObjID,
 			ObjectID:   set.BKInstID,
 		})
@@ -335,7 +336,7 @@ func GetBizModuleTopoData(ctx context.Context, cli *Client, bizID int) (*BizInst
 		}
 		s.Count = hostCnt
 
-		modules := GetSetModuleChild(cli, bizID, set.Child)
+		modules := GetSetModuleChild(ctx, cli, bizID, set.Child)
 		s.Child = modules
 
 		sets = append(sets, s)
@@ -347,7 +348,8 @@ func GetBizModuleTopoData(ctx context.Context, cli *Client, bizID int) (*BizInst
 }
 
 // GetSetModuleChild module child
-func GetSetModuleChild(cli *Client, bizID int, childs []SearchBizInstTopoData) []BizInstanceTopoData {
+func GetSetModuleChild(ctx context.Context, cli *Client, bizID int,
+	childs []SearchBizInstTopoData) []BizInstanceTopoData {
 	var (
 		modules    = make([]BizInstanceTopoData, 0)
 		moduleLock = &sync.RWMutex{}
@@ -367,7 +369,7 @@ func GetSetModuleChild(cli *Client, bizID int, childs []SearchBizInstTopoData) [
 				Expanded:   false,
 				Child:      make([]BizInstanceTopoData, 0),
 			}
-			cnt, err := GetHostCountByObject(cli, bizID, Object{
+			cnt, err := GetHostCountByObject(ctx, cli, bizID, Object{
 				ObjectName: data.BKObjID,
 				ObjectID:   data.BKInstID,
 			})
@@ -387,8 +389,8 @@ func GetSetModuleChild(cli *Client, bizID int, childs []SearchBizInstTopoData) [
 }
 
 // GetHostCountByObject get host cnt by bizID
-func GetHostCountByObject(cli *Client, bizID int, object Object) (int, error) {
-	hostTopos, err := cli.FetchAllHostTopoRelationsByBizID(bizID)
+func GetHostCountByObject(ctx context.Context, cli *Client, bizID int, object Object) (int, error) {
+	hostTopos, err := cli.FetchAllHostTopoRelationsByBizID(ctx, bizID)
 	if err != nil {
 		return 0, err
 	}

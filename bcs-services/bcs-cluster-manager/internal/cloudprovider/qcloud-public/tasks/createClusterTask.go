@@ -35,6 +35,7 @@ import (
 	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tenant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
@@ -1377,6 +1378,15 @@ func UpdateCreateClusterDBInfoTask(taskID string, stepName string) error {
 	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
 
 	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
+	ctx, err = tenant.WithTenantIdByResourceForContext(ctx, tenant.ResourceMetaData{
+		ClusterId: clusterID,
+	})
+	if err != nil {
+		blog.Errorf("UpdateCreateClusterDBInfoTask[%s] WithTenantIdByResourceForContext failed: %v", taskID, err)
+		retErr := fmt.Errorf("WithTenantIdByResourceForContext failed: %v", err)
+		_ = state.UpdateStepFailure(start, stepName, retErr)
+		return retErr
+	}
 
 	// handler logic
 	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
@@ -1397,13 +1407,13 @@ func UpdateCreateClusterDBInfoTask(taskID string, stepName string) error {
 		bkModuleID, _ := strconv.Atoi(dependInfo.Cluster.GetClusterBasicSettings().GetModule().GetMasterModuleID())
 		dependInfo.Cluster.
 			GetClusterBasicSettings().
-			GetModule().MasterModuleName = cloudprovider.GetModuleName(bkBizID, bkModuleID)
+			GetModule().MasterModuleName = cloudprovider.GetModuleName(ctx, bkBizID, bkModuleID)
 	}
 	if dependInfo.Cluster.GetClusterBasicSettings().GetModule().GetWorkerModuleID() != "" {
 		bkModuleID, _ := strconv.Atoi(dependInfo.Cluster.GetClusterBasicSettings().GetModule().GetWorkerModuleID())
 		dependInfo.Cluster.
 			GetClusterBasicSettings().
-			GetModule().WorkerModuleName = cloudprovider.GetModuleName(bkBizID, bkModuleID)
+			GetModule().WorkerModuleName = cloudprovider.GetModuleName(ctx, bkBizID, bkModuleID)
 	}
 
 	// delete passwd
@@ -1429,6 +1439,12 @@ func UpdateCreateClusterDBInfoTask(taskID string, stepName string) error {
 		"sync cluster data to pass-cc successful")
 
 	// sync cluster perms
+	ctx, err = tenant.WithTenantIdByResourceForContext(ctx, tenant.ResourceMetaData{
+		ProjectId:   dependInfo.Cluster.GetProjectID(),
+	})
+	if err != nil {
+		blog.Errorf("UpdateCreateClusterDBInfoTask WithTenantIdByResourceForContext failed: %v", err)
+	}
 	providerutils.AuthClusterResourceCreatorPerm(ctx, dependInfo.Cluster.ClusterID,
 		dependInfo.Cluster.ClusterName, dependInfo.Cluster.Creator)
 

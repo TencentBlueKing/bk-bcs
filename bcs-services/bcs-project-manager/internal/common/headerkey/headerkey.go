@@ -18,4 +18,6 @@ const (
 	RequestIDKey = "X-Request-Id"
 	// UsernameKey xxx
 	UsernameKey = "X-Project-Username"
+	// TenantIdKey xxx
+	TenantIdKey = "X-Bk-Tenant-Id"
 )

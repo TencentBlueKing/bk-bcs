@@ -22,10 +22,12 @@ import (
 	"github.com/google/uuid"
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/taskserver"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tenant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
@@ -87,7 +89,10 @@ func (da *DebugBkSopsTaskAction) Handle(
 }
 
 func (da *DebugBkSopsTaskAction) createDispatchTask() error {
-	task, err := da.buildDebugSopsTask()
+	user := auth.GetAuthAndTenantInfoFromCtx(da.ctx)
+	ctx := tenant.WithTenantIdFromContext(da.ctx, user.ResourceTenantId)
+
+	task, err := da.buildDebugSopsTask(ctx)
 	if err != nil {
 		blog.Errorf("CreateDispatchTask BuildDebugSopsTask failed: %v", err)
 		return err
@@ -117,7 +122,7 @@ func CreateDispatchTask(ctx context.Context, model store.ClusterManagerModel, ta
 }
 
 // BuildUpdateDesiredNodesTask build update desired nodes task
-func (da *DebugBkSopsTaskAction) buildDebugSopsTask() (*cmproto.Task, error) {
+func (da *DebugBkSopsTaskAction) buildDebugSopsTask(ctx context.Context) (*cmproto.Task, error) {
 	// generate main task
 	nowStr := time.Now().Format(time.RFC3339)
 	task := &cmproto.Task{
@@ -140,6 +145,8 @@ func (da *DebugBkSopsTaskAction) buildDebugSopsTask() (*cmproto.Task, error) {
 	// generate taskName
 	taskName := fmt.Sprintf("调试业务[%s:%s]标准运维任务", da.req.BusinessID, da.req.TemplateID)
 	task.CommonParams[cloudprovider.TaskNameKey.String()] = taskName
+
+	task.CommonParams[cloudprovider.TenantIdKey.String()] = tenant.GetTenantIdFromContext(ctx)
 
 	err := da.generateBKopsStep(task)
 	if err != nil {

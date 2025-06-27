@@ -32,6 +32,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/passcc"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/user"
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tenant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
@@ -246,17 +247,27 @@ func ObjToJson(obj interface{}) string {
 
 // AuthClusterResourceCreatorPerm auth resource cluster relative perms
 func AuthClusterResourceCreatorPerm(ctx context.Context, clusterID, clusterName, user string) {
-	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
-	err := auth.IAMClient.AuthResourceCreatorPerm(ctx, iam.ResourceCreator{
+	var (
+		taskID   = cloudprovider.GetTaskIDFromContext(ctx)
+		tenantId = tenant.GetTenantIdFromContext(ctx)
+	)
+
+	iamClient, err := auth.InitPermClient(tenantId)
+	if err != nil {
+		blog.Errorf("AuthClusterResourceCreatorPerm failed: %v", err)
+		return
+	}
+
+	err = iamClient.AuthResourceCreatorPerm(ctx, iam.ResourceCreator{
 		ResourceType: string(iam.SysCluster),
 		ResourceID:   clusterID,
 		ResourceName: clusterName,
 		Creator:      user,
 	}, nil)
 	if err != nil {
-		blog.Errorf("AuthClusterResourceCreatorPerm[%s] resource[%s:%s] failed: %v",
-			taskID, clusterID, clusterName, user)
+		blog.Errorf("AuthClusterResourceCreatorPerm[%s] resource[%s:%s] failed: %v:%v",
+			taskID, clusterID, clusterName, user, err)
 		return
 	}
 

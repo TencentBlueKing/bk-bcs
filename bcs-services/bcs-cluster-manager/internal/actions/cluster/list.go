@@ -39,6 +39,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/gse"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tenant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
@@ -46,7 +47,6 @@ import (
 type ListAction struct {
 	ctx         context.Context
 	model       store.ClusterManagerModel
-	iam         iam.PermClient
 	req         *cmproto.ListClusterReq
 	resp        *cmproto.ListClusterResp
 	clusterList []*cmproto.Cluster
@@ -56,7 +56,6 @@ type ListAction struct {
 func NewListAction(model store.ClusterManagerModel, iam iam.PermClient) *ListAction {
 	return &ListAction{
 		model: model,
-		iam:   iam,
 	}
 }
 
@@ -225,10 +224,12 @@ func (la *ListAction) listCluster() error {
 	la.resp.ClusterExtraInfo = returnClusterExtraInfo(la.model, clusterList)
 
 	// projectID / operator get user perm
+	user := iauth.GetAuthAndTenantInfoFromCtx(la.ctx)
 	if la.req.ProjectID != "" && la.req.Operator != "" {
 		v3Perm, err := la.GetProjectClustersV3Perm(actions.PermInfo{ // nolint
 			ProjectID: la.req.ProjectID,
 			UserID:    la.req.Operator,
+			TenantID:  user.ResourceTenantId,
 		}, clusterIDList)
 		if err != nil {
 			blog.Errorf("listCluster GetUserPermListByProjectAndCluster failed: %v", err.Error())
@@ -260,7 +261,7 @@ func (la *ListAction) GetProjectClustersV3Perm(user actions.PermInfo, clusterLis
 	)
 
 	// get user clusterList perms
-	v3Perm, err = getUserClusterPermList(la.iam, user, clusterList)
+	v3Perm, err = getUserClusterPermList(user, clusterList)
 	if err != nil {
 		blog.Errorf("listCluster GetUserClusterPermList failed: %v", err.Error())
 		return nil, err
@@ -313,7 +314,6 @@ func (la *ListAction) Handle(ctx context.Context, req *cmproto.ListClusterReq, r
 type ListProjectClusterAction struct {
 	ctx   context.Context
 	model store.ClusterManagerModel
-	iam   iam.PermClient
 
 	req         *cmproto.ListProjectClusterReq
 	resp        *cmproto.ListProjectClusterResp
@@ -324,7 +324,6 @@ type ListProjectClusterAction struct {
 func NewListProjectClusterAction(model store.ClusterManagerModel, iam iam.PermClient) *ListProjectClusterAction {
 	return &ListProjectClusterAction{
 		model: model,
-		iam:   iam,
 	}
 }
 
@@ -429,9 +428,11 @@ func (la *ListProjectClusterAction) getWebAnnotations(projectID string, clusterI
 		}
 	}
 
-	signalPerms, err := getUserClusterPermList(la.iam, actions.PermInfo{
+	user := iauth.GetAuthAndTenantInfoFromCtx(la.ctx)
+	signalPerms, err := getUserClusterPermList(actions.PermInfo{
 		ProjectID: projectID,
 		UserID:    la.req.Operator,
+		TenantID:  user.ResourceTenantId,
 	}, clusterIDs)
 	if err != nil {
 		blog.Errorf("ListProjectClusterAction GetWebAnnotations user %s cluster perms failed, err: %s",
@@ -463,7 +464,7 @@ func (la *ListProjectClusterAction) GetProjectClustersV3Perm(user actions.PermIn
 	)
 
 	// get user perms
-	v3Perm, err = getUserClusterPermList(la.iam, user, clusterList)
+	v3Perm, err = getUserClusterPermList(user, clusterList)
 	if err != nil {
 		blog.Errorf("listCluster GetUserClusterPermList failed: %v", err.Error())
 		return nil, err
@@ -884,7 +885,7 @@ func (la *ListMastersInClusterAction) appendNodeAgent() { // nolint
 	if len(hosts) == 0 {
 		return
 	}
-	_, err := gseClient.GetAgentStatusV1(&gse.GetAgentStatusReq{
+	_, err := gseClient.GetAgentStatusV1(la.ctx, &gse.GetAgentStatusReq{
 		Hosts: hosts,
 	})
 	if err != nil {
@@ -909,8 +910,14 @@ func (la *ListMastersInClusterAction) appendHostInfo() {
 		return
 	}
 
+	ctx, err := tenant.WithTenantIdByResourceForContext(la.ctx, tenant.ResourceMetaData{ClusterId: la.req.ClusterID})
+	if err != nil {
+		blog.Errorf("withTenantIdByResourceForContext failed: %s", err.Error())
+		return
+	}
+
 	cmdbClient := cmdb.GetCmdbClient()
-	hosts, err := cmdbClient.QueryAllHostInfoWithoutBiz(ips)
+	hosts, err := cmdbClient.QueryAllHostInfoWithoutBiz(ctx, ips)
 	if err != nil {
 		blog.Warnf("GetHostInfo for %s failed, %s", la.req.ClusterID, err.Error())
 		return
@@ -959,13 +966,16 @@ func (la *ListMastersInClusterAction) Handle(ctx context.Context,
 }
 
 // getUserClusterPermList get user clusters perm
-func getUserClusterPermList(iam iam.PermClient, user actions.PermInfo,
-	clusterList []string) (map[string]map[string]interface{}, error) {
-
+func getUserClusterPermList(user actions.PermInfo, clusterList []string) (map[string]map[string]interface{}, error) {
 	permissions := make(map[string]map[string]interface{}, 0)
-	clusterPerm := cluster.NewBCSClusterPermClient(iam)
+
+	clusterPerm, err := iauth.GetClusterIamClient(user.TenantID)
+	if err != nil {
+		return nil, err
+	}
 
 	actionIDs := []string{cluster.ClusterView.String(), cluster.ClusterManage.String(), cluster.ClusterDelete.String()}
+
 	perms, err := clusterPerm.GetMultiClusterMultiActionPerm(user.UserID, user.ProjectID, clusterList, actionIDs)
 	if err != nil {
 		blog.Errorf("getUserClusterPermList GetMultiClusterMultiActionPermission failed: %v", err)

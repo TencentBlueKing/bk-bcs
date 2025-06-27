@@ -29,6 +29,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/azure/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tenant"
 )
 
 func importClusterNodesToCM(ctx context.Context, nodes []k8scorev1.Node, clusterID string) error { // nolint
@@ -68,11 +69,18 @@ func importClusterNodesToCM(ctx context.Context, nodes []k8scorev1.Node, cluster
 }
 
 func setModuleInfo(group *proto.NodeGroup, bkBizIDString string) {
+	ctx, err := tenant.WithTenantIdByResourceForContext(context.Background(), tenant.ResourceMetaData{
+		ProjectId: group.ProjectID,
+	})
+	if err != nil {
+		blog.Errorf("withTenantIdByResourceForContext failed: %v", err)
+	}
+
 	if group.NodeTemplate != nil && group.NodeTemplate.Module != nil &&
 		len(group.NodeTemplate.Module.ScaleOutModuleID) != 0 {
 		bkBizID, _ := strconv.Atoi(bkBizIDString)
 		bkModuleID, _ := strconv.Atoi(group.NodeTemplate.Module.ScaleOutModuleID)
-		group.NodeTemplate.Module.ScaleOutModuleName = cloudprovider.GetModuleName(bkBizID, bkModuleID)
+		group.NodeTemplate.Module.ScaleOutModuleName = cloudprovider.GetModuleName(ctx, bkBizID, bkModuleID)
 	}
 }
 

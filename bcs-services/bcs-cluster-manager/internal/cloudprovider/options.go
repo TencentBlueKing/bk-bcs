@@ -145,6 +145,8 @@ type GetNodeOption struct {
 	Common *CommonOption
 	// ClusterVPCID for cluster vpc
 	ClusterVPCID string
+	// ProjectID for project id
+	ProjectID string
 	// ClusterID for cluster id
 	ClusterID string
 }
@@ -155,6 +157,8 @@ type ListNodesOption struct {
 	Common *CommonOption
 	// ClusterVPCID for cluster vpc
 	ClusterVPCID string
+	// ProjectID for project id
+	ProjectID string
 	// ClusterID for cluster id
 	ClusterID string
 	// NodeTemplateID for node templateID

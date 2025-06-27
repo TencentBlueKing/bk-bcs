@@ -14,14 +14,16 @@
 package steps
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/task"
 	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/itsm"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/itsm/v2"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/provider/utils"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/tenant"
 )
 
 const (
@@ -85,7 +87,15 @@ func (s itsmSubmitStep) DoWork(task *types.Task) error {
 		return err
 	}
 
-	itsmData, err := itsm.SubmitQuotaManagerCommonTicket(params.User, params.ProjectCode, params.ClusterId, params.Content)
+	ctx, err := tenant.WithTenantIdByResourceForContext(context.Background(), tenant.ResourceMetaData{
+		ProjectCode: params.ProjectCode,
+	})
+	if err != nil {
+		return err
+	}
+
+	itsmData, err := v2.SubmitQuotaManagerCommonTicket(ctx, params.User,
+		params.ProjectCode, params.ClusterId, params.Content)
 	if err != nil {
 		logging.Error("quotaManagerItsmSubmitStep[%s] SubmitQuotaManagerCommonTicket failed, err: %s",
 			task.GetTaskID(), err.Error())
@@ -99,6 +109,7 @@ func (s itsmSubmitStep) DoWork(task *types.Task) error {
 	}
 
 	task.CommonParams[utils.ItsmSnKey.String()] = itsmData.SN
+	task.CommonParams[utils.ProjectCodeKey.String()] = params.ProjectCode
 
 	return nil
 }

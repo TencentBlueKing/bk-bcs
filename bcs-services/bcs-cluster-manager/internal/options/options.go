@@ -299,6 +299,22 @@ type CommonConfig struct {
 	SystemNameSpaces string `json:"systemNameSpaces"`
 }
 
+type BkUserConfig struct {
+	AppCode   string `json:"appCode"`
+	AppSecret string `json:"appSecret"`
+	Server    string `json:"server"`
+	Debug     bool   `json:"debug"`
+}
+
+// TenantConfig tenant config, default disable tenant mode
+type TenantConfig struct {
+	EnableMultiTenantMode bool `json:"enableMultiTenantMode"`
+	// NoCheckTenantMethod no check tenant method
+	NoCheckTenantMethod string `json:"noCheckTenantMethod"`
+	// ClientExemptTenant client用户豁免租户校验
+	ClientExemptTenant string `json:"clientExemptTenant"`
+}
+
 // ClusterManagerOptions options of cluster manager
 type ClusterManagerOptions struct {
 	Etcd               EtcdOption            `json:"etcd"`
@@ -334,6 +350,8 @@ type ClusterManagerOptions struct {
 	Encrypt            encryptv2.Config      `json:"encrypt"`
 	Daemon             DaemonConfig          `json:"daemon"`
 	CommonConfig       CommonConfig          `json:"commonConfig"`
+	BkUser             BkUserConfig          `json:"bkUser"`
+	TenantConfig       TenantConfig          `json:"tenant"`
 	ServerConfig
 	ClientConfig
 }

@@ -33,6 +33,7 @@ import (
 type PermInfo struct {
 	ProjectID string
 	UserID    string
+	TenantID  string
 }
 
 // GetCloudAndCluster get relative cloud & cluster information

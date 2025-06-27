@@ -28,6 +28,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cmdb"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/job"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tenant"
 )
 
 var (
@@ -155,6 +156,16 @@ func JobExecuteScriptTask(taskID string, stepName string) error {
 
 	// inject taskID
 	ctx := cloudprovider.WithTaskIDAndStepNameForContext(context.Background(), taskID, stepName)
+	ctx, err = tenant.WithTenantIdByResourceForContext(ctx, tenant.ResourceMetaData{ClusterId: clusterID})
+	if err != nil {
+		blog.Errorf("JobExecuteScriptTask[%s] WithTenantIdByResourceForContext failed: %v", taskID, err)
+		if step.GetSkipOnFailed() {
+			_ = state.SkipFailure(start, stepName, err)
+			return nil
+		}
+		_ = state.UpdateStepFailure(start, stepName, err)
+		return err
+	}
 
 	// render script && base64 encode
 	jobParas, err := renderScript(ctx, clusterID, content, nodeIPs, operator)
@@ -273,13 +284,13 @@ func ExecuteScriptByJob(ctx context.Context, stepName, bizID, content string, ip
 	return job.GetJobTaskLink(jobID), nil
 }
 
-func getBizHosts(bizID string) (map[int64]cmdb.HostData, error) {
+func getBizHosts(ctx context.Context, bizID string) (map[int64]cmdb.HostData, error) {
 	biz, err := strconv.Atoi(bizID)
 	if err != nil {
 		blog.Errorf("strconv BusinessID to int failed: %v", err)
 		return nil, err
 	}
-	hosts, err := cmdb.GetCmdbClient().FetchAllHostsByBizID(biz, false)
+	hosts, err := cmdb.GetCmdbClient().FetchAllHostsByBizID(ctx, biz, false)
 	if err != nil {
 		blog.Errorf("cmdb FetchAllHostsByBizID failed: %v", err)
 		return nil, err
@@ -299,13 +310,13 @@ func GetIPCloudIDByNodeIPs(ctx context.Context, bizID string, ips []string) ([]j
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
 	// withoutBiz maybe get other biz host
-	hostDetailData, err := cmdb.GetCmdbClient().QueryAllHostInfoWithoutBiz(ips)
+	hostDetailData, err := cmdb.GetCmdbClient().QueryAllHostInfoWithoutBiz(ctx, ips)
 	if err != nil {
 		blog.Errorf("task[%s] GetIPCloudIDByNodeIPs failed: %v", taskID, err)
 		return nil, err
 	}
 
-	bizHostsMap, err := getBizHosts(bizID)
+	bizHostsMap, err := getBizHosts(ctx, bizID)
 	if err != nil {
 		return nil, err
 	}

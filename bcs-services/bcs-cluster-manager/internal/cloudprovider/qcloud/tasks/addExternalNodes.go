@@ -17,6 +17,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tenant"
 	"strconv"
 	"strings"
 	"time"
@@ -239,7 +240,8 @@ func recordClusterExternalNodeToDB(
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 	err = retry.Do(func() error {
 		nodes, err = business.ListExternalNodesByIP(opt.InstanceIPs, &cloudprovider.ListNodesOption{
-			Common: info.CmOption,
+			Common:    info.CmOption,
+			ProjectID: info.Cluster.ProjectID,
 		})
 		if err != nil {
 			return err
@@ -324,9 +326,6 @@ func CheckExternalNodesEmptyTask(taskID string, stepName string) error { // noli
 	blog.Infof("CheckExternalNodesEmptyTask[%s] task %s run current step %s, system: %s, old state: %s, params %v",
 		taskID, taskID, stepName, step.System, step.Status, step.Params)
 
-	// inject taskID
-	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
-
 	// extract valid parameter
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
 	nodeGroupID := step.Params[cloudprovider.NodeGroupIDKey.String()]
@@ -351,6 +350,17 @@ func CheckExternalNodesEmptyTask(taskID string, stepName string) error { // noli
 	if len(ipList) == 0 || len(deviceIdList) == 0 {
 		blog.Errorf("CheckExternalNodesEmptyTask[%s] split NodeIPsKey failed: %v", taskID, err)
 		retErr := fmt.Errorf("split NodeIPsKey failed: %v", err.Error())
+		_ = state.UpdateStepFailure(start, stepName, retErr)
+		return err
+	}
+
+	// inject taskID
+	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
+	ctx, err = tenant.WithTenantIdByResourceForContext(ctx, tenant.ResourceMetaData{ClusterId: clusterID})
+	if err != nil {
+		blog.Errorf("CheckExternalNodesEmptyTask[%s] WithTenantIdByResourceForContext failed, %s",
+			taskID, err.Error())
+		retErr := fmt.Errorf("withTenantIdByResourceForContext failed: %v", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return err
 	}

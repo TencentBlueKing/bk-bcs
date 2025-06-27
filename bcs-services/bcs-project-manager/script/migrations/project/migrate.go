@@ -32,6 +32,7 @@ import (
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/constant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/page"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
@@ -227,25 +228,27 @@ func initBuiltInProject() error {
 		return errors.New("init projectID can not be empty")
 	}
 	p := &pm.Project{
-		ProjectID:   projectID,
-		Name:        "蓝鲸",
-		ProjectCode: stringx.GetEnv("INIT_PROJECT_CODE", "blueking"),
-		Creator:     stringx.GetEnv("INIT_PROJECT_USER", "admin"),
-		Updater:     stringx.GetEnv("INIT_PROJECT_USER", "admin"),
-		Managers:    stringx.GetEnv("INIT_PROJECT_USER", "admin"),
-		ProjectType: 0,
-		UseBKRes:    false,
-		Description: "BCS built-in project",
-		IsOffline:   false,
-		Kind:        "k8s",
-		BusinessID:  stringx.GetEnv("INIT_PROJECT_BUSINESS_ID", "2"),
-		DeployType:  2,
-		BGID:        "0",
-		DeptID:      "0",
-		CenterID:    "0",
-		IsSecret:    false,
-		CreateTime:  time.Now().Format(timeLayout),
-		UpdateTime:  time.Now().Format(timeLayout),
+		ProjectID:         projectID,
+		Name:              "蓝鲸",
+		ProjectCode:       stringx.GetEnv("INIT_PROJECT_CODE", "blueking"),
+		TenantID:          constant.SystemTenantId,
+		TenantProjectCode: stringx.GetEnv("INIT_PROJECT_CODE", "blueking"),
+		Creator:           stringx.GetEnv("INIT_PROJECT_USER", "admin"),
+		Updater:           stringx.GetEnv("INIT_PROJECT_USER", "admin"),
+		Managers:          stringx.GetEnv("INIT_PROJECT_USER", "admin"),
+		ProjectType:       0,
+		UseBKRes:          false,
+		Description:       "BCS built-in project",
+		IsOffline:         false,
+		Kind:              "k8s",
+		BusinessID:        stringx.GetEnv("INIT_PROJECT_BUSINESS_ID", "2"),
+		DeployType:        2,
+		BGID:              "0",
+		DeptID:            "0",
+		CenterID:          "0",
+		IsSecret:          false,
+		CreateTime:        time.Now().Format(timeLayout),
+		UpdateTime:        time.Now().Format(timeLayout),
 	}
 	_, err := model.GetProject(context.Background(), p.ProjectID)
 	if err == nil {

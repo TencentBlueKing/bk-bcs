@@ -10,10 +10,11 @@
  * limitations under the License.
  */
 
-// Package itsm xxx
-package itsm
+// Package v2 xxx
+package v2
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -21,6 +22,7 @@ import (
 	"github.com/parnurzeal/gorequest"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/bkuser"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
@@ -87,13 +89,21 @@ type TicketsItem struct {
 }
 
 // ListTickets list itsm tickets by sn list
-func ListTickets(snList []string) ([]TicketsItem, error) {
+func ListTickets(ctx context.Context, snList []string) ([]TicketsItem, error) {
 	itsmConf := config.GlobalConf.ITSM
 	// 默认使用网关访问，如果为外部版，则使用ESB访问
 	host := itsmConf.GatewayHost
 	if itsmConf.External {
 		host = itsmConf.Host
 	}
+
+	// auth headers
+	headers, err := bkuser.GetAuthHeader(ctx)
+	if err != nil {
+		logging.Error("ListTickets get auth header failed, %s", err.Error())
+		return nil, errorx.NewRequestITSMErr(err.Error())
+	}
+
 	tickets := []TicketsItem{}
 	var page = 1
 	for {
@@ -107,7 +117,7 @@ func ListTickets(snList []string) ([]TicketsItem, error) {
 		}
 		// 请求API
 		proxy := ""
-		body, err := component.Request(req, timeout, proxy, component.GetAuthHeader())
+		body, err := component.Request(req, timeout, proxy, headers)
 		if err != nil {
 			logging.Error("request list itsm tickets %v failed, %s", snList, err.Error())
 			return nil, errorx.NewRequestITSMErr(err.Error())
@@ -150,7 +160,7 @@ type TicketApprovalItem struct {
 }
 
 // ListTicketsApprovalResult list itsm tickets approval result by sn list
-func ListTicketsApprovalResult(snList []string) ([]TicketApprovalItem, error) {
+func ListTicketsApprovalResult(ctx context.Context, snList []string) ([]TicketApprovalItem, error) {
 	itsmConf := config.GlobalConf.ITSM
 	// 默认使用网关访问，如果为外部版，则使用ESB访问
 	host := itsmConf.GatewayHost
@@ -166,9 +176,17 @@ func ListTicketsApprovalResult(snList []string) ([]TicketApprovalItem, error) {
 			"sn": snList,
 		},
 	}
+
+	// auth headers
+	headers, err := bkuser.GetAuthHeader(ctx)
+	if err != nil {
+		logging.Error("ListTicketsApprovalResult get auth header failed, %s", err.Error())
+		return nil, errorx.NewRequestITSMErr(err.Error())
+	}
+
 	// 请求API
 	proxy := ""
-	body, err := component.Request(req, timeout, proxy, component.GetAuthHeader())
+	body, err := component.Request(req, timeout, proxy, headers)
 	if err != nil {
 		logging.Error("request list itsm tickets approval %v failed, %s", snList, err.Error())
 		return nil, errorx.NewRequestITSMErr(err.Error())

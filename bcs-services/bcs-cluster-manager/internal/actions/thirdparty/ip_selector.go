@@ -16,6 +16,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/auth"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tenant"
 	"strconv"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -131,10 +133,13 @@ func (ga *GetBizInstanceTopoAction) listBizHostTopo() error {
 	bizTopos := make([]*cmdb.BizInstanceTopoData, 0)
 	ipSelector := cmdb.NewIpSelector(cmdb.GetCmdbClient(), gse.GetGseClient())
 
+	user := auth.GetAuthAndTenantInfoFromCtx(ga.ctx)
+	ctx := tenant.WithTenantIdFromContext(ga.ctx, user.ResourceTenantId)
+
 	for _, scope := range ga.req.ScopeList {
 		if scope.ScopeType == common.Biz {
 			bizID, _ := strconv.Atoi(scope.ScopeId)
-			topoData, err := ipSelector.GetBizModuleTopoData(ga.ctx, bizID)
+			topoData, err := ipSelector.GetBizModuleTopoData(ctx, bizID)
 			if err != nil {
 				blog.Errorf("GetBizInstanceTopoAction GetBizModuleTopoData[%v] failed: %v", bizID, err)
 				continue
@@ -283,12 +288,15 @@ func (gt *GetTopologyNodesAction) listBizTopologyNodes() error {
 	modules := gt.buildModuleInfo()
 	filter := gt.buildFilterCondition()
 
+	user := auth.GetAuthAndTenantInfoFromCtx(gt.ctx)
+	ctx := tenant.WithTenantIdFromContext(gt.ctx, user.ResourceTenantId)
+
 	var (
 		topoNodes []cmdb.HostDetailInfo
 		err       error
 	)
 
-	topoNodes, err = ipSelector.GetBizTopoHostData(bizID, modules, filter)
+	topoNodes, err = ipSelector.GetBizTopoHostData(ctx, bizID, modules, filter)
 	if err != nil {
 		blog.Errorf("GetTopologyNodesAction GetBizTopoHostData[%v] failed: %v", bizID, err)
 		return err
@@ -412,6 +420,9 @@ func (gt *GetScopeHostCheckAction) listScopeHostInfo() error {
 		return nil
 	}
 
+	user := auth.GetAuthAndTenantInfoFromCtx(gt.ctx)
+	ctx := tenant.WithTenantIdFromContext(gt.ctx, user.ResourceTenantId)
+
 	ipSelector := cmdb.NewIpSelector(cmdb.GetCmdbClient(), gse.GetGseClient())
 
 	bizID, _ := strconv.Atoi(gt.req.ScopeId)
@@ -423,7 +434,7 @@ func (gt *GetScopeHostCheckAction) listScopeHostInfo() error {
 		err       error
 	)
 
-	topoNodes, err = ipSelector.GetBizTopoHostData(bizID, modules, filter)
+	topoNodes, err = ipSelector.GetBizTopoHostData(ctx, bizID, modules, filter)
 	if err != nil {
 		blog.Errorf("GetTopologyNodesAction GetBizTopoHostData[%v] failed: %v", bizID, err)
 		return err
@@ -542,11 +553,14 @@ func (gt *GetTopologyHostIdsNodesAction) buildFilterCondition() cmdb.HostFilter 
 func (gt *GetTopologyHostIdsNodesAction) listBizTopologyHostIdsNodes() error {
 	ipSelector := cmdb.NewIpSelector(cmdb.GetCmdbClient(), gse.GetGseClient())
 
+	user := auth.GetAuthAndTenantInfoFromCtx(gt.ctx)
+	ctx := tenant.WithTenantIdFromContext(gt.ctx, user.ResourceTenantId)
+
 	bizID, _ := strconv.Atoi(gt.req.ScopeId)
 	modules := gt.buildModuleInfo()
 	filter := gt.buildFilterCondition()
 
-	topoNodes, err := ipSelector.GetBizTopoHostData(bizID, modules, filter)
+	topoNodes, err := ipSelector.GetBizTopoHostData(ctx, bizID, modules, filter)
 	if err != nil {
 		blog.Errorf("GetTopologyHostIdsNodesAction GetBizTopoHostData[%v] failed: %v", bizID, err)
 		return err
@@ -643,9 +657,13 @@ func (gt *GetHostsDetailsAction) setResp(code uint32, msg string) {
 func (gt *GetHostsDetailsAction) listBizTopologyHostIdsNodes() error {
 	ipSelector := cmdb.NewIpSelector(cmdb.GetCmdbClient(), gse.GetGseClient())
 
+	user := auth.GetAuthAndTenantInfoFromCtx(gt.ctx)
+	ctx := tenant.WithTenantIdFromContext(gt.ctx, user.ResourceTenantId)
+
 	bizID, _ := strconv.Atoi(gt.req.ScopeId)
 
-	topoNodes, err := ipSelector.GetBizTopoHostData(bizID, []cmdb.HostModuleInfo{{InstanceID: int64(bizID)}}, nil)
+	topoNodes, err := ipSelector.GetBizTopoHostData(ctx, bizID,
+		[]cmdb.HostModuleInfo{{InstanceID: int64(bizID)}}, nil)
 	if err != nil {
 		blog.Errorf("GetHostsDetailsAction GetBizTopoHostData[%v] failed: %v", bizID, err)
 		return err

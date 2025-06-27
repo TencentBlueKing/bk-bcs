@@ -17,6 +17,7 @@ import (
 	"strconv"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/tenant"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/page"
@@ -55,7 +56,7 @@ func (ga *ListAction) Do(ctx context.Context, req *proto.ListBusinessRequest) ([
 	if err != nil || authUser.Username == "" {
 		return nil, errorx.NewReadableErr(errorx.ParamErr, "username is empty")
 	}
-	searchData, err := cmdb.SearchBusiness(authUser.Username, "")
+	searchData, err := cmdb.SearchBusiness(ctx, authUser.Username, "")
 	if err != nil {
 		return nil, errorx.NewRequestCMDBErr(err.Error())
 	}
@@ -74,7 +75,7 @@ func (ga *ListAction) Do(ctx context.Context, req *proto.ListBusinessRequest) ([
 }
 
 func (ga *ListAction) listBusinessEnabledBCS() ([]*proto.BusinessData, error) {
-	searchData, err := cmdb.SearchBusiness("", "")
+	searchData, err := cmdb.SearchBusiness(ga.ctx, "", "")
 	if err != nil {
 		return nil, errorx.NewRequestCMDBErr(err.Error())
 	}
@@ -82,6 +83,12 @@ func (ga *ListAction) listBusinessEnabledBCS() ([]*proto.BusinessData, error) {
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{
 		"kind": "k8s",
 	})
+
+	if tenant.IsMultiTenantEnabled() {
+		tenantCond := operator.NewLeafCondition(operator.Eq, operator.M{"tenantID": tenant.GetTenantIdFromContext(ga.ctx)})
+		cond = operator.NewBranchCondition(operator.And, cond, tenantCond)
+	}
+
 	// 查询所有开启了容器服务的项目
 	projects, _, err := ga.model.ListProjects(ga.ctx, cond, &page.Pagination{All: true})
 	if err != nil {

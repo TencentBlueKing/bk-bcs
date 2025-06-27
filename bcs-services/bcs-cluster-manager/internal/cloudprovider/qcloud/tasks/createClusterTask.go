@@ -39,6 +39,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/lock"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tenant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
@@ -123,9 +124,9 @@ func calculateClusterNodeTotalIpNum(cluster *proto.Cluster, nodeIPs []string) ui
 }
 
 // generateTags tags info
-func generateTags(bizID int64, operator string) map[string]string {
+func generateTags(ctx context.Context, bizID int64, operator string) map[string]string {
 	// get internal cloud tags
-	tags, err := cloudprovider.GetCloudBizTags(bizID, operator)
+	tags, err := cloudprovider.GetCloudBizTags(ctx, bizID, operator)
 	if err != nil {
 		blog.Errorf("TKE cluster generateTags failed: %v", err)
 		return nil
@@ -162,11 +163,18 @@ func generateClusterBasicInfo(cluster *proto.Cluster, imageID, operator string) 
 		})
 	}
 
+	ctx, err := tenant.WithTenantIdByResourceForContext(context.Background(),
+		tenant.ResourceMetaData{ProjectId: cluster.ProjectID})
+	if err != nil {
+		blog.Errorf("generateClusterBasicInfo generateTags failed: %v", err)
+		return basicInfo
+	}
+
 	// internal cloud tags
 	if options.GetEditionInfo().IsInnerEdition() {
 		// according to cloud different realization to adapt
 		bizID, _ := strconv.Atoi(cluster.BusinessID)
-		cloudTags := generateTags(int64(bizID), operator)
+		cloudTags := generateTags(ctx, int64(bizID), operator)
 
 		blog.Infof("generateClusterBasicInfo tags %+v", cloudTags)
 
@@ -1572,6 +1580,12 @@ func UpdateCreateClusterDBInfoTask(taskID string, stepName string) error {
 		"sync cluster data to pass-cc successful")
 
 	// sync cluster perms
+	ctx, err = tenant.WithTenantIdByResourceForContext(ctx, tenant.ResourceMetaData{
+		ProjectId:   dependInfo.Cluster.GetProjectID(),
+	})
+	if err != nil {
+		blog.Errorf("UpdateCreateClusterDBInfoTask WithTenantIdByResourceForContext failed: %v", err)
+	}
 	providerutils.AuthClusterResourceCreatorPerm(ctx, dependInfo.Cluster.ClusterID,
 		dependInfo.Cluster.ClusterName, dependInfo.Cluster.Creator)
 

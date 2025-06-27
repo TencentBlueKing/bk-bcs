@@ -379,4 +379,6 @@ var (
 
 	// TransVPCIPs trans vpc nodes ip
 	TransVPCIPs ParamKey = "transVPCNodeIPs"
+	// TenantIdKey tenantId
+	TenantIdKey ParamKey = "tenantId"
 )

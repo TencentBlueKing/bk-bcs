@@ -39,6 +39,10 @@ const (
 	FieldKeyProjectCode = "projectCode"
 	// FieldKeyKind kind
 	FieldKeyKind = "kind"
+	// FieldKeyTenantID tenantId
+	FieldKeyTenantID = "tenantId"
+	// FieldKeyTenantProjectCode tenantProjectCode
+	FieldKeyTenantProjectCode = "tenantProjectCode"
 )
 
 var (
@@ -71,35 +75,59 @@ var (
 			},
 			Unique: false,
 		},
+		{
+			Name: tableName + "_tenantId_idx",
+			Key: bson.D{
+				bson.E{Key: FieldKeyTenantID, Value: 1},
+			},
+			Unique: false,
+		},
+		{
+			Name: tableName + "_tenantProjectCode_idx",
+			Key: bson.D{
+				bson.E{Key: FieldKeyTenantProjectCode, Value: 1},
+			},
+			Unique: false,
+		},
+		{
+			Name: tableName + "_tenantId_tenantProjectCode_idx",
+			Key: bson.D{
+				bson.E{Key: FieldKeyTenantID, Value: 1},
+				bson.E{Key: FieldKeyTenantProjectCode, Value: 1},
+			},
+			Unique: true,
+		},
 	}
 )
 
 // Project xxx
 type Project struct {
-	CreateTime  string            `json:"createTime" bson:"createTime"`
-	UpdateTime  string            `json:"updateTime" bson:"updateTime"`
-	Creator     string            `json:"creator" bson:"creator"`
-	Updater     string            `json:"updater" bson:"updater"`
-	Managers    string            `json:"managers" bson:"managers"`
-	ProjectID   string            `json:"projectID" bson:"projectID"`
-	Name        string            `json:"name" bson:"name"`
-	ProjectCode string            `json:"projectCode" bson:"projectCode"`
-	UseBKRes    bool              `json:"useBKRes" bson:"useBKRes"`
-	Description string            `json:"description" bson:"description"`
-	IsOffline   bool              `json:"isOffline" bson:"isOffline"`
-	Kind        string            `json:"kind" bson:"kind"`
-	BusinessID  string            `json:"businessID" bson:"businessID"`
-	IsSecret    bool              `json:"isSecret" bson:"isSecret"`
-	ProjectType uint32            `json:"projectType" bson:"projectType"`
-	DeployType  uint32            `json:"deployType" bson:"deployType"`
-	BGID        string            `json:"bgID" bson:"bgID"`
-	BGName      string            `json:"bgName" bson:"bgName"`
-	DeptID      string            `json:"deptID" bson:"deptID"`
-	DeptName    string            `json:"deptName" bson:"deptName"`
-	CenterID    string            `json:"centerID" bson:"centerID"`
-	CenterName  string            `json:"centerName" bson:"centerName"`
-	Labels      map[string]string `json:"labels" bson:"labels"`
-	Annotations map[string]string `json:"annotations" bson:"annotations"`
+	CreateTime        string            `json:"createTime" bson:"createTime"`
+	UpdateTime        string            `json:"updateTime" bson:"updateTime"`
+	Creator           string            `json:"creator" bson:"creator"`
+	Updater           string            `json:"updater" bson:"updater"`
+	Managers          string            `json:"managers" bson:"managers"`
+	ProjectID         string            `json:"projectID" bson:"projectID"`
+	Name              string            `json:"name" bson:"name"`
+	ProjectCode       string            `json:"projectCode" bson:"projectCode"`
+	TenantProjectCode string            `json:"tenantProjectCode" bson:"tenantProjectCode"`
+	TenantID          string            `json:"tenantID" bson:"tenantID"`
+	UseBKRes          bool              `json:"useBKRes" bson:"useBKRes"`
+	Description       string            `json:"description" bson:"description"`
+	IsOffline         bool              `json:"isOffline" bson:"isOffline"`
+	Kind              string            `json:"kind" bson:"kind"`
+	BusinessID        string            `json:"businessID" bson:"businessID"`
+	IsSecret          bool              `json:"isSecret" bson:"isSecret"`
+	ProjectType       uint32            `json:"projectType" bson:"projectType"`
+	DeployType        uint32            `json:"deployType" bson:"deployType"`
+	BGID              string            `json:"bgID" bson:"bgID"`
+	BGName            string            `json:"bgName" bson:"bgName"`
+	DeptID            string            `json:"deptID" bson:"deptID"`
+	DeptName          string            `json:"deptName" bson:"deptName"`
+	CenterID          string            `json:"centerID" bson:"centerID"`
+	CenterName        string            `json:"centerName" bson:"centerName"`
+	Labels            map[string]string `json:"labels" bson:"labels"`
+	Annotations       map[string]string `json:"annotations" bson:"annotations"`
 }
 
 // ModelProject provide project db
@@ -168,23 +196,49 @@ func (m *ModelProject) GetProject(ctx context.Context, projectIDOrCode string) (
 	return retProject, nil
 }
 
-// ProjectField 项目属性, 包含项目ID、英文缩写、项目名称
+// ProjectField 项目属性, 包含项目ID、英文缩写、项目名称、租户信息等
 // nolint
 type ProjectField struct {
-	ProjectID   string
-	ProjectCode string
-	Name        string
+	ProjectID         string
+	ProjectCode       string
+	Name              string
+	TenantID          string
+	TenantProjectCode string
 }
 
 // GetProjectByField 通过项目的属性获取项目信息
 func (m *ModelProject) GetProjectByField(ctx context.Context, pf *ProjectField) (*Project, error) {
-	if pf.ProjectID == "" && pf.Name == "" && pf.ProjectCode == "" {
-		return nil, fmt.Errorf("project field: [projectID, name, projectCode] cannot be empty")
+	if pf.ProjectID == "" && pf.Name == "" && pf.ProjectCode == "" && pf.TenantID == "" && pf.TenantProjectCode == "" {
+		return nil, fmt.Errorf("project field: [projectID, name, projectCode, " +
+			"tanantID, tenantProjectCode] cannot be empty")
 	}
-	projectIDCond := operator.NewLeafCondition(operator.Eq, operator.M{FieldKeyProjectID: pf.ProjectID})
-	projectCodeCond := operator.NewLeafCondition(operator.Eq, operator.M{FieldKeyProjectCode: pf.ProjectCode})
-	nameCond := operator.NewLeafCondition(operator.Eq, operator.M{FieldKeyName: pf.Name})
-	cond := operator.NewBranchCondition(operator.Or, projectIDCond, projectCodeCond, nameCond)
+
+	var (
+		conds = make([]*operator.Condition, 0)
+	)
+	if pf.ProjectID != "" {
+		projectIDCond := operator.NewLeafCondition(operator.Eq, operator.M{FieldKeyProjectID: pf.ProjectID})
+		conds = append(conds, projectIDCond)
+	}
+	if pf.ProjectCode != "" {
+		projectCodeCond := operator.NewLeafCondition(operator.Eq, operator.M{FieldKeyProjectCode: pf.ProjectCode})
+		conds = append(conds, projectCodeCond)
+	}
+	if pf.Name != "" {
+		nameCond := operator.NewLeafCondition(operator.Eq, operator.M{FieldKeyName: pf.Name})
+		conds = append(conds, nameCond)
+	}
+	if pf.TenantID != "" {
+		tenantCond := operator.NewLeafCondition(operator.Eq, operator.M{FieldKeyTenantID: pf.TenantID})
+		conds = append(conds, tenantCond)
+	}
+	if pf.TenantProjectCode != "" {
+		tenantProjectCodeCond := operator.NewLeafCondition(operator.Eq,
+			operator.M{FieldKeyTenantID: pf.TenantProjectCode})
+		conds = append(conds, tenantProjectCodeCond)
+	}
+
+	cond := operator.NewBranchCondition(operator.Or, conds...)
 
 	retProject := &Project{}
 	if err := m.db.Table(m.tableName).Find(cond).One(ctx, retProject); err != nil {
@@ -262,8 +316,8 @@ func (m *ModelProject) ListProjects(ctx context.Context, cond *operator.Conditio
 // SearchProjects query project sort by ids
 // NOCC:golint/fnsize(设计如此:该方法较长且不可拆分)
 // nolint
-func (m *ModelProject) SearchProjects(ctx context.Context, ids []string, limitIDs []string, searchKey, kind string,
-	pagination *page.Pagination) ([]Project, int64, error) {
+func (m *ModelProject) SearchProjects(ctx context.Context, ids []string, limitIDs []string, searchKey,
+	kind, tenantId string, pagination *page.Pagination) ([]Project, int64, error) {
 	if pagination.Limit == 0 {
 		pagination.Limit = page.DefaultPageLimit
 	}
@@ -272,6 +326,9 @@ func (m *ModelProject) SearchProjects(ctx context.Context, ids []string, limitID
 	queryElement := bson.A{}
 	if kind != "" {
 		queryElement = append(queryElement, bson.D{{"kind", bson.D{{"$eq", kind}}}})
+	}
+	if tenantId != "" {
+		queryElement = append(queryElement, bson.D{{"tenantID", bson.D{{"$eq", tenantId}}}})
 	}
 	if len(limitIDs) != 0 {
 		queryElement = append(queryElement, bson.D{{"projectID", bson.D{{"$in", limitIDs}}}})
@@ -290,7 +347,7 @@ func (m *ModelProject) SearchProjects(ctx context.Context, ids []string, limitID
 	matchPipline := bson.D{{"$match", matchElement}}
 	pipeline := mongo.Pipeline{}
 	countPipeline := mongo.Pipeline{}
-	if kind != "" || searchKey != "" || len(limitIDs) != 0 {
+	if kind != "" || searchKey != "" || len(limitIDs) != 0 || tenantId != ""{
 		pipeline = append(pipeline, matchPipline)
 		countPipeline = append(countPipeline, matchPipline)
 	}

@@ -198,6 +198,17 @@
         "annoKeyProjCode": "${bcsSharedClusterAnnoKeyProjCode}",
         "systemNameSpaces": "${systemNameSpaces}"
     },
+    "bkUser": {
+        "appCode": "${bcsAppCode}",
+        "appSecret": "${bcsAppSecret}",
+        "server": "${bcsBkUserServer}",
+        "debug": ${bcsBkUserDebug}
+    },
+    "tenant": {
+        "enableMultiTenantMode": ${enableMultiTenantMode},
+        "noCheckTenantMethod": "${noCheckTenantMethod}",
+        "clientExemptTenant": "${clientExemptTenant}"
+    },
     "tagDepart": "${tagDepart}",
     "prefixVcluster": "${prefixVcluster}",
     "version": "${bcsClusterManagerVersion}",

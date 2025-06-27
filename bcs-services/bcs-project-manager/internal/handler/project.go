@@ -14,9 +14,6 @@ package handler
 
 import (
 	"context"
-
-	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
-
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/actions/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/cmdb"
@@ -26,7 +23,9 @@ import (
 	pm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
 	projutil "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/project"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/tenant"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
+	middleauth "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 )
 
 var (
@@ -49,18 +48,22 @@ func NewProject(model store.ProjectModel) *ProjectHandler {
 // CreateProject implement for CreateProject interface
 func (p *ProjectHandler) CreateProject(ctx context.Context,
 	req *proto.CreateProjectRequest, resp *proto.ProjectResponse) error {
+
+	authUser := tenant.GetAuthAndTenantInfoFromCtx(ctx)
+	ctx = tenant.WithTenantIdFromContext(ctx, authUser.ResourceTenantId)
+
 	// 创建项目
 	ca := project.NewCreateAction(p.model)
 	projectInfo, e := ca.Do(ctx, req)
 	if e != nil {
 		return e
 	}
-	authUser, err := middleware.GetUserFromContext(ctx)
-	if err == nil && authUser.Username != "" {
+	if authUser.Username != "" {
 		// 授权创建者项目编辑和查看权限
-		if err := iam.GrantProjectCreatorActions(authUser.Username, projectInfo.ProjectID, projectInfo.Name); err != nil {
+		if errLocal := iam.GrantProjectCreatorActions(ctx, authUser.Username,
+			projectInfo.ProjectID, projectInfo.Name); errLocal != nil {
 			logging.Error("grant project %s for creator %s permission failed, err: %s",
-				projectInfo.ProjectID, authUser.Username, err.Error())
+				projectInfo.ProjectID, authUser.Username, errLocal.Error())
 		}
 	}
 	// 处理返回数据及权限
@@ -71,6 +74,15 @@ func (p *ProjectHandler) CreateProject(ctx context.Context,
 // GetProject get project info
 func (p *ProjectHandler) GetProject(ctx context.Context,
 	req *proto.GetProjectRequest, resp *proto.ProjectResponse) error {
+
+	authUser := tenant.GetAuthAndTenantInfoFromCtx(ctx)
+	ctx = tenant.WithTenantIdFromContext(ctx, authUser.ResourceTenantId)
+
+	user, err := middleauth.GetUserFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
 	// 查询项目信息
 	ga := project.NewGetAction(p.model)
 	projectInfo, err := ga.Do(ctx, req)
@@ -78,8 +90,8 @@ func (p *ProjectHandler) GetProject(ctx context.Context,
 		return err
 	}
 	businessName := ""
-	if projectInfo.BusinessID != "" && projectInfo.BusinessID != "0" {
-		business, err := cmdb.GetBusinessByID(projectInfo.BusinessID, true)
+	if projectInfo.BusinessID != "" && projectInfo.BusinessID != "0" && !user.IsInner() {
+		business, err := cmdb.GetBusinessByID(ctx, projectInfo.BusinessID, true)
 		if err != nil {
 			logging.Error("get business %s failed, err: %s", projectInfo.BusinessID, err.Error())
 		} else {
@@ -108,6 +120,10 @@ func (p *ProjectHandler) DeleteProject(ctx context.Context,
 // UpdateProject update a project record
 func (p *ProjectHandler) UpdateProject(ctx context.Context,
 	req *proto.UpdateProjectRequest, resp *proto.ProjectResponse) error {
+
+	authUser := tenant.GetAuthAndTenantInfoFromCtx(ctx)
+	ctx = tenant.WithTenantIdFromContext(ctx, authUser.ResourceTenantId)
+
 	ua := project.NewUpdateAction(p.model)
 	projectInfo, e := ua.Do(ctx, req)
 	if e != nil {
@@ -121,52 +137,85 @@ func (p *ProjectHandler) UpdateProject(ctx context.Context,
 // ListProjects list projects reocrds
 func (p *ProjectHandler) ListProjects(ctx context.Context,
 	req *proto.ListProjectsRequest, resp *proto.ListProjectsResponse) error {
+
+	authUser := tenant.GetAuthAndTenantInfoFromCtx(ctx)
+	ctx = tenant.WithTenantIdFromContext(ctx, authUser.ResourceTenantId)
+
+	logging.Info("list projects, req: %v", req)
+	logging.Info("list projects, authUser: %+v", authUser)
+
 	la := project.NewListAction(p.model)
 	projects, e := la.Do(ctx, req)
 	if e != nil {
 		return e
 	}
-	authUser, err := middleware.GetUserFromContext(ctx)
-	if err == nil && authUser.Username != "" {
+
+	projectIam, err := auth.GetProjectIamClient(authUser.GetResourceTenantId())
+	if err != nil {
+		return err
+	}
+
+	// TODO: 赋予所有权限，等待权限中心支持后，再
+	if authUser.GetUsername() != "" {
 		// with username
 		// 获取 project id, 用以获取对应的权限
 		ids := getProjectIDs(projects)
-		perms, err := auth.ProjectIamClient.GetMultiProjectMultiActionPerm(
-			authUser.Username, ids,
-			[]string{auth.ProjectCreate, auth.ProjectView, auth.ProjectEdit, auth.ProjectDelete},
-		)
+		perms, err := projectIam.GetMultiProjectMultiActionPerm(authUser.GetUsername(), ids,
+			[]string{auth.ProjectCreate, auth.ProjectView, auth.ProjectEdit, auth.ProjectDelete})
 		if err != nil {
 			return err
 		}
+
+		// perms := getProjectAllPerms(ids)
 		// 处理返回
 		setListPermsResp(resp, projects, perms)
 	} else {
 		// without username
 		setListPermsResp(resp, projects, nil)
 	}
-	projutil.PatchBusinessName(resp.Data.Results)
+	projutil.PatchBusinessName(ctx, resp.Data.Results)
 	return nil
+}
+
+func getProjectAllPerms(projectIds []string) map[string]map[string]bool {
+	perms := make(map[string]map[string]bool)
+	for _, id := range projectIds {
+		perms[id] = make(map[string]bool)
+		perms[id][auth.ProjectCreate] = true
+		perms[id][auth.ProjectView] = true
+		perms[id][auth.ProjectEdit] = true
+		perms[id][auth.ProjectDelete] = true
+	}
+	return perms
 }
 
 // ListAuthorizedProjects query authorized project info list
 func (p *ProjectHandler) ListAuthorizedProjects(ctx context.Context,
 	req *proto.ListAuthorizedProjReq, resp *proto.ListAuthorizedProjResp) error {
+
+	authUser := tenant.GetAuthAndTenantInfoFromCtx(ctx)
+	ctx = tenant.WithTenantIdFromContext(ctx, authUser.ResourceTenantId)
+
 	lap := project.NewListAuthorizedProj(p.model)
 	projects, e := lap.Do(ctx, req)
 	if e != nil {
 		return e
 	}
 	if req.All {
-		authUser, err := middleware.GetUserFromContext(ctx)
-		if err == nil && authUser.Username != "" {
+		if authUser.Username != "" {
 			ids := getProjectIDs(projects)
-			perms, err := auth.ProjectIamClient.GetMultiProjectMultiActionPerm(
-				authUser.Username, ids,
-				[]string{auth.ProjectCreate, auth.ProjectView, auth.ProjectEdit, auth.ProjectDelete},
-			)
+			projectIam, err := auth.GetProjectIamClient(authUser.GetResourceTenantId())
 			if err != nil {
 				return err
 			}
+
+			perms, err := projectIam.GetMultiProjectMultiActionPerm(authUser.GetUsername(), ids,
+				[]string{auth.ProjectCreate, auth.ProjectView, auth.ProjectEdit, auth.ProjectDelete})
+			if err != nil {
+				return err
+			}
+
+			// perms := getProjectAllPerms(ids)
 			// set web_annotation
 			setListPermsResp(resp, projects, perms)
 		}
@@ -174,7 +223,7 @@ func (p *ProjectHandler) ListAuthorizedProjects(ctx context.Context,
 		// list only authorized projects, so no need to set web_annotation
 		setListResp(resp, projects)
 	}
-	projutil.PatchBusinessName(resp.Data.Results)
+	projutil.PatchBusinessName(ctx, resp.Data.Results)
 
 	return nil
 }
@@ -182,6 +231,10 @@ func (p *ProjectHandler) ListAuthorizedProjects(ctx context.Context,
 // ListProjectsForIAM list projects with k8s enabled for iam grant
 func (p *ProjectHandler) ListProjectsForIAM(ctx context.Context,
 	req *proto.ListProjectsForIAMReq, resp *proto.ListProjectsForIAMResp) error {
+
+	authUser := tenant.GetAuthAndTenantInfoFromCtx(ctx)
+	ctx = tenant.WithTenantIdFromContext(ctx, authUser.ResourceTenantId)
+
 	lap := project.NewListForIAMActionAction(p.model)
 	projects, e := lap.Do(ctx, req)
 	if e != nil {

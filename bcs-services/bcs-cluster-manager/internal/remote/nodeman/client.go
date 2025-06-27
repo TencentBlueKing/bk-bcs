@@ -15,7 +15,6 @@ package nodeman
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"sync"
 	"time"
@@ -25,6 +24,8 @@ import (
 	"github.com/parnurzeal/gorequest"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/metrics"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/types"
+	rutils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
@@ -57,11 +58,6 @@ func NewNodeManClient(options Options) (*Client, error) {
 		serverDebug: options.Debug,
 	}
 
-	auth, err := c.generateGateWayAuth()
-	if err != nil {
-		return nil, err
-	}
-	c.userAuth = auth
 	return c, nil
 }
 
@@ -81,13 +77,6 @@ type Options struct {
 	Debug      bool
 }
 
-// AuthInfo auth user
-type AuthInfo struct {
-	BkAppCode   string `json:"bk_app_code"`
-	BkAppSecret string `json:"bk_app_secret"`
-	BkUserName  string `json:"bk_username"`
-}
-
 // Client for nodeman
 type Client struct {
 	appCode     string
@@ -95,22 +84,6 @@ type Client struct {
 	bkUserName  string
 	server      string
 	serverDebug bool
-	userAuth    string
-}
-
-func (c *Client) generateGateWayAuth() (string, error) {
-	auth := &AuthInfo{
-		BkAppCode:   c.appCode,
-		BkAppSecret: c.appSecret,
-		BkUserName:  c.bkUserName,
-	}
-
-	userAuth, err := json.Marshal(auth)
-	if err != nil {
-		return "", err
-	}
-
-	return string(userAuth), nil
 }
 
 // CloudList get cloud list
@@ -120,6 +93,17 @@ func (c *Client) CloudList(ctx context.Context) ([]CloudListData, error) {
 		respData = &CloudListResponse{}
 	)
 
+	userAuth, tenant, err := rutils.GetGatewayAuthAndTenantInfo(ctx, &types.AuthInfo{
+		BkAppUser: types.BkAppUser{
+			BkAppCode:   c.appCode,
+			BkAppSecret: c.appSecret,
+		},
+		BkUserName: c.bkUserName,
+	}, "")
+	if err != nil {
+		return nil, err
+	}
+
 	language := i18n.LanguageFromCtx(ctx)
 
 	start := time.Now()
@@ -128,7 +112,8 @@ func (c *Client) CloudList(ctx context.Context) ([]CloudListData, error) {
 		Get(reqURL).
 		Set("Content-Type", "application/json").
 		Set("Accept", "application/json").
-		Set("X-Bkapi-Authorization", c.userAuth).
+		Set("X-Bkapi-Authorization", userAuth).
+		Set("X-Bk-Tenant-Id", tenant).
 		Set("Blueking-Language", language).
 		SetDebug(c.serverDebug).
 		EndStruct(&respData)
@@ -149,7 +134,7 @@ func (c *Client) CloudList(ctx context.Context) ([]CloudListData, error) {
 }
 
 // JobInstall job install
-func (c *Client) JobInstall(jobType JobType, hosts []JobInstallHost) (*JobInstallData, error) {
+func (c *Client) JobInstall(ctx context.Context, jobType JobType, hosts []JobInstallHost) (*JobInstallData, error) {
 	var (
 		reqURL  = fmt.Sprintf("%s/api/job/install/", c.server)
 		request = &JobInstallRequest{
@@ -161,13 +146,25 @@ func (c *Client) JobInstall(jobType JobType, hosts []JobInstallHost) (*JobInstal
 		respData = &JobInstallResponse{}
 	)
 
+	userAuth, tenant, err := rutils.GetGatewayAuthAndTenantInfo(ctx, &types.AuthInfo{
+		BkAppUser: types.BkAppUser{
+			BkAppCode:   c.appCode,
+			BkAppSecret: c.appSecret,
+		},
+		BkUserName: c.bkUserName,
+	}, "")
+	if err != nil {
+		return nil, err
+	}
+
 	start := time.Now()
 	_, _, errs := gorequest.New().
 		Timeout(defaultTimeOut).
 		Post(reqURL).
 		Set("Content-Type", "application/json").
 		Set("Accept", "application/json").
-		Set("X-Bkapi-Authorization", c.userAuth).
+		Set("X-Bkapi-Authorization", userAuth).
+		Set("X-Bk-Tenant-Id", tenant).
 		SetDebug(c.serverDebug).
 		Send(request).
 		EndStruct(&respData)
@@ -188,9 +185,9 @@ func (c *Client) JobInstall(jobType JobType, hosts []JobInstallHost) (*JobInstal
 }
 
 // JobDetails get job detail
-func (c *Client) JobDetails(jobID int) (*JobDetailsData, error) {
+func (c *Client) JobDetails(ctx context.Context, jobID int) (*JobDetailsData, error) {
 	var (
-		reqURL  = fmt.Sprintf("%s/api/job/details/", c.server)
+		reqURL  = fmt.Sprintf("%s/api/job/%v/details/", c.server, jobID)
 		request = &JobDetailsRequest{
 			JobID:    jobID,
 			Page:     defaultPage,
@@ -199,13 +196,25 @@ func (c *Client) JobDetails(jobID int) (*JobDetailsData, error) {
 		respData = &JobDetailsResponse{}
 	)
 
+	userAuth, tenant, err := rutils.GetGatewayAuthAndTenantInfo(ctx, &types.AuthInfo{
+		BkAppUser: types.BkAppUser{
+			BkAppCode:   c.appCode,
+			BkAppSecret: c.appSecret,
+		},
+		BkUserName: c.bkUserName,
+	}, "")
+	if err != nil {
+		return nil, err
+	}
+
 	start := time.Now()
 	_, _, errs := gorequest.New().
 		Timeout(defaultTimeOut).
 		Post(reqURL).
 		Set("Content-Type", "application/json").
 		Set("Accept", "application/json").
-		Set("X-Bkapi-Authorization", c.userAuth).
+		Set("X-Bkapi-Authorization", userAuth).
+		Set("X-Bk-Tenant-Id", tenant).
 		SetDebug(c.serverDebug).
 		Send(request).
 		EndStruct(&respData)
@@ -226,7 +235,7 @@ func (c *Client) JobDetails(jobID int) (*JobDetailsData, error) {
 }
 
 // ListHosts list hosts with bk_biz_id
-func (c *Client) ListHosts(bkBizID, page, pageSize int) (*ListHostsData, error) {
+func (c *Client) ListHosts(ctx context.Context, bkBizID, page, pageSize int) (*ListHostsData, error) {
 	var (
 		reqURL  = fmt.Sprintf("%s/api/host/search/", c.server)
 		request = &ListHostsRequest{
@@ -237,13 +246,25 @@ func (c *Client) ListHosts(bkBizID, page, pageSize int) (*ListHostsData, error) 
 		respData = &ListHostsResponse{}
 	)
 
+	userAuth, tenant, err := rutils.GetGatewayAuthAndTenantInfo(ctx, &types.AuthInfo{
+		BkAppUser: types.BkAppUser{
+			BkAppCode:   c.appCode,
+			BkAppSecret: c.appSecret,
+		},
+		BkUserName: c.bkUserName,
+	}, "")
+	if err != nil {
+		return nil, err
+	}
+
 	start := time.Now()
 	_, _, errs := gorequest.New().
 		Timeout(defaultTimeOut).
 		Post(reqURL).
 		Set("Content-Type", "application/json").
 		Set("Accept", "application/json").
-		Set("X-Bkapi-Authorization", c.userAuth).
+		Set("X-Bkapi-Authorization", userAuth).
+		Set("X-Bk-Tenant-Id", tenant).
 		SetDebug(c.serverDebug).
 		Send(request).
 		EndStruct(&respData)
@@ -264,9 +285,9 @@ func (c *Client) ListHosts(bkBizID, page, pageSize int) (*ListHostsData, error) 
 }
 
 // ListAllHosts list all hosts with bk_biz_id
-func (c *Client) ListAllHosts(bkBizID int) ([]HostInfo, error) {
+func (c *Client) ListAllHosts(ctx context.Context, bkBizID int) ([]HostInfo, error) {
 	// get all host counts
-	result, err := c.ListHosts(bkBizID, defaultPage, defaultPageSize)
+	result, err := c.ListHosts(ctx, bkBizID, defaultPage, defaultPageSize)
 	if err != nil {
 		return nil, err
 	}
@@ -285,7 +306,7 @@ func (c *Client) ListAllHosts(bkBizID int) ([]HostInfo, error) {
 		con.Add(1)
 		go func(page int) {
 			defer con.Done()
-			hosts, err := c.ListHosts(bkBizID, page, defaultPageSize)
+			hosts, err := c.ListHosts(ctx, bkBizID, page, defaultPageSize)
 			if err != nil {
 				blog.Errorf("ListAllHosts %v failed, %s", bkBizID, err.Error())
 				return
@@ -302,9 +323,9 @@ func (c *Client) ListAllHosts(bkBizID int) ([]HostInfo, error) {
 }
 
 // GetHostIDByIPs get host id by ips
-func (c *Client) GetHostIDByIPs(bkBizID int, ips []string) ([]int, error) {
+func (c *Client) GetHostIDByIPs(ctx context.Context, bkBizID int, ips []string) ([]int, error) {
 	hostIDs := make([]int, 0)
-	hosts, err := c.ListAllHosts(bkBizID)
+	hosts, err := c.ListAllHosts(ctx, bkBizID)
 	if err != nil {
 		return nil, fmt.Errorf("list nodeman hosts err %s", err.Error())
 	}

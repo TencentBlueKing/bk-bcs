@@ -22,6 +22,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/script/migrations/itsm"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/script/migrations/tenant"
 )
 
 var migrateCmd = &cobra.Command{
@@ -32,6 +33,7 @@ var migrateCmd = &cobra.Command{
 	},
 }
 
+// migrateInitITSMCmd for auto register itsm service and write config into database
 var migrateInitITSMCmd = &cobra.Command{
 	Use:   "init-itsm",
 	Short: "Register bcs related services into itsm",
@@ -54,7 +56,31 @@ var migrateInitITSMCmd = &cobra.Command{
 	},
 }
 
+// migrateInitTenantCmd for init projects tenantInfo(default) when env not enable multi tenant
+var migrateInitTenantCmd = &cobra.Command{
+	Use:   "init-tenant",
+	Short: "init bcs project manager tenant info",
+	Run: func(cmd *cobra.Command, args []string) {
+		if _, err := config.LoadConfig(configPath); err != nil {
+			fmt.Printf("load config failed, err: %s\n", err.Error())
+			os.Exit(1)
+		}
+
+		// 内部环境 且 不开启多租户
+		if !config.GlobalConf.EnableMultiTenant {
+			fmt.Printf("multi tenant is disabled or auto register is disabled, skip migration")
+			return
+		}
+		if err := tenant.InitProject(); err != nil {
+			fmt.Printf("init tenant project failed, err: %s\n", err.Error())
+			os.Exit(1)
+		}
+		fmt.Printf("init tenant project successfully\n")
+	},
+}
+
 func init() {
 	migrateCmd.AddCommand(migrateInitITSMCmd)
+	migrateCmd.AddCommand(migrateInitTenantCmd)
 	rootCmd.AddCommand(migrateCmd)
 }

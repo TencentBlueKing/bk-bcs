@@ -1,12 +1,15 @@
 module github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager
 
-go 1.20
+go 1.21
 
 replace (
+	github.com/Tencent/bk-bcs/bcs-common => github.com/evanlixin/bk-bcs/bcs-common v0.0.0-20250626092457-bb04116c4b34
+	github.com/Tencent/bk-bcs/bcs-services/pkg => github.com/evanlixin/bk-bcs/bcs-services/pkg v0.0.0-20250626092457-bb04116c4b34
 	k8s.io/api => k8s.io/api v0.26.1
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.26.1
 	k8s.io/apimachinery => k8s.io/apimachinery v0.26.1
 	k8s.io/client-go => k8s.io/client-go v0.26.1
+	k8s.io/endpointslice => k8s.io/endpointslice v0.29.6
 	k8s.io/kubectl => k8s.io/kubectl v0.26.1
 )
 
@@ -76,6 +79,7 @@ require github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/cbs v1.0.1052
 require (
 	github.com/Azure/azure-sdk-for-go/profile/p20200901 v0.1.1
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerservice/armcontainerservice/v3 v3.0.0
+	k8s.io/klog/v2 v2.100.1
 )
 
 require (
@@ -96,7 +100,7 @@ require (
 	github.com/TencentBlueKing/bk-audit-go-sdk v0.0.6 // indirect
 	github.com/TencentBlueKing/crypto-golang-sdk v1.0.0 // indirect
 	github.com/TencentBlueKing/gopkg v1.1.0 // indirect
-	github.com/TencentBlueKing/iam-go-sdk v0.1.6 // indirect
+	github.com/TencentBlueKing/iam-go-sdk v1.0.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bitly/go-simplejson v0.5.0 // indirect
 	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
@@ -249,7 +253,6 @@ require (
 	k8s.io/cli-runtime v0.26.1 // indirect
 	k8s.io/component-base v0.26.1 // indirect
 	k8s.io/klog v1.0.0 // indirect
-	k8s.io/klog/v2 v2.100.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20221012153701-172d655c2280 // indirect
 	k8s.io/utils v0.0.0-20221107191617-1a15be271d1d // indirect
 	moul.io/http2curl v1.0.0 // indirect

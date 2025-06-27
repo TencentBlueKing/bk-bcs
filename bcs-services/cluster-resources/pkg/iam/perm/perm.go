@@ -160,5 +160,5 @@ func (p *IAMPerm) genIAMPermError(ctx Ctx, actionID string) error {
 
 	return NewIAMPermErr(ctx.GetUsername(), "no "+actionID+" permission", []ActionResourcesRequest{
 		{actionID, resType, resIDs, parentChain},
-	})
+	}, ctx.GetTenantID())
 }

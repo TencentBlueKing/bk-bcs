@@ -89,7 +89,7 @@ func (la *ListBusinessClusterAction) validate() error {
 	}
 
 	// check operator host permission
-	canUse := checkUserHasPerm(la.req.BusinessID, la.req.Operator)
+	canUse := checkUserHasPerm(la.ctx, la.req.BusinessID, la.req.Operator)
 	if !canUse {
 		errMsg := fmt.Errorf("list business cluster failed: user[%s] no perm in bizID[%s]",
 			la.req.Operator, la.req.BusinessID)

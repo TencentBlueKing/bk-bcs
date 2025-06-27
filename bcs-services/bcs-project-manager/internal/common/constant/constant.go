@@ -55,3 +55,11 @@ const (
 	// LangCookieName 语言版本 Cookie 名称
 	LangCookieName = "blueking_language"
 )
+
+// Tenant const value
+const (
+	// DefaultTenantId default tenant id
+	DefaultTenantId = "default"
+	// SystemTenantId system tenant id
+	SystemTenantId = "system"
+)

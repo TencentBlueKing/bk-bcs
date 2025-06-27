@@ -33,6 +33,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tenant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
@@ -874,10 +875,10 @@ func UpdateGKENodesToDBTask(taskID string, stepName string) error {
 	}
 	// previous step successful when retry task
 	if step == nil {
-		blog.Infof("UpdateNodesToDBTask[%s]: current step[%s] successful and skip", taskID, stepName)
+		blog.Infof("UpdateGKENodesToDBTask[%s]: current step[%s] successful and skip", taskID, stepName)
 		return nil
 	}
-	blog.Infof("UpdateNodesToDBTask[%s]: task %s run step %s, system: %s, old state: %s, params %v",
+	blog.Infof("UpdateGKENodesToDBTask[%s]: task %s run step %s, system: %s, old state: %s, params %v",
 		taskID, taskID, stepName, step.System, step.Status, step.Params)
 
 	// step login started here
@@ -891,7 +892,7 @@ func UpdateGKENodesToDBTask(taskID string, stepName string) error {
 		CloudID:   cloudID,
 	})
 	if err != nil {
-		blog.Errorf("UpdateNodesToDBTask[%s]: GetClusterDependBasicInfo for cluster %s in task %s "+
+		blog.Errorf("UpdateGKENodesToDBTask[%s]: GetClusterDependBasicInfo for cluster %s in task %s "+
 			"step %s failed, %s", taskID, clusterID, taskID, stepName, err)
 		retErr := fmt.Errorf("get cloud/project information failed, %s", err)
 		_ = state.UpdateStepFailure(start, stepName, retErr)
@@ -902,9 +903,9 @@ func UpdateGKENodesToDBTask(taskID string, stepName string) error {
 	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
 	err = updateNodeToDB(ctx, state, dependInfo, nodeGroupIDs)
 	if err != nil {
-		blog.Errorf("UpdateNodesToDBTask[%s] checkNodesGroupStatus[%s] failed: %v",
+		blog.Errorf("UpdateGKENodesToDBTask[%s] checkNodesGroupStatus[%s] failed: %v",
 			taskID, clusterID, err)
-		retErr := fmt.Errorf("UpdateNodesToDBTask[%s] update node to db failed, %s", clusterID, err)
+		retErr := fmt.Errorf("UpdateGKENodesToDBTask[%s] update node to db failed, %s", clusterID, err)
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
@@ -913,12 +914,18 @@ func UpdateGKENodesToDBTask(taskID string, stepName string) error {
 	providerutils.SyncClusterInfoToPassCC(taskID, dependInfo.Cluster)
 
 	// sync cluster perms
+	ctx, err = tenant.WithTenantIdByResourceForContext(ctx, tenant.ResourceMetaData{
+		ProjectId:   dependInfo.Cluster.GetProjectID(),
+	})
+	if err != nil {
+		blog.Errorf("UpdateGKENodesToDBTask WithTenantIdByResourceForContext failed: %v", err)
+	}
 	providerutils.AuthClusterResourceCreatorPerm(ctx, dependInfo.Cluster.ClusterID,
 		dependInfo.Cluster.ClusterName, dependInfo.Cluster.Creator)
 
 	// update step
 	if err = state.UpdateStepSucc(start, stepName); err != nil {
-		blog.Errorf("UpdateNodesToDBTask[%s] task %s %s update to storage fatal",
+		blog.Errorf("UpdateGKENodesToDBTask[%s] task %s %s update to storage fatal",
 			taskID, taskID, stepName)
 		return err
 	}

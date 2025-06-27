@@ -6,12 +6,9 @@ SWAGGEROBJ:=$(patsubst %.proto, %.swagger.json, $(PROTO))
 
 GOENVPATH = $(shell go env GOPATH)
 
-DIRECTORY := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
-PROTO_IMAGE := "proto"
-
 .PHONY: all clean
 
-all: clean docker $(OBJ) $(GWOBJ) $(SWAGGEROBJ) sync-to-bcsapi
+all:$(OBJ) $(GWOBJ) $(SWAGGEROBJ)
 
 $(OBJ):$(PROTO)
 
@@ -20,32 +17,14 @@ $(GWOBJ):$(PROTO)
 $(SWAGGEROBJ):$(PROTO)
 
 %.pb.go: %.proto
-	docker run --rm \
-		-v $(DIRECTORY)/../../third_party:/third_party \
-		-v $(DIRECTORY):/proto \
-		${PROTO_IMAGE} \
-		protoc -I/third_party --proto_path=/proto --go_out=plugins=grpc:/proto --validate_out=lang=go:/proto $<
+	protoc -I../../third_party --proto_path=. --go_out=plugins=grpc:. --validate_out=lang=go:. $<
 
 %.pb.gw.go: %.proto
-	docker run --rm \
-		-v $(DIRECTORY)/../../third_party:/third_party \
-		-v $(DIRECTORY):/proto \
-		${PROTO_IMAGE} \
-		protoc -I/third_party --proto_path=/proto --micro_out=/proto \
-	--grpc-gateway_out=allow_delete_body=true,logtostderr=true,register_func_suffix=Gw:/proto $<
+	protoc -I../../third_party --proto_path=. --micro_out=. \
+	--grpc-gateway_out=allow_delete_body=true,logtostderr=true,register_func_suffix=Gw:. $<
 
 %.swagger.json: %.proto
-	docker run --rm \
-		-v $(DIRECTORY)/../../third_party:/third_party \
-		-v $(DIRECTORY):/proto \
-		${PROTO_IMAGE} \
-		protoc -I/third_party --proto_path=/proto --swagger_out=allow_delete_body=true,logtostderr=true:/proto $<
+	protoc -I../../third_party --proto_path=. --openapiv2_out=allow_delete_body=true,logtostderr=true:. $<
 
 clean:
 	rm -f $(OBJ) $(GWOBJ) $(SWAGGEROBJ) *.pb.micro.go *.pb.validate.go
-
-docker:
-	@docker build -t ${PROTO_IMAGE} .
-
-sync-to-bcsapi:
-	cp -f *.pb.go *.pb.gw.go *.pb.micro.go *.pb.validate.go ../../../../bcs-common/pkg/bcsapi/bcsproject/

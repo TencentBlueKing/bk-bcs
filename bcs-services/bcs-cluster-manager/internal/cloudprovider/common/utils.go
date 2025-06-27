@@ -16,6 +16,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tenant"
 	"strings"
 	"time"
 
@@ -640,11 +641,17 @@ func UpdateClusterNodesLabels(ctx context.Context, data NodeLabelsData) error { 
 		blog.Errorf("updateClusterNodesLabels[%s] GetCluster[%s] failed: %v", taskID, data.ClusterID, err)
 	}
 
-	hostsMap, hostIDs, err := GetCmdbNodeDetailInfo(data.NodeIPs)
+	ctx, err = tenant.WithTenantIdByResourceForContext(ctx, tenant.ResourceMetaData{ProjectId: cls.ProjectID})
+	if err != nil {
+		blog.Errorf("updateClusterNodesLabels[%s] WithTenantIdByResourceForContext failed: %v", taskID, err)
+		return err
+	}
+
+	hostsMap, hostIDs, err := GetCmdbNodeDetailInfo(ctx, data.NodeIPs)
 	if err != nil {
 		blog.Errorf("updateClusterNodesLabels[%s] GetCmdbNodeDetailInfo failed: %v", taskID, err)
 	}
-	hostsTopo, err := GetNodeBizRelation(hostIDs)
+	hostsTopo, err := GetNodeBizRelation(ctx, hostIDs)
 	if err != nil {
 		blog.Errorf("updateClusterNodesLabels[%s] GetNodeBizRelation failed: %v", taskID, err)
 	}
@@ -710,14 +717,14 @@ func UpdateClusterNodesLabels(ctx context.Context, data NodeLabelsData) error { 
 }
 
 // GetCmdbNodeDetailInfo get cmdb detailed info
-func GetCmdbNodeDetailInfo(ips []string) (map[string]cmdb.HostDetailData, []int, error) {
+func GetCmdbNodeDetailInfo(ctx context.Context, ips []string) (map[string]cmdb.HostDetailData, []int, error) {
 	var (
 		hostsMap = make(map[string]cmdb.HostDetailData)
 		hostIDs  []int
 	)
 
 	cmdbClient := cmdb.GetCmdbClient()
-	hosts, err := cmdbClient.QueryAllHostInfoWithoutBiz(ips)
+	hosts, err := cmdbClient.QueryAllHostInfoWithoutBiz(ctx, ips)
 	if err != nil {
 		blog.Warnf("QueryAllHostInfoWithoutBiz for %v failed, %s", ips, err.Error())
 		return nil, nil, err
@@ -732,11 +739,11 @@ func GetCmdbNodeDetailInfo(ips []string) (map[string]cmdb.HostDetailData, []int,
 }
 
 // GetNodeBizRelation get nodes cmdb topo
-func GetNodeBizRelation(hostIDs []int) (map[int]cmdb.HostBizRelations, error) {
+func GetNodeBizRelation(ctx context.Context, hostIDs []int) (map[int]cmdb.HostBizRelations, error) {
 	hostTopo := make(map[int]cmdb.HostBizRelations)
 
 	cmdbClient := cmdb.GetCmdbClient()
-	relations, err := cmdbClient.FindHostBizRelations(hostIDs)
+	relations, err := cmdbClient.FindHostBizRelations(ctx, hostIDs)
 	if err != nil {
 		blog.Warnf("GetNodeBizRelation for %+v failed: %v", hostIDs, err)
 		return nil, err

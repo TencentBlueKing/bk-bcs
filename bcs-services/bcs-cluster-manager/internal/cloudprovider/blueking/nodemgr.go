@@ -190,7 +190,8 @@ func (nm *NodeManager) ListOsImage(provider string, opt *cloudprovider.CommonOpt
 }
 
 // GetExternalNodeByIP get specified Node by innerIP address
-func (nm *NodeManager) GetExternalNodeByIP(ip string, opt *cloudprovider.GetNodeOption) (*proto.Node, error) {
+func (nm *NodeManager) GetExternalNodeByIP(ip string,
+	opt *cloudprovider.GetNodeOption) (*proto.Node, error) {
 	node := &proto.Node{}
 	node.InnerIP = ip
 	node.Region = opt.Common.Region
@@ -199,7 +200,8 @@ func (nm *NodeManager) GetExternalNodeByIP(ip string, opt *cloudprovider.GetNode
 }
 
 // ListExternalNodesByIP list node by IP set
-func (nm *NodeManager) ListExternalNodesByIP(ips []string, opt *cloudprovider.ListNodesOption) ([]*proto.Node, error) {
+func (nm *NodeManager) ListExternalNodesByIP(ips []string,
+	opt *cloudprovider.ListNodesOption) ([]*proto.Node, error) {
 	var nodes []*proto.Node
 	for _, ip := range ips {
 		node := &proto.Node{}

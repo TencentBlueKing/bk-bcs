@@ -22,6 +22,7 @@ import (
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tenant"
 )
 
 var (
@@ -78,6 +79,14 @@ func AddNodesShieldAlarmTask(taskID string, stepName string) error {
 	}
 
 	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
+	ctx, err = tenant.WithTenantIdByResourceForContext(ctx, tenant.ResourceMetaData{ProjectId: cluster.ProjectID})
+	if err != nil {
+		blog.Errorf("AddNodesShieldAlarmTask[%s] WithTenantIdByResourceForContext failed: %v", taskID, err)
+		retErr := fmt.Errorf("WithTenantIdByResourceForContext %s failed", cluster.ProjectID)
+		_ = state.UpdateStepFailure(start, stepName, retErr)
+		return retErr
+	}
+
 	err = cloudprovider.ShieldHostAlarm(ctx, cluster.ClusterID, cluster.BusinessID, ipList)
 	if err != nil {
 		blog.Errorf("AddNodesShieldAlarmTask[%s] ShieldHostAlarmConfig failed: %v", taskID, err)

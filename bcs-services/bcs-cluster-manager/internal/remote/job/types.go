@@ -14,8 +14,7 @@ package job
 
 import (
 	"fmt"
-
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/utils"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/types"
 )
 
 // Options for client
@@ -110,7 +109,7 @@ type IpInfo struct {
 
 // FastExecuteScriptRsp resp xxx
 type FastExecuteScriptRsp struct {
-	utils.BaseResponse
+	types.BaseResponse
 	Data FastExecuteScripData `json:"data"`
 }
 
@@ -123,7 +122,7 @@ type FastExecuteScripData struct {
 
 // GetJobInstanceStatusRsp xxx
 type GetJobInstanceStatusRsp struct {
-	utils.BaseResponse
+	types.BaseResponse
 	Data GetJobInstanceStatusData `json:"data"`
 }
 

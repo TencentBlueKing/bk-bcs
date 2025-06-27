@@ -27,6 +27,7 @@ import (
 	pm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/stringx"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/tenant"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
 )
 
@@ -62,6 +63,8 @@ func (la *ListAction) Do(ctx context.Context, req *proto.ListProjectsRequest) (*
 
 func (la *ListAction) listProjects() ([]*pm.Project, int64, error) {
 
+	logging.Info("list projects, tenant enable: %v", tenant.IsMultiTenantEnabled())
+
 	var cond *operator.Condition
 	// 通过项目名称进行模糊查询
 	if la.req.SearchName != "" {
@@ -70,6 +73,11 @@ func (la *ListAction) listProjects() ([]*pm.Project, int64, error) {
 		condProjectCode := operator.NewLeafCondition(operator.Con,
 			operator.M{"projectCode": primitive.Regex{Pattern: la.req.SearchName, Options: "i"}})
 		cond = operator.NewBranchCondition(operator.Or, condName, condProjectCode)
+
+		if tenant.IsMultiTenantEnabled() {
+			cond = operator.NewBranchCondition(operator.And, cond, operator.NewLeafCondition(operator.Eq,
+				operator.M{"tenantID": tenant.GetTenantIdFromContext(la.ctx)}))
+		}
 	} else {
 		condM := make(operator.M)
 		if la.req.ProjectIDs != "" {
@@ -87,6 +95,10 @@ func (la *ListAction) listProjects() ([]*pm.Project, int64, error) {
 		if la.req.BusinessID != "" {
 			condM["businessID"] = stringx.SplitString(la.req.GetBusinessID())
 		}
+		if tenant.IsMultiTenantEnabled() {
+			condM["tenantID"] = stringx.SplitString(tenant.GetTenantIdFromContext(la.ctx))
+		}
+
 		cond = operator.NewLeafCondition(operator.In, condM)
 	}
 
@@ -119,59 +131,121 @@ func NewListAuthorizedProj(model store.ProjectModel) *ListAuthorizedProject {
 // Do xxx
 func (lap *ListAuthorizedProject) Do(ctx context.Context,
 	req *proto.ListAuthorizedProjReq) (*map[string]interface{}, error) {
-	var projects []pm.Project
-	var total int64
+	var (
+		projects []pm.Project
+		total    int64
+	)
 	authUser, err := middleware.GetUserFromContext(ctx)
-	if err == nil && authUser.Username != "" {
-		// username 为空时，该接口请求没有意义
-		ids, any, err := auth.ListAuthorizedProjectIDs(authUser.Username)
-		if err != nil {
-			logging.Error("get user project permissions failed, err: %s", err.Error())
-			return nil, nil
-		}
-		if req.All {
-			if config.GlobalConf.RestrictAuthorizedProjects {
-				// all 为 true 且限权显示用户授权的项目列表时，仅查看用户有权限的项目，并支持模糊查询和分页
-				if any {
-					projects, total, err = lap.model.SearchProjects(ctx, ids, nil, req.SearchKey, req.Kind,
-						&page.Pagination{Offset: req.Offset, Limit: req.Limit})
+
+	logging.Info("list authorized projects: %v %s %s", tenant.IsMultiTenantEnabled(), authUser.GetUsername(), authUser.GetTenantId())
+
+	if tenant.IsMultiTenantEnabled() {
+		if err == nil && authUser.Username != "" {
+			// username 为空时，该接口请求没有意义, any 标识用户有无限制项目权限
+			ids, any, err := auth.ListAuthorizedProjectIDs(authUser.Username, authUser.GetTenantId())
+			if err != nil {
+				logging.Error("get user project permissions failed, err: %s", err.Error())
+				return nil, nil
+			}
+
+			logging.Info("list authorized projects: %+v %+v %v %v", ids, any, req.All, config.GlobalConf.RestrictAuthorizedProjects)
+
+			if req.All {
+				// true 表示限制看到有权限的项目
+				if config.GlobalConf.RestrictAuthorizedProjects {
+					// all 为 true 且限权显示用户授权的项目列表时，仅查看用户有权限的项目，并支持模糊查询和分页
+					if any {
+						projects, total, err = lap.model.SearchProjects(ctx, ids, nil, req.SearchKey, req.Kind,
+							authUser.GetTenantId(), &page.Pagination{Offset: req.Offset, Limit: req.Limit})
+					} else {
+						projects, total, err = lap.model.SearchProjects(ctx, nil, ids, req.SearchKey, req.Kind,
+							authUser.GetTenantId(), &page.Pagination{Offset: req.Offset, Limit: req.Limit})
+					}
 				} else {
-					projects, total, err = lap.model.SearchProjects(ctx, nil, ids, req.SearchKey, req.Kind,
-						&page.Pagination{Offset: req.Offset, Limit: req.Limit})
+					// all 为 true 且不限权时，返回所有项目并排序和分页，支持模糊查询
+					projects, total, err = lap.model.SearchProjects(ctx, ids, nil, req.SearchKey, req.Kind,
+						authUser.GetTenantId(), &page.Pagination{Offset: req.Offset, Limit: req.Limit})
 				}
 			} else {
-				// all 为 true 且不限权时，返回所有项目并排序和分页，支持模糊查询
-				projects, total, err = lap.model.SearchProjects(ctx, ids, nil, req.SearchKey, req.Kind,
-					&page.Pagination{Offset: req.Offset, Limit: req.Limit})
+				// all 为 false 且用户没有全部项目查看权限时，返回用户有权限的项目，分页和模糊查询都无效
+				var cond *operator.Condition
+				condKind := make(operator.M)
+				if req.Kind != "" {
+					condKind["kind"] = req.Kind
+				}
+				if authUser.GetTenantId() != "" {
+					condKind["tenantID"] = authUser.GetTenantId()
+				}
+				if any {
+					cond = operator.NewBranchCondition(operator.And, operator.NewLeafCondition(operator.Eq, condKind))
+				} else {
+					condID := make(operator.M)
+					condID["projectID"] = ids
+					cond = operator.NewBranchCondition(operator.And,
+						operator.NewLeafCondition(operator.In, condID), operator.NewLeafCondition(operator.Eq, condKind))
+				}
+				projects, total, err = lap.model.ListProjects(ctx, cond, &page.Pagination{All: true})
 			}
-		} else {
-			// all 为 false 且用户没有全部项目查看权限时，返回用户有权限的项目，模糊查询都无效
-			var cond *operator.Condition
-			condKind := make(operator.M)
-			if req.Kind != "" {
-				condKind["kind"] = req.Kind
+			if err != nil {
+				return nil, err
 			}
-			if any {
-				cond = operator.NewBranchCondition(operator.And, operator.NewLeafCondition(operator.Eq, condKind))
-			} else {
-				condID := make(operator.M)
-				condID["projectID"] = ids
-				cond = operator.NewBranchCondition(operator.And,
-					operator.NewLeafCondition(operator.In, condID), operator.NewLeafCondition(operator.Eq, condKind))
-			}
-			pagination := &page.Pagination{All: false}
-			if req.Limit == 0 && req.Offset == 0 {
-				pagination.All = true
-			} else {
-				pagination.Offset = req.Offset
-				pagination.Limit = req.Limit
-			}
-			projects, total, err = lap.model.ListProjects(ctx, cond, pagination)
 		}
+	} else {
+		if err == nil && authUser.Username != "" {
+			// username 为空时，该接口请求没有意义, any 标识用户有无限制项目权限
+			ids, any, err := auth.ListAuthorizedProjectIDs(authUser.Username, authUser.GetTenantId())
+			if err != nil {
+				logging.Error("get user project permissions failed, err: %s", err.Error())
+				return nil, nil
+			}
+			if req.All {
+				// true 表示限制看到有权限的项目
+				if config.GlobalConf.RestrictAuthorizedProjects {
+					// all 为 true 且限权显示用户授权的项目列表时，仅查看用户有权限的项目，并支持模糊查询和分页
+					if any {
+						projects, total, err = lap.model.SearchProjects(ctx, ids, nil, req.SearchKey, req.Kind,
+							"", &page.Pagination{Offset: req.Offset, Limit: req.Limit})
+					} else {
+						projects, total, err = lap.model.SearchProjects(ctx, nil, ids, req.SearchKey, req.Kind,
+							"", &page.Pagination{Offset: req.Offset, Limit: req.Limit})
+					}
+				} else {
+					// all 为 true 且不限权时，返回所有项目并排序和分页，支持模糊查询
+					projects, total, err = lap.model.SearchProjects(ctx, ids, nil, req.SearchKey, req.Kind,
+						"", &page.Pagination{Offset: req.Offset, Limit: req.Limit})
+				}
+			} else {
+				// all 为 false 且用户没有全部项目查看权限时，返回用户有权限的项目，分页和模糊查询都无效
+				var cond *operator.Condition
+				condKind := make(operator.M)
+				if req.Kind != "" {
+					condKind["kind"] = req.Kind
+				}
+				if any {
+					cond = operator.NewBranchCondition(operator.And, operator.NewLeafCondition(operator.Eq, condKind))
+				} else {
+					condID := make(operator.M)
+					condID["projectID"] = ids
+					cond = operator.NewBranchCondition(operator.And,
+						operator.NewLeafCondition(operator.In, condID), operator.NewLeafCondition(operator.Eq, condKind))
+				}
+				projects, total, err = lap.model.ListProjects(ctx, cond, &page.Pagination{All: true})
+			}
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	/*
+		// 获取租户下所有的项目
+		cond := operator.NewLeafCondition(operator.Eq, operator.M{"tenantID": authUser.GetTanantId()})
+		projects, total, err = lap.model.ListProjects(ctx, cond, &page.Pagination{All: true})
 		if err != nil {
 			return nil, err
 		}
-	}
+	*/
+
 	projectList := []*pm.Project{}
 	for i := range projects {
 		projectList = append(projectList, &projects[i])

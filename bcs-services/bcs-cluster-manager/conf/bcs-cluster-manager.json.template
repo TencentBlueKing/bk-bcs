@@ -197,7 +197,14 @@
     },
     "commonConfig": {
       "annoKeyProjCode": "${bcsSharedClusterAnnoKeyProjCode}",
-      "systemNameSpaces": "${systemNameSpaces}"
+      "systemNameSpaces": "${systemNameSpaces}",
+      "enableMultiTenantMode": ${enableMultiTenantMode}
+    },
+    "bkUser": {
+      "appCode": "${bcsAppCode}",
+      "appSecret": "${bcsAppSecret}",
+      "server": "${bcsBkUserServer}",
+      "debug": ${bcsBkUserDebug}
     },
     "tagDepart": "${tagDepart}",
     "prefixVcluster": "${prefixVcluster}",

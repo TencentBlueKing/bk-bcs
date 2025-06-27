@@ -10,10 +10,11 @@
  * limitations under the License.
  */
 
-// Package itsm xxx
-package itsm
+// Package v2 xxx
+package v2
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -21,6 +22,7 @@ import (
 	"github.com/parnurzeal/gorequest"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/bkuser"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
@@ -37,7 +39,7 @@ type OperateTicketResp struct {
 }
 
 // WithdrawTicket withdraw itsm ticket
-func WithdrawTicket(username, sn string) error {
+func WithdrawTicket(ctx context.Context, username, sn string) error {
 	itsmConf := config.GlobalConf.ITSM
 	// 默认使用网关访问，如果为外部版，则使用ESB访问
 	host := itsmConf.GatewayHost
@@ -55,9 +57,17 @@ func WithdrawTicket(username, sn string) error {
 			"action_message": fmt.Sprintf("BCS 代理用户 %s 撤回", username),
 		},
 	}
+
+	// auth headers
+	headers, err := bkuser.GetAuthHeader(ctx)
+	if err != nil {
+		logging.Error("WithdrawTicket get auth header failed, %s", err.Error())
+		return errorx.NewRequestITSMErr(err.Error())
+	}
+
 	// 请求API
 	proxy := ""
-	body, err := component.Request(req, timeout, proxy, component.GetAuthHeader())
+	body, err := component.Request(req, timeout, proxy, headers)
 	if err != nil {
 		logging.Error("request itsm withdraw ticket %s failed, %s", sn, err.Error())
 		return errorx.NewRequestITSMErr(err.Error())

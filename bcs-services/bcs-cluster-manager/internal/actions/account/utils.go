@@ -14,10 +14,9 @@ package account
 
 import (
 	"context"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cloudaccount"
 	spb "google.golang.org/protobuf/types/known/structpb"
 
@@ -67,14 +66,13 @@ func getRelativeClustersByAccountID(
 }
 
 // GetProjectAccountsV3Perm get iam v3 perm
-func GetProjectAccountsV3Perm(
-	iam iam.PermClient, user actions.PermInfo, accountList []string) (map[string]*spb.Struct, error) {
+func GetProjectAccountsV3Perm(user actions.PermInfo, accountList []string) (map[string]*spb.Struct, error) {
 	var (
 		v3Perm map[string]map[string]interface{}
 		err    error
 	)
 
-	v3Perm, err = getUserAccountPermList(iam, user, accountList)
+	v3Perm, err = getUserAccountPermList(user, accountList)
 	if err != nil {
 		blog.Errorf("GetProjectAccountsV3Perm failed: %v", err.Error())
 		return nil, err
@@ -94,14 +92,16 @@ func GetProjectAccountsV3Perm(
 	return v3ResultPerm, nil
 }
 
-func getUserAccountPermList(
-	iam iam.PermClient, user actions.PermInfo,
-	accountList []string) (map[string]map[string]interface{}, error) {
-
+func getUserAccountPermList(user actions.PermInfo, accountList []string) (map[string]map[string]interface{}, error) {
 	permissions := make(map[string]map[string]interface{})
-	accountPerm := cloudaccount.NewBCSAccountPermClient(iam)
+
+	accountPerm, err := auth.GetCloudAccountIamClient(user.TenantID)
+	if err != nil {
+		return nil, err
+	}
 
 	actionIDs := []string{cloudaccount.AccountUse.String(), cloudaccount.AccountManage.String()}
+
 	perms, err := accountPerm.GetMultiAccountMultiActionPerm(user.UserID, user.ProjectID, accountList, actionIDs)
 	if err != nil {
 		return nil, err
@@ -117,4 +117,5 @@ func getUserAccountPermList(
 	}
 
 	return permissions, nil
+
 }

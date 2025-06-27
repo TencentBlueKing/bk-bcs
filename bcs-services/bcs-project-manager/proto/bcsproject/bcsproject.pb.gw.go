@@ -737,6 +737,40 @@ func local_request_Namespace_CreateNamespaceCallback_0(ctx context.Context, mars
 
 }
 
+func request_Namespace_CreateNamespaceCallbackV4_0(ctx context.Context, marshaler runtime.Marshaler, client NamespaceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq SharedClusterNamespaceCallbackRequest
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.CreateNamespaceCallbackV4(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_Namespace_CreateNamespaceCallbackV4_0(ctx context.Context, marshaler runtime.Marshaler, server NamespaceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq SharedClusterNamespaceCallbackRequest
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.CreateNamespaceCallbackV4(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
 func request_Namespace_UpdateNamespace_0(ctx context.Context, marshaler runtime.Marshaler, client NamespaceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq UpdateNamespaceRequest
 	var metadata runtime.ServerMetadata
@@ -961,6 +995,40 @@ func local_request_Namespace_UpdateNamespaceCallback_0(ctx context.Context, mars
 	}
 
 	msg, err := server.UpdateNamespaceCallback(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+func request_Namespace_UpdateNamespaceCallbackV4_0(ctx context.Context, marshaler runtime.Marshaler, client NamespaceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq SharedClusterNamespaceCallbackRequest
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.UpdateNamespaceCallbackV4(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_Namespace_UpdateNamespaceCallbackV4_0(ctx context.Context, marshaler runtime.Marshaler, server NamespaceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq SharedClusterNamespaceCallbackRequest
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.UpdateNamespaceCallbackV4(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -1347,6 +1415,40 @@ func local_request_Namespace_DeleteNamespaceCallback_0(ctx context.Context, mars
 	}
 
 	msg, err := server.DeleteNamespaceCallback(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+func request_Namespace_DeleteNamespaceCallbackV4_0(ctx context.Context, marshaler runtime.Marshaler, client NamespaceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq SharedClusterNamespaceCallbackRequest
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.DeleteNamespaceCallbackV4(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_Namespace_DeleteNamespaceCallbackV4_0(ctx context.Context, marshaler runtime.Marshaler, server NamespaceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq SharedClusterNamespaceCallbackRequest
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.DeleteNamespaceCallbackV4(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -3676,6 +3778,26 @@ func RegisterNamespaceGwServer(ctx context.Context, mux *runtime.ServeMux, serve
 
 	})
 
+	mux.Handle("POST", pattern_Namespace_CreateNamespaceCallbackV4_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_Namespace_CreateNamespaceCallbackV4_0(rctx, inboundMarshaler, server, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_Namespace_CreateNamespaceCallbackV4_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("PUT", pattern_Namespace_UpdateNamespace_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -3713,6 +3835,26 @@ func RegisterNamespaceGwServer(ctx context.Context, mux *runtime.ServeMux, serve
 		}
 
 		forward_Namespace_UpdateNamespaceCallback_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("POST", pattern_Namespace_UpdateNamespaceCallbackV4_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_Namespace_UpdateNamespaceCallbackV4_0(rctx, inboundMarshaler, server, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_Namespace_UpdateNamespaceCallbackV4_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -3793,6 +3935,26 @@ func RegisterNamespaceGwServer(ctx context.Context, mux *runtime.ServeMux, serve
 		}
 
 		forward_Namespace_DeleteNamespaceCallback_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("POST", pattern_Namespace_DeleteNamespaceCallbackV4_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_Namespace_DeleteNamespaceCallbackV4_0(rctx, inboundMarshaler, server, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_Namespace_DeleteNamespaceCallbackV4_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -4815,6 +4977,26 @@ func RegisterNamespaceGwClient(ctx context.Context, mux *runtime.ServeMux, clien
 
 	})
 
+	mux.Handle("POST", pattern_Namespace_CreateNamespaceCallbackV4_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_Namespace_CreateNamespaceCallbackV4_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_Namespace_CreateNamespaceCallbackV4_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("PUT", pattern_Namespace_UpdateNamespace_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -4852,6 +5034,26 @@ func RegisterNamespaceGwClient(ctx context.Context, mux *runtime.ServeMux, clien
 		}
 
 		forward_Namespace_UpdateNamespaceCallback_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("POST", pattern_Namespace_UpdateNamespaceCallbackV4_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_Namespace_UpdateNamespaceCallbackV4_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_Namespace_UpdateNamespaceCallbackV4_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -4932,6 +5134,26 @@ func RegisterNamespaceGwClient(ctx context.Context, mux *runtime.ServeMux, clien
 		}
 
 		forward_Namespace_DeleteNamespaceCallback_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("POST", pattern_Namespace_DeleteNamespaceCallbackV4_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_Namespace_DeleteNamespaceCallbackV4_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_Namespace_DeleteNamespaceCallbackV4_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -5023,9 +5245,13 @@ var (
 
 	pattern_Namespace_CreateNamespaceCallback_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8, 2, 9}, []string{"bcsproject", "v1", "projects", "projectCode", "clusters", "clusterID", "namespaces", "namespace", "callback", "create"}, "", runtime.AssumeColonVerbOpt(true)))
 
+	pattern_Namespace_CreateNamespaceCallbackV4_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 2, 5, 2, 6}, []string{"bcsproject", "v1", "projects", "sharedclusters", "namespaces", "callback", "create"}, "", runtime.AssumeColonVerbOpt(true)))
+
 	pattern_Namespace_UpdateNamespace_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7}, []string{"bcsproject", "v1", "projects", "projectCode", "clusters", "clusterID", "namespaces", "namespace"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_Namespace_UpdateNamespaceCallback_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8, 2, 9}, []string{"bcsproject", "v1", "projects", "projectCode", "clusters", "clusterID", "namespaces", "namespace", "callback", "update"}, "", runtime.AssumeColonVerbOpt(true)))
+
+	pattern_Namespace_UpdateNamespaceCallbackV4_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 2, 5, 2, 6}, []string{"bcsproject", "v1", "projects", "sharedclusters", "namespaces", "callback", "update"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_Namespace_GetNamespace_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7}, []string{"bcsproject", "v1", "projects", "projectCode", "clusters", "clusterID", "namespaces", "namespace"}, "", runtime.AssumeColonVerbOpt(true)))
 
@@ -5034,6 +5260,8 @@ var (
 	pattern_Namespace_DeleteNamespace_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7}, []string{"bcsproject", "v1", "projects", "projectCode", "clusters", "clusterID", "namespaces", "namespace"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_Namespace_DeleteNamespaceCallback_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8, 2, 9}, []string{"bcsproject", "v1", "projects", "projectCode", "clusters", "clusterID", "namespaces", "namespace", "callback", "delete"}, "", runtime.AssumeColonVerbOpt(true)))
+
+	pattern_Namespace_DeleteNamespaceCallbackV4_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 2, 5, 2, 6}, []string{"bcsproject", "v1", "projects", "sharedclusters", "namespaces", "callback", "delete"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_Namespace_SyncNamespace_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 2, 7}, []string{"bcsproject", "v1", "projects", "projectCode", "clusters", "clusterID", "namespaces", "sync"}, "", runtime.AssumeColonVerbOpt(true)))
 
@@ -5049,9 +5277,13 @@ var (
 
 	forward_Namespace_CreateNamespaceCallback_0 = runtime.ForwardResponseMessage
 
+	forward_Namespace_CreateNamespaceCallbackV4_0 = runtime.ForwardResponseMessage
+
 	forward_Namespace_UpdateNamespace_0 = runtime.ForwardResponseMessage
 
 	forward_Namespace_UpdateNamespaceCallback_0 = runtime.ForwardResponseMessage
+
+	forward_Namespace_UpdateNamespaceCallbackV4_0 = runtime.ForwardResponseMessage
 
 	forward_Namespace_GetNamespace_0 = runtime.ForwardResponseMessage
 
@@ -5060,6 +5292,8 @@ var (
 	forward_Namespace_DeleteNamespace_0 = runtime.ForwardResponseMessage
 
 	forward_Namespace_DeleteNamespaceCallback_0 = runtime.ForwardResponseMessage
+
+	forward_Namespace_DeleteNamespaceCallbackV4_0 = runtime.ForwardResponseMessage
 
 	forward_Namespace_SyncNamespace_0 = runtime.ForwardResponseMessage
 
