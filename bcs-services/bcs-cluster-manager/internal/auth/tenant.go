@@ -199,7 +199,7 @@ func getTenantIdByResource(ctx context.Context, resource resourceID) (string, er
 		return "", fmt.Errorf("projectID is empty")
 	}
 
-	pro, err := project.GetProjectManagerClient().GetProjectInfo(projectID, true)
+	pro, err := project.GetProjectManagerClient().GetProjectInfo(context.TODO(), projectID, true)
 	if err != nil {
 		return "", err
 	}

@@ -68,7 +68,7 @@ func WithTenantIdByResourceForContext(ctx context.Context, resource ResourceMeta
 		return ctx, fmt.Errorf("projectID is empty")
 	}
 
-	pro, err := project.GetProjectManagerClient().GetProjectInfo(projectID, true)
+	pro, err := project.GetProjectManagerClient().GetProjectInfo(context.TODO(), projectID, true)
 	if err != nil {
 		return ctx, err
 	}
