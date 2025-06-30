@@ -23,6 +23,35 @@ const (
 	AccessLogFileStdout = "/dev/stdout"
 )
 
+// Field key constants for Istio configuration
+const (
+	FieldKeyEnableTracing      = "enableTracing"
+	FieldKeyMeshConfig         = "meshConfig"
+	FieldKeyPilot              = "pilot"
+	FieldKeyTelemetry          = "telemetry"
+	FieldKeyGlobal             = "global"
+	FieldKeyMultiCluster       = "multiCluster"
+	FieldKeyExtensionProviders = "extensionProviders"
+	// 标记是否启用日志采集配置，用于判断是否清除日志采集配置，该字段最终不会被更新到value.yaml中
+	FieldKeyLogCollectorConfigEnabled = "logCollectorConfigEnabled"
+	FieldKeyTraceSampling             = "traceSampling"
+	FieldKeyDefaultConfig             = "defaultConfig"
+	FieldKeyTracingConfig             = "tracingConfig"
+	FieldKeyAccessLogFile             = "accessLogFile"
+	FieldKeyAccessLogFormat           = "accessLogFormat"
+	FieldKeyAccessLogEncoding         = "accessLogEncoding"
+	FieldKeyAutoscaleEnabled          = "autoscaleEnabled"
+	FieldKeyAutoscaleMin              = "autoscaleMin"
+	FieldKeyAutoscaleMax              = "autoscaleMax"
+	FieldKeyCPU                       = "cpu"
+	FieldKeyDedicatedNode             = "dedicatedNode"
+	FieldKeyDedicatedNodeEnabled      = "enabled"
+	FieldKeyDedicatedNodeNodeSelector = "nodeSelector"
+	FieldKeyDedicatedNodeTolerations  = "tolerations"
+	FieldKeyZipkin                    = "zipkin"
+	FieldKeyZipkinAddress             = "address"
+)
+
 // IstioInstallOption istio安装操作选项
 type IstioInstallOption struct {
 	ChartValuesPath string
@@ -116,9 +145,11 @@ type IstiodMeshConfig struct {
 	DefaultConfig         *DefaultConfig         `yaml:"defaultConfig,omitempty"`
 	EnableTracing         *bool                  `yaml:"enableTracing,omitempty"`
 	ExtensionProviders    []*ExtensionProvider   `yaml:"extensionProviders,omitempty"`
-	AccessLogFile         *string                `yaml:"accessLogFile,omitempty"`
-	AccessLogFormat       *string                `yaml:"accessLogFormat,omitempty"`
-	AccessLogEncoding     *string                `yaml:"accessLogEncoding,omitempty"`
+	// 标记是否启用日志采集配置，用于判断是否清除日志采集配置，该字段最终不会被更新到value.yaml中
+	LogCollectorConfigEnabled *bool   `yaml:"logCollectorConfigEnabled,omitempty"`
+	AccessLogFile             *string `yaml:"accessLogFile,omitempty"`
+	AccessLogFormat           *string `yaml:"accessLogFormat,omitempty"`
+	AccessLogEncoding         *string `yaml:"accessLogEncoding,omitempty"`
 }
 
 // ExtensionProvider 扩展提供者

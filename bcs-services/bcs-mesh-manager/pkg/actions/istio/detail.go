@@ -74,13 +74,13 @@ func (l *GetIstioDetailAction) Handle(
 }
 
 // setResp sets the response with code, message and data
-func (l *GetIstioDetailAction) setResp(code uint32, message string, data *meshmanager.IstioListItem) {
+func (l *GetIstioDetailAction) setResp(code uint32, message string, data *meshmanager.IstioDetailInfo) {
 	l.resp.Code = code
 	l.resp.Message = message
 	l.resp.Data = data
 }
 
-func (l *GetIstioDetailAction) getDetail(ctx context.Context) (*meshmanager.IstioListItem, error) {
+func (l *GetIstioDetailAction) getDetail(ctx context.Context) (*meshmanager.IstioDetailInfo, error) {
 	// 构建查询条件
 	cond := l.buildQueryConditions()
 
@@ -99,11 +99,17 @@ func (l *GetIstioDetailAction) getDetail(ctx context.Context) (*meshmanager.Isti
 		return nil, fmt.Errorf("mesh PrimaryClusters is empty, meshID: %s", meshIstio.MeshID)
 	}
 
+	// 安装中或安装失败的istio不获取release的values信息
+	if meshIstio.Status == common.IstioStatusInstalling || meshIstio.Status == common.IstioStatusInstallFailed {
+		return meshIstio.Transfer2ProtoForDetail(), nil
+	}
+
+	// istio 状态不在安装中才需要查询 release 的 values 信息
 	clusterID := meshIstio.PrimaryClusters[0]
 	namespace := common.IstioNamespace
 	istiodName := common.IstioInstallIstiodName
 
-	// 直接调用 RPC 接口获取 release 详情
+	// 调用 RPC 接口获取 release 详情
 	release, err := helm.GetReleaseDetail(
 		ctx,
 		&helmmanager.GetReleaseDetailV1Req{
@@ -137,7 +143,7 @@ func (l *GetIstioDetailAction) getDetail(ctx context.Context) (*meshmanager.Isti
 	}
 
 	// 基于实际的部署配置构建返回的 IstioListItem
-	result, err := utils.ConvertValuesToListItem(meshIstio, istiodValues)
+	result, err := utils.ConvertValuesToIstioDetailInfo(meshIstio, istiodValues)
 	if err != nil {
 		blog.Errorf("build istio list item failed, clusterID: %s, err: %s", clusterID, err.Error())
 		return nil, fmt.Errorf("build istio list item failed, clusterID: %s", clusterID)

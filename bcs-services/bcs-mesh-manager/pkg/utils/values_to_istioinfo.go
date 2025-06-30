@@ -24,11 +24,11 @@ import (
 	meshmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/proto/bcs-mesh-manager"
 )
 
-// ConvertValuesToListItem 将 MeshIstio 实体和 IstiodInstallValues 配置转换为 IstioListItem 展示结构
-func ConvertValuesToListItem(
+// ConvertValuesToIstioDetailInfo 将 MeshIstio 实体和 IstiodInstallValues 配置转换为 IstioListItem 展示结构
+func ConvertValuesToIstioDetailInfo(
 	meshIstio *entity.MeshIstio,
 	istiodValues *common.IstiodInstallValues,
-) (*meshmanager.IstioListItem, error) {
+) (*meshmanager.IstioDetailInfo, error) {
 	if meshIstio == nil {
 		blog.Errorf("meshIstio is nil")
 		return nil, fmt.Errorf("meshIstio is nil")
@@ -40,7 +40,7 @@ func ConvertValuesToListItem(
 	blog.Infof("istiodValues: %+v", istiodValues)
 
 	// 使用 Transfer2Proto 方法进行基础转换
-	result := meshIstio.Transfer2Proto()
+	result := meshIstio.Transfer2ProtoForDetail()
 
 	// 从实际的部署配置中提取资源配置
 	if istiodValues.Global != nil &&
@@ -136,7 +136,7 @@ func updateResourceConfigValues(
 // convertHighAvailabilityValues 从实际的高可用配置更新 HighAvailability
 func convertHighAvailabilityValues(
 	pilot *common.IstiodPilotConfig,
-	result *meshmanager.IstioListItem,
+	result *meshmanager.IstioDetailInfo,
 ) {
 	if result.HighAvailability == nil {
 		result.HighAvailability = &meshmanager.HighAvailability{}
@@ -183,7 +183,7 @@ func convertHighAvailabilityValues(
 // convertObservabilityConfigValues 从实际的可观测性配置更新 ObservabilityConfig
 func convertObservabilityConfigValues(
 	istiodValues *common.IstiodInstallValues,
-	result *meshmanager.IstioListItem,
+	result *meshmanager.IstioDetailInfo,
 ) {
 	meshConfig := istiodValues.MeshConfig
 	// 确保 result.ObservabilityConfig 存在
@@ -262,7 +262,7 @@ func convertObservabilityConfigValues(
 // convertFeatureConfigs 从实际的功能特性配置更新 FeatureConfigs
 func convertFeatureConfigs(
 	istiodValues *common.IstiodInstallValues,
-	result *meshmanager.IstioListItem,
+	result *meshmanager.IstioDetailInfo,
 ) {
 	// 确保 result.FeatureConfigs 存在
 	if result.FeatureConfigs == nil {
@@ -281,7 +281,7 @@ func convertFeatureConfigs(
 
 // setFeatureConfig 设置特性配置的通用辅助函数
 func setFeatureConfig(
-	result *meshmanager.IstioListItem,
+	result *meshmanager.IstioDetailInfo,
 	featureName string,
 	value string,
 ) {
@@ -294,7 +294,7 @@ func setFeatureConfig(
 // convertOutboundTrafficPolicy 转换出站流量策略配置
 func convertOutboundTrafficPolicy(
 	istiodValues *common.IstiodInstallValues,
-	result *meshmanager.IstioListItem,
+	result *meshmanager.IstioDetailInfo,
 ) {
 	if istiodValues.MeshConfig != nil && istiodValues.MeshConfig.OutboundTrafficPolicy != nil &&
 		istiodValues.MeshConfig.OutboundTrafficPolicy.Mode != nil {
@@ -305,7 +305,7 @@ func convertOutboundTrafficPolicy(
 // convertHoldApplicationUntilProxyStarts 转换等待代理启动配置
 func convertHoldApplicationUntilProxyStarts(
 	istiodValues *common.IstiodInstallValues,
-	result *meshmanager.IstioListItem,
+	result *meshmanager.IstioDetailInfo,
 ) {
 	if istiodValues.MeshConfig != nil && istiodValues.MeshConfig.DefaultConfig != nil &&
 		istiodValues.MeshConfig.DefaultConfig.HoldApplicationUntilProxyStarts != nil {
@@ -317,7 +317,7 @@ func convertHoldApplicationUntilProxyStarts(
 // convertExitOnZeroActiveConnections 转换零连接时退出配置
 func convertExitOnZeroActiveConnections(
 	istiodValues *common.IstiodInstallValues,
-	result *meshmanager.IstioListItem,
+	result *meshmanager.IstioDetailInfo,
 ) {
 	if istiodValues.MeshConfig != nil && istiodValues.MeshConfig.DefaultConfig != nil &&
 		istiodValues.MeshConfig.DefaultConfig.ProxyMetadata != nil &&
@@ -330,7 +330,7 @@ func convertExitOnZeroActiveConnections(
 // convertIstioMetaDnsCapture 转换 DNS 捕获配置
 func convertIstioMetaDnsCapture(
 	istiodValues *common.IstiodInstallValues,
-	result *meshmanager.IstioListItem,
+	result *meshmanager.IstioDetailInfo,
 ) {
 	if istiodValues.MeshConfig != nil && istiodValues.MeshConfig.DefaultConfig != nil &&
 		istiodValues.MeshConfig.DefaultConfig.ProxyMetadata != nil &&
@@ -343,7 +343,7 @@ func convertIstioMetaDnsCapture(
 // convertIstioMetaDnsAutoAllocate 转换 DNS 自动分配配置
 func convertIstioMetaDnsAutoAllocate(
 	istiodValues *common.IstiodInstallValues,
-	result *meshmanager.IstioListItem,
+	result *meshmanager.IstioDetailInfo,
 ) {
 	if istiodValues.MeshConfig != nil && istiodValues.MeshConfig.DefaultConfig != nil &&
 		istiodValues.MeshConfig.DefaultConfig.ProxyMetadata != nil &&
@@ -356,7 +356,7 @@ func convertIstioMetaDnsAutoAllocate(
 // convertIstioMetaHttp10 转换 HTTP 1.0 支持配置
 func convertIstioMetaHttp10(
 	istiodValues *common.IstiodInstallValues,
-	result *meshmanager.IstioListItem,
+	result *meshmanager.IstioDetailInfo,
 ) {
 	if istiodValues.Pilot != nil && istiodValues.Pilot.Env != nil {
 		if http10, ok := istiodValues.Pilot.Env[common.EnvPilotHTTP10]; ok {
@@ -368,7 +368,7 @@ func convertIstioMetaHttp10(
 // convertExcludeIPRanges 转换排除 IP 范围配置
 func convertExcludeIPRanges(
 	istiodValues *common.IstiodInstallValues,
-	result *meshmanager.IstioListItem,
+	result *meshmanager.IstioDetailInfo,
 ) {
 	if istiodValues.Global != nil && istiodValues.Global.Proxy != nil &&
 		istiodValues.Global.Proxy.ExcludeIPRanges != nil {

@@ -99,9 +99,17 @@ func MergeValues(defaultValues, customValues string) (string, error) {
 		return "", err
 	}
 
+	// 合并之前删除defaultValuesMap中本次需要移除的字段
+	processFieldKey(defaultValuesMap, customValuesMap)
+
 	// 递归合并 customValuesMap 到 defaultValuesMap，customValuesMap 字段覆盖 defaultValuesMap
 	if err := mergo.Merge(&defaultValuesMap, customValuesMap, mergo.WithOverride); err != nil {
 		return "", err
+	}
+
+	// 删除 logCollectorConfigEnabled 字段
+	if meshConfig, ok := defaultValuesMap[common.FieldKeyMeshConfig]; ok {
+		deleteMapKey(meshConfig, common.FieldKeyLogCollectorConfigEnabled)
 	}
 
 	merged, err := yaml.Marshal(defaultValuesMap)
@@ -406,7 +414,11 @@ func GenIstiodValuesByObservability(
 		if installValues.MeshConfig == nil {
 			installValues.MeshConfig = &common.IstiodMeshConfig{}
 		}
-		// 日志采集配置，如果启用则配置，否则清空
+		// 设置日志采集配置启用状态标记
+		installValues.MeshConfig.LogCollectorConfigEnabled =
+			pointer.Bool(observabilityConfig.LogCollectorConfig.Enabled.GetValue())
+
+		// 日志采集配置，如果启用则配置，否则不设置相关字段
 		if observabilityConfig.LogCollectorConfig.Enabled.GetValue() {
 			installValues.MeshConfig.AccessLogFile = pointer.String(common.AccessLogFileStdout)
 			if observabilityConfig.LogCollectorConfig.AccessLogFormat.GetValue() != "" {
@@ -417,11 +429,8 @@ func GenIstiodValuesByObservability(
 				installValues.MeshConfig.AccessLogEncoding =
 					pointer.String(observabilityConfig.LogCollectorConfig.AccessLogEncoding.GetValue())
 			}
-		} else {
-			installValues.MeshConfig.AccessLogFile = nil
-			installValues.MeshConfig.AccessLogFormat = nil
-			installValues.MeshConfig.AccessLogEncoding = nil
 		}
+
 	}
 
 	// 全链路追踪配置，如果启用则配置，否则清空
@@ -451,93 +460,71 @@ func GenIstiodValuesByTracing(
 		installValues.MeshConfig = &common.IstiodMeshConfig{}
 	}
 
-	// istio 1.21以上版本通过Telemetry API
-	if IsVersionSupported(istioVersion, ">=1.21") {
-		if tracingConfig.Enabled.GetValue() {
-			// 设置传统的 enableTracing 字段，即使在新版本中也可能需要
-			installValues.MeshConfig.EnableTracing = pointer.Bool(true)
-
-			// 设置采样率
-			if tracingConfig.TraceSamplingPercent.GetValue() != 0 {
-				if installValues.Pilot == nil {
-					installValues.Pilot = &common.IstiodPilotConfig{}
-				}
-				installValues.Pilot.TraceSampling = pointer.Float64(float64(tracingConfig.TraceSamplingPercent.GetValue()) / 100)
-			}
-
-			if installValues.MeshConfig.ExtensionProviders == nil {
-				installValues.MeshConfig.ExtensionProviders = []*common.ExtensionProvider{}
-			}
-			// 解析endpoint获取service、port和path
-			service, port, path, err := ParseOpenTelemetryEndpoint(tracingConfig.Endpoint.GetValue())
-			if err != nil {
-				blog.Errorf("parse endpoint %s failed: %s", tracingConfig.Endpoint.GetValue(), err)
-				return err
-			}
-			if path == "" {
-				blog.Warnf("path is empty, use default path: %s, endpoint: %s", OtelTracingPath, tracingConfig.Endpoint.GetValue())
-				path = OtelTracingPath
-			}
-			installValues.MeshConfig.ExtensionProviders = append(installValues.MeshConfig.ExtensionProviders,
-				&common.ExtensionProvider{
-					Name: pointer.String(OtelTracingName),
-					OpenTelemetry: &common.OpenTelemetryConfig{
-						Service: pointer.String(service),
-						Port:    pointer.Int32(port),
-						Http: &common.OpenTelemetryHttpConfig{
-							Path:    pointer.String(path),
-							Timeout: pointer.String(OtelTracingTimeout),
-							Headers: map[string]string{
-								OtelTracingHeader: tracingConfig.BkToken.GetValue(),
-							},
-						},
-					},
-				})
-			blog.Infof("istio version %s is supported by Telemetry API, set tracing config by Telemetry API", istioVersion)
-			return nil
-		}
+	if !tracingConfig.Enabled.GetValue() {
 		installValues.MeshConfig.EnableTracing = pointer.Bool(false)
-		installValues.MeshConfig.ExtensionProviders = nil
-		// 清理旧版本的 TracingConfig 配置（如果存在）
-		if installValues.MeshConfig.DefaultConfig != nil {
-			installValues.MeshConfig.DefaultConfig.TracingConfig = nil
-		}
-		// 清理 TraceSampling 配置
-		if installValues.Pilot != nil {
-			installValues.Pilot.TraceSampling = nil
-		}
 		return nil
 	}
-	// istio 1.21以下版本通过Zipkin生成istiod的values
-	if tracingConfig.Enabled.GetValue() {
+	// istio 1.21以上版本通过Telemetry API
+	if IsVersionSupported(istioVersion, ">=1.21") {
 		installValues.MeshConfig.EnableTracing = pointer.Bool(true)
 
-		if installValues.MeshConfig.DefaultConfig == nil {
-			installValues.MeshConfig.DefaultConfig = &common.DefaultConfig{}
-		}
-		installValues.MeshConfig.DefaultConfig.TracingConfig = &common.TracingConfig{
-			Zipkin: &common.ZipkinConfig{
-				Address: pointer.String(tracingConfig.Endpoint.GetValue()),
-			},
-		}
-		// 采样率
+		// 设置采样率
 		if tracingConfig.TraceSamplingPercent.GetValue() != 0 {
 			if installValues.Pilot == nil {
 				installValues.Pilot = &common.IstiodPilotConfig{}
 			}
 			installValues.Pilot.TraceSampling = pointer.Float64(float64(tracingConfig.TraceSamplingPercent.GetValue()) / 100)
 		}
-	} else {
-		// 关闭全链路追踪
-		installValues.MeshConfig.EnableTracing = pointer.Bool(false)
-		// 清理旧版本的 TracingConfig 配置
-		if installValues.MeshConfig.DefaultConfig != nil {
-			installValues.MeshConfig.DefaultConfig.TracingConfig = nil
+
+		if installValues.MeshConfig.ExtensionProviders == nil {
+			installValues.MeshConfig.ExtensionProviders = []*common.ExtensionProvider{}
 		}
-		// 清理 TraceSampling 配置
-		if installValues.Pilot != nil {
-			installValues.Pilot.TraceSampling = nil
+		// 解析endpoint获取service、port和path
+		service, port, path, err := ParseOpenTelemetryEndpoint(tracingConfig.Endpoint.GetValue())
+		if err != nil {
+			blog.Errorf("parse endpoint %s failed: %s", tracingConfig.Endpoint.GetValue(), err)
+			return err
 		}
+		if path == "" {
+			blog.Warnf("path is empty, use default path: %s, endpoint: %s", OtelTracingPath, tracingConfig.Endpoint.GetValue())
+			path = OtelTracingPath
+		}
+		installValues.MeshConfig.ExtensionProviders = append(installValues.MeshConfig.ExtensionProviders,
+			&common.ExtensionProvider{
+				Name: pointer.String(OtelTracingName),
+				OpenTelemetry: &common.OpenTelemetryConfig{
+					Service: pointer.String(service),
+					Port:    pointer.Int32(port),
+					Http: &common.OpenTelemetryHttpConfig{
+						Path:    pointer.String(path),
+						Timeout: pointer.String(OtelTracingTimeout),
+						Headers: map[string]string{
+							OtelTracingHeader: tracingConfig.BkToken.GetValue(),
+						},
+					},
+				},
+			})
+		blog.Infof("istio version %s is supported by Telemetry API, set tracing config by Telemetry API", istioVersion)
+		return nil
+	}
+
+	// istio 1.21以下版本通过Zipkin生成istiod的values
+	installValues.MeshConfig.EnableTracing = pointer.Bool(true)
+
+	if installValues.MeshConfig.DefaultConfig == nil {
+		installValues.MeshConfig.DefaultConfig = &common.DefaultConfig{}
+	}
+	installValues.MeshConfig.DefaultConfig.TracingConfig = &common.TracingConfig{
+		Zipkin: &common.ZipkinConfig{
+			Address: pointer.String(tracingConfig.Endpoint.GetValue()),
+		},
+	}
+	// 采样率
+	if tracingConfig.TraceSamplingPercent.GetValue() != 0 {
+		if installValues.Pilot == nil {
+			installValues.Pilot = &common.IstiodPilotConfig{}
+		}
+		installValues.Pilot.TraceSampling = pointer.Float64(float64(tracingConfig.TraceSamplingPercent.GetValue()) / 100)
 	}
 	return nil
 }
@@ -565,6 +552,7 @@ func GenIstiodValuesByHighAvailability(
 			TargetAverageUtilization: pointer.Int32(highAvailability.TargetCPUAverageUtilizationPercent.GetValue()),
 		}
 	} else {
+		// 当禁用时，设置为false，在processFieldDeletion中处理字段删除
 		installValues.Pilot.AutoscaleEnabled = pointer.Bool(false)
 	}
 
@@ -591,8 +579,6 @@ func GenIstiodValuesByHighAvailability(
 			installValues.Pilot.Tolerations = append(installValues.Pilot.Tolerations, v1.Toleration{
 				Operator: v1.TolerationOpExists,
 			})
-		} else {
-			installValues.Pilot.NodeSelector = nil
 		}
 	}
 	return nil

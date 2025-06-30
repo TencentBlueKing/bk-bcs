@@ -126,11 +126,11 @@ type FeatureConfig struct {
 	SupportVersions []string `bson:"supportVersions" json:"supportVersions"`
 }
 
-// Transfer2Proto converts MeshIstio entity to proto message
+// Transfer2ProtoForDetail converts MeshIstio entity to proto message
 // nolint:funlen
-func (m *MeshIstio) Transfer2Proto() *meshmanager.IstioListItem {
+func (m *MeshIstio) Transfer2ProtoForDetail() *meshmanager.IstioDetailInfo {
 	// TODO: 考虑直接序列化转换数据，避免逐个赋值
-	istioListItem := &meshmanager.IstioListItem{
+	istioDetailInfo := &meshmanager.IstioDetailInfo{
 		MeshID:           m.MeshID,
 		Name:             m.Name,
 		ProjectID:        m.ProjectID,
@@ -154,7 +154,7 @@ func (m *MeshIstio) Transfer2Proto() *meshmanager.IstioListItem {
 
 	// 转换 Sidecar 资源配置
 	if m.SidecarResourceConfig != nil {
-		istioListItem.SidecarResourceConfig = &meshmanager.ResourceConfig{
+		istioDetailInfo.SidecarResourceConfig = &meshmanager.ResourceConfig{
 			CpuRequest:    wrapperspb.String(m.SidecarResourceConfig.CpuRequest),
 			CpuLimit:      wrapperspb.String(m.SidecarResourceConfig.CpuLimit),
 			MemoryRequest: wrapperspb.String(m.SidecarResourceConfig.MemoryRequest),
@@ -164,7 +164,7 @@ func (m *MeshIstio) Transfer2Proto() *meshmanager.IstioListItem {
 
 	// 转换高可用配置
 	if m.HighAvailability != nil {
-		istioListItem.HighAvailability = &meshmanager.HighAvailability{
+		istioDetailInfo.HighAvailability = &meshmanager.HighAvailability{
 			AutoscaleEnabled:                   wrapperspb.Bool(m.HighAvailability.AutoscaleEnabled),
 			AutoscaleMin:                       wrapperspb.Int32(m.HighAvailability.AutoscaleMin),
 			AutoscaleMax:                       wrapperspb.Int32(m.HighAvailability.AutoscaleMax),
@@ -173,7 +173,7 @@ func (m *MeshIstio) Transfer2Proto() *meshmanager.IstioListItem {
 		}
 
 		if m.HighAvailability.ResourceConfig != nil {
-			istioListItem.HighAvailability.ResourceConfig = &meshmanager.ResourceConfig{
+			istioDetailInfo.HighAvailability.ResourceConfig = &meshmanager.ResourceConfig{
 				CpuRequest:    wrapperspb.String(m.HighAvailability.ResourceConfig.CpuRequest),
 				CpuLimit:      wrapperspb.String(m.HighAvailability.ResourceConfig.CpuLimit),
 				MemoryRequest: wrapperspb.String(m.HighAvailability.ResourceConfig.MemoryRequest),
@@ -182,7 +182,7 @@ func (m *MeshIstio) Transfer2Proto() *meshmanager.IstioListItem {
 		}
 
 		if m.HighAvailability.DedicatedNode != nil {
-			istioListItem.HighAvailability.DedicatedNode = &meshmanager.DedicatedNode{
+			istioDetailInfo.HighAvailability.DedicatedNode = &meshmanager.DedicatedNode{
 				Enabled:    wrapperspb.Bool(m.HighAvailability.DedicatedNode.Enabled),
 				NodeLabels: m.HighAvailability.DedicatedNode.NodeLabels,
 			}
@@ -191,11 +191,11 @@ func (m *MeshIstio) Transfer2Proto() *meshmanager.IstioListItem {
 
 	// 转换可观测性配置
 	if m.ObservabilityConfig != nil {
-		istioListItem.ObservabilityConfig = &meshmanager.ObservabilityConfig{}
+		istioDetailInfo.ObservabilityConfig = &meshmanager.ObservabilityConfig{}
 
 		// 转换指标配置
 		if m.ObservabilityConfig.MetricsConfig != nil {
-			istioListItem.ObservabilityConfig.MetricsConfig = &meshmanager.MetricsConfig{
+			istioDetailInfo.ObservabilityConfig.MetricsConfig = &meshmanager.MetricsConfig{
 				ControlPlaneMetricsEnabled: wrapperspb.Bool(m.ObservabilityConfig.MetricsConfig.ControlPlaneMetricsEnabled),
 				DataPlaneMetricsEnabled:    wrapperspb.Bool(m.ObservabilityConfig.MetricsConfig.DataPlaneMetricsEnabled),
 			}
@@ -203,7 +203,7 @@ func (m *MeshIstio) Transfer2Proto() *meshmanager.IstioListItem {
 
 		// 转换日志收集配置
 		if m.ObservabilityConfig.LogCollectorConfig != nil {
-			istioListItem.ObservabilityConfig.LogCollectorConfig = &meshmanager.LogCollectorConfig{
+			istioDetailInfo.ObservabilityConfig.LogCollectorConfig = &meshmanager.LogCollectorConfig{
 				Enabled:           wrapperspb.Bool(m.ObservabilityConfig.LogCollectorConfig.Enabled),
 				AccessLogEncoding: wrapperspb.String(m.ObservabilityConfig.LogCollectorConfig.AccessLogEncoding),
 				AccessLogFormat:   wrapperspb.String(m.ObservabilityConfig.LogCollectorConfig.AccessLogFormat),
@@ -212,7 +212,7 @@ func (m *MeshIstio) Transfer2Proto() *meshmanager.IstioListItem {
 
 		// 转换链路追踪配置
 		if m.ObservabilityConfig.TracingConfig != nil {
-			istioListItem.ObservabilityConfig.TracingConfig = &meshmanager.TracingConfig{
+			istioDetailInfo.ObservabilityConfig.TracingConfig = &meshmanager.TracingConfig{
 				Enabled:              wrapperspb.Bool(m.ObservabilityConfig.TracingConfig.Enabled),
 				Endpoint:             wrapperspb.String(m.ObservabilityConfig.TracingConfig.Endpoint),
 				BkToken:              wrapperspb.String(m.ObservabilityConfig.TracingConfig.BkToken),
@@ -223,15 +223,16 @@ func (m *MeshIstio) Transfer2Proto() *meshmanager.IstioListItem {
 
 	// 转换特性配置
 	if len(m.FeatureConfigs) > 0 {
-		istioListItem.FeatureConfigs = make(map[string]*meshmanager.FeatureConfig)
+		istioDetailInfo.FeatureConfigs = make(map[string]*meshmanager.FeatureConfig)
 		for name, config := range m.FeatureConfigs {
 			// 只转换支持的特性
 			if !slices.Contains(common.SupportedFeatures, name) {
 				continue
 			}
-			istioListItem.FeatureConfigs[name] = &meshmanager.FeatureConfig{
+			istioDetailInfo.FeatureConfigs[name] = &meshmanager.FeatureConfig{
 				Name:            config.Name,
 				Description:     config.Description,
+				Value:           config.Value,
 				DefaultValue:    config.DefaultValue,
 				AvailableValues: config.AvailableValues,
 				SupportVersions: config.SupportVersions,
@@ -239,6 +240,24 @@ func (m *MeshIstio) Transfer2Proto() *meshmanager.IstioListItem {
 		}
 	}
 
+	return istioDetailInfo
+}
+
+// Transfer2ProtoForListItems converts MeshIstio entity to proto message
+func (m *MeshIstio) Transfer2ProtoForListItems() *meshmanager.IstioListItem {
+	istioListItem := &meshmanager.IstioListItem{
+		MeshID:          m.MeshID,
+		Name:            m.Name,
+		ProjectID:       m.ProjectID,
+		ProjectCode:     m.ProjectCode,
+		Version:         m.Version,
+		Status:          m.Status,
+		StatusMessage:   m.StatusMessage,
+		CreateTime:      m.CreateTime,
+		ChartVersion:    m.ChartVersion,
+		PrimaryClusters: m.PrimaryClusters,
+		RemoteClusters:  m.RemoteClusters,
+	}
 	return istioListItem
 }
 
@@ -336,6 +355,7 @@ func (m *MeshIstio) TransferFromProto(req *meshmanager.IstioRequest) {
 			m.FeatureConfigs[name] = &FeatureConfig{
 				Name:            config.Name,
 				Description:     config.Description,
+				Value:           config.Value,
 				DefaultValue:    config.DefaultValue,
 				AvailableValues: config.AvailableValues,
 				SupportVersions: config.SupportVersions,

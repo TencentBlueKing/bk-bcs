@@ -518,19 +518,29 @@ message ListIstioRequest {
         title : "status",
         description : "网格状态，可选过滤条件["
                       "running：运行中；installing：安装中；installed：安装完成"
-                      "；failed：安装失败；uninstalling：卸载中；uninstalled："
-                      "卸载完成；uninstalling-"
-                      "failed：卸载失败；updating：配置更新中；update-"
-                      "failed：配置更新失败]"
+                      "install-failed：安装失败；uninstalling：卸载中；uninstalling："
+                      "卸载完成；uninstalled"
+                      "uninstalling-failed：卸载失败；updating：配置更新中；update-"
+                      "update-failed：配置更新失败]"
       } ];
-  int32 page = 5 [
+  string version = 5
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "version",
+        description : "istio版本，可选过滤条件"
+      } ];
+  string clusterID = 6
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "clusterID",
+        description : "集群ID，可选过滤条件，支持主集群和远程集群的模糊匹配"
+      } ];
+  int32 page = 7 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "page",
       description : "页码"
     },
     (validate.rules).int32 = {gt : 0, lte : 10000}
   ];
-  int32 pageSize = 6 [
+  int32 pageSize = 8 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "pageSize",
       description : "每页数量"
@@ -569,6 +579,75 @@ message ListIstioData {
 
 // istio列表项
 message IstioListItem {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {title : "IstioListItem" description : "istio列表项"}
+  };
+
+  // 系统字段
+  string meshID = 1
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "meshID",
+        description : "网格ID"
+      } ];
+  string status = 2
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "status",
+        description : "状态["
+                      "running：运行中；installing：安装中；installed：安装完成"
+                      "；failed：安装失败；uninstalling：卸载中；uninstalled："
+                      "卸载完成；uninstalling-"
+                      "failed：卸载失败；updating：配置更新中；update-"
+                      "failed：配置更新失败]"
+      } ];
+  string statusMessage = 3
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "statusMessage",
+        description : "状态消息，状态为failed时，会返回失败原因"
+      } ];
+  string chartVersion = 5
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "chartVersion",
+        description : "chart版本"
+      } ];
+  int64 createTime = 6
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "createTime",
+        description : "创建时间"
+      } ];
+
+  // 配置字段 (保持跟 IstioRequest 一致)
+  string projectID = 10
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "projectID",
+        description : "项目ID"
+      } ];
+  string projectCode = 11
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "projectCode",
+        description : "项目编码"
+      } ];
+  string name = 12 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+                         {title : "name", description : "名称"} ];
+  string version = 14
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "version",
+        description : "使用的版本"
+      } ];
+  repeated string primaryClusters = 17
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "primaryClusters",
+        description : "主集群列表"
+      } ];
+  repeated string remoteClusters = 18
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "remoteClusters",
+        description : "远程集群列表"
+      } ];
+
+}
+
+// istio详情信息
+message IstioDetailInfo {
   option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
     json_schema : {title : "IstioListItem" description : "istio列表项"}
   };
@@ -790,5 +869,5 @@ message GetIstioDetailResponse {
   string message = 2;                 // 返回错误信息
   string requestID = 3;               // 请求ID
   WebAnnotations web_annotations = 4; // 权限信息
-  IstioListItem data = 5;             // 详情数据
+  IstioDetailInfo data = 5;             // 详情数据
 }

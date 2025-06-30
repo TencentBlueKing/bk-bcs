@@ -175,26 +175,21 @@ func (u *UpdateIstioAction) buildUpdateFields(req *meshmanager.IstioRequest) ent
 // buildBasicFields builds basic fields from request
 func buildBasicFields(req *meshmanager.IstioRequest, updateFields entity.M) entity.M {
 	if req.Description != nil {
-		updateFields["description"] = req.Description.GetValue()
+		updateFields[entity.FieldKeyDescription] = req.Description.GetValue()
 	}
 	if req.Name != nil {
-		updateFields["name"] = req.Name.GetValue()
+		updateFields[entity.FieldKeyName] = req.Name.GetValue()
 	}
 	if req.ControlPlaneMode != nil {
-		updateFields["controlPlaneMode"] = req.ControlPlaneMode.GetValue()
+		updateFields[entity.FieldKeyControlPlaneMode] = req.ControlPlaneMode.GetValue()
 	}
 	if req.ClusterMode != nil {
-		updateFields["clusterMode"] = req.ClusterMode.GetValue()
-	}
-	if req.PrimaryClusters != nil {
-		updateFields["primaryClusters"] = req.PrimaryClusters
-	}
-	if req.RemoteClusters != nil {
-		updateFields["remoteClusters"] = req.RemoteClusters
+		updateFields[entity.FieldKeyClusterMode] = req.ClusterMode.GetValue()
 	}
 	if req.DifferentNetwork != nil {
-		updateFields["differentNetwork"] = req.DifferentNetwork.GetValue()
+		updateFields[entity.FieldKeyDifferentNetwork] = req.DifferentNetwork.GetValue()
 	}
+
 	return updateFields
 }
 
@@ -202,143 +197,133 @@ func buildBasicFields(req *meshmanager.IstioRequest, updateFields entity.M) enti
 func buildResourceConfigs(req *meshmanager.IstioRequest, updateFields entity.M) entity.M {
 	// Update Sidecar resource config
 	if req.SidecarResourceConfig != nil {
-		sidecarResourceConfig := &entity.ResourceConfig{}
 		if req.SidecarResourceConfig.CpuRequest != nil {
-			sidecarResourceConfig.CpuRequest = req.SidecarResourceConfig.CpuRequest.GetValue()
+			updateFields[entity.DotKeySidecarCPURequest] = req.SidecarResourceConfig.CpuRequest.GetValue()
 		}
 		if req.SidecarResourceConfig.CpuLimit != nil {
-			sidecarResourceConfig.CpuLimit = req.SidecarResourceConfig.CpuLimit.GetValue()
+			updateFields[entity.DotKeySidecarCPULimit] = req.SidecarResourceConfig.CpuLimit.GetValue()
 		}
 		if req.SidecarResourceConfig.MemoryRequest != nil {
-			sidecarResourceConfig.MemoryRequest = req.SidecarResourceConfig.MemoryRequest.GetValue()
+			updateFields[entity.DotKeySidecarMemoryRequest] = req.SidecarResourceConfig.MemoryRequest.GetValue()
 		}
 		if req.SidecarResourceConfig.MemoryLimit != nil {
-			sidecarResourceConfig.MemoryLimit = req.SidecarResourceConfig.MemoryLimit.GetValue()
+			updateFields[entity.DotKeySidecarMemoryLimit] = req.SidecarResourceConfig.MemoryLimit.GetValue()
 		}
-		updateFields["sidecarResourceConfig"] = sidecarResourceConfig
 	}
 	return updateFields
 }
 
 // buildHighAvailability builds high availability related configurations
 func buildHighAvailability(req *meshmanager.IstioRequest, updateFields entity.M) entity.M {
-	if req.HighAvailability != nil {
-		highAvailability := &entity.HighAvailability{}
-
-		if req.HighAvailability.AutoscaleEnabled != nil {
-			highAvailability.AutoscaleEnabled = req.HighAvailability.AutoscaleEnabled.GetValue()
-		}
-		if req.HighAvailability.AutoscaleMin != nil {
-			highAvailability.AutoscaleMin = req.HighAvailability.AutoscaleMin.GetValue()
-		}
-		if req.HighAvailability.AutoscaleMax != nil {
-			highAvailability.AutoscaleMax = req.HighAvailability.AutoscaleMax.GetValue()
-		}
-		if req.HighAvailability.ReplicaCount != nil {
-			highAvailability.ReplicaCount = req.HighAvailability.ReplicaCount.GetValue()
-		}
-		if req.HighAvailability.TargetCPUAverageUtilizationPercent != nil {
-			highAvailability.TargetCPUAverageUtilizationPercent =
-				req.HighAvailability.TargetCPUAverageUtilizationPercent.GetValue()
-		}
-
-		// 构建资源配置
-		if req.HighAvailability.ResourceConfig != nil {
-			highAvailability.ResourceConfig = &entity.ResourceConfig{}
-			if req.HighAvailability.ResourceConfig.CpuRequest != nil {
-				highAvailability.ResourceConfig.CpuRequest =
-					req.HighAvailability.ResourceConfig.CpuRequest.GetValue()
-			}
-			if req.HighAvailability.ResourceConfig.CpuLimit != nil {
-				highAvailability.ResourceConfig.CpuLimit =
-					req.HighAvailability.ResourceConfig.CpuLimit.GetValue()
-			}
-			if req.HighAvailability.ResourceConfig.MemoryRequest != nil {
-				highAvailability.ResourceConfig.MemoryRequest =
-					req.HighAvailability.ResourceConfig.MemoryRequest.GetValue()
-			}
-			if req.HighAvailability.ResourceConfig.MemoryLimit != nil {
-				highAvailability.ResourceConfig.MemoryLimit =
-					req.HighAvailability.ResourceConfig.MemoryLimit.GetValue()
-			}
-		}
-
-		// 构建专用节点配置
-		if req.HighAvailability.DedicatedNode != nil {
-			highAvailability.DedicatedNode = &entity.DedicatedNode{}
-			if req.HighAvailability.DedicatedNode.Enabled != nil {
-				highAvailability.DedicatedNode.Enabled =
-					req.HighAvailability.DedicatedNode.Enabled.GetValue()
-			}
-			if req.HighAvailability.DedicatedNode.NodeLabels != nil {
-				highAvailability.DedicatedNode.NodeLabels =
-					req.HighAvailability.DedicatedNode.NodeLabels
-			}
-		}
-
-		updateFields["highAvailability"] = highAvailability
+	if req.HighAvailability == nil {
+		return updateFields
 	}
+
+	// 更新基本字段
+	if req.HighAvailability.AutoscaleEnabled != nil {
+		updateFields[entity.DotKeyHAAutoscaleEnabled] = req.HighAvailability.AutoscaleEnabled.GetValue()
+	}
+	if req.HighAvailability.AutoscaleMin != nil {
+		updateFields[entity.DotKeyHAAutoscaleMin] = req.HighAvailability.AutoscaleMin.GetValue()
+	}
+	if req.HighAvailability.AutoscaleMax != nil {
+		updateFields[entity.DotKeyHAAutoscaleMax] = req.HighAvailability.AutoscaleMax.GetValue()
+	}
+	if req.HighAvailability.ReplicaCount != nil {
+		updateFields[entity.DotKeyHAReplicaCount] = req.HighAvailability.ReplicaCount.GetValue()
+	}
+	if req.HighAvailability.TargetCPUAverageUtilizationPercent != nil {
+		updateFields[entity.DotKeyHATargetCPUAverageUtilizationPercent] =
+			req.HighAvailability.TargetCPUAverageUtilizationPercent.GetValue()
+	}
+
+	// 构建资源配置
+	if req.HighAvailability.ResourceConfig != nil {
+		if req.HighAvailability.ResourceConfig.CpuRequest != nil {
+			updateFields[entity.DotKeyHAResourceCPURequest] =
+				req.HighAvailability.ResourceConfig.CpuRequest.GetValue()
+		}
+		if req.HighAvailability.ResourceConfig.CpuLimit != nil {
+			updateFields[entity.DotKeyHAResourceCPULimit] =
+				req.HighAvailability.ResourceConfig.CpuLimit.GetValue()
+		}
+		if req.HighAvailability.ResourceConfig.MemoryRequest != nil {
+			updateFields[entity.DotKeyHAResourceMemoryRequest] =
+				req.HighAvailability.ResourceConfig.MemoryRequest.GetValue()
+		}
+		if req.HighAvailability.ResourceConfig.MemoryLimit != nil {
+			updateFields[entity.DotKeyHAResourceMemoryLimit] =
+				req.HighAvailability.ResourceConfig.MemoryLimit.GetValue()
+		}
+	}
+
+	// 构建专用节点配置
+	if req.HighAvailability.DedicatedNode != nil {
+		if req.HighAvailability.DedicatedNode.Enabled != nil {
+			updateFields[entity.DotKeyHADedicatedNodeEnabled] = req.HighAvailability.DedicatedNode.Enabled.GetValue()
+		}
+		if req.HighAvailability.DedicatedNode.NodeLabels != nil {
+			updateFields[entity.DotKeyHADedicatedNodeNodeLabels] = req.HighAvailability.DedicatedNode.NodeLabels
+		}
+	}
+
 	return updateFields
 }
 
 // buildObservability builds observability related configurations
 func buildObservability(req *meshmanager.IstioRequest, updateFields entity.M) entity.M {
-	if req.ObservabilityConfig != nil {
-		observabilityConfig := &entity.ObservabilityConfig{}
-
-		// 构建指标配置
-		if req.ObservabilityConfig.MetricsConfig != nil {
-			observabilityConfig.MetricsConfig = &entity.MetricsConfig{}
-			if req.ObservabilityConfig.MetricsConfig.ControlPlaneMetricsEnabled != nil {
-				observabilityConfig.MetricsConfig.ControlPlaneMetricsEnabled =
-					req.ObservabilityConfig.MetricsConfig.ControlPlaneMetricsEnabled.GetValue()
-			}
-			if req.ObservabilityConfig.MetricsConfig.DataPlaneMetricsEnabled != nil {
-				observabilityConfig.MetricsConfig.DataPlaneMetricsEnabled =
-					req.ObservabilityConfig.MetricsConfig.DataPlaneMetricsEnabled.GetValue()
-			}
-		}
-
-		// 构建日志收集配置
-		if req.ObservabilityConfig.LogCollectorConfig != nil {
-			observabilityConfig.LogCollectorConfig = &entity.LogCollectorConfig{}
-			if req.ObservabilityConfig.LogCollectorConfig.Enabled != nil {
-				observabilityConfig.LogCollectorConfig.Enabled =
-					req.ObservabilityConfig.LogCollectorConfig.Enabled.GetValue()
-			}
-			if req.ObservabilityConfig.LogCollectorConfig.AccessLogEncoding != nil {
-				observabilityConfig.LogCollectorConfig.AccessLogEncoding =
-					req.ObservabilityConfig.LogCollectorConfig.AccessLogEncoding.GetValue()
-			}
-			if req.ObservabilityConfig.LogCollectorConfig.AccessLogFormat != nil {
-				observabilityConfig.LogCollectorConfig.AccessLogFormat =
-					req.ObservabilityConfig.LogCollectorConfig.AccessLogFormat.GetValue()
-			}
-		}
-
-		// 构建链路追踪配置
-		if req.ObservabilityConfig.TracingConfig != nil {
-			observabilityConfig.TracingConfig = &entity.TracingConfig{}
-			if req.ObservabilityConfig.TracingConfig.Enabled != nil {
-				observabilityConfig.TracingConfig.Enabled =
-					req.ObservabilityConfig.TracingConfig.Enabled.GetValue()
-			}
-			if req.ObservabilityConfig.TracingConfig.Endpoint != nil {
-				observabilityConfig.TracingConfig.Endpoint =
-					req.ObservabilityConfig.TracingConfig.Endpoint.GetValue()
-			}
-			if req.ObservabilityConfig.TracingConfig.BkToken != nil {
-				observabilityConfig.TracingConfig.BkToken =
-					req.ObservabilityConfig.TracingConfig.BkToken.GetValue()
-			}
-			if req.ObservabilityConfig.TracingConfig.TraceSamplingPercent != nil {
-				observabilityConfig.TracingConfig.TraceSamplingPercent =
-					req.ObservabilityConfig.TracingConfig.TraceSamplingPercent.GetValue()
-			}
-		}
-
-		updateFields["observabilityConfig"] = observabilityConfig
+	if req.ObservabilityConfig == nil {
+		return updateFields
 	}
+
+	// 构建指标配置
+	if req.ObservabilityConfig.MetricsConfig != nil {
+		if req.ObservabilityConfig.MetricsConfig.ControlPlaneMetricsEnabled != nil {
+			updateFields[entity.DotKeyObsMetricsControlPlaneEnabled] =
+				req.ObservabilityConfig.MetricsConfig.ControlPlaneMetricsEnabled.GetValue()
+		}
+		if req.ObservabilityConfig.MetricsConfig.DataPlaneMetricsEnabled != nil {
+			updateFields[entity.DotKeyObsMetricsDataPlaneEnabled] =
+				req.ObservabilityConfig.MetricsConfig.DataPlaneMetricsEnabled.GetValue()
+		}
+	}
+
+	// 构建日志收集配置
+	if req.ObservabilityConfig.LogCollectorConfig != nil {
+		if req.ObservabilityConfig.LogCollectorConfig.Enabled != nil {
+			updateFields[entity.DotKeyObsLogEnabled] =
+				req.ObservabilityConfig.LogCollectorConfig.Enabled.GetValue()
+		}
+		if req.ObservabilityConfig.LogCollectorConfig.AccessLogEncoding != nil {
+			updateFields[entity.DotKeyObsLogEncoding] =
+				req.ObservabilityConfig.LogCollectorConfig.AccessLogEncoding.GetValue()
+		}
+		if req.ObservabilityConfig.LogCollectorConfig.AccessLogFormat != nil {
+			updateFields[entity.DotKeyObsLogFormat] =
+				req.ObservabilityConfig.LogCollectorConfig.AccessLogFormat.GetValue()
+		}
+	}
+
+	// 构建链路追踪配置
+	if req.ObservabilityConfig.TracingConfig != nil {
+		if req.ObservabilityConfig.TracingConfig.Enabled != nil {
+			updateFields[entity.DotKeyObsTracingEnabled] =
+				req.ObservabilityConfig.TracingConfig.Enabled.GetValue()
+		}
+		if req.ObservabilityConfig.TracingConfig.Endpoint != nil {
+			updateFields[entity.DotKeyObsTracingEndpoint] =
+				req.ObservabilityConfig.TracingConfig.Endpoint.GetValue()
+		}
+		if req.ObservabilityConfig.TracingConfig.BkToken != nil {
+			updateFields[entity.DotKeyObsTracingBkToken] =
+				req.ObservabilityConfig.TracingConfig.BkToken.GetValue()
+		}
+		if req.ObservabilityConfig.TracingConfig.TraceSamplingPercent != nil {
+			updateFields[entity.DotKeyObsTracingTraceSamplingPercent] =
+				req.ObservabilityConfig.TracingConfig.TraceSamplingPercent.GetValue()
+		}
+	}
+
 	return updateFields
 }
 
@@ -347,7 +332,6 @@ func buildFeatureConfigs(req *meshmanager.IstioRequest, updateFields entity.M) e
 	if len(req.FeatureConfigs) == 0 {
 		return updateFields
 	}
-	blog.Infof("更新特征配置: %s", req.MeshID.GetValue())
 	featureConfigs := make(map[string]*entity.FeatureConfig)
 	for name, config := range req.FeatureConfigs {
 		// Only save supported features
@@ -363,6 +347,6 @@ func buildFeatureConfigs(req *meshmanager.IstioRequest, updateFields entity.M) e
 			SupportVersions: config.SupportVersions,
 		}
 	}
-	updateFields["featureConfigs"] = featureConfigs
+	updateFields[entity.FieldKeyFeatureConfigs] = featureConfigs
 	return updateFields
 }

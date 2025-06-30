@@ -44,7 +44,7 @@ var (
 		{
 			Name: tableName + "_name_idx",
 			Key: bson.D{
-				bson.E{Key: entity.FieldKeyMeshName, Value: 1},
+				bson.E{Key: entity.FieldKeyName, Value: 1},
 			},
 			Unique: false,
 		},

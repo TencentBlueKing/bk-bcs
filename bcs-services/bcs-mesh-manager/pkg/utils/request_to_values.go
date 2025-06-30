@@ -69,11 +69,6 @@ func buildBasicConfig(
 	req *meshmanager.IstioRequest,
 	installValues *common.IstiodInstallValues,
 ) {
-	// 构建Global配置
-	if installValues.Global == nil {
-		installValues.Global = &common.IstiodGlobalConfig{}
-	}
-
 	// 构建MultiCluster配置
 	if len(req.PrimaryClusters) > 0 {
 		if installValues.MultiCluster == nil {
