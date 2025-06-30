@@ -192,6 +192,15 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error { // no
 
 	blog.Infof("CheckCloudNodeGroupStatusTask[%s]: call GetClusterNodePool successful", taskID)
 
+	// 更新节点池配置
+	err = cceCli.UpdateNodePoolLimitcore(cluster.SystemID, group.CloudNodeGroupID)
+	if err != nil {
+		blog.Errorf("CheckCloudNodeGroupStatusTask[%s]: UpdateNodePoolLimitcore failed: %v", taskID, err)
+		retErr := fmt.Errorf("UpdateNodePoolLimitcore failed, %s", err.Error())
+		_ = state.UpdateStepFailure(start, stepName, retErr)
+		return retErr
+	}
+
 	// update response information to task common params
 	if state.Task.CommonParams == nil {
 		state.Task.CommonParams = make(map[string]string)
