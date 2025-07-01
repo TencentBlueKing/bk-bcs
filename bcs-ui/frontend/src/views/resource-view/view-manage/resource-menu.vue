@@ -427,8 +427,9 @@ const toggleMoreResource = () => {
 const handleGetCustomResourceDefinition = async () => {
   if (!curViewData.value) return;
 
+  const clusterIDs: string[] = curViewData.value?.clusterNamespaces?.map(item => item?.clusterID) || [];
   isLoading.value = true;
-  const res = await getMultiClusterAPIResources(route.value.params?.clusterId || '', false);
+  const res = await getMultiClusterAPIResources(clusterIDs, false);
   isLoading.value = false;
   crdData.value = res.resources || {};
 };

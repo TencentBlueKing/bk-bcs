@@ -130,11 +130,11 @@ export default function useTableData() {
   };
 
   // 更多资源
-  async function getMultiClusterAPIResources(clusterId: string, onlyCrd: boolean) {
-    if (!clusterId) return;
+  async function getMultiClusterAPIResources(clusterIDs: string[], onlyCrd: boolean) {
+    if (!clusterIDs.length) return { resources: {} };
     const res = await multiClusterAPIResources(
       {
-        clusterIDs: [clusterId],
+        clusterIDs,
         onlyCrd,
       },
       { needRes: true, cancelPrevious: false, cancelWhenRouteChange: false },
