@@ -331,7 +331,7 @@ export default defineComponent({
       setCookie('blueking_language', item.locale, window.BK_DOMAIN, expiresStr);
       // 修改用户管理语言
       try {
-        const url = `${window.BK_USER_HOST}/api/v3/open-web/tenant/current-user/language/`;
+        const url = `${window.BK_USER_HOST}/api/bk-user-web/prod/api/v3/open-web/tenant/current-user/language/`;
         await fetch(url, {
           method: 'PUT',
           headers: {
