@@ -281,7 +281,7 @@ func (hpi *HostPortInjector) injectToPod(pod *corev1.Pod) ([]types.PatchOperatio
 	}
 	var retPatches []types.PatchOperation
 	// patch affinity
-	retPatches = append(retPatches, hpi.generateAffinityPath(pod, hostPorts))
+	retPatches = append(retPatches, hpi.generateAffinityPath(pod, hostPorts)...)
 	// patch label
 	retPatches = append(retPatches, hpi.generateLabelPatch(pod, hostPorts))
 	// patch container port
@@ -399,36 +399,60 @@ func (hpi *HostPortInjector) generateEnvPatch(
 
 // generateAffinityPath xxx
 // generate pod affinity patch
-func (hpi *HostPortInjector) generateAffinityPath(pod *corev1.Pod, hostPorts []*PortEntry) types.PatchOperation {
-	var affinity *corev1.Affinity
-	op := PatchOperationReplace
-	if pod.Spec.Affinity == nil {
-		op = PatchOperationAdd
-		affinity = &corev1.Affinity{
-			PodAntiAffinity: &corev1.PodAntiAffinity{},
-		}
-	} else if pod.Spec.Affinity.PodAntiAffinity == nil {
-		affinity = pod.Spec.Affinity
-		affinity.PodAntiAffinity = &corev1.PodAntiAffinity{}
-	} else {
-		affinity = pod.Spec.Affinity
-	}
+func (hpi *HostPortInjector) generateAffinityPath(pod *corev1.Pod, hostPorts []*PortEntry) []types.PatchOperation {
+	// 创建PodAffinityTerm列表
+	terms := make([]corev1.PodAffinityTerm, 0, len(hostPorts))
 	for _, hostPort := range hostPorts {
-		affinity.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution = append(
-			affinity.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution, corev1.PodAffinityTerm{
-				LabelSelector: k8smetav1.SetAsLabelSelector(labels.Set(map[string]string{
-					strconv.FormatUint(
-						hostPort.Port, 10) + podHostportLabelSuffix: strconv.FormatUint(
-						hostPort.Port, 10),
-				})),
-				TopologyKey: "kubernetes.io/hostname",
-			})
+		terms = append(terms, corev1.PodAffinityTerm{
+			LabelSelector: k8smetav1.SetAsLabelSelector(map[string]string{
+				strconv.FormatUint(hostPort.Port, 10) + podHostportLabelSuffix: strconv.FormatUint(hostPort.Port, 10),
+			}),
+			TopologyKey: "kubernetes.io/hostname",
+		})
 	}
-	return types.PatchOperation{
-		Path:  PatchPathAffinity,
-		Op:    op,
-		Value: affinity,
+
+	// 根据Pod当前状态决定如何生成Patch
+	if pod.Spec.Affinity == nil {
+		// Pod没有Affinity的情况
+		return []types.PatchOperation{{
+			Path: PatchPathAffinity,
+			Op:   PatchOperationAdd,
+			Value: &corev1.Affinity{
+				PodAntiAffinity: &corev1.PodAntiAffinity{
+					RequiredDuringSchedulingIgnoredDuringExecution: terms,
+				},
+			},
+		}}
+	} else if pod.Spec.Affinity.PodAntiAffinity == nil {
+		// Pod有Affinity但没有PodAntiAffinity的情况
+		return []types.PatchOperation{{
+			Path: PatchPathAffinity + "/podAntiAffinity",
+			Op:   PatchOperationAdd,
+			Value: &corev1.PodAntiAffinity{
+				RequiredDuringSchedulingIgnoredDuringExecution: terms,
+			},
+		}}
+	} else if pod.Spec.Affinity.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution == nil {
+		// Pod有Affinity和PodAntiAffinity，但RequiredDuringSchedulingIgnoredDuringExecution为nil的情况
+		return []types.PatchOperation{{
+			Path:  PatchPathAffinity + PatchPathAffinityPatchPath,
+			Op:    PatchOperationAdd,
+			Value: terms,
+		}}
 	}
+
+	// Pod已有PodAntiAffinity的情况
+	var patches []types.PatchOperation
+	basePath := PatchPathAffinity + PatchPathAffinityPatchPath + "/-"
+	for _, term := range terms {
+		patches = append(patches, types.PatchOperation{
+			Path:  basePath,
+			Op:    PatchOperationAdd,
+			Value: term,
+		})
+	}
+
+	return patches
 }
 
 // generateLabelPatch xxx
