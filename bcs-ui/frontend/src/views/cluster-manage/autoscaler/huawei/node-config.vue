@@ -292,11 +292,25 @@
             </template>
             <span class="inline-flex mt15">
               <bk-checkbox
-                :disabled="true"
+                :disabled="isEdit"
                 v-model="nodePoolConfig.launchTemplate.internetAccess.publicIPAssigned">
                 {{$t('cluster.ca.nodePool.create.instanceTypeConfig.publicIPAssigned.text')}}
               </bk-checkbox>
             </span>
+            <div class="panel" v-if="nodePoolConfig.launchTemplate.internetAccess.publicIPAssigned">
+              <div class="panel-item">
+                <label class="label">{{$t('cluster.ca.nodePool.create.instanceTypeConfig.publicIPAssigned.maxBandWidth')}}</label>
+                <bk-input
+                  class="max-width-150"
+                  type="number"
+                  :disabled="isEdit"
+                  :min="1"
+                  :max="100"
+                  v-model="nodePoolConfig.launchTemplate.internetAccess.internetMaxBandwidth">
+                </bk-input>
+                <span :class="['company', { disabled: isEdit }]">Mbps</span>
+              </div>
+            </div>
           </bk-form-item>
           <!-- 登录方式 -->
           <bk-form-item :label="$t('cluster.ca.nodePool.create.loginType.text')">
@@ -456,8 +470,8 @@ import { computed, defineComponent, onMounted, ref, toRefs, watch } from 'vue';
 import { cloudsRuntimeInfo, cloudsZones } from '@/api/modules/cluster-manager';
 import FormGroup from '@/components/form-group.vue';
 import TextTips from '@/components/layout/TextTips.vue';
-import usePage from '@/composables/use-page';
 import { useFocusOnErrorField } from '@/composables/use-focus-on-error-field';
+import usePage from '@/composables/use-page';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store/index';
@@ -544,7 +558,9 @@ export default defineComponent({
         },
         internetAccess: {
           internetChargeType: defaultValues.value.launchTemplate?.internetAccess?.internetChargeType, // 计费方式
-          internetMaxBandwidth: defaultValues.value.launchTemplate?.internetAccess?.internetMaxBandwidth, // 购买带宽
+          internetMaxBandwidth: Number(defaultValues.value.launchTemplate?.internetAccess?.internetMaxBandwidth || '')
+            ? defaultValues.value.launchTemplate?.internetAccess?.internetMaxBandwidth
+            : '1', // 购买带宽
           publicIPAssigned: defaultValues.value.launchTemplate?.internetAccess?.publicIPAssigned, // 分配免费公网IP
           bandwidthPackageId: defaultValues.value.launchTemplate?.internetAccess?.bandwidthPackageId, // 带宽包ID
         },
@@ -1035,7 +1051,7 @@ export default defineComponent({
         diskSize: String(item.diskSize),
       }));
       // eslint-disable-next-line max-len
-      // nodePoolConfig.value.launchTemplate.internetAccess.internetMaxBandwidth = String(nodePoolConfig.value.launchTemplate.internetAccess.internetMaxBandwidth);
+      nodePoolConfig.value.launchTemplate.internetAccess.internetMaxBandwidth = String(nodePoolConfig.value.launchTemplate.internetAccess.internetMaxBandwidth);
       // 数据盘后端存了两个地方
       nodePoolConfig.value.launchTemplate.dataDisks = nodePoolConfig.value.nodeTemplate.dataDisks.map(item => ({
         diskType: item.diskType,
