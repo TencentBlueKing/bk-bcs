@@ -19,6 +19,7 @@ import (
 	"sort"
 
 	"github.com/huaweicloud/huaweicloud-sdk-go-v3/services/cce/v3/model"
+	eipModel "github.com/huaweicloud/huaweicloud-sdk-go-v3/services/eip/v2/model"
 	evsModel "github.com/huaweicloud/huaweicloud-sdk-go-v3/services/evs/v2/model"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	v1 "k8s.io/api/core/v1"
@@ -270,6 +271,8 @@ type CreateNodePoolTemplate struct {
 	PreScript string
 	// PostScript 后置脚本
 	PostScript string
+	// PublicIp 节点公网ip配置
+	PublicIp PublicIp
 }
 
 type ChargePrepaid struct {
@@ -279,6 +282,15 @@ type ChargePrepaid struct {
 	Period uint32
 	// RenewFlag 节点池自动续费标识
 	RenewFlag string
+}
+
+type PublicIp struct {
+	// ChargeType 节点公网计费模式
+	ChangeType string
+	// Bandwidth 节点公网带宽
+	Bandwidth int32
+	// Enable 节点公网是否启用
+	Enable bool
 }
 
 func GetChargeConfig(charge ChargePrepaid) (billingMode int32, periodType string, periodNum int32,
@@ -302,6 +314,33 @@ func GetChargeConfig(charge ChargePrepaid) (billingMode int32, periodType string
 	return
 }
 
+func GetPublicIp(publicIp PublicIp) *model.NodePublicIp {
+	if publicIp.Enable {
+		shareType := eipModel.GetCreatePublicipBandwidthOptionShareTypeEnum().PER.Value()
+		return &model.NodePublicIp{
+			Iptype: common.StringPtr("5_bgp"),
+			Bandwidth: &model.NodeBandwidth{
+				Chargemode: func() *string {
+					if publicIp.ChangeType == ChargemodeBandwidth {
+						return common.StringPtr(ChargemodeBandwidth)
+					}
+					return common.StringPtr(ChargemodeTraffic)
+				}(),
+				Sharetype: &shareType,
+				Size: func() *int32 {
+					var size int32 = 2
+					if publicIp.Bandwidth > 0 {
+						size = publicIp.Bandwidth
+					}
+					return &size
+				}(),
+			},
+		}
+	}
+
+	return nil
+}
+
 func GetRuntime(containerRuntime string) *model.Runtime {
 	runtimeName := model.GetRuntimeNameEnum().CONTAINERD
 
@@ -322,6 +361,7 @@ func (req CreateNodePoolRequest) trans2NodePoolTemplate() *model.CreateNodePoolR
 
 	dataVolumes, storageSelectors, storageGroups := GetDataVolumeAndStorgeConfig(req.Spec.Template.DataVolumes)
 	billingMode, periodType, periodNum, isAutoRenew, isAutoPay := GetChargeConfig(req.Spec.Template.Charge)
+	publicIp := GetPublicIp(req.Spec.Template.PublicIp)
 
 	return &model.CreateNodePoolRequest{
 		ClusterId: req.ClusterId,
@@ -369,6 +409,7 @@ func (req CreateNodePoolRequest) trans2NodePoolTemplate() *model.CreateNodePoolR
 					HostnameConfig: &model.HostnameConfig{
 						Type: model.GetHostnameConfigTypeEnum().PRIVATE_IP, // 节点名称默认与节点私有ip保持一致
 					},
+					PublicIP: publicIp,
 				},
 				CustomSecurityGroups: func() *[]string {
 					securityIds := make([]string, 0)
