@@ -113,3 +113,8 @@ const (
 	ContainerNetworkModeVpcRouter = "vpc-router"
 	ContainerNetworkModeOverlayL2 = "overlay_l2"
 )
+
+const (
+	ChargemodeTraffic   = "traffic"
+	ChargemodeBandwidth = "bandwidth"
+)
