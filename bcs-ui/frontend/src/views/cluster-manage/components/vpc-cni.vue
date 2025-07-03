@@ -50,8 +50,6 @@ import { ISubnetItem } from './types';
 
 import Zone from '@/views/cluster-manage/add/components/zone.vue';
 
-const nodePodNumList = ref([128, 256, 512, 1024, 2048, 4096]);
-
 const props = defineProps({
   subnets: {
     type: Array as PropType<Array<ISubnetItem>>,
@@ -72,6 +70,10 @@ const props = defineProps({
   showZone: {
     type: Boolean,
     default: true,
+  },
+  nodePodNumList: {
+    type: Array,
+    default: () => [128, 256, 512, 1024, 2048, 4096],
   },
 });
 

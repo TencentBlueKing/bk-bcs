@@ -145,6 +145,7 @@
                 :subnets="networkConfig.networkSettings.subnetSource.new"
                 cloud-i-d="tencentCloud"
                 :region="networkConfig.region"
+                :node-pod-num-list="podNumList"
                 class="max-w-[600px]"
                 @change="handleSetSubnetSourceNew" />
             </bk-form-item>
@@ -222,12 +223,16 @@
                 <i18n
                   class="leading-[20px]"
                   path="cluster.create.label.networkSetting.article1">
-                  <span place="count" class="text-[#313238]">{{ maxNodeCount }}</span>
+                  <template #count>
+                    <span class="text-[#313238]">{{ maxNodeCount }}</span>
+                  </template>
                 </i18n>
                 <i18n
                   class="leading-[20px]"
                   path="cluster.create.label.networkSetting.article2">
-                  <span place="count" class="text-[#313238]">{{ maxCapacityCount }}</span>
+                  <template #count>
+                    <span class="text-[#313238]">{{ maxCapacityCount }}</span>
+                  </template>
                 </i18n>
                 <div class="leading-[20px]">
                   {{$t('cluster.create.label.networkSetting.article3')}}
@@ -298,10 +303,18 @@
             </div>
             <div class="text-[12px] leading-[20px] mt-[4px]">
               <i18n path="cluster.create.label.manageType.managed.clusterLevel.desc">
-                <span place="nodes" class="text-[#313238]">{{ curClusterScale.level.split('L')[1] }}</span>
-                <span place="pods" class="text-[#313238]">{{ curClusterScale.scale.maxNodePodNum }}</span>
-                <span place="service" class="text-[#313238]">{{ curClusterScale.scale.maxServiceNum }}</span>
-                <span place="crd" class="text-[#313238]">{{ curClusterScale.scale.cidrStep }}</span>
+                <template #nodes>
+                  <span class="text-[#313238]">{{ curClusterScale.level.split('L')[1] }}</span>
+                </template>
+                <template #pods>
+                  <span class="text-[#313238]">{{ curClusterScale.scale.maxNodePodNum }}</span>
+                </template>
+                <template #service>
+                  <span class="text-[#313238]">{{ curClusterScale.scale.maxServiceNum }}</span>
+                </template>
+                <template #crd>
+                  <span class="text-[#313238]">{{ curClusterScale.scale.cidrStep }}</span>
+                </template>
               </i18n>
             </div>
           </bk-form-item>
@@ -400,6 +413,7 @@
 <script lang="ts">
 import { computed, defineComponent, getCurrentInstance, onMounted, ref, watch } from 'vue';
 
+import { cloudList } from '@/api/modules/cluster-manager';
 import $bkMessage from '@/common/bkmagic';
 import ConfirmDialog from '@/components/comfirm-dialog.vue';
 import BcsContent from '@/components/layout/Content.vue';
@@ -612,18 +626,20 @@ export default defineComponent({
       masterConfig.value.clusterBasicSettings.clusterLevel = scale;
     };
     // 集群模板
+    const businessID = computed(() => $store.state.curProject.businessID);
+    const cloudInfo = computed(() => templateList.value.find(item => item.cloudID === basicInfo.value.provider));
+    const podNumList = computed(() => cloudInfo.value?.networkInfo?.underlaySteps || []);
     const templateList = ref<any[]>([]);
     const templateLoading = ref(false);
     const handleGetTemplateList = async () => {
       templateLoading.value = true;
-      templateList.value = await $store.dispatch('clustermanager/fetchCloudList');
+      templateList.value = await cloudList({
+        businessID: businessID.value,
+      }).catch(() => []);
       templateLoading.value = false;
     };
     // 版本列表
-    const versionList = computed(() => {
-      const cloud = templateList.value.find(item => item.cloudID === basicInfo.value.provider);
-      return cloud?.clusterManagement.availableVersion || [];
-    });
+    const versionList = computed(() => cloudInfo.value?.clusterManagement?.availableVersion || []);
     const regionList = ref<any[]>([]);
     const regionLoading = ref(false);
     const getRegionList = async () => {
@@ -682,13 +698,6 @@ export default defineComponent({
       vpcList.value = data.filter(item => item.available === 'true');
       vpcLoading.value = false;
     };
-    const getIpNumRange = (minExponential, maxExponential) => {
-      const list: number[] = [];
-      for (let i = minExponential; i <= maxExponential; i++) {
-        list.push(Math.pow(2, i));
-      }
-      return list;
-    };
     // vpc搜索
     const vpcRemoteSearch = (v) => {
       filterValue.value = v;
@@ -703,38 +712,26 @@ export default defineComponent({
 
     // IP数量列表
     const cidrStepList = computed(() => {
-      const cloud = templateList.value.find(item => item.cloudID === basicInfo.value.provider);
-      const cidrStep = cloud?.networkInfo?.cidrStep || [];
+      const cidrStep = cloudInfo.value?.networkInfo?.cidrSteps
+        ?.filter(item => item.env === basicInfo.value.environment)
+        ?.map(item => item.step) || [];
       // 测试环境不允许选择4096
       return basicInfo.value.environment === 'prod'
         ? cidrStep
         : cidrStep.filter(ip => ip !== 4096);
     });
     // service ip选择列表
-    const serviceIpNumList = computed(() => {
-      const ipNumber = Number(networkConfig.value.networkSettings.cidrStep);
-      if (!ipNumber) return [];
-
-      const minExponential = Math.log2(128);
-      const maxExponential = Math.log2(ipNumber / 2);
-
-      return getIpNumRange(minExponential, maxExponential);
-    });
+    const serviceIpNumList = computed(() => cloudInfo.value?.networkInfo?.serviceSteps || []);
     // pod数量列表
-    const nodePodNumList = computed(() => {
-      const ipNumber = Number(networkConfig.value.networkSettings.cidrStep);
-      const serviceNumber = Number(networkConfig.value.networkSettings.maxServiceNum);
-      if (!ipNumber || !serviceNumber) return [];
-
-      const minExponential = Math.log2(32);
-      const maxExponential = Math.log2(Math.min(ipNumber - serviceNumber, 256));
-      return getIpNumRange(minExponential, maxExponential);
-    });
+    const nodePodNumList = computed(() => cloudInfo.value?.networkInfo?.perNodePodNum || []);
     // 集群最大节点数
     const maxNodeCount = computed(() => {
       const { cidrStep, maxServiceNum, maxNodePodNum } = networkConfig.value.networkSettings;
       if (cidrStep && maxServiceNum && maxNodePodNum) {
-        return Math.floor((Number(cidrStep) - Number(maxServiceNum)) / Number(maxNodePodNum)) || 0;
+        const result = Math.floor((Number(cidrStep) - Number(maxServiceNum)) / Number(maxNodePodNum));
+        if (result > 0) {
+          return result;
+        }
       }
       return 0;
     });
@@ -742,7 +739,10 @@ export default defineComponent({
     const maxCapacityCount = computed(() => {
       const { cidrStep, maxServiceNum, maxNodePodNum } = networkConfig.value.networkSettings;
       if (cidrStep && maxServiceNum && maxNodePodNum) {
-        return Math.floor((Number(cidrStep) * 5 - Number(maxServiceNum)) / Number(maxNodePodNum)) || 0;
+        const result = Math.floor((Number(cidrStep) * 5 - Number(maxServiceNum)) / Number(maxNodePodNum));
+        if (result > 0) {
+          return result;
+        }
       }
       return 0;
     });
@@ -895,6 +895,7 @@ export default defineComponent({
       maxNodeCount,
       maxCapacityCount,
       manageType,
+      podNumList,
       handleChangeManageType,
       handleChangeClusterScale,
       preStep,
