@@ -15,6 +15,7 @@ package actions
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -27,6 +28,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/templateconfig"
 )
 
 // PermInfo for perm request
@@ -223,4 +225,56 @@ func TransNodeStatus(cmNodeStatus string, k8sNode *corev1.Node) string {
 	}
 
 	return common.StatusNodeUnknown
+}
+
+// GetTemplateConfigInfosByBusinessID get templateConfigs list by businessID
+func GetTemplateConfigInfosByBusinessID(ctx context.Context, model store.ClusterManagerModel, businessID,
+	provider, confType string, opt *storeopt.ListOption) ([]*proto.TemplateConfigInfo, error) {
+	condM := make(operator.M)
+	//! we don't setting bson tag in proto file
+	//! all fields are in lowcas
+	if businessID != "" {
+		condM[templateconfig.BusinessIDKey] = businessID
+	}
+	if provider != "" {
+		condM[templateconfig.ProviderKey] = provider
+	}
+	if confType != "" {
+		condM[templateconfig.ConfigTypeKey] = confType
+	}
+	cond := operator.NewLeafCondition(operator.Eq, condM)
+
+	if opt == nil {
+		opt = &storeopt.ListOption{}
+	}
+
+	templateConfigs, err := model.ListTemplateConfigs(ctx, cond, opt)
+	if err != nil {
+		return nil, err
+	}
+
+	cloudTemplateConfigs := make([]*proto.TemplateConfigInfo, 0)
+	for _, templateConfig := range templateConfigs {
+		var cloudConfig *proto.CloudTemplateConfig
+		if err := json.Unmarshal([]byte(templateConfig.ConfigContent), &cloudConfig); err != nil {
+			blog.Errorf("unmarshal cloud config content failed: %v", err)
+			continue
+		}
+
+		cloudTemplateConfigs = append(cloudTemplateConfigs, &proto.TemplateConfigInfo{
+			TemplateConfigID:    templateConfig.TemplateConfigID,
+			BusinessID:          templateConfig.BusinessID,
+			ProjectID:           templateConfig.ProjectID,
+			ClusterID:           templateConfig.ClusterID,
+			Provider:            templateConfig.Provider,
+			ConfigType:          templateConfig.ConfigType,
+			CloudTemplateConfig: cloudConfig,
+			Creator:             templateConfig.Creator,
+			Updater:             templateConfig.Updater,
+			CreateTime:          templateConfig.CreateTime,
+			UpdateTime:          templateConfig.UpdateTime,
+		})
+	}
+
+	return cloudTemplateConfigs, nil
 }
