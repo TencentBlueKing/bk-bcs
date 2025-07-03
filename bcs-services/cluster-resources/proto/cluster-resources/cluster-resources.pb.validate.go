@@ -15180,10 +15180,23 @@ func (m *GetApiResourcesObjectReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if l := utf8.RuneCountInString(m.GetKind()); l < 1 || l > 128 {
+	// no validation rules for Group
+
+	if utf8.RuneCountInString(m.GetVersion()) < 1 {
 		err := GetApiResourcesObjectReqValidationError{
-			field:  "Kind",
-			reason: "value length must be between 1 and 128 runes, inclusive",
+			field:  "Version",
+			reason: "value length must be at least 1 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetResource()) < 1 {
+		err := GetApiResourcesObjectReqValidationError{
+			field:  "Resource",
+			reason: "value length must be at least 1 runes",
 		}
 		if !all {
 			return err
@@ -15363,6 +15376,30 @@ func (m *CreateApiResourcesObjectReq) validate(all bool) error {
 
 	// no validation rules for Namespaced
 
+	// no validation rules for Group
+
+	if utf8.RuneCountInString(m.GetVersion()) < 1 {
+		err := CreateApiResourcesObjectReqValidationError{
+			field:  "Version",
+			reason: "value length must be at least 1 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetResource()) < 1 {
+		err := CreateApiResourcesObjectReqValidationError{
+			field:  "Resource",
+			reason: "value length must be at least 1 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
 	if len(errors) > 0 {
 		return CreateApiResourcesObjectReqMultiError(errors)
 	}
@@ -15533,6 +15570,30 @@ func (m *UpdateApiResourcesObjectReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
+	// no validation rules for Group
+
+	if utf8.RuneCountInString(m.GetVersion()) < 1 {
+		err := UpdateApiResourcesObjectReqValidationError{
+			field:  "Version",
+			reason: "value length must be at least 1 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetResource()) < 1 {
+		err := UpdateApiResourcesObjectReqValidationError{
+			field:  "Resource",
+			reason: "value length must be at least 1 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
 	if len(errors) > 0 {
 		return UpdateApiResourcesObjectReqMultiError(errors)
 	}
@@ -15689,6 +15750,30 @@ func (m *DeleteApiResourcesObjectReq) validate(all bool) error {
 		err := DeleteApiResourcesObjectReqValidationError{
 			field:  "Kind",
 			reason: "value length must be at most 128 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for Group
+
+	if utf8.RuneCountInString(m.GetVersion()) < 1 {
+		err := DeleteApiResourcesObjectReqValidationError{
+			field:  "Version",
+			reason: "value length must be at least 1 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetResource()) < 1 {
+		err := DeleteApiResourcesObjectReqValidationError{
+			field:  "Resource",
+			reason: "value length must be at least 1 runes",
 		}
 		if !all {
 			return err
