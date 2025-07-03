@@ -103,7 +103,8 @@ func SkipTenantValidation(req server.Request, client string) bool {
 
 // resource id
 type resourceID struct {
-	ProjectID string
+	ProjectID   string
+	ProjectCode string
 }
 
 // GetResourceTenantId get resource tenant id
@@ -121,8 +122,12 @@ func GetResourceTenantId(ctx context.Context, req server.Request) (string, error
 
 // getTenantldByResource get tenant id by resource
 func getTenantldByResource(ctx context.Context, resource *resourceID) (string, error) {
+	projectID := resource.ProjectID
+	if len(projectID) == 0 {
+		projectID = resource.ProjectCode
+	}
 
-	project, err := project.GetProjectInfo(ctx, resource.ProjectID)
+	project, err := project.GetProjectInfo(ctx, projectID)
 	if err != nil {
 		return "", err
 	}
