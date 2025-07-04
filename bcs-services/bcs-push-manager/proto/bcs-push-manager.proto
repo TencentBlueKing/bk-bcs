@@ -1,0 +1,422 @@
+syntax = "proto3";
+package pushmanager;
+
+import "google/protobuf/timestamp.proto";
+import "google/api/annotations.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+
+option go_package = "proto/bcs-push-manager;pushmanager";
+
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
+  info : {
+    title : "Push Manager API Doc"
+    version : "0.1.0"
+  };
+  schemes : HTTP
+  consumes : "application/json"
+  produces : "application/json"
+};
+
+service PushManager {
+    // ===== 推送事件相关 =====
+    rpc CreatePushEvent(CreatePushEventRequest) returns (CreatePushEventResponse) {
+        option (google.api.http) = {
+            post: "/api/v1/domains/{domain}/push_events"
+            body: "*"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            description : "创建新的推送事件记录"
+            summary : "创建推送事件"
+        };
+    }
+    rpc DeletePushEvent(DeletePushEventRequest) returns (DeletePushEventResponse) {
+        option (google.api.http) = {
+            delete: "/api/v1/domains/{domain}/push_events/{event_id}"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            description : "根据事件ID删除推送事件"
+            summary : "删除推送事件"
+        };
+    }
+    rpc GetPushEvent(GetPushEventRequest) returns (GetPushEventResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/domains/{domain}/push_events/{event_id}"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            description : "根据事件ID获取单个推送事件的详细信息。"
+            summary : "获取推送事件"
+        };
+    }
+    rpc ListPushEvents(ListPushEventsRequest) returns (ListPushEventsResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/domains/{domain}/push_events"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            description : "获取推送事件列表，支持分页和多种过滤条件。"
+            summary : "列出推送事件"
+        };
+    }
+    rpc UpdatePushEvent(UpdatePushEventRequest) returns (UpdatePushEventResponse) {
+        option (google.api.http) = {
+            put: "/api/v1/domains/{domain}/push_events/{event_id}"
+            body: "*"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            description : "更新推送事件的任意字段，未提供的字段将保持不变"
+            summary : "更新推送事件"
+        };
+    }
+
+    // ===== 推送白名单相关 =====
+    rpc CreatePushWhitelist(CreatePushWhitelistRequest) returns (CreatePushWhitelistResponse) {
+        option (google.api.http) = {
+            post: "/api/v1/domains/{domain}/push_whitelists"
+            body: "*"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            description : "创建新的推送白名单记录，用于屏蔽特定维度的推送。"
+            summary : "创建推送白名单"
+        };
+    }
+    rpc DeletePushWhitelist(DeletePushWhitelistRequest) returns (DeletePushWhitelistResponse) {
+        option (google.api.http) = {
+            delete: "/api/v1/domains/{domain}/push_whitelists/{whitelist_id}"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            description : "根据白名单ID删除推送白名单。"
+            summary : "删除推送白名单"
+        };
+    }
+    rpc UpdatePushWhitelist(UpdatePushWhitelistRequest) returns (UpdatePushWhitelistResponse) {
+        option (google.api.http) = {
+            put: "/api/v1/domains/{domain}/push_whitelists/{whitelist_id}"
+            body: "*"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            description : "更新现有推送白名单的配置信息。"
+            summary : "更新推送白名单"
+        };
+    }
+    rpc ListPushWhitelists(ListPushWhitelistsRequest) returns (ListPushWhitelistsResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/domains/{domain}/push_whitelists"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            description : "获取推送白名单列表，支持分页和多种过滤条件。"
+            summary : "列出推送白名单"
+        };
+    }
+    rpc GetPushWhitelist(GetPushWhitelistRequest) returns (GetPushWhitelistResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/domains/{domain}/push_whitelists/{whitelist_id}"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            description : "根据白名单ID获取单个推送白名单的详细信息。"
+            summary : "获取推送白名单"
+        };
+    }
+
+    // ===== 推送模版相关 =====
+    rpc CreatePushTemplate(CreatePushTemplateRequest) returns (CreatePushTemplateResponse) {
+        option (google.api.http) = {
+            post: "/api/v1/domains/{domain}/push_templates"
+            body: "*"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            description : "创建新的推送通知模板。"
+            summary : "创建推送模板"
+        };
+    }
+    rpc DeletePushTemplate(DeletePushTemplateRequest) returns (DeletePushTemplateResponse) {
+        option (google.api.http) = {
+            delete: "/api/v1/domains/{domain}/push_templates/{template_id}"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            description : "根据模板ID删除推送通知模板。"
+            summary : "删除推送模板"
+        };
+    }
+    rpc UpdatePushTemplate(UpdatePushTemplateRequest) returns (UpdatePushTemplateResponse) {
+        option (google.api.http) = {
+            put: "/api/v1/domains/{domain}/push_templates/{template_id}"
+            body: "*"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            description : "更新现有推送通知模板的配置信息。"
+            summary : "更新推送模板"
+        };
+    }
+    rpc ListPushTemplates(ListPushTemplatesRequest) returns (ListPushTemplatesResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/domains/{domain}/push_templates"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            description : "获取推送通知模板列表，支持分页和过滤。"
+            summary : "列出推送模板"
+        };
+    }
+    rpc GetPushTemplate(GetPushTemplateRequest) returns (GetPushTemplateResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/domains/{domain}/push_templates/{template_id}"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            description : "根据模板ID获取单个推送通知模板的详细信息。"
+            summary : "获取推送模板"
+        };
+    }
+}
+
+// ===== 基础结构 =====
+message Dimension {
+  map<string, string> fields = 1;
+}
+
+// ===== 推送事件相关 =====
+message EventDetail {
+  map<string, string> fields = 1;
+}
+
+message NotificationResults {
+  map<string, string> fields = 1;
+}
+
+message MetricData {
+  double metric_value = 1;
+  google.protobuf.Timestamp timestamp = 2;
+}
+
+message PushEvent {
+    string event_id = 1;
+    string domain = 2;
+    string rule_id = 3;
+    EventDetail event_detail = 4;
+    string push_level = 5;
+    int32 status = 6;
+    NotificationResults notification_results = 7;
+    Dimension dimension = 8;
+    string bk_biz_name = 9;
+    MetricData metric_data = 10;
+    google.protobuf.Timestamp created_at = 11;
+    google.protobuf.Timestamp updated_at = 12;
+}
+
+message CreatePushEventRequest {
+    string domain = 1;
+    PushEvent event = 2;
+}
+
+message CreatePushEventResponse {
+    uint32 code = 1;
+    string message = 2;
+    string event_id = 3;
+}
+
+message DeletePushEventRequest {
+    string domain = 1;
+    string event_id = 2;
+}
+
+message DeletePushEventResponse {
+    uint32 code = 1;
+    string message = 2;
+}
+
+message GetPushEventRequest {
+    string domain = 1;
+    string event_id = 2;
+}
+
+message GetPushEventResponse {
+    uint32 code = 1;
+    string message = 2;
+    PushEvent event = 3;
+}
+
+message ListPushEventsRequest {
+    string domain = 1;
+    int32 page = 2;
+    int32 page_size = 3;
+    string rule_id = 4;
+    int32 status = 5;
+    string push_level = 6;
+    google.protobuf.Timestamp start_time = 7;
+    google.protobuf.Timestamp end_time = 8;
+}
+
+message ListPushEventsResponse {
+    uint32 code = 1;
+    string message = 2;
+    repeated PushEvent events = 3;
+    int64 total = 4;
+}
+
+message UpdatePushEventRequest {
+    string domain = 1;
+    string event_id = 2;
+    PushEvent event = 3;
+}
+
+message UpdatePushEventResponse {
+    uint32 code = 1;
+    string message = 2;
+}
+
+// ===== 推送白名单相关 =====
+message PushWhitelist {
+  string whitelist_id = 1;
+  string domain = 2;
+  Dimension dimension = 3;
+  string reason = 4;
+  string applicant = 5;
+  string approver = 6;
+  optional int32 whitelist_status = 7;
+  optional int32 approval_status = 8;
+  google.protobuf.Timestamp start_time = 9;
+  google.protobuf.Timestamp end_time = 10;
+  google.protobuf.Timestamp approved_at = 11;
+  google.protobuf.Timestamp created_at = 12;
+  google.protobuf.Timestamp updated_at = 13;
+}
+
+message CreatePushWhitelistRequest {
+    string domain = 1;
+    PushWhitelist whitelist = 2;
+}
+
+message CreatePushWhitelistResponse {
+    uint32 code = 1;
+    string message = 2;
+}
+
+message GetPushWhitelistRequest {
+    string domain = 1;
+    string whitelist_id = 2;
+}
+
+message GetPushWhitelistResponse {
+    uint32 code = 1;
+    string message = 2;
+    PushWhitelist whitelist = 3;
+}
+
+message UpdatePushWhitelistRequest {
+    string domain = 1;
+    string whitelist_id = 2;
+    PushWhitelist whitelist = 3;
+}
+
+message UpdatePushWhitelistResponse {
+    uint32 code = 1;
+    string message = 2;
+}
+
+message DeletePushWhitelistRequest {
+    string domain = 1;
+    string whitelist_id = 2;
+}
+
+message DeletePushWhitelistResponse {
+    uint32 code = 1;
+    string message = 2;
+}
+
+message ListPushWhitelistsRequest {
+    string domain = 1;
+    int32 page = 2;
+    int32 page_size = 3;
+    string applicant = 4;
+    optional int32 whitelist_status = 5;
+    optional int32 approval_status = 6;
+}
+
+message ListPushWhitelistsResponse {
+    uint32 code = 1;
+    string message = 2;
+    repeated PushWhitelist whitelists = 3;
+    int64 total = 4;
+}
+
+message ApprovePushWhitelistRequest {
+    string domain = 1;
+    string whitelist_id = 2;
+    int32 approval_status = 3;
+    string approver = 4;
+}
+
+message ApprovePushWhitelistResponse {
+    uint32 code = 1;
+    string message = 2;
+}
+
+// ===== 推送模版相关 =====
+message TemplateContent {
+  string title = 1;
+  string body = 2;
+  repeated string variables = 3;
+}
+
+message PushTemplate {
+    string template_id = 1;
+    string domain = 2;
+    string template_type = 3;
+    TemplateContent content = 4;
+    string creator = 5;
+    google.protobuf.Timestamp created_at = 6;
+}
+
+message CreatePushTemplateRequest {
+    string domain = 1;
+    PushTemplate template = 2;
+}
+
+message CreatePushTemplateResponse {
+    uint32 code = 1;
+    string message = 2;
+}
+
+message GetPushTemplateRequest {
+    string domain = 1;
+    string template_id = 2;
+}
+
+message GetPushTemplateResponse {
+    uint32 code = 1;
+    string message = 2;
+    PushTemplate template = 3;
+}
+
+message UpdatePushTemplateRequest {
+    string domain = 1;
+    string template_id = 2;
+    PushTemplate template = 3;
+}
+
+message UpdatePushTemplateResponse {
+    uint32 code = 1;
+    string message = 2;
+}
+
+message DeletePushTemplateRequest {
+    string domain = 1;
+    string template_id = 2;
+}
+
+message DeletePushTemplateResponse {
+    uint32 code = 1;
+    string message = 2;
+}
+
+message ListPushTemplatesRequest {
+    string domain = 1;
+    int32 page = 2;
+    int32 page_size = 3;
+    string template_type = 4;
+    string creator = 5;
+}
+
+message ListPushTemplatesResponse {
+    uint32 code = 1;
+    string message = 2;
+    repeated PushTemplate templates = 3;
+    int64 total = 4;
+}
