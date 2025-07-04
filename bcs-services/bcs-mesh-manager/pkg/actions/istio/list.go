@@ -20,10 +20,12 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/cmd/mesh-manager/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/store/entity"
 	storeutils "github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/store/utils"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/utils"
 	meshmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/proto/bcs-mesh-manager"
 )
 
@@ -64,18 +66,80 @@ func (l *ListIstioAction) Handle(
 		l.setResp(common.DBErrorCode, err.Error(), nil)
 		return nil
 	}
+	l.setResp(common.SuccessCode, "get list success", result)
 
 	// 设置成功响应
-	l.setResp(common.SuccessCode, "", result)
+	l.resp.WebAnnotations = l.getWebAnnotations(ctx)
 	blog.Infof("list mesh successfully, projectCode: %s", l.req.ProjectCode)
 	return nil
 }
 
 // setResp sets the response with code, message and data
-func (l *ListIstioAction) setResp(code uint32, message string, data *meshmanager.ListIstioData) {
+func (l *ListIstioAction) setResp(
+	code uint32,
+	message string,
+	data *meshmanager.ListIstioData) {
 	l.resp.Code = code
 	l.resp.Message = message
 	l.resp.Data = data
+}
+
+// getWebAnnotations 获取 WebAnnotations 权限信息
+func (l *ListIstioAction) getWebAnnotations(ctx context.Context) *meshmanager.WebAnnotations {
+
+	if l.resp.Data == nil || len(l.resp.Data.Items) == 0 {
+		return nil
+	}
+
+	username := utils.GetUserFromCtx(ctx)
+	projectID := utils.GetProjectIDFromCtx(ctx)
+
+	// 网格权限
+	meshPerms := make(map[string]interface{})
+
+	for _, item := range l.resp.Data.Items {
+		if item == nil {
+			continue
+		}
+
+		meshID := item.MeshID
+		if meshID == "" {
+			continue
+		}
+
+		// 收集该mesh涉及的所有集群
+		allClusters := mergeClusters(item.PrimaryClusters, item.RemoteClusters)
+
+		// 使用批量权限检查，即使没有集群也会返回默认的 false 权限
+		meshPerm := auth.CheckMeshPermissions(username, projectID, allClusters)
+
+		meshPerms[meshID] = meshPerm
+	}
+
+	// 如果没有有效的 mesh 数据，返回 nil
+	if len(meshPerms) == 0 {
+		return nil
+	}
+
+	// 转换为 protobuf 结构
+	s, err := common.MarshalInterfaceToValue(meshPerms)
+	if err != nil {
+		blog.Errorf("MarshalInterfaceToValue failed, err: %s", err.Error())
+		return nil
+	}
+
+	webAnnotations := &meshmanager.WebAnnotations{
+		Perms: s,
+	}
+	return webAnnotations
+}
+
+// mergeClusters 合并主集群和远程集群
+func mergeClusters(primaryClusters, remoteClusters []string) []string {
+	allClusters := make([]string, 0, len(primaryClusters)+len(remoteClusters))
+	allClusters = append(allClusters, primaryClusters...)
+	allClusters = append(allClusters, remoteClusters...)
+	return allClusters
 }
 
 // list implements the business logic for listing meshes

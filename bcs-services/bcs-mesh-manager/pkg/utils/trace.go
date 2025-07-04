@@ -18,18 +18,6 @@ import (
 	"strings"
 )
 
-// ContextKey xxx
-type ContextKey string
-
-const (
-	// RequestIDContextKey requestID for request
-	RequestIDContextKey ContextKey = "requestID"
-	// TraceIDContextKey trace id for tracing
-	TraceIDContextKey ContextKey = "traceID"
-	// UsernameContextKey username for request
-	UsernameContextKey ContextKey = "username"
-)
-
 // HeaderKey string
 const (
 	// RequestIDHeaderKey xxx

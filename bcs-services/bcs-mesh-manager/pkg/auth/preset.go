@@ -10,33 +10,19 @@
  * limitations under the License.
  */
 
-package common
+package auth
 
 import (
-	"encoding/json"
-
-	_struct "github.com/golang/protobuf/ptypes/struct"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/namespace"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/project"
 )
 
-// MapInt2MapIf converts map[string]int to map[string]interface{}
-func MapInt2MapIf(m map[string]int) map[string]interface{} {
-	newM := make(map[string]interface{})
-	for k, v := range m {
-		newM[k] = v
-	}
-	return newM
-}
+// ActionPermissions action 对应权限中心的权限
+var ActionPermissions = map[string]string{
 
-// MarshalInterfaceToValue trans interface to Struct
-func MarshalInterfaceToValue(data interface{}) (*_struct.Struct, error) {
-	b, err := json.Marshal(data)
-	if err != nil {
-		return nil, err
-	}
-	resultStruct := &_struct.Struct{}
-	err = resultStruct.UnmarshalJSON(b)
-	if err != nil {
-		return nil, err
-	}
-	return resultStruct, nil
+	"MeshManager.InstallIstio":   namespace.CanCreateNamespaceScopedResourceOperation,
+	"MeshManager.UpdateIstio":    namespace.CanUpdateNamespaceScopedResourceOperation,
+	"MeshManager.DeleteIstio":    namespace.CanDeleteNamespaceScopedResourceOperation,
+	"MeshManager.GetIstioDetail": namespace.CanViewNamespaceScopedResourceOperation,
+	"MeshManager.ListIstio":      project.CanViewProjectOperation,
 }
