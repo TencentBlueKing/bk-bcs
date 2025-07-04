@@ -124,7 +124,7 @@ func (r *EventRecorder) SendEvent(event *Event) {
 
 // Run write the event to local file
 func (r *EventRecorder) Run(ctx context.Context) error {
-	file, err := os.OpenFile(r.op.EventFile, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0755)
+	file, err := os.OpenFile(r.op.EventFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0755)
 	if err != nil && !os.IsExist(err) {
 		return errors.Wrapf(err, "open event file '%s' failed", r.op.EventFile)
 	}

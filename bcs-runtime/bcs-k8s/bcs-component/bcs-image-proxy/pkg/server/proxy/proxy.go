@@ -359,6 +359,7 @@ func (p *upstreamProxy) handleLayerDownload(ctx context.Context, rw http.Respons
 
 func (p *upstreamProxy) downloadByTCP(ctx context.Context, rw http.ResponseWriter, target string, startPos int64,
 	filePath string) error {
+	// NOCC:Server Side Request Forgery(只是代码封装，所有 URL都是可信的)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("http://%s:%d%s", target,
 		p.op.HTTPPort, apiclient.CustomAPITransferLayerTCP), nil)
 	if err != nil {

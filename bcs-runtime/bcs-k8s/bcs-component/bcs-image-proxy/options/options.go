@@ -19,6 +19,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -243,7 +244,7 @@ func (o *ImageProxyOption) getServiceEndpoints(ns, name string) ([]string, error
 	for _, ip := range result {
 		newResult = append(newResult, fmt.Sprintf("%s:%d", ip, op.HTTPPort))
 	}
-	blog.Infof("[master-election] get service endpoints: %d", len(newResult))
+	// blog.Infof("[master-election] get service endpoints: %d", len(newResult))
 	return newResult, nil
 }
 
@@ -489,13 +490,26 @@ func (o *ImageProxyOption) checkExternalConfig() error {
 	if op.ExternalConfig.HTTPProxy != "" {
 		httpProxyUrl, err = url.Parse(op.ExternalConfig.HTTPProxy)
 		if err != nil {
-			blog.Errorf("set http_proxy '%s' failed: %s", op.ExternalConfig.HTTPProxy, err.Error())
-		} else {
-			blog.Infof("set http_proxy '%s' success", op.ExternalConfig.HTTPProxy)
+			return errors.Wrapf(err, "set http_proxy '%s' failed", op.ExternalConfig.HTTPProxy)
 		}
+		if err = checkNetConnectivity(op.ExternalConfig.HTTPProxy); err != nil {
+			return errors.Wrapf(err, "check http_proxy connectivity failed")
+		}
+		blog.Infof("set http_proxy '%s' success", op.ExternalConfig.HTTPProxy)
 	} else {
 		blog.Infof("not use http_proxy")
 	}
+	return nil
+}
+
+// checkNetConnectivity check whether the target can connect
+func checkNetConnectivity(target string) error {
+	afterTrim := strings.TrimPrefix(strings.TrimPrefix(target, "http://"), "https://")
+	conn, err := net.DialTimeout("tcp", afterTrim, 5*time.Second)
+	if err != nil {
+		return errors.Wrapf(err, "dial target '%s' failed", target)
+	}
+	defer conn.Close()
 	return nil
 }
 
