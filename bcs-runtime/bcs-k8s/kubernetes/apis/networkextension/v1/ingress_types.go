@@ -143,6 +143,9 @@ type ListenerHealthCheck struct {
 // IngressListenerAttribute attribute for listener
 type IngressListenerAttribute struct {
 	SessionTime     int    `json:"sessionTime,omitempty"`
+	// +kubebuilder:validation:Enum=NORMAL;QUIC_CID
+	// +optional
+	SessionType     string `json:"sessionType,omitempty"` 
 	SniSwitch       int    `json:"sniSwitch,omitempty"`
 	KeepAliveEnable int    `json:"keepAliveEnable,omitempty"`
 	LbPolicy        string `json:"lbPolicy,omitempty"`

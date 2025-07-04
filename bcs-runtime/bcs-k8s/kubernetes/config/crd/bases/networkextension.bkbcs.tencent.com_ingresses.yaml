@@ -1,4 +1,4 @@
-
+{{- if and (.Capabilities.APIVersions.Has "apiextensions.k8s.io/v1") -}}
 ---
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
@@ -6,6 +6,8 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.6.0
   creationTimestamp: null
+  labels:
+    io.tencent.bcs.dev/deletion-allow: {{ index .Values "deletion-allow" }}
   name: ingresses.networkextension.bkbcs.tencent.com
 spec:
   group: networkextension.bkbcs.tencent.com
@@ -123,6 +125,11 @@ spec:
                           type: integer
                         sessionTime:
                           type: integer
+                        sessionType:
+                          enum:
+                          - NORMAL
+                          - QUIC_CID
+                          type: string
                         sniSwitch:
                           type: integer
                         uptimeCheck:
@@ -341,6 +348,11 @@ spec:
                                 type: integer
                               sessionTime:
                                 type: integer
+                              sessionType:
+                                enum:
+                                - NORMAL
+                                - QUIC_CID
+                                type: string
                               sniSwitch:
                                 type: integer
                               uptimeCheck:
@@ -616,6 +628,11 @@ spec:
                                 type: integer
                               sessionTime:
                                 type: integer
+                              sessionType:
+                                enum:
+                                - NORMAL
+                                - QUIC_CID
+                                type: string
                               sniSwitch:
                                 type: integer
                               uptimeCheck:
@@ -881,6 +898,11 @@ spec:
                           type: integer
                         sessionTime:
                           type: integer
+                        sessionType:
+                          enum:
+                          - NORMAL
+                          - QUIC_CID
+                          type: string
                         sniSwitch:
                           type: integer
                         uptimeCheck:
@@ -1123,7 +1145,1159 @@ spec:
     storage: true
 status:
   acceptedNames:
-    kind: ""
-    plural: ""
+    kind: ''
+    plural: ''
   conditions: []
   storedVersions: []
+
+{{ else }}
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.6.0
+  creationTimestamp: null
+  labels:
+    io.tencent.bcs.dev/deletion-allow: {{ index .Values "deletion-allow" }}
+  name: ingresses.networkextension.bkbcs.tencent.com
+spec:
+  group: networkextension.bkbcs.tencent.com
+  names:
+    kind: Ingress
+    listKind: IngressList
+    plural: ingresses
+    shortNames:
+    - bcsingress
+    singular: ingress
+  scope: Namespaced
+  validation:
+    openAPIV3Schema:
+      description: Ingress is the Schema for the ingresses API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: IngressSpec defines the desired state of Ingress
+          properties:
+            portMappings:
+              items:
+                description: IngressPortMapping mapping of ingress
+                properties:
+                  certificate:
+                    description: IngressListenerCertificate certificate configs for
+                      listener
+                    properties:
+                      certCaID:
+                        type: string
+                      certID:
+                        type: string
+                      mode:
+                        type: string
+                    type: object
+                  endIndex:
+                    type: integer
+                  hostPort:
+                    type: boolean
+                  ignoreSegment:
+                    type: boolean
+                  isRsPortFixed:
+                    type: boolean
+                  listenerAttribute:
+                    description: IngressListenerAttribute attribute for listener
+                    properties:
+                      awsAttributes:
+                        description: aws targetGroup attributes, https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_ModifyTargetGroupAttributes.html
+                        items:
+                          description: AWSAttribute define aws target group attribute
+                          properties:
+                            key:
+                              type: string
+                            value:
+                              type: string
+                          type: object
+                        type: array
+                      backendInsecure:
+                        description: BackendInsecure specifies whether to enable insecure
+                          access to the backend.
+                        type: boolean
+                      healthCheck:
+                        description: ListenerHealthCheck health check setting for
+                          listener
+                        properties:
+                          enabled:
+                            type: boolean
+                          healthCheckPort:
+                            type: integer
+                          healthCheckProtocol:
+                            type: string
+                          healthNum:
+                            type: integer
+                          httpCheckMethod:
+                            type: string
+                          httpCheckPath:
+                            type: string
+                          httpCode:
+                            type: integer
+                          httpCodeValues:
+                            description: HTTPCodeValues specifies a set of HTTP response
+                              status codes of health check. You can specify multiple
+                              values (for example, "200,202") or a range of values
+                              (for example, "200-299"). https://pkg.go.dev/github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2@v1.17.0/types#Matcher
+                            type: string
+                          intervalTime:
+                            type: integer
+                          timeout:
+                            type: integer
+                          unHealthNum:
+                            type: integer
+                        type: object
+                      keepAliveEnable:
+                        type: integer
+                      lbPolicy:
+                        type: string
+                      maxRate:
+                        description: MaxRate specifies the maximum number of connections
+                          per second allowed for every target instance.
+                        type: integer
+                      priority:
+                        description: 声明7层监听器中，rule的优先级(目前只在aws中使用)
+                        type: integer
+                      sessionTime:
+                        type: integer
+                      sessionType:
+                        enum:
+                        - NORMAL
+                        - QUIC_CID
+                        type: string
+                      sniSwitch:
+                        type: integer
+                      uptimeCheck:
+                        description: UptimeCheckConfig 拨测配置
+                        properties:
+                          authorize:
+                            description: Authorize auth config
+                            properties:
+                              auth_config:
+                                description: AuthConfig auth config
+                                properties:
+                                  password:
+                                    type: string
+                                  token:
+                                    type: string
+                                  username:
+                                    type: string
+                                type: object
+                              auth_type:
+                                type: string
+                              insecure_skip_verify:
+                                type: boolean
+                            type: object
+                          body:
+                            description: Body http body
+                            properties:
+                              content:
+                                type: string
+                              content_type:
+                                type: string
+                              data_type:
+                                type: string
+                              params:
+                                items:
+                                  description: Params http check params
+                                  properties:
+                                    desc:
+                                      type: string
+                                    is_enabled:
+                                      type: boolean
+                                    key:
+                                      type: string
+                                    value:
+                                      type: string
+                                  required:
+                                  - desc
+                                  - is_enabled
+                                  - key
+                                  - value
+                                  type: object
+                                type: array
+                            type: object
+                          enabled:
+                            type: boolean
+                          groups:
+                            items:
+                              type: string
+                            type: array
+                          headers:
+                            items:
+                              description: Params http check params
+                              properties:
+                                desc:
+                                  type: string
+                                is_enabled:
+                                  type: boolean
+                                key:
+                                  type: string
+                                value:
+                                  type: string
+                              required:
+                              - desc
+                              - is_enabled
+                              - key
+                              - value
+                              type: object
+                            type: array
+                          method:
+                            description: HTTP(S) Related properties
+                            type: string
+                          nodes:
+                            items:
+                              type: string
+                            type: array
+                          period:
+                            format: int64
+                            type: integer
+                          port:
+                            description: Target   []string `json:"target"`
+                            format: int64
+                            type: integer
+                          port_define:
+                            description: define which port should be selected to check
+                              when use port segment
+                            enum:
+                            - FIRST
+                            - LAST
+                            type: string
+                          protocol:
+                            description: support HTTP(S)/ TCP/ UDP/ ICMP
+                            type: string
+                          query_params:
+                            items:
+                              description: Params http check params
+                              properties:
+                                desc:
+                                  type: string
+                                is_enabled:
+                                  type: boolean
+                                key:
+                                  type: string
+                                value:
+                                  type: string
+                              required:
+                              - desc
+                              - is_enabled
+                              - key
+                              - value
+                              type: object
+                            type: array
+                          request:
+                            type: string
+                          request_format:
+                            type: string
+                          response:
+                            type: string
+                          response_code:
+                            type: string
+                          response_format:
+                            type: string
+                          timeout:
+                            format: int64
+                            type: integer
+                          url_list:
+                            items:
+                              type: string
+                            type: array
+                          wait_empty_response:
+                            type: boolean
+                        required:
+                        - enabled
+                        - nodes
+                        type: object
+                    type: object
+                  protocol:
+                    type: string
+                  routes:
+                    items:
+                      description: IngressPortMappingLayer7Route 7 layer route config
+                        for port mapping
+                      properties:
+                        domain:
+                          type: string
+                        listenerAttribute:
+                          description: IngressListenerAttribute attribute for listener
+                          properties:
+                            awsAttributes:
+                              description: aws targetGroup attributes, https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_ModifyTargetGroupAttributes.html
+                              items:
+                                description: AWSAttribute define aws target group
+                                  attribute
+                                properties:
+                                  key:
+                                    type: string
+                                  value:
+                                    type: string
+                                type: object
+                              type: array
+                            backendInsecure:
+                              description: BackendInsecure specifies whether to enable
+                                insecure access to the backend.
+                              type: boolean
+                            healthCheck:
+                              description: ListenerHealthCheck health check setting
+                                for listener
+                              properties:
+                                enabled:
+                                  type: boolean
+                                healthCheckPort:
+                                  type: integer
+                                healthCheckProtocol:
+                                  type: string
+                                healthNum:
+                                  type: integer
+                                httpCheckMethod:
+                                  type: string
+                                httpCheckPath:
+                                  type: string
+                                httpCode:
+                                  type: integer
+                                httpCodeValues:
+                                  description: HTTPCodeValues specifies a set of HTTP
+                                    response status codes of health check. You can
+                                    specify multiple values (for example, "200,202")
+                                    or a range of values (for example, "200-299").
+                                    https://pkg.go.dev/github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2@v1.17.0/types#Matcher
+                                  type: string
+                                intervalTime:
+                                  type: integer
+                                timeout:
+                                  type: integer
+                                unHealthNum:
+                                  type: integer
+                              type: object
+                            keepAliveEnable:
+                              type: integer
+                            lbPolicy:
+                              type: string
+                            maxRate:
+                              description: MaxRate specifies the maximum number of
+                                connections per second allowed for every target instance.
+                              type: integer
+                            priority:
+                              description: 声明7层监听器中，rule的优先级(目前只在aws中使用)
+                              type: integer
+                            sessionTime:
+                              type: integer
+                            sessionType:
+                              enum:
+                              - NORMAL
+                              - QUIC_CID
+                              type: string
+                            sniSwitch:
+                              type: integer
+                            uptimeCheck:
+                              description: UptimeCheckConfig 拨测配置
+                              properties:
+                                authorize:
+                                  description: Authorize auth config
+                                  properties:
+                                    auth_config:
+                                      description: AuthConfig auth config
+                                      properties:
+                                        password:
+                                          type: string
+                                        token:
+                                          type: string
+                                        username:
+                                          type: string
+                                      type: object
+                                    auth_type:
+                                      type: string
+                                    insecure_skip_verify:
+                                      type: boolean
+                                  type: object
+                                body:
+                                  description: Body http body
+                                  properties:
+                                    content:
+                                      type: string
+                                    content_type:
+                                      type: string
+                                    data_type:
+                                      type: string
+                                    params:
+                                      items:
+                                        description: Params http check params
+                                        properties:
+                                          desc:
+                                            type: string
+                                          is_enabled:
+                                            type: boolean
+                                          key:
+                                            type: string
+                                          value:
+                                            type: string
+                                        required:
+                                        - desc
+                                        - is_enabled
+                                        - key
+                                        - value
+                                        type: object
+                                      type: array
+                                  type: object
+                                enabled:
+                                  type: boolean
+                                groups:
+                                  items:
+                                    type: string
+                                  type: array
+                                headers:
+                                  items:
+                                    description: Params http check params
+                                    properties:
+                                      desc:
+                                        type: string
+                                      is_enabled:
+                                        type: boolean
+                                      key:
+                                        type: string
+                                      value:
+                                        type: string
+                                    required:
+                                    - desc
+                                    - is_enabled
+                                    - key
+                                    - value
+                                    type: object
+                                  type: array
+                                method:
+                                  description: HTTP(S) Related properties
+                                  type: string
+                                nodes:
+                                  items:
+                                    type: string
+                                  type: array
+                                period:
+                                  format: int64
+                                  type: integer
+                                port:
+                                  description: Target   []string `json:"target"`
+                                  format: int64
+                                  type: integer
+                                port_define:
+                                  description: define which port should be selected
+                                    to check when use port segment
+                                  enum:
+                                  - FIRST
+                                  - LAST
+                                  type: string
+                                protocol:
+                                  description: support HTTP(S)/ TCP/ UDP/ ICMP
+                                  type: string
+                                query_params:
+                                  items:
+                                    description: Params http check params
+                                    properties:
+                                      desc:
+                                        type: string
+                                      is_enabled:
+                                        type: boolean
+                                      key:
+                                        type: string
+                                      value:
+                                        type: string
+                                    required:
+                                    - desc
+                                    - is_enabled
+                                    - key
+                                    - value
+                                    type: object
+                                  type: array
+                                request:
+                                  type: string
+                                request_format:
+                                  type: string
+                                response:
+                                  type: string
+                                response_code:
+                                  type: string
+                                response_format:
+                                  type: string
+                                timeout:
+                                  format: int64
+                                  type: integer
+                                url_list:
+                                  items:
+                                    type: string
+                                  type: array
+                                wait_empty_response:
+                                  type: boolean
+                              required:
+                              - enabled
+                              - nodes
+                              type: object
+                          type: object
+                        path:
+                          type: string
+                      required:
+                      - domain
+                      type: object
+                    type: array
+                  rsStartPort:
+                    type: integer
+                  segmentLength:
+                    type: integer
+                  startIndex:
+                    type: integer
+                  startPort:
+                    type: integer
+                  workloadKind:
+                    type: string
+                  workloadName:
+                    type: string
+                  workloadNamespace:
+                    type: string
+                required:
+                - endIndex
+                - protocol
+                - startIndex
+                - startPort
+                - workloadKind
+                - workloadName
+                - workloadNamespace
+                type: object
+              type: array
+            rules:
+              items:
+                description: IngressRule rule of ingress
+                properties:
+                  certificate:
+                    description: IngressListenerCertificate certificate configs for
+                      listener
+                    properties:
+                      certCaID:
+                        type: string
+                      certID:
+                        type: string
+                      mode:
+                        type: string
+                    type: object
+                  layer7Routes:
+                    items:
+                      description: Layer7Route 7 layer route config
+                      properties:
+                        certificate:
+                          description: IngressListenerCertificate certificate configs
+                            for listener
+                          properties:
+                            certCaID:
+                              type: string
+                            certID:
+                              type: string
+                            mode:
+                              type: string
+                          type: object
+                        domain:
+                          type: string
+                        forwardType:
+                          description: ForwardType Forwarding protocol between load
+                            balancing and backend services
+                          type: string
+                        listenerAttribute:
+                          description: IngressListenerAttribute attribute for listener
+                          properties:
+                            awsAttributes:
+                              description: aws targetGroup attributes, https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_ModifyTargetGroupAttributes.html
+                              items:
+                                description: AWSAttribute define aws target group
+                                  attribute
+                                properties:
+                                  key:
+                                    type: string
+                                  value:
+                                    type: string
+                                type: object
+                              type: array
+                            backendInsecure:
+                              description: BackendInsecure specifies whether to enable
+                                insecure access to the backend.
+                              type: boolean
+                            healthCheck:
+                              description: ListenerHealthCheck health check setting
+                                for listener
+                              properties:
+                                enabled:
+                                  type: boolean
+                                healthCheckPort:
+                                  type: integer
+                                healthCheckProtocol:
+                                  type: string
+                                healthNum:
+                                  type: integer
+                                httpCheckMethod:
+                                  type: string
+                                httpCheckPath:
+                                  type: string
+                                httpCode:
+                                  type: integer
+                                httpCodeValues:
+                                  description: HTTPCodeValues specifies a set of HTTP
+                                    response status codes of health check. You can
+                                    specify multiple values (for example, "200,202")
+                                    or a range of values (for example, "200-299").
+                                    https://pkg.go.dev/github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2@v1.17.0/types#Matcher
+                                  type: string
+                                intervalTime:
+                                  type: integer
+                                timeout:
+                                  type: integer
+                                unHealthNum:
+                                  type: integer
+                              type: object
+                            keepAliveEnable:
+                              type: integer
+                            lbPolicy:
+                              type: string
+                            maxRate:
+                              description: MaxRate specifies the maximum number of
+                                connections per second allowed for every target instance.
+                              type: integer
+                            priority:
+                              description: 声明7层监听器中，rule的优先级(目前只在aws中使用)
+                              type: integer
+                            sessionTime:
+                              type: integer
+                            sessionType:
+                              enum:
+                              - NORMAL
+                              - QUIC_CID
+                              type: string
+                            sniSwitch:
+                              type: integer
+                            uptimeCheck:
+                              description: UptimeCheckConfig 拨测配置
+                              properties:
+                                authorize:
+                                  description: Authorize auth config
+                                  properties:
+                                    auth_config:
+                                      description: AuthConfig auth config
+                                      properties:
+                                        password:
+                                          type: string
+                                        token:
+                                          type: string
+                                        username:
+                                          type: string
+                                      type: object
+                                    auth_type:
+                                      type: string
+                                    insecure_skip_verify:
+                                      type: boolean
+                                  type: object
+                                body:
+                                  description: Body http body
+                                  properties:
+                                    content:
+                                      type: string
+                                    content_type:
+                                      type: string
+                                    data_type:
+                                      type: string
+                                    params:
+                                      items:
+                                        description: Params http check params
+                                        properties:
+                                          desc:
+                                            type: string
+                                          is_enabled:
+                                            type: boolean
+                                          key:
+                                            type: string
+                                          value:
+                                            type: string
+                                        required:
+                                        - desc
+                                        - is_enabled
+                                        - key
+                                        - value
+                                        type: object
+                                      type: array
+                                  type: object
+                                enabled:
+                                  type: boolean
+                                groups:
+                                  items:
+                                    type: string
+                                  type: array
+                                headers:
+                                  items:
+                                    description: Params http check params
+                                    properties:
+                                      desc:
+                                        type: string
+                                      is_enabled:
+                                        type: boolean
+                                      key:
+                                        type: string
+                                      value:
+                                        type: string
+                                    required:
+                                    - desc
+                                    - is_enabled
+                                    - key
+                                    - value
+                                    type: object
+                                  type: array
+                                method:
+                                  description: HTTP(S) Related properties
+                                  type: string
+                                nodes:
+                                  items:
+                                    type: string
+                                  type: array
+                                period:
+                                  format: int64
+                                  type: integer
+                                port:
+                                  description: Target   []string `json:"target"`
+                                  format: int64
+                                  type: integer
+                                port_define:
+                                  description: define which port should be selected
+                                    to check when use port segment
+                                  enum:
+                                  - FIRST
+                                  - LAST
+                                  type: string
+                                protocol:
+                                  description: support HTTP(S)/ TCP/ UDP/ ICMP
+                                  type: string
+                                query_params:
+                                  items:
+                                    description: Params http check params
+                                    properties:
+                                      desc:
+                                        type: string
+                                      is_enabled:
+                                        type: boolean
+                                      key:
+                                        type: string
+                                      value:
+                                        type: string
+                                    required:
+                                    - desc
+                                    - is_enabled
+                                    - key
+                                    - value
+                                    type: object
+                                  type: array
+                                request:
+                                  type: string
+                                request_format:
+                                  type: string
+                                response:
+                                  type: string
+                                response_code:
+                                  type: string
+                                response_format:
+                                  type: string
+                                timeout:
+                                  format: int64
+                                  type: integer
+                                url_list:
+                                  items:
+                                    type: string
+                                  type: array
+                                wait_empty_response:
+                                  type: boolean
+                              required:
+                              - enabled
+                              - nodes
+                              type: object
+                          type: object
+                        path:
+                          type: string
+                        services:
+                          items:
+                            description: ServiceRoute service info
+                            properties:
+                              hostPort:
+                                description: If specified, will use the hostport as
+                                  backend's port
+                                type: boolean
+                              isDirectConnect:
+                                type: boolean
+                              serviceKind:
+                                description: default service
+                                type: string
+                              serviceName:
+                                type: string
+                              serviceNamespace:
+                                type: string
+                              servicePort:
+                                type: integer
+                              subsets:
+                                items:
+                                  description: IngressSubset subset info
+                                  properties:
+                                    labelSelector:
+                                      additionalProperties:
+                                        type: string
+                                      type: object
+                                    weight:
+                                      description: IngressWeight ingress weight struct
+                                      properties:
+                                        value:
+                                          type: integer
+                                      required:
+                                      - value
+                                      type: object
+                                  required:
+                                  - labelSelector
+                                  type: object
+                                type: array
+                              weight:
+                                description: IngressWeight ingress weight struct
+                                properties:
+                                  value:
+                                    type: integer
+                                required:
+                                - value
+                                type: object
+                            required:
+                            - serviceName
+                            - servicePort
+                            type: object
+                          type: array
+                      required:
+                      - domain
+                      type: object
+                    type: array
+                  listenerAttribute:
+                    description: IngressListenerAttribute attribute for listener
+                    properties:
+                      awsAttributes:
+                        description: aws targetGroup attributes, https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_ModifyTargetGroupAttributes.html
+                        items:
+                          description: AWSAttribute define aws target group attribute
+                          properties:
+                            key:
+                              type: string
+                            value:
+                              type: string
+                          type: object
+                        type: array
+                      backendInsecure:
+                        description: BackendInsecure specifies whether to enable insecure
+                          access to the backend.
+                        type: boolean
+                      healthCheck:
+                        description: ListenerHealthCheck health check setting for
+                          listener
+                        properties:
+                          enabled:
+                            type: boolean
+                          healthCheckPort:
+                            type: integer
+                          healthCheckProtocol:
+                            type: string
+                          healthNum:
+                            type: integer
+                          httpCheckMethod:
+                            type: string
+                          httpCheckPath:
+                            type: string
+                          httpCode:
+                            type: integer
+                          httpCodeValues:
+                            description: HTTPCodeValues specifies a set of HTTP response
+                              status codes of health check. You can specify multiple
+                              values (for example, "200,202") or a range of values
+                              (for example, "200-299"). https://pkg.go.dev/github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2@v1.17.0/types#Matcher
+                            type: string
+                          intervalTime:
+                            type: integer
+                          timeout:
+                            type: integer
+                          unHealthNum:
+                            type: integer
+                        type: object
+                      keepAliveEnable:
+                        type: integer
+                      lbPolicy:
+                        type: string
+                      maxRate:
+                        description: MaxRate specifies the maximum number of connections
+                          per second allowed for every target instance.
+                        type: integer
+                      priority:
+                        description: 声明7层监听器中，rule的优先级(目前只在aws中使用)
+                        type: integer
+                      sessionTime:
+                        type: integer
+                      sessionType:
+                        enum:
+                        - NORMAL
+                        - QUIC_CID
+                        type: string
+                      sniSwitch:
+                        type: integer
+                      uptimeCheck:
+                        description: UptimeCheckConfig 拨测配置
+                        properties:
+                          authorize:
+                            description: Authorize auth config
+                            properties:
+                              auth_config:
+                                description: AuthConfig auth config
+                                properties:
+                                  password:
+                                    type: string
+                                  token:
+                                    type: string
+                                  username:
+                                    type: string
+                                type: object
+                              auth_type:
+                                type: string
+                              insecure_skip_verify:
+                                type: boolean
+                            type: object
+                          body:
+                            description: Body http body
+                            properties:
+                              content:
+                                type: string
+                              content_type:
+                                type: string
+                              data_type:
+                                type: string
+                              params:
+                                items:
+                                  description: Params http check params
+                                  properties:
+                                    desc:
+                                      type: string
+                                    is_enabled:
+                                      type: boolean
+                                    key:
+                                      type: string
+                                    value:
+                                      type: string
+                                  required:
+                                  - desc
+                                  - is_enabled
+                                  - key
+                                  - value
+                                  type: object
+                                type: array
+                            type: object
+                          enabled:
+                            type: boolean
+                          groups:
+                            items:
+                              type: string
+                            type: array
+                          headers:
+                            items:
+                              description: Params http check params
+                              properties:
+                                desc:
+                                  type: string
+                                is_enabled:
+                                  type: boolean
+                                key:
+                                  type: string
+                                value:
+                                  type: string
+                              required:
+                              - desc
+                              - is_enabled
+                              - key
+                              - value
+                              type: object
+                            type: array
+                          method:
+                            description: HTTP(S) Related properties
+                            type: string
+                          nodes:
+                            items:
+                              type: string
+                            type: array
+                          period:
+                            format: int64
+                            type: integer
+                          port:
+                            description: Target   []string `json:"target"`
+                            format: int64
+                            type: integer
+                          port_define:
+                            description: define which port should be selected to check
+                              when use port segment
+                            enum:
+                            - FIRST
+                            - LAST
+                            type: string
+                          protocol:
+                            description: support HTTP(S)/ TCP/ UDP/ ICMP
+                            type: string
+                          query_params:
+                            items:
+                              description: Params http check params
+                              properties:
+                                desc:
+                                  type: string
+                                is_enabled:
+                                  type: boolean
+                                key:
+                                  type: string
+                                value:
+                                  type: string
+                              required:
+                              - desc
+                              - is_enabled
+                              - key
+                              - value
+                              type: object
+                            type: array
+                          request:
+                            type: string
+                          request_format:
+                            type: string
+                          response:
+                            type: string
+                          response_code:
+                            type: string
+                          response_format:
+                            type: string
+                          timeout:
+                            format: int64
+                            type: integer
+                          url_list:
+                            items:
+                              type: string
+                            type: array
+                          wait_empty_response:
+                            type: boolean
+                        required:
+                        - enabled
+                        - nodes
+                        type: object
+                    type: object
+                  port:
+                    type: integer
+                  protocol:
+                    type: string
+                  services:
+                    items:
+                      description: ServiceRoute service info
+                      properties:
+                        hostPort:
+                          description: If specified, will use the hostport as backend's
+                            port
+                          type: boolean
+                        isDirectConnect:
+                          type: boolean
+                        serviceKind:
+                          description: default service
+                          type: string
+                        serviceName:
+                          type: string
+                        serviceNamespace:
+                          type: string
+                        servicePort:
+                          type: integer
+                        subsets:
+                          items:
+                            description: IngressSubset subset info
+                            properties:
+                              labelSelector:
+                                additionalProperties:
+                                  type: string
+                                type: object
+                              weight:
+                                description: IngressWeight ingress weight struct
+                                properties:
+                                  value:
+                                    type: integer
+                                required:
+                                - value
+                                type: object
+                            required:
+                            - labelSelector
+                            type: object
+                          type: array
+                        weight:
+                          description: IngressWeight ingress weight struct
+                          properties:
+                            value:
+                              type: integer
+                          required:
+                          - value
+                          type: object
+                      required:
+                      - serviceName
+                      - servicePort
+                      type: object
+                    type: array
+                required:
+                - port
+                - protocol
+                type: object
+              type: array
+          type: object
+        status:
+          description: IngressStatus defines the observed state of Ingress
+          properties:
+            loadbalancers:
+              description: 'INSERT ADDITIONAL STATUS FIELD - define observed state
+                of cluster Important: Run "make" to regenerate code after modifying
+                this file'
+              items:
+                description: IngressLoadBalancer loadbalancer for ingress
+                properties:
+                  awsLBType:
+                    type: string
+                  dnsName:
+                    type: string
+                  ips:
+                    items:
+                      type: string
+                    type: array
+                  loadbalancerID:
+                    type: string
+                  loadbalancerName:
+                    type: string
+                  region:
+                    type: string
+                  scheme:
+                    type: string
+                  type:
+                    type: string
+                type: object
+              type: array
+          type: object
+      type: object
+  version: v1
+  versions:
+  - name: v1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ''
+    plural: ''
+  conditions: []
+  storedVersions: []
+
+{{ end }} 
