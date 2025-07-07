@@ -135,8 +135,7 @@ func (w *WebServer) subRouter() http.Handler {
 
 	r.Get("/favicon.ico", w.embedWebServer.FaviconHandler)
 
-	r.With(metrics.RequestCollect("FeatureFlagsHandler"), middleware.NeedProjectAuthorization).
-		Get("/feature_flags", w.FeatureFlagsHandler)
+	r.With(metrics.RequestCollect("FeatureFlagsHandler")).Get("/feature_flags", w.FeatureFlagsHandler)
 
 	r.With(metrics.RequestCollect("GetCurrentAnnouncements")).Get("/announcements", w.GetCurrentAnnouncements)
 
