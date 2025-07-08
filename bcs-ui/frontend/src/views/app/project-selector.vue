@@ -206,6 +206,12 @@ export default defineComponent({
     };
     // 项目管理
     const handleGotoProjectManage = () => {
+      const { currentRoute } = $router;
+      if (currentRoute.name === 'projectManage') {
+        selectRef.value?.close?.();
+        return;
+      };
+
       if (window.REGION === 'ieod') {
         window.open(`${window.DEVOPS_HOST}/console/pm`);
       } else {
