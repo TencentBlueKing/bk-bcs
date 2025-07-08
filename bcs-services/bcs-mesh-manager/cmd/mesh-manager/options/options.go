@@ -27,12 +27,13 @@ type MeshManagerOptions struct {
 	conf.LogConfig
 	ServerConfig
 	ClientConfig
-	Etcd        *EtcdConfig    `json:"etcd"`
-	Mongo       *MongoConfig   `json:"mongo"`
-	Gateway     *GatewayConfig `json:"gateway"`
-	IAM         IAMConfig      `json:"iam"`
-	Auth        AuthConfig     `json:"auth"`
-	IstioConfig *IstioConfig   `json:"istio"`
+	Etcd        *EtcdConfig       `json:"etcd"`
+	Mongo       *MongoConfig      `json:"mongo"`
+	Gateway     *GatewayConfig    `json:"gateway"`
+	IAM         IAMConfig         `json:"iam"`
+	Auth        AuthConfig        `json:"auth"`
+	IstioConfig *IstioConfig      `json:"istio"`
+	Monitoring  *MonitoringConfig `json:"monitoring"`
 }
 
 // Parse parse
@@ -150,6 +151,12 @@ type AuthConfig struct {
 	// client 类型用户权限，使用 json 格式，key 为 client 名称，values 为拥有的权限，'*' 表示所有
 	// 如：`{"admin": ["*"], "client_a": ["MeshManager.ListTasks"]}`
 	ClientPermissions string `json:"clientPermissions"`
+}
+
+// MonitoringConfig monitoring configuration
+type MonitoringConfig struct {
+	Domain   string `json:"domain"`
+	DashName string `json:"dashName"`
 }
 
 // loadConfigFile loading json config file

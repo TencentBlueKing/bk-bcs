@@ -68,6 +68,8 @@ func (l *ListIstioAction) Handle(
 	}
 	l.setResp(common.SuccessCode, "get list success", result)
 
+	l.resp.MonitoringLink = utils.GenerateMonitoringLink(ctx, l.req.ProjectCode)
+
 	// 设置成功响应
 	l.resp.WebAnnotations = l.getWebAnnotations(ctx)
 	blog.Infof("list mesh successfully, projectCode: %s", l.req.ProjectCode)

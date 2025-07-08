@@ -564,6 +564,7 @@ message ListIstioResponse {
   string requestID = 3;               // 请求ID
   WebAnnotations web_annotations = 4; // 权限信息
   ListIstioData data = 5;             // 响应数据
+  string monitoringLink = 6;          // 监控链接
 }
 
 // istio列表数据

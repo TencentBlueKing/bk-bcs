@@ -3148,6 +3148,8 @@ func (m *ListIstioResponse) validate(all bool) error {
 		}
 	}
 
+	// no validation rules for MonitoringLink
+
 	if len(errors) > 0 {
 		return ListIstioResponseMultiError(errors)
 	}
