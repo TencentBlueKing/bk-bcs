@@ -749,6 +749,7 @@ export default defineComponent({
       const res = await userPermsByAction({
         $actionId: 'namespace_scoped_delete',
         perm_ctx: {
+          resource_type: 'namespace',
           cluster_id: clusterId.value,
           namespace: props.namespace,
           project_id: curProject.value?.project_id,
