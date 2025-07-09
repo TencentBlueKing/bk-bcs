@@ -347,7 +347,9 @@
                         keyvalue = paraString[i].split('=')
                         key = keyvalue[0]
                         value = keyvalue[1]
-                        obj[key] = value
+                        if (key !== '__proto__' && key !== 'constructor' && key !== 'prototype') {
+                            obj[key] = value
+                        }
                     }
                     return obj
                 },
@@ -380,6 +382,7 @@
                 watchMessage() {
                     const self = this
                     window.addEventListener('message', function (event) {
+                        if (event.origin !== window.location.origin) return
                         const data = event.data
                         if (data.type === 'shortcut' && data.key === 'showDropdown') {
                             self.showDropdown()

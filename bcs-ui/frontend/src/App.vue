@@ -86,7 +86,7 @@ bus.$on('show-apply-perm-modal', (data) => {
 });
 // 关闭登录弹窗
 window.addEventListener('message', (event) => {
-  if (event.data === 'closeLoginModal') {
+  if (event.data === 'closeLoginModal' && event.origin === window.location.origin) {
     window.location.reload();
   }
 });
