@@ -83,6 +83,13 @@ type MongoConfig struct {
 	MinPoolSize    uint   `json:"minpoolsize"`
 }
 
+type RedisConfig struct {
+	Address    string `json:"address"`
+	Password   string `json:"password"`
+	Db         int    `json:"db"`
+	MasterName string `json:"masterName"`
+}
+
 // BrokerConfig option for dispatch task broker
 type BrokerConfig struct {
 	QueueAddress string `json:"address"`
@@ -334,6 +341,7 @@ type ClusterManagerOptions struct {
 	Encrypt            encryptv2.Config      `json:"encrypt"`
 	Daemon             DaemonConfig          `json:"daemon"`
 	CommonConfig       CommonConfig          `json:"commonConfig"`
+	Redis              RedisConfig           `json:"redis"`
 	ServerConfig
 	ClientConfig
 }

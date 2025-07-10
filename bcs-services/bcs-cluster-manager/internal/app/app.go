@@ -291,7 +291,7 @@ func (cm *ClusterManager) initTaskServer() error {
 	// get taskserver and init
 	taskMgr := taskserver.GetTaskServer()
 
-	if err := taskMgr.Init(&cm.opt.Broker, cm.mongoOptions); err != nil {
+	if err := taskMgr.Init(&cm.opt.Broker, &cm.opt.Redis, cm.mongoOptions); err != nil {
 		blog.Errorf("cluster-manager init task server failed, %s", err.Error())
 		return err
 	}
