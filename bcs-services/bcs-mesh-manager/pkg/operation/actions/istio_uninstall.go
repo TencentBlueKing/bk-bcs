@@ -162,13 +162,26 @@ func (i *IstioUninstallAction) Done(err error) {
 
 // uninstallIstio 卸载istio
 func (i *IstioUninstallAction) uninstallIstio(ctx context.Context, clusterID string) error {
+	// 获取Release名称
+	baseReleaseName, err := i.Model.GetReleaseName(ctx, i.MeshID, clusterID, common.ComponentIstioBase)
+	if err != nil {
+		blog.Errorf("[%s]get base release name failed, clusterID: %s, err: %s", i.MeshID, clusterID, err)
+		return fmt.Errorf("get base release name failed: %s", err)
+	}
+
+	istiodReleaseName, err := i.Model.GetReleaseName(ctx, i.MeshID, clusterID, common.ComponentIstiod)
+	if err != nil {
+		blog.Errorf("[%s]get istiod release name failed, clusterID: %s, err: %s", i.MeshID, clusterID, err)
+		return fmt.Errorf("get istiod release name failed: %s", err)
+	}
+
 	// 删除istio base
-	if err := i.uninstallIstioComponent(ctx, clusterID, common.IstioInstallBaseName); err != nil {
+	if err := i.uninstallIstioComponent(ctx, clusterID, *baseReleaseName); err != nil {
 		return fmt.Errorf("uninstall istio base failed: %s", err)
 	}
 
 	// 删除istiod
-	if err := i.uninstallIstioComponent(ctx, clusterID, common.IstioInstallIstiodName); err != nil {
+	if err := i.uninstallIstioComponent(ctx, clusterID, *istiodReleaseName); err != nil {
 		return fmt.Errorf("uninstall istiod failed: %s", err)
 	}
 

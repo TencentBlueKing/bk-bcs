@@ -15,18 +15,31 @@ package istio
 import (
 	"context"
 	"fmt"
+	"net/url"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/cmd/mesh-manager/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/auth"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/clients/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/store/entity"
 	storeutils "github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/store/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/utils"
 	meshmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/proto/bcs-mesh-manager"
+)
+
+const (
+	// GrafanaPath Grafana路径
+	GrafanaPath = "/grafana/dashboard"
+	// HTTPSProtocol HTTPS协议
+	HTTPSProtocol = "https://"
+	// BizIDParam bizId参数名
+	BizIDParam = "bizId"
+	// DashNameParam dashName参数名
+	DashNameParam = "dashName"
 )
 
 // ListIstioAction action for list istio
@@ -68,7 +81,7 @@ func (l *ListIstioAction) Handle(
 	}
 	l.setResp(common.SuccessCode, "get list success", result)
 
-	l.resp.MonitoringLink = utils.GenerateMonitoringLink(ctx, l.req.ProjectCode)
+	l.setMonitoringLinksForItems(ctx)
 
 	// 设置成功响应
 	l.resp.WebAnnotations = l.getWebAnnotations(ctx)
@@ -142,6 +155,71 @@ func mergeClusters(primaryClusters, remoteClusters []string) []string {
 	allClusters = append(allClusters, primaryClusters...)
 	allClusters = append(allClusters, remoteClusters...)
 	return allClusters
+}
+
+// generateMonitoringLink 生成监控链接
+// 格式: https://xxx.com/grafana/dashboard?bizId=xxx&dashName=xxx&clusterId=xxx
+func generateMonitoringLink(ctx context.Context, projectCode, clusterID string) string {
+	// 从GlobalOptions获取监控配置
+	if options.GlobalOptions == nil || options.GlobalOptions.Monitoring == nil {
+		blog.Errorf("GenerateMonitoringLink: GlobalOptions or Monitoring config is nil")
+		return ""
+	}
+
+	monitoringConfig := options.GlobalOptions.Monitoring
+	if monitoringConfig.Domain == "" {
+		blog.Errorf("GenerateMonitoringLink: monitoring domain is empty")
+		return ""
+	}
+
+	projectInfo, err := project.GetProjectByCode(ctx, projectCode)
+	if err != nil {
+		blog.Errorf("GenerateMonitoringLink: failed to get project info for projectCode %s, error: %s",
+			projectCode, err.Error())
+		return ""
+	}
+
+	if projectInfo.BusinessID == "" {
+		blog.Errorf("GenerateMonitoringLink: businessID is empty for projectCode %s", projectCode)
+		return ""
+	}
+
+	baseURL := HTTPSProtocol + monitoringConfig.Domain + GrafanaPath
+	queryParams := fmt.Sprintf("%s=%s", BizIDParam, projectInfo.BusinessID)
+
+	if monitoringConfig.DashName != "" {
+		encodedDashName := url.PathEscape(monitoringConfig.DashName)
+		queryParams += fmt.Sprintf("&%s=%s", DashNameParam, encodedDashName)
+	}
+
+	// 添加集群ID参数
+	if clusterID != "" {
+		queryParams += fmt.Sprintf("&clusterId=%s", clusterID)
+	}
+
+	monitoringURL := fmt.Sprintf("%s?%s", baseURL, queryParams)
+
+	return monitoringURL
+}
+
+func (l *ListIstioAction) setMonitoringLinksForItems(ctx context.Context) {
+	if l.resp.Data == nil || len(l.resp.Data.Items) == 0 {
+		return
+	}
+
+	for _, item := range l.resp.Data.Items {
+		if item == nil {
+			continue
+		}
+
+		// 只使用主集群的第一个集群id作为监控链接的参数
+		var clusterID string
+		if len(item.PrimaryClusters) > 0 {
+			clusterID = item.PrimaryClusters[0]
+		}
+
+		item.MonitoringLink = generateMonitoringLink(ctx, l.req.ProjectCode, clusterID)
+	}
 }
 
 // list implements the business logic for listing meshes

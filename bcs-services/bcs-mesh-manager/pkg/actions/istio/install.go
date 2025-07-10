@@ -98,9 +98,7 @@ func (i *InstallIstioAction) Validate() error {
 	}
 
 	// 检查主从集群版本兼容性
-	allClusters := make([]string, 0, len(i.req.PrimaryClusters)+len(i.req.RemoteClusters))
-	allClusters = append(allClusters, i.req.PrimaryClusters...)
-	allClusters = append(allClusters, i.req.RemoteClusters...)
+	allClusters := utils.MergeSlices(i.req.PrimaryClusters, i.req.RemoteClusters)
 	if err := utils.ValidateClusterVersion(
 		context.TODO(),
 		i.istioConfig,
@@ -172,10 +170,14 @@ func (i *InstallIstioAction) install(ctx context.Context) error {
 	meshIstio := &entity.MeshIstio{}
 	meshIstio.TransferFromProto(i.req)
 
+	// 构建ReleaseNames map
+	releaseNames := i.buildReleaseNames()
+
 	meshID := utils.GenMeshID()
 	networkID := utils.GenNetworkID()
 	meshIstio.MeshID = meshID
 	meshIstio.NetworkID = networkID
+	meshIstio.ReleaseNames = releaseNames
 
 	chartVersion, err := i.getIstioChartVersion(i.req.Version.GetValue())
 	if err != nil {
@@ -244,4 +246,20 @@ func (i *InstallIstioAction) getIstioChartVersion(version string) (string, error
 		return "", errors.New("version not found")
 	}
 	return i.istioConfig.IstioVersions[version].ChartVersion, nil
+}
+
+// buildReleaseNames 构建ReleaseNames map
+func (i *InstallIstioAction) buildReleaseNames() map[string]map[string]string {
+	releaseNames := make(map[string]map[string]string)
+
+	allClusters := utils.MergeSlices(i.req.PrimaryClusters, i.req.RemoteClusters)
+
+	for _, clusterID := range allClusters {
+		releaseNames[clusterID] = map[string]string{
+			common.ComponentIstioBase: common.IstioInstallBaseName,
+			common.ComponentIstiod:    common.IstioInstallIstiodName,
+		}
+	}
+
+	return releaseNames
 }

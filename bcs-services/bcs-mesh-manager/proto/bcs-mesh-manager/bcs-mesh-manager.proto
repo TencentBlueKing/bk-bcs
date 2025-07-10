@@ -306,7 +306,8 @@ message ObservabilityConfig {
   MetricsConfig metricsConfig = 1
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "metricsConfig",
-        description : "指标采集配置"
+        description : "指标采集配置，用于控制Istio服务网格的Prometheus监控功能，包括控制面和数据面的指标采集"
+                      "该配置不写入values.yaml，而是用于控制是否部署ServiceMonitor和PodMonitor资源"
       } ];
   LogCollectorConfig logCollectorConfig = 2
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
@@ -442,15 +443,20 @@ message TracingConfig {
 
 // 指标采集配置
 message MetricsConfig {
-  google.protobuf.BoolValue controlPlaneMetricsEnabled = 1
+  google.protobuf.BoolValue metricsEnabled = 1
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "metricsEnabled",
+        description : "指标采集总开关"
+      } ];
+  google.protobuf.BoolValue controlPlaneMetricsEnabled = 2
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "controlPlaneMetricsEnabled",
-        description : "控制面指标采集开关"
+        description : "控制面指标采集开关，启用时会部署ServiceMonitor监控istiod等控制面组件的指标，包括pilot、galley、citadel等组件的性能指标"
       } ];
-  google.protobuf.BoolValue dataPlaneMetricsEnabled = 2
+  google.protobuf.BoolValue dataPlaneMetricsEnabled = 3
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "dataPlaneMetricsEnabled",
-        description : "数据面指标采集开关"
+        description : "数据面指标采集开关，启用时会部署PodMonitor监控sidecar等数据面组件的指标，包括proxy、应用容器的网络流量、延迟等指标"
       } ];
 }
 
@@ -564,7 +570,6 @@ message ListIstioResponse {
   string requestID = 3;               // 请求ID
   WebAnnotations web_annotations = 4; // 权限信息
   ListIstioData data = 5;             // 响应数据
-  string monitoringLink = 6;          // 监控链接
 }
 
 // istio列表数据
@@ -643,6 +648,11 @@ message IstioListItem {
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "remoteClusters",
         description : "远程集群列表"
+      } ];
+  string monitoringLink = 19
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "monitoringLink",
+        description : "监测链接"
       } ];
 
 }

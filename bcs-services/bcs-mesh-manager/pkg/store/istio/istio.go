@@ -232,3 +232,36 @@ func (m *ModelMeshIstio) Get(ctx context.Context, cond *operator.Condition) (*en
 
 	return mesh, nil
 }
+
+// GetReleaseName gets release name for a specific cluster and component
+func (m *ModelMeshIstio) GetReleaseName(ctx context.Context, meshID, clusterID, componentType string) (*string, error) {
+	// 从数据库查询存储的Release名称
+	meshIstio, err := m.Get(ctx, operator.NewLeafCondition(operator.Eq, operator.M{
+		entity.FieldKeyMeshID: meshID,
+	}))
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to get mesh from DB, meshID: %s, err: %s", meshID, err)
+	}
+
+	if meshIstio == nil {
+		return nil, fmt.Errorf("mesh not found, meshID: %s", meshID)
+	}
+
+	if meshIstio.ReleaseNames == nil {
+		return nil, fmt.Errorf("release names mapping is nil for meshID: %s", meshID)
+	}
+
+	mapping, exists := meshIstio.ReleaseNames[clusterID]
+	if !exists {
+		return nil, fmt.Errorf("cluster %s not found in release names mapping for meshID: %s", clusterID, meshID)
+	}
+
+	releaseName, ok := mapping[componentType]
+	if !ok {
+		return nil, fmt.Errorf("component %s not found in release names mapping for meshID: %s",
+			componentType, meshID)
+	}
+
+	return &releaseName, nil
+}

@@ -2645,6 +2645,35 @@ func (m *MetricsConfig) validate(all bool) error {
 	var errors []error
 
 	if all {
+		switch v := interface{}(m.GetMetricsEnabled()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, MetricsConfigValidationError{
+					field:  "MetricsEnabled",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, MetricsConfigValidationError{
+					field:  "MetricsEnabled",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetMetricsEnabled()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return MetricsConfigValidationError{
+				field:  "MetricsEnabled",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
 		switch v := interface{}(m.GetControlPlaneMetricsEnabled()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
@@ -3148,8 +3177,6 @@ func (m *ListIstioResponse) validate(all bool) error {
 		}
 	}
 
-	// no validation rules for MonitoringLink
-
 	if len(errors) > 0 {
 		return ListIstioResponseMultiError(errors)
 	}
@@ -3405,6 +3432,8 @@ func (m *IstioListItem) validate(all bool) error {
 	// no validation rules for Name
 
 	// no validation rules for Version
+
+	// no validation rules for MonitoringLink
 
 	if len(errors) > 0 {
 		return IstioListItemMultiError(errors)

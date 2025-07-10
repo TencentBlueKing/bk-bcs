@@ -99,17 +99,9 @@ func MergeValues(defaultValues, customValues string) (string, error) {
 		return "", err
 	}
 
-	// 合并之前删除defaultValuesMap中本次需要移除的字段
-	processFieldKey(defaultValuesMap, customValuesMap)
-
 	// 递归合并 customValuesMap 到 defaultValuesMap，customValuesMap 字段覆盖 defaultValuesMap
 	if err := mergo.Merge(&defaultValuesMap, customValuesMap, mergo.WithOverride); err != nil {
 		return "", err
-	}
-
-	// 删除 logCollectorConfigEnabled 字段
-	if meshConfig, ok := defaultValuesMap[common.FieldKeyMeshConfig]; ok {
-		deleteMapKey(meshConfig, common.FieldKeyLogCollectorConfigEnabled)
 	}
 
 	merged, err := yaml.Marshal(defaultValuesMap)
@@ -410,13 +402,11 @@ func GenIstiodValuesByObservability(
 	if observabilityConfig == nil {
 		return nil
 	}
+
 	if observabilityConfig.LogCollectorConfig != nil {
 		if installValues.MeshConfig == nil {
 			installValues.MeshConfig = &common.IstiodMeshConfig{}
 		}
-		// 设置日志采集配置启用状态标记
-		installValues.MeshConfig.LogCollectorConfigEnabled =
-			pointer.Bool(observabilityConfig.LogCollectorConfig.Enabled.GetValue())
 
 		// 日志采集配置，如果启用则配置，否则不设置相关字段
 		if observabilityConfig.LogCollectorConfig.Enabled.GetValue() {
@@ -552,7 +542,6 @@ func GenIstiodValuesByHighAvailability(
 			TargetAverageUtilization: pointer.Int32(highAvailability.TargetCPUAverageUtilizationPercent.GetValue()),
 		}
 	} else {
-		// 当禁用时，设置为false，在processFieldDeletion中处理字段删除
 		installValues.Pilot.AutoscaleEnabled = pointer.Bool(false)
 	}
 

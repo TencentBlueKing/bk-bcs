@@ -165,7 +165,7 @@ func getClustersFromContext(ctx context.Context) ([]string, error) {
 		return nil, fmt.Errorf("primaryClusters not found in context")
 	}
 
-	return mergeClusters(primaryClusters, remoteClusters), nil
+	return utils.MergeSlices(primaryClusters, remoteClusters), nil
 }
 
 // getClustersFromMesh 从网格信息获取集群列表
@@ -180,15 +180,7 @@ func getClustersFromMesh(ctx context.Context) ([]string, error) {
 		return nil, fmt.Errorf("failed to get mesh by ID %s: %w", meshID, err)
 	}
 
-	return mergeClusters(mesh.PrimaryClusters, mesh.RemoteClusters), nil
-}
-
-// mergeClusters 合并主集群和远程集群
-func mergeClusters(primaryClusters, remoteClusters []string) []string {
-	allClusters := make([]string, 0, len(primaryClusters)+len(remoteClusters))
-	allClusters = append(allClusters, primaryClusters...)
-	allClusters = append(allClusters, remoteClusters...)
-	return allClusters
+	return utils.MergeSlices(mesh.PrimaryClusters, mesh.RemoteClusters), nil
 }
 
 // checkClustersPermission 检查集群权限的公共逻辑

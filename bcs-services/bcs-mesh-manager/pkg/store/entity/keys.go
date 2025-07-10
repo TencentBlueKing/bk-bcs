@@ -65,6 +65,7 @@ const (
 	FieldKeyLogCollectorConfig         = "logCollectorConfig"
 	FieldKeyTracingConfig              = "tracingConfig"
 	FieldKeyTraceSamplingPercent       = "traceSamplingPercent"
+	FieldKeyMetricsEnabled             = "metricsEnabled"
 	FieldKeyControlPlaneMetricsEnabled = "controlPlaneMetricsEnabled"
 	FieldKeyDataPlaneMetricsEnabled    = "dataPlaneMetricsEnabled"
 
@@ -81,6 +82,11 @@ const (
 	FieldKeyDefaultValue    = "defaultValue"
 	FieldKeyAvailableValues = "availableValues"
 	FieldKeySupportVersions = "supportVersions"
+
+	// ===== 集群自定义Release名称 =====
+	FieldKeyCustomReleaseNames = "customReleaseNames"
+	// ===== 集群Release名称映射 =====
+	FieldKeyReleaseNames = "releaseNames"
 )
 
 // Dot notation field keys for granular updates
@@ -109,6 +115,7 @@ const (
 	DotKeyHADedicatedNodeNodeLabels = "highAvailability.dedicatedNode.nodeLabels"
 
 	// ===== 可观测性指标配置点操作符 =====
+	DotKeyObsMetricsEnabled             = "observabilityConfig.metricsConfig.metricsEnabled"
 	DotKeyObsMetricsControlPlaneEnabled = "observabilityConfig.metricsConfig.controlPlaneMetricsEnabled"
 	DotKeyObsMetricsDataPlaneEnabled    = "observabilityConfig.metricsConfig.dataPlaneMetricsEnabled"
 

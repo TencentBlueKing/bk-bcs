@@ -157,7 +157,7 @@
           },
           {
             "name": "status",
-            "description": "status. 网格状态，可选过滤条件[running：运行中；installing：安装中；installed：安装完成；failed：安装失败；uninstalling：卸载中；uninstalled：卸载完成；uninstalling-failed：卸载失败；updating：配置更新中；update-failed：配置更新失败]",
+            "description": "status. 网格状态，可选过滤条件[running：运行中；installing：安装中；installed：安装完成install-failed：安装失败；uninstalling：卸载中；uninstalling：卸载完成；uninstalleduninstalling-failed：卸载失败；updating：配置更新中；update-update-failed：配置更新失败]",
             "in": "query",
             "required": false,
             "type": "string"
@@ -790,6 +790,11 @@
           },
           "description": "远程集群列表",
           "title": "remoteClusters"
+        },
+        "monitoringLink": {
+          "type": "string",
+          "description": "监测链接",
+          "title": "monitoringLink"
         }
       },
       "description": "istio列表项",
@@ -1025,14 +1030,19 @@
     "meshmanagerMetricsConfig": {
       "type": "object",
       "properties": {
+        "metricsEnabled": {
+          "type": "boolean",
+          "description": "指标采集总开关",
+          "title": "metricsEnabled"
+        },
         "controlPlaneMetricsEnabled": {
           "type": "boolean",
-          "description": "控制面指标采集开关",
+          "description": "控制面指标采集开关，启用时会部署ServiceMonitor监控istiod等控制面组件的指标，包括pilot、galley、citadel等组件的性能指标",
           "title": "controlPlaneMetricsEnabled"
         },
         "dataPlaneMetricsEnabled": {
           "type": "boolean",
-          "description": "数据面指标采集开关",
+          "description": "数据面指标采集开关，启用时会部署PodMonitor监控sidecar等数据面组件的指标，包括proxy、应用容器的网络流量、延迟等指标",
           "title": "dataPlaneMetricsEnabled"
         }
       },
@@ -1043,7 +1053,7 @@
       "properties": {
         "metricsConfig": {
           "$ref": "#/definitions/meshmanagerMetricsConfig",
-          "description": "指标采集配置",
+          "description": "指标采集配置，用于控制Istio服务网格的Prometheus监控功能，包括控制面和数据面的指标采集该配置不写入values.yaml，而是用于控制是否部署ServiceMonitor和PodMonitor资源",
           "title": "metricsConfig"
         },
         "logCollectorConfig": {

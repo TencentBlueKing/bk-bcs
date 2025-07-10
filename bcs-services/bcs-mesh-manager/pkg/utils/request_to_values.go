@@ -33,32 +33,24 @@ func ConvertRequestToValues(istioVersion string, req *meshmanager.IstioRequest) 
 	buildBasicConfig(req, installValues)
 
 	// 构建Sidecar资源配置
-	if req.SidecarResourceConfig != nil {
-		if err := GenIstiodValuesBySidecarResource(req.SidecarResourceConfig, installValues); err != nil {
-			blog.Warnf("failed to build sidecar resource config: %v", err)
-			return nil, err
-		}
+	if err := GenIstiodValuesBySidecarResource(req.SidecarResourceConfig, installValues); err != nil {
+		blog.Warnf("failed to build sidecar resource config: %v", err)
+		return nil, err
 	}
 
 	// 构建高可用配置
-	if req.HighAvailability != nil {
-		if err := GenIstiodValuesByHighAvailability(req.HighAvailability, installValues); err != nil {
-			blog.Warnf("failed to build high availability config: %v", err)
-			return nil, err
-		}
+	if err := GenIstiodValuesByHighAvailability(req.HighAvailability, installValues); err != nil {
+		blog.Warnf("failed to build high availability config: %v", err)
+		return nil, err
 	}
 
 	// 构建功能特性配置
-	if req.FeatureConfigs != nil {
-		GenIstiodValuesByFeature(req.FeatureConfigs, installValues)
-	}
+	GenIstiodValuesByFeature(req.FeatureConfigs, installValues)
 
 	// 构建可观测性配置
-	if req.ObservabilityConfig != nil {
-		if err := GenIstiodValuesByObservability(istioVersion, req.ObservabilityConfig, installValues); err != nil {
-			blog.Warnf("failed to build observability config: %v", err)
-			return nil, err
-		}
+	if err := GenIstiodValuesByObservability(istioVersion, req.ObservabilityConfig, installValues); err != nil {
+		blog.Warnf("failed to build observability config: %v", err)
+		return nil, err
 	}
 
 	return installValues, nil

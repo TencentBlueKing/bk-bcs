@@ -20,6 +20,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	pointer "k8s.io/utils/pointer"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/cmd/mesh-manager/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/common"
@@ -123,17 +124,18 @@ func (u *UpdateIstioAction) update(ctx context.Context) error {
 		blog.Errorf("update mesh status failed, meshID: %s, err: %s", u.req.MeshID.GetValue(), err)
 		return err
 	}
-	// 获取更新的字段
+	// 构建mongodb的更新字段
 	updateFields := u.buildUpdateFields(u.req)
-	blog.Infof("update fields: %+v for meshID: %s", updateFields, u.req.MeshID.GetValue())
 
-	// 构建更新配置
+	// 构建values.yaml更新配置，用于更新values.yaml
 	updateValues, err := utils.ConvertRequestToValues(istio.Version, u.req)
 	if err != nil {
 		blog.Errorf("convert request to values failed, meshID: %s, err: %s", u.req.MeshID.GetValue(), err)
 		return err
 	}
-	blog.Infof("update values: %+v for meshID: %s", updateValues, u.req.MeshID.GetValue())
+
+	// 提取本次更新istio时的可选配置，当配置关闭时需要移除values.yaml中的对应字段
+	updateValuesOptions := u.updateValuesOptions(u.req)
 
 	// 异步更新istio
 	action := actions.NewIstioUpdateAction(
@@ -149,6 +151,7 @@ func (u *UpdateIstioAction) update(ctx context.Context) error {
 			UpdateFields:        updateFields,
 			UpdateValues:        updateValues,
 			ObservabilityConfig: u.req.ObservabilityConfig,
+			UpdateValuesOptions: updateValuesOptions,
 			Version:             istio.Version,
 		},
 	)
@@ -159,6 +162,38 @@ func (u *UpdateIstioAction) update(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+// buildProcessFieldKeyOptions 构建 ProcessFieldKeyOptions
+func (u *UpdateIstioAction) updateValuesOptions(req *meshmanager.IstioRequest) *utils.UpdateValuesOptions {
+	options := &utils.UpdateValuesOptions{}
+
+	// 从 HighAvailability 中提取 AutoscaleEnabled
+	if req.HighAvailability != nil && req.HighAvailability.AutoscaleEnabled != nil {
+		options.AutoscaleEnabled = pointer.Bool(req.HighAvailability.AutoscaleEnabled.GetValue())
+	}
+
+	// 从 HighAvailability.DedicatedNode 中提取 DedicatedNodeEnabled
+	if req.HighAvailability != nil && req.HighAvailability.DedicatedNode != nil {
+		if req.HighAvailability.DedicatedNode.Enabled != nil {
+			options.DedicatedNodeEnabled = pointer.Bool(req.HighAvailability.DedicatedNode.Enabled.GetValue())
+		}
+	}
+
+	// 从 ObservabilityConfig 中提取配置
+	if req.ObservabilityConfig != nil {
+		// 从 LogCollectorConfig 中提取 LogCollectorConfigEnabled
+		if req.ObservabilityConfig.LogCollectorConfig != nil && req.ObservabilityConfig.LogCollectorConfig.Enabled != nil {
+			options.LogCollectorConfigEnabled = pointer.Bool(req.ObservabilityConfig.LogCollectorConfig.Enabled.GetValue())
+		}
+
+		// 从 TracingConfig 中提取 EnableTracing
+		if req.ObservabilityConfig.TracingConfig != nil && req.ObservabilityConfig.TracingConfig.Enabled != nil {
+			options.EnableTracing = pointer.Bool(req.ObservabilityConfig.TracingConfig.Enabled.GetValue())
+		}
+	}
+
+	return options
 }
 
 // 构建更新字段

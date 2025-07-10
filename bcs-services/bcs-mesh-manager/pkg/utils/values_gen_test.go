@@ -571,75 +571,6 @@ func TestGenIstiodValuesByComponents(t *testing.T) {
 		}
 	})
 
-	t.Run("TestProcessFieldDeletion", func(t *testing.T) {
-		// 创建测试用的 defaultValuesMap，包含 pilot 相关字段
-		defaultValuesMap := map[string]interface{}{
-			"pilot": map[string]interface{}{
-				"autoscaleEnabled": true,
-				"autoscaleMin":     3,
-				"autoscaleMax":     6,
-				"cpu": map[string]interface{}{
-					"targetAverageUtilization": 80,
-				},
-				"replicaCount": 4,
-				"resources": map[string]interface{}{
-					"requests": map[string]interface{}{
-						"cpu":    "600m",
-						"memory": "512Mi",
-					},
-					"limits": map[string]interface{}{
-						"cpu":    "1000m",
-						"memory": "1Gi",
-					},
-				},
-			},
-			"global": map[string]interface{}{
-				"externalIstiod": true,
-			},
-		}
-
-		// 创建测试用的 customValuesMap，autoscaleEnabled 为 false
-		customValuesMap := map[string]interface{}{
-			"pilot": map[string]interface{}{
-				"autoscaleEnabled": false,
-				"replicaCount":     4,
-			},
-		}
-
-		// 调用 processFieldKey 函数
-		processFieldKey(defaultValuesMap, customValuesMap)
-
-		// 验证结果
-		pilotConfig, ok := defaultValuesMap["pilot"].(map[string]interface{})
-		if !ok {
-			t.Logf("pilot config type assertion failed, actual type: %T", defaultValuesMap["pilot"])
-			t.Logf("pilot config value: %+v", defaultValuesMap["pilot"])
-			t.Fatal("pilot config not found in defaultValuesMap")
-		}
-
-		t.Logf("Pilot config: %+v", pilotConfig)
-
-		// 验证 autoscaleEnabled 字段应该保留（因为这是用户设置的）
-		if _, exists := pilotConfig["autoscaleEnabled"]; !exists {
-			t.Error("autoscaleEnabled should be preserved as it's user-specified")
-		}
-
-		// 验证相关字段应该被删除
-		for _, k := range []string{"autoscaleMin", "autoscaleMax", "cpu"} {
-			if _, exists := pilotConfig[k]; exists {
-				t.Errorf("%s should be deleted but still exists", k)
-			}
-		}
-
-		// 验证其他字段应该保留
-		for _, k := range []string{"replicaCount", "resources"} {
-			if _, exists := pilotConfig[k]; !exists {
-				t.Errorf("%s should be preserved but was deleted", k)
-			}
-		}
-
-		t.Logf("Test passed! defaultValuesMap: %+v", defaultValuesMap)
-	})
 }
 
 func TestGetConfigChartValues(t *testing.T) {
@@ -755,10 +686,11 @@ global:
 		t.Error("autoscaleEnabled should be preserved as it's user-specified")
 	}
 
-	// 验证相关字段应该被删除
+	// 验证相关字段应该保留（MergeValues 只是合并，不处理字段删除逻辑）
+	// 字段删除逻辑应该在 actions 层通过 ProcessFieldKey 来处理
 	for _, k := range []string{"autoscaleMin", "autoscaleMax", "cpu"} {
-		if _, exists := pilotConfig[k]; exists {
-			t.Errorf("%s should be deleted but still exists", k)
+		if _, exists := pilotConfig[k]; !exists {
+			t.Errorf("%s should be preserved by MergeValues (field deletion is handled by ProcessFieldKey)", k)
 		}
 	}
 
@@ -860,328 +792,83 @@ global:
 	t.Logf("Test passed! Result: %s", result)
 }
 
-// TestFieldProcessor 测试 field_processor.go 中的字段处理功能
-func TestFieldProcessor(t *testing.T) {
-	t.Run("TestPilotDedicatedNodeConfig", func(t *testing.T) {
-		// 测试专属节点配置的启用和禁用
-		defaultValuesMap := map[string]interface{}{
-			"pilot": map[string]interface{}{
-				"nodeSelector": map[string]interface{}{
-					"node-type": "istio-control",
-					"zone":      "az1",
-				},
-				"tolerations": []interface{}{
-					map[string]interface{}{
-						"operator": "Exists",
-					},
-				},
-			},
+func TestMapOperations(t *testing.T) {
+	t.Run("TestGetMapValue", func(t *testing.T) {
+		// 测试 map[string]interface{} 类型
+		stringMap := map[string]interface{}{
+			"key1": "value1",
+			"key2": 123,
 		}
 
-		// 测试禁用专属节点
-		customValuesMap := map[string]interface{}{
-			"pilot": map[string]interface{}{
-				"dedicatedNode": map[string]interface{}{
-					"enabled": false,
-				},
-			},
+		if val, exists := getMapValue(stringMap, "key1"); !exists || val != "value1" {
+			t.Error("getMapValue failed for string key")
 		}
 
-		processFieldKey(defaultValuesMap, customValuesMap)
-
-		pilotConfig := defaultValuesMap["pilot"].(map[string]interface{})
-
-		// 验证专属节点相关字段被删除
-		if _, exists := pilotConfig["nodeSelector"]; exists {
-			t.Error("nodeSelector should be deleted when dedicatedNode is disabled")
-		}
-		if _, exists := pilotConfig["tolerations"]; exists {
-			t.Error("tolerations should be deleted when dedicatedNode is disabled")
+		if val, exists := getMapValue(stringMap, "key2"); !exists || val != 123 {
+			t.Error("getMapValue failed for numeric value")
 		}
 
-		// 测试启用专属节点
-		defaultValuesMap2 := map[string]interface{}{
-			"pilot": map[string]interface{}{},
+		if _, exists := getMapValue(stringMap, "nonexistent"); exists {
+			t.Error("getMapValue should return false for nonexistent key")
 		}
 
-		customValuesMap2 := map[string]interface{}{
-			"pilot": map[string]interface{}{
-				"dedicatedNode": map[string]interface{}{
-					"enabled": true,
-				},
-			},
+		// 测试 map[interface{}]interface{} 类型
+		interfaceMap := map[interface{}]interface{}{
+			"key1": "value1",
+			"key2": 123,
 		}
 
-		processFieldKey(defaultValuesMap2, customValuesMap2)
-
-		pilotConfig2 := defaultValuesMap2["pilot"].(map[string]interface{})
-
-		// 验证专属节点相关字段被创建
-		if _, exists := pilotConfig2["nodeSelector"]; !exists {
-			t.Error("nodeSelector should be created when dedicatedNode is enabled")
-		}
-		if _, exists := pilotConfig2["tolerations"]; !exists {
-			t.Error("tolerations should be created when dedicatedNode is enabled")
+		if val, exists := getMapValue(interfaceMap, "key1"); !exists || val != "value1" {
+			t.Error("getMapValue failed for interface{} map")
 		}
 	})
 
-	t.Run("TestMeshLogCollectorConfig", func(t *testing.T) {
-		// 测试日志采集配置的启用和禁用
-		defaultValuesMap := map[string]interface{}{
-			"meshConfig": map[string]interface{}{
-				"accessLogFile":     "/dev/stdout",
-				"accessLogFormat":   `{"timestamp":"%START_TIME%"}`,
-				"accessLogEncoding": "JSON",
-			},
+	t.Run("TestDeleteMapKey", func(t *testing.T) {
+		// 测试 map[string]interface{} 类型
+		stringMap := map[string]interface{}{
+			"key1": "value1",
+			"key2": "value2",
 		}
 
-		// 测试禁用日志采集
-		customValuesMap := map[string]interface{}{
-			"meshConfig": map[string]interface{}{
-				"logCollectorConfigEnabled": false,
-			},
+		deleteMapKey(stringMap, "key1")
+		if _, exists := stringMap["key1"]; exists {
+			t.Error("deleteMapKey failed for string map")
+		}
+		if _, exists := stringMap["key2"]; !exists {
+			t.Error("deleteMapKey should not delete other keys")
 		}
 
-		processFieldKey(defaultValuesMap, customValuesMap)
-
-		meshConfig := defaultValuesMap["meshConfig"].(map[string]interface{})
-
-		// 验证日志采集相关字段被删除
-		if _, exists := meshConfig["accessLogFile"]; exists {
-			t.Error("accessLogFile should be deleted when logCollectorConfigEnabled is false")
-		}
-		if _, exists := meshConfig["accessLogFormat"]; exists {
-			t.Error("accessLogFormat should be deleted when logCollectorConfigEnabled is false")
-		}
-		if _, exists := meshConfig["accessLogEncoding"]; exists {
-			t.Error("accessLogEncoding should be deleted when logCollectorConfigEnabled is false")
+		// 测试 map[interface{}]interface{} 类型
+		interfaceMap := map[interface{}]interface{}{
+			"key1": "value1",
+			"key2": "value2",
 		}
 
-		// 测试启用日志采集
-		defaultValuesMap2 := map[string]interface{}{
-			"meshConfig": map[string]interface{}{},
-		}
-
-		customValuesMap2 := map[string]interface{}{
-			"meshConfig": map[string]interface{}{
-				"logCollectorConfigEnabled": true,
-			},
-		}
-
-		processFieldKey(defaultValuesMap2, customValuesMap2)
-
-		meshConfig2 := defaultValuesMap2["meshConfig"].(map[string]interface{})
-
-		// 验证日志采集相关字段被创建
-		if _, exists := meshConfig2["accessLogFile"]; !exists {
-			t.Error("accessLogFile should be created when logCollectorConfigEnabled is true")
-		}
-		if _, exists := meshConfig2["accessLogFormat"]; !exists {
-			t.Error("accessLogFormat should be created when logCollectorConfigEnabled is true")
-		}
-		if _, exists := meshConfig2["accessLogEncoding"]; !exists {
-			t.Error("accessLogEncoding should be created when logCollectorConfigEnabled is true")
+		deleteMapKey(interfaceMap, "key1")
+		if _, exists := getMapValue(interfaceMap, "key1"); exists {
+			t.Error("deleteMapKey failed for interface{} map")
 		}
 	})
 
-	t.Run("TestMeshTracingConfig", func(t *testing.T) {
-		// 测试追踪配置的启用和禁用
-		defaultValuesMap := map[string]interface{}{
-			"meshConfig": map[string]interface{}{
-				"extensionProviders": []interface{}{
-					map[string]interface{}{
-						"name": "otel-tracing",
-					},
-				},
-				"defaultConfig": map[string]interface{}{
-					"tracingConfig": map[string]interface{}{
-						"zipkin": map[string]interface{}{
-							"address": "http://zipkin:9411/api/v2/spans",
-						},
-					},
-				},
-			},
-			"pilot": map[string]interface{}{
-				"traceSampling": 0.1,
-			},
+	t.Run("TestEnsureMapKeyExists", func(t *testing.T) {
+		// 测试 map[string]interface{} 类型
+		stringMap := map[string]interface{}{
+			"key1": "value1",
 		}
 
-		// 测试禁用追踪
-		customValuesMap := map[string]interface{}{
-			"meshConfig": map[string]interface{}{
-				"enableTracing": false,
-			},
+		ensureMapKeyExists(stringMap, "key2")
+		if _, exists := stringMap["key2"]; !exists {
+			t.Error("ensureMapKeyExists failed for string map")
 		}
 
-		processFieldKey(defaultValuesMap, customValuesMap)
-
-		meshConfig := defaultValuesMap["meshConfig"].(map[string]interface{})
-		pilotConfig := defaultValuesMap["pilot"].(map[string]interface{})
-
-		// 验证追踪相关字段被删除
-		if _, exists := meshConfig["extensionProviders"]; exists {
-			t.Error("extensionProviders should be deleted when enableTracing is false")
+		// 测试 map[interface{}]interface{} 类型
+		interfaceMap := map[interface{}]interface{}{
+			"key1": "value1",
 		}
 
-		if defaultConfig, exists := meshConfig["defaultConfig"]; exists {
-			if defaultConfigMap, ok := defaultConfig.(map[string]interface{}); ok {
-				if tracingConfig, exists := defaultConfigMap["tracingConfig"]; exists {
-					if tracingConfigMap, ok := tracingConfig.(map[string]interface{}); ok {
-						if _, exists := tracingConfigMap["zipkin"]; exists {
-							t.Error("zipkin should be deleted when enableTracing is false")
-						}
-					}
-				}
-			}
+		ensureMapKeyExists(interfaceMap, "key2")
+		if _, exists := getMapValue(interfaceMap, "key2"); !exists {
+			t.Error("ensureMapKeyExists failed for interface{} map")
 		}
-
-		if _, exists := pilotConfig["traceSampling"]; exists {
-			t.Error("traceSampling should be deleted when enableTracing is false")
-		}
-
-		// 测试启用追踪
-		defaultValuesMap2 := map[string]interface{}{
-			"meshConfig": map[string]interface{}{},
-			"pilot":      map[string]interface{}{},
-		}
-
-		customValuesMap2 := map[string]interface{}{
-			"meshConfig": map[string]interface{}{
-				"enableTracing": true,
-			},
-		}
-
-		processFieldKey(defaultValuesMap2, customValuesMap2)
-
-		meshConfig2 := defaultValuesMap2["meshConfig"].(map[string]interface{})
-		pilotConfig2 := defaultValuesMap2["pilot"].(map[string]interface{})
-
-		// 验证追踪相关字段被创建
-		if _, exists := meshConfig2["extensionProviders"]; !exists {
-			t.Error("extensionProviders should be created when enableTracing is true")
-		}
-
-		if defaultConfig2, exists := meshConfig2["defaultConfig"]; exists {
-			if defaultConfigMap2, ok := defaultConfig2.(map[string]interface{}); ok {
-				if tracingConfig2, exists := defaultConfigMap2["tracingConfig"]; exists {
-					if tracingConfigMap2, ok := tracingConfig2.(map[string]interface{}); ok {
-						if _, exists := tracingConfigMap2["zipkin"]; !exists {
-							t.Error("zipkin should be created when enableTracing is true")
-						}
-					}
-				}
-			}
-		}
-
-		if _, exists := pilotConfig2["traceSampling"]; !exists {
-			t.Error("traceSampling should be created when enableTracing is true")
-		}
-	})
-
-	t.Run("TestMapOperations", func(t *testing.T) {
-		// 测试 map 操作函数
-		t.Run("TestGetMapValue", func(t *testing.T) {
-			// 测试 map[string]interface{} 类型
-			stringMap := map[string]interface{}{
-				"key1": "value1",
-				"key2": 123,
-			}
-
-			if val, exists := getMapValue(stringMap, "key1"); !exists || val != "value1" {
-				t.Error("getMapValue failed for string key")
-			}
-
-			if val, exists := getMapValue(stringMap, "key2"); !exists || val != 123 {
-				t.Error("getMapValue failed for numeric value")
-			}
-
-			if _, exists := getMapValue(stringMap, "nonexistent"); exists {
-				t.Error("getMapValue should return false for nonexistent key")
-			}
-
-			// 测试 map[interface{}]interface{} 类型
-			interfaceMap := map[interface{}]interface{}{
-				"key1": "value1",
-				"key2": 123,
-			}
-
-			if val, exists := getMapValue(interfaceMap, "key1"); !exists || val != "value1" {
-				t.Error("getMapValue failed for interface{} map")
-			}
-		})
-
-		t.Run("TestDeleteMapKey", func(t *testing.T) {
-			// 测试 map[string]interface{} 类型
-			stringMap := map[string]interface{}{
-				"key1": "value1",
-				"key2": "value2",
-			}
-
-			deleteMapKey(stringMap, "key1")
-			if _, exists := stringMap["key1"]; exists {
-				t.Error("deleteMapKey failed for string map")
-			}
-			if _, exists := stringMap["key2"]; !exists {
-				t.Error("deleteMapKey should not delete other keys")
-			}
-
-			// 测试 map[interface{}]interface{} 类型
-			interfaceMap := map[interface{}]interface{}{
-				"key1": "value1",
-				"key2": "value2",
-			}
-
-			deleteMapKey(interfaceMap, "key1")
-			if _, exists := getMapValue(interfaceMap, "key1"); exists {
-				t.Error("deleteMapKey failed for interface{} map")
-			}
-		})
-
-		t.Run("TestEnsureMapKeyExists", func(t *testing.T) {
-			// 测试 map[string]interface{} 类型
-			stringMap := map[string]interface{}{
-				"key1": "value1",
-			}
-
-			ensureMapKeyExists(stringMap, "key2")
-			if _, exists := stringMap["key2"]; !exists {
-				t.Error("ensureMapKeyExists failed for string map")
-			}
-
-			// 测试 map[interface{}]interface{} 类型
-			interfaceMap := map[interface{}]interface{}{
-				"key1": "value1",
-			}
-
-			ensureMapKeyExists(interfaceMap, "key2")
-			if _, exists := getMapValue(interfaceMap, "key2"); !exists {
-				t.Error("ensureMapKeyExists failed for interface{} map")
-			}
-		})
-
-		t.Run("TestGetBoolValue", func(t *testing.T) {
-			// 测试布尔值获取
-			testMap := map[string]interface{}{
-				"trueKey":   true,
-				"falseKey":  false,
-				"stringKey": "not-bool",
-			}
-
-			if val, exists := getBoolValue(testMap, "trueKey"); !exists || !val {
-				t.Error("getBoolValue failed for true value")
-			}
-
-			if val, exists := getBoolValue(testMap, "falseKey"); !exists || val {
-				t.Error("getBoolValue failed for false value")
-			}
-
-			if _, exists := getBoolValue(testMap, "stringKey"); exists {
-				t.Error("getBoolValue should return false for non-bool value")
-			}
-
-			if _, exists := getBoolValue(testMap, "nonexistent"); exists {
-				t.Error("getBoolValue should return false for nonexistent key")
-			}
-		})
 	})
 }

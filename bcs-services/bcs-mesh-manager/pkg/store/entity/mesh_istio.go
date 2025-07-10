@@ -55,6 +55,9 @@ type MeshIstio struct {
 	SidecarResourceConfig *ResourceConfig      `bson:"sidecarResourceConfig" json:"sidecarResourceConfig"`
 	HighAvailability      *HighAvailability    `bson:"highAvailability" json:"highAvailability"`
 	ObservabilityConfig   *ObservabilityConfig `bson:"observabilityConfig" json:"observabilityConfig"`
+
+	// Cluster release names mapping
+	ReleaseNames map[string]map[string]string `bson:"releaseNames" json:"releaseNames"`
 }
 
 // ResourceConfig represents resource configuration for sidecar
@@ -91,6 +94,7 @@ type ObservabilityConfig struct {
 
 // MetricsConfig represents metrics configuration
 type MetricsConfig struct {
+	MetricsEnabled             bool `bson:"metricsEnabled" json:"metricsEnabled"`
 	ControlPlaneMetricsEnabled bool `bson:"controlPlaneMetricsEnabled" json:"controlPlaneMetricsEnabled"`
 	DataPlaneMetricsEnabled    bool `bson:"dataPlaneMetricsEnabled" json:"dataPlaneMetricsEnabled"`
 }
@@ -196,6 +200,7 @@ func (m *MeshIstio) Transfer2ProtoForDetail() *meshmanager.IstioDetailInfo {
 		// 转换指标配置
 		if m.ObservabilityConfig.MetricsConfig != nil {
 			istioDetailInfo.ObservabilityConfig.MetricsConfig = &meshmanager.MetricsConfig{
+				MetricsEnabled:             wrapperspb.Bool(m.ObservabilityConfig.MetricsConfig.MetricsEnabled),
 				ControlPlaneMetricsEnabled: wrapperspb.Bool(m.ObservabilityConfig.MetricsConfig.ControlPlaneMetricsEnabled),
 				DataPlaneMetricsEnabled:    wrapperspb.Bool(m.ObservabilityConfig.MetricsConfig.DataPlaneMetricsEnabled),
 			}
@@ -338,6 +343,7 @@ func (m *MeshIstio) TransferFromProto(req *meshmanager.IstioRequest) {
 		}
 		if req.ObservabilityConfig.MetricsConfig != nil {
 			m.ObservabilityConfig.MetricsConfig = &MetricsConfig{
+				MetricsEnabled:             req.ObservabilityConfig.MetricsConfig.MetricsEnabled.GetValue(),
 				ControlPlaneMetricsEnabled: req.ObservabilityConfig.MetricsConfig.ControlPlaneMetricsEnabled.GetValue(),
 				DataPlaneMetricsEnabled:    req.ObservabilityConfig.MetricsConfig.DataPlaneMetricsEnabled.GetValue(),
 			}

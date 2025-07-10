@@ -38,6 +38,8 @@ type MeshManagerModel interface {
 	List(ctx context.Context, cond *operator.Condition, opt *utils.ListOption) (int64, []*entity.MeshIstio, error)
 	// Get gets a mesh by its ID
 	Get(ctx context.Context, cond *operator.Condition) (*entity.MeshIstio, error)
+	// GetReleaseName gets release name for a specific cluster and component
+	GetReleaseName(ctx context.Context, meshID, clusterID, componentType string) (*string, error)
 }
 
 // modelSet implements MeshManagerModel by embedding ModelMesh
