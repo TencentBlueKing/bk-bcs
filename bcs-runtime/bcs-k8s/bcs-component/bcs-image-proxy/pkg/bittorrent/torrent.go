@@ -33,6 +33,7 @@ import (
 	"github.com/anacrolix/torrent/storage"
 	"github.com/dustin/go-humanize"
 	"github.com/pkg/errors"
+	"golang.org/x/time/rate"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-component/bcs-image-proxy/internal/lock"
@@ -101,6 +102,14 @@ func (th *TorrentHandler) Init() error {
 	clientConfig.TorrentPeersHighWater = 2000
 	clientConfig.DisableAcceptRateLimiting = true
 	clientConfig.AcceptPeerConnections = true
+	if th.op.TorrentUploadLimit > 0 {
+		clientConfig.UploadRateLimiter = rate.NewLimiter(rate.Limit(th.op.TorrentUploadLimit),
+			int(th.op.TorrentUploadLimit))
+	}
+	if th.op.TorrentDownloadLimit > 0 {
+		clientConfig.DownloadRateLimiter = rate.NewLimiter(rate.Limit(th.op.TorrentDownloadLimit),
+			int(th.op.TorrentDownloadLimit))
+	}
 	tc, err := torrent.NewClient(clientConfig)
 	if err != nil {
 		return errors.Wrapf(err, "create torrent client failed")

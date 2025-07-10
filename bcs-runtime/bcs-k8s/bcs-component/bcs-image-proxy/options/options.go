@@ -62,6 +62,10 @@ type ImageProxyOption struct {
 	EnableContainerd bool `json:"enableContainerd" value:"false" usage:"enable containerd"`
 	// TorrentThreshold Torrent 传输文件的阈值，超过才使用 Torrent 传输
 	TorrentThreshold int64 `json:"torrentThreshold" value:"209715200" usage:"transfer by torrent if size exceeded the threshold"`
+	// TorrentUploadLimit 种子上传速度限制，0 表示无限制
+	TorrentUploadLimit int64 `json:"torrentUploadLimit" value:"0" usage:"upload limit"`
+	// TorrentDownloadLimit 种子下载速度限制，0 表示无限制
+	TorrentDownloadLimit int64 `json:"torrentDownloadLimit" value:"0" usage:"download limit"`
 
 	// 用于从源仓库下载中 Layer 的存储目录，其下文件并不能保证完整性
 	StoragePath string `json:"storagePath" value:"/data/bcs-image-proxy/storage" usage:"the path for download layer from remote original registry, just a temp storage"`
@@ -424,6 +428,13 @@ func (o *ImageProxyOption) checkFilePath() error {
 	if op.TorrentThreshold < apiclient.TwoHundredMB {
 		op.TorrentThreshold = apiclient.TwoHundredMB
 	}
+	if op.TorrentUploadLimit > 0 && op.TorrentUploadLimit < 1048576 {
+		return errors.Errorf("upload limit '%d' too small, must >= 1048576(1MB/s)", op.TorrentUploadLimit)
+	}
+	if op.TorrentDownloadLimit > 0 && op.TorrentDownloadLimit < 1048576 {
+		return errors.Errorf("download limit '%d' too small, must >= 1048576(1MB/s)", op.TorrentUploadLimit)
+	}
+
 	if err := os.MkdirAll(op.TransferPath, 0600); err != nil {
 		return errors.Wrapf(err, "create file-path '%s' failed", op.TransferPath)
 	}
