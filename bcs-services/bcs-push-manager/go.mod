@@ -1,13 +1,14 @@
 module github.com/Tencent/bk-bcs/bcs-services/bcs-push-manager
 
-go 1.23.8
+go 1.23.2
 
 require (
-	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20250622162825-847bee080329
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-00010101000000-000000000000
 	github.com/envoyproxy/protoc-gen-validate v1.2.1
 	github.com/go-micro/plugins/v4/client/grpc v1.2.1
 	github.com/go-micro/plugins/v4/registry/etcd v1.1.0
 	github.com/go-micro/plugins/v4/server/grpc v1.2.0
+	github.com/go-resty/resty/v2 v2.16.5
 	github.com/golang/protobuf v1.5.4
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.27.0
@@ -25,7 +26,9 @@ require (
 	dario.cat/mergo v1.0.0 // indirect
 	github.com/Microsoft/go-winio v0.6.1 // indirect
 	github.com/ProtonMail/go-crypto v1.0.0 // indirect
+	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bitly/go-simplejson v0.5.1 // indirect
+	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cloudflare/circl v1.3.7 // indirect
 	github.com/coreos/go-semver v0.3.1 // indirect
 	github.com/coreos/go-systemd/v22 v22.5.0 // indirect
@@ -59,6 +62,10 @@ require (
 	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
 	github.com/pjbgf/sha1cd v0.3.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
+	github.com/prometheus/client_golang v1.19.0 // indirect
+	github.com/prometheus/client_model v0.5.0 // indirect
+	github.com/prometheus/common v0.48.0 // indirect
+	github.com/prometheus/procfs v0.12.0 // indirect
 	github.com/rogpeppe/go-internal v1.14.1 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/sergi/go-diff v1.3.2-0.20230802210424-5b0b94c5c0d3 // indirect
@@ -87,3 +94,5 @@ require (
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 )
+
+replace github.com/Tencent/bk-bcs/bcs-common => ../../bcs-common

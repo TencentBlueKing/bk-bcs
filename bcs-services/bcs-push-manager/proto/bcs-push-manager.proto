@@ -21,7 +21,7 @@ service PushManager {
     // ===== 推送事件相关 =====
     rpc CreatePushEvent(CreatePushEventRequest) returns (CreatePushEventResponse) {
         option (google.api.http) = {
-            post: "/api/v1/domains/{domain}/push_events"
+            post: "/pushmanager/api/v1/domains/{domain}/push_events"
             body: "*"
         };
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
@@ -31,7 +31,7 @@ service PushManager {
     }
     rpc DeletePushEvent(DeletePushEventRequest) returns (DeletePushEventResponse) {
         option (google.api.http) = {
-            delete: "/api/v1/domains/{domain}/push_events/{event_id}"
+            delete: "/pushmanager/api/v1/domains/{domain}/push_events/{event_id}"
         };
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
             description : "根据事件ID删除推送事件"
@@ -40,7 +40,7 @@ service PushManager {
     }
     rpc GetPushEvent(GetPushEventRequest) returns (GetPushEventResponse) {
         option (google.api.http) = {
-            get: "/api/v1/domains/{domain}/push_events/{event_id}"
+            get: "/pushmanager/api/v1/domains/{domain}/push_events/{event_id}"
         };
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
             description : "根据事件ID获取单个推送事件的详细信息。"
@@ -49,7 +49,7 @@ service PushManager {
     }
     rpc ListPushEvents(ListPushEventsRequest) returns (ListPushEventsResponse) {
         option (google.api.http) = {
-            get: "/api/v1/domains/{domain}/push_events"
+            get: "/pushmanager/api/v1/domains/{domain}/push_events"
         };
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
             description : "获取推送事件列表，支持分页和多种过滤条件。"
@@ -58,7 +58,7 @@ service PushManager {
     }
     rpc UpdatePushEvent(UpdatePushEventRequest) returns (UpdatePushEventResponse) {
         option (google.api.http) = {
-            put: "/api/v1/domains/{domain}/push_events/{event_id}"
+            put: "/pushmanager/api/v1/domains/{domain}/push_events/{event_id}"
             body: "*"
         };
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
@@ -70,7 +70,7 @@ service PushManager {
     // ===== 推送白名单相关 =====
     rpc CreatePushWhitelist(CreatePushWhitelistRequest) returns (CreatePushWhitelistResponse) {
         option (google.api.http) = {
-            post: "/api/v1/domains/{domain}/push_whitelists"
+            post: "/pushmanager/api/v1/domains/{domain}/push_whitelists"
             body: "*"
         };
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
@@ -80,7 +80,7 @@ service PushManager {
     }
     rpc DeletePushWhitelist(DeletePushWhitelistRequest) returns (DeletePushWhitelistResponse) {
         option (google.api.http) = {
-            delete: "/api/v1/domains/{domain}/push_whitelists/{whitelist_id}"
+            delete: "/pushmanager/api/v1/domains/{domain}/push_whitelists/{whitelist_id}"
         };
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
             description : "根据白名单ID删除推送白名单。"
@@ -89,7 +89,7 @@ service PushManager {
     }
     rpc UpdatePushWhitelist(UpdatePushWhitelistRequest) returns (UpdatePushWhitelistResponse) {
         option (google.api.http) = {
-            put: "/api/v1/domains/{domain}/push_whitelists/{whitelist_id}"
+            put: "/pushmanager/api/v1/domains/{domain}/push_whitelists/{whitelist_id}"
             body: "*"
         };
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
@@ -99,7 +99,7 @@ service PushManager {
     }
     rpc ListPushWhitelists(ListPushWhitelistsRequest) returns (ListPushWhitelistsResponse) {
         option (google.api.http) = {
-            get: "/api/v1/domains/{domain}/push_whitelists"
+            get: "/pushmanager/api/v1/domains/{domain}/push_whitelists"
         };
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
             description : "获取推送白名单列表，支持分页和多种过滤条件。"
@@ -108,7 +108,7 @@ service PushManager {
     }
     rpc GetPushWhitelist(GetPushWhitelistRequest) returns (GetPushWhitelistResponse) {
         option (google.api.http) = {
-            get: "/api/v1/domains/{domain}/push_whitelists/{whitelist_id}"
+            get: "/pushmanager/api/v1/domains/{domain}/push_whitelists/{whitelist_id}"
         };
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
             description : "根据白名单ID获取单个推送白名单的详细信息。"
@@ -119,7 +119,7 @@ service PushManager {
     // ===== 推送模版相关 =====
     rpc CreatePushTemplate(CreatePushTemplateRequest) returns (CreatePushTemplateResponse) {
         option (google.api.http) = {
-            post: "/api/v1/domains/{domain}/push_templates"
+            post: "/pushmanager/api/v1/domains/{domain}/push_templates"
             body: "*"
         };
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
@@ -129,7 +129,7 @@ service PushManager {
     }
     rpc DeletePushTemplate(DeletePushTemplateRequest) returns (DeletePushTemplateResponse) {
         option (google.api.http) = {
-            delete: "/api/v1/domains/{domain}/push_templates/{template_id}"
+            delete: "/pushmanager/api/v1/domains/{domain}/push_templates/{template_id}"
         };
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
             description : "根据模板ID删除推送通知模板。"
@@ -138,7 +138,7 @@ service PushManager {
     }
     rpc UpdatePushTemplate(UpdatePushTemplateRequest) returns (UpdatePushTemplateResponse) {
         option (google.api.http) = {
-            put: "/api/v1/domains/{domain}/push_templates/{template_id}"
+            put: "/pushmanager/api/v1/domains/{domain}/push_templates/{template_id}"
             body: "*"
         };
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
@@ -148,7 +148,7 @@ service PushManager {
     }
     rpc ListPushTemplates(ListPushTemplatesRequest) returns (ListPushTemplatesResponse) {
         option (google.api.http) = {
-            get: "/api/v1/domains/{domain}/push_templates"
+            get: "/pushmanager/api/v1/domains/{domain}/push_templates"
         };
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
             description : "获取推送通知模板列表，支持分页和过滤。"
@@ -157,7 +157,7 @@ service PushManager {
     }
     rpc GetPushTemplate(GetPushTemplateRequest) returns (GetPushTemplateResponse) {
         option (google.api.http) = {
-            get: "/api/v1/domains/{domain}/push_templates/{template_id}"
+            get: "/pushmanager/api/v1/domains/{domain}/push_templates/{template_id}"
         };
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
             description : "根据模板ID获取单个推送通知模板的详细信息。"

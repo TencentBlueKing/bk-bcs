@@ -18,50 +18,37 @@ import (
 	"fmt"
 	"time"
 
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
+	orimongo "go.mongodb.org/mongo-driver/mongo"
 
-	opt "github.com/Tencent/bk-bcs/bcs-services/bcs-push-manager/internal/options"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
+
 	mg "github.com/Tencent/bk-bcs/bcs-services/bcs-push-manager/internal/store/mongo"
 )
 
 // Store aggregates all data store interfaces.
 type Store struct {
-	client        *mongo.Client
+	client        *orimongo.Client
 	PushEvent     mg.PushEventStore
 	PushWhitelist mg.PushWhitelistStore
 	PushTemplate  mg.PushTemplateStore
 }
 
 // NewStore creates a new Store instance and initializes the database connection.
-func NewStore(mongoOpt *opt.MongoOption) (*Store, error) {
+func NewStore(mongoOpt *mongo.Options) (*Store, error) {
 	if mongoOpt == nil {
 		return nil, fmt.Errorf("mongoOpt is nil")
 	}
-	clientOptions := options.Client().ApplyURI(mongoOpt.Endpoints)
-
-	if mongoOpt.Username != "" && mongoOpt.Password != "" {
-		credential := options.Credential{
-			Username: mongoOpt.Username,
-			Password: mongoOpt.Password,
-		}
-		clientOptions.SetAuth(credential)
-	}
-
-	if mongoOpt.ConnectTimeout > 0 {
-		timeout := time.Duration(mongoOpt.ConnectTimeout) * time.Second
-		clientOptions.SetConnectTimeout(timeout)
-	}
-
-	client, err := mongo.Connect(context.Background(), clientOptions)
+	mongoDB, err := mongo.NewDB(mongoOpt)
 	if err != nil {
-		return nil, fmt.Errorf("failed to connect to MongoDB: %w", err)
+		blog.Errorf("init mongo db failed, err %s", err.Error())
+		return nil, err
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	if err := client.Ping(ctx, nil); err != nil {
-		return nil, fmt.Errorf("failed to ping MongoDB: %w", err)
+	if err = mongoDB.Ping(); err != nil {
+		blog.Errorf("ping mongo db failed, err %s", err.Error())
+		return nil, err
 	}
+	client := mongoDB.Client()
 	db := client.Database(mongoOpt.Database)
 
 	return &Store{

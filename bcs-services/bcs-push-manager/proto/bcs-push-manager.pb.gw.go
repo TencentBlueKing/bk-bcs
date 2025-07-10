@@ -1141,11 +1141,11 @@ func local_request_PushManager_GetPushTemplate_0(ctx context.Context, marshaler 
 
 }
 
-// RegisterPushManagerHandlerServer registers the http handlers for service PushManager to "mux".
+// RegisterPushManagerGwServer registers the http handlers for service PushManager to "mux".
 // UnaryRPC     :call PushManagerServer directly.
 // StreamingRPC :currently unsupported pending https://github.com/grpc/grpc-go/issues/906.
-// Note that using this registration option will cause many gRPC library features to stop working. Consider using RegisterPushManagerHandlerFromEndpoint instead.
-func RegisterPushManagerHandlerServer(ctx context.Context, mux *runtime.ServeMux, server PushManagerServer) error {
+// Note that using this registration option will cause many gRPC library features to stop working. Consider using RegisterPushManagerGwFromEndpoint instead.
+func RegisterPushManagerGwServer(ctx context.Context, mux *runtime.ServeMux, server PushManagerServer) error {
 
 	mux.Handle("POST", pattern_PushManager_CreatePushEvent_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
@@ -1153,7 +1153,7 @@ func RegisterPushManagerHandlerServer(ctx context.Context, mux *runtime.ServeMux
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/pushmanager.PushManager/CreatePushEvent", runtime.WithHTTPPathPattern("/api/v1/domains/{domain}/push_events"))
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/pushmanager.PushManager/CreatePushEvent", runtime.WithHTTPPathPattern("/pushmanager/api/v1/domains/{domain}/push_events"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1176,7 +1176,7 @@ func RegisterPushManagerHandlerServer(ctx context.Context, mux *runtime.ServeMux
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/pushmanager.PushManager/DeletePushEvent", runtime.WithHTTPPathPattern("/api/v1/domains/{domain}/push_events/{event_id}"))
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/pushmanager.PushManager/DeletePushEvent", runtime.WithHTTPPathPattern("/pushmanager/api/v1/domains/{domain}/push_events/{event_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1199,7 +1199,7 @@ func RegisterPushManagerHandlerServer(ctx context.Context, mux *runtime.ServeMux
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/pushmanager.PushManager/GetPushEvent", runtime.WithHTTPPathPattern("/api/v1/domains/{domain}/push_events/{event_id}"))
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/pushmanager.PushManager/GetPushEvent", runtime.WithHTTPPathPattern("/pushmanager/api/v1/domains/{domain}/push_events/{event_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1222,7 +1222,7 @@ func RegisterPushManagerHandlerServer(ctx context.Context, mux *runtime.ServeMux
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/pushmanager.PushManager/ListPushEvents", runtime.WithHTTPPathPattern("/api/v1/domains/{domain}/push_events"))
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/pushmanager.PushManager/ListPushEvents", runtime.WithHTTPPathPattern("/pushmanager/api/v1/domains/{domain}/push_events"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1245,7 +1245,7 @@ func RegisterPushManagerHandlerServer(ctx context.Context, mux *runtime.ServeMux
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/pushmanager.PushManager/UpdatePushEvent", runtime.WithHTTPPathPattern("/api/v1/domains/{domain}/push_events/{event_id}"))
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/pushmanager.PushManager/UpdatePushEvent", runtime.WithHTTPPathPattern("/pushmanager/api/v1/domains/{domain}/push_events/{event_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1268,7 +1268,7 @@ func RegisterPushManagerHandlerServer(ctx context.Context, mux *runtime.ServeMux
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/pushmanager.PushManager/CreatePushWhitelist", runtime.WithHTTPPathPattern("/api/v1/domains/{domain}/push_whitelists"))
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/pushmanager.PushManager/CreatePushWhitelist", runtime.WithHTTPPathPattern("/pushmanager/api/v1/domains/{domain}/push_whitelists"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1291,7 +1291,7 @@ func RegisterPushManagerHandlerServer(ctx context.Context, mux *runtime.ServeMux
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/pushmanager.PushManager/DeletePushWhitelist", runtime.WithHTTPPathPattern("/api/v1/domains/{domain}/push_whitelists/{whitelist_id}"))
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/pushmanager.PushManager/DeletePushWhitelist", runtime.WithHTTPPathPattern("/pushmanager/api/v1/domains/{domain}/push_whitelists/{whitelist_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1314,7 +1314,7 @@ func RegisterPushManagerHandlerServer(ctx context.Context, mux *runtime.ServeMux
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/pushmanager.PushManager/UpdatePushWhitelist", runtime.WithHTTPPathPattern("/api/v1/domains/{domain}/push_whitelists/{whitelist_id}"))
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/pushmanager.PushManager/UpdatePushWhitelist", runtime.WithHTTPPathPattern("/pushmanager/api/v1/domains/{domain}/push_whitelists/{whitelist_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1337,7 +1337,7 @@ func RegisterPushManagerHandlerServer(ctx context.Context, mux *runtime.ServeMux
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/pushmanager.PushManager/ListPushWhitelists", runtime.WithHTTPPathPattern("/api/v1/domains/{domain}/push_whitelists"))
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/pushmanager.PushManager/ListPushWhitelists", runtime.WithHTTPPathPattern("/pushmanager/api/v1/domains/{domain}/push_whitelists"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1360,7 +1360,7 @@ func RegisterPushManagerHandlerServer(ctx context.Context, mux *runtime.ServeMux
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/pushmanager.PushManager/GetPushWhitelist", runtime.WithHTTPPathPattern("/api/v1/domains/{domain}/push_whitelists/{whitelist_id}"))
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/pushmanager.PushManager/GetPushWhitelist", runtime.WithHTTPPathPattern("/pushmanager/api/v1/domains/{domain}/push_whitelists/{whitelist_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1383,7 +1383,7 @@ func RegisterPushManagerHandlerServer(ctx context.Context, mux *runtime.ServeMux
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/pushmanager.PushManager/CreatePushTemplate", runtime.WithHTTPPathPattern("/api/v1/domains/{domain}/push_templates"))
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/pushmanager.PushManager/CreatePushTemplate", runtime.WithHTTPPathPattern("/pushmanager/api/v1/domains/{domain}/push_templates"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1406,7 +1406,7 @@ func RegisterPushManagerHandlerServer(ctx context.Context, mux *runtime.ServeMux
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/pushmanager.PushManager/DeletePushTemplate", runtime.WithHTTPPathPattern("/api/v1/domains/{domain}/push_templates/{template_id}"))
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/pushmanager.PushManager/DeletePushTemplate", runtime.WithHTTPPathPattern("/pushmanager/api/v1/domains/{domain}/push_templates/{template_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1429,7 +1429,7 @@ func RegisterPushManagerHandlerServer(ctx context.Context, mux *runtime.ServeMux
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/pushmanager.PushManager/UpdatePushTemplate", runtime.WithHTTPPathPattern("/api/v1/domains/{domain}/push_templates/{template_id}"))
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/pushmanager.PushManager/UpdatePushTemplate", runtime.WithHTTPPathPattern("/pushmanager/api/v1/domains/{domain}/push_templates/{template_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1452,7 +1452,7 @@ func RegisterPushManagerHandlerServer(ctx context.Context, mux *runtime.ServeMux
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/pushmanager.PushManager/ListPushTemplates", runtime.WithHTTPPathPattern("/api/v1/domains/{domain}/push_templates"))
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/pushmanager.PushManager/ListPushTemplates", runtime.WithHTTPPathPattern("/pushmanager/api/v1/domains/{domain}/push_templates"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1475,7 +1475,7 @@ func RegisterPushManagerHandlerServer(ctx context.Context, mux *runtime.ServeMux
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/pushmanager.PushManager/GetPushTemplate", runtime.WithHTTPPathPattern("/api/v1/domains/{domain}/push_templates/{template_id}"))
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/pushmanager.PushManager/GetPushTemplate", runtime.WithHTTPPathPattern("/pushmanager/api/v1/domains/{domain}/push_templates/{template_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1495,9 +1495,9 @@ func RegisterPushManagerHandlerServer(ctx context.Context, mux *runtime.ServeMux
 	return nil
 }
 
-// RegisterPushManagerHandlerFromEndpoint is same as RegisterPushManagerHandlerGW but
+// RegisterPushManagerGwFromEndpoint is same as RegisterPushManagerGw but
 // automatically dials to "endpoint" and closes the connection when "ctx" gets done.
-func RegisterPushManagerHandlerFromEndpoint(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) (err error) {
+func RegisterPushManagerGwFromEndpoint(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) (err error) {
 	conn, err := grpc.Dial(endpoint, opts...)
 	if err != nil {
 		return err
@@ -1517,27 +1517,27 @@ func RegisterPushManagerHandlerFromEndpoint(ctx context.Context, mux *runtime.Se
 		}()
 	}()
 
-	return RegisterPushManagerHandlerGW(ctx, mux, conn)
+	return RegisterPushManagerGw(ctx, mux, conn)
 }
 
-// RegisterPushManagerHandlerGW registers the http handlers for service PushManager to "mux".
+// RegisterPushManagerGw registers the http handlers for service PushManager to "mux".
 // The handlers forward requests to the grpc endpoint over "conn".
-func RegisterPushManagerHandlerGW(ctx context.Context, mux *runtime.ServeMux, conn *grpc.ClientConn) error {
-	return RegisterPushManagerHandlerClient(ctx, mux, NewPushManagerClient(conn))
+func RegisterPushManagerGw(ctx context.Context, mux *runtime.ServeMux, conn *grpc.ClientConn) error {
+	return RegisterPushManagerGwClient(ctx, mux, NewPushManagerClient(conn))
 }
 
-// RegisterPushManagerHandlerClient registers the http handlers for service PushManager
+// RegisterPushManagerGwClient registers the http handlers for service PushManager
 // to "mux". The handlers forward requests to the grpc endpoint over the given implementation of "PushManagerClient".
 // Note: the gRPC framework executes interceptors within the gRPC handler. If the passed in "PushManagerClient"
 // doesn't go through the normal gRPC flow (creating a gRPC client etc.) then it will be up to the passed in
 // "PushManagerClient" to call the correct interceptors.
-func RegisterPushManagerHandlerClient(ctx context.Context, mux *runtime.ServeMux, client PushManagerClient) error {
+func RegisterPushManagerGwClient(ctx context.Context, mux *runtime.ServeMux, client PushManagerClient) error {
 
 	mux.Handle("POST", pattern_PushManager_CreatePushEvent_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/pushmanager.PushManager/CreatePushEvent", runtime.WithHTTPPathPattern("/api/v1/domains/{domain}/push_events"))
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/pushmanager.PushManager/CreatePushEvent", runtime.WithHTTPPathPattern("/pushmanager/api/v1/domains/{domain}/push_events"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1557,7 +1557,7 @@ func RegisterPushManagerHandlerClient(ctx context.Context, mux *runtime.ServeMux
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/pushmanager.PushManager/DeletePushEvent", runtime.WithHTTPPathPattern("/api/v1/domains/{domain}/push_events/{event_id}"))
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/pushmanager.PushManager/DeletePushEvent", runtime.WithHTTPPathPattern("/pushmanager/api/v1/domains/{domain}/push_events/{event_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1577,7 +1577,7 @@ func RegisterPushManagerHandlerClient(ctx context.Context, mux *runtime.ServeMux
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/pushmanager.PushManager/GetPushEvent", runtime.WithHTTPPathPattern("/api/v1/domains/{domain}/push_events/{event_id}"))
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/pushmanager.PushManager/GetPushEvent", runtime.WithHTTPPathPattern("/pushmanager/api/v1/domains/{domain}/push_events/{event_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1597,7 +1597,7 @@ func RegisterPushManagerHandlerClient(ctx context.Context, mux *runtime.ServeMux
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/pushmanager.PushManager/ListPushEvents", runtime.WithHTTPPathPattern("/api/v1/domains/{domain}/push_events"))
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/pushmanager.PushManager/ListPushEvents", runtime.WithHTTPPathPattern("/pushmanager/api/v1/domains/{domain}/push_events"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1617,7 +1617,7 @@ func RegisterPushManagerHandlerClient(ctx context.Context, mux *runtime.ServeMux
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/pushmanager.PushManager/UpdatePushEvent", runtime.WithHTTPPathPattern("/api/v1/domains/{domain}/push_events/{event_id}"))
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/pushmanager.PushManager/UpdatePushEvent", runtime.WithHTTPPathPattern("/pushmanager/api/v1/domains/{domain}/push_events/{event_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1637,7 +1637,7 @@ func RegisterPushManagerHandlerClient(ctx context.Context, mux *runtime.ServeMux
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/pushmanager.PushManager/CreatePushWhitelist", runtime.WithHTTPPathPattern("/api/v1/domains/{domain}/push_whitelists"))
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/pushmanager.PushManager/CreatePushWhitelist", runtime.WithHTTPPathPattern("/pushmanager/api/v1/domains/{domain}/push_whitelists"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1657,7 +1657,7 @@ func RegisterPushManagerHandlerClient(ctx context.Context, mux *runtime.ServeMux
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/pushmanager.PushManager/DeletePushWhitelist", runtime.WithHTTPPathPattern("/api/v1/domains/{domain}/push_whitelists/{whitelist_id}"))
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/pushmanager.PushManager/DeletePushWhitelist", runtime.WithHTTPPathPattern("/pushmanager/api/v1/domains/{domain}/push_whitelists/{whitelist_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1677,7 +1677,7 @@ func RegisterPushManagerHandlerClient(ctx context.Context, mux *runtime.ServeMux
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/pushmanager.PushManager/UpdatePushWhitelist", runtime.WithHTTPPathPattern("/api/v1/domains/{domain}/push_whitelists/{whitelist_id}"))
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/pushmanager.PushManager/UpdatePushWhitelist", runtime.WithHTTPPathPattern("/pushmanager/api/v1/domains/{domain}/push_whitelists/{whitelist_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1697,7 +1697,7 @@ func RegisterPushManagerHandlerClient(ctx context.Context, mux *runtime.ServeMux
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/pushmanager.PushManager/ListPushWhitelists", runtime.WithHTTPPathPattern("/api/v1/domains/{domain}/push_whitelists"))
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/pushmanager.PushManager/ListPushWhitelists", runtime.WithHTTPPathPattern("/pushmanager/api/v1/domains/{domain}/push_whitelists"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1717,7 +1717,7 @@ func RegisterPushManagerHandlerClient(ctx context.Context, mux *runtime.ServeMux
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/pushmanager.PushManager/GetPushWhitelist", runtime.WithHTTPPathPattern("/api/v1/domains/{domain}/push_whitelists/{whitelist_id}"))
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/pushmanager.PushManager/GetPushWhitelist", runtime.WithHTTPPathPattern("/pushmanager/api/v1/domains/{domain}/push_whitelists/{whitelist_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1737,7 +1737,7 @@ func RegisterPushManagerHandlerClient(ctx context.Context, mux *runtime.ServeMux
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/pushmanager.PushManager/CreatePushTemplate", runtime.WithHTTPPathPattern("/api/v1/domains/{domain}/push_templates"))
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/pushmanager.PushManager/CreatePushTemplate", runtime.WithHTTPPathPattern("/pushmanager/api/v1/domains/{domain}/push_templates"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1757,7 +1757,7 @@ func RegisterPushManagerHandlerClient(ctx context.Context, mux *runtime.ServeMux
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/pushmanager.PushManager/DeletePushTemplate", runtime.WithHTTPPathPattern("/api/v1/domains/{domain}/push_templates/{template_id}"))
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/pushmanager.PushManager/DeletePushTemplate", runtime.WithHTTPPathPattern("/pushmanager/api/v1/domains/{domain}/push_templates/{template_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1777,7 +1777,7 @@ func RegisterPushManagerHandlerClient(ctx context.Context, mux *runtime.ServeMux
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/pushmanager.PushManager/UpdatePushTemplate", runtime.WithHTTPPathPattern("/api/v1/domains/{domain}/push_templates/{template_id}"))
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/pushmanager.PushManager/UpdatePushTemplate", runtime.WithHTTPPathPattern("/pushmanager/api/v1/domains/{domain}/push_templates/{template_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1797,7 +1797,7 @@ func RegisterPushManagerHandlerClient(ctx context.Context, mux *runtime.ServeMux
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/pushmanager.PushManager/ListPushTemplates", runtime.WithHTTPPathPattern("/api/v1/domains/{domain}/push_templates"))
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/pushmanager.PushManager/ListPushTemplates", runtime.WithHTTPPathPattern("/pushmanager/api/v1/domains/{domain}/push_templates"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1817,7 +1817,7 @@ func RegisterPushManagerHandlerClient(ctx context.Context, mux *runtime.ServeMux
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/pushmanager.PushManager/GetPushTemplate", runtime.WithHTTPPathPattern("/api/v1/domains/{domain}/push_templates/{template_id}"))
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/pushmanager.PushManager/GetPushTemplate", runtime.WithHTTPPathPattern("/pushmanager/api/v1/domains/{domain}/push_templates/{template_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1837,35 +1837,35 @@ func RegisterPushManagerHandlerClient(ctx context.Context, mux *runtime.ServeMux
 }
 
 var (
-	pattern_PushManager_CreatePushEvent_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"api", "v1", "domains", "domain", "push_events"}, ""))
+	pattern_PushManager_CreatePushEvent_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"pushmanager", "api", "v1", "domains", "domain", "push_events"}, ""))
 
-	pattern_PushManager_DeletePushEvent_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5}, []string{"api", "v1", "domains", "domain", "push_events", "event_id"}, ""))
+	pattern_PushManager_DeletePushEvent_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6}, []string{"pushmanager", "api", "v1", "domains", "domain", "push_events", "event_id"}, ""))
 
-	pattern_PushManager_GetPushEvent_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5}, []string{"api", "v1", "domains", "domain", "push_events", "event_id"}, ""))
+	pattern_PushManager_GetPushEvent_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6}, []string{"pushmanager", "api", "v1", "domains", "domain", "push_events", "event_id"}, ""))
 
-	pattern_PushManager_ListPushEvents_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"api", "v1", "domains", "domain", "push_events"}, ""))
+	pattern_PushManager_ListPushEvents_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"pushmanager", "api", "v1", "domains", "domain", "push_events"}, ""))
 
-	pattern_PushManager_UpdatePushEvent_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5}, []string{"api", "v1", "domains", "domain", "push_events", "event_id"}, ""))
+	pattern_PushManager_UpdatePushEvent_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6}, []string{"pushmanager", "api", "v1", "domains", "domain", "push_events", "event_id"}, ""))
 
-	pattern_PushManager_CreatePushWhitelist_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"api", "v1", "domains", "domain", "push_whitelists"}, ""))
+	pattern_PushManager_CreatePushWhitelist_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"pushmanager", "api", "v1", "domains", "domain", "push_whitelists"}, ""))
 
-	pattern_PushManager_DeletePushWhitelist_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5}, []string{"api", "v1", "domains", "domain", "push_whitelists", "whitelist_id"}, ""))
+	pattern_PushManager_DeletePushWhitelist_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6}, []string{"pushmanager", "api", "v1", "domains", "domain", "push_whitelists", "whitelist_id"}, ""))
 
-	pattern_PushManager_UpdatePushWhitelist_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5}, []string{"api", "v1", "domains", "domain", "push_whitelists", "whitelist_id"}, ""))
+	pattern_PushManager_UpdatePushWhitelist_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6}, []string{"pushmanager", "api", "v1", "domains", "domain", "push_whitelists", "whitelist_id"}, ""))
 
-	pattern_PushManager_ListPushWhitelists_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"api", "v1", "domains", "domain", "push_whitelists"}, ""))
+	pattern_PushManager_ListPushWhitelists_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"pushmanager", "api", "v1", "domains", "domain", "push_whitelists"}, ""))
 
-	pattern_PushManager_GetPushWhitelist_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5}, []string{"api", "v1", "domains", "domain", "push_whitelists", "whitelist_id"}, ""))
+	pattern_PushManager_GetPushWhitelist_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6}, []string{"pushmanager", "api", "v1", "domains", "domain", "push_whitelists", "whitelist_id"}, ""))
 
-	pattern_PushManager_CreatePushTemplate_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"api", "v1", "domains", "domain", "push_templates"}, ""))
+	pattern_PushManager_CreatePushTemplate_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"pushmanager", "api", "v1", "domains", "domain", "push_templates"}, ""))
 
-	pattern_PushManager_DeletePushTemplate_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5}, []string{"api", "v1", "domains", "domain", "push_templates", "template_id"}, ""))
+	pattern_PushManager_DeletePushTemplate_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6}, []string{"pushmanager", "api", "v1", "domains", "domain", "push_templates", "template_id"}, ""))
 
-	pattern_PushManager_UpdatePushTemplate_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5}, []string{"api", "v1", "domains", "domain", "push_templates", "template_id"}, ""))
+	pattern_PushManager_UpdatePushTemplate_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6}, []string{"pushmanager", "api", "v1", "domains", "domain", "push_templates", "template_id"}, ""))
 
-	pattern_PushManager_ListPushTemplates_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"api", "v1", "domains", "domain", "push_templates"}, ""))
+	pattern_PushManager_ListPushTemplates_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"pushmanager", "api", "v1", "domains", "domain", "push_templates"}, ""))
 
-	pattern_PushManager_GetPushTemplate_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5}, []string{"api", "v1", "domains", "domain", "push_templates", "template_id"}, ""))
+	pattern_PushManager_GetPushTemplate_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6}, []string{"pushmanager", "api", "v1", "domains", "domain", "push_templates", "template_id"}, ""))
 )
 
 var (

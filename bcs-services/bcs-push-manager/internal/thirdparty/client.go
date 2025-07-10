@@ -15,15 +15,15 @@ package thirdparty
 
 import (
 	"crypto/tls"
-	"fmt"
-	"net/url"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
-	"google.golang.org/grpc/credentials/insecure"
-	"google.golang.org/grpc/metadata"
+	"github.com/go-micro/plugins/v4/client/grpc"
+	"github.com/go-micro/plugins/v4/registry/etcd"
+	"go-micro.dev/v4/client"
+	"go-micro.dev/v4/registry"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-push-manager/internal/constant"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-push-manager/internal/requester"
 	third "github.com/Tencent/bk-bcs/bcs-services/bcs-push-manager/pkg/bcsapi/thirdparty-service"
 )
 
@@ -52,58 +52,37 @@ type Client interface {
 
 // ClientOptions options for create client
 type ClientOptions struct {
-	ClientTLS *tls.Config
-	Endpoint  string
-	AuthToken string
+	ClientTLS     *tls.Config
+	EtcdEndpoints []string
+	EtcdTLS       *tls.Config
+	requester.BaseOptions
 }
 
 // NewClient create client with options
 func NewClient(opts *ClientOptions) (Client, error) {
-	header := map[string]string{
-		"x-content-type": "application/grpc+proto",
-		"content-type":   "application/grpc",
-	}
-	if len(opts.AuthToken) != 0 {
-		header["authorization"] = fmt.Sprintf("Bearer %s", opts.AuthToken)
-	}
-	md := metadata.New(header)
-
-	var grpcOpts []grpc.DialOption
-	grpcOpts = append(grpcOpts, grpc.WithDefaultCallOptions(grpc.Header(&md)))
-	if opts.ClientTLS != nil {
-		grpcOpts = append(grpcOpts, grpc.WithTransportCredentials(credentials.NewTLS(opts.ClientTLS)))
-	} else {
-		grpcOpts = append(grpcOpts, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if opts.Sender == nil {
+		opts.Sender = requester.NewRequester()
 	}
 
-	address := opts.Endpoint
-	if u, err := url.Parse(opts.Endpoint); err == nil && u.Host != "" {
-		address = u.Host
-	}
+	// init thirdparty manager cli
+	c := grpc.NewClient(
+		client.Registry(etcd.NewRegistry(
+			registry.Addrs(opts.EtcdEndpoints...),
+			registry.TLSConfig(opts.EtcdTLS)),
+		),
+		grpc.AuthTLS(opts.ClientTLS),
+	)
 
-	conn, err := grpc.Dial(address, grpcOpts...)
-	if err != nil {
-		blog.Errorf("failed to dial thirdparty service: %v", err)
-		return nil, fmt.Errorf("failed to dial thirdparty service: %w", err)
-	}
-
-	cli := third.NewBcsThirdpartyServiceClient(conn)
+	cli := third.NewBcsThirdpartyService(constant.ModuleThirdpartyServiceManager, c)
 	return &thirdpartyClient{
+		debug:         false,
 		opts:          opts,
-		defaultHeader: header,
 		thirdpartySvc: cli,
-		conn:          conn,
 	}, nil
 }
 
 type thirdpartyClient struct {
+	debug         bool
 	opts          *ClientOptions
-	defaultHeader map[string]string
-	thirdpartySvc third.BcsThirdpartyServiceClient
-	conn          *grpc.ClientConn
-}
-
-// Close closes the gRPC connection associated with the thirdpartyClient.
-func (c *thirdpartyClient) Close() error {
-	return c.conn.Close()
+	thirdpartySvc third.BcsThirdpartyService
 }

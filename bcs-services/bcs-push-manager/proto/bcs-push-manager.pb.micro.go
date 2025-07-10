@@ -36,100 +36,100 @@ func NewPushManagerEndpoints() []*api.Endpoint {
 	return []*api.Endpoint{
 		{
 			Name:    "PushManager.CreatePushEvent",
-			Path:    []string{"/api/v1/domains/{domain}/push_events"},
+			Path:    []string{"/pushmanager/api/v1/domains/{domain}/push_events"},
 			Method:  []string{"POST"},
 			// Body:    "*",
 			Handler: "rpc",
 		},
 		{
 			Name:    "PushManager.DeletePushEvent",
-			Path:    []string{"/api/v1/domains/{domain}/push_events/{event_id}"},
+			Path:    []string{"/pushmanager/api/v1/domains/{domain}/push_events/{event_id}"},
 			Method:  []string{"DELETE"},
 			// Body:    "",
 			Handler: "rpc",
 		},
 		{
 			Name:    "PushManager.GetPushEvent",
-			Path:    []string{"/api/v1/domains/{domain}/push_events/{event_id}"},
+			Path:    []string{"/pushmanager/api/v1/domains/{domain}/push_events/{event_id}"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
 		{
 			Name:    "PushManager.ListPushEvents",
-			Path:    []string{"/api/v1/domains/{domain}/push_events"},
+			Path:    []string{"/pushmanager/api/v1/domains/{domain}/push_events"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
 		{
 			Name:    "PushManager.UpdatePushEvent",
-			Path:    []string{"/api/v1/domains/{domain}/push_events/{event_id}"},
+			Path:    []string{"/pushmanager/api/v1/domains/{domain}/push_events/{event_id}"},
 			Method:  []string{"PUT"},
 			// Body:    "*",
 			Handler: "rpc",
 		},
 		{
 			Name:    "PushManager.CreatePushWhitelist",
-			Path:    []string{"/api/v1/domains/{domain}/push_whitelists"},
+			Path:    []string{"/pushmanager/api/v1/domains/{domain}/push_whitelists"},
 			Method:  []string{"POST"},
 			// Body:    "*",
 			Handler: "rpc",
 		},
 		{
 			Name:    "PushManager.DeletePushWhitelist",
-			Path:    []string{"/api/v1/domains/{domain}/push_whitelists/{whitelist_id}"},
+			Path:    []string{"/pushmanager/api/v1/domains/{domain}/push_whitelists/{whitelist_id}"},
 			Method:  []string{"DELETE"},
 			// Body:    "",
 			Handler: "rpc",
 		},
 		{
 			Name:    "PushManager.UpdatePushWhitelist",
-			Path:    []string{"/api/v1/domains/{domain}/push_whitelists/{whitelist_id}"},
+			Path:    []string{"/pushmanager/api/v1/domains/{domain}/push_whitelists/{whitelist_id}"},
 			Method:  []string{"PUT"},
 			// Body:    "*",
 			Handler: "rpc",
 		},
 		{
 			Name:    "PushManager.ListPushWhitelists",
-			Path:    []string{"/api/v1/domains/{domain}/push_whitelists"},
+			Path:    []string{"/pushmanager/api/v1/domains/{domain}/push_whitelists"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
 		{
 			Name:    "PushManager.GetPushWhitelist",
-			Path:    []string{"/api/v1/domains/{domain}/push_whitelists/{whitelist_id}"},
+			Path:    []string{"/pushmanager/api/v1/domains/{domain}/push_whitelists/{whitelist_id}"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
 		{
 			Name:    "PushManager.CreatePushTemplate",
-			Path:    []string{"/api/v1/domains/{domain}/push_templates"},
+			Path:    []string{"/pushmanager/api/v1/domains/{domain}/push_templates"},
 			Method:  []string{"POST"},
 			// Body:    "*",
 			Handler: "rpc",
 		},
 		{
 			Name:    "PushManager.DeletePushTemplate",
-			Path:    []string{"/api/v1/domains/{domain}/push_templates/{template_id}"},
+			Path:    []string{"/pushmanager/api/v1/domains/{domain}/push_templates/{template_id}"},
 			Method:  []string{"DELETE"},
 			// Body:    "",
 			Handler: "rpc",
 		},
 		{
 			Name:    "PushManager.UpdatePushTemplate",
-			Path:    []string{"/api/v1/domains/{domain}/push_templates/{template_id}"},
+			Path:    []string{"/pushmanager/api/v1/domains/{domain}/push_templates/{template_id}"},
 			Method:  []string{"PUT"},
 			// Body:    "*",
 			Handler: "rpc",
 		},
 		{
 			Name:    "PushManager.ListPushTemplates",
-			Path:    []string{"/api/v1/domains/{domain}/push_templates"},
+			Path:    []string{"/pushmanager/api/v1/domains/{domain}/push_templates"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
 		{
 			Name:    "PushManager.GetPushTemplate",
-			Path:    []string{"/api/v1/domains/{domain}/push_templates/{template_id}"},
+			Path:    []string{"/pushmanager/api/v1/domains/{domain}/push_templates/{template_id}"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
@@ -368,100 +368,100 @@ func RegisterPushManagerHandler(s server.Server, hdlr PushManagerHandler, opts .
 	h := &pushManagerHandler{hdlr}
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "PushManager.CreatePushEvent",
-		Path:    []string{"/api/v1/domains/{domain}/push_events"},
+		Path:    []string{"/pushmanager/api/v1/domains/{domain}/push_events"},
 		Method:  []string{"POST"},
 		// Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "PushManager.DeletePushEvent",
-		Path:    []string{"/api/v1/domains/{domain}/push_events/{event_id}"},
+		Path:    []string{"/pushmanager/api/v1/domains/{domain}/push_events/{event_id}"},
 		Method:  []string{"DELETE"},
 		// Body:    "",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "PushManager.GetPushEvent",
-		Path:    []string{"/api/v1/domains/{domain}/push_events/{event_id}"},
+		Path:    []string{"/pushmanager/api/v1/domains/{domain}/push_events/{event_id}"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "PushManager.ListPushEvents",
-		Path:    []string{"/api/v1/domains/{domain}/push_events"},
+		Path:    []string{"/pushmanager/api/v1/domains/{domain}/push_events"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "PushManager.UpdatePushEvent",
-		Path:    []string{"/api/v1/domains/{domain}/push_events/{event_id}"},
+		Path:    []string{"/pushmanager/api/v1/domains/{domain}/push_events/{event_id}"},
 		Method:  []string{"PUT"},
 		// Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "PushManager.CreatePushWhitelist",
-		Path:    []string{"/api/v1/domains/{domain}/push_whitelists"},
+		Path:    []string{"/pushmanager/api/v1/domains/{domain}/push_whitelists"},
 		Method:  []string{"POST"},
 		// Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "PushManager.DeletePushWhitelist",
-		Path:    []string{"/api/v1/domains/{domain}/push_whitelists/{whitelist_id}"},
+		Path:    []string{"/pushmanager/api/v1/domains/{domain}/push_whitelists/{whitelist_id}"},
 		Method:  []string{"DELETE"},
 		// Body:    "",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "PushManager.UpdatePushWhitelist",
-		Path:    []string{"/api/v1/domains/{domain}/push_whitelists/{whitelist_id}"},
+		Path:    []string{"/pushmanager/api/v1/domains/{domain}/push_whitelists/{whitelist_id}"},
 		Method:  []string{"PUT"},
 		// Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "PushManager.ListPushWhitelists",
-		Path:    []string{"/api/v1/domains/{domain}/push_whitelists"},
+		Path:    []string{"/pushmanager/api/v1/domains/{domain}/push_whitelists"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "PushManager.GetPushWhitelist",
-		Path:    []string{"/api/v1/domains/{domain}/push_whitelists/{whitelist_id}"},
+		Path:    []string{"/pushmanager/api/v1/domains/{domain}/push_whitelists/{whitelist_id}"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "PushManager.CreatePushTemplate",
-		Path:    []string{"/api/v1/domains/{domain}/push_templates"},
+		Path:    []string{"/pushmanager/api/v1/domains/{domain}/push_templates"},
 		Method:  []string{"POST"},
 		// Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "PushManager.DeletePushTemplate",
-		Path:    []string{"/api/v1/domains/{domain}/push_templates/{template_id}"},
+		Path:    []string{"/pushmanager/api/v1/domains/{domain}/push_templates/{template_id}"},
 		Method:  []string{"DELETE"},
 		// Body:    "",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "PushManager.UpdatePushTemplate",
-		Path:    []string{"/api/v1/domains/{domain}/push_templates/{template_id}"},
+		Path:    []string{"/pushmanager/api/v1/domains/{domain}/push_templates/{template_id}"},
 		Method:  []string{"PUT"},
 		// Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "PushManager.ListPushTemplates",
-		Path:    []string{"/api/v1/domains/{domain}/push_templates"},
+		Path:    []string{"/pushmanager/api/v1/domains/{domain}/push_templates"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "PushManager.GetPushTemplate",
-		Path:    []string{"/api/v1/domains/{domain}/push_templates/{template_id}"},
+		Path:    []string{"/pushmanager/api/v1/domains/{domain}/push_templates/{template_id}"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))

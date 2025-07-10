@@ -19,7 +19,7 @@
     "application/json"
   ],
   "paths": {
-    "/api/v1/domains/{domain}/push_events": {
+    "/pushmanager/api/v1/domains/{domain}/push_events": {
       "get": {
         "summary": "列出推送事件",
         "description": "获取推送事件列表，支持分页和多种过滤条件。",
@@ -141,7 +141,7 @@
         ]
       }
     },
-    "/api/v1/domains/{domain}/push_events/{eventId}": {
+    "/pushmanager/api/v1/domains/{domain}/push_events/{eventId}": {
       "get": {
         "summary": "获取推送事件",
         "description": "根据事件ID获取单个推送事件的详细信息。",
@@ -264,7 +264,7 @@
         ]
       }
     },
-    "/api/v1/domains/{domain}/push_templates": {
+    "/pushmanager/api/v1/domains/{domain}/push_templates": {
       "get": {
         "summary": "列出推送模板",
         "description": "获取推送通知模板列表，支持分页和过滤。",
@@ -365,7 +365,7 @@
         ]
       }
     },
-    "/api/v1/domains/{domain}/push_templates/{templateId}": {
+    "/pushmanager/api/v1/domains/{domain}/push_templates/{templateId}": {
       "get": {
         "summary": "获取推送模板",
         "description": "根据模板ID获取单个推送通知模板的详细信息。",
@@ -488,7 +488,7 @@
         ]
       }
     },
-    "/api/v1/domains/{domain}/push_whitelists": {
+    "/pushmanager/api/v1/domains/{domain}/push_whitelists": {
       "get": {
         "summary": "列出推送白名单",
         "description": "获取推送白名单列表，支持分页和多种过滤条件。",
@@ -597,7 +597,7 @@
         ]
       }
     },
-    "/api/v1/domains/{domain}/push_whitelists/{whitelistId}": {
+    "/pushmanager/api/v1/domains/{domain}/push_whitelists/{whitelistId}": {
       "get": {
         "summary": "获取推送白名单",
         "description": "根据白名单ID获取单个推送白名单的详细信息。",

@@ -19,6 +19,7 @@ import (
 	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
 	amqp "github.com/rabbitmq/amqp091-go"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-push-manager/internal/constant"
@@ -46,11 +47,18 @@ func (r *RabbitMQ) Connect() error {
 	defer r.lock.Unlock()
 	// Check if connection is already available
 	if r.connection == nil || r.connection.IsClosed() {
+		realPwd, err := encrypt.DesDecryptFromBase([]byte(r.config.Password))
+		if err != nil {
+			blog.Errorf("failed to decrypt RabbitMQ password: %s", err.Error())
+			return err
+		}
+		decryptedPassword := string(realPwd)
+
 		// Try connecting
 		con, err := amqp.DialConfig(fmt.Sprintf(
 			"amqp://%s:%s@%s:%d/%s",
 			r.config.Username,
-			r.config.Password,
+			decryptedPassword,
 			r.config.Host,
 			r.config.Port,
 			r.config.Vhost,

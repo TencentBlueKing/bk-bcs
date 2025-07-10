@@ -10,18 +10,12 @@
  * limitations under the License.
  */
 
-// Package thirdparty provides a client for interacting with bcs-thirdparty-service.
-package thirdparty
+// Package requester xxx
+package requester
 
-const (
-	// BcsHeaderClientKey client key in header
-	BcsHeaderClientKey = "X-Bcs-Client"
-	// BcsHeaderUsernameKey username key in header
-	BcsHeaderUsernameKey = "X-Bcs-Username"
-	// HeaderAuthorizationKey authorization key in header
-	HeaderAuthorizationKey = "Authorization"
-	// InnerModuleName full module name
-	InnerModuleName = "bcs-push-manager"
-	// ModuleThirdpartyServiceManager helm manager discovery name
-	ModuleThirdpartyServiceManager = "bcsthirdpartyservice.bkbcs.tencent.com"
-)
+// BaseOptions options for Client
+type BaseOptions struct {
+	Endpoint string
+	Token    string
+	Sender   Requester
+}

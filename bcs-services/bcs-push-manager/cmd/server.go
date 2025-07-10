@@ -27,8 +27,10 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
 	grpccli "github.com/go-micro/plugins/v4/client/grpc"
 	"github.com/go-micro/plugins/v4/registry/etcd"
 	grpcsvr "github.com/go-micro/plugins/v4/server/grpc"
@@ -46,6 +48,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-push-manager/internal/handler"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-push-manager/internal/mq/rabbitmq"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-push-manager/internal/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-push-manager/internal/requester"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-push-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-push-manager/internal/thirdparty"
 	pb "github.com/Tencent/bk-bcs/bcs-services/bcs-push-manager/proto"
@@ -224,7 +227,27 @@ func (s *Server) initRegistry() error {
 
 // initStore initializes the MongoDB store.
 func (s *Server) initStore() error {
-	mongoStore, err := store.NewStore(s.opt.MongoDB)
+	if len(s.opt.Mongo.MongoEndpoints) == 0 {
+		return fmt.Errorf("mongo address cannot be empty")
+	}
+	if len(s.opt.Mongo.MongoDatabaseName) == 0 {
+		return fmt.Errorf("mongo database cannot be empty")
+	}
+	password := s.opt.Mongo.MongoPassword
+	if password != "" {
+		realPwd, _ := encrypt.DesDecryptFromBase([]byte(password))
+		password = string(realPwd)
+	}
+	mongoOptions := &mongo.Options{
+		Hosts:                 strings.Split(s.opt.Mongo.MongoEndpoints, ","),
+		ConnectTimeoutSeconds: s.opt.Mongo.MongoConnectTimeout,
+		Database:              s.opt.Mongo.MongoDatabaseName,
+		Username:              s.opt.Mongo.MongoUsername,
+		Password:              password,
+		MaxPoolSize:           0,
+		MinPoolSize:           0,
+	}
+	mongoStore, err := store.NewStore(mongoOptions)
 	if err != nil {
 		return fmt.Errorf("failed to initialize MongoDB: %v", err)
 	}
@@ -244,10 +267,18 @@ func (s *Server) initMQ() error {
 
 // initMicro initializes the gRPC service.
 func (s *Server) initMicro() error {
+	realAuthToken, err := encrypt.DesDecryptFromBase([]byte(s.opt.Gateway.Token))
+	if err != nil {
+		return fmt.Errorf("init thirdPartyServiceCli failed, encrypt token error: %s", err.Error())
+	}
 	thirdpartyOpts := &thirdparty.ClientOptions{
-		ClientTLS: s.opt.Thirdparty.ClientTLS,
-		Endpoint:  s.opt.Thirdparty.Endpoint,
-		AuthToken: s.opt.Thirdparty.Token,
+		ClientTLS:     s.clientTLSConfig,
+		EtcdEndpoints: strings.Split(s.opt.Etcd.EtcdEndpoints, ","),
+		EtcdTLS:       s.opt.Etcd.TlsConfig,
+		BaseOptions: requester.BaseOptions{
+			Endpoint: s.opt.Gateway.Endpoint,
+			Token:    string(realAuthToken),
+		},
 	}
 	thirdparty.InitThirdpartyClient(thirdpartyOpts)
 
@@ -263,13 +294,15 @@ func (s *Server) initMicro() error {
 	)
 
 	s.microService = micro.NewService(
-		micro.Name(s.opt.ServerConfig.Name),
-		micro.Client(grpccli.NewClient(
-		//grpccli.AuthTLS(s.clientTLSConfig),
+		micro.Server(grpcsvr.NewServer(
+			grpcsvr.AuthTLS(s.tlsConfig),
 		)),
+		micro.Client(grpccli.NewClient(
+			grpccli.AuthTLS(s.clientTLSConfig),
+		)),
+		micro.Name(constant.ModulePushManager),
 		micro.Context(s.ctx),
 		micro.Metadata(map[string]string{constant.MicroMetaKeyHTTPPort: strconv.Itoa(int(s.opt.HTTPPort))}),
-		micro.Server(grpcsvr.NewServer()),
 		micro.Address(net.JoinHostPort(s.opt.ServerConfig.Address, strconv.Itoa(int(s.opt.Port)))),
 		micro.Version(s.opt.ServerConfig.Version),
 		micro.RegisterTTL(30*time.Second),
@@ -299,13 +332,13 @@ func (s *Server) initHTTPGateway() error {
 	gwmux := runtime.NewServeMux(
 		runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{}),
 	)
-	grpcDialOpts := []grpc.DialOption{grpc.WithInsecure()}
+	grpcDialOpts := []grpc.DialOption{}
 	if s.tlsConfig != nil && s.clientTLSConfig != nil {
 		grpcDialOpts = append(grpcDialOpts, grpc.WithTransportCredentials(credentials.NewTLS(s.clientTLSConfig)))
 	} else {
 		grpcDialOpts = append(grpcDialOpts, grpc.WithInsecure()) // nolint
 	}
-	if err := pb.RegisterPushManagerHandlerFromEndpoint(
+	if err := pb.RegisterPushManagerGwFromEndpoint(
 		context.TODO(),
 		gwmux,
 		net.JoinHostPort(s.opt.ServerConfig.Address, strconv.Itoa(int(s.opt.ServerConfig.Port))),
@@ -328,6 +361,9 @@ func (s *Server) initHTTPGateway() error {
 	s.httpServer = &http.Server{
 		Addr:    httpAddress,
 		Handler: smux,
+	}
+	if s.tlsConfig != nil {
+		s.httpServer.TLSConfig = s.tlsConfig
 	}
 	return nil
 }

@@ -155,4 +155,8 @@ const (
 	DefaultPageSize = 10
 	// DefaultExchangeName xxx
 	DefaultExchangeName = "push"
+	// ModuleThirdpartyServiceManager helm manager discovery name
+	ModuleThirdpartyServiceManager = "bcsthirdpartyservice.bkbcs.tencent.com"
+	// ModulePushManager helm manager discovery name
+	ModulePushManager = "pushmanager.bkbcs.tencent.com"
 )

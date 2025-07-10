@@ -24,7 +24,8 @@ type ServiceOptions struct {
 	conf.LogConfig `json:"log_config"`
 	ServerConfig   `json:"server_config"`
 	ClientConfig   `json:"client_config"`
-	MongoDB        *MongoOption      `json:"mongodb"`
+	Gateway        *GatewayConfig    `json:"gateway"`
+	Mongo          *MongoOption      `json:"mongodb"`
 	Etcd           *EtcdOption       `json:"etcd"`
 	Thirdparty     *ThirdpartyOption `json:"thirdparty"`
 	RabbitMQ       *RabbitMQOption   `json:"rabbitmq"`
@@ -47,11 +48,16 @@ type ServerConfig struct {
 
 // MongoOption defines the options for mongodb.
 type MongoOption struct {
-	Endpoints      string `json:"endpoints"`
-	ConnectTimeout int    `json:"connecttimeout"`
-	Database       string `json:"database"`
-	Username       string `json:"username"`
-	Password       string `json:"password"`
+	// MongoEndpoints addr of mongodb
+	MongoEndpoints string `json:"endpoints"`
+	// MongoConnectTimeout connect timeout of mongodb
+	MongoConnectTimeout int `json:"connecttimeout"`
+	// MongoDatabaseName database of mongodb
+	MongoDatabaseName string `json:"database"`
+	// MongoUsername username of mongodb
+	MongoUsername string `json:"username"`
+	// MongoPassword password of mongodb
+	MongoPassword string `json:"password"`
 }
 
 // EtcdOption defines the options for etcd.
@@ -94,9 +100,26 @@ func NewServiceOptions() *ServiceOptions {
 	return &ServiceOptions{
 		LogConfig:    conf.LogConfig{},
 		ServerConfig: ServerConfig{},
-		MongoDB:      &MongoOption{},
+		Mongo:        &MongoOption{},
 		Etcd:         &EtcdOption{},
 		Thirdparty:   &ThirdpartyOption{},
 		RabbitMQ:     &RabbitMQOption{},
+		Gateway:      &GatewayConfig{},
 	}
+}
+
+// Credential can be used to provide authentication options when configuring a Client.
+type Credential struct {
+	AuthMechanism           string
+	AuthMechanismProperties map[string]string
+	AuthSource              string
+	Username                string
+	Password                string
+	PasswordSet             bool
+}
+
+// GatewayConfig bcs gateway config
+type GatewayConfig struct {
+	Endpoint string `json:"endpoint"`
+	Token    string `json:"token"`
 }
