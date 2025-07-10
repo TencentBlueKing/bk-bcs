@@ -83,6 +83,7 @@ type MongoConfig struct {
 	MinPoolSize    uint   `json:"minpoolsize"`
 }
 
+// RedisConfig option for redis
 type RedisConfig struct {
 	Address    string `json:"address"`
 	Password   string `json:"password"`
