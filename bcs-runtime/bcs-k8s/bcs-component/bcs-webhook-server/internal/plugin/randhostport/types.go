@@ -52,4 +52,6 @@ const (
 	PatchPathAffinity = "/spec/affinity"
 	// PatchPathPodAnnotations path for patching pod annotations
 	PatchPathPodAnnotations = "/metadata/annotations"
+	// PatchPathAffinityPatchPath path for patching pod antiAffinity
+	PatchPathAffinityPatchPath = "/podAntiAffinity/requiredDuringSchedulingIgnoredDuringExecution"
 )

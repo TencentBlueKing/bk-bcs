@@ -404,14 +404,16 @@ export default defineComponent({
       return res.data?.manifest;
     };
     // 自定义资源详情(源码模式)
-    const handleGetCustomObjectDetail = async ({ namespace, name, clusterID }) => {
+    const handleGetCustomObjectDetail = async ({ namespace, name, clusterID, version, resource, group }) => {
       detailLoading.value = true;
       const res = await customResourceDetail({
         format: 'manifest',
         $clusterId: clusterID,
         $name: name,
-        kind: kind.value,
+        group,
         namespace,
+        version,
+        resource,
       }, { needRes: true }).catch(() => ({
         data: {
           manifest: {},
@@ -435,6 +437,9 @@ export default defineComponent({
           name: row?.metadata?.name,
           namespace,
           clusterID: curDetailRow.value.extData?.clusterID,
+          version: crdOptions.value?.version,
+          resource: crdOptions.value?.resource,
+          group: crdOptions.value?.group,
         });
       } else {
         curDetailRow.value.data = await handleGetResourceDetail({
@@ -509,6 +514,11 @@ export default defineComponent({
       const { name, namespace, uid } = row.metadata || {};
       const editMode = handleGetExtData(uid, 'editMode');
       if (editMode === 'yaml') {
+        const crdQuery = {
+          group: crdOptions.value.group,
+          version: crdOptions.value.version,
+          resource: crdOptions.value.resource,
+        };
         $router.push({
           name: 'dashboardResourceUpdate',
           params: {
@@ -522,6 +532,7 @@ export default defineComponent({
             kind: kind.value,
             crd: crd.value,
             customized: customized.value,
+            ...crdQuery,
           },
         });
       } else {
@@ -579,6 +590,9 @@ export default defineComponent({
           kind: kind.value,
           $clusterId: handleGetExtData(uid, 'clusterID'),
           $name: name,
+          group: crdOptions.value.group,
+          version: crdOptions.value.version,
+          resource: crdOptions.value.resource,
         }).then(() => true)
           .catch(() => false);
       } else if (type.value === 'crd') {
@@ -1090,6 +1104,7 @@ export default defineComponent({
           scope={this.scope}
           formUpdate={this.formUpdate}
           customized={this.customized}
+          crdOptions={this.crdOptions}
           cancel={() => this.showCreateDialog = false} />
       </div>
     );

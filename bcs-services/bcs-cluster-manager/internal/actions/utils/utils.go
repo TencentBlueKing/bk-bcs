@@ -39,6 +39,8 @@ const (
 	GroupTemplate = "ng"
 	// NotifyTemplate notify template
 	NotifyTemplate = "nf"
+	// TemplateConfig template config
+	TemplateConfig = "tc"
 )
 
 // CheckClusterConnection check cluster connection when delete cluster or other scenes
