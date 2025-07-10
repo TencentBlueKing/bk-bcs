@@ -639,3 +639,8 @@ func (w *Watcher) DoWatch(ctx context.Context) (chan *drivers.WatchEvent, error)
 
 	return eventChannel, nil
 }
+
+// Client returns the underlying mongo.Client instance.
+func (db *DB) Client() *mongo.Client {
+	return db.mCli
+}
