@@ -132,6 +132,14 @@ func (t *Task) AddStep(step *Step) *Task {
 	return t
 }
 
+// GetCommonParams return all common params
+func (t *Task) GetCommonParams() map[string]string {
+	if t.CommonParams == nil {
+		t.CommonParams = make(map[string]string, 0)
+	}
+	return t.CommonParams
+}
+
 // GetCommonParam get common params
 func (t *Task) GetCommonParam(key string) (string, bool) {
 	if t.CommonParams == nil {
