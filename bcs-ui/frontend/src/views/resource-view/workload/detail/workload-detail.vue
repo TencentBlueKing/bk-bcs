@@ -37,7 +37,7 @@
                 resourceName: metadata.name,
                 permCtx: {
                   resource_type: 'namespace',
-                  namespace: metadata.namespace,
+                  name: metadata.namespace,
                   project_id: curProject.project_id,
                   cluster_id: clusterId,
                 }
@@ -751,7 +751,7 @@ export default defineComponent({
         perm_ctx: {
           resource_type: 'namespace',
           cluster_id: clusterId.value,
-          namespace: props.namespace,
+          name: props.namespace,
           project_id: curProject.value?.project_id,
         },
       }).catch(() => ({}));
