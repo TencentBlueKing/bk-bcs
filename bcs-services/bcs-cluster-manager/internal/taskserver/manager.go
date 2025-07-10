@@ -16,12 +16,15 @@ package taskserver
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
 	machinery "github.com/RichardKnop/machinery/v2"
 	"github.com/RichardKnop/machinery/v2/backends/mongo"
 	"github.com/RichardKnop/machinery/v2/brokers/amqp"
+	"github.com/RichardKnop/machinery/v2/brokers/iface"
+	"github.com/RichardKnop/machinery/v2/brokers/redis"
 	"github.com/RichardKnop/machinery/v2/config"
 	"github.com/RichardKnop/machinery/v2/locks/eager"
 	"github.com/RichardKnop/machinery/v2/tasks"
@@ -54,6 +57,7 @@ func GetTaskServer() *TaskServer {
 // TaskServer server for go-machinery
 type TaskServer struct {
 	brokerOption  *options.BrokerConfig
+	redis         *options.RedisConfig
 	backendOption *cmongo.Options
 
 	cxt    context.Context
@@ -64,12 +68,13 @@ type TaskServer struct {
 }
 
 // Init register all background task, init server
-func (ts *TaskServer) Init(opt *options.BrokerConfig, backend *cmongo.Options) error {
+func (ts *TaskServer) Init(opt *options.BrokerConfig, redisCnf *options.RedisConfig, backend *cmongo.Options) error {
 	if opt == nil || backend == nil {
 		blog.Errorf("TaskServer lost Broker or backend Config")
 		return fmt.Errorf("lost broker/backend configuration")
 	}
 	ts.brokerOption = opt
+	ts.redis = redisCnf
 	ts.backendOption = backend
 	if err := ts.validateOption(); err != nil {
 		blog.Errorf("taskserver validate broker/backend Option failed, %s", err.Error())
@@ -176,6 +181,15 @@ func (ts *TaskServer) initServer() error {
 			Client:   mongoCli,
 			Database: ts.backendOption.Database,
 		},
+		Redis: &config.RedisConfig{
+			MaxIdle:                10,
+			IdleTimeout:            300,
+			ReadTimeout:            15,
+			WriteTimeout:           15,
+			ConnectTimeout:         15,
+			NormalTasksPollPeriod:  1000,
+			DelayedTasksPollPeriod: 20,
+		},
 		AMQP: &config.AMQPConfig{
 			Exchange:      ts.brokerOption.Exchange,
 			ExchangeType:  "direct",
@@ -183,7 +197,25 @@ func (ts *TaskServer) initServer() error {
 			PrefetchCount: 50,
 		},
 	}
-	broker := amqp.New(config)
+
+	var broker iface.Broker
+	if ts.redis.Address != "" {
+		blog.Infof("task server init redis broker")
+		addrs := strings.Split(ts.redis.Address, ",")
+		if len(ts.backendOption.Password) > 0 {
+			addrs[0] = ts.redis.Password + "@" + addrs[0]
+		}
+
+		if len(addrs) > 1 && len(ts.redis.MasterName) > 0 {
+			config.Redis.MasterName = ts.redis.MasterName
+		}
+
+		broker = redis.NewGR(config, addrs, ts.redis.Db)
+	} else {
+		blog.Infof("task server init amqp broker")
+		broker = amqp.New(config)
+	}
+
 	backend, err := mongo.New(config)
 	if err != nil {
 		blog.Errorf("task server init mongo backend failed, %s", err.Error())

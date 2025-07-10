@@ -9,6 +9,12 @@
         "maxpoolsize": ${bcsClusterManagerMongoMaxPoolSize},
         "minpoolsize": ${bcsClusterManagerMongoMinPoolSize}
     },
+    "redis": {
+        "address": "${bcsClusterManagerRedisAddress}",
+        "password": "${bcsClusterManagerRedisPassword}",
+        "db": ${bcsClusterManagerRedisDb},
+        "masterName": "${bcsClusterManagerRedisMasterName}"
+    },
     "etcd": {
         "endpoints": "${bcsEtcdHost}",
         "cert": "${bcsEtcdCertFile}",
