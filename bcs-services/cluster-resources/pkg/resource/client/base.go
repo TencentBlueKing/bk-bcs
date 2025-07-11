@@ -147,6 +147,14 @@ func (c *ResClient) Get(
 	return ret, c.handleErr(ctx, err)
 }
 
+// GetWithoutPerm 获取单个资源
+func (c *ResClient) GetWithoutPerm(
+	ctx context.Context, namespace, name string, opts metav1.GetOptions,
+) (*unstructured.Unstructured, error) {
+	ret, err := c.cli.Resource(c.res).Namespace(namespace).Get(ctx, name, opts)
+	return ret, c.handleErr(ctx, err)
+}
+
 // Create 创建资源
 func (c *ResClient) Create(
 	ctx context.Context, manifest map[string]interface{}, isNSScoped bool, opts metav1.CreateOptions,
@@ -230,6 +238,17 @@ func (c *ResClient) Delete(ctx context.Context, namespace, name string, opts met
 	if err := c.permValidate(ctx, action.Delete, namespace); err != nil {
 		return err
 	}
+	// 若没有设置 PropagationPolicy，则设置为 Background
+	// https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/#deleting-a-replicaset-and-its-pods
+	if opts.PropagationPolicy == nil {
+		policy := metav1.DeletePropagationBackground
+		opts.PropagationPolicy = &policy
+	}
+	return c.handleErr(ctx, c.cli.Resource(c.res).Namespace(namespace).Delete(ctx, name, opts))
+}
+
+// DeleteWithoutPerm 删除单个资源
+func (c *ResClient) DeleteWithoutPerm(ctx context.Context, namespace, name string, opts metav1.DeleteOptions) error {
 	// 若没有设置 PropagationPolicy，则设置为 Background
 	// https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/#deleting-a-replicaset-and-its-pods
 	if opts.PropagationPolicy == nil {

@@ -23,6 +23,33 @@ const (
 	AccessLogFileStdout = "/dev/stdout"
 )
 
+// Field key constants for Istio configuration
+const (
+	FieldKeyEnableTracing             = "enableTracing"
+	FieldKeyMeshConfig                = "meshConfig"
+	FieldKeyPilot                     = "pilot"
+	FieldKeyTelemetry                 = "telemetry"
+	FieldKeyGlobal                    = "global"
+	FieldKeyMultiCluster              = "multiCluster"
+	FieldKeyExtensionProviders        = "extensionProviders"
+	FieldKeyTraceSampling             = "traceSampling"
+	FieldKeyDefaultConfig             = "defaultConfig"
+	FieldKeyTracingConfig             = "tracingConfig"
+	FieldKeyAccessLogFile             = "accessLogFile"
+	FieldKeyAccessLogFormat           = "accessLogFormat"
+	FieldKeyAccessLogEncoding         = "accessLogEncoding"
+	FieldKeyAutoscaleEnabled          = "autoscaleEnabled"
+	FieldKeyAutoscaleMin              = "autoscaleMin"
+	FieldKeyAutoscaleMax              = "autoscaleMax"
+	FieldKeyCPU                       = "cpu"
+	FieldKeyDedicatedNode             = "dedicatedNode"
+	FieldKeyDedicatedNodeEnabled      = "enabled"
+	FieldKeyDedicatedNodeNodeSelector = "nodeSelector"
+	FieldKeyDedicatedNodeTolerations  = "tolerations"
+	FieldKeyZipkin                    = "zipkin"
+	FieldKeyZipkinAddress             = "address"
+)
+
 // IstioInstallOption istio安装操作选项
 type IstioInstallOption struct {
 	ChartValuesPath string

@@ -28,7 +28,7 @@ func TestConvertValuesToListItem(t *testing.T) {
 		meshIstio    *entity.MeshIstio
 		istiodValues *common.IstiodInstallValues
 		wantErr      bool
-		validate     func(t *testing.T, result *meshmanager.IstioListItem)
+		validate     func(t *testing.T, result *meshmanager.IstioDetailInfo)
 	}{
 		{
 			name:         "nil meshIstio",
@@ -60,7 +60,7 @@ func TestConvertValuesToListItem(t *testing.T) {
 			},
 			istiodValues: &common.IstiodInstallValues{},
 			wantErr:      false,
-			validate: func(t *testing.T, result *meshmanager.IstioListItem) {
+			validate: func(t *testing.T, result *meshmanager.IstioDetailInfo) {
 				if result.MeshID != "test-mesh" {
 					t.Errorf("expected MeshID 'test-mesh', got '%s'", result.MeshID)
 				}
@@ -99,7 +99,7 @@ func TestConvertValuesToListItem(t *testing.T) {
 				},
 			},
 			wantErr: false,
-			validate: func(t *testing.T, result *meshmanager.IstioListItem) {
+			validate: func(t *testing.T, result *meshmanager.IstioDetailInfo) {
 				if result.SidecarResourceConfig == nil {
 					t.Fatal("expected SidecarResourceConfig to be set")
 				}
@@ -154,7 +154,7 @@ func TestConvertValuesToListItem(t *testing.T) {
 				},
 			},
 			wantErr: false,
-			validate: func(t *testing.T, result *meshmanager.IstioListItem) {
+			validate: func(t *testing.T, result *meshmanager.IstioDetailInfo) {
 				if result.HighAvailability == nil {
 					t.Fatal("expected HighAvailability to be set")
 				}
@@ -227,7 +227,7 @@ func TestConvertValuesToListItem(t *testing.T) {
 				},
 			},
 			wantErr: false,
-			validate: func(t *testing.T, result *meshmanager.IstioListItem) {
+			validate: func(t *testing.T, result *meshmanager.IstioDetailInfo) {
 				if result.ObservabilityConfig == nil {
 					t.Fatal("expected ObservabilityConfig to be set")
 				}
@@ -288,7 +288,7 @@ func TestConvertValuesToListItem(t *testing.T) {
 				},
 			},
 			wantErr: false,
-			validate: func(t *testing.T, result *meshmanager.IstioListItem) {
+			validate: func(t *testing.T, result *meshmanager.IstioDetailInfo) {
 				if result.ObservabilityConfig == nil {
 					t.Fatal("expected ObservabilityConfig to be set")
 				}
@@ -345,7 +345,7 @@ func TestConvertValuesToListItem(t *testing.T) {
 				},
 			},
 			wantErr: false,
-			validate: func(t *testing.T, result *meshmanager.IstioListItem) {
+			validate: func(t *testing.T, result *meshmanager.IstioDetailInfo) {
 				if result.FeatureConfigs == nil {
 					t.Fatal("expected FeatureConfigs to be set")
 				}
@@ -522,7 +522,7 @@ func TestConvertValuesToListItem(t *testing.T) {
 				},
 			},
 			wantErr: false,
-			validate: func(t *testing.T, result *meshmanager.IstioListItem) {
+			validate: func(t *testing.T, result *meshmanager.IstioDetailInfo) {
 				// Validate basic fields
 				if result.MeshID != "complete-mesh" {
 					t.Errorf("expected MeshID 'complete-mesh', got '%s'", result.MeshID)
@@ -588,7 +588,7 @@ func TestConvertValuesToListItem(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := ConvertValuesToListItem(tt.meshIstio, tt.istiodValues)
+			result, err := ConvertValuesToIstioDetailInfo(tt.meshIstio, tt.istiodValues)
 
 			if tt.wantErr {
 				if err == nil {

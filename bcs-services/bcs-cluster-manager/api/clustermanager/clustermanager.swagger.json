@@ -725,6 +725,13 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "businessID",
+            "description": "businessID. 业务ID",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -823,6 +830,13 @@
             "description": "云模板ID",
             "in": "path",
             "required": true,
+            "type": "string"
+          },
+          {
+            "name": "businessID",
+            "description": "businessID. 业务ID",
+            "in": "query",
+            "required": false,
             "type": "string"
           }
         ],
@@ -6593,6 +6607,185 @@
         ]
       }
     },
+    "/clustermanager/v1/templateconfigs": {
+      "get": {
+        "summary": "查询不同云业务下的节点模板配置",
+        "description": "根据查询条件过滤节点模板配置，支持按业务ID、项目ID、集群ID等条件查询。如果某项条件值为空，则忽略此条件。如果所有条件都为空，则默认查询项目下所有模板配置。",
+        "operationId": "ClusterManager_ListTemplateConfig",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerListTemplateConfigResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "businessID",
+            "description": "businessID. 业务ID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "projectID",
+            "description": "projectID. 项目ID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "description": "clusterID. 集群ID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "provider",
+            "description": "provider. 云服务商类型",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "configType",
+            "description": "configType. 模板配置类型",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      },
+      "post": {
+        "summary": "创建模板配置",
+        "description": "创建新的模板配置，需要提供完整的配置信息",
+        "operationId": "ClusterManager_CreateTemplateConfig",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerCreateTemplateConfigResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerCreateTemplateConfigRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
+    "/clustermanager/v1/templateconfigs/{templateConfigID}": {
+      "delete": {
+        "summary": "删除模板配置信息",
+        "description": "根据配置ID删除特定的模板配置",
+        "operationId": "ClusterManager_DeleteTemplateConfig",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerDeleteTemplateConfigResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "templateConfigID",
+            "description": "删除的模板配置ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "businessID",
+            "description": "businessID. 删除的模板配置所属的业务ID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "projectID",
+            "description": "projectID. 删除的模板配置所属的项目ID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      },
+      "put": {
+        "summary": "修改模板配置",
+        "description": "修改模板配置，需要提供完整的配置信息",
+        "operationId": "ClusterManager_UpdateTemplateConfig",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerUpdateTemplateConfigResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "templateConfigID",
+            "description": "模板配置ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerUpdateTemplateConfigRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
     "/clustermanager/v1/vcluster": {
       "post": {
         "summary": "创建虚拟集群",
@@ -8885,7 +9078,7 @@
         "underlayRatio": {
           "type": "integer",
           "format": "int64",
-          "description": "underlay网络模式下自动分配子网的步长",
+          "description": "underlay网络模式下的使用率",
           "title": "underlayAutoSteps"
         },
         "vpcCniModes": {
@@ -8899,6 +9092,57 @@
       },
       "description": "用于记录公共网络配置信息",
       "title": "CloudNetworkInfo"
+    },
+    "clustermanagerCloudNetworkTemplateConfig": {
+      "type": "object",
+      "properties": {
+        "cidrSteps": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerEnvCidrStep"
+          },
+          "description": "cidr自动扩容步长设置(随环境变量配置而变化)",
+          "title": "cidrSteps"
+        },
+        "serviceSteps": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "description": "service数量扩容步长设置",
+          "title": "serviceSteps"
+        },
+        "perNodePodNum": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "description": "单节点pod数量配置",
+          "title": "perNodePodNum"
+        },
+        "underlaySteps": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "description": "underlay网络模式下用户手动分配子网的步长",
+          "title": "underlaySteps"
+        },
+        "underlayAutoSteps": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "description": "underlay网络模式下自动分配子网的步长",
+          "title": "underlayAutoSteps"
+        }
+      },
+      "description": "云模板网络配置信息",
+      "title": "cloudNetworkConfig"
     },
     "clustermanagerCloudNode": {
       "type": "object",
@@ -9001,6 +9245,18 @@
           "type": "string"
         }
       }
+    },
+    "clustermanagerCloudTemplateConfig": {
+      "type": "object",
+      "properties": {
+        "cloudNetworkTemplateConfig": {
+          "$ref": "#/definitions/clustermanagerCloudNetworkTemplateConfig",
+          "description": "云模板网络配置信息",
+          "title": "cloudNetworkTemplateConfig"
+        }
+      },
+      "description": "云模板配置信息",
+      "title": "cloudConfig"
     },
     "clustermanagerCloudVPC": {
       "type": "object",
@@ -11832,6 +12088,73 @@
         }
       }
     },
+    "clustermanagerCreateTemplateConfigRequest": {
+      "type": "object",
+      "properties": {
+        "businessID": {
+          "type": "string",
+          "description": "业务ID",
+          "title": "businessID"
+        },
+        "projectID": {
+          "type": "string",
+          "description": "项目ID",
+          "title": "projectID"
+        },
+        "clusterID": {
+          "type": "string",
+          "description": "集群ID",
+          "title": "clusterID"
+        },
+        "provider": {
+          "type": "string",
+          "description": "云服务商类型，如：aws/azure/gcp",
+          "title": "provider"
+        },
+        "configType": {
+          "type": "string",
+          "description": "模板配置类型，如：cloud/cluster/nodegroup",
+          "title": "configType"
+        },
+        "cloudTemplateConfig": {
+          "$ref": "#/definitions/clustermanagerCloudTemplateConfig",
+          "description": "云模板配置信息",
+          "title": "CloudTemplateConfig"
+        }
+      },
+      "description": "创建模板配置的请求参数",
+      "title": "createTemplateConfigRequest",
+      "required": [
+        "businessID",
+        "projectID",
+        "provider",
+        "configType"
+      ]
+    },
+    "clustermanagerCreateTemplateConfigResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回操作结果",
+          "title": "result"
+        }
+      },
+      "description": "创建模板配置的响应结果",
+      "title": "createTemplateConfigResponse"
+    },
     "clustermanagerCreateVirtualClusterReq": {
       "type": "object",
       "properties": {
@@ -12529,6 +12852,30 @@
           "title": "data"
         }
       }
+    },
+    "clustermanagerDeleteTemplateConfigResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回操作结果",
+          "title": "result"
+        }
+      },
+      "description": "删除模板配置的响应结果",
+      "title": "deleteTemplateConfigResponse"
     },
     "clustermanagerDeleteVirtualClusterResp": {
       "type": "object",
@@ -16720,6 +17067,38 @@
         }
       }
     },
+    "clustermanagerListTemplateConfigResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回操作结果",
+          "title": "result"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerTemplateConfigInfo"
+          },
+          "description": "模板配置列表",
+          "title": "data"
+        }
+      },
+      "description": "查询模板配置的响应结果",
+      "title": "listTemplateConfigResponse"
+    },
     "clustermanagerManagedConfig": {
       "type": "object",
       "properties": {
@@ -19691,6 +20070,68 @@
         }
       }
     },
+    "clustermanagerTemplateConfigInfo": {
+      "type": "object",
+      "properties": {
+        "templateConfigID": {
+          "type": "string",
+          "description": "模板配置ID，格式为BCS-tc-xxx",
+          "title": "templateConfigID"
+        },
+        "businessID": {
+          "type": "string",
+          "description": "业务ID",
+          "title": "businessID"
+        },
+        "projectID": {
+          "type": "string",
+          "description": "项目ID",
+          "title": "projectID"
+        },
+        "clusterID": {
+          "type": "string",
+          "description": "集群ID",
+          "title": "clusterID"
+        },
+        "provider": {
+          "type": "string",
+          "description": "云服务提供商类型",
+          "title": "provider"
+        },
+        "configType": {
+          "type": "string",
+          "description": "模板配置类型，如 cloud(云)/cluster(集群)/nodegroup(节点组)",
+          "title": "configType"
+        },
+        "cloudTemplateConfig": {
+          "$ref": "#/definitions/clustermanagerCloudTemplateConfig",
+          "description": "云模板配置内容",
+          "title": "cloudTemplateConfig"
+        },
+        "creator": {
+          "type": "string",
+          "description": "模板配置创建者",
+          "title": "creator"
+        },
+        "updater": {
+          "type": "string",
+          "description": "模板配置最后更新者",
+          "title": "updater"
+        },
+        "createTime": {
+          "type": "string",
+          "description": "模板配置创建时间",
+          "title": "createTime"
+        },
+        "updateTime": {
+          "type": "string",
+          "description": "配置最后更新时间",
+          "title": "updateTime"
+        }
+      },
+      "description": "模板配置信息",
+      "title": "cloudConfig"
+    },
     "clustermanagerTemplateDetailInfo": {
       "type": "object",
       "properties": {
@@ -21892,6 +22333,75 @@
           "title": "data"
         }
       }
+    },
+    "clustermanagerUpdateTemplateConfigRequest": {
+      "type": "object",
+      "properties": {
+        "templateConfigID": {
+          "type": "string",
+          "description": "模板配置ID",
+          "title": "templateConfigID"
+        },
+        "businessID": {
+          "type": "string",
+          "description": "业务ID",
+          "title": "businessID"
+        },
+        "projectID": {
+          "type": "string",
+          "description": "项目ID",
+          "title": "projectID"
+        },
+        "clusterID": {
+          "type": "string",
+          "description": "集群ID",
+          "title": "clusterID"
+        },
+        "provider": {
+          "type": "string",
+          "description": "云服务商类型，如：aws/azure/gcp",
+          "title": "provider"
+        },
+        "configType": {
+          "type": "string",
+          "description": "模板配置类型，如：cloud/cluster/nodegroup",
+          "title": "configType"
+        },
+        "cloudTemplateConfig": {
+          "$ref": "#/definitions/clustermanagerCloudTemplateConfig",
+          "description": "云模板配置信息",
+          "title": "CloudTemplateConfig"
+        }
+      },
+      "description": "修改模板配置的请求参数",
+      "title": "UpdateTemplateConfigRequest",
+      "required": [
+        "templateConfigID"
+      ]
+    },
+    "clustermanagerUpdateTemplateConfigResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回操作结果",
+          "title": "result"
+        }
+      },
+      "description": "修改模板配置的响应结果",
+      "title": "UpdateTemplateConfigResponse"
     },
     "clustermanagerUpdateVirtualClusterQuotaReq": {
       "type": "object",

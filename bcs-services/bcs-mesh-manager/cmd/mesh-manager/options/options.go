@@ -27,12 +27,13 @@ type MeshManagerOptions struct {
 	conf.LogConfig
 	ServerConfig
 	ClientConfig
-	Etcd        *EtcdConfig    `json:"etcd"`
-	Mongo       *MongoConfig   `json:"mongo"`
-	Gateway     *GatewayConfig `json:"gateway"`
-	IAM         IAMConfig      `json:"iam"`
-	Auth        AuthConfig     `json:"auth"`
-	IstioConfig *IstioConfig   `json:"istio"`
+	Etcd        *EtcdConfig       `json:"etcd"`
+	Mongo       *MongoConfig      `json:"mongo"`
+	Gateway     *GatewayConfig    `json:"gateway"`
+	IAM         IAMConfig         `json:"iam"`
+	Auth        AuthConfig        `json:"auth"`
+	IstioConfig *IstioConfig      `json:"istio"`
+	Monitoring  *MonitoringConfig `json:"monitoring"`
 }
 
 // Parse parse
@@ -129,17 +130,33 @@ type IAMConfig struct {
 	ApplyPermAddress string `json:"applyPermAddress"`
 }
 
+// CredentialScope define credentials scope for a single resource
+type CredentialScope struct {
+	ProjectCode string `json:"projectCode" yaml:"projectCode"`
+	ClusterID   string `json:"clusterID" yaml:"clusterID"`
+	ProjectID   string `json:"projectID" yaml:"projectID"`
+	Namespace   string `json:"namespace" yaml:"namespace"`
+}
+
 // AuthConfig config for auth
 type AuthConfig struct {
 	Enable bool `json:"enable"`
 	// jwt key
 	PublicKeyFile  string `json:"publicKeyFile"`
 	PrivateKeyFile string `json:"privateKeyFile"`
+	PublicKey      string `json:"publicKey"`
+	PrivateKey     string `json:"privateKey"`
+	// 不鉴权接口，使用逗号分隔，格式 `MeshManager.Health,MeshManager.Health`
+	NoAuthMethod string `json:"noAuthMethod"`
 	// client 类型用户权限，使用 json 格式，key 为 client 名称，values 为拥有的权限，'*' 表示所有
 	// 如：`{"admin": ["*"], "client_a": ["MeshManager.ListTasks"]}`
 	ClientPermissions string `json:"clientPermissions"`
-	// 不鉴权接口，使用逗号分隔，格式 `MeshManager.Health,MeshManager.Health`
-	NoAuthMethod string `json:"noAuthMethod"`
+}
+
+// MonitoringConfig monitoring configuration
+type MonitoringConfig struct {
+	Domain   string `json:"domain"`
+	DashName string `json:"dashName"`
 }
 
 // loadConfigFile loading json config file
@@ -162,3 +179,6 @@ func (o *MeshManagerOptions) Validate() error {
 	}
 	return nil
 }
+
+// GlobalOptions global mesh manager options
+var GlobalOptions *MeshManagerOptions

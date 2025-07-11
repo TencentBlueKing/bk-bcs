@@ -1,0 +1,1161 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Push Manager API Doc",
+    "version": "0.1.0"
+  },
+  "tags": [
+    {
+      "name": "PushManager"
+    }
+  ],
+  "schemes": [
+    "http"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/pushmanager/api/v1/domains/{domain}/push_events": {
+      "get": {
+        "summary": "列出推送事件",
+        "description": "获取推送事件列表，支持分页和多种过滤条件。",
+        "operationId": "PushManager_ListPushEvents",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/pushmanagerListPushEventsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "domain",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "ruleId",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "pushLevel",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "startTime",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "endTime",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          }
+        ],
+        "tags": [
+          "PushManager"
+        ]
+      },
+      "post": {
+        "summary": "创建推送事件",
+        "description": "创建新的推送事件记录",
+        "operationId": "PushManager_CreatePushEvent",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/pushmanagerCreatePushEventResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "domain",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "event": {
+                  "$ref": "#/definitions/pushmanagerPushEvent"
+                }
+              }
+            }
+          }
+        ],
+        "tags": [
+          "PushManager"
+        ]
+      }
+    },
+    "/pushmanager/api/v1/domains/{domain}/push_events/{eventId}": {
+      "get": {
+        "summary": "获取推送事件",
+        "description": "根据事件ID获取单个推送事件的详细信息。",
+        "operationId": "PushManager_GetPushEvent",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/pushmanagerGetPushEventResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "domain",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "eventId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "PushManager"
+        ]
+      },
+      "delete": {
+        "summary": "删除推送事件",
+        "description": "根据事件ID删除推送事件",
+        "operationId": "PushManager_DeletePushEvent",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/pushmanagerDeletePushEventResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "domain",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "eventId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "PushManager"
+        ]
+      },
+      "put": {
+        "summary": "更新推送事件",
+        "description": "更新推送事件的任意字段，未提供的字段将保持不变",
+        "operationId": "PushManager_UpdatePushEvent",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/pushmanagerUpdatePushEventResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "domain",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "eventId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "event": {
+                  "$ref": "#/definitions/pushmanagerPushEvent"
+                }
+              }
+            }
+          }
+        ],
+        "tags": [
+          "PushManager"
+        ]
+      }
+    },
+    "/pushmanager/api/v1/domains/{domain}/push_templates": {
+      "get": {
+        "summary": "列出推送模板",
+        "description": "获取推送通知模板列表，支持分页和过滤。",
+        "operationId": "PushManager_ListPushTemplates",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/pushmanagerListPushTemplatesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "domain",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "templateType",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "creator",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "PushManager"
+        ]
+      },
+      "post": {
+        "summary": "创建推送模板",
+        "description": "创建新的推送通知模板。",
+        "operationId": "PushManager_CreatePushTemplate",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/pushmanagerCreatePushTemplateResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "domain",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "template": {
+                  "$ref": "#/definitions/pushmanagerPushTemplate"
+                }
+              }
+            }
+          }
+        ],
+        "tags": [
+          "PushManager"
+        ]
+      }
+    },
+    "/pushmanager/api/v1/domains/{domain}/push_templates/{templateId}": {
+      "get": {
+        "summary": "获取推送模板",
+        "description": "根据模板ID获取单个推送通知模板的详细信息。",
+        "operationId": "PushManager_GetPushTemplate",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/pushmanagerGetPushTemplateResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "domain",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "templateId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "PushManager"
+        ]
+      },
+      "delete": {
+        "summary": "删除推送模板",
+        "description": "根据模板ID删除推送通知模板。",
+        "operationId": "PushManager_DeletePushTemplate",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/pushmanagerDeletePushTemplateResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "domain",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "templateId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "PushManager"
+        ]
+      },
+      "put": {
+        "summary": "更新推送模板",
+        "description": "更新现有推送通知模板的配置信息。",
+        "operationId": "PushManager_UpdatePushTemplate",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/pushmanagerUpdatePushTemplateResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "domain",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "templateId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "template": {
+                  "$ref": "#/definitions/pushmanagerPushTemplate"
+                }
+              }
+            }
+          }
+        ],
+        "tags": [
+          "PushManager"
+        ]
+      }
+    },
+    "/pushmanager/api/v1/domains/{domain}/push_whitelists": {
+      "get": {
+        "summary": "列出推送白名单",
+        "description": "获取推送白名单列表，支持分页和多种过滤条件。",
+        "operationId": "PushManager_ListPushWhitelists",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/pushmanagerListPushWhitelistsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "domain",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "applicant",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "whitelistStatus",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "approvalStatus",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "PushManager"
+        ]
+      },
+      "post": {
+        "summary": "创建推送白名单",
+        "description": "创建新的推送白名单记录，用于屏蔽特定维度的推送。",
+        "operationId": "PushManager_CreatePushWhitelist",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/pushmanagerCreatePushWhitelistResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "domain",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "whitelist": {
+                  "$ref": "#/definitions/pushmanagerPushWhitelist"
+                }
+              }
+            }
+          }
+        ],
+        "tags": [
+          "PushManager"
+        ]
+      }
+    },
+    "/pushmanager/api/v1/domains/{domain}/push_whitelists/{whitelistId}": {
+      "get": {
+        "summary": "获取推送白名单",
+        "description": "根据白名单ID获取单个推送白名单的详细信息。",
+        "operationId": "PushManager_GetPushWhitelist",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/pushmanagerGetPushWhitelistResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "domain",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "whitelistId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "PushManager"
+        ]
+      },
+      "delete": {
+        "summary": "删除推送白名单",
+        "description": "根据白名单ID删除推送白名单。",
+        "operationId": "PushManager_DeletePushWhitelist",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/pushmanagerDeletePushWhitelistResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "domain",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "whitelistId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "PushManager"
+        ]
+      },
+      "put": {
+        "summary": "更新推送白名单",
+        "description": "更新现有推送白名单的配置信息。",
+        "operationId": "PushManager_UpdatePushWhitelist",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/pushmanagerUpdatePushWhitelistResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "domain",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "whitelistId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "whitelist": {
+                  "$ref": "#/definitions/pushmanagerPushWhitelist"
+                }
+              }
+            }
+          }
+        ],
+        "tags": [
+          "PushManager"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "pushmanagerCreatePushEventResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "message": {
+          "type": "string"
+        },
+        "eventId": {
+          "type": "string"
+        }
+      }
+    },
+    "pushmanagerCreatePushTemplateResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "pushmanagerCreatePushWhitelistResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "pushmanagerDeletePushEventResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "pushmanagerDeletePushTemplateResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "pushmanagerDeletePushWhitelistResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "pushmanagerDimension": {
+      "type": "object",
+      "properties": {
+        "fields": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      },
+      "title": "===== 基础结构 ====="
+    },
+    "pushmanagerEventDetail": {
+      "type": "object",
+      "properties": {
+        "fields": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      },
+      "title": "===== 推送事件相关 ====="
+    },
+    "pushmanagerGetPushEventResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "message": {
+          "type": "string"
+        },
+        "event": {
+          "$ref": "#/definitions/pushmanagerPushEvent"
+        }
+      }
+    },
+    "pushmanagerGetPushTemplateResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "message": {
+          "type": "string"
+        },
+        "template": {
+          "$ref": "#/definitions/pushmanagerPushTemplate"
+        }
+      }
+    },
+    "pushmanagerGetPushWhitelistResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "message": {
+          "type": "string"
+        },
+        "whitelist": {
+          "$ref": "#/definitions/pushmanagerPushWhitelist"
+        }
+      }
+    },
+    "pushmanagerListPushEventsResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "message": {
+          "type": "string"
+        },
+        "events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/pushmanagerPushEvent"
+          }
+        },
+        "total": {
+          "type": "string",
+          "format": "int64"
+        }
+      }
+    },
+    "pushmanagerListPushTemplatesResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "message": {
+          "type": "string"
+        },
+        "templates": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/pushmanagerPushTemplate"
+          }
+        },
+        "total": {
+          "type": "string",
+          "format": "int64"
+        }
+      }
+    },
+    "pushmanagerListPushWhitelistsResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "message": {
+          "type": "string"
+        },
+        "whitelists": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/pushmanagerPushWhitelist"
+          }
+        },
+        "total": {
+          "type": "string",
+          "format": "int64"
+        }
+      }
+    },
+    "pushmanagerMetricData": {
+      "type": "object",
+      "properties": {
+        "metricValue": {
+          "type": "number",
+          "format": "double"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "pushmanagerNotificationResults": {
+      "type": "object",
+      "properties": {
+        "fields": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "pushmanagerPushEvent": {
+      "type": "object",
+      "properties": {
+        "eventId": {
+          "type": "string"
+        },
+        "domain": {
+          "type": "string"
+        },
+        "ruleId": {
+          "type": "string"
+        },
+        "eventDetail": {
+          "$ref": "#/definitions/pushmanagerEventDetail"
+        },
+        "pushLevel": {
+          "type": "string"
+        },
+        "status": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "notificationResults": {
+          "$ref": "#/definitions/pushmanagerNotificationResults"
+        },
+        "dimension": {
+          "$ref": "#/definitions/pushmanagerDimension"
+        },
+        "bkBizName": {
+          "type": "string"
+        },
+        "metricData": {
+          "$ref": "#/definitions/pushmanagerMetricData"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "pushmanagerPushTemplate": {
+      "type": "object",
+      "properties": {
+        "templateId": {
+          "type": "string"
+        },
+        "domain": {
+          "type": "string"
+        },
+        "templateType": {
+          "type": "string"
+        },
+        "content": {
+          "$ref": "#/definitions/pushmanagerTemplateContent"
+        },
+        "creator": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "pushmanagerPushWhitelist": {
+      "type": "object",
+      "properties": {
+        "whitelistId": {
+          "type": "string"
+        },
+        "domain": {
+          "type": "string"
+        },
+        "dimension": {
+          "$ref": "#/definitions/pushmanagerDimension"
+        },
+        "reason": {
+          "type": "string"
+        },
+        "applicant": {
+          "type": "string"
+        },
+        "approver": {
+          "type": "string"
+        },
+        "whitelistStatus": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "approvalStatus": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "startTime": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "endTime": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "approvedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "title": "===== 推送白名单相关 ====="
+    },
+    "pushmanagerTemplateContent": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "body": {
+          "type": "string"
+        },
+        "variables": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "title": "===== 推送模版相关 ====="
+    },
+    "pushmanagerUpdatePushEventResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "pushmanagerUpdatePushTemplateResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "pushmanagerUpdatePushWhitelistResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    }
+  }
+}

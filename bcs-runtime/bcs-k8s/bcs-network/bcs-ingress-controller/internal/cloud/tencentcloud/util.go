@@ -82,6 +82,9 @@ func convertListenerAttribute(lis *tclb.Listener) *networkextensionv1.IngressLis
 	if lis.KeepaliveEnable != nil {
 		attr.KeepAliveEnable = int(*lis.KeepaliveEnable)
 	}
+	if lis.SessionType != nil {
+		attr.SessionType = *lis.SessionType
+	}
 	return attr
 }
 

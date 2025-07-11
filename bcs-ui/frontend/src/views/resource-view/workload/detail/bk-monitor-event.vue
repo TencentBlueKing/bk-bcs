@@ -1,29 +1,5 @@
 <template>
   <div>
-    <!-- <div class="flex justify-end mb-[20px]">
-      <bcs-date-picker
-        :placeholder="$t('generic.placeholder.searchDate')"
-        :shortcuts="shortcuts"
-        class="ml-[5px] max-w-[320px]"
-        type="datetimerange"
-        placement="bottom"
-        shortcut-close
-        transfer
-        v-model="params.date">
-      </bcs-date-picker>
-      <bcs-search-select
-        class="flex-1 ml-[5px] bg-[#fff]"
-        clearable
-        filter
-        :show-condition="false"
-        :data="filterData"
-        :placeholder="$t('projects.eventQuery._search')"
-        :show-popover-tag-change="false"
-        :popover-zindex="9999"
-        selected-style="checkbox"
-        v-model="params.searchSelect">
-      </bcs-search-select>
-    </div> -->
     <iframe class="w-full min-h-[800px]" :src="bkMonitorEventSourceURL" :key="refreshIframe"></iframe>
   </div>
 </template>
@@ -300,7 +276,7 @@ export default defineComponent({
       const [from, to] = params.value.date;
       const fromTimestamp = from ? new Date(from)?.getTime() : '';
       const toTimestamp = to ? new Date(to)?.getTime() : '';
-      return `${window.BKMONITOR_HOST}/?space_uid=bkci__${curProject.value.projectCode}&bizId=${curProject.value.businessID}&needMenu=false&onlyShowView=true#/event-explore?targets=${encodeURL(parseToBkMonitorSearchValue.value)}&from=${fromTimestamp}&to=${toTimestamp}&timezone=Asia/Shanghai&type=event&columns=${encodeURL(columns)}&hideFeatures=${encodeURL(hideFeatures)}`;
+      return `${window.BKMONITOR_HOST}/?space_uid=bkci__${curProject.value.projectCode}&bizId=${curProject.value.businessID}&needMenu=false&onlyShowView=true#/event-explore?targets=${encodeURL(parseToBkMonitorSearchValue.value)}&from=${fromTimestamp}&to=${toTimestamp}&timezone=Asia/Shanghai&type=event&columns=${encodeURL(columns)}&hideFeatures=${encodeURL(hideFeatures)}&prop=time&order=descending`;
     });
 
     // 获取表名称

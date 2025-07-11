@@ -87,7 +87,7 @@ bcs-network:ingress-controller
 
 bcs-services:bkcmdb-synchronizer gateway \
 	storage user-manager cluster-manager cluster-reporter nodeagent tools k8s-watch kube-agent data-manager \
-	helm-manager project-manager nodegroup-manager federation-manager powertrading mesh-manager
+	helm-manager project-manager nodegroup-manager federation-manager powertrading mesh-manager push-manager
 
 bcs-scenarios: kourse gitops
 
@@ -354,6 +354,11 @@ mesh-manager:pre
 	cp -R ${BCS_SERVICES_PATH}/bcs-mesh-manager/third_party/swagger-ui ${PACKAGEPATH}/bcs-services/bcs-mesh-manager/swagger/
 	cp ${BCS_SERVICES_PATH}/bcs-mesh-manager/proto/bcs-mesh-manager/bcs-mesh-manager.swagger.json ${PACKAGEPATH}/bcs-services/bcs-mesh-manager/swagger/swagger-ui/bcs-mesh-manager.swagger.json
 	cd bcs-services/bcs-mesh-manager/ && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-mesh-manager/bcs-mesh-manager cmd/mesh-manager/main.go
+
+push-manager:pre
+	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-push-manager
+	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-push-manager ${PACKAGEPATH}/bcs-services
+	cd bcs-services/bcs-push-manager/ && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-push-manager/bcs-push-manager ./main.go
 
 nodegroup-manager:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-nodegroup-manager

@@ -373,7 +373,9 @@ export default {
           obj.list = item.list;
           obj.value = item.text;
         }
-        searchParams[item.id] = item.value.id;
+        if (item.id !== '__proto__' && item.id !== 'constructor' && item.id !== 'prototype') {
+          searchParams[item.id] = item.value.id;
+        }
       });
       this.searchParams = JSON.parse(JSON.stringify(searchParams));
       this.bkSearcherFilterList.splice(0, this.bkSearcherFilterList.length, ...bkSearcherFilterList);

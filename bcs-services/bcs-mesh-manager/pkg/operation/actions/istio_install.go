@@ -104,9 +104,7 @@ func (i *IstioInstallAction) Execute(ctx context.Context) error {
 
 	// 安装其他集群依赖的资源
 	// 主从集群都需要安装
-	clusters := make([]string, 0, len(i.PrimaryClusters)+len(i.RemoteClusters))
-	clusters = append(clusters, i.PrimaryClusters...)
-	clusters = append(clusters, i.RemoteClusters...)
+	clusters := utils.MergeSlices(i.PrimaryClusters, i.RemoteClusters)
 	for _, cluster := range clusters {
 		if err := i.installClusterResource(ctx, cluster, i.IstioInstallOption); err != nil {
 			blog.Errorf("[%s]install cluster resource failed, err: %s", i.MeshID, err)
@@ -190,6 +188,7 @@ func (i *IstioInstallAction) installClusterResource(
 ) error {
 	// 开启控制面监控，下发serviceMonitor
 	if installOption.ObservabilityConfig != nil && installOption.ObservabilityConfig.MetricsConfig != nil &&
+		installOption.ObservabilityConfig.MetricsConfig.MetricsEnabled.GetValue() &&
 		installOption.ObservabilityConfig.MetricsConfig.ControlPlaneMetricsEnabled.GetValue() {
 		// 下发ServiceMonitor 资源
 		blog.Infof("[%s]control plane metrics enabled, deploying ServiceMonitor for cluster %s", i.MeshID, clusterID)
@@ -201,6 +200,7 @@ func (i *IstioInstallAction) installClusterResource(
 
 	// 开启数据面监控，下发PodMonitor
 	if installOption.ObservabilityConfig != nil && installOption.ObservabilityConfig.MetricsConfig != nil &&
+		installOption.ObservabilityConfig.MetricsConfig.MetricsEnabled.GetValue() &&
 		installOption.ObservabilityConfig.MetricsConfig.DataPlaneMetricsEnabled.GetValue() {
 		// 下发PodMonitor 资源
 		blog.Infof("[%s]data plane metrics enabled, deploying PodMonitor for cluster %s", i.MeshID, clusterID)

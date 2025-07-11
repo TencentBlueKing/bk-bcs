@@ -101,5 +101,38 @@ func (la *ListAction) Handle(
 		la.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
+
+	err := la.setTemplateNetworkConfig(la.cloudList)
+	if err != nil {
+		la.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
+		return
+	}
+
 	la.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
+}
+
+func (la *ListAction) setTemplateNetworkConfig(clouds []*cmproto.Cloud) error {
+	templateConfigInfos, err := getCloudTemplateConfigInfos(la.ctx, la.model, la.req.BusinessID, la.req.CloudID)
+	if err != nil {
+		return err
+	}
+
+	if templateConfigInfos != nil {
+		configMap := make(map[string]*cmproto.TemplateConfigInfo)
+		for _, config := range templateConfigInfos {
+			configMap[config.Provider] = config
+		}
+
+		for _, cloud := range clouds {
+			if matchedConfigs, ok := configMap[cloud.CloudID]; ok {
+				appendConfigNetworkInfoToCloud(cloud, matchedConfigs.GetCloudTemplateConfig().GetCloudNetworkTemplateConfig())
+			}
+		}
+
+		for i := range clouds {
+			dedupeAndSortNetworkInfo(clouds[i].NetworkInfo)
+		}
+	}
+
+	return nil
 }

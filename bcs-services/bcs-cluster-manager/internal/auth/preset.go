@@ -326,4 +326,10 @@ var ActionPermissions = map[string]string{
 	"ClusterManager.DebugBkSopsTask":        "",
 
 	"ClusterManager.Health": "",
+
+	// template config
+	"ClusterManager.CreateTemplateConfig": "",
+	"ClusterManager.DeleteTemplateConfig": "",
+	"ClusterManager.ListTemplateConfig":   "",
+	"ClusterManager.UpdateTemplateConfig": "",
 }

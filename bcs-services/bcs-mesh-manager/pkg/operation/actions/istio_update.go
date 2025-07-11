@@ -45,6 +45,7 @@ type IstioUpdateOption struct {
 	UpdateFields        entity.M
 	UpdateValues        *common.IstiodInstallValues
 	ObservabilityConfig *meshmanager.ObservabilityConfig
+	UpdateValuesOptions *utils.UpdateValuesOptions
 	Version             string
 }
 
@@ -102,9 +103,7 @@ func (i *IstioUpdateAction) Execute(ctx context.Context) error {
 	// TODO: 更新远程集群的istio
 
 	// 合并主从集群列表
-	clusters := make([]string, 0, len(i.PrimaryClusters)+len(i.RemoteClusters))
-	clusters = append(clusters, i.PrimaryClusters...)
-	clusters = append(clusters, i.RemoteClusters...)
+	clusters := utils.MergeSlices(i.PrimaryClusters, i.RemoteClusters)
 
 	// 更新集群依赖资源（PodMonitor, ServiceMonitor, Telemetry）
 	for _, cluster := range clusters {
@@ -118,16 +117,22 @@ func (i *IstioUpdateAction) Execute(ctx context.Context) error {
 	return nil
 }
 
-// 更新主集群
 func (i *IstioUpdateAction) updatePrimaryCluster(ctx context.Context, clusterID string) error {
-	// 获取当前集群实际istiod的values（用户可能在集群手动更新过参数，导致和从数据库中查询的数据不一致）
+	// 获取Release名称
+	istiodReleaseName, err := i.Model.GetReleaseName(ctx, *i.MeshID, clusterID, common.ComponentIstiod)
+	if err != nil {
+		blog.Errorf("[%s]get release name failed, clusterID: %s, err: %s", i.MeshID, clusterID, err)
+		return fmt.Errorf("get release name failed: %s", err)
+	}
+
+	// 获取istiod的values.yaml配置信息
 	releaseDetail, err := helm.GetReleaseDetail(
 		ctx,
 		&helmmanager.GetReleaseDetailV1Req{
 			ProjectCode: i.ProjectCode,
 			ClusterID:   &clusterID,
 			Namespace:   pointer.String(common.IstioNamespace),
-			Name:        pointer.String(common.IstioInstallIstiodName),
+			Name:        istiodReleaseName,
 		},
 	)
 	if err != nil || releaseDetail == nil {
@@ -135,14 +140,12 @@ func (i *IstioUpdateAction) updatePrimaryCluster(ctx context.Context, clusterID 
 		return fmt.Errorf("get release detail failed, clusterID: %s", clusterID)
 	}
 
-	// 从 releaseDetail 中获取当前集群的istiod的values
 	if len(releaseDetail.Data.Values) == 0 {
 		blog.Errorf("[%s]release values is empty, clusterID: %s", i.MeshID, clusterID)
 		return fmt.Errorf("release values is empty, clusterID: %s", clusterID)
 	}
 	values := releaseDetail.Data.Values[0]
 	var customValues string
-	// 将UpdateValues转换为YAML
 	customValuesBytes, err := yaml.Marshal(i.UpdateValues)
 	if err != nil {
 		blog.Errorf("[%s]marshal install values failed, err: %s", i.MeshID, err)
@@ -150,15 +153,22 @@ func (i *IstioUpdateAction) updatePrimaryCluster(ctx context.Context, clusterID 
 	}
 	customValues = string(customValuesBytes)
 
-	// 通过 utils.MergeValues 合并 values
-	mergedValues, err := utils.MergeValues(values, customValues)
+	// utils.MergeValues 的合并以values为基准
+	// values中存在的字段无法被customValues覆盖
+	// 合并前需要先处理values中本次需要移除的字段
+	newValues, err := utils.ProcessValues(values, i.UpdateValuesOptions)
+	if err != nil {
+		blog.Errorf("[%s]process field key failed, clusterID: %s, err: %s", i.MeshID, clusterID, err)
+		return err
+	}
+
+	mergedValues, err := utils.MergeValues(newValues, customValues)
 	if err != nil {
 		blog.Errorf("[%s]merge values failed, clusterID: %s, err: %s", i.MeshID, clusterID, err)
 		return err
 	}
 	blog.Infof("[%s]merged values: %s", i.MeshID, mergedValues)
 
-	// 用新的values更新istiod（通过helm upgrade）
 	_, err = helm.Upgrade(
 		ctx,
 		&helmmanager.UpgradeReleaseV1Req{
@@ -168,7 +178,7 @@ func (i *IstioUpdateAction) updatePrimaryCluster(ctx context.Context, clusterID 
 			Repository:  i.ChartRepo,
 			Version:     i.ChartVersion,
 			Namespace:   pointer.String(common.IstioNamespace),
-			Name:        pointer.String(common.IstioInstallIstiodName),
+			Name:        istiodReleaseName,
 			Values:      []string{mergedValues},
 		},
 	)
@@ -192,7 +202,8 @@ func (i *IstioUpdateAction) updateClusterResource(ctx context.Context, clusterID
 
 	// 更新 ServiceMonitor 资源（控制面监控）
 	if i.ObservabilityConfig.MetricsConfig != nil {
-		if i.ObservabilityConfig.MetricsConfig.ControlPlaneMetricsEnabled.GetValue() {
+		if i.ObservabilityConfig.MetricsConfig.MetricsEnabled.GetValue() &&
+			i.ObservabilityConfig.MetricsConfig.ControlPlaneMetricsEnabled.GetValue() {
 			// 启用控制面监控，部署 ServiceMonitor
 			if err := k8s.DeployResourceByYAML(
 				ctx,
@@ -218,7 +229,8 @@ func (i *IstioUpdateAction) updateClusterResource(ctx context.Context, clusterID
 		}
 
 		// 更新 PodMonitor 资源（数据面监控）
-		if i.ObservabilityConfig.MetricsConfig.DataPlaneMetricsEnabled.GetValue() {
+		if i.ObservabilityConfig.MetricsConfig.MetricsEnabled.GetValue() &&
+			i.ObservabilityConfig.MetricsConfig.DataPlaneMetricsEnabled.GetValue() {
 			// 启用数据面监控，部署 PodMonitor
 			if err := k8s.DeployResourceByYAML(
 				ctx,

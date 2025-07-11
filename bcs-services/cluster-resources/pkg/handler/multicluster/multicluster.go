@@ -19,6 +19,7 @@ import (
 
 	"golang.org/x/sync/errgroup"
 	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions"
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	respUtil "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/resp"
@@ -131,6 +132,23 @@ func (h *Handler) FetchMultiClusterCustomResources(ctx context.Context,
 	// from api server
 	var query = NewAPIServerQuery(clusterNS, filter, viewQueryToQueryFilter(view.Filter))
 
+	// 获取 crd 信息，返回web anno
+	var clusterIDs []string
+	for _, v := range req.GetClusterNamespaces() {
+		clusterIDs = append(clusterIDs, v.ClusterID)
+	}
+	crdName := req.Resource + "." + req.Group
+	crdInfo, err := cli.GetClustersCRDInfoDirect(ctx, clusterIDs, crdName)
+	if err != nil {
+		if !errors.IsNotFound(err) {
+			return err
+		}
+
+		crdInfo = map[string]interface{}{
+			"kind": "",
+		}
+	}
+
 	var data map[string]interface{}
 	data, err = query.FetchPreferred(ctx, &schema.GroupVersionResource{
 		Group:    req.GetGroup(),
@@ -144,9 +162,7 @@ func (h *Handler) FetchMultiClusterCustomResources(ctx context.Context,
 	if err != nil {
 		return err
 	}
-	resp.WebAnnotations, err = web.NewAnnos(
-		web.NewFeatureFlag(featureflag.FormCreate, true),
-	).ToPbStruct()
+	resp.WebAnnotations, err = web.GenListCObjWebAnnos(ctx, data, crdInfo, "")
 	return err
 }
 
@@ -284,14 +300,21 @@ func (h *Handler) MultiClusterResourceCount(ctx context.Context, req *clusterRes
 func (h *Handler) GetApiResourcesObject(ctx context.Context,
 	req *clusterRes.GetApiResourcesObjectReq, resp *clusterRes.CommonResp) (err error) {
 
-	resInfo, err := cli.GetResObjectInfo(ctx, req.ClusterID, req.Namespace, req.ResName, req.Kind, "")
+	gvr := schema.GroupVersionResource{
+		Group:    req.GetGroup(),
+		Version:  req.GetVersion(),
+		Resource: req.GetResource(),
+	}
+
+	resInfo, err := cli.GetResObjectInfo(ctx, req.ClusterID, req.Namespace, req.ResName, gvr)
 	if err != nil {
 		return err
 	}
 
 	manifest := resInfo.UnstructuredContent()
+	kind := mapx.GetStr(manifest, "kind")
 	respDataBuilder, err := respUtil.NewRespDataBuilder(ctx, respUtil.DataBuilderParams{
-		Manifest: manifest, Kind: req.Kind, Format: req.Format,
+		Manifest: manifest, Kind: kind, Format: req.Format,
 	})
 	if err != nil {
 		return err
@@ -313,9 +336,13 @@ func (h *Handler) CreateApiResourcesObject(ctx context.Context,
 
 	rawData := req.RawData.AsMap()
 	kind := mapx.GetStr(rawData, "kind")
-	apiVersion := mapx.GetStr(rawData, "apiVersion")
+	gvr := schema.GroupVersionResource{
+		Group:    req.GetGroup(),
+		Version:  req.GetVersion(),
+		Resource: req.GetResource(),
+	}
 
-	transformer, err := trans.New(ctx, req.RawData.AsMap(), req.ClusterID, kind, constants.CreateAction, req.Format)
+	transformer, err := trans.New(ctx, rawData, req.ClusterID, kind, constants.CreateAction, req.Format)
 	if err != nil {
 		return err
 	}
@@ -326,7 +353,7 @@ func (h *Handler) CreateApiResourcesObject(ctx context.Context,
 	if err = checkAccess(ctx, "", req.ClusterID, kind, manifest); err != nil {
 		return err
 	}
-	resInfo, err := cli.CreateResObjectInfo(ctx, req.ClusterID, kind, apiVersion, req.Namespaced, manifest)
+	resInfo, err := cli.CreateResObjectInfo(ctx, req.ClusterID, gvr, req.Namespaced, manifest)
 	if err != nil {
 		return err
 	}
@@ -341,9 +368,13 @@ func (h *Handler) UpdateApiResourcesObject(ctx context.Context,
 
 	rawData := req.RawData.AsMap()
 	kind := mapx.GetStr(rawData, "kind")
-	apiVersion := mapx.GetStr(rawData, "apiVersion")
+	gvr := schema.GroupVersionResource{
+		Group:    req.GetGroup(),
+		Version:  req.GetVersion(),
+		Resource: req.GetResource(),
+	}
 
-	transformer, err := trans.New(ctx, req.RawData.AsMap(), req.ClusterID, kind, constants.CreateAction, req.Format)
+	transformer, err := trans.New(ctx, rawData, req.ClusterID, kind, constants.CreateAction, req.Format)
 	if err != nil {
 		return err
 	}
@@ -356,7 +387,7 @@ func (h *Handler) UpdateApiResourcesObject(ctx context.Context,
 		return err
 	}
 
-	resInfo, err := cli.UpdateResObjectInfo(ctx, req.ClusterID, kind, apiVersion, manifest)
+	resInfo, err := cli.UpdateResObjectInfo(ctx, req.ClusterID, gvr, manifest)
 	if err != nil {
 		return err
 	}
@@ -381,12 +412,17 @@ func (h *Handler) UpdateApiResourcesObject(ctx context.Context,
 // DeleteApiResourcesObject delete api resources object
 func (h *Handler) DeleteApiResourcesObject(ctx context.Context,
 	req *clusterRes.DeleteApiResourcesObjectReq, resp *clusterRes.CommonResp) (err error) {
+	gvr := schema.GroupVersionResource{
+		Group:    req.GetGroup(),
+		Version:  req.GetVersion(),
+		Resource: req.GetResource(),
+	}
 
 	if err = checkAccess(ctx, req.Namespace, req.ClusterID, req.Kind, nil); err != nil {
 		return err
 	}
 
-	return cli.DeleteResObjectInfo(ctx, req.ClusterID, req.Namespace, req.ResName, req.Kind, "")
+	return cli.DeleteResObjectInfo(ctx, req.ClusterID, req.Namespace, req.ResName, gvr)
 }
 
 // checkAccess 访问权限检查（如共享集群禁用等）
@@ -408,6 +444,11 @@ func checkAccess(ctx context.Context, namespace, clusterID, kind string, manifes
 		!slice.StringInSlice(kind, config.G.SharedCluster.EnabledCObjKinds) {
 		return errorx.New(errcode.NoPerm, i18n.GetMsg(ctx, "该请求资源类型 %s 在共享集群中不可用"), kind)
 	}
+	// 非namespace资源不判断命名空间
+	if namespace == "" {
+		return nil
+	}
+
 	// 对命名空间进行检查，确保是属于项目的，命名空间以 manifest 中的为准
 	if manifest != nil {
 		namespace = mapx.GetStr(manifest, "metadata.namespace")

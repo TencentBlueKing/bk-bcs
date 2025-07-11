@@ -276,6 +276,20 @@ export default defineComponent({
       type: Boolean,
       default: false,
     },
+    // CRD资源的版本
+    version: {
+      type: String,
+      default: '',
+    },
+    // CRD资源的分组
+    group: {
+      type: String,
+      default: '',
+    },
+    resource: {
+      type: String,
+      default: '',
+    },
     // CRD资源的作用域
     scope: {
       type: String as PropType<'Namespaced'|'Cluster'>,
@@ -297,6 +311,9 @@ export default defineComponent({
       defaultOriginal,
       customized,
       scope,
+      version,
+      group,
+      resource,
     } = toRefs(props);
     const { clientHeight } = document.body;
 
@@ -370,19 +387,29 @@ export default defineComponent({
       if (!isEdit.value) return null;
       isLoading.value = true;
       let res: any = null;
-      if (type.value === 'crd') {
+      if (customized.value) {
         res = await customResourceDetail({
           format: 'manifest',
           $clusterId: clusterId.value,
           $name: name.value,
-          kind: kind.value,
           namespace: namespace.value,
+          group: group.value,
+          version: version.value,
+          resource: resource.value,
         }, { needRes: true }).catch(() => ({
           data: {
             manifest: {},
             manifestExt: {},
           },
         }));
+      } else if (type.value === 'crd') {
+        res = await $store.dispatch('dashboard/retrieveCustomResourceDetail', {
+          $crd: crd.value,
+          $category: category.value,
+          $name: name.value,
+          namespace: namespace.value,
+          $clusterId: clusterId.value,
+        });
       } else {
         res = await $store.dispatch('dashboard/getResourceDetail', {
           $namespaceId: namespace.value,
@@ -577,6 +604,9 @@ export default defineComponent({
         result = await createCustomResource({
           $clusterId: clusterId.value,
           format: 'manifest',
+          group: group.value,
+          version: version.value,
+          resource: resource.value,
           namespaced: scope.value === 'Namespaced',
           rawData: detail.value,
         }).catch((err) => {
@@ -637,6 +667,9 @@ export default defineComponent({
           if (customized.value) {
             result = await updateCustomResource({
               $clusterId: clusterId.value,
+              group: group.value,
+              version: version.value,
+              resource: resource.value,
               format: 'manifest',
               rawData: detail.value,
             }).catch((err) => {

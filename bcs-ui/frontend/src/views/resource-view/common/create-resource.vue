@@ -90,6 +90,16 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  // CRD信息
+  crdOptions: {
+    type: Object as PropType<{
+      group: string,
+      version: string,
+      resource: string,
+      namespaced: boolean,
+    }>,
+    default: () => ({}),
+  },
 });
 
 const emits = defineEmits(['cancel', 'confirm']);
@@ -126,6 +136,9 @@ const handleCreateResource = () => {
       formUpdate: props.formUpdate,
       scope: props.scope,
       customized: props.customized,
+      version: props.crdOptions.version,
+      group: props.crdOptions.group,
+      resource: props.crdOptions.resource,
     },
   });
 };

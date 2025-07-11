@@ -479,23 +479,23 @@ func TestGenIstiodValuesByComponents(t *testing.T) {
 	})
 
 	t.Run("TestGenIstiodValuesByTracingCleanup", func(t *testing.T) {
-		// 测试关闭追踪时的清理逻辑
+		// 创建测试用的 installValues，包含追踪相关字段
 		installValues := &common.IstiodInstallValues{
 			MeshConfig: &common.IstiodMeshConfig{
 				EnableTracing: pointer.Bool(true),
-				DefaultConfig: &common.DefaultConfig{
-					TracingConfig: &common.TracingConfig{
-						Zipkin: &common.ZipkinConfig{
-							Address: pointer.String("http://zipkin:9411/api/v2/spans"),
-						},
-					},
-				},
 				ExtensionProviders: []*common.ExtensionProvider{
 					{
 						Name: pointer.String("otel-tracing"),
 						OpenTelemetry: &common.OpenTelemetryConfig{
-							Service: pointer.String("jaeger-collector"),
+							Service: pointer.String("jaeger-collector.istio-system"),
 							Port:    pointer.Int32(14268),
+						},
+					},
+				},
+				DefaultConfig: &common.DefaultConfig{
+					TracingConfig: &common.TracingConfig{
+						Zipkin: &common.ZipkinConfig{
+							Address: pointer.String("http://zipkin:9411/api/v2/spans"),
 						},
 					},
 				},
@@ -505,12 +505,13 @@ func TestGenIstiodValuesByComponents(t *testing.T) {
 			},
 		}
 
-		// 测试新版本（1.21+）关闭追踪的清理逻辑
+		// 创建禁用的追踪配置
 		tracingConfig := &meshmanager.TracingConfig{
 			Enabled: &wrappers.BoolValue{Value: false},
 		}
 
-		err := GenIstiodValuesByTracing("1.24.0", tracingConfig, installValues)
+		// 调用 GenIstiodValuesByTracing
+		err := GenIstiodValuesByTracing("1.21.0", tracingConfig, installValues)
 		if err != nil {
 			t.Fatalf("GenIstiodValuesByTracing error: %v", err)
 		}
@@ -520,22 +521,20 @@ func TestGenIstiodValuesByComponents(t *testing.T) {
 			t.Error("expected EnableTracing to be false")
 		}
 
-		// 验证 ExtensionProviders 被清理
-		if installValues.MeshConfig.ExtensionProviders != nil {
-			t.Error("expected ExtensionProviders to be nil")
+		// 验证其他字段保持不变（不期望被清理）
+		if installValues.MeshConfig.ExtensionProviders == nil {
+			t.Error("expected ExtensionProviders to remain unchanged")
 		}
 
-		// 验证旧版本的 TracingConfig 被清理
-		if installValues.MeshConfig.DefaultConfig != nil && installValues.MeshConfig.DefaultConfig.TracingConfig != nil {
-			t.Error("expected TracingConfig to be nil")
+		if installValues.MeshConfig.DefaultConfig == nil || installValues.MeshConfig.DefaultConfig.TracingConfig == nil {
+			t.Error("expected TracingConfig to remain unchanged")
 		}
 
-		// 验证 TraceSampling 被清理
-		if installValues.Pilot != nil && installValues.Pilot.TraceSampling != nil {
-			t.Error("expected TraceSampling to be nil")
+		if installValues.Pilot == nil || installValues.Pilot.TraceSampling == nil {
+			t.Error("expected TraceSampling to remain unchanged")
 		}
 
-		// 测试旧版本（< 1.21）关闭追踪的清理逻辑
+		// 测试旧版本（< 1.21）关闭追踪的逻辑
 		installValues2 := &common.IstiodInstallValues{
 			MeshConfig: &common.IstiodMeshConfig{
 				EnableTracing: pointer.Bool(true),
@@ -562,16 +561,16 @@ func TestGenIstiodValuesByComponents(t *testing.T) {
 			t.Error("expected EnableTracing to be false for legacy version")
 		}
 
-		// 验证旧版本的 TracingConfig 被清理
-		if installValues2.MeshConfig.DefaultConfig != nil && installValues2.MeshConfig.DefaultConfig.TracingConfig != nil {
-			t.Error("expected TracingConfig to be nil for legacy version")
+		// 验证其他字段保持不变（不期望被清理）
+		if installValues2.MeshConfig.DefaultConfig == nil || installValues2.MeshConfig.DefaultConfig.TracingConfig == nil {
+			t.Error("expected TracingConfig to remain unchanged for legacy version")
 		}
 
-		// 验证 TraceSampling 被清理
-		if installValues2.Pilot != nil && installValues2.Pilot.TraceSampling != nil {
-			t.Error("expected TraceSampling to be nil for legacy version")
+		if installValues2.Pilot == nil || installValues2.Pilot.TraceSampling == nil {
+			t.Error("expected TraceSampling to remain unchanged for legacy version")
 		}
 	})
+
 }
 
 func TestGetConfigChartValues(t *testing.T) {
@@ -630,6 +629,246 @@ func TestGetConfigChartValues(t *testing.T) {
 		}
 		if val != "" {
 			t.Errorf("expected empty string for empty path, got: %q", val)
+		}
+	})
+}
+
+func TestMergeValuesWithAutoscaleDisabled(t *testing.T) {
+	// 测试当 autoscaleEnabled 为 false 时，相关字段是否被正确删除
+	defaultValues := `pilot:
+  autoscaleEnabled: true
+  autoscaleMin: 3
+  autoscaleMax: 6
+  cpu:
+    targetAverageUtilization: 80
+  replicaCount: 4
+  resources:
+    requests:
+      cpu: "600m"
+      memory: "512Mi"
+    limits:
+      cpu: "1000m"
+      memory: "1Gi"
+global:
+  externalIstiod: true`
+
+	customValues := `pilot:
+  autoscaleEnabled: false
+  replicaCount: 4`
+
+	result, err := MergeValues(defaultValues, customValues)
+	if err != nil {
+		t.Fatalf("MergeValues error: %v", err)
+	}
+
+	t.Logf("Merge result: %s", result)
+
+	// 解析结果
+	var resultMap map[string]interface{}
+	if err := yaml.Unmarshal([]byte(result), &resultMap); err != nil {
+		t.Fatalf("unmarshal result failed: %v", err)
+	}
+
+	t.Logf("Parsed result map: %+v", resultMap)
+
+	// 检查 pilot 配置
+	pilotConfig, ok := resultMap["pilot"].(map[interface{}]interface{})
+	if !ok {
+		t.Logf("pilot config type assertion failed, actual type: %T", resultMap["pilot"])
+		t.Logf("pilot config value: %+v", resultMap["pilot"])
+		t.Fatal("pilot config not found in result")
+	}
+
+	t.Logf("Pilot config: %+v", pilotConfig)
+
+	// 验证 autoscaleEnabled 字段应该保留（因为这是用户设置的）
+	if _, exists := pilotConfig["autoscaleEnabled"]; !exists {
+		t.Error("autoscaleEnabled should be preserved as it's user-specified")
+	}
+
+	// 验证相关字段应该保留（MergeValues 只是合并，不处理字段删除逻辑）
+	// 字段删除逻辑应该在 actions 层通过 ProcessFieldKey 来处理
+	for _, k := range []string{"autoscaleMin", "autoscaleMax", "cpu"} {
+		if _, exists := pilotConfig[k]; !exists {
+			t.Errorf("%s should be preserved by MergeValues (field deletion is handled by ProcessFieldKey)", k)
+		}
+	}
+
+	// 验证其他字段应该保留
+	for _, k := range []string{"replicaCount", "resources"} {
+		found := false
+		for key := range pilotConfig {
+			if ks, ok := key.(string); ok && ks == k {
+				found = true
+			}
+		}
+		if !found {
+			t.Errorf("%s should be preserved but was deleted", k)
+		}
+	}
+
+	t.Logf("Test passed! Result: %s", result)
+}
+
+func TestMergeValuesWithAutoscaleEnabled(t *testing.T) {
+	// 测试当 autoscaleEnabled 为 true 时，相关字段应该保留
+	defaultValues := `pilot:
+  autoscaleEnabled: false
+  autoscaleMin: 3
+  autoscaleMax: 6
+  cpu:
+    targetAverageUtilization: 80
+  replicaCount: 4
+  resources:
+    requests:
+      cpu: "600m"
+      memory: "512Mi"
+    limits:
+      cpu: "1000m"
+      memory: "1Gi"
+global:
+  externalIstiod: true`
+
+	customValues := `pilot:
+  autoscaleEnabled: true
+  autoscaleMin: 2
+  autoscaleMax: 5
+  cpu:
+    targetAverageUtilization: 70
+  replicaCount: 4`
+
+	result, err := MergeValues(defaultValues, customValues)
+	if err != nil {
+		t.Fatalf("MergeValues error: %v", err)
+	}
+
+	// 解析结果
+	var resultMap map[string]interface{}
+	if err := yaml.Unmarshal([]byte(result), &resultMap); err != nil {
+		t.Fatalf("unmarshal result failed: %v", err)
+	}
+
+	// 检查 pilot 配置
+	pilotConfig, ok := resultMap["pilot"].(map[interface{}]interface{})
+	if !ok {
+		t.Fatal("pilot config not found in result")
+	}
+
+	// 验证 autoscaleEnabled 字段应该保留
+	if autoscaleEnabled, exists := pilotConfig["autoscaleEnabled"]; !exists {
+		t.Error("autoscaleEnabled should be preserved but was deleted")
+	} else if !autoscaleEnabled.(bool) {
+		t.Error("autoscaleEnabled should be true")
+	}
+
+	// 验证 autoscaleMin 字段应该保留
+	if autoscaleMin, exists := pilotConfig["autoscaleMin"]; !exists {
+		t.Error("autoscaleMin should be preserved but was deleted")
+	} else if autoscaleMin.(int) != 2 {
+		t.Errorf("autoscaleMin should be 2, got %v", autoscaleMin)
+	}
+
+	// 验证 autoscaleMax 字段应该保留
+	if autoscaleMax, exists := pilotConfig["autoscaleMax"]; !exists {
+		t.Error("autoscaleMax should be preserved but was deleted")
+	} else if autoscaleMax.(int) != 5 {
+		t.Errorf("autoscaleMax should be 5, got %v", autoscaleMax)
+	}
+
+	// 验证 cpu 字段应该保留
+	if cpu, exists := pilotConfig["cpu"]; !exists {
+		t.Error("cpu should be preserved but was deleted")
+	} else {
+		cpuMap, ok := cpu.(map[interface{}]interface{})
+		if !ok {
+			t.Error("cpu should be a map")
+		} else if targetUtil, exists := cpuMap["targetAverageUtilization"]; !exists {
+			t.Error("targetAverageUtilization should be preserved")
+		} else if targetUtil.(int) != 70 {
+			t.Errorf("targetAverageUtilization should be 70, got %v", targetUtil)
+		}
+	}
+
+	t.Logf("Test passed! Result: %s", result)
+}
+
+func TestMapOperations(t *testing.T) {
+	t.Run("TestGetMapValue", func(t *testing.T) {
+		// 测试 map[string]interface{} 类型
+		stringMap := map[string]interface{}{
+			"key1": "value1",
+			"key2": 123,
+		}
+
+		if val, exists := getMapValue(stringMap, "key1"); !exists || val != "value1" {
+			t.Error("getMapValue failed for string key")
+		}
+
+		if val, exists := getMapValue(stringMap, "key2"); !exists || val != 123 {
+			t.Error("getMapValue failed for numeric value")
+		}
+
+		if _, exists := getMapValue(stringMap, "nonexistent"); exists {
+			t.Error("getMapValue should return false for nonexistent key")
+		}
+
+		// 测试 map[interface{}]interface{} 类型
+		interfaceMap := map[interface{}]interface{}{
+			"key1": "value1",
+			"key2": 123,
+		}
+
+		if val, exists := getMapValue(interfaceMap, "key1"); !exists || val != "value1" {
+			t.Error("getMapValue failed for interface{} map")
+		}
+	})
+
+	t.Run("TestDeleteMapKey", func(t *testing.T) {
+		// 测试 map[string]interface{} 类型
+		stringMap := map[string]interface{}{
+			"key1": "value1",
+			"key2": "value2",
+		}
+
+		deleteMapKey(stringMap, "key1")
+		if _, exists := stringMap["key1"]; exists {
+			t.Error("deleteMapKey failed for string map")
+		}
+		if _, exists := stringMap["key2"]; !exists {
+			t.Error("deleteMapKey should not delete other keys")
+		}
+
+		// 测试 map[interface{}]interface{} 类型
+		interfaceMap := map[interface{}]interface{}{
+			"key1": "value1",
+			"key2": "value2",
+		}
+
+		deleteMapKey(interfaceMap, "key1")
+		if _, exists := getMapValue(interfaceMap, "key1"); exists {
+			t.Error("deleteMapKey failed for interface{} map")
+		}
+	})
+
+	t.Run("TestEnsureMapKeyExists", func(t *testing.T) {
+		// 测试 map[string]interface{} 类型
+		stringMap := map[string]interface{}{
+			"key1": "value1",
+		}
+
+		ensureMapKeyExists(stringMap, "key2")
+		if _, exists := stringMap["key2"]; !exists {
+			t.Error("ensureMapKeyExists failed for string map")
+		}
+
+		// 测试 map[interface{}]interface{} 类型
+		interfaceMap := map[interface{}]interface{}{
+			"key1": "value1",
+		}
+
+		ensureMapKeyExists(interfaceMap, "key2")
+		if _, exists := getMapValue(interfaceMap, "key2"); !exists {
+			t.Error("ensureMapKeyExists failed for interface{} map")
 		}
 	})
 }

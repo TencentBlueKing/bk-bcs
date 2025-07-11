@@ -10,8 +10,8 @@
  * limitations under the License.
  */
 
-// Package helm 获取helm manager client
-package helm
+// Package clustermanager 获取clustermanager client
+package clustermanager
 
 import (
 	"context"
@@ -21,7 +21,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/common"
 )
 
-// GetClient 获取helm manager client
+// GetClient 获取clustermanager client
 func GetClient() (clustermanager.ClusterManagerClient, func(), error) {
 	clustermanagerClient, closeFunc, err := clustermanager.GetClient(common.ServiceDomain)
 	if err != nil {

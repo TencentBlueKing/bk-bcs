@@ -157,7 +157,21 @@
           },
           {
             "name": "status",
-            "description": "status. 网格状态，可选过滤条件[running：运行中；installing：安装中；installed：安装完成；failed：安装失败；uninstalling：卸载中；uninstalled：卸载完成；uninstalling-failed：卸载失败；updating：配置更新中；update-failed：配置更新失败]",
+            "description": "status. 网格状态，可选过滤条件[running：运行中；installing：安装中；installed：安装完成install-failed：安装失败；uninstalling：卸载中；uninstalling：卸载完成；uninstalleduninstalling-failed：卸载失败；updating：配置更新中；update-update-failed：配置更新失败]",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "version",
+            "description": "version. istio版本，可选过滤条件",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "description": "clusterID. 集群ID，可选过滤条件，支持主集群和远程集群的模糊匹配",
             "in": "query",
             "required": false,
             "type": "string"
@@ -449,7 +463,7 @@
           "$ref": "#/definitions/meshmanagerWebAnnotations"
         },
         "data": {
-          "$ref": "#/definitions/meshmanagerIstioListItem"
+          "$ref": "#/definitions/meshmanagerIstioDetailInfo"
         }
       },
       "description": "获取istio详情响应",
@@ -579,7 +593,7 @@
       },
       "title": "istio版本和功能特性"
     },
-    "meshmanagerIstioListItem": {
+    "meshmanagerIstioDetailInfo": {
       "type": "object",
       "properties": {
         "meshID": {
@@ -707,6 +721,80 @@
           },
           "description": "功能特性[跟随版本关联的特性]",
           "title": "featureConfigs"
+        }
+      },
+      "description": "istio列表项",
+      "title": "IstioListItem"
+    },
+    "meshmanagerIstioListItem": {
+      "type": "object",
+      "properties": {
+        "meshID": {
+          "type": "string",
+          "description": "网格ID",
+          "title": "meshID"
+        },
+        "status": {
+          "type": "string",
+          "description": "状态[running：运行中；installing：安装中；installed：安装完成；failed：安装失败；uninstalling：卸载中；uninstalled：卸载完成；uninstalling-failed：卸载失败；updating：配置更新中；update-failed：配置更新失败]",
+          "title": "status"
+        },
+        "statusMessage": {
+          "type": "string",
+          "description": "状态消息，状态为failed时，会返回失败原因",
+          "title": "statusMessage"
+        },
+        "chartVersion": {
+          "type": "string",
+          "description": "chart版本",
+          "title": "chartVersion"
+        },
+        "createTime": {
+          "type": "string",
+          "format": "int64",
+          "description": "创建时间",
+          "title": "createTime"
+        },
+        "projectID": {
+          "type": "string",
+          "description": "项目ID",
+          "title": "projectID"
+        },
+        "projectCode": {
+          "type": "string",
+          "description": "项目编码",
+          "title": "projectCode"
+        },
+        "name": {
+          "type": "string",
+          "description": "名称",
+          "title": "name"
+        },
+        "version": {
+          "type": "string",
+          "description": "使用的版本",
+          "title": "version"
+        },
+        "primaryClusters": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "主集群列表",
+          "title": "primaryClusters"
+        },
+        "remoteClusters": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "远程集群列表",
+          "title": "remoteClusters"
+        },
+        "monitoringLink": {
+          "type": "string",
+          "description": "监测链接",
+          "title": "monitoringLink"
         }
       },
       "description": "istio列表项",
@@ -942,14 +1030,19 @@
     "meshmanagerMetricsConfig": {
       "type": "object",
       "properties": {
+        "metricsEnabled": {
+          "type": "boolean",
+          "description": "指标采集总开关",
+          "title": "metricsEnabled"
+        },
         "controlPlaneMetricsEnabled": {
           "type": "boolean",
-          "description": "控制面指标采集开关",
+          "description": "控制面指标采集开关，启用时会部署ServiceMonitor监控istiod等控制面组件的指标，包括pilot、galley、citadel等组件的性能指标",
           "title": "controlPlaneMetricsEnabled"
         },
         "dataPlaneMetricsEnabled": {
           "type": "boolean",
-          "description": "数据面指标采集开关",
+          "description": "数据面指标采集开关，启用时会部署PodMonitor监控sidecar等数据面组件的指标，包括proxy、应用容器的网络流量、延迟等指标",
           "title": "dataPlaneMetricsEnabled"
         }
       },
@@ -960,7 +1053,7 @@
       "properties": {
         "metricsConfig": {
           "$ref": "#/definitions/meshmanagerMetricsConfig",
-          "description": "指标采集配置",
+          "description": "指标采集配置，用于控制Istio服务网格的Prometheus监控功能，包括控制面和数据面的指标采集该配置不写入values.yaml，而是用于控制是否部署ServiceMonitor和PodMonitor资源",
           "title": "metricsConfig"
         },
         "logCollectorConfig": {

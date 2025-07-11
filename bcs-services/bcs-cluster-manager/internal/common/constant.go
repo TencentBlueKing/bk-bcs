@@ -673,3 +673,8 @@ const (
 	// TemplateInstanceType template instance type
 	TemplateInstanceType = "templateInstanceType"
 )
+
+// TemplateConfigType
+const (
+	CloudConfigType = "cloud"
+)

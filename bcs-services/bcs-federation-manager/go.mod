@@ -1,8 +1,6 @@
 module github.com/Tencent/bk-bcs/bcs-services/bcs-federation-manager
 
-go 1.22.0
-
-toolchain go1.23.10
+go 1.23.2
 
 require (
 	github.com/go-resty/resty/v2 v2.12.0

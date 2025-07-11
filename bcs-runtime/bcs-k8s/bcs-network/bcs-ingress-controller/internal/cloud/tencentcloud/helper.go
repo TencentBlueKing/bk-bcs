@@ -64,6 +64,12 @@ func (c *Clb) create4LayerListener(region string, listener *networkextensionv1.L
 		if len(listener.Spec.ListenerAttribute.LbPolicy) != 0 {
 			req.Scheduler = tcommon.StringPtr(listener.Spec.ListenerAttribute.LbPolicy)
 		}
+		if listener.Spec.ListenerAttribute.SessionType != "" {
+			req.SessionType = tcommon.StringPtr(listener.Spec.ListenerAttribute.SessionType)
+			if listener.Spec.ListenerAttribute.SessionType == SessionTypeQUICCID { // QUIC-CID时必须使用WRR
+				req.Scheduler = tcommon.StringPtr("WRR")
+			}
+		}
 		req.HealthCheck = transIngressHealtchCheck(listener.Spec.ListenerAttribute.HealthCheck)
 	}
 

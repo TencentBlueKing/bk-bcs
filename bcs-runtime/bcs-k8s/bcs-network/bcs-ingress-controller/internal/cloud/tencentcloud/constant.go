@@ -28,6 +28,11 @@ const (
 	// ClbProtocolGRPC clb grpc protocol
 	ClbProtocolGRPC = "GRPC"
 
+	// SessionTypeQUICCID session type QUIC_CID
+	SessionTypeQUICCID = "QUIC_CID"
+	// SessionTypeNormal session type NORMAL
+	SessionTypeNormal = "NORMAL"
+	
 	// just for v2 api
 
 	// ClbListenerProtocolHTTP clb listener http protocol

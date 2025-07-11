@@ -18,6 +18,8 @@ const (
 	ServiceDomain = "meshmanager.bkbcs.tencent.com"
 	// HelmManagerServiceDomain domain name for helm manager
 	HelmManagerServiceDomain = "helmmanager.bkbcs.tencent.com"
+	// ProjectManagerServiceName project manager service name
+	ProjectManagerServiceName = "project.bkbcs.tencent.com"
 
 	// MicroMetaKeyHTTPPort http port in micro-service meta
 	MicroMetaKeyHTTPPort = "httpport"
@@ -99,4 +101,24 @@ const (
 	IstioStatusUpdating = "updating"
 	// IstioStatusUpdateFailed 配置更新失败
 	IstioStatusUpdateFailed = "update-failed"
+)
+
+// shared cluster
+const (
+	// AnnotationKeyProjectCode namespace 的 projectcode 注解 key 默认值
+	AnnotationKeyProjectCode = "io.tencent.bcs.projectcode"
+)
+
+// MeshManager接口常量
+const (
+	// MeshManagerInstallIstio 安装Istio接口
+	MeshManagerInstallIstio = "MeshManager.InstallIstio"
+	// MeshManagerUpdateIstio 更新Istio接口
+	MeshManagerUpdateIstio = "MeshManager.UpdateIstio"
+	// MeshManagerDeleteIstio 删除Istio接口
+	MeshManagerDeleteIstio = "MeshManager.DeleteIstio"
+	// MeshManagerGetIstioDetail 获取Istio详情接口
+	MeshManagerGetIstioDetail = "MeshManager.GetIstioDetail"
+	// MeshManagerListIstio 获取Istio列表接口
+	MeshManagerListIstio = "MeshManager.ListIstio"
 )

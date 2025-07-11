@@ -966,6 +966,30 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
+		{
+			Name:    "ClusterManager.CreateTemplateConfig",
+			Path:    []string{"/clustermanager/v1/templateconfigs"},
+			Method:  []string{"POST"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "ClusterManager.DeleteTemplateConfig",
+			Path:    []string{"/clustermanager/v1/templateconfigs/{templateConfigID}"},
+			Method:  []string{"DELETE"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "ClusterManager.ListTemplateConfig",
+			Path:    []string{"/clustermanager/v1/templateconfigs"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "ClusterManager.UpdateTemplateConfig",
+			Path:    []string{"/clustermanager/v1/templateconfigs/{templateConfigID}"},
+			Method:  []string{"PUT"},
+			Handler: "rpc",
+		},
 	}
 }
 
@@ -1158,6 +1182,10 @@ type ClusterManagerService interface {
 	ListCloudNodePublicPrefix(ctx context.Context, in *ListCloudNodePublicPrefixRequest, opts ...client.CallOption) (*ListCloudNodePublicPrefixResponse, error)
 	// cluster manager health interface
 	Health(ctx context.Context, in *HealthRequest, opts ...client.CallOption) (*HealthResponse, error)
+	CreateTemplateConfig(ctx context.Context, in *CreateTemplateConfigRequest, opts ...client.CallOption) (*CreateTemplateConfigResponse, error)
+	DeleteTemplateConfig(ctx context.Context, in *DeleteTemplateConfigRequest, opts ...client.CallOption) (*DeleteTemplateConfigResponse, error)
+	ListTemplateConfig(ctx context.Context, in *ListTemplateConfigRequest, opts ...client.CallOption) (*ListTemplateConfigResponse, error)
+	UpdateTemplateConfig(ctx context.Context, in *UpdateTemplateConfigRequest, opts ...client.CallOption) (*UpdateTemplateConfigResponse, error)
 }
 
 type clusterManagerService struct {
@@ -2722,6 +2750,46 @@ func (c *clusterManagerService) Health(ctx context.Context, in *HealthRequest, o
 	return out, nil
 }
 
+func (c *clusterManagerService) CreateTemplateConfig(ctx context.Context, in *CreateTemplateConfigRequest, opts ...client.CallOption) (*CreateTemplateConfigResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.CreateTemplateConfig", in)
+	out := new(CreateTemplateConfigResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) DeleteTemplateConfig(ctx context.Context, in *DeleteTemplateConfigRequest, opts ...client.CallOption) (*DeleteTemplateConfigResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.DeleteTemplateConfig", in)
+	out := new(DeleteTemplateConfigResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) ListTemplateConfig(ctx context.Context, in *ListTemplateConfigRequest, opts ...client.CallOption) (*ListTemplateConfigResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.ListTemplateConfig", in)
+	out := new(ListTemplateConfigResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) UpdateTemplateConfig(ctx context.Context, in *UpdateTemplateConfigRequest, opts ...client.CallOption) (*UpdateTemplateConfigResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.UpdateTemplateConfig", in)
+	out := new(UpdateTemplateConfigResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for ClusterManager service
 
 type ClusterManagerHandler interface {
@@ -2911,6 +2979,10 @@ type ClusterManagerHandler interface {
 	ListCloudNodePublicPrefix(context.Context, *ListCloudNodePublicPrefixRequest, *ListCloudNodePublicPrefixResponse) error
 	// cluster manager health interface
 	Health(context.Context, *HealthRequest, *HealthResponse) error
+	CreateTemplateConfig(context.Context, *CreateTemplateConfigRequest, *CreateTemplateConfigResponse) error
+	DeleteTemplateConfig(context.Context, *DeleteTemplateConfigRequest, *DeleteTemplateConfigResponse) error
+	ListTemplateConfig(context.Context, *ListTemplateConfigRequest, *ListTemplateConfigResponse) error
+	UpdateTemplateConfig(context.Context, *UpdateTemplateConfigRequest, *UpdateTemplateConfigResponse) error
 }
 
 func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, opts ...server.HandlerOption) error {
@@ -3070,6 +3142,10 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		ListCloudModuleFlag(ctx context.Context, in *ListCloudModuleFlagRequest, out *ListCloudModuleFlagResponse) error
 		ListCloudNodePublicPrefix(ctx context.Context, in *ListCloudNodePublicPrefixRequest, out *ListCloudNodePublicPrefixResponse) error
 		Health(ctx context.Context, in *HealthRequest, out *HealthResponse) error
+		CreateTemplateConfig(ctx context.Context, in *CreateTemplateConfigRequest, out *CreateTemplateConfigResponse) error
+		DeleteTemplateConfig(ctx context.Context, in *DeleteTemplateConfigRequest, out *DeleteTemplateConfigResponse) error
+		ListTemplateConfig(ctx context.Context, in *ListTemplateConfigRequest, out *ListTemplateConfigResponse) error
+		UpdateTemplateConfig(ctx context.Context, in *UpdateTemplateConfigRequest, out *UpdateTemplateConfigResponse) error
 	}
 	type ClusterManager struct {
 		clusterManager
@@ -4005,6 +4081,30 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.CreateTemplateConfig",
+		Path:    []string{"/clustermanager/v1/templateconfigs"},
+		Method:  []string{"POST"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.DeleteTemplateConfig",
+		Path:    []string{"/clustermanager/v1/templateconfigs/{templateConfigID}"},
+		Method:  []string{"DELETE"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.ListTemplateConfig",
+		Path:    []string{"/clustermanager/v1/templateconfigs"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.UpdateTemplateConfig",
+		Path:    []string{"/clustermanager/v1/templateconfigs/{templateConfigID}"},
+		Method:  []string{"PUT"},
+		Handler: "rpc",
+	}))
 	return s.Handle(s.NewHandler(&ClusterManager{h}, opts...))
 }
 
@@ -4630,4 +4730,20 @@ func (h *clusterManagerHandler) ListCloudNodePublicPrefix(ctx context.Context, i
 
 func (h *clusterManagerHandler) Health(ctx context.Context, in *HealthRequest, out *HealthResponse) error {
 	return h.ClusterManagerHandler.Health(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) CreateTemplateConfig(ctx context.Context, in *CreateTemplateConfigRequest, out *CreateTemplateConfigResponse) error {
+	return h.ClusterManagerHandler.CreateTemplateConfig(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) DeleteTemplateConfig(ctx context.Context, in *DeleteTemplateConfigRequest, out *DeleteTemplateConfigResponse) error {
+	return h.ClusterManagerHandler.DeleteTemplateConfig(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) ListTemplateConfig(ctx context.Context, in *ListTemplateConfigRequest, out *ListTemplateConfigResponse) error {
+	return h.ClusterManagerHandler.ListTemplateConfig(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) UpdateTemplateConfig(ctx context.Context, in *UpdateTemplateConfigRequest, out *UpdateTemplateConfigResponse) error {
+	return h.ClusterManagerHandler.UpdateTemplateConfig(ctx, in, out)
 }
