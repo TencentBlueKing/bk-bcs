@@ -132,12 +132,12 @@ func (aks *AksServiceImpl) UpdatePoolAndReturn(ctx context.Context, pool *armcon
 	resourceGroupName, resourceName, poolName string) (*armcontainerservice.AgentPool, error) {
 	poller, err := aks.poolClient.BeginCreateOrUpdate(ctx, resourceGroupName, resourceName, poolName, *pool, nil)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to finish the request,resourcesGroupName:%s,resourceName:%s,poolName:%s",
+		return nil, errors.Wrapf(handleError(err), "failed to finish the request,resourcesGroupName:%s,resourceName:%s,poolName:%s",
 			resourceGroupName, resourceName, poolName)
 	}
 	resp, err := poller.PollUntilDone(ctx, pollFrequency2)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to pull the result,resourcesGroupName:%s,resourceName:%s,poolName:%s",
+		return nil, errors.Wrapf(handleError(err), "failed to pull the result,resourcesGroupName:%s,resourceName:%s,poolName:%s",
 			resourceGroupName, resourceName, poolName)
 	}
 	return &resp.AgentPool, nil
