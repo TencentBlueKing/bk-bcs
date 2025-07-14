@@ -58,31 +58,39 @@ type ListMultiClusterResourcesReq struct {
 	ClusteredNamespaces []ClusteredNamespaces `json:"clusteredNamespaces"`
 	Field               string                `json:"field"`
 	Conditions          []*operator.Condition `json:"conditions"`
+	Sort                map[string]int        `json:"sort"`
 }
 
 var defaultLimit = 1000
 
 // ListAllMultiClusterResources list all multi cluster resources
-func ListAllMultiClusterResources(ctx context.Context, req ListMultiClusterResourcesReq) ([]*Resource, error) {
+func ListAllMultiClusterResources(
+	ctx context.Context, all bool, req ListMultiClusterResourcesReq) ([]*Resource, int, error) {
 	result := make([]*Resource, 0)
 	if len(req.ClusteredNamespaces) == 0 {
-		return result, nil
+		return result, 0, nil
 	}
-	// reset
-	req.Limit = defaultLimit
-	req.Offset = 0
+	if all {
+		// reset
+		req.Limit = defaultLimit
+		req.Offset = 0
+	}
 	for {
-		resources, _, err := ListMultiClusterResources(ctx, req)
+		resources, total, err := ListMultiClusterResources(ctx, req)
 		if err != nil {
-			return nil, err
+			return nil, 0, err
 		}
 		result = append(result, resources...)
+		// 不是全量查询直接break
+		if !all {
+			return result, total, nil
+		}
 		if len(resources) < defaultLimit {
 			break
 		}
 		req.Offset += defaultLimit
 	}
-	return result, nil
+	return result, 0, nil
 }
 
 // ListMultiClusterResources list multi cluster resources

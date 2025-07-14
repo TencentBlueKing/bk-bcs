@@ -466,15 +466,19 @@ func getMulticlusterStoreOption(req *restful.Request) (*lib.StoreGetOption, erro
 	if multiClusterReq.Field != "" {
 		fields = strings.Split(multiClusterReq.Field, ",")
 	}
+	sort := map[string]int{
+		indexIdTag: -1,
+	}
+	if multiClusterReq.Sort != nil {
+		sort = multiClusterReq.Sort
+	}
 
 	// option
 	return &lib.StoreGetOption{
 		Fields: fields,
 		// Note: do not use non-indexed fields for sorting
 		// otherwise it will exceed the sorting RAM limit in mongoDB.
-		Sort: map[string]int{
-			indexIdTag: -1,
-		},
+		Sort:   sort,
 		Cond:   condition,
 		Offset: multiClusterReq.Offset,
 		Limit:  multiClusterReq.Limit,
