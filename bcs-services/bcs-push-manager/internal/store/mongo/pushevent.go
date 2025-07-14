@@ -17,12 +17,18 @@ import (
 	"context"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-push-manager/internal/store/types"
+)
+
+const (
+	domainKey  = "domain"
+	eventIDKey = "event_id"
 )
 
 // PushEventStore defines the storage interface for push events.
@@ -43,8 +49,20 @@ type pushEventStore struct {
 
 // NewPushEventStore creates a new PushEventStore instance.
 func NewPushEventStore(db *mongo.Database) PushEventStore {
+	coll := db.Collection(types.CollectionPushEvent)
+	indexModel := mongo.IndexModel{
+		Keys: bson.D{
+			{Key: domainKey, Value: 1},
+			{Key: eventIDKey, Value: 1},
+		},
+		Options: options.Index().SetUnique(true).SetName(domainKey + "_" + eventIDKey + "_1"),
+	}
+	_, err := coll.Indexes().CreateOne(context.Background(), indexModel)
+	if err != nil {
+		blog.Error("failed to create index: %v\n", err)
+	}
 	return &pushEventStore{
-		collection: db.Collection(types.CollectionPushEvent),
+		collection: coll,
 	}
 }
 

@@ -18,12 +18,18 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-push-manager/internal/store/types"
+)
+
+const (
+	templateDomainKey = "domain"
+	templateIDKey     = "template_id"
 )
 
 // PushTemplateStore defines the storage interface for push templates.
@@ -42,8 +48,20 @@ type pushTemplateStore struct {
 
 // NewPushTemplateStore creates a new PushTemplateStore instance.
 func NewPushTemplateStore(db *mongo.Database) PushTemplateStore {
+	coll := db.Collection(types.CollectionPushTemplate)
+	indexModel := mongo.IndexModel{
+		Keys: bson.D{
+			{Key: templateDomainKey, Value: 1},
+			{Key: templateIDKey, Value: 1},
+		},
+		Options: options.Index().SetUnique(true).SetName(templateDomainKey + "_" + templateIDKey + "_1"),
+	}
+	_, err := coll.Indexes().CreateOne(context.Background(), indexModel)
+	if err != nil {
+		blog.Error("failed to create index: %v\n", err)
+	}
 	return &pushTemplateStore{
-		collection: db.Collection(types.CollectionPushTemplate),
+		collection: coll,
 	}
 }
 

@@ -35,6 +35,7 @@ const (
 	BcsThirdpartyService_GetNamespace_FullMethodName              = "/bcsthirdpartyservice.BcsThirdpartyService/GetNamespace"
 	BcsThirdpartyService_SendRtx_FullMethodName                   = "/bcsthirdpartyservice.BcsThirdpartyService/SendRtx"
 	BcsThirdpartyService_SendMail_FullMethodName                  = "/bcsthirdpartyservice.BcsThirdpartyService/SendMail"
+	BcsThirdpartyService_SendMsg_FullMethodName                   = "/bcsthirdpartyservice.BcsThirdpartyService/SendMsg"
 )
 
 // BcsThirdpartyServiceClient is the client API for BcsThirdpartyService service.
@@ -55,8 +56,12 @@ type BcsThirdpartyServiceClient interface {
 	BatchImportNamespace(ctx context.Context, in *BatchImportNamespaceRequest, opts ...grpc.CallOption) (*BatchImportNamespaceResponse, error)
 	ListNamespace(ctx context.Context, in *ListNamespaceRequest, opts ...grpc.CallOption) (*ListNamespaceResponse, error)
 	GetNamespace(ctx context.Context, in *GetNamespaceRequest, opts ...grpc.CallOption) (*GetNamespaceResponse, error)
+	// 新增企业微信发送接口
 	SendRtx(ctx context.Context, in *SendRtxRequest, opts ...grpc.CallOption) (*SendRtxResponse, error)
+	// 新增邮件发送接口
 	SendMail(ctx context.Context, in *SendMailRequest, opts ...grpc.CallOption) (*SendMailResponse, error)
+	// 新增bkchat v3消息发送接口
+	SendMsg(ctx context.Context, in *SendMsgRequest, opts ...grpc.CallOption) (*SendMsgResponse, error)
 }
 
 type bcsThirdpartyServiceClient struct {
@@ -227,6 +232,16 @@ func (c *bcsThirdpartyServiceClient) SendMail(ctx context.Context, in *SendMailR
 	return out, nil
 }
 
+func (c *bcsThirdpartyServiceClient) SendMsg(ctx context.Context, in *SendMsgRequest, opts ...grpc.CallOption) (*SendMsgResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SendMsgResponse)
+	err := c.cc.Invoke(ctx, BcsThirdpartyService_SendMsg_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // BcsThirdpartyServiceServer is the server API for BcsThirdpartyService service.
 // All implementations must embed UnimplementedBcsThirdpartyServiceServer
 // for forward compatibility.
@@ -245,8 +260,12 @@ type BcsThirdpartyServiceServer interface {
 	BatchImportNamespace(context.Context, *BatchImportNamespaceRequest) (*BatchImportNamespaceResponse, error)
 	ListNamespace(context.Context, *ListNamespaceRequest) (*ListNamespaceResponse, error)
 	GetNamespace(context.Context, *GetNamespaceRequest) (*GetNamespaceResponse, error)
+	// 新增企业微信发送接口
 	SendRtx(context.Context, *SendRtxRequest) (*SendRtxResponse, error)
+	// 新增邮件发送接口
 	SendMail(context.Context, *SendMailRequest) (*SendMailResponse, error)
+	// 新增bkchat v3消息发送接口
+	SendMsg(context.Context, *SendMsgRequest) (*SendMsgResponse, error)
 	mustEmbedUnimplementedBcsThirdpartyServiceServer()
 }
 
@@ -304,6 +323,9 @@ func (UnimplementedBcsThirdpartyServiceServer) SendRtx(context.Context, *SendRtx
 }
 func (UnimplementedBcsThirdpartyServiceServer) SendMail(context.Context, *SendMailRequest) (*SendMailResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SendMail not implemented")
+}
+func (UnimplementedBcsThirdpartyServiceServer) SendMsg(context.Context, *SendMsgRequest) (*SendMsgResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SendMsg not implemented")
 }
 func (UnimplementedBcsThirdpartyServiceServer) mustEmbedUnimplementedBcsThirdpartyServiceServer() {}
 func (UnimplementedBcsThirdpartyServiceServer) testEmbeddedByValue()                              {}
@@ -614,6 +636,24 @@ func _BcsThirdpartyService_SendMail_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _BcsThirdpartyService_SendMsg_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SendMsgRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BcsThirdpartyServiceServer).SendMsg(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BcsThirdpartyService_SendMsg_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BcsThirdpartyServiceServer).SendMsg(ctx, req.(*SendMsgRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // BcsThirdpartyService_ServiceDesc is the grpc.ServiceDesc for BcsThirdpartyService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -684,6 +724,10 @@ var BcsThirdpartyService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SendMail",
 			Handler:    _BcsThirdpartyService_SendMail_Handler,
+		},
+		{
+			MethodName: "SendMsg",
+			Handler:    _BcsThirdpartyService_SendMsg_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -28,6 +28,11 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-push-manager/internal/store/types"
 )
 
+const (
+	whitelistDomainKey = "domain"
+	whitelistIDKey     = "whitelist_id"
+)
+
 // PushWhitelistStore defines the storage interface for push whitelists.
 type PushWhitelistStore interface {
 	CreatePushWhitelist(ctx context.Context, whitelist *types.PushWhitelist) error
@@ -45,8 +50,20 @@ type pushWhitelistStore struct {
 
 // NewPushWhitelistStore creates a new PushWhitelistStore instance.
 func NewPushWhitelistStore(db *mongo.Database) PushWhitelistStore {
+	coll := db.Collection(types.CollectionPushWhitelist)
+	indexModel := mongo.IndexModel{
+		Keys: bson.D{
+			{Key: whitelistDomainKey, Value: 1},
+			{Key: whitelistIDKey, Value: 1},
+		},
+		Options: options.Index().SetUnique(true).SetName(whitelistDomainKey + "_" + whitelistIDKey + "_1"),
+	}
+	_, err := coll.Indexes().CreateOne(context.Background(), indexModel)
+	if err != nil {
+		blog.Error("failed to create index: %v\n", err)
+	}
 	return &pushWhitelistStore{
-		collection: db.Collection(types.CollectionPushWhitelist),
+		collection: coll,
 	}
 }
 

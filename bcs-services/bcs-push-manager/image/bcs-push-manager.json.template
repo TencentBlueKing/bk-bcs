@@ -50,7 +50,6 @@
   },
   "notification": {
     "bk_app_code": "${bkAppCode}",
-    "bk_app_secret": "${bkAppSecret}",
-    "bk_username": "${bkUsername}"
+    "bk_app_secret": "${bkAppSecret}"
   }
 }

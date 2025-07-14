@@ -5693,12 +5693,6 @@ func (m *SendRtxRequest) validate(all bool) error {
 
 	// no validation rules for IsIgnoreFormerStaff
 
-	// no validation rules for BkAppCode
-
-	// no validation rules for BkAppSecret
-
-	// no validation rules for BkUsername
-
 	if len(errors) > 0 {
 		return SendRtxRequestMultiError(errors)
 	}
@@ -5966,12 +5960,6 @@ func (m *SendMailRequest) validate(all bool) error {
 	}
 
 	// no validation rules for MimeSubtype
-
-	// no validation rules for BkAppCode
-
-	// no validation rules for BkAppSecret
-
-	// no validation rules for BkUsername
 
 	if len(errors) > 0 {
 		return SendMailRequestMultiError(errors)
@@ -6266,6 +6254,315 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = SendMailResponseValidationError{}
+
+// Validate checks the field values on SendMsgRequest with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *SendMsgRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on SendMsgRequest with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in SendMsgRequestMultiError,
+// or nil if none found.
+func (m *SendMsgRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *SendMsgRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for ImToken
+
+	// no validation rules for AppId
+
+	// no validation rules for AppSecret
+
+	// no validation rules for RobotCode
+
+	// no validation rules for AppCode
+
+	// no validation rules for AppSecretBody
+
+	// no validation rules for Im
+
+	// no validation rules for MsgType
+
+	if all {
+		switch v := interface{}(m.GetMsgParam()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, SendMsgRequestValidationError{
+					field:  "MsgParam",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, SendMsgRequestValidationError{
+					field:  "MsgParam",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetMsgParam()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return SendMsgRequestValidationError{
+				field:  "MsgParam",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetReceiver()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, SendMsgRequestValidationError{
+					field:  "Receiver",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, SendMsgRequestValidationError{
+					field:  "Receiver",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetReceiver()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return SendMsgRequestValidationError{
+				field:  "Receiver",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return SendMsgRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// SendMsgRequestMultiError is an error wrapping multiple validation errors
+// returned by SendMsgRequest.ValidateAll() if the designated constraints
+// aren't met.
+type SendMsgRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m SendMsgRequestMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m SendMsgRequestMultiError) AllErrors() []error { return m }
+
+// SendMsgRequestValidationError is the validation error returned by
+// SendMsgRequest.Validate if the designated constraints aren't met.
+type SendMsgRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e SendMsgRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e SendMsgRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e SendMsgRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e SendMsgRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e SendMsgRequestValidationError) ErrorName() string { return "SendMsgRequestValidationError" }
+
+// Error satisfies the builtin error interface
+func (e SendMsgRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sSendMsgRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = SendMsgRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = SendMsgRequestValidationError{}
+
+// Validate checks the field values on SendMsgResponse with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *SendMsgResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on SendMsgResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// SendMsgResponseMultiError, or nil if none found.
+func (m *SendMsgResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *SendMsgResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	if all {
+		switch v := interface{}(m.GetData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, SendMsgResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, SendMsgResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return SendMsgResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return SendMsgResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// SendMsgResponseMultiError is an error wrapping multiple validation errors
+// returned by SendMsgResponse.ValidateAll() if the designated constraints
+// aren't met.
+type SendMsgResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m SendMsgResponseMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m SendMsgResponseMultiError) AllErrors() []error { return m }
+
+// SendMsgResponseValidationError is the validation error returned by
+// SendMsgResponse.Validate if the designated constraints aren't met.
+type SendMsgResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e SendMsgResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e SendMsgResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e SendMsgResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e SendMsgResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e SendMsgResponseValidationError) ErrorName() string { return "SendMsgResponseValidationError" }
+
+// Error satisfies the builtin error interface
+func (e SendMsgResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sSendMsgResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = SendMsgResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = SendMsgResponseValidationError{}
 
 // Validate checks the field values on GetKubeConfigForSuanliResponseKubeCfg
 // with the rules defined in the proto definition for this message. If any
