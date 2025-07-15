@@ -24,12 +24,14 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/page"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clientset"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
 	vdm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/variabledefinition"
 	vvm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/variablevalue"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
 	quotautils "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/quota"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/stringx"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
 )
 
@@ -66,7 +68,9 @@ func (c *IndependentNamespaceAction) ListNamespaces(ctx context.Context,
 			CreateTime:  ns.GetCreationTimestamp().Format(constant.TimeLayout),
 			Labels:      []*proto.Label{},
 			Annotations: []*proto.Annotation{},
+			IsSystem:    stringx.StringInSlice(ns.GetName(), config.GlobalConf.SystemNameSpace),
 		}
+
 		for k, v := range ns.Labels {
 			retData.Labels = append(retData.Labels, &proto.Label{Key: k, Value: v})
 		}
