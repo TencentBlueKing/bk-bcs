@@ -16,11 +16,13 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"net/http"
 	"regexp"
 	"strconv"
 	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/profile/p20200901/resourcemanager/containerservice/armcontainerservice"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute"
 	armcontainerservicev3 "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerservice/armcontainerservice/v3"
@@ -1560,4 +1562,31 @@ func checkInstanceType(intce string) bool {
 		}
 	}
 	return false
+}
+
+func handleError(err error) error {
+	if respErr, ok := err.(*azcore.ResponseError); ok {
+		switch respErr.StatusCode {
+		case http.StatusForbidden:
+			blog.Errorf("call handleError: code(%d), permission denied: %s", respErr.StatusCode, respErr.Error())
+			blog.Errorf("可能原因: 权限不足")
+			return fmt.Errorf("permission denied(%d): %s", respErr.StatusCode, respErr.Error())
+		case http.StatusNotFound:
+			blog.Errorf("call handleError: code(%d), resource not found: %s", respErr.StatusCode, respErr.Error())
+			blog.Errorf("可能原因: 请检查资源组、集群名称和节点池名称是否正确")
+			return fmt.Errorf("resource not found(%d): %s", respErr.StatusCode, respErr.Error())
+		case http.StatusConflict:
+			blog.Errorf("call handleError: code(%d), resource conflict: %s", respErr.StatusCode, respErr.Error())
+			blog.Errorf("可能原因: 另一个操作正在进行中，请稍后重试")
+			return fmt.Errorf("resource conflict(%d): %s", respErr.StatusCode, respErr.Error())
+		case http.StatusBadRequest:
+			blog.Errorf("call handleError: code(%d), bad request: %s", respErr.StatusCode, respErr.Error())
+			blog.Errorf("可能原因: 目标节点数量超过限制或配额不足")
+			return fmt.Errorf("bad request(%d): %s", respErr.StatusCode, respErr.Error())
+		default:
+			return fmt.Errorf("status code: %d, error: %s", respErr.StatusCode, respErr.Error())
+		}
+	}
+
+	return fmt.Errorf("error: %s", err.Error())
 }
