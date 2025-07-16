@@ -16,7 +16,7 @@ import (
 	"net/http"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/i18n"
-	"github.com/emicklei/go-restful"
+	restful "github.com/emicklei/go-restful/v3"
 )
 
 const defaultLang = "zh-cn"

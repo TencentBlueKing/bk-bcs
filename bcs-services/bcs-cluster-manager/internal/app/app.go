@@ -48,7 +48,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/micro"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
-	restful "github.com/emicklei/go-restful"
+	restful "github.com/emicklei/go-restful/v3"
 	"github.com/go-micro/plugins/v4/registry/etcd"
 	microgrpcserver "github.com/go-micro/plugins/v4/server/grpc"
 	"github.com/gorilla/mux"

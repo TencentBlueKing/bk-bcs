@@ -20,7 +20,7 @@ import (
 	"net/http"
 
 	"github.com/dustin/go-humanize"
-	"github.com/emicklei/go-restful"
+	restful "github.com/emicklei/go-restful/v3"
 
 	blog "github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/log"
 )

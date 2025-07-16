@@ -19,7 +19,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/tracing/utils"
-	"github.com/emicklei/go-restful"
+	restful "github.com/emicklei/go-restful/v3"
 	"github.com/opentracing/opentracing-go"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/lib"

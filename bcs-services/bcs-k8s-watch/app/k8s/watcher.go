@@ -92,7 +92,7 @@ type Watcher struct {
 
 // WatcherOptions provide options for create Watcher
 type WatcherOptions struct {
-	DynamicClient    *dynamic.Interface
+	DynamicClient    *dynamic.DynamicClient
 	Namespace        string
 	ResourceType     string
 	GroupVersion     string

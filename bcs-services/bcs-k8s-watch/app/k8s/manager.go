@@ -204,7 +204,7 @@ func (mgr *WatcherManager) addCrdInformer(crdVersion string,
 		crdInformer := crdInformerFactory.Apiextensions().V1beta1().CustomResourceDefinitions()
 		crdInformer.Lister()
 
-		crdInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
+		_, _ = crdInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 			AddFunc:    mgr.AddEventV1beta1,
 			UpdateFunc: mgr.UpdateEventV1beta1,
 			DeleteFunc: mgr.DeleteEventV1beta1,
@@ -216,7 +216,7 @@ func (mgr *WatcherManager) addCrdInformer(crdVersion string,
 	crdInformer := crdInformerFactory.Apiextensions().V1().CustomResourceDefinitions()
 	crdInformer.Lister()
 
-	crdInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
+	_, _ = crdInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc:    mgr.AddEventV1,
 		UpdateFunc: mgr.UpdateEventV1,
 		DeleteFunc: mgr.DeleteEventV1,

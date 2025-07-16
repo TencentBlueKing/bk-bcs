@@ -21,7 +21,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/emicklei/go-restful"
+	restful "github.com/emicklei/go-restful/v3"
 	opentrace "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	tracinglog "github.com/opentracing/opentracing-go/log"
