@@ -27,6 +27,7 @@ import (
 	"github.com/parnurzeal/gorequest"
 	"github.com/patrickmn/go-cache"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
@@ -68,12 +69,43 @@ func SetCmdbClient(options Options) error {
 	}
 
 	CmdbClient = cli
+	auth.SetCheckBizPerm(checkUserBizPerm)
 	return nil
 }
 
 // GetCmdbClient get cmdb client
 func GetCmdbClient() *Client {
 	return CmdbClient
+}
+
+// 检查业务下的角色用户是否存在
+func checkUserBizPerm(username string, businessID string) (bool, error) {
+	if businessID == "" {
+		return false, errors.New("permission denied")
+	}
+	bizID, err := strconv.Atoi(businessID)
+	if err != nil {
+		errMsg := fmt.Errorf("strconv BusinessID to int failed: %v", err)
+		blog.Errorf(errMsg.Error())
+		return false, errMsg
+	}
+
+	// query biz hosts
+	businessData, err := GetCmdbClient().GetBusinessMaintainer(bizID)
+	if err != nil {
+		blog.Errorf("getUserHasPermHosts GetBusinessMaintainer failed: %v", err)
+		return false, err
+	}
+	var userList []string
+	userList = append(userList, strings.Split(businessData.BKBizMaintainer, ",")...)
+	userList = append(userList, strings.Split(businessData.BkBizProductor, ",")...)
+	userList = append(userList, strings.Split(businessData.BkBizTester, ",")...)
+	userList = append(userList, strings.Split(businessData.BkBizDeveloper, ",")...)
+	userList = append(userList, strings.Split(businessData.Operator, ",")...)
+	if utils.StringInSlice(username, userList) {
+		return true, nil
+	}
+	return false, errors.New("permission denied")
 }
 
 // NewCmdbClient create cmdb client

@@ -162,6 +162,10 @@ type BusinessData struct {
 	BKBizID         int64  `json:"bk_biz_id"`
 	BKBizName       string `json:"bk_biz_name"`
 	BKBizMaintainer string `json:"bk_biz_maintainer"`
+	BkBizProductor  string `json:"bk_biz_productor"`
+	BkBizTester     string `json:"bk_biz_tester"`
+	BkBizDeveloper  string `json:"bk_biz_developer"`
+	Operator        string `json:"operator"`
 }
 
 // ListBizHostRequest list biz host request
