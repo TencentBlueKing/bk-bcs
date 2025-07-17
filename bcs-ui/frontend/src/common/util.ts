@@ -671,6 +671,32 @@ export function compareVersion(v1, v2) {
   return 0;
 }
 
+export function satisfiesVersion(currentVersion: string, range: string) {
+  if (!range || !currentVersion) return;
+  // 提取操作符和版本号
+  const operator = range.match(/^([><]=?|~|\^)/)?.[0] || '';
+  const targetVersion = range.replace(operator, '');
+
+  // 解析版本号（兼容 1.20 和 1.20.0）
+  const parseVersion = (v) => {
+    const parts = v.split('.').map(Number);
+    while (parts.length < 3) parts.push(0); // 补零（1.20 → 1.20.0）
+    return parts;
+  };
+
+  const current = parseVersion(currentVersion);
+  const target = parseVersion(targetVersion);
+
+  // 比较版本号
+  for (let i = 0; i < 3; i++) {
+    if (current[i] > target[i]) return operator ? !operator.includes('<') : true;
+    if (current[i] < target[i]) return operator ? !operator.includes('>') : false;
+  }
+
+  // 严格等于的情况
+  return operator ? operator.includes('=') : true;
+}
+
 /**
  * 生成随机数
  * @param {Number} n
