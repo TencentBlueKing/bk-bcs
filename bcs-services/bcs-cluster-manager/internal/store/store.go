@@ -15,7 +15,6 @@ package store
 
 import (
 	"context"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/templateconfig"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -45,6 +44,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/resourcequota"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/scalingoption"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/task"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/templateconfig"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/tke"
 	stypes "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/types"
 	itypes "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
@@ -217,7 +217,8 @@ type ClusterManagerModel interface {
 	DeleteTemplateConfig(ctx context.Context, templateConfigID string) error
 	GetTemplateConfig(ctx context.Context, businessID, provider, configType string) (*types.TemplateConfig, error)
 	GetTemplateConfigByID(ctx context.Context, templateConfigID string) (*types.TemplateConfig, error)
-	ListTemplateConfigs(ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]*types.TemplateConfig, error)
+	ListTemplateConfigs(ctx context.Context, cond *operator.Condition,
+		opt *options.ListOption) ([]*types.TemplateConfig, error)
 }
 
 // ModelSet a set of client

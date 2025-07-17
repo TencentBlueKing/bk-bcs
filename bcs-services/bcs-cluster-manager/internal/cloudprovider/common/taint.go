@@ -335,15 +335,14 @@ func UpdateClusterNodesTaints(ctx context.Context, data NodeTaintData) error {
 			taints = make([]*proto.Taint, 0)
 		}
 
-		// merge source node labels
-		for i := range node.NodeTaint {
-			taints = append(taints, &proto.Taint{
-				Key:    node.NodeTaint[i].Key,
-				Value:  node.NodeTaint[i].Value,
-				Effect: node.NodeTaint[i].Effect,
-			})
+		// 删除原来节点的污点
+		err = k8sOperator.UpdateNodeTaints(ctx, data.ClusterID, node.NodeName, []corev1.Taint{})
+		if err != nil {
+			blog.Errorf("UpdateClusterNodesTaints[%s] ip[%s] delete taints failed: %v", taskID, node.NodeName, err)
+			continue
 		}
-		err := k8sOperator.UpdateNodeTaints(ctx, data.ClusterID, node.NodeName, utils.TaintToK8sTaint(taints))
+
+		err = k8sOperator.UpdateNodeTaints(ctx, data.ClusterID, node.NodeName, utils.TaintToK8sTaint(taints))
 		if err != nil {
 			blog.Errorf("UpdateClusterNodesTaints[%s] ip[%s] failed: %v", taskID, node.NodeName, err)
 			continue
