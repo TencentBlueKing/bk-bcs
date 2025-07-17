@@ -2,8 +2,6 @@ module gomicro-discovery-operator
 
 go 1.23.0
 
-toolchain go1.23.11
-
 require (
 	github.com/TencentBlueKing/blueking-apigateway-operator v1.16.0
 	github.com/go-micro/plugins/v4/registry/etcd v1.2.0

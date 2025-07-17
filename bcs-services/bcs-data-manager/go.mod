@@ -2,8 +2,6 @@ module github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager
 
 go 1.21
 
-toolchain go1.23.11
-
 require (
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20240418123107-72b120390195
 	github.com/envoyproxy/protoc-gen-validate v1.0.4

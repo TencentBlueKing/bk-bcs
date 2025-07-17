@@ -2,8 +2,6 @@ module github.com/Tencent/bk-bcs/bcs-common
 
 go 1.21
 
-toolchain go1.23.11
-
 require (
 	github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common v0.0.0-20220330120237-0bbed74dcf6d
 	github.com/TencentBlueKing/bk-audit-go-sdk v0.0.6

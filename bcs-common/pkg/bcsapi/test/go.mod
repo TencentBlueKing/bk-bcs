@@ -2,8 +2,6 @@ module github.com/Tencent/bk-bcs/bcs-common/test
 
 go 1.21
 
-toolchain go1.23.11
-
 replace github.com/Tencent/bk-bcs/bcs-common => ../../../../bcs-common
 
 require github.com/Tencent/bk-bcs/bcs-common v0.0.0-20240918084738-c35a091b66a3

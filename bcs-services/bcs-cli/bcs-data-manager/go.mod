@@ -2,8 +2,6 @@ module github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-data-manager
 
 go 1.21
 
-toolchain go1.23.11
-
 require (
 	github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager v0.0.0-20240510062419-98e7fc501788
 	github.com/olekukonko/tablewriter v0.0.5

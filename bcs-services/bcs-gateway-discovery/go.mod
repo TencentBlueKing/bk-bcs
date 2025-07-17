@@ -2,8 +2,6 @@ module github.com/Tencent/bk-bcs/bcs-services/bcs-gateway-discovery
 
 go 1.23.0
 
-toolchain go1.23.11
-
 replace github.com/kevholditch/gokong => github.com/DeveloperJim/gokong v1.9.2
 
 require (

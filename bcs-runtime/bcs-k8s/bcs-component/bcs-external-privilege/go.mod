@@ -2,8 +2,6 @@ module github.com/TencentBlueKing/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-e
 
 go 1.21
 
-toolchain go1.23.11
-
 replace (
 	github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4
 	github.com/mholt/caddy => github.com/caddyserver/caddy v0.11.1

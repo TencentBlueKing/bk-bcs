@@ -2,8 +2,6 @@ module github.com/Tencent/bk-bcs/bcs-common/common/task
 
 go 1.21
 
-toolchain go1.23.11
-
 require (
 	github.com/RichardKnop/machinery/v2 v2.0.13
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20240803071244-414878b26fa9

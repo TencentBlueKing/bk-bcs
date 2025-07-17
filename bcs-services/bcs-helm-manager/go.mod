@@ -2,8 +2,6 @@ module github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager
 
 go 1.23.0
 
-toolchain go1.23.11
-
 replace (
 	// github.com/databus23/helm-diff/v3 limit by go 1.23
 	github.com/databus23/helm-diff/v3 => github.com/databus23/helm-diff/v3 v3.9.11

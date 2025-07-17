@@ -2,8 +2,6 @@ module github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer
 
 go 1.23.0
 
-toolchain go1.23.11
-
 replace (
 	configcenter => github.com/Tencent/bk-cmdb v0.0.0-20220923072424-595387cbc3cb
 	github.com/apache/thrift => github.com/apache/thrift v0.0.0-20161221203622-b2a4d4ae21c7

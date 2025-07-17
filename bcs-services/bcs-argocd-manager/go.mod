@@ -2,8 +2,6 @@ module github.com/Tencent/bk-bcs/bcs-services/bcs-argocd-manager
 
 go 1.21
 
-toolchain go1.23.11
-
 require (
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20220316064358-856d7f76f693
 	github.com/asim/go-micro/plugins/client/grpc/v4 v4.0.0-20220314060314-356448017f02
