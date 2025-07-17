@@ -21,6 +21,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/cmd/mesh-manager/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/operation"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/operation/actions"
@@ -78,23 +79,14 @@ func (i *InstallIstioAction) Handle(
 
 // Validate 验证请求参数
 func (i *InstallIstioAction) Validate() error {
-	// 必填字段
-	if i.req.ProjectCode.GetValue() == "" && i.req.ProjectID.GetValue() == "" {
-		return fmt.Errorf("project is required")
-	}
-	if len(i.req.PrimaryClusters) == 0 {
-		return fmt.Errorf("clusters is required")
-	}
-	if i.req.Version.GetValue() == "" {
-		return fmt.Errorf("chart version is required")
-	}
-	if i.req.FeatureConfigs == nil {
-		return fmt.Errorf("feature configs is required")
-	}
-	// 检查resource参数（limit和request 合法，并且limit >= request）
-	if err := i.validateResource(i.req); err != nil {
-		blog.Errorf("validate resource failed, err: %s", err)
+	// 必填字段验证
+	if err := utils.ValidateBasicFields(i.req); err != nil {
 		return err
+	}
+	// 检查resource参数
+	if err := utils.ValidateResource(i.req); err != nil {
+		blog.Errorf("validate resource failed, err: %s", err)
+		return fmt.Errorf("资源配置错误")
 	}
 
 	// 检查主从集群版本兼容性
@@ -116,43 +108,8 @@ func (i *InstallIstioAction) Validate() error {
 	if err := utils.ValidateObservabilityConfig(i.req.ObservabilityConfig); err != nil {
 		return err
 	}
-	return nil
-}
-
-func (i *InstallIstioAction) validateResource(req *meshmanager.IstioRequest) error {
-	// 检查sidecar resource参数（limit和request 合法，并且limit >= request）
-	if req.SidecarResourceConfig == nil {
-		return nil
-	}
-	if err := utils.ValidateResourceLimit(
-		req.SidecarResourceConfig.CpuRequest.GetValue(),
-		req.SidecarResourceConfig.CpuLimit.GetValue(),
-	); err != nil {
-		return err
-	}
-	if err := utils.ValidateResourceLimit(
-		req.SidecarResourceConfig.MemoryRequest.GetValue(),
-		req.SidecarResourceConfig.MemoryLimit.GetValue(),
-	); err != nil {
-		return err
-	}
-	// 检查hpa中resource参数（limit和request 合法，并且limit >= request）
-	if req.HighAvailability == nil {
-		return nil
-	}
-	if req.HighAvailability.ResourceConfig == nil {
-		return nil
-	}
-	if err := utils.ValidateResourceLimit(
-		req.HighAvailability.ResourceConfig.CpuRequest.GetValue(),
-		req.HighAvailability.ResourceConfig.CpuLimit.GetValue(),
-	); err != nil {
-		return err
-	}
-	if err := utils.ValidateResourceLimit(
-		req.HighAvailability.ResourceConfig.MemoryRequest.GetValue(),
-		req.HighAvailability.ResourceConfig.MemoryLimit.GetValue(),
-	); err != nil {
+	// 检查高可用配置是否正确
+	if err := utils.ValidateHighAvailabilityConfig(i.req.HighAvailability); err != nil {
 		return err
 	}
 	return nil
@@ -178,6 +135,8 @@ func (i *InstallIstioAction) install(ctx context.Context) error {
 	meshIstio.MeshID = meshID
 	meshIstio.NetworkID = networkID
 	meshIstio.ReleaseNames = releaseNames
+	meshIstio.CreateBy = auth.GetUserFromCtx(ctx)
+	meshIstio.CreateTime = time.Now().UnixMilli()
 
 	chartVersion, err := i.getIstioChartVersion(i.req.Version.GetValue())
 	if err != nil {

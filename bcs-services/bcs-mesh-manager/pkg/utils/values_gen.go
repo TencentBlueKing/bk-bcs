@@ -22,6 +22,7 @@ import (
 	"github.com/imdario/mergo"
 	"gopkg.in/yaml.v2"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	pointer "k8s.io/utils/pointer"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/common"
@@ -222,6 +223,13 @@ func setResourceRequirement(
 	isLimit bool,
 ) error {
 	if value == "" {
+		return nil
+	}
+	quantity, err := resource.ParseQuantity(value)
+	if err != nil {
+		return fmt.Errorf("parse quantity %s failed: %s", value, err)
+	}
+	if quantity.IsZero() {
 		return nil
 	}
 

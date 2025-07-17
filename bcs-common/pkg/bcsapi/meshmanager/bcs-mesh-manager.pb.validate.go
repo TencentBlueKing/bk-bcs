@@ -546,6 +546,35 @@ func (m *IstioConfigData) validate(all bool) error {
 		}
 	}
 
+	if all {
+		switch v := interface{}(m.GetObservabilityConfig()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, IstioConfigDataValidationError{
+					field:  "ObservabilityConfig",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, IstioConfigDataValidationError{
+					field:  "ObservabilityConfig",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetObservabilityConfig()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return IstioConfigDataValidationError{
+				field:  "ObservabilityConfig",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
 	{
 		sorted_keys := make([]string, len(m.GetFeatureConfigs()))
 		i := 0

@@ -20,9 +20,11 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	"k8s.io/apimachinery/pkg/api/resource"
 	pointer "k8s.io/utils/pointer"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/cmd/mesh-manager/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/operation"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/operation/actions"
@@ -57,7 +59,7 @@ func (u *UpdateIstioAction) Handle(
 	u.req = req
 	u.resp = resp
 
-	if err := u.validate(req); err != nil {
+	if err := u.validate(); err != nil {
 		blog.Errorf("update mesh failed, invalid request, %s, param: %v", err.Error(), u.req)
 		u.setResp(common.ParamErrorCode, err.Error())
 		return nil
@@ -79,25 +81,28 @@ func (u *UpdateIstioAction) setResp(code uint32, message string) {
 	u.resp.Message = message
 }
 
-func (u *UpdateIstioAction) validate(req *meshmanager.IstioRequest) error {
+func (u *UpdateIstioAction) validate() error {
 	// 必填字段验证
-	if req.MeshID == nil {
-		return fmt.Errorf("meshID is required")
+	if u.req.MeshID == nil {
+		return fmt.Errorf("网格 ID 不能为空")
 	}
-	if req.ProjectID == nil {
-		return fmt.Errorf("projectID is required")
-	}
-	if req.Version.GetValue() == "" {
-		return fmt.Errorf("chart version is required")
-	}
-	if req.FeatureConfigs == nil {
-		return fmt.Errorf("feature configs is required")
-	}
-	// 检查可观测性配置是否配置正确
-	if err := utils.ValidateObservabilityConfig(req.ObservabilityConfig); err != nil {
+	if err := utils.ValidateBasicFields(u.req); err != nil {
 		return err
 	}
 
+	// 检查resource参数
+	if err := utils.ValidateResource(u.req); err != nil {
+		blog.Errorf("validate resource failed, err: %s", err)
+		return fmt.Errorf("资源配置错误")
+	}
+	// 检查可观测性配置是否配置正确
+	if err := utils.ValidateObservabilityConfig(u.req.ObservabilityConfig); err != nil {
+		return err
+	}
+	// 检查高可用配置是否正确
+	if err := utils.ValidateHighAvailabilityConfig(u.req.HighAvailability); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -116,16 +121,17 @@ func (u *UpdateIstioAction) update(ctx context.Context) error {
 	u.req.PrimaryClusters = istio.PrimaryClusters
 	u.req.RemoteClusters = istio.RemoteClusters
 
-	// 更新 istio 的状态为更新中
-	err = u.model.Update(ctx, u.req.MeshID.GetValue(), entity.M{
-		entity.FieldKeyStatus: common.IstioStatusUpdating,
-	})
-	if err != nil {
-		blog.Errorf("update mesh status failed, meshID: %s, err: %s", u.req.MeshID.GetValue(), err)
-		return err
-	}
 	// 构建mongodb的更新字段
 	updateFields := u.buildUpdateFields(u.req)
+	updateFields[entity.FieldKeyStatus] = common.IstioStatusUpdating
+	updateFields[entity.FieldKeyUpdateBy] = auth.GetUserFromCtx(ctx)
+	updateFields[entity.FieldKeyUpdateTime] = time.Now().UnixMilli()
+	updateFields[entity.FieldKeyStatusMessage] = "更新中"
+	err = u.model.Update(ctx, u.req.MeshID.GetValue(), updateFields)
+	if err != nil {
+		blog.Errorf("update mesh fields failed, meshID: %s, err: %s", u.req.MeshID.GetValue(), err)
+		return err
+	}
 
 	// 构建values.yaml更新配置，用于更新values.yaml
 	updateValues, err := utils.ConvertRequestToValues(istio.Version, u.req)
@@ -148,7 +154,6 @@ func (u *UpdateIstioAction) update(ctx context.Context) error {
 			ChartRepo:           &u.istioConfig.ChartRepo,
 			PrimaryClusters:     istio.PrimaryClusters,
 			RemoteClusters:      istio.RemoteClusters,
-			UpdateFields:        updateFields,
 			UpdateValues:        updateValues,
 			ObservabilityConfig: u.req.ObservabilityConfig,
 			UpdateValuesOptions: updateValuesOptions,
@@ -164,36 +169,141 @@ func (u *UpdateIstioAction) update(ctx context.Context) error {
 	return nil
 }
 
-// buildProcessFieldKeyOptions 构建 ProcessFieldKeyOptions
+// updateValuesOptions 构建 UpdateValuesOptions，作为更新values.yaml的参数
+// 当配置关闭时，或资源的值为0时需要移除values.yaml中的对应字段
 func (u *UpdateIstioAction) updateValuesOptions(req *meshmanager.IstioRequest) *utils.UpdateValuesOptions {
 	options := &utils.UpdateValuesOptions{}
 
+	// 处理高可用配置
+	u.processHighAvailabilityOptions(req, options)
+
+	// 处理可观测性配置
+	u.processObservabilityOptions(req, options)
+
+	// 处理 Sidecar 资源配置
+	u.processSidecarResourceOptions(req, options)
+
+	return options
+}
+
+// processHighAvailabilityOptions 处理高可用配置选项
+func (u *UpdateIstioAction) processHighAvailabilityOptions(
+	req *meshmanager.IstioRequest,
+	options *utils.UpdateValuesOptions) {
+	if req.HighAvailability == nil {
+		return
+	}
+
 	// 从 HighAvailability 中提取 AutoscaleEnabled
-	if req.HighAvailability != nil && req.HighAvailability.AutoscaleEnabled != nil {
+	if req.HighAvailability.AutoscaleEnabled != nil {
 		options.AutoscaleEnabled = pointer.Bool(req.HighAvailability.AutoscaleEnabled.GetValue())
 	}
 
 	// 从 HighAvailability.DedicatedNode 中提取 DedicatedNodeEnabled
-	if req.HighAvailability != nil && req.HighAvailability.DedicatedNode != nil {
-		if req.HighAvailability.DedicatedNode.Enabled != nil {
-			options.DedicatedNodeEnabled = pointer.Bool(req.HighAvailability.DedicatedNode.Enabled.GetValue())
+	if req.HighAvailability.DedicatedNode != nil && req.HighAvailability.DedicatedNode.Enabled != nil {
+		options.DedicatedNodeEnabled = pointer.Bool(req.HighAvailability.DedicatedNode.Enabled.GetValue())
+	}
+
+	// 处理高可用资源配置
+	if req.HighAvailability.ResourceConfig != nil {
+		resourceConfig := req.HighAvailability.ResourceConfig
+
+		// 处理 CPU 请求
+		if resourceConfig.CpuRequest.GetValue() != "" {
+			if u.isResourceQuantityZero(resourceConfig.CpuRequest.GetValue()) {
+				options.DeleteHACpuRequest = true
+			}
+		}
+
+		// 处理内存请求
+		if resourceConfig.MemoryRequest.GetValue() != "" {
+			if u.isResourceQuantityZero(resourceConfig.MemoryRequest.GetValue()) {
+				options.DeleteHAMemoryRequest = true
+			}
+		}
+
+		// 处理 CPU 限制
+		if resourceConfig.CpuLimit.GetValue() != "" {
+			if u.isResourceQuantityZero(resourceConfig.CpuLimit.GetValue()) {
+				options.DeleteHACpuLimit = true
+			}
+		}
+
+		// 处理内存限制
+		if resourceConfig.MemoryLimit.GetValue() != "" {
+			if u.isResourceQuantityZero(resourceConfig.MemoryLimit.GetValue()) {
+				options.DeleteHAMemoryLimit = true
+			}
+		}
+	}
+}
+
+// processObservabilityOptions 处理可观测性配置选项
+func (u *UpdateIstioAction) processObservabilityOptions(
+	req *meshmanager.IstioRequest,
+	options *utils.UpdateValuesOptions,
+) {
+	if req.ObservabilityConfig == nil {
+		return
+	}
+
+	// 从 LogCollectorConfig 中提取 LogCollectorConfigEnabled
+	if req.ObservabilityConfig.LogCollectorConfig != nil && req.ObservabilityConfig.LogCollectorConfig.Enabled != nil {
+		options.LogCollectorConfigEnabled = pointer.Bool(req.ObservabilityConfig.LogCollectorConfig.Enabled.GetValue())
+	}
+
+	// 从 TracingConfig 中提取 EnableTracing
+	if req.ObservabilityConfig.TracingConfig != nil && req.ObservabilityConfig.TracingConfig.Enabled != nil {
+		options.EnableTracing = pointer.Bool(req.ObservabilityConfig.TracingConfig.Enabled.GetValue())
+	}
+}
+
+// processSidecarResourceOptions 处理 Sidecar 资源配置选项
+func (u *UpdateIstioAction) processSidecarResourceOptions(
+	req *meshmanager.IstioRequest,
+	options *utils.UpdateValuesOptions,
+) {
+	if req.SidecarResourceConfig == nil {
+		return
+	}
+
+	// 处理 CPU 请求
+	if req.SidecarResourceConfig.CpuRequest.GetValue() != "" {
+		if u.isResourceQuantityZero(req.SidecarResourceConfig.CpuRequest.GetValue()) {
+			options.DeleteSidecarCpuRequest = true
 		}
 	}
 
-	// 从 ObservabilityConfig 中提取配置
-	if req.ObservabilityConfig != nil {
-		// 从 LogCollectorConfig 中提取 LogCollectorConfigEnabled
-		if req.ObservabilityConfig.LogCollectorConfig != nil && req.ObservabilityConfig.LogCollectorConfig.Enabled != nil {
-			options.LogCollectorConfigEnabled = pointer.Bool(req.ObservabilityConfig.LogCollectorConfig.Enabled.GetValue())
-		}
-
-		// 从 TracingConfig 中提取 EnableTracing
-		if req.ObservabilityConfig.TracingConfig != nil && req.ObservabilityConfig.TracingConfig.Enabled != nil {
-			options.EnableTracing = pointer.Bool(req.ObservabilityConfig.TracingConfig.Enabled.GetValue())
+	// 处理内存请求
+	if req.SidecarResourceConfig.MemoryRequest.GetValue() != "" {
+		if u.isResourceQuantityZero(req.SidecarResourceConfig.MemoryRequest.GetValue()) {
+			options.DeleteSidecarMemoryRequest = true
 		}
 	}
 
-	return options
+	// 处理 CPU 限制
+	if req.SidecarResourceConfig.CpuLimit.GetValue() != "" {
+		if u.isResourceQuantityZero(req.SidecarResourceConfig.CpuLimit.GetValue()) {
+			options.DeleteSidecarCpuLimit = true
+		}
+	}
+
+	// 处理内存限制
+	if req.SidecarResourceConfig.MemoryLimit.GetValue() != "" {
+		if u.isResourceQuantityZero(req.SidecarResourceConfig.MemoryLimit.GetValue()) {
+			options.DeleteSidecarMemoryLimit = true
+		}
+	}
+}
+
+// isResourceQuantityZero 检查资源数量是否为零
+func (u *UpdateIstioAction) isResourceQuantityZero(value string) bool {
+	quantity, err := resource.ParseQuantity(value)
+	if err != nil {
+		blog.Errorf("parse resource quantity failed, value: %s, err: %s", value, err)
+		return true
+	}
+	return quantity.IsZero()
 }
 
 // 构建更新字段
@@ -313,6 +423,10 @@ func buildObservability(req *meshmanager.IstioRequest, updateFields entity.M) en
 
 	// 构建指标配置
 	if req.ObservabilityConfig.MetricsConfig != nil {
+		if req.ObservabilityConfig.MetricsConfig.MetricsEnabled != nil {
+			updateFields[entity.DotKeyObsMetricsEnabled] =
+				req.ObservabilityConfig.MetricsConfig.MetricsEnabled.GetValue()
+		}
 		if req.ObservabilityConfig.MetricsConfig.ControlPlaneMetricsEnabled != nil {
 			updateFields[entity.DotKeyObsMetricsControlPlaneEnabled] =
 				req.ObservabilityConfig.MetricsConfig.ControlPlaneMetricsEnabled.GetValue()

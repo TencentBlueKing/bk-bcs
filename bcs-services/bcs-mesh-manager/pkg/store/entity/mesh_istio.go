@@ -14,7 +14,6 @@ package entity
 
 import (
 	"slices"
-	"time"
 
 	"google.golang.org/protobuf/types/known/wrapperspb"
 
@@ -133,7 +132,6 @@ type FeatureConfig struct {
 // Transfer2ProtoForDetail converts MeshIstio entity to proto message
 // nolint:funlen
 func (m *MeshIstio) Transfer2ProtoForDetail() *meshmanager.IstioDetailInfo {
-	// TODO: 考虑直接序列化转换数据，避免逐个赋值
 	istioDetailInfo := &meshmanager.IstioDetailInfo{
 		MeshID:           m.MeshID,
 		Name:             m.Name,
@@ -280,10 +278,6 @@ func (m *MeshIstio) TransferFromProto(req *meshmanager.IstioRequest) {
 	m.PrimaryClusters = req.PrimaryClusters
 	m.RemoteClusters = req.RemoteClusters
 	m.DifferentNetwork = req.DifferentNetwork.GetValue()
-	m.CreateTime = time.Now().Unix()
-	m.UpdateTime = time.Now().Unix()
-	m.CreateBy = "system" // TODO: get from context
-	m.UpdateBy = "system" // TODO: get from context
 
 	// 转换 Sidecar 资源配置
 	if req.SidecarResourceConfig != nil {
