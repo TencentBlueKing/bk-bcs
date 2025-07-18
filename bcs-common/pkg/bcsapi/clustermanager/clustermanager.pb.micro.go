@@ -818,7 +818,7 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 		},
 		{
 			Name:    "ClusterManager.ListOperationLogs",
-			Path:    []string{"/clustermanager/v1/operationlogs"},
+			Path:    []string{"/clustermanager/v1/projects/{projectID}/operationlogs"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
@@ -3933,7 +3933,7 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.ListOperationLogs",
-		Path:    []string{"/clustermanager/v1/operationlogs"},
+		Path:    []string{"/clustermanager/v1/projects/{projectID}/operationlogs"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))

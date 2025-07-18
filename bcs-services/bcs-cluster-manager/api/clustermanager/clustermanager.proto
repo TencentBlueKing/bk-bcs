@@ -1351,7 +1351,7 @@ service ClusterManager {
   // Operation logs
   rpc ListOperationLogs(ListOperationLogsRequest) returns (ListOperationLogsResponse) {
     option (google.api.http) = {
-      get : "/clustermanager/v1/operationlogs"
+      get : "/clustermanager/v1/projects/{projectID}/operationlogs"
     };
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
       description : "查询操作日志列表"

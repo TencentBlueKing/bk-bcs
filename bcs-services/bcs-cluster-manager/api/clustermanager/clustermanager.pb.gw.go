@@ -8122,12 +8122,30 @@ func local_request_ClusterManager_ListCloudRuntimeInfo_0(ctx context.Context, ma
 }
 
 var (
-	filter_ClusterManager_ListOperationLogs_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+	filter_ClusterManager_ListOperationLogs_0 = &utilities.DoubleArray{Encoding: map[string]int{"projectID": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
 )
 
 func request_ClusterManager_ListOperationLogs_0(ctx context.Context, marshaler runtime.Marshaler, client ClusterManagerClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq ListOperationLogsRequest
 	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["projectID"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectID")
+	}
+
+	protoReq.ProjectID, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectID", err)
+	}
 
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
@@ -8144,6 +8162,24 @@ func request_ClusterManager_ListOperationLogs_0(ctx context.Context, marshaler r
 func local_request_ClusterManager_ListOperationLogs_0(ctx context.Context, marshaler runtime.Marshaler, server ClusterManagerServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq ListOperationLogsRequest
 	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["projectID"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectID")
+	}
+
+	protoReq.ProjectID, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectID", err)
+	}
 
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
@@ -16789,7 +16825,7 @@ var (
 
 	pattern_ClusterManager_ListCloudRuntimeInfo_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"clustermanager", "v1", "clouds", "cloudID", "runtimeinfo"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_ClusterManager_ListOperationLogs_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"clustermanager", "v1", "operationlogs"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_ClusterManager_ListOperationLogs_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"clustermanager", "v1", "projects", "projectID", "operationlogs"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_ClusterManager_ListTaskStepLogs_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"clustermanager", "v1", "tasksteplogs"}, "", runtime.AssumeColonVerbOpt(true)))
 
