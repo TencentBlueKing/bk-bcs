@@ -225,9 +225,9 @@ const (
 )
 
 // 包被循环调用，只能使用SetCheckBizPerm设置
-var checkUserBizPerm func(username string, BusinessID string) (bool, error)
+var checkUserBizPerm func(username string, businessID string) (bool, error)
 
 // SetCheckBizPerm xxx
-func SetCheckBizPerm(f func(username string, BusinessID string) (bool, error)) {
+func SetCheckBizPerm(f func(username string, businessID string) (bool, error)) {
 	checkUserBizPerm = f
 }
