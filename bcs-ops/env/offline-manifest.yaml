@@ -26,7 +26,7 @@ bcs-ops:
       - hub.bktencent.com/registry.k8s.io/metrics-server/metrics-server:v0.6.3
       - hub.bktencent.com/registry.k8s.io/multus-cni:snapshot
       - hub.bktencent.com/registry.k8s.io/kube-vip:v0.5.12
-      - hub.bktencent.com/blueking/bcs-apiserver-proxy:v1.29.0-alpha.130-tencent
+      - hub.bktencent.com/blueking/bcs-apiserver-proxy:v1.31.0-alpha.43
       - hub.bktencent.com/alpine/helm:3.7.2
       - hub.bktencent.com/registry.k8s.io/ingress-nginx/controller:v1.3.1
       - hub.bktencent.com/registry.k8s.io/ingress-nginx/kube-webhook-certgen:v1.3.0
@@ -57,7 +57,7 @@ bcs-ops:
       - hub.bktencent.com/registry.k8s.io/metrics-server/metrics-server:v0.6.3
       - hub.bktencent.com/registry.k8s.io/multus-cni:snapshot
       - hub.bktencent.com/registry.k8s.io/kube-vip:v0.5.12
-      - hub.bktencent.com/blueking/bcs-apiserver-proxy:v1.29.0-alpha.130-tencent
+      - hub.bktencent.com/blueking/bcs-apiserver-proxy:v1.31.0-alpha.43
       - hub.bktencent.com/alpine/helm:3.7.2
       - hub.bktencent.com/registry.k8s.io/ingress-nginx/controller:v1.3.1
       - hub.bktencent.com/registry.k8s.io/ingress-nginx/kube-webhook-certgen:v1.3.0
@@ -88,7 +88,7 @@ bcs-ops:
       - hub.bktencent.com/registry.k8s.io/metrics-server/metrics-server:v0.6.3
       - hub.bktencent.com/registry.k8s.io/multus-cni:snapshot
       - hub.bktencent.com/registry.k8s.io/kube-vip:v0.5.12
-      - hub.bktencent.com/blueking/bcs-apiserver-proxy:v1.29.0-alpha.130-tencent
+      - hub.bktencent.com/blueking/bcs-apiserver-proxy:v1.31.0-alpha.43
       - hub.bktencent.com/alpine/helm:3.7.2
       - hub.bktencent.com/registry.k8s.io/ingress-nginx/controller:v1.3.1
       - hub.bktencent.com/registry.k8s.io/ingress-nginx/kube-webhook-certgen:v1.3.0
@@ -118,7 +118,7 @@ bcs-ops:
       - hub.bktencent.com/registry.k8s.io/metrics-server/metrics-server:v0.6.3
       - hub.bktencent.com/registry.k8s.io/multus-cni:snapshot
       - hub.bktencent.com/registry.k8s.io/kube-vip:v0.5.12
-      - hub.bktencent.com/blueking/bcs-apiserver-proxy:v1.29.0-alpha.130-tencent
+      - hub.bktencent.com/blueking/bcs-apiserver-proxy:v1.31.0-alpha.43
       - hub.bktencent.com/alpine/helm:3.7.2
       - hub.bktencent.com/registry.k8s.io/ingress-nginx/controller:v1.3.1
       - hub.bktencent.com/registry.k8s.io/ingress-nginx/kube-webhook-certgen:v1.3.0
@@ -148,7 +148,7 @@ bcs-ops:
       - hub.bktencent.com/registry.k8s.io/metrics-server/metrics-server:v0.6.3
       - hub.bktencent.com/registry.k8s.io/multus-cni:snapshot
       - hub.bktencent.com/registry.k8s.io/kube-vip:v0.5.12
-      - hub.bktencent.com/blueking/bcs-apiserver-proxy:v1.29.0-alpha.130-tencent
+      - hub.bktencent.com/blueking/bcs-apiserver-proxy:v1.31.0-alpha.43
       - hub.bktencent.com/alpine/helm:3.7.2
       - hub.bktencent.com/registry.k8s.io/ingress-nginx/controller:v1.3.1
       - hub.bktencent.com/registry.k8s.io/ingress-nginx/kube-webhook-certgen:v1.3.0
@@ -157,7 +157,7 @@ bcs-ops:
     bin-tools:
       k8s: "1.30.11"
       cni-plugins: "1.3.0"
-      crictl: "1.28.0-150500"
+      crictl: "1.28.0"
       containerd: "1.6.21"
       runc: "1.1.8"
       jq: "1.7.1"
@@ -178,7 +178,7 @@ bcs-ops:
       - hub.bktencent.com/registry.k8s.io/metrics-server/metrics-server:v0.6.3
       - hub.bktencent.com/registry.k8s.io/multus-cni:snapshot
       - hub.bktencent.com/registry.k8s.io/kube-vip:v0.5.12
-      - hub.bktencent.com/blueking/bcs-apiserver-proxy:v1.29.0-alpha.130-tencent
+      - hub.bktencent.com/blueking/bcs-apiserver-proxy:v1.31.0-alpha.43
       - hub.bktencent.com/alpine/helm:3.7.2
       - hub.bktencent.com/registry.k8s.io/ingress-nginx/controller:v1.3.1
       - hub.bktencent.com/registry.k8s.io/ingress-nginx/kube-webhook-certgen:v1.3.0
