@@ -49,7 +49,6 @@ var NoAuthMethod = []string{
 	"ClusterManager.SyncAutoScalingOption",
 
 	// cloud account
-	"ClusterManager.ListCloudAccount",
 	"ClusterManager.ListCloudAccountToPerm",
 
 	// cloud module flag
