@@ -105,7 +105,8 @@ func checkUserBizPerm(username string, businessID string) (bool, error) {
 	if utils.StringInSlice(username, userList) {
 		return true, nil
 	}
-	return false, errors.New("permission denied")
+	return false, errors.New("permission denied, need scope of blueking bkcc business permition:" +
+		"[bk_biz_maintainer|bk_biz_productor|bk_biz_tester|bk_biz_developer]")
 }
 
 // NewCmdbClient create cmdb client
