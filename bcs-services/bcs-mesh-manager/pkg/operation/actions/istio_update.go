@@ -207,7 +207,7 @@ func (i *IstioUpdateAction) updateClusterResource(ctx context.Context, clusterID
 			if err := k8s.DeployResourceByYAML(
 				ctx,
 				clusterID,
-				common.GetServiceMonitorYAML(),
+				common.GetServiceMonitorYAML(common.ServiceMonitorName),
 				"ServiceMonitor",
 				common.ServiceMonitorName,
 			); err != nil {
@@ -234,7 +234,7 @@ func (i *IstioUpdateAction) updateClusterResource(ctx context.Context, clusterID
 			if err := k8s.DeployResourceByYAML(
 				ctx,
 				clusterID,
-				common.GetPodMonitorYAML(),
+				common.GetPodMonitorYAML(common.PodMonitorName),
 				"PodMonitor",
 				common.PodMonitorName,
 			); err != nil {
