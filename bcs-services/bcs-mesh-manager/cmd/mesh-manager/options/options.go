@@ -22,6 +22,11 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 )
 
+const (
+	// LocalIPEnv local ip environment variable
+	LocalIPEnv = "LOCAL_IP"
+)
+
 // MeshManagerOptions options for mesh manager
 type MeshManagerOptions struct {
 	conf.LogConfig
@@ -178,6 +183,26 @@ func (o *MeshManagerOptions) Validate() error {
 		return err
 	}
 	return nil
+}
+
+// SetDefault set default options
+func (o *MeshManagerOptions) SetDefault() error {
+	if o.ServerConfig.Address == "" {
+		localIP, err := getLocalIP()
+		if err != nil {
+			return err
+		}
+		o.ServerConfig.Address = localIP
+	}
+	return nil
+}
+
+func getLocalIP() (string, error) {
+	localIP := os.Getenv(LocalIPEnv)
+	if localIP == "" {
+		return "", fmt.Errorf("env %s is empty", LocalIPEnv)
+	}
+	return localIP, nil
 }
 
 // GlobalOptions global mesh manager options

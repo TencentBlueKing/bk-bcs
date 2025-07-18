@@ -23,7 +23,7 @@ metadata:
   labels:
     monitoring: istio-proxies
     created-by: bcs-mesh-manager
-  name: bcs-istio-proxy-metrics
+  name: %s
   namespace: istio-system
 spec:
   jobLabel: envoy-stats
@@ -70,7 +70,7 @@ metadata:
     app: istiod
     created-by: bcs-mesh-manager
     monitoring: istio-control-plane
-  name: istiod-monitor
+  name: %s
   namespace: istio-system
 spec:
   endpoints:
@@ -97,13 +97,13 @@ spec:
     randomSamplingPercentage: %d`
 
 // GetPodMonitorYAML 获取PodMonitor YAML模板
-func GetPodMonitorYAML() string {
-	return PodMonitorTemplate
+func GetPodMonitorYAML(name string) string {
+	return fmt.Sprintf(PodMonitorTemplate, name)
 }
 
 // GetServiceMonitorYAML 获取ServiceMonitor YAML模板
-func GetServiceMonitorYAML() string {
-	return ServiceMonitorTemplate
+func GetServiceMonitorYAML(name string) string {
+	return fmt.Sprintf(ServiceMonitorTemplate, name)
 }
 
 // GetTelemetryYAML 获取Telemetry YAML模板
