@@ -208,6 +208,7 @@ type ProjectConfig struct {
 	RestrictAuthorizedProjects bool                         `yaml:"restrictAuthorizedProjects"`
 	TaskConfig                 TaskConfig                   `yaml:"taskConfig"`
 	SharedClusterConfig        SharedClusterConfig          `yaml:"sharedClusterConfig"`
+	SystemNameSpace            []string                     `yaml:"systemNameSpace"`
 }
 
 func (conf *ProjectConfig) initServerAddress() {

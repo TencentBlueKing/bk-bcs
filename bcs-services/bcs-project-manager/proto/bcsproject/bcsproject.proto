@@ -1534,6 +1534,10 @@ message NamespaceData {
     title: "managers", 
     description: "命名空间管理员"
   }];
+  bool isSystem = 17[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "isSystem", 
+    description: "是否为系统命名空间, false则表示项目命名空间"
+  }];
 }
 
 message NativeNamespaceData {

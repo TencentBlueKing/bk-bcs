@@ -6336,6 +6336,8 @@ func (m *NamespaceData) validate(all bool) error {
 
 	// no validation rules for ItsmTicketType
 
+	// no validation rules for IsSystem
+
 	if len(errors) > 0 {
 		return NamespaceDataMultiError(errors)
 	}
