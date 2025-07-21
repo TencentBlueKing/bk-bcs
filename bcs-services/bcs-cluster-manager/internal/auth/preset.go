@@ -235,6 +235,7 @@ var ActionPermissions = map[string]string{
 	"ClusterManager.ListCloudRuntimeInfo":     "",
 	"ClusterManager.ListCloudInstances":       cloudaccount.CanUseCloudAccountOperation,
 	"ClusterManager.ListOperationLogs":        "",
+	"ClusterManager.ListOperationLogsV2":      project.CanViewProjectOperation,
 	"ClusterManager.ListTaskStepLogs":         project.CanViewProjectOperation,
 	"ClusterManager.ListResourceSchema":       "",
 	"ClusterManager.GetResourceSchema":        "",
