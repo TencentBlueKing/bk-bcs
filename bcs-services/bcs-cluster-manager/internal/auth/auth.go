@@ -195,6 +195,9 @@ func callIAM(username, action string, resourceID resourceID) (bool, string, []au
 	case cloudaccount.CanManageCloudAccountOperation:
 		allow, url, err := CloudAccountIamClient.CanManageCloudAccount(username, resourceID.ProjectID, resourceID.AccountID)
 		return allow, url, nil, err
+	case cloudaccount.CanCreateCloudAccountOperation:
+		allow, url, err := CloudAccountIamClient.CanCreateCloudAccount(username, resourceID.ProjectID)
+		return allow, url, nil, err
 	case cloudaccount.CanUseCloudAccountOperation:
 		// 存在account id 非必输的情况，跳过权限校验
 		if resourceID.AccountID == "" {
