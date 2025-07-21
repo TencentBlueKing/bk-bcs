@@ -64,6 +64,7 @@ var NoAuthMethod = []string{
 
 	"ClusterManager.QueryPermByActionID",
 	"ClusterManager.ListBKCloud",
+	"ClusterManager.ListCCTopology", // 集群id非必须
 	"ClusterManager.GetInnerTemplateValues",
 	"ClusterManager.DebugBkSopsTask",
 	"ClusterManager.Health",
