@@ -59,8 +59,8 @@ var (
 	ErrNodeGroupLaunchTemplateLost = errors.New("launchTemplate attribute in nodegroup cannot be empty")
 	// ErrVirtualMachineEmpty VirtualMachine 不能为空
 	ErrVirtualMachineEmpty = errors.New("virtual machine cannot be empty")
-	// ErrVmInstanceType 机型不存在
-	ErrVmInstanceType = errors.New("instance type does not exist")
+	// ErrVMInstanceType 机型不存在
+	ErrVMInstanceType = errors.New("instance type does not exist")
 	// ErrAgentPoolNotMatchesVMSSs 找不到与AgentPool匹配的VMSSs
 	ErrAgentPoolNotMatchesVMSSs = errors.New("could not find a matching VMSSs for AgentPool")
 )
@@ -188,8 +188,8 @@ type CreateClusterOption struct {
 
 // NodeData node data
 type NodeData struct {
-	NodeIp string `json:"nodeIp"`
-	NodeId string `json:"nodeId"`
+	NodeIP string `json:"nodeIP"`
+	NodeID string `json:"nodeID"`
 }
 
 // CreateVirtualClusterOption create virtual cluster option
@@ -215,7 +215,7 @@ type ImportClusterOption struct {
 // GetZoneListOption get zone list option
 type GetZoneListOption struct {
 	CommonOption
-	VpcId string
+	VpcID string
 	State string
 }
 
@@ -317,6 +317,8 @@ type AddNodesOption struct {
 	NodeSchedule bool
 	// Advance for node advanced info
 	Advance *proto.NodeAdvancedInfo
+	// IsRetryTask retry task
+	IsRetryTask bool
 }
 
 // DeleteNodesOption create cluster option
@@ -346,8 +348,8 @@ type EnableExternalNodePara struct {
 	NetworkType string
 	// ClusterCIDR Pod CIDR
 	ClusterCIDR string
-	// SubnetId 子网ID
-	SubnetId string
+	// SubnetID 子网ID
+	SubnetID string
 	// 是否开启第三方节点池支持(true: 开启第三方节点 false: 关闭第三方节点)
 	Enabled bool
 }
@@ -563,7 +565,7 @@ type SwitchClusterNetworkOption struct {
 	Cloud               *proto.Cloud
 	Operator            string
 	Disable             bool
-	IsStaticIpMode      bool
+	IsStaticIPMode      bool
 	ClaimExpiredSeconds uint32
 }
 
@@ -573,7 +575,7 @@ type CheckClusterNetworkStatusOption struct {
 	Cluster             *proto.Cluster
 	SubnetSource        *proto.SubnetSource
 	Disable             bool
-	IsStaticIpMode      bool
+	IsStaticIPMode      bool
 	ClaimExpiredSeconds uint32
 }
 
@@ -585,7 +587,7 @@ type CheckHaMasterNodesOption struct {
 // GetMasterSuggestedMachinesOption master suggested machine
 type GetMasterSuggestedMachinesOption struct {
 	CommonOption
-	Cpu   int
+	CPU   int
 	Mem   int
 	Zones []string
 }
@@ -601,7 +603,7 @@ type InstanceInfo struct {
 	Region       string
 	Zone         string
 	NodeFamily   string
-	Cpu          uint32
+	CPU          uint32
 	Memory       uint32
 	BizID        string
 	Provider     string
@@ -611,7 +613,7 @@ type InstanceInfo struct {
 
 // MachineConfig instance config
 type MachineConfig struct {
-	Cpu int
+	CPU int
 	Mem int
 	Gpu int
 }

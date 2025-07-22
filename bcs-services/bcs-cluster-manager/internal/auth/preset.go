@@ -18,7 +18,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/project"
 )
 
-// NoAuthMethod 不需要用户身份认证的方法
+// NoAuthMethod no auth method
 var NoAuthMethod = []string{
 	// 集群相关
 	"ClusterManager.ListCommonCluster",
@@ -73,7 +73,7 @@ var NoAuthMethod = []string{
 	"ClusterManager.VerifyCloudAccount",
 }
 
-// ActionPermissions action 对应权限中心的权限
+// ActionPermissions actions perms
 var ActionPermissions = map[string]string{
 	// cluster
 	"ClusterManager.CreateCluster":                cluster.CanCreateClusterOperation,
@@ -236,7 +236,7 @@ var ActionPermissions = map[string]string{
 	"ClusterManager.ListCloudRuntimeInfo":     "",
 	"ClusterManager.ListCloudInstances":       cloudaccount.CanUseCloudAccountOperation,
 	"ClusterManager.ListOperationLogs":        "",
-	"ClusterManager.ListOperationLogsV2":      project.CanViewProjectOperation,
+	"ClusterManager.ListProjectOperationLogs": project.CanViewProjectOperation,
 	"ClusterManager.ListTaskStepLogs":         project.CanViewProjectOperation,
 	"ClusterManager.ListResourceSchema":       "",
 	"ClusterManager.GetResourceSchema":        "",

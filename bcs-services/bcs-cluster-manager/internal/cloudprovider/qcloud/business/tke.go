@@ -37,14 +37,14 @@ import (
 
 // 集群相关接口
 
-// GetTkeCluster returns cluster by clusterId
-func GetTkeCluster(opt *cloudprovider.CommonOption, clusterId string) (*tke.Cluster, error) {
+// GetTkeCluster returns cluster by clusterID
+func GetTkeCluster(opt *cloudprovider.CommonOption, clusterID string) (*tke.Cluster, error) {
 	tkeCli, err := api.NewTkeClient(opt)
 	if err != nil {
 		return nil, err
 	}
 
-	cluster, err := tkeCli.GetTKECluster(clusterId)
+	cluster, err := tkeCli.GetTKECluster(clusterID)
 	if err != nil {
 		return nil, err
 	}
@@ -77,9 +77,9 @@ func GetClusterVpcCniSubnets(cls *tke.Cluster) []string {
 }
 
 // GetClusterSubnetsZoneUsage get cluster subnets zone usage
-func GetClusterSubnetsZoneUsage(cmOption *cloudprovider.CommonOption, subnetIds []string, extraIp bool) (
+func GetClusterSubnetsZoneUsage(cmOption *cloudprovider.CommonOption, subnetIDs []string, extraIP bool) (
 	map[string]*ZoneSubnetRatio, float64, error) {
-	subnets, err := GetDrSubnetInfo(cmOption, subnetIds)
+	subnets, err := GetDrSubnetInfo(cmOption, subnetIDs)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -90,7 +90,7 @@ func GetClusterSubnetsZoneUsage(cmOption *cloudprovider.CommonOption, subnetIds 
 			zoneSubnetNum[subnets[i].Zone] = &ZoneSubnetRatio{}
 		}
 
-		if extraIp {
+		if extraIP {
 			zoneSubnetNum[subnets[i].Zone].TotalIps += subnets[i].TotalIps + 3
 		} else {
 			zoneSubnetNum[subnets[i].Zone].TotalIps += subnets[i].TotalIps
@@ -124,7 +124,7 @@ type ZoneSubnetRatio struct {
 }
 
 // GetClusterCurrentVpcCniSubnets get tke cluster subnets
-func GetClusterCurrentVpcCniSubnets(cls *proto.Cluster, extraIp bool) (map[string]*ZoneSubnetRatio,
+func GetClusterCurrentVpcCniSubnets(cls *proto.Cluster, extraIP bool) (map[string]*ZoneSubnetRatio,
 	float64, []string, error) {
 	cmOption, err := cloudprovider.GetCloudCmOptionByCluster(cls)
 	if err != nil {
@@ -146,7 +146,7 @@ func GetClusterCurrentVpcCniSubnets(cls *proto.Cluster, extraIp bool) (map[strin
 		return nil, 0, nil, fmt.Errorf("clsuter[%s] subnets empty", cls.GetClusterID())
 	}
 
-	zoneSubnetNum, totalRatio, err := GetClusterSubnetsZoneUsage(cmOption, subnetIds, extraIp)
+	zoneSubnetNum, totalRatio, err := GetClusterSubnetsZoneUsage(cmOption, subnetIds, extraIP)
 	if err != nil {
 		return nil, 0, nil, err
 	}
@@ -882,8 +882,8 @@ func generateGPUArgs(gpuArgs *proto.GPUArgs) *api.GPUArgs {
 
 // AddExistedInstanceResult add existed result
 type AddExistedInstanceResult struct {
-	SuccessNodes []string
-	FailedNodes  []string
+	SuccessNodeInfos []InstanceInfo
+	FailedNodeInfos  []InstanceInfo
 }
 
 // AddNodesToCluster add nodes to cluster and return nodes result
@@ -904,6 +904,7 @@ func AddNodesToCluster(ctx context.Context, info *cloudprovider.CloudDependBasic
 		addInstanceReq *api.AddExistedInstanceReq
 		nodeIPs        = make([]string, 0)
 	)
+
 	for i := range nodeIDs {
 		if ip, ok := idToIP[nodeIDs[i]]; ok {
 			nodeIPs = append(nodeIPs, ip)
@@ -933,22 +934,43 @@ func AddNodesToCluster(ctx context.Context, info *cloudprovider.CloudDependBasic
 	}
 
 	if len(resp.SuccessInstanceIDs) > 0 {
-		result.SuccessNodes = resp.SuccessInstanceIDs
+		for i := range resp.SuccessInstanceIDs {
+			nodeID := resp.SuccessInstanceIDs[i]
+			instanceInfo := InstanceInfo{
+				NodeId: nodeID,
+				NodeIp: idToIP[nodeID],
+			}
+			result.SuccessNodeInfos = append(result.SuccessNodeInfos, instanceInfo)
+		}
 	}
 	if len(resp.FailedInstanceIDs) > 0 || len(resp.TimeoutInstanceIDs) > 0 {
-		result.FailedNodes = append(result.FailedNodes, resp.TimeoutInstanceIDs...)
-		result.FailedNodes = append(result.FailedNodes, resp.FailedInstanceIDs...)
+		for i := range resp.FailedInstanceIDs {
+			nodeID := resp.FailedInstanceIDs[i]
+			instanceInfo := InstanceInfo{
+				NodeId: nodeID,
+				NodeIp: idToIP[nodeID],
+			}
+			result.FailedNodeInfos = append(result.FailedNodeInfos, instanceInfo)
+		}
+		for i := range resp.TimeoutInstanceIDs {
+			nodeID := resp.TimeoutInstanceIDs[i]
+			instanceInfo := InstanceInfo{
+				NodeId: nodeID,
+				NodeIp: idToIP[nodeID],
+			}
+			result.FailedNodeInfos = append(result.FailedNodeInfos, instanceInfo)
+		}
 	}
 
-	blog.Infof("AddNodesToCluster[%s] AddExistedInstancesToCluster success[%v] failed[%v]"+
-		"reasons[%v]", taskID, result.SuccessNodes, result.FailedNodes, resp.FailedReasons)
+	blog.Infof("AddNodesToCluster[%s] AddExistedInstancesToCluster success [%v],"+
+		"failed [%v], reasons[%v]", taskID, result.SuccessNodeInfos, result.FailedNodeInfos, resp.FailedReasons)
 
 	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
-		fmt.Sprintf("success [%v] failed [%v]", result.SuccessNodes, result.FailedNodes))
+		fmt.Sprintf("success nodes: [%v]", result.SuccessNodeInfos))
 
-	if len(result.FailedNodes) > 0 {
-		cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
-			fmt.Sprintf("failed Nodes:[%v], reason:[%v]", result.FailedNodes, resp.FailedReasons))
+	if len(result.FailedNodeInfos) > 0 {
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
+			fmt.Sprintf("failed nodes: [%v], reason [%v]", result.FailedNodeInfos, resp.FailedReasons))
 	}
 
 	return result, nil
@@ -961,7 +983,7 @@ func CheckClusterDeletedNodes(ctx context.Context, info *cloudprovider.CloudDepe
 	// get qcloud client
 	cli, err := api.NewTkeClient(info.CmOption)
 	if err != nil {
-		blog.Errorf("checkClusterInstanceStatus[%s] failed, %s", taskID, err)
+		blog.Errorf("CheckClusterDeletedNodes[%s] failed, %s", taskID, err)
 		return err
 	}
 
@@ -1009,8 +1031,8 @@ func CheckClusterDeletedNodes(ctx context.Context, info *cloudprovider.CloudDepe
 func CheckClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, // nolint
 	instanceIDs []string) ([]string, []string, error) {
 	var (
-		addSuccessNodes = make([]string, 0)
-		addFailureNodes = make([]string, 0)
+		addSuccessNodes = make([]InstanceInfo, 0)
+		addFailureNodes = make([]InstanceInfo, 0)
 	)
 
 	taskID, stepName := cloudprovider.GetTaskIDAndStepNameFromContext(ctx)
@@ -1038,16 +1060,27 @@ func CheckClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDe
 			return nil
 		}
 
-		index := 0
-		running, failure := make([]string, 0), make([]string, 0)
+		var (
+			index   int
+			running = make([]InstanceInfo, 0)
+			failure = make([]InstanceInfo, 0)
+		)
 		for _, ins := range instances {
-			blog.Infof("checkClusterInstanceStatus[%s] instance[%s] status[%s]", taskID, *ins.InstanceId, *ins.InstanceState)
+			blog.Infof("checkClusterInstanceStatus[%s] instance id[%s] status[%s]",
+				taskID, *ins.InstanceId, *ins.InstanceState)
+
 			switch *ins.InstanceState {
 			case api.RunningInstanceTke.String():
-				running = append(running, *ins.InstanceId)
+				running = append(running, InstanceInfo{
+					NodeId: *ins.InstanceId,
+					NodeIp: *ins.LanIP,
+				})
 				index++
 			case api.FailedInstanceTke.String():
-				failure = append(failure, *ins.InstanceId)
+				failure = append(failure, InstanceInfo{
+					NodeId: *ins.InstanceId,
+					NodeIp: *ins.LanIP,
+				})
 				index++
 			default:
 			}
@@ -1075,7 +1108,10 @@ func CheckClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDe
 
 		blog.Errorf("checkClusterInstanceStatus[%s] QueryTkeClusterInstances failed: %v", taskID, err)
 
-		running, failure := make([]string, 0), make([]string, 0)
+		var (
+			running = make([]InstanceInfo, 0)
+			failure = make([]InstanceInfo, 0)
+		)
 		instances, errQuery := cli.QueryTkeClusterInstances(&api.DescribeClusterInstances{
 			ClusterID:   info.Cluster.SystemID,
 			InstanceIDs: instanceIDs,
@@ -1089,41 +1125,66 @@ func CheckClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDe
 			return nil, nil, errQuery
 		}
 		for _, ins := range instances {
-			blog.Infof("checkClusterInstanceStatus[%s] instance[%s] status[%s]", taskID, *ins.InstanceId, *ins.InstanceState)
+			blog.Infof("checkClusterInstanceStatus[%s] instance id[%s] status[%s]",
+				taskID, *ins.InstanceId, *ins.InstanceState)
+
 			switch *ins.InstanceState {
 			case api.RunningInstanceTke.String():
-				running = append(running, *ins.InstanceId)
+				running = append(running, InstanceInfo{
+					NodeId: *ins.InstanceId,
+					NodeIp: *ins.LanIP,
+				})
 			default:
-				failure = append(failure, *ins.InstanceId)
+				failure = append(failure, InstanceInfo{
+					NodeId: *ins.InstanceId,
+					NodeIp: *ins.LanIP,
+				})
 			}
 		}
 		addSuccessNodes = running
 		addFailureNodes = failure
 	}
-	blog.Infof("checkClusterInstanceStatus[%s] success[%v] failure[%v]", taskID, addSuccessNodes, addFailureNodes)
+	blog.Infof("checkClusterInstanceStatus[%s] success instances[%v] failure instance[%v]",
+		taskID, addSuccessNodes, addFailureNodes)
 
 	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
-		fmt.Sprintf("success [%v] failure [%v]", addSuccessNodes, addFailureNodes))
+		fmt.Sprintf("success instance [%v]", addSuccessNodes))
 
-	// set cluster node status
-	for _, n := range addFailureNodes {
-		err = cloudprovider.UpdateNodeStatus(false, n, common.StatusAddNodesFailed)
-		if err != nil {
-			blog.Errorf("checkClusterInstanceStatus[%s] UpdateNodeStatusByInstanceID[%s] failed: %v", taskID, n, err)
+	if len(addFailureNodes) > 0 {
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
+			fmt.Sprintf("failure instance [%v]", addFailureNodes))
+
+		// set cluster node status
+		for _, n := range addFailureNodes {
+			err = cloudprovider.UpdateNodeStatus(false, n.NodeId, common.StatusAddNodesFailed)
+			if err != nil {
+				blog.Errorf("checkClusterInstanceStatus[%s] UpdateNodeStatusByInstanceID[%s] failed: %v", taskID, n, err)
+			}
 		}
 	}
 
-	return addSuccessNodes, addFailureNodes, nil
+	var (
+		successNodeIds []string
+		failedNodeIds  []string
+	)
+	for i := range addSuccessNodes {
+		successNodeIds = append(successNodeIds, addSuccessNodes[i].NodeId)
+	}
+	for i := range addFailureNodes {
+		failedNodeIds = append(failedNodeIds, addFailureNodes[i].NodeId)
+	}
+
+	return successNodeIds, failedNodeIds, nil
 }
 
 // GetFailedNodesReason get add nodes failed reason
 func GetFailedNodesReason(ctx context.Context, info *cloudprovider.CloudDependBasicInfo,
 	instanceIDs []string) (map[string]InstanceInfo, string, error) {
-	taskId := cloudprovider.GetTaskIDFromContext(ctx)
+	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
 	tkeCli, err := api.NewTkeClient(info.CmOption)
 	if err != nil {
-		blog.Errorf("GetFailedNodesReason[%s] failed: %v", taskId, err)
+		blog.Errorf("GetFailedNodesReason[%s] failed: %v", taskID, err)
 		return nil, "", err
 	}
 
@@ -1145,12 +1206,12 @@ func GetFailedNodesReason(ctx context.Context, info *cloudprovider.CloudDependBa
 	return insMapInfo, strings.Join(allInsReason, ";"), nil
 }
 
-// DeleteTkeClusterByClusterId delete cluster by clsId
-func DeleteTkeClusterByClusterId(ctx context.Context, opt *cloudprovider.CommonOption,
-	clsId string, deleteMode string) error {
+// DeleteTkeClusterByClusterID delete cluster by clsId
+func DeleteTkeClusterByClusterID(ctx context.Context, opt *cloudprovider.CommonOption,
+	clsID string, deleteMode string) error {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
-	if len(clsId) == 0 {
+	if len(clsID) == 0 {
 		blog.Warnf("DeleteTkeClusterByClusterId[%s] clusterID empty", taskID)
 		return nil
 	}
@@ -1161,13 +1222,13 @@ func DeleteTkeClusterByClusterId(ctx context.Context, opt *cloudprovider.CommonO
 		return err
 	}
 
-	err = tkeCli.DeleteTKECluster(clsId, api.DeleteMode(deleteMode))
+	err = tkeCli.DeleteTKECluster(clsID, api.DeleteMode(deleteMode))
 	if err != nil && !strings.Contains(err.Error(), api.ErrClusterNotFound.Error()) {
 		blog.Errorf("DeleteTkeClusterByClusterId[%s] deleteCluster failed: %v", taskID, err)
 		return err
 	}
 
-	blog.Infof("DeleteTkeClusterByClusterId[%s] deleteCluster[%s] success", taskID, clsId)
+	blog.Infof("DeleteTkeClusterByClusterId[%s] deleteCluster[%s] success", taskID, clsID)
 
 	return nil
 }

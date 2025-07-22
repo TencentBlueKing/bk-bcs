@@ -1103,7 +1103,7 @@ func (sn *SwitchClusterNetworkTaskOption) BuildAllocateClusterSubnetTask(task *p
 
 	allocateSubnetStep.Params[cloudprovider.ClusterIDKey.String()] = sn.Cluster.ClusterID
 	allocateSubnetStep.Params[cloudprovider.SubnetInfoKey.String()] = sn.SubnetInfo
-	allocateSubnetStep.Params[cloudprovider.IsStaticIpModeKey.String()] = sn.IsStaticIpModeInfo
+	allocateSubnetStep.Params[cloudprovider.IsStaticIPModeKey.String()] = sn.IsStaticIpModeInfo
 	allocateSubnetStep.Params[cloudprovider.ClaimExpiredSecondsKey.String()] = sn.ClaimExpiredSecondsInfo
 
 	task.Steps[allocateClusterSubnetStep.StepMethod] = allocateSubnetStep
@@ -1116,7 +1116,7 @@ func (sn *SwitchClusterNetworkTaskOption) BuildClusterOpenVpcCniStep(task *proto
 
 	openVpcCniStep.Params[cloudprovider.ClusterIDKey.String()] = sn.Cluster.ClusterID
 	openVpcCniStep.Params[cloudprovider.SubnetInfoKey.String()] = sn.SubnetInfo
-	openVpcCniStep.Params[cloudprovider.IsStaticIpModeKey.String()] = sn.IsStaticIpModeInfo
+	openVpcCniStep.Params[cloudprovider.IsStaticIPModeKey.String()] = sn.IsStaticIpModeInfo
 	openVpcCniStep.Params[cloudprovider.ClaimExpiredSecondsKey.String()] = sn.ClaimExpiredSecondsInfo
 
 	task.Steps[openClusterVpcCniStep.StepMethod] = openVpcCniStep

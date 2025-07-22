@@ -237,7 +237,7 @@ var (
 	// NodeLoginKey xxx
 	NodeLoginKey ParamKey = "nodeLogin"
 	// FailedTransVpcNodeIDsKey xxx
-	FailedTransVpcNodeIDsKey ParamKey = "failedNodeIDs"
+	FailedTransVpcNodeIDsKey ParamKey = "failedTransVpcNodeIDs"
 	// NodeNamesKey xxx
 	NodeNamesKey ParamKey = "nodeNames"
 	// DeviceIDsKey xxx
@@ -322,9 +322,9 @@ var (
 	// CloudJobID xxx
 	CloudJobID ParamKey = "jobID"
 
-	// BkSopsUrlKey bk-sops depend Key
-	// BkSopsUrlKey url
-	BkSopsUrlKey ParamKey = "url"
+	// BkSopsURLKey bk-sops depend Key
+	// BkSopsURLKey url
+	BkSopsURLKey ParamKey = "url"
 	// BkSopsBizIDKey bizID
 	BkSopsBizIDKey ParamKey = "template_biz_id"
 	// BkSopsTemplateIDKey template ID
@@ -336,10 +336,10 @@ var (
 	// BkSopsConstantsKey constants
 	BkSopsConstantsKey ParamKey = "constants"
 
-	// BkSopsTaskUrlKey inject bksops task url
-	BkSopsTaskUrlKey ParamKey = "taskUrl"
-	// ShowSopsUrlKey show bkSops url
-	ShowSopsUrlKey ParamKey = "showUrl"
+	// BkSopsTaskURLKey inject bksops task url
+	BkSopsTaskURLKey ParamKey = "taskUrl"
+	// ShowSopsURLKey show bkSops url
+	ShowSopsURLKey ParamKey = "showUrl"
 
 	// ConnectClusterKey connect cluster result
 	ConnectClusterKey ParamKey = "connectCluster"
@@ -369,8 +369,8 @@ var (
 
 	// SubnetInfoKey xxx
 	SubnetInfoKey ParamKey = "subnetInfo"
-	// IsStaticIpModeKey xxx
-	IsStaticIpModeKey ParamKey = "isStaticIpMode"
+	// IsStaticIPModeKey xxx
+	IsStaticIPModeKey ParamKey = "isStaticIpMode"
 	// ClaimExpiredSecondsKey xxx
 	ClaimExpiredSecondsKey ParamKey = "claimExpiredSeconds"
 

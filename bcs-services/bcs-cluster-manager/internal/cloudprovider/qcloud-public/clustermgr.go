@@ -596,7 +596,7 @@ func (c *Cluster) EnableExternalNodeSupport(cls *proto.Cluster, opt *cloudprovid
 		if opt == nil || opt.Operator == "" || opt.EnablePara == nil {
 			return fmt.Errorf("qcloud EnableExternalNodeSupport lost valid paras")
 		}
-		if opt.EnablePara.NetworkType == "" || opt.EnablePara.SubnetId == "" || opt.EnablePara.ClusterCIDR == "" {
+		if opt.EnablePara.NetworkType == "" || opt.EnablePara.SubnetID == "" || opt.EnablePara.ClusterCIDR == "" {
 			return fmt.Errorf("qcloud EnableExternalNodeSupport enableexternal paras empty")
 		}
 
@@ -614,7 +614,7 @@ func (c *Cluster) EnableExternalNodeSupport(cls *proto.Cluster, opt *cloudprovid
 		err := cli.EnableExternalNodeSupport(cls.SystemID, api.EnableExternalNodeConfig{ // nolint
 			NetworkType: opt.EnablePara.NetworkType,
 			ClusterCIDR: opt.EnablePara.ClusterCIDR,
-			SubnetId:    opt.EnablePara.SubnetId,
+			SubnetId:    opt.EnablePara.SubnetID,
 			Enabled:     opt.EnablePara.Enabled,
 		})
 		if err != nil {
@@ -801,9 +801,9 @@ func (c *Cluster) GetMasterSuggestedMachines(level, vpcId string,
 		instanceTemplate = make([]*proto.InstanceTemplateConfig, 0)
 	)
 
-	machineConfig := clusterLevel.GetCpuMemConfig(opt.Cpu, opt.Mem)
+	machineConfig := clusterLevel.GetCpuMemConfig(opt.CPU, opt.Mem)
 
-	mtZones, zoneInstanceTypes, err := getZoneMachineTypes(machineConfig.Cpu, machineConfig.Mem, opt.CommonOption)
+	mtZones, zoneInstanceTypes, err := getZoneMachineTypes(machineConfig.CPU, machineConfig.Mem, opt.CommonOption)
 	if err != nil {
 		blog.Errorf("GetMasterSuggestedMachines getZoneMachineTypes failed: %v", err)
 		return nil, err
@@ -909,7 +909,7 @@ func getZoneMachineTypes(
 
 	nodeCli := &NodeManager{}
 	instanceTypes, err := nodeCli.getCloudInstanceType(cloudprovider.InstanceInfo{
-		Cpu:    uint32(cpu),
+		CPU:    uint32(cpu),
 		Memory: uint32(mem),
 	}, &opt)
 	if err != nil {

@@ -77,6 +77,10 @@ func (ua *TaskRecordsAction) fetchTaskRecords() error {
 		return err
 	}
 
+	if autils.CheckTaskStepPartFailureStatus(task) {
+		task.Status = cloudprovider.TaskStatusPartFailure
+	}
+
 	ua.resp.Data = &cmproto.TaskRecordsResponseData{
 		Status: statusMap[task.Status],
 		Step:   []*cmproto.TaskRecordStep{},

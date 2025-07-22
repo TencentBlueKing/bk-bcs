@@ -787,12 +787,6 @@ func (ua *UpdateDesiredNodeAction) validate() error {
 		ua.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
 		return err
 	}
-	// limit desiredNode num
-	if ua.req.Manual && ua.req.DesiredNode > 100 {
-		err := errors.New("manual operation limit desiredNode: 100")
-		ua.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
-		return err
-	}
 	// validate nodegroup exist
 	group, err := ua.model.GetNodeGroup(ua.ctx, ua.req.NodeGroupID)
 	if err != nil {
@@ -980,6 +974,13 @@ func (ua *UpdateDesiredNodeAction) checkCloudClusterResource(scaleNodesNum uint3
 		return err
 	}
 
+	// limit scale nodeNum if nodegroup manual scale
+	if ua.req.Manual && scaleNodesNum > 100 {
+		err := errors.New("nodegroup manual operation limit desiredNode: 100")
+		ua.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
+		return err
+	}
+
 	// check cloud CIDR && autoScale cluster cidr
 	available, err := clusterMgr.CheckClusterCidrAvailable(ua.cluster, &cloudprovider.CheckClusterCIDROption{
 		CommonOption:    *cmOption,
@@ -1085,10 +1086,10 @@ func (ua *UpdateDesiredNodeAction) injectVirtualNodeData(nodeNum uint32) {
 	var i uint32
 
 	for ; i < nodeNum; i++ {
-		nodeId := virtualNodeID()
+		nodeID := virtualNodeID()
 
 		err := ua.model.CreateNode(context.Background(), &cmproto.Node{
-			NodeID:      nodeId,
+			NodeID:      nodeID,
 			Status:      common.StatusResourceApplying,
 			ZoneID:      "",
 			NodeGroupID: ua.group.NodeGroupID,
@@ -1098,7 +1099,7 @@ func (ua *UpdateDesiredNodeAction) injectVirtualNodeData(nodeNum uint32) {
 			TaskID:      ua.task.GetTaskID(),
 		})
 		if err != nil {
-			blog.Errorf("UpdateDesiredNodeAction injectVirtualNodeData[%s] failed: %v", nodeId, err)
+			blog.Errorf("UpdateDesiredNodeAction injectVirtualNodeData[%s] failed: %v", nodeID, err)
 		}
 		time.Sleep(time.Millisecond * 10)
 	}

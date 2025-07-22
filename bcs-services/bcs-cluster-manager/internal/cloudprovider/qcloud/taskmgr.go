@@ -1851,7 +1851,7 @@ func (t *Task) BuildSwitchClusterNetworkTask(
 	if err != nil {
 		return nil, fmt.Errorf("BuildSwitchClusterNetworkTask failed: %v", err)
 	}
-	isStaticIpModeInfo := strconv.FormatBool(opt.IsStaticIpMode)
+	isStaticIpModeInfo := strconv.FormatBool(opt.IsStaticIPMode)
 	claimExpiredSecondsInfo := strconv.Itoa(int(opt.ClaimExpiredSeconds))
 
 	// setting step details

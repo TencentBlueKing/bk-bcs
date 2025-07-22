@@ -220,7 +220,7 @@ func (nm *NodeManager) ListNodesByInstanceID(ids []string, opt *cloudprovider.Li
 func (nm *NodeManager) ListNodeInstanceType(ctx context.Context, info cloudprovider.InstanceInfo,
 	opt *cloudprovider.CommonOption) ([]*proto.InstanceType, error) {
 	blog.Infof("ListNodeInstanceType zone: %s, nodeFamily: %s, cpu: %d, memory: %d",
-		info.Zone, info.NodeFamily, info.Cpu, info.Memory)
+		info.Zone, info.NodeFamily, info.CPU, info.Memory)
 
 	if options.GetEditionInfo().IsInnerEdition() {
 		return nm.getInnerInstanceTypes(ctx, info)
@@ -257,7 +257,7 @@ func (nm *NodeManager) getInnerInstanceTypes(ctx context.Context, info cloudprov
 		targetTypes, err = tresource.GetResourceManagerClient().GetInstanceTypes(context.Background(),
 			info.Region, resource.InstanceSpec{
 				BizID:        info.BizID,
-				Cpu:          info.Cpu,
+				Cpu:          info.CPU,
 				Mem:          info.Memory,
 				Provider:     info.Provider,
 				ResourceType: info.ResourceType,
@@ -470,8 +470,8 @@ func (nm *NodeManager) getCloudInstanceType(info cloudprovider.InstanceInfo, opt
 	// filter result instanceTypes
 	result := make([]*proto.InstanceType, 0)
 	for _, item := range list {
-		if info.Cpu > 0 {
-			if item.Cpu != info.Cpu {
+		if info.CPU > 0 {
+			if item.Cpu != info.CPU {
 				continue
 			}
 		}

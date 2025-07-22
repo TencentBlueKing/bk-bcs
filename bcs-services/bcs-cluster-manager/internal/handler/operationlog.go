@@ -39,8 +39,8 @@ func (cm *ClusterManager) ListOperationLogs(ctx context.Context,
 	return nil
 }
 
-// ListOperationLogsV2 implements interface cmproto.ClusterManagerServer
-func (cm *ClusterManager) ListOperationLogsV2(ctx context.Context,
+// ListProjectOperationLogs implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) ListProjectOperationLogs(ctx context.Context,
 	req *cmproto.ListOperationLogsRequest, resp *cmproto.ListOperationLogsResponse) error {
 	reqID, err := requestIDFromContext(ctx)
 	if err != nil {

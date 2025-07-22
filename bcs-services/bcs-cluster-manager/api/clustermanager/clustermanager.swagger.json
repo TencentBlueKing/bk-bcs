@@ -6005,7 +6005,7 @@
       "get": {
         "summary": "查询操作日志列表",
         "description": "查询操作日志列表",
-        "operationId": "ClusterManager_ListOperationLogsV2",
+        "operationId": "ClusterManager_ListProjectOperationLogs",
         "responses": {
           "200": {
             "description": "A successful response.",

@@ -15,6 +15,7 @@ package task
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -118,6 +119,8 @@ type RetryAction struct {
 
 	task    *cmproto.Task
 	cluster *cmproto.Cluster
+
+	isPartFailure bool
 }
 
 // NewRetryAction create retry action for cluster retry
@@ -164,8 +167,16 @@ func (ua *RetryAction) validate() error {
 
 	// check task status
 	switch ua.task.Status {
-	case cloudprovider.TaskStatusInit, cloudprovider.TaskStatusRunning, cloudprovider.TaskStatusSuccess:
-		errMsg := fmt.Errorf("task[%s] status[%s] doing or done when retry task", ua.task.TaskID, ua.task.Status)
+	case cloudprovider.TaskStatusInit, cloudprovider.TaskStatusRunning:
+		errMsg := fmt.Errorf("task[%s] status[%s] doing when retry task", ua.task.TaskID, ua.task.Status)
+		return errMsg
+	case cloudprovider.TaskStatusSuccess:
+		if utils.CheckTaskStepPartFailureStatus(ua.task) &&
+			strings.Contains(ua.task.TaskType, cloudprovider.AddNodesToCluster.String()) {
+			ua.isPartFailure = true
+			return nil
+		}
+		errMsg := fmt.Errorf("task[%s] status[%s] done when retry task", ua.task.TaskID, ua.task.Status)
 		return errMsg
 	case cloudprovider.TaskStatusFailure, cloudprovider.TaskStatusTimeout:
 	}
@@ -174,19 +185,36 @@ func (ua *RetryAction) validate() error {
 }
 
 func (ua *RetryAction) distributeTask() error {
-	ua.task.Status = cloudprovider.TaskStatusRunning
-	ua.task.Message = "task retrying"
-	step, ok := ua.task.Steps[ua.task.CurrentStep]
-	if ok && step.MaxRetry > 0 {
-		step.Retry = 0
+	// status is part failure && whole task is done will create new task
+	if ua.isPartFailure {
+		newTask, err := retryPartFailureTask(ua.model, ua.cluster, ua.task)
+		if err != nil {
+			return nil
+		}
+		ua.task = newTask
+		// create task
+		if err := ua.model.CreateTask(ua.ctx, ua.task); err != nil {
+			blog.Errorf("save addNodesToCluster cluster task for cluster %s failed, %s",
+				ua.cluster.ClusterID, err.Error(),
+			)
+			return err
+		}
+	} else {
+		ua.task.Status = cloudprovider.TaskStatusRunning
+		ua.task.Message = "task retrying"
+		step, ok := ua.task.Steps[ua.task.CurrentStep]
+		if ok && step.MaxRetry > 0 {
+			step.Retry = 0
+		}
+
+		err := ua.model.UpdateTask(ua.ctx, ua.task)
+		if err != nil {
+			blog.Errorf("RetryTaskAction[%s] updateTask failed: %v", ua.cluster.ClusterID, err)
+			return err
+		}
 	}
 
-	err := ua.model.UpdateTask(ua.ctx, ua.task)
-	if err != nil {
-		blog.Errorf("RetryTaskAction[%s] updateTask failed: %v", ua.cluster.ClusterID, err)
-		return err
-	}
-	if err = taskserver.GetTaskServer().Dispatch(ua.task); err != nil {
+	if err := taskserver.GetTaskServer().Dispatch(ua.task); err != nil {
 		blog.Errorf("dispatch retry task[%s] for cluster %s failed, %s", ua.req.TaskID, ua.task.ClusterID, err.Error())
 		return err
 	}
@@ -225,7 +253,9 @@ func (ua *RetryAction) Handle(
 		return
 	}
 	// handle cluster data status and not block task, finally task will update data status
-	_ = updateTaskDataStatus(ua.model, ua.task)
+	if !ua.isPartFailure {
+		_ = updateTaskDataStatus(ua.model, ua.task)
+	}
 
 	ua.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 }

@@ -140,7 +140,7 @@ func (ng *NodeGroup) RecommendNodeGroupConf(
 	mgr := NodeManager{}
 	insTypes, err := mgr.ListNodeInstanceType(ctx, cloudprovider.InstanceInfo{
 		Region: opt.Region,
-		Cpu:    8,
+		CPU:    8,
 		Memory: 16,
 	}, opt)
 	if err != nil {

@@ -110,7 +110,7 @@ func (la *SuggestMasterMachinesAction) allocateMasterSuggestedMachines() error {
 	machines, err := clsMgr.GetMasterSuggestedMachines(la.req.GetLevel(), la.req.GetVpcID(),
 		&cloudprovider.GetMasterSuggestedMachinesOption{
 			CommonOption: *cmOption,
-			Cpu:          int(la.req.GetCpu()),
+			CPU:          int(la.req.GetCpu()),
 			Mem:          int(la.req.GetMemory()),
 			Zones: func() []string {
 				if len(la.req.GetZones()) == 0 {
