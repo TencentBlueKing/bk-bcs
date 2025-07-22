@@ -2915,6 +2915,7 @@ tke:
     publicImage: 公共镜像
     marketImage: 市场镜像
     privateImage: 私有镜像
+    bcsImage: 平台镜像
     ipNum: IP数量
     zone: 可用区
     staticIpMode: 固定 Pod IP

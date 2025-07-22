@@ -66,6 +66,22 @@
           @type-change="(v) => loginType = v"
           @pass-change="(v) => confirmPassword = v" />
       </bk-form-item>
+      <!-- 操作系统 -->
+      <bk-form-item
+        :label="$t('cluster.create.label.system')"
+        property="imageID"
+        error-display-type="normal"
+        v-if="curCluster.provider === 'tencentCloud'">
+        <ImageList
+          class="max-w-[500px]"
+          v-model="formData.advance.nodeOs"
+          :region="curCluster.region"
+          :cloud-i-d="curCluster.provider"
+          :rec-default-image="'BCS-5.4.241-1-tlinux4-0017'"
+          :rec-provider="'BCS_IMAGE'"
+          :provider-order="['BCS_IMAGE', 'PUBLIC_IMAGE', 'PRIVATE_IMAGE']"
+          init-data />
+      </bk-form-item>
       <!-- IP选择器 -->
       <IpSelector
         :cloud-id="curCluster.provider"
@@ -117,10 +133,11 @@ import { ICluster } from '@/composables/use-app';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store/index';
+import ImageList from '@/views/cluster-manage/add/components/image-list.vue';
 import LoginType from '@/views/cluster-manage/add/components/login-type.vue';
 
 export default defineComponent({
-  components: { IpSelector, StatusIcon, ConfirmDialog, TemplateSelector, LoginType },
+  components: { IpSelector, StatusIcon, ConfirmDialog, TemplateSelector, LoginType, ImageList },
   props: {
     clusterId: {
       type: String,
@@ -138,9 +155,15 @@ export default defineComponent({
           id: string
         }
       }>
+      advance: {
+        nodeOs: string
+      }
     }>({
       currentTemplate: {},
       ipList: [],
+      advance: {
+        nodeOs: '',
+      },
     });
     const formRules = ref({
       ip: [{
@@ -188,6 +211,15 @@ export default defineComponent({
               return workerLogin.value.initLoginPassword === confirmPassword.value;
             }
             return true;
+          },
+        },
+      ],
+      imageID: [
+        {
+          trigger: 'custom',
+          message: $i18n.t('generic.validate.required'),
+          validator() {
+            return !!formData.value.advance.nodeOs;
           },
         },
       ],
@@ -272,12 +304,13 @@ export default defineComponent({
     const confirmLoading = ref(false);
     const handleConfirm = async () => {
       confirmLoading.value = true;
-      const { ipList, currentTemplate } = formData.value;
+      const { ipList, currentTemplate, advance } = formData.value;
       const result = await addNode({
         clusterId: props.clusterId,
         nodeIps: ipList.map(item => item.ip),
         nodeTemplateID: currentTemplate.nodeTemplateID,
         login: workerLogin.value,
+        advance,
       });
       confirmLoading.value = false;
 

@@ -3582,6 +3582,7 @@ tke:
     publicImage: Public image
     marketImage: Market image
     privateImage: Private image
+    bcsImage: BCS image
     apiServerCLB:
       text: CLB
       internet: Internet
