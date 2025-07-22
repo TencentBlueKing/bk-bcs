@@ -129,9 +129,6 @@ case "${K8S_CSI,,}" in
     ;;
 esac
 
-
-# wait kubelet to start
-sleep 30
 if systemctl is-active kubelet.service -q; then
   utils::log "WARN" "kubelet service is active now, skip kubeadm join"
 else
@@ -148,4 +145,19 @@ if [[ "${ENABLE_APISERVER_HA}" == "true" ]]; then
     "${ROOT_DIR}"/system/config_bcs_dns -u "${VIP}" k8s-api.bcs.local
     k8s::restart_kubelet
   fi
+fi
+
+# wait kubelet to start
+for i in `seq 10`;
+do
+  sleep 30
+  node_name=$(ps -ef|grep kubelet|grep hostname-override|grep -o "hostname-override=\S*"|sed "s/hostname-override=//g"|head -1)
+  if ! kubectl get node --kubeconfig /etc/kubernetes/kubelet.conf ${node_name}|grep NotReady;then
+    break
+  fi
+done
+
+node_name=$(ps -ef|grep kubelet|grep hostname-override|grep -o "hostname-override=\S*"|sed "s/hostname-override=//g"|head -1)
+if kubectl get node --kubeconfig /etc/kubernetes/kubelet.conf ${node_name}|grep NotReady;then
+  utils::log "FATAL" "${node_name} status is notready"
 fi
