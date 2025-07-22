@@ -63,7 +63,7 @@ const (
 	FieldKeyObservabilityConfig        = "observabilityConfig"
 	FieldKeyMetricsConfig              = "metricsConfig"
 	FieldKeyLogCollectorConfig         = "logCollectorConfig"
-	FieldKeyTracingConfig              = "tracingConfig"
+	FieldKeyTracingConfig              = "tracing"
 	FieldKeyTraceSamplingPercent       = "traceSamplingPercent"
 	FieldKeyMetricsEnabled             = "metricsEnabled"
 	FieldKeyControlPlaneMetricsEnabled = "controlPlaneMetricsEnabled"

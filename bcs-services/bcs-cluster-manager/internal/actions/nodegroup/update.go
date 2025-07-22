@@ -14,6 +14,7 @@ package nodegroup
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -783,6 +784,12 @@ func (ua *UpdateDesiredNodeAction) setResp(code uint32, msg string) {
 // validate check
 func (ua *UpdateDesiredNodeAction) validate() error {
 	if err := ua.req.Validate(); err != nil {
+		ua.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
+		return err
+	}
+	// limit desiredNode num
+	if ua.req.Manual && ua.req.DesiredNode > 100 {
+		err := errors.New("manual operation limit desiredNode: 100")
 		ua.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
 		return err
 	}

@@ -128,7 +128,6 @@ func (l *GetIstioDetailAction) getDetail(ctx context.Context) (*meshmanager.Isti
 		return nil, fmt.Errorf("get release detail failed, clusterID: %s, release is nil", clusterID)
 	}
 
-	// 检查 release values 是否为空
 	if len(release.Data.Values) == 0 {
 		blog.Errorf("release values is empty, clusterID: %s", clusterID)
 		return nil, fmt.Errorf("release values is empty, clusterID: %s", clusterID)
@@ -148,6 +147,15 @@ func (l *GetIstioDetailAction) getDetail(ctx context.Context) (*meshmanager.Isti
 		blog.Errorf("build istio list item failed, clusterID: %s, err: %s", clusterID, err.Error())
 		return nil, fmt.Errorf("build istio list item failed, clusterID: %s", clusterID)
 	}
+
+	// 转换资源配置单位
+	if err := utils.NormalizeResourcesConfig(result); err != nil {
+		blog.Errorf("normalize resources failed, clusterID: %s, err: %s",
+			clusterID, err.Error())
+		return nil, fmt.Errorf("normalize istio detail resources failed, clusterID: %s, err: %s",
+			clusterID, err.Error())
+	}
+
 	return result, nil
 }
 

@@ -6001,6 +6001,165 @@
         ]
       }
     },
+    "/clustermanager/v1/projects/{projectID}/operationlogs": {
+      "get": {
+        "summary": "查询操作日志列表",
+        "description": "查询操作日志列表",
+        "operationId": "ClusterManager_ListOperationLogsV2",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerListOperationLogsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "description": "默认为空, 过滤项目维度的操作审计",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "resourceType",
+            "description": "resourceType. 资源类型,可选值: cluster, autoscalingoption, cloud, cloudvpc, nodegroup, task",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "resourceID",
+            "description": "resourceID. 资源ID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "startTime",
+            "description": "startTime. 开始时间，GMT 时间戳，秒",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "endTime",
+            "description": "endTime. 结束时间，GMT 时间戳，秒",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "limit",
+            "description": "limit. 每页数量",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "page",
+            "description": "page. 页码",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "simple",
+            "description": "simple. 只展示 operationLogs 信息",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          },
+          {
+            "name": "taskIDNull",
+            "description": "taskIDNull. 默认false,过滤taskID为空的场景; 当为true时,不过滤taskID为空的",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          },
+          {
+            "name": "clusterID",
+            "description": "clusterID. 默认为空, 过滤集群维度的操作审计",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "description": "status. 默认为空, 任务状态筛选",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "taskType",
+            "description": "taskType. 默认为空, 任务类型筛选",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "v2",
+            "description": "v2. 是否使用v2的查询版本",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          },
+          {
+            "name": "ipList",
+            "description": "ipList. 通过,隔开ipList过滤任务",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "taskID",
+            "description": "taskID. 默认为空, 过滤任务维度的操作审计",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "taskName",
+            "description": "taskName. 默认为空, 过滤任务名称维度的操作审计",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "resourceName",
+            "description": "resourceName. 默认为空, 过滤资源名称维度的操作审计",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "opUser",
+            "description": "opUser. 默认为空, 发起者筛选",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
     "/clustermanager/v1/projects/{projectID}/providers/{providerID}/autoscaler/resource_usage": {
       "get": {
         "summary": "获取项目维度用户CA资源使用情况",

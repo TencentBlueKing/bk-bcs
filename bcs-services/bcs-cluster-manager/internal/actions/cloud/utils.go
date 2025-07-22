@@ -14,7 +14,6 @@ package cloud
 
 import (
 	"context"
-	"fmt"
 	"sort"
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
@@ -99,7 +98,9 @@ func dedupeAndSortEnvCidrSteps(steps []*cmproto.EnvCidrStep) []*cmproto.EnvCidrS
 		if step == nil {
 			continue
 		}
-		key := step.Env + fmt.Sprint(step.Step)
+		// nolint:govet
+		// conversion from uint32 to string yields a string of one rune, not a string of digits
+		key := step.Env + string(step.Step)
 		if _, exist := exists[key]; !exist {
 			exists[key] = struct{}{}
 			uniqueSteps = append(uniqueSteps, step)

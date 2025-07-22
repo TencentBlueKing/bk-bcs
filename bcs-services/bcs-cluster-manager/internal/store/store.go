@@ -217,8 +217,8 @@ type ClusterManagerModel interface {
 	DeleteTemplateConfig(ctx context.Context, templateConfigID string) error
 	GetTemplateConfig(ctx context.Context, businessID, provider, configType string) (*types.TemplateConfig, error)
 	GetTemplateConfigByID(ctx context.Context, templateConfigID string) (*types.TemplateConfig, error)
-	ListTemplateConfigs(ctx context.Context, cond *operator.Condition,
-		opt *options.ListOption) ([]*types.TemplateConfig, error)
+	ListTemplateConfigs(
+		ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]*types.TemplateConfig, error)
 }
 
 // ModelSet a set of client

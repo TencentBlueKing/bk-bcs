@@ -302,7 +302,7 @@ func (i *IstioInstallAction) deployPodMonitor(ctx context.Context, clusterID str
 	return k8s.DeployResourceByYAML(
 		ctx,
 		clusterID,
-		common.GetPodMonitorYAML(),
+		common.GetPodMonitorYAML(common.PodMonitorName),
 		"PodMonitor",
 		common.PodMonitorName,
 	)
@@ -313,7 +313,7 @@ func (i *IstioInstallAction) deployServiceMonitor(ctx context.Context, clusterID
 	return k8s.DeployResourceByYAML(
 		ctx,
 		clusterID,
-		common.GetServiceMonitorYAML(),
+		common.GetServiceMonitorYAML(common.ServiceMonitorName),
 		"ServiceMonitor",
 		common.ServiceMonitorName,
 	)

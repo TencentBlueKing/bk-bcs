@@ -14,7 +14,7 @@
 package httpserver
 
 import (
-	"github.com/emicklei/go-restful"
+	restful "github.com/emicklei/go-restful/v3"
 )
 
 // Action restful action struct

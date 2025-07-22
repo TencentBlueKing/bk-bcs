@@ -159,6 +159,11 @@ message IstioConfigData {
         title : "highAvailability",
         description : "高可用配置"
       } ];
+  ObservabilityConfig observabilityConfig = 22
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "observabilityConfig",
+        description : "可观测性配置"
+      } ];
   map<string, FeatureConfig> featureConfigs = 2
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "featureConfigs"

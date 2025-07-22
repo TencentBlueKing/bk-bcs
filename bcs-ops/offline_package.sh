@@ -39,9 +39,16 @@ safe_curl() {
     echo "[INFO]: $save_file exist"
   else
     echo "[INFO]: downloading ${url} as ${save_file}"
-    if ! curl -sSfL "${url}" -o "${save_file}" -m "360"; then
+    for i in `seq 10`;do
+      if ! curl -sSfL "${url}" -o "${save_file}" -m "360"; then
+        echo "[FATAL]: Fail to download ${url}, retry $i"
+        rm -f "${save_file}"
+      else
+        break
+      fi
+    done
+    if [ ! -f ${save_file} ];then
       echo "[FATAL]: Fail to download ${url}"
-      rm -f "${save_file}"
       return 1
     fi
   fi

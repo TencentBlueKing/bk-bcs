@@ -369,6 +369,7 @@ generic:
     know: I Know
     confirmSave: Confirm save
     detail: Detail
+    detail1: Detail
     remove: Remove
   label:
     basicConfig: Basic config
@@ -426,6 +427,7 @@ generic:
     resourceName: Resource name
     resourceID: Resource ID
     none: None
+    tag: Tags
   status:
     part_failure: Part failure
     support: Support
@@ -4000,3 +4002,122 @@ diff:
   delete: Delete
   change: Change
   add: Add
+serviceMesh:
+  title: Service Mesh
+  create: Create Mesh
+  status:
+    'on': 'ON'
+    'off': 'OFF'
+  label:
+    name: Mesh Name
+    ID: Mesh ID
+    version: Version
+    status: Status
+    cluster: Associated Cluster
+    createTime: Creation Time
+    scene: Observation Scenario
+    upgrade: Upgrade
+    basicInfo: Basic Information
+    network: Mesh Feature Configuration
+    master: High Availability Configuration
+    create: Create Mesh
+    info: Mesh Information
+    description: Description
+    clusterConfig: Cluster Configuration
+    primaryClusters: Primary Cluster
+    featureConfig: Feature Settings
+    egressMode: Egress Traffic Mode
+    sidecarOn: Sidecar Readiness Guarantee
+    sidecarOff: Sidecar Termination Guarantee
+    sidecarResource: Sidecar Resources
+    cpuRequest: CPU Request
+    cpuLimit: CPU Limit
+    memoryRequest: Memory Request
+    memoryLimit: Memory Limit
+    dnsCapture: DNS Proxy Forwarding
+    dnsAutoAllocate: Auto Allocate IP
+    http10: Support HTTP/1.0
+    excludeIPs: Exclude IP Ranges
+    observability: Observability
+    metrics: Metrics Collection
+    controlPlane: Control Plane Metrics Reporting
+    dataPlane: Data Plane Metrics Reporting
+    logOutput: Log Output
+    logType: Log Output Type
+    logFormat: Log Output Format
+    tracing: Distributed Tracing
+    sampleRate: Sampling Rate
+    endpoint: Reporting Endpoint
+    bkToken: Reporting Token
+    highAvailability: Control Plane HA Configuration
+    replicas: Replicas
+    resource: Resources
+    cpuPercent: CPU Utilization
+    replicaMin: Minimum Replicas
+    replicaMax: Maximum Replicas
+    dedicatedNode: Dedicated Node
+  placeholder:
+    search: Search mesh name/version/status/associated cluster
+    ips: 'Please enter IPs, separate multiple IPs with Enter'
+  tips:
+    delete: Confirm to delete this mesh?
+    subTitle: 'Mesh Name: {name}'
+    primaryClusterDesc: Used for deploying istio control plane
+    clusterEnabled: This cluster does not match the currently selected k8s version
+    maxlength: 'Maximum length: 2000'
+    cpuValidate: CPU limit must be greater than or equal to CPU request
+    memoryValidate: memory limit must be greater than or equal to memory request
+    endpointValidate: 'Only uppercase and lowercase letters, numbers, and characters ( . : / ) are supported'
+    disabledVirtual: VCluster is not supported
+    disabledShare: Shared cluster is not supported
+    disabledFederation: Federation cluster is not supported
+    autoscaleMax: The maximum number of replicas cannot be less than the minimum number of replicas
+    noPermission: No permission
+    egressModeDesc:
+      title: Configure outbound traffic policy for services within the mesh.
+      registryOnly: >-
+        Registry Only:Only supports accessing services automatically discovered
+        by the mesh and manually registered services
+      allowAny: 'Allow Any:Can access any address'
+    sidecarOnDesc: >-
+      Using HoldApplicationUntilProxyStarts feature to configure business
+      containers to wait for Sidecar to complete startup before starting,
+      ensuring Pods that depend on Sidecar run normally
+    sidecarOffDesc: >-
+      When enabled, Sidecar termination will wait for complete termination of
+      processes in business containers, which will increase Pod termination time
+      to some extent. Recommended for services whose processes cannot be
+      terminated at any time
+    dnsCaptureDesc: >-
+      When Istio proxies DNS, all DNS requests from applications will be
+      redirected to Sidecar. If the request is processed by the proxy, it will
+      directly return the response to the application, avoiding round trips to
+      upstream DNS servers
+    dnsAutoAllocateDesc: >-
+      DNS proxy supports automatically allocating addresses for ServiceEntries
+      without explicitly specified addresses
+    http10Desc: >-
+      By default, Istio does not support HTTP/1.0 and prefers to use HTTP/1.1 or
+      HTTP/2 protocols. If HTTP/1.0 support is required, it needs to be enabled
+      separately.
+    excludeIPsDesc: >-
+      Corresponding to excludeIPRanges, by default, the Sidecar will handle all
+      traffic within the current Pod. If you want to bypass the Sidecar proxy
+      for specific IPs, you can configure this option. Once configured, traffic
+      to the specified IP ranges will not utilize Istio's traffic management,
+      observability, and other features. Configuration changes will only take
+      effect for newly created Pods; existing Pods will require a restart to
+      apply the changes.
+    dataPlaneDesc: >-
+      For large-scale clusters, need to evaluate the potential pressure on
+      remote storage caused by monitoring data
+    sampleRateDesc: >-
+      Sampling ratio for mesh to collect and persist tracing calls. Sidecar data
+      collection and reporting consume resources and bandwidth proportional to
+      data volume. Configure as needed, recommended 100% for dev/test
+      environments and 1% for production
+    endpointDesc: Corresponding reporting endpoint of BlueKing Monitor
+    bkTokenDesc: Obtain from BlueKing Monitor APM settings
+    dedicatedNodeDesc: >-
+      Set labels to schedule istio control plane to dedicated nodes, provided
+      that corresponding labels already exist on the nodes

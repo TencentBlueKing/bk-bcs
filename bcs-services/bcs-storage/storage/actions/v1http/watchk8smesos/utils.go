@@ -18,7 +18,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
 	bcstypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
-	"github.com/emicklei/go-restful"
+	restful "github.com/emicklei/go-restful/v3"
 
 	sto "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/types"

@@ -1203,8 +1203,8 @@ func (la *ListBasicInfoAction) setResp(code uint32, msg string) {
 }
 
 // Handle list cluster request
-func (la *ListBasicInfoAction) Handle(ctx context.Context, req *cmproto.ListClusterV2Req,
-	resp *cmproto.ListClusterV2Resp) {
+func (la *ListBasicInfoAction) Handle(
+	ctx context.Context, req *cmproto.ListClusterV2Req, resp *cmproto.ListClusterV2Resp) {
 	if req == nil || resp == nil {
 		blog.Errorf("list cluster failed, req or resp is empty")
 		return
