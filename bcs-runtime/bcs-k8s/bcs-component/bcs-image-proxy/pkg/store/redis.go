@@ -65,7 +65,7 @@ type CacheStore interface {
 // RedisStore defines the redis store object
 type RedisStore struct {
 	op          *options.ImageProxyOption
-	redisClient *redis.ClusterClient
+	redisClient *redis.Client
 }
 
 var (
@@ -73,29 +73,15 @@ var (
 	syncOnce sync.Once
 )
 
-// NewRedisStore create the redis store instance
-func NewRedisStore(op *options.ImageProxyOption) CacheStore {
-	globalRS = &RedisStore{
-		op: op,
-		redisClient: redis.NewFailoverClusterClient(&redis.FailoverOptions{
-			MasterName:    "mymaster",
-			SentinelAddrs: strings.Split(op.RedisAddress, ","),
-			Password:      op.RedisPassword,
-		}),
-	}
-	return globalRS
-}
-
 // GlobalRedisStore returns the global redis store instance
 func GlobalRedisStore() CacheStore {
 	syncOnce.Do(func() {
 		op := options.GlobalOptions()
 		globalRS = &RedisStore{
 			op: op,
-			redisClient: redis.NewFailoverClusterClient(&redis.FailoverOptions{
-				MasterName:    "mymaster",
-				SentinelAddrs: strings.Split(op.RedisAddress, ","),
-				Password:      op.RedisPassword,
+			redisClient: redis.NewClient(&redis.Options{
+				Addr:     op.RedisAddress,
+				Password: op.RedisPassword,
 			}),
 		}
 	})

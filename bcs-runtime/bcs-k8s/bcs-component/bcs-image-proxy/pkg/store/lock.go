@@ -21,7 +21,7 @@ import (
 
 // RedisLock defines the instance of redis lock
 type RedisLock struct {
-	client     *redis.ClusterClient
+	client     *redis.Client
 	lockKey    string
 	lockValue  string
 	expiration time.Duration
@@ -29,7 +29,7 @@ type RedisLock struct {
 }
 
 // NewRedisLock 创建新的 Redis 锁
-func NewRedisLock(client *redis.ClusterClient, lockKey, lockValue string, expiration time.Duration) *RedisLock {
+func NewRedisLock(client *redis.Client, lockKey, lockValue string, expiration time.Duration) *RedisLock {
 	return &RedisLock{
 		client:     client,
 		lockKey:    lockKey,
