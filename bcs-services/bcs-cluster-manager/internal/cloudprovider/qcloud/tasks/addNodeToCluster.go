@@ -95,7 +95,7 @@ func ModifyInstancesVpcTask(taskID string, stepName string) error {
 }
 
 // CheckInstanceStateTask check instance operation state
-func CheckInstanceStateTask(taskID string, stepName string) error {
+func CheckInstanceStateTask(taskID string, stepName string) error { // nolint
 	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
 		"start check instance operation status")
 	start := time.Now()

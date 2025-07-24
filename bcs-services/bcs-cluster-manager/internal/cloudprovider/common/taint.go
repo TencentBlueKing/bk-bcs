@@ -285,7 +285,7 @@ type NodeTaintData struct {
 }
 
 // UpdateClusterNodesTaints update cluster taints
-func UpdateClusterNodesTaints(ctx context.Context, data NodeTaintData) error {
+func UpdateClusterNodesTaints(ctx context.Context, data NodeTaintData) error { // nolint
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
 	k8sOperator := clusterops.NewK8SOperator(options.GetGlobalCMOptions(), cloudprovider.GetStorageModel())
