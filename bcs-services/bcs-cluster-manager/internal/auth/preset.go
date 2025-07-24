@@ -40,6 +40,7 @@ var NoAuthMethod = []string{
 
 	// kubeConfig
 	"ClusterManager.CheckCloudKubeConfig",
+	"ClusterManager.CheckCloudKubeConfigConnect",
 
 	// task resource
 
