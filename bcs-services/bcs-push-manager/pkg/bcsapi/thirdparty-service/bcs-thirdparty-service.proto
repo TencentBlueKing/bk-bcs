@@ -1,0 +1,1618 @@
+syntax = "proto3";
+
+package bcsthirdpartyservice;
+
+option go_package = "./proto;bcsthirdpartyservice";
+
+import "google/api/annotations.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+import "validate/validate.proto";
+import "google/protobuf/struct.proto";
+
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
+  info: {
+    title: "bcsthirdpartyservice Manager API Doc"
+    version: "0.1.0"
+  };
+  schemes : HTTP
+  consumes : "application/json"
+  produces : "application/json"
+};
+
+service BcsThirdpartyService {
+
+  rpc CreateNamespaceForTaiji(CreateNamespaceForTaijiRequest) returns (CreateNamespaceForTaijiResponse) {
+    option (google.api.http) = {
+      post: "/bcsthirdpartyservice/v1/taiji/namespace"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      description : "创建太极命名空间"
+      summary : "创建太极命名空间"
+    };
+  }
+
+  rpc GetQuotaInfoForTaiji(GetQuotaInfoForTaijiRequest) returns (GetQuotaInfoForTaijiResponse) {
+    option (google.api.http) = {
+      get: "/bcsthirdpartyservice/v1/taiji/getQuotaInfo/{namespace}"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      description: "查询太极命名空间quota信息"
+      summary: "查询太极命名空间quota信息"
+    };
+  }
+
+  rpc UpdateQuotaInfoForTaiji(UpdateQuotaInfoForTaijiRequest) returns (UpdateQuotaInfoForTaijiResponse) {
+    option (google.api.http) = {
+      put: "/bcsthirdpartyservice/v1/taiji/quotaInfo"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      description: "更新太极NS额度"
+      summary: "更新太极NS额度"
+    };
+  }
+
+  rpc GetKubeConfigForTaiji(GetKubeConfigForTaijiRequest) returns (GetKubeConfigForTaijiResponse) {
+    option (google.api.http) = {
+      get: "/bcsthirdpartyservice/v1/taiji/kubeConfig/{nameSpace}"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      description: "查询太极NS kubeconfig"
+      summary: "查询太极NS kubeconfig"
+    };
+  }
+
+  rpc CreateModule(CreateModuleRequest) returns (CreateModuleResponse) {
+    option (google.api.http) = {
+      post: "/bcsthirdpartyservice/v1/{platform}/module"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      description : "创建模块"
+      summary : "创建模块"
+    };
+  }
+
+  rpc CreateNamespaceForTaijiV3(CreateNamespaceForTaijiV3Request) returns (CreateNamespaceForTaijiV3Response) {
+    option (google.api.http) = {
+      post: "/bcsthirdpartyservice/v1/taiji/v3/namespace"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      description : "创建太极命名空间v3"
+      summary : "创建太极命名空间v3"
+    };
+  }
+  rpc ImportTjKubeconfig(ImportTjKubeconfigRequest) returns (ImportTjKubeconfigResponse) {
+    option (google.api.http) = {
+      post: "/bcsthirdpartyservice/v1/taiji/kubeconfig/import"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      description : "创建太极kubeconfig"
+      summary : "创建太极kubeconfig"
+    };
+  }
+  rpc UpdateTjKubeconfig(UpdateTjKubeconfigRequest) returns (UpdateTjKubeconfigResponse) {
+    option (google.api.http) = {
+      put: "/bcsthirdpartyservice/v1/taiji/kubeconfig/update"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      description : "更新太极kubeconfig"
+      summary : "更新太极kubeconfig"
+    };
+  }
+
+  rpc CreateNamespaceForSuanli(CreateNamespaceForSuanliRequest) returns (CreateNamespaceForSuanliResponse) {
+    option (google.api.http) = {
+      post: "/bcsthirdpartyservice/v1/suanli/namespace"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      description : "创建算力命名空间"
+      summary : "创建算力命名空间"
+    };
+  }
+
+  rpc UpdateNamespaceForSuanli(UpdateNamespaceForSuanliRequest) returns (UpdateNamespaceForSuanliResponse) {
+    option (google.api.http) = {
+      put: "/bcsthirdpartyservice/v1/suanli/namespace"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      description : "创建算力命名空间"
+      summary : "创建算力命名空间"
+    };
+  }
+
+  rpc GetKubeConfigForSuanli(GetKubeConfigForSuanliRequest) returns (GetKubeConfigForSuanliResponse) {
+    option (google.api.http) = {
+      get: "/bcsthirdpartyservice/v1/suanli/kubeconfig/namespace/{nameSpace}"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      description: "查询算力NS kubeconfig"
+      summary: "查询算力NS kubeconfig"
+    };
+  }
+
+  rpc BatchImportNamespace (BatchImportNamespaceRequest) returns (BatchImportNamespaceResponse) {
+    option (google.api.http) = {
+      post: "/bcsthirdpartyservice/v1/namespace/import"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      description: "批量导入命名空间"
+      summary: "批量导入命名空间"
+    };
+  }
+
+  rpc ListNamespace (ListNamespaceRequest) returns (ListNamespaceResponse) {
+    option (google.api.http) = {
+      post: "/bcsthirdpartyservice/v1/namespace"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      description: "查询命名空间列表"
+      summary: "查询命名空间列表"
+    };
+  }
+
+  rpc GetNamespace (GetNamespaceRequest) returns (GetNamespaceResponse) {
+    option (google.api.http) = {
+      get: "/bcsthirdpartyservice/v1/platform/{platform}/namespace/{namespace}"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      description: "查询命名空间"
+      summary: "查询命名空间"
+    };
+  }
+  // 新增企业微信发送接口
+  rpc SendRtx (SendRtxRequest) returns (SendRtxResponse) {
+    option (google.api.http) = {
+      post: "/bcsthirdpartyservice/v1/notification/rtx"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      description: "发送企业微信消息"
+      summary: "发送企业微信消息"
+    };
+  }
+
+  // 新增邮件发送接口
+  rpc SendMail (SendMailRequest) returns (SendMailResponse) {
+    option (google.api.http) = {
+      post: "/bcsthirdpartyservice/v1/notification/mail"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      description: "发送邮件"
+      summary: "发送邮件"
+    };
+  }
+
+  // 新增bkchat v3消息发送接口
+  rpc SendMsg (SendMsgRequest) returns (SendMsgResponse) {
+    option (google.api.http) = {
+      post: "/bcsthirdpartyservice/v1/notification/msgv3"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      description: "通过bkchat发送多IM类型消息（v3）"
+      summary: "发送IM消息v3"
+    };
+  }
+
+}
+
+message UpdateTjKubeconfigRequest{
+  string namespace = 1;
+  string kubeconfig = 2;
+  string platform = 3;
+  string operator = 4;
+}
+
+message UpdateTjKubeconfigResponse{
+  string code = 1 [
+    json_name = "code",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "code"
+      description: "code"
+    }
+  ];
+  string message = 2 [
+    json_name = "message",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "message"
+      description: "message"
+    }
+  ];
+}
+
+message ImportTjKubeconfigRequest{
+  string namespace = 1;
+  string kubeconfig = 2;
+  string platform = 3;
+  string creator = 4;
+}
+
+message ImportTjKubeconfigResponse{
+  string code = 1 [
+    json_name = "code",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "code"
+      description: "code"
+    }
+  ];
+  string message = 2 [
+    json_name = "message",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "message"
+      description: "message"
+    }
+  ];
+}
+
+message UpdateNamespaceForSuanliRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "UpdateNamespaceForSuanliRequest"
+      description: "更新算力命名空间"
+      required: ["subQuotaInfos", "namespace"]
+    }
+  };
+  string namespace = 1 [
+    json_name = "namespace",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "namespace"
+      description: "命名空间名字"
+    }
+  ];
+  string operator = 2 [
+    json_name = "operator",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "operator"
+      description: "操作人"
+    }
+  ];
+  repeated NamespaceQuotaForSuanli subQuotaInfos = 3 [
+    json_name = "subQuotaInfos",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "subQuotaInfos"
+      description: "subQuotaInfos"
+    }
+  ];
+}
+
+message UpdateNamespaceForSuanliResponse{
+  string code = 1 [
+    json_name = "code",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "code"
+      description: "code"
+    }
+  ];
+  string message = 2 [
+    json_name = "message",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "message"
+      description: "message"
+    }
+  ];
+}
+
+message GetNamespaceRequest{
+  string platform = 1;
+  string namespace = 2;
+}
+
+message GetNamespaceResponse{
+  string code = 1;
+  string message = 2;
+  Namespace data = 3;
+}
+
+message ListNamespaceRequest{
+  string platform = 1;
+  bool all = 2;
+  int64 limit = 3;
+  int64 page = 4;
+}
+
+message ListNamespaceResponse{
+  string code = 1;
+  string message = 2;
+  ListNamespaceResponseData data = 3;
+}
+
+message ListNamespaceResponseData{
+  int64 total = 1;
+  repeated Namespace namespace = 2;
+}
+
+message Namespace {
+  string name = 1;
+  string platform = 2;
+  KubeConfig kubeConfig = 3;
+  map<string, string> labels = 4;
+  map<string, string> annotations = 5;
+  repeated SubQuotaInfos subQuotaInfos = 6;
+  string creator = 7;
+  string updater = 8;
+  string createdTime = 9;
+  string updatedTime = 10;
+}
+
+message KubeConfig{
+  string name = 1;
+  string config = 2;
+}
+
+message SubQuotaInfos {
+  string name = 1 [
+    json_name = "name",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "name"
+      description: "name"
+    }
+  ];
+  map<string, string> sub_quota_labels = 2 [
+    json_name = "sub_quota_labels",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "sub_quota_labels"
+      description: "sub_quota_labels"
+    }
+  ];
+  map<string, string> sub_quota_resources = 3 [
+    json_name = "sub_quota_resources",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "sub_quota_resources"
+      description: "sub_quota_resources"
+    }
+  ];
+}
+
+message BatchImportNamespaceRequest{
+  repeated BatchImportNamespaceData namespaces = 1;
+}
+
+message BatchImportNamespaceData{
+  string namespace = 1 [
+    json_name = "namespace",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "namespace"
+      description: "命名空间名字"
+    }
+  ];
+  string creator = 2 [
+    json_name = "creator",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "creator"
+      description: "操作人"
+    }
+  ];
+  repeated SubQuotaInfos subQuotaInfos = 3 [
+    json_name = "subQuotaInfos",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "subQuotaInfos"
+      description: "subQuotaInfos"
+    }
+  ];
+  map<string, string> labels = 4 [
+    json_name = "labels",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "labels"
+      description: "labels"
+    }
+  ];
+  map<string, string> annotations = 5 [
+    json_name = "annotations",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "annotations"
+      description: "annotations"
+    }
+  ];
+  string platform = 6 [
+    json_name = "platform",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "platform"
+      description: "平台"
+    }
+  ];
+  string clusterName = 7 [
+    json_name = "clusterName",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "clusterName"
+      description: "算力平台 clusterName"
+    }
+  ];
+}
+
+message BatchImportNamespaceResponse{
+  string code = 1;
+  string message = 2;
+}
+
+message GetKubeConfigForSuanliRequest{
+  string nameSpace = 1;
+}
+
+message GetKubeConfigForSuanliResponse{
+  string code = 1;
+  string message = 2;
+  kubeCfg data = 3;
+  message kubeCfg {
+    string kube_cfg = 1;
+  }
+}
+
+message CmdbBusinessLevel3DetailInfoData{
+  repeated BusinessLevel3DetailInfo list = 1;
+  string scrollId = 2;
+  bool hasNext = 3;
+}
+
+message BusinessLevel3DetailInfo{
+  int64 businessLevel1Id = 1;
+  string businessLevel1Name = 2;
+  string businessLevel1Uid = 3;
+  int64 businessLevel2Id = 4;
+  string businessLevel2Name = 5;
+  string businessLevel2Uid = 6;
+  int64 businessLevel3Id = 7;
+  string businessLevel3Name = 8;
+  string businessLevel3Uid = 9;
+  int64 businessDepartmentId = 10;
+  string businessDepartmentName = 11;
+  string operationProductName = 12;
+  int64 operationProductId = 13;
+}
+
+message CreateNamespaceForSuanliRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "CreateNamespaceForSuanliRequest"
+      description: "创建算力命名空间"
+      required: ["bkBizId", "bkModuleId", "namespace"]
+    }
+  };
+  string namespace = 1 [
+    json_name = "namespace",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "namespace"
+      description: "命名空间名字"
+    }
+  ];
+  string creator = 2 [
+    json_name = "creator",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "creator"
+      description: "操作人"
+    }
+  ];
+  repeated NamespaceQuotaForSuanli subQuotaInfos = 3 [
+    json_name = "subQuotaInfos",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "subQuotaInfos"
+      description: "subQuotaInfos"
+    }
+  ];
+
+  string bkBizId = 4 [
+    json_name = "bkBizId",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "bkBizId"
+      description: "计费关联的bkcc业务id"
+    }
+  ];
+  string bkModuleId = 5 [
+    json_name = "bkModuleId",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "bkModuleId"
+      description: "计费关联的bkcc业务模块id"
+    }
+  ];
+}
+
+message NamespaceQuotaForSuanli {
+  string name = 1 [
+    json_name = "name",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "name"
+      description: "name"
+    }
+  ];
+  map<string, string> subQuotaLabels = 2 [
+    json_name = "subQuotaLabels",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "subQuotaLabels"
+      description: "subQuotaLabels"
+    }
+  ];
+  map<string, string> subQuotaResources = 3 [
+    json_name = "subQuotaResources",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "subQuotaResources"
+      description: "subQuotaResources"
+    }
+  ];
+  string location = 4 [
+    json_name = "location",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "location"
+      description: "location"
+    }
+  ];
+}
+
+message CreateNamespaceForSuanliResponse{
+  string code = 1 [
+    json_name = "code",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "code"
+      description: "code"
+    }
+  ];
+  string message = 2 [
+    json_name = "message",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "message"
+      description: "message"
+    }
+  ];
+}
+
+message CreateNamespaceForTaijiV3Request{
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "CreateNamespaceForTaijiV3Request"
+      description: "创建太极命名空间V3请求"
+      required: ["bkBizId", "bkModuleId", "location", "namespace", "scheduleAlgorithm"]
+    }
+  };
+  string location = 1 [
+    json_name = "location",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "location"
+      description: "地域"
+    }
+  ];
+  string namespace = 2 [
+    json_name = "namespace",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "namespace"
+      description: "命名空间名字"
+    }
+  ];
+  string creator = 3 [
+    json_name = "creator",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "creator"
+      description: "操作人"
+    }
+  ];
+  optional string scheduleAlgorithm = 4 [
+    json_name = "scheduleAlgorithm",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "scheduleAlgorithm"
+      description: "调度算法"
+    }
+  ];
+
+  repeated string gpuPpClusterNames = 5 [
+    json_name = "gpuPpClusterNames",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "gpuPpClusterNames"
+      description: "对应gpu集群"
+    }
+  ];
+  repeated NamespaceQuotaForTaiji subQuotaInfos = 6 [
+    json_name = "subQuotaInfos",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "subQuotaInfos"
+      description: "subQuotaInfos"
+    }
+  ];
+  optional bool isPrivateResource = 7 [
+    json_name = "isPrivateResource",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "isPrivateResource"
+      description: "是否专属额度"
+    }
+  ];
+  string bkBizId = 8 [
+    json_name = "bkBizId",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "bkBizId"
+      description: "计费关联的bkcc业务id"
+    }
+  ];
+  string bkModuleId = 9 [
+    json_name = "bkModuleId",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "bkModuleId"
+      description: "计费关联的bkcc业务模块id"
+    }
+  ];
+}
+
+message CreateNamespaceForTaijiV3Response{
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "CreateNamespaceForTaijiV3Response"
+      description: "创建命名空间返回"
+    }
+  };
+  TaijiDefaultResponse error = 1 [
+    json_name = "error",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "error",
+      description: "响应结果"
+    }];
+  CreateNamespaceForTaijiV3Data data = 2 [
+    json_name = "data",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "data",
+      description: "响应结果"
+    }];
+}
+
+message CreateNamespaceForTaijiV3Data{
+  string id = 1 [
+    json_name = "id",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "id",
+      description: "id"
+    }];
+  string kubeCfg = 2 [
+    json_name = "kubeCfg",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "kubeCfg",
+      description: "kubeCfg"
+    }];
+  bool repeatedBusinessMould = 3 [
+    json_name = "repeatedBusinessMould",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "repeatedBusinessMould",
+      description: "repeatedBusinessMould"
+    }];
+}
+
+message CreateModuleRequest{
+  string bk_module_name = 1 [
+    json_name = "bk_module_name",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "bk_module_name",
+      description: "模块名"
+    }];
+  string platform = 2 [
+    json_name = "platform",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "platform",
+      description: "平台"
+    }];
+}
+
+message CreateModuleResponse{
+  bool result = 1 [
+    json_name = "result",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "result",
+      description: "请求成功与否。true:请求成功；false请求失败"
+    }];
+  string code = 2 [
+    json_name = "code",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "code",
+      description: "错误编码。 0表示success，>0表示失败错误"
+    }];
+  string message = 3 [
+    json_name = "message",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "message",
+      description: "请求失败返回的错误信息"
+    }];
+  string requestID = 4 [
+    json_name = "requestID",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "requestID",
+      description: "请求链id"
+    }];
+  CreateModuleData data = 5 [
+    json_name = "data",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "data",
+      description: "请求返回的数据"
+    }];
+}
+
+message CreateModuleData{
+  int64 bk_biz_id = 1[
+    json_name = "bk_biz_id",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "bk_biz_id",
+      description: "业务id"
+    }];
+  int64 bk_module_id = 2 [
+    json_name = "bk_module_id",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "bk_module_id",
+      description: "主机所属的模块ID"
+    }];
+  string bk_module_name = 3 [
+    json_name = "bk_module_name",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "bk_module_name",
+      description: "模块名"
+    }];
+  string bk_module_type = 4[
+    json_name = "bk_module_type",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "bk_module_type",
+      description: "模块类型"
+    }];
+  int64 bk_parent_id = 5[
+    json_name = "bk_parent_id",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "bk_parent_id",
+      description: "父节点的ID"
+    }];
+  int64 bk_set_id = 6 [
+    json_name = "bk_set_id",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "bk_set_id",
+      description: "集群id"
+    }];
+  string bk_supplier_account = 7 [
+    json_name = "bk_supplier_account",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "bk_supplier_account",
+      description: "开发商账号"
+    }];
+  string create_time = 8[
+    json_name = "create_time",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "create_time",
+      description: "创建时间"
+    }];
+  int64 default = 9 [
+    json_name = "default",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "default",
+      description: "表示模块类型"
+    }];
+  bool host_apply_enabled = 10 [
+    json_name = "host_apply_enabled",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "host_apply_enabled",
+      description: "是否启用主机属性自动应用"
+    }];
+  string last_time = 11 [
+    json_name = "last_time",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "last_time",
+      description: "更新时间"
+    }];
+  int64 service_category_id = 12 [
+    json_name = "service_category_id",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "service_category_id",
+      description: "服务分类ID"
+    }];
+  int64 service_template_id = 13 [
+    json_name = "service_template_id",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "service_template_id",
+      description: "服务模版ID"
+    }];
+  int64 set_template_id = 14 [
+    json_name = "set_template_id",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "set_template_id",
+      description: "集群模板ID"
+    }];
+}
+
+message GetKubeConfigForTaijiRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "GetKubeConfigForTaijiRequest"
+      description: "查询太极NS kubeconfig"
+      required: ["nameSpace"]
+    }
+  };
+
+  string nameSpace = 1 [
+    json_name = "nameSpace",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "nameSpace",
+      description: "命名空间"
+    }];
+}
+
+message UpdateQuotaInfoForTaijiRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "UpdateQuotaInfoForTaijiRequest"
+      description: "更新太极quota请求"
+      required: ["nameSpace", "subQuotaInfos"]
+    }
+  };
+  string namespace = 1 [
+    json_name = "nameSpace",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "nameSpace",
+      description: "命名空间"
+    }];
+  repeated string gpuPpClusterNames = 2[
+    json_name = "gpuPpClusterNames",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "gpuPpClusterNames",
+      description: "对应gpu集群"
+    }];
+  repeated NamespaceQuotaForTaiji subQuotaInfos = 3[
+    json_name = "subQuotaInfos",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "subQuotaInfos",
+      description: "subQuotaInfos"
+    }];
+  string location = 4 [
+    json_name = "location",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "location",
+      description: "location"
+    }];
+  string operator = 5 [
+    json_name = "operator",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "operator"
+      description: "操作人"
+    }
+  ];
+}
+
+message UpdateQuotaInfoForTaijiResponse{
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "CreateNamespaceForTaijiResponse"
+      description: "CreateNamespaceForTaijiResponse"
+    }
+  };
+  TaijiDefaultResponse error = 1 [
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "error",
+      description: "返回错误结果"
+    }];
+  TaijiKubeCfgData data = 2 [
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "data",
+      description: "响应"
+    }];
+}
+
+
+message GetQuotaInfoForTaijiRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "GetQuotaInfoInfoRequest"
+      description: "查询太极命名空间quota信息"
+      required: ["namespace"]
+    }
+  };
+
+  string namespace = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    title: "namespace",
+    description: "命名空间"
+  }];
+}
+
+message GetQuotaInfoForTaijiResponse{
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "GetQuotaInfoForTaijiResponse"
+      description: "获取quota返回"
+    }
+  };
+  TaijiDefaultResponse error = 1 [
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "error",
+      description: "返回错误结果"
+    }];
+  repeated GetQuotaInfoForTaijiData data = 2 [
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "data",
+      description: "查询太极命名空间quota信息响应"
+    }];
+}
+
+message GetQuotaInfoForTaijiData{
+  string clusterName = 1 [
+    json_name = "clusterName",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "clusterName"
+      description: "clusterName"
+    }
+  ];
+  string type = 2 [
+    json_name = "type",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "type"
+      description: "type"
+    }
+  ];
+  string id = 3 [
+    json_name = "id",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "id"
+      description: "id"
+    }
+  ];
+  string cardType = 4 [
+    json_name = "cardType",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "cardType"
+      description: "cardType"
+    }
+  ];
+  string usedGpus = 5 [
+    json_name = "usedGpus",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "usedGpus"
+      description: "usedGpus"
+    }
+  ];
+  string availableGpus = 6 [
+    json_name = "availableGpus",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "availableGpus"
+      description: "availableGpus"
+    }
+  ];
+  string totalGpus = 7 [
+    json_name = "totalGpus",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "totalGpus"
+      description: "totalGpus"
+    }
+  ];
+  string usedGpuMemoryGb = 8 [
+    json_name = "usedGpuMemoryGb",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "usedGpuMemoryGb"
+      description: "usedGpuMemoryGb"
+    }
+  ];
+  string totalGpuMemoryGb = 9 [
+    json_name = "totalGpuMemoryGb",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "totalGpuMemoryGb"
+      description: "totalGpuMemoryGb"
+    }
+  ];
+  bool exclusive = 10 [
+    json_name = "exclusive",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "exclusive"
+      description: "exclusive"
+    }
+  ];
+  string availableGpuDetails = 11 [
+    json_name = "availableGpuDetails",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "availableGpuDetails"
+      description: "availableGpuDetails"
+    }
+  ];
+}
+
+message CreateNamespaceForTaijiRequest{
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "CreateNamespaceForTaijiRequest"
+      description: "创建太极命名空间"
+      required: ["bkBizId", "bkModuleId", "location", "namespace", "scheduleAlgorithm"]
+    }
+  };
+  string namespace = 1 [
+    json_name = "namespace",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "namespace"
+      description: "命名空间名字"
+    }
+  ];
+  string creator = 2 [
+    json_name = "creator",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "creator"
+      description: "操作人"
+    }
+  ];
+  string scheduleAlgorithm = 3 [
+    json_name = "scheduleAlgorithm",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "scheduleAlgorithm"
+      description: "调度算法"
+    }
+  ];
+  repeated string gpuPpClusterNames = 4 [
+    json_name = "gpuPpClusterNames",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "gpuPpClusterNames"
+      description: "对应gpu集群"
+    }
+  ];
+  repeated NamespaceQuotaForTaiji subQuotaInfos = 5 [
+    json_name = "subQuotaInfos",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "subQuotaInfos"
+      description: "subQuotaInfos"
+    }
+  ];
+  bool isPrivateResource = 6 [
+    json_name = "isPrivateResource",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "isPrivateResource"
+      description: "是否专属额度"
+    }
+  ];
+  string bkBizId = 7 [
+    json_name = "bkBizId",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "bkBizId"
+      description: "计费关联的bkcc业务id"
+    }
+  ];
+  string bkModuleId = 8 [
+    json_name = "bkModuleId",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "bkModuleId"
+      description: "计费关联的bkcc业务模块id"
+    }
+  ];
+  string tag = 9 [
+    json_name = "tag",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "tag"
+      description: "tag"
+    }
+  ];
+  string location = 10 [
+    json_name = "location",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "location"
+      description: "地域"
+    }
+  ];
+}
+
+message NamespaceQuotaForTaiji {
+  string name = 1 [
+    json_name = "name",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "name"
+      description: "name"
+    }
+  ];
+  map<string, string> subQuotaLabels = 2 [
+    json_name = "subQuotaLabels",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "subQuotaLabels"
+      description: "subQuotaLabels"
+    }
+  ];
+  map<string, string> subQuotaResources = 3 [
+    json_name = "subQuotaResources",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "subQuotaResources"
+      description: "subQuotaResources"
+    }
+  ];
+  string location = 4 [
+    json_name = "location",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "location"
+      description: "location"
+    }
+  ];
+}
+
+message CreateNamespaceForTaijiResponse {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "CreateNamespaceForTaijiResponse"
+      description: "CreateNamespaceForTaijiResponse"
+    }
+  };
+  TaijiDefaultResponse error = 1 [
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "error",
+      description: "返回错误结果"
+    }];
+  TaijiDefaultData data = 2 [
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "data",
+      description: "查询太极命名空间quota信息响应"
+    }];
+}
+
+message TaijiDefaultResult {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "TaijiDefaultResult"
+      description: "TaijiDefaultResult"
+    }
+  };
+  TaijiDefaultResponse error = 1 [
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "error",
+      description: "返回错误结果"
+    }];
+  TaijiDefaultData data = 2 [
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "data",
+      description: "查询太极命名空间quota信息响应"
+    }];
+}
+
+message GetKubeConfigForTaijiResponse {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "GetKubeConfigForTaijiResponse"
+      description: "GetKubeConfigForTaijiResponse"
+    }
+  };
+  TaijiDefaultResponse error = 1 [
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "error",
+      description: "返回错误结果"
+    }];
+  TaijiKubeCfgData data = 2 [
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "data",
+      description: "查询kubeCfg响应"
+    }];
+}
+
+
+message TaijiDefaultResponse {
+  string code = 1 [
+    json_name = "code",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "code"
+      description: "code"
+    }
+  ];
+  string message = 2 [
+    json_name = "message",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "message"
+      description: "message"
+    }
+  ];
+  string cause = 3 [
+    json_name = "cause",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "cause"
+      description: "cause"
+    }
+  ];
+}
+
+message TaijiDefaultData{
+  string id = 1[
+    json_name = "id",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "id"
+      description: "id"
+    }
+  ];
+  string kubeCfg = 2 [
+    json_name = "kubeCfg",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "kubeCfg"
+      description: "kubeCfg"
+    }
+  ];
+}
+
+message TaijiKubeCfgData{
+  string id = 1[
+    json_name = "id",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "id"
+      description: "id"
+    }
+  ];
+  string kube_cfg = 2 [
+    json_name = "kube_cfg",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "kube_cfg"
+      description: "kube_cfg"
+    }
+  ];
+}
+
+message SendRtxRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "SendRtxRequest"
+      description: "发送企业微信消息请求"
+      required: ["sender", "receiver", "title", "message"]
+    }
+  };
+  string sender = 1 [
+    json_name = "sender",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "sender"
+      description: "发送者"
+    }
+  ];
+  repeated string receiver = 2 [
+    json_name = "receiver",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "receiver"
+      description: "接收者，用户英文ID"
+    }
+  ];
+  string title = 3 [
+    json_name = "title",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "title"
+      description: "标题"
+    }
+  ];
+  string message = 4 [
+    json_name = "message",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "message"
+      description: "消息内容"
+    }
+  ];
+  bool is_ignore_former_staff = 5 [
+    json_name = "is_ignore_former_staff",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "is_ignore_former_staff"
+      description: "是否忽略离职员工"
+    }
+  ];
+}
+
+// 企业微信发送接口响应
+message SendRtxResponse {
+  string code = 1 [
+    json_name = "code",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "code"
+      description: "状态码"
+    }
+  ];
+  string message = 2 [
+    json_name = "message",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "message"
+      description: "状态信息"
+    }
+  ];
+  bool result = 3 [
+    json_name = "result",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "result"
+      description: "请求结果"
+    }
+  ];
+}
+
+// 新增邮件发送接口请求
+message SendMailRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "SendMailRequest"
+      description: "发送邮件请求"
+      required: ["title", "content"]
+    }
+  };
+  string send_way = 1 [
+    json_name = "send_way",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "send_way"
+      description: "发送方式，包含'tof4'、'script'"
+    }
+  ];
+  string sender = 2 [
+    json_name = "sender",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "sender"
+      description: "邮件发送者"
+    }
+  ];
+  string password = 3 [
+    json_name = "password",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "password"
+      description: "发送者密码"
+    }
+  ];
+  repeated string receiver = 4 [
+    json_name = "receiver",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "receiver"
+      description: "邮件接收者"
+    }
+  ];
+  string title = 5 [
+    json_name = "title",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "title"
+      description: "邮件主题"
+    }
+  ];
+  string content = 6 [
+    json_name = "content",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "content"
+      description: "邮件内容"
+    }
+  ];
+  bool is_content_base64 = 7 [
+    json_name = "is_content_base64",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "is_content_base64"
+      description: "邮件内容是否base64编码"
+    }
+  ];
+  repeated string cc = 8 [
+    json_name = "cc",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "cc"
+      description: "抄送人"
+    }
+  ];
+  repeated string bcc = 9 [
+    json_name = "bcc",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "bcc"
+      description: "暗送人"
+    }
+  ];
+  string body_format = 10 [
+    json_name = "body_format",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "body_format"
+      description: "邮件格式，包含'Html', 'Text'"
+    }
+  ];
+  string email_type = 11 [
+    json_name = "email_type",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "email_type"
+      description: "发送邮件类型"
+    }
+  ];
+  string priority = 12 [
+    json_name = "priority",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "priority"
+      description: "优先级"
+    }
+  ];
+  string location = 13 [
+    json_name = "location",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "location"
+      description: "会议举办地点"
+    }
+  ];
+  string organizer = 14 [
+    json_name = "organizer",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "organizer"
+      description: "约会组织者"
+    }
+  ];
+  string start_time = 15 [
+    json_name = "start_time",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "start_time"
+      description: "约会开始时间"
+    }
+  ];
+  string end_time = 16 [
+    json_name = "end_time",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "end_time"
+      description: "约会结束时间"
+    }
+  ];
+  repeated MailAttachment attachments = 17 [
+    json_name = "attachments",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "attachments"
+      description: "邮件附件"
+    }
+  ];
+  string mime_subtype = 18 [
+    json_name = "mime_subtype",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "mime_subtype"
+      description: "SMTP MIMEMultipart的_subtype"
+    }
+  ];
+}
+
+// 邮件附件
+message MailAttachment {
+  string filename = 1 [
+    json_name = "filename",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "filename"
+      description: "文件名"
+    }
+  ];
+  string content = 2 [
+    json_name = "content",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "content"
+      description: "文件内容，base64编码"
+    }
+  ];
+  string type = 3 [
+    json_name = "type",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "type"
+      description: "文件类型"
+    }
+  ];
+  string disposition = 4 [
+    json_name = "disposition",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "disposition"
+      description: "文件Content-Disposition"
+    }
+  ];
+  string content_id = 5 [
+    json_name = "content_id",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "content_id"
+      description: "文件Content-ID"
+    }
+  ];
+}
+
+// 邮件发送接口响应
+message SendMailResponse {
+  string code = 1 [
+    json_name = "code",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "code"
+      description: "状态码"
+    }
+  ];
+  string message = 2 [
+    json_name = "message",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "message"
+      description: "状态信息"
+    }
+  ];
+  bool result = 3 [
+    json_name = "result",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "result"
+      description: "请求结果"
+    }
+  ];
+}
+
+message SendMsgRequest {
+  string im_token = 1 [
+    json_name = "im_token",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "im_token"
+      description: "IM的token，header传递"
+    }
+  ];
+  string app_id = 2 [
+    json_name = "app_id",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "app_id"
+      description: "IM app id，header传递"
+    }
+  ];
+  string app_secret = 3 [
+    json_name = "app_secret",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "app_secret"
+      description: "IM app secret，header传递"
+    }
+  ];
+  string robot_code = 4 [
+    json_name = "robot_code",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "robot_code"
+      description: "机器人code，header传递"
+    }
+  ];
+  string app_code = 5 [
+    json_name = "app_code",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "app_code"
+      description: "应用ID，body传递"
+    }
+  ];
+  string app_secret_body = 6 [
+    json_name = "app_secret_body",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "app_secret_body"
+      description: "安全秘钥，body传递"
+    }
+  ];
+  string im = 7 [
+    json_name = "im",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "im"
+      description: "IM工具类型"
+    }
+  ];
+  string msg_type = 8 [
+    json_name = "msg_type",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "msg_type"
+      description: "消息类型"
+    }
+  ];
+  MsgParam msg_param = 9 [
+    json_name = "msg_param",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "msg_param"
+      description: "消息参数"
+    }
+  ];
+  Receiver receiver = 10 [
+    json_name = "receiver",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "receiver"
+      description: "接收者参数"
+    }
+  ];
+}
+
+message MsgParam {
+  string content = 1;
+}
+
+message Receiver {
+  string receiver_type = 1;
+  repeated string receiver_ids = 2;
+}
+
+message SendMsgResponse {
+  string code = 1 [
+    json_name = "code",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "code"
+      description: "状态码"
+    }
+  ];
+  string message = 2 [
+    json_name = "message",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "message"
+      description: "状态信息"
+    }
+  ];
+  bool result = 3 [
+    json_name = "result",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "result"
+      description: "请求结果"
+    }
+  ];
+  google.protobuf.Struct data = 4 [
+    json_name = "data",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "data"
+      description: "返回数据"
+    }
+  ];
+}

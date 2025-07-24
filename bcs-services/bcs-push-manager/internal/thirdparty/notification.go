@@ -58,3 +58,21 @@ func (t *thirdpartyClient) SendMail(req *third.SendMailRequest) error {
 	}
 	return nil
 }
+
+// SendMsg sends an bkchat-msg using the bcs-thirdparty-service.
+func (t *thirdpartyClient) SendMsg(req *third.SendMsgRequest) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
+	defer cancel()
+	resp, err := t.thirdpartySvc.SendMsg(ctx, req)
+	if err != nil {
+		blog.Errorf("sendMsg failed err: %s", err.Error())
+		return fmt.Errorf("sendMsg failed: %v", err)
+	}
+
+	blog.Infof("sendMsg resp: %+v", resp)
+	if !resp.Result {
+		return fmt.Errorf("sendMsg failed, code: %s, message: %s",
+			resp.Code, resp.Message)
+	}
+	return nil
+}

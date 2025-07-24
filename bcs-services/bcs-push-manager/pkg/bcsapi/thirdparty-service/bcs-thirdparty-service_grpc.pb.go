@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.5.1
 // - protoc             v3.21.5
-// source: proto/bcs-thirdparty-service.proto
+// source: pkg/bcsapi/thirdparty-service/bcs-thirdparty-service.proto
 
 package bcsthirdpartyservice
 
@@ -731,5 +731,5 @@ var BcsThirdpartyService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "proto/bcs-thirdparty-service.proto",
+	Metadata: "pkg/bcsapi/thirdparty-service/bcs-thirdparty-service.proto",
 }
