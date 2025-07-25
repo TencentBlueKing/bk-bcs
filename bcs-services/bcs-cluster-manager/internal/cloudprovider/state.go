@@ -220,7 +220,7 @@ func (stat *TaskState) UpdateStepSucc(start time.Time, stepName string) error {
 		stat.Task.End = end.Format(time.RFC3339)
 		stat.Task.ExecutionTime = uint32(end.Unix() - taskStart.Unix())
 		stat.Task.Status = TaskStatusSuccess
-		stat.Task.Message = "whole task is done"
+		stat.Task.Message = "whole task is done" // nolint
 
 		metrics.ReportMasterTaskMetric(stat.Task.TaskType, stat.Task.Status, "", taskStart)
 
