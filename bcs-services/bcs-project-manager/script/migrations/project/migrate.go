@@ -227,12 +227,31 @@ func initBuiltInProject() error {
 	if projectID == "" {
 		return errors.New("init projectID can not be empty")
 	}
+
+	var (
+		tenantID, businessID, tenantProjectCode, projectCode string
+	)
+
+	// check tenant switch
+	enableTenant := stringx.GetEnv("ENABLE_MULTI_TENANT", "false")
+	if enableTenant == "true" {
+		tenantID = constant.SystemTenantId
+		businessID = stringx.GetEnv("INIT_PROJECT_BUSINESS_ID", "1")
+		tenantProjectCode = stringx.GetEnv("INIT_PROJECT_CODE", "blueking")
+		projectCode = fmt.Sprintf("%s-%s", tenantID, tenantProjectCode)
+	} else {
+		tenantID = constant.DefaultTenantId
+		businessID = stringx.GetEnv("INIT_PROJECT_BUSINESS_ID", "2")
+		tenantProjectCode = stringx.GetEnv("INIT_PROJECT_CODE", "blueking")
+		projectCode = stringx.GetEnv("INIT_PROJECT_CODE", "blueking")
+	}
+
 	p := &pm.Project{
 		ProjectID:         projectID,
 		Name:              "蓝鲸",
-		ProjectCode:       stringx.GetEnv("INIT_PROJECT_CODE", "blueking"),
-		TenantID:          constant.SystemTenantId,
-		TenantProjectCode: stringx.GetEnv("INIT_PROJECT_CODE", "blueking"),
+		ProjectCode:       projectCode,
+		TenantID:          tenantID,
+		TenantProjectCode: tenantProjectCode,
 		Creator:           stringx.GetEnv("INIT_PROJECT_USER", "admin"),
 		Updater:           stringx.GetEnv("INIT_PROJECT_USER", "admin"),
 		Managers:          stringx.GetEnv("INIT_PROJECT_USER", "admin"),
@@ -241,7 +260,7 @@ func initBuiltInProject() error {
 		Description:       "BCS built-in project",
 		IsOffline:         false,
 		Kind:              "k8s",
-		BusinessID:        stringx.GetEnv("INIT_PROJECT_BUSINESS_ID", "2"),
+		BusinessID:        businessID,
 		DeployType:        2,
 		BGID:              "0",
 		DeptID:            "0",
