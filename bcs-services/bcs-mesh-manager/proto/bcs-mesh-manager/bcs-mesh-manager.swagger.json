@@ -582,6 +582,11 @@
           "description": "高可用配置",
           "title": "highAvailability"
         },
+        "observabilityConfig": {
+          "$ref": "#/definitions/meshmanagerObservabilityConfig",
+          "description": "可观测性配置",
+          "title": "observabilityConfig"
+        },
         "featureConfigs": {
           "type": "object",
           "additionalProperties": {

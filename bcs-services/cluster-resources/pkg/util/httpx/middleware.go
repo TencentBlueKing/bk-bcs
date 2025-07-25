@@ -14,9 +14,12 @@
 package httpx
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"strings"
 	"time"
@@ -37,6 +40,12 @@ import (
 	projectAuth "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/iam/perm/resource/project"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/contextx"
 )
+
+// BasicInfo basic info, projectId && clusterId
+type BasicInfo struct {
+	ProjectId string `json:"projectId,omitempty"`
+	ClusterId string `json:"clusterId,omitempty"`
+}
 
 // LoggingMiddleware log http request
 func LoggingMiddleware(next http.Handler) http.Handler {
@@ -121,7 +130,7 @@ func ParseProjectIDMiddleware(next http.Handler) http.Handler {
 }
 
 // ParseClusterIDMiddleware parse clusterID
-func ParseClusterIDMiddleware(next http.Handler) http.Handler {
+func ParseClusterIDMiddleware(next http.Handler, checkValidate bool) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		clusterID := vars["clusterID"]
@@ -131,22 +140,48 @@ func ParseClusterIDMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		cluster, err := cluster.GetClusterInfo(r.Context(), clusterID)
+		localCluster, err := cluster.GetClusterInfo(r.Context(), clusterID)
 		if err != nil {
 			msg := fmt.Errorf("ParseClusterID get clusterID error, clusterID: %s, err: %s", clusterID, err.Error())
 			ResponseSystemError(w, r, msg)
 			return
 		}
 
-		projectID := contextx.GetProjectIDFromCtx(r.Context())
+		if checkValidate {
+			bytesBody, errLocal := ioutil.ReadAll(r.Body)
+			if errLocal != nil {
+				msg := fmt.Errorf("ParseRequest bosy error, clusterID: %s, err: %s", clusterID, errLocal.Error())
+				ResponseSystemError(w, r, msg)
+				return
+			}
+			// 重新构造请求体
+			r.Body = ioutil.NopCloser(bytes.NewReader(bytesBody))
 
-		if !cluster.IsShared && cluster.ProjID != projectID {
+			basicInfo := &BasicInfo{}
+			errLocal = json.Unmarshal(bytesBody, basicInfo)
+			if errLocal != nil {
+				msg := fmt.Errorf("ParseRequest bosy error, clusterID: %s, err: %s", clusterID, errLocal.Error())
+				ResponseSystemError(w, r, msg)
+				return
+			}
+
+			if basicInfo.ClusterId != clusterID {
+				msg := fmt.Errorf("url[%s] and body[%s] clusterId is inconsistent",
+					basicInfo.ClusterId, clusterID)
+				ResponseSystemError(w, r, msg)
+				return
+			}
+		}
+
+		projectID := contextx.GetProjectIDFromCtx(r.Context())
+		// 独立集群: 校验集群项目所属关系；共享集群：校验项目查看权限
+		if !localCluster.IsShared && localCluster.ProjID != projectID {
 			msg := fmt.Errorf("cluster is invalid")
 			ResponseSystemError(w, r, msg)
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), contextx.ClusterIDContextKey, cluster.ID)
+		ctx := context.WithValue(r.Context(), contextx.ClusterIDContextKey, localCluster.ID)
 		r = r.WithContext(ctx)
 		next.ServeHTTP(w, r)
 	})

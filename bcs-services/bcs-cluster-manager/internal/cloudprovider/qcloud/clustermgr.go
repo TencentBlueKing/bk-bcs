@@ -652,7 +652,7 @@ func (c *Cluster) EnableExternalNodeSupport(cls *proto.Cluster, opt *cloudprovid
 		if opt == nil || opt.Operator == "" || opt.EnablePara == nil {
 			return fmt.Errorf("qcloud EnableExternalNodeSupport lost valid paras")
 		}
-		if opt.EnablePara.NetworkType == "" || opt.EnablePara.SubnetId == "" || opt.EnablePara.ClusterCIDR == "" {
+		if opt.EnablePara.NetworkType == "" || opt.EnablePara.SubnetID == "" || opt.EnablePara.ClusterCIDR == "" {
 			return fmt.Errorf("qcloud EnableExternalNodeSupport enableexternal paras empty")
 		}
 
@@ -670,7 +670,7 @@ func (c *Cluster) EnableExternalNodeSupport(cls *proto.Cluster, opt *cloudprovid
 		err := cli.EnableExternalNodeSupport(cls.SystemID, api.EnableExternalNodeConfig{ // nolint
 			NetworkType: opt.EnablePara.NetworkType,
 			ClusterCIDR: opt.EnablePara.ClusterCIDR,
-			SubnetId:    opt.EnablePara.SubnetId,
+			SubnetId:    opt.EnablePara.SubnetID,
 			Enabled:     opt.EnablePara.Enabled,
 		})
 		if err != nil {
@@ -696,11 +696,6 @@ func (c *Cluster) ListOsImage(provider string, opt *cloudprovider.CommonOption) 
 	}
 
 	images := make([]*proto.OsImage, 0)
-
-	var filterImageProvider = []string{icommon.PublicImageProvider, icommon.BCSImageProvider}
-	if !utils.StringInSlice(provider, filterImageProvider) {
-		return images, nil
-	}
 
 	cli, err := api.NewTkeClient(opt)
 	if err != nil {
@@ -780,7 +775,7 @@ func (c *Cluster) ListProjects(opt *cloudprovider.CommonOption) ([]*proto.CloudP
 func (c *Cluster) AppendCloudNodeInfo(ctx context.Context,
 	nodes []*proto.ClusterNode, opt *cloudprovider.CommonOption) error {
 
-	zoneIdMap, zoneMap, err := business.GetZoneInfoByRegion(opt)
+	zoneIDMap, zoneMap, err := business.GetZoneInfoByRegion(opt)
 	if err != nil {
 		blog.Errorf("AppendCloudNodeInfo GetZoneInfoByRegion failed: %v", err)
 		return err
@@ -789,7 +784,7 @@ func (c *Cluster) AppendCloudNodeInfo(ctx context.Context,
 	lang := i18n.LanguageFromCtx(ctx)
 	// get node zoneName
 	for i := range nodes {
-		zone, ok := zoneIdMap[nodes[i].ZoneName]
+		zone, ok := zoneIDMap[nodes[i].ZoneName]
 		if ok {
 			nodes[i].ZoneName = zone.GetZoneName()
 			if lang != utils.ZH {
@@ -873,7 +868,7 @@ func (c *Cluster) AddSubnetsToCluster(ctx context.Context, subnet *proto.SubnetS
 }
 
 // GetMasterSuggestedMachines get master suggested machines
-func (c *Cluster) GetMasterSuggestedMachines(level, vpcId string,
+func (c *Cluster) GetMasterSuggestedMachines(level, vpcID string,
 	opt *cloudprovider.GetMasterSuggestedMachinesOption) ([]*proto.InstanceTemplateConfig, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
@@ -962,16 +957,16 @@ func (c *Cluster) SwitchClusterNetwork(
 }
 
 // CheckClusterNetworkStatus check cluster network status
-func (c *Cluster) CheckClusterNetworkStatus(clusterId string,
+func (c *Cluster) CheckClusterNetworkStatus(clusterID string,
 	opt *cloudprovider.CheckClusterNetworkStatusOption) (bool, error) {
-	if clusterId == "" {
+	if clusterID == "" {
 		return false, fmt.Errorf("cluster[%s] cloud systemId empty", opt.Cluster.ClusterID)
 	}
 
 	// get cloud cluster
-	cls, err := getCloudCluster(clusterId, &opt.CommonOption)
+	cls, err := getCloudCluster(clusterID, &opt.CommonOption)
 	if err != nil {
-		blog.Errorf("Get Cluster %s failed, %s", clusterId, err.Error())
+		blog.Errorf("Get Cluster %s failed, %s", clusterID, err.Error())
 		return false, err
 	}
 
@@ -1032,7 +1027,7 @@ func (c *Cluster) CheckClusterNetworkStatus(clusterId string,
 			return false,
 				fmt.Errorf("cluster %s/%s already open vpc-cni", opt.Cluster.ClusterID, opt.Cluster.ClusterName)
 		}
-		opt.Cluster.NetworkSettings.IsStaticIpMode = opt.IsStaticIpMode
+		opt.Cluster.NetworkSettings.IsStaticIpMode = opt.IsStaticIPMode
 		opt.Cluster.NetworkSettings.ClaimExpiredSeconds = opt.ClaimExpiredSeconds
 		opt.Cluster.NetworkSettings.SubnetSource = opt.SubnetSource
 		if opt.Cluster.NetworkSettings.GetClaimExpiredSeconds() <= 0 {
@@ -1128,8 +1123,8 @@ func (c *Cluster) CheckHighAvailabilityMasterNodes(cls *proto.Cluster, nodes []*
 }
 
 // getClusterCidrAvailableIPNum get global router ip num
-func getClusterCidrAvailableIPNum(clusterId, tkeId string, option *cloudprovider.CommonOption) (uint32, uint32, error) {
-	return business.GetClusterGrIPSurplus(option, clusterId, tkeId)
+func getClusterCidrAvailableIPNum(clusterID, tkeID string, option *cloudprovider.CommonOption) (uint32, uint32, error) {
+	return business.GetClusterGrIPSurplus(option, clusterID, tkeID)
 }
 
 // TKE cluster exist master clusterCIDR and multiCIDRList, multiCIDRList add length 9 CIDRs at most.

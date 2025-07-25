@@ -25,7 +25,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	cm "github.com/chartmuseum/helm-push/pkg/chartmuseum"
 	"github.com/chartmuseum/helm-push/pkg/helm"
-	"helm.sh/helm/v3/pkg/chart/loader"
+	"k8s.io/helm/pkg/chartutil"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/repo"
@@ -252,7 +252,7 @@ func (rh *repositoryHandler) getOCIChartURI(name string) string {
 
 // uploadChart
 func (rh *repositoryHandler) uploadChart(_ context.Context, option repo.UploadOption) error {
-	chart, err := loader.LoadArchive(option.Content)
+	chart, err := chartutil.LoadArchive(option.Content)
 	if err != nil {
 		return fmt.Errorf("failed load chart, %s", err)
 	}

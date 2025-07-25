@@ -22,7 +22,8 @@ export interface INodesParams {
   nodeIP: string[];
   nodes: string[];
   nodeTemplateID?: string;
-  login?: any
+  login?: any;
+  advance?: any;
 }
 
 export interface INodeCordonParams {
@@ -83,8 +84,8 @@ export default function useNode() {
     });
   };
   // 添加节点
-  const addNode = async (params: Pick<INodesParams, 'clusterId' | 'nodeIps' | 'nodeTemplateID' | 'login'>) => {
-    const { clusterId, nodeIps = [], nodeTemplateID = '', login } = params;
+  const addNode = async (params: Pick<INodesParams, 'clusterId' | 'nodeIps' | 'nodeTemplateID' | 'login' | 'advance'>) => {
+    const { clusterId, nodeIps = [], nodeTemplateID = '', login, advance } = params;
     if (!clusterId || !nodeIps.length) {
       console.warn('clusterId or is nodes is empty');
       return;
@@ -94,6 +95,7 @@ export default function useNode() {
       nodes: nodeIps,
       nodeTemplateID,
       login,
+      advance,
       operator: store.state.user?.username,
     });
     result && $bkMessage({

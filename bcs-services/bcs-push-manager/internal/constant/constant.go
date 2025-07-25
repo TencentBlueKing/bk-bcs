@@ -118,31 +118,49 @@ const (
 
 // Notification constants.
 const (
-	// NotificationActionQueueName is the name of queue.
+	// NotificationActionQueueName is the name of the notification action queue.
 	NotificationActionQueueName = "textqueuename"
 	// PushTypeRtx represents the RTX push type.
 	PushTypeRtx = "rtx"
 	// PushTypeMail represents the Mail push type.
 	PushTypeMail = "mail"
-	// NotificationResultSuccess represents a successful notification.
+	// PushTypeMsg represents the message (bkchat) push type.
+	PushTypeMsg = "msg"
+	// NotificationResultSuccess indicates that a notification was successful.
 	NotificationResultSuccess = "success"
-	// NotificationResultFailed represents a failed notification.
+	// NotificationResultFailed indicates that a notification failed.
 	NotificationResultFailed = "failed"
-	// NotificationDefaultSender specifies the default sender.
+	// NotificationDefaultSender specifies the default sender for notifications.
 	NotificationDefaultSender = "bcs"
-	// EmailBodyFormat specifies the format of the email body, using HTML format.
+	// MsgDefaultImWework specifies the default instant messaging platform as WeWork.
+	MsgDefaultImWework = "WEWORK"
+	// MsgDefaultTypeMarkdown specifies the message type to be Markdown.
+	MsgDefaultTypeMarkdown = "markdown"
+	// MsgReceiverTypeSingle specifies that the message receiver type is single.
+	MsgReceiverTypeSingle = "single"
+	// NotificationMailFormat specifies that the email body format should be HTML.
 	NotificationMailFormat = "html"
-	// EventDetailKeyContent is the key for event content.
-	EventDetailKeyContent = "content"
-	// EventDetailKeyReceivers is the key for event receivers.
-	EventDetailKeyReceivers = "receivers"
 	// EventDetailKeyTypes is the key for event types.
 	EventDetailKeyTypes = "types"
-	// EventDetailKeyTitle is the key for event title.
-	EventDetailKeyTitle = "title"
-	// MQRoutingKeyFormat is the format string for MQ routing key, e.g. "*.push.%s"
+	// EventDetailKeyRTXReceivers is the key for RTX receivers in event details.
+	EventDetailKeyRTXReceivers = "rtx_receivers"
+	// EventDetailKeyRTXContent is the key for RTX content in event details.
+	EventDetailKeyRTXContent = "rtx_content"
+	// EventDetailKeyRTXTitle is the key for RTX title in event details.
+	EventDetailKeyRTXTitle = "rtx_title"
+	// EventDetailKeyMsgReceivers is the key for message receivers in event details.
+	EventDetailKeyMsgReceivers = "msg_receivers"
+	// EventDetailKeyMsgContent is the key for message content in event details.
+	EventDetailKeyMsgContent = "msg_content"
+	// EventDetailKeyMailReceivers is the key for mail receivers in event details.
+	EventDetailKeyMailReceivers = "mail_receivers"
+	// EventDetailKeyMailContent is the key for mail content in event details.
+	EventDetailKeyMailContent = "mail_content"
+	// EventDetailKeyMailTitle is the key for mail title in event details.
+	EventDetailKeyMailTitle = "mail_title"
+	// MQRoutingKeyFormat is the format string for creating MQ routing keys. Example: "*.push.%s"
 	MQRoutingKeyFormat = "*.push.%s"
-	// MQRoutingKeyBindPattern is the routing key pattern for queue binding, e.g. "*.push.#"
+	// MQRoutingKeyBindPattern is the pattern used for queue binding in MQ. Example: "*.push.#"
 	MQRoutingKeyBindPattern = "*.push.#"
 )
 

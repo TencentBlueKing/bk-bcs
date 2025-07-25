@@ -66,7 +66,7 @@ func GetNodeInstanceDataDiskInfo(
 		return nil, err
 	}
 
-	instanceList, err := client.GetInstancesById(instanceIDs)
+	instanceList, err := client.GetInstancesByID(instanceIDs)
 	if err != nil {
 		blog.Errorf("GetNodeInstanceDataDiskInfo[%+v] failed: %v", instanceIDs, err)
 		return nil, err

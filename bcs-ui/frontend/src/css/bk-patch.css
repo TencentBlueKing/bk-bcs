@@ -175,6 +175,10 @@
         position: relative;
         top: 1px;
     }
+
+    &:not(.bk-button-text) {
+        min-width: 88px;
+    }
 }
 
 .bk-text-button {

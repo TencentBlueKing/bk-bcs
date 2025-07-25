@@ -95,7 +95,7 @@ func RunBKsopsJob(taskID string, stepName string) error {
 		taskID, taskID, stepName, step.System, step.Status, step.Params)
 
 	// get bksops common parameter
-	url := step.Params[cloudprovider.BkSopsUrlKey.String()]
+	url := step.Params[cloudprovider.BkSopsURLKey.String()]
 	bizID := step.Params[cloudprovider.BkSopsBizIDKey.String()]
 	templateID := step.Params[cloudprovider.BkSopsTemplateIDKey.String()]
 	operator := step.Params[cloudprovider.BkSopsTemplateUserKey.String()]
@@ -148,7 +148,7 @@ func RunBKsopsJob(taskID string, stepName string) error {
 	if err != nil {
 		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
 			fmt.Sprintf("run bksops job failed [%s]", err))
-		state.TaskUrl = taskUrl
+		state.TaskURL = taskUrl
 		if step.GetSkipOnFailed() {
 			_ = state.SkipFailure(start, stepName, err)
 			return nil
@@ -160,7 +160,7 @@ func RunBKsopsJob(taskID string, stepName string) error {
 	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
 		"run bksops job successful")
 
-	state.TaskUrl = taskUrl
+	state.TaskURL = taskUrl
 	_ = state.UpdateStepSucc(start, stepName)
 	return nil
 }
@@ -198,7 +198,7 @@ func ExecBkSopsTask(ctx context.Context, paras CreateBkSopsTaskParas) (string, e
 	blog.Infof("execBkSopsTask[%s] createBkSopsTask successful: taskID[%v]", taskID, taskResp.TaskID)
 
 	// update bksops taskUrl to task
-	_ = cloudprovider.SetTaskStepParas(taskID, paras.StepName, cloudprovider.BkSopsTaskUrlKey.String(),
+	_ = cloudprovider.SetTaskStepParas(taskID, paras.StepName, cloudprovider.BkSopsTaskURLKey.String(),
 		taskResp.TaskURL)
 
 	startTaskReq := startBkSopsTaskParas{

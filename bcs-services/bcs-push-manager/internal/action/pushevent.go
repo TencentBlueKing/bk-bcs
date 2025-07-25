@@ -19,6 +19,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -412,22 +413,53 @@ func (a *PushEventAction) isValidPushLevel(level string) bool {
 func (a *PushEventAction) validateEventDetail(detail *types.EventDetail, rsp *pb.CreatePushEventResponse) error {
 	fields := detail.Fields
 
-	requiredFields := []string{
-		constant.EventDetailKeyContent,
-		constant.EventDetailKeyReceivers,
-		constant.EventDetailKeyTitle,
-	}
+	pushTypes := strings.Split(fields[constant.EventDetailKeyTypes], ",")
 
-	for _, field := range requiredFields {
-		if fields[field] == "" {
+	for _, pushType := range pushTypes {
+		switch pushType {
+		case constant.PushTypeRtx:
+			requiredRTXFields := []string{
+				constant.EventDetailKeyRTXReceivers,
+				constant.EventDetailKeyRTXContent,
+				constant.EventDetailKeyRTXTitle,
+			}
+			for _, field := range requiredRTXFields {
+				if fields[field] == "" {
+					rsp.Code = uint32(constant.ResponseCodeBadRequest)
+					rsp.Message = fmt.Sprintf("event detail missing required non-empty field for RTX: %s", field)
+					return errors.New("invalid event detail")
+				}
+			}
+		case constant.PushTypeMail:
+			requiredMailFields := []string{
+				constant.EventDetailKeyMailReceivers,
+				constant.EventDetailKeyMailContent,
+				constant.EventDetailKeyMailTitle,
+			}
+			for _, field := range requiredMailFields {
+				if fields[field] == "" {
+					rsp.Code = uint32(constant.ResponseCodeBadRequest)
+					rsp.Message = fmt.Sprintf("event detail missing required non-empty field for Mail: %s", field)
+					return errors.New("invalid event detail")
+				}
+			}
+		case constant.PushTypeMsg:
+			requiredMsgFields := []string{
+				constant.EventDetailKeyMsgReceivers,
+				constant.EventDetailKeyMsgContent,
+			}
+			for _, field := range requiredMsgFields {
+				if fields[field] == "" {
+					rsp.Code = uint32(constant.ResponseCodeBadRequest)
+					rsp.Message = fmt.Sprintf("event detail missing required non-empty field for Msg: %s", field)
+					return errors.New("invalid event detail")
+				}
+			}
+		default:
 			rsp.Code = uint32(constant.ResponseCodeBadRequest)
-			rsp.Message = fmt.Sprintf("event detail missing required non-empty field: %s", field)
+			rsp.Message = fmt.Sprintf("event detail contains invalid push type: %s", pushType)
 			return errors.New("invalid event detail")
 		}
-	}
-
-	if fields[constant.EventDetailKeyTypes] == "" {
-		fields[constant.EventDetailKeyTypes] = constant.PushTypeRtx
 	}
 
 	return nil

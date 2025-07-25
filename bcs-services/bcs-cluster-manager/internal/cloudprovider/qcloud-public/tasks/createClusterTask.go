@@ -746,6 +746,7 @@ func createCluster(ctx context.Context, info *cloudprovider.CloudDependBasicInfo
 		return *tkeCluster.ClusterId, nil
 	}
 
+	// tke create cluster
 	resp, errCreate := tkeCli.CreateTKECluster(request)
 	if errCreate != nil {
 		blog.Errorf("createCluster[%s] call CreateTKECluster[%s] failed, %s",
@@ -773,6 +774,7 @@ func createTkeCluster(ctx context.Context, info *cloudprovider.CloudDependBasicI
 	// handle default addon parameters
 	req.Addons = handleTkeDefaultExtensionAddons(ctx, info.CmOption)
 
+	// create cluster
 	systemId, err := createCluster(ctx, info, req, info.Cluster.SystemID)
 	if err != nil {
 		blog.Errorf("createTkeCluster[%s] call createCluster[%s] failed, %s",
@@ -818,6 +820,7 @@ func CreateTkeClusterTask(taskID string, stepName string) error {
 	blog.Infof("CreateTkeClusterTask[%s]: task %s run step %s, system: %s, old state: %s, params %v",
 		taskID, taskID, stepName, step.System, step.Status, step.Params)
 
+	// task data
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
 	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
 
@@ -959,6 +962,7 @@ func CheckTkeClusterStatusTask(taskID string, stepName string) error {
 	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
 	systemID := state.Task.CommonParams[cloudprovider.CloudSystemID.String()]
 
+	// basic task dependInfo
 	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
 		ClusterID: clusterID,
 		CloudID:   cloudID,
@@ -1062,6 +1066,7 @@ func CheckCreateClusterNodeStatusTask(taskID string, stepName string) error { //
 	if state.Task.CommonParams == nil {
 		state.Task.CommonParams = make(map[string]string)
 	}
+	// failed nodes
 	if len(addFailureNodes) > 0 {
 		state.Task.CommonParams[cloudprovider.FailedClusterNodeIDsKey.String()] =
 			strings.Join(business.GetInstanceIDs(addFailureNodes), ",")
@@ -1078,6 +1083,8 @@ func CheckCreateClusterNodeStatusTask(taskID string, stepName string) error { //
 
 		return retErr
 	}
+
+	// save common data
 	state.Task.CommonParams[cloudprovider.SuccessClusterNodeIDsKey.String()] =
 		strings.Join(business.GetInstanceIDs(addSuccessNodes), ",")
 	state.Task.CommonParams[cloudprovider.NodeIPsKey.String()] =
@@ -1297,13 +1304,15 @@ func getRandomSubnetFromNodes(
 	ctx context.Context, info *cloudprovider.CloudDependBasicInfo, nodeIps []string) (string, error) {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
+	// get cvm client
 	cvmClient, err := api.GetCVMClient(info.CmOption)
 	if err != nil {
 		blog.Errorf("getRandomSubnetFromNodes[%s] GetCVMClient failed: %v", taskID, err)
 		return "", err
 	}
 
-	insList, err := cvmClient.GetInstancesByIp(nodeIps)
+	// get instances by ip
+	insList, err := cvmClient.GetInstancesByIP(nodeIps)
 	if err != nil {
 		blog.Errorf("getRandomSubnetFromNodes[%s] GetInstancesByIp failed: %v", taskID, err)
 		return "", err
@@ -1344,6 +1353,7 @@ func openClusterAdminKubeConfig(ctx context.Context, info *cloudprovider.CloudDe
 		return "", err
 	}
 
+	// get cluster kubeconfig
 	kube, err := tkeCli.GetTKEClusterKubeConfig(info.Cluster.SystemID,
 		info.Cluster.GetClusterAdvanceSettings().GetClusterConnectSetting().GetIsExtranet())
 	if err != nil {

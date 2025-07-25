@@ -18,6 +18,8 @@
   "enableDockerd": ${enableDockerd},
   "enableContainerd": ${enableContainerd},
   "torrentThreshold": "${torrentThreshold}",
+  "torrentUploadLimit": ${torrentUploadLimit},
+  "torrentDownloadLimit": ${torrentDownloadLimit},
   "storagePath": "${storagePath}",
   "transferPath": "${transferPath}",
   "smallFilePath": "${smallFilePath}",

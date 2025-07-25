@@ -163,8 +163,8 @@ func (ca *CreateAction) checkClusterWorkerNodes(cls *cmproto.Cluster) error { //
 
 		if node.GetVPC() != cls.VpcID {
 			ca.diffVpcNodes = append(ca.diffVpcNodes, cloudprovider.NodeData{
-				NodeIp: node.InnerIP,
-				NodeId: node.NodeID,
+				NodeIP: node.InnerIP,
+				NodeID: node.NodeID,
 			})
 		}
 	}
@@ -196,8 +196,8 @@ func (ca *CreateAction) checkClusterMasterNodes(cls *cmproto.Cluster) error {
 		cls.Master[node.InnerIP] = node
 		if node.GetVPC() != cls.VpcID {
 			ca.diffVpcNodes = append(ca.diffVpcNodes, cloudprovider.NodeData{
-				NodeIp: node.InnerIP,
-				NodeId: node.NodeID,
+				NodeIP: node.InnerIP,
+				NodeID: node.NodeID,
 			})
 		}
 	}

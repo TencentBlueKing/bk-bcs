@@ -353,7 +353,13 @@
               :status-color-map="nodeStatusColorMap"
               v-else
             >
-              <span class="bcs-ellipsis flex-1">{{ nodeStatusMap[row.status.toLowerCase()] }}</span>
+              <span
+                :class="['bcs-ellipsis flex-1', row.failedReason ? 'bcs-border-tips !flex-none' : '']"
+                v-bk-tooltips="{
+                  content: row.failedReason,
+                  disabled: !row.failedReason
+                }">
+                {{ nodeStatusMap[row.status.toLowerCase()] }}</span>
             </StatusIcon>
           </template>
         </bcs-table-column>
@@ -693,6 +699,12 @@
       @hidden="closeLog"
       :quick-close="true"
       transfer>
+      <template #header>
+        <div class="flex items-center">
+          <TaskIcon :font-size="'16px'" :status="logSideDialogConf.status" />
+          <span>{{logSideDialogConf.title || ' '}}</span>
+        </div>
+      </template>
       <div slot="content">
         <div v-bkloading="{ isLoading: logSideDialogConf.loading }">
           <TaskLog
@@ -779,6 +791,7 @@ import ClusterSelect from '@/components/cluster-selector/cluster-select.vue';
 import KeyValue, { IData } from '@/components/key-value.vue';
 import LoadingIcon from '@/components/loading-icon.vue';
 import StatusIcon from '@/components/status-icon';
+import TaskIcon from '@/components/task-icon.vue';
 import { ICluster, useAppData } from '@/composables/use-app';
 import useInterval from '@/composables/use-interval';
 import usePage from '@/composables/use-page';
@@ -825,6 +838,7 @@ export default defineComponent({
     BcsCascade,
     TopoSelector,
     DeleteNode,
+    TaskIcon,
   },
   props: {
     clusterId: {
@@ -1897,7 +1911,15 @@ export default defineComponent({
       });
     };
     // 查看日志
-    const logSideDialogConf = ref({
+    const logSideDialogConf = ref<{
+      isShow: boolean;
+      title: string;
+      taskID: string;
+      taskData: any[];
+      row: any;
+      loading: boolean;
+      status: string;
+    }>({
       isShow: false,
       title: '',
       taskID: '', // 最新任务ID

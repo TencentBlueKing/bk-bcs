@@ -21,12 +21,14 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/clients/k8s"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/operation"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/operation/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/store/entity"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/utils"
 	meshmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/proto/bcs-mesh-manager"
 )
 
@@ -108,9 +110,7 @@ func (d *DeleteIstioAction) Validate(ctx context.Context) (*entity.MeshIstio, er
 	}
 
 	// 检查集群中是否存在Istio资源，如果存在则不允许删除
-	allClusters := make([]string, 0, len(meshIstio.PrimaryClusters)+len(meshIstio.RemoteClusters))
-	allClusters = append(allClusters, meshIstio.PrimaryClusters...)
-	allClusters = append(allClusters, meshIstio.RemoteClusters...)
+	allClusters := utils.MergeSlices(meshIstio.PrimaryClusters, meshIstio.RemoteClusters)
 
 	for _, clusterID := range allClusters {
 		exists, err := k8s.CheckIstioResourceExists(ctx, clusterID)
@@ -138,8 +138,10 @@ func (d *DeleteIstioAction) Validate(ctx context.Context) (*entity.MeshIstio, er
 func (d *DeleteIstioAction) delete(ctx context.Context, meshIstio *entity.MeshIstio) error {
 	// 更新mesh状态为删除中
 	updateFields := entity.M{
-		entity.FieldKeyStatus:     common.IstioStatusUninstalling,
-		entity.FieldKeyUpdateTime: time.Now().Unix(),
+		entity.FieldKeyStatus:        common.IstioStatusUninstalling,
+		entity.FieldKeyUpdateBy:      auth.GetUserFromCtx(ctx),
+		entity.FieldKeyUpdateTime:    time.Now().UnixMilli(),
+		entity.FieldKeyStatusMessage: "删除中",
 	}
 	if err := d.model.Update(ctx, d.req.MeshID, updateFields); err != nil {
 		errMsg := fmt.Sprintf("update mesh status failed, meshID: %s", d.req.MeshID)

@@ -18,7 +18,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	http2 "github.com/Tencent/bk-bcs/bcs-common/common/http"
-	"github.com/emicklei/go-restful"
+	restful "github.com/emicklei/go-restful/v3"
 )
 
 // RestResponse wrapper for restful Response

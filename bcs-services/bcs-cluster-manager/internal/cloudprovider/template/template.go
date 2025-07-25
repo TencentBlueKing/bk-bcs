@@ -173,8 +173,8 @@ func GenerateBKopsStep(taskMethod, taskName, stepName string, cls *proto.Cluster
 		SkipOnFailed: plugin.AllowSkipWhenFailed,
 		Translate:    info.TranslateMethod,
 	}
-	step.Params[cloudprovider.BkSopsUrlKey.String()] = plugin.Link
-	step.Params[cloudprovider.ShowSopsUrlKey.String()] = fmt.Sprintf("%v", info.ShowSopsUrl)
+	step.Params[cloudprovider.BkSopsURLKey.String()] = plugin.Link
+	step.Params[cloudprovider.ShowSopsURLKey.String()] = fmt.Sprintf("%v", info.ShowSopsUrl)
 
 	constants := make(map[string]string)
 	// 变量values值分3类: 1.标准参数  2.直接渲染参数 3.template渲染参数

@@ -920,7 +920,7 @@ var (
 func (cl ClusterLevel) GetCpuMemConfig(cpu, mem int) cloudprovider.MachineConfig {
 	if cpu > 0 && mem > 0 {
 		return cloudprovider.MachineConfig{
-			Cpu: cpu,
+			CPU: cpu,
 			Mem: mem,
 		}
 	}
@@ -928,23 +928,23 @@ func (cl ClusterLevel) GetCpuMemConfig(cpu, mem int) cloudprovider.MachineConfig
 	switch cl {
 	case level100:
 		return cloudprovider.MachineConfig{
-			Cpu: 8,
+			CPU: 8,
 			Mem: 16,
 		}
 	case level500:
 		return cloudprovider.MachineConfig{
-			Cpu: 16,
+			CPU: 16,
 			Mem: 32,
 		}
 	case level1000:
 		return cloudprovider.MachineConfig{
-			Cpu: 48,
+			CPU: 48,
 			Mem: 128,
 		}
 	}
 
 	return cloudprovider.MachineConfig{
-		Cpu: 16,
+		CPU: 16,
 		Mem: 32,
 	}
 }

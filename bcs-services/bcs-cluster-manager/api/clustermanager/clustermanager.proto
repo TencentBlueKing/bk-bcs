@@ -1359,6 +1359,17 @@ service ClusterManager {
     };
   }
 
+    // Operation logs
+  rpc ListProjectOperationLogs(ListOperationLogsRequest) returns (ListOperationLogsResponse) {
+    option (google.api.http) = {
+      get : "/clustermanager/v1/projects/{projectID}/operationlogs"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "查询操作日志列表"
+      summary : "查询操作日志列表"
+    };
+  }
+
   // Task Step logs
   rpc ListTaskStepLogs(ListTaskStepLogsRequest) returns (ListTaskStepLogsResponse) {
     option (google.api.http) = {

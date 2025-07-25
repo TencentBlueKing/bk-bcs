@@ -34,7 +34,7 @@ const (
 	FieldKeyExtensionProviders        = "extensionProviders"
 	FieldKeyTraceSampling             = "traceSampling"
 	FieldKeyDefaultConfig             = "defaultConfig"
-	FieldKeyTracingConfig             = "tracingConfig"
+	FieldKeyTracingConfig             = "tracing"
 	FieldKeyAccessLogFile             = "accessLogFile"
 	FieldKeyAccessLogFormat           = "accessLogFormat"
 	FieldKeyAccessLogEncoding         = "accessLogEncoding"
@@ -42,12 +42,17 @@ const (
 	FieldKeyAutoscaleMin              = "autoscaleMin"
 	FieldKeyAutoscaleMax              = "autoscaleMax"
 	FieldKeyCPU                       = "cpu"
+	FieldKeyMemory                    = "memory"
 	FieldKeyDedicatedNode             = "dedicatedNode"
 	FieldKeyDedicatedNodeEnabled      = "enabled"
 	FieldKeyDedicatedNodeNodeSelector = "nodeSelector"
 	FieldKeyDedicatedNodeTolerations  = "tolerations"
 	FieldKeyZipkin                    = "zipkin"
 	FieldKeyZipkinAddress             = "address"
+	FieldKeyResources                 = "resources"
+	FieldKeyRequests                  = "requests"
+	FieldKeyLimits                    = "limits"
+	FieldKeyProxy                     = "proxy"
 )
 
 // IstioInstallOption istio安装操作选项
@@ -177,7 +182,7 @@ type OutboundTrafficPolicy struct {
 type DefaultConfig struct {
 	HoldApplicationUntilProxyStarts *bool          `yaml:"holdApplicationUntilProxyStarts,omitempty"`
 	ProxyMetadata                   *ProxyMetadata `yaml:"proxyMetadata,omitempty"`
-	TracingConfig                   *TracingConfig `yaml:"tracingConfig,omitempty"`
+	TracingConfig                   *TracingConfig `yaml:"tracing,omitempty"`
 }
 
 // TracingConfig 追踪配置

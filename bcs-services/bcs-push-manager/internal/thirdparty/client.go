@@ -48,6 +48,7 @@ func GetThirdpartyClient() Client {
 type Client interface {
 	SendRtx(req *third.SendRtxRequest) error
 	SendMail(req *third.SendMailRequest) error
+	SendMsg(req *third.SendMsgRequest) error
 }
 
 // ClientOptions options for create client

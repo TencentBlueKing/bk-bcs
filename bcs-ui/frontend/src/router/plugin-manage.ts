@@ -8,6 +8,9 @@ const MetricManage = () => import(/* webpackChunkName: 'plugin' */'@/views/plugi
 // 日志采集
 const logCollector = () => import(/* webpackChunkName: 'plugin' */'@/views/plugin-manage/tools/log-collector/log-collector.vue');
 
+// 服务网格
+const ServiceMesh = () => import(/* webpackChunkName: 'plugin' */'@/views/plugin-manage/service-mesh/index.vue');
+
 export default [
   // 组件库
   {
@@ -58,5 +61,11 @@ export default [
     path: 'metric',
     name: 'metricManage',
     component: MetricManage,
+  },
+  // 服务网格
+  {
+    path: 'service-mesh',
+    name: 'serviceMesh',
+    component: ServiceMesh,
   },
 ];

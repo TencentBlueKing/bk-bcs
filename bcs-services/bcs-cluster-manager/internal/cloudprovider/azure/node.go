@@ -120,7 +120,7 @@ func (n *NodeManager) ListNodeInstanceType(
 			if info.NodeFamily != "" && info.NodeFamily != *v.Family {
 				continue
 			}
-			if info.Cpu != 0 && info.Cpu != uint32(cpu) {
+			if info.CPU != 0 && info.CPU != uint32(cpu) {
 				continue
 			}
 			if info.Memory != 0 && info.Memory != uint32(mem) {

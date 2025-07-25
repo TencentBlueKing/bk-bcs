@@ -42,7 +42,6 @@ type IstioUpdateOption struct {
 	ChartRepo           *string
 	PrimaryClusters     []string
 	RemoteClusters      []string
-	UpdateFields        entity.M
 	UpdateValues        *common.IstiodInstallValues
 	ObservabilityConfig *meshmanager.ObservabilityConfig
 	UpdateValuesOptions *utils.UpdateValuesOptions
@@ -208,7 +207,7 @@ func (i *IstioUpdateAction) updateClusterResource(ctx context.Context, clusterID
 			if err := k8s.DeployResourceByYAML(
 				ctx,
 				clusterID,
-				common.GetServiceMonitorYAML(),
+				common.GetServiceMonitorYAML(common.ServiceMonitorName),
 				"ServiceMonitor",
 				common.ServiceMonitorName,
 			); err != nil {
@@ -235,7 +234,7 @@ func (i *IstioUpdateAction) updateClusterResource(ctx context.Context, clusterID
 			if err := k8s.DeployResourceByYAML(
 				ctx,
 				clusterID,
-				common.GetPodMonitorYAML(),
+				common.GetPodMonitorYAML(common.PodMonitorName),
 				"PodMonitor",
 				common.PodMonitorName,
 			); err != nil {
@@ -296,14 +295,20 @@ func (i *IstioUpdateAction) updateClusterResource(ctx context.Context, clusterID
 func (i *IstioUpdateAction) Done(err error) {
 	if err != nil {
 		blog.Errorf("[%s]istio update operation failed, err: %s", i.MeshID, err)
-		i.UpdateFields[entity.FieldKeyStatus] = common.IstioStatusUpdateFailed
-		i.UpdateFields[entity.FieldKeyStatusMessage] = fmt.Sprintf("更新失败，%s", err.Error())
+		updateErr := i.Model.Update(context.TODO(), *i.MeshID, entity.M{
+			entity.FieldKeyStatus:        common.IstioStatusUpdateFailed,
+			entity.FieldKeyStatusMessage: fmt.Sprintf("更新失败，%s", err.Error()),
+		})
+		if updateErr != nil {
+			blog.Errorf("[%s]update mesh status failed, err: %s", *i.MeshID, updateErr)
+		}
 	} else {
-		i.UpdateFields[entity.FieldKeyStatus] = common.IstioStatusRunning
-		i.UpdateFields[entity.FieldKeyStatusMessage] = "更新成功"
-	}
-	updateErr := i.Model.Update(context.TODO(), *i.MeshID, i.UpdateFields)
-	if updateErr != nil {
-		blog.Errorf("[%s]update mesh status failed, err: %s", *i.MeshID, updateErr)
+		updateErr := i.Model.Update(context.TODO(), *i.MeshID, entity.M{
+			entity.FieldKeyStatus:        common.IstioStatusRunning,
+			entity.FieldKeyStatusMessage: "",
+		})
+		if updateErr != nil {
+			blog.Errorf("[%s]update mesh status failed, err: %s", *i.MeshID, updateErr)
+		}
 	}
 }

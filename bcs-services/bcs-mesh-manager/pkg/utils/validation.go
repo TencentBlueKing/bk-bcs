@@ -15,8 +15,10 @@ package utils
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"k8s.io/apimachinery/pkg/api/resource"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/cmd/mesh-manager/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/clients/k8s"
@@ -47,13 +49,12 @@ func ValidateSingleClusterVersion(
 ) error {
 	version, err := k8s.GetClusterVersion(ctx, clusterID)
 	if err != nil {
-		return fmt.Errorf("get cluster version failed, err: %s, clusterID: %s", err, clusterID)
+		return fmt.Errorf("获取集群版本失败")
 	}
 
 	istioVersionConfig := istioConfig.IstioVersions[istioVersion]
 	if istioVersionConfig == nil {
-		blog.Errorf("istio version %s not found", istioVersion)
-		return fmt.Errorf("istio version %s not found", istioVersion)
+		return fmt.Errorf("未找到指定的 istio 版本")
 	}
 
 	if istioVersionConfig.KubeVersion == "" {
@@ -62,7 +63,7 @@ func ValidateSingleClusterVersion(
 		return nil
 	}
 	if !IsVersionSupported(version, istioVersionConfig.KubeVersion) {
-		return fmt.Errorf("cluster %s version is not compatible with istio version %s", clusterID, istioVersion)
+		return fmt.Errorf("集群版本与 istio 版本不兼容")
 	}
 	return nil
 }
@@ -72,11 +73,10 @@ func ValidateIstioInstalled(ctx context.Context, clusterIDs []string) error {
 	for _, clusterID := range clusterIDs {
 		installed, err := k8s.CheckIstioInstalled(ctx, clusterID)
 		if err != nil {
-			blog.Errorf("check cluster installed istio failed, err: %s, clusterID: %s", err, clusterID)
-			return err
+			return fmt.Errorf("检查集群 istio 安装状态失败")
 		}
 		if installed {
-			return fmt.Errorf("cluster %s already installed istio", clusterID)
+			return fmt.Errorf("集群已安装 istio")
 		}
 	}
 	return nil
@@ -93,7 +93,7 @@ func ValidateObservabilityConfig(observabilityConfig *meshmanager.ObservabilityC
 			// TEXT or JSON
 			if observabilityConfig.LogCollectorConfig.AccessLogEncoding.GetValue() != "TEXT" &&
 				observabilityConfig.LogCollectorConfig.AccessLogEncoding.GetValue() != "JSON" {
-				return fmt.Errorf("log collector access log endcoding is invalid, must be TEXT or JSON")
+				return fmt.Errorf("日志编码格式需为 TEXT 或 JSON")
 			}
 		}
 	}
@@ -101,26 +101,194 @@ func ValidateObservabilityConfig(observabilityConfig *meshmanager.ObservabilityC
 	if observabilityConfig.TracingConfig != nil && observabilityConfig.TracingConfig.Enabled.GetValue() {
 		// 检查endpoint
 		if observabilityConfig.TracingConfig.Endpoint.GetValue() == "" {
-			return fmt.Errorf("otel tracing endpoint is required")
+			return fmt.Errorf("endpoint 不能为空")
 		}
 		// 采样率 ,0 - 100 之间
 		if observabilityConfig.TracingConfig.TraceSamplingPercent.GetValue() < 0 ||
 			observabilityConfig.TracingConfig.TraceSamplingPercent.GetValue() > 100 {
-			return fmt.Errorf("otel tracing trace sampling percent is invalid")
+			return fmt.Errorf("链路追踪采样率无效，必须在 0-100 之间")
 		}
 
 		// 检查上报地址是否配置正确, 只检查service和port, path非必须（<1.21不需要）
 		service, port, _, err := ParseOpenTelemetryEndpoint(observabilityConfig.TracingConfig.Endpoint.GetValue())
 		if err != nil {
-			return fmt.Errorf("otel tracing endpoint is invalid, err: %s", err)
+			return fmt.Errorf("endpoint 格式无效")
 		}
 		if service == "" {
-			return fmt.Errorf("otel tracing endpoint is invalid")
+			return fmt.Errorf("endpoint 无效")
 		}
 		if port == 0 {
-			return fmt.Errorf("otel tracing port is invalid")
+			return fmt.Errorf("endpoint 无效")
 		}
 
 	}
+	return nil
+}
+
+// ValidateHighAvailabilityConfig 检查高可用配置是否正确
+func ValidateHighAvailabilityConfig(highAvailability *meshmanager.HighAvailability) error {
+	if highAvailability == nil {
+		return nil
+	}
+
+	// 副本数不能小于1
+	if highAvailability.ReplicaCount != nil {
+		replicaCount := highAvailability.ReplicaCount.GetValue()
+		if replicaCount <= 0 {
+			return fmt.Errorf("副本数必须大于 0")
+		}
+	}
+
+	// 如果开启了自动扩缩容，需要检查相关配置
+	if highAvailability.AutoscaleEnabled != nil && highAvailability.AutoscaleEnabled.GetValue() {
+		// 检查最小副本数
+		if highAvailability.AutoscaleMin == nil {
+			return fmt.Errorf("最小副本数不能为空")
+		}
+		autoscaleMin := highAvailability.AutoscaleMin.GetValue()
+		if autoscaleMin <= 0 {
+			return fmt.Errorf("最小副本数必须大于 0")
+		}
+
+		// 检查最大副本数
+		if highAvailability.AutoscaleMax == nil {
+			return fmt.Errorf("最大副本数不能为空")
+		}
+		autoscaleMax := highAvailability.AutoscaleMax.GetValue()
+		if autoscaleMax <= 0 {
+			return fmt.Errorf("最大副本数必须大于 0")
+		}
+
+		// 检查最小副本数不能大于最大副本数
+		if autoscaleMin > autoscaleMax {
+			return fmt.Errorf("最小副本数不能大于最大副本数")
+		}
+
+		// 检查目标CPU使用率
+		if highAvailability.TargetCPUAverageUtilizationPercent != nil {
+			targetCPU := highAvailability.TargetCPUAverageUtilizationPercent.GetValue()
+			if targetCPU <= 0 || targetCPU > 100 {
+				return fmt.Errorf("目标 CPU 使用率必须在 1-100 之间")
+			}
+		}
+	}
+
+	return nil
+}
+
+// ValidateResource 验证 Istio 请求中的资源配置
+// 检查 Sidecar 资源配置和 HighAvailability 资源配置的合法性
+// 确保 limit >= request（当 limit 不为空且不为零时）
+func ValidateResource(req *meshmanager.IstioRequest) error {
+	// 检查sidecar resource参数
+	if req.SidecarResourceConfig == nil {
+		return nil
+	}
+	if err := validateResourceLimit(
+		req.SidecarResourceConfig.CpuRequest.GetValue(),
+		req.SidecarResourceConfig.CpuLimit.GetValue(),
+	); err != nil {
+		return err
+	}
+	if err := validateResourceLimit(
+		req.SidecarResourceConfig.MemoryRequest.GetValue(),
+		req.SidecarResourceConfig.MemoryLimit.GetValue(),
+	); err != nil {
+		return err
+	}
+	// 检查hpa中resource参数
+	if req.HighAvailability == nil {
+		return nil
+	}
+	if req.HighAvailability.ResourceConfig == nil {
+		return nil
+	}
+	if err := validateResourceLimit(
+		req.HighAvailability.ResourceConfig.CpuRequest.GetValue(),
+		req.HighAvailability.ResourceConfig.CpuLimit.GetValue(),
+	); err != nil {
+		return err
+	}
+	if err := validateResourceLimit(
+		req.HighAvailability.ResourceConfig.MemoryRequest.GetValue(),
+		req.HighAvailability.ResourceConfig.MemoryLimit.GetValue(),
+	); err != nil {
+		return err
+	}
+	return nil
+}
+
+// validateResourceLimit 检查limit和request是否合法，并且limit >= request
+// 如果limit为0或nil，则认为不进行资源限制，不需要大于request
+func validateResourceLimit(request string, limit string) error {
+	var (
+		requestQuantity resource.Quantity
+		limitQuantity   resource.Quantity
+		err             error
+	)
+
+	// request 不能为空
+	if request == "" {
+		return fmt.Errorf("request cannot be empty")
+	}
+
+	// 解析 request
+	requestQuantity, err = resource.ParseQuantity(request)
+	if err != nil {
+		return fmt.Errorf("request %s is invalid, err: %s", request, err)
+	}
+	// request 必须大于0
+	if requestQuantity.IsZero() {
+		return fmt.Errorf("request %s must be greater than 0", request)
+	}
+
+	// 解析 limit
+	if limit != "" {
+		limitQuantity, err = resource.ParseQuantity(limit)
+		if err != nil {
+			return fmt.Errorf("limit %s is invalid, err: %s", limit, err)
+		}
+	}
+
+	// 只有当 limit 不为空且不为0时，才进行大小比较
+	if limit != "" && !limitQuantity.IsZero() && limitQuantity.Cmp(requestQuantity) < 0 {
+		return fmt.Errorf("limit %s must be greater than or equal to request %s", limit, request)
+	}
+
+	return nil
+}
+
+// ValidateBasicFields 校验基础信息字段
+func ValidateBasicFields(req *meshmanager.IstioRequest) error {
+	// 校验项目信息
+	if req.ProjectCode.GetValue() == "" && req.ProjectID.GetValue() == "" {
+		return fmt.Errorf("项目编码或项目 ID 不能为空")
+	}
+
+	// 校验主集群
+	if len(req.PrimaryClusters) == 0 {
+		return fmt.Errorf("主集群不能为空")
+	}
+
+	// 校验版本
+	if req.Version.GetValue() == "" {
+		return fmt.Errorf("chart version 不能为空")
+	}
+
+	// 校验特性配置
+	if req.FeatureConfigs == nil {
+		return fmt.Errorf("特性配置不能为空")
+	}
+
+	// 网格名称不能为空
+	if req.Name.GetValue() == "" {
+		return fmt.Errorf("网格名称不能为空")
+	}
+
+	// 网格名称不能仅为空格
+	if strings.TrimSpace(req.Name.GetValue()) == "" {
+		return fmt.Errorf("网格名称不能仅为空格")
+	}
+
 	return nil
 }

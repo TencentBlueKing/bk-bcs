@@ -31,7 +31,6 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	netservicev1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-netservice-controller/api/v1"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-netservice-controller/internal/constant"
@@ -423,7 +422,7 @@ func (r *BCSNetPoolReconciler) patchNodeResource(ctx context.Context, node *core
 	}
 	blog.V(5).Infof("marshaled patchStruct of node '%s', patchStruct: %s", node.GetName(), string(patchBytes))
 	rawPatch := client.RawPatch(k8stypes.MergePatchType, patchBytes)
-	if err := r.Status().Patch(ctx, node, rawPatch, &client.PatchOptions{}); err != nil {
+	if err := r.Status().Patch(ctx, node, rawPatch, &client.SubResourcePatchOptions{}); err != nil {
 		return fmt.Errorf("patch node %s capacity failed, err %s", node.GetName(), err.Error())
 	}
 	return nil
@@ -451,7 +450,7 @@ func (r *BCSNetPoolReconciler) listIPWithSelector(ctx context.Context, netIPList
 func (r *BCSNetPoolReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&netservicev1.BCSNetPool{}).
-		Watches(&source.Kind{Type: &netservicev1.BCSNetIP{}}, r.IPFilter).
-		Watches(&source.Kind{Type: &corev1.Node{}}, &handler.Funcs{}).
+		Watches(&netservicev1.BCSNetIP{}, r.IPFilter).
+		Watches(&corev1.Node{}, &handler.Funcs{}).
 		Complete(r)
 }

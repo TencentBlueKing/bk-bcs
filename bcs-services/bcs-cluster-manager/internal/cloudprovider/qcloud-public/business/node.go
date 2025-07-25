@@ -246,7 +246,7 @@ func TransInstanceIDsToNodes(
 		return nil, err
 	}
 
-	cloudInstances, err := client.GetInstancesById(ids)
+	cloudInstances, err := client.GetInstancesByID(ids)
 	if err != nil {
 		blog.Errorf("cvm client GetInstancesById len(%d) failed, %s", len(ids), err.Error())
 		return nil, err
@@ -292,7 +292,7 @@ func TransIPsToNodes(ips []string, opt *cloudprovider.ListNodesOption) ([]*proto
 		blog.Errorf("create CVM client when transIPsToNodes failed, %s", err.Error())
 		return nil, err
 	}
-	cloudInstances, err := client.GetInstancesByIp(ips)
+	cloudInstances, err := client.GetInstancesByIP(ips)
 	if err != nil {
 		blog.Errorf("cvm client transIPsToNodes GetInstancesByIp len(%d) "+
 			"ip address failed, %s", len(ips), err.Error())

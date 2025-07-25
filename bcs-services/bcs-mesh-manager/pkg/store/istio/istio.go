@@ -149,7 +149,7 @@ func (m *ModelMeshIstio) Update(ctx context.Context, meshID string, entityM enti
 
 	// Set update time if not provided
 	if entityM[entity.FieldKeyUpdateTime] == nil {
-		entityM[entity.FieldKeyUpdateTime] = time.Now().Unix()
+		entityM[entity.FieldKeyUpdateTime] = time.Now().UnixMilli()
 	}
 
 	if err := m.db.Table(m.tableName).Update(ctx, cond, operator.M{"$set": entityM}); err != nil {
@@ -206,7 +206,7 @@ func (m *ModelMeshIstio) Create(ctx context.Context, mesh *entity.MeshIstio) err
 		return err
 	}
 
-	now := time.Now().Unix()
+	now := time.Now().UnixMilli()
 	mesh.CreateTime = now
 	mesh.UpdateTime = now
 

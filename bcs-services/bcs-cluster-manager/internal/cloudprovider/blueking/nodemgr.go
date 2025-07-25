@@ -106,7 +106,7 @@ func (nm *NodeManager) ListNodeInstanceType(
 	ctx context.Context, info cloudprovider.InstanceInfo, opt *cloudprovider.CommonOption) (
 	[]*proto.InstanceType, error) {
 	blog.Infof("ListNodeInstanceType zone: %s, nodeFamily: %s, cpu: %d, memory: %d",
-		info.Zone, info.NodeFamily, info.Cpu, info.Memory)
+		info.Zone, info.NodeFamily, info.CPU, info.Memory)
 
 	return nm.getInnerInstanceTypes(info)
 }
@@ -119,7 +119,7 @@ func (nm *NodeManager) getInnerInstanceTypes(info cloudprovider.InstanceInfo) ( 
 	targetTypes, err := tresource.GetResourceManagerClient().GetInstanceTypes(context.Background(),
 		info.Region, resource.InstanceSpec{
 			BizID:        info.BizID,
-			Cpu:          info.Cpu,
+			Cpu:          info.CPU,
 			Mem:          info.Memory,
 			Provider:     info.Provider,
 			ResourceType: info.ResourceType,

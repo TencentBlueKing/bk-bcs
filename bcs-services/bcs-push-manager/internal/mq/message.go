@@ -27,14 +27,22 @@ import (
 type PushEventMessage struct {
 	// EventID is the unique identifier for the event.
 	EventID string `json:"event_id"`
-	// Type specifies the notification channels (e.g., rtx, mail).
-	Type []string `json:"type"` // rtx/mail
-	// Title is the title of the notification.
-	Title string `json:"title"`
-	// Content is the body of the notification.
-	Content string `json:"content"`
-	// Receivers is the list of recipients.
-	Receivers []string `json:"receivers"`
+	// Type specifies the notification channels (e.g., rtx, mail, msg).
+	Type []string `json:"type"`
+	// RTX-specific fields
+	RTXReceivers []string `json:"rtx_receivers"`
+	RTXContent   string   `json:"rtx_content"`
+	RTXTitle     string   `json:"rtx_title"`
+
+	// Mail-specific fields
+	MailReceivers []string `json:"mail_receivers"`
+	MailContent   string   `json:"mail_content"`
+	MailTitle     string   `json:"mail_title"`
+
+	// Msg-specific fields
+	MsgReceivers []string `json:"msg_receivers"`
+	MsgContent   string   `json:"msg_content"`
+
 	// Extra contains additional data for the notification.
 	Extra map[string]string `json:"extra"`
 }
@@ -46,9 +54,9 @@ func (m *PushEventMessage) ToRtxRequest() *thirdpb.SendRtxRequest {
 		return nil
 	}
 	rtxReq := &thirdpb.SendRtxRequest{
-		Receiver: m.Receivers,
-		Title:    m.Title,
-		Message:  m.Content,
+		Receiver: m.RTXReceivers,
+		Title:    m.RTXTitle,
+		Message:  m.RTXContent,
 		Sender:   constant.NotificationDefaultSender,
 	}
 	return rtxReq
@@ -61,13 +69,35 @@ func (m *PushEventMessage) ToMailRequest() *thirdpb.SendMailRequest {
 		return nil
 	}
 	mailReq := &thirdpb.SendMailRequest{
-		Receiver:   m.Receivers,
-		Title:      m.Title,
-		Content:    m.Content,
+		Receiver:   m.MailReceivers,
+		Title:      m.MailTitle,
+		Content:    m.MailContent,
 		Sender:     constant.NotificationDefaultSender,
 		BodyFormat: constant.NotificationMailFormat,
 	}
 	return mailReq
+}
+
+// ToMsgRequest converts a PushEventMessage to a thirdparty SendMsgRequest.
+func (m *PushEventMessage) ToMsgRequest() *thirdpb.SendMsgRequest {
+	if err := validatePushEventMessage(m); err != nil {
+		blog.Errorf("cannot convert to SendMsgRequest: %v", err)
+		return nil
+	}
+	msgParam := &thirdpb.MsgParam{
+		Content: m.MsgContent,
+	}
+	receiver := &thirdpb.Receiver{
+		ReceiverType: constant.MsgReceiverTypeSingle,
+		ReceiverIds:  m.MsgReceivers,
+	}
+	msgReq := &thirdpb.SendMsgRequest{
+		Im:       constant.MsgDefaultImWework,
+		MsgType:  constant.MsgDefaultTypeMarkdown,
+		MsgParam: msgParam,
+		Receiver: receiver,
+	}
+	return msgReq
 }
 
 // Marshal serializes the PushEventMessage to JSON.
@@ -88,9 +118,24 @@ func validatePushEventMessage(m *PushEventMessage) error {
 		blog.Errorf("PushEventMessage is nil")
 		return fmt.Errorf("PushEventMessage is nil")
 	}
-	if len(m.Receivers) == 0 {
-		blog.Warnf("PushEventMessage has no receivers")
-		return fmt.Errorf("PushEventMessage has no receivers")
+	for _, channel := range m.Type {
+		switch channel {
+		case constant.PushTypeRtx:
+			if len(m.RTXReceivers) == 0 {
+				blog.Warnf("PushEventMessage has no RTX receivers")
+				return fmt.Errorf("PushEventMessage has no RTX receivers")
+			}
+		case constant.PushTypeMail:
+			if len(m.MailReceivers) == 0 {
+				blog.Warnf("PushEventMessage has no Mail receivers")
+				return fmt.Errorf("PushEventMessage has no Mail receivers")
+			}
+		case constant.PushTypeMsg:
+			if len(m.MsgReceivers) == 0 {
+				blog.Warnf("PushEventMessage has no Msg receivers")
+				return fmt.Errorf("PushEventMessage has no Msg receivers")
+			}
+		}
 	}
 	return nil
 }

@@ -781,20 +781,20 @@ func CreateModifyInstancesVpcTask(taskID string, stepName string) error {
 	var nodes []cloudprovider.NodeData
 	_ = json.Unmarshal([]byte(nodeBytes), &nodes)
 
-	nodeIds := make([]string, 0)
+	nodeIDs := make([]string, 0)
 	for i := range nodes {
-		nodeIds = append(nodeIds, nodes[i].NodeId)
+		nodeIDs = append(nodeIDs, nodes[i].NodeID)
 	}
 
 	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
-		fmt.Sprintf("nodes %+v start to trans vpc[%s]", nodeIds, dependInfo.Cluster.GetVpcID()))
+		fmt.Sprintf("nodes %+v start to trans vpc[%s]", nodeIDs, dependInfo.Cluster.GetVpcID()))
 
-	err = business.ModifyInstancesVpcAttribute(ctx, dependInfo.Cluster.GetVpcID(), nodeIds, dependInfo.CmOption)
+	err = business.ModifyInstancesVpcAttribute(ctx, dependInfo.Cluster.GetVpcID(), nodeIDs, dependInfo.CmOption)
 	if err != nil {
 		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
-			fmt.Sprintf("modify nodes %+v vpc failed %s", nodeIds, err.Error()))
+			fmt.Sprintf("modify nodes %+v vpc failed %s", nodeIDs, err.Error()))
 		blog.Errorf("CreateModifyInstancesVpcTask[%s]: ModifyInstancesVpcAttribute for vpc[%v] nodes %+v failed, %s",
-			taskID, dependInfo.Cluster.GetVpcID(), nodeIds, err.Error())
+			taskID, dependInfo.Cluster.GetVpcID(), nodeIDs, err.Error())
 		retErr := fmt.Errorf("ModifyInstancesVpcAttribute err, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
@@ -854,18 +854,18 @@ func CreateCheckInstanceStateTask(taskID string, stepName string) error {
 	var nodes []cloudprovider.NodeData
 	_ = json.Unmarshal([]byte(nodeBytes), &nodes)
 
-	nodeIds := make([]string, 0)
+	nodeIDs := make([]string, 0)
 	for i := range nodes {
-		nodeIds = append(nodeIds, nodes[i].NodeId)
+		nodeIDs = append(nodeIDs, nodes[i].NodeID)
 	}
 
-	instanceList, err := business.CheckCvmInstanceState(ctx, nodeIds,
+	instanceList, err := business.CheckCvmInstanceState(ctx, nodeIDs,
 		&cloudprovider.ListNodesOption{Common: dependInfo.CmOption})
 	if err != nil {
 		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
 			fmt.Sprintf("check cvm instance state failed [%s]", err))
 		blog.Errorf("CreateCheckInstanceStateTask[%s]: CheckCvmInstanceState for nodes[%v] failed, %s",
-			taskID, nodeIds, err.Error())
+			taskID, nodeIDs, err.Error())
 		retErr := fmt.Errorf("CheckCvmInstanceState err, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
