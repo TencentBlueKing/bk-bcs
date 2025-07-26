@@ -218,8 +218,11 @@ func (c *PodClient) GetPVCMountInfo(
 
 // ExecCommand 在指定容器中执行命令，获取 stdout, stderr
 func (c *PodClient) ExecCommand(
-	namespace, podName, containerName string, cmds []string,
+	ctx context.Context, namespace, podName, containerName string, cmds []string,
 ) (string, string, error) {
+	if err := c.permValidate(ctx, action.View, namespace); err != nil {
+		return "", "", err
+	}
 	clientSet, err := kubernetes.NewForConfig(c.conf.Rest)
 	if err != nil {
 		return "", "", err

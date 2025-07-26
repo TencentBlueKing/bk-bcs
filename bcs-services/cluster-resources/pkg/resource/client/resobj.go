@@ -42,7 +42,8 @@ func NewApiResourceClientByClusterID(
 // GetResObjectInfo 获取 api-resources object 基础信息
 func GetResObjectInfo(ctx context.Context, clusterID, namespace, name string,
 	gvr schema.GroupVersionResource) (*unstructured.Unstructured, error) {
-	return NewApiResourceClientByClusterID(ctx, clusterID, gvr).GetWithoutPerm(ctx, namespace, name, metav1.GetOptions{})
+	return NewApiResourceClientByClusterID(ctx, clusterID, gvr).
+		Get(ctx, namespace, name, metav1.GetOptions{})
 }
 
 // CreateResObjectInfo 创建 api-resources object 基础信息
@@ -56,12 +57,12 @@ func CreateResObjectInfo(ctx context.Context, clusterID string, gvr schema.Group
 func UpdateResObjectInfo(ctx context.Context, clusterID string, gvr schema.GroupVersionResource,
 	manifest map[string]interface{}) (*unstructured.Unstructured, error) {
 	return NewApiResourceClientByClusterID(ctx, clusterID, gvr).
-		ApplyWithoutPerm(ctx, manifest, metav1.CreateOptions{})
+		Apply(ctx, manifest, metav1.CreateOptions{})
 }
 
 // DeleteResObjectInfo 删除 api-resources object 基础信息
 func DeleteResObjectInfo(
 	ctx context.Context, clusterID, namespace, name string, gvr schema.GroupVersionResource) error {
 	return NewApiResourceClientByClusterID(ctx, clusterID, gvr).
-		DeleteWithoutPerm(ctx, namespace, name, metav1.DeleteOptions{})
+		Delete(ctx, namespace, name, metav1.DeleteOptions{})
 }
