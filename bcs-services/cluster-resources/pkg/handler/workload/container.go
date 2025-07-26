@@ -58,7 +58,7 @@ func (h *Handler) GetContainerEnvInfo(
 	}
 
 	envResp, _, err := cli.NewPodCliByClusterID(ctx, req.ClusterID).ExecCommand(
-		req.Namespace, req.PodName, req.ContainerName, []string{"/bin/sh", "-c", "env"},
+		ctx, req.Namespace, req.PodName, req.ContainerName, []string{"/bin/sh", "-c", "env"},
 	)
 	if err != nil {
 		return errorx.New(errcode.General, i18n.GetMsg(ctx, "获取容器环境变量失败，请确认容器处于 Running 状态"))
