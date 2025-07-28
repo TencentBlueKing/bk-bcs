@@ -583,6 +583,7 @@
     import path2tree from '@/common/path2tree'
     import resizer from '@/components/resize'
     import Header from '@/components/layout/Header.vue';
+    import xss from 'xss';
 
     Archive.init({
         workerUrl: `${window.BK_STATIC_URL}/static/archive-worker/worker-bundle.js`
@@ -2426,7 +2427,7 @@
                 if (node.value) {
                     const nodeId = `file_${node.value.id}`
                     return <div id={ nodeId }>
-                        <span class={ titleClass } domPropsInnerHTML={ node.name } title={ node.name } onClick={() => this.handleSelectNode(node, 'default') }></span>
+                        <span class={ titleClass } domPropsInnerHTML={ xss(node.name) } title={ node.name } onClick={() => this.handleSelectNode(node, 'default') }></span>
                         <div class="actions">
                             <span class="bcs-icon bcs-icon-more" onClick={this.preventEvent}></span>
                             <div class="menulist">
@@ -2460,7 +2461,7 @@
                 }
                 if (node.value) {
                     return <div>
-                        <span class={ titleClass } domPropsInnerHTML={ node.name } onClick={() => this.handleSelectNode(node, 'custom') } title={ node.name }></span>
+                        <span class={ titleClass } domPropsInnerHTML={ xss(node.name) } onClick={() => this.handleSelectNode(node, 'custom') } title={ node.name }></span>
                         <div class="actions" onClick={this.preventEvent}>
                             <span class="bcs-icon bcs-icon-more" onClick={this.preventEvent}></span>
                             <div class="menulist">
@@ -2472,7 +2473,7 @@
                 } else if (node.parent) {
                     if (node.name === 'CustomManifest') {
                         return <div>
-                            <span class={ titleClass } domPropsInnerHTML={ node.name } title={ node.name }></span>
+                            <span class={ titleClass } domPropsInnerHTML={ xss(node.name) } title={ node.name }></span>
                             <div class="actions" onClick={this.preventEvent}>
                                 <span class="bcs-icon bcs-icon-more" onClick={this.preventEvent}></span>
                                 <div class="menulist">
@@ -2483,7 +2484,7 @@
                         </div>
                     } else {
                         return <div>
-                            <span class={ titleClass } domPropsInnerHTML={ node.name } title={ node.name }></span>
+                            <span class={ titleClass } domPropsInnerHTML={ xss(node.name) } title={ node.name }></span>
                             <div class="actions" onClick={this.preventEvent}>
                                 <span class="bcs-icon bcs-icon-more" onClick={this.preventEvent}></span>
                                 <div class="menulist">
@@ -2497,7 +2498,7 @@
                     }
                 } else {
                     return <div>
-                        <span class={ titleClass } domPropsInnerHTML={ node.name } title={ node.name }></span>
+                        <span class={ titleClass } domPropsInnerHTML={ xss(node.name) } title={ node.name }></span>
                         <div class="actions" onClick={this.preventEvent}>
                             <span class="bcs-icon bcs-icon-more" onClick={this.preventEvent}></span>
                             <div class="menulist">
