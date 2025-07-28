@@ -13,11 +13,20 @@
 package endpoint
 
 import (
+	"context"
 	"errors"
+	"fmt"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
+	corev1lister "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
 )
 
@@ -63,11 +72,57 @@ func (c *K8sConfig) GetKubernetesClient() (kubernetes.Interface, error) {
 	}
 	blog.Infof("GetKubernetesClient call getRestConfig successful")
 
-	clientSet, err := kubernetes.NewForConfig(config)
+	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		blog.Errorf("GetKubernetesClient call NewForConfig failed: %v", err)
 		return nil, err
 	}
 
-	return clientSet, nil
+	return clientset, nil
+}
+
+// GetNodeLister init kubernetes node lister by k8sConfig
+func (c *K8sConfig) GetNodeLister() (corev1lister.NodeLister, corev1lister.NodeLister, error) {
+
+	// 因为selector不支持“或”逻辑，所以这里分别初始化master和controlPlane的NodeLister
+	masterNodeLister, err := c.getNodeLister(masterLabel)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	cpNodeLister, err := c.getNodeLister(controlPlaneLabel)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return masterNodeLister, cpNodeLister, nil
+}
+
+func (c *K8sConfig) getNodeLister(label string) (corev1lister.NodeLister, error) {
+	clientset, err := c.GetKubernetesClient()
+	if err != nil {
+		blog.Errorf("GetNodeLister call GetKubernetesClient failed: %v", err)
+		return nil, err
+	}
+
+	tweakFunc := func(opts *metav1.ListOptions) {
+		opts.LabelSelector = label // 只监听带此标签的 Node
+	}
+
+	factory := informers.NewFilteredSharedInformerFactory(clientset, 10*time.Hour, "", tweakFunc)
+	nodeInformer := factory.Core().V1().Nodes()
+	nodeLister := nodeInformer.Lister()
+
+	// 5. 启动 Informer 并等待缓存同步
+	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer cancel()
+
+	factory.Start(ctx.Done())
+	if !cache.WaitForCacheSync(ctx.Done(), nodeInformer.Informer().HasSynced) {
+		blog.Errorf("wait for cache sync failed for node selector %s", label)
+		return nil, fmt.Errorf("wait for cache sync failed for node selector %s", label)
+	}
+	blog.Infof("wait for cache sync successful for node selector %s", label)
+
+	return nodeLister, nil
 }
