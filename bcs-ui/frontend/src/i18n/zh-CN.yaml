@@ -459,7 +459,6 @@ generic:
     required1: taints不能有空字段
     annotationValueEmpty: 注解值不能为空
     labelKey1: 仅支持字母，数字和字符(-_./)，且需以字母数字开头和结尾
-    labelValue: 仅支持字母，数字和字符(-_.)，且需以字母数字开头和结尾
     kindName: 名称只能包含数字、字母、中划线(-)、下划线(_)、点(.)，开头结尾必须是数字或字母
     fileName: 文件名称只能包含数字、字母、中划线(-)、下划线(_)、点(.)，开头结尾必须是数字或字母
     notRootName: 用户名不能为root
@@ -780,7 +779,6 @@ cluster:
       masterNum135: 仅支持1台、3台或5台主机
       quota: CPU配额最少40核，内存配额最少40GiB
       regionDiff: '节点地域需要与集群地域保持一致，节点地域：{region1}，集群地域：{region2}'
-      vpcDiff: '节点VPC需要与集群VPC保存一致，节点VPC：{vpc1}，集群VPC：{vpc2}'
       emptyKubeConfig: 请先测试kubeconfig可用性
     button:
       createCluster: 创建集群
@@ -3230,7 +3228,6 @@ serviceMesh:
     cluster: 关联集群
     createTime: 创建时间
     scene: 观测场景
-    upgrade: 升级
     basicInfo: 基础信息
     network: 网格特性配置
     master: 高可用配置

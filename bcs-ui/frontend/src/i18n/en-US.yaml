@@ -484,9 +484,6 @@ generic:
     labelKey1: >-
       Only support the letters, numbers and characters (-_./), and need to start
       with the letter number
-    labelValue: >-
-      Only support the letters, numbers and characters (-_.), and need to start
-      with the letter number
     kindName: >-
       The name can only include numbers, letters, mid-line lines (-), down line
       (_), point (.), The beginning and end must be numbers or letters
@@ -912,9 +909,6 @@ cluster:
       regionDiff: >-
         The node area needs to be consistent with the cluster area, node area:
         {region1}, cluster area: {region2}
-      vpcDiff: >-
-        Node VPC needs to be consistent with the cluster VPC, node VPC: {VPC1},
-        cluster VPC: {VPC2}
       emptyKubeConfig: please run kubeconfig usability testing
     button:
       createCluster: Create Cluster
@@ -4017,7 +4011,6 @@ serviceMesh:
     cluster: Associated Cluster
     createTime: Creation Time
     scene: Observation Scenario
-    upgrade: Upgrade
     basicInfo: Basic Information
     network: Mesh Feature Configuration
     master: High Availability Configuration
@@ -4068,11 +4061,15 @@ serviceMesh:
     maxlength: 'Maximum length: 2000'
     cpuValidate: CPU limit must be greater than or equal to CPU request
     memoryValidate: memory limit must be greater than or equal to memory request
-    endpointValidate: 'Only uppercase and lowercase letters, numbers, and characters ( . : / ) are supported'
+    endpointValidate: >-
+      Only uppercase and lowercase letters, numbers, and characters ( . : / )
+      are supported
     disabledVirtual: VCluster is not supported
     disabledShare: Shared cluster is not supported
     disabledFederation: Federation cluster is not supported
-    autoscaleMax: The maximum number of replicas cannot be less than the minimum number of replicas
+    autoscaleMax: >-
+      The maximum number of replicas cannot be less than the minimum number of
+      replicas
     noPermission: No permission
     egressModeDesc:
       title: Configure outbound traffic policy for services within the mesh.

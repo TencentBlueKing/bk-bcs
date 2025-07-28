@@ -1,4 +1,3 @@
-<!-- eslint-disable vue/no-v-html -->
 <template>
   <div class="apply-host-wrapper" v-if="$INTERNAL">
     <div class="apply-host-btn flex items-center">
