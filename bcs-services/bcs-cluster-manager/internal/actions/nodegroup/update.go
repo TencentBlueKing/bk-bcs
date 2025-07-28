@@ -976,7 +976,7 @@ func (ua *UpdateDesiredNodeAction) checkCloudClusterResource(scaleNodesNum uint3
 
 	// limit scale nodeNum if nodegroup manual scale
 	if ua.req.Manual && scaleNodesNum > 100 {
-		err := errors.New("nodegroup manual operation limit desiredNode: 100")
+		err = errors.New("nodegroup manual operation limit desiredNode: 100")
 		ua.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
 		return err
 	}

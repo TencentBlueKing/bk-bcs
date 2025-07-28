@@ -216,7 +216,7 @@ func getNodeIdsAndIps(nodes []*proto.Node) ([]string, []string) {
 }
 
 // getAllFailedNodeIds get all failed node ids
-func getAllFailedNodeIds(task *proto.Task) ([]string, error) {
+func getAllFailedNodeIds(task *proto.Task) ([]string, error) { // nolint
 	var allFailedNodeIds []string
 
 	if task == nil || len(task.CommonParams) == 0 {
@@ -279,7 +279,7 @@ type taskParams struct {
 }
 
 // getTaskParams get add nodes task params
-func getAddNodesTaskParams(task *proto.Task) (*taskParams, error) {
+func getAddNodesTaskParams(task *proto.Task) (*taskParams, error) { // nolint
 	params := &taskParams{}
 
 	if task == nil || len(task.Steps) == 0 {
