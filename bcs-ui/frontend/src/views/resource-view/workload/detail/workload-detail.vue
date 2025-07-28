@@ -344,6 +344,7 @@
 /* eslint-disable camelcase */
 import { bkOverflowTips } from 'bk-magic-vue';
 import { computed, defineComponent, onBeforeUnmount, onMounted, ref, toRefs, watch } from 'vue';
+import xss from 'xss';
 
 import EventTable from './bk-monitor-event.vue';
 import detailBasicList from './detail-basic';
@@ -558,7 +559,7 @@ export default defineComponent({
       return {
         allowHTML: true,
         maxWidth: 480,
-        content: images.join('<br />'),
+        content: xss(images.join('<br />')),
       };
     };
 

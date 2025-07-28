@@ -1,4 +1,3 @@
-<!-- eslint-disable vue/no-v-html -->
 <!-- eslint-disable vue/no-mutating-props -->
 <template>
   <bcs-dialog

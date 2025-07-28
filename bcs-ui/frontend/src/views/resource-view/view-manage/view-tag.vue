@@ -38,7 +38,7 @@
           v-for="item, index in parseValue"
           :key="index"
           :class="index < (parseValue.length - 1) ? 'mb-[6px]' : ''">
-          {{ getValue(item) }}
+          {{ xss(getValue(item)) }}
         </div>
       </slot>
     </div>
@@ -46,6 +46,7 @@
 </template>
 <script setup lang="ts">
 import { computed, PropType } from 'vue';
+import xss from 'xss';
 const props = defineProps({
   invalid: {
     type: Boolean,

@@ -1,4 +1,3 @@
-<!-- eslint-disable vue/no-v-html -->
 <template>
   <div :class="['bcs-md-preview markdown-body', theme]" v-html="filterXSS"></div>
 </template>
