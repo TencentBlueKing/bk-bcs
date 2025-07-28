@@ -285,7 +285,7 @@ type NodeTaintData struct {
 }
 
 // UpdateClusterNodesTaints update cluster taints
-func UpdateClusterNodesTaints(ctx context.Context, data NodeTaintData) error {
+func UpdateClusterNodesTaints(ctx context.Context, data NodeTaintData) error { // nolint
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
 	k8sOperator := clusterops.NewK8SOperator(options.GetGlobalCMOptions(), cloudprovider.GetStorageModel())
@@ -329,20 +329,55 @@ func UpdateClusterNodesTaints(ctx context.Context, data NodeTaintData) error {
 	blog.Infof("UpdateClusterNodesTaints[%s] ListClusterNodesByIPsOrNames successful[%v]", taskID, nodeNames)
 
 	for _, node := range nodeNames {
-		// user defined labels
+		// user defined taints
 		taints := data.Taints
 		if taints == nil {
 			taints = make([]*proto.Taint, 0)
 		}
 
-		// merge source node labels
-		for i := range node.NodeTaint {
-			taints = append(taints, &proto.Taint{
-				Key:    node.NodeTaint[i].Key,
-				Value:  node.NodeTaint[i].Value,
-				Effect: node.NodeTaint[i].Effect,
-			})
+		// 过滤相同key和effect的污点
+		exitDiffValTaints := make([]*proto.Taint, 0)
+		for i := range taints {
+			exit := false
+			for x := range node.NodeTaint {
+				if taints[i].Key == node.NodeTaint[x].Key && taints[i].Effect == node.NodeTaint[x].Effect &&
+					taints[i].Value != node.NodeTaint[x].Value {
+					exit = true
+					break
+				}
+			}
+
+			if !exit {
+				exitDiffValTaints = append(exitDiffValTaints, taints[i])
+			}
 		}
+
+		// 如果存在BCSNodeGroupTaintKey污点则保留
+		for x := range node.NodeTaint {
+			if cutils.BCSNodeGroupTaintKey == node.NodeTaint[x].Key {
+				exitDiffValTaints = append(exitDiffValTaints, &proto.Taint{
+					Key:    node.NodeTaint[x].Key,
+					Value:  node.NodeTaint[x].Value,
+					Effect: node.NodeTaint[x].Effect,
+				})
+
+				taints = append(taints, &proto.Taint{
+					Key:    node.NodeTaint[x].Key,
+					Value:  node.NodeTaint[x].Value,
+					Effect: node.NodeTaint[x].Effect,
+				})
+			}
+		}
+
+		if len(exitDiffValTaints) != len(taints) {
+			err := k8sOperator.UpdateNodeTaints(ctx, data.ClusterID, node.NodeName,
+				utils.TaintToK8sTaint(exitDiffValTaints))
+			if err != nil {
+				blog.Errorf("UpdateClusterNodesTaints[%s] ip[%s] failed: %v", taskID, node.NodeName, err)
+				continue
+			}
+		}
+
 		err := k8sOperator.UpdateNodeTaints(ctx, data.ClusterID, node.NodeName, utils.TaintToK8sTaint(taints))
 		if err != nil {
 			blog.Errorf("UpdateClusterNodesTaints[%s] ip[%s] failed: %v", taskID, node.NodeName, err)
