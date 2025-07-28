@@ -1,11 +1,12 @@
 <!-- eslint-disable vue/no-v-html -->
 <template>
-  <div :class="['bcs-md-preview markdown-body', theme]" v-html="html"></div>
+  <div :class="['bcs-md-preview markdown-body', theme]" v-html="filterXSS"></div>
 </template>
 
 <script>
 import MarkdownIt from 'markdown-it';
-import { defineComponent, onMounted, ref, toRefs, watch } from 'vue';
+import { computed, defineComponent, onMounted, ref, toRefs, watch } from 'vue';
+import xss from 'xss';
 
 import hljs from './md-highlight.js';
 
@@ -41,6 +42,7 @@ export default defineComponent({
     const render = (value) => {
       html.value = md.render(value);
     };
+    const filterXSS = computed(() => xss(html.value));
     watch(code, () => {
       render(code.value);
     });
@@ -62,7 +64,7 @@ export default defineComponent({
       render(code.value);
     });
     return {
-      html,
+      filterXSS,
     };
   },
 });
