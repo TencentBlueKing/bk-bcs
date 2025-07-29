@@ -163,17 +163,17 @@ set +x
 
 #### k8s 网络配置
 
-| 环境变量           | 默认值                                                                                      | 说明                                                                                          |
-| ------------------ | ------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| 环境变量           | 默认值                                                            | 说明                                                                                          |
+| ------------------ |----------------------------------------------------------------| --------------------------------------------------------------------------------------------- |
 | `K8S_CTRL_IP`      | 控制平面默认是自身。<br />工作平面默认是中控机 ip，如果开启了 apiserver hpa，则是 VIP<br /> | 访问控制平面 ip。<br />                                                                       |
-| `K8S_SVC_CIDR`     | `10.96.0.0/12`                                                                              | 集群 svc ipv4 网段                                                                            |
-| `K8S_POD_CIDR`     | `10.244.0.0/16`                                                                             | 集群 pod ipv4 网段                                                                            |
-| `K8S_SVC_CIDRv6`   | `fd00::1234:5678:1:0/112`                                                                   | 集群 svc ipv6 网段（`K8S_IPv6_STATUS`不为`Disable`时有效）                                    |
-| `K8S_POD_CIDRv6`   | `fd00::1234:5678:0/104`                                                                     | 集群 pod ipv6 网段（`K8S_IPv6_STATUS`不为`Disable`时有效）                                    |
-| `K8S_MASK`         | `24`                                                                                        | 集群 pod ipv4 掩码长度                                                                        |
-| `K8S_IPv6_MASK`    | `120`                                                                                       | 集群 pod ipv6 掩码长度                                                                        |
-| `K8S_CNI`          | `flannel`                                                                                   | CNI 插件，现仅支持 `flannel`                                                                  |
-| `ENABLE_MULTUS_HA` | `true`                                                                                      | [MULTUS_CNI](https://k8snetworkplumbingwg.github.io/multus-cni/docs/quickstart.html) 默认启用 |
+| `K8S_SVC_CIDR`     | `10.96.0.0/12`                                                 | 集群 svc ipv4 网段                                                                            |
+| `K8S_POD_CIDR`     | `10.240.0.0/12`                                                | 集群 pod ipv4 网段                                                                            |
+| `K8S_SVC_CIDRv6`   | `fd00::1234:5678:1:0/112`                                      | 集群 svc ipv6 网段（`K8S_IPv6_STATUS`不为`Disable`时有效）                                    |
+| `K8S_POD_CIDRv6`   | `fd00::1234:5678:0/104`                                        | 集群 pod ipv6 网段（`K8S_IPv6_STATUS`不为`Disable`时有效）                                    |
+| `K8S_MASK`         | `24`                                                           | 集群 pod ipv4 掩码长度                                                                        |
+| `K8S_IPv6_MASK`    | `120`                                                          | 集群 pod ipv6 掩码长度                                                                        |
+| `K8S_CNI`          | `flannel`                                                      | CNI 插件，现仅支持 `flannel`                                                                  |
+| `ENABLE_MULTUS_HA` | `true`                                                         | [MULTUS_CNI](https://k8snetworkplumbingwg.github.io/multus-cni/docs/quickstart.html) 默认启用 |
 
 #### CRI 环境变量
 
