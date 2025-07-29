@@ -24,7 +24,6 @@ type ServiceOptions struct {
 	conf.LogConfig `json:"log_config"`
 	ServerConfig   `json:"server_config"`
 	ClientConfig   `json:"client_config"`
-	Gateway        *GatewayConfig    `json:"gateway"`
 	Mongo          *MongoOption      `json:"mongodb"`
 	Etcd           *EtcdOption       `json:"etcd"`
 	Thirdparty     *ThirdpartyOption `json:"thirdparty"`
@@ -104,7 +103,6 @@ func NewServiceOptions() *ServiceOptions {
 		Etcd:         &EtcdOption{},
 		Thirdparty:   &ThirdpartyOption{},
 		RabbitMQ:     &RabbitMQOption{},
-		Gateway:      &GatewayConfig{},
 	}
 }
 
@@ -116,10 +114,4 @@ type Credential struct {
 	Username                string
 	Password                string
 	PasswordSet             bool
-}
-
-// GatewayConfig bcs gateway config
-type GatewayConfig struct {
-	Endpoint string `json:"endpoint"`
-	Token    string `json:"token"`
 }

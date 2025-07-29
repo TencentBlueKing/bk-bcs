@@ -30,8 +30,8 @@ import (
 // NotificationAction defines the action for handling notification messages.
 type NotificationAction struct {
 	ThirdpartyClient third.Client
-	WhitelistStore   mongo.PushWhitelistStore
-	EventStore       mongo.PushEventStore
+	WhitelistStore   *mongo.ModelPushWhitelist
+	EventStore       *mongo.ModelPushEvent
 	MaxRetry         int
 	RetryInterval    time.Duration
 	Chn              *amqp.Channel
@@ -133,11 +133,19 @@ func (n *NotificationAction) sendNotification(pushType string, pushMsg *mq.PushE
 			req := pushMsg.ToRtxRequest()
 			return n.ThirdpartyClient.SendRtx(req)
 		}
+		return fmt.Errorf("cannot send %s notification: ThirdpartyClient is nil", pushType)
 	case constant.PushTypeMail:
 		if n.ThirdpartyClient != nil {
 			req := pushMsg.ToMailRequest()
 			return n.ThirdpartyClient.SendMail(req)
 		}
+		return fmt.Errorf("cannot send %s notification: ThirdpartyClient is nil", pushType)
+	case constant.PushTypeMsg:
+		if n.ThirdpartyClient != nil {
+			req := pushMsg.ToMsgRequest()
+			return n.ThirdpartyClient.SendMsg(req)
+		}
+		return fmt.Errorf("cannot send %s notification: ThirdpartyClient is nil", pushType)
 	default:
 		blog.Infof("unknown notification type: %s", pushType)
 		return fmt.Errorf("unknown notification type: %s", pushType)

@@ -10,7 +10,6 @@
  * limitations under the License.
  */
 
-// Package mongo provides a MongoDB-based implementation of the data store interfaces.
 package mongo
 
 import (
@@ -18,83 +17,112 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
+
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-push-manager/internal/store/types"
 )
 
-const (
-	templateDomainKey = "domain"
-	templateIDKey     = "template_id"
+var (
+	modelPushTemplateIndexes = []drivers.Index{
+		{
+			Key: bson.D{
+				bson.E{Key: pushDomainKey, Value: 1},
+				bson.E{Key: pushTemplateUniqueKey, Value: 1},
+			},
+			Name:   pushTemplateTableName + "_1",
+			Unique: true,
+		},
+		{
+			Key: bson.D{
+				bson.E{Key: pushTemplateUniqueKey, Value: 1},
+			},
+			Name:   pushTemplateUniqueKey + "_1",
+			Unique: true,
+		},
+	}
 )
 
-// PushTemplateStore defines the storage interface for push templates.
-type PushTemplateStore interface {
-	CreatePushTemplate(ctx context.Context, template *types.PushTemplate) error
-	DeletePushTemplate(ctx context.Context, templateID string) error
-	GetPushTemplate(ctx context.Context, templateID string) (*types.PushTemplate, error)
-	ListPushTemplates(ctx context.Context, filter bson.M, page, pageSize int64) ([]*types.PushTemplate, int64, error)
-	UpdatePushTemplate(ctx context.Context, templateID string, update bson.M) error
+// ModelPushTemplate is a MongoDB-based implementation of PushTemplateStore.
+type ModelPushTemplate struct {
+	Public
 }
 
-// pushTemplateStore is a MongoDB-based implementation of PushTemplateStore.
-type pushTemplateStore struct {
-	collection *mongo.Collection
-}
-
-// NewPushTemplateStore creates a new PushTemplateStore instance.
-func NewPushTemplateStore(db *mongo.Database) PushTemplateStore {
-	coll := db.Collection(types.CollectionPushTemplate)
-	indexModel := mongo.IndexModel{
-		Keys: bson.D{
-			{Key: templateDomainKey, Value: 1},
-			{Key: templateIDKey, Value: 1},
-		},
-		Options: options.Index().SetUnique(true).SetName(templateDomainKey + "_" + templateIDKey + "_1"),
-	}
-	_, err := coll.Indexes().CreateOne(context.Background(), indexModel)
-	if err != nil {
-		blog.Error("failed to create index: %v\n", err)
-	}
-	return &pushTemplateStore{
-		collection: coll,
-	}
+// NewModelPushTemplate creates a new PushTemplateStore instance.
+func NewModelPushTemplate(db drivers.DB) *ModelPushTemplate {
+	return &ModelPushTemplate{
+		Public: Public{
+			TableName: tableNamePrefix + pushTemplateTableName,
+			Indexes:   modelPushTemplateIndexes,
+			DB:        db,
+		}}
 }
 
 // CreatePushTemplate inserts a new push template into the database.
-func (s *pushTemplateStore) CreatePushTemplate(ctx context.Context, template *types.PushTemplate) error {
+func (m *ModelPushTemplate) CreatePushTemplate(ctx context.Context, template *types.PushTemplate) error {
+	if err := ensureTable(ctx, &m.Public); err != nil {
+		return fmt.Errorf("ensure table failed: %v", err)
+	}
+	if template == nil {
+		return fmt.Errorf("push template is nil")
+	}
+
 	template.ID = primitive.NewObjectID()
 	template.CreatedAt = time.Now()
 
-	_, err := s.collection.InsertOne(ctx, template)
-	return err
-}
-
-// DeletePushTemplate deletes a push template from the database by its ID.
-func (s *pushTemplateStore) DeletePushTemplate(ctx context.Context, templateID string) error {
-	filter := bson.M{"template_id": templateID}
-	_, err := s.collection.DeleteOne(ctx, filter)
-	return err
-}
-
-// GetPushTemplate retrieves a single push template from the database by its ID.
-func (s *pushTemplateStore) GetPushTemplate(ctx context.Context, templateID string) (*types.PushTemplate, error) {
-	var template types.PushTemplate
-	filter := bson.M{"template_id": templateID}
-	err := s.collection.FindOne(ctx, filter).Decode(&template)
-	if err == mongo.ErrNoDocuments {
-		return nil, nil
+	if _, err := m.DB.Table(m.TableName).Insert(ctx, []interface{}{template}); err != nil {
+		return fmt.Errorf("create push template failed: %v", err)
 	}
-	return &template, err
+	return nil
+}
+
+// DeletePushTemplate deletes a push template from the database by template_id.
+func (m *ModelPushTemplate) DeletePushTemplate(ctx context.Context, templateID string) error {
+	if err := ensureTable(ctx, &m.Public); err != nil {
+		return fmt.Errorf("ensure table failed: %v", err)
+	}
+	if templateID == "" {
+		return fmt.Errorf("templateID is empty")
+	}
+
+	cond := operator.NewLeafCondition(operator.Eq, operator.M{
+		pushTemplateUniqueKey: templateID,
+	})
+
+	if _, err := m.DB.Table(m.TableName).Delete(ctx, cond); err != nil {
+		return fmt.Errorf("delete push template failed: %v", err)
+	}
+	return nil
+}
+
+// GetPushTemplate retrieves a single push template from the database by template_id.
+func (m *ModelPushTemplate) GetPushTemplate(ctx context.Context, templateID string) (*types.PushTemplate, error) {
+	if err := ensureTable(ctx, &m.Public); err != nil {
+		return nil, fmt.Errorf("ensure table failed: %v", err)
+	}
+	if templateID == "" {
+		return nil, fmt.Errorf("templateID cannot be empty")
+	}
+
+	cond := operator.NewLeafCondition(operator.Eq, operator.M{
+		pushTemplateUniqueKey: templateID,
+	})
+
+	var template types.PushTemplate
+	if err := m.DB.Table(m.TableName).Find(cond).One(ctx, &template); err != nil {
+		return nil, fmt.Errorf("get push template failed: %v", err)
+	}
+	return &template, nil
 }
 
 // ListPushTemplates retrieves a list of push templates from the database with filtering and pagination.
-func (s *pushTemplateStore) ListPushTemplates(ctx context.Context, filter bson.M, page, pageSize int64) ([]*types.PushTemplate, int64, error) {
-
+func (m *ModelPushTemplate) ListPushTemplates(ctx context.Context, filter operator.M, page, pageSize int64) ([]*types.PushTemplate, int64, error) {
+	if err := ensureTable(ctx, &m.Public); err != nil {
+		return nil, 0, fmt.Errorf("ensure table failed: %v", err)
+	}
 	if page < 1 {
 		return nil, 0, fmt.Errorf("invalid page: must be greater than or equal to 1")
 	}
@@ -102,33 +130,47 @@ func (s *pushTemplateStore) ListPushTemplates(ctx context.Context, filter bson.M
 		return nil, 0, fmt.Errorf("invalid pageSize: must be greater than 0")
 	}
 
-	findOptions := options.Find()
-	findOptions.SetSkip((page - 1) * pageSize)
-	findOptions.SetLimit(pageSize)
-	findOptions.SetSort(bson.M{"created_at": -1})
-
-	cursor, err := s.collection.Find(ctx, filter, findOptions)
-	if err != nil {
-		return nil, 0, err
+	cond := operator.NewLeafCondition(operator.Eq, operator.M{})
+	if filter != nil {
+		cond = operator.NewBranchCondition(operator.And, cond, operator.NewLeafCondition(operator.Eq, filter))
 	}
-	defer cursor.Close(ctx)
 
 	var templates []*types.PushTemplate
-	if err = cursor.All(ctx, &templates); err != nil {
-		return nil, 0, err
+	finder := m.DB.Table(m.TableName).Find(cond)
+	if page > 1 {
+		finder = finder.WithStart((page - 1) * pageSize)
+	}
+	if pageSize > 0 {
+		finder = finder.WithLimit(pageSize)
+	}
+	if err := finder.All(ctx, &templates); err != nil {
+		return nil, 0, fmt.Errorf("list push templates failed: %v", err)
 	}
 
-	total, err := s.collection.CountDocuments(ctx, filter)
+	total, err := finder.Count(ctx)
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, fmt.Errorf("count push templates failed: %v", err)
 	}
 
 	return templates, total, nil
 }
 
 // UpdatePushTemplate updates a push template in the database.
-func (s *pushTemplateStore) UpdatePushTemplate(ctx context.Context, templateID string, update bson.M) error {
-	filter := bson.M{"template_id": templateID}
-	_, err := s.collection.UpdateOne(ctx, filter, update)
-	return err
+func (m *ModelPushTemplate) UpdatePushTemplate(ctx context.Context, templateID string, update operator.M) error {
+	if err := ensureTable(ctx, &m.Public); err != nil {
+		return fmt.Errorf("ensure table failed: %v", err)
+	}
+	if templateID == "" {
+		return fmt.Errorf("templateID cannot be empty")
+	}
+
+	cond := operator.NewLeafCondition(operator.Eq, operator.M{
+		pushTemplateUniqueKey: templateID,
+	})
+
+	update["updated_at"] = time.Now()
+	if err := m.DB.Table(m.TableName).Update(ctx, cond, operator.M{"$set": update}); err != nil {
+		return fmt.Errorf("update push template failed: %v", err)
+	}
+	return nil
 }

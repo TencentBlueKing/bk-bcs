@@ -15,134 +15,175 @@ package mongo
 
 import (
 	"context"
+	"fmt"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-push-manager/internal/store/types"
 )
 
-const (
-	domainKey  = "domain"
-	eventIDKey = "event_id"
+var (
+	modelPushEventIndexes = []drivers.Index{
+		{
+			Key: bson.D{
+				bson.E{Key: pushDomainKey, Value: 1},
+				bson.E{Key: pushEventUniqueKey, Value: 1},
+			},
+			Name:   pushEventTableName + "_1",
+			Unique: true,
+		},
+		{
+			Key: bson.D{
+				bson.E{Key: pushEventUniqueKey, Value: 1},
+			},
+			Name:   pushEventUniqueKey + "_1",
+			Unique: true,
+		},
+	}
 )
 
-// PushEventStore defines the storage interface for push events.
-type PushEventStore interface {
-	CreatePushEvent(ctx context.Context, event *types.PushEvent) error
-	DeletePushEvent(ctx context.Context, eventID string) error
-	GetPushEvent(ctx context.Context, eventID string) (*types.PushEvent, error)
-	ListPushEvents(ctx context.Context, filter bson.M, page, pageSize int64) ([]*types.PushEvent, int64, error)
-	UpdatePushEvent(ctx context.Context, eventID string, update bson.M) error
-	UpdatePushEventStatus(ctx context.Context, eventID string, status int) error
-	AppendNotificationResult(ctx context.Context, eventID string, channel, result string) error
+// ModelPushEvent is a MongoDB-based implementation of PushEventStore.
+type ModelPushEvent struct {
+	Public
 }
 
-// pushEventStore is a MongoDB-based implementation of PushEventStore.
-type pushEventStore struct {
-	collection *mongo.Collection
-}
-
-// NewPushEventStore creates a new PushEventStore instance.
-func NewPushEventStore(db *mongo.Database) PushEventStore {
-	coll := db.Collection(types.CollectionPushEvent)
-	indexModel := mongo.IndexModel{
-		Keys: bson.D{
-			{Key: domainKey, Value: 1},
-			{Key: eventIDKey, Value: 1},
-		},
-		Options: options.Index().SetUnique(true).SetName(domainKey + "_" + eventIDKey + "_1"),
-	}
-	_, err := coll.Indexes().CreateOne(context.Background(), indexModel)
-	if err != nil {
-		blog.Error("failed to create index: %v\n", err)
-	}
-	return &pushEventStore{
-		collection: coll,
-	}
+// NewModelPushEvent creates a new PushEventStore instance.
+func NewModelPushEvent(db drivers.DB) *ModelPushEvent {
+	return &ModelPushEvent{
+		Public: Public{
+			TableName: tableNamePrefix + pushEventTableName,
+			Indexes:   modelPushEventIndexes,
+			DB:        db,
+		}}
 }
 
 // CreatePushEvent inserts a new push event into the database.
-func (s *pushEventStore) CreatePushEvent(ctx context.Context, event *types.PushEvent) error {
-	event.ID = primitive.NewObjectID()
+func (m *ModelPushEvent) CreatePushEvent(ctx context.Context, event *types.PushEvent) error {
+	if err := ensureTable(ctx, &m.Public); err != nil {
+		return fmt.Errorf("ensure table failed: %v", err)
+	}
+	if event == nil {
+		return fmt.Errorf("push event is nil")
+	}
 	event.CreatedAt = time.Now()
 	event.UpdatedAt = time.Now()
 
-	_, err := s.collection.InsertOne(ctx, event)
-	return err
+	if _, err := m.DB.Table(m.TableName).Insert(ctx, []interface{}{event}); err != nil {
+		return fmt.Errorf("create push event failed: %v", err)
+	}
+	return nil
 }
 
 // DeletePushEvent deletes a push event from the database by event_id.
-func (s *pushEventStore) DeletePushEvent(ctx context.Context, eventID string) error {
-	filter := bson.M{"event_id": eventID}
-	_, err := s.collection.DeleteOne(ctx, filter)
-	return err
+func (m *ModelPushEvent) DeletePushEvent(ctx context.Context, eventID string) error {
+	if err := ensureTable(ctx, &m.Public); err != nil {
+		return fmt.Errorf("ensure table failed: %v", err)
+	}
+	if eventID == "" {
+		return fmt.Errorf("eventID cannot be empty")
+	}
+	cond := operator.NewLeafCondition(operator.Eq, operator.M{
+		pushEventUniqueKey: eventID,
+	})
+
+	if _, err := m.DB.Table(m.TableName).Delete(ctx, cond); err != nil {
+		return fmt.Errorf("delete push event failed: %v", err)
+	}
+	return nil
 }
 
 // GetPushEvent retrieves a single push event from the database by event_id.
-func (s *pushEventStore) GetPushEvent(ctx context.Context, eventID string) (*types.PushEvent, error) {
-	var event types.PushEvent
-	filter := bson.M{"event_id": eventID}
-	err := s.collection.FindOne(ctx, filter).Decode(&event)
-	if err == mongo.ErrNoDocuments {
-		return nil, nil
+func (m *ModelPushEvent) GetPushEvent(ctx context.Context, eventID string) (*types.PushEvent, error) {
+	if err := ensureTable(ctx, &m.Public); err != nil {
+		return nil, fmt.Errorf("ensure table failed: %v", err)
 	}
-	return &event, err
+	if eventID == "" {
+		return nil, fmt.Errorf("eventID cannot be empty")
+	}
+
+	cond := operator.NewLeafCondition(operator.Eq, operator.M{
+		pushEventUniqueKey: eventID,
+	})
+
+	var event types.PushEvent
+	if err := m.DB.Table(m.TableName).Find(cond).One(ctx, &event); err != nil {
+		return nil, fmt.Errorf("get push event failed: %v", err)
+	}
+	return &event, nil
 }
 
 // ListPushEvents retrieves a list of push events from the database with filtering and pagination.
-func (s *pushEventStore) ListPushEvents(ctx context.Context, filter bson.M, page, pageSize int64) ([]*types.PushEvent, int64, error) {
-	findOptions := options.Find()
-	findOptions.SetSkip((page - 1) * pageSize)
-	findOptions.SetLimit(pageSize)
-
-	cursor, err := s.collection.Find(ctx, filter, findOptions)
-	if err != nil {
-		return nil, 0, err
+func (m *ModelPushEvent) ListPushEvents(ctx context.Context, filter operator.M, page, pageSize int64) ([]*types.PushEvent, int64, error) {
+	if err := ensureTable(ctx, &m.Public); err != nil {
+		return nil, 0, fmt.Errorf("ensure table failed: %v", err)
 	}
-	defer cursor.Close(ctx)
+	cond := operator.NewLeafCondition(operator.Eq, operator.M{})
+	if filter != nil {
+		cond = operator.NewBranchCondition(operator.And, cond, operator.NewLeafCondition(operator.Eq, filter))
+	}
 
 	var events []*types.PushEvent
-	if err = cursor.All(ctx, &events); err != nil {
-		return nil, 0, err
+	finder := m.DB.Table(m.TableName).Find(cond)
+	if page > 1 {
+		finder = finder.WithStart((page - 1) * pageSize)
+	}
+	if pageSize > 0 {
+		finder = finder.WithLimit(pageSize)
+	}
+	if err := finder.All(ctx, &events); err != nil {
+		return nil, 0, fmt.Errorf("list push events failed: %v", err)
 	}
 
-	total, err := s.collection.CountDocuments(ctx, filter)
+	total, err := finder.Count(ctx)
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, fmt.Errorf("count push events failed: %v", err)
 	}
 
 	return events, total, nil
 }
 
 // UpdatePushEvent updates a push event in the database.
-func (s *pushEventStore) UpdatePushEvent(ctx context.Context, eventID string, update bson.M) error {
-	filter := bson.M{"event_id": eventID}
-	update["$set"].(bson.M)["updated_at"] = time.Now()
-	_, err := s.collection.UpdateOne(ctx, filter, update)
-	return err
+func (m *ModelPushEvent) UpdatePushEvent(ctx context.Context, eventID string, update operator.M) error {
+	if err := ensureTable(ctx, &m.Public); err != nil {
+		return fmt.Errorf("ensure table failed: %v", err)
+	}
+	if eventID == "" {
+		return fmt.Errorf("eventID cannot be empty")
+	}
+
+	cond := operator.NewLeafCondition(operator.Eq, operator.M{
+		pushEventUniqueKey: eventID,
+	})
+
+	update["updated_at"] = time.Now()
+	if err := m.DB.Table(m.TableName).Update(ctx, cond, operator.M{"$set": update}); err != nil {
+		return fmt.Errorf("update push event failed: %v", err)
+	}
+	return nil
 }
 
 // UpdatePushEventStatus updates the status of a specific event.
-func (s *pushEventStore) UpdatePushEventStatus(ctx context.Context, eventID string, status int) error {
-	update := bson.M{"$set": bson.M{"status": status}}
-	return s.UpdatePushEvent(ctx, eventID, update)
+func (m *ModelPushEvent) UpdatePushEventStatus(ctx context.Context, eventID string, status int) error {
+	return m.UpdatePushEvent(ctx, eventID, operator.M{"status": status})
 }
 
 // AppendNotificationResult appends or updates the notification_results field for an event.
-func (s *pushEventStore) AppendNotificationResult(ctx context.Context, eventID string, channel, result string) error {
-	event, err := s.GetPushEvent(ctx, eventID)
-	if err != nil || event == nil {
-		return err
+func (m *ModelPushEvent) AppendNotificationResult(ctx context.Context, eventID string, channel, result string) error {
+	event, err := m.GetPushEvent(ctx, eventID)
+	if err != nil {
+		return fmt.Errorf("get push event failed: %v", err)
 	}
+	if event == nil {
+		return fmt.Errorf("push event not found")
+	}
+
 	if event.NotificationResults.Fields == nil {
 		event.NotificationResults.Fields = make(map[string]string)
 	}
 	event.NotificationResults.Fields[channel] = result
-	update := bson.M{"$set": bson.M{"notification_results": event.NotificationResults}}
-	return s.UpdatePushEvent(ctx, eventID, update)
+
+	return m.UpdatePushEvent(ctx, eventID, operator.M{"notification_results": event.NotificationResults})
 }

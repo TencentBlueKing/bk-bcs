@@ -17,7 +17,7 @@ import (
 	"context"
 	"fmt"
 
-	"go.mongodb.org/mongo-driver/bson"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-push-manager/internal/constant"
@@ -28,11 +28,11 @@ import (
 
 // PushTemplateAction defines the business logic for handling push template operations.
 type PushTemplateAction struct {
-	store mongo.PushTemplateStore
+	store *mongo.ModelPushTemplate
 }
 
 // NewPushTemplateAction creates a new PushTemplateAction instance.
-func NewPushTemplateAction(store mongo.PushTemplateStore) *PushTemplateAction {
+func NewPushTemplateAction(store *mongo.ModelPushTemplate) *PushTemplateAction {
 	return &PushTemplateAction{
 		store: store,
 	}
@@ -191,7 +191,7 @@ func (a *PushTemplateAction) UpdatePushTemplate(ctx context.Context, req *pb.Upd
 	}
 
 	// build update fields
-	updateFields := bson.M{}
+	updateFields := operator.M{}
 	if req.Template.TemplateType != "" {
 		updateFields["template_type"] = req.Template.TemplateType
 	}
@@ -223,7 +223,7 @@ func (a *PushTemplateAction) UpdatePushTemplate(ctx context.Context, req *pb.Upd
 		return nil
 	}
 
-	update := bson.M{"$set": updateFields}
+	update := operator.M{"$set": updateFields}
 
 	// call store layer
 	err = a.store.UpdatePushTemplate(ctx, req.TemplateId, update)
@@ -251,7 +251,7 @@ func (a *PushTemplateAction) ListPushTemplates(ctx context.Context, req *pb.List
 
 	// set default pagination
 	page := int64(req.Page)
-	if page <= 0 {
+	if page < 1 {
 		page = constant.DefaultPage
 	}
 	pageSize := int64(req.PageSize)
@@ -260,7 +260,7 @@ func (a *PushTemplateAction) ListPushTemplates(ctx context.Context, req *pb.List
 	}
 
 	// build filter
-	filter := bson.M{"domain": req.Domain}
+	filter := operator.M{"domain": req.Domain}
 	if req.TemplateType != "" {
 		filter["template_type"] = req.TemplateType
 	}

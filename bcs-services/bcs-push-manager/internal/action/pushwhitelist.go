@@ -17,7 +17,7 @@ import (
 	"context"
 	"fmt"
 
-	"go.mongodb.org/mongo-driver/bson"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-push-manager/internal/constant"
@@ -28,11 +28,11 @@ import (
 
 // PushWhitelistAction defines the business logic for handling push whitelist operations.
 type PushWhitelistAction struct {
-	store mongo.PushWhitelistStore
+	store *mongo.ModelPushWhitelist
 }
 
 // NewPushWhitelistAction creates a new PushWhitelistAction instance.
-func NewPushWhitelistAction(store mongo.PushWhitelistStore) *PushWhitelistAction {
+func NewPushWhitelistAction(store *mongo.ModelPushWhitelist) *PushWhitelistAction {
 	return &PushWhitelistAction{
 		store: store,
 	}
@@ -239,7 +239,7 @@ func (a *PushWhitelistAction) UpdatePushWhitelist(ctx context.Context, req *pb.U
 	}
 
 	// build update fields
-	updateFields := bson.M{}
+	updateFields := operator.M{}
 	if req.Whitelist.Reason != "" {
 		updateFields["reason"] = req.Whitelist.Reason
 	}
@@ -283,7 +283,7 @@ func (a *PushWhitelistAction) UpdatePushWhitelist(ctx context.Context, req *pb.U
 		return nil
 	}
 
-	update := bson.M{"$set": updateFields}
+	update := operator.M{"$set": updateFields}
 
 	// call store layer
 	err = a.store.UpdatePushWhitelist(ctx, req.WhitelistId, update)
@@ -311,7 +311,7 @@ func (a *PushWhitelistAction) ListPushWhitelists(ctx context.Context, req *pb.Li
 
 	// set default pagination
 	page := int64(req.Page)
-	if page <= 0 {
+	if page <= 1 {
 		page = constant.DefaultPage
 	}
 	pageSize := int64(req.PageSize)
@@ -320,7 +320,7 @@ func (a *PushWhitelistAction) ListPushWhitelists(ctx context.Context, req *pb.Li
 	}
 
 	// build filter
-	filter := bson.M{"domain": req.Domain}
+	filter := operator.M{"domain": req.Domain}
 	if req.Applicant != "" {
 		filter["applicant"] = req.Applicant
 	}

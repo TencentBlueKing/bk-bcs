@@ -22,9 +22,9 @@ import (
 	"strings"
 	"time"
 
-	"go.mongodb.org/mongo-driver/bson"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-push-manager/internal/constant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-push-manager/internal/store/mongo"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-push-manager/internal/store/types"
@@ -33,11 +33,11 @@ import (
 
 // PushEventAction defines the business logic for handling push event operations.
 type PushEventAction struct {
-	store mongo.PushEventStore
+	store *mongo.ModelPushEvent
 }
 
 // NewPushEventAction creates a new PushEventAction instance.
-func NewPushEventAction(store mongo.PushEventStore) *PushEventAction {
+func NewPushEventAction(store *mongo.ModelPushEvent) *PushEventAction {
 	return &PushEventAction{
 		store: store,
 	}
@@ -233,7 +233,7 @@ func (a *PushEventAction) ListPushEvents(ctx context.Context, req *pb.ListPushEv
 
 	// set default pagination
 	page := int64(req.Page)
-	if page <= 0 {
+	if page < 1 {
 		page = constant.DefaultPage
 	}
 	pageSize := int64(req.PageSize)
@@ -242,7 +242,7 @@ func (a *PushEventAction) ListPushEvents(ctx context.Context, req *pb.ListPushEv
 	}
 
 	// build filter
-	filter := bson.M{"domain": req.Domain}
+	filter := operator.M{"domain": req.Domain}
 	if req.RuleId != "" {
 		filter["rule_id"] = req.RuleId
 	}
@@ -253,13 +253,12 @@ func (a *PushEventAction) ListPushEvents(ctx context.Context, req *pb.ListPushEv
 		filter["push_level"] = req.PushLevel
 	}
 	if req.StartTime != nil && req.EndTime != nil {
-		filter["created_at"] = bson.M{
+		filter["created_at"] = operator.M{
 			"$gte": req.StartTime.AsTime(),
 			"$lte": req.EndTime.AsTime(),
 		}
 	}
 
-	// call store layer
 	events, total, err := a.store.ListPushEvents(ctx, filter, page, pageSize)
 	if err != nil {
 		rsp.Code = uint32(constant.ResponseCodeInternalError)
@@ -325,7 +324,7 @@ func (a *PushEventAction) UpdatePushEvent(ctx context.Context, req *pb.UpdatePus
 	}
 
 	// build update fields
-	updateFields := bson.M{}
+	updateFields := operator.M{}
 	if req.Event.RuleId != "" {
 		updateFields["rule_id"] = req.Event.RuleId
 	}
@@ -369,7 +368,7 @@ func (a *PushEventAction) UpdatePushEvent(ctx context.Context, req *pb.UpdatePus
 		return nil
 	}
 
-	update := bson.M{"$set": updateFields}
+	update := operator.M{"$set": updateFields}
 
 	// call store layer
 	err := a.store.UpdatePushEvent(ctx, req.EventId, update)

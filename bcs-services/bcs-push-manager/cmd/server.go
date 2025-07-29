@@ -48,8 +48,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-push-manager/internal/handler"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-push-manager/internal/mq/rabbitmq"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-push-manager/internal/options"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-push-manager/internal/requester"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-push-manager/internal/store"
+	mongostore "github.com/Tencent/bk-bcs/bcs-services/bcs-push-manager/internal/store/mongo"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-push-manager/internal/thirdparty"
 	pb "github.com/Tencent/bk-bcs/bcs-services/bcs-push-manager/proto"
 )
@@ -61,7 +60,7 @@ type Server struct {
 	opt             *options.ServiceOptions
 	httpServer      *http.Server
 	mqClient        *rabbitmq.RabbitMQ
-	mongoStore      *store.Store
+	mongoServer     *mongostore.Server
 	tlsConfig       *tls.Config
 	clientTLSConfig *tls.Config
 
@@ -247,11 +246,14 @@ func (s *Server) initStore() error {
 		MaxPoolSize:           0,
 		MinPoolSize:           0,
 	}
-	mongoStore, err := store.NewStore(mongoOptions)
+	instance, err := mongo.NewDB(mongoOptions)
 	if err != nil {
-		return fmt.Errorf("failed to initialize MongoDB: %v", err)
+		return fmt.Errorf("storage create mongo instance failed, %s", err.Error())
 	}
-	s.mongoStore = mongoStore
+	if pingErr := instance.Ping(); pingErr != nil {
+		return fmt.Errorf("storage connection test failed, %s", pingErr.Error())
+	}
+	s.mongoServer = mongostore.NewServer(instance)
 	return nil
 }
 
@@ -267,24 +269,16 @@ func (s *Server) initMQ() error {
 
 // initMicro initializes the gRPC service.
 func (s *Server) initMicro() error {
-	realAuthToken, err := encrypt.DesDecryptFromBase([]byte(s.opt.Gateway.Token))
-	if err != nil {
-		return fmt.Errorf("init thirdPartyServiceCli failed, encrypt token error: %s", err.Error())
-	}
 	thirdpartyOpts := &thirdparty.ClientOptions{
 		ClientTLS:     s.clientTLSConfig,
 		EtcdEndpoints: strings.Split(s.opt.Etcd.EtcdEndpoints, ","),
 		EtcdTLS:       s.opt.Etcd.TlsConfig,
-		BaseOptions: requester.BaseOptions{
-			Endpoint: s.opt.Gateway.Endpoint,
-			Token:    string(realAuthToken),
-		},
 	}
 	thirdparty.InitThirdpartyClient(thirdpartyOpts)
 
-	pushEventAction := action.NewPushEventAction(s.mongoStore.PushEvent)
-	pushWhitelistAction := action.NewPushWhitelistAction(s.mongoStore.PushWhitelist)
-	pushTemplateAction := action.NewPushTemplateAction(s.mongoStore.PushTemplate)
+	pushEventAction := action.NewPushEventAction(s.mongoServer.GetPushEventModel())
+	pushWhitelistAction := action.NewPushWhitelistAction(s.mongoServer.GetPushWhitelistModel())
+	pushTemplateAction := action.NewPushTemplateAction(s.mongoServer.GetPushTemplateModel())
 
 	svcHandler := handler.NewPushManagerService(
 		pushEventAction,
@@ -376,8 +370,8 @@ func (s *Server) startRabbitMQConsumer(ctx context.Context) error {
 	// Create notification action with dependencies
 	notificationAction := &action.NotificationAction{
 		ThirdpartyClient: thirdparty.GetThirdpartyClient(),
-		WhitelistStore:   s.mongoStore.PushWhitelist,
-		EventStore:       s.mongoStore.PushEvent,
+		WhitelistStore:   s.mongoServer.GetPushWhitelistModel(),
+		EventStore:       s.mongoServer.GetPushEventModel(),
 		MaxRetry:         3,
 		RetryInterval:    5 * time.Second,
 	}

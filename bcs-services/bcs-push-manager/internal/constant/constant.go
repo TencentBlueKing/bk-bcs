@@ -170,7 +170,7 @@ const (
 	// DefaultPage specifies the default page number.
 	DefaultPage = 1
 	// DefaultPageSize specifies the default number of items per page.
-	DefaultPageSize = 10
+	DefaultPageSize = 100
 	// DefaultExchangeName xxx
 	DefaultExchangeName = "push"
 	// ModuleThirdpartyServiceManager helm manager discovery name

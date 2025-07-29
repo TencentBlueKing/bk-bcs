@@ -23,7 +23,6 @@ import (
 	"go-micro.dev/v4/registry"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-push-manager/internal/constant"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-push-manager/internal/requester"
 	third "github.com/Tencent/bk-bcs/bcs-services/bcs-push-manager/pkg/bcsapi/thirdparty-service"
 )
 
@@ -56,15 +55,10 @@ type ClientOptions struct {
 	ClientTLS     *tls.Config
 	EtcdEndpoints []string
 	EtcdTLS       *tls.Config
-	requester.BaseOptions
 }
 
 // NewClient create client with options
 func NewClient(opts *ClientOptions) (Client, error) {
-	if opts.Sender == nil {
-		opts.Sender = requester.NewRequester()
-	}
-
 	// init thirdparty manager cli
 	c := grpc.NewClient(
 		client.Registry(etcd.NewRegistry(
@@ -73,7 +67,6 @@ func NewClient(opts *ClientOptions) (Client, error) {
 		),
 		grpc.AuthTLS(opts.ClientTLS),
 	)
-
 	cli := third.NewBcsThirdpartyService(constant.ModuleThirdpartyServiceManager, c)
 	return &thirdpartyClient{
 		debug:         false,

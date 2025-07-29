@@ -27,10 +27,6 @@
     "key": "${etcdKey}",
     "ca": "${etcdCA}"
   },
-  "gateway": {
-    "endpoint": "${bcsGatewayEndpoint}",
-    "token": "${bcsGatewayToken}"
-  },
   "rabbitmq": {
     "host": "${rabbitmqHost}",
     "port": ${rabbitmqPort},
