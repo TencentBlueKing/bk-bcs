@@ -68,7 +68,7 @@ func (c *IndependentNamespaceAction) ListNamespaces(ctx context.Context,
 			CreateTime:  ns.GetCreationTimestamp().Format(constant.TimeLayout),
 			Labels:      []*proto.Label{},
 			Annotations: []*proto.Annotation{},
-			IsSystem:    stringx.StringInSlice(ns.GetName(), config.GlobalConf.SystemNameSpace),
+			IsSystem:    stringx.StringInSlice(ns.GetName(), config.GlobalConf.SystemConfig.SystemNameSpaces),
 		}
 
 		for k, v := range ns.Labels {

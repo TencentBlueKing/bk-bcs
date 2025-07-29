@@ -548,11 +548,11 @@ func generateNodeConfig(nodeGroup *proto.NodeGroup) *api.NodeConfig {
 	diskSize, _ := strconv.Atoi(template.SystemDisk.DiskSize)
 	conf := &api.NodeConfig{
 		MachineType: template.InstanceType,
-		Labels:      nodeGroup.NodeTemplate.Labels,
-		Taints:      api.MapTaints(nodeGroup.NodeTemplate.Taints),
-		DiskSizeGb:  int64(diskSize),
-		DiskType:    template.SystemDisk.DiskType,
-		Tags:        nodeGroup.LaunchTemplate.NetworkTag,
+		// Labels:      nodeGroup.NodeTemplate.Labels,
+		Taints:     api.MapTaints(nodeGroup.NodeTemplate.Taints),
+		DiskSizeGb: int64(diskSize),
+		DiskType:   template.SystemDisk.DiskType,
+		Tags:       nodeGroup.LaunchTemplate.NetworkTag,
 	}
 	if template.ImageInfo != nil {
 		conf.ImageType = template.ImageInfo.ImageName

@@ -501,7 +501,10 @@ func updateClusterNodesAnnotations(ctx context.Context, data NodeAnnotationsData
 	blog.Infof("updateClusterNodesAnnotations[%s] ListClusterNodesByIPsOrNames successful[%v]", taskID, nodeNames)
 
 	for _, name := range nodeNames {
-		annotations := data.annotations
+		annotations := make(map[string]string)
+		for k, v := range data.annotations {
+			annotations[k] = v
+		}
 
 		if len(annotations) == 0 {
 			blog.Infof("updateClusterNodesAnnotations[%s] node[%s] annotations empty", taskID, name)

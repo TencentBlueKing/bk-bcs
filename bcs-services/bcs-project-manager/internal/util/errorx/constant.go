@@ -94,4 +94,6 @@ const (
 	NoPermissionErr = 40403
 	// ProjectNotExistsErr 项目不存在
 	ProjectNotExistsErr = 40404
+	// ProjectQuotaNotExistsErr 项目配额不存在
+	ProjectQuotaNotExistsErr = 40405
 )

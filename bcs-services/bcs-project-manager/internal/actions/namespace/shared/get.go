@@ -30,6 +30,7 @@ import (
 	nsm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/namespace"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
 	quotautils "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/quota"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/stringx"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
 )
 
@@ -74,6 +75,7 @@ func (a *SharedNamespaceAction) GetNamespace(ctx context.Context,
 		Uid:        string(namespace.GetUID()),
 		CreateTime: namespace.GetCreationTimestamp().Format(constant.TimeLayout),
 		Status:     string(namespace.Status.Phase),
+		IsSystem:   stringx.StringInSlice(namespace.GetName(), config.GlobalConf.SystemConfig.SystemNameSpaces),
 	}
 	// get quota
 	// nolint
