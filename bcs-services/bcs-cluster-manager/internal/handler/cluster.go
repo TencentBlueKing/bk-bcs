@@ -563,3 +563,20 @@ func (cm *ClusterManager) GetClusterSharedProject(ctx context.Context,
 	blog.Infof("reqID: %s, action: GetClusterSharedProject, req %v, resp %v", reqID, req, resp)
 	return nil
 }
+
+// GetClusterUpgradeInfo implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) GetClusterUpgradeInfo(ctx context.Context,
+	req *cmproto.GetClusterUpgradeInfoReq, resp *cmproto.GetClusterUpgradeInfoResp) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	na := clusterac.NewGetClusterUpgradeInfoAction(cm.model)
+	na.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("GetClusterUpgradeInfo", "grpc",
+		strconv.Itoa(int(resp.Code)), start)
+
+	blog.Infof("reqID: %s, action: GetClusterUpgradeInfo, req %v, resp %v", reqID, req, resp)
+	return nil
+}

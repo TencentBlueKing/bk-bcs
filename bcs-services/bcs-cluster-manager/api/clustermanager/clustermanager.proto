@@ -304,6 +304,16 @@ service ClusterManager {
     };
   }
 
+  rpc GetClusterUpgradeInfo(GetClusterUpgradeInfoReq) returns (GetClusterUpgradeInfoResp) {
+    option (google.api.http) = {
+      get : "/clustermanager/v1/providers/{providerID}/upgradeinfo"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "获取集群升级信息"
+      summary : "获取集群升级信息"
+    };
+  }
+
   //* node management
   rpc GetNode(GetNodeRequest) returns (GetNodeResponse) {
     option (google.api.http) = {
@@ -2409,6 +2419,14 @@ message ClusterMgr {
   repeated ManagedConfig managedConfig = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "managedConfig",
     description: "托管集群规格配置,目前适用于TKE"
+  }];
+  map<string, string> upgradeVersion = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "upgrade version", 
+    description: "集群版本和对应服务终止支持的时间"
+  }];
+  uint32 advDays = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "advDays",
+    description : "提前通知天数"
   }];
 }
 
@@ -16006,3 +16024,52 @@ message UpdateTemplateConfigResponse {
   }];
 }
 
+message GetClusterUpgradeInfoReq {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetClusterUpgradeInfoReq"
+      description : "获取集群升级信息"
+      required : [ "providerID" ]
+    }
+  };
+  string providerID = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "providerID",
+    description: "资源供应provider"
+  }];
+}
+
+message GetClusterUpgradeInfoResp {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetClusterUpgradeInfoResp"
+      description : "获取集群升级信息的响应结果"
+    }
+  };
+  uint32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+  string message = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+  bool result = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回操作结果"
+  }];
+  ClusterUpgradeInfo data = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "data",
+    description: "集群升级信息"
+  }];
+}
+
+message ClusterUpgradeInfo {
+  map<string, string> version = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "version", 
+    description: "集群版本和对应服务终止支持的时间"
+  }];
+  uint32 advDays = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "advDays",
+    description : "提前通知天数"
+  }];
+}
