@@ -8,6 +8,7 @@ require (
 	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20230602131736-2c6f5ea23f31
 	github.com/chonla/format v0.0.0-20220105105701-1119f4a3f36f
 	github.com/dustin/go-humanize v1.0.0
+	github.com/feiin/go-xss v1.3.0
 	github.com/fsnotify/fsnotify v1.6.0
 	github.com/ggicci/httpin v0.19.0
 	github.com/gin-contrib/sse v0.1.0
@@ -66,6 +67,7 @@ require (
 	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
 	github.com/cyphar/filepath-securejoin v0.2.5 // indirect
 	github.com/fatih/color v1.15.0 // indirect
+	github.com/feiin/pkg v0.2.1 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/frankban/quicktest v1.14.4 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.8 // indirect
