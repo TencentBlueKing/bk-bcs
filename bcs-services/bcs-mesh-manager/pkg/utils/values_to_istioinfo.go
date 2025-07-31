@@ -310,7 +310,7 @@ func convertExitOnZeroActiveConnections(
 		istiodValues.MeshConfig.DefaultConfig.ProxyMetadata != nil &&
 		istiodValues.MeshConfig.DefaultConfig.ProxyMetadata.ExitOnZeroActiveConnections != nil {
 		setFeatureConfig(result, common.FeatureExitOnZeroActiveConnections,
-			fmt.Sprintf("%t", *istiodValues.MeshConfig.DefaultConfig.ProxyMetadata.ExitOnZeroActiveConnections))
+			*istiodValues.MeshConfig.DefaultConfig.ProxyMetadata.ExitOnZeroActiveConnections)
 	}
 }
 

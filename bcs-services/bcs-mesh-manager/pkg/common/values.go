@@ -197,7 +197,7 @@ type ZipkinConfig struct {
 
 // ProxyMetadata proxy metadata
 type ProxyMetadata struct {
-	ExitOnZeroActiveConnections *bool   `yaml:"EXIT_ON_ZERO_ACTIVE_CONNECTIONS,omitempty"`
+	ExitOnZeroActiveConnections *string `yaml:"EXIT_ON_ZERO_ACTIVE_CONNECTIONS,omitempty"`
 	IstioMetaDnsCapture         *string `yaml:"ISTIO_META_DNS_CAPTURE,omitempty"`
 	IstioMetaDnsAutoAllocate    *string `yaml:"ISTIO_META_DNS_AUTO_ALLOCATE,omitempty"`
 }

@@ -355,7 +355,7 @@ func GenIstiodValuesByFeature(
 				installValues.MeshConfig.DefaultConfig.ProxyMetadata = &common.ProxyMetadata{}
 			}
 			// nolint:lll
-			installValues.MeshConfig.DefaultConfig.ProxyMetadata.ExitOnZeroActiveConnections = pointer.Bool(featureConfig.Value == common.StringTrue)
+			installValues.MeshConfig.DefaultConfig.ProxyMetadata.ExitOnZeroActiveConnections = pointer.String(featureConfig.Value)
 		case common.FeatureIstioMetaDnsCapture:
 			if installValues.MeshConfig == nil {
 				installValues.MeshConfig = &common.IstiodMeshConfig{}

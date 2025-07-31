@@ -327,7 +327,7 @@ func TestConvertValuesToListItem(t *testing.T) {
 					DefaultConfig: &common.DefaultConfig{
 						HoldApplicationUntilProxyStarts: boolPtr(true),
 						ProxyMetadata: &common.ProxyMetadata{
-							ExitOnZeroActiveConnections: boolPtr(true),
+							ExitOnZeroActiveConnections: strPtr("true"),
 							IstioMetaDnsCapture:         strPtr("true"),
 							IstioMetaDnsAutoAllocate:    strPtr("true"),
 						},
@@ -501,7 +501,7 @@ func TestConvertValuesToListItem(t *testing.T) {
 					DefaultConfig: &common.DefaultConfig{
 						HoldApplicationUntilProxyStarts: boolPtr(false),
 						ProxyMetadata: &common.ProxyMetadata{
-							ExitOnZeroActiveConnections: boolPtr(false),
+							ExitOnZeroActiveConnections: strPtr("false"),
 							IstioMetaDnsCapture:         strPtr("false"),
 							IstioMetaDnsAutoAllocate:    strPtr("false"),
 						},
