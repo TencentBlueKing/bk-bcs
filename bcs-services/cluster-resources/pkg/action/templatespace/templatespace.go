@@ -17,6 +17,7 @@ import (
 	"context"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	"github.com/feiin/go-xss"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
@@ -147,7 +148,7 @@ func (t *TemplateSpaceAction) Create(ctx context.Context, req *clusterRes.Create
 	templateSpace := &entity.TemplateSpace{
 		Name:        req.GetName(),
 		ProjectCode: p.Code,
-		Description: req.GetDescription(),
+		Description: xss.FilterXSS(req.GetDescription(), xss.XssOption{}),
 	}
 	id, err := t.model.CreateTemplateSpace(ctx, templateSpace)
 	if err != nil {
@@ -215,7 +216,7 @@ func (t *TemplateSpaceAction) Update(ctx context.Context, req *clusterRes.Update
 
 	updateTemplateSpace := entity.M{
 		"name":        req.GetName(),
-		"description": req.GetDescription(),
+		"description": xss.FilterXSS(req.GetDescription(), xss.XssOption{}),
 	}
 	if err = t.model.UpdateTemplateSpace(ctx, req.GetId(), updateTemplateSpace); err != nil {
 		return err

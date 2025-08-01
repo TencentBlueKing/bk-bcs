@@ -17,6 +17,7 @@ import (
 	"context"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	"github.com/feiin/go-xss"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
@@ -151,7 +152,7 @@ func (t *TemplateAction) Create(ctx context.Context, req *clusterRes.CreateTempl
 	// 创建顺序：templateVersion -> template
 	templateVersion := &entity.TemplateVersion{
 		ProjectCode:   p.Code,
-		Description:   req.GetVersionDescription(),
+		Description:   xss.FilterXSS(req.GetVersionDescription(), xss.XssOption{}),
 		TemplateName:  req.Name,
 		TemplateSpace: req.TemplateSpace,
 		Version:       req.Version,
@@ -167,7 +168,7 @@ func (t *TemplateAction) Create(ctx context.Context, req *clusterRes.CreateTempl
 	template := &entity.Template{
 		Name:          req.GetName(),
 		ProjectCode:   p.Code,
-		Description:   req.GetDescription(),
+		Description:   xss.FilterXSS(req.GetDescription(), xss.XssOption{}),
 		TemplateSpace: req.GetTemplateSpace(),
 		ResourceType:  req.GetResourceType(),
 		Creator:       userName,
@@ -241,7 +242,7 @@ func (t *TemplateAction) Update(ctx context.Context, req *clusterRes.UpdateTempl
 
 	updateTemplate := entity.M{
 		"name":         req.GetName(),
-		"description":  req.GetDescription(),
+		"description":  xss.FilterXSS(req.GetDescription(), xss.XssOption{}),
 		"resourceType": req.GetResourceType(),
 		"updator":      userName,
 		"tags":         req.GetTags(),
