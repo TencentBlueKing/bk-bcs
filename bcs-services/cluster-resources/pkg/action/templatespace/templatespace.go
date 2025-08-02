@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	"github.com/feiin/go-xss"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
@@ -196,7 +197,7 @@ func (t *TemplateSpaceAction) Create(ctx context.Context, req *clusterRes.Create
 	templateSpace := &entity.TemplateSpace{
 		Name:        req.GetName(),
 		ProjectCode: p.Code,
-		Description: req.GetDescription(),
+		Description: xss.FilterXSS(req.GetDescription(), xss.XssOption{}),
 		Tags:        req.GetTags(),
 	}
 	id, err := t.model.CreateTemplateSpace(ctx, templateSpace)
@@ -265,7 +266,7 @@ func (t *TemplateSpaceAction) Update(ctx context.Context, req *clusterRes.Update
 
 	updateTemplateSpace := entity.M{
 		"name":        req.GetName(),
-		"description": req.GetDescription(),
+		"description": xss.FilterXSS(req.GetDescription(), xss.XssOption{}),
 		"tags":        req.GetTags(),
 	}
 	if err = t.model.UpdateTemplateSpace(ctx, req.GetId(), updateTemplateSpace); err != nil {
@@ -354,7 +355,7 @@ func (t *TemplateSpaceAction) Copy(ctx context.Context, id, name, desc string) (
 	templateSpace.Name = name
 	// id重置，让底层重新生成
 	templateSpace.ID = primitive.NilObjectID
-	templateSpace.Description = desc
+	templateSpace.Description = xss.FilterXSS(desc, xss.XssOption{})
 
 	newId, err := t.model.CreateTemplateSpace(ctx, templateSpace)
 	if err != nil {

@@ -18,6 +18,7 @@ import (
 	"path"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	"github.com/feiin/go-xss"
 	"gopkg.in/yaml.v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -274,7 +275,7 @@ func (t *TemplateAction) Create(ctx context.Context, req *clusterRes.CreateTempl
 	template := &entity.Template{
 		Name:          req.GetName(),
 		ProjectCode:   p.Code,
-		Description:   req.GetDescription(),
+		Description:   xss.FilterXSS(req.GetDescription(), xss.XssOption{}),
 		TemplateSpace: templateSpace.Name,
 		ResourceType:  parser.GetResourceTypesFromManifest(req.GetContent()),
 		Creator:       userName,
@@ -353,7 +354,7 @@ func (t *TemplateAction) Update(ctx context.Context, req *clusterRes.UpdateTempl
 	renderMode := constants.RenderMode(req.GetRenderMode()).GetRenderMode()
 	updateTemplate := entity.M{
 		"name":            req.GetName(),
-		"description":     req.GetDescription(),
+		"description":     xss.FilterXSS(req.GetDescription(), xss.XssOption{}),
 		"updator":         userName,
 		"tags":            req.GetTags(),
 		"versionMode":     req.GetVersionMode(),
