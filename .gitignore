@@ -137,3 +137,4 @@ scripts/8.3.2.tar.gz
 scripts/Tongsuo-8.3.2/
 
 pre-*-bkcodeai
+git-sync.sh
