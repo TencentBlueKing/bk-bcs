@@ -119,8 +119,8 @@ func restyErrHook(r *resty.Request, err error) {
 }
 
 func restyAfterResponseHook(c *resty.Client, r *resty.Response) error {
-	log.Info(r.Request.Context(), "REQ: %s", restyReqToCurl(r.Request))
-	log.Info(r.Request.Context(), "RESP: %s", restyResponseToCurl(r))
+	log.Debug(r.Request.Context(), "REQ: %s", restyReqToCurl(r.Request))
+	log.Debug(r.Request.Context(), "RESP: %s", restyResponseToCurl(r))
 	return nil
 }
 
