@@ -61,7 +61,7 @@ func (i *IstioInstallAction) Name() string {
 // Validate 验证参数
 func (i *IstioInstallAction) Validate() error {
 	// 必填字段
-	if i.ProjectCode == "" && i.ProjectID == "" {
+	if i.ProjectCode == "" {
 		return fmt.Errorf("project is required")
 	}
 	if len(i.PrimaryClusters) == 0 {

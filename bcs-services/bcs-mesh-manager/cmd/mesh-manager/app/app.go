@@ -30,6 +30,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/helmmanager"
 	discovery "github.com/Tencent/bk-bcs/bcs-common/pkg/discovery"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
@@ -70,9 +71,10 @@ type Server struct {
 	httpServer *http.Server
 	opt        *options.MeshManagerOptions
 
-	discovery            *discovery.ModuleDiscovery
-	helmManagerDiscovery *discovery.ModuleDiscovery
-	projectDiscovery     *discovery.ModuleDiscovery
+	discovery               *discovery.ModuleDiscovery
+	helmManagerDiscovery    *discovery.ModuleDiscovery
+	projectDiscovery        *discovery.ModuleDiscovery
+	clusterManagerDiscovery *discovery.ModuleDiscovery
 
 	model        store.MeshManagerModel
 	mongoOptions *mongo.Options
@@ -277,8 +279,6 @@ func (s *Server) initMicro() error {
 			utils.RequestLogWarpper,
 			authWrapper.AuthenticationFunc,
 			utils.ParseProjectIDWrapper,
-			utils.ParseMeshIDWrapper,
-			utils.ParseInstallClustersWrapper,
 			authWrapper.AuthorizationFunc,
 			trace.NewTracingWrapper(),
 		),
@@ -313,6 +313,9 @@ func (s *Server) microAfterStart() error {
 	if err := s.projectDiscovery.Start(); err != nil {
 		return err
 	}
+	if err := s.clusterManagerDiscovery.Start(); err != nil {
+		return err
+	}
 	return s.discovery.Start()
 }
 
@@ -322,6 +325,7 @@ func (s *Server) microAfterStop() error {
 	}
 	s.helmManagerDiscovery.Stop()
 	s.projectDiscovery.Stop()
+	s.clusterManagerDiscovery.Stop()
 	s.discovery.Stop()
 	return nil
 }
@@ -333,6 +337,8 @@ func (s *Server) initHTTPService() error {
 		runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{
 			// 设置为true，表示输出未设置的值
 			MarshalOptions: protojson.MarshalOptions{EmitUnpopulated: true},
+			// 允许未知字段，避免前端传入未定义字段时报错
+			UnmarshalOptions: protojson.UnmarshalOptions{DiscardUnknown: true},
 		}),
 	)
 	grpcDialOpts := []grpc.DialOption{}
@@ -397,10 +403,14 @@ func (s *Server) initDiscovery() error {
 		// enable discovery project manager module
 		s.projectDiscovery = discovery.NewModuleDiscovery(common.ProjectManagerServiceName, s.microRegistry)
 		bcsproject.SetClientConfig(s.clientTLSConfig, s.projectDiscovery)
+		// enable discovery cluster manager module
+		s.clusterManagerDiscovery = discovery.NewModuleDiscovery(common.ClusterManagerServiceDomain, s.microRegistry)
+		clustermanager.SetClientConfig(s.clientTLSConfig, s.clusterManagerDiscovery)
 		blog.Info("init project client successfully")
 	} else {
 		helmmanager.SetClientConfig(s.clientTLSConfig, nil)
 		bcsproject.SetClientConfig(s.clientTLSConfig, nil)
+		clustermanager.SetClientConfig(s.clientTLSConfig, nil)
 	}
 	blog.Info("init discovery for cluster manager successfully")
 	return nil

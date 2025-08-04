@@ -17,7 +17,6 @@ const (
 	// ===== 基础信息 =====
 	FieldKeyMeshID        = "meshID"
 	FieldKeyNetworkID     = "networkID"
-	FieldKeyProjectID     = "projectID"
 	FieldKeyProjectCode   = "projectCode"
 	FieldKeyDescription   = "description"
 	FieldKeyChartVersion  = "chartVersion"

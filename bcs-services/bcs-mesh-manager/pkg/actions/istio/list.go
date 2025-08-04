@@ -122,11 +122,8 @@ func (l *ListIstioAction) getWebAnnotations(ctx context.Context) *meshmanager.We
 			continue
 		}
 
-		// 收集该mesh涉及的所有集群
 		allClusters := mergeClusters(item.PrimaryClusters, item.RemoteClusters)
-
-		// 使用批量权限检查，即使没有集群也会返回默认的 false 权限
-		meshPerm := auth.CheckMeshPermissions(username, projectID, allClusters)
+		meshPerm := auth.GetMeshOpPerm(username, projectID, allClusters)
 
 		meshPerms[meshID] = meshPerm
 	}

@@ -83,7 +83,7 @@ func (u *UpdateIstioAction) setResp(code uint32, message string) {
 
 func (u *UpdateIstioAction) validate() error {
 	// 必填字段验证
-	if u.req.MeshID == nil {
+	if u.req.MeshID == "" {
 		return fmt.Errorf("网格 ID 不能为空")
 	}
 	if err := utils.ValidateBasicFields(u.req); err != nil {
@@ -110,11 +110,11 @@ func (u *UpdateIstioAction) validate() error {
 func (u *UpdateIstioAction) update(ctx context.Context) error {
 	// 获取istio信息
 	istio, err := u.model.Get(ctx, operator.NewLeafCondition(operator.Eq, operator.M{
-		entity.FieldKeyMeshID:    u.req.MeshID.GetValue(),
-		entity.FieldKeyProjectID: u.req.ProjectID.GetValue(),
+		entity.FieldKeyMeshID:      u.req.MeshID,
+		entity.FieldKeyProjectCode: u.req.ProjectCode,
 	}))
 	if err != nil {
-		blog.Errorf("get mesh istio failed, meshID: %s, err: %s", u.req.MeshID.GetValue(), err)
+		blog.Errorf("get mesh istio failed, meshID: %s, err: %s", u.req.MeshID, err)
 		return err
 	}
 	// 主从集群信息使用db中的，不可更新，单独接口处理集群更新的情况
@@ -127,16 +127,16 @@ func (u *UpdateIstioAction) update(ctx context.Context) error {
 	updateFields[entity.FieldKeyUpdateBy] = auth.GetUserFromCtx(ctx)
 	updateFields[entity.FieldKeyUpdateTime] = time.Now().UnixMilli()
 	updateFields[entity.FieldKeyStatusMessage] = "更新中"
-	err = u.model.Update(ctx, u.req.MeshID.GetValue(), updateFields)
+	err = u.model.Update(ctx, u.req.MeshID, updateFields)
 	if err != nil {
-		blog.Errorf("update mesh fields failed, meshID: %s, err: %s", u.req.MeshID.GetValue(), err)
+		blog.Errorf("update mesh fields failed, meshID: %s, err: %s", u.req.MeshID, err)
 		return err
 	}
 
 	// 构建values.yaml更新配置，用于更新values.yaml
 	updateValues, err := utils.ConvertRequestToValues(istio.Version, u.req)
 	if err != nil {
-		blog.Errorf("convert request to values failed, meshID: %s, err: %s", u.req.MeshID.GetValue(), err)
+		blog.Errorf("convert request to values failed, meshID: %s, err: %s", u.req.MeshID, err)
 		return err
 	}
 

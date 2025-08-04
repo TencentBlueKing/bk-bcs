@@ -20,6 +20,8 @@ const (
 	HelmManagerServiceDomain = "helmmanager.bkbcs.tencent.com"
 	// ProjectManagerServiceName project manager service name
 	ProjectManagerServiceName = "project.bkbcs.tencent.com"
+	// ClusterManagerServiceDomain domain name for cluster manager
+	ClusterManagerServiceDomain = "clustermanager.bkbcs.tencent.com"
 
 	// MicroMetaKeyHTTPPort http port in micro-service meta
 	MicroMetaKeyHTTPPort = "httpport"
@@ -121,4 +123,6 @@ const (
 	MeshManagerGetIstioDetail = "MeshManager.GetIstioDetail"
 	// MeshManagerListIstio 获取Istio列表接口
 	MeshManagerListIstio = "MeshManager.ListIstio"
+	// MeshManagerGetClusterInfo 获取集群信息接口
+	MeshManagerGetClusterInfo = "MeshManager.GetClusterInfo"
 )

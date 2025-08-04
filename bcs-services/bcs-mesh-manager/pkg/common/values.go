@@ -60,7 +60,6 @@ type IstioInstallOption struct {
 	ChartValuesPath string
 	ChartRepo       string
 
-	ProjectID             string
 	ProjectCode           string
 	Name                  string
 	Description           string

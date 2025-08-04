@@ -261,7 +261,7 @@ func validateResourceLimit(request string, limit string) error {
 // ValidateBasicFields 校验基础信息字段
 func ValidateBasicFields(req *meshmanager.IstioRequest) error {
 	// 校验项目信息
-	if req.ProjectCode.GetValue() == "" && req.ProjectID.GetValue() == "" {
+	if req.ProjectCode == "" {
 		return fmt.Errorf("项目编码或项目 ID 不能为空")
 	}
 

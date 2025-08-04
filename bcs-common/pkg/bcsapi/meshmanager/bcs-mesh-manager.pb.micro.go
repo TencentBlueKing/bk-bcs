@@ -72,6 +72,12 @@ func NewMeshManagerEndpoints() []*api.Endpoint {
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
+		{
+			Name:    "MeshManager.GetClusterInfo",
+			Path:    []string{"/meshmanager/v1/mesh/clusters"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
 	}
 }
 
@@ -90,6 +96,8 @@ type MeshManagerService interface {
 	DeleteIstio(ctx context.Context, in *DeleteIstioRequest, opts ...client.CallOption) (*DeleteIstioResponse, error)
 	// 获取istio详情
 	GetIstioDetail(ctx context.Context, in *GetIstioDetailRequest, opts ...client.CallOption) (*GetIstioDetailResponse, error)
+	// 获取项目下的集群信息
+	GetClusterInfo(ctx context.Context, in *GetClusterInfoRequest, opts ...client.CallOption) (*GetClusterInfoResponse, error)
 }
 
 type meshManagerService struct {
@@ -164,6 +172,16 @@ func (c *meshManagerService) GetIstioDetail(ctx context.Context, in *GetIstioDet
 	return out, nil
 }
 
+func (c *meshManagerService) GetClusterInfo(ctx context.Context, in *GetClusterInfoRequest, opts ...client.CallOption) (*GetClusterInfoResponse, error) {
+	req := c.c.NewRequest(c.name, "MeshManager.GetClusterInfo", in)
+	out := new(GetClusterInfoResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for MeshManager service
 
 type MeshManagerHandler interface {
@@ -179,6 +197,8 @@ type MeshManagerHandler interface {
 	DeleteIstio(context.Context, *DeleteIstioRequest, *DeleteIstioResponse) error
 	// 获取istio详情
 	GetIstioDetail(context.Context, *GetIstioDetailRequest, *GetIstioDetailResponse) error
+	// 获取项目下的集群信息
+	GetClusterInfo(context.Context, *GetClusterInfoRequest, *GetClusterInfoResponse) error
 }
 
 func RegisterMeshManagerHandler(s server.Server, hdlr MeshManagerHandler, opts ...server.HandlerOption) error {
@@ -189,6 +209,7 @@ func RegisterMeshManagerHandler(s server.Server, hdlr MeshManagerHandler, opts .
 		UpdateIstio(ctx context.Context, in *IstioRequest, out *UpdateIstioResponse) error
 		DeleteIstio(ctx context.Context, in *DeleteIstioRequest, out *DeleteIstioResponse) error
 		GetIstioDetail(ctx context.Context, in *GetIstioDetailRequest, out *GetIstioDetailResponse) error
+		GetClusterInfo(ctx context.Context, in *GetClusterInfoRequest, out *GetClusterInfoResponse) error
 	}
 	type MeshManager struct {
 		meshManager
@@ -230,6 +251,12 @@ func RegisterMeshManagerHandler(s server.Server, hdlr MeshManagerHandler, opts .
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "MeshManager.GetClusterInfo",
+		Path:    []string{"/meshmanager/v1/mesh/clusters"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
 	return s.Handle(s.NewHandler(&MeshManager{h}, opts...))
 }
 
@@ -259,4 +286,8 @@ func (h *meshManagerHandler) DeleteIstio(ctx context.Context, in *DeleteIstioReq
 
 func (h *meshManagerHandler) GetIstioDetail(ctx context.Context, in *GetIstioDetailRequest, out *GetIstioDetailResponse) error {
 	return h.MeshManagerHandler.GetIstioDetail(ctx, in, out)
+}
+
+func (h *meshManagerHandler) GetClusterInfo(ctx context.Context, in *GetClusterInfoRequest, out *GetClusterInfoResponse) error {
+	return h.MeshManagerHandler.GetClusterInfo(ctx, in, out)
 }

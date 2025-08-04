@@ -47,7 +47,6 @@ func TestConvertValuesToListItem(t *testing.T) {
 			meshIstio: &entity.MeshIstio{
 				MeshID:           "test-mesh",
 				Name:             "test-istio",
-				ProjectID:        "test-project",
 				ProjectCode:      "test-code",
 				NetworkID:        "test-network",
 				Description:      "test description",
@@ -77,7 +76,6 @@ func TestConvertValuesToListItem(t *testing.T) {
 			meshIstio: &entity.MeshIstio{
 				MeshID:       "test-mesh",
 				Name:         "test-istio",
-				ProjectID:    "test-project",
 				NetworkID:    "test-network",
 				Version:      "1.24.0",
 				ChartVersion: "1.24.0",
@@ -116,7 +114,6 @@ func TestConvertValuesToListItem(t *testing.T) {
 			meshIstio: &entity.MeshIstio{
 				MeshID:       "test-mesh",
 				Name:         "test-istio",
-				ProjectID:    "test-project",
 				NetworkID:    "test-network",
 				Version:      "1.24.0",
 				ChartVersion: "1.24.0",
@@ -195,7 +192,6 @@ func TestConvertValuesToListItem(t *testing.T) {
 			meshIstio: &entity.MeshIstio{
 				MeshID:       "test-mesh",
 				Name:         "test-istio",
-				ProjectID:    "test-project",
 				NetworkID:    "test-network",
 				Version:      "1.24.0",
 				ChartVersion: "1.24.0",
@@ -267,7 +263,6 @@ func TestConvertValuesToListItem(t *testing.T) {
 			meshIstio: &entity.MeshIstio{
 				MeshID:       "test-mesh",
 				Name:         "test-istio",
-				ProjectID:    "test-project",
 				NetworkID:    "test-network",
 				Version:      "1.20.0",
 				ChartVersion: "1.20.0",
@@ -314,7 +309,6 @@ func TestConvertValuesToListItem(t *testing.T) {
 			meshIstio: &entity.MeshIstio{
 				MeshID:       "test-mesh",
 				Name:         "test-istio",
-				ProjectID:    "test-project",
 				NetworkID:    "test-network",
 				Version:      "1.24.0",
 				ChartVersion: "1.24.0",
@@ -410,7 +404,6 @@ func TestConvertValuesToListItem(t *testing.T) {
 			meshIstio: &entity.MeshIstio{
 				MeshID:           "complete-mesh",
 				Name:             "complete-istio",
-				ProjectID:        "complete-project",
 				ProjectCode:      "complete-code",
 				NetworkID:        "complete-network",
 				Description:      "complete test",

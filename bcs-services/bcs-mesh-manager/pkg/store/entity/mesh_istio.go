@@ -27,7 +27,6 @@ type MeshIstio struct {
 	MeshID        string `bson:"meshID" json:"meshID" validate:"required"`
 	Name          string `bson:"name" json:"name" validate:"required"`
 	NetworkID     string `bson:"networkID" json:"networkID" validate:"required"`
-	ProjectID     string `bson:"projectID" json:"projectID" validate:"required"`
 	ProjectCode   string `bson:"projectCode" json:"projectCode" validate:"required"`
 	Description   string `bson:"description" json:"description"`
 	Version       string `bson:"version" json:"version" validate:"required"`
@@ -135,7 +134,6 @@ func (m *MeshIstio) Transfer2ProtoForDetail() *meshmanager.IstioDetailInfo {
 	istioDetailInfo := &meshmanager.IstioDetailInfo{
 		MeshID:           m.MeshID,
 		Name:             m.Name,
-		ProjectID:        m.ProjectID,
 		ProjectCode:      m.ProjectCode,
 		NetworkID:        m.NetworkID,
 		Description:      m.Description,
@@ -251,7 +249,6 @@ func (m *MeshIstio) Transfer2ProtoForListItems() *meshmanager.IstioListItem {
 	istioListItem := &meshmanager.IstioListItem{
 		MeshID:          m.MeshID,
 		Name:            m.Name,
-		ProjectID:       m.ProjectID,
 		ProjectCode:     m.ProjectCode,
 		Version:         m.Version,
 		Status:          m.Status,
@@ -269,8 +266,7 @@ func (m *MeshIstio) Transfer2ProtoForListItems() *meshmanager.IstioListItem {
 func (m *MeshIstio) TransferFromProto(req *meshmanager.IstioRequest) {
 	// 转换基本字段
 	m.Name = req.Name.GetValue()
-	m.ProjectID = req.ProjectID.GetValue()
-	m.ProjectCode = req.ProjectCode.GetValue()
+	m.ProjectCode = req.ProjectCode
 	m.Description = req.Description.GetValue()
 	m.Version = req.Version.GetValue()
 	m.ControlPlaneMode = req.ControlPlaneMode.GetValue()

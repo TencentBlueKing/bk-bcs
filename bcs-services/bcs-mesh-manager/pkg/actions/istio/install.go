@@ -163,8 +163,7 @@ func (i *InstallIstioAction) install(ctx context.Context) error {
 			NetworkID:       networkID,
 			ChartVersion:    chartVersion,
 
-			ProjectID:             i.req.ProjectID.GetValue(),
-			ProjectCode:           i.req.ProjectCode.GetValue(),
+			ProjectCode:           i.req.ProjectCode,
 			Name:                  i.req.Name.GetValue(),
 			Description:           i.req.Description.GetValue(),
 			Version:               i.req.Version.GetValue(),

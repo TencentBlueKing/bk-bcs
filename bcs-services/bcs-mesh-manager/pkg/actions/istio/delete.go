@@ -109,25 +109,62 @@ func (d *DeleteIstioAction) Validate(ctx context.Context) (*entity.MeshIstio, er
 		return nil, common.NewCodeMessageError(common.NotFoundErrorCode, "mesh not found", nil)
 	}
 
-	// 检查集群中是否存在Istio资源，如果存在则不允许删除
 	allClusters := utils.MergeSlices(meshIstio.PrimaryClusters, meshIstio.RemoteClusters)
+	// 并发检查所有集群的Istio资源
+	type checkResult struct {
+		clusterID string
+		exists    bool
+		err       error
+	}
+
+	resultChan := make(chan checkResult, len(allClusters))
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
 
 	for _, clusterID := range allClusters {
-		exists, err := k8s.CheckIstioResourceExists(ctx, clusterID)
-		if err != nil {
-			blog.Errorf("check istio resources failed, meshID: %s, clusterID: %s, err: %s",
-				d.req.MeshID, clusterID, err)
-			return nil, common.NewCodeMessageError(common.InnerErrorCode, "check istio resources failed", err)
-		}
+		go func(cid string) {
+			// 为每个集群检查设置30秒超时
+			checkCtx, checkCancel := context.WithTimeout(ctx, 30*time.Second)
+			defer checkCancel()
 
-		if exists {
-			blog.Errorf("cluster still has istio resources, meshID: %s, clusterID: %s",
-				d.req.MeshID, clusterID)
-			return nil, common.NewCodeMessageError(
-				common.InnerErrorCode,
-				fmt.Sprintf("cluster %s still has istio resources", clusterID),
-				nil,
-			)
+			exists, err := k8s.CheckIstioResourceExists(checkCtx, cid)
+			select {
+			case resultChan <- checkResult{
+				clusterID: cid,
+				exists:    exists,
+				err:       err,
+			}:
+			case <-ctx.Done():
+				// 如果context被取消，直接退出
+				return
+			}
+		}(clusterID)
+	}
+
+	// 收集结果，遇到错误或发现资源立即返回
+	completedCount := 0
+	for completedCount < len(allClusters) {
+		select {
+		case result := <-resultChan:
+			completedCount++
+
+			if result.err != nil {
+				blog.Errorf("check istio resources failed, meshID: %s, clusterID: %s, err: %s",
+					d.req.MeshID, result.clusterID, result.err)
+				cancel()
+				return nil, common.NewCodeMessageError(common.InnerErrorCode, "check istio resources failed", result.err)
+			}
+
+			if result.exists {
+				blog.Errorf("cluster still has istio resources, meshID: %s, clusterID: %s",
+					d.req.MeshID, result.clusterID)
+				cancel()
+				errMsg := fmt.Sprintf("cluster %s still has istio resources", result.clusterID)
+				return nil, common.NewCodeMessageError(common.InnerErrorCode, errMsg, nil)
+			}
+
+		case <-ctx.Done():
+			return nil, common.NewCodeMessageError(common.InnerErrorCode, "check istio resources timeout", ctx.Err())
 		}
 	}
 

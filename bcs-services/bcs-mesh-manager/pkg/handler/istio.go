@@ -78,3 +78,13 @@ func (m *MeshManager) GetIstioDetail(
 	action := istioaction.NewGetIstioDetailAction(m.opt.IstioConfig, m.model)
 	return action.Handle(ctx, req, resp)
 }
+
+// GetClusterInfo implements meshmanager.MeshManagerHandler
+func (m *MeshManager) GetClusterInfo(
+	ctx context.Context,
+	req *meshmanager.GetClusterInfoRequest,
+	resp *meshmanager.GetClusterInfoResponse,
+) error {
+	action := istioaction.NewGetClusterInfoAction(m.model)
+	return action.Handle(ctx, req, resp)
+}

@@ -20,6 +20,39 @@
     "application/json"
   ],
   "paths": {
+    "/meshmanager/v1/mesh/clusters": {
+      "get": {
+        "summary": "获取项目下的集群信息",
+        "description": "获取项目下的集群信息",
+        "operationId": "MeshManager_GetClusterInfo",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/meshmanagerGetClusterInfoResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "description": "projectCode. 项目编码",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "MeshManager"
+        ]
+      }
+    },
     "/meshmanager/v1/mesh/istio/config": {
       "get": {
         "summary": "获取当前开放的istio版本和配置信息",
@@ -268,11 +301,6 @@
             "schema": {
               "type": "object",
               "properties": {
-                "projectID": {
-                  "type": "string",
-                  "description": "项目ID",
-                  "title": "projectID"
-                },
                 "projectCode": {
                   "type": "string",
                   "description": "项目编码",
@@ -359,6 +387,61 @@
     }
   },
   "definitions": {
+    "meshmanagerClusterInfo": {
+      "type": "object",
+      "properties": {
+        "clusterID": {
+          "type": "string",
+          "description": "集群ID",
+          "title": "clusterID"
+        },
+        "clusterName": {
+          "type": "string",
+          "description": "集群名称",
+          "title": "clusterName"
+        },
+        "clusterType": {
+          "type": "string",
+          "description": "集群类型",
+          "title": "clusterType"
+        },
+        "isShared": {
+          "type": "boolean",
+          "description": "是否为共享集群",
+          "title": "isShared"
+        },
+        "isInstalled": {
+          "type": "boolean",
+          "description": "是否已安装istio",
+          "title": "isInstalled"
+        },
+        "status": {
+          "type": "string",
+          "description": "集群状态",
+          "title": "status"
+        },
+        "version": {
+          "type": "string",
+          "description": "集群版本",
+          "title": "version"
+        }
+      },
+      "title": "集群信息"
+    },
+    "meshmanagerClusterInfoData": {
+      "type": "object",
+      "properties": {
+        "clusters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/meshmanagerClusterInfo"
+          },
+          "description": "集群信息",
+          "title": "clusters"
+        }
+      },
+      "title": "集群信息数据"
+    },
     "meshmanagerDedicatedNode": {
       "type": "object",
       "properties": {
@@ -391,7 +474,7 @@
         "requestID": {
           "type": "string"
         },
-        "webAnnotations": {
+        "web_annotations": {
           "$ref": "#/definitions/meshmanagerWebAnnotations"
         }
       },
@@ -401,7 +484,7 @@
         "code",
         "message",
         "requestID",
-        "webAnnotations"
+        "web_annotations"
       ]
     },
     "meshmanagerFeatureConfig": {
@@ -446,6 +529,32 @@
       },
       "title": "功能特性配置"
     },
+    "meshmanagerGetClusterInfoResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "message": {
+          "type": "string"
+        },
+        "requestID": {
+          "type": "string"
+        },
+        "data": {
+          "$ref": "#/definitions/meshmanagerClusterInfoData"
+        }
+      },
+      "description": "获取项目下的集群信息响应",
+      "title": "GetClusterInfoResponse",
+      "required": [
+        "code",
+        "message",
+        "requestID",
+        "data"
+      ]
+    },
     "meshmanagerGetIstioDetailResponse": {
       "type": "object",
       "properties": {
@@ -459,7 +568,7 @@
         "requestID": {
           "type": "string"
         },
-        "webAnnotations": {
+        "web_annotations": {
           "$ref": "#/definitions/meshmanagerWebAnnotations"
         },
         "data": {
@@ -472,7 +581,7 @@
         "code",
         "message",
         "requestID",
-        "webAnnotations",
+        "web_annotations",
         "data"
       ]
     },
@@ -540,7 +649,7 @@
           "description": "请求 ID",
           "title": "request id"
         },
-        "webAnnotations": {
+        "web_annotations": {
           "$ref": "#/definitions/meshmanagerWebAnnotations",
           "description": "权限信息",
           "title": "web_annotations"
@@ -557,7 +666,7 @@
         "code",
         "message",
         "requestID",
-        "webAnnotations",
+        "web_annotations",
         "data"
       ]
     },
@@ -647,11 +756,6 @@
           "type": "string",
           "description": "更新者",
           "title": "updateBy"
-        },
-        "projectID": {
-          "type": "string",
-          "description": "项目ID",
-          "title": "projectID"
         },
         "projectCode": {
           "type": "string",
@@ -760,11 +864,6 @@
           "description": "创建时间",
           "title": "createTime"
         },
-        "projectID": {
-          "type": "string",
-          "description": "项目ID",
-          "title": "projectID"
-        },
         "projectCode": {
           "type": "string",
           "description": "项目编码",
@@ -812,11 +911,6 @@
           "type": "string",
           "description": "网格ID",
           "title": "meshID"
-        },
-        "projectID": {
-          "type": "string",
-          "description": "项目ID",
-          "title": "projectID"
         },
         "projectCode": {
           "type": "string",
@@ -940,7 +1034,7 @@
           "description": "请求 ID",
           "title": "request id"
         },
-        "webAnnotations": {
+        "web_annotations": {
           "$ref": "#/definitions/meshmanagerWebAnnotations",
           "description": "权限信息",
           "title": "web_annotations"
@@ -957,7 +1051,7 @@
         "code",
         "message",
         "requestID",
-        "webAnnotations",
+        "web_annotations",
         "data"
       ]
     },
@@ -994,7 +1088,7 @@
         "requestID": {
           "type": "string"
         },
-        "webAnnotations": {
+        "web_annotations": {
           "$ref": "#/definitions/meshmanagerWebAnnotations"
         },
         "data": {
@@ -1007,7 +1101,7 @@
         "code",
         "message",
         "requestID",
-        "webAnnotations",
+        "web_annotations",
         "data"
       ]
     },
@@ -1140,7 +1234,7 @@
         "requestID": {
           "type": "string"
         },
-        "webAnnotations": {
+        "web_annotations": {
           "$ref": "#/definitions/meshmanagerWebAnnotations"
         }
       },
@@ -1150,7 +1244,7 @@
         "code",
         "message",
         "requestID",
-        "webAnnotations"
+        "web_annotations"
       ]
     },
     "meshmanagerWebAnnotations": {

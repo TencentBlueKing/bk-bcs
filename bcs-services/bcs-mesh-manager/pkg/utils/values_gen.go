@@ -215,9 +215,9 @@ func GenIstiodValues(
 	return mergedValues, nil
 }
 
-// setResourceRequirement 通用的资源设置函数
+// setResourceRequirement 资源设置函数
 func setResourceRequirement(
-	resources **common.ResourceConfig,
+	resources *common.ResourceConfig,
 	resourceType v1.ResourceName,
 	value string,
 	isLimit bool,
@@ -233,31 +233,26 @@ func setResourceRequirement(
 		return nil
 	}
 
-	// 初始化 Resources 结构
-	if *resources == nil {
-		*resources = &common.ResourceConfig{}
-	}
-
 	// 设置对应的资源值
 	if isLimit {
-		if (*resources).Limits == nil {
-			(*resources).Limits = &common.ResourceLimits{}
+		if resources.Limits == nil {
+			resources.Limits = &common.ResourceLimits{}
 		}
 		switch resourceType {
 		case v1.ResourceCPU:
-			(*resources).Limits.CPU = pointer.String(value)
+			resources.Limits.CPU = pointer.String(value)
 		case v1.ResourceMemory:
-			(*resources).Limits.Memory = pointer.String(value)
+			resources.Limits.Memory = pointer.String(value)
 		}
 	} else {
-		if (*resources).Requests == nil {
-			(*resources).Requests = &common.ResourceRequests{}
+		if resources.Requests == nil {
+			resources.Requests = &common.ResourceRequests{}
 		}
 		switch resourceType {
 		case v1.ResourceCPU:
-			(*resources).Requests.CPU = pointer.String(value)
+			resources.Requests.CPU = pointer.String(value)
 		case v1.ResourceMemory:
-			(*resources).Requests.Memory = pointer.String(value)
+			resources.Requests.Memory = pointer.String(value)
 		}
 	}
 
@@ -266,7 +261,7 @@ func setResourceRequirement(
 
 // applyResourceConfig 应用资源配置到指定的 Resources 对象
 func applyResourceConfig(
-	resources **common.ResourceConfig,
+	resources *common.ResourceConfig,
 	resourceConfig *meshmanager.ResourceConfig,
 ) error {
 	if resourceConfig == nil {
@@ -316,9 +311,11 @@ func GenIstiodValuesBySidecarResource(
 	if installValues.Global.Proxy == nil {
 		installValues.Global.Proxy = &common.IstioProxyConfig{}
 	}
+	if installValues.Global.Proxy.Resources == nil {
+		installValues.Global.Proxy.Resources = &common.ResourceConfig{}
+	}
 
-	// 使用通用函数应用资源配置
-	return applyResourceConfig(&installValues.Global.Proxy.Resources, sidecarResourceConfig)
+	return applyResourceConfig(installValues.Global.Proxy.Resources, sidecarResourceConfig)
 }
 
 // GenIstiodValuesByFeature 根据featureConfigs生成istiod的values
@@ -555,8 +552,10 @@ func GenIstiodValuesByHighAvailability(
 
 	// pilot资源设置
 	if highAvailability.ResourceConfig != nil {
-		// 使用通用函数应用资源配置
-		if err := applyResourceConfig(&installValues.Pilot.Resources, highAvailability.ResourceConfig); err != nil {
+		if installValues.Pilot.Resources == nil {
+			installValues.Pilot.Resources = &common.ResourceConfig{}
+		}
+		if err := applyResourceConfig(installValues.Pilot.Resources, highAvailability.ResourceConfig); err != nil {
 			return err
 		}
 	}
