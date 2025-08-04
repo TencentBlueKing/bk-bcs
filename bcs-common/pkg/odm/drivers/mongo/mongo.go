@@ -306,6 +306,85 @@ func (c *Collection) Aggregation(ctx context.Context, pipeline interface{}, resu
 	return cursor.All(ctx, result)
 }
 
+func (c *Collection) AggregationWithOptions(ctx context.Context, pipeline interface{}, options map[string]interface{}, result interface{}) error {
+	var err error
+	var cursor *mongo.Cursor
+	startTime := time.Now()
+	defer func() {
+		reportMongdbMetrics("aggregationWithOptions", err, startTime)
+	}()
+	aggregateOptions := mopt.AggregateOptions{}
+
+	// 处理hint选项
+	if hint, ok := options["hint"]; ok {
+		aggregateOptions.SetHint(hint)
+	}
+
+	// 处理allowDiskUse选项 - 允许聚合操作使用磁盘空间
+	if allowDiskUse, ok := options["allowDiskUse"]; ok {
+		if allowDiskUseBool, ok := allowDiskUse.(bool); ok {
+			aggregateOptions.SetAllowDiskUse(allowDiskUseBool)
+		}
+	}
+
+	// 处理batchSize选项 - 设置批处理大小
+	if batchSize, ok := options["batchSize"]; ok {
+		if batchSizeInt32, ok := batchSize.(int32); ok {
+			aggregateOptions.SetBatchSize(batchSizeInt32)
+		} else if batchSizeInt, ok := batchSize.(int); ok {
+			aggregateOptions.SetBatchSize(int32(batchSizeInt))
+		}
+	}
+
+	// 处理maxTimeMS选项 - 设置最大执行时间（毫秒）
+	if maxTimeMS, ok := options["maxTimeMS"]; ok {
+		if maxTimeMSInt64, ok := maxTimeMS.(int64); ok {
+			aggregateOptions.SetMaxTime(time.Duration(maxTimeMSInt64) * time.Millisecond)
+		} else if maxTimeMSInt, ok := maxTimeMS.(int); ok {
+			aggregateOptions.SetMaxTime(time.Duration(maxTimeMSInt) * time.Millisecond)
+		}
+	}
+
+	// 处理collation选项 - 设置排序规则
+	if collation, ok := options["collation"]; ok {
+		if collationOpt, ok := collation.(*mopt.Collation); ok {
+			aggregateOptions.SetCollation(collationOpt)
+		}
+	}
+
+	// 处理comment选项 - 设置操作注释
+	if comment, ok := options["comment"]; ok {
+		if commentStr, ok := comment.(string); ok {
+			aggregateOptions.SetComment(commentStr)
+		}
+	}
+
+	// 处理bypassDocumentValidation选项 - 绕过文档验证
+	if bypassValidation, ok := options["bypassDocumentValidation"]; ok {
+		if bypassValidationBool, ok := bypassValidation.(bool); ok {
+			aggregateOptions.SetBypassDocumentValidation(bypassValidationBool)
+		}
+	}
+
+	// 处理let选项 - 设置变量
+	if let, ok := options["let"]; ok {
+		if letDoc, ok := let.(bson.D); ok {
+			aggregateOptions.SetLet(letDoc)
+		}
+	}
+
+	cursor, err = c.mCli.Database(c.dbName).
+		Collection(c.collectionName).
+		Aggregate(ctx, pipeline, &aggregateOptions)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = cursor.Close(ctx)
+	}()
+	return cursor.All(ctx, result)
+}
+
 // Insert insert many data
 func (c *Collection) Insert(ctx context.Context, docs []interface{}) (int, error) {
 	var ret *mongo.InsertManyResult
