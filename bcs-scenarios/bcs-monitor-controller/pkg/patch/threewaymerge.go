@@ -27,8 +27,9 @@ import (
 // original: 上次变更的rule
 // current： 当前bkm平台上的rule
 // modified： 本次尝试变更的rule
-func ThreeWayMergeMonitorRule(scenario string, original, current, modified []*v1.MonitorRuleDetail) []*v1.
-	MonitorRuleDetail {
+func ThreeWayMergeMonitorRule(scenario string, original, current, modified []*v1.MonitorRuleDetail) ([]*v1.
+	MonitorRuleDetail, []string) {
+	updatedRules := make([]string, 0)
 	mergeResult := make([]*v1.MonitorRuleDetail, 0)
 
 	originalMap := make(map[string]*v1.MonitorRuleDetail)
@@ -79,6 +80,7 @@ func ThreeWayMergeMonitorRule(scenario string, original, current, modified []*v1
 			mergeRule.Labels = modifiedRule.Labels
 		} else {
 			blog.Infof("[%s]changed Rule..", originalRule.Name)
+			updatedRules = append(updatedRules, originalRule.Name)
 			if !reflect.DeepEqual(originalRule.Detect, currentRule.Detect) {
 				// 用户修改了探测条件， 不做变更
 				mergeRule = currentRule
@@ -95,7 +97,7 @@ func ThreeWayMergeMonitorRule(scenario string, original, current, modified []*v1
 		mergeResult = append(mergeResult, mergeRule)
 	}
 
-	return mergeResult
+	return mergeResult, updatedRules
 }
 
 // compareMonitorRule return true if equal
