@@ -139,6 +139,7 @@ type PortBinding struct {
 	Status PortBindingStatus `json:"status,omitempty"`
 }
 
+// GetPortBindingType type include [Pod, Node]
 func (pb *PortBinding) GetPortBindingType() string {
 	if pb.Labels == nil {
 		return PortBindingTypePod

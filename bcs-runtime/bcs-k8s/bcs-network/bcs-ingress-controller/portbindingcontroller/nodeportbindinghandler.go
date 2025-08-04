@@ -286,31 +286,31 @@ func (n *nodePortBindingHandler) updateAllConfigMap(portBinding *networkextensio
 }
 
 func (n *nodePortBindingHandler) updateConfigMap(configMapNamespace string) error {
-	configMap := &k8scorev1.ConfigMap{}
-	err := n.k8sClient.Get(n.ctx, k8stypes.NamespacedName{Namespace: configMapNamespace,
-		Name: networkextensionv1.NodePortBindingConfigMapName}, configMap)
-	// nolint
-	if err != nil {
-		if k8serrors.IsNotFound(err) {
-			if cerr := n.createConfigMap(configMapNamespace); cerr != nil {
-				return cerr
+	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		configMap := &k8scorev1.ConfigMap{}
+		if err := n.k8sClient.Get(n.ctx, k8stypes.NamespacedName{Namespace: configMapNamespace,
+			Name: networkextensionv1.NodePortBindingConfigMapName}, configMap); err != nil {
+			if k8serrors.IsNotFound(err) {
+				if cerr := n.createConfigMap(configMapNamespace); cerr != nil {
+					return cerr
+				}
+			} else {
+				err = errors.Wrapf(err, "get config map failed")
+				blog.Errorf("%v", err)
+				return err
 			}
-		} else {
-			err = errors.Wrapf(err, "get config map failed")
+		}
+
+		configMap.Data = n.bindCache.GetCache()
+
+		if err := n.k8sClient.Update(n.ctx, configMap); err != nil {
+			err = errors.Wrapf(err, "update node portbinding[''] config map failed")
 			blog.Errorf("%v", err)
 			return err
 		}
-	}
 
-	configMap.Data = n.bindCache.GetCache()
-
-	if err := n.k8sClient.Update(n.ctx, configMap); err != nil {
-		err = errors.Wrapf(err, "update node portbinding[''] config map failed")
-		blog.Errorf("%v", err)
-		return err
-	}
-
-	return nil
+		return nil
+	})
 }
 
 func (n *nodePortBindingHandler) createConfigMap(configMapNamespace string) error {
