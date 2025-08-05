@@ -222,7 +222,7 @@ func TokenAuthenticateV2(request *restful.Request, response *restful.Response, c
 	request.SetAttribute(constant.CurrentUserAttr, user)
 	request.SetAttribute(constant.CurrentTenantID, getTenantID(user.TenantID, request))
 	ctx := context.WithValue(request.Request.Context(), constant.CurrentTenantID, getTenantID(user.TenantID, request))
-	request.Request.WithContext(ctx)
+	request.Request = request.Request.WithContext(ctx)
 	chain.ProcessFilter(request, response)
 }
 
@@ -245,7 +245,7 @@ func PermsAuthFunc(actionID string, permCtx *PermCtx) func(request *restful.Requ
 		var allow bool
 		var applyURL string
 		node := GetResourceNodeFromPermCtx(permCtx)
-		allow, err := config.GloablIAMClient(utils.GetTenantIDFromContext(request.Request.Context())).
+		allow, err := config.GloablIAMClient(utils.GetTenantIDFromAttribute(request)).
 			IsAllowedWithResource(actionID, permReq, []iam.ResourceNode{node}, true)
 		if err != nil {
 			utils.ResponseSystemError(response, fmt.Errorf("get perm failed, err %s", err.Error()))
@@ -254,7 +254,7 @@ func PermsAuthFunc(actionID string, permCtx *PermCtx) func(request *restful.Requ
 
 		if !allow {
 			applyURL, err = GetApplyURL(GetApplicationsFromPermCtx(permCtx, actionID),
-				utils.GetTenantIDFromContext(request.Request.Context()))
+				utils.GetTenantIDFromAttribute(request))
 			if err != nil {
 				utils.ResponseSystemError(response, fmt.Errorf("get apply url failed, err %s", err.Error()))
 				return
@@ -359,7 +359,7 @@ func TokenAuthAuthenticate(request *restful.Request, response *restful.Response,
 	request.SetAttribute(constant.CurrentUserAttr, user)
 	request.SetAttribute(constant.CurrentTenantID, getTenantID(user.TenantID, request))
 	ctx := context.WithValue(request.Request.Context(), constant.CurrentTenantID, getTenantID(user.TenantID, request))
-	request.Request.WithContext(ctx)
+	request.Request = request.Request.WithContext(ctx)
 	chain.ProcessFilter(request, response)
 }
 
