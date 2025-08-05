@@ -16,6 +16,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 	"gopkg.in/yaml.v2"
 
+	cloudproviderUtils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/utils"
 	cmoptions "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
@@ -39,6 +40,7 @@ type ValuesTemplate struct {
 	Env struct {
 		ClusterID     string `yaml:"BK_BCS_clusterId"`
 		StorageServer string `yaml:"BK_BCS_customStorage"`
+		StorageToken  string `yaml:"BK_BCS_customStorageToken"`
 		ClientPwd     string `yaml:"BK_BCS_clientKeyPassword"`
 	}
 	Secret struct {
@@ -75,6 +77,11 @@ func (bw *BcsWatch) GetValues() (string, error) {
 		bw.Replicas = defaultReplicas
 	}
 
+	token, err := cloudproviderUtils.BuildBcsAgentToken(bw.ClusterID, false)
+	if err != nil {
+		return "", err
+	}
+
 	// get config info
 	op := cmoptions.GetGlobalCMOptions()
 	var (
@@ -93,10 +100,12 @@ func (bw *BcsWatch) GetValues() (string, error) {
 		Env: struct {
 			ClusterID     string `yaml:"BK_BCS_clusterId"`
 			StorageServer string `yaml:"BK_BCS_customStorage"`
+			StorageToken  string `yaml:"BK_BCS_customStorageToken"`
 			ClientPwd     string `yaml:"BK_BCS_clientKeyPassword"`
 		}{
 			ClusterID:     bw.ClusterID,
 			StorageServer: op.ComponentDeploy.Watch.StorageServer,
+			StorageToken:  token,
 			ClientPwd:     static.ClientCertPwd,
 		},
 		Secret: struct {

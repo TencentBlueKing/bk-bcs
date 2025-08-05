@@ -26,11 +26,11 @@ import (
 
 // GetStorageService returns storage InnerService object for discovery.
 // in container deployment mode, get storage endpoints from configuration directly
-func GetStorageService(zkHosts string, bcsTLSConfig bcsoptions.TLS, customIPStr string, isExternal bool) (*InnerService,
+func GetStorageService(zkHosts string, bcsTLSConfig bcsoptions.TLS, customIPStr string, isExternal bool, token string) (*InnerService,
 	*RegisterDiscover.RegDiscover, error) {
 	customEndpoints := strings.Split(customIPStr, ",")
 	storageService := NewInnerService(types.BCS_MODULE_STORAGE, nil, customEndpoints, isExternal)
-	storageService.update(customEndpoints, bcsTLSConfig)
+	storageService.update(customEndpoints, bcsTLSConfig, token)
 	return storageService, nil, nil
 }
 
@@ -56,7 +56,7 @@ func GetNetService(zkHosts string, bcsTLSConfig bcsoptions.TLS, customIPStr stri
 		customEndpoints = strings.Split(customIPStr, ",")
 	}
 	netService := NewInnerService(types.BCS_MODULE_NETSERVICE, eventChan, customEndpoints, isExternal)
-	go netService.Watch(bcsTLSConfig) // nolint
+	go netService.Watch(bcsTLSConfig, "") // nolint
 
 	return netService, discovery, nil
 }
