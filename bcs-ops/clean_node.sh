@@ -48,6 +48,9 @@ clean_cni() {
       ;;
   esac
   rm -rf /etc/cni/net.d/*
+  rm -rf /opt/cni/bin
+  rm -rf /var/run/flannel
+  rm -rf /var/lib/cni
 }
 
 clean_vni() {
