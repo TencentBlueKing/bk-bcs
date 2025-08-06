@@ -63,10 +63,14 @@ func buildBasicConfig(
 ) {
 	// 构建MultiCluster配置
 	if len(req.PrimaryClusters) > 0 {
-		if installValues.MultiCluster == nil {
-			installValues.MultiCluster = &common.IstiodMultiClusterConfig{}
+		if installValues.Global == nil {
+			installValues.Global = &common.IstiodGlobalConfig{}
 		}
+		if installValues.Global.MultiCluster == nil {
+			installValues.Global.MultiCluster = &common.IstiodMultiClusterConfig{}
+		}
+		// todo: 兼容多集群逻辑
 		clusterName := strings.ToLower(req.PrimaryClusters[0])
-		installValues.MultiCluster.ClusterName = &clusterName
+		installValues.Global.MultiCluster.ClusterName = &clusterName
 	}
 }

@@ -80,12 +80,11 @@ type IstioInstallOption struct {
 
 // IstiodInstallValues istiod安装参数
 type IstiodInstallValues struct {
-	IstiodRemote *IstiodRemoteConfig       `yaml:"istiodRemote,omitempty"`
-	Pilot        *IstiodPilotConfig        `yaml:"pilot,omitempty"`
-	Telemetry    *IstiodTelemetryConfig    `yaml:"telemetry,omitempty"`
-	Global       *IstiodGlobalConfig       `yaml:"global,omitempty"`
-	MultiCluster *IstiodMultiClusterConfig `yaml:"multiCluster,omitempty"`
-	MeshConfig   *IstiodMeshConfig         `yaml:"meshConfig,omitempty"`
+	IstiodRemote *IstiodRemoteConfig    `yaml:"istiodRemote,omitempty"`
+	Pilot        *IstiodPilotConfig     `yaml:"pilot,omitempty"`
+	Telemetry    *IstiodTelemetryConfig `yaml:"telemetry,omitempty"`
+	Global       *IstiodGlobalConfig    `yaml:"global,omitempty"`
+	MeshConfig   *IstiodMeshConfig      `yaml:"meshConfig,omitempty"`
 }
 
 // IstiodRemoteConfig istiod远程配置
@@ -121,13 +120,14 @@ type IstiodTelemetryConfig struct {
 
 // IstiodGlobalConfig global配置
 type IstiodGlobalConfig struct {
-	MeshID                       *string           `yaml:"meshID,omitempty"`
-	Network                      *string           `yaml:"network,omitempty"`
-	ConfigCluster                *bool             `yaml:"configCluster,omitempty"`
-	OmitSidecarInjectorConfigMap *bool             `yaml:"omitSidecarInjectorConfigMap,omitempty"`
-	RemotePilotAddress           *string           `yaml:"remotePilotAddress,omitempty"`
-	ExternalIstiod               *bool             `yaml:"externalIstiod,omitempty"`
-	Proxy                        *IstioProxyConfig `yaml:"proxy,omitempty"`
+	MeshID                       *string                   `yaml:"meshID,omitempty"`
+	Network                      *string                   `yaml:"network,omitempty"`
+	ConfigCluster                *bool                     `yaml:"configCluster,omitempty"`
+	OmitSidecarInjectorConfigMap *bool                     `yaml:"omitSidecarInjectorConfigMap,omitempty"`
+	RemotePilotAddress           *string                   `yaml:"remotePilotAddress,omitempty"`
+	ExternalIstiod               *bool                     `yaml:"externalIstiod,omitempty"`
+	Proxy                        *IstioProxyConfig         `yaml:"proxy,omitempty"`
+	MultiCluster                 *IstiodMultiClusterConfig `yaml:"multiCluster,omitempty"`
 }
 
 // IstioProxyConfig proxy配置
@@ -138,6 +138,7 @@ type IstioProxyConfig struct {
 
 // IstiodMultiClusterConfig multiCluster配置
 type IstiodMultiClusterConfig struct {
+	Enabled     *bool   `yaml:"enabled,omitempty"`
 	ClusterName *string `yaml:"clusterName,omitempty"`
 }
 

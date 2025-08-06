@@ -441,6 +441,9 @@ func TestConvertValuesToListItem(t *testing.T) {
 						},
 						ExcludeIPRanges: strPtr("192.168.0.0/16"),
 					},
+					MultiCluster: &common.IstiodMultiClusterConfig{
+						ClusterName: strPtr("complete-cluster"),
+					},
 				},
 				Pilot: &common.IstiodPilotConfig{
 					ReplicaCount:     int32Ptr(3),
@@ -509,9 +512,6 @@ func TestConvertValuesToListItem(t *testing.T) {
 				IstiodRemote: &common.IstiodRemoteConfig{
 					Enabled:       boolPtr(true),
 					InjectionPath: strPtr("/inject"),
-				},
-				MultiCluster: &common.IstiodMultiClusterConfig{
-					ClusterName: strPtr("complete-cluster"),
 				},
 			},
 			wantErr: false,

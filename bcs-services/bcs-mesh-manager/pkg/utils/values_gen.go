@@ -143,21 +143,20 @@ func GenIstiodValues(
 	}
 	blog.Infof("get istiod values: %s for cluster: %s, mesh: %s, network: %s",
 		values, installOption.PrimaryClusters, installOption.MeshID, installOption.NetworkID)
-	clusterName := strings.ToLower(installOption.PrimaryClusters[0])
 	primaryClusterName := strings.ToLower(installOption.PrimaryClusters[0])
 	installValues := &common.IstiodInstallValues{
 		Global: &common.IstiodGlobalConfig{
 			MeshID:  &installOption.MeshID,
 			Network: &installOption.NetworkID,
 		},
-		MultiCluster: &common.IstiodMultiClusterConfig{
-			ClusterName: &clusterName,
-		},
 	}
 	// 获取安装参数
 	// 主集群
 	if installModel == common.IstioInstallModePrimary {
 		installValues.Global.ExternalIstiod = pointer.Bool(true)
+		installValues.Global.MultiCluster = &common.IstiodMultiClusterConfig{
+			ClusterName: &primaryClusterName,
+		}
 	}
 
 	// 从集群
