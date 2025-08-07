@@ -15,6 +15,7 @@ package cmdb
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"testing"
 
 	bkcmdbkube "configcenter/src/kube/types"
@@ -41,24 +42,12 @@ func init() {
 	//json.Unmarshal(byteValue, BkcmdbSynchronizerOption)
 }
 
-/*
 func getCli() *cmdbClient {
 	return NewCmdbClient(&Options{
 		AppCode:    os.Getenv("TEST_CMDB_BK_APP_CODE"),
 		AppSecret:  os.Getenv("TEST_CMDB_BK_APP_SECRET"),
 		BKUserName: os.Getenv("TEST_CMDB_BK_USERNAME"),
 		Server:     os.Getenv("TEST_CMDB_SERVER"),
-		Debug:      true,
-	})
-}
-*/
-
-func getCli() *cmdbClient {
-	return NewCmdbClient(&Options{
-		AppCode:    "bk-bcs-cmdb-sync",
-		AppSecret:  "QoPPXWdTIxWCfb4KhMqAa99bh9nd30yNMgtj",
-		BKUserName: "haojiefan",
-		Server:     "https://bk-cmdb.apigw.o.woa.com/prod",
 		Debug:      true,
 	})
 }
