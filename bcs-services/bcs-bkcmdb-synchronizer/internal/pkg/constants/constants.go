@@ -10,21 +10,11 @@
  * limitations under the License.
  */
 
-package main
+package constants
 
-import (
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/synchronizer"
+const (
+	// BkTenantIdHeaderKey is the header name of X-Bk-Tenant-Id.
+	BkTenantIdHeaderKey = "X-Bk-Tenant-Id"
+	// DefaultTenantId default tenant id
+	DefaultTenantId = "default"
 )
-
-// Synchronizerd the synchronizer daemon
-func Synchronizerd() {
-	s, err := synchronizer.NewSynchronizer(BkcmdbSynchronizerOption)
-	if err != nil {
-		blog.Errorf("new synchronizer failed, err: %s", err.Error())
-		return
-	}
-	s.Init()
-	s.Run()
-}

@@ -71,12 +71,12 @@ func GetPerms(request *restful.Request, response *restful.Response) {
 	}
 	var result map[string]bool
 	if form.PermCtx == nil || form.PermCtx.ResourceType == "" {
-		result, err = config.GloablIAMClient(utils.GetTenantIDFromContext(request.Request.Context())).
+		result, err = config.GloablIAMClient(utils.GetTenantIDFromAttribute(request)).
 			MultiActionsAllowedWithoutResource(form.ActionIDs, permReq)
 	} else {
 		nodes := make([]iam.ResourceNode, 0)
 		nodes = append(nodes, auth.GetResourceNodeFromPermCtx(form.PermCtx))
-		result, err = config.GloablIAMClient(utils.GetTenantIDFromContext(request.Request.Context())).
+		result, err = config.GloablIAMClient(utils.GetTenantIDFromAttribute(request)).
 			ResourceMultiActionsAllowed(form.ActionIDs, permReq, nodes)
 	}
 	if err != nil {
@@ -132,11 +132,11 @@ func GetPermByActionID(request *restful.Request, response *restful.Response) {
 	var allow bool
 	var applyURL string
 	if form.PermCtx == nil || form.PermCtx.ResourceType == "" {
-		allow, err = config.GloablIAMClient(utils.GetTenantIDFromContext(request.Request.Context())).
+		allow, err = config.GloablIAMClient(utils.GetTenantIDFromAttribute(request)).
 			IsAllowedWithoutResource(actionID, permReq, true)
 	} else {
 		node := auth.GetResourceNodeFromPermCtx(form.PermCtx)
-		allow, err = config.GloablIAMClient(utils.GetTenantIDFromContext(request.Request.Context())).
+		allow, err = config.GloablIAMClient(utils.GetTenantIDFromAttribute(request)).
 			IsAllowedWithResource(actionID, permReq, []iam.ResourceNode{node}, true)
 	}
 	if err != nil {
@@ -147,7 +147,7 @@ func GetPermByActionID(request *restful.Request, response *restful.Response) {
 
 	if !allow {
 		applyURL, err = auth.GetApplyURL(auth.GetApplicationsFromPermCtx(form.PermCtx, actionID),
-			utils.GetTenantIDFromContext(request.Request.Context()))
+			utils.GetTenantIDFromAttribute(request))
 	}
 	if err != nil {
 		msg := fmt.Sprintf("get apply url failed, err %s", err.Error())

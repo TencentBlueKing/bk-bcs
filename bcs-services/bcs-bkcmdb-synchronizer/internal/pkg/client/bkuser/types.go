@@ -10,21 +10,32 @@
  * limitations under the License.
  */
 
-package main
+package bkuser
 
-import (
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+// AuthInfo auth app
+type AuthInfo struct {
+	// BkAppCode bk app code
+	BkAppCode string `json:"bk_app_code"`
+	// BkAppSecret bk app secret
+	BkAppSecret string `json:"bk_app_secret"`
+}
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/synchronizer"
-)
+// Options for client
+type Options struct {
+	AppCode   string
+	AppSecret string
+	Server    string
+	Debug     bool
+}
 
-// Synchronizerd the synchronizer daemon
-func Synchronizerd() {
-	s, err := synchronizer.NewSynchronizer(BkcmdbSynchronizerOption)
-	if err != nil {
-		blog.Errorf("new synchronizer failed, err: %s", err.Error())
-		return
-	}
-	s.Init()
-	s.Run()
+// LookupVirtualUserRsp resp xxx
+type LookupVirtualUserRsp struct {
+	Data []VirtualUserData `json:"data"`
+}
+
+// VirtualUserData virtual user data
+type VirtualUserData struct {
+	BkUsername  string `json:"bk_username"`
+	LoginName   string `json:"login_name"`
+	DisplayName string `json:"display_name"`
 }

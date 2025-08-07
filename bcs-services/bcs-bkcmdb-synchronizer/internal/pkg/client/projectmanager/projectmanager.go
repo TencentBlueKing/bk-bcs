@@ -23,7 +23,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
-	pmp "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
+	// pmp "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
 	cmp "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
 	"github.com/patrickmn/go-cache"
 	"go-micro.dev/v4/registry"
@@ -33,7 +33,10 @@ import (
 	"google.golang.org/grpc/metadata"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/client"
+	icache "github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/client/cache"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/discovery"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/option"
+	pmp "github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/types"
 )
 
 const (
@@ -347,4 +350,70 @@ func NewProjectManagerGrpcGwClient(opts *Options) (pmCli *client.ProjectManagerC
 	}
 	blog.Infof("init project manager client successfully")
 	return pmCli, nil
+}
+
+// GetProjectManagerGrpcGwClient is a function that returns a project manager gRPC gateway client.
+func GetProjectManagerGrpcGwClient() (*client.ProjectManagerClientWithHeader, error) {
+	tlsConfig, err := option.InitTClientTlsConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	// Create a project manager gRPC gateway client configuration with the given options.
+	opts := &Options{
+		Module:          ModuleProjectManager,
+		Address:         option.GetGlobalConfig().Bcsapi.GrpcAddr,
+		EtcdRegistry:    nil,
+		ClientTLSConfig: tlsConfig,
+		AuthToken:       option.GetGlobalConfig().Bcsapi.BearerToken,
+	}
+
+	// Create a new project manager gRPC gateway client with the configuration.
+	pmCli, err := NewProjectManagerGrpcGwClient(opts)
+	if err != nil {
+		return nil, err
+	}
+
+	// Return the project manager gRPC gateway client and any error that occurred.
+	return pmCli, nil
+}
+
+const (
+	// cache key
+	cacheProjectKeyPrefix = "project_%s"
+)
+
+// GetProjectInfo get project detailed info
+func GetProjectInfo(ctx context.Context, projectIdOrCode string, isCache bool) (*pmp.Project, error) {
+	// load project data from cache
+	key := fmt.Sprintf(cacheProjectKeyPrefix, projectIdOrCode)
+	if isCache {
+		v, ok := icache.GetCache().Get(key)
+		if ok {
+			if project, ok := v.(*pmp.Project); ok {
+				return project, nil
+			}
+		}
+	}
+
+	cli, err := GetProjectManagerGrpcGwClient()
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := cli.Cli.GetProject(cli.Ctx, &pmp.GetProjectRequest{ProjectIDOrCode: projectIdOrCode})
+	if err != nil {
+		blog.Errorf("GetProjectInfo[%s] GetProject failed: %v", projectIdOrCode, err)
+		return nil, err
+	}
+	if resp.Code != 0 {
+		blog.Errorf("GetProjectInfo[%s] GetProject err: %v", projectIdOrCode, resp.GetMessage())
+		return nil, errors.New(resp.Message)
+	}
+
+	if isCache {
+		icache.GetCache().Set(key, resp.GetData(), cache.DefaultExpiration)
+	}
+
+	return resp.GetData(), nil
 }

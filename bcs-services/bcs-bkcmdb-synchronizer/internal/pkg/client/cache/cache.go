@@ -10,21 +10,25 @@
  * limitations under the License.
  */
 
-package main
+// Package cache xxx
+package cache
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/synchronizer"
+	"github.com/patrickmn/go-cache"
 )
 
-// Synchronizerd the synchronizer daemon
-func Synchronizerd() {
-	s, err := synchronizer.NewSynchronizer(BkcmdbSynchronizerOption)
-	if err != nil {
-		blog.Errorf("new synchronizer failed, err: %s", err.Error())
-		return
-	}
-	s.Init()
-	s.Run()
+var cacheData *cache.Cache
+
+// InitCache init cache data
+func InitCache() {
+	// Create a cache with a default expiration time of 10 minutes, and which
+	// purges expired items every 1 hour
+	cacheData = cache.New(5*time.Minute, 60*time.Minute)
+}
+
+// GetCache get cache data
+func GetCache() *cache.Cache {
+	return cacheData
 }

@@ -15,6 +15,7 @@
 package syncer
 
 import (
+	"context"
 	"crypto/tls"
 	"encoding/json"
 	"errors"
@@ -26,9 +27,8 @@ import (
 
 	bkcmdbkube "configcenter/src/kube/types" // nolint
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
-	pmp "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
+	//pmp "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
 	cmp "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/storage"
 	gdv1alpha1 "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/storage/tkex/gamedeployment/v1alpha1"
@@ -46,6 +46,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/option"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/store/db/sqlite"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/store/model"
+	pmp "github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/types"
 )
 
 // Syncer the syncer
@@ -69,10 +70,11 @@ func NewSyncer(bkcmdbSynchronizerOption *option.BkcmdbSynchronizerOption) *Synce
 // Init init the synchronizer
 func (s *Syncer) Init() {
 	blog.InitLogs(s.BkcmdbSynchronizerOption.Bcslog)
-	err := s.initTlsConfig()
+	clientTls, err := option.InitTClientTlsConfig()
 	if err != nil {
 		blog.Errorf("init tls config failed, err: %s", err.Error())
 	}
+	s.ClientTls = clientTls
 
 	err = s.initCMDBClient()
 	if err != nil {
@@ -80,29 +82,6 @@ func (s *Syncer) Init() {
 	}
 	bkBizID = s.BkcmdbSynchronizerOption.Synchronizer.BkBizID
 	hostID = s.BkcmdbSynchronizerOption.Synchronizer.HostID
-}
-
-// init Tls Config
-func (s *Syncer) initTlsConfig() error {
-	if len(s.BkcmdbSynchronizerOption.Client.ClientCrt) != 0 &&
-		len(s.BkcmdbSynchronizerOption.Client.ClientKey) != 0 &&
-		len(s.BkcmdbSynchronizerOption.Client.ClientCa) != 0 {
-		tlsConfig, err := ssl.ClientTslConfVerity(
-			s.BkcmdbSynchronizerOption.Client.ClientCa,
-			s.BkcmdbSynchronizerOption.Client.ClientCrt,
-			s.BkcmdbSynchronizerOption.Client.ClientKey,
-			s.BkcmdbSynchronizerOption.Client.ClientCrtPwd,
-		)
-		// static.ClientCertPwd)
-		if err != nil {
-			blog.Errorf("init tls config failed, err: %s", err.Error())
-			return err
-		}
-		s.ClientTls = tlsConfig
-		blog.Infof("init tls config success")
-
-	}
-	return nil
 }
 
 // init CMDB Client
@@ -126,8 +105,46 @@ func (s *Syncer) initCMDBClient() error {
 	return nil
 }
 
+// GetBcsStorageClient is a function that returns a BCS storage client.
+func (s *Syncer) GetBcsStorageClient() (bcsapi.Storage, error) {
+	// Create a BCS API configuration with the given options.
+	config := &bcsapi.Config{
+		Hosts:     []string{s.BkcmdbSynchronizerOption.Bcsapi.HttpAddr},
+		AuthToken: s.BkcmdbSynchronizerOption.Bcsapi.BearerToken,
+		TLSConfig: s.ClientTls,
+		Gateway:   strings.Contains(s.BkcmdbSynchronizerOption.Bcsapi.HttpAddr, "gateway"),
+	}
+
+	// Create a new BCS storage client with the configuration.
+	cli := bsc.NewStorageClient(config)
+
+	// Get the storage client from the BCS storage client.
+	storageCli, err := cli.GetStorageClient()
+
+	// Return the storage client and any error that occurred.
+	return storageCli, err
+}
+
+// GetProjectManagerGrpcGwClient is a function that returns a project manager gRPC gateway client.
+func (s *Syncer) GetProjectManagerGrpcGwClient() (pmCli *client.ProjectManagerClientWithHeader, err error) {
+	// Create a project manager gRPC gateway client configuration with the given options.
+	opts := &pm.Options{
+		Module:          pm.ModuleProjectManager,
+		Address:         s.BkcmdbSynchronizerOption.Bcsapi.GrpcAddr,
+		EtcdRegistry:    nil,
+		ClientTLSConfig: s.ClientTls,
+		AuthToken:       s.BkcmdbSynchronizerOption.Bcsapi.BearerToken,
+	}
+
+	// Create a new project manager gRPC gateway client with the configuration.
+	pmCli, err = pm.NewProjectManagerGrpcGwClient(opts)
+
+	// Return the project manager gRPC gateway client and any error that occurred.
+	return pmCli, err
+}
+
 // SyncCluster  sync cluster
-func (s *Syncer) SyncCluster(cluster *cmp.Cluster) error {
+func (s *Syncer) SyncCluster(ctx context.Context, cluster *cmp.Cluster) error {
 	blog.Infof("sync cluster: %s", cluster.ClusterID)
 	clusterNetwork := make([]string, 0)
 	if cluster.NetworkSettings != nil {
@@ -135,7 +152,7 @@ func (s *Syncer) SyncCluster(cluster *cmp.Cluster) error {
 		clusterNetwork = append(clusterNetwork, cluster.NetworkSettings.ServiceIPv4CIDR)
 		clusterNetwork = append(clusterNetwork, cluster.NetworkSettings.MultiClusterCIDR...)
 	}
-	bkCluster, err := s.GetBkCluster(cluster, nil, false)
+	bkCluster, err := s.GetBkCluster(ctx, cluster, nil, false)
 	clusterType := "INDEPENDENT_CLUSTER"
 	if cluster.IsShared {
 		clusterType = "SHARE_CLUSTER"
@@ -161,7 +178,7 @@ func (s *Syncer) SyncCluster(cluster *cmp.Cluster) error {
 				clusterBkBizID = bkBizID
 			}
 			// CreateBcsCluster creates a new BCS cluster with the given request.
-			_, err = s.CMDBClient.CreateBcsCluster(&client.CreateBcsClusterRequest{
+			_, err = s.CMDBClient.CreateBcsCluster(ctx, &client.CreateBcsClusterRequest{
 				BKBizID:          &clusterBkBizID,
 				Name:             &cluster.ClusterName,
 				SchedulingEngine: &cluster.EngineType,
@@ -186,7 +203,7 @@ func (s *Syncer) SyncCluster(cluster *cmp.Cluster) error {
 	blog.Infof("get bcs cluster success, cluster: %v", bkCluster)
 	if bkCluster != nil {
 		// UpdateBcsCluster updates the BCS cluster with the given request.
-		err = s.CMDBClient.UpdateBcsCluster(&client.UpdateBcsClusterRequest{
+		err = s.CMDBClient.UpdateBcsCluster(ctx, &client.UpdateBcsClusterRequest{
 			BKBizID: &bkCluster.BizID,
 			IDs:     &[]int64{bkCluster.ID},
 			Data: &client.UpdateBcsClusterRequestData{
@@ -203,7 +220,7 @@ func (s *Syncer) SyncCluster(cluster *cmp.Cluster) error {
 		}
 		if *bkCluster.Type != clusterType {
 			// UpdateBcsClusterType updates the BCS cluster type with the given request.
-			err = s.CMDBClient.UpdateBcsClusterType(&client.UpdateBcsClusterTypeRequest{
+			err = s.CMDBClient.UpdateBcsClusterType(ctx, &client.UpdateBcsClusterTypeRequest{
 				BKBizID: &bkCluster.BizID,
 				ID:      &bkCluster.ID,
 				Type:    &clusterType,
@@ -217,7 +234,7 @@ func (s *Syncer) SyncCluster(cluster *cmp.Cluster) error {
 }
 
 // SyncNodes sync nodes
-func (s *Syncer) SyncNodes(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
+func (s *Syncer) SyncNodes(ctx context.Context, cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
 	// GetBcsStorageClient is a function that returns a BCS storage client.
 	storageCli, err := s.GetBcsStorageClient()
 	if err != nil {
@@ -232,7 +249,7 @@ func (s *Syncer) SyncNodes(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster, 
 	blog.Infof("query k8s node success, nodes: %v", nodeList)
 
 	// GetBkNodes get bknodes
-	bkNodeList, err := s.GetBkNodes(bkCluster.BizID, &client.PropertyFilter{
+	bkNodeList, err := s.GetBkNodes(ctx, bkCluster.BizID, &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
 			{
@@ -278,7 +295,7 @@ func (s *Syncer) SyncNodes(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster, 
 			}
 		} else {
 			// GenerateBkNodeData generate bknode data from k8snode
-			nodeData, errN := s.GenerateBkNodeData(bkCluster, v)
+			nodeData, errN := s.GenerateBkNodeData(ctx, bkCluster, v)
 			if errN == nil {
 				nodeToAdd = append(nodeToAdd, nodeData)
 				blog.Infof("nodeToAdd: %s+%s", bkCluster.Uid, v.Data.Name)
@@ -287,9 +304,9 @@ func (s *Syncer) SyncNodes(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster, 
 		}
 	}
 
-	s.CreateBkNodes(bkCluster, &nodeToAdd, db)
-	s.DeleteBkNodes(bkCluster, &nodeToDelete, db) // nolint  not checked
-	s.UpdateBkNodes(bkCluster, &nodeToUpdate, db)
+	s.CreateBkNodes(ctx, bkCluster, &nodeToAdd, db)
+	s.DeleteBkNodes(ctx, bkCluster, &nodeToDelete, db) // nolint  not checked
+	s.UpdateBkNodes(ctx, bkCluster, &nodeToUpdate, db)
 
 	return err
 }
@@ -325,7 +342,7 @@ func (s *Syncer) getBizidByProjectCode(projectCode string) (int64, error) {
 
 // SyncNamespaces sync namespaces
 // nolint funlen
-func (s *Syncer) SyncNamespaces(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
+func (s *Syncer) SyncNamespaces(ctx context.Context, cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
 	// GetBcsStorageClient is a function that returns a BCS storage client.
 	storageCli, err := s.GetBcsStorageClient()
 	if err != nil {
@@ -342,7 +359,7 @@ func (s *Syncer) SyncNamespaces(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Clus
 	blog.Infof("query k8s namespace success, namespaces: %v", nsList)
 
 	// GetBkNamespaces get bknamespaces
-	bkNamespaceList, err := s.GetBkNamespaces(bkCluster.BizID, &client.PropertyFilter{
+	bkNamespaceList, err := s.GetBkNamespaces(ctx, bkCluster.BizID, &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
 			{
@@ -391,7 +408,7 @@ func (s *Syncer) SyncNamespaces(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Clus
 
 		if _, ok := bkNsMap[k]; ok {
 			if bkNsMap[k].BizID != nsbizid {
-				err = s.DeleteAllByClusterAndNamespace(bkCluster, bkNsMap[k], db)
+				err = s.DeleteAllByClusterAndNamespace(ctx, bkCluster, bkNsMap[k], db)
 				if err != nil {
 					blog.Errorf("delete namespace error: %v", err)
 					continue
@@ -422,47 +439,48 @@ func (s *Syncer) SyncNamespaces(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Clus
 		}
 	}
 
-	s.DeleteBkNamespaces(bkCluster, &nsToDelete, db) // nolint  not checked
-	s.CreateBkNamespaces(bkCluster, nsToAdd, db)
-	s.UpdateBkNamespaces(bkCluster, &nsToUpdate, db)
+	s.DeleteBkNamespaces(ctx, bkCluster, &nsToDelete, db) // nolint  not checked
+	s.CreateBkNamespaces(ctx, bkCluster, nsToAdd, db)
+	s.UpdateBkNamespaces(ctx, bkCluster, &nsToUpdate, db)
 
 	return nil
 }
 
 // SyncWorkloads sync workloads
-func (s *Syncer) SyncWorkloads(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
+func (s *Syncer) SyncWorkloads(ctx context.Context,
+	cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
 	// syncDeployments sync deployments
-	err := s.syncDeployments(cluster, bkCluster, db)
+	err := s.syncDeployments(ctx, cluster, bkCluster, db)
 	if err != nil {
 		blog.Errorf("sync deployment failed, err: %s", err.Error())
 	}
 
 	// syncStatefulSets sync statefulsets
-	err = s.syncStatefulSets(cluster, bkCluster, db)
+	err = s.syncStatefulSets(ctx, cluster, bkCluster, db)
 	if err != nil {
 		blog.Errorf("sync statefulset failed, err: %s", err.Error())
 	}
 
 	// syncDaemonSets sync daemonsets
-	err = s.syncDaemonSets(cluster, bkCluster, db)
+	err = s.syncDaemonSets(ctx, cluster, bkCluster, db)
 	if err != nil {
 		blog.Errorf("sync daemonset failed, err: %s", err.Error())
 	}
 
 	// syncGameDeployments sync gamedeployments
-	err = s.syncGameDeployments(cluster, bkCluster, db)
+	err = s.syncGameDeployments(ctx, cluster, bkCluster, db)
 	if err != nil {
 		blog.Errorf("sync gamedeployment failed, err: %s", err.Error())
 	}
 
 	// syncGameStatefulSets sync gamestatefulsets
-	err = s.syncGameStatefulSets(cluster, bkCluster, db)
+	err = s.syncGameStatefulSets(ctx, cluster, bkCluster, db)
 	if err != nil {
 		blog.Errorf("sync gamestatefulset failed, err: %s", err.Error())
 	}
 
 	// syncWorkloadPods sync workloadPods
-	err = s.syncWorkloadPods(cluster, bkCluster, db)
+	err = s.syncWorkloadPods(ctx, cluster, bkCluster, db)
 	if err != nil {
 		blog.Errorf("sync workload pods failed, err: %s", err.Error())
 	}
@@ -472,7 +490,7 @@ func (s *Syncer) SyncWorkloads(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Clust
 
 // syncDeployments sync deployments
 // nolint funlen
-func (s *Syncer) syncDeployments(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
+func (s *Syncer) syncDeployments(ctx context.Context, cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
 	kind := "deployment"
 	// GetBcsStorageClient is a function that returns a BCS storage client.
 	storageCli, err := s.GetBcsStorageClient()
@@ -481,7 +499,7 @@ func (s *Syncer) syncDeployments(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Clu
 	}
 
 	// GetBkNamespaces get bknamespaces
-	bkNamespaceList, err := s.GetBkNamespaces(bkCluster.BizID, &client.PropertyFilter{
+	bkNamespaceList, err := s.GetBkNamespaces(ctx, bkCluster.BizID, &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
 			{
@@ -517,7 +535,7 @@ func (s *Syncer) syncDeployments(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Clu
 	blog.Infof("query k8s deployment success, deployments: %v", deploymentList)
 
 	// GetBkWorkloads get bkworkloads
-	bkDeployments, err := s.GetBkWorkloads(bkCluster.BizID, "deployment", &client.PropertyFilter{
+	bkDeployments, err := s.GetBkWorkloads(ctx, bkCluster.BizID, "deployment", &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
 			{
@@ -587,16 +605,16 @@ func (s *Syncer) syncDeployments(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Clu
 		}
 	}
 
-	s.DeleteBkWorkloads(bkCluster, kind, &deploymentToDelete, db) // nolint  not checked
-	s.CreateBkWorkloads(bkCluster, kind, deploymentToAdd, db)
-	s.UpdateBkWorkloads(bkCluster, kind, &deploymentToUpdate, db)
+	s.DeleteBkWorkloads(ctx, bkCluster, kind, &deploymentToDelete, db) // nolint  not checked
+	s.CreateBkWorkloads(ctx, bkCluster, kind, deploymentToAdd, db)
+	s.UpdateBkWorkloads(ctx, bkCluster, kind, &deploymentToUpdate, db)
 
 	return nil
 }
 
 // syncStatefulSets sync statefulsets
 // nolint funlen
-func (s *Syncer) syncStatefulSets(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
+func (s *Syncer) syncStatefulSets(ctx context.Context, cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
 	kind := "statefulSet"
 	// GetBcsStorageClient is a function that returns a BCS storage client.
 	storageCli, err := s.GetBcsStorageClient()
@@ -605,7 +623,7 @@ func (s *Syncer) syncStatefulSets(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cl
 	}
 
 	// GetBkNamespaces get bknamespaces
-	bkNamespaceList, err := s.GetBkNamespaces(bkCluster.BizID, &client.PropertyFilter{
+	bkNamespaceList, err := s.GetBkNamespaces(ctx, bkCluster.BizID, &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
 			{
@@ -640,7 +658,7 @@ func (s *Syncer) syncStatefulSets(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cl
 	blog.Infof("get statefulset list success, len: %d", len(statefulSetList))
 
 	// GetBkWorkloads get bkworkloads
-	bkStatefulSets, err := s.GetBkWorkloads(bkCluster.BizID, "statefulSet", &client.PropertyFilter{
+	bkStatefulSets, err := s.GetBkWorkloads(ctx, bkCluster.BizID, "statefulSet", &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
 			{
@@ -708,16 +726,16 @@ func (s *Syncer) syncStatefulSets(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cl
 		}
 	}
 
-	s.DeleteBkWorkloads(bkCluster, kind, &statefulSetToDelete, db) // nolint  not checked
-	s.CreateBkWorkloads(bkCluster, kind, statefulSetToAdd, db)
-	s.UpdateBkWorkloads(bkCluster, kind, &statefulSetToUpdate, db)
+	s.DeleteBkWorkloads(ctx, bkCluster, kind, &statefulSetToDelete, db) // nolint  not checked
+	s.CreateBkWorkloads(ctx, bkCluster, kind, statefulSetToAdd, db)
+	s.UpdateBkWorkloads(ctx, bkCluster, kind, &statefulSetToUpdate, db)
 
 	return nil
 }
 
 // syncDaemonSets sync daemonsets
 // nolint funlen
-func (s *Syncer) syncDaemonSets(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
+func (s *Syncer) syncDaemonSets(ctx context.Context, cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
 	kind := "daemonSet"
 	// GetBcsStorageClient is a function that returns a BCS storage client.
 	storageCli, err := s.GetBcsStorageClient()
@@ -726,7 +744,7 @@ func (s *Syncer) syncDaemonSets(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Clus
 	}
 
 	// GetBkNamespaces get bknamespaces
-	bkNamespaceList, err := s.GetBkNamespaces(bkCluster.BizID, &client.PropertyFilter{
+	bkNamespaceList, err := s.GetBkNamespaces(ctx, bkCluster.BizID, &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
 			{
@@ -763,7 +781,7 @@ func (s *Syncer) syncDaemonSets(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Clus
 	blog.Infof("get daemonset list success, len: %d", len(daemonSetList))
 
 	// 获取bk的daemonSet列表
-	bkDaemonSets, err := s.GetBkWorkloads(bkCluster.BizID, "daemonSet", &client.PropertyFilter{
+	bkDaemonSets, err := s.GetBkWorkloads(ctx, bkCluster.BizID, "daemonSet", &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
 			{
@@ -842,16 +860,16 @@ func (s *Syncer) syncDaemonSets(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Clus
 	}
 
 	// 执行删除、添加、更新操作
-	s.DeleteBkWorkloads(bkCluster, kind, &daemonSetToDelete, db) // nolint  not checked
-	s.CreateBkWorkloads(bkCluster, kind, daemonSetToAdd, db)
-	s.UpdateBkWorkloads(bkCluster, kind, &daemonSetToUpdate, db)
+	s.DeleteBkWorkloads(ctx, bkCluster, kind, &daemonSetToDelete, db) // nolint  not checked
+	s.CreateBkWorkloads(ctx, bkCluster, kind, daemonSetToAdd, db)
+	s.UpdateBkWorkloads(ctx, bkCluster, kind, &daemonSetToUpdate, db)
 
 	return nil
 }
 
 // syncGameDeployments sync gamedeployments
 // nolint funlen
-func (s *Syncer) syncGameDeployments(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
+func (s *Syncer) syncGameDeployments(ctx context.Context, cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
 	kind := "gameDeployment"                   // 定义资源类型为游戏部署
 	storageCli, err := s.GetBcsStorageClient() // 获取Bcs存储客户端
 	if err != nil {
@@ -859,7 +877,7 @@ func (s *Syncer) syncGameDeployments(cluster *cmp.Cluster, bkCluster *bkcmdbkube
 	}
 
 	// 获取bk命名空间列表
-	bkNamespaceList, err := s.GetBkNamespaces(bkCluster.BizID, &client.PropertyFilter{
+	bkNamespaceList, err := s.GetBkNamespaces(ctx, bkCluster.BizID, &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
 			{
@@ -895,7 +913,7 @@ func (s *Syncer) syncGameDeployments(cluster *cmp.Cluster, bkCluster *bkcmdbkube
 	blog.Infof("game deployment list: %v", gameDeploymentList)
 
 	// 获取bk游戏部署列表
-	bkGameDeployments, err := s.GetBkWorkloads(bkCluster.BizID, "gameDeployment", &client.PropertyFilter{
+	bkGameDeployments, err := s.GetBkWorkloads(ctx, bkCluster.BizID, "gameDeployment", &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
 			{
@@ -971,16 +989,16 @@ func (s *Syncer) syncGameDeployments(cluster *cmp.Cluster, bkCluster *bkcmdbkube
 	}
 
 	// 执行删除、添加、更新操作
-	s.DeleteBkWorkloads(bkCluster, kind, &gameDeploymentToDelete, db) // nolint  not checked
-	s.CreateBkWorkloads(bkCluster, kind, gameDeploymentToAdd, db)
-	s.UpdateBkWorkloads(bkCluster, kind, &gameDeploymentToUpdate, db)
+	s.DeleteBkWorkloads(ctx, bkCluster, kind, &gameDeploymentToDelete, db) // nolint  not checked
+	s.CreateBkWorkloads(ctx, bkCluster, kind, gameDeploymentToAdd, db)
+	s.UpdateBkWorkloads(ctx, bkCluster, kind, &gameDeploymentToUpdate, db)
 
 	return nil
 }
 
 // syncGameStatefulSets sync gamestatefulsets
 // nolint funlen
-func (s *Syncer) syncGameStatefulSets(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
+func (s *Syncer) syncGameStatefulSets(ctx context.Context, cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
 	kind := "gameStatefulSet"                  // 定义资源类型为游戏状态集
 	storageCli, err := s.GetBcsStorageClient() // 获取Bcs存储客户端
 	if err != nil {
@@ -988,7 +1006,7 @@ func (s *Syncer) syncGameStatefulSets(cluster *cmp.Cluster, bkCluster *bkcmdbkub
 	}
 
 	// 获取bk命名空间列表
-	bkNamespaceList, err := s.GetBkNamespaces(bkCluster.BizID, &client.PropertyFilter{
+	bkNamespaceList, err := s.GetBkNamespaces(ctx, bkCluster.BizID, &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
 			{
@@ -1025,7 +1043,7 @@ func (s *Syncer) syncGameStatefulSets(cluster *cmp.Cluster, bkCluster *bkcmdbkub
 
 	// 从bk获取游戏状态集列表
 	bkGameStatefulSets, err :=
-		s.GetBkWorkloads(bkCluster.BizID, "gameStatefulSet", &client.PropertyFilter{
+		s.GetBkWorkloads(ctx, bkCluster.BizID, "gameStatefulSet", &client.PropertyFilter{
 			Condition: "AND",
 			Rules: []client.Rule{
 				{
@@ -1103,20 +1121,20 @@ func (s *Syncer) syncGameStatefulSets(cluster *cmp.Cluster, bkCluster *bkcmdbkub
 	}
 
 	// 执行删除、添加、更新操作
-	s.DeleteBkWorkloads(bkCluster, kind, &gameStatefulSetToDelete, db) // nolint  not checked
-	s.CreateBkWorkloads(bkCluster, kind, gameStatefulSetToAdd, db)
-	s.UpdateBkWorkloads(bkCluster, kind, &gameStatefulSetToUpdate, db)
+	s.DeleteBkWorkloads(ctx, bkCluster, kind, &gameStatefulSetToDelete, db) // nolint  not checked
+	s.CreateBkWorkloads(ctx, bkCluster, kind, gameStatefulSetToAdd, db)
+	s.UpdateBkWorkloads(ctx, bkCluster, kind, &gameStatefulSetToUpdate, db)
 
 	return nil
 }
 
 // syncWorkloadPods sync workloadPods
 // nolint
-func (s *Syncer) syncWorkloadPods(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
+func (s *Syncer) syncWorkloadPods(ctx context.Context, cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
 	kind := "pods" // nolint
 
 	// 获取bk集群中的命名空间列表
-	bkNamespaceList, err := s.GetBkNamespaces(bkCluster.BizID, &client.PropertyFilter{
+	bkNamespaceList, err := s.GetBkNamespaces(ctx, bkCluster.BizID, &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
 			{
@@ -1141,7 +1159,7 @@ func (s *Syncer) syncWorkloadPods(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cl
 	bkWorkloadPodsList := make([]bkcmdbkube.PodsWorkload, 0)
 
 	// 获取bk集群中的工作负载Pods
-	bkWorkloadPods, err := s.GetBkWorkloads(bkCluster.BizID, "pods", &client.PropertyFilter{
+	bkWorkloadPods, err := s.GetBkWorkloads(ctx, bkCluster.BizID, "pods", &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
 			{
@@ -1202,21 +1220,21 @@ func (s *Syncer) syncWorkloadPods(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cl
 	}
 
 	// 删除不需要的Pods工作负载
-	s.DeleteBkWorkloads(bkCluster, kind, &workloadPodsToDelete, db) // nolint  not checked
+	s.DeleteBkWorkloads(ctx, bkCluster, kind, &workloadPodsToDelete, db) // nolint  not checked
 	// 添加新的Pods工作负载
-	s.CreateBkWorkloads(bkCluster, kind, workloadPodsToAdd, db)
+	s.CreateBkWorkloads(ctx, bkCluster, kind, workloadPodsToAdd, db)
 	// 更新已有的Pods工作负载
-	s.UpdateBkWorkloads(bkCluster, kind, &workloadPodsToUpdate, db)
+	s.UpdateBkWorkloads(ctx, bkCluster, kind, &workloadPodsToUpdate, db)
 
 	return nil
 }
 
 // nolint
 // getBkNsMap 获取与特定集群关联的所有命名空间的映射
-func (s *Syncer) getBkNsMap(
+func (s *Syncer) getBkNsMap(ctx context.Context,
 	cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) (map[string]*bkcmdbkube.Namespace, error) {
 	// 调用GetBkNamespaces方法获取与bkCluster.Uid关联的命名空间列表
-	bkNamespaceList, err := s.GetBkNamespaces(bkCluster.BizID, &client.PropertyFilter{
+	bkNamespaceList, err := s.GetBkNamespaces(ctx, bkCluster.BizID, &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
 			{
@@ -1245,14 +1263,14 @@ func (s *Syncer) getBkNsMap(
 
 // nolint
 // getBkDeploymentMap 获取与特定集群相关的部署信息的映射
-func (s *Syncer) getBkDeploymentMap(
+func (s *Syncer) getBkDeploymentMap(ctx context.Context,
 	cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) (map[string]*bkcmdbkube.Deployment, error) {
 
 	// 初始化一个空的部署列表
 	bkDeploymentList := make([]bkcmdbkube.Deployment, 0)
 
 	// 调用GetBkWorkloads函数获取特定业务ID和集群UID下的部署列表
-	bkDeployments, err := s.GetBkWorkloads(bkCluster.BizID, "deployment", &client.PropertyFilter{
+	bkDeployments, err := s.GetBkWorkloads(ctx, bkCluster.BizID, "deployment", &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
 			{
@@ -1303,13 +1321,13 @@ func (s *Syncer) getBkDeploymentMap(
 //
 //	map[string]*bkcmdbkube.StatefulSet: StatefulSet对象的map，键为命名空间+名称
 //	error: 如果发生错误，返回错误信息
-func (s *Syncer) getBkStatefulSetMap(
+func (s *Syncer) getBkStatefulSetMap(ctx context.Context,
 	cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) (map[string]*bkcmdbkube.StatefulSet, error) {
 	// 初始化StatefulSet列表
 	bkStatefulSetList := make([]bkcmdbkube.StatefulSet, 0)
 
 	// 调用GetBkWorkloads方法获取StatefulSet列表
-	bkStatefulSets, err := s.GetBkWorkloads(bkCluster.BizID, "statefulSet", &client.PropertyFilter{
+	bkStatefulSets, err := s.GetBkWorkloads(ctx, bkCluster.BizID, "statefulSet", &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
 			{
@@ -1351,13 +1369,13 @@ func (s *Syncer) getBkStatefulSetMap(
 
 // nolint
 // getBkDaemonSetMap 获取指定集群的DaemonSet映射
-func (s *Syncer) getBkDaemonSetMap(
+func (s *Syncer) getBkDaemonSetMap(ctx context.Context,
 	cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) (map[string]*bkcmdbkube.DaemonSet, error) {
 	// 初始化DaemonSet列表
 	bkDaemonSetList := make([]bkcmdbkube.DaemonSet, 0)
 
 	// 调用GetBkWorkloads方法获取DaemonSet列表
-	bkDaemonSets, err := s.GetBkWorkloads(bkCluster.BizID, "daemonSet", &client.PropertyFilter{
+	bkDaemonSets, err := s.GetBkWorkloads(ctx, bkCluster.BizID, "daemonSet", &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
 			{
@@ -1399,7 +1417,7 @@ func (s *Syncer) getBkDaemonSetMap(
 
 // nolint
 // getBkGameDeploymentMap 获取与特定集群相关的游戏部署映射
-func (s *Syncer) getBkGameDeploymentMap(
+func (s *Syncer) getBkGameDeploymentMap(ctx context.Context,
 	cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) (map[string]*bkcmdbkube.GameDeployment, error) {
 
 	// 初始化游戏部署列表
@@ -1407,7 +1425,7 @@ func (s *Syncer) getBkGameDeploymentMap(
 
 	// 调用GetBkWorkloads方法获取特定业务ID和类型为"gameDeployment"的工作负载列表，
 	// 并且过滤条件是集群UID匹配
-	bkGameDeployments, err := s.GetBkWorkloads(bkCluster.BizID, "gameDeployment", &client.PropertyFilter{
+	bkGameDeployments, err := s.GetBkWorkloads(ctx, bkCluster.BizID, "gameDeployment", &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
 			{
@@ -1461,7 +1479,7 @@ func (s *Syncer) getBkGameDeploymentMap(
 //
 //	map[string]*bkcmdbkube.GameStatefulSet: 游戏有状态集的映射，键为命名空间加名称
 //	error: 如果操作过程中发生错误，则返回错误信息
-func (s *Syncer) getBkGameStatefulSetMap(
+func (s *Syncer) getBkGameStatefulSetMap(ctx context.Context,
 	cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) (map[string]*bkcmdbkube.GameStatefulSet, error) {
 	// 初始化一个空的GameStatefulSet列表
 	bkGameStatefulSetList := make([]bkcmdbkube.GameStatefulSet, 0)
@@ -1469,7 +1487,7 @@ func (s *Syncer) getBkGameStatefulSetMap(
 	// 调用GetBkWorkloads方法获取bkcmdbkube中的GameStatefulSet列表
 	// 参数包括业务ID、资源类型、过滤条件等
 	bkGameStatefulSets, err :=
-		s.GetBkWorkloads(bkCluster.BizID, "gameStatefulSet", &client.PropertyFilter{
+		s.GetBkWorkloads(ctx, bkCluster.BizID, "gameStatefulSet", &client.PropertyFilter{
 			Condition: "AND",
 			Rules: []client.Rule{
 				{
@@ -1513,9 +1531,9 @@ func (s *Syncer) getBkGameStatefulSetMap(
 }
 
 // nolint
-func (s *Syncer) getBkNodeMap(
+func (s *Syncer) getBkNodeMap(ctx context.Context,
 	cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) (map[string]*bkcmdbkube.Node, error) {
-	bkNodeList, err := s.GetBkNodes(bkCluster.BizID, &client.PropertyFilter{
+	bkNodeList, err := s.GetBkNodes(ctx, bkCluster.BizID, &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
 			{
@@ -1538,10 +1556,10 @@ func (s *Syncer) getBkNodeMap(
 }
 
 // nolint
-func (s *Syncer) getBkWorkloadPods(
+func (s *Syncer) getBkWorkloadPods(ctx context.Context,
 	cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster,
 	pod *storage.Pod, db *gorm.DB) (*bkcmdbkube.PodsWorkload, error) {
-	bkWorkloadPods, err := s.GetBkWorkloads(bkCluster.BizID, "pods", &client.PropertyFilter{
+	bkWorkloadPods, err := s.GetBkWorkloads(ctx, bkCluster.BizID, "pods", &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
 			{
@@ -1705,13 +1723,13 @@ func (s *Syncer) getPodWordloadInfo(
 
 // SyncPods sync pods
 // nolint
-func (s *Syncer) SyncPods(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
+func (s *Syncer) SyncPods(ctx context.Context, cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
 	storageCli, err := s.GetBcsStorageClient()
 	if err != nil {
 		blog.Errorf("get bcs storage client failed, err: %s", err.Error())
 	}
 
-	bkNsMap, err := s.getBkNsMap(cluster, bkCluster, db)
+	bkNsMap, err := s.getBkNsMap(ctx, cluster, bkCluster, db)
 	if err != nil {
 		return err
 	}
@@ -1727,39 +1745,39 @@ func (s *Syncer) SyncPods(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster, d
 		podList = append(podList, pods...)
 	}
 
-	bkDeploymentMap, err := s.getBkDeploymentMap(cluster, bkCluster, db)
+	bkDeploymentMap, err := s.getBkDeploymentMap(ctx, cluster, bkCluster, db)
 	if err != nil {
 		return err
 	}
 
-	bkStatefulSetMap, err := s.getBkStatefulSetMap(cluster, bkCluster, db)
+	bkStatefulSetMap, err := s.getBkStatefulSetMap(ctx, cluster, bkCluster, db)
 	if err != nil {
 		return err
 	}
 
-	bkDaemonSetMap, err := s.getBkDaemonSetMap(cluster, bkCluster, db)
+	bkDaemonSetMap, err := s.getBkDaemonSetMap(ctx, cluster, bkCluster, db)
 	if err != nil {
 		return err
 	}
 
-	bkGameDeploymentMap, err := s.getBkGameDeploymentMap(cluster, bkCluster, db)
+	bkGameDeploymentMap, err := s.getBkGameDeploymentMap(ctx, cluster, bkCluster, db)
 	if err != nil {
 		return err
 	}
 
-	bkGameStatefulSetMap, err := s.getBkGameStatefulSetMap(cluster, bkCluster, db)
+	bkGameStatefulSetMap, err := s.getBkGameStatefulSetMap(ctx, cluster, bkCluster, db)
 	if err != nil {
 		return err
 	}
 
-	bkNodeMap, err := s.getBkNodeMap(cluster, bkCluster, db)
+	bkNodeMap, err := s.getBkNodeMap(ctx, cluster, bkCluster, db)
 	if err != nil {
 		return err
 	}
 
 	blog.Infof("query k8s pod success, pods: %v", podList)
 
-	bkPodList, err := s.GetBkPods(bkCluster.BizID, &client.PropertyFilter{
+	bkPodList, err := s.GetBkPods(ctx, bkCluster.BizID, &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
 			{
@@ -1792,7 +1810,7 @@ func (s *Syncer) SyncPods(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster, d
 			podToDelete = append(podToDelete, v.ID)
 			blog.Infof("podToDelete: %s+%s", v.NameSpace, *v.Name)
 		} else {
-			if s.ComparePod(&v, podMap[v.NameSpace+*v.Name], db) {
+			if s.ComparePod(ctx, &v, podMap[v.NameSpace+*v.Name], db) {
 				podToDelete = append(podToDelete, v.ID)
 				blog.Infof("podToDelete: %s+%s", v.NameSpace, *v.Name)
 				delete(bkPodMap, v.NameSpace+*v.Name)
@@ -1800,7 +1818,7 @@ func (s *Syncer) SyncPods(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster, d
 		}
 	}
 
-	s.syncPodsCheck(podMap, bkPodMap,
+	s.syncPodsCheck(ctx, podMap, bkPodMap,
 		bkDeploymentMap, bkStatefulSetMap,
 		bkDaemonSetMap, bkGameDeploymentMap,
 		bkGameStatefulSetMap, bkNsMap,
@@ -1809,14 +1827,14 @@ func (s *Syncer) SyncPods(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster, d
 		bkCluster, db, storageCli)
 
 	//blog.Infof("podToDelete: %v", podToDelete)
-	s.DeleteBkPods(bkCluster, &podToDelete, db) // nolint  not checked
-	s.CreateBkPods(bkCluster, podToAdd, db)
+	s.DeleteBkPods(ctx, bkCluster, &podToDelete, db) // nolint  not checked
+	s.CreateBkPods(ctx, bkCluster, podToAdd, db)
 
 	return err
 }
 
 // nolint
-func (s *Syncer) syncPodsCheck(podMap map[string]*storage.Pod, bkPodMap map[string]*bkcmdbkube.Pod,
+func (s *Syncer) syncPodsCheck(ctx context.Context, podMap map[string]*storage.Pod, bkPodMap map[string]*bkcmdbkube.Pod,
 	bkDeploymentMap map[string]*bkcmdbkube.Deployment, bkStatefulSetMap map[string]*bkcmdbkube.StatefulSet,
 	bkDaemonSetMap map[string]*bkcmdbkube.DaemonSet, bkGameDeploymentMap map[string]*bkcmdbkube.GameDeployment,
 	bkGameStatefulSetMap map[string]*bkcmdbkube.GameStatefulSet, bkNsMap map[string]*bkcmdbkube.Namespace,
@@ -1830,7 +1848,7 @@ func (s *Syncer) syncPodsCheck(podMap map[string]*storage.Pod, bkPodMap map[stri
 			if v.Data.Status.Phase != corev1.PodRunning {
 				continue
 			}
-			bkWorkloadPods, podsErr := s.getBkWorkloadPods(cluster, bkCluster, v, db)
+			bkWorkloadPods, podsErr := s.getBkWorkloadPods(ctx, cluster, bkCluster, v, db)
 			if podsErr != nil {
 				continue
 			}
@@ -1986,7 +2004,7 @@ func (s *Syncer) syncPodsCheck(podMap map[string]*storage.Pod, bkPodMap map[stri
 }
 
 // SyncStore sync store
-func (s *Syncer) SyncStore(bkCluster *bkcmdbkube.Cluster, force bool) error {
+func (s *Syncer) SyncStore(ctx context.Context, bkCluster *bkcmdbkube.Cluster, force bool) error {
 	path := "/data/bcs/bcs-bkcmdb-synchronizer/db/" + bkCluster.Uid + ".db"
 
 	db := sqlite.Open(path)
@@ -1996,7 +2014,7 @@ func (s *Syncer) SyncStore(bkCluster *bkcmdbkube.Cluster, force bool) error {
 	}
 	s.SyncStoreMigrate(db)
 
-	err := s.SyncStoreNode(bkCluster, db)
+	err := s.SyncStoreNode(ctx, bkCluster, db)
 	if err != nil {
 		blog.Errorf("sync store node failed, err: %s", err.Error())
 	}
@@ -2008,32 +2026,32 @@ func (s *Syncer) SyncStore(bkCluster *bkcmdbkube.Cluster, force bool) error {
 		}
 	}
 
-	err = s.SyncStoreCluster(bkCluster, db)
+	err = s.SyncStoreCluster(ctx, bkCluster, db)
 	if err != nil {
 		blog.Errorf("sync store cluster failed, err: %s", err.Error())
 	}
 
-	err = s.SyncStoreNamespace(bkCluster, db)
+	err = s.SyncStoreNamespace(ctx, bkCluster, db)
 	if err != nil {
 		blog.Errorf("sync store namespace failed, err: %s", err.Error())
 	}
 
-	err = s.SyncStorePod(bkCluster, db)
+	err = s.SyncStorePod(ctx, bkCluster, db)
 	if err != nil {
 		blog.Errorf("sync store pod failed, err: %s", err.Error())
 	}
 
-	err = s.SyncStoreContainer(bkCluster, db)
+	err = s.SyncStoreContainer(ctx, bkCluster, db)
 	if err != nil {
 		blog.Errorf("sync store container failed, err: %s", err.Error())
 	}
 
-	err = s.SyncStoreNode(bkCluster, db)
+	err = s.SyncStoreNode(ctx, bkCluster, db)
 	if err != nil {
 		blog.Errorf("sync store node failed, err: %s", err.Error())
 	}
 
-	err = s.SyncStoreWorkload(bkCluster, db)
+	err = s.SyncStoreWorkload(ctx, bkCluster, db)
 	if err != nil {
 		blog.Errorf("sync store workload failed, err: %s", err.Error())
 	}
@@ -2092,7 +2110,7 @@ func (s *Syncer) SyncStoreMigrate(db *gorm.DB) {
 }
 
 // SyncStoreCluster sync store cluster
-func (s *Syncer) SyncStoreCluster(bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
+func (s *Syncer) SyncStoreCluster(ctx context.Context, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
 	err := model.ClusterMigrate(db)
 	if err != nil {
 		blog.Errorf("migrate cluster failed, err: %s", err.Error())
@@ -2134,14 +2152,14 @@ func (s *Syncer) SyncStoreCluster(bkCluster *bkcmdbkube.Cluster, db *gorm.DB) er
 }
 
 // SyncStoreNamespace sync store namespace
-func (s *Syncer) SyncStoreNamespace(bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
+func (s *Syncer) SyncStoreNamespace(ctx context.Context, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
 	err := model.NamespaceMigrate(db)
 	if err != nil {
 		blog.Errorf("migrate namespace failed, err: %s", err.Error())
 		return fmt.Errorf("migrate namespace failed, err: %s", err.Error())
 	}
 
-	bkNamespaceList, err := s.GetBkNamespaces(bkCluster.BizID, &client.PropertyFilter{
+	bkNamespaceList, err := s.GetBkNamespaces(ctx, bkCluster.BizID, &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
 			{
@@ -2194,7 +2212,7 @@ func (s *Syncer) SyncStoreNamespace(bkCluster *bkcmdbkube.Cluster, db *gorm.DB) 
 }
 
 // SyncStorePod 同步 Pod 信息到数据库
-func (s *Syncer) SyncStorePod(bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
+func (s *Syncer) SyncStorePod(ctx context.Context, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
 	err := model.PodMigrate(db)
 	if err != nil {
 		blog.Errorf("migrate pod failed, err: %s", err.Error())
@@ -2206,7 +2224,7 @@ func (s *Syncer) SyncStorePod(bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error 
 	//	 return fmt.Errorf("migrate container failed, err: %s", err.Error())
 	// }
 
-	bkPodList, err := s.GetBkPods(bkCluster.BizID, &client.PropertyFilter{
+	bkPodList, err := s.GetBkPods(ctx, bkCluster.BizID, &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
 			{
@@ -2285,14 +2303,14 @@ func (s *Syncer) SyncStorePod(bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error 
 }
 
 // SyncStoreContainer 同步容器信息到数据库
-func (s *Syncer) SyncStoreContainer(bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
+func (s *Syncer) SyncStoreContainer(ctx context.Context, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
 	err := model.ContainerMigrate(db)
 	if err != nil {
 		blog.Errorf("migrate container failed, err: %s", err.Error())
 		return fmt.Errorf("migrate container failed, err: %s", err.Error())
 	}
 
-	bkContainerList, err := s.GetBkContainers(bkCluster.BizID, &client.PropertyFilter{
+	bkContainerList, err := s.GetBkContainers(ctx, bkCluster.BizID, &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
 			{
@@ -2342,7 +2360,7 @@ func (s *Syncer) SyncStoreContainer(bkCluster *bkcmdbkube.Cluster, db *gorm.DB) 
 }
 
 // SyncStoreNode 同步节点信息到数据库
-func (s *Syncer) SyncStoreNode(bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
+func (s *Syncer) SyncStoreNode(ctx context.Context, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
 	err := model.NodeMigrate(db)
 	if err != nil {
 		blog.Errorf("migrate node failed, err: %s", err.Error())
@@ -2350,7 +2368,7 @@ func (s *Syncer) SyncStoreNode(bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error
 	}
 
 	// GetBkNodes get bknodes
-	bkNodeList, err := s.GetBkNodes(bkCluster.BizID, &client.PropertyFilter{
+	bkNodeList, err := s.GetBkNodes(ctx, bkCluster.BizID, &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
 			{
@@ -2420,28 +2438,28 @@ func (s *Syncer) SyncStoreNode(bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error
 }
 
 // SyncStoreWorkload 同步工作负载信息到数据库
-func (s *Syncer) SyncStoreWorkload(bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
-	err := s.SyncStoreDeployment(bkCluster, db)
+func (s *Syncer) SyncStoreWorkload(ctx context.Context, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
+	err := s.SyncStoreDeployment(ctx, bkCluster, db)
 	if err != nil {
 		blog.Errorf("syncStore Deployment err: %v", err)
 	}
-	err = s.SyncStoreStatefulSet(bkCluster, db)
+	err = s.SyncStoreStatefulSet(ctx, bkCluster, db)
 	if err != nil {
 		blog.Errorf("syncStore StatefulSet err: %v", err)
 	}
-	err = s.SyncStoreDaemonSet(bkCluster, db)
+	err = s.SyncStoreDaemonSet(ctx, bkCluster, db)
 	if err != nil {
 		blog.Errorf("syncStore DaemonSet err: %v", err)
 	}
-	err = s.SyncStoreGameDeployment(bkCluster, db)
+	err = s.SyncStoreGameDeployment(ctx, bkCluster, db)
 	if err != nil {
 		blog.Errorf("syncStore GameDeployment err: %v", err)
 	}
-	err = s.SyncStoreGameStatefulSet(bkCluster, db)
+	err = s.SyncStoreGameStatefulSet(ctx, bkCluster, db)
 	if err != nil {
 		blog.Errorf("syncStore GameStatefulSet err: %v", err)
 	}
-	err = s.SyncStorePodsWorkload(bkCluster, db)
+	err = s.SyncStorePodsWorkload(ctx, bkCluster, db)
 	if err != nil {
 		blog.Errorf("syncStore PodsWordload err: %v", err)
 	}
@@ -2449,7 +2467,7 @@ func (s *Syncer) SyncStoreWorkload(bkCluster *bkcmdbkube.Cluster, db *gorm.DB) e
 }
 
 // SyncStoreDeployment 同步 Deployment 信息到数据库
-func (s *Syncer) SyncStoreDeployment(bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
+func (s *Syncer) SyncStoreDeployment(ctx context.Context, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
 	err := model.DeploymentMigrate(db)
 	if err != nil {
 		blog.Errorf("migrate deployment failed, err: %s", err.Error())
@@ -2457,7 +2475,7 @@ func (s *Syncer) SyncStoreDeployment(bkCluster *bkcmdbkube.Cluster, db *gorm.DB)
 	}
 
 	// GetBkWorkloads get bkworkloads
-	bkDeployments, err := s.GetBkWorkloads(bkCluster.BizID, "deployment", &client.PropertyFilter{
+	bkDeployments, err := s.GetBkWorkloads(ctx, bkCluster.BizID, "deployment", &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
 			{
@@ -2503,7 +2521,7 @@ func (s *Syncer) SyncStoreDeployment(bkCluster *bkcmdbkube.Cluster, db *gorm.DB)
 }
 
 // SyncStoreStatefulSet 同步 StatefulSet 信息到数据库
-func (s *Syncer) SyncStoreStatefulSet(bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
+func (s *Syncer) SyncStoreStatefulSet(ctx context.Context, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
 	err := model.StatefulSetMigrate(db)
 	if err != nil {
 		blog.Errorf("migrate statefulset failed, err: %s", err.Error())
@@ -2511,7 +2529,7 @@ func (s *Syncer) SyncStoreStatefulSet(bkCluster *bkcmdbkube.Cluster, db *gorm.DB
 	}
 
 	// GetBkWorkloads get bkworkloads
-	bkStatefulSets, err := s.GetBkWorkloads(bkCluster.BizID, "statefulSet", &client.PropertyFilter{
+	bkStatefulSets, err := s.GetBkWorkloads(ctx, bkCluster.BizID, "statefulSet", &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
 			{
@@ -2558,7 +2576,7 @@ func (s *Syncer) SyncStoreStatefulSet(bkCluster *bkcmdbkube.Cluster, db *gorm.DB
 }
 
 // SyncStoreDaemonSet 同步 DaemonSet 信息到数据库
-func (s *Syncer) SyncStoreDaemonSet(bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
+func (s *Syncer) SyncStoreDaemonSet(ctx context.Context, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
 	err := model.DaemonSetMigrate(db)
 	if err != nil {
 		blog.Errorf("migrate daemonset failed, err: %s", err.Error())
@@ -2566,7 +2584,7 @@ func (s *Syncer) SyncStoreDaemonSet(bkCluster *bkcmdbkube.Cluster, db *gorm.DB) 
 	}
 
 	// GetBkWorkloads get bkworkloads
-	bkDaemonSets, err := s.GetBkWorkloads(bkCluster.BizID, "daemonSet", &client.PropertyFilter{
+	bkDaemonSets, err := s.GetBkWorkloads(ctx, bkCluster.BizID, "daemonSet", &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
 			{
@@ -2613,7 +2631,7 @@ func (s *Syncer) SyncStoreDaemonSet(bkCluster *bkcmdbkube.Cluster, db *gorm.DB) 
 }
 
 // SyncStoreGameDeployment 同步 GameDeployment 信息到数据库
-func (s *Syncer) SyncStoreGameDeployment(bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
+func (s *Syncer) SyncStoreGameDeployment(ctx context.Context, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
 	err := model.GameDeploymentMigrate(db)
 	if err != nil {
 		blog.Errorf("migrate gamedeployment failed, err: %s", err.Error())
@@ -2621,7 +2639,7 @@ func (s *Syncer) SyncStoreGameDeployment(bkCluster *bkcmdbkube.Cluster, db *gorm
 	}
 
 	// GetBkWorkloads get bkworkloads
-	bkGameDeployments, err := s.GetBkWorkloads(bkCluster.BizID, "gameDeployment", &client.PropertyFilter{
+	bkGameDeployments, err := s.GetBkWorkloads(ctx, bkCluster.BizID, "gameDeployment", &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
 			{
@@ -2669,7 +2687,7 @@ func (s *Syncer) SyncStoreGameDeployment(bkCluster *bkcmdbkube.Cluster, db *gorm
 }
 
 // SyncStoreGameStatefulSet 同步 GameStatefulSet 信息到数据库
-func (s *Syncer) SyncStoreGameStatefulSet(bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
+func (s *Syncer) SyncStoreGameStatefulSet(ctx context.Context, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
 	err := model.GameStatefulSetMigrate(db)
 	if err != nil {
 		blog.Errorf("migrate gameStatefulSet failed, err: %s", err.Error())
@@ -2677,7 +2695,7 @@ func (s *Syncer) SyncStoreGameStatefulSet(bkCluster *bkcmdbkube.Cluster, db *gor
 	}
 
 	// GetBkWorkloads get bkworkloads
-	bkGameStatefulSets, err := s.GetBkWorkloads(bkCluster.BizID, "gameStatefulSet", &client.PropertyFilter{
+	bkGameStatefulSets, err := s.GetBkWorkloads(ctx, bkCluster.BizID, "gameStatefulSet", &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
 			{
@@ -2725,7 +2743,7 @@ func (s *Syncer) SyncStoreGameStatefulSet(bkCluster *bkcmdbkube.Cluster, db *gor
 }
 
 // SyncStorePodsWorkload 同步 PodsWorkload 信息到数据库
-func (s *Syncer) SyncStorePodsWorkload(bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
+func (s *Syncer) SyncStorePodsWorkload(ctx context.Context, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
 	err := model.PodsWorkloadMigrate(db)
 	if err != nil {
 		blog.Errorf("migrate podsworkload failed, err: %s", err.Error())
@@ -2733,7 +2751,7 @@ func (s *Syncer) SyncStorePodsWorkload(bkCluster *bkcmdbkube.Cluster, db *gorm.D
 	}
 
 	// GetBkWorkloads get bkworkloads
-	bkPodsWorkloads, err := s.GetBkWorkloads(bkCluster.BizID, "pods", &client.PropertyFilter{
+	bkPodsWorkloads, err := s.GetBkWorkloads(ctx, bkCluster.BizID, "pods", &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
 			{
@@ -2779,46 +2797,9 @@ func (s *Syncer) SyncStorePodsWorkload(bkCluster *bkcmdbkube.Cluster, db *gorm.D
 	return nil
 }
 
-// GetBcsStorageClient is a function that returns a BCS storage client.
-func (s *Syncer) GetBcsStorageClient() (bcsapi.Storage, error) {
-	// Create a BCS API configuration with the given options.
-	config := &bcsapi.Config{
-		Hosts:     []string{s.BkcmdbSynchronizerOption.Bcsapi.HttpAddr},
-		AuthToken: s.BkcmdbSynchronizerOption.Bcsapi.BearerToken,
-		TLSConfig: s.ClientTls,
-		Gateway:   strings.Contains(s.BkcmdbSynchronizerOption.Bcsapi.HttpAddr, "gateway"),
-	}
-
-	// Create a new BCS storage client with the configuration.
-	cli := bsc.NewStorageClient(config)
-
-	// Get the storage client from the BCS storage client.
-	storageCli, err := cli.GetStorageClient()
-
-	// Return the storage client and any error that occurred.
-	return storageCli, err
-}
-
-// GetProjectManagerGrpcGwClient is a function that returns a project manager gRPC gateway client.
-func (s *Syncer) GetProjectManagerGrpcGwClient() (pmCli *client.ProjectManagerClientWithHeader, err error) {
-	// Create a project manager gRPC gateway client configuration with the given options.
-	opts := &pm.Options{
-		Module:          pm.ModuleProjectManager,
-		Address:         s.BkcmdbSynchronizerOption.Bcsapi.GrpcAddr,
-		EtcdRegistry:    nil,
-		ClientTLSConfig: s.ClientTls,
-		AuthToken:       s.BkcmdbSynchronizerOption.Bcsapi.BearerToken,
-	}
-
-	// Create a new project manager gRPC gateway client with the configuration.
-	pmCli, err = pm.NewProjectManagerGrpcGwClient(opts)
-
-	// Return the project manager gRPC gateway client and any error that occurred.
-	return pmCli, err
-}
-
 // GetBkCluster get bkcluster
-func (s *Syncer) GetBkCluster(cluster *cmp.Cluster, db *gorm.DB, withDB bool) (*bkcmdbkube.Cluster, error) {
+func (s *Syncer) GetBkCluster(ctx context.Context, cluster *cmp.Cluster,
+	db *gorm.DB, withDB bool) (*bkcmdbkube.Cluster, error) {
 	var clusterBkBizID int64
 	if bkBizID == 0 {
 		bizid, err := strconv.ParseInt(cluster.BusinessID, 10, 64)
@@ -2832,7 +2813,7 @@ func (s *Syncer) GetBkCluster(cluster *cmp.Cluster, db *gorm.DB, withDB bool) (*
 		clusterBkBizID = bkBizID
 	}
 
-	bkClusterList, err := s.CMDBClient.GetBcsCluster(&client.GetBcsClusterRequest{
+	bkClusterList, err := s.CMDBClient.GetBcsCluster(ctx, &client.GetBcsClusterRequest{
 		CommonRequest: client.CommonRequest{
 			BKBizID: clusterBkBizID,
 			Page: client.Page{
@@ -2866,13 +2847,13 @@ func (s *Syncer) GetBkCluster(cluster *cmp.Cluster, db *gorm.DB, withDB bool) (*
 }
 
 // GetBkNodes get bknodes
-func (s *Syncer) GetBkNodes(
+func (s *Syncer) GetBkNodes(ctx context.Context,
 	bkBizID int64, filter *client.PropertyFilter, withDB bool, db *gorm.DB) (*[]bkcmdbkube.Node, error) {
 	bkNodeList := make([]bkcmdbkube.Node, 0)
 
 	pageStart := 0
 	for {
-		bkNodes, err := s.CMDBClient.GetBcsNode(&client.GetBcsNodeRequest{
+		bkNodes, err := s.CMDBClient.GetBcsNode(ctx, &client.GetBcsNodeRequest{
 			CommonRequest: client.CommonRequest{
 				BKBizID: bkBizID,
 				Page: client.Page{
@@ -2905,10 +2886,10 @@ func (s *Syncer) GetBkNodes(
 }
 
 // CreateBkNodes create bknodes
-func (s *Syncer) CreateBkNodes(
+func (s *Syncer) CreateBkNodes(ctx context.Context,
 	bkCluster *bkcmdbkube.Cluster, toCreate *[]client.CreateBcsNodeRequestData, db *gorm.DB) {
 	if len(*toCreate) > 0 {
-		_, err := s.CMDBClient.CreateBcsNode(&client.CreateBcsNodeRequest{
+		_, err := s.CMDBClient.CreateBcsNode(ctx, &client.CreateBcsNodeRequest{
 			BKBizID: &bkCluster.BizID,
 			Data:    toCreate,
 		}, db)
@@ -2921,7 +2902,7 @@ func (s *Syncer) CreateBkNodes(
 					section = (*toCreate)[i : i+1]
 				}
 
-				_, err = s.CMDBClient.CreateBcsNode(&client.CreateBcsNodeRequest{
+				_, err = s.CMDBClient.CreateBcsNode(ctx, &client.CreateBcsNodeRequest{
 					BKBizID: &bkCluster.BizID,
 					Data:    &section,
 				}, db)
@@ -2939,7 +2920,7 @@ func (s *Syncer) CreateBkNodes(
 }
 
 // ComparePod compare pod
-func (s *Syncer) ComparePod(bkPod *bkcmdbkube.Pod, k8sPod *storage.Pod, db *gorm.DB) (needToRecreate bool) {
+func (s *Syncer) ComparePod(ctx context.Context, bkPod *bkcmdbkube.Pod, k8sPod *storage.Pod, db *gorm.DB) (needToRecreate bool) {
 	needToRecreate = false
 	// bkContainers, err := s.CMDBClient.GetBcsContainer(&client.GetBcsContainerRequest{
 	//	CommonRequest: client.CommonRequest{
@@ -2952,7 +2933,7 @@ func (s *Syncer) ComparePod(bkPod *bkcmdbkube.Pod, k8sPod *storage.Pod, db *gorm
 	//	BkPodID: bkPod.ID,
 	// }, nil, false)
 
-	bkContainers, err := s.GetBkContainers(bkPod.BizID, &client.PropertyFilter{
+	bkContainers, err := s.GetBkContainers(ctx, bkPod.BizID, &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
 			{
@@ -3169,7 +3150,7 @@ func (s *Syncer) compareNode(bkNode *bkcmdbkube.Node, k8sNode *storage.K8sNode,
 }
 
 // GenerateBkNodeData generate bknode data from k8snode
-func (s *Syncer) GenerateBkNodeData(
+func (s *Syncer) GenerateBkNodeData(ctx context.Context,
 	bkCluster *bkcmdbkube.Cluster, k8sNode *storage.K8sNode) (data client.CreateBcsNodeRequestData, err error) {
 	taints := make(map[string]string)
 	for _, taint := range k8sNode.Data.Spec.Taints {
@@ -3192,7 +3173,7 @@ func (s *Syncer) GenerateBkNodeData(
 	}
 	var theHostID int64
 	if hostID == 0 {
-		hosts, err := s.CMDBClient.GetHostsByBiz(bkCluster.BizID, internalIP)
+		hosts, err := s.CMDBClient.GetHostsByBiz(ctx, bkCluster.BizID, internalIP)
 		if err != nil {
 			blog.Errorf("GetHostsByBiz error: %v", err)
 			return client.CreateBcsNodeRequestData{}, err
@@ -3227,14 +3208,14 @@ func (s *Syncer) GenerateBkNodeData(
 
 // UpdateBkNodes update bknodes
 // nolint
-func (s *Syncer) UpdateBkNodes(
+func (s *Syncer) UpdateBkNodes(ctx context.Context,
 	bkCluster *bkcmdbkube.Cluster, toUpdate *map[int64]*client.UpdateBcsNodeRequestData, db *gorm.DB) {
 	if toUpdate == nil {
 		return
 	}
 
 	for k, v := range *toUpdate {
-		err := s.CMDBClient.UpdateBcsNode(&client.UpdateBcsNodeRequest{
+		err := s.CMDBClient.UpdateBcsNode(ctx, &client.UpdateBcsNodeRequest{
 			BKBizID: &bkCluster.BizID,
 			IDs:     &[]int64{k},
 			Data:    v,
@@ -3247,12 +3228,12 @@ func (s *Syncer) UpdateBkNodes(
 }
 
 // DeleteBkNodes delete bknodes
-func (s *Syncer) DeleteBkNodes(bkCluster *bkcmdbkube.Cluster, toDelete *[]int64, db *gorm.DB) error {
+func (s *Syncer) DeleteBkNodes(ctx context.Context, bkCluster *bkcmdbkube.Cluster, toDelete *[]int64, db *gorm.DB) error {
 	if len(*toDelete) == 0 {
 		return nil
 	}
 
-	bkPodList, err := s.GetBkPods(bkCluster.BizID, &client.PropertyFilter{
+	bkPodList, err := s.GetBkPods(ctx, bkCluster.BizID, &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
 			{
@@ -3271,10 +3252,10 @@ func (s *Syncer) DeleteBkNodes(bkCluster *bkcmdbkube.Cluster, toDelete *[]int64,
 			podToDelete = append(podToDelete, pod.ID)
 			blog.Infof("podToDelete: %s+%s", pod.NameSpace, *pod.Name)
 		}
-		_ = s.DeleteBkPods(bkCluster, &podToDelete, db)
+		_ = s.DeleteBkPods(ctx, bkCluster, &podToDelete, db)
 	}
 
-	err = s.CMDBClient.DeleteBcsNode(&client.DeleteBcsNodeRequest{
+	err = s.CMDBClient.DeleteBcsNode(ctx, &client.DeleteBcsNodeRequest{
 		BKBizID: &bkCluster.BizID,
 		IDs:     toDelete,
 	}, nil)
@@ -3287,7 +3268,7 @@ func (s *Syncer) DeleteBkNodes(bkCluster *bkcmdbkube.Cluster, toDelete *[]int64,
 				section = (*toDelete)[i : i+1]
 			}
 
-			err = s.CMDBClient.DeleteBcsNode(&client.DeleteBcsNodeRequest{
+			err = s.CMDBClient.DeleteBcsNode(ctx, &client.DeleteBcsNodeRequest{
 				BKBizID: &bkCluster.BizID,
 				IDs:     &section,
 			}, nil)
@@ -3302,13 +3283,13 @@ func (s *Syncer) DeleteBkNodes(bkCluster *bkcmdbkube.Cluster, toDelete *[]int64,
 }
 
 // GetBkNamespaces get bknamespaces
-func (s *Syncer) GetBkNamespaces(
+func (s *Syncer) GetBkNamespaces(ctx context.Context,
 	bkBizID int64, filter *client.PropertyFilter, withDB bool, db *gorm.DB) (*[]bkcmdbkube.Namespace, error) {
 	bkNamespaceList := make([]bkcmdbkube.Namespace, 0)
 
 	pageStart := 0
 	for {
-		bkNamespaces, err := s.CMDBClient.GetBcsNamespace(&client.GetBcsNamespaceRequest{
+		bkNamespaces, err := s.CMDBClient.GetBcsNamespace(ctx, &client.GetBcsNamespaceRequest{
 			CommonRequest: client.CommonRequest{
 				BKBizID: bkBizID,
 				Page: client.Page{
@@ -3393,7 +3374,7 @@ func (s *Syncer) GenerateBkNsData(bkCluster *bkcmdbkube.Cluster, k8sNs *storage.
 }
 
 // CreateBkNamespaces create bknamespaces
-func (s *Syncer) CreateBkNamespaces(
+func (s *Syncer) CreateBkNamespaces(ctx context.Context,
 	bkCluster *bkcmdbkube.Cluster, toCreate map[int64][]bkcmdbkube.Namespace, db *gorm.DB) {
 	if len(toCreate) > 0 {
 		for bizid, bkNsList := range toCreate {
@@ -3406,7 +3387,7 @@ func (s *Syncer) CreateBkNamespaces(
 						section = (bkNsList)[i : i+1]
 					}
 
-					bkNsIDs, err := s.CMDBClient.CreateBcsNamespace(&client.CreateBcsNamespaceRequest{
+					bkNsIDs, err := s.CMDBClient.CreateBcsNamespace(ctx, &client.CreateBcsNamespaceRequest{
 						BKBizID: &bizid,
 						Data:    &section,
 					}, db)
@@ -3418,7 +3399,7 @@ func (s *Syncer) CreateBkNamespaces(
 
 					podsKind := "pods" // nolint
 					podsName := "pods" // nolint
-					_, err = s.CMDBClient.CreateBcsWorkload(&client.CreateBcsWorkloadRequest{
+					_, err = s.CMDBClient.CreateBcsWorkload(ctx, &client.CreateBcsWorkloadRequest{
 						BKBizID: &bizid,
 						Kind:    &podsKind,
 						Data: &[]client.CreateBcsWorkloadRequestData{
@@ -3440,14 +3421,14 @@ func (s *Syncer) CreateBkNamespaces(
 
 // UpdateBkNamespaces update bknamespaces
 // nolint
-func (s *Syncer) UpdateBkNamespaces(
+func (s *Syncer) UpdateBkNamespaces(ctx context.Context,
 	bkCluster *bkcmdbkube.Cluster, toUpdate *map[int64]*client.UpdateBcsNamespaceRequestData, db *gorm.DB) {
 	if toUpdate == nil {
 		return
 	}
 
 	for k, v := range *toUpdate {
-		err := s.CMDBClient.UpdateBcsNamespace(&client.UpdateBcsNamespaceRequest{
+		err := s.CMDBClient.UpdateBcsNamespace(ctx, &client.UpdateBcsNamespaceRequest{
 			BKBizID: &bkCluster.BizID,
 			IDs:     &[]int64{k},
 			Data:    v,
@@ -3460,7 +3441,7 @@ func (s *Syncer) UpdateBkNamespaces(
 }
 
 // DeleteBkNamespaces delete bknamespaces
-func (s *Syncer) DeleteBkNamespaces(bkCluster *bkcmdbkube.Cluster, toDelete *[]int64, db *gorm.DB) error {
+func (s *Syncer) DeleteBkNamespaces(ctx context.Context, bkCluster *bkcmdbkube.Cluster, toDelete *[]int64, db *gorm.DB) error {
 	if len(*toDelete) > 0 {
 		for i := 0; i < len(*toDelete); i++ {
 			var section []int64
@@ -3470,7 +3451,7 @@ func (s *Syncer) DeleteBkNamespaces(bkCluster *bkcmdbkube.Cluster, toDelete *[]i
 				section = (*toDelete)[i : i+1]
 			}
 
-			bkWorkloadPods, err := s.GetBkWorkloads(bkCluster.BizID, "pods", &client.PropertyFilter{
+			bkWorkloadPods, err := s.GetBkWorkloads(ctx, bkCluster.BizID, "pods", &client.PropertyFilter{
 				Condition: "AND",
 				Rules: []client.Rule{
 					{
@@ -3499,7 +3480,7 @@ func (s *Syncer) DeleteBkNamespaces(bkCluster *bkcmdbkube.Cluster, toDelete *[]i
 
 			podsKind := "pods" // nolint
 
-			err = s.CMDBClient.DeleteBcsWorkload(&client.DeleteBcsWorkloadRequest{
+			err = s.CMDBClient.DeleteBcsWorkload(ctx, &client.DeleteBcsWorkloadRequest{
 				BKBizID: &bkCluster.BizID,
 				Kind:    &podsKind,
 				IDs:     &[]int64{p.ID},
@@ -3510,7 +3491,7 @@ func (s *Syncer) DeleteBkNamespaces(bkCluster *bkcmdbkube.Cluster, toDelete *[]i
 				return err
 			}
 
-			err = s.CMDBClient.DeleteBcsNamespace(&client.DeleteBcsNamespaceRequest{
+			err = s.CMDBClient.DeleteBcsNamespace(ctx, &client.DeleteBcsNamespaceRequest{
 				BKBizID: &bkCluster.BizID,
 				IDs:     &section,
 			}, db)
@@ -3524,14 +3505,13 @@ func (s *Syncer) DeleteBkNamespaces(bkCluster *bkcmdbkube.Cluster, toDelete *[]i
 }
 
 // GetBkWorkloads get bkworkloads
-func (s *Syncer) GetBkWorkloads(
-	bkBizID int64, workloadType string,
+func (s *Syncer) GetBkWorkloads(ctx context.Context, bkBizID int64, workloadType string,
 	filter *client.PropertyFilter, withDB bool, db *gorm.DB) (*[]interface{}, error) {
 	bkWorkloadList := make([]interface{}, 0)
 
 	pageStart := 0
 	for {
-		bkWorkloads, err := s.CMDBClient.GetBcsWorkload(&client.GetBcsWorkloadRequest{
+		bkWorkloads, err := s.CMDBClient.GetBcsWorkload(ctx, &client.GetBcsWorkloadRequest{
 			CommonRequest: client.CommonRequest{
 				BKBizID: bkBizID,
 				Page: client.Page{
@@ -3573,12 +3553,12 @@ func (s *Syncer) GetBkWorkloads(
 }
 
 // CreateBkWorkloads create bkworkloads
-func (s *Syncer) CreateBkWorkloads(
+func (s *Syncer) CreateBkWorkloads(ctx context.Context,
 	bkCluster *bkcmdbkube.Cluster, kind string, toCreate map[int64][]client.CreateBcsWorkloadRequestData, db *gorm.DB) {
 	if len(toCreate) > 0 {
 		for bizid, workloads := range toCreate {
 			if len(workloads) > 0 {
-				_, err := s.CMDBClient.CreateBcsWorkload(&client.CreateBcsWorkloadRequest{
+				_, err := s.CMDBClient.CreateBcsWorkload(ctx, &client.CreateBcsWorkloadRequest{
 					BKBizID: &bizid,
 					Kind:    &kind,
 					Data:    &workloads,
@@ -3591,7 +3571,7 @@ func (s *Syncer) CreateBkWorkloads(
 						} else {
 							section = (workloads)[i : i+1]
 						}
-						_, err = s.CMDBClient.CreateBcsWorkload(&client.CreateBcsWorkloadRequest{
+						_, err = s.CMDBClient.CreateBcsWorkload(ctx, &client.CreateBcsWorkloadRequest{
 							BKBizID: &bkCluster.BizID,
 							Kind:    &kind,
 							Data:    &section,
@@ -4973,7 +4953,7 @@ func (s *Syncer) GenerateBkGameStatefulSet(
 
 // UpdateBkWorkloads update bkworkloads
 // nolint
-func (s *Syncer) UpdateBkWorkloads(
+func (s *Syncer) UpdateBkWorkloads(ctx context.Context,
 	bkCluster *bkcmdbkube.Cluster, kind string, toUpdate *map[int64]*client.UpdateBcsWorkloadRequestData, db *gorm.DB) {
 	if toUpdate == nil {
 		return
@@ -4981,7 +4961,7 @@ func (s *Syncer) UpdateBkWorkloads(
 
 	for k, v := range *toUpdate {
 		// UpdateBcsWorkload updates the BCS workload with the given request.
-		err := s.CMDBClient.UpdateBcsWorkload(&client.UpdateBcsWorkloadRequest{
+		err := s.CMDBClient.UpdateBcsWorkload(ctx, &client.UpdateBcsWorkloadRequest{
 			BKBizID: &bkCluster.BizID,
 			Kind:    &kind,
 			IDs:     &[]int64{k},
@@ -4995,10 +4975,11 @@ func (s *Syncer) UpdateBkWorkloads(
 }
 
 // DeleteBkWorkloads delete bkworkloads
-func (s *Syncer) DeleteBkWorkloads(bkCluster *bkcmdbkube.Cluster, kind string, toDelete *[]int64, db *gorm.DB) error {
+func (s *Syncer) DeleteBkWorkloads(ctx context.Context, bkCluster *bkcmdbkube.Cluster,
+	kind string, toDelete *[]int64, db *gorm.DB) error {
 	if len(*toDelete) > 0 {
 		// DeleteBcsWorkload deletes the BCS workload with the given request.
-		err := s.CMDBClient.DeleteBcsWorkload(&client.DeleteBcsWorkloadRequest{
+		err := s.CMDBClient.DeleteBcsWorkload(ctx, &client.DeleteBcsWorkloadRequest{
 			BKBizID: &bkCluster.BizID,
 			Kind:    &kind,
 			IDs:     toDelete,
@@ -5011,7 +4992,7 @@ func (s *Syncer) DeleteBkWorkloads(bkCluster *bkcmdbkube.Cluster, kind string, t
 				} else {
 					section = (*toDelete)[i : i+1]
 				}
-				err = s.CMDBClient.DeleteBcsWorkload(&client.DeleteBcsWorkloadRequest{
+				err = s.CMDBClient.DeleteBcsWorkload(ctx, &client.DeleteBcsWorkloadRequest{
 					BKBizID: &bkCluster.BizID,
 					Kind:    &kind,
 					IDs:     &section,
@@ -5028,14 +5009,14 @@ func (s *Syncer) DeleteBkWorkloads(bkCluster *bkcmdbkube.Cluster, kind string, t
 }
 
 // GetBkPods get bkpods
-func (s *Syncer) GetBkPods(
+func (s *Syncer) GetBkPods(ctx context.Context,
 	bkBizID int64, filter *client.PropertyFilter, withDB bool, db *gorm.DB) (*[]bkcmdbkube.Pod, error) {
 	bkPodList := make([]bkcmdbkube.Pod, 0)
 
 	pageStart := 0
 	for {
 		// GetBcsPod returns the BCS pod information for the given request.
-		bkPods, err := s.CMDBClient.GetBcsPod(&client.GetBcsPodRequest{
+		bkPods, err := s.CMDBClient.GetBcsPod(ctx, &client.GetBcsPodRequest{
 			CommonRequest: client.CommonRequest{
 				BKBizID: bkBizID,
 				Page: client.Page{
@@ -5065,14 +5046,14 @@ func (s *Syncer) GetBkPods(
 }
 
 // GetBkContainers get bkcontainers
-func (s *Syncer) GetBkContainers(
+func (s *Syncer) GetBkContainers(ctx context.Context,
 	bkBizID int64, filter *client.PropertyFilter, withDB bool, db *gorm.DB) (*[]client.Container, error) {
 	bkContainerList := make([]client.Container, 0)
 
 	pageStart := 0
 	for {
 		// GetBcsPod returns the BCS pod information for the given request.
-		bkContainers, err := s.CMDBClient.GetBcsContainer(&client.GetBcsContainerRequest{
+		bkContainers, err := s.CMDBClient.GetBcsContainer(ctx, &client.GetBcsContainerRequest{
 			CommonRequest: client.CommonRequest{
 				BKBizID: bkBizID,
 				Page: client.Page{
@@ -5102,7 +5083,7 @@ func (s *Syncer) GetBkContainers(
 }
 
 // CreateBkPods create bkpods
-func (s *Syncer) CreateBkPods(
+func (s *Syncer) CreateBkPods(ctx context.Context,
 	bkCluster *bkcmdbkube.Cluster, toCreate map[int64][]client.CreateBcsPodRequestDataPod, db *gorm.DB) {
 	if len(toCreate) > 0 {
 		for bizid, pods := range toCreate {
@@ -5116,7 +5097,7 @@ func (s *Syncer) CreateBkPods(
 					}
 
 					// CreateBcsPod creates a new BCS pod with the given request.
-					_, err := s.CMDBClient.CreateBcsPod(&client.CreateBcsPodRequest{
+					_, err := s.CMDBClient.CreateBcsPod(ctx, &client.CreateBcsPodRequest{
 						Data: &[]client.CreateBcsPodRequestData{
 							{
 								BizID: &bizid,
@@ -5128,7 +5109,7 @@ func (s *Syncer) CreateBkPods(
 					if err != nil {
 						for j := 0; j < len(section); j++ {
 							sec := section[j : j+1]
-							_, err = s.CMDBClient.CreateBcsPod(&client.CreateBcsPodRequest{
+							_, err = s.CMDBClient.CreateBcsPod(ctx, &client.CreateBcsPodRequest{
 								Data: &[]client.CreateBcsPodRequestData{
 									{
 										BizID: &bizid,
@@ -5152,7 +5133,7 @@ func (s *Syncer) CreateBkPods(
 }
 
 // DeleteBkPods delete bkpods
-func (s *Syncer) DeleteBkPods(bkCluster *bkcmdbkube.Cluster, toDelete *[]int64, db *gorm.DB) error {
+func (s *Syncer) DeleteBkPods(ctx context.Context, bkCluster *bkcmdbkube.Cluster, toDelete *[]int64, db *gorm.DB) error {
 	if len(*toDelete) > 0 {
 		for i := 0; i < len(*toDelete); i += 100 {
 			var ids []int64
@@ -5162,7 +5143,7 @@ func (s *Syncer) DeleteBkPods(bkCluster *bkcmdbkube.Cluster, toDelete *[]int64, 
 				ids = (*toDelete)[i : i+100]
 			}
 			// DeleteBcsPod deletes the BCS pod with the given request.
-			err := s.CMDBClient.DeleteBcsPod(&client.DeleteBcsPodRequest{
+			err := s.CMDBClient.DeleteBcsPod(ctx, &client.DeleteBcsPodRequest{
 				Data: &[]client.DeleteBcsPodRequestData{
 					{
 						BKBizID: &bkCluster.BizID,
@@ -5197,11 +5178,11 @@ func (s *Syncer) CompareBkWorkloadPods(workload *bkcmdbkube.PodsWorkload) (
 
 // DeleteAllByCluster clean by cluster
 // nolint
-func (s *Syncer) DeleteAllByCluster(bkCluster *bkcmdbkube.Cluster) error {
+func (s *Syncer) DeleteAllByCluster(ctx context.Context, bkCluster *bkcmdbkube.Cluster) error {
 	blog.Infof("start delete all: %s", bkCluster.Uid)
 	blog.Infof("start delete all pod: %s", bkCluster.Uid)
 	for {
-		got, err := s.CMDBClient.GetBcsPod(&client.GetBcsPodRequest{
+		got, err := s.CMDBClient.GetBcsPod(ctx, &client.GetBcsPodRequest{
 			CommonRequest: client.CommonRequest{
 				BKBizID: bkCluster.BizID,
 				Fields:  []string{"id"},
@@ -5234,7 +5215,7 @@ func (s *Syncer) DeleteAllByCluster(bkCluster *bkcmdbkube.Cluster) error {
 			break
 		} else {
 			blog.Infof("delete pod: %v", podToDelete)
-			err := s.CMDBClient.DeleteBcsPod(&client.DeleteBcsPodRequest{
+			err := s.CMDBClient.DeleteBcsPod(ctx, &client.DeleteBcsPodRequest{
 				Data: &[]client.DeleteBcsPodRequestData{
 					{
 						BKBizID: &bkCluster.BizID,
@@ -5255,7 +5236,7 @@ func (s *Syncer) DeleteAllByCluster(bkCluster *bkcmdbkube.Cluster) error {
 
 	for _, workloadType := range workloadTypes {
 		for {
-			got, err := s.CMDBClient.GetBcsWorkload(&client.GetBcsWorkloadRequest{
+			got, err := s.CMDBClient.GetBcsWorkload(ctx, &client.GetBcsWorkloadRequest{
 				CommonRequest: client.CommonRequest{
 					BKBizID: bkCluster.BizID,
 					Fields:  []string{"id"},
@@ -5289,7 +5270,7 @@ func (s *Syncer) DeleteAllByCluster(bkCluster *bkcmdbkube.Cluster) error {
 				break
 			} else {
 				blog.Infof("delete workload: %v", workloadToDelete)
-				err := s.CMDBClient.DeleteBcsWorkload(&client.DeleteBcsWorkloadRequest{
+				err := s.CMDBClient.DeleteBcsWorkload(ctx, &client.DeleteBcsWorkloadRequest{
 					BKBizID: &bkCluster.BizID,
 					Kind:    &workloadType,
 					IDs:     &workloadToDelete,
@@ -5304,19 +5285,19 @@ func (s *Syncer) DeleteAllByCluster(bkCluster *bkcmdbkube.Cluster) error {
 	blog.Infof("delete all workload success: %s", bkCluster.Uid)
 
 	blog.Infof("start delete all namespace: %s", bkCluster.Uid)
-	if errDN := s.deleteAllByClusterNamespace(bkCluster); errDN != nil {
+	if errDN := s.deleteAllByClusterNamespace(ctx, bkCluster); errDN != nil {
 		return errDN
 	}
 	blog.Infof("delete all namespace success: %s", bkCluster.Uid)
 
 	blog.Infof("start delete all node: %s", bkCluster.Uid)
-	if errDN := s.deleteAllByClusterNode(bkCluster); errDN != nil {
+	if errDN := s.deleteAllByClusterNode(ctx, bkCluster); errDN != nil {
 		return errDN
 	}
 	blog.Infof("delete all node success: %s", bkCluster.Uid)
 
 	blog.Infof("start delete all cluster: %s", bkCluster.Uid)
-	if errDC := s.deleteAllByClusterCluster(bkCluster); errDC != nil {
+	if errDC := s.deleteAllByClusterCluster(ctx, bkCluster); errDC != nil {
 		return errDC
 	}
 	blog.Infof("delete all cluster success: %s", bkCluster.Uid)
@@ -5326,10 +5307,11 @@ func (s *Syncer) DeleteAllByCluster(bkCluster *bkcmdbkube.Cluster) error {
 
 // DeleteAllByClusterAndNamespace clean by cluster and namespace
 // nolint
-func (s *Syncer) DeleteAllByClusterAndNamespace(bkCluster *bkcmdbkube.Cluster, bkNamespace *bkcmdbkube.Namespace, db *gorm.DB) error {
+func (s *Syncer) DeleteAllByClusterAndNamespace(ctx context.Context,
+	bkCluster *bkcmdbkube.Cluster, bkNamespace *bkcmdbkube.Namespace, db *gorm.DB) error {
 	blog.Infof("start delete all: %s namespace: %s", bkCluster.Uid, bkNamespace.Name)
 	for {
-		got, err := s.CMDBClient.GetBcsPod(&client.GetBcsPodRequest{
+		got, err := s.CMDBClient.GetBcsPod(ctx, &client.GetBcsPodRequest{
 			CommonRequest: client.CommonRequest{
 				BKBizID: bkCluster.BizID,
 				Fields:  []string{"id"},
@@ -5367,7 +5349,7 @@ func (s *Syncer) DeleteAllByClusterAndNamespace(bkCluster *bkcmdbkube.Cluster, b
 			break
 		} else {
 			blog.Infof("delete pod: %v", podToDelete)
-			err := s.CMDBClient.DeleteBcsPod(&client.DeleteBcsPodRequest{
+			err := s.CMDBClient.DeleteBcsPod(ctx, &client.DeleteBcsPodRequest{
 				Data: &[]client.DeleteBcsPodRequestData{
 					{
 						BKBizID: &bkCluster.BizID,
@@ -5388,7 +5370,7 @@ func (s *Syncer) DeleteAllByClusterAndNamespace(bkCluster *bkcmdbkube.Cluster, b
 
 	for _, workloadType := range workloadTypes {
 		for {
-			got, err := s.CMDBClient.GetBcsWorkload(&client.GetBcsWorkloadRequest{
+			got, err := s.CMDBClient.GetBcsWorkload(ctx, &client.GetBcsWorkloadRequest{
 				CommonRequest: client.CommonRequest{
 					BKBizID: bkCluster.BizID,
 					Fields:  []string{"id"},
@@ -5427,7 +5409,7 @@ func (s *Syncer) DeleteAllByClusterAndNamespace(bkCluster *bkcmdbkube.Cluster, b
 				break
 			} else {
 				blog.Infof("delete workload: %v", workloadToDelete)
-				err := s.CMDBClient.DeleteBcsWorkload(&client.DeleteBcsWorkloadRequest{
+				err := s.CMDBClient.DeleteBcsWorkload(ctx, &client.DeleteBcsWorkloadRequest{
 					BKBizID: &bkCluster.BizID,
 					Kind:    &workloadType,
 					IDs:     &workloadToDelete,
@@ -5442,7 +5424,7 @@ func (s *Syncer) DeleteAllByClusterAndNamespace(bkCluster *bkcmdbkube.Cluster, b
 	blog.Infof("delete all workload success: %s", bkCluster.Uid)
 
 	blog.Infof("start delete all namespace: %s", bkCluster.Uid)
-	err := s.CMDBClient.DeleteBcsNamespace(&client.DeleteBcsNamespaceRequest{
+	err := s.CMDBClient.DeleteBcsNamespace(ctx, &client.DeleteBcsNamespaceRequest{
 		BKBizID: &bkCluster.BizID,
 		IDs:     &[]int64{bkNamespace.ID},
 	}, db)
@@ -5455,9 +5437,9 @@ func (s *Syncer) DeleteAllByClusterAndNamespace(bkCluster *bkcmdbkube.Cluster, b
 	return nil
 }
 
-func (s *Syncer) deleteAllByClusterCluster(bkCluster *bkcmdbkube.Cluster) error {
+func (s *Syncer) deleteAllByClusterCluster(ctx context.Context, bkCluster *bkcmdbkube.Cluster) error {
 	for {
-		got, err := s.CMDBClient.GetBcsCluster(&client.GetBcsClusterRequest{
+		got, err := s.CMDBClient.GetBcsCluster(ctx, &client.GetBcsClusterRequest{
 			CommonRequest: client.CommonRequest{
 				BKBizID: bkCluster.BizID,
 				Fields:  []string{"id"},
@@ -5480,7 +5462,7 @@ func (s *Syncer) deleteAllByClusterCluster(bkCluster *bkcmdbkube.Cluster) error 
 			break
 		} else {
 			blog.Infof("delete cluster: %v", clusterToDelete)
-			errDC := s.CMDBClient.DeleteBcsCluster(&client.DeleteBcsClusterRequest{
+			errDC := s.CMDBClient.DeleteBcsCluster(ctx, &client.DeleteBcsClusterRequest{
 				BKBizID: &bkCluster.BizID,
 				IDs:     &clusterToDelete,
 			}, nil)
@@ -5493,9 +5475,9 @@ func (s *Syncer) deleteAllByClusterCluster(bkCluster *bkcmdbkube.Cluster) error 
 	return nil
 }
 
-func (s *Syncer) deleteAllByClusterNode(bkCluster *bkcmdbkube.Cluster) error {
+func (s *Syncer) deleteAllByClusterNode(ctx context.Context, bkCluster *bkcmdbkube.Cluster) error {
 	for {
-		got, err := s.CMDBClient.GetBcsNode(&client.GetBcsNodeRequest{
+		got, err := s.CMDBClient.GetBcsNode(ctx, &client.GetBcsNodeRequest{
 			CommonRequest: client.CommonRequest{
 				BKBizID: bkCluster.BizID,
 				Page: client.Page{
@@ -5517,7 +5499,7 @@ func (s *Syncer) deleteAllByClusterNode(bkCluster *bkcmdbkube.Cluster) error {
 			break
 		} else {
 			blog.Infof("delete node: %v", nodeToDelete)
-			err := s.CMDBClient.DeleteBcsNode(&client.DeleteBcsNodeRequest{
+			err := s.CMDBClient.DeleteBcsNode(ctx, &client.DeleteBcsNodeRequest{
 				BKBizID: &bkCluster.BizID,
 				IDs:     &nodeToDelete,
 			}, nil)
@@ -5530,9 +5512,9 @@ func (s *Syncer) deleteAllByClusterNode(bkCluster *bkcmdbkube.Cluster) error {
 	return nil
 }
 
-func (s *Syncer) deleteAllByClusterNamespace(bkCluster *bkcmdbkube.Cluster) error {
+func (s *Syncer) deleteAllByClusterNamespace(ctx context.Context, bkCluster *bkcmdbkube.Cluster) error {
 	for {
-		got, err := s.CMDBClient.GetBcsNamespace(&client.GetBcsNamespaceRequest{
+		got, err := s.CMDBClient.GetBcsNamespace(ctx, &client.GetBcsNamespaceRequest{
 			CommonRequest: client.CommonRequest{
 				BKBizID: bkCluster.BizID,
 				Fields:  []string{"id"},
@@ -5555,7 +5537,7 @@ func (s *Syncer) deleteAllByClusterNamespace(bkCluster *bkcmdbkube.Cluster) erro
 			break
 		} else {
 			blog.Infof("delete namespace: %v", namespaceToDelete)
-			err := s.CMDBClient.DeleteBcsNamespace(&client.DeleteBcsNamespaceRequest{
+			err := s.CMDBClient.DeleteBcsNamespace(ctx, &client.DeleteBcsNamespaceRequest{
 				BKBizID: &bkCluster.BizID,
 				IDs:     &namespaceToDelete,
 			}, nil)
