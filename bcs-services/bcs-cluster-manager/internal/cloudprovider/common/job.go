@@ -248,7 +248,7 @@ func ExecuteScriptByJob(ctx context.Context, stepName, bizID, content string, ip
 		job.GetJobTaskLink(jobID))
 
 	// check status
-	ctx, cancel := context.WithTimeout(context.TODO(), 10*time.Minute)
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Minute)
 	defer cancel()
 
 	err = loop.LoopDoFunc(ctx, func() error {

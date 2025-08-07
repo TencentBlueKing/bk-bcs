@@ -15,13 +15,16 @@ package bcsstorage
 
 import (
 	"context"
+	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
-	pmp "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
+	// pmp "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
 	cmp "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
 	"google.golang.org/grpc"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/client"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/option"
+	pmp "github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/types"
 )
 
 type bcsStorageClient struct {
@@ -106,4 +109,29 @@ func NewStorageClient(config *bcsapi.Config) client.Client {
 	return &bcsStorageClient{
 		Config: config,
 	}
+}
+
+// GetBcsStorageClient is a function that returns a BCS storage client.
+func GetBcsStorageClient() (bcsapi.Storage, error) {
+	tlsConfig, err := option.InitTClientTlsConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	// Create a BCS API configuration with the given options.
+	config := &bcsapi.Config{
+		Hosts:     []string{option.GetGlobalConfig().Bcsapi.HttpAddr},
+		AuthToken: option.GetGlobalConfig().Bcsapi.BearerToken,
+		TLSConfig: tlsConfig,
+		Gateway:   strings.Contains(option.GetGlobalConfig().Bcsapi.HttpAddr, "gateway"),
+	}
+
+	// Create a new BCS storage client with the configuration.
+	cli := NewStorageClient(config)
+
+	// Get the storage client from the BCS storage client.
+	storageCli, err := cli.GetStorageClient()
+
+	// Return the storage client and any error that occurred.
+	return storageCli, err
 }

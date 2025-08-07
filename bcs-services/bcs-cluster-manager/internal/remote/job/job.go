@@ -71,7 +71,7 @@ func NewJobClient(options Options) (*Client, error) {
 func (c *Client) ExecuteScript(ctx context.Context, paras ExecuteScriptParas) (uint64, error) {
 	var (
 		_    = "ExecuteScript"
-		path = fmt.Sprintf("%s/api/v3/fast_execute_script/", c.Server)
+		path = fmt.Sprintf("%s/api/v3/system/fast_execute_script/", c.Server)
 	)
 
 	req := transToBkJobExecuteScriptReq(paras)
@@ -120,7 +120,7 @@ func (c *Client) ExecuteScript(ctx context.Context, paras ExecuteScriptParas) (u
 func (c *Client) GetJobStatus(ctx context.Context, job JobInfo) (int, error) {
 	var (
 		_    = "GetJobStatus"
-		path = fmt.Sprintf("%s/api/v3/get_job_instance_status/", c.Server)
+		path = fmt.Sprintf("%s/api/v3/system/get_job_instance_status/", c.Server)
 	)
 
 	resp := &GetJobInstanceStatusRsp{}

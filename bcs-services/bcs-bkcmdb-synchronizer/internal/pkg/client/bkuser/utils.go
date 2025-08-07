@@ -10,8 +10,7 @@
  * limitations under the License.
  */
 
-// Package utils xxx
-package utils
+package bkuser
 
 import (
 	"context"
@@ -21,18 +20,17 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	gocache "github.com/patrickmn/go-cache"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/bk_user"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cache"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/types"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tenant"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/client"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/client/cache"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/option"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/tenant"
 )
 
 // GetGatewayAuthAndTenantInfo generate blueking gateway auth and tenant info, user is bkUserName
-func GetGatewayAuthAndTenantInfo(ctx context.Context, auth *types.AuthInfo, user string) (string, string, error) {
+func GetGatewayAuthAndTenantInfo(ctx context.Context, auth *client.AuthInfo, user string) (string, string, error) {
 	tenantId := tenant.GetTenantIdFromContext(ctx)
 
-	if options.GetGlobalCMOptions().TenantConfig.EnableMultiTenantMode {
+	if option.GetGlobalConfig().Synchronizer.EnableMultiTenantMode {
 		// 多租户模式下，优先使用传入的user，否则根据租户获取用户名
 		if user != "" {
 			auth.BkUserName = user
@@ -69,7 +67,7 @@ func buildCacheName(keyPrefix string, tenant, name string) string {
 
 // GetBkUserNameByTenantLoginName get bkUserName by tenant login name
 func GetBkUserNameByTenantLoginName(ctx context.Context, tenantId, loginName string, useCache bool) (string, error) {
-	if !options.GetGlobalCMOptions().TenantConfig.EnableMultiTenantMode {
+	if !option.GetGlobalConfig().Synchronizer.EnableMultiTenantMode {
 		return loginName, nil
 	}
 
@@ -84,7 +82,7 @@ func GetBkUserNameByTenantLoginName(ctx context.Context, tenantId, loginName str
 		}
 	}
 
-	data, err := bk_user.GetBkUserClient().QueryUserInfoByTenantLoginName(ctx, tenantId, loginName)
+	data, err := GetBkUserClient().QueryUserInfoByTenantLoginName(ctx, tenantId, loginName)
 	if err != nil {
 		blog.Errorf("GetBkUserNameByTenantLoginName QueryUserInfoByTenantLoginName failed, err: %v", err)
 		return "", err
