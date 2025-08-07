@@ -71,7 +71,7 @@ const (
 	// ResponseMsgBodyRequired is the message when the template body is missing.
 	ResponseMsgBodyRequired = "template body is required"
 	// ResponseMsgDomainMismatch is the message when the domain of the resource does not match the requested domain.
-	ResponseMsgDomainMismatch = "domain mismatch"
+	ResponseMsgDomainMismatch = "domain in path and request body must be the same"
 )
 
 // Push event status constants.

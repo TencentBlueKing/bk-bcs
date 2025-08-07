@@ -30,6 +30,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
+	"github.com/Tencent/bk-bcs/bcs-common/common/version"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
 	grpccli "github.com/go-micro/plugins/v4/client/grpc"
 	"github.com/go-micro/plugins/v4/registry/etcd"
@@ -298,7 +299,7 @@ func (s *Server) initMicro() error {
 		micro.Context(s.ctx),
 		micro.Metadata(map[string]string{constant.MicroMetaKeyHTTPPort: strconv.Itoa(int(s.opt.HTTPPort))}),
 		micro.Address(net.JoinHostPort(s.opt.ServerConfig.Address, strconv.Itoa(int(s.opt.Port)))),
-		micro.Version(s.opt.ServerConfig.Version),
+		micro.Version(version.BcsVersion),
 		micro.RegisterTTL(30*time.Second),
 		micro.RegisterInterval(25*time.Second),
 		micro.Registry(s.microRegistry),

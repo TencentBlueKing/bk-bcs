@@ -150,5 +150,4 @@ func (n *NotificationAction) sendNotification(pushType string, pushMsg *mq.PushE
 		blog.Infof("unknown notification type: %s", pushType)
 		return fmt.Errorf("unknown notification type: %s", pushType)
 	}
-	return nil
 }

@@ -57,6 +57,12 @@ func (a *PushWhitelistAction) CreatePushWhitelist(ctx context.Context, req *pb.C
 		return nil
 	}
 
+	if err := validateDomainMatch(req.Whitelist.Domain, req.Domain); err != nil {
+		rsp.Code = uint32(constant.ResponseCodeBadRequest)
+		rsp.Message = err.Error()
+		return nil
+	}
+
 	// convert to internal type
 	whitelist := &types.PushWhitelist{
 		WhitelistID:     req.Whitelist.WhitelistId,
@@ -127,8 +133,25 @@ func (a *PushWhitelistAction) DeletePushWhitelist(ctx context.Context, req *pb.D
 		return nil
 	}
 
+	whitelist, err := a.store.GetPushWhitelist(ctx, req.WhitelistId)
+	if err != nil {
+		rsp.Code = uint32(constant.ResponseCodeInternalError)
+		rsp.Message = fmt.Sprintf("failed to get push whitelist: %v", err)
+		return nil
+	}
+	if whitelist == nil {
+		rsp.Code = uint32(constant.ResponseCodeNotFound)
+		rsp.Message = constant.ResponseMsgPushWhitelistNotFound
+		return nil
+	}
+	if err := validateDomainMatch(whitelist.Domain, req.Domain); err != nil {
+		rsp.Code = uint32(constant.ResponseCodeBadRequest)
+		rsp.Message = err.Error()
+		return nil
+	}
+
 	// call store layer
-	err := a.store.DeletePushWhitelist(ctx, req.WhitelistId)
+	err = a.store.DeletePushWhitelist(ctx, req.WhitelistId)
 	if err != nil {
 		rsp.Code = uint32(constant.ResponseCodeInternalError)
 		rsp.Message = fmt.Sprintf("failed to delete push whitelist: %v", err)
@@ -166,6 +189,12 @@ func (a *PushWhitelistAction) GetPushWhitelist(ctx context.Context, req *pb.GetP
 	if whitelist == nil {
 		rsp.Code = uint32(constant.ResponseCodeNotFound)
 		rsp.Message = constant.ResponseMsgPushWhitelistNotFound
+		return nil
+	}
+
+	if err := validateDomainMatch(whitelist.Domain, req.Domain); err != nil {
+		rsp.Code = uint32(constant.ResponseCodeBadRequest)
+		rsp.Message = err.Error()
 		return nil
 	}
 

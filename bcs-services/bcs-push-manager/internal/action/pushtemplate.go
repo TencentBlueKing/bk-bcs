@@ -56,6 +56,11 @@ func (a *PushTemplateAction) CreatePushTemplate(ctx context.Context, req *pb.Cre
 		rsp.Message = constant.ResponseMsgTemplateIDRequired
 		return nil
 	}
+	if req.Domain != req.Template.Domain {
+		rsp.Code = uint32(constant.ResponseCodeBadRequest)
+		rsp.Message = constant.ResponseMsgDomainMismatch
+		return nil
+	}
 
 	// convert to internal type
 	template := &types.PushTemplate{
@@ -104,7 +109,24 @@ func (a *PushTemplateAction) DeletePushTemplate(ctx context.Context, req *pb.Del
 	}
 
 	// call store layer
-	err := a.store.DeletePushTemplate(ctx, req.TemplateId)
+	template, err := a.store.GetPushTemplate(ctx, req.TemplateId)
+	if err != nil {
+		rsp.Code = uint32(constant.ResponseCodeInternalError)
+		rsp.Message = fmt.Sprintf("failed to get push template: %v", err)
+		return nil
+	}
+	if template == nil {
+		rsp.Code = uint32(constant.ResponseCodeNotFound)
+		rsp.Message = constant.ResponseMsgPushTemplateNotFound
+		return nil
+	}
+	if err := validateDomainMatch(template.Domain, req.Domain); err != nil {
+		rsp.Code = uint32(constant.ResponseCodeBadRequest)
+		rsp.Message = err.Error()
+		return nil
+	}
+
+	err = a.store.DeletePushTemplate(ctx, req.TemplateId)
 	if err != nil {
 		rsp.Code = uint32(constant.ResponseCodeInternalError)
 		rsp.Message = fmt.Sprintf("failed to delete push template: %v", err)
@@ -142,6 +164,11 @@ func (a *PushTemplateAction) GetPushTemplate(ctx context.Context, req *pb.GetPus
 	if template == nil {
 		rsp.Code = uint32(constant.ResponseCodeNotFound)
 		rsp.Message = constant.ResponseMsgPushTemplateNotFound
+		return nil
+	}
+	if err := validateDomainMatch(template.Domain, req.Domain); err != nil {
+		rsp.Code = uint32(constant.ResponseCodeBadRequest)
+		rsp.Message = err.Error()
 		return nil
 	}
 

@@ -167,9 +167,20 @@ func (m *ModelPushTemplate) UpdatePushTemplate(ctx context.Context, templateID s
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{
 		pushTemplateUniqueKey: templateID,
 	})
+	if update == nil {
+		return fmt.Errorf("update cannot be nil")
+	}
+	set, ok := update["$set"].(operator.M)
+	if !ok {
+		return fmt.Errorf("invalid update format: $set must be operator.M type")
+	}
+	if set == nil {
+		set = operator.M{}
+		update["$set"] = set
+	}
+	set["updated_at"] = time.Now()
 
-	update["updated_at"] = time.Now()
-	if err := m.DB.Table(m.TableName).Update(ctx, cond, operator.M{"$set": update}); err != nil {
+	if err := m.DB.Table(m.TableName).Update(ctx, cond, update); err != nil {
 		return fmt.Errorf("update push template failed: %v", err)
 	}
 	return nil

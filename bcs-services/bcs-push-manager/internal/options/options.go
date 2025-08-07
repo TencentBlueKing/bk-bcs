@@ -35,8 +35,6 @@ type ServiceOptions struct {
 
 // ServerConfig defines the config for the server.
 type ServerConfig struct {
-	Name       string `json:"name"`
-	Version    string `json:"version"`
 	Address    string `json:"address"`
 	Port       uint   `json:"port"`
 	HTTPPort   uint   `json:"httpport"`

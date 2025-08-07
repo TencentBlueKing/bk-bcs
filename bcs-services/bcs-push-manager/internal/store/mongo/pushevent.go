@@ -157,9 +157,20 @@ func (m *ModelPushEvent) UpdatePushEvent(ctx context.Context, eventID string, up
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{
 		pushEventUniqueKey: eventID,
 	})
+	if update == nil {
+		return fmt.Errorf("update cannot be nil")
+	}
+	set, ok := update["$set"].(operator.M)
+	if !ok {
+		return fmt.Errorf("invalid update format: $set must be operator.M type")
+	}
+	if set == nil {
+		set = operator.M{}
+		update["$set"] = set
+	}
+	set["updated_at"] = time.Now()
 
-	update["updated_at"] = time.Now()
-	if err := m.DB.Table(m.TableName).Update(ctx, cond, operator.M{"$set": update}); err != nil {
+	if err := m.DB.Table(m.TableName).Update(ctx, cond, update); err != nil {
 		return fmt.Errorf("update push event failed: %v", err)
 	}
 	return nil
@@ -167,7 +178,9 @@ func (m *ModelPushEvent) UpdatePushEvent(ctx context.Context, eventID string, up
 
 // UpdatePushEventStatus updates the status of a specific event.
 func (m *ModelPushEvent) UpdatePushEventStatus(ctx context.Context, eventID string, status int) error {
-	return m.UpdatePushEvent(ctx, eventID, operator.M{"status": status})
+	return m.UpdatePushEvent(ctx, eventID, operator.M{
+		"$set": operator.M{"status": status},
+	})
 }
 
 // AppendNotificationResult appends or updates the notification_results field for an event.
@@ -185,5 +198,7 @@ func (m *ModelPushEvent) AppendNotificationResult(ctx context.Context, eventID s
 	}
 	event.NotificationResults.Fields[channel] = result
 
-	return m.UpdatePushEvent(ctx, eventID, operator.M{"notification_results": event.NotificationResults})
+	return m.UpdatePushEvent(ctx, eventID, operator.M{
+		"$set": operator.M{"notification_results": event.NotificationResults},
+	})
 }

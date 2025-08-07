@@ -63,6 +63,12 @@ func (a *PushEventAction) CreatePushEvent(ctx context.Context, req *pb.CreatePus
 		req.Event.PushLevel = constant.AlertLevelWarning
 	}
 
+	if err := validateDomainMatch(req.Event.Domain, req.Domain); err != nil {
+		rsp.Code = uint32(constant.ResponseCodeBadRequest)
+		rsp.Message = err.Error()
+		return nil
+	}
+
 	// convert to internal type
 	event := &types.PushEvent{
 		EventID:             req.Event.EventId,
@@ -147,8 +153,25 @@ func (a *PushEventAction) DeletePushEvent(ctx context.Context, req *pb.DeletePus
 		return nil
 	}
 
+	event, err := a.store.GetPushEvent(ctx, req.EventId)
+	if err != nil {
+		rsp.Code = uint32(constant.ResponseCodeInternalError)
+		rsp.Message = fmt.Sprintf("failed to get push event: %v", err)
+		return nil
+	}
+	if event == nil {
+		rsp.Code = uint32(constant.ResponseCodeNotFound)
+		rsp.Message = constant.ResponseMsgPushEventNotFound
+		return nil
+	}
+	if err := validateDomainMatch(event.Domain, req.Domain); err != nil {
+		rsp.Code = uint32(constant.ResponseCodeBadRequest)
+		rsp.Message = err.Error()
+		return nil
+	}
+
 	// call store layer
-	err := a.store.DeletePushEvent(ctx, req.EventId)
+	err = a.store.DeletePushEvent(ctx, req.EventId)
 	if err != nil {
 		rsp.Code = uint32(constant.ResponseCodeInternalError)
 		rsp.Message = fmt.Sprintf("failed to delete push event: %v", err)
@@ -186,6 +209,12 @@ func (a *PushEventAction) GetPushEvent(ctx context.Context, req *pb.GetPushEvent
 	if event == nil {
 		rsp.Code = uint32(constant.ResponseCodeNotFound)
 		rsp.Message = constant.ResponseMsgPushEventNotFound
+		return nil
+	}
+
+	if err := validateDomainMatch(event.Domain, req.Domain); err != nil {
+		rsp.Code = uint32(constant.ResponseCodeBadRequest)
+		rsp.Message = err.Error()
 		return nil
 	}
 
@@ -322,6 +351,22 @@ func (a *PushEventAction) UpdatePushEvent(ctx context.Context, req *pb.UpdatePus
 		rsp.Message = constant.ResponseMsgEventRequired
 		return nil
 	}
+	event, err := a.store.GetPushEvent(ctx, req.EventId)
+	if err != nil {
+		rsp.Code = uint32(constant.ResponseCodeInternalError)
+		rsp.Message = fmt.Sprintf("failed to get push event: %v", err)
+		return nil
+	}
+	if event == nil {
+		rsp.Code = uint32(constant.ResponseCodeNotFound)
+		rsp.Message = constant.ResponseMsgPushEventNotFound
+		return nil
+	}
+	if err := validateDomainMatch(event.Domain, req.Domain); err != nil {
+		rsp.Code = uint32(constant.ResponseCodeBadRequest)
+		rsp.Message = err.Error()
+		return nil
+	}
 
 	// build update fields
 	updateFields := operator.M{}
@@ -371,7 +416,7 @@ func (a *PushEventAction) UpdatePushEvent(ctx context.Context, req *pb.UpdatePus
 	update := operator.M{"$set": updateFields}
 
 	// call store layer
-	err := a.store.UpdatePushEvent(ctx, req.EventId, update)
+	err = a.store.UpdatePushEvent(ctx, req.EventId, update)
 	if err != nil {
 		rsp.Code = uint32(constant.ResponseCodeInternalError)
 		rsp.Message = fmt.Sprintf("failed to update push event: %v", err)

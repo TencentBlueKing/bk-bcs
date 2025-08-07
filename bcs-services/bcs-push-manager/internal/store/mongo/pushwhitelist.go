@@ -187,11 +187,18 @@ func (m *ModelPushWhitelist) UpdatePushWhitelist(ctx context.Context, whitelistI
 			operator.NewLeafCondition(operator.Eq, operator.M{"deleted_at": operator.M{"$exists": false}}),
 		),
 	)
-
-	if update["$set"] == nil {
-		update["$set"] = operator.M{}
+	if update == nil {
+		return fmt.Errorf("update cannot be nil")
 	}
-	update["$set"].(operator.M)["updated_at"] = time.Now()
+	set, ok := update["$set"].(operator.M)
+	if !ok {
+		return fmt.Errorf("invalid update format: $set must be operator.M type")
+	}
+	if set == nil {
+		set = operator.M{}
+		update["$set"] = set
+	}
+	set["updated_at"] = time.Now()
 
 	if err := m.DB.Table(m.TableName).Update(ctx, cond, update); err != nil {
 		return fmt.Errorf("update push whitelist failed: %v", err)
@@ -237,11 +244,10 @@ func (m *ModelPushWhitelist) IsDimensionWhitelisted(ctx context.Context, domain 
 				"updated_at":       now,
 			}}
 			cond := operator.NewLeafCondition(operator.Eq, operator.M{"_id": wl.ID})
-			err := m.DB.Table(m.TableName).Update(ctx, cond, update)
-			if err != nil {
-				return false, fmt.Errorf("update failed: %v", err)
+			if err := m.DB.Table(m.TableName).Update(ctx, cond, update); err != nil {
+				return false, fmt.Errorf("update expired whitelist status failed: %v", err)
 			}
-			continue
+			return false, nil
 		}
 		return true, nil
 	}

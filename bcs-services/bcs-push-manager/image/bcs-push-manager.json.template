@@ -1,8 +1,6 @@
 {
   "server_config": {
-    "name": "${serverName}",
-    "version": "${serverVersion}",
-    "address": "${serverAddress}",
+    "address": "${localIp}",
     "port": ${serverPort},
     "httpport": ${serverHttpPort},
     "servercert": "${serverCert}",
