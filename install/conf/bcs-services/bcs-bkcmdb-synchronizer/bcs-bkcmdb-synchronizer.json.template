@@ -5,7 +5,8 @@
     "bkBizID": ${synchronizer_bkBizID},
     "hostID": ${synchronizer_hostID},
     "whiteList": "${synchronizer_whiteList}",
-    "blackList": "${synchronizer_blackList}"
+    "blackList": "${synchronizer_blackList}",
+    "enableMultiTenantMode": ${enableMultiTenantMode}
   },
   "client": {
     "client_crt_pwd": "${client_clientCrtPwd}",
@@ -45,6 +46,12 @@
     "bk_username": "${cmdb_bkUsername}",
     "server": "${cmdb_server}",
     "debug": ${cmdb_debug}
+  },
+  "bkUser": {
+    "appCode": "${cmdb_appCode}",
+    "appSecret": "${cmdb_appSecret}",
+    "server": "${bcsBkUserServer}",
+    "debug": ${bcsBkUserDebug}
   },
   "shared_cluster": {
     "annotation_key_proj_code": "${sharedCluster_annoKeyProjCode}"

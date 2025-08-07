@@ -23,7 +23,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
-	pmp "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
+	// pmp "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
 	cmp "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
 	"github.com/patrickmn/go-cache"
 	"go-micro.dev/v4/registry"
@@ -34,6 +34,8 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/client"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/discovery"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/option"
+	pmp "github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/types"
 )
 
 const (
@@ -342,5 +344,26 @@ func NewClusterManagerGrpcGwClient(opts *Options) (cmCli *client.ClusterManagerC
 		return nil, fmt.Errorf("cmcli ping error %s", err.Error())
 	}
 	blog.Infof("init cluster manager client successfully")
+	return cmCli, nil
+}
+
+// GetClusterManagerGrpcGwClient get cluster manager client
+func GetClusterManagerGrpcGwClient() (cmCli *client.ClusterManagerClientWithHeader, err error) {
+	tlsConfig, err := option.InitTClientTlsConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	opts := &Options{
+		Module:          ModuleClusterManager,
+		Address:         option.GetGlobalConfig().Bcsapi.GrpcAddr,
+		EtcdRegistry:    nil,
+		ClientTLSConfig: tlsConfig,
+		AuthToken:       option.GetGlobalConfig().Bcsapi.BearerToken,
+	}
+	cmCli, err = NewClusterManagerGrpcGwClient(opts)
+	if err != nil {
+		return nil, err
+	}
 	return cmCli, nil
 }

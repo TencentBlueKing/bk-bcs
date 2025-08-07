@@ -16,11 +16,19 @@ import (
 	"context"
 	"crypto/tls"
 	"math/big"
+	"time"
 
 	bkcmdbkube "configcenter/src/kube/types" // nolint
-	pmp "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
+	// pmp "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
 	cmp "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
 	bcsregistry "github.com/Tencent/bk-bcs/bcs-common/pkg/registry"
+
+	pmp "github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/types"
+)
+
+var (
+	// DefaultTimeOut default timeout
+	DefaultTimeOut = time.Second * 60
 )
 
 // field result
@@ -31,6 +39,9 @@ const (
 // condition result
 const (
 	ConditionBkBizID = "bk_biz_id"
+
+	// BkTenantIdHeaderKey is the header name of X-Bk-Tenant-Id.
+	BkTenantIdHeaderKey = "X-Bk-Tenant-Id"
 )
 
 // Page page
@@ -1098,3 +1109,24 @@ type VolumeMount struct {
 // MountPropagationMode describes mount propagation.
 // +enum
 type MountPropagationMode string
+
+// CommonClient client common section
+type CommonClient struct {
+	AppCode   string
+	AppSecret string
+	Server    string
+	Debug     bool
+}
+
+// BkAppUser appCode/appSecret
+type BkAppUser struct {
+	BkAppCode   string `json:"bk_app_code"`
+	BkAppSecret string `json:"bk_app_secret"`
+}
+
+// AuthInfo auth user for gateway
+type AuthInfo struct {
+	BkAppUser
+	BkUserName  string `json:"bk_username,omitempty"`
+	AccessToken string `json:"access_token,omitempty"`
+}

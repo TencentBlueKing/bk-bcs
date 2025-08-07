@@ -24,11 +24,13 @@ import (
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/template"
 	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tenant"
 )
 
 // ListTemplateListAction action for list sops templates
@@ -104,6 +106,9 @@ func (la *ListTemplateListAction) Handle(
 	la.ctx = ctx
 	la.req = req
 	la.resp = resp
+
+	user := auth.GetAuthAndTenantInfoFromCtx(la.ctx)
+	la.ctx = tenant.WithTenantIdFromContext(la.ctx, user.ResourceTenantId)
 
 	if err := req.Validate(); err != nil {
 		la.setResp(icommon.BcsErrClusterManagerInvalidParameter, err.Error())
@@ -215,6 +220,9 @@ func (la *GetTemplateInfoAction) Handle(
 	la.ctx = ctx
 	la.req = req
 	la.resp = resp
+
+	user := auth.GetAuthAndTenantInfoFromCtx(la.ctx)
+	la.ctx = tenant.WithTenantIdFromContext(la.ctx, user.ResourceTenantId)
 
 	if err := req.Validate(); err != nil {
 		la.setResp(icommon.BcsErrClusterManagerInvalidParameter, err.Error())

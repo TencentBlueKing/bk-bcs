@@ -183,7 +183,7 @@ func InstallGSEAgentTask(taskID string, stepName string) error { // nolint
 	}
 
 	// get apID from cloud list
-	clouds, err := nodeManClient.CloudList(context.Background())
+	clouds, err := nodeManClient.CloudList(ctx)
 	if err != nil {
 		blog.Errorf("InstallGSEAgentTask %s get cloud list error, %s", taskID, err.Error())
 		retErr := fmt.Errorf("get cloud list error, %s", err.Error())
@@ -279,7 +279,7 @@ func InstallGSEAgentTask(taskID string, stepName string) error { // nolint
 	blog.Infof("InstallGSEAgentTask %s install gse agent job(%d) url %s", taskID, job.JobID, job.JobURL)
 
 	// check status
-	ctx, cancel := context.WithTimeout(context.TODO(), 10*time.Minute)
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Minute)
 	defer cancel()
 	err = loop.LoopDoFunc(ctx, func() error {
 		detail, errLocal := nodeManClient.JobDetails(ctx, job.JobID)

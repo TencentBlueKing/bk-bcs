@@ -119,7 +119,7 @@ func GetResourceTenantId(ctx context.Context, req server.Request) (string, error
 		return "", err
 	}
 
-	blog.Infof("CheckUserResourceTenantAttrFunc mehtod[%s], body: %s", req.Method(), string(b))
+	blog.Infof("CheckUserResourceTenantAttrFunc method[%s], body: %s", req.Method(), string(b))
 
 	// parse resource id
 	resource := &resourceID{}
