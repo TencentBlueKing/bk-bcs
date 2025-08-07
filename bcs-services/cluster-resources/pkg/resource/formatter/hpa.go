@@ -148,12 +148,12 @@ func (p *hpaTargetsParser) parseResourceMetric(idx int, spec LightHPAMetricSpec)
 		return fmt.Sprintf("%s/%s", current, spec.Resource.Target.AverageValue)
 	}
 	if len(p.statuses) > idx && p.statuses[idx].Resource != nil &&
-		p.statuses[idx].Resource.Current.AverageUtilization != 0 {
-		current = fmt.Sprintf("%d%%", p.statuses[idx].Resource.Current.AverageUtilization)
+		p.statuses[idx].Resource.Current.AverageUtilization != nil {
+		current = fmt.Sprintf("%d%%", *p.statuses[idx].Resource.Current.AverageUtilization)
 	}
 	target := HPAMetricTargetDefaultVal
-	if spec.Resource.Target.AverageUtilization != 0 {
-		target = fmt.Sprintf("%d%%", spec.Resource.Target.AverageUtilization)
+	if spec.Resource.Target.AverageUtilization != nil {
+		target = fmt.Sprintf("%d%%", *spec.Resource.Target.AverageUtilization)
 	}
 	return fmt.Sprintf("%s/%s", current, target)
 }
@@ -168,12 +168,12 @@ func (p *hpaTargetsParser) parseContainerResourceMetric(idx int, spec LightHPAMe
 		return fmt.Sprintf("%s/%s", current, spec.ContainerResource.Target.AverageValue)
 	}
 	if len(p.statuses) > idx && p.statuses[idx].ContainerResource != nil &&
-		p.statuses[idx].ContainerResource.Current.AverageUtilization != 0 {
-		current = fmt.Sprintf("%d%%", p.statuses[idx].ContainerResource.Current.AverageUtilization)
+		p.statuses[idx].ContainerResource.Current.AverageUtilization != nil {
+		current = fmt.Sprintf("%d%%", *p.statuses[idx].ContainerResource.Current.AverageUtilization)
 	}
 	target := HPAMetricTargetDefaultVal
-	if spec.ContainerResource.Target.AverageUtilization != 0 {
-		target = fmt.Sprintf("%d%%", spec.ContainerResource.Target.AverageUtilization)
+	if spec.ContainerResource.Target.AverageUtilization != nil {
+		target = fmt.Sprintf("%d%%", *spec.ContainerResource.Target.AverageUtilization)
 	}
 	return fmt.Sprintf("%s/%s", current, target)
 }
