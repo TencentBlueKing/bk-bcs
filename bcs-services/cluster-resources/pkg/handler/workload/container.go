@@ -18,10 +18,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/perm"
 	respUtil "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/resp"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/pbstruct"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/stringx"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
@@ -61,7 +58,7 @@ func (h *Handler) GetContainerEnvInfo(
 		req.Namespace, req.PodName, req.ContainerName, []string{"/bin/sh", "-c", "env"},
 	)
 	if err != nil {
-		return errorx.New(errcode.General, i18n.GetMsg(ctx, "获取容器环境变量失败，请确认容器处于 Running 状态"))
+		return err
 	}
 
 	// 逐行解析 stdout，生成容器 env 信息
