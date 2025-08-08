@@ -247,8 +247,5 @@ var clusterIdRe = regexp.MustCompile("^BCS-[^-]+-.+$")
 
 // checkClusterUser check clusterId
 func checkClusterClient(username string) bool {
-	if clusterIdRe.MatchString(username) {
-		return true
-	}
-	return false
+	return clusterIdRe.MatchString(username)
 }
