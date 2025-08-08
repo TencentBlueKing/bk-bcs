@@ -223,7 +223,7 @@ function handleReject(error, config) {
     if (status === 401) {
       // 登录弹窗
       const successUrl = `${location.origin}${window.BK_STATIC_URL}/login_success.html`;
-      const loginUrl = `${window.LOGIN_FULL}plain/?size=big&c_url=${encodeURIComponent(successUrl)}`;
+      const loginUrl = `${window.LOGIN_FULL}${window.LOGIN_FULL.endsWith('/') ? '' : '/'}plain/?size=big&c_url=${encodeURIComponent(successUrl)}`;
       // 传入最终的登录地址，弹出登录窗口，更多选项参考 Options
       showLoginModal({ loginUrl });
 
