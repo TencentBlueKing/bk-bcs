@@ -64,6 +64,26 @@ func (ca *CreateAction) importCloudModuleFlagList() error {
 			UpdateTime:    timeStr,
 			FlagType:      ca.req.FlagList[i].FlagType,
 			FlagValueList: ca.req.FlagList[i].FlagValueList,
+			Schedule: func() *cmproto.Schedule {
+				if ca.req.FlagList[i].GetSchedule() != nil {
+					return &cmproto.Schedule{
+						StartDate: ca.req.FlagList[i].GetSchedule().StartDate,
+						CycleDays: func(startDate, TerminationDate string) string {
+							sDate, _ := time.Parse(time.DateOnly, startDate)
+							tDate, _ := time.Parse(time.DateOnly, TerminationDate)
+							return fmt.Sprintf("%d", int(tDate.Sub(sDate).Hours()/24))
+						}(ca.req.FlagList[i].Schedule.StartDate, ca.req.FlagList[i].Schedule.TerminationDate),
+						TerminationDate: ca.req.FlagList[i].GetSchedule().TerminationDate,
+						AdvDays: func(advDays string) string {
+							if advDays != "" {
+								return advDays
+							}
+							return "30"
+						}(ca.req.FlagList[i].GetSchedule().AdvDays),
+					}
+				}
+				return nil
+			}(),
 			Regex: func() *cmproto.ValueRegex {
 				if ca.req.FlagList[i].GetRegex() != nil {
 					return &cmproto.ValueRegex{
@@ -146,6 +166,18 @@ func (ca *CreateAction) validate() error {
 	err := ca.req.Validate()
 	if err != nil {
 		return err
+	}
+
+	for _, v := range ca.req.FlagList {
+		_, err = time.Parse(time.DateOnly, v.Schedule.StartDate)
+		if err != nil {
+			return fmt.Errorf("invalid start date format: %s", v.Schedule.StartDate)
+		}
+
+		_, err = time.Parse(time.DateOnly, v.Schedule.TerminationDate)
+		if err != nil {
+			return fmt.Errorf("invalid start date format: %s", v.Schedule.TerminationDate)
+		}
 	}
 
 	return nil
