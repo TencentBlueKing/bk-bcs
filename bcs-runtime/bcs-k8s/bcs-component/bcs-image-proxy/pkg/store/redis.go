@@ -127,7 +127,7 @@ func (r *RedisStore) buildLayerKey(layer string, ociType LayerType) string {
 // SaveOCILayer save the dockerd/containerd layers with filepath
 func (r *RedisStore) SaveOCILayer(ctx context.Context, ociType LayerType, layer, filePath string) error {
 	rdk := r.buildLayerKey(layer, ociType)
-	if err := r.redisClient.Set(ctx, rdk, filePath, 180*time.Second).Err(); err != nil {
+	if err := r.redisClient.Set(context.WithoutCancel(ctx), rdk, filePath, 180*time.Second).Err(); err != nil {
 		return errors.Wrapf(err, "redis set key '%s' with vaule '%s' failed", rdk, filePath)
 	}
 	logctx.Infof(ctx, "cache save oci layer '%s = %s' success", rdk, filePath)
@@ -137,7 +137,7 @@ func (r *RedisStore) SaveOCILayer(ctx context.Context, ociType LayerType, layer,
 // SaveStaticLayer save static layer
 func (r *RedisStore) SaveStaticLayer(ctx context.Context, layer string, filePath string, printLog bool) error {
 	rdk := r.buildLayerKey(layer, StaticFile)
-	if err := r.redisClient.Set(ctx, rdk, filePath, 180*time.Second).Err(); err != nil {
+	if err := r.redisClient.Set(context.WithoutCancel(ctx), rdk, filePath, 180*time.Second).Err(); err != nil {
 		return errors.Wrapf(err, "redis set key '%s' with vaule '%s' failed", rdk, filePath)
 	}
 	if printLog {
@@ -149,7 +149,7 @@ func (r *RedisStore) SaveStaticLayer(ctx context.Context, layer string, filePath
 // SaveTorrent save torrent layer
 func (r *RedisStore) SaveTorrent(ctx context.Context, layer string, torrentBase64 string) error {
 	rdk := r.buildLayerKey(layer, TORRENT)
-	if err := r.redisClient.Set(ctx, rdk, torrentBase64, 180*time.Second).Err(); err != nil {
+	if err := r.redisClient.Set(context.WithoutCancel(ctx), rdk, torrentBase64, 180*time.Second).Err(); err != nil {
 		return errors.Wrapf(err, "redis set key '%s' with vaule '%s' failed", rdk, torrentBase64)
 	}
 	logctx.Infof(ctx, "cache save torrent layer '%s = (too long)' success", rdk)
@@ -159,7 +159,7 @@ func (r *RedisStore) SaveTorrent(ctx context.Context, layer string, torrentBase6
 // DeleteTorrent delete torrent layer
 func (r *RedisStore) DeleteTorrent(ctx context.Context, layer string) error {
 	rdk := r.buildLayerKey(layer, TORRENT)
-	if err := r.redisClient.Del(ctx, rdk).Err(); err != nil {
+	if err := r.redisClient.Del(context.WithoutCancel(ctx), rdk).Err(); err != nil {
 		return errors.Wrapf(err, "redis del key '%s' failed", rdk)
 	}
 	return nil
@@ -168,7 +168,7 @@ func (r *RedisStore) DeleteTorrent(ctx context.Context, layer string) error {
 // DeleteStaticLayer delete static layer
 func (r *RedisStore) DeleteStaticLayer(ctx context.Context, layer string) error {
 	rdk := r.buildLayerKey(layer, StaticFile)
-	if err := r.redisClient.Del(ctx, rdk).Err(); err != nil {
+	if err := r.redisClient.Del(context.WithoutCancel(ctx), rdk).Err(); err != nil {
 		return errors.Wrapf(err, "redis del key '%s' failed", rdk)
 	}
 	return nil
@@ -181,7 +181,8 @@ func (r *RedisStore) CleanHostCache(ctx context.Context) error {
 	var resultKeys = make([]string, 0)
 	for {
 		var err error
-		keys, cursor, err = r.redisClient.Scan(ctx, cursor, fmt.Sprintf("*/%s/*", r.op.Address), 50).Result()
+		keys, cursor, err = r.redisClient.Scan(context.WithoutCancel(ctx), cursor,
+			fmt.Sprintf("*/%s/*", r.op.Address), 50).Result()
 		if err != nil {
 			return errors.Wrapf(err, "redis clean host layers failed")
 		}
@@ -194,7 +195,7 @@ func (r *RedisStore) CleanHostCache(ctx context.Context) error {
 		return nil
 	}
 	blog.Infof("clean host layers keys(%d): %s", len(resultKeys), strings.Join(resultKeys, ", "))
-	if v, err := r.redisClient.Del(ctx, resultKeys...).Result(); err != nil {
+	if v, err := r.redisClient.Del(context.WithoutCancel(ctx), resultKeys...).Result(); err != nil {
 		return errors.Wrapf(err, "redis clean host layers failed")
 	} else {
 		blog.Infof("clean host layers: %d", v)
@@ -223,7 +224,8 @@ func (r *RedisStore) commonQuery(ctx context.Context, layer string, keyTypes []s
 	var resultKeys []string
 	for {
 		var err error
-		keys, cursor, err = r.redisClient.Scan(ctx, cursor, fmt.Sprintf("%s/*", layer), 5000).Result()
+		keys, cursor, err = r.redisClient.Scan(context.WithoutCancel(ctx), cursor,
+			fmt.Sprintf("%s/*", layer), 5000).Result()
 		if err != nil {
 			return nil, errors.Wrapf(err, "redis scan layer '%s' with cursor '%d' failed", layer, cursor)
 		}
@@ -245,7 +247,7 @@ func (r *RedisStore) commonQuery(ctx context.Context, layer string, keyTypes []s
 		if !slices.Contains(keyTypes, ociType) {
 			continue
 		}
-		v, err := r.redisClient.Get(ctx, key).Result()
+		v, err := r.redisClient.Get(context.WithoutCancel(ctx), key).Result()
 		if err != nil {
 			logctx.Warnf(ctx, "redis key '%s' get failed: %s", key, err)
 			continue

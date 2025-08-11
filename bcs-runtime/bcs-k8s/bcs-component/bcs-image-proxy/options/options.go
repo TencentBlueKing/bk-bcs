@@ -357,10 +357,22 @@ func (o *ImageProxyOption) IsMaster() bool {
 
 // HTTPProxyTransport return the insecure-skip-verify transport
 func (o *ImageProxyOption) HTTPProxyTransport() http.RoundTripper {
-	tp := http.DefaultTransport.(*http.Transport)
-	// NOTE: insecure for original registry
-	// NOCC:gas/tls(设计如此)
-	tp.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	netDialer := &net.Dialer{
+		Timeout:   30 * time.Second,
+		KeepAlive: 30 * time.Second,
+	}
+	tp := &http.Transport{
+		Proxy:                 http.ProxyFromEnvironment,
+		DialContext:           netDialer.DialContext,
+		ForceAttemptHTTP2:     true,
+		MaxIdleConns:          100,
+		IdleConnTimeout:       90 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+		// NOTE: insecure for original registry
+		// NOCC:gas/tls(设计如此)
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
 	if httpProxyUrl == nil {
 		return tp
 	}
@@ -586,7 +598,7 @@ func (o *ImageProxyOption) checkExternalConfigRegistries() error {
 				return errors.Errorf("registry '%s' users[%d] not set user or password", mp.OriginalHost, i)
 			}
 			blog.Infof("registry '%s' set user '%s' and password '%s'", mp.OriginalHost,
-				mp.Username, mp.Password)
+				auth.Username, auth.Password)
 		}
 	}
 	return nil

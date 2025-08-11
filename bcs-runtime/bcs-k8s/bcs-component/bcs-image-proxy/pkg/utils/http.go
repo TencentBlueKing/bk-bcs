@@ -84,7 +84,7 @@ func SendHTTPRequestReturnResponse(ctx context.Context, hr *HTTPRequest) (*http.
 	}
 
 	var resp *http.Response
-	httpClient := http.DefaultClient
+	httpClient := &http.Client{}
 	if !strings.Contains(hr.Url, "custom_api") {
 		httpClient.Transport = options.GlobalOptions().HTTPProxyTransport()
 	}

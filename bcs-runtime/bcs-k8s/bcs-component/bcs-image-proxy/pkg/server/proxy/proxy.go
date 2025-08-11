@@ -383,8 +383,11 @@ func (p *upstreamProxy) downloadByTCP(ctx context.Context, rw http.ResponseWrite
 			return errors.Wrapf(err, "download-by-tcp give up '%d' bytes failed", startPos)
 		}
 	}
-	buf := make([]byte, 1024*1024)
-	if _, err = io.CopyBuffer(rw, resp.Body, buf); err != nil {
+	//buf := make([]byte, 1024*1024)
+	//if _, err = io.CopyBuffer(rw, resp.Body, buf); err != nil {
+	//	return errors.Wrapf(err, "download-by-tcp io.copy failed")
+	//}
+	if _, err = io.Copy(rw, resp.Body); err != nil {
 		return errors.Wrapf(err, "download-by-tcp io.copy failed")
 	}
 	logctx.Infof(ctx, "layer download-by-tcp rewrite to http.writer success")

@@ -385,8 +385,11 @@ func (th *TorrentHandler) DownloadTorrent(ctx context.Context, rw http.ResponseW
 		return true, 0, errors.Wrapf(err, "open torrent file '%s' failed", torrentFile)
 	}
 	defer tf.Close()
-	buf := make([]byte, 1024*1024)
-	if written, err := io.CopyBuffer(rw, tf, buf); err != nil {
+	//buf := make([]byte, 1024*1024)
+	//if written, err := io.CopyBuffer(rw, tf, buf); err != nil {
+	//	return true, written, errors.Wrapf(err, "rewrite torrent file '%s' failed", torrentFile)
+	//}
+	if written, err := io.Copy(rw, tf); err != nil {
 		return true, written, errors.Wrapf(err, "rewrite torrent file '%s' failed", torrentFile)
 	}
 	return true, 0, nil

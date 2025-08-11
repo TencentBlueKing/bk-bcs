@@ -81,12 +81,15 @@ var (
 // We should initiative auth to registry and get the bearerToken.
 // e.g: Www-Authenticate: Bearer realm="https://auth.docker.io/token",service="registry.docker.io",scope="repository:samalba/my-app:pull,push"
 // refer to: https://docker-docs.uclv.cu/registry/spec/auth/token/#how-to-authenticate
-func HandleRegistryUnauthorized(ctx context.Context, authReq *AuthRequest, registry *options.RegistryMapping) (
+func HandleRegistryUnauthorized(ctx context.Context, authReq *AuthRequest, registry *options.RegistryMapping,
+	checkToken func(bearerToken string) (bool, error)) (
 	*AuthToken, error) {
-	authSlice := make([][]string, 0)
+	// 如果正确的用户/密码不为空，则直接获取 Token 并返回，并且不验证 Token 是否正确
 	if registry.CorrectUser != "" && registry.CorrectPass != "" {
-		authSlice = append(authSlice, []string{registry.CorrectUser, registry.CorrectPass})
+		return handleRegistryAuth(ctx, authReq, registry.CorrectUser, registry.CorrectPass)
 	}
+
+	authSlice := make([][]string, 0)
 	if registry.Username != "" && registry.Password != "" {
 		authSlice = append(authSlice, []string{registry.Username, registry.Password})
 	}
@@ -98,25 +101,31 @@ func HandleRegistryUnauthorized(ctx context.Context, authReq *AuthRequest, regis
 		return handleRegistryAuth(ctx, authReq, "", "")
 	}
 
-	var result *AuthToken
-	var err error
+	// 用每一个用户名/密码获取 Token，并校验 Token 的正确性
 	for _, item := range authSlice {
-		result, err = handleRegistryAuth(ctx, authReq, item[0], item[1])
-		if err == nil {
-			registryAuthLock.Lock()
-			registry.CorrectUser = item[0]
-			registry.CorrectPass = item[1]
-			registryAuthLock.Unlock()
-			return result, nil
+		authToken, err := handleRegistryAuth(ctx, authReq, item[0], item[1])
+		if err != nil {
+			logctx.Warnf(ctx, "handle registry auth with user '%s' and pass '%s' failed: %s",
+				item[0], item[1], err.Error())
+			continue
 		}
-		logctx.Warnf(ctx, "handle registry auth with user '%s' and pass '%s' failed: %s",
-			item[0], item[1], err.Error())
+		correct, err := checkToken(authToken.Token)
+		if err != nil {
+			logctx.Warnf(ctx, "handle registry auth with user '%s' and pass '%s' check token failed: %s",
+				item[0], item[1], err.Error())
+			continue
+		}
+		if !correct {
+			logctx.Warnf(ctx, "handle registry auth with user '%s' not correct", item[0])
+			continue
+		}
+		registryAuthLock.Lock()
+		registry.CorrectUser = item[0]
+		registry.CorrectPass = item[1]
+		registryAuthLock.Unlock()
+		return authToken, nil
 	}
-	if result == nil {
-		return nil, errors.Errorf("registry '%s' auth failed after %d times", registry.OriginalHost,
-			len(authSlice))
-	}
-	return result, nil
+	return nil, fmt.Errorf("registry not have correct auth-user")
 }
 
 func handleRegistryAuth(ctx context.Context, authReq *AuthRequest, user, passwd string) (*AuthToken, error) {

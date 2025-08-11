@@ -14,6 +14,7 @@
 package transport
 
 import (
+	"fmt"
 	"math/rand"
 	"net/http"
 	"time"
@@ -88,7 +89,22 @@ func (r *ProxyTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 				return resp, nil
 			}
 			var tokenResult *registryauth.AuthToken
-			tokenResult, err = registryauth.HandleRegistryUnauthorized(ctx, authReq, r.proxyRegistry)
+			tokenResult, err = registryauth.HandleRegistryUnauthorized(ctx, authReq, r.proxyRegistry,
+				func(token string) (bool, error) {
+					req.Header.Set("Authorization", "Bearer "+token)
+					checkResp, checkErr := tp.RoundTrip(req)
+					if checkErr != nil {
+						return false, checkErr
+					}
+					switch {
+					case checkResp.StatusCode < 300:
+						return true, nil
+					case checkResp.StatusCode == http.StatusUnauthorized:
+						return false, nil
+					default:
+						return false, fmt.Errorf("unexpected status code: %d", checkResp.StatusCode)
+					}
+				})
 			if err != nil {
 				logctx.Warnf(ctx, "handle unauthorized request failed: %s", err.Error())
 				return resp, nil
@@ -96,6 +112,7 @@ func (r *ProxyTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 			logctx.Infof(ctx, "transport handle unauthorized request return bearer token: %s", tokenResult.Token)
 			// set auth token and to retry again
 			req.Header.Set("Authorization", "Bearer "+tokenResult.Token)
+			continue
 		}
 		// handle response status code 429, sleeping random time
 		rand.New(rand.NewSource(time.Now().UnixNano()))
