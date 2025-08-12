@@ -32,6 +32,7 @@ type MulticlusterListReqParams struct {
 	Field               string                `json:"field"`
 	LabelSelector       string                `json:"labelSelector"`
 	Conditions          []*operator.Condition `json:"conditions"`
+	Sort                map[string]int        `json:"sort"`
 }
 
 // EnsureConditions ensure conditions's value is operator.M instead of map[string]interface{}
