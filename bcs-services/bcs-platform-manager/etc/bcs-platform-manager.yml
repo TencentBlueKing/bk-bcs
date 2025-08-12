@@ -1,0 +1,19 @@
+base_conf:
+  http_port: 8099
+  bind_address: 127.0.0.1
+
+redis:
+  type: standalone
+  host: "127.0.0.1"
+  port: 6379
+  password: ""
+  db: 0
+  master_name: ""
+  sentinel_addrs: []
+  sentinel_password: ""
+
+mongo:
+  address: 127.0.0.1:27017
+  database: bcs-platform-manager
+  username: root
+  password: 123456

@@ -36,6 +36,7 @@ bcs-services/bcs-kube-agent
 bcs-services/bcs-monitor
 # bcs-services/bcs-nodegroup-manager
 bcs-services/bcs-project-manager
+bcs-services/bcs-platform-manager
 bcs-services/bcs-storage
 # bcs-services/bcs-user-manager
 bcs-services/bcs-webconsole
