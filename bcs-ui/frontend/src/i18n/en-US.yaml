@@ -1675,6 +1675,7 @@ cluster:
       disableImportClusterAction: 'Kubeconfig imports cluster, node management function is unavailable'
       disableImportClusterAddNode: Importing a cluster does not support adding nodes from existing servers.
       hasNotNodePoolNode: There are nodes added by non-node pools among the selected nodes.
+      notNodePoolNode: This node is added by non-node pools.
       disableBatchSettingNodes: There are abnormal nodes among the selected nodes.
       undo: undo
       batchUndo: Batch undo

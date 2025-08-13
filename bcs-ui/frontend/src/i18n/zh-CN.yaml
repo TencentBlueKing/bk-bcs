@@ -1338,6 +1338,7 @@ cluster:
       disableImportClusterAction: 导入集群，节点管理功能不可用
       disableImportClusterAddNode: 导入集群不支持从已有服务器添加节点
       hasNotNodePoolNode: 选择的节点中有非节点池添加的节点
+      notNodePoolNode: 该节点为非节点池添加的节点
       disableBatchSettingNodes: 选中的节点中有非正常状态的节点
       undo: 恢复
       batchUndo: 批量恢复

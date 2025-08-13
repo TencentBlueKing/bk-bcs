@@ -540,13 +540,21 @@
               <bk-button v-else-if="row.status === 'REMOVABLE'" text class="mr10" @click="handleEnableNode(row)">
                 {{ $t('generic.button.uncordon.text') }}
               </bk-button>
-              <bk-button
-                text
-                v-if="['REMOVE-FAILURE', 'REMOVE-CA-FAILURE', 'REMOVABLE'].includes(row.status)"
-                class="mr10"
-                @click="handleSchedulerNode(row)">
-                {{ $t('generic.button.drain.text') }}
-              </bk-button>
+              <span
+                v-bk-tooltips="{
+                  content: $t('generic.button.drain.tips'),
+                  disabled: ['REMOVABLE', 'REMOVE-FAILURE', 'REMOVE-CA-FAILURE'].includes(row.status),
+                  placement: 'top',
+                  interactive: false
+                }">
+                <bk-button
+                  text
+                  :disabled="!['REMOVE-FAILURE', 'REMOVE-CA-FAILURE', 'REMOVABLE'].includes(row.status)"
+                  class="mr10"
+                  @click="handleSchedulerNode(row)">
+                  {{ $t('generic.button.drain.text') }}
+                </bk-button>
+              </span>
               <bk-button
                 class="mr10"
                 text
@@ -583,13 +591,19 @@
                       </li>
                     </template>
                     <li
-                      :class="['bcs-dropdown-item', { disabled: isKubeConfigOrAgentImportCluster || isCloudSelfNode(row) || isGkeManagedCluster }]"
+                      :class="[
+                        'bcs-dropdown-item',
+                        { disabled: isKubeConfigOrAgentImportCluster || isCloudSelfNode(row) || isGkeManagedCluster
+                          || !['REMOVE-FAILURE', 'ADD-FAILURE', 'REMOVABLE', 'NOTREADY'].includes(row.status)
+                        }
+                      ]"
                       v-bk-tooltips="{
-                        disabled: !isKubeConfigOrAgentImportCluster && !isCloudSelfNode(row),
-                        content: $t('cluster.nodeList.tips.disableImportClusterAction'),
+                        disabled: !isKubeConfigOrAgentImportCluster
+                          && !isCloudSelfNode(row)
+                          && ['REMOVE-FAILURE', 'ADD-FAILURE', 'REMOVABLE', 'NOTREADY'].includes(row.status),
+                        content: getDisableDeleteTips(row),
                         placement: 'right'
                       }"
-                      v-if="['REMOVE-FAILURE', 'ADD-FAILURE', 'REMOVABLE', 'NOTREADY'].includes(row.status)"
                       :disabled="!row.inner_ip"
                       @click="handleDeleteNode(row)"
                     >
@@ -1395,6 +1409,16 @@ export default defineComponent({
       return $i18n.t('cluster.ca.nodePool.nodes.action.delete.tips');
     });
 
+    const getDisableDeleteTips = (row) => {
+      if (isKubeConfigOrAgentImportCluster.value) {
+        return $i18n.t('cluster.nodeList.tips.disableImportClusterAction');
+      }
+      if (row.clusterCategory === 'importer' && !row.nodeGroupID) {
+        return $i18n.t('cluster.nodeList.tips.notNodePoolNode');
+      }
+      return $i18n.t('cluster.ca.nodePool.nodes.action.delete.tips');
+    };
+
     const handleGoOverview = (row) => {
       $router.push({
         name: 'clusterNodeOverview',
@@ -1659,7 +1683,8 @@ export default defineComponent({
       curCheckedNodes.value = [];
     };
     const handleDeleteNode = async (row) => {
-      if (isKubeConfigOrAgentImportCluster.value || isCloudSelfNode(row) || isGkeManagedCluster.value) return;
+      if (isKubeConfigOrAgentImportCluster.value || isCloudSelfNode(row) || isGkeManagedCluster.value
+        || !['REMOVE-FAILURE', 'ADD-FAILURE', 'REMOVABLE', 'NOTREADY'].includes(row.status)) return;
 
       curCheckedNodes.value = [row];
       showDeleteDialog.value = true;
@@ -2212,6 +2237,7 @@ export default defineComponent({
       handleStepSkip,
       handleHidePodDrain,
       handleSuccess,
+      getDisableDeleteTips,
     };
   },
 });
