@@ -31,14 +31,12 @@
         <bcs-table-column :label="$t('serviceMesh.label.name')" prop="name" sortable show-overflow-tooltip>
           <template #default="{ row }">
             <span
-              v-bk-tooltips="{
-                content: $t('serviceMesh.tips.noPermission'),
-                disabled: webAnnotations.perms[row.meshID]?.['MeshManager.GetIstioDetail'],
+              v-authority="{
+                clickable: web_annotations.perms[row.meshID]?.['MeshManager.GetIstioDetail'],
+                disablePerms: true,
+                originClick: true,
               }"
-              :class="[
-                webAnnotations.perms[row.meshID]?.['MeshManager.GetIstioDetail']
-                  ? 'cursor-pointer text-[#3A84FF]' : 'text-[#C4C6CC] cursor-not-allowed',
-              ]"
+              class="cursor-pointer text-[#3A84FF]"
               @click="handleDetail(row)">{{ row.name || '--' }}</span>
           </template>
         </bcs-table-column>
@@ -77,12 +75,12 @@
               @click="handleLinkToMonitor(row)"
               v-if="row.monitoringLink">{{ $t('serviceMesh.label.scene') }}</bcs-button>
             <bcs-button
-              v-bk-tooltips="{
-                content: $t('serviceMesh.tips.noPermission'),
-                disabled: webAnnotations.perms[row.meshID]?.['MeshManager.DeleteIstio'],
+              v-authority="{
+                clickable: web_annotations.perms[row.meshID]?.['MeshManager.DeleteIstio'],
+                disablePerms: true,
+                originClick: true,
               }"
               :class="[{ 'ml-[10px]': row.monitoringLink }]"
-              :disabled="!webAnnotations.perms[row.meshID]?.['MeshManager.DeleteIstio']"
               text
               @click="deleteMesh(row)">
               {{ $t('generic.label.delete') }}</bcs-button>
@@ -171,9 +169,10 @@ const searchSelectDataSource = [
 // 网格
 const {
   meshData,
-  webAnnotations,
+  web_annotations,
   fetchMeshData,
   handleDelete,
+  handleGetMeshDetail,
 } = useMesh();
 // 分页
 const {
@@ -231,7 +230,14 @@ const editSettings = ref({
   projectCode: '',
 });
 async function handleDetail(row) {
-  if (!webAnnotations.value.perms[row.meshID]?.['MeshManager.GetIstioDetail']) return;
+  if (!web_annotations.value.perms[row.meshID]?.['MeshManager.GetIstioDetail']) {
+    // 没有权限时接口会触发权限弹窗，类似用户点击申请权限
+    handleGetMeshDetail({
+      meshID: row.meshID,
+      projectCode: row.projectCode,
+    });
+    return;
+  };
   editSettings.value.isShow = true;
   editSettings.value.title = row.name;
   editSettings.value.meshID = row.meshID;
@@ -240,6 +246,11 @@ async function handleDetail(row) {
 
 // 点击删除
 function deleteMesh(row) {
+  if (!web_annotations.value.perms[row.meshID]?.['MeshManager.DeleteIstio']) {
+    // 没有权限时接口会触发权限弹窗，类似用户点击申请权限
+    handleDel(row);
+    return;
+  };
   $bkInfo({
     clsName: 'custom-info-confirm',
     theme: 'danger',

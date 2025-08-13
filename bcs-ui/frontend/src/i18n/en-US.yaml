@@ -4070,7 +4070,7 @@ serviceMesh:
     autoscaleMax: >-
       The maximum number of replicas cannot be less than the minimum number of
       replicas
-    noPermission: No permission
+    isInstalled: Already installed
     egressModeDesc:
       title: Configure outbound traffic policy for services within the mesh.
       registryOnly: >-

@@ -60,13 +60,13 @@
         'absolute bottom-0 left-0 w-full bg-white py-[10px] px-[40px] z-[999] border-t border-t-[#e6e6ec]'
       ]">
       <bcs-button
-        v-bk-tooltips="{
-          content: $t('serviceMesh.tips.noPermission'),
-          disabled: webAnnotations.perms[meshId]?.['MeshManager.UpdateIstio'],
+        v-authority="{
+          clickable: web_annotations.perms[meshId]?.['MeshManager.UpdateIstio'],
+          disablePerms: true,
+          originClick: true,
         }"
         theme="primary"
-        :disabled="!webAnnotations.perms[meshId]?.['MeshManager.UpdateIstio']"
-        @click="isEdit = true">
+        @click.stop="handleEdit">
         {{ $t('generic.button.edit') }}</bcs-button>
     </div>
   </div>
@@ -156,7 +156,7 @@ function beforeToggle(tab) {
 
 const data = ref<IMesh>();
 const {
-  webAnnotations,
+  web_annotations,
   handleGetMeshDetail,
   handleUpdateMesh,
   handleGetConfig,
@@ -171,6 +171,16 @@ async function getMeshData() {
     formData.value = cloneDeep(data.value);
   }
   loading.value = false;
+}
+
+// 编辑
+function handleEdit() {
+  if (!web_annotations.value.perms[props.meshId]?.['MeshManager.UpdateIstio']) {
+    // 没有权限时接口会触发权限弹窗，类似用户点击申请权限
+    formData.value && handleUpdate(formData.value);
+    return;
+  }
+  isEdit.value = true;
 }
 
 onMounted(async () => {

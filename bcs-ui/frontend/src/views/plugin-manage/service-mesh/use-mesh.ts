@@ -69,7 +69,7 @@ export interface ISidecar {
 
 export const configData = ref<Partial<Pick<IMesh, 'featureConfigs' | 'highAvailability' | 'sidecarResourceConfig' | 'observabilityConfig'>> & { istioVersions?: any[] }>({});
 
-export const webAnnotations = ref({ perms: {} });
+export const web_annotations = ref({ perms: {} });
 
 // 提取字符串中的数字
 export function extractNumbers(str?: string): number {
@@ -91,7 +91,7 @@ export default function useMesh() {
     );
     meshData.value = res?.data?.items || [];
     total.value = res?.data?.total || 0;
-    webAnnotations.value = res?.webAnnotations || { perms: {} };
+    web_annotations.value = res?.web_annotations || { perms: {} };
     loading.value = false;
   };
 
@@ -139,7 +139,7 @@ export default function useMesh() {
     total,
     meshData,
     configData,
-    webAnnotations,
+    web_annotations,
     fetchMeshData,
     handleDelete,
     handleGetMeshDetail,

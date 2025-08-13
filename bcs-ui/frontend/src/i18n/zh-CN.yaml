@@ -3283,7 +3283,7 @@ serviceMesh:
     disabledShare: 不支持共享集群部署
     disabledFederation: 不支持联邦集群部署
     autoscaleMax: 最大副本数不能小于最小副本数
-    noPermission: 暂无操作权限
+    isInstalled: 集群已部署
     egressModeDesc:
       title: 配置网格内服务对外访问的放通策略。
       registryOnly: Registry Only：仅支持访问网格自动发现的服务与手动注册的服务

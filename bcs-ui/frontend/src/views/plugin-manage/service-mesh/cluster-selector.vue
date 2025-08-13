@@ -9,6 +9,7 @@
     :search-placeholder="$t('cluster.placeholder.searchCluster')"
     :size="size"
     :scroll-height="460"
+    :loading="loading"
     multiple
     :ext-cls="extCls"
     ref="clusterSelectorRef"
@@ -55,11 +56,22 @@
   </bcs-select>
 </template>
 <script lang="ts">
-import {  computed, defineComponent, PropType, ref, toRefs, watch } from 'vue';
+import {  computed, defineComponent, onBeforeMount, PropType, ref, toRefs, watch } from 'vue';
 
+import { meshClusters } from '@/api/modules/mesh-manager';
 import { satisfiesVersion } from '@/common/util';
-import { useCluster } from '@/composables/use-app';
+import { useProject } from '@/composables/use-app';
 import $i18n from '@/i18n/i18n-setup';
+
+type MeshCluster = {
+  clusterID: string,
+  clusterName: string,
+  clusterType: string,
+  isShared: boolean,
+  isInstalled: boolean
+  status: string,
+  version: string,
+};
 
 export default defineComponent({
   name: 'ClusterSelector',
@@ -109,24 +121,38 @@ export default defineComponent({
   setup(props, { emit }) {
     const { value } = toRefs(props);
 
+    const { projectCode } = useProject();
+
     const normalStatusList = ['RUNNING'];
     const hoverClusterID = ref<string>();
 
     const clusterSelectorRef = ref<any>(null);
     const clusterValue = ref<string[]>([]);
-    const { clusterList } = useCluster();
+    const clusterList = ref<MeshCluster[]>([]);
+    const loading = ref(false);
+    async function getClusterList() {
+      loading.value = true;
+      const res = await meshClusters({
+        projectCode: projectCode.value,
+      }).catch(() => ({ clusters: [] }));
+      clusterList.value = res.clusters;
+      loading.value = false;
+    }
+
     // 不支持部署的集群
-    function isDisabledCluster(item) {
-      return item.clusterType === 'virtual' || item.is_shared || item.clusterType === 'federation';
+    function isDisabledCluster(item: MeshCluster) {
+      return item.clusterType === 'virtual' || item.isShared || item.clusterType === 'federation';
     }
     function getDesc(item) {
       let desc = $i18n.t('serviceMesh.tips.clusterEnabled');
       if (item.clusterType === 'virtual') {
         desc = $i18n.t('serviceMesh.tips.disabledVirtual');
-      } else if (item.is_shared) {
+      } else if (item.isShared) {
         desc = $i18n.t('serviceMesh.tips.disabledShare');
       } else if (item.clusterType === 'federation') {
         desc = $i18n.t('serviceMesh.tips.disabledFederation');
+      } else if (item.isInstalled) {
+        desc = $i18n.t('serviceMesh.tips.isInstalled');
       }
       return desc;
     }
@@ -139,8 +165,9 @@ export default defineComponent({
       })
       .map(item => ({
         ...item,
-        disabled: !isVersionSupported(item.clusterBasicSettings.version)
-          || isDisabledCluster(item),
+        disabled: isDisabledCluster(item)
+          || !isVersionSupported(item.version)
+          || item.isInstalled,
         disabledDesc: getDesc(item),
       })));
 
@@ -174,12 +201,17 @@ export default defineComponent({
       return versions.value.every(v => satisfiesVersion(version, v));
     }
 
+    onBeforeMount(() => {
+      getClusterList();
+    });
+
     return {
       normalStatusList,
       hoverClusterID,
       clusterValue,
       clusterListOfMesh,
       clusterSelectorRef,
+      loading,
       remoteMethod,
       handleChange,
       isVersionSupported,
