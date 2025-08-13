@@ -14,6 +14,7 @@
 package controllers
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -575,8 +576,10 @@ func (r *AppMonitorReconciler) ensureMonitorRule(appMonitor *monitorextensionv1.
 		} else {
 			existMap[res.GetName()] = true
 			existRes := resMap[res.GetName()]
+			existResBts, _ := json.Marshal(existRes.Spec)
+			resBts, _ := json.Marshal(res.Spec)
 			// 如果spec没有变化， 则跳过
-			if reflect.DeepEqual(existRes.Spec, res.Spec) {
+			if bytes.Equal(existResBts, resBts) {
 				continue
 			}
 			// if update resource, need to retry to wait
@@ -647,8 +650,10 @@ func (r *AppMonitorReconciler) ensurePanel(appMonitor *monitorextensionv1.AppMon
 		} else {
 			existMap[res.GetName()] = true
 			existRes := resMap[res.GetName()]
+			existResBts, _ := json.Marshal(existRes.Spec)
+			resBts, _ := json.Marshal(res.Spec)
 			// 如果spec没有变化， 则跳过
-			if reflect.DeepEqual(existRes.Spec, res.Spec) {
+			if bytes.Equal(existResBts, resBts) {
 				continue
 			}
 			// if update resource, need to retry to wait
@@ -720,13 +725,16 @@ func (r *AppMonitorReconciler) ensureNoticeGroup(appMonitor *monitorextensionv1.
 		} else {
 			existMap[res.GetName()] = true
 			existRes := resMap[res.GetName()]
+			existResBts, _ := json.Marshal(existRes.Spec)
+			resBts, _ := json.Marshal(res.Spec)
 			// 如果spec没有变化， 则跳过
-			if reflect.DeepEqual(existRes.Spec, res.Spec) {
+			if bytes.Equal(existResBts, resBts) {
 				continue
 			}
 			// if update resource, need to retry to wait
 			needRetry = true
 			blog.Infof("found updated notice group: %s/%s", existRes.GetNamespace(), existRes.GetName())
+
 			existRes.Spec = res.Spec
 			if inErr := r.Update(context.Background(), existRes); inErr != nil {
 				blog.Errorf("update notice group '%s/%s' failed, err: %s", res.Namespace,
@@ -757,16 +765,24 @@ func (r *AppMonitorReconciler) ensureResource(appMonitor *monitorextensionv1.App
 		return true, err
 	}
 
-	if needRetry, err := r.ensureNoticeGroup(appMonitor, result); needRetry || err != nil {
+	needRetryFlag := false
+	needRetry, err := r.ensureNoticeGroup(appMonitor, result)
+	if err != nil {
 		return true, err
 	}
+	needRetryFlag = needRetryFlag || needRetry
 
-	if needRetry, err := r.ensureMonitorRule(appMonitor, result); needRetry || err != nil {
+	needRetry, err = r.ensureMonitorRule(appMonitor, result)
+	if err != nil {
 		return true, err
 	}
+	needRetryFlag = needRetryFlag || needRetry
 
-	if needRetry, err := r.ensurePanel(appMonitor, result); needRetry || err != nil {
+	needRetry, err = r.ensurePanel(appMonitor, result)
+	if err != nil {
 		return true, err
 	}
-	return false, nil
+	needRetryFlag = needRetryFlag || needRetry
+
+	return needRetryFlag, nil
 }

@@ -125,8 +125,9 @@ func compareMonitorRule(mr1, mr2 *v1.MonitorRuleDetail) bool {
 
 func mergeNoticeGroup(currentRule *v1.Notice, modifiedRule *v1.Notice) *v1.Notice {
 	result := currentRule.DeepCopy()
-	// 仅merge告警组配置， 其他以用户配置为准
+	// 仅merge告警组配置 & 告警通知模板， 其他以用户配置为准
 
 	result.UserGroups = utils.MergeStringList(currentRule.UserGroups, modifiedRule.UserGroups)
+	result.Template = modifiedRule.Template
 	return result
 }
