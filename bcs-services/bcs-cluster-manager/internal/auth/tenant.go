@@ -24,6 +24,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tenant"
 )
 
 // TenantClientWhiteList tenant client white list
@@ -65,6 +66,15 @@ func CheckUserResourceTenantAttrFunc(fn server.HandlerFunc) server.HandlerFunc {
 			user           = GetAuthUserInfoFromCtx(ctx)
 		)
 
+		// get tenant id
+		if headerTenantId == "" {
+			tenantId = user.GetTenantId()
+		} else {
+			tenantId = headerTenantId
+		}
+		// 注入租户信息
+		ctx = tenant.WithTenantIdFromContext(ctx, tenantId)
+
 		// exempt inner user
 		if user.IsInner() {
 			blog.Infof("CheckUserResourceTenantAttrFunc user[%s] inner client",
@@ -80,17 +90,6 @@ func CheckUserResourceTenantAttrFunc(fn server.HandlerFunc) server.HandlerFunc {
 		if SkipTenantValidation(ctx, req, user.GetUsername()) {
 			blog.Infof("CheckUserResourceTenantAttrFunc skip tenant[%s] validate", user.GetUsername())
 			return fn(ctx, req, rsp)
-		}
-
-		// get tenant id
-		if headerTenantId == "" {
-			tenantId = user.GetTenantId()
-		} else {
-			if user.GetTenantId() != headerTenantId {
-				tenantId = user.GetTenantId()
-			} else {
-				tenantId = headerTenantId
-			}
 		}
 
 		// get resource tenant id

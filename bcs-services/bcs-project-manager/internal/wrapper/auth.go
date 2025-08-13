@@ -34,6 +34,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/stringx"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/tenant"
 )
 
 // NoAuthEndpoints 不需要用户身份认证的方法
@@ -170,7 +171,8 @@ func (r *resourceID) check() error {
 
 // CheckUserPerm implementation for CheckUserPerm interface
 func CheckUserPerm(ctx context.Context, req server.Request, user middleauth.AuthUser) (bool, error) {
-	logging.Info("CheckUserPerm: method/%s, user: %s/%s", req.Method(), user.GetTenantId(), user.GetUsername())
+	logging.Info("CheckUserPerm: method/%s, user: %s/%s", req.Method(), tenant.GetTenantIdFromContext(ctx),
+		user.GetUsername())
 
 	if len(user.GetUsername()) == 0 {
 		return false, errorx.NewReadableErr(errorx.PermDeniedErr, "用户名为空")
@@ -223,11 +225,11 @@ func callIAM(ctx context.Context, user middleauth.AuthUser, action string, resou
 		isSharedCluster = cluster.GetIsShared() && cluster.GetProjectID() != resourceID.ProjectID
 	}
 
-	projectIam, err := auth.GetProjectIamClient(user.GetTenantId())
+	projectIam, err := auth.GetProjectIamClient(tenant.GetTenantIdFromContext(ctx))
 	if err != nil {
 		return false, "", nil, errorx.NewReadableErr(errorx.PermDeniedErr, "校验用户权限失败")
 	}
-	namespaceIam, err := auth.GetNamespaceIamClient(user.GetTenantId())
+	namespaceIam, err := auth.GetNamespaceIamClient(tenant.GetTenantIdFromContext(ctx))
 	if err != nil {
 		return false, "", nil, errorx.NewReadableErr(errorx.PermDeniedErr, "校验用户权限失败")
 	}

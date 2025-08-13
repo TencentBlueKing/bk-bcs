@@ -87,8 +87,17 @@ func CheckUserResourceTenantAttrFunc(fn server.HandlerFunc) server.HandlerFunc {
 			user, _ = middleauth.GetUserFromContext(ctx)
 		)
 
+		// get tenant id
+		if headerTenantId == "" {
+			tenantId = user.GetTenantId()
+		} else {
+			tenantId = headerTenantId
+		}
+		// 注入租户信息
+		ctx = context.WithValue(ctx, headerkey.TenantIdKey, tenantId)
+
 		logging.Info("CheckUserResourceTenantAttrFunc clientName[%s] tenant[%s] username[%s], innerClient[%s]",
-			user.ClientName, user.TenantId, user.Username, user.InnerClient)
+			user.ClientName, tenantId, user.Username, user.InnerClient)
 
 		// exempt inner user
 		if user.IsInner() {
@@ -107,17 +116,6 @@ func CheckUserResourceTenantAttrFunc(fn server.HandlerFunc) server.HandlerFunc {
 			return fn(ctx, req, rsp)
 		}
 
-		// get tenant id
-		if headerTenantId == "" {
-			tenantId = user.GetTenantId()
-		} else {
-			if user.GetTenantId() != headerTenantId {
-				tenantId = user.GetTenantId()
-			} else {
-				tenantId = headerTenantId
-			}
-		}
-
 		// get resource tenant id
 		resourceTenantId, err := getResourceTenantId(ctx, req)
 		if err != nil {
@@ -132,9 +130,6 @@ func CheckUserResourceTenantAttrFunc(fn server.HandlerFunc) server.HandlerFunc {
 			return fmt.Errorf("user[%s] tenant[%s] not match resource tenant[%s]",
 				user, tenantId, resourceTenantId)
 		}
-
-		// 注入租户信息
-		ctx = context.WithValue(ctx, headerkey.TenantIdKey, tenantId)
 
 		return fn(ctx, req, rsp)
 	}

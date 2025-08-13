@@ -128,8 +128,8 @@ func GetAuthAndTenantInfoFromCtx(ctx context.Context) UserInfoCtx {
 
 	user := UserInfoCtx{
 		Username:         authUser.GetUsername(),
-		TenantId:         authUser.GetTenantId(),
-		ResourceTenantId: authUser.GetTenantId(),
+		TenantId:         GetTenantIdFromContext(ctx),
+		ResourceTenantId: GetTenantIdFromContext(ctx),
 	}
 
 	// 兼容跨租户场景，不在租户的人员可以获取其他租户的资源

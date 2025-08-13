@@ -22,6 +22,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tenant"
 )
 
 // jwtClient is the jwt client
@@ -80,8 +81,8 @@ func GetAuthAndTenantInfoFromCtx(ctx context.Context) UserInfoCtx {
 
 	user := UserInfoCtx{
 		Username:         authUser.GetUsername(),
-		TenantId:         authUser.GetTenantId(),
-		ResourceTenantId: authUser.GetTenantId(),
+		TenantId:         tenant.GetTenantIdFromContext(ctx),
+		ResourceTenantId: tenant.GetTenantIdFromContext(ctx),
 	}
 
 	// 兼容跨租户场景，不在租户的人员可以获取其他租户的资源

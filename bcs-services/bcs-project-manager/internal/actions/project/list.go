@@ -137,18 +137,20 @@ func (lap *ListAuthorizedProject) Do(ctx context.Context,
 	)
 	authUser, err := middleware.GetUserFromContext(ctx)
 
-	logging.Info("list authorized projects: %v %s %s", tenant.IsMultiTenantEnabled(), authUser.GetUsername(), authUser.GetTenantId())
+	logging.Info("list authorized projects: %v %s %s", tenant.IsMultiTenantEnabled(), authUser.GetUsername(),
+		tenant.GetTenantIdFromContext(ctx))
 
 	if tenant.IsMultiTenantEnabled() {
 		if err == nil && authUser.Username != "" {
 			// username 为空时，该接口请求没有意义, any 标识用户有无限制项目权限
-			ids, any, err := auth.ListAuthorizedProjectIDs(authUser.Username, authUser.GetTenantId())
+			ids, any, err := auth.ListAuthorizedProjectIDs(authUser.Username, tenant.GetTenantIdFromContext(ctx))
 			if err != nil {
 				logging.Error("get user project permissions failed, err: %s", err.Error())
 				return nil, nil
 			}
 
-			logging.Info("list authorized projects: %+v %+v %v %v", ids, any, req.All, config.GlobalConf.RestrictAuthorizedProjects)
+			logging.Info("list authorized projects: %+v %+v %v %v", ids, any, req.All,
+				config.GlobalConf.RestrictAuthorizedProjects)
 
 			if req.All {
 				// true 表示限制看到有权限的项目
@@ -156,15 +158,15 @@ func (lap *ListAuthorizedProject) Do(ctx context.Context,
 					// all 为 true 且限权显示用户授权的项目列表时，仅查看用户有权限的项目，并支持模糊查询和分页
 					if any {
 						projects, total, err = lap.model.SearchProjects(ctx, ids, nil, req.SearchKey, req.Kind,
-							authUser.GetTenantId(), &page.Pagination{Offset: req.Offset, Limit: req.Limit})
+							tenant.GetTenantIdFromContext(ctx), &page.Pagination{Offset: req.Offset, Limit: req.Limit})
 					} else {
 						projects, total, err = lap.model.SearchProjects(ctx, nil, ids, req.SearchKey, req.Kind,
-							authUser.GetTenantId(), &page.Pagination{Offset: req.Offset, Limit: req.Limit})
+							tenant.GetTenantIdFromContext(ctx), &page.Pagination{Offset: req.Offset, Limit: req.Limit})
 					}
 				} else {
 					// all 为 true 且不限权时，返回所有项目并排序和分页，支持模糊查询
 					projects, total, err = lap.model.SearchProjects(ctx, ids, nil, req.SearchKey, req.Kind,
-						authUser.GetTenantId(), &page.Pagination{Offset: req.Offset, Limit: req.Limit})
+						tenant.GetTenantIdFromContext(ctx), &page.Pagination{Offset: req.Offset, Limit: req.Limit})
 				}
 			} else {
 				// all 为 false 且用户没有全部项目查看权限时，返回用户有权限的项目，分页和模糊查询都无效
@@ -173,8 +175,8 @@ func (lap *ListAuthorizedProject) Do(ctx context.Context,
 				if req.Kind != "" {
 					condKind["kind"] = req.Kind
 				}
-				if authUser.GetTenantId() != "" {
-					condKind["tenantID"] = authUser.GetTenantId()
+				if tenant.GetTenantIdFromContext(ctx) != "" {
+					condKind["tenantID"] = tenant.GetTenantIdFromContext(ctx)
 				}
 				if any {
 					cond = operator.NewBranchCondition(operator.And, operator.NewLeafCondition(operator.Eq, condKind))
@@ -193,7 +195,7 @@ func (lap *ListAuthorizedProject) Do(ctx context.Context,
 	} else {
 		if err == nil && authUser.Username != "" {
 			// username 为空时，该接口请求没有意义, any 标识用户有无限制项目权限
-			ids, any, err := auth.ListAuthorizedProjectIDs(authUser.Username, authUser.GetTenantId())
+			ids, any, err := auth.ListAuthorizedProjectIDs(authUser.Username, tenant.GetTenantIdFromContext(ctx))
 			if err != nil {
 				logging.Error("get user project permissions failed, err: %s", err.Error())
 				return nil, nil
