@@ -191,10 +191,14 @@ function _M:get_jwt_from_redis(credential, conf, ctx, key_prefix, create_if_null
             --core.log.warn("conf.bk_login_host_tenant: ", conf.bk_login_host_tenant)
             local data = get_userinfo_handler(credential, conf)
             --core.log.warn("data: ", core.json.encode(data))
-            userinfo = {
-                username = data["data"]["bk_username"],
-                tenant_id = data["data"]["tenant_id"]
-            }
+            if data["data"] then
+                userinfo = {
+                    username = data["data"]["bk_username"],
+                    tenant_id = data["data"]["tenant_id"]
+                }
+            else
+                userinfo = data
+            end
         else
             --core.log.warn("conf.bk_login_host: ", conf.bk_login_host)
             userinfo = get_userinfo_handler(credential, conf.bk_login_host)
