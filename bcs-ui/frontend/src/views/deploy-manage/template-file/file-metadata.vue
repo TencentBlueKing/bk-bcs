@@ -29,6 +29,7 @@
 <script setup lang="ts">
 import { cloneDeep } from 'lodash';
 import { ref, watch } from 'vue';
+import xss from 'xss';
 
 import $i18n from '@/i18n/i18n-setup';
 
@@ -72,7 +73,13 @@ async function confirm() {
   const result = await metaDataFormRef.value?.validate().catch(() => false);
   if (!result) return;
 
-  emits('confirm', formData.value);
+  const data = cloneDeep(formData.value);
+  const xssDesc = xss(data.description);
+  if (data.description !== xssDesc) {
+    console.warn('Intercepted by XSS');
+  }
+  data.description = xssDesc;
+  emits('confirm', data);
 };
 
 watch(() => props.value, () => {

@@ -344,7 +344,9 @@
   </div>
 </template>
 <script lang="ts">
+import { cloneDeep } from 'lodash';
 import { computed, defineComponent, getCurrentInstance, onMounted, ref, watch } from 'vue';
+import xss from 'xss';
 
 import ActionDoc from '../components/action-doc.vue';
 
@@ -679,17 +681,26 @@ export default defineComponent({
       } else {
         data.scaleOutExtraAddons = {};
       }
+
+      // xss
+      const cloneFormData = cloneDeep(formData.value);
+      const xssDesc = xss(cloneFormData.desc);
+      if (cloneFormData.desc !== xssDesc) {
+        console.warn('Intercepted by XSS');
+      }
+      cloneFormData.desc = xssDesc;
+
       let result = false;
       if (isEdit.value) {
         result = await $store.dispatch('clustermanager/updateNodeTemplate', {
           $nodeTemplateId: props.nodeTemplateID,
-          ...formData.value,
+          ...cloneFormData,
           ...data,
           updater: user.value.username,
         });
       } else {
         result = await $store.dispatch('clustermanager/createNodeTemplate', {
-          ...formData.value,
+          ...cloneFormData,
           ...data,
           creator: user.value.username,
         });

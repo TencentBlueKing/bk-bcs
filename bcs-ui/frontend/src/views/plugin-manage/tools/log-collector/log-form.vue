@@ -340,6 +340,7 @@
 <script setup lang="ts">
 import { cloneDeep, isEqual, merge } from 'lodash';
 import { computed, onBeforeMount, onMounted, PropType, ref, watch } from 'vue';
+import xss from 'xss';
 
 import ContainerLabel from './container-label.vue';
 import KeyValue from './key-value.vue';
@@ -622,6 +623,14 @@ const handleGetFormData = async () => {
   if (!isContainerFile.value) {
     data.rule.config.paths = [];
   }
+
+  // 处理xss
+  const xssDesc = xss(data.description);
+  if (data.description !== xssDesc) {
+    console.warn('Intercepted by XSS');
+  }
+  data.description = xssDesc;
+
   return data;
 };
 

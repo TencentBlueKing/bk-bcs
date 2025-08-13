@@ -222,7 +222,9 @@
 <script lang="ts">
 import BkForm from 'bk-magic-vue/lib/form';
 import BkFormItem from 'bk-magic-vue/lib/form-item';
+import { cloneDeep } from 'lodash';
 import { computed, defineComponent, onMounted, ref, watch } from 'vue';
+import xss from 'xss';
 
 import useVariable, { IParams, Pick } from './use-variable';
 import exampleData from './variable.json';
@@ -404,15 +406,22 @@ export default defineComponent({
       const validate = await formRef.value?.validate();
       if (!validate) return;
 
+      const cloneFormData = cloneDeep(formData.value);
+      const xssDesc = xss(cloneFormData.desc);
+      if (cloneFormData.desc !== xssDesc) {
+        console.warn('Intercepted by XSS');
+      }
+      cloneFormData.desc = xssDesc;
+
       dialogLoading.value = true;
       let result = false;
       if (currentRow.value) {
         result = await handleUpdateVariable({
           $variableID: currentRow.value.id,
-          ...formData.value,
+          ...cloneFormData,
         });
       } else {
-        result = await handleCreateVariable(formData.value);
+        result = await handleCreateVariable(cloneFormData);
       }
       dialogLoading.value = false;
 
