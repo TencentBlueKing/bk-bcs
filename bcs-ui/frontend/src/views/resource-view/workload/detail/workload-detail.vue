@@ -24,11 +24,11 @@
         <div class="btns">
           <bk-button theme="primary" @click="handleShowYamlPanel">{{ $t('dashboard.workload.button.yaml') }}</bk-button>
           <template v-if="!hiddenOperate">
+            <bk-button @click="handleShowScale">{{ $t('deploy.templateset.scale') }}</bk-button>
             <bk-button
-              theme="primary"
               @click="handleUpdateResource">{{$t('generic.button.update')}}</bk-button>
             <bk-button
-              theme="danger"
+              :disabled="!pagePerms.deleteBtn.disabled"
               v-authority="{
                 clickable: pagePerms.deleteBtn.clickable,
                 content: pagePerms.deleteBtn.tip,
@@ -338,6 +338,31 @@
         </div>
       </template>
     </bcs-dialog>
+    <!-- 扩缩容 -->
+    <bcs-dialog
+      v-model="scaleShow"
+      :mask-close="false"
+      :title="$t('deploy.templateset.scale')"
+      header-position="left"
+      :width="480"
+      @confirm="handleConfirmScaleShow">
+      <bk-form :label-width="100">
+        <div class="bg-[#F5F7FA] py-[8px]">
+          <bk-form-item :label="$t('cluster.labels.name')">
+            {{ clusterNameMap[clusterId] }}
+          </bk-form-item>
+          <bk-form-item :label="$t('k8s.namespace')" class="!mt-0">
+            {{ metadata.namespace }}
+          </bk-form-item>
+          <bk-form-item :label="$t('view.labels.resourceName')" class="!mt-0">
+            {{ metadata.name }}
+          </bk-form-item>
+        </div>
+        <bk-form-item :label="$t('dashboard.workload.label.scaleNum')" class="mt-[16px]" required>
+          <bk-input v-model="replicas" type="number" class="w-[100px]" :min="0"></bk-input>
+        </bk-form-item>
+      </bk-form>
+    </bcs-dialog>
   </div>
 </template>
 <script lang="ts">
@@ -350,6 +375,7 @@ import EventTable from './bk-monitor-event.vue';
 import detailBasicList from './detail-basic';
 import useDetail from './use-detail';
 
+import { crdEnlargeCapacityChange, enlargeCapacityChange } from '@/api/base';
 import $bkMessage from '@/common/bkmagic';
 import { timeFormat } from '@/common/util';
 import BcsLog from '@/components/bcs-log/log-dialog.vue';
@@ -702,6 +728,39 @@ export default defineComponent({
       batchBtnLoading.value = false;
     };
 
+    // 扩缩容
+    const scaleShow = ref(false);
+    const replicas = ref(0);
+    function handleShowScale() {
+      replicas.value = detail.value?.manifest?.spec?.replicas || 0;
+      scaleShow.value = true;
+    }
+    async function handleConfirmScaleShow() {
+      let result = false;
+      if (props.category === 'custom_objects') {
+        result = await crdEnlargeCapacityChange({
+          $crdName: props.crd,
+          $cobjName: props.name,
+          $clusterId: clusterId.value,
+          replicas: replicas.value,
+          namespace: props.namespace,
+        }).catch(() => false);
+      } else {
+        result = await enlargeCapacityChange({
+          $namespace: props.namespace,
+          $category: props.category,
+          $name: props.name,
+          $clusterId: clusterId.value,
+          replicas: replicas.value,
+        }).catch(() => false);
+      }
+      result && $bkMessage({
+        theme: 'success',
+        message: $i18n.t('generic.msg.success.modify'),
+      });
+      handleRefreshPodsStatus();
+    }
+
     // 事件列表
     const kindsNames = computed(() => [
       props.name,
@@ -813,6 +872,10 @@ export default defineComponent({
       clusterNameMap,
       podStatusFilters,
       handleFilterChange,
+      scaleShow,
+      replicas,
+      handleConfirmScaleShow,
+      handleShowScale,
     };
   },
 });

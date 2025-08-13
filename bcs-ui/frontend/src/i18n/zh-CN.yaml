@@ -2357,7 +2357,7 @@ dashboard:
       reason: 原因
       scaleNum: 实例数量
     button:
-      yaml: 查看YAML配置
+      yaml: 查看YAML
       restart: 滚动重启
       onDelete: 手动重启
       applyURL: 申请访问
