@@ -161,6 +161,7 @@ iam:
   button:
     apply: Apply
     apply2: IAM
+    applied: Applied
   actionMap:
     project_create: Project creation
     project_view: Project View

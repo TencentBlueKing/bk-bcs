@@ -142,6 +142,7 @@ iam:
   button:
     apply: 去申请
     apply2: 申请权限
+    applied: 已申请
   actionMap:
     project_create: 项目创建
     project_view: 项目查看
