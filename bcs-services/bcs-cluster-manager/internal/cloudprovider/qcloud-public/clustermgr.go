@@ -633,7 +633,7 @@ func (c *Cluster) EnableExternalNodeSupport(cls *proto.Cluster, opt *cloudprovid
 }
 
 // ListOsImage list image os
-func (c *Cluster) ListOsImage(provider string, opt *cloudprovider.CommonOption) ([]*proto.OsImage, error) {
+func (c *Cluster) ListOsImage(provider, clusterID string, opt *cloudprovider.CommonOption) ([]*proto.OsImage, error) {
 	if opt == nil || opt.Account == nil || len(opt.Account.SecretID) == 0 ||
 		len(opt.Account.SecretKey) == 0 || len(opt.Region) == 0 {
 		return nil, fmt.Errorf("qcloud ListOsImage lost authoration")
@@ -646,7 +646,7 @@ func (c *Cluster) ListOsImage(provider string, opt *cloudprovider.CommonOption) 
 		return nil, err
 	}
 
-	cloudImages, err := cli.DescribeOsImages(provider, nil, opt)
+	cloudImages, err := cli.DescribeOsImages(provider, "", nil, opt)
 	if err != nil {
 		return nil, err
 	}

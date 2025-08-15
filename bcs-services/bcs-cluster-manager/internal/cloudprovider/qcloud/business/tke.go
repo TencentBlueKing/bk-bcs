@@ -523,10 +523,8 @@ func GenerateNTAddExistedInstanceReq(info *cloudprovider.CloudDependBasicInfo, n
 						Operator: operator,
 						Render:   true,
 					}, options)
-					// has many data disk
-					if disk.DiskCount > 1 {
-						overrideInstanceAdvanced.DataDisks = []api.DataDetailDisk{api.GetDefaultDataDisk("")}
-					}
+
+					overrideInstanceAdvanced.DataDisks = []api.DataDetailDisk{api.GetDefaultDataDisk("")}
 
 					req.InstanceAdvancedSettingsOverrides = append(req.InstanceAdvancedSettingsOverrides,
 						overrideInstanceAdvanced)

@@ -109,14 +109,14 @@ func (la *ListCloudOsImageAction) listCloudImageOs() error {
 	switch la.req.Provider {
 	case common.AllImageProvider:
 		providers := []string{common.PublicImageProvider, common.MarketImageProvider,
-			common.PrivateImageProvider, common.BCSImageProvider}
+			common.PrivateImageProvider, common.BCSImageProvider, common.ClusterImageProvider}
 		for i := range providers {
 			barrier.Add(1)
 			go func(provider string) {
 				defer func() {
 					barrier.Done()
 				}()
-				images, errLocal := clsMgr.ListOsImage(provider, cmOption)
+				images, errLocal := clsMgr.ListOsImage(provider, la.req.ClusterID, cmOption)
 				if errLocal != nil {
 					blog.Errorf("ListCloudOsImageAction listCloudImageOs[%s] failed: %v", provider, err)
 					return
@@ -128,7 +128,7 @@ func (la *ListCloudOsImageAction) listCloudImageOs() error {
 		}
 	default:
 		// get image os list
-		imageOsList, err = clsMgr.ListOsImage(la.req.Provider, cmOption)
+		imageOsList, err = clsMgr.ListOsImage(la.req.Provider, la.req.ClusterID, cmOption)
 		if err != nil {
 			return err
 		}
@@ -161,6 +161,27 @@ func (la *ListCloudOsImageAction) appendImageRelativeCluster() {
 						ClusterID:   cls.ClusterID,
 					})
 				}
+			}
+		}
+	}
+
+	if la.req.ClusterID != "" {
+		cluster, err := actions.GetClusterInfoByClusterID(la.model, la.req.ClusterID)
+		if err != nil {
+			blog.Errorf("GetClusterInfoByClusterID[%s] appendImageRelativeCluster failed: %v",
+				la.req.ClusterID, err)
+			return
+		}
+
+		for i := range la.OsImageList {
+			if cluster.GetClusterBasicSettings().GetOS() == la.OsImageList[i].Alias {
+				if la.OsImageList[i].Clusters == nil {
+					la.OsImageList[i].Clusters = make([]*cmproto.ClusterInfo, 0)
+				}
+				la.OsImageList[i].Clusters = append(la.OsImageList[i].Clusters, &cmproto.ClusterInfo{
+					ClusterName: cluster.ClusterName,
+					ClusterID:   cluster.ClusterID,
+				})
 			}
 		}
 	}

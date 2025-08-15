@@ -336,7 +336,7 @@ type ClusterManager interface {
 	// EnableExternalNodeSupport enable cluster support external node
 	EnableExternalNodeSupport(cls *proto.Cluster, opt *EnableExternalNodeOption) error
 	// ListOsImage get osimage list
-	ListOsImage(provider string, opt *CommonOption) ([]*proto.OsImage, error)
+	ListOsImage(provider, clusterID string, opt *CommonOption) ([]*proto.OsImage, error)
 	// ListProjects get cloud projects list
 	ListProjects(opt *CommonOption) ([]*proto.CloudProject, error)
 	// CheckClusterEndpointStatus check cluster endpoint status

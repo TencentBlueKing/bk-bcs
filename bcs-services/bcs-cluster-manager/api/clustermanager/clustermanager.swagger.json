@@ -1879,6 +1879,13 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "description": "clusterID. 集群ID, 集群正在使用的镜像会添加额外信息",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [

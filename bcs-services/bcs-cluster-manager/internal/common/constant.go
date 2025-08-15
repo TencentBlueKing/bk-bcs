@@ -595,6 +595,8 @@ const (
 	PrivateImageProvider = "PRIVATE_IMAGE"
 	// MarketImageProvider 市场镜像
 	MarketImageProvider = "MARKET_IMAGE"
+	// ClusterImageProvider 集群当前使用镜像
+	ClusterImageProvider = "CLUSTER_IMAGE"
 	// BCSImageProvider BCS镜像
 	BCSImageProvider = "BCS_IMAGE"
 	// AllImageProvider 所有镜像

@@ -12505,11 +12505,15 @@ message ListCloudOsImageRequest {
   }];
   string provider = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "provider",
-    description : "镜像提供方，可选值:PUBLIC_IMAGE(公共镜像),PRIVATE_IMAGE(私有镜像),SHARED_IMAGE(共享镜像),MARKET_IMAGE(市场镜像), ALL所有镜像"
+    description : "镜像提供方，可选值:PUBLIC_IMAGE(公共镜像),PRIVATE_IMAGE(私有镜像),SHARED_IMAGE(共享镜像),MARKET_IMAGE(市场镜像),CLUSTER_IMAGE(集群使用镜像)，ALL所有镜像"
   }];
   string projectID = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "projectID",
     description : "容器平台项目ID, 使用某个镜像的集群信息列表"
+  }];
+  string clusterID = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "clusterID",
+    description : "集群ID, 集群正在使用的镜像会添加额外信息"
   }];
 }
 

@@ -694,7 +694,7 @@ func TestClient_DescribeOSImages(t *testing.T) {
 	cli := getClient(regions.Nanjing)
 
 	defaultCommonOption.Region = regions.Nanjing
-	images, err := cli.DescribeOsImages(icommon.PrivateImageProvider, nil, defaultCommonOption)
+	images, err := cli.DescribeOsImages(icommon.PrivateImageProvider, "", nil, defaultCommonOption)
 	if err != nil {
 		t.Fatal(err)
 	}
