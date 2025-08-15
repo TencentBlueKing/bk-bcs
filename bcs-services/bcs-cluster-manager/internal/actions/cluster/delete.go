@@ -26,6 +26,7 @@ import (
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	com "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
@@ -458,6 +459,11 @@ func (da *DeleteAction) Handle(ctx context.Context, req *cmproto.DeleteClusterRe
 	})
 	if err != nil {
 		blog.Errorf("delete cluster[%s] CreateOperationLog failed: %v", da.cluster.ClusterID, err)
+	}
+
+	err = com.StorageCli.DelClusterData(da.cluster.ClusterID)
+	if err != nil {
+		blog.Errorf("delete cluster[%s] del storage data failed: %v", da.cluster.ClusterID, err)
 	}
 
 	da.resp.Data = da.cluster

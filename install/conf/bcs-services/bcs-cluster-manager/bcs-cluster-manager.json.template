@@ -40,6 +40,11 @@
         "templateURL": "${bcsSopsTemplateURL}",
         "frontURL": "${bcsSopsFrontURL}"
     },
+    "storage": {
+        "host": "${bcsStorageHost}",
+        "token": "${bcsStorageToken}",
+        "debug": ${debug}
+    },
     "cmdb": {
         "enable": ${bcsCmdbEnable},
         "appCode": "${bcsAppCode}",
