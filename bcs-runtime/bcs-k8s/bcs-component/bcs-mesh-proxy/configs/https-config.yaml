@@ -1,0 +1,39 @@
+# mesh-proxy HTTPS 配置示例
+
+# 目标集群配置（程序要代理的集群）
+targetCluster:
+  # 是否使用in-cluster配置（推荐在k8s集群内运行时使用）
+  useInClusterConfig: true
+  
+  # 连接超时时间
+  timeout: 30s
+
+# 代理配置
+proxy:
+  # 监听端口
+  port: 61011
+  
+  # 是否跳过TLS验证
+  insecureSkipTLSVerify: true
+  
+  # 请求超时时间
+  requestTimeout: 60s
+  
+  # 允许的API组和版本
+  allowedAPIGroups:
+    - "networking.istio.io"
+    - "security.istio.io"
+    - "telemetry.istio.io"
+  
+  # TLS配置
+  tls:
+    # 启用TLS
+    enabled: true
+    # 证书文件路径（相对于配置文件或绝对路径）
+    certFile: "/etc/mesh-proxy/tls/tls.crt"
+    # 密钥文件路径（相对于配置文件或绝对路径）
+    keyFile: "/etc/mesh-proxy/tls/tls.key"
+    # 客户端认证模式：不验证客户端证书
+    clientAuth: "NoClientCert"
+    # CA证书文件路径（用于验证客户端证书，可选）
+    caFile: "" 

@@ -1,0 +1,25 @@
+# mesh-proxy in-cluster 配置示例
+# 此配置适用于在Kubernetes集群内运行的情况
+
+localCluster:
+  # 使用in-cluster配置，自动获取ServiceAccount的token和权限
+  useInClusterConfig: true
+  
+  # 连接超时时间
+  timeout: 60s
+
+proxy:
+  # 监听端口
+  port: 61011
+  
+  # 是否跳过TLS验证
+  insecureSkipTLSVerify: true
+  
+  # 请求超时时间
+  requestTimeout: 60s
+  
+  # 允许的API组和版本
+  allowedAPIGroups:
+    - "networking.istio.io"
+    - "security.istio.io"
+    - "telemetry.istio.io"

@@ -1,0 +1,155 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bcs-mesh-proxy
+  namespace: istio-system
+  labels:
+    app: bcs-mesh-proxy
+    version: v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bcs-mesh-proxy
+  template:
+    metadata:
+      labels:
+        app: bcs-mesh-proxy
+        version: v1
+    spec:
+      serviceAccountName: bcs-mesh-proxy
+      containers:
+      - name: bcs-mesh-proxy
+        image: bcs-mesh-proxy:latest
+        ports:
+        - containerPort: 61011
+          name: https
+        command:
+        - /usr/local/bin/bcs-mesh-proxy
+        args:
+        - --config
+        - /app/configs/config.yaml
+        - --port
+        - "61011"
+        volumeMounts:
+        - name: config
+          mountPath: /app/configs
+        - name: tls-certs
+          mountPath: /etc/mesh-proxy/tls
+          readOnly: true
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
+            memory: "128Mi"
+            cpu: "100m"
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 61011
+            scheme: HTTPS
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: 61011
+            scheme: HTTPS
+          initialDelaySeconds: 5
+          periodSeconds: 5
+      volumes:
+      - name: config
+        configMap:
+          name: bcs-mesh-proxy-config-https
+      - name: tls-certs
+        secret:
+          secretName: bcs-mesh-proxy-tls
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: istio-crd
+  namespace: istio-system
+  labels:
+    app: bcs-mesh-proxy
+spec:
+  ports:
+  - port: 61011
+    targetPort: 61011
+    protocol: TCP
+    name: https
+  selector:
+    app: bcs-mesh-proxy
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: bcs-mesh-proxy
+  namespace: istio-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: bcs-mesh-proxy
+rules:
+- apiGroups: ["networking.istio.io"]
+  resources: ["*"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+- apiGroups: ["security.istio.io"]
+  resources: ["*"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+- apiGroups: ["telemetry.istio.io"]
+  resources: ["*"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: bcs-mesh-proxy
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: bcs-mesh-proxy
+subjects:
+- kind: ServiceAccount
+  name: bcs-mesh-proxy
+  namespace: istio-system
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bcs-mesh-proxy-config-https
+  namespace: istio-system
+data:
+  config.yaml: |
+    targetCluster:
+      useInClusterConfig: true
+      timeout: 60s
+    
+    proxy:
+      port: 61011
+      insecureSkipTLSVerify: true
+      requestTimeout: 60s
+      allowedAPIGroups:
+        - "networking.istio.io"
+        - "security.istio.io"
+        - "telemetry.istio.io"
+      tls:
+        enabled: true
+        certFile: "/etc/mesh-proxy/tls/tls.crt"
+        keyFile: "/etc/mesh-proxy/tls/tls.key"
+        clientAuth: "NoClientCert"
+        caFile: ""
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: bcs-mesh-proxy-tls
+  namespace: istio-system
+  labels:
+    app: bcs-mesh-proxy
+type: kubernetes.io/tls
+data:
+  tls.crt: xxx
+  tls.key: xxx
