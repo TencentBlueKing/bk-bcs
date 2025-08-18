@@ -3579,6 +3579,7 @@ tke:
     marketImage: Market image
     privateImage: Private image
     bcsImage: BCS image
+    clusterImage: Cluster image
     apiServerCLB:
       text: CLB
       internet: Internet
@@ -3777,6 +3778,7 @@ tke:
       The Pod IP of the VPC-CNI network plugin is not using this availability
       zone, please choose another availability zone
     imageUsedInCluster: A cluster is using this
+    currentClusterUsed: Current cluster usage
     subnetZone: >-
       The Pod IP of the VPC-CNI network plugin is bound to the cluster nodes,
       and the availability zone of the Pod IP must be consistent with the

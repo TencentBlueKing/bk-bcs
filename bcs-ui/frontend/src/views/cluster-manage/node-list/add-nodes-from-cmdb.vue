@@ -77,10 +77,9 @@
           v-model="formData.advance.nodeOs"
           :region="curCluster.region"
           :cloud-i-d="curCluster.provider"
-          :rec-default-image="'BCS-5.4.241-1-tlinux4-0017'"
-          :rec-provider="'BCS_IMAGE'"
-          :provider-order="['BCS_IMAGE', 'PUBLIC_IMAGE', 'PRIVATE_IMAGE']"
-          init-data />
+          :cluster-id="clusterId"
+          init-data
+          @init="handleOs" />
       </bk-form-item>
       <!-- IP选择器 -->
       <IpSelector
@@ -119,10 +118,12 @@
   </div>
 </template>
 <script lang="ts">
+import { cloneDeep } from 'lodash';
 import { computed, defineComponent, ref } from 'vue';
 
 import TemplateSelector from '../components/template-selector.vue';
 
+import ImageList from './tencent-image-list.vue';
 import useNode from './use-node';
 
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
@@ -133,7 +134,6 @@ import { ICluster } from '@/composables/use-app';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store/index';
-import ImageList from '@/views/cluster-manage/add/components/image-list.vue';
 import LoginType from '@/views/cluster-manage/add/components/login-type.vue';
 
 export default defineComponent({
@@ -305,12 +305,17 @@ export default defineComponent({
     const handleConfirm = async () => {
       confirmLoading.value = true;
       const { ipList, currentTemplate, advance } = formData.value;
+      // 腾讯自研云 若为当前集群使用镜像，则不传
+      const cloneAdvance = cloneDeep(advance);
+      if (cloneAdvance.nodeOs === defaultOs.value) {
+        cloneAdvance.nodeOs = '';
+      }
       const result = await addNode({
         clusterId: props.clusterId,
         nodeIps: ipList.map(item => item.ip),
         nodeTemplateID: currentTemplate.nodeTemplateID,
         login: workerLogin.value,
-        advance,
+        advance: cloneAdvance,
       });
       confirmLoading.value = false;
 
@@ -324,6 +329,12 @@ export default defineComponent({
         });
       }
     };
+
+    // 腾讯自研云 获取当前集群使用镜像
+    const defaultOs = ref('');
+    function handleOs(data) {
+      defaultOs.value = data?.imageID;
+    }
 
     const handleCancel = () => {
       $router.back();
@@ -352,6 +363,7 @@ export default defineComponent({
       handleTemplateChange,
       handleLoginValueChange,
       validateLogin,
+      handleOs,
     };
   },
 });

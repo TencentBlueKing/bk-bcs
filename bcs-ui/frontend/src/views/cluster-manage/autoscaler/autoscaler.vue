@@ -1862,6 +1862,8 @@ export default defineComponent({
     };
     // 克隆节点
     const handleClonePool = (row) => {
+      const $refs = proxy?.$refs || {};
+      $refs[row.nodeGroupID] && ($refs[row.nodeGroupID] as any).hideHandler();
       $router.push({
         name: 'nodePool',
         params: {
@@ -1877,6 +1879,8 @@ export default defineComponent({
     };
     // 编辑节点规格
     const handleEditPool = (row) => {
+      const $refs = proxy?.$refs || {};
+      $refs[row.nodeGroupID] && ($refs[row.nodeGroupID] as any).hideHandler();
       $router.push({
         name: 'editNodePool',
         params: {

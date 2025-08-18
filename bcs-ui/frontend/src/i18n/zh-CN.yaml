@@ -2916,6 +2916,7 @@ tke:
     marketImage: 市场镜像
     privateImage: 私有镜像
     bcsImage: 平台镜像
+    clusterImage: 集群镜像
     ipNum: IP数量
     zone: 可用区
     staticIpMode: 固定 Pod IP
@@ -3047,6 +3048,7 @@ tke:
     hasSelected: 已选择
     zone: 'VPC-CNI网络插件的Pod IP没有使用此可用区, 请选择其他可用区'
     imageUsedInCluster: 有集群正在使用
+    currentClusterUsed: 当前集群使用
     subnetZone: VPC-CNI网络插件的Pod IP绑定在集群节点上，Pod IP可用区必须与集群节点(包含控制面与Node节点)可用区保持一致
     noAvailableIp: 无可用IP
     subnetInUsed: '子网已被集群 {0} 使用'

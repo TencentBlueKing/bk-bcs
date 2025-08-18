@@ -1684,7 +1684,7 @@ export default defineComponent({
     };
     const handleDeleteNode = async (row) => {
       if (isKubeConfigOrAgentImportCluster.value || isCloudSelfNode(row) || isGkeManagedCluster.value
-        || !['REMOVE-FAILURE', 'ADD-FAILURE', 'REMOVABLE', 'NOTREADY'].includes(row.status)) return;
+        || !['REMOVE-FAILURE', 'ADD-FAILURE', 'REMOVABLE', 'NOTREADY', 'APPLY-FAILURE'].includes(row.status)) return;
 
       curCheckedNodes.value = [row];
       showDeleteDialog.value = true;

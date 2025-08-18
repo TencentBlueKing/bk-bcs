@@ -152,7 +152,10 @@ export interface IImageItem {
   provider: string
   status: string
   alias: string
-  clusters: string[]
+  clusters: {
+    clusterID: string
+    clusterName: string
+  }[]
 }
 export interface IImageGroup {
   name: string
