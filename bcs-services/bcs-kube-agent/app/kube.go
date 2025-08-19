@@ -25,7 +25,8 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/avast/retry-go"
-	"k8s.io/api/core/v1" // nolint
+	"github.com/spf13/viper"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
@@ -101,6 +102,19 @@ func (k *KubeClientContext) GetRestConfig() *rest.Config {
 
 // GetApiserverAddresses get apiserver address
 func (k *KubeClientContext) GetApiserverAddresses() (string, error) {
+
+	// 支持指定集群server
+	externalProxyAddresses := viper.GetString("agent.external-proxy-addresses")
+	if externalProxyAddresses != "" {
+		serverSlice := strings.Split(externalProxyAddresses, ",")
+		for _, server := range serverSlice {
+			if !strings.HasPrefix(server, "https://") {
+				return "", fmt.Errorf("got invalid external-proxy-addresses")
+			}
+		}
+		return externalProxyAddresses, nil
+	}
+
 	if k.kubeClient == nil {
 		return "", fmt.Errorf("kubeClientContext kubeClient not init")
 	}
