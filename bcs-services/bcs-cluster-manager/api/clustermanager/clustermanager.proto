@@ -14255,15 +14255,19 @@ message CloudModuleFlag {
     title: "flagValueList",
     description: "参数可选的值列表"
   }];
-  valueRegex regex = 14[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  Schedule schedule = 14 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "schedule",
+    description: "云集群发布预计时间表"
+  }];
+  valueRegex regex = 15[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "regex",
     description: "参数有效性校验规则"
   }];
-  NumberRange range = 15[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  NumberRange range = 16[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "range",
     description: "若参数为数值类型，表示参数范围值"
   }];
-  string networkType = 16[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  string networkType = 17[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "networkType",
     description: "当moduleID=runtime时, 该字段生效。集群IP类型，networkType: ipv4/ipv6/dual 表示版本支持的网络类型。"
       "通过字符[,]隔开若为空表示仅支持ipv4"
@@ -14277,9 +14281,10 @@ message flagInfo {
   google.protobuf.BoolValue enable = 4;
   string flagType = 5;
   repeated string flagValueList = 6;
-  valueRegex regex = 7;
-  NumberRange range = 8;
-  string networkType = 9;
+  Schedule schedule = 7;
+  valueRegex regex = 8;
+  NumberRange range = 9;
+  string networkType = 10;
 }
 
 message valueRegex {
@@ -16006,3 +16011,28 @@ message UpdateTemplateConfigResponse {
   }];
 }
 
+message Schedule {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ScheduleInfo"
+      description : "云集群发布预计时间表"
+      required : [ "startDate", "terminationDate" ]
+    }
+  };
+  string startDate = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "startDate",
+    description: "集群维护周期起始日期"
+  }];
+  string cycleDays = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "cycleDays",
+    description: "集群维护周期(天)"
+  }];
+  string terminationDate = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "terminationDate",
+    description: "集群维护周期终止服务日期"
+  }];
+  string advDays = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "advDays",
+    description: "提前通知时间(天)"
+  }];
+}

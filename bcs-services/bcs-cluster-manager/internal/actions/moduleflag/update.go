@@ -84,7 +84,9 @@ func (ua *UpdateAction) updateCloudModuleFlag(
 	if len(flagInfo.FlagValueList) > 0 {
 		destModuleFlag.FlagValueList = flagInfo.FlagValueList
 	}
-
+	if flagInfo.Schedule != nil {
+		destModuleFlag.Schedule = flagInfo.Schedule
+	}
 	if destModuleFlag.Regex == nil {
 		destModuleFlag.Regex = &cmproto.ValueRegex{}
 	}
