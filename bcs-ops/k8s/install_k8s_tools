@@ -123,7 +123,11 @@ _yum_k8s() {
   if [ ! -d /opt/cni/bin/ ];then
     mkdir /opt/cni/bin/
   fi
-  cp /usr/libexec/cni/* /opt/cni/bin/
+
+  if [ -d /usr/libexec/cni/ ];then
+    cp /usr/libexec/cni/* /opt/cni/bin/
+  fi
+
 }
 
 _curl_k8s() {
