@@ -227,30 +227,24 @@ func (hpi *HostPortInjector) injectToPod(pod *corev1.Pod) ([]types.PatchOperatio
 	containerPortsIndexList := make([][]int, len(pod.Spec.Containers))
 	containerPortList := make([]int32, 0)
 	needInjectCount := 0
-
 	for containerIndex, container := range pod.Spec.Containers {
 		for portIndex, containerPort := range container.Ports {
-			for _, portStr := range portStrs {
-				// 根据声明的port名字或者端口号去匹配容器端口
-				// 1. 先按名字匹配
-				// 2. 再按端口号匹配
-				if portStr == containerPort.Name {
-					containerPortsIndexList[containerIndex] = append(containerPortsIndexList[containerIndex], portIndex)
-					containerPortList = append(containerPortList, containerPort.ContainerPort)
-					needInjectCount++
-					break
-				}
-				// 如果不能转成数字，则跳过，说明用户声明的是端口名字，名字不匹配。
-				portNumber, err := strconv.Atoi(portStr)
-				if err != nil {
-					continue
-				}
-				if int32(portNumber) == containerPort.ContainerPort {
-					containerPortsIndexList[containerIndex] = append(containerPortsIndexList[containerIndex], portIndex)
-					containerPortList = append(containerPortList, containerPort.ContainerPort)
-					needInjectCount++
-					break
-				}
+			if matched, port := matchPort(portStrs, containerPort); matched {
+				containerPortsIndexList[containerIndex] = append(containerPortsIndexList[containerIndex], portIndex)
+				containerPortList = append(containerPortList, port)
+				needInjectCount++
+				break
+			}
+		}
+	}
+	initContainerPortsIndexList := make([][]int, len(pod.Spec.InitContainers))
+	for containerIndex, initContainer := range pod.Spec.InitContainers {
+		for portIndex, containerPort := range initContainer.Ports {
+			if matched, port := matchPort(portStrs, containerPort); matched {
+				initContainerPortsIndexList[containerIndex] = append(initContainerPortsIndexList[containerIndex], portIndex)
+				containerPortList = append(containerPortList, port)
+				needInjectCount++
+				break
 			}
 		}
 	}
@@ -284,11 +278,38 @@ func (hpi *HostPortInjector) injectToPod(pod *corev1.Pod) ([]types.PatchOperatio
 	retPatches = append(retPatches, hpi.generateAffinityPath(pod, hostPorts)...)
 	// patch label
 	retPatches = append(retPatches, hpi.generateLabelPatch(pod, hostPorts))
+	params := &ContainerPortsParams{
+		RetPatches:                  retPatches,
+		Pod:                         pod,
+		HostPorts:                   hostPorts,
+		ContainerPortsIndexList:     containerPortsIndexList,
+		InitContainerPortsIndexList: initContainerPortsIndexList,
+		ContainerPortList:           containerPortList,
+		AlsoChangeContainerPort:     alsoChangeContainerPort,
+	}
+	//  patch container and init container port
+	hpi.getRetPatches(params)
+	// inject hostport into pod annotations
+	retPatches = append(params.RetPatches, hpi.generateAnnotationsPatch(pod, params.HostPortMapping))
+	fmt.Println(retPatches)
+
+	return retPatches, nil
+}
+
+// getRetPatches get all patches
+func (hpi *HostPortInjector) getRetPatches(params *ContainerPortsParams) {
+
 	// patch container port
 	hostPortCount := 0
-
+	pod := params.Pod
+	retPatches := params.RetPatches
+	containerPortsIndexList := params.ContainerPortsIndexList
+	initContainerPortsIndexList := params.InitContainerPortsIndexList
+	alsoChangeContainerPort := params.AlsoChangeContainerPort
+	hostPorts := params.HostPorts
+	containerPortList := params.ContainerPortList
 	// containerPort=>hostPort
-	hostPortMapping := make(map[uint64]uint64, len(containerPortsIndexList))
+	hostPortMapping := make(map[uint64]uint64, len(containerPortsIndexList)+len(initContainerPortsIndexList))
 	for containerIndex, portIndexList := range containerPortsIndexList {
 		for _, portIndex := range portIndexList {
 			containerPort := pod.Spec.Containers[containerIndex].Ports[portIndex].ContainerPort
@@ -315,18 +336,51 @@ func (hpi *HostPortInjector) injectToPod(pod *corev1.Pod) ([]types.PatchOperatio
 		envPatch := hpi.generateEnvPatch(PatchPathContainerEnv, containerIndex, envs, containerPortList, hostPorts)
 		retPatches = append(retPatches, envPatch)
 	}
-	// injecto all hostport envs into all init containers
-	for containerIndex, container := range pod.Spec.InitContainers {
-		envPatch := hpi.generateEnvPatch(
-			PatchPathInitContainerEnv, containerIndex, container.Env, containerPortList, hostPorts)
+	for containerIndex, portIndexList := range initContainerPortsIndexList {
+		for _, portIndex := range portIndexList {
+			containerPort := pod.Spec.InitContainers[containerIndex].Ports[portIndex].ContainerPort
+			// inject hostport into container port
+			retPatches = append(retPatches, types.PatchOperation{
+				Path:  fmt.Sprintf(PatchPathInitContainerHostPort, containerIndex, portIndex),
+				Op:    PatchOperationAdd,
+				Value: hostPorts[hostPortCount].Port,
+			})
+			if alsoChangeContainerPort {
+				retPatches = append(retPatches, types.PatchOperation{
+					Path:  fmt.Sprintf(PatchPathInitContainerContainerPort, containerIndex, portIndex),
+					Op:    PatchOperationAdd,
+					Value: hostPorts[hostPortCount].Port,
+				})
+				hostPortMapping[hostPorts[hostPortCount].Port] = hostPorts[hostPortCount].Port
+			} else {
+				hostPortMapping[uint64(containerPort)] = hostPorts[hostPortCount].Port
+			}
+			hostPortCount++
+		}
+		// inject all hostport envs into all containers
+		envs := pod.Spec.InitContainers[containerIndex].Env
+		envPatch := hpi.generateEnvPatch(PatchPathInitContainerEnv, containerIndex, envs, containerPortList, hostPorts)
 		retPatches = append(retPatches, envPatch)
 	}
+	params.RetPatches = retPatches
+	params.HostPortMapping = hostPortMapping
+}
 
-	// inject hostport into pod annotations
-	retPatches = append(retPatches, hpi.generateAnnotationsPatch(pod, hostPortMapping))
-	fmt.Println(retPatches)
-
-	return retPatches, nil
+func matchPort(portStrs []string, port corev1.ContainerPort) (bool, int32) {
+	for _, portStr := range portStrs {
+		// 根据声明的port名字或者端口号去匹配容器端口
+		// 1. 先按名字匹配
+		// 2. 再按端口号匹配
+		if portStr == port.Name {
+			return true, port.ContainerPort
+		}
+		// 如果不能转成数字，则跳过，说明用户声明的是端口名字，名字不匹配。
+		portNumber, err := strconv.Atoi(portStr)
+		if err == nil && int32(portNumber) == port.ContainerPort {
+			return true, port.ContainerPort
+		}
+	}
+	return false, 0
 }
 
 // generateAnnotationsPatch generate patch for pod annotations
