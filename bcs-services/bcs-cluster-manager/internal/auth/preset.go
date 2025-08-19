@@ -72,6 +72,7 @@ var NoAuthMethod = []string{
 	"ClusterManager.Health",
 
 	"ClusterManager.VerifyCloudAccount",
+	"ClusterManager.GetClusterUpgradeInfo",
 }
 
 // ActionPermissions actions perms
@@ -96,6 +97,7 @@ var ActionPermissions = map[string]string{
 	"ClusterManager.SwitchClusterUnderlayNetwork": cluster.CanManageClusterOperation,
 	"ClusterManager.GetClusterSharedProject":      cluster.CanViewClusterOperation,
 	"ClusterManager.GetClustersMetaData":          "",
+	"ClusterManager.GetClusterUpgradeInfo":        "",
 
 	// node
 	"ClusterManager.AddNodesToCluster":           cluster.CanManageClusterOperation,
