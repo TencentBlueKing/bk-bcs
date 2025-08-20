@@ -524,7 +524,10 @@ func GenerateNTAddExistedInstanceReq(info *cloudprovider.CloudDependBasicInfo, n
 						Render:   true,
 					}, options)
 
-					overrideInstanceAdvanced.DataDisks = []api.DataDetailDisk{api.GetDefaultDataDisk("")}
+					// only handle cvm first /dev/vdb disk
+					if disk.DiskCount >= 1 {
+						overrideInstanceAdvanced.DataDisks = []api.DataDetailDisk{api.GetDefaultDataDisk("")}
+					}
 
 					req.InstanceAdvancedSettingsOverrides = append(req.InstanceAdvancedSettingsOverrides,
 						overrideInstanceAdvanced)

@@ -1448,7 +1448,8 @@ func (cli *TkeClient) getCommonImages() ([]*OSImage, error) {
 }
 
 // DescribeOsImages pull common images
-func (cli *TkeClient) DescribeOsImages(provider, clusterID string, bcsImageNameList []string, opt *cloudprovider.CommonOption) ([]*OSImage, error) {
+func (cli *TkeClient) DescribeOsImages(provider, clusterID string, bcsImageNameList []string,
+	opt *cloudprovider.CommonOption) ([]*OSImage, error) {
 	if cli == nil {
 		return nil, cloudprovider.ErrServerIsNil
 	}
