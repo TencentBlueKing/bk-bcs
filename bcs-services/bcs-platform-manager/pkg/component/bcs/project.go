@@ -70,7 +70,7 @@ func GetProject(ctx context.Context, bcsConf *config.BCSConf, projectIDOrCode st
 	}
 
 	project := new(Project)
-	if err := component.UnmarshalBKResult(resp, project); err != nil {
+	if err := component.UnmarshalBKData(resp, project); err != nil {
 		return nil, err
 	}
 

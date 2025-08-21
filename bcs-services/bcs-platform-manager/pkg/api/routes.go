@@ -23,6 +23,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	httpSwagger "github.com/swaggo/http-swagger"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/api/cloudvpc"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/api/pod"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/rest"
@@ -117,6 +118,13 @@ func registerRoutes() http.Handler {
 
 		route.Get("/containers", rest.Handle(pod.GetPodContainers))
 		route.Post("/containers", rest.Handle(pod.CreateContainers))
+	})
+
+	r.Route("/cloudvpc", func(route chi.Router) {
+		route.Use(middleware.AuthenticationRequired, middleware.Tracing, middleware.Audit)
+
+		route.Post("/", rest.Handle(cloudvpc.CreateCloudVPC))
+		route.Put("/", rest.Handle(cloudvpc.UpdateCloudVPC))
 	})
 	return r
 }
