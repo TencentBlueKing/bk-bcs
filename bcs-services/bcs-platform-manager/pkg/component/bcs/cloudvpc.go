@@ -168,15 +168,15 @@ func UpdateCloudVPC(req *UpdateCloudVPCReq) (*CloudVPC, error) {
 		return nil, err
 	}
 
-	var result *CloudVPC
+	var result CloudVPC
 
 	fmt.Printf("update cloud vpc response: %s", resp.String())
-	if err = component.UnmarshalBKData(resp, result); err != nil {
+	if err = component.UnmarshalBKData(resp, &result); err != nil {
 		blog.Errorf("unmarshal cloud vpc error, %s", err.Error())
 		return nil, err
 	}
 
-	return result, nil
+	return &result, nil
 }
 
 // DeleteCloudVPC 删除cloud vpc
@@ -192,7 +192,7 @@ func DeleteCloudVPC(cloudID, vpcID string) (*CloudVPC, error) {
 		return nil, err
 	}
 
-	var result *CloudVPC
+	var result CloudVPC
 
 	fmt.Printf("delete cloud vpc response: %s", resp.String())
 	if err = component.UnmarshalBKData(resp, &result); err != nil {
@@ -200,5 +200,5 @@ func DeleteCloudVPC(cloudID, vpcID string) (*CloudVPC, error) {
 		return nil, err
 	}
 
-	return result, nil
+	return &result, nil
 }
