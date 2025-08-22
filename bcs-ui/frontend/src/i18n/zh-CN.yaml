@@ -505,6 +505,8 @@ generic:
       ipInUsed: 'IP已被 {name}{id} 占用'
       ipRegionNotMatched: '待选节点所属地域需与集群保持一致, 集群地域: {0}'
       ipVpcNotMatched: '待选节点所属VPC需与集群保持一致, 待选节点VPC: {0}, 集群VPC: {1}'
+      ipDiskNumNotMatched: 待选节点必须存在/dev/vdb数据盘
+      ipAgentAbnormal: Agent状态异常
     selected:
       text2: '已选择{remainCount}个节点'
     label:

@@ -548,6 +548,8 @@ generic:
       ipVpcNotMatched: >-
         The VPC that belongs to the election node must be consistent with the
         cluster. The selected node VPC: {0}, cluster VPC: {1}
+      ipDiskNumNotMatched: Selected nodes must have /dev/vdb data disk
+      ipAgentAbnormal: Agent status is abnormal
     selected:
       text2: '{remainCount} items'
     label:

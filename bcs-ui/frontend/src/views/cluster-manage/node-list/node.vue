@@ -723,7 +723,7 @@
         <div v-bkloading="{ isLoading: logSideDialogConf.loading }">
           <TaskLog
             :data="logSideDialogConf.taskData"
-            :enable-auto-refresh="['INITIALIZATION', 'DELETING'].includes(logSideDialogConf.status)"
+            :enable-auto-refresh="['LOADING', 'WAITING'].includes(logSideDialogConf.status)"
             enable-statistics
             type="multi-task"
             :status="logSideDialogConf.status"

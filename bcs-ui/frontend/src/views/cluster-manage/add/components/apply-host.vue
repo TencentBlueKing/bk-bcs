@@ -84,6 +84,8 @@
           :region="region"
           :vpc="vpc"
           :validate-vpc="true"
+          :validate-agent-status="cloudId === 'tencentCloud'"
+          :validate-data-disk="cloudId === 'tencentCloud'"
           @confirm="handleChooseServer"
           @cancel="showIpSelector = false" />
       </template>

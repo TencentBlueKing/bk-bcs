@@ -41,6 +41,11 @@ let cacheNodeListCloudDataMap: Record<string, {
   vpc: string
   zone: string
   zoneName: string
+  dataDiskNum: number
+}> = {};
+// 节点信息 nodes 接口
+let cacheNodeListDataMap: Record<string, {
+  alive: 0 | 1
 }> = {};
 </script>
 <script setup lang="ts">
@@ -95,6 +100,16 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  // 是否校验 Agent 状态，默认不校验
+  validateAgentStatus: {
+    type: Boolean,
+    default: false,
+  },
+  // 是否校验数据盘，默认不校验
+  validateDataDisk: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const selectorKey = ref('');
@@ -135,7 +150,18 @@ const isHostOnlyValid = ref(false);
 
 // 获取主机云和占有信息
 const handleGetHostAvailableAndCloudInfo = async (hostData: IHostData[]) => {
-  const ipList = hostData.filter(item => !!item.ip).map(item => item.ip);
+  const hasIpData = hostData.filter(item => !!item.ip);
+  const tempData = hasIpData.reduce((pre, item) => {
+    if (item.ip) {
+      pre[item.ip] = item;
+    }
+    return pre;
+  }, {});
+  cacheNodeListDataMap = {
+    ...cacheNodeListDataMap,
+    ...tempData,
+  };
+  const ipList = hasIpData.map(item => item.ip);
   // 查询主机是否可用
   const nodeAvailableData = await nodeAvailable({
     innerIPs: ipList,
@@ -214,6 +240,10 @@ const disableHostMethod = (row: IHostData) => {
     } else if (!!props.availableZoneList?.length
       && !props.availableZoneList.includes(cacheNodeListCloudDataMap[row.ip]?.zone)) {
       tips = $i18n.t('tke.tips.nodeNotInSubnetZone', [cacheNodeListCloudDataMap[row.ip]?.zoneName, props.availableZoneList.join(',')]);
+    } else if (props.validateDataDisk && cacheNodeListCloudDataMap[row.ip]?.dataDiskNum < 1) {
+      tips = $i18n.t('generic.ipSelector.tips.ipDiskNumNotMatched');
+    } else if (props.validateAgentStatus && cacheNodeListDataMap[row.ip]?.alive === 0) {
+      tips = $i18n.t('generic.ipSelector.tips.ipAgentAbnormal');
     }
   }
   return tips;

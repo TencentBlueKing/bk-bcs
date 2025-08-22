@@ -90,7 +90,9 @@
         :ip-list="formData.ipList"
         :validate-vpc-and-region="curCluster.provider !== 'bluekingCloud'"
         :account-i-d="curCluster.cloudAccountID"
-        :validate-vpc="true"
+        validate-vpc
+        validate-agent-status
+        validate-data-disk
         @confirm="chooseServer"
         @cancel="showIpSelector = false">
       </IpSelector>
