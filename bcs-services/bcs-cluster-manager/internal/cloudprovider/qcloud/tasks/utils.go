@@ -27,8 +27,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 )
 
-// imageName image name or image id
-func transImageNameToImageID(cmOption *cloudprovider.CommonOption, imageName string) (string, error) { // nolint
+// TransImageNameToImageID imageName image name or image id
+func TransImageNameToImageID(cmOption *cloudprovider.CommonOption, imageName string) (string, error) { // nolint
 	imageID, err := business.GetCVMImageIDByImageName(imageName, cmOption)
 	if err == nil {
 		return imageID, nil

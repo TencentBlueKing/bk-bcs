@@ -225,6 +225,7 @@ func handleTaskData(state *cloudprovider.TaskState, failedIds []string) {
 	state.Task.NodeIPList = availableNodeIps
 	state.Task.CommonParams[cloudprovider.NodeIDsKey.String()] = strings.Join(availableNodeIds, ",")
 	state.Task.CommonParams[cloudprovider.NodeIPsKey.String()] = strings.Join(availableNodeIps, ",")
+	state.Task.CommonParams[cloudprovider.DynamicNodeIPListKey.String()] = strings.Join(availableNodeIps, ",")
 	state.Task.CommonParams[cloudprovider.FailedTransVpcNodeIDsKey.String()] = strings.Join(failedIds, ",")
 }
 

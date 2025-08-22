@@ -1868,7 +1868,7 @@
           },
           {
             "name": "provider",
-            "description": "provider. 镜像提供方，可选值:PUBLIC_IMAGE(公共镜像),PRIVATE_IMAGE(私有镜像),SHARED_IMAGE(共享镜像),MARKET_IMAGE(市场镜像), ALL所有镜像",
+            "description": "provider. 镜像提供方，可选值:PUBLIC_IMAGE(公共镜像),PRIVATE_IMAGE(私有镜像),SHARED_IMAGE(共享镜像),MARKET_IMAGE(市场镜像),CLUSTER_IMAGE(集群使用镜像)，ALL所有镜像",
             "in": "query",
             "required": false,
             "type": "string"
@@ -9381,6 +9381,12 @@
           "format": "boolean",
           "description": "是否是该云的某个地域节点",
           "title": "cloudRegionNode"
+        },
+        "dataDiskNum": {
+          "type": "integer",
+          "format": "int64",
+          "description": "节点数据盘数量",
+          "title": "dataDiskNum"
         }
       },
       "description": "记录节点信息，用于节点列表展示",
@@ -17777,6 +17783,12 @@
           "type": "string",
           "description": "机型计费模型，POSTPAID_BY_HOUR按小时后付费，PREPAID包年包月",
           "title": "chargeType"
+        },
+        "dataDiskNum": {
+          "type": "integer",
+          "format": "int64",
+          "description": "节点数据盘数量",
+          "title": "dataDiskNum"
         }
       },
       "description": "记录节点信息，用于维护节点状态，被cluster与nodegroup使用",

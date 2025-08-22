@@ -177,6 +177,8 @@ var (
 	DeviceRecordIDKey ParamKey = "deviceRecordKey"
 	// ManualKey xxx
 	ManualKey ParamKey = "manual"
+	// ImageIdKey xxx
+	ImageIdKey ParamKey = "imageId"
 
 	// PoolProvider xxx
 	PoolProvider ParamKey = "poolProvider"
@@ -281,6 +283,8 @@ var (
 	DynamicClusterKubeConfigKey ParamKey = "KubeConfig"
 	// DynamicMasterNodeIPListKey xxx
 	DynamicMasterNodeIPListKey ParamKey = "MasterNodeIPList"
+	// DynamicImageIdKey xxx
+	DynamicImageIdKey ParamKey = "ImageId"
 
 	// SuccessNodeIDsKey xxx
 	// CVM Instance

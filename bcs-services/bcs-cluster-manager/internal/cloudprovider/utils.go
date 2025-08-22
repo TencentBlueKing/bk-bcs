@@ -809,6 +809,44 @@ func GetClusterMasterIPList(cluster *proto.Cluster) []string {
 	return masterIPs
 }
 
+// GetClusterImage get cluster image info
+func GetClusterImage(ctx context.Context, cls *proto.Cluster) (string, error) {
+	cloud, err := GetStorageModel().GetCloud(context.Background(), cls.GetProvider())
+	if err != nil {
+		blog.Errorf("GetClusterImage[%s:%s] get cloud failed: %v",
+			cls.GetClusterID(), cls.GetProvider(), err)
+		return "", err
+	}
+
+	nodeMgr, err := GetNodeMgr(cloud.CloudProvider)
+	if err != nil {
+		blog.Errorf("get cloudprovider %s NodeManager getCloudZones failed, %s", cloud.CloudProvider, err.Error())
+		return "", err
+	}
+	cmOption, err := GetCredential(&CredentialData{
+		Cloud:     cloud,
+		AccountID: cls.CloudAccountID,
+	})
+	if err != nil {
+		blog.Errorf("get credential for cloudprovider %s/%s getCloudZones failed, %s",
+			cloud.CloudID, cloud.CloudProvider, err.Error())
+		return "", err
+	}
+	cmOption.Region = cls.Region
+
+	imageId, err := nodeMgr.GetCVMImageIDByImageName(cls.GetClusterBasicSettings().GetOS(), cmOption)
+	if err == nil {
+		blog.Errorf("GetClusterImage[%s] GetCVMImageIDByImageName success: %v",
+			cls.GetClusterBasicSettings().GetOS(), imageId)
+		return imageId, nil
+	}
+
+	blog.Infof("GetClusterImage[%s] GetCVMImageIDByImageName failed: %v",
+		cls.GetClusterBasicSettings().GetOS(), err)
+
+	return cls.GetClusterBasicSettings().GetOS(), nil
+}
+
 // StepOptions xxx
 type StepOptions struct {
 	SkipFailed bool

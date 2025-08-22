@@ -230,7 +230,7 @@ func (t *Task) BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.Node
 	}())
 
 	// step2: shield nodes alarm
-	common.BuildShieldAlertTaskStep(task, opt.Cluster.GetClusterID())
+	common.BuildShieldAlertTaskStep(task, opt.Cluster.GetClusterID(), cloudprovider.ImageIdKey.String())
 
 	// step3: 业务自定义流程, 缩容前置流程支持标准运维任务和执行业务job脚本
 	if group.NodeTemplate != nil && len(group.NodeTemplate.ScaleInPreScript) > 0 {
@@ -344,7 +344,7 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 	// step2: check nodes if sync to cmdb
 	updateDesiredNodes.BuildSyncClusterNodesToCMDBStep(task)
 	// step3: shied nodes alert
-	common.BuildShieldAlertTaskStep(task, opt.Cluster.GetClusterID())
+	common.BuildShieldAlertTaskStep(task, opt.Cluster.GetClusterID(), cloudprovider.ImageIdKey.String())
 	// step4: add Nodes to cluster
 	updateDesiredNodes.BuildAddNodesToClusterStep(task)
 	// step5: check nodes status

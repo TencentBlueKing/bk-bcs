@@ -331,6 +331,7 @@ func TransIPsToNodes(ips []string, opt *cloudprovider.ListNodesOption) ([]*proto
 			nodeMap[node.NodeID] = node
 			node.InnerIP = ip
 			node.Region = opt.Common.Region
+			node.DataDiskNum = uint32(len(inst.DataDisks))
 
 			// check node vpc and cluster vpc
 			if opt.ClusterVPCID != "" && !strings.EqualFold(node.VPC, opt.ClusterVPCID) {

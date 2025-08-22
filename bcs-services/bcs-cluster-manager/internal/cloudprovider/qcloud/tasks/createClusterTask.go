@@ -536,6 +536,22 @@ func CreateClusterShieldAlarmTask(taskID string, stepName string) error {
 		}
 	}
 
+	if len(masterIPs) > 0 {
+		state.Task.CommonParams[cloudprovider.DynamicMasterNodeIPListKey.String()] = strings.Join(masterIPs, ",")
+	}
+	if len(nodes) > 0 {
+		state.Task.CommonParams[cloudprovider.DynamicNodeIPListKey.String()] = strings.Join(nodes, ",")
+	}
+
+	clusterImageId, errLocal := cloudprovider.GetClusterImage(ctx, cluster)
+	if errLocal != nil {
+		blog.Errorf("CreateClusterShieldAlarmTask[%s] GetClusterImage failed: %v", taskID, errLocal)
+		_ = state.UpdateStepFailure(start, stepName, errLocal)
+		return errLocal
+	}
+	blog.Infof("CreateClusterShieldAlarmTask[%s] GetClusterImage success: %v", taskID, clusterImageId)
+	state.Task.CommonParams[cloudprovider.DynamicImageIdKey.String()] = clusterImageId
+
 	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
 		"shield host alarm config successful")
 
@@ -577,7 +593,7 @@ func createTkeCluster(ctx context.Context, info *cloudprovider.CloudDependBasicI
 	}
 
 	// image info
-	imageID, err := transImageNameToImageID(info.CmOption, info.Cluster.ClusterBasicSettings.OS)
+	imageID, err := TransImageNameToImageID(info.CmOption, info.Cluster.ClusterBasicSettings.OS)
 	if err != nil {
 		blog.Errorf("createTkeCluster[%s]: transImageNameToImageID for cluster[%s] failed, %v",
 			taskID, info.Cluster.ClusterID, err)

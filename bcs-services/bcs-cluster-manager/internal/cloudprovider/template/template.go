@@ -34,8 +34,14 @@ const (
 	UserBeforeInit = "userBeforeInit"
 	// UserPostInit post init
 	UserPostInit = "userAfterInit"
+	// SystemBeforeInit bksops system pre init
+	SystemBeforeInit = "systemPreInit"
+	// SystemPostInit bksops system init
+	SystemPostInit = "systemPostInit"
+	// SystemPreInit bksops system pre init
+	SystemPreInit = "系统前置初始化"
 	// SystemInit bksops system init
-	SystemInit = "系统初始化"
+	SystemInit = "系统后置初始化"
 	// UserAfterInit bksops user after init
 	UserAfterInit = "用户后置初始化"
 	// UserPreInit bksops user pre init
@@ -54,6 +60,7 @@ var (
 		nodeIPList:         "NodeIPList",
 		externalNodeScript: "ExternalNodeScript",
 		clusterKubeConfig:  "KubeConfig",
+		clusterImageId:     "ImageId",
 	}
 )
 
@@ -73,6 +80,7 @@ type ExtraInfo struct {
 	TranslateMethod    string
 	GroupCreator       string
 	GroupColocation    bool
+	ImageId            string
 }
 
 // BuildSopsFactory xxx
@@ -291,7 +299,7 @@ func getTemplateParameterByName(name string, cluster *proto.Cluster, extra Extra
 		if len(extra.ClusterKubeConfig) == 0 {
 			return clusterKubeConfig, nil
 		}
-		return extra.ExternalNodeScript, nil
+		return extra.ClusterKubeConfig, nil
 	case nodeOperator:
 		return extra.NodeOperator, nil
 	case templateBusinessID:
@@ -317,6 +325,11 @@ func getTemplateParameterByName(name string, cluster *proto.Cluster, extra Extra
 		return cluster.GetClusterBasicSettings().GetVersion(), nil
 	case clusterProvider:
 		return cluster.GetProvider(), nil
+	case clusterImageId:
+		if len(extra.ImageId) == 0 {
+			return clusterImageId, nil
+		}
+		return extra.ImageId, nil
 	default:
 	}
 

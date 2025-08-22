@@ -74,6 +74,7 @@ var (
 	clusterOsType          = "CM.cluster.ClusterOsType"
 	clusterK8sVersion      = "CM.cluster.ClusterK8sVersion"
 	clusterProvider        = "CM.cluster.ClusterProvider"
+	clusterImageId         = "CM.cluster.ClusterImageId"
 
 	// node render info
 	// NOCC:gas/crypto(误报)

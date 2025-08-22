@@ -1951,6 +1951,10 @@ message Node {
     title: "chargeType",
     description: "机型计费模型，POSTPAID_BY_HOUR按小时后付费，PREPAID包年包月"
   }];
+  uint32 dataDiskNum = 24 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "dataDiskNum",
+    description: "节点数据盘数量"
+  }];
 }
 
 message NetworkSetting {
@@ -12367,6 +12371,10 @@ message CloudNode {
   bool cloudRegionNode=13[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "cloudRegionNode",
     description: "是否是该云的某个地域节点"
+  }];
+  uint32 dataDiskNum = 14 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "dataDiskNum",
+    description: "节点数据盘数量"
   }];
 }
 
