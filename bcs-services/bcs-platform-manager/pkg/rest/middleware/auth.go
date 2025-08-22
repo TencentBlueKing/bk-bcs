@@ -46,8 +46,8 @@ func AuthenticationRequired(next http.Handler) http.Handler {
 		case initContextWithBCSJwt(r, restContext):
 		case initContextWithDevEnv(r, restContext):
 		default:
-			// _ = render.Render(w, r, rest.AbortWithUnauthorizedError(restContext, rest.ErrorUnauthorized))
-			// return
+			_ = render.Render(w, r, rest.AbortWithUnauthorizedError(restContext, rest.ErrorUnauthorized))
+			return
 		}
 
 		next.ServeHTTP(w, r)

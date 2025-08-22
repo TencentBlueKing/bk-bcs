@@ -37,6 +37,8 @@ import (
 var (
 	// ErrorUnauthorized 错误
 	ErrorUnauthorized = errors.New("用户未登入")
+	// ErrorNoPermission 无权限访问
+	ErrorNoPermission = errors.New("无权限访问")
 )
 
 // Result 返回的标准结构
