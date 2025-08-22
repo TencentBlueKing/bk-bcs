@@ -258,19 +258,39 @@ func GetBKAPIAuthorization(username string) (string, error) {
 
 // BKResult 蓝鲸返回规范的结构体
 type BKResult struct {
-	Code    interface{} `json:"code"`
-	Message string      `json:"message"`
-	Data    interface{} `json:"data"`
+	Code    any    `json:"code"`
+	Message string `json:"message"`
+	Data    any    `json:"data"`
+	Result  any    `json:"result"`
 }
 
-// UnmarshalBKResult 反序列化为蓝鲸返回规范
-func UnmarshalBKResult(resp *resty.Response, data interface{}) error {
+// UnmarshalBKData 反序列化为蓝鲸返回规范
+func UnmarshalBKData(resp *resty.Response, data any) error {
 	if resp.StatusCode() != http.StatusOK {
 		return errors.Errorf("http code %d != 200", resp.StatusCode())
 	}
 
 	// 部分接口，如 usermanager 返回的content-type不是json, 需要手动Unmarshal
 	bkResult := &BKResult{Data: data}
+	if err := json.Unmarshal(resp.Body(), bkResult); err != nil {
+		return err
+	}
+
+	if err := bkResult.ValidateCode(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// UnmarshalBKResult 反序列化为蓝鲸返回规范
+func UnmarshalBKResult(resp *resty.Response, result any) error {
+	if resp.StatusCode() != http.StatusOK {
+		return errors.Errorf("http code %d != 200", resp.StatusCode())
+	}
+
+	// 部分接口，如 usermanager 返回的content-type不是json, 需要手动Unmarshal
+	bkResult := &BKResult{Result: result}
 	if err := json.Unmarshal(resp.Body(), bkResult); err != nil {
 		return err
 	}
@@ -302,7 +322,7 @@ func (r *BKResult) ValidateCode() error {
 	}
 
 	if resultCode != 0 {
-		return errors.Errorf("resp code %d != 0, %s", resultCode, r.Message)
+		return errors.Errorf("%s", r.Message)
 	}
 	return nil
 }

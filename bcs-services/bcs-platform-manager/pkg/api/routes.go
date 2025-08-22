@@ -23,7 +23,9 @@ import (
 	"github.com/go-chi/chi/v5"
 	httpSwagger "github.com/swaggo/http-swagger"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/api/cloudvpc"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/api/pod"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/api/templateconfig"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/rest"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/rest/middleware"
@@ -110,13 +112,28 @@ func (a *APIServer) newRoutes() http.Handler {
 func registerRoutes() http.Handler {
 	r := chi.NewRouter()
 	// 日志相关接口
-
 	r.Route("/projects/{projectId}/clusters/{clusterId}", func(route chi.Router) {
 		route.Use(middleware.AuthenticationRequired, middleware.ProjectParse, middleware.ClusterAuthorization)
 		route.Use(middleware.Tracing, middleware.Audit)
 
 		route.Get("/containers", rest.Handle(pod.GetPodContainers))
 		route.Post("/containers", rest.Handle(pod.CreateContainers))
+	})
+
+	// vpc 相关接口
+	r.Route("/cloudvpc", func(route chi.Router) {
+		route.Use(middleware.AuthenticationRequired, middleware.Tracing, middleware.Audit)
+
+		route.Post("/", rest.Handle(cloudvpc.CreateCloudVPC))
+		route.Put("/", rest.Handle(cloudvpc.UpdateCloudVPC))
+	})
+
+	// templateconfig 相关接口
+	r.Route("/templateconfigs", func(route chi.Router) {
+		route.Use(middleware.AuthenticationRequired, middleware.Tracing, middleware.Audit)
+
+		route.Post("/", rest.Handle(templateconfig.CreateTemplateConfig))
+		route.Delete("/{templateConfigID}", rest.Handle(templateconfig.DeleteTemplateConfig))
 	})
 	return r
 }
