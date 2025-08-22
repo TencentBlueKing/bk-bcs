@@ -91,8 +91,8 @@
         :validate-vpc-and-region="curCluster.provider !== 'bluekingCloud'"
         :account-i-d="curCluster.cloudAccountID"
         validate-vpc
-        validate-agent-status
-        validate-data-disk
+        :validate-agent-status="curCluster.provider === 'tencentCloud'"
+        :validate-data-disk="curCluster.provider === 'tencentCloud'"
         @confirm="chooseServer"
         @cancel="showIpSelector = false">
       </IpSelector>
