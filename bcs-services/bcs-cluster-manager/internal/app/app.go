@@ -469,6 +469,21 @@ func (cm *ClusterManager) initBKOpsClient() error {
 	return nil
 }
 
+// init bk-ops client
+func (cm *ClusterManager) initStorageClient() error {
+	err := common.SetStorageClient(common.StorageOptions{
+		Host:  cm.opt.StorageManager.Host,
+		Token: cm.opt.StorageManager.Token,
+		Debug: cm.opt.StorageManager.Debug,
+	})
+	if err != nil {
+		blog.Errorf("initBKOpsClient failed: %v", err)
+		return err
+	}
+
+	return nil
+}
+
 // init iam client for perm
 func (cm *ClusterManager) initIAMClient() error {
 	var err error
@@ -1161,6 +1176,11 @@ func (cm *ClusterManager) Init() error {
 	}
 	// init bk-ops client
 	err = cm.initBKOpsClient()
+	if err != nil {
+		return err
+	}
+	// init storage client
+	err = cm.initStorageClient()
 	if err != nil {
 		return err
 	}
