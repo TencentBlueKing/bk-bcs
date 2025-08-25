@@ -49,6 +49,24 @@ func NewStorageEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		{
+			Name:    "Storage.PutProjectInfo",
+			Path:    []string{"/bcsstorage/v2/projects/{projectID}"},
+			Method:  []string{"PUT"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "Storage.PutClusterInfo",
+			Path:    []string{"/bcsstorage/v2/clusters/{clusterID}"},
+			Method:  []string{"PUT"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "Storage.DeleteClusterInfo",
+			Path:    []string{"/bcsstorage/v2/clusters/{clusterID}"},
+			Method:  []string{"DELETE"},
+			Handler: "rpc",
+		},
+		{
 			Name:    "Storage.GetClusterConfig",
 			Path:    []string{"/bcsstorage/v2/cluster_config/clusters/{clusterId}"},
 			Method:  []string{"GET"},
@@ -499,14 +517,17 @@ type StorageService interface {
 	// **** Alarm(告警) ****
 	PostAlarm(ctx context.Context, in *PostAlarmRequest, opts ...client.CallOption) (*PostAlarmResponse, error)
 	ListAlarm(ctx context.Context, in *ListAlarmRequest, opts ...client.CallOption) (*ListAlarmResponse, error)
+	// ****  项目集群数据 ****
+	PutProjectInfo(ctx context.Context, in *PutProjectInfoRequest, opts ...client.CallOption) (*PutProjectInfoResponse, error)
+	PutClusterInfo(ctx context.Context, in *PutClusterInfoRequest, opts ...client.CallOption) (*PutClusterInfoResponse, error)
+	DeleteClusterInfo(ctx context.Context, in *DeleteClusterInfoRequest, opts ...client.CallOption) (*PutClusterInfoResponse, error)
 	// ****  Cluster Config(集群配置) ****
 	GetClusterConfig(ctx context.Context, in *GetClusterConfigRequest, opts ...client.CallOption) (*GetClusterConfigResponse, error)
 	PutClusterConfig(ctx context.Context, in *PutClusterConfigRequest, opts ...client.CallOption) (*PutClusterConfigResponse, error)
 	GetServiceConfig(ctx context.Context, in *GetServiceConfigRequest, opts ...client.CallOption) (*GetServiceConfigResponse, error)
 	GetStableVersion(ctx context.Context, in *GetStableVersionRequest, opts ...client.CallOption) (*GetStableVersionResponse, error)
 	PutStableVersion(ctx context.Context, in *PutStableVersionRequest, opts ...client.CallOption) (*PutStableVersionResponse, error)
-	//
-	//k8s namespace resources
+	// k8s namespace resources
 	GetK8SNamespaceResources(ctx context.Context, in *GetNamespaceResourcesRequest, opts ...client.CallOption) (*GetNamespaceResourcesResponse, error)
 	PutK8SNamespaceResources(ctx context.Context, in *PutNamespaceResourcesRequest, opts ...client.CallOption) (*PutNamespaceResourcesResponse, error)
 	DeleteK8SNamespaceResources(ctx context.Context, in *DeleteNamespaceResourcesRequest, opts ...client.CallOption) (*DeleteNamespaceResourcesResponse, error)
@@ -580,7 +601,7 @@ type StorageService interface {
 	ListMetricTables(ctx context.Context, in *ListMetricTablesRequest, opts ...client.CallOption) (*ListMetricTablesResponse, error)
 	// **** metric watch ****
 	WatchMetric(ctx context.Context, in *WatchMetricRequest, opts ...client.CallOption) (Storage_WatchMetricService, error)
-	//**** watch k8s ****
+	// **** watch k8s ****
 	// k8s
 	K8SGetWatchResource(ctx context.Context, in *K8SGetWatchResourceRequest, opts ...client.CallOption) (*K8SGetWatchResourceResponse, error)
 	K8SPutWatchResource(ctx context.Context, in *K8SPutWatchResourceRequest, opts ...client.CallOption) (*K8SPutWatchResourceResponse, error)
@@ -613,6 +634,36 @@ func (c *storageService) PostAlarm(ctx context.Context, in *PostAlarmRequest, op
 func (c *storageService) ListAlarm(ctx context.Context, in *ListAlarmRequest, opts ...client.CallOption) (*ListAlarmResponse, error) {
 	req := c.c.NewRequest(c.name, "Storage.ListAlarm", in)
 	out := new(ListAlarmResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *storageService) PutProjectInfo(ctx context.Context, in *PutProjectInfoRequest, opts ...client.CallOption) (*PutProjectInfoResponse, error) {
+	req := c.c.NewRequest(c.name, "Storage.PutProjectInfo", in)
+	out := new(PutProjectInfoResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *storageService) PutClusterInfo(ctx context.Context, in *PutClusterInfoRequest, opts ...client.CallOption) (*PutClusterInfoResponse, error) {
+	req := c.c.NewRequest(c.name, "Storage.PutClusterInfo", in)
+	out := new(PutClusterInfoResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *storageService) DeleteClusterInfo(ctx context.Context, in *DeleteClusterInfoRequest, opts ...client.CallOption) (*PutClusterInfoResponse, error) {
+	req := c.c.NewRequest(c.name, "Storage.DeleteClusterInfo", in)
+	out := new(PutClusterInfoResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -1532,14 +1583,17 @@ type StorageHandler interface {
 	// **** Alarm(告警) ****
 	PostAlarm(context.Context, *PostAlarmRequest, *PostAlarmResponse) error
 	ListAlarm(context.Context, *ListAlarmRequest, *ListAlarmResponse) error
+	// ****  项目集群数据 ****
+	PutProjectInfo(context.Context, *PutProjectInfoRequest, *PutProjectInfoResponse) error
+	PutClusterInfo(context.Context, *PutClusterInfoRequest, *PutClusterInfoResponse) error
+	DeleteClusterInfo(context.Context, *DeleteClusterInfoRequest, *PutClusterInfoResponse) error
 	// ****  Cluster Config(集群配置) ****
 	GetClusterConfig(context.Context, *GetClusterConfigRequest, *GetClusterConfigResponse) error
 	PutClusterConfig(context.Context, *PutClusterConfigRequest, *PutClusterConfigResponse) error
 	GetServiceConfig(context.Context, *GetServiceConfigRequest, *GetServiceConfigResponse) error
 	GetStableVersion(context.Context, *GetStableVersionRequest, *GetStableVersionResponse) error
 	PutStableVersion(context.Context, *PutStableVersionRequest, *PutStableVersionResponse) error
-	//
-	//k8s namespace resources
+	// k8s namespace resources
 	GetK8SNamespaceResources(context.Context, *GetNamespaceResourcesRequest, *GetNamespaceResourcesResponse) error
 	PutK8SNamespaceResources(context.Context, *PutNamespaceResourcesRequest, *PutNamespaceResourcesResponse) error
 	DeleteK8SNamespaceResources(context.Context, *DeleteNamespaceResourcesRequest, *DeleteNamespaceResourcesResponse) error
@@ -1613,7 +1667,7 @@ type StorageHandler interface {
 	ListMetricTables(context.Context, *ListMetricTablesRequest, *ListMetricTablesResponse) error
 	// **** metric watch ****
 	WatchMetric(context.Context, *WatchMetricRequest, Storage_WatchMetricStream) error
-	//**** watch k8s ****
+	// **** watch k8s ****
 	// k8s
 	K8SGetWatchResource(context.Context, *K8SGetWatchResourceRequest, *K8SGetWatchResourceResponse) error
 	K8SPutWatchResource(context.Context, *K8SPutWatchResourceRequest, *K8SPutWatchResourceResponse) error
@@ -1625,6 +1679,9 @@ func RegisterStorageHandler(s server.Server, hdlr StorageHandler, opts ...server
 	type storage interface {
 		PostAlarm(ctx context.Context, in *PostAlarmRequest, out *PostAlarmResponse) error
 		ListAlarm(ctx context.Context, in *ListAlarmRequest, out *ListAlarmResponse) error
+		PutProjectInfo(ctx context.Context, in *PutProjectInfoRequest, out *PutProjectInfoResponse) error
+		PutClusterInfo(ctx context.Context, in *PutClusterInfoRequest, out *PutClusterInfoResponse) error
+		DeleteClusterInfo(ctx context.Context, in *DeleteClusterInfoRequest, out *PutClusterInfoResponse) error
 		GetClusterConfig(ctx context.Context, in *GetClusterConfigRequest, out *GetClusterConfigResponse) error
 		PutClusterConfig(ctx context.Context, in *PutClusterConfigRequest, out *PutClusterConfigResponse) error
 		GetServiceConfig(ctx context.Context, in *GetServiceConfigRequest, out *GetServiceConfigResponse) error
@@ -1713,6 +1770,24 @@ func RegisterStorageHandler(s server.Server, hdlr StorageHandler, opts ...server
 		Name:    "Storage.ListAlarm",
 		Path:    []string{"/bcsstorage/v2/alarms"},
 		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Storage.PutProjectInfo",
+		Path:    []string{"/bcsstorage/v2/projects/{projectID}"},
+		Method:  []string{"PUT"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Storage.PutClusterInfo",
+		Path:    []string{"/bcsstorage/v2/clusters/{clusterID}"},
+		Method:  []string{"PUT"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Storage.DeleteClusterInfo",
+		Path:    []string{"/bcsstorage/v2/clusters/{clusterID}"},
+		Method:  []string{"DELETE"},
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -2170,6 +2245,18 @@ func (h *storageHandler) PostAlarm(ctx context.Context, in *PostAlarmRequest, ou
 
 func (h *storageHandler) ListAlarm(ctx context.Context, in *ListAlarmRequest, out *ListAlarmResponse) error {
 	return h.StorageHandler.ListAlarm(ctx, in, out)
+}
+
+func (h *storageHandler) PutProjectInfo(ctx context.Context, in *PutProjectInfoRequest, out *PutProjectInfoResponse) error {
+	return h.StorageHandler.PutProjectInfo(ctx, in, out)
+}
+
+func (h *storageHandler) PutClusterInfo(ctx context.Context, in *PutClusterInfoRequest, out *PutClusterInfoResponse) error {
+	return h.StorageHandler.PutClusterInfo(ctx, in, out)
+}
+
+func (h *storageHandler) DeleteClusterInfo(ctx context.Context, in *DeleteClusterInfoRequest, out *PutClusterInfoResponse) error {
+	return h.StorageHandler.DeleteClusterInfo(ctx, in, out)
 }
 
 func (h *storageHandler) GetClusterConfig(ctx context.Context, in *GetClusterConfigRequest, out *GetClusterConfigResponse) error {
