@@ -44,22 +44,3 @@ func GetPodContainers(c context.Context, req *SampleRequset) (*entity.Audit, err
 	}
 	return audit, nil
 }
-
-// CreateContainers 获取 Pod 容器列表
-// @Summary 获取 Pod 容器列表
-// @Tags    Logs
-// @Produce json
-// @Success 200 {array} k8sclient.Container
-// @Router  /namespaces/:namespace/pods/:pod/containers [get]
-func CreateContainers(c context.Context, req *SampleRequset) (*SampleResponse, error) {
-	id, err := storage.GlobalStorage.CreateAudit(c, &entity.Audit{
-		ProjectCode: req.ProjectId,
-		ClusterID:   req.ClusterId,
-	})
-	if err != nil {
-		return nil, err
-	}
-	return &SampleResponse{
-		Id: id.Hex(),
-	}, nil
-}

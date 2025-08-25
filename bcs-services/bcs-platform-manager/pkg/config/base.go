@@ -29,19 +29,20 @@ const (
 
 // BaseConf :
 type BaseConf struct {
-	HttpPort     string              `yaml:"http_port"`
-	BindAddress  string              `yaml:"bind_address"`
-	AppCode      string              `yaml:"app_code"`
-	AppSecret    string              `yaml:"app_secret"`
-	SystemID     string              `yaml:"system_id"`
-	BKUsername   string              `yaml:"bk_username"`
-	TimeZone     string              `yaml:"time_zone"`
-	LanguageCode string              `yaml:"language_code"`
-	Managers     []string            `yaml:"managers"`
-	ManagerMap   map[string]struct{} `yaml:"-"`
-	Debug        bool                `yaml:"debug"`
-	RunEnv       string              `yaml:"run_env"`
-	Location     *time.Location      `yaml:"-"`
+	HttpPort          string              `yaml:"http_port"`
+	BindAddress       string              `yaml:"bind_address"`
+	AppCode           string              `yaml:"app_code"`
+	AppSecret         string              `yaml:"app_secret"`
+	SystemID          string              `yaml:"system_id"`
+	BKUsername        string              `yaml:"bk_username"`
+	TimeZone          string              `yaml:"time_zone"`
+	LanguageCode      string              `yaml:"language_code"`
+	Managers          []string            `yaml:"managers"`
+	VisitorsWhiteList []string            `yaml:"visitors_white_list"`
+	ManagerMap        map[string]struct{} `yaml:"-"`
+	Debug             bool                `yaml:"debug"`
+	RunEnv            string              `yaml:"run_env"`
+	Location          *time.Location      `yaml:"-"`
 }
 
 // Init :

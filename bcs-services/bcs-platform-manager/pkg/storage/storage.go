@@ -17,7 +17,6 @@ import (
 	"context"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/storage/audit"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/storage/entity"
@@ -27,10 +26,6 @@ import (
 type Storage interface {
 	// Audit operation
 	GetAudit(ctx context.Context, projectCode, clusterID string) (*entity.Audit, error)
-	CreateAudit(ctx context.Context, audit *entity.Audit) (primitive.ObjectID, error)
-	UpdateAudit(ctx context.Context, id string, audit entity.M) error
-	DeleteAudit(ctx context.Context, id string) error
-	FirstAuditOrCreate(ctx context.Context, audit *entity.Audit) (*entity.Audit, error)
 }
 
 type modelSet struct {
