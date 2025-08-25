@@ -15,15 +15,11 @@ package audit
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"sync"
-	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/storage/entity"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/utils"
@@ -82,69 +78,6 @@ func (m *ModelAudit) ensureTable(ctx context.Context) error {
 	return nil
 }
 
-// CreateAudit create audit
-func (m *ModelAudit) CreateAudit(ctx context.Context, lc *entity.Audit) (primitive.ObjectID, error) {
-	if err := m.ensureTable(ctx); err != nil {
-		return primitive.NilObjectID, err
-	}
-
-	now := utils.JSONTime{Time: time.Now()}
-	lc.CreatedAt = now
-	lc.UpdatedAt = now
-	if lc.ID.IsZero() {
-		lc.ID = primitive.NewObjectIDFromTimestamp(now.Time)
-	}
-	if _, err := m.db.Table(m.tableName).Insert(ctx, []interface{}{lc}); err != nil {
-		return primitive.NilObjectID, err
-	}
-	return lc.ID, nil
-}
-
-// UpdateAudit update audit
-func (m *ModelAudit) UpdateAudit(ctx context.Context, id string, lc entity.M) error {
-	if err := m.ensureTable(ctx); err != nil {
-		return err
-	}
-
-	objectID, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		return fmt.Errorf("invalid id")
-	}
-
-	cond := operator.NewLeafCondition(operator.Eq, operator.M{
-		entity.FieldKeyObjectID: objectID,
-	})
-
-	lc[entity.FieldKeyUpdatedAt] = utils.JSONTime{Time: time.Now()}
-	if err := m.db.Table(m.tableName).Update(ctx, cond, operator.M{"$set": lc}); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// DeleteAudit delete audit
-func (m *ModelAudit) DeleteAudit(ctx context.Context, id string) error {
-	if err := m.ensureTable(ctx); err != nil {
-		return err
-	}
-
-	objectID, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		return fmt.Errorf("invalid id")
-	}
-
-	cond := operator.NewLeafCondition(operator.Eq, operator.M{
-		entity.FieldKeyObjectID: objectID,
-	})
-
-	if _, err := m.db.Table(m.tableName).Delete(ctx, cond); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 // GetAudit get audit by projectCode and clusterID
 func (m *ModelAudit) GetAudit(ctx context.Context, projectCode, clusterID string) (*entity.Audit, error) {
 	if err := m.ensureTable(ctx); err != nil {
@@ -162,22 +95,4 @@ func (m *ModelAudit) GetAudit(ctx context.Context, projectCode, clusterID string
 	}
 
 	return audit, nil
-}
-
-// FirstAuditOrCreate get audit by projectCode and clusterID, if not found, create a new one
-func (m *ModelAudit) FirstAuditOrCreate(ctx context.Context, audit *entity.Audit) (*entity.Audit, error) {
-	getAudit, err := m.GetAudit(ctx, audit.ProjectCode, audit.ClusterID)
-	if err != nil {
-		if errors.Is(err, drivers.ErrTableRecordNotFound) {
-			id, cerr := m.CreateAudit(ctx, audit)
-			if cerr != nil {
-				return nil, cerr
-			}
-			audit.ID = id
-			return audit, nil
-		}
-		return nil, err
-	}
-
-	return getAudit, nil
 }

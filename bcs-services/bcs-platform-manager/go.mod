@@ -6,7 +6,6 @@ require (
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20250729093702-993155773a94
 	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20250729093702-993155773a94
 	github.com/dustin/go-humanize v1.0.1
-	github.com/fsnotify/fsnotify v1.9.0
 	github.com/ggicci/httpin v0.20.1
 	github.com/gin-contrib/sse v1.1.0
 	github.com/go-chi/chi/v5 v5.2.2
@@ -59,6 +58,7 @@ require (
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/evanphx/json-patch/v5 v5.6.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
+	github.com/fsnotify/fsnotify v1.9.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.8 // indirect
 	github.com/ggicci/owl v0.8.2 // indirect
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect

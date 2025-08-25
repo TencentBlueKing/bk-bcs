@@ -113,10 +113,9 @@ func registerRoutes() http.Handler {
 
 	r.Route("/projects/{projectId}/clusters/{clusterId}", func(route chi.Router) {
 		route.Use(middleware.AuthenticationRequired, middleware.ProjectParse, middleware.ClusterAuthorization)
-		route.Use(middleware.Tracing, middleware.Audit)
+		route.Use(middleware.VisitorsRequired, middleware.Tracing, middleware.Audit)
 
 		route.Get("/containers", rest.Handle(pod.GetPodContainers))
-		route.Post("/containers", rest.Handle(pod.CreateContainers))
 	})
 	return r
 }
