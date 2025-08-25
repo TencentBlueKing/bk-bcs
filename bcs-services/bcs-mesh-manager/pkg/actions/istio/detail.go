@@ -107,8 +107,7 @@ func (l *GetIstioDetailAction) getDetail(ctx context.Context) (*meshmanager.Isti
 	// istio 状态不在安装中才需要查询 release 的 values 信息
 	clusterID := meshIstio.PrimaryClusters[0]
 	namespace := common.IstioNamespace
-	istiodName := common.IstioInstallIstiodName
-
+	istiodName := meshIstio.ReleaseNames[clusterID][common.ComponentIstiod]
 	// 调用 RPC 接口获取 release 详情
 	release, err := helm.GetReleaseDetail(
 		ctx,

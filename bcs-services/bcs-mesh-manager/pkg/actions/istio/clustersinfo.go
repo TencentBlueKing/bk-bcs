@@ -109,6 +109,7 @@ func (c *GetClusterInfoAction) getClusterInfo(ctx context.Context) (*meshmanager
 			IsInstalled: false,
 			Status:      cluster.Status,
 			Version:     getClusterVersion(cluster),
+			Region:      cluster.Region,
 		}
 
 		// 共享集群、联邦集群、vcluster集群不检查istio安装状态

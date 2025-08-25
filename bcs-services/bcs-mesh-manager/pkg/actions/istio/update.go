@@ -16,10 +16,12 @@ import (
 	"context"
 	"fmt"
 	"slices"
+	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	"google.golang.org/protobuf/types/known/wrapperspb"
 	"k8s.io/apimachinery/pkg/api/resource"
 	pointer "k8s.io/utils/pointer"
 
@@ -38,7 +40,7 @@ import (
 type UpdateIstioAction struct {
 	istioConfig *options.IstioConfig
 	model       store.MeshManagerModel
-	req         *meshmanager.IstioRequest
+	req         *meshmanager.IstioUpdateRequest
 	resp        *meshmanager.UpdateIstioResponse
 }
 
@@ -53,7 +55,7 @@ func NewUpdateIstioAction(istioConfig *options.IstioConfig, model store.MeshMana
 // Handle processes the istio update request
 func (u *UpdateIstioAction) Handle(
 	ctx context.Context,
-	req *meshmanager.IstioRequest,
+	req *meshmanager.IstioUpdateRequest,
 	resp *meshmanager.UpdateIstioResponse,
 ) error {
 	u.req = req
@@ -86,14 +88,49 @@ func (u *UpdateIstioAction) validate() error {
 	if u.req.MeshID == "" {
 		return fmt.Errorf("网格 ID 不能为空")
 	}
-	if err := utils.ValidateBasicFields(u.req); err != nil {
-		return err
+	// 校验项目信息
+	if u.req.ProjectCode == "" {
+		return fmt.Errorf("项目编码或项目 ID 不能为空")
+	}
+
+	// 校验特性配置
+	if u.req.FeatureConfigs == nil {
+		return fmt.Errorf("特性配置不能为空")
+	}
+
+	// 网格名称不能为空
+	if u.req.Name.GetValue() == "" {
+		return fmt.Errorf("网格名称不能为空")
+	}
+
+	// 网格名称不能仅为空格
+	if strings.TrimSpace(u.req.Name.GetValue()) == "" {
+		return fmt.Errorf("网格名称不能仅为空格")
+	}
+
+	if len(u.req.RemoteClusters) > 0 {
+		if !u.req.MultiClusterEnabled.GetValue() {
+			return fmt.Errorf("从集群不为空时必须开启多集群模式")
+		}
+	}
+
+	// 开启多集群模式时必须配置CLBID
+	if u.req.MultiClusterEnabled.GetValue() {
+		if u.req.ClbID == nil {
+			return fmt.Errorf("多集群模式下必须配置CLBID")
+		}
 	}
 
 	// 检查resource参数
-	if err := utils.ValidateResource(u.req); err != nil {
+	if err := utils.ValidateResource(u.req.SidecarResourceConfig); err != nil {
 		blog.Errorf("validate resource failed, err: %s", err)
-		return fmt.Errorf("资源配置错误")
+		return fmt.Errorf("sidecar资源配置验证失败: %w", err)
+	}
+	if u.req.HighAvailability != nil {
+		if err := utils.ValidateResource(u.req.HighAvailability.ResourceConfig); err != nil {
+			blog.Errorf("validate resource failed, err: %s", err)
+			return fmt.Errorf("高可用资源配置验证失败: %w", err)
+		}
 	}
 	// 检查可观测性配置是否配置正确
 	if err := utils.ValidateObservabilityConfig(u.req.ObservabilityConfig); err != nil {
@@ -117,16 +154,28 @@ func (u *UpdateIstioAction) update(ctx context.Context) error {
 		blog.Errorf("get mesh istio failed, meshID: %s, err: %s", u.req.MeshID, err)
 		return err
 	}
-	// 主从集群信息使用db中的，不可更新，单独接口处理集群更新的情况
-	u.req.PrimaryClusters = istio.PrimaryClusters
-	u.req.RemoteClusters = istio.RemoteClusters
+	if istio == nil {
+		return fmt.Errorf("mesh istio not found, meshID: %s", u.req.MeshID)
+	}
+	if len(u.req.RemoteClusters) > 0 {
+		// 从集群不为空时，若已配置clbID则不可更新
+		if istio.ClbID != "" {
+			u.req.ClbID = wrapperspb.String(istio.ClbID)
+		}
+	}
 
 	// 构建mongodb的更新字段
-	updateFields := u.buildUpdateFields(u.req)
-	updateFields[entity.FieldKeyStatus] = common.IstioStatusUpdating
-	updateFields[entity.FieldKeyUpdateBy] = auth.GetUserFromCtx(ctx)
-	updateFields[entity.FieldKeyUpdateTime] = time.Now().UnixMilli()
-	updateFields[entity.FieldKeyStatusMessage] = "更新中"
+	updateFields := u.buildUpdateFields(ctx, u.req)
+	newRemoteClusters := make([]*entity.RemoteCluster, 0, len(u.req.RemoteClusters))
+	if u.req.MultiClusterEnabled.GetValue() {
+		// 转换proto RemoteCluster 为 entity RemoteCluster
+		newRemoteClusters = u.buildRemoteClusters(u.req.RemoteClusters)
+		updateFields[entity.FieldKeyRemoteClusters] = newRemoteClusters
+	} else {
+		updateFields[entity.FieldKeyRemoteClusters] = []*entity.RemoteCluster{}
+	}
+
+	// 更新istio信息
 	err = u.model.Update(ctx, u.req.MeshID, updateFields)
 	if err != nil {
 		blog.Errorf("update mesh fields failed, meshID: %s, err: %s", u.req.MeshID, err)
@@ -139,25 +188,28 @@ func (u *UpdateIstioAction) update(ctx context.Context) error {
 		blog.Errorf("convert request to values failed, meshID: %s, err: %s", u.req.MeshID, err)
 		return err
 	}
-
 	// 提取本次更新istio时的可选配置，当配置关闭时需要移除values.yaml中的对应字段
 	updateValuesOptions := u.updateValuesOptions(u.req)
-
 	// 异步更新istio
 	action := actions.NewIstioUpdateAction(
 		&actions.IstioUpdateOption{
 			Model:               u.model,
 			ProjectCode:         &istio.ProjectCode,
 			MeshID:              &istio.MeshID,
+			NetworkID:           &istio.NetworkID,
 			ChartName:           common.ComponentIstiod,
 			ChartVersion:        &istio.ChartVersion,
+			ChartValuesPath:     &u.istioConfig.ChartValuesPath,
 			ChartRepo:           &u.istioConfig.ChartRepo,
 			PrimaryClusters:     istio.PrimaryClusters,
-			RemoteClusters:      istio.RemoteClusters,
+			OldRemoteClusters:   istio.RemoteClusters,
+			NewRemoteClusters:   newRemoteClusters,
+			MultiClusterEnabled: pointer.Bool(u.req.MultiClusterEnabled.GetValue()),
 			UpdateValues:        updateValues,
 			ObservabilityConfig: u.req.ObservabilityConfig,
 			UpdateValuesOptions: updateValuesOptions,
-			Version:             istio.Version,
+			CLBID:               pointer.String(u.req.ClbID.GetValue()),
+			Revision:            &istio.Revision,
 		},
 	)
 	_, err = operation.GlobalOperator.Dispatch(action, 10*time.Minute)
@@ -169,9 +221,32 @@ func (u *UpdateIstioAction) update(ctx context.Context) error {
 	return nil
 }
 
+func (u *UpdateIstioAction) buildRemoteClusters(clusters []*meshmanager.RemoteCluster) []*entity.RemoteCluster {
+	remoteClusters := make([]*entity.RemoteCluster, 0, len(clusters))
+	for _, cluster := range clusters {
+		joinTime := cluster.JoinTime
+		if joinTime == 0 {
+			joinTime = time.Now().UnixMilli()
+		}
+		// 将新添加的从集群的状态设置为安装中
+		status := cluster.Status
+		if status == "" {
+			status = common.RemoteClusterStatusInstalling
+		}
+		remoteClusters = append(remoteClusters, &entity.RemoteCluster{
+			ClusterID:   cluster.ClusterID,
+			ClusterName: cluster.ClusterName,
+			Region:      cluster.Region,
+			JoinTime:    joinTime,
+			Status:      status,
+		})
+	}
+	return remoteClusters
+}
+
 // updateValuesOptions 构建 UpdateValuesOptions，作为更新values.yaml的参数
 // 当配置关闭时，或资源的值为0时需要移除values.yaml中的对应字段
-func (u *UpdateIstioAction) updateValuesOptions(req *meshmanager.IstioRequest) *utils.UpdateValuesOptions {
+func (u *UpdateIstioAction) updateValuesOptions(req *meshmanager.IstioUpdateRequest) *utils.UpdateValuesOptions {
 	options := &utils.UpdateValuesOptions{}
 
 	// 处理高可用配置
@@ -188,7 +263,7 @@ func (u *UpdateIstioAction) updateValuesOptions(req *meshmanager.IstioRequest) *
 
 // processHighAvailabilityOptions 处理高可用配置选项
 func (u *UpdateIstioAction) processHighAvailabilityOptions(
-	req *meshmanager.IstioRequest,
+	req *meshmanager.IstioUpdateRequest,
 	options *utils.UpdateValuesOptions) {
 	if req.HighAvailability == nil {
 		return
@@ -240,7 +315,7 @@ func (u *UpdateIstioAction) processHighAvailabilityOptions(
 
 // processObservabilityOptions 处理可观测性配置选项
 func (u *UpdateIstioAction) processObservabilityOptions(
-	req *meshmanager.IstioRequest,
+	req *meshmanager.IstioUpdateRequest,
 	options *utils.UpdateValuesOptions,
 ) {
 	if req.ObservabilityConfig == nil {
@@ -260,7 +335,7 @@ func (u *UpdateIstioAction) processObservabilityOptions(
 
 // processSidecarResourceOptions 处理 Sidecar 资源配置选项
 func (u *UpdateIstioAction) processSidecarResourceOptions(
-	req *meshmanager.IstioRequest,
+	req *meshmanager.IstioUpdateRequest,
 	options *utils.UpdateValuesOptions,
 ) {
 	if req.SidecarResourceConfig == nil {
@@ -307,9 +382,9 @@ func (u *UpdateIstioAction) isResourceQuantityZero(value string) bool {
 }
 
 // 构建更新字段
-func (u *UpdateIstioAction) buildUpdateFields(req *meshmanager.IstioRequest) entity.M {
+func (u *UpdateIstioAction) buildUpdateFields(ctx context.Context, req *meshmanager.IstioUpdateRequest) entity.M {
 	updateFields := entity.M{}
-	updateFields = buildBasicFields(req, updateFields)
+	updateFields = buildBasicFields(ctx, req, updateFields)
 	updateFields = buildResourceConfigs(req, updateFields)
 	updateFields = buildHighAvailability(req, updateFields)
 	updateFields = buildFeatureConfigs(req, updateFields)
@@ -318,7 +393,7 @@ func (u *UpdateIstioAction) buildUpdateFields(req *meshmanager.IstioRequest) ent
 }
 
 // buildBasicFields builds basic fields from request
-func buildBasicFields(req *meshmanager.IstioRequest, updateFields entity.M) entity.M {
+func buildBasicFields(ctx context.Context, req *meshmanager.IstioUpdateRequest, updateFields entity.M) entity.M {
 	if req.Description != nil {
 		updateFields[entity.FieldKeyDescription] = req.Description.GetValue()
 	}
@@ -334,12 +409,27 @@ func buildBasicFields(req *meshmanager.IstioRequest, updateFields entity.M) enti
 	if req.DifferentNetwork != nil {
 		updateFields[entity.FieldKeyDifferentNetwork] = req.DifferentNetwork.GetValue()
 	}
-
+	if req.MultiClusterEnabled != nil {
+		updateFields[entity.FieldKeyMultiClusterEnabled] = req.MultiClusterEnabled.GetValue()
+		// 开启多集群模式时，默认设置为主从模式
+		if req.MultiClusterEnabled.GetValue() {
+			updateFields[entity.FieldKeyClusterMode] = common.MultiClusterModePrimaryRemote
+		} else {
+			updateFields[entity.FieldKeyClusterMode] = ""
+		}
+	}
+	if req.ClbID != nil {
+		updateFields[entity.FieldKeyClbID] = req.ClbID.GetValue()
+	}
+	updateFields[entity.FieldKeyStatus] = common.IstioStatusUpdating
+	updateFields[entity.FieldKeyUpdateBy] = auth.GetUserFromCtx(ctx)
+	updateFields[entity.FieldKeyUpdateTime] = time.Now().UnixMilli()
+	updateFields[entity.FieldKeyStatusMessage] = "更新中"
 	return updateFields
 }
 
 // buildResourceConfigs builds resource related configurations
-func buildResourceConfigs(req *meshmanager.IstioRequest, updateFields entity.M) entity.M {
+func buildResourceConfigs(req *meshmanager.IstioUpdateRequest, updateFields entity.M) entity.M {
 	// Update Sidecar resource config
 	if req.SidecarResourceConfig != nil {
 		if req.SidecarResourceConfig.CpuRequest != nil {
@@ -359,7 +449,7 @@ func buildResourceConfigs(req *meshmanager.IstioRequest, updateFields entity.M) 
 }
 
 // buildHighAvailability builds high availability related configurations
-func buildHighAvailability(req *meshmanager.IstioRequest, updateFields entity.M) entity.M {
+func buildHighAvailability(req *meshmanager.IstioUpdateRequest, updateFields entity.M) entity.M {
 	if req.HighAvailability == nil {
 		return updateFields
 	}
@@ -416,7 +506,7 @@ func buildHighAvailability(req *meshmanager.IstioRequest, updateFields entity.M)
 }
 
 // buildObservability builds observability related configurations
-func buildObservability(req *meshmanager.IstioRequest, updateFields entity.M) entity.M {
+func buildObservability(req *meshmanager.IstioUpdateRequest, updateFields entity.M) entity.M {
 	if req.ObservabilityConfig == nil {
 		return updateFields
 	}
@@ -477,7 +567,7 @@ func buildObservability(req *meshmanager.IstioRequest, updateFields entity.M) en
 }
 
 // buildFeatureConfigs builds feature configurations
-func buildFeatureConfigs(req *meshmanager.IstioRequest, updateFields entity.M) entity.M {
+func buildFeatureConfigs(req *meshmanager.IstioUpdateRequest, updateFields entity.M) entity.M {
 	if len(req.FeatureConfigs) == 0 {
 		return updateFields
 	}

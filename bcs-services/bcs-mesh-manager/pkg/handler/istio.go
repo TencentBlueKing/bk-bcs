@@ -32,7 +32,7 @@ func (m *MeshManager) ListIstio(
 // InstallIstio implements meshmanager.MeshManagerHandler
 func (m *MeshManager) InstallIstio(
 	ctx context.Context,
-	req *meshmanager.IstioRequest,
+	req *meshmanager.IstioInstallRequest,
 	resp *meshmanager.InstallIstioResponse,
 ) error {
 	action := istioaction.NewInstallIstioAction(m.opt.IstioConfig, m.model)
@@ -42,7 +42,7 @@ func (m *MeshManager) InstallIstio(
 // UpdateIstio implements meshmanager.MeshManagerHandler
 func (m *MeshManager) UpdateIstio(
 	ctx context.Context,
-	req *meshmanager.IstioRequest,
+	req *meshmanager.IstioUpdateRequest,
 	resp *meshmanager.UpdateIstioResponse,
 ) error {
 	action := istioaction.NewUpdateIstioAction(m.opt.IstioConfig, m.model)

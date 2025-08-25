@@ -414,7 +414,7 @@ func TestConvertValuesToListItem(t *testing.T) {
 				ControlPlaneMode: "PRIMARY",
 				ClusterMode:      "MULTI",
 				PrimaryClusters:  []string{"cluster1", "cluster2"},
-				RemoteClusters:   []string{"cluster3"},
+				RemoteClusters:   []*entity.RemoteCluster{{ClusterID: "cluster3"}},
 				DifferentNetwork: true,
 				CreateTime:       1640995200,
 				UpdateTime:       1640995300,

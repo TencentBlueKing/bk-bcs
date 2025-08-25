@@ -90,6 +90,8 @@ kind: Telemetry
 metadata:
   name: bcs-istio-tracing
   namespace: istio-system
+  labels:
+    created-by: bcs-mesh-manager
 spec:
   tracing:
   - providers:
@@ -119,4 +121,14 @@ const (
 	ServiceMonitorName = "bcs-istio-control-plane-metrics"
 	// TelemetryName Telemetry资源名称
 	TelemetryName = "bcs-istio-tracing"
+)
+
+// 监控资源类型常量
+const (
+	// PodMonitorKind PodMonitor资源类型
+	PodMonitorKind = "PodMonitor"
+	// ServiceMonitorKind ServiceMonitor资源类型
+	ServiceMonitorKind = "ServiceMonitor"
+	// TelemetryKind Telemetry资源类型
+	TelemetryKind = "Telemetry"
 )

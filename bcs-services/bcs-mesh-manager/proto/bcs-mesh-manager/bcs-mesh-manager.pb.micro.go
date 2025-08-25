@@ -87,11 +87,11 @@ type MeshManagerService interface {
 	// 获取当前开放的istio版本和配置信息
 	ListIstioConfig(ctx context.Context, in *ListIstioConfigRequest, opts ...client.CallOption) (*ListIstioConfigResponse, error)
 	// 安装istio
-	InstallIstio(ctx context.Context, in *IstioRequest, opts ...client.CallOption) (*InstallIstioResponse, error)
+	InstallIstio(ctx context.Context, in *IstioInstallRequest, opts ...client.CallOption) (*InstallIstioResponse, error)
 	// 获取istio列表
 	ListIstio(ctx context.Context, in *ListIstioRequest, opts ...client.CallOption) (*ListIstioResponse, error)
 	// 更新istio配置
-	UpdateIstio(ctx context.Context, in *IstioRequest, opts ...client.CallOption) (*UpdateIstioResponse, error)
+	UpdateIstio(ctx context.Context, in *IstioUpdateRequest, opts ...client.CallOption) (*UpdateIstioResponse, error)
 	// 删除istio
 	DeleteIstio(ctx context.Context, in *DeleteIstioRequest, opts ...client.CallOption) (*DeleteIstioResponse, error)
 	// 获取istio详情
@@ -122,7 +122,7 @@ func (c *meshManagerService) ListIstioConfig(ctx context.Context, in *ListIstioC
 	return out, nil
 }
 
-func (c *meshManagerService) InstallIstio(ctx context.Context, in *IstioRequest, opts ...client.CallOption) (*InstallIstioResponse, error) {
+func (c *meshManagerService) InstallIstio(ctx context.Context, in *IstioInstallRequest, opts ...client.CallOption) (*InstallIstioResponse, error) {
 	req := c.c.NewRequest(c.name, "MeshManager.InstallIstio", in)
 	out := new(InstallIstioResponse)
 	err := c.c.Call(ctx, req, out, opts...)
@@ -142,7 +142,7 @@ func (c *meshManagerService) ListIstio(ctx context.Context, in *ListIstioRequest
 	return out, nil
 }
 
-func (c *meshManagerService) UpdateIstio(ctx context.Context, in *IstioRequest, opts ...client.CallOption) (*UpdateIstioResponse, error) {
+func (c *meshManagerService) UpdateIstio(ctx context.Context, in *IstioUpdateRequest, opts ...client.CallOption) (*UpdateIstioResponse, error) {
 	req := c.c.NewRequest(c.name, "MeshManager.UpdateIstio", in)
 	out := new(UpdateIstioResponse)
 	err := c.c.Call(ctx, req, out, opts...)
@@ -188,11 +188,11 @@ type MeshManagerHandler interface {
 	// 获取当前开放的istio版本和配置信息
 	ListIstioConfig(context.Context, *ListIstioConfigRequest, *ListIstioConfigResponse) error
 	// 安装istio
-	InstallIstio(context.Context, *IstioRequest, *InstallIstioResponse) error
+	InstallIstio(context.Context, *IstioInstallRequest, *InstallIstioResponse) error
 	// 获取istio列表
 	ListIstio(context.Context, *ListIstioRequest, *ListIstioResponse) error
 	// 更新istio配置
-	UpdateIstio(context.Context, *IstioRequest, *UpdateIstioResponse) error
+	UpdateIstio(context.Context, *IstioUpdateRequest, *UpdateIstioResponse) error
 	// 删除istio
 	DeleteIstio(context.Context, *DeleteIstioRequest, *DeleteIstioResponse) error
 	// 获取istio详情
@@ -204,9 +204,9 @@ type MeshManagerHandler interface {
 func RegisterMeshManagerHandler(s server.Server, hdlr MeshManagerHandler, opts ...server.HandlerOption) error {
 	type meshManager interface {
 		ListIstioConfig(ctx context.Context, in *ListIstioConfigRequest, out *ListIstioConfigResponse) error
-		InstallIstio(ctx context.Context, in *IstioRequest, out *InstallIstioResponse) error
+		InstallIstio(ctx context.Context, in *IstioInstallRequest, out *InstallIstioResponse) error
 		ListIstio(ctx context.Context, in *ListIstioRequest, out *ListIstioResponse) error
-		UpdateIstio(ctx context.Context, in *IstioRequest, out *UpdateIstioResponse) error
+		UpdateIstio(ctx context.Context, in *IstioUpdateRequest, out *UpdateIstioResponse) error
 		DeleteIstio(ctx context.Context, in *DeleteIstioRequest, out *DeleteIstioResponse) error
 		GetIstioDetail(ctx context.Context, in *GetIstioDetailRequest, out *GetIstioDetailResponse) error
 		GetClusterInfo(ctx context.Context, in *GetClusterInfoRequest, out *GetClusterInfoResponse) error
@@ -268,7 +268,7 @@ func (h *meshManagerHandler) ListIstioConfig(ctx context.Context, in *ListIstioC
 	return h.MeshManagerHandler.ListIstioConfig(ctx, in, out)
 }
 
-func (h *meshManagerHandler) InstallIstio(ctx context.Context, in *IstioRequest, out *InstallIstioResponse) error {
+func (h *meshManagerHandler) InstallIstio(ctx context.Context, in *IstioInstallRequest, out *InstallIstioResponse) error {
 	return h.MeshManagerHandler.InstallIstio(ctx, in, out)
 }
 
@@ -276,7 +276,7 @@ func (h *meshManagerHandler) ListIstio(ctx context.Context, in *ListIstioRequest
 	return h.MeshManagerHandler.ListIstio(ctx, in, out)
 }
 
-func (h *meshManagerHandler) UpdateIstio(ctx context.Context, in *IstioRequest, out *UpdateIstioResponse) error {
+func (h *meshManagerHandler) UpdateIstio(ctx context.Context, in *IstioUpdateRequest, out *UpdateIstioResponse) error {
 	return h.MeshManagerHandler.UpdateIstio(ctx, in, out)
 }
 

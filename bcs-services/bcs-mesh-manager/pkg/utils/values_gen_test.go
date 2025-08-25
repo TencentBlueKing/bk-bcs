@@ -93,7 +93,7 @@ func TestGenIstiodValues(t *testing.T) {
 		name           string
 		installMode    string
 		remotePilot    string
-		installOption  *common.IstioInstallOption
+		installOption  *GenIstiodValuesOption
 		expectedFields []string
 		notExpected    []string
 	}{
@@ -101,7 +101,8 @@ func TestGenIstiodValues(t *testing.T) {
 			name:        "basic primary cluster configuration",
 			installMode: common.IstioInstallModePrimary,
 			remotePilot: "",
-			installOption: &common.IstioInstallOption{
+			installOption: &GenIstiodValuesOption{
+				InstallModel:    common.IstioInstallModePrimary,
 				ChartValuesPath: dir,
 				ChartVersion:    "1.24",
 				PrimaryClusters: []string{"primary-cluster"},
@@ -120,7 +121,8 @@ func TestGenIstiodValues(t *testing.T) {
 			name:        "sidecar resource configuration",
 			installMode: common.IstioInstallModePrimary,
 			remotePilot: "",
-			installOption: &common.IstioInstallOption{
+			installOption: &GenIstiodValuesOption{
+				InstallModel:    common.IstioInstallModePrimary,
 				ChartValuesPath: dir,
 				ChartVersion:    "1.24",
 				PrimaryClusters: []string{"primary-cluster"},
@@ -139,7 +141,8 @@ func TestGenIstiodValues(t *testing.T) {
 			name:        "high availability configuration",
 			installMode: common.IstioInstallModePrimary,
 			remotePilot: "",
-			installOption: &common.IstioInstallOption{
+			installOption: &GenIstiodValuesOption{
+				InstallModel:    common.IstioInstallModePrimary,
 				ChartValuesPath: dir,
 				ChartVersion:    "1.24",
 				PrimaryClusters: []string{"primary-cluster"},
@@ -176,7 +179,8 @@ func TestGenIstiodValues(t *testing.T) {
 			name:        "observability configuration with tracing",
 			installMode: common.IstioInstallModePrimary,
 			remotePilot: "",
-			installOption: &common.IstioInstallOption{
+			installOption: &GenIstiodValuesOption{
+				InstallModel:    common.IstioInstallModePrimary,
 				ChartValuesPath: dir,
 				ChartVersion:    "1.24",
 				PrimaryClusters: []string{"primary-cluster"},
@@ -207,7 +211,8 @@ func TestGenIstiodValues(t *testing.T) {
 			name:        "observability configuration with legacy tracing (< 1.21)",
 			installMode: common.IstioInstallModePrimary,
 			remotePilot: "",
-			installOption: &common.IstioInstallOption{
+			installOption: &GenIstiodValuesOption{
+				InstallModel:    common.IstioInstallModePrimary,
 				ChartValuesPath: dir,
 				ChartVersion:    "1.24",
 				PrimaryClusters: []string{"primary-cluster"},
@@ -231,7 +236,8 @@ func TestGenIstiodValues(t *testing.T) {
 			name:        "comprehensive feature configuration",
 			installMode: common.IstioInstallModePrimary,
 			remotePilot: "",
-			installOption: &common.IstioInstallOption{
+			installOption: &GenIstiodValuesOption{
+				InstallModel:    common.IstioInstallModePrimary,
 				ChartValuesPath: dir,
 				ChartVersion:    "1.24",
 				PrimaryClusters: []string{"primary-cluster"},
@@ -271,7 +277,7 @@ func TestGenIstiodValues(t *testing.T) {
 			expectedFields: []string{
 				"mesh-features", "net-features", "REGISTRY_ONLY",
 				"holdApplicationUntilProxyStarts: true",
-				"EXIT_ON_ZERO_ACTIVE_CONNECTIONS: true",
+				"EXIT_ON_ZERO_ACTIVE_CONNECTIONS: \"true\"",
 				"ISTIO_META_DNS_CAPTURE: \"true\"",
 				"PILOT_HTTP10",
 				"excludeIPRanges", "10.0.0.0/8,172.16.0.0/12",
@@ -281,12 +287,15 @@ func TestGenIstiodValues(t *testing.T) {
 			name:        "remote cluster configuration",
 			installMode: common.IstioInstallModeRemote,
 			remotePilot: "pilot.istio-system.svc.cluster.local",
-			installOption: &common.IstioInstallOption{
+			installOption: &GenIstiodValuesOption{
+				InstallModel:    common.IstioInstallModeRemote,
+				ClusterID:       "remote-cluster",
 				ChartValuesPath: dir,
 				ChartVersion:    "1.24",
 				PrimaryClusters: []string{"primary-cluster"},
 				MeshID:          "mesh-remote",
 				NetworkID:       "net-remote",
+				CLBIP:           "pilot.istio-system.svc.cluster.local",
 			},
 			expectedFields: []string{
 				"mesh-remote", "net-remote", "configCluster: true",
@@ -299,7 +308,8 @@ func TestGenIstiodValues(t *testing.T) {
 			name:        "resource configuration with actual values verification",
 			installMode: common.IstioInstallModePrimary,
 			remotePilot: "",
-			installOption: &common.IstioInstallOption{
+			installOption: &GenIstiodValuesOption{
+				InstallModel:    common.IstioInstallModePrimary,
 				ChartValuesPath: dir,
 				ChartVersion:    "1.24",
 				PrimaryClusters: []string{"primary-cluster"},
@@ -339,7 +349,7 @@ func TestGenIstiodValues(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := GenIstiodValues(tt.installMode, tt.remotePilot, tt.installOption)
+			result, err := GenIstiodValues(tt.installOption)
 			if err != nil {
 				t.Fatalf("GenIstiodValues error: %v", err)
 			}

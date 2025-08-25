@@ -50,7 +50,7 @@ func local_request_MeshManager_ListIstioConfig_0(ctx context.Context, marshaler 
 }
 
 func request_MeshManager_InstallIstio_0(ctx context.Context, marshaler runtime.Marshaler, client MeshManagerClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq IstioRequest
+	var protoReq IstioInstallRequest
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -67,7 +67,7 @@ func request_MeshManager_InstallIstio_0(ctx context.Context, marshaler runtime.M
 }
 
 func local_request_MeshManager_InstallIstio_0(ctx context.Context, marshaler runtime.Marshaler, server MeshManagerServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq IstioRequest
+	var protoReq IstioInstallRequest
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -120,7 +120,7 @@ func local_request_MeshManager_ListIstio_0(ctx context.Context, marshaler runtim
 }
 
 func request_MeshManager_UpdateIstio_0(ctx context.Context, marshaler runtime.Marshaler, client MeshManagerClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq IstioRequest
+	var protoReq IstioUpdateRequest
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -154,7 +154,7 @@ func request_MeshManager_UpdateIstio_0(ctx context.Context, marshaler runtime.Ma
 }
 
 func local_request_MeshManager_UpdateIstio_0(ctx context.Context, marshaler runtime.Marshaler, server MeshManagerServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq IstioRequest
+	var protoReq IstioUpdateRequest
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)

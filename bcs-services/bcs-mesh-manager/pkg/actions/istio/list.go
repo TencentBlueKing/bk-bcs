@@ -122,7 +122,13 @@ func (l *ListIstioAction) getWebAnnotations(ctx context.Context) *meshmanager.We
 			continue
 		}
 
-		allClusters := mergeClusters(item.PrimaryClusters, item.RemoteClusters)
+		remoteClusters := make([]string, 0, len(item.RemoteClusters))
+		for _, cluster := range item.RemoteClusters {
+			if cluster != nil {
+				remoteClusters = append(remoteClusters, cluster.ClusterID)
+			}
+		}
+		allClusters := mergeClusters(item.PrimaryClusters, remoteClusters)
 		meshPerm := auth.GetMeshOpPerm(username, projectID, allClusters)
 
 		meshPerms[meshID] = meshPerm

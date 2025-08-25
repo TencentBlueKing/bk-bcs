@@ -76,7 +76,7 @@ service MeshManager {
   // ===== Istio 管理相关 =====
 
   // 安装istio
-  rpc InstallIstio(IstioRequest) returns (InstallIstioResponse) {
+  rpc InstallIstio(IstioInstallRequest) returns (InstallIstioResponse) {
     option (google.api.http) = {
       post : "/meshmanager/v1/mesh/istio/install"
       body : "*"
@@ -91,7 +91,7 @@ service MeshManager {
   }
 
   // 更新istio配置
-  rpc UpdateIstio(IstioRequest) returns (UpdateIstioResponse) {
+  rpc UpdateIstio(IstioUpdateRequest) returns (UpdateIstioResponse) {
     option (google.api.http) = {
       put : "/meshmanager/v1/mesh/istio/{meshID}"
       body : "*"
@@ -248,7 +248,93 @@ message FeatureConfig {
 // ===== Istio 管理相关消息 =====
 
 // istio配置信息
-message IstioRequest {
+message IstioInstallRequest {
+  string projectCode = 1
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "projectCode",
+        description : "项目编码"
+      } ];
+  google.protobuf.StringValue name = 2
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "name",
+        description : "网格名称"
+      } ];
+  google.protobuf.StringValue version = 3
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "version",
+        description : "使用的版本，例如 1.18"
+      } ];
+  google.protobuf.StringValue controlPlaneMode = 4
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "controlPlaneMode",
+        description : "安装模式["
+                      "independent：独立控制面（默认）；hosting：托管控制面]"
+      } ];
+  google.protobuf.StringValue clusterMode = 5
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "clusterMode",
+        description : "多集群集群模式["
+                      "primaryRemote：主从架构（默认）；multiPrimary：多主架构]"
+      } ];
+  google.protobuf.StringValue description = 6
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "description",
+        description : "文字描述"
+      } ];
+  repeated string primaryClusters = 7
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "primaryClusters",
+        description : "主集群列表，使用BCS集群ID"
+      } ];
+  repeated RemoteCluster remoteClusters = 8
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "remoteClusters",
+        description : "远程/从集群列表,多集群模式下填写"
+      } ];
+  google.protobuf.BoolValue differentNetwork = 9
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "differentNetwork",
+        description : "网络是否已打通：关乎是否默认安装egress "
+                      "gateway，true：已打通（默认），false：未打通，暂不支持"
+      } ];
+  ResourceConfig sidecarResourceConfig = 10
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "sidecarResourceConfig",
+        description : "sidecar资源配置"
+      } ];
+  HighAvailability highAvailability = 11
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "highAvailability",
+        description : "高可用配置"
+      } ];
+  ObservabilityConfig observabilityConfig = 12
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "observabilityConfig",
+        description : "可观测性配置"
+      } ];
+  map<string, FeatureConfig> featureConfigs = 13
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "featureConfigs",
+        description : "功能特性[跟随版本关联的特性]"
+      } ];
+  google.protobuf.BoolValue multiClusterEnabled = 14
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "multiClusterEnabled", 
+        description : "是否开启多集群"
+      } ];
+  google.protobuf.StringValue clbID = 15
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "clbID",
+        description : "东西向网关clbID"
+      } ];
+  google.protobuf.StringValue revision = 16
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "revision",
+        description : "istio revision"
+      } ];
+}
+
+message IstioUpdateRequest {
   string meshID = 1
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "meshID",
@@ -259,68 +345,68 @@ message IstioRequest {
         title : "projectCode",
         description : "项目编码"
       } ];
-  google.protobuf.StringValue name = 4
+  google.protobuf.StringValue name = 3
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "name",
         description : "网格名称"
       } ];
-  google.protobuf.StringValue version = 5
-      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-        title : "version",
-        description : "使用的版本，例如 1.18"
-      } ];
-  google.protobuf.StringValue controlPlaneMode = 6
+  google.protobuf.StringValue controlPlaneMode = 4
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "controlPlaneMode",
         description : "安装模式["
                       "independent：独立控制面（默认）；hosting：托管控制面]"
       } ];
-  google.protobuf.StringValue clusterMode = 7
+  google.protobuf.StringValue clusterMode = 5
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "clusterMode",
         description : "多集群集群模式["
-                      "primaryPemote：主从架构（默认）；multiPrimary：多主架构]"
+                      "primaryRemote：主从架构（默认）；multiPrimary：多主架构]"
       } ];
-  google.protobuf.StringValue description = 8
+  google.protobuf.StringValue description = 6
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "description",
         description : "文字描述"
       } ];
-  repeated string primaryClusters = 9
-      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-        title : "primaryClusters",
-        description : "主集群列表，使用BCS集群ID"
-      } ];
-  repeated string remoteClusters = 10
+  repeated RemoteCluster remoteClusters = 7
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "remoteClusters",
         description : "远程/从集群列表,多集群模式下填写"
       } ];
-  google.protobuf.BoolValue differentNetwork = 11
+  google.protobuf.BoolValue differentNetwork = 8
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "differentNetwork",
         description : "网络是否已打通：关乎是否默认安装egress "
                       "gateway，true：已打通（默认），false：未打通，暂不支持"
       } ];
-  ResourceConfig sidecarResourceConfig = 12
+  ResourceConfig sidecarResourceConfig = 9
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "sidecarResourceConfig",
         description : "sidecar资源配置"
       } ];
-  HighAvailability highAvailability = 13
+  HighAvailability highAvailability = 10
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "highAvailability",
         description : "高可用配置"
       } ];
-  ObservabilityConfig observabilityConfig = 14
+  ObservabilityConfig observabilityConfig = 11
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "observabilityConfig",
         description : "可观测性配置"
       } ];
-  map<string, FeatureConfig> featureConfigs = 15
+  map<string, FeatureConfig> featureConfigs = 12
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "featureConfigs",
         description : "功能特性[跟随版本关联的特性]"
+      } ];
+  google.protobuf.BoolValue multiClusterEnabled = 13
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "multiClusterEnabled", 
+        description : "是否开启多集群"
+      } ];
+  google.protobuf.StringValue clbID = 14
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "clbID",
+        description : "东西向网关clbID"
       } ];
 }
 
@@ -482,6 +568,36 @@ message MetricsConfig {
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "dataPlaneMetricsEnabled",
         description : "数据面指标采集开关，启用时会部署PodMonitor监控sidecar等数据面组件的指标，包括proxy、应用容器的网络流量、延迟等指标"
+      } ];
+}
+
+// 从集群信息
+message RemoteCluster {
+  string clusterID = 1
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "clusterID",
+        description : "集群ID"
+      } ];
+  string clusterName = 2
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "clusterName",
+        description : "集群名称"
+      } ];
+  string region = 3
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "region",
+        description : "集群所属区域"
+      } ];
+  int64 joinTime = 4
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "joinTime",
+        description : "纳入服务网格管理时间"
+      } ];
+  string status = 5
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "status",
+        description : "集群状态["
+                      "running：运行中；installing：安装中；install-failed：安装失败"
       } ];
 }
 
@@ -667,7 +783,7 @@ message IstioListItem {
         title : "primaryClusters",
         description : "主集群列表"
       } ];
-  repeated string remoteClusters = 10
+  repeated RemoteCluster remoteClusters = 10
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "remoteClusters",
         description : "远程集群列表"
@@ -764,14 +880,14 @@ message IstioDetailInfo {
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "clusterMode",
         description : "多集群集群模式,"
-                      "primaryPemote：主从架构（默认）；multiPrimary：多主架构]"
+                      "primaryRemote：主从架构（默认）；multiPrimary：多主架构]"
       } ];
   repeated string primaryClusters = 16
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "primaryClusters",
         description : "主集群列表"
       } ];
-  repeated string remoteClusters = 17
+  repeated RemoteCluster remoteClusters = 17
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "remoteClusters",
         description : "远程集群列表"
@@ -800,6 +916,21 @@ message IstioDetailInfo {
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "featureConfigs",
         description : "功能特性[跟随版本关联的特性]"
+      } ];
+  google.protobuf.BoolValue multiClusterEnabled = 24
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "multiClusterEnabled", 
+        description : "是否开启多集群"
+      } ];
+  google.protobuf.StringValue clbID = 25
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "clbID",
+        description : "东西向网关clbID"
+      } ];
+  string revision = 26
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "revision",
+        description : "版本"
       } ];
 }
 
@@ -971,5 +1102,9 @@ message ClusterInfo {
   string version = 7 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "version",
     description : "集群版本"
+  } ];
+  string region = 8 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "region",
+    description : "集群所属区域"
   } ];
 }

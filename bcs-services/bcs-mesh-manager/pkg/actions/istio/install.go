@@ -16,6 +16,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -35,7 +36,7 @@ import (
 type InstallIstioAction struct {
 	istioConfig *options.IstioConfig
 	model       store.MeshManagerModel
-	req         *meshmanager.IstioRequest
+	req         *meshmanager.IstioInstallRequest
 	resp        *meshmanager.InstallIstioResponse
 }
 
@@ -50,7 +51,7 @@ func NewInstallIstioAction(istioConfig *options.IstioConfig, model store.MeshMan
 // Handle handles the install istio request
 func (i *InstallIstioAction) Handle(
 	ctx context.Context,
-	req *meshmanager.IstioRequest,
+	req *meshmanager.IstioInstallRequest,
 	resp *meshmanager.InstallIstioResponse,
 ) error {
 
@@ -79,18 +80,53 @@ func (i *InstallIstioAction) Handle(
 
 // Validate 验证请求参数
 func (i *InstallIstioAction) Validate() error {
-	// 必填字段验证
-	if err := utils.ValidateBasicFields(i.req); err != nil {
-		return err
+	// 校验项目信息
+	if i.req.ProjectCode == "" {
+		return fmt.Errorf("项目编码或项目 ID 不能为空")
+	}
+
+	// 校验主集群
+	if len(i.req.PrimaryClusters) == 0 {
+		return fmt.Errorf("主集群不能为空")
+	}
+
+	// 校验版本
+	if i.req.Version.GetValue() == "" {
+		return fmt.Errorf("chart version 不能为空")
+	}
+
+	// 校验特性配置
+	if i.req.FeatureConfigs == nil {
+		return fmt.Errorf("特性配置不能为空")
+	}
+
+	// 网格名称不能为空
+	if i.req.Name.GetValue() == "" {
+		return fmt.Errorf("网格名称不能为空")
+	}
+
+	// 网格名称不能仅为空格
+	if strings.TrimSpace(i.req.Name.GetValue()) == "" {
+		return fmt.Errorf("网格名称不能仅为空格")
 	}
 	// 检查resource参数
-	if err := utils.ValidateResource(i.req); err != nil {
+	if err := utils.ValidateResource(i.req.SidecarResourceConfig); err != nil {
 		blog.Errorf("validate resource failed, err: %s", err)
-		return fmt.Errorf("资源配置错误")
+		return fmt.Errorf("sidecar资源配置验证失败: %w", err)
+	}
+	if i.req.HighAvailability != nil {
+		if err := utils.ValidateResource(i.req.HighAvailability.ResourceConfig); err != nil {
+			blog.Errorf("validate resource failed, err: %s", err)
+			return fmt.Errorf("高可用资源配置验证失败: %w", err)
+		}
 	}
 
 	// 检查主从集群版本兼容性
-	allClusters := utils.MergeSlices(i.req.PrimaryClusters, i.req.RemoteClusters)
+	remoteClusters := make([]string, 0, len(i.req.RemoteClusters))
+	for _, cluster := range i.req.RemoteClusters {
+		remoteClusters = append(remoteClusters, cluster.ClusterID)
+	}
+	allClusters := utils.MergeSlices(i.req.PrimaryClusters, remoteClusters)
 	if err := utils.ValidateClusterVersion(
 		context.TODO(),
 		i.istioConfig,
@@ -126,18 +162,13 @@ func (i *InstallIstioAction) install(ctx context.Context) error {
 	// 创建 Mesh 实体并转换
 	meshIstio := &entity.MeshIstio{}
 	meshIstio.TransferFromProto(i.req)
-
-	// 构建ReleaseNames map
-	releaseNames := i.buildReleaseNames()
-
 	meshID := utils.GenMeshID()
 	networkID := utils.GenNetworkID()
 	meshIstio.MeshID = meshID
 	meshIstio.NetworkID = networkID
-	meshIstio.ReleaseNames = releaseNames
+	meshIstio.ReleaseNames = i.buildReleaseNames()
 	meshIstio.CreateBy = auth.GetUserFromCtx(ctx)
 	meshIstio.CreateTime = time.Now().UnixMilli()
-
 	chartVersion, err := i.getIstioChartVersion(i.req.Version.GetValue())
 	if err != nil {
 		blog.Errorf("get istio chart version failed, err: %s", err)
@@ -146,23 +177,27 @@ func (i *InstallIstioAction) install(ctx context.Context) error {
 	meshIstio.ChartVersion = chartVersion
 	// 状态设置为安装中
 	meshIstio.Status = common.IstioStatusInstalling
-
+	revision := ""
+	if i.req.Revision.GetValue() != "" {
+		revision = i.req.Revision.GetValue()
+	} else {
+		revision = common.GetRevision(chartVersion)
+	}
+	meshIstio.Revision = revision
 	// 写入DB，状态更新为安装中
 	err = i.model.Create(ctx, meshIstio)
 	if err != nil {
 		blog.Errorf("create mesh istio failed, err: %s", err)
 		return common.NewCodeMessageError(common.DBErrorCode, "create mesh istio failed", err)
 	}
-
 	// 创建并开始任务
 	action := actions.NewIstioInstallAction(
 		&common.IstioInstallOption{
-			ChartValuesPath: i.istioConfig.ChartValuesPath,
-			ChartRepo:       i.istioConfig.ChartRepo,
-			MeshID:          meshID,
-			NetworkID:       networkID,
-			ChartVersion:    chartVersion,
-
+			ChartValuesPath:       i.istioConfig.ChartValuesPath,
+			ChartRepo:             i.istioConfig.ChartRepo,
+			MeshID:                meshID,
+			NetworkID:             networkID,
+			ChartVersion:          chartVersion,
 			ProjectCode:           i.req.ProjectCode,
 			Name:                  i.req.Name.GetValue(),
 			Description:           i.req.Description.GetValue(),
@@ -175,6 +210,9 @@ func (i *InstallIstioAction) install(ctx context.Context) error {
 			HighAvailability:      i.req.HighAvailability,
 			ObservabilityConfig:   i.req.ObservabilityConfig,
 			FeatureConfigs:        i.req.FeatureConfigs,
+			MultiClusterEnabled:   i.req.MultiClusterEnabled.GetValue(),
+			CLBID:                 i.req.ClbID.GetValue(),
+			Revision:              revision,
 		},
 		i.model,
 	)
@@ -210,12 +248,17 @@ func (i *InstallIstioAction) getIstioChartVersion(version string) (string, error
 func (i *InstallIstioAction) buildReleaseNames() map[string]map[string]string {
 	releaseNames := make(map[string]map[string]string)
 
-	allClusters := utils.MergeSlices(i.req.PrimaryClusters, i.req.RemoteClusters)
+	remoteClusters := make([]string, 0, len(i.req.RemoteClusters))
+	for _, cluster := range i.req.RemoteClusters {
+		remoteClusters = append(remoteClusters, cluster.ClusterID)
+	}
+	allClusters := utils.MergeSlices(i.req.PrimaryClusters, remoteClusters)
 
 	for _, clusterID := range allClusters {
 		releaseNames[clusterID] = map[string]string{
-			common.ComponentIstioBase: common.IstioInstallBaseName,
-			common.ComponentIstiod:    common.IstioInstallIstiodName,
+			common.ComponentIstioBase:    common.IstioInstallBaseName,
+			common.ComponentIstiod:       common.IstioInstallIstiodName,
+			common.ComponentIstioGateway: common.IstioInstallIstioGatewayName,
 		}
 	}
 

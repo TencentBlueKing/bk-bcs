@@ -34,3 +34,30 @@ func MergeSlices[T any](slices ...[]T) []T {
 
 	return result
 }
+
+// Contains 检查切片中是否包含指定元素
+func Contains[T comparable](slice []T, item T) bool {
+	for _, v := range slice {
+		if v == item {
+			return true
+		}
+	}
+	return false
+}
+
+// Difference 返回在 sliceOne 中但不在 sliceTwo 中的元素
+func Difference[T comparable](sliceOne, sliceTwo []T) []T {
+	excludeMap := make(map[T]struct{}, len(sliceTwo))
+	for _, item := range sliceTwo {
+		excludeMap[item] = struct{}{}
+	}
+
+	// 预分配 result 切片容量，避免多次内存分配
+	result := make([]T, 0, len(sliceOne))
+	for _, item := range sliceOne {
+		if _, exists := excludeMap[item]; !exists {
+			result = append(result, item)
+		}
+	}
+	return result
+}

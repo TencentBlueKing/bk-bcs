@@ -15,7 +15,6 @@ package utils
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -179,41 +178,21 @@ func ValidateHighAvailabilityConfig(highAvailability *meshmanager.HighAvailabili
 // ValidateResource 验证 Istio 请求中的资源配置
 // 检查 Sidecar 资源配置和 HighAvailability 资源配置的合法性
 // 确保 limit >= request（当 limit 不为空且不为零时）
-func ValidateResource(req *meshmanager.IstioRequest) error {
+func ValidateResource(resourceConfig *meshmanager.ResourceConfig) error {
 	// 检查sidecar resource参数
-	if req.SidecarResourceConfig == nil {
-		return nil
-	}
-	if err := validateResourceLimit(
-		req.SidecarResourceConfig.CpuRequest.GetValue(),
-		req.SidecarResourceConfig.CpuLimit.GetValue(),
-	); err != nil {
-		return err
-	}
-	if err := validateResourceLimit(
-		req.SidecarResourceConfig.MemoryRequest.GetValue(),
-		req.SidecarResourceConfig.MemoryLimit.GetValue(),
-	); err != nil {
-		return err
-	}
-	// 检查hpa中resource参数
-	if req.HighAvailability == nil {
-		return nil
-	}
-	if req.HighAvailability.ResourceConfig == nil {
-		return nil
-	}
-	if err := validateResourceLimit(
-		req.HighAvailability.ResourceConfig.CpuRequest.GetValue(),
-		req.HighAvailability.ResourceConfig.CpuLimit.GetValue(),
-	); err != nil {
-		return err
-	}
-	if err := validateResourceLimit(
-		req.HighAvailability.ResourceConfig.MemoryRequest.GetValue(),
-		req.HighAvailability.ResourceConfig.MemoryLimit.GetValue(),
-	); err != nil {
-		return err
+	if resourceConfig != nil {
+		if err := validateResourceLimit(
+			resourceConfig.CpuRequest.GetValue(),
+			resourceConfig.CpuLimit.GetValue(),
+		); err != nil {
+			return err
+		}
+		if err := validateResourceLimit(
+			resourceConfig.MemoryRequest.GetValue(),
+			resourceConfig.MemoryLimit.GetValue(),
+		); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -253,41 +232,6 @@ func validateResourceLimit(request string, limit string) error {
 	// 只有当 limit 不为空且不为0时，才进行大小比较
 	if limit != "" && !limitQuantity.IsZero() && limitQuantity.Cmp(requestQuantity) < 0 {
 		return fmt.Errorf("limit %s must be greater than or equal to request %s", limit, request)
-	}
-
-	return nil
-}
-
-// ValidateBasicFields 校验基础信息字段
-func ValidateBasicFields(req *meshmanager.IstioRequest) error {
-	// 校验项目信息
-	if req.ProjectCode == "" {
-		return fmt.Errorf("项目编码或项目 ID 不能为空")
-	}
-
-	// 校验主集群
-	if len(req.PrimaryClusters) == 0 {
-		return fmt.Errorf("主集群不能为空")
-	}
-
-	// 校验版本
-	if req.Version.GetValue() == "" {
-		return fmt.Errorf("chart version 不能为空")
-	}
-
-	// 校验特性配置
-	if req.FeatureConfigs == nil {
-		return fmt.Errorf("特性配置不能为空")
-	}
-
-	// 网格名称不能为空
-	if req.Name.GetValue() == "" {
-		return fmt.Errorf("网格名称不能为空")
-	}
-
-	// 网格名称不能仅为空格
-	if strings.TrimSpace(req.Name.GetValue()) == "" {
-		return fmt.Errorf("网格名称不能仅为空格")
 	}
 
 	return nil

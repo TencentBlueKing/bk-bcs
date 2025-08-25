@@ -139,7 +139,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/meshmanagerIstioRequest"
+              "$ref": "#/definitions/meshmanagerIstioInstallRequest"
             }
           }
         ],
@@ -311,11 +311,6 @@
                   "description": "网格名称",
                   "title": "name"
                 },
-                "version": {
-                  "type": "string",
-                  "description": "使用的版本，例如 1.18",
-                  "title": "version"
-                },
                 "controlPlaneMode": {
                   "type": "string",
                   "description": "安装模式[independent：独立控制面（默认）；hosting：托管控制面]",
@@ -323,7 +318,7 @@
                 },
                 "clusterMode": {
                   "type": "string",
-                  "description": "多集群集群模式[primaryPemote：主从架构（默认）；multiPrimary：多主架构]",
+                  "description": "多集群集群模式[primaryRemote：主从架构（默认）；multiPrimary：多主架构]",
                   "title": "clusterMode"
                 },
                 "description": {
@@ -331,18 +326,10 @@
                   "description": "文字描述",
                   "title": "description"
                 },
-                "primaryClusters": {
-                  "type": "array",
-                  "items": {
-                    "type": "string"
-                  },
-                  "description": "主集群列表，使用BCS集群ID",
-                  "title": "primaryClusters"
-                },
                 "remoteClusters": {
                   "type": "array",
                   "items": {
-                    "type": "string"
+                    "$ref": "#/definitions/meshmanagerRemoteCluster"
                   },
                   "description": "远程/从集群列表,多集群模式下填写",
                   "title": "remoteClusters"
@@ -374,9 +361,18 @@
                   },
                   "description": "功能特性[跟随版本关联的特性]",
                   "title": "featureConfigs"
+                },
+                "multiClusterEnabled": {
+                  "type": "boolean",
+                  "description": "是否开启多集群",
+                  "title": "multiClusterEnabled"
+                },
+                "clbID": {
+                  "type": "string",
+                  "description": "东西向网关clbID",
+                  "title": "clbID"
                 }
-              },
-              "title": "istio配置信息"
+              }
             }
           }
         ],
@@ -424,6 +420,11 @@
           "type": "string",
           "description": "集群版本",
           "title": "version"
+        },
+        "region": {
+          "type": "string",
+          "description": "集群所属区域",
+          "title": "region"
         }
       },
       "title": "集群信息"
@@ -784,7 +785,7 @@
         },
         "clusterMode": {
           "type": "string",
-          "description": "多集群集群模式,primaryPemote：主从架构（默认）；multiPrimary：多主架构]",
+          "description": "多集群集群模式,primaryRemote：主从架构（默认）；multiPrimary：多主架构]",
           "title": "clusterMode"
         },
         "primaryClusters": {
@@ -798,7 +799,7 @@
         "remoteClusters": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/definitions/meshmanagerRemoteCluster"
           },
           "description": "远程集群列表",
           "title": "remoteClusters"
@@ -830,10 +831,120 @@
           },
           "description": "功能特性[跟随版本关联的特性]",
           "title": "featureConfigs"
+        },
+        "multiClusterEnabled": {
+          "type": "boolean",
+          "description": "是否开启多集群",
+          "title": "multiClusterEnabled"
+        },
+        "clbID": {
+          "type": "string",
+          "description": "东西向网关clbID",
+          "title": "clbID"
+        },
+        "revision": {
+          "type": "string",
+          "description": "版本",
+          "title": "revision"
         }
       },
       "description": "istio列表项",
       "title": "IstioListItem"
+    },
+    "meshmanagerIstioInstallRequest": {
+      "type": "object",
+      "properties": {
+        "projectCode": {
+          "type": "string",
+          "description": "项目编码",
+          "title": "projectCode"
+        },
+        "name": {
+          "type": "string",
+          "description": "网格名称",
+          "title": "name"
+        },
+        "version": {
+          "type": "string",
+          "description": "使用的版本，例如 1.18",
+          "title": "version"
+        },
+        "controlPlaneMode": {
+          "type": "string",
+          "description": "安装模式[independent：独立控制面（默认）；hosting：托管控制面]",
+          "title": "controlPlaneMode"
+        },
+        "clusterMode": {
+          "type": "string",
+          "description": "多集群集群模式[primaryRemote：主从架构（默认）；multiPrimary：多主架构]",
+          "title": "clusterMode"
+        },
+        "description": {
+          "type": "string",
+          "description": "文字描述",
+          "title": "description"
+        },
+        "primaryClusters": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "主集群列表，使用BCS集群ID",
+          "title": "primaryClusters"
+        },
+        "remoteClusters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/meshmanagerRemoteCluster"
+          },
+          "description": "远程/从集群列表,多集群模式下填写",
+          "title": "remoteClusters"
+        },
+        "differentNetwork": {
+          "type": "boolean",
+          "description": "网络是否已打通：关乎是否默认安装egress gateway，true：已打通（默认），false：未打通，暂不支持",
+          "title": "differentNetwork"
+        },
+        "sidecarResourceConfig": {
+          "$ref": "#/definitions/meshmanagerResourceConfig",
+          "description": "sidecar资源配置",
+          "title": "sidecarResourceConfig"
+        },
+        "highAvailability": {
+          "$ref": "#/definitions/meshmanagerHighAvailability",
+          "description": "高可用配置",
+          "title": "highAvailability"
+        },
+        "observabilityConfig": {
+          "$ref": "#/definitions/meshmanagerObservabilityConfig",
+          "description": "可观测性配置",
+          "title": "observabilityConfig"
+        },
+        "featureConfigs": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/meshmanagerFeatureConfig"
+          },
+          "description": "功能特性[跟随版本关联的特性]",
+          "title": "featureConfigs"
+        },
+        "multiClusterEnabled": {
+          "type": "boolean",
+          "description": "是否开启多集群",
+          "title": "multiClusterEnabled"
+        },
+        "clbID": {
+          "type": "string",
+          "description": "东西向网关clbID",
+          "title": "clbID"
+        },
+        "revision": {
+          "type": "string",
+          "description": "istio revision",
+          "title": "revision"
+        }
+      },
+      "title": "istio配置信息"
     },
     "meshmanagerIstioListItem": {
       "type": "object",
@@ -890,7 +1001,7 @@
         "remoteClusters": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/definitions/meshmanagerRemoteCluster"
           },
           "description": "远程集群列表",
           "title": "remoteClusters"
@@ -903,91 +1014,6 @@
       },
       "description": "istio列表项",
       "title": "IstioListItem"
-    },
-    "meshmanagerIstioRequest": {
-      "type": "object",
-      "properties": {
-        "meshID": {
-          "type": "string",
-          "description": "网格ID",
-          "title": "meshID"
-        },
-        "projectCode": {
-          "type": "string",
-          "description": "项目编码",
-          "title": "projectCode"
-        },
-        "name": {
-          "type": "string",
-          "description": "网格名称",
-          "title": "name"
-        },
-        "version": {
-          "type": "string",
-          "description": "使用的版本，例如 1.18",
-          "title": "version"
-        },
-        "controlPlaneMode": {
-          "type": "string",
-          "description": "安装模式[independent：独立控制面（默认）；hosting：托管控制面]",
-          "title": "controlPlaneMode"
-        },
-        "clusterMode": {
-          "type": "string",
-          "description": "多集群集群模式[primaryPemote：主从架构（默认）；multiPrimary：多主架构]",
-          "title": "clusterMode"
-        },
-        "description": {
-          "type": "string",
-          "description": "文字描述",
-          "title": "description"
-        },
-        "primaryClusters": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "description": "主集群列表，使用BCS集群ID",
-          "title": "primaryClusters"
-        },
-        "remoteClusters": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "description": "远程/从集群列表,多集群模式下填写",
-          "title": "remoteClusters"
-        },
-        "differentNetwork": {
-          "type": "boolean",
-          "description": "网络是否已打通：关乎是否默认安装egress gateway，true：已打通（默认），false：未打通，暂不支持",
-          "title": "differentNetwork"
-        },
-        "sidecarResourceConfig": {
-          "$ref": "#/definitions/meshmanagerResourceConfig",
-          "description": "sidecar资源配置",
-          "title": "sidecarResourceConfig"
-        },
-        "highAvailability": {
-          "$ref": "#/definitions/meshmanagerHighAvailability",
-          "description": "高可用配置",
-          "title": "highAvailability"
-        },
-        "observabilityConfig": {
-          "$ref": "#/definitions/meshmanagerObservabilityConfig",
-          "description": "可观测性配置",
-          "title": "observabilityConfig"
-        },
-        "featureConfigs": {
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/definitions/meshmanagerFeatureConfig"
-          },
-          "description": "功能特性[跟随版本关联的特性]",
-          "title": "featureConfigs"
-        }
-      },
-      "title": "istio配置信息"
     },
     "meshmanagerIstioVersion": {
       "type": "object",
@@ -1167,6 +1193,38 @@
         }
       },
       "title": "可观测性配置"
+    },
+    "meshmanagerRemoteCluster": {
+      "type": "object",
+      "properties": {
+        "clusterID": {
+          "type": "string",
+          "description": "集群ID",
+          "title": "clusterID"
+        },
+        "clusterName": {
+          "type": "string",
+          "description": "集群名称",
+          "title": "clusterName"
+        },
+        "region": {
+          "type": "string",
+          "description": "集群所属区域",
+          "title": "region"
+        },
+        "joinTime": {
+          "type": "string",
+          "format": "int64",
+          "description": "纳入服务网格管理时间",
+          "title": "joinTime"
+        },
+        "status": {
+          "type": "string",
+          "description": "集群状态[running：运行中；installing：安装中；install-failed：安装失败",
+          "title": "status"
+        }
+      },
+      "title": "从集群信息"
     },
     "meshmanagerResourceConfig": {
       "type": "object",

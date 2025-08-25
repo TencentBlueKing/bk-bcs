@@ -112,58 +112,87 @@ func MergeValues(defaultValues, customValues string) (string, error) {
 	return string(merged), nil
 }
 
+// GenBaseValuesOption base组件安装参数
+type GenBaseValuesOption struct {
+	InstallModel    string
+	ChartValuesPath string
+	ChartVersion    string
+	Revision        string
+}
+
 // GenBaseValues 获取base组件的配置的values
 func GenBaseValues(
-	installOption *common.IstioInstallOption,
+	opt *GenBaseValuesOption,
 ) (string, error) {
 	values, err := GetConfigChartValues(
-		installOption.ChartValuesPath,
+		opt.ChartValuesPath,
 		common.ComponentIstioBase,
-		installOption.ChartVersion,
+		opt.ChartVersion,
 	)
 	if err != nil {
 		return "", err
 	}
-	blog.Infof("getBaseValues values: %s for cluster: %s, mesh: %s, network: %s",
-		values, installOption.PrimaryClusters, installOption.MeshID, installOption.NetworkID)
+	baseValues := &common.BaseValues{
+		Global: &common.BaseGlobalConfig{},
+	}
+	if opt.Revision != "" {
+		baseValues.Revision = &opt.Revision
+	}
+	// 从集群安装时，修改externalIstiod字段为true
+	if opt.InstallModel == common.IstioInstallModeRemote {
+		baseValues.Global.ExternalIstiod = pointer.Bool(true)
+	}
+	customValues, err := yaml.Marshal(baseValues)
+	if err != nil {
+		blog.Errorf("marshal istiod values failed: %s", err)
+		return "", err
+	}
+	mergedValues, err := MergeValues(values, string(customValues))
+	if err != nil {
+		blog.Errorf("merge istiod values failed: %s", err)
+		return "", err
+	}
 
-	return values, nil
+	return mergedValues, nil
+}
+
+// GenIstiodValuesOption istiod安装组件参数
+type GenIstiodValuesOption struct {
+	InstallModel          string
+	ClusterID             string
+	NetworkID             string
+	CLBIP                 string
+	PrimaryClusters       []string
+	MeshID                string
+	ChartVersion          string
+	ChartValuesPath       string
+	Version               string
+	ObservabilityConfig   *meshmanager.ObservabilityConfig
+	HighAvailability      *meshmanager.HighAvailability
+	FeatureConfigs        map[string]*meshmanager.FeatureConfig
+	SidecarResourceConfig *meshmanager.ResourceConfig
+	Revision              string
 }
 
 // GenIstiodValues 获取istiod组件的配置的values
 func GenIstiodValues(
-	installModel string,
-	remotePilotAddress string,
-	installOption *common.IstioInstallOption,
+	opt *GenIstiodValuesOption,
 ) (string, error) {
-	values, err := GetConfigChartValues(installOption.ChartValuesPath, common.ComponentIstiod, installOption.ChartVersion)
-	if err != nil {
-		blog.Errorf("get istiod values failed: %s", err)
-		return "", err
-	}
-	blog.Infof("get istiod values: %s for cluster: %s, mesh: %s, network: %s",
-		values, installOption.PrimaryClusters, installOption.MeshID, installOption.NetworkID)
-	primaryClusterName := strings.ToLower(installOption.PrimaryClusters[0])
+	clusterName := strings.ToLower(opt.ClusterID)
 	installValues := &common.IstiodInstallValues{
 		Global: &common.IstiodGlobalConfig{
-			MeshID:  &installOption.MeshID,
-			Network: &installOption.NetworkID,
+			MeshID:  &opt.MeshID,
+			Network: &opt.NetworkID,
 		},
 	}
-	// 获取安装参数
-	// 主集群
-	if installModel == common.IstioInstallModePrimary {
-		installValues.Global.ExternalIstiod = pointer.Bool(true)
-		installValues.Global.MultiCluster = &common.IstiodMultiClusterConfig{
-			ClusterName: &primaryClusterName,
-		}
+	if opt.Revision != "" {
+		installValues.Revision = &opt.Revision
 	}
-
-	// 从集群
-	if installModel == common.IstioInstallModeRemote {
+	// 从集群istiod配置
+	if opt.InstallModel == common.IstioInstallModeRemote {
 		installValues.IstiodRemote = &common.IstiodRemoteConfig{
 			Enabled:       pointer.Bool(true),
-			InjectionPath: pointer.String(fmt.Sprintf("/inject/cluster/%s/net/%s", primaryClusterName, installOption.NetworkID)),
+			InjectionPath: pointer.String(fmt.Sprintf("/inject/cluster/%s/net/%s", clusterName, opt.NetworkID)),
 		}
 		if installValues.Pilot == nil {
 			installValues.Pilot = &common.IstiodPilotConfig{}
@@ -174,26 +203,53 @@ func GenIstiodValues(
 		}
 		installValues.Telemetry.Enabled = pointer.Bool(false)
 		installValues.Global.ConfigCluster = pointer.Bool(true)
-		installValues.Global.RemotePilotAddress = pointer.String(remotePilotAddress)
+		installValues.Global.RemotePilotAddress = pointer.String(opt.CLBIP)
 		installValues.Global.OmitSidecarInjectorConfigMap = pointer.Bool(true)
+		installValues.Global.MultiCluster = &common.IstiodMultiClusterConfig{
+			ClusterName: &clusterName,
+		}
+		customValues, err := yaml.Marshal(installValues)
+		if err != nil {
+			blog.Errorf("marshal istiod values failed: %s", err)
+			return "", err
+		}
+		return string(customValues), nil
+	}
+
+	primaryClusterName := ""
+	if len(opt.PrimaryClusters) > 0 {
+		primaryClusterName = strings.ToLower(opt.PrimaryClusters[0])
+	}
+	// 主集群
+	if opt.InstallModel == common.IstioInstallModePrimary {
+		installValues.Global.ExternalIstiod = pointer.Bool(true)
+		installValues.Global.MultiCluster = &common.IstiodMultiClusterConfig{
+			ClusterName: &primaryClusterName,
+		}
+	}
+
+	values, err := GetConfigChartValues(opt.ChartValuesPath, common.ComponentIstiod, opt.ChartVersion)
+	if err != nil {
+		blog.Errorf("get istiod values failed: %s", err)
+		return "", err
 	}
 	// proxy resource
-	err = GenIstiodValuesBySidecarResource(installOption.SidecarResourceConfig, installValues)
+	err = GenIstiodValuesBySidecarResource(opt.SidecarResourceConfig, installValues)
 	if err != nil {
 		blog.Errorf("gen istiod values by sidecar resource failed: %s", err)
 		return "", err
 	}
 	// 填充feature的参数配置
-	GenIstiodValuesByFeature(installOption.FeatureConfigs, installValues)
+	GenIstiodValuesByFeature(opt.FeatureConfigs, installValues)
 
 	// 填充observability的参数配置
-	err = GenIstiodValuesByObservability(installOption.Version, installOption.ObservabilityConfig, installValues)
+	err = GenIstiodValuesByObservability(opt.Version, opt.ObservabilityConfig, installValues)
 	if err != nil {
 		blog.Errorf("gen istiod values by observability failed: %s", err)
 		return "", err
 	}
 	// 填充高可用配置
-	err = GenIstiodValuesByHighAvailability(installOption.HighAvailability, installValues)
+	err = GenIstiodValuesByHighAvailability(opt.HighAvailability, installValues)
 	if err != nil {
 		blog.Errorf("gen istiod values by high availability failed: %s", err)
 		return "", err
@@ -208,9 +264,47 @@ func GenIstiodValues(
 		blog.Errorf("merge istiod values failed: %s", err)
 		return "", err
 	}
+	return mergedValues, nil
+}
 
-	blog.Infof("gen istiod values: %s for cluster: %s, mesh: %s, network: %s",
-		mergedValues, installOption.PrimaryClusters, installOption.MeshID, installOption.NetworkID)
+// GenEgressGatewayValuesOption eastwestgateway组件安装参数
+type GenEgressGatewayValuesOption struct {
+	ChartValuesPath string
+	ChartVersion    string
+	CLBID           string
+	NetworkID       string
+	Revision        string
+}
+
+// GenEgressGatewayValues 生成eastwestgateway组件的values
+func GenEgressGatewayValues(
+	opt *GenEgressGatewayValuesOption,
+) (string, error) {
+	values, err := GetConfigChartValues(opt.ChartValuesPath, common.ComponentIstioGateway, opt.ChartVersion)
+	if err != nil {
+		blog.Errorf("get istiod values failed: %s", err)
+		return "", err
+	}
+
+	eastwestGatewayValues := &common.EastwestGatewayValues{
+		Revision:       opt.Revision,
+		NetworkGateway: opt.NetworkID,
+		Service: common.Service{
+			Annotations: map[string]string{
+				"service.kubernetes.io/tke-existed-lbid": opt.CLBID,
+			},
+		},
+	}
+	customValues, err := yaml.Marshal(eastwestGatewayValues)
+	if err != nil {
+		blog.Errorf("marshal eastwestgateway values failed: %s", err)
+		return "", err
+	}
+	mergedValues, err := MergeValues(values, string(customValues))
+	if err != nil {
+		blog.Errorf("merge eastwestgateway values failed: %s", err)
+		return "", err
+	}
 	return mergedValues, nil
 }
 

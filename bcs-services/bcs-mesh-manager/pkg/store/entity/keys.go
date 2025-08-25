@@ -30,11 +30,13 @@ const (
 	FieldKeyVersion       = "version"
 
 	// ===== Mesh 配置 =====
-	FieldKeyControlPlaneMode = "controlPlaneMode"
-	FieldKeyClusterMode      = "clusterMode"
-	FieldKeyPrimaryClusters  = "primaryClusters"
-	FieldKeyRemoteClusters   = "remoteClusters"
-	FieldKeyDifferentNetwork = "differentNetwork"
+	FieldKeyControlPlaneMode    = "controlPlaneMode"
+	FieldKeyClusterMode         = "clusterMode"
+	FieldKeyPrimaryClusters     = "primaryClusters"
+	FieldKeyRemoteClusters      = "remoteClusters"
+	FieldKeyDifferentNetwork    = "differentNetwork"
+	FieldKeyMultiClusterEnabled = "multiClusterEnabled"
+	FieldKeyClbID               = "clbID"
 
 	// ===== 特性配置 =====
 	FieldKeyFeatureConfigs = "featureConfigs"

@@ -16,6 +16,7 @@ package istio
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -109,12 +110,17 @@ func (d *DeleteIstioAction) Validate(ctx context.Context) (*entity.MeshIstio, er
 		return nil, common.NewCodeMessageError(common.NotFoundErrorCode, "mesh not found", nil)
 	}
 
-	allClusters := utils.MergeSlices(meshIstio.PrimaryClusters, meshIstio.RemoteClusters)
+	remoteClusters := make([]string, 0, len(meshIstio.RemoteClusters))
+	for _, cluster := range meshIstio.RemoteClusters {
+		remoteClusters = append(remoteClusters, cluster.ClusterID)
+	}
+	allClusters := utils.MergeSlices(meshIstio.PrimaryClusters, remoteClusters)
 	// 并发检查所有集群的Istio资源
 	type checkResult struct {
 		clusterID string
 		exists    bool
 		err       error
+		details   []string
 	}
 
 	resultChan := make(chan checkResult, len(allClusters))
@@ -127,12 +133,13 @@ func (d *DeleteIstioAction) Validate(ctx context.Context) (*entity.MeshIstio, er
 			checkCtx, checkCancel := context.WithTimeout(ctx, 30*time.Second)
 			defer checkCancel()
 
-			exists, err := k8s.CheckIstioResourceExists(checkCtx, cid)
+			exists, details, err := k8s.CheckIstioResourceExists(checkCtx, cid)
 			select {
 			case resultChan <- checkResult{
 				clusterID: cid,
 				exists:    exists,
 				err:       err,
+				details:   details,
 			}:
 			case <-ctx.Done():
 				// 如果context被取消，直接退出
@@ -156,10 +163,11 @@ func (d *DeleteIstioAction) Validate(ctx context.Context) (*entity.MeshIstio, er
 			}
 
 			if result.exists {
-				blog.Errorf("cluster still has istio resources, meshID: %s, clusterID: %s",
-					d.req.MeshID, result.clusterID)
+				blog.Errorf("cluster still has istio resources, meshID: %s, clusterID: %s, resources: %v",
+					d.req.MeshID, result.clusterID, result.details)
 				cancel()
-				errMsg := fmt.Sprintf("cluster %s still has istio resources", result.clusterID)
+				errMsg := fmt.Sprintf("cluster %s still has istio resources: %s",
+					result.clusterID, strings.Join(result.details, ", "))
 				return nil, common.NewCodeMessageError(common.InnerErrorCode, errMsg, nil)
 			}
 
@@ -186,6 +194,10 @@ func (d *DeleteIstioAction) delete(ctx context.Context, meshIstio *entity.MeshIs
 		return common.NewCodeMessageError(common.DBErrorCode, errMsg, err)
 	}
 
+	remoteClusters := make([]string, 0, len(meshIstio.RemoteClusters))
+	for _, cluster := range meshIstio.RemoteClusters {
+		remoteClusters = append(remoteClusters, cluster.ClusterID)
+	}
 	// 异步删除istio
 	action := actions.NewIstioUninstallAction(
 		&actions.IstioUninstallOption{
@@ -193,7 +205,7 @@ func (d *DeleteIstioAction) delete(ctx context.Context, meshIstio *entity.MeshIs
 			ProjectCode:     meshIstio.ProjectCode,
 			MeshID:          d.req.MeshID,
 			PrimaryClusters: meshIstio.PrimaryClusters,
-			RemoteClusters:  meshIstio.RemoteClusters,
+			RemoteClusters:  remoteClusters,
 		},
 	)
 	// 异步执行，5分钟超时

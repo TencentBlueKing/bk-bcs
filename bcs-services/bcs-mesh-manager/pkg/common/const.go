@@ -53,7 +53,9 @@ const (
 	// IstioInstallIstiodName istiod安装名称
 	IstioInstallIstiodName = "bcs-istio-istiod"
 	// IstioInstallIstioGatewayName istio gateway安装名称
-	IstioInstallIstioGatewayName = "bcs-istio-ingress-gateway"
+	IstioInstallIstioGatewayName = "bcs-istio-eastwestgateway"
+	// EastWestGatewayServiceName eastwestgateway service name
+	EastWestGatewayServiceName = "bcs-istio-eastwestgateway"
 )
 
 const (
@@ -70,8 +72,8 @@ const (
 	ControlPlaneModeIndependent = "independent"
 
 	// MultiClusterModePrimaryRemote 主从架构
-	MultiClusterModePrimaryRemote = "primaryPemote"
-	// MultiClusterModeMultiPrimary 主从架构
+	MultiClusterModePrimaryRemote = "primaryRemote"
+	// MultiClusterModeMultiPrimary 多主架构
 	MultiClusterModeMultiPrimary = "multiPrimary"
 
 	// AccessLogEncodingJSON 日志编码json
@@ -103,6 +105,16 @@ const (
 	IstioStatusUpdating = "updating"
 	// IstioStatusUpdateFailed 配置更新失败
 	IstioStatusUpdateFailed = "update-failed"
+)
+
+// RemoteClusterStatus 从集群状态
+const (
+	// RemoteClusterStatusRunning 从集群运行中
+	RemoteClusterStatusRunning = "running"
+	// RemoteClusterStatusInstalling 从集群安装中
+	RemoteClusterStatusInstalling = "installing"
+	// RemoteClusterStatusInstallFailed 从集群安装失败
+	RemoteClusterStatusInstallFailed = "install-failed"
 )
 
 // shared cluster

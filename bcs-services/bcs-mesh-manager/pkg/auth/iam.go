@@ -134,7 +134,11 @@ func getClustersFromRequest(ctx context.Context, req server.Request) ([]string, 
 		if err != nil {
 			return nil, fmt.Errorf("failed to get mesh by ID %s: %w", meshID, err)
 		}
-		return utils.MergeSlices(mesh.PrimaryClusters, mesh.RemoteClusters), nil
+		remoteClusters := make([]string, 0, len(mesh.RemoteClusters))
+		for _, cluster := range mesh.RemoteClusters {
+			remoteClusters = append(remoteClusters, cluster.ClusterID)
+		}
+		return utils.MergeSlices(mesh.PrimaryClusters, remoteClusters), nil
 
 	default:
 		return nil, fmt.Errorf("unsupported method for cluster extraction: %s", req.Method())
@@ -339,15 +343,31 @@ func getClusters(req server.Request) ([]string, []string, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	type clustersStruct struct {
-		PrimaryClusters []string `json:"primaryClusters,omitempty"`
-		RemoteClusters  []string `json:"remoteClusters,omitempty"`
+
+	type RemoteCluster struct {
+		ClusterID string `json:"clusterID,omitempty"`
+		Region    string `json:"region,omitempty"`
+		JoinTime  int64  `json:"joinTime,omitempty"`
 	}
+
+	type clustersStruct struct {
+		PrimaryClusters []string         `json:"primaryClusters,omitempty"`
+		RemoteClusters  []*RemoteCluster `json:"remoteClusters,omitempty"`
+	}
+
 	var c clustersStruct
 	if err := json.Unmarshal(b, &c); err != nil {
 		return nil, nil, err
 	}
-	return c.PrimaryClusters, c.RemoteClusters, nil
+
+	var remoteClusters []string
+	for _, cluster := range c.RemoteClusters {
+		if cluster != nil && cluster.ClusterID != "" {
+			remoteClusters = append(remoteClusters, cluster.ClusterID)
+		}
+	}
+
+	return c.PrimaryClusters, remoteClusters, nil
 }
 
 // CallIAM call iam

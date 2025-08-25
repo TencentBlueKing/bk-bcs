@@ -14,16 +14,19 @@ package utils
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	pointer "k8s.io/utils/pointer"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/common"
 	meshmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/proto/bcs-mesh-manager"
 )
 
 // ConvertRequestToValues 从 IstioRequest 构建 IstiodInstallValues 部署配置
-func ConvertRequestToValues(istioVersion string, req *meshmanager.IstioRequest) (*common.IstiodInstallValues, error) {
+func ConvertRequestToValues(
+	istioVersion string,
+	req *meshmanager.IstioUpdateRequest,
+) (*common.IstiodInstallValues, error) {
 	if req == nil {
 		return nil, fmt.Errorf("request is nil")
 	}
@@ -58,19 +61,16 @@ func ConvertRequestToValues(istioVersion string, req *meshmanager.IstioRequest) 
 
 // buildBasicConfig 构建基础配置
 func buildBasicConfig(
-	req *meshmanager.IstioRequest,
+	req *meshmanager.IstioUpdateRequest,
 	installValues *common.IstiodInstallValues,
 ) {
-	// 构建MultiCluster配置
-	if len(req.PrimaryClusters) > 0 {
-		if installValues.Global == nil {
-			installValues.Global = &common.IstiodGlobalConfig{}
-		}
-		if installValues.Global.MultiCluster == nil {
-			installValues.Global.MultiCluster = &common.IstiodMultiClusterConfig{}
-		}
-		// todo: 兼容多集群逻辑
-		clusterName := strings.ToLower(req.PrimaryClusters[0])
-		installValues.Global.MultiCluster.ClusterName = &clusterName
+	if installValues.Global == nil {
+		installValues.Global = &common.IstiodGlobalConfig{}
+	}
+	// 开启多集群则更新ExternalIstiod字段为true，否则为false
+	if req.MultiClusterEnabled.GetValue() {
+		installValues.Global.ExternalIstiod = pointer.Bool(true)
+	} else {
+		installValues.Global.ExternalIstiod = pointer.Bool(false)
 	}
 }

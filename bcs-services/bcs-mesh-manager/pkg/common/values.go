@@ -55,6 +55,29 @@ const (
 	FieldKeyProxy                     = "proxy"
 )
 
+// BaseValues base组件的values
+type BaseValues struct {
+	Global   *BaseGlobalConfig `yaml:"global,omitempty"`
+	Revision *string           `yaml:"defaultRevision,omitempty"`
+}
+
+// BaseGlobalConfig base组件的global配置
+type BaseGlobalConfig struct {
+	ExternalIstiod *bool `yaml:"externalIstiod,omitempty"`
+}
+
+// EastwestGatewayValues eastwestgateway组件的values
+type EastwestGatewayValues struct {
+	Revision       string  `yaml:"revision,omitempty"`
+	NetworkGateway string  `yaml:"networkGateway,omitempty"`
+	Service        Service `yaml:"service,omitempty"`
+}
+
+// Service service配置
+type Service struct {
+	Annotations map[string]string `yaml:"annotations,omitempty"`
+}
+
 // IstioInstallOption istio安装操作选项
 type IstioInstallOption struct {
 	ChartValuesPath string
@@ -67,15 +90,19 @@ type IstioInstallOption struct {
 	ControlPlaneMode      string
 	ClusterMode           string
 	PrimaryClusters       []string
-	RemoteClusters        []string
+	RemoteClusters        []*meshmanager.RemoteCluster
 	SidecarResourceConfig *meshmanager.ResourceConfig
 	HighAvailability      *meshmanager.HighAvailability
 	ObservabilityConfig   *meshmanager.ObservabilityConfig
 	FeatureConfigs        map[string]*meshmanager.FeatureConfig
 
-	MeshID       string
-	NetworkID    string
-	ChartVersion string
+	MeshID              string
+	NetworkID           string
+	ChartVersion        string
+	MultiClusterEnabled bool
+	CLBID               string
+	CLBIP               string
+	Revision            string
 }
 
 // IstiodInstallValues istiod安装参数
@@ -85,6 +112,7 @@ type IstiodInstallValues struct {
 	Telemetry    *IstiodTelemetryConfig `yaml:"telemetry,omitempty"`
 	Global       *IstiodGlobalConfig    `yaml:"global,omitempty"`
 	MeshConfig   *IstiodMeshConfig      `yaml:"meshConfig,omitempty"`
+	Revision     *string                `yaml:"revision,omitempty"`
 }
 
 // IstiodRemoteConfig istiod远程配置
@@ -138,7 +166,6 @@ type IstioProxyConfig struct {
 
 // IstiodMultiClusterConfig multiCluster配置
 type IstiodMultiClusterConfig struct {
-	Enabled     *bool   `yaml:"enabled,omitempty"`
 	ClusterName *string `yaml:"clusterName,omitempty"`
 }
 
