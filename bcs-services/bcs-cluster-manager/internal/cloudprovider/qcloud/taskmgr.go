@@ -710,7 +710,12 @@ func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Nod
 			StepName: template.SystemPreInit,
 			Cluster:  cls,
 			Extra: template.ExtraInfo{
-				NodeIPList:      "",
+				NodeIPList: func() string {
+					if len(addNodesTask.DiffVpcNodeIds) > 0 {
+						return ""
+					}
+					return strings.Join(addNodesTask.NodeIPs, ",")
+				}(),
 				ImageId:         "",
 				TranslateMethod: template.SystemPreInit,
 			}}.BuildSopsStep(task, opt.Cloud.ClusterManagement.AddNodesToCluster, true)

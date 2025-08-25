@@ -501,7 +501,8 @@ func CreateClusterShieldAlarmTask(taskID string, stepName string) error {
 
 	// step login started here
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
-	nodes := cloudprovider.ParseNodeIpOrIdFromCommonMap(step.Params, cloudprovider.NodeIPsKey.String(), ",")
+	nodes := cloudprovider.ParseNodeIpOrIdFromCommonMap(state.Task.CommonParams,
+		cloudprovider.NodeIPsKey.String(), ",")
 
 	cluster, err := cloudprovider.GetStorageModel().GetCluster(context.Background(), clusterID)
 	if err != nil {
