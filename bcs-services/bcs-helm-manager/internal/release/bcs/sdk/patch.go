@@ -14,6 +14,7 @@ package sdk
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -166,10 +167,23 @@ func inject4MetadataLabels(manifest string) (string, error) {
 		return s, err
 	}
 
+	// replace annotaions null value
+	annoPath, annoByte, err := replaceAnnoNull(s)
+	if err != nil {
+		return s, err
+	}
+
 	// parse origin yaml
 	f, err := parser.ParseBytes([]byte(s), 0)
 	if err != nil {
 		return s, err
+	}
+
+	if annoByte != nil {
+		err = annoPath.ReplaceWithReader(f, strings.NewReader(string(annoByte)))
+		if err != nil {
+			return s, err
+		}
 	}
 
 	// inject service metadata
@@ -190,4 +204,33 @@ func inject4MetadataLabels(manifest string) (string, error) {
 	}
 
 	return manifest, nil
+}
+
+// 替换掉annotations null值
+func replaceAnnoNull(manifest string) (*goyaml.Path, []byte, error) {
+	// parse kind
+	annoPath, err := goyaml.PathString("$.metadata.annotations")
+	if err != nil {
+		return annoPath, nil, err
+	}
+	var annotation map[string]interface{}
+	err = annoPath.Read(strings.NewReader(manifest), &annotation)
+	if err != nil {
+		if errors.Is(err, goyaml.ErrNotFoundNode) {
+			return annoPath, nil, nil
+		}
+		return annoPath, nil, err
+	}
+	for k, v := range annotation {
+		if v == nil {
+			annotation[k] = ""
+		}
+	}
+
+	annoByte, err := yaml.Marshal(annotation)
+	if err != nil {
+		return annoPath, nil, err
+	}
+
+	return annoPath, annoByte, nil
 }
