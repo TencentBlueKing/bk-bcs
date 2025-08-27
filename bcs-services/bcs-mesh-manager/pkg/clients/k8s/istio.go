@@ -276,7 +276,7 @@ func DeployServiceMonitor(ctx context.Context, clusterID []string) error {
 		if err := DeployResourceByYAML(
 			ctx,
 			cluster,
-			common.GetServiceMonitorYAML(cluster),
+			common.GetServiceMonitorYAML(common.ServiceMonitorName),
 			common.ServiceMonitorKind,
 			common.ServiceMonitorName,
 		); err != nil {
@@ -293,7 +293,7 @@ func DeployPodMonitor(ctx context.Context, clusterID []string) error {
 		if err := DeployResourceByYAML(
 			ctx,
 			cluster,
-			common.GetPodMonitorYAML(cluster),
+			common.GetPodMonitorYAML(common.PodMonitorName),
 			common.PodMonitorKind,
 			common.PodMonitorName,
 		); err != nil {
