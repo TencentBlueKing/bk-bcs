@@ -2386,6 +2386,7 @@ dashboard:
       filelog: 文件日志检索
       search: 请入名称、镜像、IP、Node搜索
       confirm: 确认删除以下Pod
+      logDisabledTips: 集群未安装 bklog-collector
     editor:
       yamlMode:
         confirm: 确认切换为 YAML 模式？

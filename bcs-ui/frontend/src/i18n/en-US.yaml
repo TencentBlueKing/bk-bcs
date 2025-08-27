@@ -2969,6 +2969,7 @@ dashboard:
       filelog: Log Retrieval
       search: 'Please enter the name, mirror image, IP, node search'
       confirm: Confirm the Multi-Delete PODs below
+      logDisabledTips: The cluster does not have bklog-collector installed
     editor:
       yamlMode:
         confirm: Are you sure you want to switch to YAML mode?
