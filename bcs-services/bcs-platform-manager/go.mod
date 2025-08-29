@@ -17,7 +17,6 @@ replace (
 
 require (
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20250710101644-24c34c9b3919
-	github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager v0.0.0-20250825015655-cf938f258a8b
 	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20250729093702-993155773a94
 	github.com/dustin/go-humanize v1.0.1
 	github.com/ggicci/httpin v0.20.1
@@ -38,7 +37,6 @@ require (
 	github.com/prometheus/prometheus v1.8.2-0.20220308163432-03831554a519
 	github.com/spf13/cobra v1.9.1
 	github.com/spf13/viper v1.20.1
-	github.com/stretchr/testify v1.10.0
 	github.com/swaggo/http-swagger v1.3.4
 	go-micro.dev/v4 v4.9.0
 	go.mongodb.org/mongo-driver v1.17.4
@@ -73,6 +71,7 @@ require (
 	github.com/emicklei/go-restful/v3 v3.11.0 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/envoyproxy/protoc-gen-validate v1.2.1 // indirect
+	github.com/evanphx/json-patch v4.12.0+incompatible // indirect
 	github.com/evanphx/json-patch/v5 v5.6.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
@@ -136,7 +135,6 @@ require (
 	github.com/parnurzeal/gorequest v0.2.16 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.3 // indirect
 	github.com/pjbgf/sha1cd v0.3.0 // indirect
-	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/prometheus/client_golang v1.19.0 // indirect
 	github.com/prometheus/client_model v0.5.0 // indirect
 	github.com/prometheus/common v0.48.0 // indirect
