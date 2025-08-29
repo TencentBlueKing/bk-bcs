@@ -2,21 +2,10 @@ module github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager
 
 go 1.23.0
 
-replace (
-	// github.com/databus23/helm-diff/v3 limit by go 1.23
-	github.com/databus23/helm-diff/v3 => github.com/databus23/helm-diff/v3 v3.9.11
-	helm.sh/helm/v3 => github.com/adevjoe/helm/v3 v3.17.3-tx.1
-	k8s.io/api => k8s.io/api v0.32.2
-	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.32.2
-	k8s.io/apimachinery => k8s.io/apimachinery v0.32.2
-	k8s.io/cli-runtime => k8s.io/cli-runtime v0.32.2
-	k8s.io/client-go => k8s.io/client-go v0.32.2
-	k8s.io/kubectl => k8s.io/kubectl v0.32.2
-	k8s.io/kubernetes => k8s.io/kubernetes v1.13.0
-)
+replace k8s.io/client-go => k8s.io/client-go v0.32.2
 
 require (
-	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20250710101644-24c34c9b3919
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20250729093702-993155773a94
 	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20250729093702-993155773a94
 	github.com/dustin/go-humanize v1.0.1
 	github.com/ggicci/httpin v0.20.1
@@ -38,7 +27,7 @@ require (
 	github.com/spf13/cobra v1.9.1
 	github.com/spf13/viper v1.20.1
 	github.com/swaggo/http-swagger v1.3.4
-	go-micro.dev/v4 v4.9.0
+	go-micro.dev/v4 v4.10.2
 	go.mongodb.org/mongo-driver v1.17.4
 	go.opentelemetry.io/contrib/instrumentation/go.mongodb.org/mongo-driver/mongo/otelmongo v0.62.0
 	go.opentelemetry.io/otel v1.37.0
@@ -71,7 +60,6 @@ require (
 	github.com/emicklei/go-restful/v3 v3.11.0 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/envoyproxy/protoc-gen-validate v1.2.1 // indirect
-	github.com/evanphx/json-patch v4.12.0+incompatible // indirect
 	github.com/evanphx/json-patch/v5 v5.6.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
@@ -199,7 +187,7 @@ require (
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	k8s.io/api v0.32.2 // indirect
 	k8s.io/apimachinery v0.32.2 // indirect
-	k8s.io/client-go v11.0.0+incompatible // indirect
+	k8s.io/client-go v0.23.1 // indirect
 	k8s.io/klog v1.0.0 // indirect
 	k8s.io/klog/v2 v2.130.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20241105132330-32ad38e42d3f // indirect
