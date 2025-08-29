@@ -26,6 +26,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/util"
+	itypes "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 )
 
 const (
@@ -182,6 +183,18 @@ func (m *ModelTask) ListTask(ctx context.Context, cond *operator.Condition, opt 
 	return taskList, nil
 }
 
+// ListTaskQuota list clusters task quota
+func (m *ModelTask) ListTaskQuota(ctx context.Context, clusterId string, opt *options.ListOption) (
+	[]*itypes.ClusterTaskQuota, error) {
+	taskList := make([]*itypes.ClusterTaskQuota, 0)
+	pipeline := m.genTaskQuotaPipeline(clusterId)
+	err := m.db.Table(m.tableName).Aggregation(ctx, pipeline, &taskList)
+	if err != nil {
+		return nil, err
+	}
+	return taskList, nil
+}
+
 // DeleteFinishedTaskByDate delete finished task by date
 func (m *ModelTask) DeleteFinishedTaskByDate(ctx context.Context, startTime, endTime string) error {
 	if err := m.ensureTable(ctx); err != nil {
@@ -202,4 +215,107 @@ func (m *ModelTask) DeleteFinishedTaskByDate(ctx context.Context, startTime, end
 		return err
 	}
 	return nil
+}
+
+// nolint: funlen
+func (m *ModelTask) genTaskQuotaPipeline(clusterId string) interface{} {
+	condM := make([]bson.M, 0)
+	// 通过集群id筛选数据
+	if clusterId != "" && clusterId != "-" {
+		condM = append(condM, bson.M{
+			"$match": bson.M{
+				"clusterid": clusterId,
+			},
+		})
+	}
+	subCond := []bson.M{
+		{
+			"$group": bson.M{
+				"_id": bson.M{
+					"taskType":  "$tasktype",
+					"clusterId": "$clusterid",
+				},
+				"totalCount": bson.M{
+					"$sum": 1,
+				}, // 统计总数
+				"avgExecutionTime": bson.M{
+					"$avg": "$executiontime",
+				}, // 耗时平均值
+				"successCount": bson.M{
+					"$sum": bson.M{
+						"$cond": bson.M{
+							"if":   bson.M{"$eq": []string{"$status", "SUCCESS"}},
+							"then": 1,
+							"else": 0,
+						},
+					}, // 成功次数
+				},
+			},
+		},
+		{
+			"$lookup": bson.M{
+				"from": m.tableName,
+				"let": bson.M{
+					"tt":  "$_id.taskType",
+					"cid": "$_id.clusterId",
+				},
+				"pipeline": []bson.M{
+					{
+						"$match": bson.M{
+							"$expr": bson.M{
+								"$and": []bson.M{
+									{
+										"$eq": []string{"$tasktype", "$$tt"},
+									},
+									{
+										"$eq": []string{"$clusterid", "$$cid"},
+									},
+									{
+										"$eq": []string{"$status", "FAILURE"},
+									},
+								},
+							},
+						},
+					},
+					{
+						"$group": bson.M{
+							"_id": "$message",
+							"failCount": bson.M{
+								"$sum": 1,
+							},
+						},
+					},
+					{
+						"$sort": bson.M{
+							"failCount": -1,
+						},
+					},
+					{
+						"$limit": 1,
+					},
+				},
+				"as": "topFail", // 失败top原因
+			},
+		},
+		{
+			"$unwind": bson.M{
+				"path":                       "$topFail",
+				"preserveNullAndEmptyArrays": true,
+			},
+		},
+		{
+			"$project": bson.M{
+				"_id":       0,
+				"taskType":  "$_id.taskType",
+				"clusterId": "$_id.clusterId",
+				"successRate": bson.M{
+					"$divide": []string{"$successCount", "$totalCount"}, // 成功率
+				},
+				"topFailReason":    "$topFail._id",
+				"avgExecutionTime": 1,
+			},
+		},
+	}
+	condM = append(condM, subCond...)
+	return condM
 }
