@@ -138,3 +138,12 @@ type GCPServiceAccount struct {
 	AuthProviderCertURL string `json:"auth_provider_x509_cert_url"`
 	ClientCertURL       string `json:"client_x509_cert_url"`
 }
+
+// ClusterTaskQuota cluster task quota
+type ClusterTaskQuota struct {
+	TaskType         string  `json:"taskType"`
+	ClusterId        string  `json:"clusterId"`
+	SuccessRate      float64 `json:"successRate"`
+	TopFailReason    string  `json:"topFailReason"`
+	AvgExecutionTime float64 `json:"avgExecutionTime"`
+}

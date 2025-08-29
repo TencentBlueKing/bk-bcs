@@ -133,3 +133,20 @@ func (cm *ClusterManager) SkipTask(ctx context.Context,
 	blog.Infof("reqID: %s, action: SkipTask, req %v, resp %v", reqID, req, resp)
 	return nil
 }
+
+// ListClusterTaskQuota implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) ListClusterTaskQuota(ctx context.Context,
+	req *cmproto.ListClusterTaskQuotaRequest, resp *cmproto.ListClusterTaskQuotaResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	ca := task.NewListClusterTaskQuotaAction(cm.model)
+	ca.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("ListClusterTaskQuota", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: ListClusterTaskQuota, req %v, resp.Code %d, resp.Message %s, resp.Data.Length %v",
+		reqID, req, resp.Code, resp.Message, len(resp.Data))
+	blog.V(5).Infof("reqID: %s, action: ListClusterTaskQuota, req %v, resp %v", reqID, req, resp)
+	return nil
+}

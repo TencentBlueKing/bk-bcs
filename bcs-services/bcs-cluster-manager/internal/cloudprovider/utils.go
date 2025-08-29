@@ -1535,3 +1535,8 @@ func GetCloudBizTags(bizId int64, operator string) (map[string]string, error) {
 		common.KeyOperator:  operator,
 	}, nil
 }
+
+// GenFailedMessage 生成错误信息
+func GenFailedMessage(stepName string, err error) string {
+	return fmt.Sprintf("%sFailed: %s", stepName, err.Error())
+}
