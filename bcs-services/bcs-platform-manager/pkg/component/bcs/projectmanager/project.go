@@ -18,6 +18,7 @@ import (
 	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/config"
 )
 
