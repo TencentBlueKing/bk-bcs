@@ -32,6 +32,7 @@ const (
 
 // BCSConf :
 type BCSConf struct {
+	Target       string         `yaml:"target"`
 	Host         string         `yaml:"host"`
 	Token        string         `yaml:"token"`
 	Verify       bool           `yaml:"verify"`
