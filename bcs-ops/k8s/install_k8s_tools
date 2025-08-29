@@ -121,7 +121,7 @@ _yum_k8s() {
   yum install -y "kubeadm-${pkg_ver}" "kubelet-${pkg_ver}" "kubectl-${pkg_ver}" "cri-tools"
 
   if [ ! -d /opt/cni/bin/ ];then
-    mkdir /opt/cni/bin/
+    mkdir -p /opt/cni/bin/
   fi
 
   if [ -d /usr/libexec/cni/ ];then
