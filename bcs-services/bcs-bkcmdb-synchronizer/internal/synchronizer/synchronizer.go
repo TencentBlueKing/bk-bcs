@@ -34,6 +34,8 @@ import (
 	cmp "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
 	amqp "github.com/rabbitmq/amqp091-go"
 
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/client"
 	cm "github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/client/clustermanager"
 	pm "github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/client/projectmanager"
@@ -125,6 +127,12 @@ func (s *Synchronizer) Init() {
 	}
 
 	s.initSharedClusterConf()
+
+	// 添加metrics初始化
+	err = s.initMetrics()
+	if err != nil {
+		blog.Errorf("init metrics failed, err: %s", err.Error())
+	}
 }
 
 func (s *Synchronizer) initTlsConfig() error {
@@ -176,6 +184,37 @@ func (s *Synchronizer) initSharedClusterConf() {
 	if s.Syncer.BkcmdbSynchronizerOption.SharedCluster.AnnotationKeyProjCode == "" {
 		s.Syncer.BkcmdbSynchronizerOption.SharedCluster.AnnotationKeyProjCode = "io.tencent.bcs.projectcode"
 	}
+}
+
+// initMetrics 初始化metrics相关组件
+func (s *Synchronizer) initMetrics() error {
+	blog.Infof("init metrics...")
+
+	// 设置默认端口
+	if s.BkcmdbSynchronizerOption.Metrics.Port == 0 {
+		s.BkcmdbSynchronizerOption.Metrics.Port = 8082
+	}
+
+	// 启动metrics服务器
+	go func() {
+		mux := http.NewServeMux()
+		mux.Handle("/metrics", promhttp.Handler())
+
+		addr := fmt.Sprintf(":%d", s.BkcmdbSynchronizerOption.Metrics.Port)
+		blog.Infof("starting metrics server on %s", addr)
+
+		if err := http.ListenAndServe(addr, mux); err != nil {
+			blog.Errorf("metrics server failed to start: %v", err)
+		}
+	}()
+
+	blog.Infof("init metrics success on port %d", s.BkcmdbSynchronizerOption.Metrics.Port)
+	blog.Infof("CMDB metrics registered:")
+	blog.Infof("  - bkbcs_cmdbsynchronizer_cmdb_requests_total (Counter)")
+	blog.Infof("  - bkbcs_cmdbsynchronizer_cmdb_request_duration_seconds (Histogram)")
+	blog.Infof("  - bkbcs_cmdbsynchronizer_cmdb_requests_in_flight (Gauge)")
+
+	return nil
 }
 
 // Run run the synchronizer
