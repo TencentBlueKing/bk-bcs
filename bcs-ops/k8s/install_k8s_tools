@@ -119,6 +119,15 @@ _yum_k8s() {
     | awk '/'"${crictl_pat}"'/{last=$2} END{sub(/.*:/,"",last);print last}')
 
   yum install -y "kubeadm-${pkg_ver}" "kubelet-${pkg_ver}" "kubectl-${pkg_ver}" "cri-tools"
+
+  if [ ! -d /opt/cni/bin/ ];then
+    mkdir -p /opt/cni/bin/
+  fi
+
+  if [ -d /usr/libexec/cni/ ];then
+    cp /usr/libexec/cni/* /opt/cni/bin/
+  fi
+
 }
 
 _curl_k8s() {

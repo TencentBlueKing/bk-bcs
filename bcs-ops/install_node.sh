@@ -129,10 +129,15 @@ case "${K8S_CSI,,}" in
     ;;
 esac
 
+params=""
+if ! sysctl -a |grep bridge;then
+  params="--ignore-preflight-errors=FileContent--proc-sys-net-bridge-bridge-nf-call-iptables"
+fi
+
 if systemctl is-active kubelet.service -q; then
   utils::log "WARN" "kubelet service is active now, skip kubeadm join"
 else
-  kubeadm join --config="${ROOT_DIR}/kubeadm-config" -v 11 \
+  kubeadm join --config="${ROOT_DIR}/kubeadm-config" -v 11 ${params}\
     || utils::log "FATAL" "${LAN_IP} failed to join cluster: ${K8S_CTRL_IP}"
   systemctl enable --now kubelet
 fi

@@ -190,10 +190,11 @@ render_containerd() {
   utils::log "INFO" "init containerd config:"
 
   local sandbox_img_url
+  pause_version=$(yq '.bcs-ops[]|select(.version=="'${K8S_VER}'")|.images' "${ROOT_DIR}"/env/offline-manifest.yaml|grep pause|awk -F':' ' { print $2 } ')
   if [[ -n ${BK_PUBLIC_REPO:-} ]]; then
-    sandbox_img_url="${BK_PUBLIC_REPO}/registry.k8s.io/pause:3.6"
+    sandbox_img_url="${BK_PUBLIC_REPO}/registry.k8s.io/pause:${pause_version}"
   else
-    sandbox_img_url="registry.k8s.io/pause:3.6"
+    sandbox_img_url="registry.k8s.io/pause:${pause_version}"
   fi
 
   cat <<EOF | tee ${config_path}
