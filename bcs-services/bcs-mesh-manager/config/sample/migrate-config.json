@@ -1,0 +1,10 @@
+{
+    "mongo": {
+        "authDatabase": "admin",
+        "connectTimeout": 5,
+        "encrypted": false,
+        "maxPoolSize": 0,
+        "minPoolSize": 0,
+        "database": "meshmanager"
+    }
+}

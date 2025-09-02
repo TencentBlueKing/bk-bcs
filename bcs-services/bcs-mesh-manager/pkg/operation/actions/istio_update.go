@@ -54,6 +54,7 @@ type IstioUpdateOption struct {
 	UpdateValuesOptions *utils.UpdateValuesOptions
 	CLBID               *string
 	Revision            *string
+	OldReleaseNames     map[string]map[string]string
 }
 
 // IstioUpdateAction istio更新操作
@@ -812,11 +813,35 @@ func (i *IstioUpdateAction) Done(err error) {
 // buildReleaseNames 构建ReleaseNames map
 func (i *IstioUpdateAction) buildReleaseNames(clusters []string) map[string]map[string]string {
 	releaseNames := make(map[string]map[string]string)
+
+	// 构建集群的集合，用于快速查找
+	clusterSet := make(map[string]struct{})
 	for _, clusterID := range clusters {
-		releaseNames[clusterID] = map[string]string{
-			common.ComponentIstioBase:    common.IstioInstallBaseName,
-			common.ComponentIstiod:       common.IstioInstallIstiodName,
-			common.ComponentIstioGateway: common.IstioInstallIstioGatewayName,
+		clusterSet[clusterID] = struct{}{}
+	}
+
+	// 存在部分服务网格通过手动部署，使用自定义的releaseName，需要保留
+	if i.OldReleaseNames != nil {
+		for clusterID, clusterReleases := range i.OldReleaseNames {
+			if _, exists := clusterSet[clusterID]; exists {
+				// 只保留仍然存在的集群
+				releaseNames[clusterID] = make(map[string]string)
+				for component, releaseName := range clusterReleases {
+					releaseNames[clusterID][component] = releaseName
+				}
+			}
+		}
+	}
+
+	// 新加入网格的集群使用自定义的releaseName
+	for _, clusterID := range clusters {
+		if _, exists := releaseNames[clusterID]; !exists {
+			// 新集群，使用默认名称
+			releaseNames[clusterID] = map[string]string{
+				common.ComponentIstioBase:    common.IstioInstallBaseName,
+				common.ComponentIstiod:       common.IstioInstallIstiodName,
+				common.ComponentIstioGateway: common.IstioInstallIstioGatewayName,
+			}
 		}
 	}
 
@@ -826,7 +851,12 @@ func (i *IstioUpdateAction) buildReleaseNames(clusters []string) map[string]map[
 // getCLBIPForNewClusters 为新集群获取CLB IP地址
 func (i *IstioUpdateAction) getCLBIPForNewClusters(ctx context.Context) (string, error) {
 	// 从主集群的eastwestgateway service中获取内网CLB地址
-	clbIP, err := k8s.GetCLBIP(ctx, i.PrimaryClusters[0])
+	releaseNames := i.OldReleaseNames[i.PrimaryClusters[0]]
+	if releaseNames[common.ComponentIstioGateway] == "" {
+		return "", fmt.Errorf("eastwestgateway release name is empty")
+	}
+	releaseName := releaseNames[common.ComponentIstioGateway]
+	clbIP, err := k8s.GetCLBIP(ctx, i.PrimaryClusters[0], releaseName)
 	if err != nil {
 		blog.Errorf("[%s]get CLB IP failed for primary cluster %s, err: %s", i.MeshID, i.PrimaryClusters[0], err)
 		return "", fmt.Errorf("get CLB IP failed for primary cluster %s: %s", i.PrimaryClusters[0], err)

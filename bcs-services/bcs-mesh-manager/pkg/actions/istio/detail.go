@@ -22,6 +22,7 @@ import (
 	"gopkg.in/yaml.v2"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/cmd/mesh-manager/options"
+	clustermanagerclient "github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/clients/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/clients/helm"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/store"
@@ -147,6 +148,9 @@ func (l *GetIstioDetailAction) getDetail(ctx context.Context) (*meshmanager.Isti
 		return nil, fmt.Errorf("build istio list item failed, clusterID: %s", clusterID)
 	}
 
+	// 下发从集群的名称和地域信息
+	l.buildRemoteClusterInfo(ctx, result)
+
 	// 转换资源配置单位
 	if err := utils.NormalizeResourcesConfig(result); err != nil {
 		blog.Errorf("normalize resources failed, clusterID: %s, err: %s",
@@ -177,4 +181,25 @@ func (l *GetIstioDetailAction) buildQueryConditions() *operator.Condition {
 		return operator.NewBranchCondition(operator.And, conditions...)
 	}
 	return operator.NewBranchCondition(operator.And)
+}
+
+// buildRemoteClusterInfo 构建从集群的名称和地域信息
+func (l *GetIstioDetailAction) buildRemoteClusterInfo(ctx context.Context, detailInfo *meshmanager.IstioDetailInfo) {
+	if detailInfo == nil || detailInfo.RemoteClusters == nil {
+		return
+	}
+
+	for i := range detailInfo.RemoteClusters {
+		clusterInfo, err := clustermanagerclient.GetClusterInfo(
+			ctx,
+			utils.GetProjectIDFromCtx(ctx),
+			detailInfo.RemoteClusters[i].ClusterID,
+		)
+		if err != nil {
+			blog.Errorf("get cluster info failed, clusterID: %s, err: %s", detailInfo.RemoteClusters[i].ClusterID, err.Error())
+			continue
+		}
+		detailInfo.RemoteClusters[i].ClusterName = clusterInfo.ClusterName
+		detailInfo.RemoteClusters[i].Region = clusterInfo.Region
+	}
 }

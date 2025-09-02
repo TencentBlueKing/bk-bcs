@@ -64,9 +64,7 @@ type MeshIstio struct {
 
 // RemoteCluster represents remote cluster information
 type RemoteCluster struct {
-	ClusterID   string `bson:"clusterID" json:"clusterID"`
-	ClusterName string `bson:"clusterName" json:"clusterName"`
-	Region      string `bson:"region" json:"region"`
+	ClusterID string `bson:"clusterID" json:"clusterID"`
 	// 纳入服务网格管理时间
 	JoinTime int64 `bson:"joinTime" json:"joinTime"`
 	// 集群状态
@@ -171,11 +169,9 @@ func (m *MeshIstio) Transfer2ProtoForDetail() *meshmanager.IstioDetailInfo {
 	remoteClusters := make([]*meshmanager.RemoteCluster, 0, len(m.RemoteClusters))
 	for _, cluster := range m.RemoteClusters {
 		remoteClusters = append(remoteClusters, &meshmanager.RemoteCluster{
-			ClusterID:   cluster.ClusterID,
-			ClusterName: cluster.ClusterName,
-			Region:      cluster.Region,
-			JoinTime:    cluster.JoinTime,
-			Status:      cluster.Status,
+			ClusterID: cluster.ClusterID,
+			JoinTime:  cluster.JoinTime,
+			Status:    cluster.Status,
 		})
 	}
 	istioDetailInfo.RemoteClusters = remoteClusters
@@ -288,11 +284,9 @@ func (m *MeshIstio) Transfer2ProtoForListItems() *meshmanager.IstioListItem {
 	remoteClusters := make([]*meshmanager.RemoteCluster, 0, len(m.RemoteClusters))
 	for _, cluster := range m.RemoteClusters {
 		remoteClusters = append(remoteClusters, &meshmanager.RemoteCluster{
-			ClusterID:   cluster.ClusterID,
-			ClusterName: cluster.ClusterName,
-			Region:      cluster.Region,
-			JoinTime:    cluster.JoinTime,
-			Status:      cluster.Status,
+			ClusterID: cluster.ClusterID,
+			JoinTime:  cluster.JoinTime,
+			Status:    cluster.Status,
 		})
 	}
 	istioListItem.RemoteClusters = remoteClusters
@@ -317,11 +311,9 @@ func (m *MeshIstio) TransferFromProto(req *meshmanager.IstioInstallRequest) {
 			cluster := req.RemoteClusters[i]
 			joinTime := time.Now().UnixMilli()
 			m.RemoteClusters = append(m.RemoteClusters, &RemoteCluster{
-				ClusterID:   cluster.ClusterID,
-				ClusterName: cluster.ClusterName,
-				Region:      cluster.Region,
-				JoinTime:    joinTime,
-				Status:      common.RemoteClusterStatusInstalling,
+				ClusterID: cluster.ClusterID,
+				JoinTime:  joinTime,
+				Status:    common.RemoteClusterStatusInstalling,
 			})
 			cluster.JoinTime = joinTime
 			cluster.Status = common.RemoteClusterStatusInstalling

@@ -22,6 +22,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/cmd/mesh-manager/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/auth"
+	clustermanagerclient "github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/clients/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/clients/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/store"
@@ -245,6 +246,7 @@ func (l *ListIstioAction) list(ctx context.Context) (*meshmanager.ListIstioData,
 			return nil, fmt.Errorf("data error, mesh is nil")
 		}
 		item := mesh.Transfer2ProtoForListItems()
+		l.buildRemoteClusterInfo(ctx, item)
 		items = append(items, item)
 	}
 	return &meshmanager.ListIstioData{
@@ -319,5 +321,24 @@ func (l *ListIstioAction) buildPaginationOptions() *storeutils.ListOption {
 		},
 		Page: page,
 		Size: pageSize,
+	}
+}
+
+// buildRemoteClusterInfo 构建从集群的名称和地域信息
+func (l *ListIstioAction) buildRemoteClusterInfo(ctx context.Context, item *meshmanager.IstioListItem) {
+	if item == nil || item.RemoteClusters == nil {
+		return
+	}
+
+	for i := range item.RemoteClusters {
+		clusterInfo, err := clustermanagerclient.GetClusterInfo(
+			ctx, utils.GetProjectIDFromCtx(ctx), item.RemoteClusters[i].ClusterID,
+		)
+		if err != nil {
+			blog.Errorf("get cluster info failed, clusterID: %s, err: %s", item.RemoteClusters[i].ClusterID, err.Error())
+			continue
+		}
+		item.RemoteClusters[i].ClusterName = clusterInfo.ClusterName
+		item.RemoteClusters[i].Region = clusterInfo.Region
 	}
 }

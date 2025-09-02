@@ -221,10 +221,10 @@ const (
 	ServiceTypeLoadBalancer = "LoadBalancer"
 )
 
-// GetCLBIP 从eastwestgateway的service中获取内网CLB地址
-func GetCLBIP(ctx context.Context, clusterID string) (string, error) {
+// GetCLBIP 获取东西向网关的CLB IP
+func GetCLBIP(ctx context.Context, clusterID, serviceName string) (string, error) {
 	// 获取eastwestgateway的service
-	service, err := GetService(ctx, clusterID, common.IstioNamespace, common.EastWestGatewayServiceName)
+	service, err := GetService(ctx, clusterID, common.IstioNamespace, serviceName)
 	if err != nil {
 		return "", fmt.Errorf("get eastwestgateway service failed: %s", err)
 	}

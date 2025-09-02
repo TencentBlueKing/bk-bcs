@@ -142,14 +142,6 @@ func (i *IstioUninstallAction) Execute(ctx context.Context) error {
 		return fmt.Errorf("uninstall egress gateway failed: %s", err)
 	}
 
-	// 删除主集群中部署的从集群的secret
-	// for _, cluster := range i.RemoteClusters {
-	// 	if err := k8s.DeleteRemoteClusterSecret(ctx, i.PrimaryClusters[0], cluster); err != nil {
-	// 		blog.Errorf("[%s]delete secret for remote cluster %s failed, err: %s", i.MeshID, cluster, err)
-	// 		return fmt.Errorf("delete secret for remote cluster %s failed: %s", cluster, err)
-	// 	}
-	// }
-
 	// 尝试删除istio crd
 	for _, cluster := range clusters {
 		if err := k8s.DeleteIstioCrd(ctx, cluster); err != nil {
