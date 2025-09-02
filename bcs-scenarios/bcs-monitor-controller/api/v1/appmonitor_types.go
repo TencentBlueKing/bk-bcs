@@ -66,6 +66,9 @@ type RuleEnhance struct {
 	Trigger            string   `json:"trigger,omitempty" yaml:"trigger,omitempty"`
 	WhereAdd           string   `json:"whereAdd,omitempty" yaml:"whereAdd,omitempty"`
 	WhereOr            string   `json:"whereOr,omitempty" yaml:"whereOr,omitempty"`
+
+	NoticeTemplateAbnormalAppend string `json:"noticeTemplateAbnormalAppend,omitempty" yaml:"noticeTemplateAbnormalAppend,omitempty"` // nolint
+
 	// if true, controller will ignore resource's change
 	IgnoreChange bool `json:"ignoreChange,omitempty" yaml:"ignoreChange,omitempty"`
 }
