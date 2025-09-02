@@ -103,7 +103,7 @@ func FilterNodesByDataDisk(instanceIDs []string, opt *cloudprovider.CommonOption
 	}
 
 	for i := range instanceDisk {
-		if instanceDisk[i].DiskCount <= 1 {
+		if instanceDisk[i].DiskCount < 1 {
 			filter.SingleDiskInstance = append(filter.SingleDiskInstance, instanceDisk[i].InstanceID)
 			filter.SingleDiskInstanceIP = append(filter.SingleDiskInstanceIP, instanceDisk[i].InstanceIP)
 			continue
