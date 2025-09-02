@@ -29,8 +29,10 @@ import (
 	"time"
 
 	bkcmdbkube "configcenter/src/kube/types" // nolint
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
+	pmp "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
 	cmp "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
 	amqp "github.com/rabbitmq/amqp091-go"
 
@@ -354,6 +356,14 @@ func (s *Synchronizer) Run() {
 				if exist, _ := common.InArray(wT, workListT); !exist {
 					blog.Infof("%s stopped", wT)
 					gm.Stop(wT, clusterMapT[wT])
+				}
+			}
+
+			// 只有主Pod（podIndex=0）负责清理CMDB中多余的集群数据
+			if podIndex == 0 {
+				err := s.cleanupOrphanedClustersInCMDB(clusterMapT)
+				if err != nil {
+					blog.Errorf("cleanup orphaned clusters failed: %s", err.Error())
 				}
 			}
 		}
@@ -840,4 +850,95 @@ func (s *Synchronizer) getProjectManagerGrpcGwClient() (pmCli *client.ProjectMan
 	}
 	pmCli, err = pm.NewProjectManagerGrpcGwClient(opts)
 	return pmCli, err
+}
+
+// cleanupOrphanedClustersInCMDB 清理CMDB中孤立的集群数据
+// 只有主Pod（podIndex=0）会执行此操作，避免重复删除
+func (s *Synchronizer) cleanupOrphanedClustersInCMDB(clusterMapT map[string]*cmp.Cluster) error {
+	blog.Infof("start cleanup orphaned clusters in CMDB")
+
+	// 1. 构建ClusterManager中有效的集群ID列表
+	validClusterMap := make(map[string]bool)
+	for clusterID := range clusterMapT {
+		validClusterMap[clusterID] = true
+	}
+
+	pmCli, err := s.Syncer.GetProjectManagerGrpcGwClient()
+	if err != nil {
+		blog.Errorf("get project manager client failed: %v", err)
+		return fmt.Errorf("get project manager client failed: %v", err)
+	}
+
+	// 2. 获取所有业务ID - 通过项目获取业务信息
+	projectResp, err := pmCli.Cli.ListProjects(pmCli.Ctx, &pmp.ListProjectsRequest{})
+	if err != nil {
+		blog.Errorf("get all projects from project manager failed: %v", err)
+		return fmt.Errorf("get all projects from project manager failed: %v", err)
+	}
+
+	if projectResp.Data == nil || len(projectResp.Data.Results) == 0 {
+		blog.Infof("no projects found, skipping cleanup")
+		return nil
+	}
+
+	// 3. 从项目中提取唯一的业务ID，避免重复处理
+	uniqueBusinessMap := make(map[string]string)
+	for _, project := range projectResp.Data.Results {
+		uniqueBusinessMap[project.BusinessID] = project.BusinessName
+	}
+
+	blog.Infof("found %d projects from project manager, extracted %d unique businesses", len(projectResp.Data.Results), len(uniqueBusinessMap))
+
+	// 4. 遍历所有唯一的业务ID，获取CMDB中的集群
+	totalOrphanedCount := 0
+	for bizIDStr, bizName := range uniqueBusinessMap {
+		bizID, err := strconv.ParseInt(bizIDStr, 10, 64)
+		if err != nil {
+			blog.Errorf("parse business ID %s failed: %v", bizIDStr, err)
+			continue
+		}
+
+		blog.Infof("checking orphaned clusters for business %d (%s)", bizID, bizName)
+
+		cmdbClusters, err := s.Syncer.CMDBClient.GetBcsCluster(&client.GetBcsClusterRequest{
+			CommonRequest: client.CommonRequest{
+				BKBizID: bizID,
+				Fields:  []string{"id", "uid"},
+				Page: client.Page{
+					Limit: 200,
+					Start: 0,
+				},
+			},
+		}, nil, false)
+		if err != nil {
+			blog.Errorf("get CMDB clusters for biz %d failed: %v", bizID, err)
+			continue
+		}
+
+		// 4. 找出CMDB中存在但ClusterManager中不存在的集群
+		orphanedCount := 0
+		for _, cmdbCluster := range *cmdbClusters {
+			if !validClusterMap[cmdbCluster.Uid] {
+				blog.Infof("found orphaned cluster in CMDB for biz %d: %s, start deletion", bizID, cmdbCluster.Uid)
+
+				// 设置BizID，因为从CMDB查询的集群数据中可能没有包含此字段
+				cmdbCluster.BizID = bizID
+				err = s.Syncer.DeleteAllByCluster(&cmdbCluster)
+				if err != nil {
+					blog.Errorf("delete orphaned cluster %s in biz %d failed: %v", cmdbCluster.Uid, bizID, err)
+				} else {
+					blog.Infof("successfully deleted orphaned cluster %s from CMDB in biz %d", cmdbCluster.Uid, bizID)
+					orphanedCount++
+				}
+			}
+		}
+
+		if orphanedCount > 0 {
+			blog.Infof("cleaned up %d orphaned clusters for business %d (%s)", orphanedCount, bizID, bizName)
+		}
+		totalOrphanedCount += orphanedCount
+	}
+
+	blog.Infof("cleanup orphaned clusters completed, deleted %d clusters total across all businesses", totalOrphanedCount)
+	return nil
 }
