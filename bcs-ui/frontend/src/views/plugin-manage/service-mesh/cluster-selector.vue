@@ -9,7 +9,7 @@
     :search-placeholder="$t('cluster.placeholder.searchCluster')"
     :size="size"
     :scroll-height="460"
-    :loading="loading"
+    :loading="clusterLoading"
     multiple
     :ext-cls="extCls"
     ref="clusterSelectorRef"
@@ -23,21 +23,11 @@
       :id="cluster.clusterID"
       :name="cluster.clusterName"
       :disabled="cluster.disabled">
-      <div
-        class="flex items-center justify-between"
-        @mouseenter="hoverClusterID = cluster.clusterID"
-        @mouseleave="hoverClusterID = ''">
+      <div class="flex items-center justify-between">
         <div class="flex flex-col justify-center h-[50px]">
           <span class="leading-[20px] bcs-ellipsis" v-bk-overflow-tips>{{ cluster.clusterName }}</span>
           <span
-            :class="[
-              'leading-[20px]',
-              {
-                'text-[#979BA5]': normalStatusList.includes(cluster.status || ''),
-                '!text-[#699DF4]': clusterValue.includes(cluster.clusterID || '') ||
-                  (normalStatusList.includes(cluster.status || '')
-                    && (hoverClusterID === cluster.clusterID) && !cluster.disabled),
-              }]"
+            class="leading-[20px]"
             v-bk-tooltips="{
               content: cluster.disabledDesc,
               disabled: !cluster.disabled,
@@ -46,32 +36,29 @@
             ({{ cluster.clusterID }})
           </span>
         </div>
-        <bcs-tag
-          theme="danger"
-          v-if="!normalStatusList.includes(cluster.status || '')">
-          {{ $t('generic.label.abnormal') }}
-        </bcs-tag>
+        <span class="shrink-0">
+          <bcs-tag
+            theme="danger"
+            class="mr-[10px]"
+            v-if="!normalStatusList.includes(cluster.status || '')">
+            {{ $t('generic.label.abnormal') }}
+          </bcs-tag>
+          <i
+            v-if="clusterValue.includes(cluster.clusterID || '') && multiple"
+            class="bcs-icon bcs-icon-check-1 font-bold">
+          </i>
+        </span>
       </div>
     </bcs-option>
   </bcs-select>
 </template>
 <script lang="ts">
-import {  computed, defineComponent, onBeforeMount, PropType, ref, toRefs, watch } from 'vue';
+import {  computed, defineComponent, PropType, ref, toRefs, watch } from 'vue';
 
-import { meshClusters } from '@/api/modules/mesh-manager';
+import useMesh, { MeshCluster } from './use-mesh';
+
 import { satisfiesVersion } from '@/common/util';
-import { useProject } from '@/composables/use-app';
 import $i18n from '@/i18n/i18n-setup';
-
-type MeshCluster = {
-  clusterID: string,
-  clusterName: string,
-  clusterType: string,
-  isShared: boolean,
-  isInstalled: boolean
-  status: string,
-  version: string,
-};
 
 export default defineComponent({
   name: 'ClusterSelector',
@@ -116,28 +103,25 @@ export default defineComponent({
       type: String,
       default: '',
     },
+    disabledFun: {
+      type: Function,
+      default: null,
+    },
+    enableValues: {
+      type: Array as PropType<string[]>,
+      default: () => [],
+    },
   },
   emits: ['change'],
   setup(props, { emit }) {
-    const { value } = toRefs(props);
-
-    const { projectCode } = useProject();
+    const { value, disabledFun, enableValues } = toRefs(props);
 
     const normalStatusList = ['RUNNING'];
-    const hoverClusterID = ref<string>();
 
     const clusterSelectorRef = ref<any>(null);
     const clusterValue = ref<string[]>([]);
-    const clusterList = ref<MeshCluster[]>([]);
-    const loading = ref(false);
-    async function getClusterList() {
-      loading.value = true;
-      const res = await meshClusters({
-        projectCode: projectCode.value,
-      }).catch(() => ({ clusters: [] }));
-      clusterList.value = res.clusters;
-      loading.value = false;
-    }
+
+    const { clusterList, clusterLoading } = useMesh();
 
     // 不支持部署的集群
     function isDisabledCluster(item: MeshCluster) {
@@ -151,8 +135,10 @@ export default defineComponent({
         desc = $i18n.t('serviceMesh.tips.disabledShare');
       } else if (item.clusterType === 'federation') {
         desc = $i18n.t('serviceMesh.tips.disabledFederation');
-      } else if (item.isInstalled) {
+      } else if (item.isInstalled && !enableValues.value.includes(item.clusterID)) {
         desc = $i18n.t('serviceMesh.tips.isInstalled');
+      } else if (typeof disabledFun.value === 'function' && disabledFun.value(item)) {
+        desc = $i18n.t('serviceMesh.tips.disabledClustersDesc');
       }
       return desc;
     }
@@ -167,7 +153,8 @@ export default defineComponent({
         ...item,
         disabled: isDisabledCluster(item)
           || !isVersionSupported(item.version)
-          || item.isInstalled,
+          || (item.isInstalled && !enableValues.value.includes(item.clusterID))
+          || (typeof disabledFun.value === 'function' && disabledFun.value(item)),
         disabledDesc: getDesc(item),
       })));
 
@@ -189,6 +176,8 @@ export default defineComponent({
       if (!props.multiple) {
         clusterValue.value = value[value.length - 1] ? [value[value.length - 1]] : [];
         clusterSelectorRef.value?.close?.();
+      } else {
+        clusterValue.value = value;
       }
       emit('change', clusterValue.value);
     }
@@ -201,17 +190,12 @@ export default defineComponent({
       return versions.value.every(v => satisfiesVersion(version, v));
     }
 
-    onBeforeMount(() => {
-      getClusterList();
-    });
-
     return {
       normalStatusList,
-      hoverClusterID,
       clusterValue,
       clusterListOfMesh,
       clusterSelectorRef,
-      loading,
+      clusterLoading,
       remoteMethod,
       handleChange,
       isVersionSupported,

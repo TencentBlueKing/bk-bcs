@@ -47,8 +47,10 @@
         </FieldItem>
       </div>
     </FieldItem>
-    <FieldItem class="mb-[16px]" :label="$t('serviceMesh.label.excludeIPs')">
-      {{ data?.featureConfigs?.excludeIPRanges?.value }}
+    <FieldItem
+      class="mb-[16px]"
+      :label="$t('serviceMesh.label.excludeIPs')"
+      :value="data?.featureConfigs?.excludeIPRanges?.value">
     </FieldItem>
     <FieldItem :label="$t('serviceMesh.label.http10')">
       <bk-tag

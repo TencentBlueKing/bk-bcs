@@ -26,6 +26,7 @@
       <bcs-table
         :data="meshData"
         :pagination="pagination"
+        row-auto-height
         @page-change="pageChange"
         @page-limit-change="pageSizeChange">
         <bcs-table-column :label="$t('serviceMesh.label.name')" prop="name" sortable show-overflow-tooltip>
@@ -50,20 +51,35 @@
             <StatusIcon
               :status="row.status"
               :message="row.statusMessage"
+              :status-color-map="statusColorMap"
+              :status-text-map="statusTextMap"
               :pending="loadingStatusList.includes(row.status)" />
           </template>
         </bcs-table-column>
         <bcs-table-column :label="$t('serviceMesh.label.cluster')" show-overflow-tooltip>
           <template #default="{ row }">
             <div
-              v-for="(item, index) in (row.primaryClusters || []).slice(0, 3)"
-              :key="`${index}-${item}`">
-              {{ item }}
-              <span v-if="row.primaryClusters?.length >= 3">...</span>
+              class="flex flex-col"
+              v-bk-tooltips="{
+                content: `${(row.primaryClusters || []).join()},
+                  ${(row.remoteClusters || []).map(v => v.clusterID).join()}`,
+                disabled: row.remoteClusters?.length < 3,
+              }">
+              <span
+                v-for="(item, index) in (row.primaryClusters || [])"
+                :key="`${index}-${item}`">
+                {{ item }}
+              </span>
+              <span
+                v-for="item in (row.remoteClusters || []).slice(0, 2)"
+                :key="item.clusterID">
+                {{ item.clusterID || '--' }}
+                <span v-if="row.remoteClusters?.length > 2">...</span>
+              </span>
             </div>
           </template>
         </bcs-table-column>
-        <bcs-table-column :label="$t('serviceMesh.label.createTime')" prop="createTime" sortable>
+        <bcs-table-column :label="$t('serviceMesh.label.createTime')" prop="createTime" sortable show-overflow-tooltip>
           <template #default="{ row }">
             {{ formatDate(Number(row.createTime || 0)) || '--' }}
           </template>
@@ -221,6 +237,23 @@ const { start, stop } = useInterval(() => handleGetData(), 5000);
 
 const detailEditRef = ref<InstanceType<typeof DetailEdit> | null>(null);
 const isQuickClose = computed(() => !detailEditRef.value?.isEdit);
+
+// 状态信息
+const statusTextMap = ref({
+  running: $i18n.t('generic.status.running'),
+  failed: $i18n.t('generic.status.installFailed'),
+  installing: $i18n.t('generic.status.installing'),
+  updating: $i18n.t('generic.status.updating'),
+  'update-failed': $i18n.t('generic.status.updateFailed'),
+  uninstalling: $i18n.t('generic.status.uninstalling'),
+  'uninstall-failed': $i18n.t('generic.status.uninstallFailed'),
+});
+const statusColorMap = ref({
+  running: 'green',
+  failed: 'red',
+  'uninstalling-failed': 'red',
+  'update-failed': 'red',
+});
 
 // 网格详情
 const editSettings = ref({

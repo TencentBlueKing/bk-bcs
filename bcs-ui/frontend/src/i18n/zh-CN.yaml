@@ -448,6 +448,10 @@ generic:
     halfSuccess: 部分成功
     terminate: 退出
     waiting: 等待
+    installing: 安装中
+    installFailed: 安装失败
+    uninstalling: 卸载中
+    uninstallFailed: 卸载失败
   validate:
     name: 仅支持字母，数字和字符(-)，且以字母开头
     repeatKey: 重复键
@@ -3274,6 +3278,16 @@ serviceMesh:
     replicaMin: 最小副本
     replicaMax: 最大副本
     dedicatedNode: 专属节点
+    multiCluster: 多集群
+    differentNetwork: 集群网络连通性
+    connected: 已打通
+    notConnected: 未打通（暂不支持）
+    clbID: 东西向网关 CLB
+    subClusters: 从集群
+    tableEmpty: 暂无数据，请先添加集群
+    clusterRegion: 集群地域
+    joinTime: 加入时间
+    networkID: 网络 ID
   placeholder:
     search: 搜索网格名称/版本/状态/关联集群
     ips: 请输入 IP，多个 IP 用回车分隔
@@ -3315,3 +3329,12 @@ serviceMesh:
     endpointDesc: 对应蓝鲸监控的上报地址
     bkTokenDesc: 蓝鲸监控 APM 设置中获取
     dedicatedNodeDesc: 设置标签将 istio 控制面调度到专用的节点上，前提是需要节点上已存在对应的 label
+    differentNetworkDesc: 通过云联网打通容器网络，或者自研云内要求在同一个 vpc
+    clbIDDesc: 用于从集群连接主集群控制面，填写一个 clb id
+    subClustersDesc: 构建多集群，用于加入主机群控制面
+    disabledClustersDesc: 集群被占用
+    cancelTitle: 确认关闭多集群？
+    cancelSubTitle: 关闭后，已填写的内容将会被清空。
+    clearClustersTip: 请先清空集群
+    revisionDesc: >-
+      用于指定控制面版本，命名空间需要添加标签来使用对应版本控制面，如istio.io/rev=1-18-bcs-2。仅首次安装可以指定后续不可修改，未指定则使用默认值。

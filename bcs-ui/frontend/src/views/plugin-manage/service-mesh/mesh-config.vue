@@ -58,7 +58,7 @@
       </bk-form-item>
     </div>
     <!-- Sidecar 资源 -->
-    <div class="mt-[24px] mb-[6px]">{{ $t('serviceMesh.label.sidecarResource') }}</div>
+    <div class="mt-[14px] mb-[6px] text-[12px]">{{ $t('serviceMesh.label.sidecarResource') }}</div>
     <div class="bg-[#F5F7FA] flex flex-wrap rounded-sm py-[12px] px-[16px]">
       <bk-form-item
         class="mr-[12px]"
@@ -136,7 +136,7 @@
       </bk-form-item>
     </div>
     <!-- DNS 代理转发 -->
-    <div class="flex mt-[24px]">
+    <div class="flex mt-[14px]">
       <bk-form-item
         class="!mt-0"
         :label="$t('serviceMesh.label.dnsCapture')"
@@ -173,7 +173,7 @@
     </div>
     <!-- 排除 IP 范围 -->
     <bk-form-item
-      class="mt-[8px]"
+      class="mt-[10px]"
       :label="$t('serviceMesh.label.excludeIPs')"
       :desc="$t('serviceMesh.tips.excludeIPsDesc')">
       <bcs-tag-input
@@ -187,7 +187,7 @@
     </bk-form-item>
     <!-- HTTP/1.0 -->
     <bk-form-item
-      class="mt-[8px]"
+      class="!mt-[14px]"
       :label="$t('serviceMesh.label.http10')"
       :desc="$t('serviceMesh.tips.http10Desc')">
       <bcs-switcher
@@ -338,7 +338,7 @@ const {
 } = useMesh();
 const { focusOnErrorField } = useFocusOnErrorField();
 
-const excludeIPs = ref([]);
+const excludeIPs = ref<string[]>([]);
 const sidecarConfig = ref<Record<keyof ISidecar, number>>({
   cpuRequest: 0,
   cpuLimit: 0,
@@ -488,7 +488,7 @@ async function handleNext() {
     return;
   };
 
-  formatData();
+  formData.value.featureConfigs.excludeIPRanges.value = excludeIPs.value.join(',');
   emits('next', formData.value);
 }
 
@@ -499,23 +499,10 @@ async function handleSave() {
     return;
   };
 
-  formatData();
+  formData.value.featureConfigs.excludeIPRanges.value = excludeIPs.value.join(',');
   emits('save', formData.value);
 }
-function formatData() {
-  if (excludeIPs.value.length) {
-    formData.value.featureConfigs.excludeIPRanges.value = excludeIPs.value.join(',');
-  }
-  if (!formData.value.observabilityConfig.metricsConfig.metricsEnabled) {
-    formData.value.observabilityConfig.metricsConfig = {};
-  }
-  if (!formData.value.observabilityConfig.logCollectorConfig.enabled) {
-    formData.value.observabilityConfig.logCollectorConfig = {};
-  }
-  if (!formData.value.observabilityConfig.tracingConfig.enabled) {
-    formData.value.observabilityConfig.tracingConfig = {};
-  }
-}
+
 function handleCancel() {
   emits('cancel');
 }
@@ -533,6 +520,18 @@ watch(sidecarConfig, () => {
 watch(() => props.active, () => {
   if (props.isEdit) {
     formData.value = cloneDeep(props.data) as IParams;
+    // excludeIPs
+    excludeIPs.value = formData.value.featureConfigs?.excludeIPRanges?.value?.split(',')?.filter(item => !!item) || [];
+    // 避免空异常
+    if (formData.value.observabilityConfig.metricsConfig?.metricsEnabled === undefined) {
+      formData.value.observabilityConfig.metricsConfig = {};
+    }
+    if (formData.value.observabilityConfig.logCollectorConfig?.enabled === undefined) {
+      formData.value.observabilityConfig.logCollectorConfig = {};
+    }
+    if (formData.value.observabilityConfig.tracingConfig?.enabled === undefined) {
+      formData.value.observabilityConfig.tracingConfig = {};
+    }
   }
 }, { immediate: true });
 

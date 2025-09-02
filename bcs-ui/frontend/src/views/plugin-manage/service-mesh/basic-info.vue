@@ -7,14 +7,14 @@
     form-type="vertical"
     class="px-[20px]">
     <div class="font-bold mb-[10px] text-[14px]">{{ $t('serviceMesh.label.info') }}</div>
-    <div class="flex mb-[18px]">
+    <div class="flex mb-[14px]">
       <bk-form-item
         property="name"
         class="mr-[24px]"
         :label="$t('serviceMesh.label.name')"
         error-display-type="normal"
         required>
-        <bk-input v-model.trim="baseInfo.name"></bk-input>
+        <bk-input clearable v-model.trim="baseInfo.name"></bk-input>
       </bk-form-item>
       <bk-form-item
         property="version"
@@ -26,13 +26,20 @@
           <bk-radio-button
             v-for="(item, index) in (configData.istioVersions || [])"
             :key="`${item.version}-${index}`"
+            :disabled="isEdit && item.version !== baseInfo.version"
             :value="item.version">
             {{ item.name }}
           </bk-radio-button>
         </bk-radio-group>
       </bk-form-item>
     </div>
-    <bk-form-item :label="$t('serviceMesh.label.description')">
+    <bk-form-item
+      property="revision"
+      label="revision"
+      :desc="$t('serviceMesh.tips.revisionDesc')">
+      <bk-input :disabled="isEdit" clearable v-model.trim="baseInfo.revision"></bk-input>
+    </bk-form-item>
+    <bk-form-item class="!mt-[14px]" :label="$t('serviceMesh.label.description')">
       <bk-input type="textarea" v-model="baseInfo.description" :maxlength="100"></bk-input>
     </bk-form-item>
     <bcs-divider class="!mt-[24px] !mb-[8px]"></bcs-divider>
@@ -44,57 +51,129 @@
       error-display-type="normal"
       :desc="$t('serviceMesh.tips.primaryClusterDesc')">
       <ClusterSelector
+        :disabled="isEdit"
         :allowed-version-range="allowedVersionRange"
+        :disabled-fun="handleDisabledCluster"
         v-model="baseInfo.primaryClusters" />
     </bk-form-item>
-    <!-- <ContentSwitcher
-      class="mt-[26px] text-[12px]"
-      :label="'多集群'"
-      v-model="clustersOpen">
-      <div class="flex justify-between">
-        <bk-form-item label="集群网络连通性" desc="通过云联网打通容器网络，或者自研云内要求在同一个 vpc">
-          <bk-radio-group v-model="baseInfo.name">
-            <bk-radio :value="'value1'">已打通</bk-radio>
-            <bk-radio :value="'value2'" :disabled="true">未打通（暂不支持）</bk-radio>
+    <ContentSwitcher
+      class="mt-[24px] text-[12px]"
+      :label="$t('serviceMesh.label.multiCluster')"
+      :before-close="handleBeforeClose"
+      :disabled="!!subClusters?.length"
+      :disabled-desc="$t('serviceMesh.tips.clearClustersTip')"
+      v-model="baseInfo.multiClusterEnabled">
+      <div class="grid grid-cols-2">
+        <bk-form-item
+          :label="$t('serviceMesh.label.differentNetwork')"
+          :desc="{
+            content: $t('serviceMesh.tips.differentNetworkDesc'),
+            placement: 'top-start',
+          }">
+          <bk-radio-group v-model="baseInfo.differentNetwork">
+            <bk-radio
+              class="text-[12px]"
+              :value="true">
+              {{ $t('serviceMesh.label.connected') }}
+            </bk-radio>
+            <bk-radio
+              class="text-[12px]"
+              :value="false"
+              :disabled="true">
+              {{ $t('serviceMesh.label.notConnected') }}
+            </bk-radio>
           </bk-radio-group>
         </bk-form-item>
-        <bk-form-item label="东西向网关 CLB" desc="用于从集群连接主集群控制面，填写一个 clb id">
-          <bk-input v-model="baseInfo.name"></bk-input>
+        <bk-form-item
+          property="clbID"
+          error-display-type="normal"
+          required
+          class="!mt-0"
+          :label="$t('serviceMesh.label.clbID')"
+          :desc="{
+            content: $t('serviceMesh.tips.clbIDDesc'),
+            placement: 'top-start',
+          }">
+          <span
+            v-bk-tooltips="{
+              content: $t('serviceMesh.tips.clearClustersTip'),
+              disabled: !subClusters?.length,
+              interactive: false,
+            }">
+            <bk-input :disabled="!!subClusters?.length" clearable v-model="baseInfo.clbID"></bk-input>
+          </span>
         </bk-form-item>
       </div>
-      <div class="flex items-center">
+      <div class="flex items-center mt-[8px]">
         <span
           class="underline decoration-dashed underline-offset-4 decoration-[#979ba5] cursor-pointer"
           v-bk-tooltips="{
-            content: '构建多集群，用于加入主机群控制面',
-            placement: 'top',
-          }">从集群</span>
+            content: $t('serviceMesh.tips.subClustersDesc'),
+            placement: 'top-start',
+          }">{{ $t('serviceMesh.label.subClusters') }}</span>
         <ClusterSelector
           ext-cls="!border-0 !rounded-none !shadow-none"
           multiple
           trigger
-          v-model="baseInfo.remoteClusters">
+          :disabled-fun="handleDisabledSubCluster"
+          :allowed-version-range="allowedVersionRange"
+          :enable-values="Object.keys(originSubClustersMap)"
+          v-model="tempClusters"
+          @change="handleClusterChange">
           <template #trigger>
             <bk-button
               theme="primary"
               class="ml-[16px] text-[12px]"
               text>
               <i class="bcs-icon bcs-icon-plus-circle"></i>
-              添加
+              {{ $t('generic.button.add') }}
             </bk-button>
           </template>
         </ClusterSelector>
       </div>
       <bcs-table
         class="mt-[8px]"
-        empty-text="暂无数据，请先添加集群"
+        custom-header-color="#F5F7FA"
+        empty-block-class-name="border-b border-[#DCDEE5]"
+        cell-class-name="!h-[36px]"
+        header-cell-class-name="!h-[36px]"
         :outer-border="false"
-        :data="baseInfo.remoteClusters">
-        <bcs-table-column label="集群" prop="clusterName"></bcs-table-column>
-        <bcs-table-column label="集群地域" prop="region"></bcs-table-column>
-        <bcs-table-column label="加入时间" prop="createTime"></bcs-table-column>
+        :data="subClusters">
+        <bcs-table-column width="240" :label="$t('generic.label.cluster')" show-overflow-tooltip>
+          <template #default="{ row }">
+            {{ `${row.clusterName || '--'}(${row.clusterID || '--'})` }}
+          </template>
+        </bcs-table-column>
+        <bcs-table-column :label="$t('serviceMesh.label.clusterRegion')" show-overflow-tooltip>
+          <template #default="{ row }">
+            {{ row.region || '--' }}
+          </template>
+        </bcs-table-column>
+        <bcs-table-column :label="$t('serviceMesh.label.status')" show-overflow-tooltip>
+          <template #default="{ row }">
+            {{ originSubClustersMap[row.clusterID]
+              ? originSubClustersMap[row.clusterID]?.status : '--' }}
+          </template>
+        </bcs-table-column>
+        <bcs-table-column width="160" :label="$t('serviceMesh.label.joinTime')" show-overflow-tooltip>
+          <template #default="{ row }">
+            {{ originSubClustersMap[row.clusterID]
+              ? timeFormat(Number(originSubClustersMap[row.clusterID]?.joinTime)) : '--' }}
+          </template>
+        </bcs-table-column>
+        <bcs-table-column :resizable="false" width="50" fixed="right">
+          <template #default="{ row }">
+            <i
+              class="bcs-icon bcs-icon-minus-circle text-[16px] text-[#979ba5] cursor-pointer"
+              @click="handleDel(row)">
+            </i>
+          </template>
+        </bcs-table-column>
+        <template #empty>
+          {{ $t('serviceMesh.label.tableEmpty') }}
+        </template>
       </bcs-table>
-    </ContentSwitcher> -->
+    </ContentSwitcher>
     <div
       :class="[
         'absolute bottom-0 left-0 w-full bg-white py-[10px] px-[40px] z-[999] border-t border-t-[#e6e6ec]'
@@ -113,15 +192,17 @@
 </template>
 <script setup lang="ts">
 import { cloneDeep } from 'lodash';
-import { computed, ref, watch } from 'vue';
+import { computed, onBeforeMount, ref, watch } from 'vue';
 
 import ClusterSelector from './cluster-selector.vue';
-import useMesh, { IMesh } from './use-mesh';
+import ContentSwitcher from './content-switcher.vue';
+import useMesh, { IMesh, MeshCluster } from './use-mesh';
 
-// import ContentSwitcher from './content-switcher.vue';
+import { timeFormat } from '@/common/util';
+import { useFocusOnErrorField } from '@/composables/use-focus-on-error-field';
 import $i18n from '@/i18n/i18n-setup';
 
-type IParams = Pick<IMesh, 'name' | 'description' | 'version' | 'primaryClusters'>;
+type IParams = Pick<IMesh, 'name' | 'description' | 'version' | 'primaryClusters' | 'remoteClusters' | 'multiClusterEnabled' | 'clbID' | 'differentNetwork' | 'revision'>;
 
 const props = defineProps({
   isEdit: {
@@ -140,13 +221,18 @@ const props = defineProps({
 
 const emits = defineEmits(['next', 'cancel', 'save', 'change']);
 
-const { configData } = useMesh();
+const { configData, getClusterList, clusterList } = useMesh();
 
 const baseInfo = ref<IParams>({
   name: '',
   description: '',
   version: '',
   primaryClusters: [],
+  remoteClusters: [],
+  multiClusterEnabled: false,
+  clbID: '',
+  differentNetwork: true,
+  revision: '',
 });
 const rules = ref({
   name: [
@@ -175,20 +261,62 @@ const rules = ref({
       trigger: 'blur',
     },
   ],
+  clbID: [
+    {
+      validator: (value: string) => !baseInfo.value.multiClusterEnabled || value,
+      message: $i18n.t('generic.validate.required'),
+      trigger: 'blur',
+    },
+  ],
 });
 
+// 允许的集群版本
 const allowedVersionRange = computed(() => configData.value.istioVersions
-  ?.find(item => item.version === baseInfo.value.version)?.kubeVersion);
+  ?.find?.(item => item.version === baseInfo.value.version)?.kubeVersion);
 
+// 切换版本，清空集群
 function handelVersionChange() {
   baseInfo.value.primaryClusters = [];
+  baseInfo.value.remoteClusters = [];
+  tempClusters.value = [];
+  subClusters.value = [];
 }
 
+// 从集群
+const subClusters = ref<MeshCluster[]>([]); // 从集群列表
+const tempClusters = ref<string[]>([]); // 下拉框绑定值
+const originSubClustersMap = ref<Record<string, MeshCluster>>({}); // 详情从集群
+function handleClusterChange(value: string[]) {
+  subClusters.value = clusterList.value.filter(item => value.includes(item.clusterID));
+}
+// 选择从集群时，判断是否已被当作主集群
+function handleDisabledSubCluster(val: MeshCluster) {
+  return baseInfo.value.primaryClusters.includes(val.clusterID);
+}
+// 选择主集群时，判断是否已被当从集群
+function handleDisabledCluster(val: MeshCluster) {
+  return tempClusters.value.includes(val.clusterID);
+}
+// 点击表格删除按钮
+function handleDel(row: MeshCluster) {
+  tempClusters.value = tempClusters.value.filter(item => item !== row.clusterID);
+  subClusters.value = subClusters.value.filter(item => item.clusterID !== row.clusterID);
+}
+
+const { focusOnErrorField } = useFocusOnErrorField();
 const formRef = ref();
 async function nextData() {
   const result = await formRef.value.validate().catch(() => false);
-  if (!result) return;
+  if (!result) {
+    focusOnErrorField();
+    return;
+  };
 
+  baseInfo.value.remoteClusters = subClusters.value.map(item => ({
+    clusterID: item.clusterID,
+    clusterName: item.clusterName,
+    region: item.region,
+  }));
   emits('next', baseInfo.value);
 };
 function handleCancel() {
@@ -197,13 +325,41 @@ function handleCancel() {
 
 async function handleSave() {
   const result = await formRef.value.validate().catch(() => false);
-  if (!result) return;
+  if (!result) {
+    focusOnErrorField();
+    return;
+  };
+  baseInfo.value.remoteClusters = subClusters.value.map((item) => {
+    const cluster = originSubClustersMap.value[item.clusterID];
+    if (cluster) {
+      return { ...cluster };
+    }
+    return {
+      clusterID: item.clusterID,
+      clusterName: item.clusterName,
+      region: item.region,
+    };
+  });
   emits('save', baseInfo.value);
+}
+
+function handleBeforeClose() {
+  subClusters.value = [];
+  tempClusters.value = [];
+  baseInfo.value.remoteClusters = [];
+  baseInfo.value.clbID = '';
 }
 
 watch(() => props.active, () => {
   if (props.isEdit) {
     baseInfo.value = cloneDeep(props.data) as IParams;
+    // 初始化从集群
+    subClusters.value = props.data.remoteClusters || [];
+    tempClusters.value = props.data.remoteClusters?.map?.(item => item.clusterID) || [];
+    originSubClustersMap.value = cloneDeep(subClusters.value).reduce((acc, item) => {
+      acc[item.clusterID] = item;
+      return acc;
+    }, {});
   }
 }, { immediate: true });
 
@@ -218,4 +374,22 @@ watch(configData, () => {
   baseInfo.value.version = configData.value.istioVersions?.[0]?.version || '';
 });
 
+onBeforeMount(() => {
+  getClusterList();
+});
+
 </script>
+<style lang="postcss" scoped>
+:deep(.bk-form-radio-button .bk-radio-button-input:disabled+.bk-radio-button-text) {
+  border-left: 1px solid #dcdee5;
+}
+:deep(.bk-form-radio-button .bk-radio-button-text) {
+  font-size: 12px;
+}
+:deep(.bk-table-empty-text) {
+  padding: 0px;
+}
+:deep(.bk-table th>.cell) {
+  height: 36px;
+}
+</style>

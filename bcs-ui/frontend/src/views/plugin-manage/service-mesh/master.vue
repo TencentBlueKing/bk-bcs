@@ -15,7 +15,7 @@
         :precision="0"></bk-input>
     </bk-form-item>
     <!-- 资源 -->
-    <div class="mt-[24px] mb-[6px]">{{ $t('serviceMesh.label.resource') }}</div>
+    <div class="mt-[24px] mb-[6px] text-[12px]">{{ $t('serviceMesh.label.resource') }}</div>
     <div class="bg-[#F5F7FA] flex flex-wrap rounded-sm py-[12px] px-[16px]">
       <bk-form-item
         class="mr-[12px]"
@@ -144,7 +144,7 @@
       v-model="formData.highAvailability.dedicatedNode.enabled">
       <template #label>
         <span
-          class="underline decoration-dashed underline-offset-4 decoration-[#979ba5] cursor-pointer"
+          class="underline decoration-dashed underline-offset-4 decoration-[#979ba5] cursor-pointer text-[12px]"
           v-bk-tooltips="{
             content: $t('serviceMesh.tips.dedicatedNodeDesc'),
             placement: 'top',
@@ -160,9 +160,9 @@
       ]">
       <template v-if="!isEdit">
         <bk-button theme="default" @click="handlePre">{{ $t('generic.button.pre') }}</bk-button>
-        <bk-button theme="primary" @click="handleCreate">{{ $t('generic.button.create') }}</bk-button>
+        <bk-button theme="primary" @click="handleConfirm('create')">{{ $t('generic.button.create') }}</bk-button>
       </template>
-      <bk-button v-else theme="primary" @click="handleSave">{{ $t('generic.button.save') }}</bk-button>
+      <bk-button v-else theme="primary" @click="handleConfirm('edit')">{{ $t('generic.button.save') }}</bk-button>
       <bk-button theme="default" @click="handleCancel">{{ $t('generic.button.cancel') }}</bk-button>
     </bk-form-item>
   </bk-form>
@@ -273,27 +273,17 @@ function handlePre() {
 }
 
 const formRef = ref();
-async function handleCreate() {
+async function handleConfirm(val: 'create' | 'edit') {
   const result = await formRef.value.validate().catch(() => false);
   if (!result) {
     return;
   };
-  if (!formData.value.highAvailability.dedicatedNode.enabled) {
-    formData.value.highAvailability.dedicatedNode = {};
-  }
 
-  emits('submit', formData.value);
-}
-async function handleSave() {
-  const result = await formRef.value.validate().catch(() => false);
-  if (!result) {
-    return;
-  };
-  if (!formData.value.highAvailability.dedicatedNode.enabled) {
-    formData.value.highAvailability.dedicatedNode = {};
+  if (val === 'create') {
+    emits('submit', formData.value);
+  } else {
+    emits('save', formData.value);
   }
-
-  emits('save', formData.value);
 }
 function handleCancel() {
   emits('cancel');
@@ -312,6 +302,9 @@ watch(resourceData, () => {
 watch(() => props.active, () => {
   if (props.isEdit) {
     formData.value = cloneDeep(props.data) as IParams;
+    if (formData.value.highAvailability.dedicatedNode?.enabled === undefined) {
+      formData.value.highAvailability.dedicatedNode = {};
+    }
   }
 }, { immediate: true });
 
