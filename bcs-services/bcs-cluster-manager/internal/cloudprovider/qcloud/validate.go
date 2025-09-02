@@ -111,6 +111,20 @@ func (c *CloudValidate) CreateClusterValidate(req *proto.CreateClusterReq, opt *
 		req.ClusterCategory = common.Builder
 	}
 
+	// cluster add nodes limit
+	maxNodeLimit := func() uint32 {
+		if opt == nil || opt.CommonConf.CreateClusterNodesLimit == 0 {
+			return common.CreateClusterNodesLimit
+		}
+
+		return opt.CommonConf.CreateClusterNodesLimit
+	}()
+	if len(req.Nodes) > int(maxNodeLimit) {
+		errMsg := fmt.Errorf("create cluster nodes count exceed maxNodeLimit: %d", maxNodeLimit)
+		blog.Errorf(errMsg.Error())
+		return errMsg
+	}
+
 	return nil
 }
 

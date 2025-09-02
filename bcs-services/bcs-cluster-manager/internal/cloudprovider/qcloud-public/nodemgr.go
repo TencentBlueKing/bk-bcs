@@ -263,7 +263,6 @@ func (nm *NodeManager) getCloudInstanceType(info cloudprovider.InstanceInfo, opt
 	if err != nil {
 		return nil, err
 	}
-
 	list := make([]*proto.InstanceType, 0)
 	instanceMap := make(map[string][]string) // instanceType: []zone
 	for _, v := range cloudInstanceTypes {

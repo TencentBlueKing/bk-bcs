@@ -351,12 +351,26 @@ func (rm *ResManClient) GetInstanceTypesV2(ctx context.Context, region string, s
 	for _, pool := range pools {
 		blog.Infof("GetInstanceTypesV2 pool[%v] detail: %v", pool.GetId(), pool)
 
-		// filter cpu & mem
+		// filter cpu & mem & gpu
 		if spec.Cpu != 0 && spec.Cpu != pool.GetBaseConfig().GetCpu() {
 			continue
 		}
 		if spec.Mem != 0 && spec.Mem != pool.GetBaseConfig().GetMem() {
 			continue
+		}
+		if spec.InstanceType != "" {
+			gpuNum := pool.GetBaseConfig().GetGpu()
+			switch spec.InstanceType {
+			case common.CvmInstanceType:
+				if gpuNum != 0 {
+					continue
+				}
+			case common.GpuInstanceType:
+				if gpuNum == 0 {
+					continue
+				}
+			default:
+			}
 		}
 		// labels
 		labels := pool.GetLabels()

@@ -219,8 +219,8 @@ func (nm *NodeManager) ListNodesByInstanceID(ids []string, opt *cloudprovider.Li
 // ListNodeInstanceType list node type by zone and node family
 func (nm *NodeManager) ListNodeInstanceType(ctx context.Context, info cloudprovider.InstanceInfo,
 	opt *cloudprovider.CommonOption) ([]*proto.InstanceType, error) {
-	blog.Infof("ListNodeInstanceType zone: %s, nodeFamily: %s, cpu: %d, memory: %d",
-		info.Zone, info.NodeFamily, info.CPU, info.Memory)
+	blog.Infof("ListNodeInstanceType zone: %s, nodeFamily: %s, cpu: %d, memory: %d, instanceType: %s",
+		info.Zone, info.NodeFamily, info.CPU, info.Memory, info.InstanceType)
 
 	if options.GetEditionInfo().IsInnerEdition() {
 		return nm.getInnerInstanceTypes(ctx, info)
@@ -261,6 +261,7 @@ func (nm *NodeManager) getInnerInstanceTypes(ctx context.Context, info cloudprov
 				Mem:          info.Memory,
 				Provider:     info.Provider,
 				ResourceType: info.ResourceType,
+				InstanceType: info.InstanceType,
 			})
 		if err != nil {
 			blog.Errorf("resourceManager ListNodeInstanceType failed: %v", err)
@@ -478,6 +479,19 @@ func (nm *NodeManager) getCloudInstanceType(info cloudprovider.InstanceInfo, opt
 		if info.Memory > 0 {
 			if item.Memory != info.Memory {
 				continue
+			}
+		}
+		if info.InstanceType != "" {
+			switch info.InstanceType {
+			case icommon.CvmInstanceType:
+				if item.Gpu != 0 {
+					continue
+				}
+			case icommon.GpuInstanceType:
+				if item.Gpu == 0 {
+					continue
+				}
+			default:
 			}
 		}
 		result = append(result, item)

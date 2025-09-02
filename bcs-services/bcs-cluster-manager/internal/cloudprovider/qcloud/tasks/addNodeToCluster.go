@@ -342,7 +342,6 @@ func AddNodesToClusterTask(taskID string, stepName string) error { // nolint
 
 	// parse node schedule status
 	schedule, _ := strconv.ParseBool(scheduleStr)
-
 	// get node advance info
 	advancedInfo := &proto.NodeAdvancedInfo{}
 	advance, exist := step.Params[cloudprovider.NodeAdvanceKey.String()]
@@ -393,12 +392,20 @@ func AddNodesToClusterTask(taskID string, stepName string) error { // nolint
 		return retErr
 	}
 
+	existedInstanceIps := make([]string, 0)
+	notExistedInstanceIps := make([]string, 0)
+	for _, ins := range existedInstance {
+		existedInstanceIps = append(existedInstanceIps, idToIPMap[ins])
+	}
+	for _, ins := range notExistedInstance {
+		notExistedInstanceIps = append(notExistedInstanceIps, idToIPMap[ins])
+	}
 	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
-		fmt.Sprintf("AddNodesToClusterTask existedInstance[%v] notExistedInstance[%v]",
-			existedInstance, notExistedInstance))
+		fmt.Sprintf("AddNodesToClusterTask existedInstance id[%v] ip[%v], notExistedInstance id[%v] ip[%v]",
+			existedInstance, existedInstanceIps, notExistedInstance, notExistedInstanceIps))
 
-	blog.Infof("AddNodesToClusterTask[%s] existedInstance[%v] notExistedInstance[%v]",
-		taskID, existedInstance, notExistedInstance)
+	blog.Infof("AddNodesToClusterTask[%s] existedInstance id[%v] ip[%v], notExistedInstance id[%v] ip[%v]",
+		taskID, existedInstance, existedInstanceIps, notExistedInstance, notExistedInstanceIps)
 
 	// record success and failed node ids
 	var (
@@ -422,6 +429,7 @@ func AddNodesToClusterTask(taskID string, stepName string) error { // nolint
 			_ = state.UpdateStepFailure(start, stepName, retErr)
 			return retErr
 		}
+		// record success and failed nodes
 		for i := range result.SuccessNodeInfos {
 			successNodeIds = append(successNodeIds, result.SuccessNodeInfos[i].NodeId)
 		}

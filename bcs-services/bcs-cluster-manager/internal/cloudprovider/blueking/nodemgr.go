@@ -123,6 +123,7 @@ func (nm *NodeManager) getInnerInstanceTypes(info cloudprovider.InstanceInfo) ( 
 			Mem:          info.Memory,
 			Provider:     info.Provider,
 			ResourceType: info.ResourceType,
+			InstanceType: info.InstanceType,
 		})
 	if err != nil {
 		blog.Errorf("resourceManager ListNodeInstanceType failed: %v", err)

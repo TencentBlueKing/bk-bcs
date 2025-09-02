@@ -40,6 +40,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/alarm/tmp"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cmdb"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/nodeman"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/nodetemplate"
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
@@ -1534,4 +1535,29 @@ func GetCloudBizTags(bizId int64, operator string) (map[string]string, error) {
 		common.KeySecondBiz: business2.BizLevel2Name + fmt.Sprintf("_%v", business2.BizLevel2Id),
 		common.KeyOperator:  operator,
 	}, nil
+}
+
+// GetGpuNodeTemplate get gpu node template by instanceType
+func GetGpuNodeTemplate(insType string) (*proto.NodeTemplate, error) {
+	condM := make(operator.M)
+	condM[nodetemplate.ProjectIDKey] = common.Default
+	condM[nodetemplate.NameKey] = insType
+	cond := operator.NewLeafCondition(operator.Eq, condM)
+	nodeTemplates, err := GetStorageModel().ListNodeTemplate(context.Background(), cond, &storeopt.ListOption{All: true})
+	if err != nil {
+		blog.Errorf("GetGpuNodeTemplate ListNodeTemplate ins[%s], err:%s", insType, err.Error())
+		return nil, fmt.Errorf("GetGpuNodeTemplate ins[%s], err:%s", insType, err.Error())
+	}
+
+	for i := range nodeTemplates {
+		templateType, ok := nodeTemplates[i].GetExtraInfo()[common.TemplateType]
+		if !ok {
+			continue
+		}
+		if templateType == common.TemplateGpu {
+			return nodeTemplates[i], nil
+		}
+	}
+
+	return nil, fmt.Errorf("GetGpuNodeTemplate ins[%s] is empty", insType)
 }
