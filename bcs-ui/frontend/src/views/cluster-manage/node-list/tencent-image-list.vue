@@ -5,6 +5,7 @@
     :loading="osLoading"
     :value="value"
     :disabled="disabled"
+    :placeholder="placeholder"
     @change="handleImageChange">
     <bcs-option-group
       v-for="group in imageListByGroup"
@@ -30,9 +31,7 @@
             {{ `${item.alias} | ${item.osName} | ${item.imageID}` }}
           </span>
           <bcs-tag
-            v-if="item.clusters
-              && item.clusters.find(v => v.clusterID === clusterId)
-              && item.provider === 'CLUSTER_IMAGE'"
+            v-if="item.provider === 'CLUSTER_IMAGE'"
             theme="info"
             radius="45px"
             class="shrink-0">
@@ -56,7 +55,6 @@ import { computed, onBeforeMount, ref, watch } from 'vue';
 import { cloudOsImage } from '@/api/modules/cluster-manager';
 import CollapseTitle from '@/components/cluster-selector/collapse-title.vue';
 import $i18n from '@/i18n/i18n-setup';
-import $store from '@/store';
 import { IImageGroup, IImageItem } from '@/views/cluster-manage/types/types';
 
 const props = defineProps({
@@ -79,14 +77,6 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
-  // recDefaultImage: {
-  //   type: String,
-  //   default: 'TencentOS Server 3.1 (TK4)',
-  // },
-  // recProvider: {
-  //   type: String,
-  //   default: 'PUBLIC_IMAGE',
-  // },
   providerOrder: {
     type: Array as () => Array<string>,
     default: () => ['CLUSTER_IMAGE', 'BCS_IMAGE', 'PUBLIC_IMAGE', 'PRIVATE_IMAGE'],
@@ -94,6 +84,14 @@ const props = defineProps({
   clusterId: {
     type: String,
     default: '',
+  },
+  // 镜像/OS，兼容自研云 创建节点池选择操作系统
+  mode: {
+    type: String as () => 'OS' | 'IMAGE', // 'OS' os-change 返回 osName，否则返回 alias
+    default: 'OS',
+  },
+  placeholder: {
+    type: String,
   },
 });
 const emits = defineEmits(['input', 'change', 'os-change', 'init']);
@@ -108,7 +106,7 @@ const handleToggleCollapse = (provider: string) => {
     collapseList.value.push(provider);
   }
 };
-const imageList = ref<Array<IImageItem>>($store.state.cloudMetadata.osList);
+const imageList = ref<Array<IImageItem>>([]);
 const providerMap = {
   CLUSTER_IMAGE: $i18n.t('tke.label.clusterImage'),
   BCS_IMAGE: $i18n.t('tke.label.bcsImage'),
@@ -170,22 +168,19 @@ const handleGetOsList = async () => {
     region: props.region,
     provider: 'ALL',
   }).catch(() => []);
-  $store.commit('cloudMetadata/updateOsList', imageList.value);
+  // 当前集群镜像
+  const clusterImage = imageList.value.find(item => item.provider === 'CLUSTER_IMAGE');
+  currentClusterUsedImage.value = clusterImage;
+  emits('init', currentClusterUsedImage.value);
+  // 推荐镜像
+  const recImage = imageList.value.find(item => item.provider === 'BCS_IMAGE');
+  recDefaultImage.value = recImage?.alias || '';
   // 设置默认镜像
-  if (!props.value) {
-    // 当前集群镜像
-    let defaultImage = imageList.value.find((item) => {
-      const image = item.clusters.find(item => item.clusterID === props.clusterId);
-      return !!image;
-    });
-    currentClusterUsedImage.value = defaultImage;
-    emits('init', currentClusterUsedImage.value);
-    if (!defaultImage) {
-      // 平台镜像
-      defaultImage = imageList.value.find(item => item.provider === 'BCS_IMAGE');
-    }
-    recDefaultImage.value = defaultImage?.alias || '';
-    handleImageChange(defaultImage?.imageID || '');
+  if (!props.value && !props.disabled) {
+    handleImageChange(clusterImage?.imageID || recImage?.imageID || '');
+  } else if (props.value) {
+    // 返回镜像名称
+    handleImageChange(props.value);
   }
   osLoading.value = false;
 };
@@ -200,11 +195,10 @@ const handleImageChange = (imageID: string) => {
     emits('os-change', imageItem.imageID);
   } else {
     // 其他镜像取名称
-    emits('os-change', imageItem.osName);
+    emits('os-change', props.mode === 'OS' ? imageItem.osName : imageItem.alias);
   }
   emits('change', imageID);
   emits('input', imageID);
-  $store.commit('cloudMetadata/updateImageID', imageID);
 };
 
 watch([

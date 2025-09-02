@@ -554,6 +554,8 @@ generic:
         cluster. The selected node VPC: {0}, cluster VPC: {1}
       ipDiskNumNotMatched: Selected nodes must have /dev/vdb data disk
       ipAgentAbnormal: Agent status is abnormal
+      ipNotGpu: The election node is not a GPU node
+      ipIsGpu: The election node is a GPU node
     selected:
       text2: '{remainCount} items'
     label:
@@ -917,6 +919,7 @@ cluster:
         The node area needs to be consistent with the cluster area, node area:
         {region1}, cluster area: {region2}
       emptyKubeConfig: please run kubeconfig usability testing
+      maxNum50: The maximum number of nodes is 50
     button:
       createCluster: Create Cluster
       addHost: Add server
@@ -1225,6 +1228,11 @@ cluster:
         name: Node pool name
         detail: View node pool details
         serviceRole: Service role
+        type:
+          title: Node Pool Type
+          tips: Default use of GPU image provided by the platform
+        CVM: CVM
+        GPU: GPU
       title:
         nodeConfig: Node configuration
         initConfig: Initialization configuration
@@ -1748,6 +1756,9 @@ cluster:
       termination: Termination grace period
       drainRisk: Drain Risk
       isDrainOnly: Only show will be evicted Pods
+      nodeType: Node Type
+      cvmNode: CVM
+      gpuNode: GPU
     metric:
       cpuUsageAndRequestUsage: CPU usage rate/packing rate
       memUsageAndRequestUsage: Memory usage/packing rate

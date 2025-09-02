@@ -1,6 +1,12 @@
 <template>
   <div>
     <bk-form :rules="formRules" ref="formRef" class="bg-[#fff] pb-[20px]">
+      <bk-form-item v-if="curCluster.provider === 'tencentCloud'" :label="$t('cluster.nodeList.label.nodeType')">
+        <bk-radio-group v-model="formData.advance.isGPUNode" @change="handleNodeTypeChange">
+          <bk-radio :value="false">{{$t('cluster.nodeList.label.cvmNode')}}</bk-radio>
+          <bk-radio :value="true">{{$t('cluster.nodeList.label.gpuNode')}}</bk-radio>
+        </bk-radio-group>
+      </bk-form-item>
       <bk-form-item
         :label="$t('cluster.nodeList.label.selectNode')"
         property="ip"
@@ -71,7 +77,7 @@
         :label="$t('cluster.create.label.system')"
         property="imageID"
         error-display-type="normal"
-        v-if="curCluster.provider === 'tencentCloud'">
+        v-if="curCluster.provider === 'tencentCloud' && !formData.advance.isGPUNode">
         <ImageList
           class="max-w-[500px]"
           v-model="formData.advance.nodeOs"
@@ -93,6 +99,7 @@
         validate-vpc
         :validate-agent-status="curCluster.provider === 'tencentCloud'"
         :validate-data-disk="curCluster.provider === 'tencentCloud'"
+        :validate-node-type="curCluster.provider === 'tencentCloud' ? validateNodeType : undefined"
         @confirm="chooseServer"
         @cancel="showIpSelector = false">
       </IpSelector>
@@ -153,18 +160,21 @@ export default defineComponent({
       currentTemplate: Record<string, string>
       ipList: Array<{
         ip: string
+        isGpuNode: boolean
         cloudArea: {
           id: string
         }
       }>
       advance: {
         nodeOs: string
+        isGPUNode: boolean
       }
     }>({
       currentTemplate: {},
       ipList: [],
       advance: {
         nodeOs: '',
+        isGPUNode: false,
       },
     });
     const formRules = ref({
@@ -237,7 +247,11 @@ export default defineComponent({
 
     // IP选择器
     const showIpSelector = ref(false);
+    const validateNodeType = ref<'cvm'|'gpu'|undefined>();
     const handleAddNode = () => {
+      if (curCluster.value.provider === 'tencentCloud') {
+        validateNodeType.value = formData.value.advance.isGPUNode ? 'gpu' : 'cvm';
+      }
       showIpSelector.value = true;
     };
     const handleRemoveIp = (row) => {
@@ -260,6 +274,14 @@ export default defineComponent({
       }),
       $i18n.t('cluster.nodeList.create.button.confirmAdd.article2'),
     ]);
+    function handleNodeTypeChange(val: boolean) {
+      // gpu节点不需要传操作系统
+      if (val) {
+        formData.value.advance.nodeOs = '';
+      }
+      formData.value.ipList = [];
+      validateNodeType.value = undefined;
+    }
 
     // 节点模板
     const handleTemplateChange = (item) => {
@@ -356,6 +378,7 @@ export default defineComponent({
       showIpSelector,
       formData,
       statusColorMap,
+      validateNodeType,
       handleRemoveIp,
       chooseServer,
       handleCancel,
@@ -366,6 +389,7 @@ export default defineComponent({
       handleLoginValueChange,
       validateLogin,
       handleOs,
+      handleNodeTypeChange,
     };
   },
 });

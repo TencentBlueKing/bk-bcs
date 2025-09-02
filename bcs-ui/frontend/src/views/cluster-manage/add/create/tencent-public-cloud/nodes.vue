@@ -110,8 +110,9 @@
 <script setup lang="ts">
 import { computed, inject, PropType, ref, watch } from 'vue';
 
-import ApplyHostResource from './apply-host-resource.vue';
 import { ClusterDataInjectKey, IHostNode, IInstanceItem, ISecurityGroup } from '../../../types/types';
+
+import ApplyHostResource from './apply-host-resource.vue';
 
 import { cloudSecurityGroups } from '@/api/modules/cluster-manager';
 import $i18n from '@/i18n/i18n-setup';
@@ -251,16 +252,28 @@ const handleConfirmPasswordChange = (v) => {
 // });
 // 动态 i18n 问题，这里使用computed
 const nodeConfigRules = computed(() => ({
-  nodes: [{
-    message: $i18n.t('generic.validate.required'),
-    trigger: 'custom',
-    validator: () => {
-      if (nodeConfig.value.autoGenerateMasterNodes) {
-        return true;
-      }
-      return !!nodeConfig.value.nodes.length;
+  nodes: [
+    {
+      message: $i18n.t('generic.validate.required'),
+      trigger: 'custom',
+      validator: () => {
+        if (nodeConfig.value.autoGenerateMasterNodes) {
+          return true;
+        }
+        return !!nodeConfig.value.nodes.length;
+      },
     },
-  }],
+    {
+      message: $i18n.t('cluster.create.validate.maxNum50'),
+      trigger: 'custom',
+      validator: () => {
+        if (nodeConfig.value.autoGenerateMasterNodes) {
+          return true;
+        }
+        return nodeConfig.value.nodes.length <= 50;
+      },
+    },
+  ],
   'clusterBasicSettings.module.workerModuleID': [
     {
       required: true,

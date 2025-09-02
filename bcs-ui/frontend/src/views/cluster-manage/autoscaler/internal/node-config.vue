@@ -12,14 +12,25 @@
       </FormGroup>
       <FormGroup :title="$t('cluster.ca.nodePool.title.nodeConfig')" :allow-toggle="false">
         <bk-form class="node-config" :model="nodePoolConfig" :rules="nodePoolConfigRules" ref="formRef">
-          <bk-form-item :label="$t('cluster.ca.nodePool.create.imageProvider.title')" :desc="$t('cluster.ca.nodePool.create.imageProvider.desc')">
-            <bk-radio-group :value="extraInfo.IMAGE_PROVIDER">
-              <bk-radio value="PUBLIC_IMAGE" disabled>{{$t('deploy.image.publicImage')}}</bk-radio>
-              <bk-radio value="PRIVATE_IMAGE" disabled>{{$t('cluster.ca.nodePool.create.imageProvider.private_image')}}</bk-radio>
+          <bk-form-item v-if="!isEdit" :label="$t('cluster.ca.nodePool.label.type.title')">
+            <bk-radio-group v-model="isGPUNode" @change="handleNodePoolTypeChange">
+              <bk-radio :disabled="isEdit" :value="false">{{$t('cluster.ca.nodePool.label.CVM')}}</bk-radio>
+              <bk-radio :disabled="isEdit" :value="true">{{$t('cluster.ca.nodePool.label.GPU')}}</bk-radio>
             </bk-radio-group>
           </bk-form-item>
           <bk-form-item :label="$t('cluster.ca.nodePool.label.system')">
-            <bcs-input disabled :value="clusterOS"></bcs-input>
+            <ImageList
+              v-model="imageID"
+              :region="cluster.region"
+              :cloud-i-d="cluster.provider"
+              :cluster-id="cluster.clusterID"
+              :disabled="isEdit || isGPUNode"
+              :placeholder="isGPUNode ? $t('cluster.ca.nodePool.label.type.tips') : ''"
+              mode="IMAGE"
+              init-data
+              @init="handleImageListInit"
+              @os-change="handleSetOS"
+              @change="handleImageChange" />
           </bk-form-item>
           <bk-form-item
             :label="$t('cluster.ca.nodePool.create.az.title')"
@@ -129,6 +140,7 @@
                   <span>{{ row.memory }}G</span>
                 </template>
               </bcs-table-column>
+              <bcs-table-column label="GPU" prop="gpu" width="80" align="center"></bcs-table-column>
             </bcs-table>
             <p
               class="text-[12px] text-[#ea3636] error-tips"
@@ -364,9 +376,11 @@ import $router from '@/router';
 import $store from '@/store/index';
 import Schema from '@/views/cluster-manage/autoscaler/resolve-schema';
 import { useClusterInfo } from '@/views/cluster-manage/cluster/use-cluster';
+import ImageList from '@/views/cluster-manage/node-list/tencent-image-list.vue';
+import { IImageItem } from '@/views/cluster-manage/types/types';
 
 export default defineComponent({
-  components: { FormGroup, TextTips },
+  components: { FormGroup, TextTips, ImageList },
   props: {
     schema: {
       type: Object,
@@ -392,7 +406,10 @@ export default defineComponent({
   },
   setup(props, ctx) {
     const defaultSecurityGroupName = '云梯默认安全组';
-    const resourcePoolProvider = computed<'yunti'|'self'>(() => $router.currentRoute?.query?.provider || 'yunti');
+    const resourcePoolProvider = computed<'yunti' | 'self'>(() => {
+      const provider = $router.currentRoute?.query?.provider;
+      return provider === 'yunti' || provider === 'self' ? provider : 'yunti';
+    });
     const { defaultValues, cluster, isEdit, schema } = toRefs(props);
     const nodeConfigRef = ref<any>(null);
     const formRef = ref<any>(null);
@@ -412,6 +429,33 @@ export default defineComponent({
         name: $i18n.t('cluster.ca.nodePool.create.instanceTypeConfig.diskType.hssd'),
       },
     ]);
+    // 节点池类型
+    const imageID = ref();
+    const clusterImage = ref<IImageItem>();
+    const isGPUNode = ref(false);
+    async function handleNodePoolTypeChange(value) {
+      if (value) {
+        imageID.value = '';
+      } else {
+        imageID.value = clusterImage.value?.imageID;
+      }
+      nodePoolConfig.value.nodeTemplate.imageInfo.imageID = '';
+      nodePoolConfig.value.nodeTemplate.imageInfo.imageName = '';
+      await handleGetInstanceTypes();
+      // 重置机型
+      nodePoolConfig.value.launchTemplate.instanceType = instanceTypesList.value
+        .find(instance => instance.status === 'SELL')?.nodeType;
+    }
+    // 镜像初始化，默认选择集群镜像
+    function handleImageListInit(value) {
+      if (!isEdit.value) {
+        clusterImage.value = value;
+        imageID.value = value.imageID;
+      } else {
+        imageID.value = defaultValues.value.nodeTemplate?.imageInfo?.imageID;
+      }
+    }
+
     const confirmPassword = ref(''); // 确认密码
     const nodePoolConfig = ref({
       nodeGroupID: defaultValues.value.nodeGroupID, // 编辑时
@@ -450,6 +494,10 @@ export default defineComponent({
         runtime: {
           containerRuntime: defaultValues.value.nodeTemplate?.runtime?.containerRuntime || 'docker', // 运行时容器组件
           runtimeVersion: defaultValues.value.nodeTemplate?.runtime?.runtimeVersion || '19.3', // 运行时版本
+        },
+        imageInfo: {
+          imageID: '', // 镜像ID
+          imageName: '', // 镜像名称
         },
       },
       extra: {
@@ -617,6 +665,7 @@ export default defineComponent({
     };
     const handleGetInstanceTypes = async () => {
       instanceTypesLoading.value = true;
+      const instanceType = !isEdit.value ? (isGPUNode.value ? 'GPU' : 'CVM') : '';
       // const cpu = nodePoolConfig.value.launchTemplate.CPU || undefined;
       // const memory =  nodePoolConfig.value.launchTemplate.Mem || undefined;
       const params = resourcePoolProvider.value === 'self'
@@ -632,6 +681,7 @@ export default defineComponent({
         projectID: projectID.value,
         version: 'v2',
         provider: resourcePoolProvider.value,
+        instanceType,
         ...params,
       });
       instanceData.value = data.sort((pre, current) => pre.cpu - current.cpu);
@@ -693,6 +743,20 @@ export default defineComponent({
       securityGroupsLoading.value = false;
     };
 
+    // 操作系统
+    function handleSetOS(image) {
+      nodePoolConfig.value.nodeTemplate.imageInfo.imageName = image;
+    };
+    // 切换镜像操作
+    function handleImageChange(id) {
+      nodePoolConfig.value.nodeTemplate.imageInfo.imageID = id;
+      // 所选镜像为集群镜像不传
+      if (id === clusterImage.value?.imageID) {
+        nodePoolConfig.value.nodeTemplate.imageInfo.imageID = '';
+        nodePoolConfig.value.nodeTemplate.imageInfo.imageName = '';
+      }
+    }
+
     // 运行版本
     watch(() => nodePoolConfig.value.nodeTemplate.runtime.containerRuntime, (runtime) => {
       if (runtime === 'docker') {
@@ -714,8 +778,16 @@ export default defineComponent({
         };
         nodePoolConfig.value.launchTemplate.securityGroupIDs = [];
         nodePoolConfig.value.launchTemplate.dataDisks = [];
-        // 自建资源池调整为null
-        nodePoolConfig.value.nodeTemplate.dataDisks = null;
+        // 新建时默认添加一个数据盘，编辑时不修改
+        if (!isEdit.value) {
+          nodePoolConfig.value.nodeTemplate.dataDisks = [{
+            diskType: '',
+            diskSize: '',
+            fileSystem: 'ext4',
+            autoFormatAndMount: true,
+            mountTarget: '/data',
+          }];
+        }
         const resourcePoolIDList = curInstanceItem.value?.resourcePoolID;
         nodePoolConfig.value.extra.poolID = Array.isArray(resourcePoolIDList) ? resourcePoolIDList?.join(',') : resourcePoolIDList;
       } else {
@@ -849,6 +921,12 @@ export default defineComponent({
       instanceTypesList,
       instanceDesc,
       defaultSecurityGroupName,
+      handleSetOS,
+      isGPUNode,
+      handleNodePoolTypeChange,
+      imageID,
+      handleImageListInit,
+      handleImageChange,
     };
   },
 });

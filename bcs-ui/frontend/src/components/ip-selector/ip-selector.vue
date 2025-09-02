@@ -42,6 +42,7 @@ let cacheNodeListCloudDataMap: Record<string, {
   zone: string
   zoneName: string
   dataDiskNum: number
+  isGpuNode: boolean
 }> = {};
 // 节点信息 nodes 接口
 let cacheNodeListDataMap: Record<string, {
@@ -109,6 +110,11 @@ const props = defineProps({
   validateDataDisk: {
     type: Boolean,
     default: false,
+  },
+  // 支持普通 CVM 节点和 GPU 节点，默认不支持
+  validateNodeType: {
+    type: String as PropType<'cvm'|'gpu'|undefined>,
+    default: undefined,
   },
 });
 
@@ -244,6 +250,12 @@ const disableHostMethod = (row: IHostData) => {
       tips = $i18n.t('generic.ipSelector.tips.ipDiskNumNotMatched');
     } else if (props.validateAgentStatus && cacheNodeListDataMap[row.ip]?.alive === 0) {
       tips = $i18n.t('generic.ipSelector.tips.ipAgentAbnormal');
+    } else if (!!props.validateNodeType) {
+      if (props.validateNodeType === 'cvm' && cacheNodeListCloudDataMap[row.ip]?.isGpuNode) {
+        tips = $i18n.t('generic.ipSelector.tips.ipIsGpu');
+      } else if (props.validateNodeType === 'gpu' && !cacheNodeListCloudDataMap[row.ip]?.isGpuNode) {
+        tips = $i18n.t('generic.ipSelector.tips.ipNotGpu');
+      }
     }
   }
   return tips;

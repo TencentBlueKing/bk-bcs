@@ -511,6 +511,8 @@ generic:
       ipVpcNotMatched: '待选节点所属VPC需与集群保持一致, 待选节点VPC: {0}, 集群VPC: {1}'
       ipDiskNumNotMatched: 待选节点必须存在/dev/vdb数据盘
       ipAgentAbnormal: Agent状态异常
+      ipNotGpu: 待选节点非 GPU 节点
+      ipIsGpu: 待选节点为 GPU 节点
     selected:
       text2: '已选择{remainCount}个节点'
     label:
@@ -787,6 +789,7 @@ cluster:
       quota: CPU配额最少40核，内存配额最少40GiB
       regionDiff: '节点地域需要与集群地域保持一致，节点地域：{region1}，集群地域：{region2}'
       emptyKubeConfig: 请先测试kubeconfig可用性
+      maxNum50: 最多支持50个节点
     button:
       createCluster: 创建集群
       addHost: 添加服务器
@@ -993,6 +996,11 @@ cluster:
         name: 节点池名称
         detail: 查看节点池详情
         serviceRole: IAM角色
+        type:
+          title: 节点池类型
+          tips: 默认使用平台提供 GPU 镜像
+        CVM: 普通 CVM 节点池
+        GPU: GPU 节点池
       title:
         nodeConfig: 节点配置
         initConfig: 初始化配置
@@ -1404,6 +1412,9 @@ cluster:
       termination: 终止宽限时间
       drainRisk: 驱逐风险
       isDrainOnly: 仅展示可驱逐的 Pod
+      nodeType: 节点类型
+      cvmNode: 普通 CVM 节点
+      gpuNode: GPU 节点
     metric:
       cpuUsageAndRequestUsage: CPU使用率/装箱率
       memUsageAndRequestUsage: 内存使用率/装箱率
