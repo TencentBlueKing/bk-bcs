@@ -37,6 +37,7 @@ const (
 	FieldKeyDifferentNetwork    = "differentNetwork"
 	FieldKeyMultiClusterEnabled = "multiClusterEnabled"
 	FieldKeyClbID               = "clbID"
+	FieldKeyRevision            = "revision"
 
 	// ===== 特性配置 =====
 	FieldKeyFeatureConfigs = "featureConfigs"

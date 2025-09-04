@@ -206,6 +206,7 @@ func (d *DeleteIstioAction) delete(ctx context.Context, meshIstio *entity.MeshIs
 			MeshID:          d.req.MeshID,
 			PrimaryClusters: meshIstio.PrimaryClusters,
 			RemoteClusters:  remoteClusters,
+			OldReleaseNames: meshIstio.ReleaseNames,
 		},
 	)
 	// 异步执行，5分钟超时

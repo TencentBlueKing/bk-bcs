@@ -24,6 +24,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/clients/k8s"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/operation"
+	opcommon "github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/operation/actions/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/store/entity"
 )
@@ -35,6 +36,7 @@ type IstioUninstallOption struct {
 	MeshID          string
 	PrimaryClusters []string
 	RemoteClusters  []string
+	OldReleaseNames map[string]map[string]string
 }
 
 // IstioUninstallAction istio卸载操作
@@ -156,16 +158,19 @@ func (i *IstioUninstallAction) Execute(ctx context.Context) error {
 // uninstallEgressGateway 卸载东西向网关
 func (i *IstioUninstallAction) uninstallEgressGateway(ctx context.Context, clusterID string) error {
 	// 获取东西向网关的release name
-	releaseName, err := i.Model.GetReleaseName(ctx, i.MeshID, clusterID, common.ComponentIstioGateway)
+	releaseName, err := opcommon.GetReleaseName(i.OldReleaseNames, clusterID, common.ComponentIstioGateway, i.MeshID)
 	if err != nil {
-		blog.Errorf("[%s]get istio gateway release name failed, clusterID: %s, err: %s", i.MeshID, clusterID, err)
-		return fmt.Errorf("get istio gateway release name failed: %s", err)
+		return err
+	}
+	// 如果东西向网关的release name不存在，则表示未部署
+	if releaseName == "" {
+		return nil
 	}
 
 	// 删除东西向网关
 	if err := helm.UninstallIstioComponent(
 		ctx, clusterID,
-		*releaseName,
+		releaseName,
 		i.ProjectCode,
 		i.MeshID,
 	); err != nil {
@@ -197,25 +202,23 @@ func (i *IstioUninstallAction) Done(err error) {
 // uninstallIstio 卸载istio
 func (i *IstioUninstallAction) uninstallIstio(ctx context.Context, clusterID string) error {
 	// 获取Release名称
-	baseReleaseName, err := i.Model.GetReleaseName(ctx, i.MeshID, clusterID, common.ComponentIstioBase)
+	baseReleaseName, err := opcommon.GetReleaseName(i.OldReleaseNames, clusterID, common.ComponentIstioBase, i.MeshID)
 	if err != nil {
-		blog.Errorf("[%s]get base release name failed, clusterID: %s, err: %s", i.MeshID, clusterID, err)
-		return fmt.Errorf("get base release name failed: %s", err)
+		return err
 	}
 
-	istiodReleaseName, err := i.Model.GetReleaseName(ctx, i.MeshID, clusterID, common.ComponentIstiod)
+	istiodReleaseName, err := opcommon.GetReleaseName(i.OldReleaseNames, clusterID, common.ComponentIstiod, i.MeshID)
 	if err != nil {
-		blog.Errorf("[%s]get istiod release name failed, clusterID: %s, err: %s", i.MeshID, clusterID, err)
-		return fmt.Errorf("get istiod release name failed: %s", err)
+		return err
 	}
 
 	// 删除istio base
-	if err := helm.UninstallIstioComponent(ctx, clusterID, *baseReleaseName, i.ProjectCode, i.MeshID); err != nil {
+	if err := helm.UninstallIstioComponent(ctx, clusterID, baseReleaseName, i.ProjectCode, i.MeshID); err != nil {
 		return fmt.Errorf("uninstall istio base failed: %s", err)
 	}
 
 	// 删除istiod
-	if err := helm.UninstallIstioComponent(ctx, clusterID, *istiodReleaseName, i.ProjectCode, i.MeshID); err != nil {
+	if err := helm.UninstallIstioComponent(ctx, clusterID, istiodReleaseName, i.ProjectCode, i.MeshID); err != nil {
 		return fmt.Errorf("uninstall istiod failed: %s", err)
 	}
 

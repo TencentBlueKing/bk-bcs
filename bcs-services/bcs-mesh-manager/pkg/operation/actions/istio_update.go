@@ -22,13 +22,13 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/helmmanager"
 	"gopkg.in/yaml.v2"
-	"helm.sh/helm/v3/pkg/storage/driver"
 	"k8s.io/utils/pointer"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/clients/helm"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/clients/k8s"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/operation"
+	opcommon "github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/operation/actions/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/store/entity"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/utils"
@@ -226,18 +226,12 @@ func (i *IstioUpdateAction) updateObservability(ctx context.Context, clusters []
 }
 
 // uninstallEastWestGateway 卸载东西向网关
-func (i *IstioUpdateAction) uninstallEastWestGateway(ctx context.Context) error {
-	// 获取东西向网关的release name
-	releaseName, err := i.Model.GetReleaseName(ctx, *i.MeshID, i.PrimaryClusters[0], common.ComponentIstioGateway)
-	if err != nil {
-		blog.Errorf("[%s]get istio gateway release name failed, err: %s", *i.MeshID, err)
-		return fmt.Errorf("get istio gateway release name failed: %s", err)
-	}
+func (i *IstioUpdateAction) uninstallEastWestGateway(ctx context.Context, releaseName string) error {
 
-	if err = helm.UninstallIstioComponent(
+	if err := helm.UninstallIstioComponent(
 		ctx,
 		i.PrimaryClusters[0],
-		*releaseName,
+		releaseName,
 		*i.ProjectCode,
 		*i.MeshID,
 	); err != nil {
@@ -249,77 +243,33 @@ func (i *IstioUpdateAction) uninstallEastWestGateway(ctx context.Context) error 
 }
 
 // updateEastWestGateway 安装东西向网关
-// nolint: funlen
 func (i *IstioUpdateAction) updateEastWestGateway(ctx context.Context) error {
-	// 关闭多集群模式，则卸载东西向网关
+	// 获取东西向网关的release name。若获取不到表示未安装东西向网关
+	releaseName, err := opcommon.GetReleaseName(
+		i.OldReleaseNames, i.PrimaryClusters[0], common.ComponentIstioGateway, *i.MeshID,
+	)
+	if err != nil {
+		return err
+	}
+	// 关闭多集群模式且东西向网关已部署，则卸载东西向网关
 	if i.MultiClusterEnabled != nil && !*i.MultiClusterEnabled {
-		return i.uninstallEastWestGateway(ctx)
+		if releaseName != "" {
+			return i.uninstallEastWestGateway(ctx, releaseName)
+		}
+		return nil
 	}
 
-	// 检查网关是否已经部署
-	releaseName, err := i.Model.GetReleaseName(ctx, *i.MeshID, i.PrimaryClusters[0], common.ComponentIstioGateway)
-	if err != nil {
-		blog.Errorf("[%s]get istio gateway release name failed, err: %s", *i.MeshID, err)
-		return fmt.Errorf("get istio gateway release name failed: %s", err)
-	}
-
-	// 检查网关部署状态，若未部署则安装网关，若已部署则更新网关
-	if err := i.handleGatewayDeployment(ctx, *releaseName); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// handleGatewayDeployment 处理网关部署
-func (i *IstioUpdateAction) handleGatewayDeployment(ctx context.Context, releaseName string) error {
-	// 检查网关是否已经部署
-	releaseDetail, err := i.getGatewayReleaseDetail(ctx, releaseName)
-	if err != nil {
-		return err
-	}
-
-	// 如果网关未部署，则安装网关
-	if i.isGatewayNotDeployed(releaseDetail) {
-		return i.installNewGateway(ctx)
+	// 开启多集群模式且东西向网关的release name不存在，则表示未部署
+	if releaseName == "" {
+		return i.installEastWestGateway(ctx)
 	}
 
 	// 若已安装则更新东西向网关
-	return i.upgradeExistingGateway(ctx, releaseName)
-}
-
-// checkGatewayDeploymentStatus 检查网关部署状态
-func (i *IstioUpdateAction) getGatewayReleaseDetail(
-	ctx context.Context,
-	releaseName string,
-) (*helmmanager.GetReleaseDetailV1Resp, error) {
-	releaseDetail, err := helm.GetReleaseDetail(
-		ctx,
-		&helmmanager.GetReleaseDetailV1Req{
-			ProjectCode: i.ProjectCode,
-			ClusterID:   &i.PrimaryClusters[0],
-			Namespace:   pointer.String(common.IstioNamespace),
-			Name:        &releaseName,
-		},
-	)
-	if err != nil {
-		blog.Errorf("[%s]get istio gateway release detail failed, err: %s", *i.MeshID, err)
-		return nil, fmt.Errorf("get istio gateway release detail failed: %s", err)
-	}
-	return releaseDetail, nil
-}
-
-// isGatewayNotDeployed 检查网关是否未部署
-func (i *IstioUpdateAction) isGatewayNotDeployed(detail *helmmanager.GetReleaseDetailV1Resp) bool {
-	if detail != nil && detail.Message != nil &&
-		*detail.Message == driver.ErrReleaseNotFound.Error() {
-		return true
-	}
-	return false
+	return i.upgradeEastWestGateway(ctx, releaseName)
 }
 
 // installNewGateway 安装新的网关
-func (i *IstioUpdateAction) installNewGateway(ctx context.Context) error {
+func (i *IstioUpdateAction) installEastWestGateway(ctx context.Context) error {
 	// 创建 istio-system 命名空间,如果已经存在则忽略
 	if err := k8s.CreateIstioNamespace(ctx, i.PrimaryClusters[0]); err != nil {
 		blog.Errorf("[%s]create istio namespace failed for cluster %s, err: %s", *i.MeshID, i.PrimaryClusters[0], err)
@@ -393,7 +343,7 @@ func (i *IstioUpdateAction) deployGatewayResources(ctx context.Context) error {
 }
 
 // upgradeExistingGateway 升级已存在的网关
-func (i *IstioUpdateAction) upgradeExistingGateway(ctx context.Context, releaseName string) error {
+func (i *IstioUpdateAction) upgradeEastWestGateway(ctx context.Context, releaseName string) error {
 	// 生成网关配置值
 	values, err := utils.GenEgressGatewayValues(&utils.GenEgressGatewayValuesOption{
 		ChartValuesPath: *i.ChartValuesPath,
@@ -433,10 +383,9 @@ func (i *IstioUpdateAction) upgradeExistingGateway(ctx context.Context, releaseN
 // updatePrimaryCluster 更新主集群istio
 func (i *IstioUpdateAction) updatePrimaryCluster(ctx context.Context, clusterID string) error {
 	// 获取Release名称
-	istiodReleaseName, err := i.Model.GetReleaseName(ctx, *i.MeshID, clusterID, common.ComponentIstiod)
+	istiodReleaseName, err := opcommon.GetReleaseName(i.OldReleaseNames, clusterID, common.ComponentIstiod, *i.MeshID)
 	if err != nil {
-		blog.Errorf("[%s]get release name failed, clusterID: %s, err: %s", *i.MeshID, clusterID, err)
-		return fmt.Errorf("get release name failed: %s", err)
+		return err
 	}
 
 	// 获取istiod的values.yaml配置信息
@@ -446,7 +395,7 @@ func (i *IstioUpdateAction) updatePrimaryCluster(ctx context.Context, clusterID 
 			ProjectCode: i.ProjectCode,
 			ClusterID:   &clusterID,
 			Namespace:   pointer.String(common.IstioNamespace),
-			Name:        istiodReleaseName,
+			Name:        &istiodReleaseName,
 		},
 	)
 	if err != nil || releaseDetail == nil {
@@ -491,7 +440,7 @@ func (i *IstioUpdateAction) updatePrimaryCluster(ctx context.Context, clusterID 
 			Repository:  i.ChartRepo,
 			Version:     i.ChartVersion,
 			Namespace:   pointer.String(common.IstioNamespace),
-			Name:        istiodReleaseName,
+			Name:        &istiodReleaseName,
 			Values:      []string{mergedValues},
 		},
 	)
@@ -680,44 +629,32 @@ func (i *IstioUpdateAction) updateRemoteClusterStatuses(
 func (i *IstioUpdateAction) uninstallOldIstio(ctx context.Context, clusters []string) error {
 	for _, cluster := range clusters {
 		// 获取istiod release name
-		istiodReleaseName, err := i.Model.GetReleaseName(ctx, *i.MeshID, cluster, common.ComponentIstiod)
+		istiodReleaseName, err := opcommon.GetReleaseName(
+			i.OldReleaseNames, cluster, common.ComponentIstiod, *i.MeshID,
+		)
 		if err != nil {
-			blog.Errorf("[%s]get istiod release name failed, clusterID: %s, err: %s", *i.MeshID, cluster, err)
-			return fmt.Errorf("get istiod release name failed: %s", err)
+			return err
 		}
 		if err = helm.UninstallIstioComponent(
-			ctx,
-			cluster,
-			*istiodReleaseName,
-			*i.ProjectCode,
-			*i.MeshID,
+			ctx, cluster, istiodReleaseName, *i.ProjectCode, *i.MeshID,
 		); err != nil {
 			blog.Errorf("[%s]uninstall istiod failed, clusterID: %s, err: %s", *i.MeshID, cluster, err)
 			return err
 		}
 		// 获取istio base release name
-		baseReleaseName, err := i.Model.GetReleaseName(ctx, *i.MeshID, cluster, common.ComponentIstioBase)
+		baseReleaseName, err := opcommon.GetReleaseName(
+			i.OldReleaseNames, cluster, common.ComponentIstioBase, *i.MeshID,
+		)
 		if err != nil {
-			blog.Errorf("[%s]get istio base release name failed, clusterID: %s, err: %s", *i.MeshID, cluster, err)
-			return fmt.Errorf("get istio base release name failed: %s", err)
+			return err
 		}
 		// 移除从集群istio base
-		if err = helm.UninstallIstioComponent(
-			ctx,
-			cluster,
-			*baseReleaseName,
-			*i.ProjectCode,
-			*i.MeshID,
+		if err := helm.UninstallIstioComponent(
+			ctx, cluster, baseReleaseName, *i.ProjectCode, *i.MeshID,
 		); err != nil {
 			blog.Errorf("[%s]uninstall istio base failed, clusterID: %s, err: %s", *i.MeshID, cluster, err)
 			return err
 		}
-
-		// 删除已移除远程集群的secret
-		// if err := k8s.DeleteRemoteClusterSecret(ctx, i.PrimaryClusters[0], cluster); err != nil {
-		// 	blog.Errorf("[%s]delete secret for remote cluster %s failed, err: %s", *i.MeshID, cluster, err)
-		// 	return err
-		// }
 	}
 	return nil
 }
@@ -820,11 +757,10 @@ func (i *IstioUpdateAction) buildReleaseNames(clusters []string) map[string]map[
 		clusterSet[clusterID] = struct{}{}
 	}
 
-	// 存在部分服务网格通过手动部署，使用自定义的releaseName，需要保留
+	// 存在部分服务网格通过手动部署，使用自定义的releaseName，需要保留releaseName
 	if i.OldReleaseNames != nil {
 		for clusterID, clusterReleases := range i.OldReleaseNames {
 			if _, exists := clusterSet[clusterID]; exists {
-				// 只保留仍然存在的集群
 				releaseNames[clusterID] = make(map[string]string)
 				for component, releaseName := range clusterReleases {
 					releaseNames[clusterID][component] = releaseName
@@ -833,14 +769,28 @@ func (i *IstioUpdateAction) buildReleaseNames(clusters []string) map[string]map[
 		}
 	}
 
-	// 新加入网格的集群使用自定义的releaseName
+	// 处理多集群模式关闭时的东西向网关清理
+	if i.MultiClusterEnabled != nil && !*i.MultiClusterEnabled {
+		for clusterID := range releaseNames {
+			delete(releaseNames[clusterID], common.ComponentIstioGateway)
+		}
+	}
+
+	// 为新集群设置默认Release名称
 	for _, clusterID := range clusters {
 		if _, exists := releaseNames[clusterID]; !exists {
-			// 新集群，使用默认名称
 			releaseNames[clusterID] = map[string]string{
-				common.ComponentIstioBase:    common.IstioInstallBaseName,
-				common.ComponentIstiod:       common.IstioInstallIstiodName,
-				common.ComponentIstioGateway: common.IstioInstallIstioGatewayName,
+				common.ComponentIstioBase: common.IstioInstallBaseName,
+				common.ComponentIstiod:    common.IstioInstallIstiodName,
+			}
+		}
+	}
+
+	// 为多集群模式开启的集群添加东西向网关Release名称
+	if i.MultiClusterEnabled != nil && *i.MultiClusterEnabled {
+		for _, clusterID := range clusters {
+			if _, exists := releaseNames[clusterID]; exists {
+				releaseNames[clusterID][common.ComponentIstioGateway] = common.IstioInstallIstioGatewayName
 			}
 		}
 	}
@@ -851,11 +801,12 @@ func (i *IstioUpdateAction) buildReleaseNames(clusters []string) map[string]map[
 // getCLBIPForNewClusters 为新集群获取CLB IP地址
 func (i *IstioUpdateAction) getCLBIPForNewClusters(ctx context.Context) (string, error) {
 	// 从主集群的eastwestgateway service中获取内网CLB地址
-	releaseNames := i.OldReleaseNames[i.PrimaryClusters[0]]
-	if releaseNames[common.ComponentIstioGateway] == "" {
-		return "", fmt.Errorf("eastwestgateway release name is empty")
+	releaseName, err := opcommon.GetReleaseName(
+		i.OldReleaseNames, i.PrimaryClusters[0], common.ComponentIstioGateway, *i.MeshID,
+	)
+	if err != nil {
+		return "", fmt.Errorf("get eastwestgateway release name failed: %s", err)
 	}
-	releaseName := releaseNames[common.ComponentIstioGateway]
 	clbIP, err := k8s.GetCLBIP(ctx, i.PrimaryClusters[0], releaseName)
 	if err != nil {
 		blog.Errorf("[%s]get CLB IP failed for primary cluster %s, err: %s", i.MeshID, i.PrimaryClusters[0], err)

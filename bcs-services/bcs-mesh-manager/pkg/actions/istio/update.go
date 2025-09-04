@@ -420,6 +420,9 @@ func buildBasicFields(ctx context.Context, req *meshmanager.IstioUpdateRequest, 
 	if req.ClbID != nil {
 		updateFields[entity.FieldKeyClbID] = req.ClbID.GetValue()
 	}
+	if req.Revision != nil {
+		updateFields[entity.FieldKeyRevision] = req.Revision.GetValue()
+	}
 	updateFields[entity.FieldKeyStatus] = common.IstioStatusUpdating
 	updateFields[entity.FieldKeyUpdateBy] = auth.GetUserFromCtx(ctx)
 	updateFields[entity.FieldKeyUpdateTime] = time.Now().UnixMilli()

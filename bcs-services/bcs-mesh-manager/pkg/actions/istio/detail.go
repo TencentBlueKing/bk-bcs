@@ -141,7 +141,7 @@ func (l *GetIstioDetailAction) getDetail(ctx context.Context) (*meshmanager.Isti
 		return nil, fmt.Errorf("unmarshal istiod values failed, clusterID: %s", clusterID)
 	}
 
-	// 基于实际的部署配置构建返回的 IstioListItem
+	// 基于实际的部署配置构建返回的 IstioDetailInfo
 	result, err := utils.ConvertValuesToIstioDetailInfo(meshIstio, istiodValues)
 	if err != nil {
 		blog.Errorf("build istio list item failed, clusterID: %s, err: %s", clusterID, err.Error())

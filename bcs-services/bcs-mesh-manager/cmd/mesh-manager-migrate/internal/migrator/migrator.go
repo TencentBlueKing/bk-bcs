@@ -514,10 +514,9 @@ func (m *Migrator) buildReleaseNames(opts *MigrateOptions) map[string]map[string
 			common.ComponentIstioBase: opts.BaseReleaseName,
 			common.ComponentIstiod:    opts.IstiodReleaseName,
 		}
-		if opts.GatewaysReleaseName != "" {
+		// 多集群模式下，存储东西向网关的release name
+		if opts.MultiClusterEnabled {
 			releaseNames[clusterID][common.ComponentIstioGateway] = opts.GatewaysReleaseName
-		} else {
-			releaseNames[clusterID][common.ComponentIstioGateway] = common.IstioInstallIstioGatewayName
 		}
 	}
 
