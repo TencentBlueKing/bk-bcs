@@ -34,11 +34,8 @@ const (
 type BCSConf struct {
 	Host         string         `yaml:"host"`
 	Token        string         `yaml:"token"`
-	Verify       bool           `yaml:"verify"`
 	JWTPubKey    string         `yaml:"jwt_public_key"`
-	QueryURL     string         `yaml:"query_url"`
 	JWTPubKeyObj *rsa.PublicKey `yaml:"-"`
-	ClusterEnv   BCSClusterEnv  `yaml:"cluster_env"`
 }
 
 // Init :
@@ -48,8 +45,6 @@ func (c *BCSConf) Init() error {
 	c.Token = ""
 	c.JWTPubKey = ""
 	c.JWTPubKeyObj = nil
-	c.Verify = false
-	c.ClusterEnv = ProdCluster
 	return nil
 }
 
