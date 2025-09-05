@@ -10,37 +10,43 @@
  * limitations under the License.
  */
 
-// Package pod pod operate
-package pod
+// Package cloudvpc cloudvpc operate
+package cloudvpc
 
 import (
 	"context"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/storage"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/storage/entity"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
+
+	clustermgr "github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/component/bcs/clustermanager"
 )
 
-// SampleRequset 示例请求
-type SampleRequset struct {
-	ProjectId string `json:"projectId" in:"path=projectId" validate:"required"`
-	ClusterId string `json:"clusterId" in:"path=clusterId" validate:"required"`
-}
-
-// SampleResponse 示例响应
-type SampleResponse struct {
-	Id string `json:"id"`
-}
-
-// GetPodContainers 获取 Pod 容器列表
-// @Summary 获取 Pod 容器列表
+// CreateCloudVPC 创建VPC
+// @Summary 创建VPC
 // @Tags    Logs
 // @Produce json
 // @Success 200 {array} k8sclient.Container
-// @Router  /namespaces/:namespace/pods/:pod/containers [get]
-func GetPodContainers(c context.Context, req *SampleRequset) (*entity.Audit, error) {
-	audit, err := storage.GlobalStorage.GetAudit(c, req.ProjectId, req.ClusterId)
+// @Router  /cloudvpc [post]
+func CreateCloudVPC(ctx context.Context, req *clustermanager.CreateCloudVPCRequest) (*bool, error) {
+	result, err := clustermgr.CreateCloudVPC(ctx, req)
 	if err != nil {
 		return nil, err
 	}
-	return audit, nil
+
+	return &result, nil
+}
+
+// UpdateCloudVPC 更新VPC
+// @Summary 更新VPC
+// @Tags    Logs
+// @Produce json
+// @Success 200 {array} k8sclient.Container
+// @Router  /cloudvpc [put]
+func UpdateCloudVPC(ctx context.Context, req *clustermanager.UpdateCloudVPCRequest) (*bool, error) {
+	result, err := clustermgr.UpdateCloudVPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	return &result, nil
 }

@@ -10,18 +10,10 @@
  * limitations under the License.
  */
 
-package bcs
+package config
 
-import (
-	"testing"
-
-	"github.com/stretchr/testify/assert"
-
-	bcstesting "github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/testing"
-)
-
-func TestGetCluster(t *testing.T) {
-	cluster, err := GetCluster(bcstesting.GetTestClusterId())
-	assert.NoError(t, err)
-	assert.Equal(t, cluster.ProjectID, bcstesting.GetTestProjectId())
+// CmdbConf cmdb config
+type CmdbConf struct {
+	Host  string `json:"host"`
+	Debug bool   `json:"debug"`
 }

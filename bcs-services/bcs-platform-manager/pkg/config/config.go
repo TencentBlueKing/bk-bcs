@@ -41,6 +41,7 @@ type Configuration struct {
 	Credentials map[string][]*Credential `yaml:"-"`
 	Web         *WebConf                 `yaml:"web"`
 	TracingConf *TracingConf             `yaml:"tracing_conf"`
+	Cmdb        *CmdbConf                `yaml:"cmdb"`
 }
 
 // init 初始化
@@ -181,6 +182,11 @@ func (c *Configuration) ReadFrom(content []byte) error {
 	}
 	if c.Mongo.Password == "" {
 		c.Mongo.Password = MONGO_PASSWORD
+	}
+
+	// cmdb
+	if c.Cmdb.Host == "" {
+		c.Cmdb.Host = BK_CMDB_HOST
 	}
 
 	if err := c.init(); err != nil {
