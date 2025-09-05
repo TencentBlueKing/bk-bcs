@@ -18,11 +18,11 @@ import (
 	"fmt"
 	"time"
 
-	bkcmdbkube "configcenter/src/kube/types"
-
+	bkcmdbkube "configcenter/src/kube/types" // nolint
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/config"
 	"github.com/parnurzeal/gorequest"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/config"
 )
 
 var (
@@ -38,7 +38,7 @@ type Options struct {
 	Debug      bool
 }
 
-// client for cc
+// Client for cc
 type Client struct {
 	config   *Options
 	userAuth string
@@ -378,6 +378,7 @@ func (c *Client) GetBcsCluster(req *GetBcsClusterReq) (*[]bkcmdbkube.Cluster, er
 	return &respData.Data.Info, nil
 }
 
+// DeleteBcsCluster delete bcs cluster
 func (c *Client) DeleteBcsCluster(req *DeleteBcsClusterReq) error {
 	// 构造请求的 URL
 	reqURL := fmt.Sprintf("%s/api/v3/delete/kube/cluster", c.config.Server)

@@ -14,8 +14,9 @@
 package cmdb
 
 import (
-	"configcenter/src/common/blog"
 	"context"
+
+	"configcenter/src/common/blog"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/component/cmdb"
 )

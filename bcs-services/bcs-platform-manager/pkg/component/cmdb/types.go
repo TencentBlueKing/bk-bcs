@@ -168,7 +168,7 @@ type GetBcsNodeRespData struct {
 	Info  *[]bkcmdbkube.Node `json:"info"`
 }
 
-// DeleteBcsNodeResponse defines the structure of the response for deleting BCS nodes.
+// DeleteBcsNodeResp defines the structure of the response for deleting BCS nodes.
 type DeleteBcsNodeResp struct {
 	CommonResp
 	Data interface{} `json:"data"`
