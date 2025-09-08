@@ -47,4 +47,6 @@ var (
 	BK_LOG_HOST = os.Getenv("BK_LOG_HOST")
 	// BK_BASE_HOST ...
 	BK_BASE_HOST = os.Getenv("BK_BASE_HOST")
+	// BK_CMDB_HOST ...
+	BK_CMDB_HOST = os.Getenv("BK_CMDB_HOST")
 )

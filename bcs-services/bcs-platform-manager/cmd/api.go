@@ -24,7 +24,6 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/component"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/component/bcs"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/discovery"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/storage"
@@ -80,8 +79,6 @@ func runAPIServer(ctx context.Context, g *run.Group, opt *option) error {
 	// 启动 apiserver
 	g.Add(server.Run, func(err error) { _ = server.Close(); component.GetAuditClient().Close() })
 	g.Add(sd.Run, func(error) {})
-
-	bcs.CacheListClusters()
 
 	return nil
 }
