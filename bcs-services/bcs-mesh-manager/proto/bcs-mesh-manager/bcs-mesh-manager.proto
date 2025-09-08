@@ -408,6 +408,11 @@ message IstioUpdateRequest {
         title : "clbID",
         description : "东西向网关clbID"
       } ];
+  google.protobuf.StringValue revision = 15
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "revision",
+        description : "istio revision"
+      } ];
 }
 
 // ===== 配置相关消息 =====

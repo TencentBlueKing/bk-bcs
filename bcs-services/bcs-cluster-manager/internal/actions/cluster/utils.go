@@ -148,6 +148,13 @@ func selectVclusterHostCluster(model store.ClusterManagerModel, filter VClusterH
 	}
 	// version filter
 	for i := range clusterList {
+		// filter vcluster cluster
+		extra := clusterList[i].GetExtraInfo()
+		_, ok := extra[common.ShowSharedCluster]
+		if !ok {
+			continue
+		}
+
 		if clusterList[i].GetClusterBasicSettings().Version == filter.Version {
 			filterHostClusters = append(filterHostClusters, clusterList[i])
 		}

@@ -36,6 +36,7 @@ const (
 	// ProjectIDKey xxx
 	ProjectIDKey                  = "projectid"
 	templateIDKey                 = "nodetemplateid"
+	NameKey                       = "name"
 	defaultCloudAccountListLength = 4000
 )
 

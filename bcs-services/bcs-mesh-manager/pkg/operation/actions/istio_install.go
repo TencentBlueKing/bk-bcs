@@ -114,7 +114,7 @@ func (i *IstioInstallAction) Execute(ctx context.Context) error {
 		}
 
 		// 从eastwestgateway的service中获取内网clb地址
-		clbIP, err := k8s.GetCLBIP(ctx, primaryCluster)
+		clbIP, err := k8s.GetCLBIP(ctx, primaryCluster, common.EastWestGatewayServiceName)
 		if err != nil {
 			blog.Errorf("[%s]get clb id failed for primary cluster %s, err: %s", i.MeshID, primaryCluster, err)
 			// 获取CLB失败，将所有从集群状态设置为失败
@@ -256,11 +256,9 @@ func (i *IstioInstallAction) Done(err error) {
 	remoteClusters := make([]*entity.RemoteCluster, 0, len(i.RemoteClusters))
 	for _, cluster := range i.RemoteClusters {
 		entityCluster := &entity.RemoteCluster{
-			ClusterID:   cluster.ClusterID,
-			ClusterName: cluster.ClusterName,
-			Region:      cluster.Region,
-			JoinTime:    cluster.JoinTime,
-			Status:      cluster.Status,
+			ClusterID: cluster.ClusterID,
+			JoinTime:  cluster.JoinTime,
+			Status:    cluster.Status,
 		}
 		remoteClusters = append(remoteClusters, entityCluster)
 	}

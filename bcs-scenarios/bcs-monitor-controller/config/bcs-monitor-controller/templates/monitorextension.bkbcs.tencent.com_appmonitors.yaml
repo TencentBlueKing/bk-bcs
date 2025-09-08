@@ -1,11 +1,9 @@
-
 ---
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.6.0
-  creationTimestamp: null
+    controller-gen.kubebuilder.io/version: v0.18.0
   name: appmonitors.monitorextension.bkbcs.tencent.com
 spec:
   group: monitorextension.bkbcs.tencent.com
@@ -26,14 +24,19 @@ spec:
         description: AppMonitor is the Schema for the appmonitors API
         properties:
           apiVersion:
-            description: 'APIVersion defines the versioned schema of this representation
-              of an object. Servers should convert recognized schemas to the latest
-              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
             type: string
           kind:
-            description: 'Kind is a string value representing the REST resource this
-              object represents. Servers may infer this from the endpoint the client
-              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
             type: string
           metadata:
             type: object
@@ -303,6 +306,8 @@ spec:
                     items:
                       type: string
                     type: array
+                  noticeTemplateAbnormalAppend:
+                    type: string
                   rules:
                     items:
                       description: Rule 告警规则
@@ -443,9 +448,9 @@ spec:
             description: AppMonitorStatus defines the observed state of AppMonitor
             properties:
               syncStatus:
-                description: 'INSERT ADDITIONAL STATUS FIELD - define observed state
-                  of cluster Important: Run "make" to regenerate code after modifying
-                  this file'
+                description: |-
+                  INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
+                  Important: Run "make" to regenerate code after modifying this file
                 properties:
                   app:
                     type: string
@@ -455,9 +460,11 @@ spec:
                   message:
                     type: string
                   state:
-                    description: 'SyncState is state for syncing process of polaris
-                      service Syncing: syncing is in process Completed: syncing process
-                      is successfully finished Failed: syncing process failed'
+                    description: |-
+                      SyncState is state for syncing process of polaris service
+                      Syncing: syncing is in process
+                      Completed: syncing process is successfully finished
+                      Failed: syncing process failed
                     type: string
                 required:
                 - state
@@ -470,9 +477,3 @@ spec:
     storage: true
     subresources:
       status: {}
-status:
-  acceptedNames:
-    kind: ""
-    plural: ""
-  conditions: []
-  storedVersions: []

@@ -1860,51 +1860,51 @@ message Node {
     }
   };
   string nodeID = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "nodeID", 
+    title: "nodeID",
     description: "节点云instanceID"
   }];
   string innerIP = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "innerIP", 
+    title: "innerIP",
     description: "节点内网主IP"
   }];
   string instanceType = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "instanceType", 
+    title: "instanceType",
     description: "机型信息字符串，可能为空"
   }];
   uint32 CPU = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "CPU", 
+    title: "CPU",
     description: "节点CPU信息"
   }];
   uint32 mem = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "mem", 
+    title: "mem",
     description: "节点内存信息"
   }];
   uint32 GPU = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "GPU", 
+    title: "GPU",
     description: "节点GPU信息，可能为0"
   }];
   string status = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "status", 
+    title: "status",
     description: "节点状态信息（根据弹性伸缩定义的），RUNNING, DELETEING, CREATING, FAILED, INITIALIZATION"
   }];
   string zoneID = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "zone", 
+    title: "zone",
     description: "节点可用区，可能为空"
   }];
   string nodeGroupID = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "nodeGroupID", 
+    title: "nodeGroupID",
     description: "节点所属的NodeGroup ID, 可能为空(仅CA节点归属于nodeGroup)"
   }];
   string clusterID = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "clusterID", 
+    title: "clusterID",
     description: "节点所属的ClusterID"
   }];
   string VPC = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "VPC", 
+    title: "VPC",
     description: "节点所属的VPC ID"
   }];
   string region = 12[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "region", 
+    title: "region",
     description: "节点所属区域，例如广州，深圳，加州等"
   }];
   string passwd = 13[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
@@ -1954,6 +1954,10 @@ message Node {
   uint32 dataDiskNum = 24 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "dataDiskNum",
     description: "节点数据盘数量"
+  }];
+  bool isGpuNode = 25[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "isGpuNode",
+    description: "节点是否是GPU节点"
   }];
 }
 
@@ -2234,11 +2238,11 @@ message NodeLoginInfo {
 }
 
 message NodeAdvancedInfo {
-  string nodeOs = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  string nodeOs = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "nodeOs",
     description: "上架节点时可支持设置自定义节点镜像,不设置时复用集群镜像"
   }];
-  bool isGPUNode = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  bool isGPUNode = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "isGPUNode",
     description: "是否GPU节点"
   }];
@@ -3597,6 +3601,11 @@ message CloudConfigInfo {
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title: "whiteImageOsName",
       description: "镜像白名单"
+    }];
+  uint32 createClusterNodesLimit = 12 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title: "createClusterNodesLimit",
+      description: "创建集群时最大添加节点数"
     }];
 }
 
@@ -12013,6 +12022,10 @@ message ListCloudInstanceTypeRequest {
     title : "projectID",
     description : "项目 ID"
   }];
+  string instanceType = 12 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "instanceType",
+    description : "机型类别，可用参数CVM、GPU，如果为空则默认获取全部机型"
+  }];
 }
 
 message ListCloudInstanceTypeResponse {
@@ -12320,35 +12333,35 @@ message CloudNode {
       description : "记录节点信息，用于节点列表展示"
     }
   };
-  string nodeID = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  string nodeID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "nodeID",
     description: "节点云instanceID"
   }];
-  string innerIP = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  string innerIP = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "innerIP",
     description: "节点内网主IP"
   }];
-  string instanceType = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  string instanceType = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "instanceType",
     description: "机型信息字符串，可能为空"
   }];
-  uint32 cpu = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  uint32 cpu = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "cpu",
     description: "节点cpu信息"
   }];
-  uint32 mem = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  uint32 mem = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "mem",
     description: "节点内存信息"
   }];
-  uint32 gpu = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  uint32 gpu = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "gpu",
     description: "节点gpu信息，可能为0"
   }];
-  string vpc = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  string vpc = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "vpc",
     description: "节点所属的VPC ID"
   }];
-  string region = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  string region = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "region",
     description: "节点所属区域，例如广州，深圳，加州等"
   }];
@@ -12356,25 +12369,29 @@ message CloudNode {
     title: "innerIPv6",
     description: "节点ipv6地址"
   }];
-  string zoneID = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  string zoneID = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "zoneID",
     description: "节点可用区ID，可能为空"
   }];
-  string zone = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  string zone = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "zone",
     description: "节点可用区，可能为空"
   }];
-  string zoneName=12[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  string zoneName = 12 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "zoneName",
     description: "节点可用区名称"
   }];
-  bool cloudRegionNode=13[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  bool cloudRegionNode = 13 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "cloudRegionNode",
     description: "是否是该云的某个地域节点"
   }];
   uint32 dataDiskNum = 14 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "dataDiskNum",
     description: "节点数据盘数量"
+  }];
+  bool isGpuNode = 15[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "isGpuNode",
+    description: "该节点是否是GPU节点"
   }];
 }
 
@@ -12389,7 +12406,7 @@ message GetCloudAccountTypeRequest {
   string cloudID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "cloudID",
     description : "云信息"
-  },(validate.rules).string = {min_len : 2}];
+  }, (validate.rules).string = {min_len : 2}];
   string region = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "region",
     description : "云地域信息"
@@ -12399,6 +12416,7 @@ message GetCloudAccountTypeRequest {
     description : "云凭证ID, 通过指定的云账号信息获取"
   }];
 }
+
 
 message GetCloudAccountTypeResponse {
   option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {

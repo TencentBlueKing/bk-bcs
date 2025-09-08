@@ -371,6 +371,11 @@
                   "type": "string",
                   "description": "东西向网关clbID",
                   "title": "clbID"
+                },
+                "revision": {
+                  "type": "string",
+                  "description": "istio revision",
+                  "title": "revision"
                 }
               }
             }

@@ -210,6 +210,7 @@ func (u *UpdateIstioAction) update(ctx context.Context) error {
 			UpdateValuesOptions: updateValuesOptions,
 			CLBID:               pointer.String(u.req.ClbID.GetValue()),
 			Revision:            &istio.Revision,
+			OldReleaseNames:     istio.ReleaseNames,
 		},
 	)
 	_, err = operation.GlobalOperator.Dispatch(action, 10*time.Minute)
@@ -234,11 +235,9 @@ func (u *UpdateIstioAction) buildRemoteClusters(clusters []*meshmanager.RemoteCl
 			status = common.RemoteClusterStatusInstalling
 		}
 		remoteClusters = append(remoteClusters, &entity.RemoteCluster{
-			ClusterID:   cluster.ClusterID,
-			ClusterName: cluster.ClusterName,
-			Region:      cluster.Region,
-			JoinTime:    joinTime,
-			Status:      status,
+			ClusterID: cluster.ClusterID,
+			JoinTime:  joinTime,
+			Status:    status,
 		})
 	}
 	return remoteClusters
@@ -420,6 +419,9 @@ func buildBasicFields(ctx context.Context, req *meshmanager.IstioUpdateRequest, 
 	}
 	if req.ClbID != nil {
 		updateFields[entity.FieldKeyClbID] = req.ClbID.GetValue()
+	}
+	if req.Revision != nil {
+		updateFields[entity.FieldKeyRevision] = req.Revision.GetValue()
 	}
 	updateFields[entity.FieldKeyStatus] = common.IstioStatusUpdating
 	updateFields[entity.FieldKeyUpdateBy] = auth.GetUserFromCtx(ctx)

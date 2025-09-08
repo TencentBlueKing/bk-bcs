@@ -178,9 +178,14 @@ func InstanceToNode(inst *cvm.Instance, zoneInfo map[string]*proto.ZoneInfo) *pr
 		InstanceType: *inst.InstanceType,
 		CPU:          uint32(*inst.CPU),
 		Mem:          uint32(*inst.Memory),
-		GPU:          0,
-		VPC:          *inst.VirtualPrivateCloud.VpcId,
-		ZoneID:       *inst.Placement.Zone,
+		GPU: func() uint32 {
+			if inst.GPUInfo != nil {
+				return uint32(*inst.GPUInfo.GPUCount)
+			}
+			return 0
+		}(),
+		VPC:    *inst.VirtualPrivateCloud.VpcId,
+		ZoneID: *inst.Placement.Zone,
 		Zone: func() uint32 {
 			if zone != nil {
 				zoneID, _ := strconv.ParseUint(zone.ZoneID, 10, 32)
@@ -194,6 +199,9 @@ func InstanceToNode(inst *cvm.Instance, zoneInfo map[string]*proto.ZoneInfo) *pr
 				return zone.ZoneName
 			}
 			return ""
+		}(),
+		IsGpuNode: func() bool {
+			return inst.GPUInfo != nil
 		}(),
 	}
 	return node

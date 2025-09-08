@@ -124,6 +124,7 @@ func (la *ListNodeTypeAction) listCloudInstancetypes() error {
 		Provider:     la.req.Provider,
 		ResourceType: la.req.ResourceType,
 		ProjectID:    la.req.ProjectID,
+		InstanceType: la.req.InstanceType,
 	}, cmOption)
 	if err != nil {
 		return err

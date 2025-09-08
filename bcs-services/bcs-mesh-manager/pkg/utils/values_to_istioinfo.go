@@ -37,10 +37,13 @@ func ConvertValuesToIstioDetailInfo(
 		blog.Errorf("istiodValues is nil")
 		return nil, fmt.Errorf("istiodValues is nil")
 	}
-	blog.Infof("istiodValues: %+v", istiodValues)
-
 	// 使用 Transfer2Proto 方法进行基础转换
 	result := meshIstio.Transfer2ProtoForDetail()
+
+	// 同步values中的revision
+	if istiodValues.Revision != nil {
+		result.Revision = *istiodValues.Revision
+	}
 
 	// 同步values中的资源配置
 	if istiodValues.Global != nil &&

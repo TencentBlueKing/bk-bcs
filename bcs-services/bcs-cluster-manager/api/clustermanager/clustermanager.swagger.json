@@ -1717,6 +1717,13 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "instanceType",
+            "description": "instanceType. 机型类别，可用参数CVM、GPU，如果为空则默认获取全部机型",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -9052,6 +9059,12 @@
           },
           "description": "镜像白名单",
           "title": "whiteImageOsName"
+        },
+        "createClusterNodesLimit": {
+          "type": "integer",
+          "format": "int64",
+          "description": "创建集群时最大添加节点数",
+          "title": "createClusterNodesLimit"
         }
       },
       "description": "用于记录云公共配置信息",
@@ -9387,6 +9400,12 @@
           "format": "int64",
           "description": "节点数据盘数量",
           "title": "dataDiskNum"
+        },
+        "isGpuNode": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "该节点是否是GPU节点",
+          "title": "isGpuNode"
         }
       },
       "description": "记录节点信息，用于节点列表展示",
@@ -17789,6 +17808,12 @@
           "format": "int64",
           "description": "节点数据盘数量",
           "title": "dataDiskNum"
+        },
+        "isGpuNode": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "节点是否是GPU节点",
+          "title": "isGpuNode"
         }
       },
       "description": "记录节点信息，用于维护节点状态，被cluster与nodegroup使用",

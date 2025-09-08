@@ -473,6 +473,10 @@ generic:
     halfSuccess: Half success
     terminate: Terminate
     waiting: Waiting
+    installing: Installing
+    installFailed: Install Failed
+    uninstalling: Uninstalling
+    uninstallFailed: Uninstall Failed
   validate:
     repeatKey: Repeat key
     required: Requiring item
@@ -550,6 +554,8 @@ generic:
         cluster. The selected node VPC: {0}, cluster VPC: {1}
       ipDiskNumNotMatched: Selected nodes must have /dev/vdb data disk
       ipAgentAbnormal: Agent status is abnormal
+      ipNotGpu: The election node is not a GPU node
+      ipIsGpu: The election node is a GPU node
     selected:
       text2: '{remainCount} items'
     label:
@@ -913,6 +919,7 @@ cluster:
         The node area needs to be consistent with the cluster area, node area:
         {region1}, cluster area: {region2}
       emptyKubeConfig: please run kubeconfig usability testing
+      maxNum50: The maximum number of nodes is 50
     button:
       createCluster: Create Cluster
       addHost: Add server
@@ -1221,6 +1228,11 @@ cluster:
         name: Node pool name
         detail: View node pool details
         serviceRole: Service role
+        type:
+          title: Node Pool Type
+          tips: Default use of GPU image provided by the platform
+        CVM: CVM
+        GPU: GPU
       title:
         nodeConfig: Node configuration
         initConfig: Initialization configuration
@@ -1744,6 +1756,9 @@ cluster:
       termination: Termination grace period
       drainRisk: Drain Risk
       isDrainOnly: Only show will be evicted Pods
+      nodeType: Node Type
+      cvmNode: CVM
+      gpuNode: GPU
     metric:
       cpuUsageAndRequestUsage: CPU usage rate/packing rate
       memUsageAndRequestUsage: Memory usage/packing rate
@@ -2969,6 +2984,7 @@ dashboard:
       filelog: Log Retrieval
       search: 'Please enter the name, mirror image, IP, node search'
       confirm: Confirm the Multi-Delete PODs below
+      logDisabledTips: The cluster does not have bklog-collector installed
     editor:
       yamlMode:
         confirm: Are you sure you want to switch to YAML mode?
@@ -4056,6 +4072,16 @@ serviceMesh:
     replicaMin: Minimum Replicas
     replicaMax: Maximum Replicas
     dedicatedNode: Dedicated Node
+    multiCluster: Multi-cluster
+    differentNetwork: Cluster network connectivity
+    connected: Connected
+    notConnected: Not connected (currently not supported)
+    clbID: East West Gateway CLB
+    subClusters: Sub Clusters
+    tableEmpty: 'No data available, please add cluster first'
+    clusterRegion: Region
+    joinTime: Join Time
+    networkID: Network ID
   placeholder:
     search: Search mesh name/version/status/associated cluster
     ips: 'Please enter IPs, separate multiple IPs with Enter'
@@ -4125,3 +4151,19 @@ serviceMesh:
     dedicatedNodeDesc: >-
       Set labels to schedule istio control plane to dedicated nodes, provided
       that corresponding labels already exist on the nodes
+    differentNetworkDesc: >-
+      Connect container networks through cloud networking, or independently
+      develop cloud based requirements on the same VPC
+    clbIDDesc: >-
+      Used to connect from the cluster to the main cluster control plane, fill
+      in a clb id
+    subClustersDesc: Build multiple clusters for joining the host group control surface
+    disabledClustersDesc: Cluster is occupied
+    cancelTitle: Are you sure to close the multi cluster?
+    cancelSubTitle: 'After closing, the filled in content will be cleared.'
+    clearClustersTip: Please clear the cluster first
+    revisionDesc: >-
+      Used to specify the control surface version, namespaces need to add labels
+      to use the corresponding version control surface, such as Istio.
+      io/rev=1-18-bcs-2. Only the first installation can specify that subsequent
+      modifications cannot be made, otherwise the default value will be used.

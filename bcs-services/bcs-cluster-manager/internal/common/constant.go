@@ -314,6 +314,8 @@ const (
 	ClusterManagerServiceDomain = "clustermanager.bkbcs.tencent.com"
 	// ResourceManagerServiceDomain domain name for service
 	ResourceManagerServiceDomain = "resourcemanager.bkbcs.tencent.com"
+	// CreateClusterNodesLimit create cluster nodes limit
+	CreateClusterNodesLimit = 50
 
 	// ClusterOverlayNetwork overlay
 	ClusterOverlayNetwork = "overlay"
@@ -668,9 +670,17 @@ const (
 	TemplateGpu = "gpu"
 	// TemplateInstanceType template instance type
 	TemplateInstanceType = "templateInstanceType"
+	// DefaultGpuNodeTemplateName default gpu node template name
+	DefaultGpuNodeTemplateName = "defaultGpuNodeTemplate"
 )
 
 // TemplateConfigType
 const (
 	CloudConfigType = "cloud"
+)
+
+// InstanceType
+const (
+	CvmInstanceType = "CVM"
+	GpuInstanceType = "GPU"
 )

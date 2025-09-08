@@ -307,11 +307,13 @@ func handleClusterMasterNodes(ctx context.Context, req *api.CreateClusterRequest
 		req.ExistedInstancesForNode = make([]*api.ExistedInstancesForNode, 0)
 	}
 
-	// single disk & many disk
+	// empty disk instance
 	if len(filterDisk.SingleDiskInstance) > 0 {
 		req.ExistedInstancesForNode = append(req.ExistedInstancesForNode,
 			generateMasterExistedInstance(api.MASTER_ETCD.String(), passwd, filterDisk.SingleDiskInstance, false, info.Cluster))
 	}
+
+	// exist disk instance
 	if len(filterDisk.ManyDiskInstance) > 0 {
 		req.ExistedInstancesForNode = append(req.ExistedInstancesForNode,
 			generateMasterExistedInstance(api.MASTER_ETCD.String(), passwd, filterDisk.ManyDiskInstance, true, info.Cluster))
@@ -366,13 +368,13 @@ func handleClusterWorkerNodes(ctx context.Context, req *api.CreateClusterRequest
 
 	blog.Infof("handleClusterWorkerNodes[%s] FilterNodesByDataDisk result[%+v]", taskID, filterDisk)
 
-	// single disk
+	// empty disk
 	if len(filterDisk.SingleDiskInstance) > 0 {
 		req.ExistedInstancesForNode = append(req.ExistedInstancesForNode,
 			generateWorkerExistedInstance(info, filterDisk.SingleDiskInstance, filterDisk.SingleDiskInstanceIP, passwd,
 				false, operator))
 	}
-	// many disk
+	// exist disk
 	if len(filterDisk.ManyDiskInstance) > 0 {
 		req.ExistedInstancesForNode = append(req.ExistedInstancesForNode,
 			generateWorkerExistedInstance(info, filterDisk.ManyDiskInstance, filterDisk.ManyDiskInstanceIP, passwd,

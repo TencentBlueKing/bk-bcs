@@ -92,7 +92,7 @@ export default defineComponent({
         }} />
       : (
         <div class="dashboard-status">
-          <svg class={['mr-[5px]', 'size-[16px]']}>
+          <svg class={['mr-[5px]', 'size-[16px]', 'shrink-0']}>
             <use xlinkHref={`#bcs-icon-color-${this.statusClass}`}></use>
           </svg>
           {

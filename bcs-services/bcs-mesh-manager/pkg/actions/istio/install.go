@@ -256,9 +256,12 @@ func (i *InstallIstioAction) buildReleaseNames() map[string]map[string]string {
 
 	for _, clusterID := range allClusters {
 		releaseNames[clusterID] = map[string]string{
-			common.ComponentIstioBase:    common.IstioInstallBaseName,
-			common.ComponentIstiod:       common.IstioInstallIstiodName,
-			common.ComponentIstioGateway: common.IstioInstallIstioGatewayName,
+			common.ComponentIstioBase: common.IstioInstallBaseName,
+			common.ComponentIstiod:    common.IstioInstallIstiodName,
+		}
+		// 开启多集群模式，则存储东西向网关的release name
+		if i.req.MultiClusterEnabled.GetValue() {
+			releaseNames[clusterID][common.ComponentIstioGateway] = common.IstioInstallIstioGatewayName
 		}
 	}
 

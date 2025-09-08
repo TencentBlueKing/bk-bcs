@@ -314,6 +314,12 @@ func (ua *UpdateAction) modifyNodeGroupNodeTemplate(group *cmproto.NodeGroup) {
 		} else {
 			group.NodeTemplate.ScaleInPostScript = ua.req.NodeTemplate.ScaleInPostScript
 		}
+		if ua.req.NodeTemplate.Image != nil {
+			group.NodeTemplate.Image = ua.req.NodeTemplate.Image
+		}
+		if ua.req.NodeTemplate.GpuArgs != nil {
+			group.NodeTemplate.GpuArgs = ua.req.NodeTemplate.GpuArgs
+		}
 
 		// attention: field will be full update
 		group.NodeTemplate.UnSchedulable = ua.req.NodeTemplate.UnSchedulable

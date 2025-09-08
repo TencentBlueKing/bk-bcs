@@ -113,6 +113,8 @@ type CloudConf struct {
 	VpcDomain string
 	// MaxNodeCount for max node count
 	MaxNodeCount uint32
+	// CreateClusterNodesLimit for create cluster nodes limit
+	CreateClusterNodesLimit uint32
 }
 
 // InitClusterConfigOption init cluster default cloud config
@@ -609,6 +611,7 @@ type InstanceInfo struct {
 	Provider     string
 	ResourceType string
 	ProjectID    string
+	InstanceType string
 }
 
 // MachineConfig instance config

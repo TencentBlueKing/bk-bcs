@@ -76,7 +76,7 @@ help: ## Display this help.
 #manifest:controller-gen paths=./... crd:crdVersions=v1,trivialVersions=true,maxDescLen=1000,generateEmbeddedObjectMeta=true rbac:roleName=operator output:crd:artifacts:config=config/crd
 .PHONY: manifests
 manifests: ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
-	controller-gen paths=./... crd:crdVersions=v1,trivialVersions=true,maxDescLen=1000,generateEmbeddedObjectMeta=true rbac:roleName=operator output:crd:artifacts:config=config/crd
+	controller-gen crd:crdVersions=v1,maxDescLen=1000,generateEmbeddedObjectMeta=true rbac:roleName=operator paths=./... output:crd:artifacts:config=config/crd
 
 .PHONY: generate
 generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
@@ -120,7 +120,7 @@ ENVTEST ?= $(LOCALBIN)/setup-envtest
 
 ## Tool Versions
 KUSTOMIZE_VERSION ?= v3.8.7
-CONTROLLER_TOOLS_VERSION ?= v0.6.0
+CONTROLLER_TOOLS_VERSION ?= v0.14.0
 
 KUSTOMIZE_INSTALL_SCRIPT ?= "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"
 .PHONY: kustomize

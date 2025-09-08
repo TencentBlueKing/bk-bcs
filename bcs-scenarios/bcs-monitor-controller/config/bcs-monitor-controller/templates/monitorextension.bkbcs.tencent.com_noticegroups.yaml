@@ -1,11 +1,9 @@
-
 ---
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.6.0
-  creationTimestamp: null
+    controller-gen.kubebuilder.io/version: v0.18.0
   name: noticegroups.monitorextension.bkbcs.tencent.com
 spec:
   group: monitorextension.bkbcs.tencent.com
@@ -26,14 +24,19 @@ spec:
         description: NoticeGroup is the Schema for the noticegroups API
         properties:
           apiVersion:
-            description: 'APIVersion defines the versioned schema of this representation
-              of an object. Servers should convert recognized schemas to the latest
-              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
             type: string
           kind:
-            description: 'Kind is a string value representing the REST resource this
-              object represents. Servers may infer this from the endpoint the client
-              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
             type: string
           metadata:
             type: object
@@ -41,8 +44,9 @@ spec:
             description: NoticeGroupSpec defines the desired state of NoticeGroup
             properties:
               bizID:
-                description: 'INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-                  Important: Run "make" to regenerate code after modifying this file'
+                description: |-
+                  INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
+                  Important: Run "make" to regenerate code after modifying this file
                 type: string
               bizToken:
                 type: string
@@ -241,9 +245,11 @@ spec:
                   message:
                     type: string
                   state:
-                    description: 'SyncState is state for syncing process of polaris
-                      service Syncing: syncing is in process Completed: syncing process
-                      is successfully finished Failed: syncing process failed'
+                    description: |-
+                      SyncState is state for syncing process of polaris service
+                      Syncing: syncing is in process
+                      Completed: syncing process is successfully finished
+                      Failed: syncing process failed
                     type: string
                 required:
                 - state
@@ -254,9 +260,3 @@ spec:
     storage: true
     subresources:
       status: {}
-status:
-  acceptedNames:
-    kind: ""
-    plural: ""
-  conditions: []
-  storedVersions: []
