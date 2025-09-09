@@ -6498,6 +6498,47 @@
         ]
       }
     },
+    "/clustermanager/v1/task/metrics/{clusterID}": {
+      "post": {
+        "summary": "集群维度统计任务成功率、耗时、失败top原因",
+        "description": "集群维度统计任务成功率、耗时、失败top原因",
+        "operationId": "ClusterManager_ListClusterTaskMetrics",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerListClusterTaskMetricsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "clusterID",
+            "description": "任务所关联的集群，该ID为BCS集群ID，如果为-，统计所有集群",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerListClusterTaskMetricsRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
     "/clustermanager/v1/task/{taskID}": {
       "get": {
         "summary": "查询Task",
@@ -10693,6 +10734,51 @@
       },
       "description": "记录节点信息，用于节点列表展示",
       "title": "ClusterNode"
+    },
+    "clustermanagerClusterTask": {
+      "type": "object",
+      "properties": {
+        "clusterId": {
+          "type": "string",
+          "description": "集群ID",
+          "title": "clusterId"
+        },
+        "taskMetrics": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerClusterTaskMetrics"
+          },
+          "description": "任务指标",
+          "title": "taskMetrics"
+        }
+      }
+    },
+    "clustermanagerClusterTaskMetrics": {
+      "type": "object",
+      "properties": {
+        "successRate": {
+          "type": "number",
+          "format": "double",
+          "description": "任务成功率",
+          "title": "successRate"
+        },
+        "executionTime": {
+          "type": "number",
+          "format": "double",
+          "description": "任务耗时",
+          "title": "executionTime"
+        },
+        "failureTopReason": {
+          "type": "string",
+          "description": "任务失败top原因",
+          "title": "failureTopReason"
+        },
+        "taskType": {
+          "type": "string",
+          "description": "任务类型",
+          "title": "taskType"
+        }
+      }
     },
     "clustermanagerCommonListResp": {
       "type": "object",
@@ -16659,6 +16745,64 @@
         "code",
         "message",
         "data"
+      ]
+    },
+    "clustermanagerListClusterTaskMetricsRequest": {
+      "type": "object",
+      "properties": {
+        "clusterID": {
+          "type": "string",
+          "description": "任务所关联的集群，该ID为BCS集群ID，如果为-，统计所有集群",
+          "title": "clusterID"
+        },
+        "start": {
+          "type": "string",
+          "description": "任务启动时间",
+          "title": "start"
+        },
+        "end": {
+          "type": "string",
+          "description": "任务结束时间",
+          "title": "end"
+        }
+      },
+      "description": "集群维度统计任务成功率、耗时、失败top原因请求",
+      "title": "ListClusterTaskMetricsRequest"
+    },
+    "clustermanagerListClusterTaskMetricsResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerClusterTask"
+          },
+          "description": "获取到的集群任务指标",
+          "title": "data"
+        }
+      },
+      "description": "集群维度统计任务成功率、耗时、失败top原因返回",
+      "title": "ListClusterTaskMetricsResponse",
+      "required": [
+        "code",
+        "message"
       ]
     },
     "clustermanagerListClusterV2Resp": {
