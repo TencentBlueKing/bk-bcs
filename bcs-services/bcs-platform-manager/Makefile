@@ -23,7 +23,7 @@ LDFLAG=-ldflags "-X github.com/Tencent/bk-bcs/bcs-common/common/version.BcsVersi
 
 .PHONY: build
 build:
-	${GOBUILD} ${LDFLAG} -o bin/bcs-platform-manager .
+	${GOBUILD} ${LDFLAG} -o bcs-platform-manager .
 
 .PHONY: docker
 docker:

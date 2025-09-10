@@ -237,6 +237,7 @@ func (ua *UpdateAction) modifyNodeGroupLaunchTemplate(group *cmproto.NodeGroup) 
 }
 
 // modifyNodeGroupNodeTemplate nodeTemplate field
+// nolint:funlen
 func (ua *UpdateAction) modifyNodeGroupNodeTemplate(group *cmproto.NodeGroup) {
 	if ua.req.NodeTemplate != nil {
 		if group.NodeTemplate == nil {

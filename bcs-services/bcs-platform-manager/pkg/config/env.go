@@ -47,4 +47,6 @@ var (
 	BK_LOG_HOST = os.Getenv("BK_LOG_HOST")
 	// BK_BASE_HOST ...
 	BK_BASE_HOST = os.Getenv("BK_BASE_HOST")
+	// POD_IP ...
+	POD_IP = os.Getenv("POD_IP")
 )
