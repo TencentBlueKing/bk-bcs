@@ -49,7 +49,7 @@ type BaseConf struct {
 func (c *BaseConf) Init() error {
 	var err error
 	c.HttpPort = "8080"
-	c.BindAddress = "127.0.0.1"
+	c.BindAddress = ""
 	c.AppCode = ""
 	c.AppSecret = ""
 	c.TimeZone = "Asia/Shanghai"

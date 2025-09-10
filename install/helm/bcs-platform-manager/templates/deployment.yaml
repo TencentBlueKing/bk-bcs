@@ -1,0 +1,84 @@
+{{- if .Values.enabled -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "bcs-platform-manager.fullname" . }}
+  labels:
+    {{- include "bcs-platform-manager.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "bcs-platform-manager.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        checksum/config: "{{ toYaml .Values.svcConf | sha256sum | trunc 63 }}"
+      labels:
+        {{- include "bcs-platform-manager.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "bcs-platform-manager.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: main
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: {{ include "common.images.image" ( dict "imageRoot" .Values.image "global" .Values.global) }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+            - '--config'
+            - /data/workspace/etc/conf.yaml
+          ports:
+            - name: http
+              containerPort: {{ .Values.svcConf.base_conf.http_port }}
+              protocol: TCP
+          env:
+            {{- include "bcs-platform-manager.envs" . | trim | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /-/healthy
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /-/ready
+              port: http
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: cr-conf-volume
+              mountPath: /data/workspace/etc
+            - name: bcs-certs
+              mountPath: /data/bcs/cert/bcs
+            - name: etcd-certs
+              mountPath: /data/bcs/cert/etcd
+            - name: bcs-jwt
+              mountPath: /data/bcs/cert/jwt
+      volumes:
+        - name: cr-conf-volume
+          configMap:
+            name: {{ include "bcs-platform-manager.confCMName" . }}
+        {{- include "bcs-common.volumes.bcsServices" . | indent 8 }}
+        {{- include "bcs-common.volumes.bcsJWT" . | nindent 8 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}
