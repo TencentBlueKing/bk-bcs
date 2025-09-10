@@ -43147,6 +43147,512 @@ var _ interface {
 	ErrorName() string
 } = ListTaskResponseValidationError{}
 
+// Validate checks the field values on ListClusterTaskMetricsRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ListClusterTaskMetricsRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListClusterTaskMetricsRequest with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the result is a list of violation errors wrapped in
+// ListClusterTaskMetricsRequestMultiError, or nil if none found.
+func (m *ListClusterTaskMetricsRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListClusterTaskMetricsRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if utf8.RuneCountInString(m.GetClusterID()) > 100 {
+		err := ListClusterTaskMetricsRequestValidationError{
+			field:  "ClusterID",
+			reason: "value length must be at most 100 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for Start
+
+	// no validation rules for End
+
+	if len(errors) > 0 {
+		return ListClusterTaskMetricsRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListClusterTaskMetricsRequestMultiError is an error wrapping multiple
+// validation errors returned by ListClusterTaskMetricsRequest.ValidateAll()
+// if the designated constraints aren't met.
+type ListClusterTaskMetricsRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListClusterTaskMetricsRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListClusterTaskMetricsRequestMultiError) AllErrors() []error { return m }
+
+// ListClusterTaskMetricsRequestValidationError is the validation error
+// returned by ListClusterTaskMetricsRequest.Validate if the designated
+// constraints aren't met.
+type ListClusterTaskMetricsRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListClusterTaskMetricsRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListClusterTaskMetricsRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListClusterTaskMetricsRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListClusterTaskMetricsRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListClusterTaskMetricsRequestValidationError) ErrorName() string {
+	return "ListClusterTaskMetricsRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListClusterTaskMetricsRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListClusterTaskMetricsRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListClusterTaskMetricsRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListClusterTaskMetricsRequestValidationError{}
+
+// Validate checks the field values on ListClusterTaskMetricsResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ListClusterTaskMetricsResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListClusterTaskMetricsResponse with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the result is a list of violation errors wrapped in
+// ListClusterTaskMetricsResponseMultiError, or nil if none found.
+func (m *ListClusterTaskMetricsResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListClusterTaskMetricsResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, ListClusterTaskMetricsResponseValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, ListClusterTaskMetricsResponseValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ListClusterTaskMetricsResponseValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return ListClusterTaskMetricsResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListClusterTaskMetricsResponseMultiError is an error wrapping multiple
+// validation errors returned by ListClusterTaskMetricsResponse.ValidateAll()
+// if the designated constraints aren't met.
+type ListClusterTaskMetricsResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListClusterTaskMetricsResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListClusterTaskMetricsResponseMultiError) AllErrors() []error { return m }
+
+// ListClusterTaskMetricsResponseValidationError is the validation error
+// returned by ListClusterTaskMetricsResponse.Validate if the designated
+// constraints aren't met.
+type ListClusterTaskMetricsResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListClusterTaskMetricsResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListClusterTaskMetricsResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListClusterTaskMetricsResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListClusterTaskMetricsResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListClusterTaskMetricsResponseValidationError) ErrorName() string {
+	return "ListClusterTaskMetricsResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListClusterTaskMetricsResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListClusterTaskMetricsResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListClusterTaskMetricsResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListClusterTaskMetricsResponseValidationError{}
+
+// Validate checks the field values on ClusterTask with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *ClusterTask) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ClusterTask with the rules defined in
+// the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in ClusterTaskMultiError, or
+// nil if none found.
+func (m *ClusterTask) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ClusterTask) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for ClusterId
+
+	for idx, item := range m.GetTaskMetrics() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, ClusterTaskValidationError{
+						field:  fmt.Sprintf("TaskMetrics[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, ClusterTaskValidationError{
+						field:  fmt.Sprintf("TaskMetrics[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ClusterTaskValidationError{
+					field:  fmt.Sprintf("TaskMetrics[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return ClusterTaskMultiError(errors)
+	}
+
+	return nil
+}
+
+// ClusterTaskMultiError is an error wrapping multiple validation errors
+// returned by ClusterTask.ValidateAll() if the designated constraints aren't met.
+type ClusterTaskMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ClusterTaskMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ClusterTaskMultiError) AllErrors() []error { return m }
+
+// ClusterTaskValidationError is the validation error returned by
+// ClusterTask.Validate if the designated constraints aren't met.
+type ClusterTaskValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ClusterTaskValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ClusterTaskValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ClusterTaskValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ClusterTaskValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ClusterTaskValidationError) ErrorName() string { return "ClusterTaskValidationError" }
+
+// Error satisfies the builtin error interface
+func (e ClusterTaskValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sClusterTask.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ClusterTaskValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ClusterTaskValidationError{}
+
+// Validate checks the field values on ClusterTaskMetrics with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ClusterTaskMetrics) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ClusterTaskMetrics with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ClusterTaskMetricsMultiError, or nil if none found.
+func (m *ClusterTaskMetrics) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ClusterTaskMetrics) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for SuccessRate
+
+	// no validation rules for ExecutionTime
+
+	// no validation rules for FailureTopReason
+
+	// no validation rules for TaskType
+
+	if len(errors) > 0 {
+		return ClusterTaskMetricsMultiError(errors)
+	}
+
+	return nil
+}
+
+// ClusterTaskMetricsMultiError is an error wrapping multiple validation errors
+// returned by ClusterTaskMetrics.ValidateAll() if the designated constraints
+// aren't met.
+type ClusterTaskMetricsMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ClusterTaskMetricsMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ClusterTaskMetricsMultiError) AllErrors() []error { return m }
+
+// ClusterTaskMetricsValidationError is the validation error returned by
+// ClusterTaskMetrics.Validate if the designated constraints aren't met.
+type ClusterTaskMetricsValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ClusterTaskMetricsValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ClusterTaskMetricsValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ClusterTaskMetricsValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ClusterTaskMetricsValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ClusterTaskMetricsValidationError) ErrorName() string {
+	return "ClusterTaskMetricsValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ClusterTaskMetricsValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sClusterTaskMetrics.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ClusterTaskMetricsValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ClusterTaskMetricsValidationError{}
+
 // Validate checks the field values on CreateAutoScalingOptionRequest with the
 // rules defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
