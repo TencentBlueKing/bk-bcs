@@ -472,8 +472,8 @@ func GetClusterExternalNodeScript(ctx context.Context, info *cloudprovider.Cloud
 
 // GenerateNTAddExistedInstanceReq 生成上架节点请求. 节点模板抽象理论上需要用户保证节点配置高度一致, 若用户配置了多盘挂载,
 // 则使用用户配置选项若没有配置节点模板 或者 节点模板没有配置多盘选项, 则需要自动进行多盘挂载
-func GenerateNTAddExistedInstanceReq(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, nodeIDs, nodeIPs []string,
-	passwd, operator string, options *NodeAdvancedOptions) *api.AddExistedInstanceReq {
+func GenerateNTAddExistedInstanceReq(ctx context.Context, info *cloudprovider.CloudDependBasicInfo,
+	nodeIDs, nodeIPs []string, passwd, operator string, options *NodeAdvancedOptions) *api.AddExistedInstanceReq {
 	req := &api.AddExistedInstanceReq{
 		ClusterID:   info.Cluster.SystemID,
 		InstanceIDs: nodeIDs,
@@ -530,8 +530,8 @@ func GenerateNTAddExistedInstanceReq(ctx context.Context, info *cloudprovider.Cl
 }
 
 // genGpuAdvSettingOverride 生成GPU节点的节点定制化高级配置
-func genGpuAdvSettingOverride(req *api.AddExistedInstanceReq, info *cloudprovider.CloudDependBasicInfo, nodeIDs, nodeIPs []string,
-	operator string, options *NodeAdvancedOptions, gpuNodeTemplate *proto.NodeTemplate) {
+func genGpuAdvSettingOverride(req *api.AddExistedInstanceReq, info *cloudprovider.CloudDependBasicInfo,
+	nodeIDs, nodeIPs []string, operator string, options *NodeAdvancedOptions, gpuNodeTemplate *proto.NodeTemplate) {
 	// 未使用节点模板 或者 节点模板未配置磁盘格式化
 	if info.NodeTemplate == nil || len(info.NodeTemplate.DataDisks) == 0 {
 		// 使用默认配置, 主要解决CVM多盘挂载问题
@@ -568,7 +568,8 @@ func genGpuAdvSettingOverride(req *api.AddExistedInstanceReq, info *cloudprovide
 }
 
 // gpuNodeTemplatesMapByNodeIDs get gpuNodeTemplatesMap by nodeIDs, map key: nodeId, value: gpuNodeTemplate
-func getGPUNodeTemplatesMapByNodeIDs(nodeIDs []string, cmOption *cloudprovider.CommonOption) (map[string]*proto.NodeTemplate, error) {
+func getGPUNodeTemplatesMapByNodeIDs(
+	nodeIDs []string, cmOption *cloudprovider.CommonOption) (map[string]*proto.NodeTemplate, error) {
 	gpuNodeTemplates := make(map[string]*proto.NodeTemplate)
 	nodes, err := TransInstanceIDsToNodes(nodeIDs, &cloudprovider.ListNodesOption{
 		Common: cmOption,
@@ -671,8 +672,9 @@ func skipValidateOption(cls *proto.Cluster) []string {
 }
 
 // GenerateGPUAddExistedInstanceReqs generate gpu add existed instance request
-func GenerateGPUAddExistedInstanceReqs(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, nodeIDs, nodeIPs []string,
-	idToIP map[string]string, passwd, operator string, options *NodeAdvancedOptions) []*api.AddExistedInstanceReq {
+func GenerateGPUAddExistedInstanceReqs(ctx context.Context, info *cloudprovider.CloudDependBasicInfo,
+	nodeIDs, nodeIPs []string, idToIP map[string]string, passwd, operator string,
+	options *NodeAdvancedOptions) []*api.AddExistedInstanceReq {
 	taskID, stepName := cloudprovider.GetTaskIDAndStepNameFromContext(ctx)
 
 	reqs := make([]*api.AddExistedInstanceReq, 0)
@@ -728,8 +730,8 @@ func GenerateGPUAddExistedInstanceReqs(ctx context.Context, info *cloudprovider.
 // NodeGroup生成上架节点请求, 解决多盘问题主要取决于用户是否配置 多盘挂载, 类比于qcloud产品
 
 // GenerateNGAddExistedInstanceReq xxx
-func GenerateNGAddExistedInstanceReq(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, nodeIDs, nodeIPs []string,
-	passwd, operator string, options *NodeAdvancedOptions) *api.AddExistedInstanceReq {
+func GenerateNGAddExistedInstanceReq(ctx context.Context, info *cloudprovider.CloudDependBasicInfo,
+	nodeIDs, nodeIPs []string, passwd, operator string, options *NodeAdvancedOptions) *api.AddExistedInstanceReq {
 	req := &api.AddExistedInstanceReq{
 		ClusterID:   info.Cluster.SystemID,
 		InstanceIDs: nodeIDs,
@@ -767,7 +769,6 @@ func generateGpuInfoInNGReq(ctx context.Context, req *api.AddExistedInstanceReq,
 	isGpuNode := true
 	for _, node := range nodes {
 		if !node.GetIsGpuNode() {
-			isGpuNode = false
 			return
 		}
 	}
@@ -1063,6 +1064,7 @@ type AddExistedInstanceResult struct {
 }
 
 // AddNodesToCluster add nodes to cluster and return nodes result
+// nolint:funlen
 func AddNodesToCluster(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, options *NodeAdvancedOptions,
 	nodeIDs []string, passwd string, isNodeGroup bool, idToIP map[string]string,
 	operator string) (*AddExistedInstanceResult, error) {
@@ -1100,7 +1102,7 @@ func AddNodesToCluster(ctx context.Context, info *cloudprovider.CloudDependBasic
 		}
 	}
 
-	if addInstanceReqs == nil || len(addInstanceReqs) == 0 {
+	if len(addInstanceReqs) == 0 {
 		return nil, fmt.Errorf("AddNodesToCluster[%s] addInstanceReqs is empty", taskID)
 	}
 
@@ -1178,7 +1180,8 @@ type gpuNodesInfo struct {
 }
 
 // getImagesToGpuNodesInfoMap get gpu nodes info map
-func getImagesToGpuNodesInfoMap(nodeIds []string, info *cloudprovider.CloudDependBasicInfo) (map[string]*gpuNodesInfo, error) {
+func getImagesToGpuNodesInfoMap(
+	nodeIds []string, info *cloudprovider.CloudDependBasicInfo) (map[string]*gpuNodesInfo, error) {
 	imageToGpuNodesInfo := make(map[string]*gpuNodesInfo)
 	gpuNodeTemplatesMap, err := getGPUNodeTemplatesMapByNodeIDs(nodeIds, info.CmOption)
 	if err != nil {
