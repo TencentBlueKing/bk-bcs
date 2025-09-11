@@ -230,32 +230,6 @@ func GetNoTraceClient() *resty.Client {
 	return noTraceGlobalClient
 }
 
-// AuthInfo auth info, issue https://github.com/TencentBlueKing/blueking-apigateway/issues/325
-type AuthInfo struct {
-	BkAppCode   string `json:"bk_app_code"`
-	BkAppSecret string `json:"bk_app_secret"`
-	BkUserName  string `json:"bk_username"`
-}
-
-// GetBKAPIAuthorization generate bk api auth header, X-Bkapi-Authorization
-func GetBKAPIAuthorization(username string) (string, error) {
-	if username == "" {
-		username = config.G.Base.BKUsername
-	}
-	auth := &AuthInfo{
-		BkAppCode:   config.G.Base.AppCode,
-		BkAppSecret: config.G.Base.AppSecret,
-		BkUserName:  username,
-	}
-
-	userAuth, err := json.Marshal(auth)
-	if err != nil {
-		return "", err
-	}
-
-	return string(userAuth), nil
-}
-
 // BKResult 蓝鲸返回规范的结构体
 type BKResult struct {
 	Code    interface{} `json:"code"`

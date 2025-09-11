@@ -45,11 +45,6 @@ func (p *Project) String() string {
 	return fmt.Sprintf("project<%s, %s|%s|%s>", p.Name, displayCode, p.ProjectId, p.CcBizID)
 }
 
-// CreateTime xxx
-func (p *Project) CreateTime() (time.Time, error) {
-	return time.ParseInLocation("2006-01-02T15:04:05Z", p.RawCreateTime, config.G.Base.Location)
-}
-
 // GetProject 通过 project_id/code 获取项目信息
 func GetProject(ctx context.Context, bcsConf *config.BCSConf, projectIDOrCode string) (*Project, error) {
 	cacheKey := fmt.Sprintf("bcs.GetProject:%s", projectIDOrCode)
