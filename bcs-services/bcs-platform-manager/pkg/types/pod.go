@@ -10,35 +10,17 @@
  * limitations under the License.
  */
 
-// Package config project config
-package config
+// Package types pod types
+package types
 
-const (
-	// DevEnv xxx
-	DevEnv = "dev"
-	// StagEnv xxx
-	StagEnv = "stag"
-	// ProdEnv xxx
-	ProdEnv = "prod"
-)
-
-// BaseConf :
-type BaseConf struct {
-	HttpPort          string   `yaml:"http_port"`
-	BindAddress       string   `yaml:"bind_address"`
-	AppCode           string   `yaml:"app_code"`
-	AppSecret         string   `yaml:"app_secret"`
-	SystemID          string   `yaml:"system_id"`
-	VisitorsWhiteList []string `yaml:"visitors_white_list"`
-	RunEnv            string   `yaml:"run_env"`
+// SampleRequset 示例请求
+type SampleRequset struct {
+	ProjectId string `json:"projectId" in:"path=projectId" validate:"required"`
+	ClusterId string `json:"clusterId" in:"path=clusterId" validate:"required"`
 }
 
-// Init :
-func (c *BaseConf) Init() error {
-	c.HttpPort = "8080"
-	c.BindAddress = ""
-	c.AppCode = ""
-	c.AppSecret = ""
-	c.RunEnv = DevEnv
-	return nil
+// SampleResponse 示例响应
+type SampleResponse struct {
+	Id                  string `json:"id"`
+	CollectorConfigName string `json:"collector_config_name"`
 }
