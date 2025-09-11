@@ -50,6 +50,7 @@ type IstioUpdateOption struct {
 	NewRemoteClusters   []*entity.RemoteCluster
 	MultiClusterEnabled *bool
 	UpdateValues        *common.IstiodInstallValues
+	Values              string // 当前集群的values
 	ObservabilityConfig *meshmanager.ObservabilityConfig
 	UpdateValuesOptions *utils.UpdateValuesOptions
 	CLBID               *string
@@ -344,17 +345,46 @@ func (i *IstioUpdateAction) deployGatewayResources(ctx context.Context) error {
 
 // upgradeExistingGateway 升级已存在的网关
 func (i *IstioUpdateAction) upgradeEastWestGateway(ctx context.Context, releaseName string) error {
-	// 生成网关配置值
-	values, err := utils.GenEgressGatewayValues(&utils.GenEgressGatewayValuesOption{
-		ChartValuesPath: *i.ChartValuesPath,
-		ChartVersion:    *i.ChartVersion,
-		CLBID:           *i.CLBID,
-		NetworkID:       *i.NetworkID,
-		Revision:        *i.Revision,
-	})
+	// 获取网关的values
+	releaseDetail, err := helm.GetReleaseDetail(
+		ctx,
+		&helmmanager.GetReleaseDetailV1Req{
+			ProjectCode: i.ProjectCode,
+			ClusterID:   &i.PrimaryClusters[0],
+			Namespace:   pointer.String(common.IstioNamespace),
+			Name:        &releaseName,
+		},
+	)
 	if err != nil {
-		blog.Errorf("[%s]gen egress gateway values failed, err: %s", *i.MeshID, err)
-		return fmt.Errorf("gen egress gateway values failed: %s", err)
+		blog.Errorf("[%s]get release detail failed, err: %s", *i.MeshID, err)
+		return fmt.Errorf("get release detail failed: %s", err)
+	}
+	if releaseDetail == nil {
+		blog.Errorf("[%s]release detail is nil", *i.MeshID)
+		return fmt.Errorf("release detail is nil")
+	}
+	if len(releaseDetail.Data.Values) == 0 {
+		blog.Errorf("[%s]release values is empty", *i.MeshID)
+		return fmt.Errorf("release values is empty")
+	}
+	values := releaseDetail.Data.Values[0]
+	customValues := common.EastwestGatewayValues{
+		Service: common.Service{
+			Annotations: map[string]string{
+				utils.KeyServiceAnnotationCLBID: *i.CLBID,
+			},
+		},
+	}
+	customValuesBytes, err := yaml.Marshal(customValues)
+	if err != nil {
+		blog.Errorf("[%s]marshal custom values failed, err: %s", *i.MeshID, err)
+		return fmt.Errorf("marshal custom values failed: %s", err)
+	}
+	newCustomValues := string(customValuesBytes)
+	mergedValues, err := utils.MergeValues(values, newCustomValues)
+	if err != nil {
+		blog.Errorf("[%s]merge values failed, err: %s", *i.MeshID, err)
+		return fmt.Errorf("merge values failed: %s", err)
 	}
 
 	// 执行升级
@@ -368,7 +398,7 @@ func (i *IstioUpdateAction) upgradeEastWestGateway(ctx context.Context, releaseN
 			Version:     i.ChartVersion,
 			Namespace:   pointer.String(common.IstioNamespace),
 			Name:        &releaseName,
-			Values:      []string{values},
+			Values:      []string{mergedValues},
 		},
 	)
 	if err != nil {
@@ -382,32 +412,6 @@ func (i *IstioUpdateAction) upgradeEastWestGateway(ctx context.Context, releaseN
 
 // updatePrimaryCluster 更新主集群istio
 func (i *IstioUpdateAction) updatePrimaryCluster(ctx context.Context, clusterID string) error {
-	// 获取Release名称
-	istiodReleaseName, err := opcommon.GetReleaseName(i.OldReleaseNames, clusterID, common.ComponentIstiod, *i.MeshID)
-	if err != nil {
-		return err
-	}
-
-	// 获取istiod的values.yaml配置信息
-	releaseDetail, err := helm.GetReleaseDetail(
-		ctx,
-		&helmmanager.GetReleaseDetailV1Req{
-			ProjectCode: i.ProjectCode,
-			ClusterID:   &clusterID,
-			Namespace:   pointer.String(common.IstioNamespace),
-			Name:        &istiodReleaseName,
-		},
-	)
-	if err != nil || releaseDetail == nil {
-		blog.Errorf("[%s]get release detail failed, clusterID: %s", *i.MeshID, clusterID)
-		return fmt.Errorf("get release detail failed, clusterID: %s", clusterID)
-	}
-
-	if len(releaseDetail.Data.Values) == 0 {
-		blog.Errorf("[%s]release values is empty, clusterID: %s", *i.MeshID, clusterID)
-		return fmt.Errorf("release values is empty, clusterID: %s", clusterID)
-	}
-	values := releaseDetail.Data.Values[0]
 	var customValues string
 	customValuesBytes, err := yaml.Marshal(i.UpdateValues)
 	if err != nil {
@@ -419,7 +423,7 @@ func (i *IstioUpdateAction) updatePrimaryCluster(ctx context.Context, clusterID 
 	// utils.MergeValues 的合并以values为基准
 	// values中存在的字段无法被customValues覆盖
 	// 合并前需要先处理values中本次需要移除的字段
-	newValues, err := utils.ProcessValues(values, i.UpdateValuesOptions)
+	newValues, err := utils.ProcessValues(i.Values, i.UpdateValuesOptions)
 	if err != nil {
 		blog.Errorf("[%s]process field key failed, clusterID: %s, err: %s", *i.MeshID, clusterID, err)
 		return err
@@ -431,6 +435,12 @@ func (i *IstioUpdateAction) updatePrimaryCluster(ctx context.Context, clusterID 
 		return err
 	}
 
+	istiodReleaseName, err := opcommon.GetReleaseName(
+		i.OldReleaseNames, clusterID, common.ComponentIstiod, *i.MeshID,
+	)
+	if err != nil {
+		return err
+	}
 	_, err = helm.Upgrade(
 		ctx,
 		&helmmanager.UpgradeReleaseV1Req{
@@ -790,7 +800,10 @@ func (i *IstioUpdateAction) buildReleaseNames(clusters []string) map[string]map[
 	if i.MultiClusterEnabled != nil && *i.MultiClusterEnabled {
 		for _, clusterID := range clusters {
 			if _, exists := releaseNames[clusterID]; exists {
-				releaseNames[clusterID][common.ComponentIstioGateway] = common.IstioInstallIstioGatewayName
+				// 只有当集群没有gateway releaseName时才设置默认值，避免覆盖自定义的releaseName
+				if _, hasGateway := releaseNames[clusterID][common.ComponentIstioGateway]; !hasGateway {
+					releaseNames[clusterID][common.ComponentIstioGateway] = common.IstioInstallIstioGatewayName
+				}
 			}
 		}
 	}
@@ -806,6 +819,9 @@ func (i *IstioUpdateAction) getCLBIPForNewClusters(ctx context.Context) (string,
 	)
 	if err != nil {
 		return "", fmt.Errorf("get eastwestgateway release name failed: %s", err)
+	}
+	if releaseName == "" {
+		releaseName = common.IstioInstallIstioGatewayName
 	}
 	clbIP, err := k8s.GetCLBIP(ctx, i.PrimaryClusters[0], releaseName)
 	if err != nil {
