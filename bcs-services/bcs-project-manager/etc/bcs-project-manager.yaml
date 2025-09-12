@@ -19,6 +19,7 @@ mongo:
   address: "127.0.0.1:27017"
   replicaset: ""
   connecttimeout: 5
+  authdatabase: ""
   database: "bcsproject_project"
   username: "admin"
   password: 123456

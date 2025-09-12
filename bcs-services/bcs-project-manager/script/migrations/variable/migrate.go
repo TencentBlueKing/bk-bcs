@@ -64,6 +64,7 @@ var (
 	mongoReplicaset string
 	mongoUser       string
 	mongoPwd        string
+	mongoAuthDBName string
 	mongoDBName     string
 
 	// db instance
@@ -92,6 +93,7 @@ func parseFlags() {
 	flag.StringVar(&mongoReplicaset, "mongo_replicaset", "", "mongo replicaset")
 	flag.StringVar(&mongoUser, "mongo_user", "", "access mongo username")
 	flag.StringVar(&mongoPwd, "mongo_pwd", "", "access mongo password")
+	flag.StringVar(&mongoAuthDBName, "mongo_auth_db_name", "", "access mongo db name")
 	flag.StringVar(&mongoDBName, "mongo_db_name", "", "access mongo db name")
 
 	flag.Parse()
@@ -226,6 +228,7 @@ func initDB() error {
 	store.InitMongo(&config.MongoConfig{
 		Address:        mongoAddr,
 		ConnectTimeout: 5,
+		AuthDatabase: mongoAuthDBName,
 		Database:       mongoDBName,
 		Username:       mongoUser,
 		Password:       mongoPwd,

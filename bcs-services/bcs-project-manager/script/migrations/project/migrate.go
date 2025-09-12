@@ -55,6 +55,7 @@ var (
 	mongoUser       string
 	mongoPwd        string
 	mongoDBName     string
+	mongoAuthDBName string
 	initProject     bool
 	migrateCC       bool
 
@@ -127,6 +128,7 @@ func parseFlags() {
 	flag.StringVar(&mongoUser, "mongo_user", "", "access mongo username")
 	flag.StringVar(&mongoPwd, "mongo_pwd", "", "access mongo password")
 	flag.StringVar(&mongoDBName, "mongo_db_name", "", "access mongo db name")
+	flag.StringVar(&mongoAuthDBName, "mongo_auth_db_name", "", "access mongo auth db name")
 
 	// init built-in project
 	flag.BoolVar(&initProject, "init_project", false, "whether to init the built-in project")
@@ -139,6 +141,7 @@ func parseFlags() {
 func initDB() error {
 	// mongo
 	store.InitMongo(&config.MongoConfig{
+		AuthDatabase:   mongoAuthDBName,
 		Address:        mongoAddr,
 		Replicaset:     mongoReplicaset,
 		ConnectTimeout: 5,

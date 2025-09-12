@@ -36,6 +36,7 @@ type MongoConfig struct {
 	Address        string `yaml:"address"`
 	Replicaset     string `yaml:"replicaset"`
 	ConnectTimeout uint   `yaml:"connecttimeout"`
+	AuthDatabase   string `yaml:"authdatabase"`
 	Database       string `yaml:"database"`
 	Username       string `yaml:"username"`
 	Password       string `yaml:"password"`
