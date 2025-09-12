@@ -272,6 +272,7 @@ func (a *APIResource) parseMongodb(key string, dbConf *conf.Config) error {
 	if err != nil {
 		return err
 	}
+	authDatabase := dbConf.Read(key, "AuthDatabase")
 	database := dbConf.Read(key, "Database")
 	username := dbConf.Read(key, "Username")
 	password := dbConf.Read(key, "Password")
@@ -298,6 +299,7 @@ func (a *APIResource) parseMongodb(key string, dbConf *conf.Config) error {
 	}
 
 	mongoOptions := &mongo.Options{
+		AuthDatabase:          authDatabase,
 		Hosts:                 strings.Split(address, ","),
 		Replicaset:            replicaset,
 		ConnectTimeoutSeconds: timeout,
