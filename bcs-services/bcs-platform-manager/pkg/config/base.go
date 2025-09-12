@@ -25,6 +25,8 @@ const (
 	StagEnv = "stag"
 	// ProdEnv xxx
 	ProdEnv = "prod"
+	// ServiceDomain domain name for service
+	ServiceDomain = "bcsplatformmanager.bkbcs.tencent.com"
 )
 
 // BaseConf :
