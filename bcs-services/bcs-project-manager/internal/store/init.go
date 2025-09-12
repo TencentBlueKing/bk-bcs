@@ -52,6 +52,7 @@ func NewMongo(conf *config.MongoConfig) *mongo.DB {
 	}
 
 	mongoOptions := &mongo.Options{
+		AuthDatabase:          conf.AuthDatabase,
 		Hosts:                 strings.Split(conf.Address, ","),
 		Replicaset:            conf.Replicaset,
 		ConnectTimeoutSeconds: int(conf.ConnectTimeout),

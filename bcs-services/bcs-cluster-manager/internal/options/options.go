@@ -81,6 +81,7 @@ type MongoConfig struct {
 	Password       string `json:"password"`
 	MaxPoolSize    uint   `json:"maxpoolsize"`
 	MinPoolSize    uint   `json:"minpoolsize"`
+	AuthDatabase   string `bson:"authdatabase"`
 }
 
 // BrokerConfig option for dispatch task broker

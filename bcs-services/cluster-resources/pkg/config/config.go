@@ -88,6 +88,9 @@ func LoadConf(filePath string) (*ClusterResourcesConf, error) {
 	if conf.Mongo.Password == "" {
 		conf.Mongo.Password = envs.MongoPassword
 	}
+	if conf.Mongo.AuthDatabase == "" {
+		conf.Mongo.AuthDatabase = envs.MongoAuthDatabase
+	}
 
 	for _, f := range []func() error{
 		// 初始化 Server.Address
