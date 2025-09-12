@@ -228,7 +228,7 @@ func initDB() error {
 	store.InitMongo(&config.MongoConfig{
 		Address:        mongoAddr,
 		ConnectTimeout: 5,
-		AuthDatabase: mongoAuthDBName,
+		AuthDatabase:   mongoAuthDBName,
 		Database:       mongoDBName,
 		Username:       mongoUser,
 		Password:       mongoPwd,
