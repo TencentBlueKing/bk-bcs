@@ -504,9 +504,7 @@
                                 </td>
                                 <td>{{versionData.updated}}</td>
                                 <td>
-                                    <bk-user-display-name v-if="versionData?.updator" :user-id="versionData?.updator">
-                                    </bk-user-display-name>
-                                    <span v-else>--</span>
+                                    <bk-user-display-name :user-id="versionData?.updator"></bk-user-display-name>
                                 </td>
                                 <td>
                                     <a href="javascript:void(0);" class="bk-text-button" @click.stop.prevent="getTemplateByVersion(versionData.show_version_id)">{{$t('deploy.templateset.load')}}</a>

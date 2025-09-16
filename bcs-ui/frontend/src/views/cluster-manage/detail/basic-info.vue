@@ -188,9 +188,7 @@
           {{ getClusterImportCategory(clusterData) }}
         </bk-form-item>
         <bk-form-item :label="$t('generic.label.createdBy')">
-          <bk-user-display-name v-if="clusterData.creator" :user-id="clusterData.creator">
-          </bk-user-display-name>
-          <span v-else>--</span>
+          <bk-user-display-name :user-id="clusterData.creator"></bk-user-display-name>
         </bk-form-item>
         <bk-form-item :label="$t('cluster.labels.createdAt')">
           {{ clusterData.createTime || '--' }}

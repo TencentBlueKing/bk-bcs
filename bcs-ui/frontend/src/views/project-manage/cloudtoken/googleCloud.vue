@@ -90,9 +90,7 @@
         prop="account.creator"
         show-overflow-tooltip>
         <template #default="{ row }">
-          <bk-user-display-name v-if="row.account?.creator" :user-id="row.account?.creator">
-          </bk-user-display-name>
-          <span v-else>--</span>
+          <bk-user-display-name :user-id="row.account?.creator"></bk-user-display-name>
         </template>
       </bcs-table-column>
       <bcs-table-column :label="$t('googleCloud.label.operate')" width="100" show-overflow-tooltip>

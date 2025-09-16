@@ -82,8 +82,7 @@
           </bk-table-column>
           <bk-table-column :label="$t('projects.operateAudit.operator')" prop="user">
             <template #default="{ row }">
-              <bk-user-display-name v-if="row.user" :user-id="row.user"></bk-user-display-name>
-              <span v-else>--</span>
+              <bk-user-display-name :user-id="row.user"></bk-user-display-name>
             </template>
           </bk-table-column>
           <bk-table-column :label="$t('cluster.create.label.desc')" prop="description" :show-overflow-tooltip="true" min-width="160">

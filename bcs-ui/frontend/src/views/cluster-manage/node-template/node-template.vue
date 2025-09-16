@@ -47,16 +47,12 @@
         </bcs-table-column>
         <bcs-table-column :label="$t('generic.label.createdBy1')" prop="creator">
           <template #default="{ row }">
-            <bk-user-display-name v-if="row.creator" :user-id="row.creator">
-            </bk-user-display-name>
-            <span v-else>--</span>
+            <bk-user-display-name :user-id="row.creator"></bk-user-display-name>
           </template>
         </bcs-table-column>
         <bcs-table-column :label="$t('generic.label.updator1')" prop="updater">
           <template #default="{ row }">
-            <bk-user-display-name v-if="row.updater" :user-id="row.updater">
-            </bk-user-display-name>
-            <span v-else>--</span>
+            <bk-user-display-name :user-id="row.updater"></bk-user-display-name>
           </template>
         </bcs-table-column>
         <bcs-table-column :label="$t('cluster.labels.createdAt')" prop="createTime"></bcs-table-column>

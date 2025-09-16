@@ -60,10 +60,7 @@
       </bk-table-column>
       <bk-table-column :label="$t('generic.label.createdBy1')" prop="creator">
         <template #default="{ row }">
-          <template v-if="flagsMap.EnableMultiTenantMode && row.creator">
-            <bk-user-display-name :user-id="row.creator"></bk-user-display-name>
-          </template>
-          <span v-else>{{ row.creator || '--' }}</span>
+          <bk-user-display-name :user-id="row.creator"></bk-user-display-name>
         </template>
       </bk-table-column>
       <bk-table-column :label="$t('generic.label.action')" width="120">

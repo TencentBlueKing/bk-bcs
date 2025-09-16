@@ -21,9 +21,7 @@
               <div class="title" :title="curTemplate.name">{{curTemplate.name || '--'}}</div>
               <div class="creater" :title="curTemplate.creator">
                 {{$t('generic.label.createdBy')}}：
-                <bk-user-display-name v-if="curTemplate.creator" :user-id="curTemplate.creator">
-                </bk-user-display-name>
-                <span v-else>--</span>
+                <bk-user-display-name :user-id="curTemplate.creator"></bk-user-display-name>
               </div>
             </div>
             <div class="desc" :title="curTemplate.desc">

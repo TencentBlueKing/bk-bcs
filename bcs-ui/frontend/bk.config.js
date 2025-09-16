@@ -45,6 +45,12 @@ module.exports = {
         },
         proxy: [
           {
+            context: ['/api/bk-user-web'],
+            target: process.env.BK_USER_HOST,
+            changeOrigin: true,
+            secure: false
+          },
+          {
             context: ['/api', '/change_log'],
             target: process.env.BK_PROXY_DEVOPS_BCS_API_URL,
             changeOrigin: true,

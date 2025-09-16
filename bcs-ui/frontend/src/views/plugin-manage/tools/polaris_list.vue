@@ -114,11 +114,7 @@
         <template #default="{ row }">
           <p class="bcs-ellipsis leading-[24px]">
             {{ $t('generic.label.updator') }}：<span>
-              <bk-user-display-name
-                v-if="handleGetExtData(row.metadata.uid, 'updater')"
-                :user-id="handleGetExtData(row.metadata.uid, 'updater')">
-              </bk-user-display-name>
-              <span v-else>--</span>
+              <bk-user-display-name :user-id="handleGetExtData(row.metadata.uid, 'updater')"></bk-user-display-name>
             </span>
           </p>
           <p class="bcs-ellipsis leading-[24px]">

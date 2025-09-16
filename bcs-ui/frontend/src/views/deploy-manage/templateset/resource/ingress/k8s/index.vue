@@ -85,9 +85,7 @@
             </bk-table-column>
             <bk-table-column :label="$t('generic.label.updator')" min-width="100">
               <template slot-scope="props">
-                <bk-user-display-name v-if="props.row.updator" :user-id="props.row.updator">
-                </bk-user-display-name>
-                <span v-else>--</span>
+                <bk-user-display-name :user-id="props.row.updator"></bk-user-display-name>
               </template>
             </bk-table-column>
             <bk-table-column :label="$t('generic.label.action')" width="150">

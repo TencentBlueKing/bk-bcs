@@ -113,7 +113,6 @@
       @delete="handleDeleteField(item)">
       <template v-if="item.id === 'creator'">
         <TenantUserSelector
-          v-if="flagsMap.EnableMultiTenantMode"
           v-model="viewData.filter[item.id]"
           multiple
           class="w-full"
@@ -121,13 +120,13 @@
           :tenant-id="user.tenant_id"
           :placeholder="$t('view.placeholder.creator')"
           ref="inputRef" />
-        <BkUserSelector
+        <!-- <BkUserSelector
           v-else
           v-model="viewData.filter[item.id]"
           class="w-full"
           :api="userSelectorAPI"
           :placeholder="$t('view.placeholder.creator')"
-          ref="inputRef" />
+          ref="inputRef" /> -->
       </template>
       <template v-else-if="item.id === 'labelSelector'">
         <LabelSelector
@@ -201,8 +200,8 @@ import { cloneDeep, get, isEqual, merge, set } from 'lodash';
 import { computed, PropType, ref, watch } from 'vue';
 
 import TenantUserSelector from '@blueking/bk-user-selector/vue2';
-import BkUserSelector from '@blueking/user-selector';
 
+// import BkUserSelector from '@blueking/user-selector';
 import BatchClusterSelect from './batch-cluster-select.vue';
 import LabelSelector from './label-selector.vue';
 import NSSelect from './ns-select.vue';
@@ -240,9 +239,9 @@ const { user, flagsMap } = useAppData();
 const normalStatusList = ['RUNNING'];
 
 // 用户管理API
-const userSelectorAPI = `${window.BK_USER_HOST}/api/c/compapi/v2/usermanage/fs_list_users/?app_code=bk-magicbox&page_size=100&page=1&callback=USER_LIST_CALLBACK_0`;
+// const userSelectorAPI = `${window.BK_USER_HOST}/api/c/compapi/v2/usermanage/fs_list_users/?app_code=bk-magicbox&page_size=100&page=1&callback=USER_LIST_CALLBACK_0`;
 // 租户用户管理API
-const tenantUserSelectorAPI = `${window.BK_USER_HOST}/api/bk-user-web/prod`;
+const tenantUserSelectorAPI = window.RUN_ENV === 'dev' ? '/api/bk-user-web/prod' : `${window.BK_USER_HOST}/api/bk-user-web/prod`;
 // popoverRef
 const addFieldPopoverRef = ref();
 // 视图数据

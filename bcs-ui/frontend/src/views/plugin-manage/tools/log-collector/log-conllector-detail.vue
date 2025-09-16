@@ -178,9 +178,7 @@
       </div>
     </bcs-form-item>
     <bcs-form-item :label="$t('deploy.image.lastUpdatedBy')">
-      <bk-user-display-name v-if="data.updator" :user-id="data.updator">
-      </bk-user-display-name>
-      <span v-else>--</span>
+      <bk-user-display-name :user-id="data.updator"></bk-user-display-name>
     </bcs-form-item>
     <bcs-form-item :label="$t('deploy.image.LastUpdatedAt')">{{ data.updated_at }}</bcs-form-item>
     <bcs-form-item :label="$t('generic.label.memo')">{{ data.description || '--' }}</bcs-form-item>

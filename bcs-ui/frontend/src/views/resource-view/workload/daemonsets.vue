@@ -21,8 +21,7 @@
         isViewEditable,
         isClusterMode,
         sourceTypeMap,
-        resolveLink,
-        flagsMap
+        resolveLink
       }">
       <bk-table
         :data="curPageData"
@@ -102,10 +101,7 @@
         </bk-table-column>
         <bk-table-column :label="$t('generic.label.createdBy')">
           <template slot-scope="{ row }">
-            <template v-if="flagsMap.EnableMultiTenantMode && handleGetExtData(row.metadata.uid, 'creator')">
-              <bk-user-display-name :user-id="handleGetExtData(row.metadata.uid, 'creator')"></bk-user-display-name>
-            </template>
-            <span v-else>{{handleGetExtData(row.metadata.uid, 'creator') || '--'}}</span>
+            <bk-user-display-name :user-id="handleGetExtData(row.metadata.uid, 'creator')"></bk-user-display-name>
           </template>
         </bk-table-column>
         <bk-table-column :label="$t('generic.label.source')" :show-overflow-tooltip="false">

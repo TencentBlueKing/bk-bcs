@@ -44,11 +44,7 @@
       </bcs-table-column>
       <bcs-table-column :label="$t('generic.label.updator')" min-width="100">
         <template #default="{ row }">
-          <bk-user-display-name
-            v-if="handleGetExtData(row.metadata.uid, 'updater')"
-            :user-id="handleGetExtData(row.metadata.uid, 'updater')">
-          </bk-user-display-name>
-          <span v-else>--</span>
+          <bk-user-display-name :user-id="handleGetExtData(row.metadata.uid, 'updater')"></bk-user-display-name>
         </template>
       </bcs-table-column>
       <bcs-table-column :label="$t('generic.label.action')" width="150">

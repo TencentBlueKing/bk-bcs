@@ -147,12 +147,13 @@ export function useCluster() {
 export function useAppData() {
   // 用户信息
   const user = computed(() => $store.state.user);
+  const apiBaseUrl = window.RUN_ENV === 'dev' ? '/api/bk-user-web/prod' : `${window.BK_USER_HOST}/api/bk-user-web/prod`;
   async function getUserInfo() {
     const data = await userInfo().catch(() => ({}));
     // 多租户用户名展示组件配置
     BkUserDisplayName.configure({
       tenantId: data.tenant_id,
-      apiBaseUrl: `${window.BK_USER_HOST}/api/bk-user-web/prod`,
+      apiBaseUrl,
     });
     $store.commit('updateUser', data);
     return data;
@@ -166,7 +167,6 @@ export function useAppData() {
     AZURECLOUD: true,
     IMPORTSOPSCLUSTER: true,
     PROJECTQUOTAS: false,
-    EnableMultiTenantMode: true, // 多租户模式
   };
   async function getFeatureFlags(params: { projectCode: string }) {
     const data = await featureFlagsApi(params).catch(() => ({}));

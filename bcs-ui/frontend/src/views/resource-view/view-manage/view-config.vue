@@ -101,10 +101,7 @@
                 v-for="(item, index) in originViewData?.filter.creator"
                 :key="index"
                 :class="['m-[0px] mr-[8px]', index > 0 ? 'mt-[6px]' : '']">
-                <template v-if="flagsMap.EnableMultiTenantMode">
-                  <bk-user-display-name :user-id="item"></bk-user-display-name>
-                </template>
-                <span v-else>{{ item }}</span>
+                <bk-user-display-name :user-id="item"></bk-user-display-name>
               </bcs-tag>
             </ViewField>
             <ViewField
@@ -316,7 +313,7 @@ import $bkMessage from '@/common/bkmagic';
 import { bus } from '@/common/bus';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import PopoverSelector from '@/components/popover-selector.vue';
-import { useAppData, useCluster } from '@/composables/use-app';
+import { useCluster } from '@/composables/use-app';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store';
@@ -324,9 +321,6 @@ import $store from '@/store';
 const emits = defineEmits(['close']);
 
 const { clusterNameMap } = useCluster();
-
-// 特性开关
-const { flagsMap } = useAppData();
 
 // resize event
 const panelRef = ref();

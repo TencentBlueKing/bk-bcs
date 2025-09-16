@@ -500,9 +500,7 @@
             <div class="data-item">
               <p class="key">{{$t('generic.label.updator')}}：</p>
               <p class="value">
-                <bk-user-display-name v-if="curService?.updator" :user-id="curService?.updator">
-                </bk-user-display-name>
-                <span v-else>--</span>
+                <bk-user-display-name :user-id="curService?.updator"></bk-user-display-name>
               </p>
             </div>
             <div class="data-item">

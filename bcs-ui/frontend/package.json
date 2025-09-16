@@ -12,8 +12,8 @@
   "dependencies": {
     "@blueking/ai-blueking": "0.4.2",
     "@blueking/bk-trace": "0.0.1",
-    "@blueking/bk-user-display-name": "^1.0.2",
-    "@blueking/bk-user-selector": "^0.0.28",
+    "@blueking/bk-user-display-name": "^1.0.3-beta.3",
+    "@blueking/bk-user-selector": "^0.0.31",
     "@blueking/bkui-form": "0.0.49",
     "@blueking/bkui-library": "^0.0.0-beta.6",
     "@blueking/ip-selector": "0.2.0-beta.1",

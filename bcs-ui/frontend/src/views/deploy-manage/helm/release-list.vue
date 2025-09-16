@@ -105,9 +105,7 @@
       <bcs-table-column :label="$t('k8s.namespace')" prop="namespace" show-overflow-tooltip></bcs-table-column>
       <bcs-table-column :label="$t('generic.label.updator')" prop="updateBy" width="130">
         <template #default="{ row }">
-          <bk-user-display-name v-if="row.updateBy" :user-id="row.updateBy">
-          </bk-user-display-name>
-          <span v-else>--</span>
+          <bk-user-display-name :user-id="row.updateBy"></bk-user-display-name>
         </template>
       </bcs-table-column>
       <bcs-table-column :label="$t('cluster.labels.updatedAt')" prop="updateTime" width="200"></bcs-table-column>

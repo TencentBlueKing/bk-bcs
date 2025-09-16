@@ -25,10 +25,7 @@
     <bk-table :data="data" v-bkloading="{ isLoading: loading }">
       <bk-table-column :label="$t('deploy.helm.username')">
         <template #default>
-          <template v-if="flagsMap.EnableMultiTenantMode && user.username">
-            <bk-user-display-name :user-id="user.username"></bk-user-display-name>
-          </template>
-          <span v-else>{{user.username}}</span>
+          <bk-user-display-name :user-id="user.username"></bk-user-display-name>
         </template>
       </bk-table-column>
       <bk-table-column :label="$t('apiToken.text')" min-width="300">
