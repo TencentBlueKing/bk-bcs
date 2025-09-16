@@ -224,7 +224,8 @@ import BkForm from 'bk-magic-vue/lib/form';
 import BkFormItem from 'bk-magic-vue/lib/form-item';
 import { cloneDeep } from 'lodash';
 import { computed, defineComponent, onMounted, ref, watch } from 'vue';
-import xss from 'xss';
+
+import { filterPlainText } from '@blueking/xss-filter';
 
 import useVariable, { IParams, Pick } from './use-variable';
 import exampleData from './variable.json';
@@ -407,7 +408,7 @@ export default defineComponent({
       if (!validate) return;
 
       const cloneFormData = cloneDeep(formData.value);
-      const xssDesc = xss(cloneFormData.desc);
+      const xssDesc = filterPlainText(cloneFormData.desc);
       if (cloneFormData.desc !== xssDesc) {
         console.warn('Intercepted by XSS');
       }

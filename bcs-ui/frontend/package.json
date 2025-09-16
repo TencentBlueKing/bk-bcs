@@ -20,6 +20,7 @@
     "@blueking/platform-config": "^1.0.5",
     "@blueking/task-log": "^0.0.8",
     "@blueking/user-selector": "^1.0.9",
+    "@blueking/xss-filter": "^0.0.9",
     "axios": "^1.7.7",
     "base-64": "^0.1.0",
     "bk-magic-vue": "2.5.10-beta.3",
@@ -48,10 +49,10 @@
     "vue": "^2.7.14",
     "vue-i18n": "8.28.2",
     "vue-router": "^3.6.5",
-    "vuex": "3.6.2",
-    "xss": "^1.0.15"
+    "vuex": "3.6.2"
   },
   "devDependencies": {
+    "@babel/runtime": "7.26.7",
     "@blueking/babel-preset-bk": "2.1.0-beta.10",
     "@blueking/cli-service-webpack": "0.0.5-beta.4",
     "@blueking/eslint-config-bk": "2.1.0-beta.18",
@@ -73,8 +74,7 @@
     "tailwindcss": "^3.1.8",
     "text-loader": "0.0.1",
     "typescript": "^5.3.3",
-    "vue-i18n-extract": "^2.0.7",
-    "@babel/runtime": "7.26.7"
+    "vue-i18n-extract": "^2.0.7"
   },
   "engines": {
     "node": ">= 6.0.0",

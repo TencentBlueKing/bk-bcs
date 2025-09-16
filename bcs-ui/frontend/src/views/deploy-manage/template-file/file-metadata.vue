@@ -29,7 +29,8 @@
 <script setup lang="ts">
 import { cloneDeep } from 'lodash';
 import { ref, watch } from 'vue';
-import xss from 'xss';
+
+import { filterPlainText } from '@blueking/xss-filter';
 
 import $i18n from '@/i18n/i18n-setup';
 
@@ -74,7 +75,7 @@ async function confirm() {
   if (!result) return;
 
   const data = cloneDeep(formData.value);
-  const xssDesc = xss(data.description);
+  const xssDesc = filterPlainText(data.description);
   if (data.description !== xssDesc) {
     console.warn('Intercepted by XSS');
   }

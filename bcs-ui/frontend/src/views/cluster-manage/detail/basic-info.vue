@@ -222,7 +222,8 @@
 <script lang="ts">
 import { merge } from 'lodash';
 import { computed, defineComponent, onMounted, ref, toRefs } from 'vue';
-import xss from 'xss';
+
+import { filterPlainText } from '@blueking/xss-filter';
 
 import { getClusterImportCategory, getClusterTypeName, useClusterInfo, useClusterList } from '../cluster/use-cluster';
 import ClusterVisibleRange from '../components/cluster-visible-range.vue';
@@ -351,7 +352,7 @@ export default defineComponent({
     };
     // 修改集群描述
     const handleClusterDescChange = async (description) => {
-      const xssDescription = xss(description);
+      const xssDescription = filterPlainText(description);
       if (description !== xssDescription) {
         console.warn('Intercepted by XSS');
       }
