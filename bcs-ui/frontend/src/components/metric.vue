@@ -20,13 +20,14 @@
         </ul>
       </bk-dropdown-menu>
     </div>
-    <ECharts class="vue-echarts" :options="echartsOptions" auto-resize v-if="!isNoData"></ECharts>
+    <ECharts ref="eChartsRef" class="vue-echarts" :options="echartsOptions" auto-resize v-if="!isNoData"></ECharts>
     <bk-exception class="echarts-empty" type="empty" scene="part" v-else> </bk-exception>
   </div>
 </template>
 <script lang="ts">
+import { throttle  } from 'lodash';
 import moment from 'moment';
-import { computed, defineComponent, onMounted, PropType, reactive, ref, toRef, toRefs, watch } from 'vue';
+import { computed, defineComponent, getCurrentInstance, onMounted, onUnmounted, PropType, reactive, ref, toRef, toRefs, watch } from 'vue';
 
 import defaultChartOption from '../views/resource-view/common/default-echarts-option';
 
@@ -236,6 +237,28 @@ export default defineComponent({
       return metricData;
     };
 
+
+    /**
+     * 由于ECharts容器已被撑开，页面缩小无法触发自身resize事件
+     * 通过监听父盒子尺寸变化，隐藏/显示图表达到重新渲染的效果
+     */
+    const resizeObserver = ref<ResizeObserver | null>(null);
+    const containerRef = ref<HTMLElement>();
+    const eChartsRef = ref();
+    // 初始化
+    function init() {
+      containerRef.value = getCurrentInstance()?.proxy?.$el?.parentElement || undefined;
+      if (containerRef.value) {
+        resizeObserver.value = new ResizeObserver(() => {
+          throttleFn();
+        });
+        resizeObserver.value.observe(containerRef.value);
+      }
+    };
+    const throttleFn = throttle(() => {
+      eChartsRef.value?.resize();
+    }, 300);
+
     const { params } = toRefs(props);
     watch(params, (newValue, oldValue) => {
       if ((newValue && !oldValue)
@@ -246,11 +269,18 @@ export default defineComponent({
 
     onMounted(() => {
       handleGetMetricData();
+      init();
+    });
+    onUnmounted(() => {
+      resizeObserver.value?.disconnect();
+      containerRef.value && resizeObserver.value?.unobserve?.(containerRef.value);
+      resizeObserver.value = null;
     });
 
     return {
       ...toRefs(state),
       isNoData,
+      eChartsRef,
       metricNameProp,
       echartsOptions,
       handleTimeRangeChange,
