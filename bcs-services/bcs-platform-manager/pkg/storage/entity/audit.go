@@ -14,8 +14,6 @@ package entity
 
 import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
-
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/utils"
 )
 
 // Audit for audit
@@ -27,6 +25,4 @@ type Audit struct {
 	CollectorConfigName string             `json:"collector_config_name" bson:"collectorConfigName"`
 	DataID              int                `json:"data_id" bson:"dataID"`
 	BKLogConfigName     string             `json:"bk_log_config_name" bson:"bkLogConfigName"`
-	CreatedAt           utils.JSONTime     `json:"created_at" bson:"createdAt"`
-	UpdatedAt           utils.JSONTime     `json:"updated_at" bson:"updatedAt"`
 }
