@@ -156,8 +156,9 @@ router.beforeEach(async (to, from, next) => {
           newPath = `${SITE_URL}/projects/${projectCode}${redirectPath?.replace(SITE_URL, '')}`;
         }
         let name;
+        let newPathRoute;
         try {
-          const newPathRoute = router.resolve(newPath);
+          newPathRoute = router.resolve(newPath);
           name = newPathRoute.route.matched?.[newPathRoute.route.matched.length - 1]?.name;
         } catch (err) {
           console.warn(err);
@@ -168,6 +169,7 @@ router.beforeEach(async (to, from, next) => {
         next({
           name,
           params: { // 防止被路由规则的 params 覆盖
+            ...(newPathRoute?.route?.params || {}),
             projectCode,
             clusterId,
           },
