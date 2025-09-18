@@ -172,6 +172,13 @@ type UserConfig struct {
 	Token       string `json:"token"`
 }
 
+// StorageConfig storage config
+type StorageConfig struct {
+	Host  string `json:"host"`
+	Token string `json:"token"`
+	Debug bool   `json:"debug"`
+}
+
 // AlarmConfig for alarm interface
 type AlarmConfig struct {
 	Server        string `json:"server"`
@@ -308,6 +315,7 @@ type ClusterManagerOptions struct {
 	Mongo              MongoConfig           `json:"mongo"`
 	Broker             BrokerConfig          `json:"broker"`
 	BKOps              BKOpsConfig           `json:"bkOps"`
+	StorageManager     StorageConfig         `json:"storage"`
 	Cmdb               CmdbConfig            `json:"cmdb"`
 	TenCmdb            TenCmdbConfig         `json:"tenCmdb"`
 	NodeMan            NodeManConfig         `json:"nodeman"`
