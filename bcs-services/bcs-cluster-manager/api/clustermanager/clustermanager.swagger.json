@@ -4182,6 +4182,118 @@
         ]
       }
     },
+    "/clustermanager/v1/clusterv2": {
+      "get": {
+        "summary": "查询简化Cluster列表",
+        "description": "根据查询条件过滤简化Cluster列表，如果某项条件值为空，则忽略此条件。如果所有条件都为空，则默认查询所有集群",
+        "operationId": "ClusterManager_ListClusterSimple",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerListClusterSimpleResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "clusterID",
+            "description": "clusterID. 集群ID，例如BCS-K8S-000000",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "clusterName",
+            "description": "clusterName. 集群名称",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "provider",
+            "description": "provider. 集群提供者，云模板ID，影响具体云设施管理流程",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "description": "status. 集群状态，可能状态CREATING，RUNNING，DELETING，FALURE，INITIALIZATION，DELETED",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "environment",
+            "description": "environment. 集群环境, 例如[prod, debug, test]",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "clusterType",
+            "description": "clusterType. 集群类型, 例如[federation, single], federation表示为联邦集群，single表示独立集群，默认为single",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "projectID",
+            "description": "projectID. 项目ID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "businessID",
+            "description": "businessID. CMDB业务ID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "offset",
+            "description": "offset. 查询偏移量",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "limit",
+            "description": "limit. 查询限制数量",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "sort",
+            "description": "sort. 根据某个字段排序",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "order",
+            "description": "order. 升序或者降序",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
     "/clustermanager/v1/dbdatas/{dataType}": {
       "delete": {
         "summary": "清理历史任务/操作记录日志记录",
@@ -10694,6 +10806,63 @@
       "description": "记录节点信息，用于节点列表展示",
       "title": "ClusterNode"
     },
+    "clustermanagerClusterSimpleInfo": {
+      "type": "object",
+      "properties": {
+        "clusterID": {
+          "type": "string",
+          "description": "BCS内部使用集群ID，格式为BCS-K8S-XXXXX",
+          "title": "clusterID"
+        },
+        "clusterName": {
+          "type": "string",
+          "description": "集群名称",
+          "title": "clusterName"
+        },
+        "provider": {
+          "type": "string",
+          "description": "集群提供者，云模板ID",
+          "title": "provider"
+        },
+        "status": {
+          "type": "string",
+          "description": "集群状态，可能状态CREATING，RUNNING，DELETING，FALURE，INITIALIZATION",
+          "title": "status"
+        },
+        "environment": {
+          "type": "string",
+          "description": "集群所对应的环境信息，stag，debug，prod",
+          "title": "environment"
+        },
+        "clusterType": {
+          "type": "string",
+          "description": "集群类型，federation、single",
+          "title": "clusterType"
+        },
+        "projectID": {
+          "type": "string",
+          "description": "集群所关联的项目ID",
+          "title": "projectID"
+        },
+        "businessID": {
+          "type": "string",
+          "description": "项目绑定的业务ID, 集群所关联的业务ID，该ID来源于CMDB",
+          "title": "businessID"
+        },
+        "creator": {
+          "type": "string",
+          "description": "集群信息创建者",
+          "title": "creator"
+        },
+        "biz_maintainer": {
+          "type": "string",
+          "description": "业务运维人",
+          "title": "biz_maintainer"
+        }
+      },
+      "description": "简化集群信息",
+      "title": "ClusterSimpleInfo"
+    },
     "clustermanagerCommonListResp": {
       "type": "object",
       "properties": {
@@ -16655,6 +16824,43 @@
       },
       "description": "查询集群列表返回",
       "title": "ListClusterResp",
+      "required": [
+        "code",
+        "message",
+        "data"
+      ]
+    },
+    "clustermanagerListClusterSimpleResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerClusterSimpleInfo"
+          },
+          "description": "简化集群信息列表",
+          "title": "data"
+        }
+      },
+      "description": "查询集群列表返回",
+      "title": "ListClusterV2Resp",
       "required": [
         "code",
         "message",
