@@ -391,7 +391,7 @@ func (nm *NodeManager) GetInstanceTypeByProjectQuotaList(
 			NodeType:       zoneResources.GetInstanceType(),
 			Cpu:            zoneResources.GetCpu(),
 			Memory:         zoneResources.GetMem(),
-			Gpu:            zoneResources.GetCpu(),
+			Gpu:            zoneResources.GetGpu(),
 			Status:         status,
 			Zones:          []string{zoneResources.GetZoneName()},
 			Provider:       provider,
