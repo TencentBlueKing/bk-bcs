@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -145,6 +146,13 @@ func CheckUserPerm(ctx context.Context, req server.Request, username string) (bo
 		return false, err
 	}
 
+	if len(resourceID.ClusterID) != 0 && checkClusterClient(username) {
+		if username != resourceID.ClusterID {
+			return false, errors.New("no permission: username must match clusterID")
+		}
+		return true, nil
+	}
+
 	action, ok := ActionPermissions[req.Method()]
 	if !ok {
 		return false, errors.New("operation has not authorized")
@@ -233,4 +241,11 @@ var checkUserBizPerm func(username string, businessID string) (bool, error)
 // SetCheckBizPerm xxx
 func SetCheckBizPerm(f func(username string, businessID string) (bool, error)) {
 	checkUserBizPerm = f
+}
+
+var clusterIdRe = regexp.MustCompile("^BCS-[^-]+-.+$")
+
+// checkClusterUser check clusterId
+func checkClusterClient(username string) bool {
+	return clusterIdRe.MatchString(username)
 }

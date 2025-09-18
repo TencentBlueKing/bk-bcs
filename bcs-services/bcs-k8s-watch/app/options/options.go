@@ -61,6 +61,8 @@ type BCSConfig struct {
 
 	// whether the k8s cluster and bcs-k8s-watch is in external network
 	IsExternal bool `json:"is-external"`
+	// authorization token
+	CustomStorageEndpointToken string `json:"custom-storage-endpoints-token"`
 
 	// WriterQueueLen show writer module chan queue length for data distribute, default 10240
 	WriterQueueLen int64 `json:"writerQueueLen"`
