@@ -44,6 +44,7 @@ var NoAuthMethod = []string{
 	"ClusterManager.CheckCloudKubeConfigConnect",
 
 	// task resource
+	"ClusterManager.ListClusterTaskMetrics",
 
 	// cluster autoscaling
 	"ClusterManager.ListAutoScalingOption",
