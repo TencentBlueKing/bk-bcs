@@ -240,6 +240,17 @@ service ClusterManager {
     };
   }
 
+  rpc ListClusterSimple(ListClusterSimpleReq) returns (ListClusterSimpleResp) {
+    option (google.api.http) = {
+      get : "/clustermanager/v1/clusterv2"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据查询条件过滤简化Cluster列表，如果某项条件值为空，则忽略此"
+          "条件。如果所有条件都为空，则默认查询所有集群"
+      summary : "查询简化Cluster列表"
+    };
+  }
+
   rpc ListCommonCluster(ListCommonClusterReq) returns (ListCommonClusterResp) {
     option (google.api.http) = {
       get : "/clustermanager/v1/sharedclusters"
@@ -7800,6 +7811,160 @@ message ListClusterV2Resp {
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "data",
       description : "简化集群信息列表"}];
+}
+
+message ListClusterSimpleReq {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListClusterSimpleReq"
+      description : "利用条件过滤集群列表请求，查询条件为And关系，如果某项查询"
+          "条件值为空，则忽略不会用此条件过滤"
+    }
+  };
+  string clusterID = 1 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "clusterID",
+      description : "集群ID，例如BCS-K8S-000000"
+    },
+    (validate.rules).string = {max_len: 1024}
+  ];
+  string clusterName = 2 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "clusterName",
+      description : "集群名称"
+    },
+    (validate.rules).string.max_len = 100
+  ];
+  string provider = 3 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "provider",
+      description : "集群提供者，云模板ID，影响具体云设施管理流程"
+    }, (validate.rules).string.max_len = 32];
+  string status = 4[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title: "status",
+      description: "集群状态，可能状态CREATING，RUNNING，DELETING，FALURE，INITIALIZATION，DELETED"
+    }, (validate.rules).string = {in: ["CREATING", "RUNNING", "DELETING", "FALURE", "INITIALIZATION", "DELETED", ""]}];
+  string environment = 5 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "environment",
+      description : "集群环境, 例如[prod, debug, test]"
+    }];
+  string clusterType = 6 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "clusterType",
+      description : "集群类型, 例如[federation, single], "
+          "federation表示为联邦集群，single表示独立集群，默认为single"
+    }];
+  string projectID = 7 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "projectID",
+      description : "项目ID"
+    }, (validate.rules).string = {max_len : 100}];
+  string businessID = 8 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "businessID",
+      description : "CMDB业务ID"
+    }, (validate.rules).string = {max_len : 100}];
+  uint32 offset = 9 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "offset",
+      description : "查询偏移量"
+    }, (validate.rules).uint32.gte = 0];
+  uint32 limit = 10 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "limit",
+      description : "查询限制数量"
+    }, (validate.rules).uint32.lte = 1000];
+  string sort = 11 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "sort",
+      description : "根据某个字段排序"
+    }];
+  string order = 12 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "order",
+      description : "升序或者降序"
+    }, (validate.rules).string = {in: ["", "asc", "desc"]}];
+}
+
+message ListClusterSimpleResp {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListClusterV2Resp"
+      description : "查询集群列表返回"
+      required : [ "code", "message", "data" ]
+    }
+  };
+
+  uint32 code = 1 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+      { title : "code",
+        description : "返回错误码"
+      }];
+  string message = 2 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "message",
+      description : "返回错误信息"}];
+  bool result = 3 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+      { title : "result",
+        description : "返回结果"
+      }];
+  repeated ClusterSimpleInfo data = 4 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "data",
+      description : "简化集群信息列表"}];
+}
+
+message ClusterSimpleInfo {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ClusterSimpleInfo"
+      description : "简化集群信息"
+    }
+  };
+  string clusterID = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "clusterID",
+    description: "BCS内部使用集群ID，格式为BCS-K8S-XXXXX"
+  }];
+  string clusterName = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "clusterName",
+    description: "集群名称"
+  }];
+  string provider = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "provider",
+    description: "集群提供者，云模板ID"
+  }];
+  string status = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "status",
+    description: "集群状态，可能状态CREATING，RUNNING，DELETING，FALURE，INITIALIZATION"
+  }, (validate.rules).string = {in: ["CREATING", "RUNNING", "DELETING", "FALURE", "INITIALIZATION"]}
+  ];
+  string environment = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "environment",
+    description: "集群所对应的环境信息，stag，debug，prod"
+  }];  
+  string clusterType = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "clusterType",
+    description: "集群类型，federation、single"
+  }];
+  string projectID = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "projectID",
+    description: "集群所关联的项目ID"
+  }];
+  string businessID = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "businessID",
+    description: "项目绑定的业务ID, 集群所关联的业务ID，该ID来源于CMDB"
+  }];
+  string creator = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "creator",
+    description: "集群信息创建者"
+  }];
+  string biz_maintainer = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "biz_maintainer",
+    description: "业务运维人"
+  }];
 }
 
 message ExtraInfo {

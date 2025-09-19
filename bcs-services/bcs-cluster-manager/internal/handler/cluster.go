@@ -361,6 +361,23 @@ func (cm *ClusterManager) ListClusterV2(ctx context.Context,
 	return nil
 }
 
+// ListClusterSimple implements interface cmproto.ClusterManagerServer, get ClusterSimpleInfo
+func (cm *ClusterManager) ListClusterSimple(ctx context.Context,
+	req *cmproto.ListClusterSimpleReq, resp *cmproto.ListClusterSimpleResp) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	ca := clusterac.NewListSimpleInfoAction(cm.model)
+	ca.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("ListClusterSimple", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: ListClusterSimple, req %v, resp.Code %d, "+
+		"resp.Message %s", reqID, req, resp.Code, resp.Message)
+	blog.V(5).Infof("reqID: %s, action: ListClusterSimple, req %v, resp %v", reqID, req, resp)
+	return nil
+}
+
 // ListCommonCluster implements interface cmproto.ClusterManagerServer
 func (cm *ClusterManager) ListCommonCluster(ctx context.Context,
 	req *cmproto.ListCommonClusterReq, resp *cmproto.ListCommonClusterResp) error {

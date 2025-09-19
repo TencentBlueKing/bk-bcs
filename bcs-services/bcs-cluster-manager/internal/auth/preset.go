@@ -88,6 +88,7 @@ var ActionPermissions = map[string]string{
 	"ClusterManager.ListClusterV2":                project.CanViewProjectOperation,
 	"ClusterManager.ListBusinessCluster":          "", // 内部接口，无须权限校验
 	"ClusterManager.ListCommonCluster":            "",
+	"ClusterManager.ListClusterSimpleInfo":        "",
 	"ClusterManager.CreateVirtualCluster":         cluster.CanCreateClusterOperation,
 	"ClusterManager.DeleteVirtualCluster":         cluster.CanDeleteClusterOperation,
 	"ClusterManager.UpdateVirtualClusterQuota":    cluster.CanManageClusterOperation,

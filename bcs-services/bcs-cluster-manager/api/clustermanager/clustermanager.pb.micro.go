@@ -157,6 +157,12 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		{
+			Name:    "ClusterManager.ListClusterSimple",
+			Path:    []string{"/clustermanager/v1/clusterv2"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
 			Name:    "ClusterManager.ListCommonCluster",
 			Path:    []string{"/clustermanager/v1/sharedclusters"},
 			Method:  []string{"GET"},
@@ -1023,6 +1029,7 @@ type ClusterManagerService interface {
 	ListBusinessCluster(ctx context.Context, in *ListBusinessClusterReq, opts ...client.CallOption) (*ListBusinessClusterResp, error)
 	ListCluster(ctx context.Context, in *ListClusterReq, opts ...client.CallOption) (*ListClusterResp, error)
 	ListClusterV2(ctx context.Context, in *ListClusterV2Req, opts ...client.CallOption) (*ListClusterV2Resp, error)
+	ListClusterSimple(ctx context.Context, in *ListClusterSimpleReq, opts ...client.CallOption) (*ListClusterSimpleResp, error)
 	ListCommonCluster(ctx context.Context, in *ListCommonClusterReq, opts ...client.CallOption) (*ListCommonClusterResp, error)
 	AddSubnetToCluster(ctx context.Context, in *AddSubnetToClusterReq, opts ...client.CallOption) (*AddSubnetToClusterResp, error)
 	SwitchClusterUnderlayNetwork(ctx context.Context, in *SwitchClusterUnderlayNetworkReq, opts ...client.CallOption) (*SwitchClusterUnderlayNetworkResp, error)
@@ -1401,6 +1408,16 @@ func (c *clusterManagerService) ListCluster(ctx context.Context, in *ListCluster
 func (c *clusterManagerService) ListClusterV2(ctx context.Context, in *ListClusterV2Req, opts ...client.CallOption) (*ListClusterV2Resp, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.ListClusterV2", in)
 	out := new(ListClusterV2Resp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) ListClusterSimple(ctx context.Context, in *ListClusterSimpleReq, opts ...client.CallOption) (*ListClusterSimpleResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.ListClusterSimple", in)
+	out := new(ListClusterSimpleResp)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -2832,6 +2849,7 @@ type ClusterManagerHandler interface {
 	ListBusinessCluster(context.Context, *ListBusinessClusterReq, *ListBusinessClusterResp) error
 	ListCluster(context.Context, *ListClusterReq, *ListClusterResp) error
 	ListClusterV2(context.Context, *ListClusterV2Req, *ListClusterV2Resp) error
+	ListClusterSimple(context.Context, *ListClusterSimpleReq, *ListClusterSimpleResp) error
 	ListCommonCluster(context.Context, *ListCommonClusterReq, *ListCommonClusterResp) error
 	AddSubnetToCluster(context.Context, *AddSubnetToClusterReq, *AddSubnetToClusterResp) error
 	SwitchClusterUnderlayNetwork(context.Context, *SwitchClusterUnderlayNetworkReq, *SwitchClusterUnderlayNetworkResp) error
@@ -3027,6 +3045,7 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		ListBusinessCluster(ctx context.Context, in *ListBusinessClusterReq, out *ListBusinessClusterResp) error
 		ListCluster(ctx context.Context, in *ListClusterReq, out *ListClusterResp) error
 		ListClusterV2(ctx context.Context, in *ListClusterV2Req, out *ListClusterV2Resp) error
+		ListClusterSimple(ctx context.Context, in *ListClusterSimpleReq, out *ListClusterSimpleResp) error
 		ListCommonCluster(ctx context.Context, in *ListCommonClusterReq, out *ListCommonClusterResp) error
 		AddSubnetToCluster(ctx context.Context, in *AddSubnetToClusterReq, out *AddSubnetToClusterResp) error
 		SwitchClusterUnderlayNetwork(ctx context.Context, in *SwitchClusterUnderlayNetworkReq, out *SwitchClusterUnderlayNetworkResp) error
@@ -3289,6 +3308,12 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.ListClusterV2",
 		Path:    []string{"/clustermanager/v2/cluster"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.ListClusterSimple",
+		Path:    []string{"/clustermanager/v1/clusterv2"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
@@ -4217,6 +4242,10 @@ func (h *clusterManagerHandler) ListCluster(ctx context.Context, in *ListCluster
 
 func (h *clusterManagerHandler) ListClusterV2(ctx context.Context, in *ListClusterV2Req, out *ListClusterV2Resp) error {
 	return h.ClusterManagerHandler.ListClusterV2(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) ListClusterSimple(ctx context.Context, in *ListClusterSimpleReq, out *ListClusterSimpleResp) error {
+	return h.ClusterManagerHandler.ListClusterSimple(ctx, in, out)
 }
 
 func (h *clusterManagerHandler) ListCommonCluster(ctx context.Context, in *ListCommonClusterReq, out *ListCommonClusterResp) error {

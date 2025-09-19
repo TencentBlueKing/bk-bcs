@@ -27531,6 +27531,510 @@ var _ interface {
 	ErrorName() string
 } = ListClusterV2RespValidationError{}
 
+// Validate checks the field values on ListClusterSimpleReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ListClusterSimpleReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListClusterSimpleReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListClusterSimpleReqMultiError, or nil if none found.
+func (m *ListClusterSimpleReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListClusterSimpleReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if utf8.RuneCountInString(m.GetClusterID()) > 1024 {
+		err := ListClusterSimpleReqValidationError{
+			field:  "ClusterID",
+			reason: "value length must be at most 1024 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetClusterName()) > 100 {
+		err := ListClusterSimpleReqValidationError{
+			field:  "ClusterName",
+			reason: "value length must be at most 100 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetProvider()) > 32 {
+		err := ListClusterSimpleReqValidationError{
+			field:  "Provider",
+			reason: "value length must be at most 32 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if _, ok := _ListClusterSimpleReq_Status_InLookup[m.GetStatus()]; !ok {
+		err := ListClusterSimpleReqValidationError{
+			field:  "Status",
+			reason: "value must be in list [CREATING RUNNING DELETING FALURE INITIALIZATION DELETED ]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for Environment
+
+	// no validation rules for ClusterType
+
+	if utf8.RuneCountInString(m.GetProjectID()) > 100 {
+		err := ListClusterSimpleReqValidationError{
+			field:  "ProjectID",
+			reason: "value length must be at most 100 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetBusinessID()) > 100 {
+		err := ListClusterSimpleReqValidationError{
+			field:  "BusinessID",
+			reason: "value length must be at most 100 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if m.GetOffset() < 0 {
+		err := ListClusterSimpleReqValidationError{
+			field:  "Offset",
+			reason: "value must be greater than or equal to 0",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if m.GetLimit() > 1000 {
+		err := ListClusterSimpleReqValidationError{
+			field:  "Limit",
+			reason: "value must be less than or equal to 1000",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for Sort
+
+	if _, ok := _ListClusterSimpleReq_Order_InLookup[m.GetOrder()]; !ok {
+		err := ListClusterSimpleReqValidationError{
+			field:  "Order",
+			reason: "value must be in list [ asc desc]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return ListClusterSimpleReqMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListClusterSimpleReqMultiError is an error wrapping multiple validation
+// errors returned by ListClusterSimpleReq.ValidateAll() if the designated
+// constraints aren't met.
+type ListClusterSimpleReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListClusterSimpleReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListClusterSimpleReqMultiError) AllErrors() []error { return m }
+
+// ListClusterSimpleReqValidationError is the validation error returned by
+// ListClusterSimpleReq.Validate if the designated constraints aren't met.
+type ListClusterSimpleReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListClusterSimpleReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListClusterSimpleReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListClusterSimpleReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListClusterSimpleReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListClusterSimpleReqValidationError) ErrorName() string {
+	return "ListClusterSimpleReqValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListClusterSimpleReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListClusterSimpleReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListClusterSimpleReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListClusterSimpleReqValidationError{}
+
+var _ListClusterSimpleReq_Status_InLookup = map[string]struct{}{
+	"CREATING":       {},
+	"RUNNING":        {},
+	"DELETING":       {},
+	"FALURE":         {},
+	"INITIALIZATION": {},
+	"DELETED":        {},
+	"":               {},
+}
+
+var _ListClusterSimpleReq_Order_InLookup = map[string]struct{}{
+	"":     {},
+	"asc":  {},
+	"desc": {},
+}
+
+// Validate checks the field values on ListClusterSimpleResp with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ListClusterSimpleResp) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListClusterSimpleResp with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListClusterSimpleRespMultiError, or nil if none found.
+func (m *ListClusterSimpleResp) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListClusterSimpleResp) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, ListClusterSimpleRespValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, ListClusterSimpleRespValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ListClusterSimpleRespValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return ListClusterSimpleRespMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListClusterSimpleRespMultiError is an error wrapping multiple validation
+// errors returned by ListClusterSimpleResp.ValidateAll() if the designated
+// constraints aren't met.
+type ListClusterSimpleRespMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListClusterSimpleRespMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListClusterSimpleRespMultiError) AllErrors() []error { return m }
+
+// ListClusterSimpleRespValidationError is the validation error returned by
+// ListClusterSimpleResp.Validate if the designated constraints aren't met.
+type ListClusterSimpleRespValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListClusterSimpleRespValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListClusterSimpleRespValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListClusterSimpleRespValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListClusterSimpleRespValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListClusterSimpleRespValidationError) ErrorName() string {
+	return "ListClusterSimpleRespValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListClusterSimpleRespValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListClusterSimpleResp.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListClusterSimpleRespValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListClusterSimpleRespValidationError{}
+
+// Validate checks the field values on ClusterSimpleInfo with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *ClusterSimpleInfo) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ClusterSimpleInfo with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ClusterSimpleInfoMultiError, or nil if none found.
+func (m *ClusterSimpleInfo) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ClusterSimpleInfo) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for ClusterID
+
+	// no validation rules for ClusterName
+
+	// no validation rules for Provider
+
+	if _, ok := _ClusterSimpleInfo_Status_InLookup[m.GetStatus()]; !ok {
+		err := ClusterSimpleInfoValidationError{
+			field:  "Status",
+			reason: "value must be in list [CREATING RUNNING DELETING FALURE INITIALIZATION]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for Environment
+
+	// no validation rules for ClusterType
+
+	// no validation rules for ProjectID
+
+	// no validation rules for BusinessID
+
+	// no validation rules for Creator
+
+	// no validation rules for BizMaintainer
+
+	if len(errors) > 0 {
+		return ClusterSimpleInfoMultiError(errors)
+	}
+
+	return nil
+}
+
+// ClusterSimpleInfoMultiError is an error wrapping multiple validation errors
+// returned by ClusterSimpleInfo.ValidateAll() if the designated constraints
+// aren't met.
+type ClusterSimpleInfoMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ClusterSimpleInfoMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ClusterSimpleInfoMultiError) AllErrors() []error { return m }
+
+// ClusterSimpleInfoValidationError is the validation error returned by
+// ClusterSimpleInfo.Validate if the designated constraints aren't met.
+type ClusterSimpleInfoValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ClusterSimpleInfoValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ClusterSimpleInfoValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ClusterSimpleInfoValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ClusterSimpleInfoValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ClusterSimpleInfoValidationError) ErrorName() string {
+	return "ClusterSimpleInfoValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ClusterSimpleInfoValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sClusterSimpleInfo.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ClusterSimpleInfoValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ClusterSimpleInfoValidationError{}
+
+var _ClusterSimpleInfo_Status_InLookup = map[string]struct{}{
+	"CREATING":       {},
+	"RUNNING":        {},
+	"DELETING":       {},
+	"FALURE":         {},
+	"INITIALIZATION": {},
+}
+
 // Validate checks the field values on ExtraInfo with the rules defined in the
 // proto definition for this message. If any rules are violated, the first
 // error encountered is returned, or nil if there are no violations.

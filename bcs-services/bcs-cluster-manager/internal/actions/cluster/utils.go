@@ -977,3 +977,18 @@ func clusterToClusterBasicInfo(cluster *proto.Cluster) *proto.ClusterBasicInfo {
 		IsShared:        cluster.IsShared,
 	}
 }
+
+// clusterToClusterSimpleInfo for convert cluster to clusterSimpleInfo
+func clusterToClusterSimpleInfo(cluster *proto.Cluster) *proto.ClusterSimpleInfo {
+	return &proto.ClusterSimpleInfo{
+		ClusterID:   cluster.ClusterID,
+		ClusterName: cluster.ClusterName,
+		Provider:    cluster.Provider,
+		ProjectID:   cluster.ProjectID,
+		BusinessID:  cluster.BusinessID,
+		Environment: cluster.Environment,
+		ClusterType: cluster.ClusterType,
+		Creator:     cluster.Creator,
+		Status:      cluster.Status,
+	}
+}
