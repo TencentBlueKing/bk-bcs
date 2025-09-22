@@ -183,6 +183,13 @@ func (i *IstioInstallAction) deployMonitoringResources(ctx context.Context) erro
 		return nil
 	}
 
+	// 开启指标采集时触发流水线执行，流水线执行失败则记录日志，并继续向下执行
+	err := utils.ExecutePipeline(ctx)
+	if err != nil {
+		blog.Errorf("[%s]execute pipeline failed, err: %s", i.MeshID, err)
+		// PASS
+	}
+
 	// 获取所有需要部署监控资源的集群
 	clusters := i.getAllClusters()
 
