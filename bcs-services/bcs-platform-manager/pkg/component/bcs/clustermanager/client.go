@@ -26,7 +26,7 @@ const (
 	ClusterManagerServiceName = "clustermanager.bkbcs.tencent.com"
 )
 
-// NewClient create cluster manager service client
+// SetClientConifg set client config
 func SetClientConifg(tlsConfig *tls.Config, microRgt microRgt.Registry) error {
 	if !discovery.UseServiceDiscovery() {
 		dis := discovery.NewModuleDiscovery(ClusterManagerServiceName, microRgt)
@@ -42,6 +42,7 @@ func SetClientConifg(tlsConfig *tls.Config, microRgt microRgt.Registry) error {
 	return nil
 }
 
+// Close close client connection
 func Close(close func()) {
 	if close != nil {
 		close()
