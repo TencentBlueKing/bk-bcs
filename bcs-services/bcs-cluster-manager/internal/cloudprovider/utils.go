@@ -1561,3 +1561,8 @@ func GetGpuNodeTemplate(insType string) (*proto.NodeTemplate, error) {
 
 	return nil, fmt.Errorf("GetGpuNodeTemplate ins[%s] is empty", insType)
 }
+
+// GenFailedMessage 生成错误信息
+func GenFailedMessage(stepName string, err error) string {
+	return fmt.Sprintf("%sFailed: %s", stepName, err.Error())
+}
