@@ -15,6 +15,7 @@ package cluster
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -96,23 +97,39 @@ func (ua *UpdateVirtualClusterQuotaAction) Handle(ctx context.Context, req *cmpr
 		return
 	}
 
-	// update quota
-	err = ua.k8sOp.UpdateResourceQuota(ctx, ua.cluster.SystemID, clusterops.ResourceQuotaInfo{
+	resourceQuota := clusterops.ResourceQuotaInfo{
 		Name:        nsInfo.Name,
 		CpuRequests: ua.req.Quota.CpuRequests,
 		CpuLimits:   ua.req.Quota.CpuLimits,
 		MemRequests: ua.req.Quota.MemoryRequests,
 		MemLimits:   ua.req.Quota.MemoryLimits,
-	})
+	}
+
+	if ua.req.Quota.ServiceLimits != "" {
+		parsedValue, err := strconv.ParseUint(ua.req.Quota.ServiceLimits, 10, 32)
+		if err != nil {
+			ua.setResp(common.BcsErrClusterManagerInvalidParameter,
+				fmt.Sprintf("invalid ServiceLimits format '%s': %v", ua.req.Quota.ServiceLimits, err))
+			return
+		}
+		resourceQuota.ServiceLimits = strconv.FormatUint(parsedValue, 10)
+	} else {
+		serviceLimits := ua.cluster.NetworkSettings.MaxServiceNum
+		resourceQuota.ServiceLimits = strconv.FormatUint(uint64(serviceLimits), 10)
+	}
+
+	// update quota
+	err = ua.k8sOp.UpdateResourceQuota(ctx, ua.cluster.SystemID, resourceQuota)
 	if err != nil {
 		ua.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
 		return
 	}
 
-	nsInfo.Quota.CpuRequests = ua.req.Quota.CpuRequests
-	nsInfo.Quota.CpuLimits = ua.req.Quota.CpuLimits
-	nsInfo.Quota.MemoryRequests = ua.req.Quota.MemoryRequests
-	nsInfo.Quota.MemoryLimits = ua.req.Quota.MemoryLimits
+	nsInfo.Quota.CpuRequests = resourceQuota.CpuRequests
+	nsInfo.Quota.CpuLimits = resourceQuota.CpuLimits
+	nsInfo.Quota.MemoryRequests = resourceQuota.MemRequests
+	nsInfo.Quota.MemoryLimits = resourceQuota.MemLimits
+	nsInfo.Quota.ServiceLimits = resourceQuota.ServiceLimits
 
 	ua.cluster.ExtraInfo[common.VClusterNamespaceInfo] = utils.ToJSONString(nsInfo)
 	err = ua.model.UpdateCluster(ctx, ua.cluster)

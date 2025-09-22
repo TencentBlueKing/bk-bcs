@@ -18399,6 +18399,8 @@ func (m *NamespaceQuota) validate(all bool) error {
 
 	// no validation rules for MemoryLimits
 
+	// no validation rules for ServiceLimits
+
 	if len(errors) > 0 {
 		return NamespaceQuotaMultiError(errors)
 	}
