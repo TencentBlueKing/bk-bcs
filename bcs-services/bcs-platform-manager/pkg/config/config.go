@@ -14,10 +14,7 @@
 package config
 
 import (
-	"sync"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
-	"github.com/go-viper/mapstructure/v2"
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v3"
 )
@@ -30,17 +27,15 @@ const (
 // Configuration 配置
 type Configuration struct {
 	Viper       *viper.Viper
-	mtx         sync.Mutex
-	Base        *BaseConf                `yaml:"base_conf"`
-	Redis       *RedisConf               `yaml:"redis"`
-	Mongo       *MongoConf               `yaml:"mongo"`
-	Logging     *conf.LogConfig          `yaml:"logging"`
-	BKAPIGW     *BKAPIGWConf             `yaml:"bkapigw_conf"`
-	BCS         *BCSConf                 `yaml:"bcs_conf"`
-	IAM         *IAMConfig               `yaml:"iam_conf"`
-	Credentials map[string][]*Credential `yaml:"-"`
-	Web         *WebConf                 `yaml:"web"`
-	TracingConf *TracingConf             `yaml:"tracing_conf"`
+	Base        *BaseConf       `yaml:"base_conf"`
+	Redis       *RedisConf      `yaml:"redis"`
+	Mongo       *MongoConf      `yaml:"mongo"`
+	Logging     *conf.LogConfig `yaml:"logging"`
+	BKAPIGW     *BKAPIGWConf    `yaml:"bkapigw_conf"`
+	BCS         *BCSConf        `yaml:"bcs_conf"`
+	IAM         *IAMConfig      `yaml:"iam_conf"`
+	Web         *WebConf        `yaml:"web"`
+	TracingConf *TracingConf    `yaml:"tracing_conf"`
 }
 
 // init 初始化
@@ -75,8 +70,6 @@ func newConfiguration() (*Configuration, error) {
 	c.Logging = defaultLogConf()
 	c.Web = defaultWebConf()
 
-	c.Credentials = map[string][]*Credential{}
-
 	c.IAM = &IAMConfig{}
 
 	c.BKAPIGW = &BKAPIGWConf{}
@@ -107,36 +100,6 @@ func init() {
 	G = g
 }
 
-// IsDevMode 是否本地开发模式
-func (c *Configuration) IsDevMode() bool {
-	return c.Base.RunEnv == DevEnv
-}
-
-// ReadCredViper 使用 viper 读取配置
-func (c *Configuration) ReadCredViper(name string, v *viper.Viper) error {
-	c.mtx.Lock()
-	defer c.mtx.Unlock()
-
-	cred := []*Credential{}
-
-	// 使用 yaml tag 反序列化
-	opt := viper.DecoderConfigOption(func(decoderConfig *mapstructure.DecoderConfig) {
-		decoderConfig.TagName = "yaml"
-	})
-
-	if err := v.UnmarshalKey("credentials", &cred, opt); err != nil {
-		return err
-	}
-
-	c.Credentials[name] = cred
-	for _, v := range c.Credentials[name] {
-		if err := v.InitCred(); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 // ReadFrom : read from file
 func (c *Configuration) ReadFrom(content []byte) error {
 	if err := yaml.Unmarshal(content, c); err != nil {
@@ -152,6 +115,9 @@ func (c *Configuration) ReadFrom(content []byte) error {
 	}
 	if c.Base.SystemID == "" {
 		c.Base.SystemID = BK_SYSTEM_ID
+	}
+	if c.Base.BindAddress == "" {
+		c.Base.BindAddress = POD_IP
 	}
 	if c.Redis.Password == "" {
 		c.Redis.Password = REDIS_PASSWORD

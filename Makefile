@@ -295,6 +295,11 @@ project-manager:pre
 	cd ${BCS_SERVICES_PATH}/bcs-project-manager && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-project-manager/bcs-project-migration ./script/migrations/project/migrate.go
 	cd ${BCS_SERVICES_PATH}/bcs-project-manager && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-project-manager/bcs-variable-migration ./script/migrations/variable/migrate.go
 
+bcs-platform-manager:pre
+	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-platform-manager
+	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-platform-manager/* ${PACKAGEPATH}/bcs-services/bcs-platform-manager
+	cd ${BCS_SERVICES_PATH}/bcs-platform-manager && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-platform-manager/bcs-platform-manager ./main.go
+
 CR_LDFLAG_EXT=" -X github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/version.Version=${VERSION} \
  -X github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/version.GitCommit=${GITHASH} \
  -X github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/version.BuildTime=${BUILDTIME}"

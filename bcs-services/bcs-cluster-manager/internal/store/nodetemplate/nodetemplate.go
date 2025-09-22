@@ -34,8 +34,9 @@ const (
 
 	tableName = "nodetemplate"
 	// ProjectIDKey xxx
-	ProjectIDKey                  = "projectid"
-	templateIDKey                 = "nodetemplateid"
+	ProjectIDKey  = "projectid"
+	templateIDKey = "nodetemplateid"
+	// NameKey xxx
 	NameKey                       = "name"
 	defaultCloudAccountListLength = 4000
 )
