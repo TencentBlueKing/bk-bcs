@@ -14,6 +14,8 @@
 package quota
 
 import (
+	"strconv"
+
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 
@@ -57,7 +59,9 @@ func ResourceMemoryCompute(inc bool, origin string, num string) (string, error) 
 	// origin add num
 	if inc {
 		memOriginQuantity.Add(memQuantity)
-		return memOriginQuantity.String(), nil
+		memInt64, _ := memOriginQuantity.AsInt64()
+
+		return strconv.FormatInt(memInt64, 10), nil
 	}
 
 	cmp := memOriginQuantity.Cmp(memQuantity)
@@ -65,8 +69,9 @@ func ResourceMemoryCompute(inc bool, origin string, num string) (string, error) 
 		return "0", nil
 	}
 	memOriginQuantity.Sub(memQuantity)
+	memInt64, _ := memOriginQuantity.AsInt64()
 
-	return memOriginQuantity.String(), nil
+	return strconv.FormatInt(memInt64, 10), nil
 }
 
 // ResourceCpuCompute resource cpu calculate
@@ -84,7 +89,9 @@ func ResourceCpuCompute(inc bool, origin string, num string) (string, error) {
 	// origin add num
 	if inc {
 		cpuOriginQuantity.Add(cpuQuantity)
-		return cpuOriginQuantity.String(), nil
+		cpuInt64, _ := cpuOriginQuantity.AsInt64()
+
+		return strconv.FormatInt(cpuInt64, 10), nil
 	}
 
 	cmp := cpuOriginQuantity.Cmp(cpuQuantity)
@@ -92,8 +99,9 @@ func ResourceCpuCompute(inc bool, origin string, num string) (string, error) {
 		return "0", nil
 	}
 	cpuOriginQuantity.Sub(cpuQuantity)
+	cpuInt64, _ := cpuOriginQuantity.AsInt64()
 
-	return cpuOriginQuantity.String(), nil
+	return strconv.FormatInt(cpuInt64, 10), nil
 }
 
 // TransferToProto transfer k8s ResourceQuota to proto ResourceQuota
