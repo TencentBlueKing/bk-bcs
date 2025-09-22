@@ -150,7 +150,7 @@ func PushActivities(request *restful.Request, response *restful.Response) {
 		}
 
 		// 暂不记录
-		if v.ActivityType == "k8s_resource" {
+		if v.ResourceType == "k8s_resource" {
 			continue
 		}
 
