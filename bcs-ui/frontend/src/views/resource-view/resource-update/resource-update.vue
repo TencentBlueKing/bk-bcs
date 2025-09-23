@@ -273,7 +273,7 @@ export default defineComponent({
     },
     // CRD资源分两种，普通和定制，customized 用来区分普通和定制
     customized: {
-      type: Boolean,
+      type: [Boolean, String],
       default: false,
     },
     // CRD资源的版本
@@ -387,7 +387,7 @@ export default defineComponent({
       if (!isEdit.value) return null;
       isLoading.value = true;
       let res: any = null;
-      if (customized.value) {
+      if (customized.value && customized.value !== 'false') {
         res = await customResourceDetail({
           format: 'manifest',
           $clusterId: clusterId.value,
@@ -600,7 +600,7 @@ export default defineComponent({
     };
     const handleCreateResource = async () => {
       let result = false;
-      if (customized.value) { // 创建普通crd资源
+      if (customized.value && customized.value !== 'false') { // 创建普通crd资源
         result = await createCustomResource({
           $clusterId: clusterId.value,
           format: 'manifest',
@@ -664,7 +664,7 @@ export default defineComponent({
         defaultInfo: true,
         confirmFn: async () => {
           let result = false;
-          if (customized.value) {
+          if (customized.value && customized.value !== 'false') {
             result = await updateCustomResource({
               $clusterId: clusterId.value,
               group: group.value,
