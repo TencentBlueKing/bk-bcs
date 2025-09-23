@@ -83,6 +83,17 @@ service BCSProject {
     };
   }
 
+  rpc UpdateProjectBusiness(UpdateProjectBusinessRequest) returns (ProjectResponse) {
+    option (google.api.http) = {
+      put : "/bcsproject/v1/projectBusiness/{projectID}"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "更新项目businessID"
+      summary : "更新项目资源business"
+    };
+  }
+
   rpc DeleteProject(DeleteProjectRequest) returns (ProjectResponse) {
     option (google.api.http) = {
       delete : "/bcsproject/v1/projects/{projectID}"
@@ -3153,6 +3164,27 @@ message UpdateProjectQuotaRequest {
   map<string, string> annotations = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "annotations",
     description: "资源quota的注解配置"
+  }];
+}
+
+message UpdateProjectBusinessRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "UpdateProjectQuotaRequest"
+      description : "更新项目quota请求"
+    }
+  };
+  string projectID = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "projectID", 
+    description: "项目ID"
+  }, (validate.rules).string = {len: 32, pattern: "^[0-9a-zA-Z-]+$"}];
+  string businessID = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "businessID", 
+    description: "项目绑定的蓝鲸CMDB中业务ID信息"
+  }];
+  string updater = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "updater",
+    description: "更新者"
   }];
 }
 

@@ -159,6 +159,47 @@
         ]
       }
     },
+    "/bcsproject/v1/projectBusiness/{projectID}": {
+      "put": {
+        "summary": "更新项目资源business",
+        "description": "更新项目businessID",
+        "operationId": "BCSProject_UpdateProjectBusiness",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bcsprojectProjectResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "description": "项目ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/bcsprojectUpdateProjectBusinessRequest"
+            }
+          }
+        ],
+        "tags": [
+          "BCSProject"
+        ]
+      }
+    },
     "/bcsproject/v1/projectQuotas": {
       "get": {
         "summary": "查询项目资源quota列表",
@@ -4647,6 +4688,28 @@
           "title": "request id"
         }
       }
+    },
+    "bcsprojectUpdateProjectBusinessRequest": {
+      "type": "object",
+      "properties": {
+        "projectID": {
+          "type": "string",
+          "description": "项目ID",
+          "title": "projectID"
+        },
+        "businessID": {
+          "type": "string",
+          "description": "项目绑定的蓝鲸CMDB中业务ID信息",
+          "title": "businessID"
+        },
+        "updater": {
+          "type": "string",
+          "description": "更新者",
+          "title": "updater"
+        }
+      },
+      "description": "更新项目quota请求",
+      "title": "UpdateProjectQuotaRequest"
     },
     "bcsprojectUpdateProjectQuotaRequest": {
       "type": "object",

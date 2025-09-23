@@ -118,6 +118,19 @@ func (p *ProjectHandler) UpdateProject(ctx context.Context,
 	return nil
 }
 
+// UpdateProjectBusiness update a project business id
+func (p *ProjectHandler) UpdateProjectBusiness(ctx context.Context,
+	req *proto.UpdateProjectBusinessRequest, resp *proto.ProjectResponse) error {
+	ua := project.NewUpdateBusinessAction(p.model)
+	projectInfo, e := ua.Do(ctx, req)
+	if e != nil {
+		return e
+	}
+	// 处理返回数据及权限
+	setResp(resp, projectInfo)
+	return nil
+}
+
 // ListProjects list projects reocrds
 func (p *ProjectHandler) ListProjects(ctx context.Context,
 	req *proto.ListProjectsRequest, resp *proto.ListProjectsResponse) error {

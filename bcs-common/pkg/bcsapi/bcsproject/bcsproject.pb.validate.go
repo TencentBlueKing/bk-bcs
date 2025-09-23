@@ -6336,6 +6336,8 @@ func (m *NamespaceData) validate(all bool) error {
 
 	// no validation rules for ItsmTicketType
 
+	// no validation rules for IsSystem
+
 	if len(errors) > 0 {
 		return NamespaceDataMultiError(errors)
 	}
@@ -13717,6 +13719,138 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = UpdateProjectQuotaRequestValidationError{}
+
+// Validate checks the field values on UpdateProjectBusinessRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *UpdateProjectBusinessRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on UpdateProjectBusinessRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// UpdateProjectBusinessRequestMultiError, or nil if none found.
+func (m *UpdateProjectBusinessRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *UpdateProjectBusinessRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if utf8.RuneCountInString(m.GetProjectID()) != 32 {
+		err := UpdateProjectBusinessRequestValidationError{
+			field:  "ProjectID",
+			reason: "value length must be 32 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+
+	}
+
+	if !_UpdateProjectBusinessRequest_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+		err := UpdateProjectBusinessRequestValidationError{
+			field:  "ProjectID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for BusinessID
+
+	// no validation rules for Updater
+
+	if len(errors) > 0 {
+		return UpdateProjectBusinessRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// UpdateProjectBusinessRequestMultiError is an error wrapping multiple
+// validation errors returned by UpdateProjectBusinessRequest.ValidateAll() if
+// the designated constraints aren't met.
+type UpdateProjectBusinessRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m UpdateProjectBusinessRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m UpdateProjectBusinessRequestMultiError) AllErrors() []error { return m }
+
+// UpdateProjectBusinessRequestValidationError is the validation error returned
+// by UpdateProjectBusinessRequest.Validate if the designated constraints
+// aren't met.
+type UpdateProjectBusinessRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpdateProjectBusinessRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpdateProjectBusinessRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpdateProjectBusinessRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpdateProjectBusinessRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpdateProjectBusinessRequestValidationError) ErrorName() string {
+	return "UpdateProjectBusinessRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpdateProjectBusinessRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpdateProjectBusinessRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpdateProjectBusinessRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpdateProjectBusinessRequestValidationError{}
+
+var _UpdateProjectBusinessRequest_ProjectID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 
 // Validate checks the field values on DeleteProjectQuotaRequest with the rules
 // defined in the proto definition for this message. If any rules are
