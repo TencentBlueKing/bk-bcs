@@ -1664,7 +1664,6 @@ service ClusterManager {
     };
   }
 }
-
 message Cluster {
   option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
     json_schema : {
@@ -16036,4 +16035,3 @@ message UpdateTemplateConfigResponse {
     description : "返回操作结果"
   }];
 }
-

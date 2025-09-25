@@ -1642,3 +1642,35 @@ func (cli *TkeClient) GetTkeAppChartVersionByName(clusterType string, appName st
 
 	return "", nil
 }
+
+// EnableClusterAudit 开启集群审计
+func (cli *TkeClient) EnableClusterAudit(clusterID, logsetId, topicId, topicRegion string, withoutCollection bool) error {
+	if cli == nil {
+		return cloudprovider.ErrServerIsNil
+	}
+	if len(clusterID) == 0 {
+		return fmt.Errorf("EnableClusterAudit failed: clusterID is empty")
+	}
+
+	req := NewEnableClusterAuditRequest()
+	req.ClusterId = common.StringPtr(clusterID)
+	req.LogsetId = common.StringPtr(logsetId)
+	req.TopicId = common.StringPtr(topicId)
+	req.TopicRegion = common.StringPtr(topicRegion)
+	req.WithoutCollection = common.BoolPtr(withoutCollection)
+
+	resp, err := cli.tkeCommon.EnableClusterAudit(req)
+	if err != nil {
+		blog.Errorf("EnableClusterAudit[%s] failed: %v", clusterID, err)
+		return err
+	}
+
+	// check response
+	if resp == nil || resp.Response == nil {
+		blog.Errorf("EnableClusterAudit[%s] but lost response information", clusterID)
+		return cloudprovider.ErrCloudLostResponse
+	}
+	blog.Infof("RequestId[%s] tke client EnableClusterAudit response successful", *resp.Response.RequestId)
+
+	return nil
+}

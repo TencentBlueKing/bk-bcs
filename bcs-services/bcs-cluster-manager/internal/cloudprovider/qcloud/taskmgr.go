@@ -218,6 +218,7 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 	createClusterTask.BuildCreateClusterStep(task)
 	// step2: check cluster status by clusterID
 	createClusterTask.BuildCheckClusterStatusStep(task)
+
 	// step3: check cluster nodes status
 	createClusterTask.BuildCheckClusterNodesStatusStep(task)
 
@@ -288,11 +289,14 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 		}
 	}
 
-	// step7: allocate vpc-cni subnet for cluster
+	// step7: deploy bcs log collector
+	common.BuildLogCollectorAddonTaskStep(task, cls)
+
+	// step8: allocate vpc-cni subnet for cluster
 	createClusterTask.BuildAllocateSubnetTask(task)
-	// step8: enable vpc-cni network mode when cluster enable vpc-cni
+	// step9: enable vpc-cni network mode when cluster enable vpc-cni
 	createClusterTask.BuildEnableVpcCniStep(task)
-	// step9: update DB info by cluster data
+	// step10: update DB info by cluster data
 	createClusterTask.BuildUpdateTaskStatusStep(task)
 
 	// set current step

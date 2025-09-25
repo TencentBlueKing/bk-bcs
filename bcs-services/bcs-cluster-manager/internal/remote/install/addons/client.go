@@ -21,7 +21,7 @@ import (
 )
 
 // addonsClient addons client
-var addonsClient *AddonsClient
+var addonsClient = &AddonsClient{}
 
 // GetAddonsClient get addon client
 func GetAddonsClient() *AddonsClient {

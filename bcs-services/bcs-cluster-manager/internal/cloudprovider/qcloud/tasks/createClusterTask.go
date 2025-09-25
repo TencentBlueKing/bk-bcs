@@ -198,12 +198,7 @@ func generateClusterAdvancedInfo(cluster *proto.Cluster) *api.ClusterAdvancedSet
 		ExtraArgs:          &api.ClusterExtraArgs{},
 		NetworkType:        cluster.ClusterAdvanceSettings.NetworkType,
 		DeletionProtection: cluster.ClusterAdvanceSettings.DeletionProtection,
-	}
-
-	if options.GetEditionInfo().IsInnerEdition() {
-		advancedInfo.AuditEnabled = true
-	} else {
-		advancedInfo.AuditEnabled = cluster.ClusterAdvanceSettings.AuditEnabled
+		AuditEnabled:       cluster.ClusterAdvanceSettings.AuditEnabled,
 	}
 
 	// extraArgs
@@ -1124,6 +1119,26 @@ func CheckTkeClusterStatusTask(taskID string, stepName string) error {
 
 	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
 		"check tke cluster status successful")
+
+	if dependInfo.Cluster.ManageType == icommon.ClusterManageTypeIndependent {
+		cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+			"start enable cluster audit without collection")
+		err = business.EnableClusterAudit(ctx, dependInfo.Cluster, &cloudprovider.EnableClusterAuditOption{
+			CommonOption:      *dependInfo.CmOption,
+			WithoutCollection: true,
+		})
+		if err != nil {
+			cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
+				fmt.Sprintf("enable cluster audit failed:[%v]", err))
+			blog.Errorf("CheckTkeClusterStatusTask[%s] EnableClusterAudit[%s] failed: %v",
+				taskID, clusterID, err)
+			retErr := fmt.Errorf("checkClusterStatus[%s] EnableClusterAudit failed:[%v]", clusterID, err.Error())
+			_ = state.UpdateStepFailure(start, stepName, retErr)
+			return retErr
+		}
+		cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+			"enable cluster audit without collection successful")
+	}
 
 	// update step
 	if err = state.UpdateStepSucc(start, stepName); err != nil {

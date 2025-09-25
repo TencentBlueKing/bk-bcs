@@ -620,3 +620,12 @@ type MachineConfig struct {
 	Mem int
 	Gpu int
 }
+
+// EnableClusterAuditOption enable cluster audit option
+type EnableClusterAuditOption struct {
+	CommonOption
+	LogsetId          string
+	TopicId           string
+	TopicRegion       string
+	WithoutCollection bool
+}

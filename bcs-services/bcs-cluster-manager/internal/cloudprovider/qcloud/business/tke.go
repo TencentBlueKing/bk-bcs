@@ -1474,3 +1474,22 @@ func DeleteTkeClusterByClusterID(ctx context.Context, opt *cloudprovider.CommonO
 
 	return nil
 }
+
+// EnableClusterAudit enable cluster audit
+func EnableClusterAudit(ctx context.Context, cls *proto.Cluster, opt *cloudprovider.EnableClusterAuditOption) error {
+	taskID := cloudprovider.GetTaskIDFromContext(ctx)
+
+	tkeCli, err := api.NewTkeClient(&opt.CommonOption)
+	if err != nil {
+		return err
+	}
+
+	err = tkeCli.EnableClusterAudit(cls.SystemID, opt.LogsetId, opt.TopicId, opt.TopicRegion, opt.WithoutCollection)
+	if err != nil {
+		return err
+	}
+
+	blog.Infof("EnableClusterAudit[%s] cluster[%s] success", taskID, cls.SystemID)
+
+	return nil
+}
