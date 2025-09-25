@@ -233,7 +233,7 @@ func (hpi *HostPortInjector) injectToPod(pod *corev1.Pod) ([]types.PatchOperatio
 				containerPortsIndexList[containerIndex] = append(containerPortsIndexList[containerIndex], portIndex)
 				containerPortList = append(containerPortList, port)
 				needInjectCount++
-				break
+				continue
 			}
 		}
 	}
@@ -244,7 +244,7 @@ func (hpi *HostPortInjector) injectToPod(pod *corev1.Pod) ([]types.PatchOperatio
 				initContainerPortsIndexList[containerIndex] = append(initContainerPortsIndexList[containerIndex], portIndex)
 				containerPortList = append(containerPortList, port)
 				needInjectCount++
-				break
+				continue
 			}
 		}
 	}
