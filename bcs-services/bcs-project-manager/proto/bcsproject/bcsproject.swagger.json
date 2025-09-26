@@ -2062,6 +2062,47 @@
           "BCSProject"
         ]
       }
+    },
+    "/bcsproject/v2/projects/{projectID}": {
+      "put": {
+        "summary": "更新项目",
+        "description": "更新项目信息",
+        "operationId": "BCSProject_UpdateProjectV2",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bcsprojectProjectResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "description": "项目ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/bcsprojectUpdateProjectV2Request"
+            }
+          }
+        ],
+        "tags": [
+          "BCSProject"
+        ]
+      }
     }
   },
   "definitions": {
@@ -4757,6 +4798,72 @@
       },
       "description": "更新项目请求",
       "title": "UpdateProjectRequest"
+    },
+    "bcsprojectUpdateProjectV2Request": {
+      "type": "object",
+      "properties": {
+        "projectID": {
+          "type": "string",
+          "description": "项目ID",
+          "title": "projectID"
+        },
+        "businessID": {
+          "type": "string",
+          "description": "项目绑定的蓝鲸CMDB中业务ID信息",
+          "title": "businessID"
+        },
+        "managers": {
+          "type": "string",
+          "description": "项目管理员",
+          "title": "managers"
+        },
+        "name": {
+          "type": "string",
+          "description": "项目中文名称, 长度不能超过64字符",
+          "title": "name"
+        },
+        "projectCode": {
+          "type": "string",
+          "description": "项目编码(英文缩写), 全局唯一, 长度不能超过64字符",
+          "title": "projectCode"
+        },
+        "useBKRes": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "是否使用蓝鲸提供的资源池, 主要用于资源计费, 默认false",
+          "title": "useBKRes"
+        },
+        "description": {
+          "type": "string",
+          "description": "项目简要描述",
+          "title": "description"
+        },
+        "isOffline": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "项目是否已经下线, 默认false",
+          "title": "isOffline"
+        },
+        "kind": {
+          "type": "string",
+          "description": "项目中集群类型, 可选k8s/mesos, 未来该字段可能废弃",
+          "title": "kind"
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "annotations": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "更新项目quota请求",
+      "title": "UpdateProjectQuotaRequest"
     },
     "bcsprojectUpdateVariableData": {
       "type": "object",

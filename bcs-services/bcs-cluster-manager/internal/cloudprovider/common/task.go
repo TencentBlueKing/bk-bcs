@@ -73,6 +73,7 @@ const (
 // * backgroup task running depends on machinery framework
 
 // RunBKsopsJob running bksops job and wait for results
+// nolint: funlen
 func RunBKsopsJob(taskID string, stepName string) error {
 	// step1: get BKops url and para by taskID
 	// step2: create bkops task

@@ -156,6 +156,7 @@ func (ko *K8SOperator) CreateResourceQuota(ctx context.Context, clusterID string
 				apiv1.ResourceRequestsMemory: resource.MustParse(info.MemRequests),
 				apiv1.ResourceLimitsMemory:   resource.MustParse(info.MemLimits),
 				apiv1.ResourceServices: func() resource.Quantity {
+					// nolint: govet
 					q, err := resource.ParseQuantity(info.ServiceLimits)
 					if err != nil {
 						blog.Errorf("CreateResourceQuota[%s:%s] invalid ServiceLimits format '%s': %v, using default value 0",
@@ -239,8 +240,10 @@ func (ko *K8SOperator) UpdateResourceQuota(ctx context.Context, clusterID string
 	quota.Spec.Hard[apiv1.ResourceLimitsMemory] = resource.MustParse(info.MemLimits)
 	if info.ServiceLimits != "" {
 		quota.Spec.Hard[apiv1.ResourceServices] = func() resource.Quantity {
+			// nolint: govet
 			q, err := resource.ParseQuantity(info.ServiceLimits)
 			if err != nil {
+				// nolint: govet
 				blog.Errorf("UpdateResourceQuota[%s:%s] invalid ServiceLimits format '%s': %v, using default value 0",
 					clusterID, info.Name, info.ServiceLimits, err)
 				return resource.Quantity{}
