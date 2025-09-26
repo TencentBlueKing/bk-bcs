@@ -106,6 +106,7 @@ func (ua *UpdateVirtualClusterQuotaAction) Handle(ctx context.Context, req *cmpr
 	}
 
 	if ua.req.Quota.ServiceLimits != "" {
+		// nolint: govet
 		parsedValue, err := strconv.ParseUint(ua.req.Quota.ServiceLimits, 10, 32)
 		if err != nil {
 			ua.setResp(common.BcsErrClusterManagerInvalidParameter,
