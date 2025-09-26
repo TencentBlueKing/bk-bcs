@@ -106,10 +106,10 @@ func (ua *UpdateVirtualClusterQuotaAction) Handle(ctx context.Context, req *cmpr
 	}
 
 	if ua.req.Quota.ServiceLimits != "" {
-		parsedValue, err := strconv.ParseUint(ua.req.Quota.ServiceLimits, 10, 32)
-		if err != nil {
+		parsedValue, pErr := strconv.ParseUint(ua.req.Quota.ServiceLimits, 10, 32)
+		if pErr != nil {
 			ua.setResp(common.BcsErrClusterManagerInvalidParameter,
-				fmt.Sprintf("invalid ServiceLimits format '%s': %v", ua.req.Quota.ServiceLimits, err))
+				fmt.Sprintf("invalid ServiceLimits format '%s': %v", ua.req.Quota.ServiceLimits, pErr))
 			return
 		}
 		resourceQuota.ServiceLimits = strconv.FormatUint(parsedValue, 10)
