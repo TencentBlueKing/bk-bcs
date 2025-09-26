@@ -7531,6 +7531,27 @@
             "required": false,
             "type": "integer",
             "format": "int64"
+          },
+          {
+            "name": "clusterName",
+            "description": "clusterName. 集群名称",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "sort",
+            "description": "sort. 根据某个字段排序",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "order",
+            "description": "order. 升序或者降序",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -10276,6 +10297,11 @@
           "format": "boolean",
           "description": "是否为共享集群,默认false",
           "title": "is_shared"
+        },
+        "biz_maintainer": {
+          "type": "string",
+          "description": "业务运维人",
+          "title": "biz_maintainer"
         }
       },
       "description": "简化集群信息",
@@ -17522,6 +17548,9 @@
           "type": "string"
         },
         "memoryLimits": {
+          "type": "string"
+        },
+        "serviceLimits": {
           "type": "string"
         }
       }
