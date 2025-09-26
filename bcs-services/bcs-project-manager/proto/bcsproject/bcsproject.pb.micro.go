@@ -55,8 +55,8 @@ func NewBCSProjectEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		{
-			Name:    "BCSProject.UpdateProjectBusiness",
-			Path:    []string{"/bcsproject/v1/projectBusiness/{projectID}"},
+			Name:    "BCSProject.UpdateProjectV2",
+			Path:    []string{"/bcsproject/v2/projects/{projectID}"},
 			Method:  []string{"PUT"},
 			Handler: "rpc",
 		},
@@ -99,7 +99,7 @@ type BCSProjectService interface {
 	CreateProject(ctx context.Context, in *CreateProjectRequest, opts ...client.CallOption) (*ProjectResponse, error)
 	GetProject(ctx context.Context, in *GetProjectRequest, opts ...client.CallOption) (*ProjectResponse, error)
 	UpdateProject(ctx context.Context, in *UpdateProjectRequest, opts ...client.CallOption) (*ProjectResponse, error)
-	UpdateProjectBusiness(ctx context.Context, in *UpdateProjectBusinessRequest, opts ...client.CallOption) (*ProjectResponse, error)
+	UpdateProjectV2(ctx context.Context, in *UpdateProjectV2Request, opts ...client.CallOption) (*ProjectResponse, error)
 	DeleteProject(ctx context.Context, in *DeleteProjectRequest, opts ...client.CallOption) (*ProjectResponse, error)
 	ListProjects(ctx context.Context, in *ListProjectsRequest, opts ...client.CallOption) (*ListProjectsResponse, error)
 	ListAuthorizedProjects(ctx context.Context, in *ListAuthorizedProjReq, opts ...client.CallOption) (*ListAuthorizedProjResp, error)
@@ -149,8 +149,8 @@ func (c *bCSProjectService) UpdateProject(ctx context.Context, in *UpdateProject
 	return out, nil
 }
 
-func (c *bCSProjectService) UpdateProjectBusiness(ctx context.Context, in *UpdateProjectBusinessRequest, opts ...client.CallOption) (*ProjectResponse, error) {
-	req := c.c.NewRequest(c.name, "BCSProject.UpdateProjectBusiness", in)
+func (c *bCSProjectService) UpdateProjectV2(ctx context.Context, in *UpdateProjectV2Request, opts ...client.CallOption) (*ProjectResponse, error) {
+	req := c.c.NewRequest(c.name, "BCSProject.UpdateProjectV2", in)
 	out := new(ProjectResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
@@ -215,7 +215,7 @@ type BCSProjectHandler interface {
 	CreateProject(context.Context, *CreateProjectRequest, *ProjectResponse) error
 	GetProject(context.Context, *GetProjectRequest, *ProjectResponse) error
 	UpdateProject(context.Context, *UpdateProjectRequest, *ProjectResponse) error
-	UpdateProjectBusiness(context.Context, *UpdateProjectBusinessRequest, *ProjectResponse) error
+	UpdateProjectV2(context.Context, *UpdateProjectV2Request, *ProjectResponse) error
 	DeleteProject(context.Context, *DeleteProjectRequest, *ProjectResponse) error
 	ListProjects(context.Context, *ListProjectsRequest, *ListProjectsResponse) error
 	ListAuthorizedProjects(context.Context, *ListAuthorizedProjReq, *ListAuthorizedProjResp) error
@@ -228,7 +228,7 @@ func RegisterBCSProjectHandler(s server.Server, hdlr BCSProjectHandler, opts ...
 		CreateProject(ctx context.Context, in *CreateProjectRequest, out *ProjectResponse) error
 		GetProject(ctx context.Context, in *GetProjectRequest, out *ProjectResponse) error
 		UpdateProject(ctx context.Context, in *UpdateProjectRequest, out *ProjectResponse) error
-		UpdateProjectBusiness(ctx context.Context, in *UpdateProjectBusinessRequest, out *ProjectResponse) error
+		UpdateProjectV2(ctx context.Context, in *UpdateProjectV2Request, out *ProjectResponse) error
 		DeleteProject(ctx context.Context, in *DeleteProjectRequest, out *ProjectResponse) error
 		ListProjects(ctx context.Context, in *ListProjectsRequest, out *ListProjectsResponse) error
 		ListAuthorizedProjects(ctx context.Context, in *ListAuthorizedProjReq, out *ListAuthorizedProjResp) error
@@ -258,8 +258,8 @@ func RegisterBCSProjectHandler(s server.Server, hdlr BCSProjectHandler, opts ...
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
-		Name:    "BCSProject.UpdateProjectBusiness",
-		Path:    []string{"/bcsproject/v1/projectBusiness/{projectID}"},
+		Name:    "BCSProject.UpdateProjectV2",
+		Path:    []string{"/bcsproject/v2/projects/{projectID}"},
 		Method:  []string{"PUT"},
 		Handler: "rpc",
 	}))
@@ -312,8 +312,8 @@ func (h *bCSProjectHandler) UpdateProject(ctx context.Context, in *UpdateProject
 	return h.BCSProjectHandler.UpdateProject(ctx, in, out)
 }
 
-func (h *bCSProjectHandler) UpdateProjectBusiness(ctx context.Context, in *UpdateProjectBusinessRequest, out *ProjectResponse) error {
-	return h.BCSProjectHandler.UpdateProjectBusiness(ctx, in, out)
+func (h *bCSProjectHandler) UpdateProjectV2(ctx context.Context, in *UpdateProjectV2Request, out *ProjectResponse) error {
+	return h.BCSProjectHandler.UpdateProjectV2(ctx, in, out)
 }
 
 func (h *bCSProjectHandler) DeleteProject(ctx context.Context, in *DeleteProjectRequest, out *ProjectResponse) error {

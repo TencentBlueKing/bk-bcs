@@ -83,14 +83,14 @@ service BCSProject {
     };
   }
 
-  rpc UpdateProjectBusiness(UpdateProjectBusinessRequest) returns (ProjectResponse) {
+  rpc UpdateProjectV2(UpdateProjectV2Request) returns (ProjectResponse) {
     option (google.api.http) = {
-      put : "/bcsproject/v1/projectBusiness/{projectID}"
+      put : "/bcsproject/v2/projects/{projectID}"
       body : "*"
     };
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-      description : "更新项目businessID"
-      summary : "更新项目资源business"
+      description : "更新项目信息"
+      summary : "更新项目"
     };
   }
 
@@ -3167,7 +3167,7 @@ message UpdateProjectQuotaRequest {
   }];
 }
 
-message UpdateProjectBusinessRequest {
+message UpdateProjectV2Request {
   option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
     json_schema : {
       title : "UpdateProjectQuotaRequest"
@@ -3178,13 +3178,45 @@ message UpdateProjectBusinessRequest {
     title: "projectID", 
     description: "项目ID"
   }, (validate.rules).string = {len: 32, pattern: "^[0-9a-zA-Z-]+$"}];
-  string businessID = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  string businessID = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "businessID", 
     description: "项目绑定的蓝鲸CMDB中业务ID信息"
   }];
-  string updater = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "updater",
-    description: "更新者"
+  string managers = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "managers", 
+    description: "项目管理员"
+  }];
+  string name = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "name", 
+    description: "项目中文名称, 长度不能超过64字符"
+  }, (validate.rules).string = {max_len: 64}];
+  string projectCode = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "projectCode", 
+    description: "项目编码(英文缩写), 全局唯一, 长度不能超过64字符"
+  }];
+  google.protobuf.BoolValue useBKRes = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "useBKRes", 
+    description: "是否使用蓝鲸提供的资源池, 主要用于资源计费, 默认false"
+  }];
+  string description = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "description", 
+    description: "项目简要描述"
+  }];
+  google.protobuf.BoolValue isOffline = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "isOffline", 
+    description: "项目是否已经下线, 默认false"
+  }];
+  string kind = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "kind", 
+    description: "项目中集群类型, 可选k8s/mesos, 未来该字段可能废弃"
+  }];
+  map<string, string> labels = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "labels",
+    description: "project的标签配置"
+  }];
+  map<string, string> annotations = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "annotations",
+    description: "project的注解配置"
   }];
 }
 

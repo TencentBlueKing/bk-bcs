@@ -118,10 +118,10 @@ func (p *ProjectHandler) UpdateProject(ctx context.Context,
 	return nil
 }
 
-// UpdateProjectBusiness update a project business id
-func (p *ProjectHandler) UpdateProjectBusiness(ctx context.Context,
-	req *proto.UpdateProjectBusinessRequest, resp *proto.ProjectResponse) error {
-	ua := project.NewUpdateBusinessAction(p.model)
+// UpdateProjectV2 update a project business id
+func (p *ProjectHandler) UpdateProjectV2(ctx context.Context,
+	req *proto.UpdateProjectV2Request, resp *proto.ProjectResponse) error {
+	ua := project.NewUpdateV2Action(p.model)
 	projectInfo, e := ua.Do(ctx, req)
 	if e != nil {
 		return e

@@ -189,8 +189,8 @@ func local_request_BCSProject_UpdateProject_0(ctx context.Context, marshaler run
 
 }
 
-func request_BCSProject_UpdateProjectBusiness_0(ctx context.Context, marshaler runtime.Marshaler, client BCSProjectClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq UpdateProjectBusinessRequest
+func request_BCSProject_UpdateProjectV2_0(ctx context.Context, marshaler runtime.Marshaler, client BCSProjectClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq UpdateProjectV2Request
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -219,13 +219,13 @@ func request_BCSProject_UpdateProjectBusiness_0(ctx context.Context, marshaler r
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectID", err)
 	}
 
-	msg, err := client.UpdateProjectBusiness(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.UpdateProjectV2(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func local_request_BCSProject_UpdateProjectBusiness_0(ctx context.Context, marshaler runtime.Marshaler, server BCSProjectServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq UpdateProjectBusinessRequest
+func local_request_BCSProject_UpdateProjectV2_0(ctx context.Context, marshaler runtime.Marshaler, server BCSProjectServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq UpdateProjectV2Request
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -254,7 +254,7 @@ func local_request_BCSProject_UpdateProjectBusiness_0(ctx context.Context, marsh
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectID", err)
 	}
 
-	msg, err := server.UpdateProjectBusiness(ctx, &protoReq)
+	msg, err := server.UpdateProjectV2(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -3530,7 +3530,7 @@ func RegisterBCSProjectGwServer(ctx context.Context, mux *runtime.ServeMux, serv
 
 	})
 
-	mux.Handle("PUT", pattern_BCSProject_UpdateProjectBusiness_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("PUT", pattern_BCSProject_UpdateProjectV2_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
@@ -3539,14 +3539,14 @@ func RegisterBCSProjectGwServer(ctx context.Context, mux *runtime.ServeMux, serv
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_BCSProject_UpdateProjectBusiness_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_BCSProject_UpdateProjectV2_0(rctx, inboundMarshaler, server, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_BCSProject_UpdateProjectBusiness_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_BCSProject_UpdateProjectV2_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -4571,7 +4571,7 @@ func RegisterBCSProjectGwClient(ctx context.Context, mux *runtime.ServeMux, clie
 
 	})
 
-	mux.Handle("PUT", pattern_BCSProject_UpdateProjectBusiness_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("PUT", pattern_BCSProject_UpdateProjectV2_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
@@ -4580,14 +4580,14 @@ func RegisterBCSProjectGwClient(ctx context.Context, mux *runtime.ServeMux, clie
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_BCSProject_UpdateProjectBusiness_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_BCSProject_UpdateProjectV2_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_BCSProject_UpdateProjectBusiness_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_BCSProject_UpdateProjectV2_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -4701,7 +4701,7 @@ var (
 
 	pattern_BCSProject_UpdateProject_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"bcsproject", "v1", "projects", "projectID"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_BCSProject_UpdateProjectBusiness_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"bcsproject", "v1", "projectBusiness", "projectID"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_BCSProject_UpdateProjectV2_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"bcsproject", "v2", "projects", "projectID"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_BCSProject_DeleteProject_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"bcsproject", "v1", "projects", "projectID"}, "", runtime.AssumeColonVerbOpt(true)))
 
@@ -4721,7 +4721,7 @@ var (
 
 	forward_BCSProject_UpdateProject_0 = runtime.ForwardResponseMessage
 
-	forward_BCSProject_UpdateProjectBusiness_0 = runtime.ForwardResponseMessage
+	forward_BCSProject_UpdateProjectV2_0 = runtime.ForwardResponseMessage
 
 	forward_BCSProject_DeleteProject_0 = runtime.ForwardResponseMessage
 

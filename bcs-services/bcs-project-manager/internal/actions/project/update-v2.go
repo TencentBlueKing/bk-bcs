@@ -26,22 +26,22 @@ import (
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
 )
 
-// UpdateBusinessAction xxx
-type UpdateBusinessAction struct {
+// UpdateV2Action xxx
+type UpdateV2Action struct {
 	ctx   context.Context
 	model store.ProjectModel
-	req   *proto.UpdateProjectBusinessRequest
+	req   *proto.UpdateProjectV2Request
 }
 
-// NewUpdateBusinessAction new update project business action
-func NewUpdateBusinessAction(model store.ProjectModel) *UpdateBusinessAction {
-	return &UpdateBusinessAction{
+// NewUpdateV2Action new update project v2 action
+func NewUpdateV2Action(model store.ProjectModel) *UpdateV2Action {
+	return &UpdateV2Action{
 		model: model,
 	}
 }
 
 // Do update project request
-func (ua *UpdateBusinessAction) Do(ctx context.Context, req *proto.UpdateProjectBusinessRequest) (*pm.Project, error) {
+func (ua *UpdateV2Action) Do(ctx context.Context, req *proto.UpdateProjectV2Request) (*pm.Project, error) {
 	ua.ctx = ctx
 	ua.req = req
 
@@ -55,7 +55,7 @@ func (ua *UpdateBusinessAction) Do(ctx context.Context, req *proto.UpdateProject
 		return nil, errorx.NewParamErr(err.Error())
 	}
 
-	if err := ua.updateProjectBusiness(p); err != nil {
+	if err := ua.updateProjectV2(p); err != nil {
 		return nil, errorx.NewDBErr(err.Error())
 	}
 
@@ -70,7 +70,7 @@ func (ua *UpdateBusinessAction) Do(ctx context.Context, req *proto.UpdateProject
 	return p, nil
 }
 
-func (ua *UpdateBusinessAction) validate() error {
+func (ua *UpdateV2Action) validate() error {
 	err := ua.req.Validate()
 	if err != nil {
 		return err
@@ -79,7 +79,7 @@ func (ua *UpdateBusinessAction) validate() error {
 	return nil
 }
 
-func (ua *UpdateBusinessAction) updateProjectBusiness(p *pm.Project) error {
+func (ua *UpdateV2Action) updateProjectV2(p *pm.Project) error {
 	p.UpdateTime = time.Now().Format(time.RFC3339)
 	// 从 context 中获取 username
 	if authUser, err := middleware.GetUserFromContext(ua.ctx); err == nil {
@@ -88,8 +88,36 @@ func (ua *UpdateBusinessAction) updateProjectBusiness(p *pm.Project) error {
 
 	req := ua.req
 
+	if req.Managers != "" {
+		p.Managers = req.Managers
+	}
+	if req.Name != "" {
+		p.Name = req.Name
+	}
+	if req.ProjectCode != "" {
+		p.ProjectCode = req.ProjectCode
+	}
+	// 更新bool型，判断是否为nil
+	if req.UseBKRes != nil && req.UseBKRes.GetValue() != p.UseBKRes {
+		p.UseBKRes = req.UseBKRes.GetValue()
+	}
+	if req.Description != "" {
+		p.Description = req.Description
+	}
+	if req.IsOffline != nil && req.IsOffline.GetValue() != p.IsOffline {
+		p.IsOffline = req.IsOffline.GetValue()
+	}
+	if req.Kind != "" {
+		p.Kind = req.Kind
+	}
 	if req.BusinessID != "" {
 		p.BusinessID = req.BusinessID
+	}
+	if ua.req.Labels != nil {
+		p.Labels = req.Labels
+	}
+	if ua.req.Annotations != nil {
+		p.Annotations = req.Annotations
 	}
 
 	return ua.model.UpdateProject(ua.ctx, p)
