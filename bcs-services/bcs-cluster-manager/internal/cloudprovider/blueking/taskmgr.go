@@ -460,8 +460,8 @@ func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Nod
 }
 
 // addNodesSystemInitBkSops 构建系统初始化步骤
-func (t *Task) addNodesSystemInitBkSops(task *proto.Task, cls *proto.Cluster,
-	nodeIPs []string, opt *cloudprovider.AddNodesOption) error {
+func (t *Task) addNodesSystemInitBkSops(
+	task *proto.Task, cls *proto.Cluster, nodeIPs []string, opt *cloudprovider.AddNodesOption) error {
 	if opt.Cloud != nil && opt.Cloud.ClusterManagement != nil &&
 		opt.Cloud.ClusterManagement.AddNodesToCluster != nil && !opt.NodeTemplate.GetSkipSystemInit() {
 		step := &template.BkSopsStepAction{
@@ -485,8 +485,8 @@ func (t *Task) addNodesSystemInitBkSops(task *proto.Task, cls *proto.Cluster,
 }
 
 // addNodesExecUserScript 构建用户脚本步骤
-func (t *Task) addNodesExecUserScript(task *proto.Task, cls *proto.Cluster,
-	nodeIPs []string, opt *cloudprovider.AddNodesOption) {
+func (t *Task) addNodesExecUserScript(
+	task *proto.Task, cls *proto.Cluster, nodeIPs []string, opt *cloudprovider.AddNodesOption) {
 	if opt.NodeTemplate != nil && len(opt.NodeTemplate.UserScript) > 0 {
 		common.BuildJobExecuteScriptStep(task, common.JobExecParas{
 			ClusterID:        cls.ClusterID,
@@ -501,8 +501,8 @@ func (t *Task) addNodesExecUserScript(task *proto.Task, cls *proto.Cluster,
 }
 
 // addNodesUserPostBkSops 构建用户后置步骤
-func (t *Task) addNodesUserPostBkSops(task *proto.Task, cls *proto.Cluster,
-	nodeIPs []string, opt *cloudprovider.AddNodesOption) error {
+func (t *Task) addNodesUserPostBkSops(
+	task *proto.Task, cls *proto.Cluster, nodeIPs []string, opt *cloudprovider.AddNodesOption) error {
 	if opt.NodeTemplate != nil && opt.NodeTemplate.ScaleOutExtraAddons != nil {
 		err := template.BuildSopsFactory{
 			StepName: template.UserAfterInit,
@@ -521,8 +521,8 @@ func (t *Task) addNodesUserPostBkSops(task *proto.Task, cls *proto.Cluster,
 }
 
 // addNodesMixedClsBkSops 构建混部集群步骤
-func (t *Task) addNodesMixedClsBkSops(task *proto.Task, cls *proto.Cluster,
-	nodeIPs []string, opt *cloudprovider.AddNodesOption) error {
+func (t *Task) addNodesMixedClsBkSops(
+	task *proto.Task, cls *proto.Cluster, nodeIPs []string, opt *cloudprovider.AddNodesOption) error {
 	if cls.GetIsMixed() && opt.Cloud != nil && opt.Cloud.ClusterManagement != nil &&
 		opt.Cloud.ClusterManagement.CommonMixedAction != nil {
 		err := template.BuildSopsFactory{
@@ -541,7 +541,8 @@ func (t *Task) addNodesMixedClsBkSops(task *proto.Task, cls *proto.Cluster,
 }
 
 // BuildRemoveNodesFromClusterTask build removeNodes task
-func (t *Task) BuildRemoveNodesFromClusterTask(cls *proto.Cluster, nodes []*proto.Node, // nolint
+// nolint: funlen
+func (t *Task) BuildRemoveNodesFromClusterTask(cls *proto.Cluster, nodes []*proto.Node,
 	opt *cloudprovider.DeleteNodesOption) (*proto.Task, error) {
 	// removeNodesFromCluster has two steps:
 	// 1. call blueking bkops to delete node
@@ -1092,8 +1093,8 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 }
 
 // updateDesiredNodesSysInitBkSops 构建更新期望节点数的系统初始化步骤
-func (t *Task) updateDesiredNodesSysInitBkSops(task *proto.Task, group *proto.NodeGroup,
-	opt *cloudprovider.UpdateDesiredNodeOption) error {
+func (t *Task) updateDesiredNodesSysInitBkSops(
+	task *proto.Task, group *proto.NodeGroup, opt *cloudprovider.UpdateDesiredNodeOption) error {
 	if opt.Cloud != nil && opt.Cloud.ClusterManagement != nil &&
 		opt.Cloud.ClusterManagement.AddNodesToCluster != nil && !group.GetNodeTemplate().GetSkipSystemInit() {
 		step := &template.BkSopsStepAction{
@@ -1118,8 +1119,8 @@ func (t *Task) updateDesiredNodesSysInitBkSops(task *proto.Task, group *proto.No
 }
 
 // updateDesiredNodesUserScript 构建更新期望节点数的用户脚本步骤
-func (t *Task) updateDesiredNodesUserScript(task *proto.Task, group *proto.NodeGroup,
-	opt *cloudprovider.UpdateDesiredNodeOption) {
+func (t *Task) updateDesiredNodesUserScript(
+	task *proto.Task, group *proto.NodeGroup, opt *cloudprovider.UpdateDesiredNodeOption) {
 	if group.NodeTemplate != nil && len(group.NodeTemplate.UserScript) > 0 {
 		common.BuildJobExecuteScriptStep(task, common.JobExecParas{
 			ClusterID:        group.ClusterID,
@@ -1134,8 +1135,8 @@ func (t *Task) updateDesiredNodesUserScript(task *proto.Task, group *proto.NodeG
 }
 
 // updateDesiredNodesUserPostBkSops 构建更新期望节点数的用户后置步骤
-func (t *Task) updateDesiredNodesUserPostBkSops(task *proto.Task, group *proto.NodeGroup,
-	opt *cloudprovider.UpdateDesiredNodeOption) error {
+func (t *Task) updateDesiredNodesUserPostBkSops(
+	task *proto.Task, group *proto.NodeGroup, opt *cloudprovider.UpdateDesiredNodeOption) error {
 	if group.NodeTemplate != nil && group.NodeTemplate.ScaleOutExtraAddons != nil {
 		err := template.BuildSopsFactory{
 			StepName: template.UserAfterInit,

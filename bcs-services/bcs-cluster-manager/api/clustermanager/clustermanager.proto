@@ -7772,6 +7772,23 @@ message ListClusterV2Req {
       title : "limit",
       description : "查询限制数量"
     }, (validate.rules).uint32.lte = 1000];
+  string clusterName = 16 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "clusterName",
+      description : "集群名称"
+    },
+    (validate.rules).string.max_len = 100
+  ];
+  string sort = 17 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "sort",
+      description : "根据某个字段排序"
+    }];
+  string order = 18 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "order",
+      description : "升序或者降序"
+    }, (validate.rules).string = {in: ["", "asc", "desc"]}];
 }
 
 message ListClusterV2Resp {
@@ -15675,6 +15692,10 @@ message ClusterBasicInfo {
   bool is_shared = 24[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "is_shared",
     description: "是否为共享集群,默认false"
+  }];
+  string biz_maintainer = 25[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "biz_maintainer",
+    description: "业务运维人"
   }];
 }
 
