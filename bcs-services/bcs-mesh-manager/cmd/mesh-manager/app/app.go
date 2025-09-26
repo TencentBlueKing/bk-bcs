@@ -109,6 +109,7 @@ func (s *Server) Init() error {
 		s.initMicro,
 		s.initHTTPService,
 		s.initK8sClient,
+		s.initPipelineConfig,
 	}
 
 	// init
@@ -460,5 +461,34 @@ func (s *Server) initIAMClient() error {
 	// 初始化权限检查模块的 mesh model
 	auth.SetMeshModel(s.model)
 
+	return nil
+}
+
+// initPipelineConfig 初始化pipeline配置
+func (s *Server) initPipelineConfig() error {
+	// 用户未配置，则初始化一个禁用的配置
+	if s.opt.Pipeline == nil {
+		utils.InitPipelineConfig(&utils.PipelineConfig{Enable: false})
+		return nil
+	}
+
+	config := &utils.PipelineConfig{
+		BKDevOpsUrl:     s.opt.Pipeline.BKDevOpsUrl,
+		AppCode:         s.opt.Pipeline.AppCode,
+		AppSecret:       s.opt.Pipeline.AppSecret,
+		DevopsProjectID: s.opt.Pipeline.DevopsProjectID,
+		DevopsUID:       s.opt.Pipeline.DevopsUID,
+		BkUsername:      s.opt.Pipeline.BkUsername,
+		DevOpsToken:     s.opt.Pipeline.DevOpsToken,
+		BizID:           s.opt.Pipeline.BizID,
+		Collection:      s.opt.Pipeline.Collection,
+		PipelineID:      s.opt.Pipeline.PipelineID,
+		EnableGroup:     s.opt.Pipeline.EnableGroup,
+		Enable:          s.opt.Pipeline.Enable,
+	}
+
+	// 初始化Pipeline配置
+	utils.InitPipelineConfig(config)
+	blog.Infof("pipeline config initialized successfully")
 	return nil
 }

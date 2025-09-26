@@ -110,12 +110,13 @@ func (ko *K8SOperator) DeleteNamespace(ctx context.Context, clusterID, name stri
 
 // ResourceQuotaInfo resource quota info
 type ResourceQuotaInfo struct {
-	Name        string
-	Namespace   string
-	CpuRequests string
-	CpuLimits   string
-	MemRequests string
-	MemLimits   string
+	Name          string
+	Namespace     string
+	CpuRequests   string
+	CpuLimits     string
+	MemRequests   string
+	MemLimits     string
+	ServiceLimits string
 }
 
 // CreateResourceQuota create namespace resource quota
@@ -154,6 +155,15 @@ func (ko *K8SOperator) CreateResourceQuota(ctx context.Context, clusterID string
 				apiv1.ResourceLimitsCPU:      resource.MustParse(info.CpuLimits),
 				apiv1.ResourceRequestsMemory: resource.MustParse(info.MemRequests),
 				apiv1.ResourceLimitsMemory:   resource.MustParse(info.MemLimits),
+				apiv1.ResourceServices: func() resource.Quantity {
+					q, err := resource.ParseQuantity(info.ServiceLimits)
+					if err != nil {
+						blog.Errorf("CreateResourceQuota[%s:%s] invalid ServiceLimits format '%s': %v, using default value 0",
+							clusterID, info.Name, info.ServiceLimits, err)
+						return resource.Quantity{}
+					}
+					return q
+				}(),
 			},
 		},
 	}
@@ -227,6 +237,17 @@ func (ko *K8SOperator) UpdateResourceQuota(ctx context.Context, clusterID string
 	quota.Spec.Hard[apiv1.ResourceLimitsCPU] = resource.MustParse(info.CpuLimits)
 	quota.Spec.Hard[apiv1.ResourceRequestsMemory] = resource.MustParse(info.MemRequests)
 	quota.Spec.Hard[apiv1.ResourceLimitsMemory] = resource.MustParse(info.MemLimits)
+	if info.ServiceLimits != "" {
+		quota.Spec.Hard[apiv1.ResourceServices] = func() resource.Quantity {
+			q, err := resource.ParseQuantity(info.ServiceLimits)
+			if err != nil {
+				blog.Errorf("UpdateResourceQuota[%s:%s] invalid ServiceLimits format '%s': %v, using default value 0",
+					clusterID, info.Name, info.ServiceLimits, err)
+				return resource.Quantity{}
+			}
+			return q
+		}()
+	}
 
 	newData, err := json.Marshal(quota)
 	if err != nil {

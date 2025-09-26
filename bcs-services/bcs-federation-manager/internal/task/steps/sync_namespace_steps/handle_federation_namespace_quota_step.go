@@ -106,7 +106,10 @@ func (s HandleFederationNamespaceQuotaStep) DoWork(t *types.Task) error {
 				hardList := v1.ResourceList{}
 				for _, k8SResource := range quota.ResourceList {
 					resourceName := v1.ResourceName(k8SResource.ResourceName)
-					resourceQuantity := resource.MustParse(k8SResource.ResourceQuantity)
+					resourceQuantity, mErr := resource.ParseQuantity(k8SResource.ResourceQuantity)
+					if mErr != nil {
+						return mErr
+					}
 					hardList[resourceName] = resourceQuantity
 				}
 

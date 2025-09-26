@@ -5849,6 +5849,7 @@ message NamespaceQuota {
   string cpuLimits = 2;
   string memoryRequests = 3;
   string memoryLimits = 4;
+  string serviceLimits = 5;
 }
 
 message CreateVirtualClusterResp {

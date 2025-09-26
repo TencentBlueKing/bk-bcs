@@ -93,11 +93,17 @@ func CheckNodePodsTask(taskID string, stepName string) error {
 	}
 
 	errors := utils.NewMultiError()
+	podNames := make([]string, 0)
 	for name, pods := range nodePods {
-		blog.Errorf("CheckNodePodsTask[%s] nodeName[%s] failed: %d", taskID, name, len(pods))
+		blog.Errorf("CheckNodePodsTask[%s] nodeName[%s] podName[%s] failed: %d",
+			taskID, name, len(pods), strings.Join(podNames, ","))
 
 		if len(pods) > 0 {
-			errors.Append(fmt.Errorf("node[%s] exist business podNum[%v]", name, len(pods)))
+			for _, pod := range pods {
+				podNames = append(podNames, pod.Name)
+			}
+			errors.Append(fmt.Errorf("node[%s] exist business podNum[%v], podName[%s]",
+				name, len(pods), strings.Join(podNames, ",")))
 		}
 	}
 	if errors.HasErrors() {
