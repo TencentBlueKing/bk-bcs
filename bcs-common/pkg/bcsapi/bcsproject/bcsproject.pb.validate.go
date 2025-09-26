@@ -13720,22 +13720,22 @@ var _ interface {
 	ErrorName() string
 } = UpdateProjectQuotaRequestValidationError{}
 
-// Validate checks the field values on UpdateProjectBusinessRequest with the
-// rules defined in the proto definition for this message. If any rules are
+// Validate checks the field values on UpdateProjectV2Request with the rules
+// defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
-func (m *UpdateProjectBusinessRequest) Validate() error {
+func (m *UpdateProjectV2Request) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on UpdateProjectBusinessRequest with the
-// rules defined in the proto definition for this message. If any rules are
+// ValidateAll checks the field values on UpdateProjectV2Request with the rules
+// defined in the proto definition for this message. If any rules are
 // violated, the result is a list of violation errors wrapped in
-// UpdateProjectBusinessRequestMultiError, or nil if none found.
-func (m *UpdateProjectBusinessRequest) ValidateAll() error {
+// UpdateProjectV2RequestMultiError, or nil if none found.
+func (m *UpdateProjectV2Request) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *UpdateProjectBusinessRequest) validate(all bool) error {
+func (m *UpdateProjectV2Request) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -13743,7 +13743,7 @@ func (m *UpdateProjectBusinessRequest) validate(all bool) error {
 	var errors []error
 
 	if utf8.RuneCountInString(m.GetProjectID()) != 32 {
-		err := UpdateProjectBusinessRequestValidationError{
+		err := UpdateProjectV2RequestValidationError{
 			field:  "ProjectID",
 			reason: "value length must be 32 runes",
 		}
@@ -13754,8 +13754,8 @@ func (m *UpdateProjectBusinessRequest) validate(all bool) error {
 
 	}
 
-	if !_UpdateProjectBusinessRequest_ProjectID_Pattern.MatchString(m.GetProjectID()) {
-		err := UpdateProjectBusinessRequestValidationError{
+	if !_UpdateProjectV2Request_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+		err := UpdateProjectV2RequestValidationError{
 			field:  "ProjectID",
 			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
 		}
@@ -13767,22 +13767,101 @@ func (m *UpdateProjectBusinessRequest) validate(all bool) error {
 
 	// no validation rules for BusinessID
 
-	// no validation rules for Updater
+	// no validation rules for Managers
+
+	if utf8.RuneCountInString(m.GetName()) > 64 {
+		err := UpdateProjectV2RequestValidationError{
+			field:  "Name",
+			reason: "value length must be at most 64 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for ProjectCode
+
+	if all {
+		switch v := interface{}(m.GetUseBKRes()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, UpdateProjectV2RequestValidationError{
+					field:  "UseBKRes",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, UpdateProjectV2RequestValidationError{
+					field:  "UseBKRes",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetUseBKRes()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateProjectV2RequestValidationError{
+				field:  "UseBKRes",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for Description
+
+	if all {
+		switch v := interface{}(m.GetIsOffline()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, UpdateProjectV2RequestValidationError{
+					field:  "IsOffline",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, UpdateProjectV2RequestValidationError{
+					field:  "IsOffline",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetIsOffline()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateProjectV2RequestValidationError{
+				field:  "IsOffline",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for Kind
+
+	// no validation rules for Labels
+
+	// no validation rules for Annotations
 
 	if len(errors) > 0 {
-		return UpdateProjectBusinessRequestMultiError(errors)
+		return UpdateProjectV2RequestMultiError(errors)
 	}
 
 	return nil
 }
 
-// UpdateProjectBusinessRequestMultiError is an error wrapping multiple
-// validation errors returned by UpdateProjectBusinessRequest.ValidateAll() if
-// the designated constraints aren't met.
-type UpdateProjectBusinessRequestMultiError []error
+// UpdateProjectV2RequestMultiError is an error wrapping multiple validation
+// errors returned by UpdateProjectV2Request.ValidateAll() if the designated
+// constraints aren't met.
+type UpdateProjectV2RequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m UpdateProjectBusinessRequestMultiError) Error() string {
+func (m UpdateProjectV2RequestMultiError) Error() string {
 	var msgs []string
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -13791,12 +13870,11 @@ func (m UpdateProjectBusinessRequestMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m UpdateProjectBusinessRequestMultiError) AllErrors() []error { return m }
+func (m UpdateProjectV2RequestMultiError) AllErrors() []error { return m }
 
-// UpdateProjectBusinessRequestValidationError is the validation error returned
-// by UpdateProjectBusinessRequest.Validate if the designated constraints
-// aren't met.
-type UpdateProjectBusinessRequestValidationError struct {
+// UpdateProjectV2RequestValidationError is the validation error returned by
+// UpdateProjectV2Request.Validate if the designated constraints aren't met.
+type UpdateProjectV2RequestValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -13804,24 +13882,24 @@ type UpdateProjectBusinessRequestValidationError struct {
 }
 
 // Field function returns field value.
-func (e UpdateProjectBusinessRequestValidationError) Field() string { return e.field }
+func (e UpdateProjectV2RequestValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e UpdateProjectBusinessRequestValidationError) Reason() string { return e.reason }
+func (e UpdateProjectV2RequestValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e UpdateProjectBusinessRequestValidationError) Cause() error { return e.cause }
+func (e UpdateProjectV2RequestValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e UpdateProjectBusinessRequestValidationError) Key() bool { return e.key }
+func (e UpdateProjectV2RequestValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e UpdateProjectBusinessRequestValidationError) ErrorName() string {
-	return "UpdateProjectBusinessRequestValidationError"
+func (e UpdateProjectV2RequestValidationError) ErrorName() string {
+	return "UpdateProjectV2RequestValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e UpdateProjectBusinessRequestValidationError) Error() string {
+func (e UpdateProjectV2RequestValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -13833,14 +13911,14 @@ func (e UpdateProjectBusinessRequestValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sUpdateProjectBusinessRequest.%s: %s%s",
+		"invalid %sUpdateProjectV2Request.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = UpdateProjectBusinessRequestValidationError{}
+var _ error = UpdateProjectV2RequestValidationError{}
 
 var _ interface {
 	Field() string
@@ -13848,9 +13926,9 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = UpdateProjectBusinessRequestValidationError{}
+} = UpdateProjectV2RequestValidationError{}
 
-var _UpdateProjectBusinessRequest_ProjectID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+var _UpdateProjectV2Request_ProjectID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 
 // Validate checks the field values on DeleteProjectQuotaRequest with the rules
 // defined in the proto definition for this message. If any rules are
