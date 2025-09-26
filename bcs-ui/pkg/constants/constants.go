@@ -13,6 +13,12 @@
 // Package constants xxx
 package constants
 
+import (
+	"fmt"
+
+	"github.com/Tencent/bk-bcs/bcs-ui/pkg/config"
+)
+
 type contextKey string
 
 func (c contextKey) String() string {
@@ -34,3 +40,6 @@ const (
 	// BluekingLanguage switch cookies constant
 	BluekingLanguage = "blueking_language"
 )
+
+// ServiceDomain service domain
+var ServiceDomain = fmt.Sprintf("%s%s", config.G.Base.ModuleName, ".bkbcs.tencent.com")

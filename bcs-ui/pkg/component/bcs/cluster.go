@@ -15,11 +15,8 @@ package bcs
 
 import (
 	"context"
-	"fmt"
 
-	"github.com/Tencent/bk-bcs/bcs-ui/pkg/component"
-	"github.com/Tencent/bk-bcs/bcs-ui/pkg/config"
-	"github.com/Tencent/bk-bcs/bcs-ui/pkg/contextx"
+	"github.com/Tencent/bk-bcs/bcs-ui/pkg/component/bcs/clustermanager"
 )
 
 // Cluster 集群信息
@@ -42,21 +39,17 @@ type GetClusterResponse struct {
 
 // GetCluster 获取集群详情
 func GetCluster(ctx context.Context, clusterID string) (*Cluster, error) {
-	bcsConf := config.G.BCS
-	url := fmt.Sprintf("%s/bcsapi/v4/clustermanager/v1/cluster/%s", bcsConf.Host, clusterID)
-	resp, err := component.GetClient().R().
-		SetContext(ctx).
-		SetHeaders(contextx.GetLaneIDByCtx(ctx)).
-		SetAuthToken(bcsConf.Token).
-		Get(url)
-
+	c, err := clustermanager.GetCluster(ctx, clusterID)
 	if err != nil {
 		return nil, err
 	}
-
-	cluster := new(Cluster)
-	if err := component.UnmarshalBKResult(resp, cluster); err != nil {
-		return nil, err
-	}
-	return cluster, nil
+	return &Cluster{
+		ProjectID:   c.ProjectID,
+		ClusterID:   c.ClusterID,
+		ClusterName: c.ClusterName,
+		BusinessID:  c.BusinessID,
+		Status:      c.Status,
+		IsShared:    c.IsShared,
+		ClusterType: c.ClusterType,
+	}, nil
 }

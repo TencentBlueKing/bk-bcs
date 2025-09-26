@@ -15,9 +15,11 @@ package discovery
 
 import (
 	"context"
+	"crypto/tls"
 	"strings"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	etcd "github.com/go-micro/plugins/v4/registry/etcd"
@@ -27,6 +29,8 @@ import (
 	"go-micro.dev/v4/server"
 	"go-micro.dev/v4/util/cmd"
 
+	"github.com/Tencent/bk-bcs/bcs-ui/pkg/component/bcs/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-ui/pkg/component/bcs/project"
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/config"
 )
 
@@ -34,8 +38,9 @@ const serverNameSuffix = ".bkbcs.tencent.com"
 
 // ServiceDiscovery service discovery
 type ServiceDiscovery struct {
-	ctx context.Context
-	srv micro.Service
+	ctx             context.Context
+	srv             micro.Service
+	clientTLSConfig *tls.Config
 }
 
 // NewServiceDiscovery :
@@ -89,6 +94,47 @@ func (s *ServiceDiscovery) init() error {
 	if etcdRegistry != nil {
 		s.srv.Init(micro.Registry(etcdRegistry))
 	}
+	err = s.initTLSConfig()
+	if err != nil {
+		return err
+	}
+	err = s.initComponent(etcdRegistry)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// initTLSConfig 初始化client TLS 配置
+func (s *ServiceDiscovery) initTLSConfig() error {
+
+	// client tls config
+	if config.G.Client.Cert != "" && config.G.Client.Key != "" && config.G.Client.Ca != "" {
+		tlsConfig, err := ssl.ClientTslConfVerity(
+			config.G.Client.Ca, config.G.Client.Cert, config.G.Client.Key, config.G.Client.CertPwd,
+		)
+		if err != nil {
+			blog.Error("load bcs-ui client tls config failed: %v", err)
+			return err
+		}
+		s.clientTLSConfig = tlsConfig
+		blog.Info("load bcs-ui client tls config successfully")
+	}
+	return nil
+}
+
+func (s *ServiceDiscovery) initComponent(microRgt registry.Registry) error {
+	err := project.NewClient(s.clientTLSConfig, microRgt)
+	if err != nil {
+		blog.Error("init project client error, %s", err.Error())
+		return err
+	}
+	err = clustermanager.NewClient(s.clientTLSConfig, microRgt)
+	if err != nil {
+		blog.Error("init clustermanager client error, %s", err.Error())
+		return err
+	}
+	blog.Info("init all client successfully")
 	return nil
 }
 

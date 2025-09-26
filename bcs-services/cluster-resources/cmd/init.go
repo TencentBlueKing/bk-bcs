@@ -43,9 +43,9 @@ import (
 	grpcCreds "google.golang.org/grpc/credentials"
 
 	audit2 "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/audit"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/component/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/component/project"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	basicHdlr "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/handler/basic"
@@ -462,8 +462,16 @@ func (crSvc *clusterResourcesService) initMetricService() error {
 // initComponentClient 初始化依赖组件 Client
 func (crSvc *clusterResourcesService) initComponentClient() (err error) {
 	// ClusterManager
+	err = cluster.NewClient(crSvc.clientTLSConfig, crSvc.microRtr)
+	if err != nil {
+		return err
+	}
 	cluster.InitCMClient()
 	// ProjectManager
+	err = project.NewClient(crSvc.clientTLSConfig, crSvc.microRtr)
+	if err != nil {
+		return err
+	}
 	project.InitProjClient()
 	return nil
 }

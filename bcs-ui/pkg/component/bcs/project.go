@@ -14,11 +14,8 @@ package bcs
 
 import (
 	"context"
-	"fmt"
 
-	"github.com/Tencent/bk-bcs/bcs-ui/pkg/component"
-	"github.com/Tencent/bk-bcs/bcs-ui/pkg/config"
-	"github.com/Tencent/bk-bcs/bcs-ui/pkg/contextx"
+	"github.com/Tencent/bk-bcs/bcs-ui/pkg/component/bcs/project"
 )
 
 // Project 项目信息
@@ -40,22 +37,16 @@ type GetProjectResponse struct {
 
 // GetProject 通过 project_id/code 获取项目信息
 func GetProject(ctx context.Context, projectIDOrCode string) (*Project, error) {
-	bcsConf := config.G.BCS
-	url := fmt.Sprintf("%s/bcsapi/v4/bcsproject/v1/projects/%s", bcsConf.Host, projectIDOrCode)
-	resp, err := component.GetClient().R().
-		SetContext(ctx).
-		SetHeader("X-Project-Username", ""). // bcs_project 要求有这个header
-		SetHeaders(contextx.GetLaneIDByCtx(ctx)).
-		SetAuthToken(bcsConf.Token).
-		Get(url)
-
+	p, err := project.GetProjectByCode(ctx, projectIDOrCode)
 	if err != nil {
 		return nil, err
 	}
-
-	project := new(Project)
-	if err := component.UnmarshalBKResult(resp, project); err != nil {
-		return nil, err
-	}
-	return project, nil
+	return &Project{
+		Name:        p.Name,
+		ProjectID:   p.ProjectID,
+		ProjectCode: p.ProjectCode,
+		BusinessID:  p.BusinessID,
+		Creator:     p.Creator,
+		Kind:        p.Kind,
+	}, nil
 }

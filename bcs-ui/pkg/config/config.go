@@ -31,6 +31,7 @@ type Configuration struct {
 	FrontendConf *FrontendConf                `yaml:"frontend_conf"`
 	FeatureFlags map[string]FeatureFlagOption `yaml:"feature_flags"`
 	Etcd         *EtcdConf                    `yaml:"etcd"`
+	Client       *ClientConf                  `yaml:"client"`
 }
 
 // init 初始化
@@ -74,6 +75,8 @@ func newConfiguration() (*Configuration, error) {
 	// etcdc初始化
 	c.Etcd = &EtcdConf{}
 	c.Etcd.Init()
+	c.Client = &ClientConf{}
+	c.Client.Init()
 
 	c.BKAIAgent = &BKAIAgentConf{}
 	c.BKNotice = &BKNoticeConf{}

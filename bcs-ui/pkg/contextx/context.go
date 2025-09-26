@@ -73,3 +73,13 @@ func WithLaneIdCtx(ctx context.Context, h http.Header) context.Context {
 	}
 	return ctx
 }
+
+// WithGrpcLaneIdCtx ctx lane id
+func WithGrpcLaneIdCtx(ctx context.Context, h http.Header) context.Context {
+	for k, v := range h {
+		if strings.HasPrefix(k, LaneIDPrefix) && len(v) > 0 {
+			ctx = metadata.NewIncomingContext(ctx, metadata.Pairs(k, v[0]))
+		}
+	}
+	return ctx
+}

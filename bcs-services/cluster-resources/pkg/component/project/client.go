@@ -14,18 +14,20 @@ package project
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"sync"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/discovery"
 	"github.com/patrickmn/go-cache"
+	"go-micro.dev/v4/registry"
 
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runmode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runtime"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	log "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/contextx"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/httpclient"
 )
 
 var projMgrCli *ProjClient
@@ -39,7 +41,25 @@ const (
 	CacheExpireTime = 20
 	// PurgeExpiredCacheTime 清理过期缓存时间，单位：min
 	PurgeExpiredCacheTime = 60
+
+	// ProjectManagerServiceName project manager service name
+	ProjectManagerServiceName = "project.bkbcs.tencent.com"
 )
+
+// NewClient create project service client
+func NewClient(tlsConfig *tls.Config, microRgt registry.Registry) error {
+	if !discovery.UseServiceDiscovery() {
+		dis := discovery.NewModuleDiscovery(ProjectManagerServiceName, microRgt)
+		err := dis.Start()
+		if err != nil {
+			return err
+		}
+		bcsproject.SetClientConfig(tlsConfig, dis)
+	} else {
+		bcsproject.SetClientConfig(tlsConfig, nil)
+	}
+	return nil
+}
 
 // genProjInfoCacheKey 获取项目信息缓存键
 func genProjInfoCacheKey(projectID string) string {
@@ -84,7 +104,7 @@ func (c *ProjClient) fetchProjInfoWithCache(ctx context.Context, projectID strin
 	}
 	log.Info(ctx, "project %s info not in cache, start call project manager", projectID)
 
-	projInfo, err := c.fetchProjInfo(ctx, projectID)
+	projInfo, err := fetchProjInfo(ctx, projectID)
 	if err != nil {
 		return nil, err
 	}
@@ -94,26 +114,31 @@ func (c *ProjClient) fetchProjInfoWithCache(ctx context.Context, projectID strin
 }
 
 // fetchProjInfo 获取项目信息
-func (c *ProjClient) fetchProjInfo(ctx context.Context, projectID string) (*Project, error) {
-	url := fmt.Sprintf("%s/bcsapi/v4/bcsproject/v1/projects/%s", config.G.BCSAPIGW.Host, projectID)
-
-	resp, err := httpclient.GetClient().R().
-		SetContext(ctx).
-		SetHeader("X-Project-Username", ""). // bcs_project 要求有这个header
-		SetHeaders(contextx.GetLaneIDByCtx(ctx)).
-		SetAuthToken(config.G.BCSAPIGW.AuthToken).
-		Get(url)
-
+func fetchProjInfo(ctx context.Context, projectID string) (*Project, error) {
+	cli, close, err := bcsproject.GetClient(conf.ServiceDomain)
+	defer func() {
+		if close != nil {
+			close()
+		}
+	}()
 	if err != nil {
 		return nil, err
 	}
-
-	project := new(Project)
-	if err := httpclient.UnmarshalBKResult(resp, project); err != nil {
-		return nil, err
+	p, err := cli.Project.GetProject(ctx,
+		&bcsproject.GetProjectRequest{ProjectIDOrCode: projectID})
+	if err != nil {
+		return nil, fmt.Errorf("GetProject error: %s", err)
+	}
+	if p.Code != 0 || p.Data == nil {
+		return nil, fmt.Errorf("GetProject error, code: %d, message: %s, requestID: %s",
+			p.Code, p.GetMessage(), p.GetRequestID())
 	}
 
-	return project, nil
+	return &Project{
+		ID:         p.Data.ProjectID,
+		Code:       p.Data.ProjectCode,
+		BusinessID: p.Data.BusinessID,
+	}, nil
 }
 
 // fetchProjInfoWithCache 获取项目信息（支持缓存）
@@ -125,7 +150,7 @@ func (c *ProjClient) fetchSharedClusterProjNsWitchCache(ctx context.Context, pro
 	}
 	log.Info(ctx, "project %s cluster %s ns not in cache, start call project manager", projectID, clusterID)
 
-	ns, err := c.fetchSharedClusterProjNs(ctx, projectID, clusterID)
+	ns, err := fetchSharedClusterProjNs(ctx, projectID, clusterID)
 	if err != nil {
 		return nil, err
 	}
@@ -135,49 +160,70 @@ func (c *ProjClient) fetchSharedClusterProjNsWitchCache(ctx context.Context, pro
 }
 
 // fetchShardClusterProjNs 获取共享集群项目下的命名空间
-func (c *ProjClient) fetchSharedClusterProjNs(ctx context.Context, projectID, clusterID string) ([]Namespace, error) {
-	url := fmt.Sprintf("%s/bcsapi/v4/bcsproject/v1/projects/%s/clusters/%s/namespaces", config.G.BCSAPIGW.Host,
-		projectID, clusterID)
-
-	resp, err := httpclient.GetClient().R().
-		SetContext(ctx).
-		SetHeader("X-Project-Username", ""). // bcs_project 要求有这个header
-		SetHeaders(contextx.GetLaneIDByCtx(ctx)).
-		SetAuthToken(config.G.BCSAPIGW.AuthToken).
-		Get(url)
-
+func fetchSharedClusterProjNs(ctx context.Context, projectID, clusterID string) ([]Namespace, error) {
+	cli, close, err := bcsproject.GetClient(conf.ServiceDomain)
+	defer func() {
+		if close != nil {
+			close()
+		}
+	}()
 	if err != nil {
 		return nil, err
 	}
-
-	ns := make([]Namespace, 0)
-	if err := httpclient.UnmarshalBKResult(resp, &ns); err != nil {
-		return nil, err
+	p, err := cli.Namespace.ListNamespaces(ctx, &bcsproject.ListNamespacesRequest{
+		ProjectCode: projectID,
+		ClusterID:   clusterID,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("ListNamespaces error: %s", err)
 	}
-
+	if p.Code != 0 {
+		return nil, fmt.Errorf("ListNamespaces error, code: %d, message: %s, requestID: %s",
+			p.Code, p.GetMessage(), p.GetRequestID())
+	}
+	ns := []Namespace{}
+	for _, v := range p.Data {
+		ns = append(ns, Namespace{
+			Name:   v.Name,
+			Status: v.Status,
+		})
+	}
 	return ns, nil
 }
 
 // getVariable get
-func (c *ProjClient) getVariable(ctx context.Context, projectCode, clusterID, namespace string) ([]VariableValue,
-	error) {
-	url := fmt.Sprintf("%s/bcsapi/v4/bcsproject/v1/projects/%s/clusters/%s/namespaces/%s/variables/render",
-		config.G.BCSAPIGW.Host, projectCode, clusterID, namespace)
-
-	resp, err := httpclient.GetClient().R().
-		SetContext(ctx).
-		SetHeader("X-Project-Username", "").
-		SetHeaders(contextx.GetLaneIDByCtx(ctx)).
-		SetAuthToken(config.G.BCSAPIGW.AuthToken).
-		Get(url)
-
+func getVariable(ctx context.Context, projectCode, clusterID, namespace string) ([]VariableValue, error) {
+	client, close, err := bcsproject.GetClient(conf.ServiceDomain)
+	defer func() {
+		if close != nil {
+			close()
+		}
+	}()
 	if err != nil {
 		return nil, err
 	}
-
-	data := make([]VariableValue, 0)
-	if err := httpclient.UnmarshalBKResult(resp, &data); err != nil {
-		return nil, err
+	resp, err := client.Variable.RenderVariables(ctx,
+		&bcsproject.RenderVariablesRequest{ProjectCode: projectCode, ClusterID: clusterID, Namespace: namespace})
+	if err != nil {
+		return nil, fmt.Errorf("ListNamespaceVariables error: %s", err)
 	}
-	return data, nil
+	if resp.Code != 0 {
+		return nil, fmt.Errorf("ListNamespaceVariables error, code: %d, message: %s, requestID: %s",
+			resp.Code, resp.GetMessage(), resp.GetRequestID())
+	}
+
+	vv := []VariableValue{}
+	for _, v := range resp.GetData() {
+		vv = append(vv, VariableValue{
+			Id:          v.Id,
+			Key:         v.Key,
+			Name:        v.Name,
+			ClusterID:   v.ClusterID,
+			ClusterName: v.ClusterName,
+			Namespace:   v.Namespace,
+			Value:       v.Value,
+			Scope:       v.Scope,
+		})
+	}
+	return vv, nil
 }

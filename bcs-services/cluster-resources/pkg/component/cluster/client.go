@@ -14,18 +14,20 @@ package cluster
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"sync"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/discovery"
 	"github.com/patrickmn/go-cache"
+	"go-micro.dev/v4/registry"
 
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runmode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runtime"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	log "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/contextx"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/httpclient"
 )
 
 var clusterMgrCli *CMClient
@@ -39,7 +41,25 @@ const (
 	CacheExpireTime = 5
 	// PurgeExpiredCacheTime 清理过期缓存时间，单位：min
 	PurgeExpiredCacheTime = 60
+
+	// ClusterManagerServiceName cluster manager service name
+	ClusterManagerServiceName = "clustermanager.bkbcs.tencent.com"
 )
+
+// NewClient create cluster manager service client
+func NewClient(tlsConfig *tls.Config, microRgt registry.Registry) error {
+	if !discovery.UseServiceDiscovery() {
+		dis := discovery.NewModuleDiscovery(ClusterManagerServiceName, microRgt)
+		err := dis.Start()
+		if err != nil {
+			return err
+		}
+		clustermanager.SetClientConfig(tlsConfig, dis)
+	} else {
+		clustermanager.SetClientConfig(tlsConfig, nil)
+	}
+	return nil
+}
 
 // genClusterInfoCacheKey 获取集群信息缓存键
 func genClusterInfoCacheKey(clusterID string) string {
@@ -80,7 +100,7 @@ func (c *CMClient) fetchClusterInfoWithCache(ctx context.Context, clusterID stri
 	}
 	log.Info(ctx, "cluster %s info not in cache, start call cluster manager", clusterID)
 
-	clusterInfo, err := c.fetchClusterInfo(ctx, clusterID)
+	clusterInfo, err := fetchClusterInfo(ctx, clusterID)
 	if err != nil {
 		return nil, err
 	}
@@ -89,25 +109,33 @@ func (c *CMClient) fetchClusterInfoWithCache(ctx context.Context, clusterID stri
 	return clusterInfo, nil
 }
 
-// fetchClusterInfo 获取集群信息
-func (c *CMClient) fetchClusterInfo(ctx context.Context, clusterID string) (*Cluster, error) {
-	url := fmt.Sprintf("%s/bcsapi/v4/clustermanager/v1/cluster/%s", config.G.BCSAPIGW.Host, clusterID)
-
-	resp, err := httpclient.GetClient().R().
-		SetContext(ctx).
-		SetHeaders(contextx.GetLaneIDByCtx(ctx)).
-		SetAuthToken(config.G.BCSAPIGW.AuthToken).
-		Get(url)
-
+// fetchClusterInfo get cluster from cluster manager
+func fetchClusterInfo(ctx context.Context, clusterID string) (*Cluster, error) {
+	cli, close, err := clustermanager.GetClient(conf.ServiceDomain)
+	defer func() {
+		if close != nil {
+			close()
+		}
+	}()
 	if err != nil {
 		return nil, err
 	}
-
-	var cluster *Cluster
-	if err := httpclient.UnmarshalBKResult(resp, &cluster); err != nil {
-		return nil, err
+	p, err := cli.GetCluster(ctx, &clustermanager.GetClusterReq{ClusterID: clusterID})
+	if err != nil {
+		return nil, fmt.Errorf("GetCluster error: %s", err)
+	}
+	if p.Code != 0 || p.Data == nil {
+		return nil, fmt.Errorf("GetCluster error, code: %d, message: %s", p.Code, p.GetMessage())
 	}
 
+	cluster := &Cluster{
+		ID:       p.Data.ClusterID,
+		Name:     p.Data.ClusterName,
+		ProjID:   p.Data.ProjectID,
+		Status:   p.Data.Status,
+		IsShared: p.Data.IsShared,
+		Type:     "",
+	}
 	// 设置集群类型
 	if cluster.IsShared {
 		cluster.Type = ClusterTypeShared
