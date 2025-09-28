@@ -23,6 +23,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/contextx"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
 )
@@ -273,5 +274,7 @@ func addAudit(ctx context.Context, req server.Request, rsp interface{}, startTim
 		// 查看类型不用记录 activity
 		auditAction.DisableActivity()
 	}
-	_ = auditAction.SetContext(auditCtx).SetResource(resource).SetAction(action).SetResult(result).Do()
+	logging.Info("add audit, auditCtx: %+v, resource:%+v, action: %+v, result: %+v", auditCtx, resource, action, result)
+	err := auditAction.SetContext(auditCtx).SetResource(resource).SetAction(action).SetResult(result).Do()
+	logging.Error("add audit failed, err: %v", err)
 }
