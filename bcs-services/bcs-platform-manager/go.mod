@@ -9,7 +9,7 @@ replace (
 
 require (
 	configcenter v0.0.0-00010101000000-000000000000
-	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20250729093702-993155773a94
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20250926092740-c9190b0ef3cf
 	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20250729093702-993155773a94
 	github.com/dustin/go-humanize v1.0.1
 	github.com/ggicci/httpin v0.20.1

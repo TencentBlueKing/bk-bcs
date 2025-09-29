@@ -85,8 +85,8 @@ func ListProject(ctx context.Context, req *bcsproject.ListProjectsRequest) ([]*b
 	return p.Data.GetResults(), nil
 }
 
-// UpdateProject update project from project manager
-func UpdateProject(ctx context.Context, req *bcsproject.UpdateProjectRequest) (bool, error) {
+// UpdateProjectV2 update project from project manager
+func UpdateProjectV2(ctx context.Context, req *bcsproject.UpdateProjectV2Request) (bool, error) {
 	cli, close, err := bcsproject.GetClient(config.ServiceDomain)
 	if err != nil {
 		return false, err
@@ -94,13 +94,13 @@ func UpdateProject(ctx context.Context, req *bcsproject.UpdateProjectRequest) (b
 
 	defer Close(close)
 
-	p, err := cli.Project.UpdateProject(ctx, req)
+	p, err := cli.Project.UpdateProjectV2(ctx, req)
 	if err != nil {
-		return false, fmt.Errorf("UpdateProject error: %s", err)
+		return false, fmt.Errorf("UpdateProjectV2 error: %s", err)
 	}
 
 	if p.Code != 0 {
-		return false, fmt.Errorf("UpdateProject error, code: %d, message: %s", p.Code, p.GetMessage())
+		return false, fmt.Errorf("UpdateProjectV2 error, code: %d, message: %s", p.Code, p.GetMessage())
 	}
 
 	return true, nil

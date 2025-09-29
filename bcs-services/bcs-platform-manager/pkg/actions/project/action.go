@@ -79,7 +79,7 @@ func (a *Action) GetProject(ctx context.Context, projectIDOrCode string) (*bcspr
 
 // UpdateProjectManagers update project managers
 func (a *Action) UpdateProjectManagers(ctx context.Context, req *types.UpdateProjectManagersReq) (bool, error) {
-	result, err := projectrmgr.UpdateProject(ctx, &bcsproject.UpdateProjectRequest{
+	result, err := projectrmgr.UpdateProjectV2(ctx, &bcsproject.UpdateProjectV2Request{
 		ProjectID: req.ProjectID,
 		Managers:  req.Managers,
 	})
@@ -89,7 +89,7 @@ func (a *Action) UpdateProjectManagers(ctx context.Context, req *types.UpdatePro
 
 // UpdateProjectBusiness update project business
 func (a *Action) UpdateProjectBusiness(ctx context.Context, req *types.UpdateProjectBusinessReq) (bool, error) {
-	result, err := projectrmgr.UpdateProject(ctx, &bcsproject.UpdateProjectRequest{
+	result, err := projectrmgr.UpdateProjectV2(ctx, &bcsproject.UpdateProjectV2Request{
 		ProjectID:  req.ProjectID,
 		BusinessID: req.BusinessID,
 	})

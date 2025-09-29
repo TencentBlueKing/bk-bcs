@@ -19,6 +19,7 @@ import (
 	"time"
 
 	bkcmdbkube "configcenter/src/kube/types" // nolint
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/parnurzeal/gorequest"
 )
@@ -99,7 +100,7 @@ func (c *Client) generateGateWayAuth() (string, error) {
 
 // GetBcsPod get pod
 func (c *Client) GetBcsPod(req *GetBcsPodReq) (*[]bkcmdbkube.Pod, error) {
-	reqURL := fmt.Sprintf("%s/api/v3/findmany/kube/pod", c.config.Server)
+	reqURL := fmt.Sprintf("%s/api/bk-cmdb/prod/api/v3/findmany/kube/pod", c.config.Server)
 	respData := &GetBcsPodResp{}
 
 	resp, _, errs := gorequest.New().
@@ -131,7 +132,7 @@ func (c *Client) GetBcsPod(req *GetBcsPodReq) (*[]bkcmdbkube.Pod, error) {
 
 // DeleteBcsPod delete pod
 func (c *Client) DeleteBcsPod(req *DeleteBcsPodReq) error {
-	reqURL := fmt.Sprintf("%s/api/v3/deletemany/kube/pod", c.config.Server)
+	reqURL := fmt.Sprintf("%s/api/bk-cmdb/prod/api/v3/deletemany/kube/pod", c.config.Server)
 	respData := &DeleteBcsPodResp{}
 
 	resp, _, errs := gorequest.New().
@@ -163,7 +164,7 @@ func (c *Client) DeleteBcsPod(req *DeleteBcsPodReq) error {
 
 // GetBcsWorkload get workload
 func (c *Client) GetBcsWorkload(req *GetBcsWorkloadReq) (*[]interface{}, error) {
-	reqURL := fmt.Sprintf("%s/api/v3/findmany/kube/workload/%s", c.config.Server, req.Kind)
+	reqURL := fmt.Sprintf("%s/api/bk-cmdb/prod/api/v3/findmany/kube/workload/%s", c.config.Server, req.Kind)
 	respData := &GetBcsWorkloadResp{}
 
 	resp, _, errs := gorequest.New().
@@ -195,7 +196,7 @@ func (c *Client) GetBcsWorkload(req *GetBcsWorkloadReq) (*[]interface{}, error) 
 
 // DeleteBcsWorkload delete workload
 func (c *Client) DeleteBcsWorkload(req *DeleteBcsWorkloadReq) error {
-	reqURL := fmt.Sprintf("%s/api/v3/deletemany/kube/workload/%s", c.config.Server, *req.Kind)
+	reqURL := fmt.Sprintf("%s/api/bk-cmdb/prod/api/v3/deletemany/kube/workload/%s", c.config.Server, *req.Kind)
 	respData := &DeleteBcsWorkloadResp{}
 
 	resp, _, errs := gorequest.New().
@@ -228,7 +229,7 @@ func (c *Client) DeleteBcsWorkload(req *DeleteBcsWorkloadReq) error {
 
 // GetBcsNamespace get namespace
 func (c *Client) GetBcsNamespace(req *GetBcsNamespaceReq) (*[]bkcmdbkube.Namespace, error) {
-	reqURL := fmt.Sprintf("%s/api/v3/findmany/kube/namespace", c.config.Server)
+	reqURL := fmt.Sprintf("%s/api/bk-cmdb/prod/api/v3/findmany/kube/namespace", c.config.Server)
 	respData := &GetBcsNamespaceResp{}
 
 	resp, _, errs := gorequest.New().
@@ -260,7 +261,7 @@ func (c *Client) GetBcsNamespace(req *GetBcsNamespaceReq) (*[]bkcmdbkube.Namespa
 
 // DeleteBcsNamespace delete namespace
 func (c *Client) DeleteBcsNamespace(req *DeleteBcsNamespaceReq) error {
-	reqURL := fmt.Sprintf("%s/api/v3/deletemany/kube/namespace", c.config.Server)
+	reqURL := fmt.Sprintf("%s/api/bk-cmdb/prod/api/v3/deletemany/kube/namespace", c.config.Server)
 	respData := &DeleteBcsNamespaceResp{}
 
 	resp, _, errs := gorequest.New().
@@ -292,7 +293,7 @@ func (c *Client) DeleteBcsNamespace(req *DeleteBcsNamespaceReq) error {
 
 // GetBcsNode get node
 func (c *Client) GetBcsNode(req *GetBcsNodeReq) (*[]bkcmdbkube.Node, error) {
-	reqURL := fmt.Sprintf("%s/api/v3/findmany/kube/node", c.config.Server)
+	reqURL := fmt.Sprintf("%s/api/bk-cmdb/prod/api/v3/findmany/kube/node", c.config.Server)
 	respData := &GetBcsNodeResp{}
 
 	resp, _, errs := gorequest.New().
@@ -324,7 +325,7 @@ func (c *Client) GetBcsNode(req *GetBcsNodeReq) (*[]bkcmdbkube.Node, error) {
 
 // DeleteBcsNode delete node
 func (c *Client) DeleteBcsNode(req *DeleteBcsNodeReq) error {
-	reqURL := fmt.Sprintf("%s/api/v3/deletemany/kube/node", c.config.Server)
+	reqURL := fmt.Sprintf("%s/api/bk-cmdb/prod/api/v3/deletemany/kube/node", c.config.Server)
 	respData := &DeleteBcsNodeResp{}
 
 	resp, _, errs := gorequest.New().
@@ -357,7 +358,7 @@ func (c *Client) DeleteBcsNode(req *DeleteBcsNodeReq) error {
 // GetBcsCluster get cluster
 func (c *Client) GetBcsCluster(req *GetBcsClusterReq) (*[]bkcmdbkube.Cluster, error) {
 	// 如果没有通过数据库查询，则通过API调用获取集群信息
-	reqURL := fmt.Sprintf("%s/api/v3/findmany/kube/cluster", c.config.Server)
+	reqURL := fmt.Sprintf("%s/api/bk-cmdb/prod/api/v3/findmany/kube/cluster", c.config.Server)
 	respData := &GetBcsClusterResp{}
 	// 使用gorequest库发送POST请求，并处理响应
 	resp, _, errs := gorequest.New().
@@ -392,7 +393,7 @@ func (c *Client) GetBcsCluster(req *GetBcsClusterReq) (*[]bkcmdbkube.Cluster, er
 // DeleteBcsCluster delete bcs cluster
 func (c *Client) DeleteBcsCluster(req *DeleteBcsClusterReq) error {
 	// 构造请求的 URL
-	reqURL := fmt.Sprintf("%s/api/v3/delete/kube/cluster", c.config.Server)
+	reqURL := fmt.Sprintf("%s/api/bk-cmdb/prod/api/v3/delete/kube/cluster", c.config.Server)
 	// 初始化响应数据结构
 	respData := &DeleteBcsClusterResp{}
 
