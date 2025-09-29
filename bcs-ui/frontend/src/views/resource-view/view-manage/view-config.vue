@@ -180,11 +180,9 @@
             theme="primary"
             class="min-w-[88px]"
             v-bk-trace.click="{
-              module: 'view',
-              operation: 'query',
-              desc: '视图查询操作',
-              username: $store.state.user.username,
-              projectCode: $store.getters.curProjectCode,
+              ct: 'view',
+              act: 'query',
+              d: '视图查询操作',
             }"
             @click="handleQuery">
             {{ $t('view.button.query') }}
@@ -237,11 +235,9 @@
           :loading="saving"
           :disabled="disabledSaveBtn"
           v-bk-trace.click="{
-            module: 'view',
-            operation: 'save',
-            desc: '视图保存操作',
-            username: $store.state.user.username,
-            projectCode: $store.getters.curProjectCode,
+            ct: 'view',
+            act: 'save',
+            d: '视图保存操作',
           }"
           @click="handleSaveView">
           {{ $t('generic.button.save') }}
@@ -270,11 +266,9 @@
             :disabled="!viewName"
             theme="primary"
             v-bk-trace.click="{
-              module: 'view',
-              operation: 'save',
-              desc: '视图保存操作',
-              username: $store.state.user.username,
-              projectCode: $store.getters.curProjectCode,
+              ct: 'view',
+              act: 'save',
+              d: '视图保存操作',
             }"
             @click="handleSaveAs(false)">
             {{ $t('generic.button.save') }}
@@ -283,11 +277,9 @@
             :loading="saving"
             :disabled="!viewName"
             v-bk-trace.click="{
-              module: 'view',
-              operation: 'save',
-              desc: '视图保存操作',
-              username: $store.state.user.username,
-              projectCode: $store.getters.curProjectCode,
+              ct: 'view',
+              act: 'save',
+              d: '视图保存操作',
             }"
             @click="handleSaveAs">
             {{ $t('view.button.confirmAndChangeView') }}
@@ -406,14 +398,6 @@ const parseCurTmpViewData = computed(() => {
 // 更新视图临时条件数据
 const handleUpdateTmpViewData = debounce((data: IViewData|undefined = undefined) => {
   $store.commit('updateTmpViewData', cloneDeep(data));
-  // 数据上报
-  window.BkTrace?.startReported({
-    module: 'view',
-    operation: 'auto-query',
-    desc: '视图输入查询',
-    username: $store.state.user.username,
-    projectCode: $store.getters.curProjectCode,
-  });
 }, 300);
 
 const showResetBtn = ref(false);

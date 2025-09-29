@@ -192,23 +192,12 @@ router.beforeEach(async (to, from, next) => {
   // 取消上一个页面的请求
   await cancelRequest();
   // 校验路由是否开启
-  const { validateRouteEnable, getNavByRoute } = useMenu();
+  const { validateRouteEnable } = useMenu();
   const result = await validateRouteEnable(to);
   if (!result) {
     // 未开启菜单项
     next({ name: '404' });
   } else {
-    // 数据上报
-    window.BkTrace?.startReported({
-      module: 'router',
-      operation: 'router',
-      desc: '路由跳转',
-      username: $store.state.user.username,
-      projectCode: to.params.projectCode,
-      to: to.name,
-      from: from.name,
-      navID: getNavByRoute(to)?.id,
-    }, 'router');
     next();
   }
 });

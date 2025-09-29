@@ -70,11 +70,9 @@
           ]"
           v-if="showPreVersionBtn"
           v-bk-trace.click="{
-            module: 'app',
-            operation: 'backToLegacy',
-            desc: '返回旧版',
-            username: $store.state.user.username,
-            projectCode: $store.getters.curProjectCode,
+            ct: 'app',
+            act: 'backToLegacy',
+            d: '返回旧版',
           }"
           @click="backToPreVersion">
           {{ $t('bcs.preVersion') }}

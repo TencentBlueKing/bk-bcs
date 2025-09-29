@@ -857,11 +857,9 @@ export default defineComponent({
               this.isViewConfigShow ? '!border-[#3a84ff] text-[#3a84ff]' : 'text-[#979BA5] hover:!border-[#979BA5]',
             ]}
             v-bk-trace_click={{
-              module: 'view',
-              operation: 'filter2',
-              desc: '视图筛选按钮2',
-              username: $store.state.user.username,
-              projectCode: $store.getters.curProjectCode,
+              ct: 'view',
+              act: 'filter2',
+              d: '视图筛选按钮2',
             }}
             onClick={this.handleShowViewConfig}>
               <i class="bk-icon icon-funnel text-[14px]"></i>
