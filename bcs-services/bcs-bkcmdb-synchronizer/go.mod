@@ -20,6 +20,7 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/parnurzeal/gorequest v0.2.16
 	github.com/patrickmn/go-cache v2.1.0+incompatible
+	github.com/prometheus/client_golang v1.19.0
 	github.com/rabbitmq/amqp091-go v1.5.0
 	go-micro.dev/v4 v4.8.1
 	google.golang.org/grpc v1.62.1
@@ -108,7 +109,6 @@ require (
 	github.com/pelletier/go-toml/v2 v2.0.8 // indirect
 	github.com/pjbgf/sha1cd v0.3.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/prometheus/client_golang v1.19.0 // indirect
 	github.com/prometheus/client_model v0.5.0 // indirect
 	github.com/prometheus/common v0.48.0 // indirect
 	github.com/prometheus/procfs v0.12.0 // indirect
