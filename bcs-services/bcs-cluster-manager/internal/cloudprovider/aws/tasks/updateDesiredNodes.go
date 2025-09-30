@@ -433,7 +433,7 @@ func transInstancesToNode(ctx context.Context, state *cloudprovider.TaskState, s
 			return err
 		}
 		return nil
-	}, retry.Attempts(3))
+	}, retry.Attempts(3), retry.Delay(2*time.Second))
 	if err != nil {
 		blog.Errorf("transInstancesToNode[%s] failed: %v", taskID, err)
 		return nil, err
@@ -665,6 +665,10 @@ func checkClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDe
 
 		for _, ins := range instanceNames {
 			n, ok := nodeNameMap[ins]
+			if n == nil {
+				continue
+			}
+
 			if ok && utils.CheckNodeIfReady(n) {
 				running = append(running, getEksNodeIDFromNode(n))
 				ipv4, _ := utils.GetNodeIPAddress(n)
