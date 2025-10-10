@@ -40,6 +40,8 @@ func InitV1Routers(ws *restful.WebService, service *permission.PermVerifyClient)
 	ws.Filter(middleware.LoggingFilter)
 	ws.Filter(middleware.LanguageFilter)
 
+	ws.Route(ws.GET("/healthz").To(Health))
+
 	initUsersRouters(ws)
 	initClustersRouters(ws)
 	initTkeRouters(ws)
