@@ -73,7 +73,15 @@ func LoadConf(filePath string) (*ClusterResourcesConf, error) {
 
 	if len(conf.Global.MultiCluster.SystemNamespaces) == 0 {
 		conf.Global.MultiCluster.SystemNamespaces = []string{
+			"bcs-blackbox-job",
+			"bcs-system",
+			"bk-system",
+			"bkmonitor-operator",
+			"kube-node-lease",
+			"kube-public",
 			"kube-system",
+			"kube-flannel",
+			"tkex-ieg-weterm",
 		}
 	}
 
