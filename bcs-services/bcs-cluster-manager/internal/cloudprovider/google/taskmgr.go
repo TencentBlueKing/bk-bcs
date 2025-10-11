@@ -526,7 +526,10 @@ func (t *Task) BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.Node
 	// step3: check cluster delete nodes
 	common.BuildCheckClusterCleanNodesTaskStep(task, group.Provider, opt.Cluster.ClusterID, nodeIDs)
 
-	// step5: remove host from cmdb
+	// step5: remove data from cmdb
+	common.BuildRemoveCmdbDataStep(task, opt.Cluster.BusinessID, opt.Cluster.ClusterID, nodeIDs)
+
+	// step6: remove host from cmdb
 	common.BuildRemoveHostStep(task, opt.Cluster.BusinessID, nodeIPs)
 
 	// set current step

@@ -57,6 +57,8 @@ const (
 	WatchTask = "watchjob"
 	// InstallImagePullSecretAddonAction imagePull component common job
 	InstallImagePullSecretAddonAction = "installImagePullSecret"
+	// RemoveDataFromCmdbAction remove cmdb data action
+	RemoveDataFromCmdbAction = "removeDataFromCmdb"
 	// RemoveHostFromCmdbAction remove host action
 	RemoveHostFromCmdbAction = "removeHostFromCmdb"
 	// CheckNodeIpsInCmdbAction check node if in cmdb
