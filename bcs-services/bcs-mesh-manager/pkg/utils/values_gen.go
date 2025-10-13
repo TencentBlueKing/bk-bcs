@@ -229,6 +229,7 @@ func GenIstiodValues(
 	}
 
 	values, err := GetConfigChartValues(opt.ChartValuesPath, common.ComponentIstiod, opt.ChartVersion)
+
 	if err != nil {
 		blog.Errorf("get istiod values failed: %s", err)
 		return "", err
@@ -276,6 +277,11 @@ type GenEgressGatewayValuesOption struct {
 	Revision        string
 }
 
+const (
+	// KeyServiceAnnotationCLBID service annotation clb id
+	KeyServiceAnnotationCLBID = "service.kubernetes.io/tke-existed-lbid"
+)
+
 // GenEgressGatewayValues 生成eastwestgateway组件的values
 func GenEgressGatewayValues(
 	opt *GenEgressGatewayValuesOption,
@@ -291,7 +297,7 @@ func GenEgressGatewayValues(
 		NetworkGateway: opt.NetworkID,
 		Service: common.Service{
 			Annotations: map[string]string{
-				"service.kubernetes.io/tke-existed-lbid": opt.CLBID,
+				KeyServiceAnnotationCLBID: opt.CLBID,
 			},
 		},
 	}

@@ -82,7 +82,7 @@
             {{ imageProvider || '--'}}
           </bk-form-item>
           <bk-form-item :label="$t('cluster.ca.nodePool.label.system')">
-            {{clusterOS || '--'}}
+            {{nodePoolData.nodeTemplate?.imageInfo?.imageName || clusterOS || '--'}}
           </bk-form-item>
           <bk-form-item :label="$t('cluster.ca.nodePool.create.containerRuntime.title')">
             {{`${clusterData.clusterAdvanceSettings

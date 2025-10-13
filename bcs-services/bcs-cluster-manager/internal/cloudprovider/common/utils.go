@@ -807,11 +807,12 @@ func canDelete(pod v1.Pod) bool { // nolint
 
 // ResourceQuotaDetail resource quota info
 type ResourceQuotaDetail struct {
-	Name        string `json:"name"`
-	CpuRequests string `json:"cpuRequests"`
-	CpuLimits   string `json:"cpuLimits"`
-	MemRequests string `json:"memRequests"`
-	MemLimits   string `json:"memLimits"`
+	Name          string `json:"name"`
+	CpuRequests   string `json:"cpuRequests"`
+	CpuLimits     string `json:"cpuLimits"`
+	MemRequests   string `json:"memRequests"`
+	MemLimits     string `json:"memLimits"`
+	ServiceLimits string `json:"serviceLimits"`
 }
 
 // BuildCreateResourceQuotaTaskStep build create resource quota task step
@@ -897,11 +898,12 @@ func CreateNamespaceResourceQuota(ctx context.Context, clusterID string, quota R
 
 	k8sOperator := clusterops.NewK8SOperator(options.GetGlobalCMOptions(), cloudprovider.GetStorageModel())
 	err := k8sOperator.CreateResourceQuota(ctx, clusterID, clusterops.ResourceQuotaInfo{
-		Name:        quota.Name,
-		CpuRequests: quota.CpuRequests,
-		CpuLimits:   quota.CpuLimits,
-		MemRequests: quota.MemRequests,
-		MemLimits:   quota.MemLimits,
+		Name:          quota.Name,
+		CpuRequests:   quota.CpuRequests,
+		CpuLimits:     quota.CpuLimits,
+		MemRequests:   quota.MemRequests,
+		MemLimits:     quota.MemLimits,
+		ServiceLimits: quota.ServiceLimits,
 	})
 	if err != nil {
 		blog.Errorf("CreateNamespaceResourceQuota[%s] resource[%s:%s] failed: %v", taskID,

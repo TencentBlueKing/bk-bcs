@@ -245,7 +245,7 @@ func (nm *NodeManager) getInnerInstanceTypes(ctx context.Context, info cloudprov
 
 	if utils.StringInSlice(quoteGrayMode, []string{project.QuotaGrayOverMode, project.QuotaGrayNormalMode}) &&
 		info.Provider != resource.SelfPool {
-		targetTypes, err = nm.GetInstanceTypeByProjectQuotaList(info.ProjectID, info.Region, info.Provider)
+		targetTypes, err = nm.GetInstanceTypeByProjectQuotaList(info.ProjectID, info.Region, info.Provider, info.InstanceType)
 		if err != nil {
 			blog.Errorf("GetProjectManagerClient GetNodeGroupAndZoneResourceQuotas[%s:%s] failed: %v",
 				info.ProjectID, info.Region, err)
@@ -356,7 +356,7 @@ func (nm *NodeManager) getInnerInstanceTypes(ctx context.Context, info cloudprov
 
 // GetInstanceTypeByProjectQuotaList get instanceType from zoneResource by project quota list info
 func (nm *NodeManager) GetInstanceTypeByProjectQuotaList(
-	projectId, region string, provider string) ([]resource.InstanceType, error) {
+	projectId, region string, provider string, instanceType string) ([]resource.InstanceType, error) {
 	listProjectQuotasData, err := project.GetProjectManagerClient().ListProjectQuotas(projectId,
 		project.ProjectQuotaHostType, project.ProjectQuotaProvider)
 	if err != nil {
@@ -380,6 +380,21 @@ func (nm *NodeManager) GetInstanceTypeByProjectQuotaList(
 			continue
 		}
 
+		if instanceType != "" {
+			gpuNum := zoneResources.GetGpu()
+			switch instanceType {
+			case icommon.CvmInstanceType:
+				if gpuNum != 0 {
+					continue
+				}
+			case icommon.GpuInstanceType:
+				if gpuNum == 0 {
+					continue
+				}
+			default:
+			}
+		}
+
 		availableQuota := zoneResources.GetQuotaNum() - zoneResources.GetQuotaUsed()
 		// instanceType sell status
 		status := icommon.InstanceSell
@@ -391,7 +406,7 @@ func (nm *NodeManager) GetInstanceTypeByProjectQuotaList(
 			NodeType:       zoneResources.GetInstanceType(),
 			Cpu:            zoneResources.GetCpu(),
 			Memory:         zoneResources.GetMem(),
-			Gpu:            zoneResources.GetCpu(),
+			Gpu:            zoneResources.GetGpu(),
 			Status:         status,
 			Zones:          []string{zoneResources.GetZoneName()},
 			Provider:       provider,

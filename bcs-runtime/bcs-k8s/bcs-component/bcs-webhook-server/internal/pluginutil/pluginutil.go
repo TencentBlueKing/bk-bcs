@@ -14,6 +14,8 @@
 package pluginutil
 
 import (
+	"strings"
+
 	"k8s.io/api/admission/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -32,4 +34,11 @@ func ToAdmissionAllowedResponse() *v1beta1.AdmissionResponse {
 			return &pt
 		}(),
 	}
+}
+
+// JSONKeyEscape json key转义函数
+func JSONKeyEscape(key string) string {
+	key = strings.ReplaceAll(key, "~", "~0")
+	key = strings.ReplaceAll(key, "/", "~1")
+	return key
 }

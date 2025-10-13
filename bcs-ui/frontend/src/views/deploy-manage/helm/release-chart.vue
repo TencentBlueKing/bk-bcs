@@ -239,7 +239,8 @@
 </template>
 <script lang="ts">
 import { computed, defineComponent, onMounted, ref, toRefs, watch } from 'vue';
-import xss from 'xss';
+
+import { filterPlainText } from '@blueking/xss-filter';
 
 import ChartFileTree from './chart-file-tree.vue';
 import useHelm from './use-helm';
@@ -514,7 +515,7 @@ export default defineComponent({
           return `${item.key}=${item.value}s`;
         }
         if (item.key === '--description') {
-          const result = xss(item.value);
+          const result = filterPlainText(item.value);
           if (result !== item.value) {
             console.warn('Intercepted by XSS');
           }

@@ -27,6 +27,7 @@ import VeeValidate from 'vee-validate';
 import Vue from 'vue';
 
 import BkTrace from '@blueking/bk-trace';
+import { BkXssFilterDirective } from '@blueking/xss-filter';
 
 import '@/common/bkmagic';
 import '@/fonts/svg-icon/iconcool';
@@ -83,6 +84,7 @@ Vue.use(bkmagic2);
 Vue.use(VeeValidate, {
   fieldsBagName: '_veeFields',
 });
+Vue.use(BkXssFilterDirective);
 Vue.mixin(config);
 Vue.component('BkbcsInput', bkbcsInput);
 Vue.component('BkCombox', bkCombox);

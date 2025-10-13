@@ -22,6 +22,12 @@ const (
 	NamespaceBcs = "bcs-system"
 	// BcsWebhookAnnotationInjectKey inject flag for object in ignored namespaces
 	BcsWebhookAnnotationInjectKey = "webhook.inject.bkbcs.tencent.com"
+	// PatchOperationAdd patch add operation
+	PatchOperationAdd = "add"
+	// PatchOperationReplace patch replace operation
+	PatchOperationReplace = "replace"
+	// PatchOperationRemove patch remove operation
+	PatchOperationRemove = "remove"
 )
 
 // IgnoredNamespaces namespaces to ignore inject

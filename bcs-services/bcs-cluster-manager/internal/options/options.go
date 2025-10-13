@@ -239,12 +239,20 @@ type AddonData struct {
 	AddonName string `json:"addonName"`
 }
 
+// LogCollector log config
+type LogCollector struct {
+	HttpServer string `json:"httpServer"`
+	AddonName  string `json:"addonName"`
+	Token      string `json:"token"`
+}
+
 // ComponentDeploy config
 type ComponentDeploy struct {
 	AutoScaler      AutoScaler     `json:"autoScaler"`
 	Watch           BcsWatch       `json:"watch"`
 	Vcluster        VirtualCluster `json:"vcluster"`
 	ImagePullSecret AddonData      `json:"imagePullSecret"`
+	LogCollector    LogCollector   `json:"logCollector"`
 	Registry        string         `json:"registry"`
 	BCSAPIGateway   string         `json:"bcsApiGateway"`
 	Token           string         `json:"token"`

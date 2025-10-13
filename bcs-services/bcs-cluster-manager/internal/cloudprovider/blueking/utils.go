@@ -191,9 +191,34 @@ func (dn *DeleteClusterTaskOption) BuildCleanClusterDbInfoStep(task *proto.Task)
 
 // AddNodesTaskOption for build add cluster nodes step
 type AddNodesTaskOption struct {
-	Cluster *proto.Cluster
-	Cloud   *proto.Cloud
-	NodeIps []string
+	Cluster      *proto.Cluster
+	Cloud        *proto.Cloud
+	NodeTemplate *proto.NodeTemplate
+	NodeIps      []string
+}
+
+// BuildNodeAnnotationsStep set node annotations
+func (an *AddNodesTaskOption) BuildNodeAnnotationsStep(task *proto.Task) {
+	if an.NodeTemplate == nil || len(an.NodeTemplate.Annotations) == 0 {
+		return
+	}
+	common.BuildNodeAnnotationsTaskStep(task, an.Cluster.ClusterID, an.NodeIps, an.NodeTemplate.Annotations)
+}
+
+// BuildNodeLabelsStep set node labels
+func (an *AddNodesTaskOption) BuildNodeLabelsStep(task *proto.Task) {
+	if an.NodeTemplate == nil || len(an.NodeTemplate.Labels) == 0 {
+		return
+	}
+	common.BuildNodeLabelsTaskStep(task, an.Cluster.ClusterID, an.NodeIps, an.NodeTemplate.Labels)
+}
+
+// BuildNodeTaintsTaskStep set node taints
+func (an *AddNodesTaskOption) BuildNodeTaintsTaskStep(task *proto.Task) {
+	if an.NodeTemplate == nil || len(an.NodeTemplate.Taints) == 0 {
+		return
+	}
+	common.BuildNodeTaintsTaskStep(task, an.Cluster.ClusterID, an.NodeIps, an.NodeTemplate.Taints)
 }
 
 // BuildUpdateAddNodeDbInfoStep xxx

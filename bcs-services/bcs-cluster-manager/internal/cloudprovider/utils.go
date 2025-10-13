@@ -105,6 +105,8 @@ const (
 	AddNodesShieldAlarmAction = "addNodesShieldAlarm"
 	// NodeDrainPodAction 节点驱逐pod
 	NodeDrainPodAction = "nodeDrainPod"
+	// InstallLogCollectorAddonAction 安装日志采集组件
+	InstallLogCollectorAddonAction = "installLogCollectorAddon"
 )
 
 var (
