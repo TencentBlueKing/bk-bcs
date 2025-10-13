@@ -19,7 +19,6 @@ import (
 	"time"
 
 	bkcmdbkube "configcenter/src/kube/types" // nolint
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/parnurzeal/gorequest"
 )
