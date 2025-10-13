@@ -445,7 +445,10 @@ func (h *clusterClient) CreateNamespaceQuota(federationId string,
 		hardList := corev1.ResourceList{}
 		for _, k8SResource := range quota.ResourceList {
 			resourceName := corev1.ResourceName(k8SResource.ResourceName)
-			resourceQuantity := resource.MustParse(k8SResource.ResourceQuantity)
+			resourceQuantity, mErr := resource.ParseQuantity(k8SResource.ResourceQuantity)
+			if mErr != nil {
+				return mErr
+			}
 			hardList[resourceName] = resourceQuantity
 		}
 

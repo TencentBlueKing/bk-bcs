@@ -253,7 +253,7 @@ func TestInjectPod(t *testing.T) { // nolint
 					},
 					Annotations: map[string]string{
 						pluginAnnotationKey:      pluginAnnotationValue,
-						pluginPortsAnnotationKey: "8080,http",
+						pluginPortsAnnotationKey: "http,8080",
 					},
 				},
 				Spec: corev1.PodSpec{
@@ -302,7 +302,7 @@ func TestInjectPod(t *testing.T) { // nolint
 					},
 					Annotations: map[string]string{
 						pluginAnnotationKey:                    pluginAnnotationValue,
-						pluginPortsAnnotationKey:               "8080,http",
+						pluginPortsAnnotationKey:               "http,8080",
 						annotationsRandHostportPrefix + "8080": "31000",
 						annotationsRandHostportPrefix + "8081": "31001",
 					},

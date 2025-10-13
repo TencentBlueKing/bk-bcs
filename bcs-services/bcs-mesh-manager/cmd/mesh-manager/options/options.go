@@ -39,6 +39,7 @@ type MeshManagerOptions struct {
 	Auth        AuthConfig        `json:"auth"`
 	IstioConfig *IstioConfig      `json:"istio"`
 	Monitoring  *MonitoringConfig `json:"monitoring"`
+	Pipeline    *PipelineConfig   `json:"pipeline"`
 }
 
 // Parse parse
@@ -164,6 +165,61 @@ type MonitoringConfig struct {
 	DashName string `json:"dashName"`
 }
 
+// PipelineConfig pipeline configuration
+type PipelineConfig struct {
+	BizID           int64  `json:"bizID"`
+	DevOpsToken     string `json:"devOpsToken"`
+	BKDevOpsUrl     string `json:"bkDevOpsUrl"`
+	AppCode         string `json:"appCode"`
+	AppSecret       string `json:"appSecret"`
+	DevopsUID       string `json:"devopsUID"`
+	BkUsername      string `json:"bkUsername"`
+	DevopsProjectID string `json:"devopsProjectID"`
+	PipelineID      string `json:"pipelineID"`
+	Collection      string `json:"collection"`
+	EnableGroup     bool   `json:"enableGroup"`
+	Enable          bool   `json:"enable"`
+}
+
+// Validate validate pipeline config
+func (p *PipelineConfig) Validate() error {
+	if !p.Enable {
+		return nil
+	}
+	// 所有字段都必须提供
+	if p.BKDevOpsUrl == "" {
+		return fmt.Errorf("pipeline config: bkDevOpsUrl is required")
+	}
+	if p.AppCode == "" {
+		return fmt.Errorf("pipeline config: appCode is required")
+	}
+	if p.AppSecret == "" {
+		return fmt.Errorf("pipeline config: appSecret is required")
+	}
+	if p.DevopsProjectID == "" {
+		return fmt.Errorf("pipeline config: devopsProjectID is required")
+	}
+	if p.DevopsUID == "" {
+		return fmt.Errorf("pipeline config: devopsUID is required")
+	}
+	if p.BkUsername == "" {
+		return fmt.Errorf("pipeline config: bkUsername is required")
+	}
+	if p.DevOpsToken == "" {
+		return fmt.Errorf("pipeline config: devOpsToken is required")
+	}
+	if p.BizID == 0 {
+		return fmt.Errorf("pipeline config: bizID is required")
+	}
+	if p.Collection == "" {
+		return fmt.Errorf("pipeline config: collection is required")
+	}
+	if p.PipelineID == "" {
+		return fmt.Errorf("pipeline config: pipelineID is required")
+	}
+	return nil
+}
+
 // loadConfigFile loading json config file
 func loadConfigFile(fileName string, opt *MeshManagerOptions) error {
 	content, err := os.ReadFile(fileName)
@@ -182,6 +238,14 @@ func (o *MeshManagerOptions) Validate() error {
 	if err := o.IstioConfig.Validate(); err != nil {
 		return err
 	}
+
+	// validate pipeline config
+	if o.Pipeline != nil {
+		if err := o.Pipeline.Validate(); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 

@@ -149,35 +149,7 @@ func (m *Migrator) Migrate(opts *MigrateOptions) error {
 func (m *Migrator) buildMeshIstio(
 	opts *MigrateOptions,
 ) (*entity.MeshIstio, error) {
-	// 获取 istiod 的 values
-	values, err := util.GetValues(opts.PrimaryClusterID, opts.IstiodReleaseName, opts.KubeconfigPath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get helm release: %v", err)
-	}
-
-	istiodValues := &common.IstiodInstallValues{}
-	if err = yaml.Unmarshal(values, istiodValues); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal helm values to IstiodInstallValues: %v", err)
-	}
-
 	meshIstio := &entity.MeshIstio{}
-	// 从 values 中获取 network ID 和 meshID
-	if istiodValues.Global != nil {
-		if istiodValues.Global.Network != nil {
-			meshIstio.NetworkID = *istiodValues.Global.Network
-		} else {
-			meshIstio.NetworkID = utils.GenNetworkID()
-		}
-		if istiodValues.Global.MeshID != nil {
-			meshIstio.MeshID = *istiodValues.Global.MeshID
-		} else {
-			meshIstio.MeshID = utils.GenMeshID()
-		}
-	}
-	// 从 release values 中提取配置
-	if istiodValues.Revision != nil {
-		meshIstio.Revision = *istiodValues.Revision
-	}
 	appVersion, err := util.GetAppVersion(opts.PrimaryClusterID, opts.IstiodReleaseName, opts.KubeconfigPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get helm app version: %v", err)
@@ -195,6 +167,32 @@ func (m *Migrator) buildMeshIstio(
 	meshIstio.PrimaryClusters = []string{opts.PrimaryClusterID}
 	meshIstio.ControlPlaneMode = common.ControlPlaneModeIndependent
 	meshIstio.Description = opts.Description
+
+	// 获取 istiod 的 values
+	values, err := util.GetValues(opts.PrimaryClusterID, opts.IstiodReleaseName, opts.KubeconfigPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get helm release: %v", err)
+	}
+
+	istiodValues := &common.IstiodInstallValues{}
+	if err = yaml.Unmarshal(values, istiodValues); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal helm values to IstiodInstallValues: %v", err)
+	}
+	// 从 values 中获取 network ID 和 meshID
+	if istiodValues.Global != nil {
+		if istiodValues.Global.Network != nil {
+			meshIstio.NetworkID = *istiodValues.Global.Network
+		}
+		if istiodValues.Global.MeshID != nil && *istiodValues.Global.MeshID != "" {
+			meshIstio.MeshID = *istiodValues.Global.MeshID
+		} else {
+			meshIstio.MeshID = utils.GenMeshID()
+		}
+	}
+	// 从 release values 中提取配置
+	if istiodValues.Revision != nil {
+		meshIstio.Revision = *istiodValues.Revision
+	}
 
 	// 多集群配置
 	if opts.MultiClusterEnabled {
@@ -217,7 +215,7 @@ func (m *Migrator) buildMeshIstio(
 			return nil, fmt.Errorf("failed to get clbID from eastwestgateway, service annotations is empty")
 		}
 
-		clbID, ok := eastwestGatewayValues.Service.Annotations["service.kubernetes.io/tke-existed-lbid"]
+		clbID, ok := eastwestGatewayValues.Service.Annotations[utils.KeyServiceAnnotationCLBID]
 		if !ok {
 			return nil, fmt.Errorf("failed to get clbID from eastwestgateway, service annotations is empty")
 		}
@@ -334,7 +332,12 @@ func (m *Migrator) buildFeatureConfigs(values *common.IstiodInstallValues) map[s
 func (m *Migrator) buildSidecarResourceConfig(values *common.IstiodInstallValues) *entity.ResourceConfig {
 	if values.Global != nil && values.Global.Proxy != nil && values.Global.Proxy.Resources != nil {
 		resources := values.Global.Proxy.Resources
-		config := &entity.ResourceConfig{}
+		config := &entity.ResourceConfig{
+			CpuRequest:    "100m",
+			CpuLimit:      "2000m",
+			MemoryRequest: "128Mi",
+			MemoryLimit:   "1024Mi",
+		}
 
 		if resources.Requests != nil {
 			if resources.Requests.CPU != nil {
@@ -361,7 +364,21 @@ func (m *Migrator) buildSidecarResourceConfig(values *common.IstiodInstallValues
 // buildHighAvailabilityConfig 构建高可用配置
 func (m *Migrator) buildHighAvailabilityConfig(values *common.IstiodInstallValues) *entity.HighAvailability {
 	if values.Pilot != nil {
-		haConfig := &entity.HighAvailability{}
+		haConfig := &entity.HighAvailability{
+			AutoscaleEnabled:                   true,
+			AutoscaleMin:                       1,
+			AutoscaleMax:                       5,
+			ReplicaCount:                       1,
+			TargetCPUAverageUtilizationPercent: 80,
+			ResourceConfig: &entity.ResourceConfig{
+				CpuRequest:    "500m",
+				MemoryRequest: "2048Mi",
+			},
+			DedicatedNode: &entity.DedicatedNode{
+				Enabled:    false,
+				NodeLabels: make(map[string]string),
+			},
+		}
 
 		// 自动扩缩容配置
 		if values.Pilot.AutoscaleEnabled != nil {
@@ -386,8 +403,6 @@ func (m *Migrator) buildHighAvailabilityConfig(values *common.IstiodInstallValue
 
 		// 资源配置
 		if values.Pilot.Resources != nil {
-			haConfig.ResourceConfig = &entity.ResourceConfig{}
-
 			if values.Pilot.Resources.Requests != nil {
 				if values.Pilot.Resources.Requests.CPU != nil {
 					haConfig.ResourceConfig.CpuRequest = *values.Pilot.Resources.Requests.CPU
@@ -408,9 +423,7 @@ func (m *Migrator) buildHighAvailabilityConfig(values *common.IstiodInstallValue
 
 		// 节点选择器
 		if len(values.Pilot.NodeSelector) > 0 {
-			haConfig.DedicatedNode = &entity.DedicatedNode{}
 			haConfig.DedicatedNode.Enabled = true
-			haConfig.DedicatedNode.NodeLabels = make(map[string]string)
 			for k, v := range values.Pilot.NodeSelector {
 				haConfig.DedicatedNode.NodeLabels[k] = v
 			}
@@ -426,20 +439,30 @@ func (m *Migrator) buildObservabilityConfig(
 	values *common.IstiodInstallValues,
 	opts *MigrateOptions,
 ) *entity.ObservabilityConfig {
-	obsConfig := &entity.ObservabilityConfig{}
+	obsConfig := &entity.ObservabilityConfig{
+		MetricsConfig: &entity.MetricsConfig{
+			MetricsEnabled:             false,
+			ControlPlaneMetricsEnabled: false,
+			DataPlaneMetricsEnabled:    false,
+		},
+		LogCollectorConfig: &entity.LogCollectorConfig{
+			Enabled:           false,
+			AccessLogEncoding: common.AccessLogEncodingTEXT,
+			AccessLogFormat:   "",
+		},
+		TracingConfig: &entity.TracingConfig{
+			Enabled:              true,
+			Endpoint:             "zipkin.istio-system:9411",
+			BkToken:              "",
+			TraceSamplingPercent: 1,
+		},
+	}
 
 	// 指标配置
 	obsConfig.MetricsConfig = &entity.MetricsConfig{
 		MetricsEnabled:             opts.MetricsEnabled,
 		ControlPlaneMetricsEnabled: opts.ControlPlaneMetricsEnabled,
 		DataPlaneMetricsEnabled:    opts.DataPlaneMetricsEnabled,
-	}
-
-	// 日志收集配置
-	obsConfig.LogCollectorConfig = &entity.LogCollectorConfig{
-		Enabled:           false,
-		AccessLogEncoding: common.AccessLogEncodingTEXT,
-		AccessLogFormat:   "",
 	}
 
 	// 从 MeshConfig 中提取日志配置
@@ -459,14 +482,6 @@ func (m *Migrator) buildObservabilityConfig(
 		}
 	}
 
-	// 链路追踪配置
-	obsConfig.TracingConfig = &entity.TracingConfig{
-		Enabled:              false,
-		Endpoint:             "",
-		BkToken:              "",
-		TraceSamplingPercent: 10,
-	}
-
 	// 从 MeshConfig 中提取追踪配置
 	if values.MeshConfig != nil {
 		// 追踪开关
@@ -474,10 +489,14 @@ func (m *Migrator) buildObservabilityConfig(
 			obsConfig.TracingConfig.Enabled = *values.MeshConfig.EnableTracing
 		}
 
-		// 从提供的参数中设置追踪端点
+		// 迁移参数中未设置追踪端点，则从values中获取
 		if opts.TracingEndpoint != "" {
-			obsConfig.TracingConfig.Enabled = true
 			obsConfig.TracingConfig.Endpoint = opts.TracingEndpoint
+		} else if values.MeshConfig.DefaultConfig != nil &&
+			values.MeshConfig.DefaultConfig.TracingConfig != nil &&
+			values.MeshConfig.DefaultConfig.TracingConfig.Zipkin != nil &&
+			values.MeshConfig.DefaultConfig.TracingConfig.Zipkin.Address != nil {
+			obsConfig.TracingConfig.Endpoint = *values.MeshConfig.DefaultConfig.TracingConfig.Zipkin.Address
 		}
 
 		// 从提供的参数中设置 token

@@ -51,9 +51,21 @@ func NewWebhookServer(opt *options.ServerOption) (*WebhookServer, error) {
 
 	// init plugin
 	pm := pluginmanager.NewManager(opt.EngineType, opt.PluginDir)
-	pluginNames := strings.Split(opt.Plugins, ",")
-	if err = pm.InitPlugins(pluginNames); err != nil {
-		return nil, err
+	pluginNames := make([]string, 0)
+	if opt.Plugins != "" {
+		pluginNames = strings.Split(opt.Plugins, ",")
+		filteredNames := make([]string, 0)
+		for _, name := range pluginNames {
+			if name != "" {
+				filteredNames = append(filteredNames, name)
+			}
+		}
+		pluginNames = filteredNames
+	}
+	if len(pluginNames) > 0 {
+		if err = pm.InitPlugins(pluginNames); err != nil {
+			return nil, err
+		}
 	}
 
 	whsvr := &WebhookServer{

@@ -87,7 +87,8 @@ bcs-network:ingress-controller
 
 bcs-services:bkcmdb-synchronizer gateway \
 	storage user-manager cluster-manager cluster-reporter nodeagent tools k8s-watch kube-agent data-manager \
-	helm-manager project-manager nodegroup-manager federation-manager powertrading mesh-manager push-manager
+	helm-manager project-manager nodegroup-manager federation-manager powertrading mesh-manager push-manager \
+	platform-manager
 
 bcs-scenarios: kourse gitops
 
@@ -295,7 +296,7 @@ project-manager:pre
 	cd ${BCS_SERVICES_PATH}/bcs-project-manager && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-project-manager/bcs-project-migration ./script/migrations/project/migrate.go
 	cd ${BCS_SERVICES_PATH}/bcs-project-manager && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-project-manager/bcs-variable-migration ./script/migrations/variable/migrate.go
 
-bcs-platform-manager:pre
+platform-manager:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-platform-manager
 	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-platform-manager/* ${PACKAGEPATH}/bcs-services/bcs-platform-manager
 	cd ${BCS_SERVICES_PATH}/bcs-platform-manager && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-platform-manager/bcs-platform-manager ./main.go

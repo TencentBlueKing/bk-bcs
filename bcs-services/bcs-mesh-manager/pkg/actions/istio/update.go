@@ -20,13 +20,16 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/helmmanager"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 	"k8s.io/apimachinery/pkg/api/resource"
 	pointer "k8s.io/utils/pointer"
+	"sigs.k8s.io/yaml"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/cmd/mesh-manager/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/auth"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/clients/helm"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/operation"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/operation/actions"
@@ -143,19 +146,93 @@ func (u *UpdateIstioAction) validate() error {
 	return nil
 }
 
-// update implements the business logic for updating mesh
-func (u *UpdateIstioAction) update(ctx context.Context) error {
-	// 获取istio信息
+// 获取 istio 信息
+func (u *UpdateIstioAction) getIstio(ctx context.Context) (*entity.MeshIstio, error) {
 	istio, err := u.model.Get(ctx, operator.NewLeafCondition(operator.Eq, operator.M{
 		entity.FieldKeyMeshID:      u.req.MeshID,
 		entity.FieldKeyProjectCode: u.req.ProjectCode,
 	}))
 	if err != nil {
 		blog.Errorf("get mesh istio failed, meshID: %s, err: %s", u.req.MeshID, err)
-		return err
+		return nil, err
 	}
 	if istio == nil {
-		return fmt.Errorf("mesh istio not found, meshID: %s", u.req.MeshID)
+		blog.Errorf("mesh istio not found, meshID: %s", u.req.MeshID)
+		return nil, fmt.Errorf("mesh istio not found, meshID: %s", u.req.MeshID)
+	}
+	return istio, nil
+}
+
+// 获取values.yaml配置信息
+func (u *UpdateIstioAction) getValues(ctx context.Context, istio *entity.MeshIstio) (string, error) {
+	clusterID := istio.PrimaryClusters[0]
+	if istio.ReleaseNames[clusterID] == nil {
+		blog.Errorf("[%s]release names not found for cluster: %s", u.req.MeshID, clusterID)
+		return "", fmt.Errorf("release names not found for cluster: %s", clusterID)
+	}
+	istiodReleaseName, ok := istio.ReleaseNames[clusterID][common.ComponentIstiod]
+	if !ok {
+		blog.Errorf("[%s]get istiod release name failed, clusterID: %s", u.req.MeshID, clusterID)
+		return "", fmt.Errorf("get istiod release name failed, clusterID: %s", clusterID)
+	}
+	// 获取istiod的values.yaml配置信息
+	releaseDetail, err := helm.GetReleaseDetail(
+		ctx,
+		&helmmanager.GetReleaseDetailV1Req{
+			ProjectCode: &istio.ProjectCode,
+			ClusterID:   &clusterID,
+			Namespace:   pointer.String(common.IstioNamespace),
+			Name:        &istiodReleaseName,
+		},
+	)
+	if err != nil {
+		blog.Errorf("[%s]get release detail failed, clusterID: %s, err: %s", u.req.MeshID, clusterID, err)
+		return "", fmt.Errorf("get release detail failed, clusterID: %s, err: %s", clusterID, err)
+	}
+	if releaseDetail == nil {
+		blog.Errorf("[%s]release detail is nil, clusterID: %s", u.req.MeshID, clusterID)
+		return "", fmt.Errorf("release detail is nil, clusterID: %s", clusterID)
+	}
+	if len(releaseDetail.Data.Values) == 0 {
+		blog.Errorf("[%s]release values is empty, clusterID: %s", u.req.MeshID, clusterID)
+		return "", fmt.Errorf("release values is empty, clusterID: %s", clusterID)
+	}
+	values := releaseDetail.Data.Values[0]
+	return values, nil
+}
+
+// 验证多集群开启条件
+func (u *UpdateIstioAction) validateMultiClusterEnabled(
+	istiodValues *common.IstiodInstallValues,
+	primaryCluster string,
+) error {
+	if istiodValues.Global == nil {
+		return fmt.Errorf("请检查控制面配置，global不能为空")
+	}
+	if istiodValues.Global.MultiCluster == nil ||
+		istiodValues.Global.MultiCluster.ClusterName == nil ||
+		*istiodValues.Global.MultiCluster.ClusterName != strings.ToLower(primaryCluster) {
+		return fmt.Errorf("请检查控制面配置，必须配置multiCluster.clusterName")
+	}
+	// 部分手动安装的istio未配置meshID，若用户需要在此基础上升级为多集群，则需要用户手动配置meshID和db的一致
+	if istiodValues.Global.MeshID == nil || *istiodValues.Global.MeshID != u.req.MeshID {
+		return fmt.Errorf("meshID异常，请联系bcs助手修正")
+	}
+	if istiodValues.Global.Network == nil || *istiodValues.Global.Network == "" {
+		return fmt.Errorf("请检查控制面配置，network不能为空")
+	}
+	if istiodValues.Revision == nil || *istiodValues.Revision == "" {
+		return fmt.Errorf("请检查控制面配置，revision不能为空")
+	}
+	return nil
+}
+
+// update implements the business logic for updating mesh
+func (u *UpdateIstioAction) update(ctx context.Context) error {
+	// 获取istio信息
+	istio, err := u.getIstio(ctx)
+	if err != nil {
+		return err
 	}
 	if len(u.req.RemoteClusters) > 0 {
 		// 从集群不为空时，若已配置clbID则不可更新
@@ -164,10 +241,24 @@ func (u *UpdateIstioAction) update(ctx context.Context) error {
 		}
 	}
 
+	// 获取values.yaml配置信息
+	values, err := u.getValues(ctx, istio)
+	if err != nil {
+		return err
+	}
+	istiodValues := &common.IstiodInstallValues{}
+	if err = yaml.Unmarshal([]byte(values), istiodValues); err != nil {
+		blog.Errorf("unmarshal istiod values failed, meshID: %s, err: %s", u.req.MeshID, err)
+		return fmt.Errorf("unmarshal istiod values failed, meshID: %s", u.req.MeshID)
+	}
 	// 构建mongodb的更新字段
 	updateFields := u.buildUpdateFields(ctx, u.req)
 	newRemoteClusters := make([]*entity.RemoteCluster, 0, len(u.req.RemoteClusters))
 	if u.req.MultiClusterEnabled.GetValue() {
+		// 验证是否具备开启多集群条件
+		if err = u.validateMultiClusterEnabled(istiodValues, istio.PrimaryClusters[0]); err != nil {
+			return err
+		}
 		// 转换proto RemoteCluster 为 entity RemoteCluster
 		newRemoteClusters = u.buildRemoteClusters(u.req.RemoteClusters)
 		updateFields[entity.FieldKeyRemoteClusters] = newRemoteClusters
@@ -190,13 +281,18 @@ func (u *UpdateIstioAction) update(ctx context.Context) error {
 	}
 	// 提取本次更新istio时的可选配置，当配置关闭时需要移除values.yaml中的对应字段
 	updateValuesOptions := u.updateValuesOptions(u.req)
+	// 使用values.yaml中的networkID，兼容部分非平台安装的迁移数据
+	networkID := ""
+	if istiodValues.Global != nil && istiodValues.Global.Network != nil {
+		networkID = *istiodValues.Global.Network
+	}
 	// 异步更新istio
 	action := actions.NewIstioUpdateAction(
 		&actions.IstioUpdateOption{
 			Model:               u.model,
 			ProjectCode:         &istio.ProjectCode,
 			MeshID:              &istio.MeshID,
-			NetworkID:           &istio.NetworkID,
+			NetworkID:           pointer.String(networkID),
 			ChartName:           common.ComponentIstiod,
 			ChartVersion:        &istio.ChartVersion,
 			ChartValuesPath:     &u.istioConfig.ChartValuesPath,
@@ -205,11 +301,12 @@ func (u *UpdateIstioAction) update(ctx context.Context) error {
 			OldRemoteClusters:   istio.RemoteClusters,
 			NewRemoteClusters:   newRemoteClusters,
 			MultiClusterEnabled: pointer.Bool(u.req.MultiClusterEnabled.GetValue()),
+			Values:              values,
 			UpdateValues:        updateValues,
 			ObservabilityConfig: u.req.ObservabilityConfig,
 			UpdateValuesOptions: updateValuesOptions,
 			CLBID:               pointer.String(u.req.ClbID.GetValue()),
-			Revision:            &istio.Revision,
+			Revision:            pointer.String(u.req.Revision.GetValue()),
 			OldReleaseNames:     istio.ReleaseNames,
 		},
 	)
@@ -423,6 +520,10 @@ func buildBasicFields(ctx context.Context, req *meshmanager.IstioUpdateRequest, 
 	if req.Revision != nil {
 		updateFields[entity.FieldKeyRevision] = req.Revision.GetValue()
 	}
+	// todo: 后续版本需要前端提交networkID，以同步values和db状态
+	// if req.NetworkID != nil {
+	// 	updateFields[entity.FieldKeyNetworkID] = req.NetworkID.GetValue()
+	// }
 	updateFields[entity.FieldKeyStatus] = common.IstioStatusUpdating
 	updateFields[entity.FieldKeyUpdateBy] = auth.GetUserFromCtx(ctx)
 	updateFields[entity.FieldKeyUpdateTime] = time.Now().UnixMilli()

@@ -524,3 +524,41 @@ func (c *Client) DescribeInstanceCreateProgressWithContext(ctx context.Context,
 	err = c.Send(request, response)
 	return
 }
+
+func NewEnableClusterAuditRequest() (request *EnableClusterAuditRequest) {
+	request = &EnableClusterAuditRequest{
+		BaseRequest: &tchttp.BaseRequest{},
+	}
+
+	request.Init().WithApiInfo("tke", APIVersion, "EnableClusterAudit")
+
+	return
+}
+
+func NewEnableClusterAuditResponse() (response *EnableClusterAuditResponse) {
+	response = &EnableClusterAuditResponse{
+		BaseResponse: &tchttp.BaseResponse{},
+	}
+	return
+}
+
+func (c *Client) EnableClusterAudit(request *EnableClusterAuditRequest) (response *EnableClusterAuditResponse, err error) {
+	return c.EnableClusterAuditWithContext(context.Background(), request)
+}
+
+func (c *Client) EnableClusterAuditWithContext(ctx context.Context, request *EnableClusterAuditRequest) (response *EnableClusterAuditResponse, err error) {
+	if request == nil {
+		request = NewEnableClusterAuditRequest()
+	}
+	c.InitBaseRequest(&request.BaseRequest, "tke", APIVersion, "EnableClusterAudit")
+
+	if c.GetCredential() == nil {
+		return nil, errors.New("EnableClusterAudit require credential")
+	}
+
+	request.SetContext(ctx)
+
+	response = NewEnableClusterAuditResponse()
+	err = c.Send(request, response)
+	return
+}

@@ -205,6 +205,7 @@ export default function () {
     curViewType,
     isViewEditable,
     curCrdData,
+    viewDetailData,
     getViewConfigList,
     getViewConfigDetail,
     createViewConfig,

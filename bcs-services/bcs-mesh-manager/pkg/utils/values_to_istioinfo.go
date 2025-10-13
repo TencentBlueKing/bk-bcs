@@ -44,6 +44,9 @@ func ConvertValuesToIstioDetailInfo(
 	if istiodValues.Revision != nil {
 		result.Revision = *istiodValues.Revision
 	}
+	if istiodValues.Global != nil && istiodValues.Global.Network != nil {
+		result.NetworkID = *istiodValues.Global.Network
+	}
 
 	// 同步values中的资源配置
 	if istiodValues.Global != nil &&
@@ -185,8 +188,10 @@ func convertObservabilityConfigValues(
 	if result.ObservabilityConfig.TracingConfig == nil {
 		result.ObservabilityConfig.TracingConfig = &meshmanager.TracingConfig{}
 	}
-	result.ObservabilityConfig.TracingConfig.Enabled =
-		wrapperspb.Bool(meshConfig.EnableTracing != nil && *meshConfig.EnableTracing)
+	if meshConfig.EnableTracing != nil {
+		result.ObservabilityConfig.TracingConfig.Enabled =
+			wrapperspb.Bool(*meshConfig.EnableTracing)
+	}
 
 	// 先看istio版本
 	if IsVersionSupported(result.Version, ">=1.21") {

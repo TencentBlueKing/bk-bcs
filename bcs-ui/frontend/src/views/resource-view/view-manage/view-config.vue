@@ -368,6 +368,7 @@ const {
   curViewData,
   curViewName,
   curCrdData,
+  viewDetailData,
   getViewConfigDetail,
   createViewConfig,
   deleteViewConfig,
@@ -569,6 +570,7 @@ const handleDeleteView = () => {
     title: $i18n.t('view.tips.confirmDelete'),
     clsName: 'custom-info-confirm default-info',
     subTitle: originViewData.value.name,
+    theme: 'danger',
     confirmFn: async () => {
       const result = await deleteViewConfig({ $id: originViewData.value.id || '' });
       if (result) {
@@ -600,7 +602,8 @@ const handleShowSaveAsDialog = () => {
 const handleSaveAs = async (changeView = true) => {
   saving.value = true;
   const result = await createViewConfig({
-    ...curTmpViewData.value,
+    clusterNamespaces: curViewData.value.clusterNamespaces,
+    filter: (viewDetailData.value?.tmpViewData?.filter || {}),
     name: viewName.value,
   });
   if (result?.id) {

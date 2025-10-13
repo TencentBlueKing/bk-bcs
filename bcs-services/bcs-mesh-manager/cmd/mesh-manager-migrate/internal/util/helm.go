@@ -60,6 +60,8 @@ func GetValues(
 
 	// 创建GetValues action
 	getValues := action.NewGetValues(actionConfig)
+	// 设置 AllValues 为 true，对应实际的命令 helm get values --all
+	getValues.AllValues = true
 
 	// 获取values
 	values, err := getValues.Run(releaseName)

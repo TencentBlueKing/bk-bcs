@@ -148,6 +148,12 @@ func PushActivities(request *restful.Request, response *restful.Response) {
 			blog.Errorf("get project failed, err %s", err.Error())
 			continue
 		}
+
+		// 暂不记录
+		if v.ResourceType == "k8s_resource" {
+			continue
+		}
+
 		activities = append(activities, &models.Activity{
 			ProjectCode:  project.ProjectCode,
 			ResourceType: v.ResourceType,

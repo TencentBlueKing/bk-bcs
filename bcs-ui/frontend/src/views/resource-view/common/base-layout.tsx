@@ -93,7 +93,7 @@ export default defineComponent({
     },
     // CRD资源分两种，普通和定制，customized 用来区分普通和定制
     customized: {
-      type: Boolean,
+      type: [Boolean, String],
       default: false,
     },
   },
@@ -584,7 +584,7 @@ export default defineComponent({
     const confirmDelete = async () => {
       const { name, namespace, uid } = curDetailRow.value.data?.metadata || {};
       let result = false;
-      if (customized.value) {
+      if (customized.value && customized.value !== 'false') {
         result = await deleteCRDResource({
           namespace,
           kind: kind.value,

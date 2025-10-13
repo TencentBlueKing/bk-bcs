@@ -452,7 +452,7 @@ export default defineComponent({
         clusterImage.value = value;
         imageID.value = value.imageID;
       } else {
-        imageID.value = defaultValues.value.nodeTemplate?.imageInfo?.imageID;
+        imageID.value = defaultValues.value.nodeTemplate?.imageInfo?.imageID || value.imageID;
       }
     }
 

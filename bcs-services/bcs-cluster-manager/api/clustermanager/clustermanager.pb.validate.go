@@ -18399,6 +18399,8 @@ func (m *NamespaceQuota) validate(all bool) error {
 
 	// no validation rules for MemoryLimits
 
+	// no validation rules for ServiceLimits
+
 	if len(errors) > 0 {
 		return NamespaceQuotaMultiError(errors)
 	}
@@ -27301,6 +27303,30 @@ func (m *ListClusterV2Req) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
+	if utf8.RuneCountInString(m.GetClusterName()) > 100 {
+		err := ListClusterV2ReqValidationError{
+			field:  "ClusterName",
+			reason: "value length must be at most 100 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for Sort
+
+	if _, ok := _ListClusterV2Req_Order_InLookup[m.GetOrder()]; !ok {
+		err := ListClusterV2ReqValidationError{
+			field:  "Order",
+			reason: "value must be in list [ asc desc]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
 	if len(errors) > 0 {
 		return ListClusterV2ReqMultiError(errors)
 	}
@@ -27387,6 +27413,12 @@ var _ListClusterV2Req_Status_InLookup = map[string]struct{}{
 	"INITIALIZATION": {},
 	"DELETED":        {},
 	"":               {},
+}
+
+var _ListClusterV2Req_Order_InLookup = map[string]struct{}{
+	"":     {},
+	"asc":  {},
+	"desc": {},
 }
 
 // Validate checks the field values on ListClusterV2Resp with the rules defined
@@ -70079,6 +70111,8 @@ func (m *ClusterBasicInfo) validate(all bool) error {
 	// no validation rules for ClusterCategory
 
 	// no validation rules for IsShared
+
+	// no validation rules for BizMaintainer
 
 	if len(errors) > 0 {
 		return ClusterBasicInfoMultiError(errors)
