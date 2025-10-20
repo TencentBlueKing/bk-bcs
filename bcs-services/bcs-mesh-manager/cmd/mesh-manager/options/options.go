@@ -167,7 +167,6 @@ type MonitoringConfig struct {
 
 // PipelineConfig pipeline configuration
 type PipelineConfig struct {
-	BizID           int64  `json:"bizID"`
 	DevOpsToken     string `json:"devOpsToken"`
 	BKDevOpsUrl     string `json:"bkDevOpsUrl"`
 	AppCode         string `json:"appCode"`
@@ -207,9 +206,6 @@ func (p *PipelineConfig) Validate() error {
 	}
 	if p.DevOpsToken == "" {
 		return fmt.Errorf("pipeline config: devOpsToken is required")
-	}
-	if p.BizID == 0 {
-		return fmt.Errorf("pipeline config: bizID is required")
 	}
 	if p.Collection == "" {
 		return fmt.Errorf("pipeline config: collection is required")

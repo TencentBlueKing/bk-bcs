@@ -184,7 +184,7 @@ func (i *IstioInstallAction) deployMonitoringResources(ctx context.Context) erro
 	}
 
 	// 开启指标采集时触发流水线执行，流水线执行失败则记录日志，并继续向下执行
-	err := utils.ExecutePipeline(ctx)
+	err := utils.ExecutePipeline(ctx, i.ProjectCode)
 	if err != nil {
 		blog.Errorf("[%s]execute pipeline failed, err: %s", i.MeshID, err)
 		// PASS
