@@ -9241,6 +9241,17 @@ func (m *ClusterNamespaces) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
+	if _, ok := _ClusterNamespaces_Nsgroup_InLookup[m.GetNsgroup()]; !ok {
+		err := ClusterNamespacesValidationError{
+			field:  "Nsgroup",
+			reason: "value must be in list [ all-system all-user all]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
 	if len(errors) > 0 {
 		return ClusterNamespacesMultiError(errors)
 	}
@@ -9320,6 +9331,13 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ClusterNamespacesValidationError{}
+
+var _ClusterNamespaces_Nsgroup_InLookup = map[string]struct{}{
+	"":           {},
+	"all-system": {},
+	"all-user":   {},
+	"all":        {},
+}
 
 // Validate checks the field values on LabelSelector with the rules defined in
 // the proto definition for this message. If any rules are violated, the first
