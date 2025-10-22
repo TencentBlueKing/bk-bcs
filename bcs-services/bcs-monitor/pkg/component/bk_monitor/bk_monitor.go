@@ -433,6 +433,7 @@ func MetadataQueryDataSource(ctx context.Context, host string, dataID int) (*Dat
 	url := fmt.Sprintf("%s/metadata_query_data_source", host)
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
+		SetHeader(utils.TenantIDHeaderKey, utils.GetTenantIDFromContext(ctx)).
 		SetHeader("X-Bkapi-Authorization", authInfo).
 		SetQueryParam("bk_data_id", strconv.Itoa(dataID)).
 		Get(url)

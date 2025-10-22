@@ -487,7 +487,9 @@ func DatabusCustomCreate(ctx context.Context, req *DatabusCustomCreateReq) (*Dat
 	}
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
+		SetHeader(utils.TenantIDHeaderKey, utils.GetTenantIDFromContext(ctx)).
 		SetHeader("X-Bkapi-Authorization", authInfo).
+		SetHeaders(utils.GetLaneIDByCtx(ctx)).
 		SetBody(req).
 		Post(url)
 
@@ -522,7 +524,9 @@ func DatabusCustomUpdate(ctx context.Context, id int, req *DatabusCustomUpdateRe
 	}
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
+		SetHeader(utils.TenantIDHeaderKey, utils.GetTenantIDFromContext(ctx)).
 		SetHeader("X-Bkapi-Authorization", authInfo).
+		SetHeaders(utils.GetLaneIDByCtx(ctx)).
 		SetBody(req).
 		Post(url)
 

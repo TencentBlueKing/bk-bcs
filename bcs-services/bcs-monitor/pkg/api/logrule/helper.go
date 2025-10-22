@@ -425,9 +425,9 @@ func getRuleIDByName(projectID, clusterID, ruleName string) (string, error) {
 }
 
 // createBKlog create bklog
-func createBKLog(req *bklog.CreateBCSCollectorReq) {
+func createBKLog(tenantID string, req *bklog.CreateBCSCollectorReq) {
 	blog.Infof("ready to create bklog, req: %s", req)
-	ctx := context.Background()
+	ctx := context.WithValue(context.Background(), utils.ContextTenantKey, tenantID)
 	store := storage.GlobalStorage
 	// get log rule
 	ruleID, err := getRuleIDByName(req.ProjectID, req.BCSClusterID, req.CollectorConfigNameEN)
@@ -467,9 +467,9 @@ func createBKLog(req *bklog.CreateBCSCollectorReq) {
 }
 
 // updateBKLog update bklog
-func updateBKLog(ruleID string, bkRuleID int, req *bklog.UpdateBCSCollectorReq) {
+func updateBKLog(tenantID, ruleID string, bkRuleID int, req *bklog.UpdateBCSCollectorReq) {
 	blog.Infof("ready to update bklog, req: %s", req)
-	ctx := context.Background()
+	ctx := context.WithValue(context.Background(), utils.ContextTenantKey, tenantID)
 	store := storage.GlobalStorage
 
 	// update bk log

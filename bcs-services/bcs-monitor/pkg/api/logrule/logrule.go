@@ -189,7 +189,7 @@ func CreateLogRule(c context.Context, req *CreateLogRuleReq) (*string, error) {
 	}
 
 	// 创建 bklog 规则耗时比较长，异步调用
-	go createBKLog(req.toBKLog(rctx))
+	go createBKLog(utils.GetTenantIDFromContext(c), req.toBKLog(rctx))
 	return &id, nil
 }
 
@@ -226,7 +226,7 @@ func UpdateLogRule(c context.Context, req *UpdateLogRuleReq) (*string, error) {
 	}
 
 	// 更新 bklog 规则耗时比较长，异步调用
-	go updateBKLog(rule.ID.Hex(), rule.RuleID, req.toBKLog(rctx, rule.RuleName))
+	go updateBKLog(utils.GetTenantIDFromContext(c), rule.ID.Hex(), rule.RuleID, req.toBKLog(rctx, rule.RuleName))
 	return &id, nil
 }
 
@@ -312,7 +312,7 @@ func RetryLogRule(c context.Context, req *GetLogRuleReq) (*any, error) {
 			rule.Rule.LogRuleContainer.LabelSelector.MatchExpressions)
 		rule.Rule.LogRuleContainer.LabelSelector = bklog.LabelSelector{
 			MatchLabels: matchLabels, MatchExpressions: matchExpressions}
-		go createBKLog(&bklog.CreateBCSCollectorReq{
+		go createBKLog(utils.GetTenantIDFromContext(c), &bklog.CreateBCSCollectorReq{
 			SpaceUID:              GetSpaceID(rctx.ProjectCode),
 			ProjectID:             rctx.ProjectId,
 			CollectorConfigName:   rule.DisplayName,
