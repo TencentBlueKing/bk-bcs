@@ -323,6 +323,11 @@ cluster-resources:pre
 	# go build
 	cd ${BCS_SERVICES_PATH}/cluster-resources && go mod tidy && CGO_ENABLED=0 go build ${LDFLAG}${CR_LDFLAG_EXT} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/cluster-resources/bcs-cluster-resources *.go
 
+syncing:pre
+	mkdir -p ${PACKAGEPATH}/bcs-services/syncing
+	cp -R ${BCS_CONF_SERVICES_PATH}/syncing/* ${PACKAGEPATH}/bcs-services/syncing
+	cd ${BCS_SERVICES_PATH}/bcs-bk-apisix-gateway/syncing && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/syncing/syncing ./main.go
+
 # end of bcs-service section
 
 apiserver-proxy:pre
