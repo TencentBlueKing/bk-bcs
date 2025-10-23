@@ -64,6 +64,7 @@ func TenantMiddleware(next http.Handler) http.Handler {
 			ResponseAuthError(w, r, err)
 			return
 		}
+		next.ServeHTTP(w, r)
 	})
 }
 

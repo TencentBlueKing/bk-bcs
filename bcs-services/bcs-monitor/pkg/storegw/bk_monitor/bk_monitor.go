@@ -133,9 +133,14 @@ func (s *BKMonitorStore) LabelValues(ctx context.Context, r *storepb.LabelValues
 	if err != nil {
 		return nil, err
 	}
+	project, err := bcs.GetProject(ctx, config.G.BCS, cluster.ProjectID)
+	if err != nil {
+		return nil, err
+	}
 
 	// get bk_monitor metrics
-	metrics, err := bkmonitor_client.GetMetricsList(ctx, config.G.BKMonitor.MetadataURL, clusterID, cluster.BKBizID)
+	metrics, err := bkmonitor_client.GetMetricsList(ctx, config.G.BKMonitor.MetadataURL, clusterID, cluster.BKBizID,
+		project.TenantId)
 	if err != nil {
 		return nil, err
 	}
@@ -193,12 +198,16 @@ func (s *BKMonitorStore) Series(r *storepb.SeriesRequest, srv storepb.Store_Seri
 	if err != nil {
 		return err
 	}
+	project, err := bcs.GetProject(ctx, config.G.BCS, cluster.ProjectID)
+	if err != nil {
+		return err
+	}
 
 	// series 数据, 这里只查询最近 SeriesStepDeltaSeconds
 	if r.SkipChunks {
 		// end = time.Now().Unix()
 		// start = end - clientutil.SeriesStepDeltaSeconds
-		return s.getMatcherSeries(r, srv, clusterID, cluster.BKBizID)
+		return s.getMatcherSeries(r, srv, clusterID, cluster.BKBizID, project.TenantId)
 	}
 
 	newMatchers := getMatcher(r.Matchers, metricName, cluster)
@@ -216,7 +225,7 @@ func (s *BKMonitorStore) Series(r *storepb.SeriesRequest, srv storepb.Store_Seri
 		bkmonitorURL = url.URL
 	}
 	promSeriesSet, err := bkmonitor_client.QueryByPromQL(srv.Context(), bkmonitorURL, cluster.BKBizID,
-		start, end, step, newMatchers, pql)
+		project.TenantId, start, end, step, newMatchers, pql)
 	if err != nil {
 		return err
 	}
@@ -264,10 +273,10 @@ func getMatcher(matchers []storepb.LabelMatcher, metricName string, cluster *bcs
 }
 
 func (s *BKMonitorStore) getMatcherSeries(r *storepb.SeriesRequest, srv storepb.Store_SeriesServer,
-	clusterID, bizID string) error {
+	clusterID, bizID, tenantID string) error {
 	ctx := srv.Context()
 	blog.Infow(clientutil.DumpPromQL(r), "request_id", store.RequestIDValue(ctx), "clusterID", clusterID)
-	series, err := bkmonitor_client.GetMetricsSeries(ctx, config.G.BKMonitor.MetadataURL, clusterID, bizID)
+	series, err := bkmonitor_client.GetMetricsSeries(ctx, config.G.BKMonitor.MetadataURL, clusterID, bizID, tenantID)
 	if err != nil {
 		return err
 	}

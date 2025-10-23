@@ -148,7 +148,7 @@ func getQueryURL(rawURL string) (string, error) {
 }
 
 // QueryByPromQLRaw unifyquery 查询, promql 语法
-func QueryByPromQLRaw(ctx context.Context, rawURL, bkBizID string, start, end, step int64,
+func QueryByPromQLRaw(ctx context.Context, rawURL, bkBizID, tenantID string, start, end, step int64,
 	labelMatchers []storepb.LabelMatcher, rawPromql string) (*BKUnifyQueryResult, error) {
 	url, err := getQueryURL(rawURL)
 	if err != nil {
@@ -177,7 +177,7 @@ func QueryByPromQLRaw(ctx context.Context, rawURL, bkBizID string, start, end, s
 	resp, err := component.GetNoTraceClient().R().
 		SetContext(ctx).
 		SetBody(body).
-		SetHeader(utils.TenantIDHeaderKey, utils.GetTenantIDFromContext(ctx)).
+		SetHeader(utils.TenantIDHeaderKey, tenantID).
 		SetHeader("X-Bkapi-Authorization", authInfo).
 		SetHeader("X-Bk-Scope-Space-Uid", fmt.Sprintf("bkcc__%s", bkBizID)). // 支持空间参数
 		SetHeaders(utils.GetLaneIDByCtx(ctx)).                               // 泳道特性
@@ -200,9 +200,9 @@ func QueryByPromQLRaw(ctx context.Context, rawURL, bkBizID string, start, end, s
 
 // QueryByPromQL unifyquery 查询, promql 语法
 // start, end, step 单位秒
-func QueryByPromQL(ctx context.Context, rawURL, bkBizID string, start, end, step int64,
+func QueryByPromQL(ctx context.Context, rawURL, bkBizID, tenantID string, start, end, step int64,
 	labelMatchers []storepb.LabelMatcher, rawPromql string) ([]*prompb.TimeSeries, error) {
-	result, err := QueryByPromQLRaw(ctx, rawURL, bkBizID, start, end, step, labelMatchers, rawPromql)
+	result, err := QueryByPromQLRaw(ctx, rawURL, bkBizID, tenantID, start, end, step, labelMatchers, rawPromql)
 	if err != nil {
 		return nil, err
 	}
@@ -210,7 +210,7 @@ func QueryByPromQL(ctx context.Context, rawURL, bkBizID string, start, end, step
 }
 
 // QueryMultiValues unifyquery 查询, promql 语法
-func QueryMultiValues(ctx context.Context, rawURL, bkBizID string, start int64, promqlMap map[string]string,
+func QueryMultiValues(ctx context.Context, rawURL, bkBizID, tenantID string, start int64, promqlMap map[string]string,
 	params map[string]interface{}) (map[string]string, error) {
 	var (
 		wg  sync.WaitGroup
@@ -228,7 +228,7 @@ func QueryMultiValues(ctx context.Context, rawURL, bkBizID string, start int64, 
 			defer wg.Done()
 
 			promql = format.Sprintf(promql, params)
-			resutl, err := QueryByPromQLRaw(ctx, rawURL, bkBizID, start, start, 60, nil, promql)
+			resutl, err := QueryByPromQLRaw(ctx, rawURL, bkBizID, tenantID, start, start, 60, nil, promql)
 			mtx.Lock()
 			defer mtx.Unlock()
 
@@ -317,7 +317,7 @@ type MetricLabel struct {
 }
 
 // GetMetricsList 获取 metrics 列表
-func GetMetricsList(ctx context.Context, host, clusterID, bizID string) ([]MetricList, error) {
+func GetMetricsList(ctx context.Context, host, clusterID, bizID, tenantID string) ([]MetricList, error) {
 	cacheKey := fmt.Sprintf("bcs.QueryGrayClusterMap.%s", clusterID)
 	if cacheResult, ok := storage.LocalCache.Slot.Get(cacheKey); ok {
 		return cacheResult.([]MetricList), nil
@@ -332,7 +332,7 @@ func GetMetricsList(ctx context.Context, host, clusterID, bizID string) ([]Metri
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
 		SetHeaders(utils.GetLaneIDByCtx(ctx)).
-		SetHeader(utils.TenantIDHeaderKey, utils.GetTenantIDFromContext(ctx)).
+		SetHeader(utils.TenantIDHeaderKey, tenantID).
 		SetHeader("X-Bkapi-Authorization", authInfo).
 		SetQueryParam("cluster_ids", clusterID).
 		SetQueryString(fmt.Sprintf("bk_biz_ids=0&bk_biz_ids=%s", bizID)).
@@ -352,8 +352,8 @@ func GetMetricsList(ctx context.Context, host, clusterID, bizID string) ([]Metri
 }
 
 // GetMetricsSeries 获取 metrics series 列表
-func GetMetricsSeries(ctx context.Context, host, clusterID, bizID string) ([]*prompb.TimeSeries, error) {
-	metrics, err := GetMetricsList(ctx, host, clusterID, bizID)
+func GetMetricsSeries(ctx context.Context, host, clusterID, bizID, tenantID string) ([]*prompb.TimeSeries, error) {
+	metrics, err := GetMetricsList(ctx, host, clusterID, bizID, tenantID)
 	if err != nil {
 		return nil, err
 	}

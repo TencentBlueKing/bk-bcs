@@ -58,7 +58,7 @@ func (h BKMonitorHandler) handleBKMonitorClusterMetric(
 		"mountpoint": config.G.BKMonitor.MountPoint,
 	})
 
-	result, err := bkmonitor.QueryByPromQLRaw(c.Request.Context(), h.url, h.bkBizID, queryTime.Start.Unix(),
+	result, err := bkmonitor.QueryByPromQLRaw(c.Request.Context(), h.url, h.bkBizID, c.TenantId, queryTime.Start.Unix(),
 		queryTime.End.Unix(), int64(queryTime.Step.Seconds()), nil, rawQL)
 	if err != nil {
 		return nil, err
@@ -106,8 +106,8 @@ func (h BKMonitorHandler) GetClusterOverview(c *rest.Context) (*ClusterOverviewM
 		"pod_total":    `sum(avg_over_time(bkmonitor:kube_node_status_capacity_pods{bcs_cluster_id="%<clusterID>s", node!=""%<node>s}[2m]))`,
 	}
 
-	result, err := bkmonitor.QueryMultiValues(c.Request.Context(), h.url, h.bkBizID, utils.GetNowQueryTime().Unix(),
-		promqlMap, params)
+	result, err := bkmonitor.QueryMultiValues(c.Request.Context(), h.url, h.bkBizID, c.TenantId,
+		utils.GetNowQueryTime().Unix(), promqlMap, params)
 	if err != nil {
 		return nil, err
 	}
