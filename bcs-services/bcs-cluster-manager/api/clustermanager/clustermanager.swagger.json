@@ -9465,6 +9465,11 @@
           "$ref": "#/definitions/clustermanagerCloudNetworkTemplateConfig",
           "description": "云模板网络配置信息",
           "title": "cloudNetworkTemplateConfig"
+        },
+        "taskTimeTemplateConfig": {
+          "$ref": "#/definitions/clustermanagerTaskTimeTemplateConfig",
+          "description": "任务时间配置信息",
+          "title": "taskTimeTemplateConfig"
         }
       },
       "description": "云模板配置信息",
@@ -20302,6 +20307,21 @@
         }
       }
     },
+    "clustermanagerTaskTimeTemplateConfig": {
+      "type": "object",
+      "properties": {
+        "timeoutConfig": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerTimeoutConfig"
+          },
+          "description": "任务步骤超时时间配置",
+          "title": "timeoutConfig"
+        }
+      },
+      "description": "任务时间配置信息",
+      "title": "taskTimeTemplateConfig"
+    },
     "clustermanagerTemplateConfigInfo": {
       "type": "object",
       "properties": {
@@ -20452,6 +20472,24 @@
       },
       "description": "autoScale定时扩缩配置",
       "title": "TimeRange"
+    },
+    "clustermanagerTimeoutConfig": {
+      "type": "object",
+      "properties": {
+        "stepName": {
+          "type": "string",
+          "description": "步骤名",
+          "title": "stepName"
+        },
+        "timeout": {
+          "type": "integer",
+          "format": "int64",
+          "description": "超时时间，单位为分钟",
+          "title": "timeout"
+        }
+      },
+      "description": "任务步骤超时时间配置",
+      "title": "timeoutConfig"
     },
     "clustermanagerTransNodeGroupToNodeTemplateResponse": {
       "type": "object",

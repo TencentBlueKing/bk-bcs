@@ -70530,6 +70530,35 @@ func (m *CloudTemplateConfig) validate(all bool) error {
 		}
 	}
 
+	if all {
+		switch v := interface{}(m.GetTaskTimeTemplateConfig()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, CloudTemplateConfigValidationError{
+					field:  "TaskTimeTemplateConfig",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, CloudTemplateConfigValidationError{
+					field:  "TaskTimeTemplateConfig",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetTaskTimeTemplateConfig()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CloudTemplateConfigValidationError{
+				field:  "TaskTimeTemplateConfig",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
 	if len(errors) > 0 {
 		return CloudTemplateConfigMultiError(errors)
 	}
@@ -70745,6 +70774,246 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = CloudNetworkTemplateConfigValidationError{}
+
+// Validate checks the field values on TaskTimeTemplateConfig with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *TaskTimeTemplateConfig) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on TaskTimeTemplateConfig with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// TaskTimeTemplateConfigMultiError, or nil if none found.
+func (m *TaskTimeTemplateConfig) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *TaskTimeTemplateConfig) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	for idx, item := range m.GetTimeoutConfig() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, TaskTimeTemplateConfigValidationError{
+						field:  fmt.Sprintf("TimeoutConfig[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, TaskTimeTemplateConfigValidationError{
+						field:  fmt.Sprintf("TimeoutConfig[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return TaskTimeTemplateConfigValidationError{
+					field:  fmt.Sprintf("TimeoutConfig[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return TaskTimeTemplateConfigMultiError(errors)
+	}
+
+	return nil
+}
+
+// TaskTimeTemplateConfigMultiError is an error wrapping multiple validation
+// errors returned by TaskTimeTemplateConfig.ValidateAll() if the designated
+// constraints aren't met.
+type TaskTimeTemplateConfigMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m TaskTimeTemplateConfigMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m TaskTimeTemplateConfigMultiError) AllErrors() []error { return m }
+
+// TaskTimeTemplateConfigValidationError is the validation error returned by
+// TaskTimeTemplateConfig.Validate if the designated constraints aren't met.
+type TaskTimeTemplateConfigValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e TaskTimeTemplateConfigValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e TaskTimeTemplateConfigValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e TaskTimeTemplateConfigValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e TaskTimeTemplateConfigValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e TaskTimeTemplateConfigValidationError) ErrorName() string {
+	return "TaskTimeTemplateConfigValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e TaskTimeTemplateConfigValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sTaskTimeTemplateConfig.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = TaskTimeTemplateConfigValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = TaskTimeTemplateConfigValidationError{}
+
+// Validate checks the field values on TimeoutConfig with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *TimeoutConfig) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on TimeoutConfig with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in TimeoutConfigMultiError, or
+// nil if none found.
+func (m *TimeoutConfig) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *TimeoutConfig) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for StepName
+
+	// no validation rules for Timeout
+
+	if len(errors) > 0 {
+		return TimeoutConfigMultiError(errors)
+	}
+
+	return nil
+}
+
+// TimeoutConfigMultiError is an error wrapping multiple validation errors
+// returned by TimeoutConfig.ValidateAll() if the designated constraints
+// aren't met.
+type TimeoutConfigMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m TimeoutConfigMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m TimeoutConfigMultiError) AllErrors() []error { return m }
+
+// TimeoutConfigValidationError is the validation error returned by
+// TimeoutConfig.Validate if the designated constraints aren't met.
+type TimeoutConfigValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e TimeoutConfigValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e TimeoutConfigValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e TimeoutConfigValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e TimeoutConfigValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e TimeoutConfigValidationError) ErrorName() string { return "TimeoutConfigValidationError" }
+
+// Error satisfies the builtin error interface
+func (e TimeoutConfigValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sTimeoutConfig.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = TimeoutConfigValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = TimeoutConfigValidationError{}
 
 // Validate checks the field values on CreateTemplateConfigRequest with the
 // rules defined in the proto definition for this message. If any rules are

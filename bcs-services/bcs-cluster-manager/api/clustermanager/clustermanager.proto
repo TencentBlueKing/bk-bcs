@@ -15811,9 +15811,13 @@ message CloudTemplateConfig {
       description : "云模板配置信息"
     }
   };
-  CloudNetworkTemplateConfig cloudNetworkTemplateConfig = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  CloudNetworkTemplateConfig cloudNetworkTemplateConfig = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "cloudNetworkTemplateConfig",
     description: "云模板网络配置信息"
+  }];
+  TaskTimeTemplateConfig taskTimeTemplateConfig = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "taskTimeTemplateConfig",
+    description: "任务时间配置信息"
   }];
 }
 
@@ -15843,6 +15847,36 @@ message CloudNetworkTemplateConfig {
   repeated uint32 underlayAutoSteps = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "underlayAutoSteps",
     description: "underlay网络模式下自动分配子网的步长"
+  }];
+}
+
+message TaskTimeTemplateConfig {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "taskTimeTemplateConfig"
+      description : "任务时间配置信息"
+    }
+  };
+  repeated TimeoutConfig timeoutConfig = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title: "timeoutConfig",
+      description: "任务步骤超时时间配置"
+    }];
+}
+
+message TimeoutConfig {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "timeoutConfig"
+      description : "任务步骤超时时间配置"
+    }
+  };
+  string stepName = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "stepName",
+    description: "步骤名"
+  }];
+  uint32 timeout = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "timeout",
+    description: "超时时间，单位为分钟"
   }];
 }
 

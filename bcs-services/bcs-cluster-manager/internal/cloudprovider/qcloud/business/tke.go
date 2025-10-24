@@ -1279,6 +1279,11 @@ func CheckClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDe
 
 	taskID, stepName := cloudprovider.GetTaskIDAndStepNameFromContext(ctx)
 
+	// get task timeout from template config, if no configure, use default timeout
+	defaultTime := 30 * time.Minute
+	taskTimeout := cloudprovider.GetTaskTimeout(ctx, info.Cluster.ProjectID,
+		info.Cluster.ClusterID, stepName, defaultTime)
+
 	// get qcloud client
 	cli, err := api.NewTkeClient(info.CmOption)
 	if err != nil {
@@ -1287,12 +1292,11 @@ func CheckClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDe
 	}
 
 	// wait node group state to normal
-	timeCtx, cancel := context.WithTimeout(context.TODO(), 30*time.Minute)
+	timeCtx, cancel := context.WithTimeout(context.TODO(), taskTimeout)
 	defer cancel()
 
 	// wait all nodes to be ready
 	err = loop.LoopDoFunc(timeCtx, func() error {
-
 		instances, errQuery := cli.QueryTkeClusterInstances(&api.DescribeClusterInstances{
 			ClusterID:   info.Cluster.SystemID,
 			InstanceIDs: instanceIDs,
@@ -1308,9 +1312,10 @@ func CheckClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDe
 			failure = make([]InstanceInfo, 0)
 		)
 		for _, ins := range instances {
-			blog.Infof("checkClusterInstanceStatus[%s] instance id[%s] status[%s]",
-				taskID, *ins.InstanceId, *ins.InstanceState)
-
+			// instances info
+			blog.Infof("provider[%s] checkClusterInstanceStatus[%s] businessID[%s] projectID[%s] cluster[%s] instanceInfo[%s:%s] status[%s]",
+				info.Cluster.GetProvider(), taskID, info.Cluster.GetBusinessID(), info.Cluster.GetProjectID(), utils.StringPtrToString(ins.InstanceId),
+				utils.StringPtrToString(ins.LanIP), info.Cluster.GetSystemID(), utils.StringPtrToString(ins.InstanceState))
 			switch *ins.InstanceState {
 			case api.RunningInstanceTke.String():
 				running = append(running, InstanceInfo{
@@ -1367,9 +1372,6 @@ func CheckClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDe
 			return nil, nil, errQuery
 		}
 		for _, ins := range instances {
-			blog.Infof("checkClusterInstanceStatus[%s] instance id[%s] status[%s]",
-				taskID, *ins.InstanceId, *ins.InstanceState)
-
 			switch *ins.InstanceState {
 			case api.RunningInstanceTke.String():
 				running = append(running, InstanceInfo{

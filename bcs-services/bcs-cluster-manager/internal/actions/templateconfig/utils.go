@@ -29,7 +29,8 @@ import (
 
 // ConfigType xxx
 var ConfigType = map[string]struct{}{
-	common.CloudConfigType: {},
+	common.CloudConfigType:    {},
+	common.TaskTimeConfigType: {},
 }
 
 func checkTemplateConfigType(confType string) bool {

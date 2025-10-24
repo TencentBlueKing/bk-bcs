@@ -134,7 +134,11 @@ func RunBKsopsJob(taskID string, stepName string) error {
 	// inject taskID
 	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
 
-	timeOutCtx, cancel := context.WithTimeout(ctx, time.Minute*120)
+	defaultTime := 120 * time.Minute
+	taskTimeout := cloudprovider.GetTaskTimeout(ctx, state.Task.GetProjectID(),
+		state.Task.GetClusterID(), stepName, defaultTime)
+
+	timeOutCtx, cancel := context.WithTimeout(ctx, taskTimeout)
 	defer cancel()
 
 	taskUrl, err := ExecBkSopsTask(timeOutCtx, CreateBkSopsTaskParas{
