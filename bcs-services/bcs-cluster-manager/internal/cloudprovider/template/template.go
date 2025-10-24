@@ -21,7 +21,6 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
@@ -39,7 +38,7 @@ const (
 	// SystemPostInit bksops system init
 	SystemPostInit = "systemPostInit"
 	// SystemPreInit bksops system pre init
-	SystemPreInit = "系统前置初始化"
+	SystemPreInit = "空闲检查"
 	// SystemInit bksops system init
 	SystemInit = "系统后置初始化"
 	// UserAfterInit bksops user after init
@@ -81,6 +80,7 @@ type ExtraInfo struct {
 	GroupCreator       string
 	GroupColocation    bool
 	ImageId            string
+	AllowSkip          bool
 }
 
 // BuildSopsFactory xxx
@@ -180,6 +180,7 @@ func GenerateBKopsStep(taskMethod, taskName, stepName string, cls *proto.Cluster
 		TaskName:     taskName,
 		SkipOnFailed: plugin.AllowSkipWhenFailed,
 		Translate:    info.TranslateMethod,
+		AllowSkip:    info.AllowSkip,
 	}
 	step.Params[cloudprovider.BkSopsURLKey.String()] = plugin.Link
 	step.Params[cloudprovider.ShowSopsURLKey.String()] = fmt.Sprintf("%v", info.ShowSopsUrl)

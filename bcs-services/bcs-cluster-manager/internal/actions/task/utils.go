@@ -183,6 +183,7 @@ func addNodesToClusterTask(model store.ClusterManagerModel, cluster *proto.Clust
 		Operator:     params.operator,
 		NodeSchedule: params.nodeSchedule,
 		Advance:      params.advance,
+		IsRetryTask:  true,
 	})
 	if err != nil {
 		blog.Errorf("cloudprovider %s addNodes %v to Cluster %s failed, %s",

@@ -709,7 +709,7 @@ func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Nod
 	common.BuildShieldAlertTaskStep(task, cls.GetClusterID(), imageId)
 
 	// step3:  postAction bk-sops task
-	if opt.Cloud != nil && opt.Cloud.ClusterManagement != nil && opt.Cloud.ClusterManagement.AddNodesToCluster != nil {
+	if !opt.IsRetryTask && opt.Cloud != nil && opt.Cloud.ClusterManagement != nil && opt.Cloud.ClusterManagement.AddNodesToCluster != nil {
 		err := template.BuildSopsFactory{
 			StepName: template.SystemPreInit,
 			Cluster:  cls,
@@ -721,7 +721,8 @@ func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Nod
 					return strings.Join(addNodesTask.NodeIPs, ",")
 				}(),
 				ImageId:         "",
-				TranslateMethod: template.SystemPreInit,
+				TranslateMethod: template.SystemBeforeInit,
+				AllowSkip:       true,
 			}}.BuildSopsStep(task, opt.Cloud.ClusterManagement.AddNodesToCluster, true)
 		if err != nil {
 			return nil, fmt.Errorf("BuildAddNodesToClusterTask BuildBkSopsStepAction failed: %v", err)

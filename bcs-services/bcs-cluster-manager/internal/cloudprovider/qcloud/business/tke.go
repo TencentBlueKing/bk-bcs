@@ -516,7 +516,7 @@ func GenerateNTAddExistedInstanceReq(ctx context.Context, info *cloudprovider.Cl
 
 					// only handle cvm first /dev/vdb disk
 					if disk.DiskCount >= 1 {
-						overrideInstanceAdvanced.DataDisks = []api.DataDetailDisk{api.GetDefaultDataDisk("")}
+						overrideInstanceAdvanced.DataDisks = []api.DataDetailDisk{api.GetDefaultDataDisk(api.Ext4)}
 					}
 
 					req.InstanceAdvancedSettingsOverrides = append(req.InstanceAdvancedSettingsOverrides,
@@ -555,7 +555,7 @@ func genGpuAdvSettingOverride(req *api.AddExistedInstanceReq, info *cloudprovide
 
 					// only handle cvm first /dev/vdb disk
 					if disk.DiskCount >= 1 {
-						overrideInstanceAdvanced.DataDisks = []api.DataDetailDisk{api.GetDefaultDataDisk("")}
+						overrideInstanceAdvanced.DataDisks = []api.DataDetailDisk{api.GetDefaultDataDisk(api.Ext4)}
 					}
 					overrideInstanceAdvanced.GPUArgs = generateGPUArgs(gpuNodeTemplate.GpuArgs)
 
@@ -679,6 +679,7 @@ func GenerateGPUAddExistedInstanceReqs(ctx context.Context, info *cloudprovider.
 
 	reqs := make([]*api.AddExistedInstanceReq, 0)
 
+	// GPU节点分类, 将相同模版的节点进行聚合
 	imagesToGpuNodesInfoMap, err := getImagesToGpuNodesInfoMap(nodeIDs, info)
 	if err != nil {
 		blog.Errorf("AddNodesToCluster[%s] getNodesImagesToIdsMap failed: %v", taskID, err)
@@ -766,41 +767,39 @@ func generateGpuInfoInNGReq(ctx context.Context, req *api.AddExistedInstanceReq,
 			nodeIDs, err.Error())
 		return
 	}
-	isGpuNode := true
 	for _, node := range nodes {
 		if !node.GetIsGpuNode() {
 			return
 		}
 	}
 
-	if isGpuNode {
-		instanceType := info.NodeGroup.GetLaunchTemplate().GetInstanceType()
-		gpuNodeTemplate, err := cloudprovider.GetGpuNodeTemplate(instanceType)
-		if err != nil || gpuNodeTemplate == nil {
+	instanceType := info.NodeGroup.GetLaunchTemplate().GetInstanceType()
+	gpuNodeTemplate, err := cloudprovider.GetGpuNodeTemplate(instanceType)
+	if err != nil || gpuNodeTemplate == nil {
+		blog.Errorf("GenerateNGAddExistedInstanceReq instances[%v] GetGpuNodeTemplate failed, err:[%s]",
+			instanceType, err)
+		cloudprovider.GetStorageModel().CreateTaskStepLogWarn(context.Background(), taskID, stepName,
+			fmt.Sprintf("GenerateNGAddExistedInstanceReq instances[%v] not found GPUNodeTemplate, err:[%s], "+
+				"falling back to default settings", instanceType, err))
+
+		// if not find gpu node template, use default gpu node template
+		defaultGpuNodeTemplate, localErr := cloudprovider.GetGpuNodeTemplate(common.DefaultGpuNodeTemplateName)
+		if localErr != nil {
 			blog.Errorf("GenerateNGAddExistedInstanceReq instances[%v] GetGpuNodeTemplate failed, err:[%s]",
-				instanceType, err)
-			cloudprovider.GetStorageModel().CreateTaskStepLogWarn(context.Background(), taskID, stepName,
-				fmt.Sprintf("GenerateNGAddExistedInstanceReq instances[%v] not found GPUNodeTemplate, err:[%s], "+
-					"falling back to default settings", instanceType, err))
-
-			// if not find gpu node template, use default gpu node template
-			defaultGpuNodeTemplate, localErr := cloudprovider.GetGpuNodeTemplate(common.DefaultGpuNodeTemplateName)
-			if localErr != nil {
-				blog.Errorf("GenerateNGAddExistedInstanceReq instances[%v] GetGpuNodeTemplate failed, err:[%s]",
-					instanceType, localErr)
-				return
-			}
-			gpuNodeTemplate = defaultGpuNodeTemplate
+				instanceType, localErr)
+			return
 		}
-
-		req.ImageId = setImageIdFromNodeTemplate(gpuNodeTemplate, info.CmOption)
-		req.AdvancedSetting.GPUArgs = generateGPUArgs(gpuNodeTemplate.GetGpuArgs())
-
-		gpuArgsJSON, _ := json.Marshal(req.AdvancedSetting.GPUArgs)
-		cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
-			fmt.Sprintf("GenerateNGAddExistedInstanceReq instances[%v] found GPUNodeTemplate, "+
-				"gpuArgs:[%s], imageId:[%s]", instanceType, gpuArgsJSON, req.ImageId))
+		gpuNodeTemplate = defaultGpuNodeTemplate
 	}
+
+	req.ImageId = setImageIdFromNodeTemplate(gpuNodeTemplate, info.CmOption)
+	req.AdvancedSetting.GPUArgs = generateGPUArgs(gpuNodeTemplate.GetGpuArgs())
+
+	gpuArgsJSON, _ := json.Marshal(req.AdvancedSetting.GPUArgs)
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		fmt.Sprintf("GenerateNGAddExistedInstanceReq instances[%v] found GPUNodeTemplate, "+
+			"gpuArgs:[%s], imageId:[%s]", instanceType, gpuArgsJSON, req.ImageId))
+
 }
 
 func setImageIdFromNodeTemplate(nodeTemplate *proto.NodeTemplate, cmOption *cloudprovider.CommonOption) string {
@@ -1183,6 +1182,7 @@ type gpuNodesInfo struct {
 func getImagesToGpuNodesInfoMap(
 	nodeIds []string, info *cloudprovider.CloudDependBasicInfo) (map[string]*gpuNodesInfo, error) {
 	imageToGpuNodesInfo := make(map[string]*gpuNodesInfo)
+	// 获取每个GPU节点使用的模版
 	gpuNodeTemplatesMap, err := getGPUNodeTemplatesMapByNodeIDs(nodeIds, info.CmOption)
 	if err != nil {
 		blog.Errorf("gpuNodeTemplatesMap[%s] failed: %v", nodeIds, err)
@@ -1204,6 +1204,7 @@ func getImagesToGpuNodesInfoMap(
 				}
 			}
 
+			// 使用相同镜像的节点聚合
 			if _, exists := imageToGpuNodesInfo[imageID]; !exists {
 				imageToGpuNodesInfo[imageID] = &gpuNodesInfo{
 					nodeIds:         []string{nodeId},
