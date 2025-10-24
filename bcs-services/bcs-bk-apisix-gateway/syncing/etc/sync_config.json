@@ -1,0 +1,24 @@
+{
+  "etcd_conf": {
+    "etcd_ca_cert": "",
+    "etcd_cert_cert": "",
+    "etcd_cert_key": "",
+    "etcd_endpoints": ["http://127.0.0.1:2379"],
+    "etcd_password": "",
+    "etcd_prefix": "/prefix",
+    "etcd_schema_type": "http",
+    "etcd_username": ""
+  },
+  "gateway_conf": {
+    "gateway_host": "https://example.com",
+    "x_bk_api_token": "",
+    "apisix_type": "apisix",
+    "apisix_version": "3.13.0",
+    "description": "",
+    "maintainers": [],
+    "mode": 0,
+    "name": "bcs-test-apisix",
+    "read_only": false,
+    "resources_path": "/resources"
+  }
+}
