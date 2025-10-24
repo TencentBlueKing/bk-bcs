@@ -474,7 +474,11 @@
           </template>
         </bk-alert>
         <bk-form :ref="steps[3].formRef" :model="nodesConfig" :rules="nodesConfigRules" class="mt-[16px]">
-          <bk-form-item :label-width="0.1" class="tips-offset" property="nodes" error-display-type="normal">
+          <bk-form-item
+            class="tips-offset"
+            error-display-type="normal"
+            :label-width="0.1"
+            :property="manageType === 'INDEPENDENT_CLUSTER' ? 'nodes' : ''">
             <ApplyHost
               :region="networkConfig.region"
               :cloud-id="basicInfo.provider"
