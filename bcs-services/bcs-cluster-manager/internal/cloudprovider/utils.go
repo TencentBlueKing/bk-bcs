@@ -59,6 +59,8 @@ const (
 	WatchTask = "watchjob"
 	// InstallImagePullSecretAddonAction imagePull component common job
 	InstallImagePullSecretAddonAction = "installImagePullSecret"
+	// RemoveDataFromCmdbAction remove cmdb data action
+	RemoveDataFromCmdbAction = "removeDataFromCmdb"
 	// RemoveHostFromCmdbAction remove host action
 	RemoveHostFromCmdbAction = "removeHostFromCmdb"
 	// CheckNodeIpsInCmdbAction check node if in cmdb
@@ -108,7 +110,7 @@ const (
 	// NodeDrainPodAction 节点驱逐pod
 	NodeDrainPodAction = "nodeDrainPod"
 	// InstallLogCollectorAddonAction 安装日志采集组件
-	InstallLogCollectorAddonAction = "installLogCollectorAddon"
+	InstallLogCollectorAddonAction = "installLogCollectorAddon" // nolint
 )
 
 var (

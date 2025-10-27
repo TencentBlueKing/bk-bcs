@@ -1147,3 +1147,336 @@ func (c *Client) SyncHostInfoFromCmpy(bkCloudId int, bkHostIds []int64) error {
 
 	return nil
 }
+
+// GetBcsPod get pod
+func (c *Client) GetBcsPod(req *GetBcsPodReq) (*[]Pod, error) {
+	reqURL := fmt.Sprintf("%s/api/bk-cmdb/prod/api/v3/findmany/kube/pod", c.server)
+	respData := &GetBcsPodResp{}
+
+	resp, _, errs := gorequest.New().
+		Timeout(defaultTimeOut).
+		Post(reqURL).
+		Set("Content-Type", "application/json").
+		Set("Accept", "application/json").
+		Set("X-Bkapi-Authorization", c.userAuth).
+		SetDebug(c.serverDebug).
+		Send(req).
+		Retry(3, 3*time.Second, 429).
+		EndStruct(&respData)
+	if len(errs) > 0 {
+		blog.Errorf("call api list_pod failed: %v", errs[0])
+		return nil, errs[0]
+	}
+
+	if !respData.Result {
+		blog.Errorf("call api list_pod failed: %v, rid: %s",
+			respData.Message, resp.Header.Get("X-Request-Id"))
+		return nil, fmt.Errorf(respData.Message)
+	}
+
+	blog.Infof("call api list_pod with url(%s) (%v) successfully, X-Request-Id: %s",
+		reqURL, req, resp.Header.Get("X-Request-Id"))
+
+	return respData.Data.Info, nil
+}
+
+// DeleteBcsPod delete pod
+func (c *Client) DeleteBcsPod(req *DeleteBcsPodReq) error {
+	reqURL := fmt.Sprintf("%s/api/bk-cmdb/prod/api/v3/deletemany/kube/pod", c.server)
+	respData := &DeleteBcsPodResp{}
+
+	resp, _, errs := gorequest.New().
+		Timeout(defaultTimeOut).
+		Delete(reqURL).
+		Set("Content-Type", "application/json").
+		Set("Accept", "application/json").
+		Set("X-Bkapi-Authorization", c.userAuth).
+		SetDebug(c.serverDebug).
+		Send(req).
+		Retry(3, 3*time.Second, 429).
+		EndStruct(&respData)
+	if len(errs) > 0 {
+		blog.Errorf("call api batch_delete_kube_pod failed: %v", errs[0])
+		return errs[0]
+	}
+
+	if !respData.Result {
+		blog.Errorf("call api batch_delete_kube_pod failed: %v, rid: %s",
+			respData.Message, resp.Header.Get("X-Request-Id"))
+		return fmt.Errorf(respData.Message)
+	}
+
+	blog.Infof("call api batch_delete_kube_pod with url(%s) (%v) successfully, X-Request-Id: %s",
+		reqURL, req, resp.Header.Get("X-Request-Id"))
+
+	return nil
+}
+
+// GetBcsWorkload get workload
+func (c *Client) GetBcsWorkload(req *GetBcsWorkloadReq) (*[]interface{}, error) {
+	reqURL := fmt.Sprintf("%s/api/bk-cmdb/prod/api/v3/findmany/kube/workload/%s", c.server, req.Kind)
+	respData := &GetBcsWorkloadResp{}
+
+	resp, _, errs := gorequest.New().
+		Timeout(defaultTimeOut).
+		Post(reqURL).
+		Set("Content-Type", "application/json").
+		Set("Accept", "application/json").
+		Set("X-Bkapi-Authorization", c.userAuth).
+		SetDebug(c.serverDebug).
+		Send(req).
+		Retry(3, 3*time.Second, 429).
+		EndStruct(&respData)
+	if len(errs) > 0 {
+		blog.Errorf("call api list_workload failed: %v, rid: %s", errs[0], respData.RequestID)
+		return nil, errs[0]
+	}
+
+	if !respData.Result {
+		blog.Errorf("call api list_workload failed: %v, rid: %s",
+			respData.Message, resp.Header.Get("X-Request-Id"))
+		return nil, fmt.Errorf(respData.Message)
+	}
+
+	blog.Infof("call api list_workload with url(%s) (%v) successfully, X-Request-Id: %s",
+		reqURL, req, resp.Header.Get("X-Request-Id"))
+
+	return &respData.Data.Info, nil
+}
+
+// DeleteBcsWorkload delete workload
+func (c *Client) DeleteBcsWorkload(req *DeleteBcsWorkloadReq) error {
+	reqURL := fmt.Sprintf("%s/api/bk-cmdb/prod/api/v3/deletemany/kube/workload/%s", c.server, *req.Kind)
+	respData := &DeleteBcsWorkloadResp{}
+
+	resp, _, errs := gorequest.New().
+		Timeout(defaultTimeOut).
+		Delete(reqURL).
+		Set("Content-Type", "application/json").
+		Set("Accept", "application/json").
+		Set("X-Bkapi-Authorization", c.userAuth).
+		SetDebug(c.serverDebug).
+		Send(req).
+		Retry(3, 3*time.Second, 429).
+		EndStruct(&respData)
+	if len(errs) > 0 {
+		blog.Errorf("call api batch_delete_workload failed: %v", errs[0])
+		return errs[0]
+	}
+
+	if !respData.Result {
+		blog.Errorf(
+			"call api batch_delete_workload failed: %v, rid: %s, request: bkbizid: %d, kind: %s, ids: %v",
+			respData.Message, resp.Header.Get("X-Request-Id"), *req.BKBizID, *req.Kind, *req.IDs)
+		return fmt.Errorf(respData.Message)
+	}
+
+	blog.Infof("call api batch_delete_workload with url(%s) (%v) successfully, X-Request-Id: %s",
+		reqURL, req, resp.Header.Get("X-Request-Id"))
+
+	return nil
+}
+
+// GetBcsNamespace get namespace
+func (c *Client) GetBcsNamespace(req *GetBcsNamespaceReq) (*[]Namespace, error) {
+	reqURL := fmt.Sprintf("%s/api/bk-cmdb/prod/api/v3/findmany/kube/namespace", c.server)
+	respData := &GetBcsNamespaceResp{}
+
+	resp, _, errs := gorequest.New().
+		Timeout(defaultTimeOut).
+		Post(reqURL).
+		Set("Content-Type", "application/json").
+		Set("Accept", "application/json").
+		Set("X-Bkapi-Authorization", c.userAuth).
+		SetDebug(c.serverDebug).
+		Send(req).
+		Retry(3, 3*time.Second, 429).
+		EndStruct(&respData)
+	if len(errs) > 0 {
+		blog.Errorf("call api list_namespace failed: %v", errs[0])
+		return nil, errs[0]
+	}
+
+	if !respData.Result {
+		blog.Errorf("call api list_namespace failed: %v, rid: %s",
+			respData.Message, resp.Header.Get("X-Request-Id"))
+		return nil, fmt.Errorf(respData.Message)
+	}
+
+	blog.Infof("call api list_namespace with url(%s) (%v) successfully, X-Request-Id: %s",
+		reqURL, req, resp.Header.Get("X-Request-Id"))
+
+	return respData.Data.Info, nil
+}
+
+// DeleteBcsNamespace delete namespace
+func (c *Client) DeleteBcsNamespace(req *DeleteBcsNamespaceReq) error {
+	reqURL := fmt.Sprintf("%s/api/bk-cmdb/prod/api/v3/deletemany/kube/namespace", c.server)
+	respData := &DeleteBcsNamespaceResp{}
+
+	resp, _, errs := gorequest.New().
+		Timeout(defaultTimeOut).
+		Delete(reqURL).
+		Set("Content-Type", "application/json").
+		Set("Accept", "application/json").
+		Set("X-Bkapi-Authorization", c.userAuth).
+		SetDebug(c.serverDebug).
+		Send(req).
+		Retry(3, 3*time.Second, 429).
+		EndStruct(&respData)
+	if len(errs) > 0 {
+		blog.Errorf("call api batch_delete_namespace failed: %v", errs[0])
+		return errs[0]
+	}
+
+	if !respData.Result {
+		blog.Errorf("call api batch_delete_namespace failed: %v, rid: %s",
+			respData.Message, resp.Header.Get("X-Request-Id"))
+		return fmt.Errorf(respData.Message)
+	}
+
+	blog.Infof("call api batch_delete_namespace with url(%s) (%v) successfully, X-Request-Id: %s",
+		reqURL, req, resp.Header.Get("X-Request-Id"))
+
+	return nil
+}
+
+// GetBcsNode get node
+func (c *Client) GetBcsNode(req *GetBcsNodeReq) (*[]Node, error) {
+	reqURL := fmt.Sprintf("%s/api/bk-cmdb/prod/api/v3/findmany/kube/node", c.server)
+	respData := &GetBcsNodeResp{}
+
+	resp, _, errs := gorequest.New().
+		Timeout(defaultTimeOut).
+		Post(reqURL).
+		Set("Content-Type", "application/json").
+		Set("Accept", "application/json").
+		Set("X-Bkapi-Authorization", c.userAuth).
+		SetDebug(c.serverDebug).
+		Send(req).
+		Retry(3, 3*time.Second, 429).
+		EndStruct(&respData)
+	if len(errs) > 0 {
+		blog.Errorf("call api list_kube_node failed: %v", errs[0])
+		return nil, errs[0]
+	}
+
+	if !respData.Result {
+		blog.Errorf("call api list_kube_node failed: %v, rid: %s",
+			respData.Message, resp.Header.Get("X-Request-Id"))
+		return nil, fmt.Errorf(respData.Message)
+	}
+
+	blog.Infof("call api list_kube_node with url(%s) (%v) successfully, X-Request-Id: %s",
+		reqURL, req, resp.Header.Get("X-Request-Id"))
+
+	return respData.Data.Info, nil
+}
+
+// DeleteBcsNode delete node
+func (c *Client) DeleteBcsNode(req *DeleteBcsNodeReq) error {
+	reqURL := fmt.Sprintf("%s/api/bk-cmdb/prod/api/v3/deletemany/kube/node", c.server)
+	respData := &DeleteBcsNodeResp{}
+
+	resp, _, errs := gorequest.New().
+		Timeout(defaultTimeOut).
+		Delete(reqURL).
+		Set("Content-Type", "application/json").
+		Set("Accept", "application/json").
+		Set("X-Bkapi-Authorization", c.userAuth).
+		SetDebug(c.serverDebug).
+		Send(req).
+		Retry(3, 3*time.Second, 429).
+		EndStruct(&respData)
+	if len(errs) > 0 {
+		blog.Errorf("call api batch_delete_kube_node failed: %v", errs[0])
+		return errs[0]
+	}
+
+	if !respData.Result {
+		blog.Errorf("call api batch_delete_kube_node failed: %v, rid: %s",
+			respData.Message, resp.Header.Get("X-Request-Id"))
+		return fmt.Errorf(respData.Message)
+	}
+
+	blog.Infof("call api batch_delete_kube_node with url(%s) (%v) successfully, X-Request-Id: %s",
+		reqURL, req, resp.Header.Get("X-Request-Id"))
+
+	return nil
+}
+
+// GetBcsCluster get cluster
+func (c *Client) GetBcsCluster(req *GetBcsClusterReq) (*[]Cluster, error) {
+	// 如果没有通过数据库查询，则通过API调用获取集群信息
+	reqURL := fmt.Sprintf("%s/api/bk-cmdb/prod/api/v3/findmany/kube/cluster", c.server)
+	respData := &GetBcsClusterResp{}
+	// 使用gorequest库发送POST请求，并处理响应
+	resp, _, errs := gorequest.New().
+		Timeout(defaultTimeOut).
+		Post(reqURL).
+		Set("Content-Type", "application/json").
+		Set("Accept", "application/json").
+		Set("X-Bkapi-Authorization", c.userAuth).
+		SetDebug(c.serverDebug).
+		Send(req).
+		Retry(3, 3*time.Second, 429).
+		EndStruct(&respData)
+	// 检查是否有错误发生
+	if len(errs) > 0 {
+		blog.Errorf("call api list_kube_cluster failed: %v", errs[0])
+		return nil, errs[0]
+	}
+
+	// 检查API响应是否成功
+	if !respData.Result {
+		blog.Errorf("call api list_kube_cluster failed: %v, rid: %s",
+			respData.Message, resp.Header.Get("X-Request-Id"))
+		return nil, fmt.Errorf(respData.Message)
+	}
+
+	blog.Infof("call api list_kube_cluster with url(%s) (%v) successfully, X-Request-Id: %s",
+		reqURL, req, resp.Header.Get("X-Request-Id"))
+
+	return &respData.Data.Info, nil
+}
+
+// DeleteBcsCluster delete bcs cluster
+func (c *Client) DeleteBcsCluster(req *DeleteBcsClusterReq) error {
+	// 构造请求的 URL
+	reqURL := fmt.Sprintf("%s/api/bk-cmdb/prod/api/v3/delete/kube/cluster", c.server)
+	// 初始化响应数据结构
+	respData := &DeleteBcsClusterResp{}
+
+	// 使用 gorequest 库发送 HTTP DELETE 请求
+	// 设置请求超时时间、内容类型、接受类型、授权头等信息
+	// 发送请求体并尝试重试，最多重试3次，每次间隔3秒，如果遇到429状态码也会重试
+	resp, _, errs := gorequest.New().
+		Timeout(defaultTimeOut).
+		Delete(reqURL).
+		Set("Content-Type", "application/json").
+		Set("Accept", "application/json").
+		Set("X-Bkapi-Authorization", c.userAuth).
+		SetDebug(c.serverDebug).
+		Send(req).
+		Retry(3, 3*time.Second, 429).
+		EndStruct(&respData)
+
+	// 如果请求过程中出现错误，则记录错误并返回
+	if len(errs) > 0 {
+		blog.Errorf("call api batch_delete_kube_cluster failed: %v", errs[0])
+		return errs[0]
+	}
+
+	// 如果响应结果指示操作失败，则记录错误信息并返回错误
+	if !respData.Result {
+		blog.Errorf("call api batch_delete_kube_cluster failed: %v, rid: %s",
+			respData.Message, resp.Header.Get("X-Request-Id"))
+		return fmt.Errorf(respData.Message)
+	}
+
+	// 如果操作成功，则记录成功的日志信息
+	blog.Infof("call api batch_delete_kube_cluster with url(%s) (%v) successfully, X-Request-Id: %s",
+		reqURL, req, resp.Header.Get("X-Request-Id"))
+
+	return nil
+}

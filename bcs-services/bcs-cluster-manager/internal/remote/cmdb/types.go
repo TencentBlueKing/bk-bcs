@@ -518,3 +518,249 @@ type SyncHostInfoFromCmpyReq struct {
 type SyncHostInfoFromCmpyResp struct {
 	BaseResponse
 }
+
+// GetBcsPodReq defines the structure of the request for getting BCS pods.
+type GetBcsPodReq struct {
+	BKBizID int64               `json:"bk_biz_id"`
+	Page    Page                `json:"page"`
+	Fields  []string            `json:"fields"`
+	Filter  *HostPropertyFilter `json:"filter"`
+}
+
+// GetBcsPodResp defines the structure of the response for getting BCS pods.
+type GetBcsPodResp struct {
+	BaseResponse
+	Data *GetBcsPodRespData `json:"data"`
+}
+
+// GetBcsPodRespData defines the structure of the response data for getting BCS pods.
+type GetBcsPodRespData struct {
+	Count int    `json:"count"`
+	Info  *[]Pod `json:"info"`
+}
+
+// Pod pod details
+type Pod struct {
+	// cc的自增主键
+	ID            int64              `json:"id"`
+	Name          *string            `json:"name"`
+	Priority      *int32             `json:"priority"`
+	Labels        *map[string]string `json:"labels"`
+	IP            *string            `json:"ip"`
+	NodeSelectors *map[string]string `json:"node_selectors"`
+	Operator      *[]string          `json:"operator"`
+}
+
+// DeleteBcsPodReq defines the request structure for deleting a BCS pod.
+type DeleteBcsPodReq struct {
+	Data *[]DeleteBcsPodReqData `json:"data"`
+}
+
+// DeleteBcsPodReqData defines the data structure in the DeleteBcsPodRequest.
+type DeleteBcsPodReqData struct {
+	BKBizID *int64   `json:"bk_biz_id"`
+	IDs     *[]int64 `json:"ids"`
+}
+
+// DeleteBcsPodResp defines the response structure for deleting a BCS pod.
+type DeleteBcsPodResp struct {
+	BaseResponse
+	Data interface{} `json:"data"`
+}
+
+// GetBcsWorkloadReq represents a request for getting BCS workload
+type GetBcsWorkloadReq struct {
+	BKBizID int64               `json:"bk_biz_id"`
+	Page    Page                `json:"page"`
+	Fields  []string            `json:"fields"`
+	Filter  *HostPropertyFilter `json:"filter"`
+	Kind    string              `json:"kind"`
+}
+
+// GetBcsWorkloadResp represents a response for getting BCS workload
+type GetBcsWorkloadResp struct {
+	BaseResponse
+	Data *GetBcsWorkloadRespData `json:"data"`
+}
+
+// GetBcsWorkloadRespData represents the data structure of the response for getting BCS workload
+type GetBcsWorkloadRespData struct {
+	Count int64         `json:"count"`
+	Info  []interface{} `json:"info"`
+}
+
+// DeleteBcsWorkloadReq defines the structure of the request for deleting a BCS workload.
+type DeleteBcsWorkloadReq struct {
+	BKBizID *int64   `json:"bk_biz_id"`
+	Kind    *string  `json:"kind"`
+	IDs     *[]int64 `json:"ids"`
+}
+
+// DeleteBcsWorkloadResp defines the structure of the response for deleting a BCS workload.
+type DeleteBcsWorkloadResp struct {
+	BaseResponse
+	Data interface{} `json:"data"`
+}
+
+// GetBcsNamespaceReq represents the request for getting a BCS namespace
+type GetBcsNamespaceReq struct {
+	BKBizID int64               `json:"bk_biz_id"`
+	Page    Page                `json:"page"`
+	Fields  []string            `json:"fields"`
+	Filter  *HostPropertyFilter `json:"filter"`
+}
+
+// Namespace define the namespace struct.
+type Namespace struct {
+	ID              int64              `json:"id"`
+	Name            string             `json:"name"`
+	Labels          *map[string]string `json:"labels"`
+	SupplierAccount string             `json:"bk_supplier_account"`
+}
+
+// GetBcsNamespaceResp represents the response for getting a BCS namespace
+type GetBcsNamespaceResp struct {
+	BaseResponse
+	Data *GetBcsNamespaceRespData `json:"data"`
+}
+
+// GetBcsNamespaceRespData represents the data for getting a BCS namespace
+type GetBcsNamespaceRespData struct {
+	Count int64        `json:"count"`
+	Info  *[]Namespace `json:"info"`
+}
+
+// DeleteBcsNamespaceReq represents the request for deleting a BCS namespace
+type DeleteBcsNamespaceReq struct {
+	BKBizID *int64   `json:"bk_biz_id"`
+	IDs     *[]int64 `json:"ids"`
+}
+
+// DeleteBcsNamespaceResp represents the response for deleting a BCS namespace
+type DeleteBcsNamespaceResp struct {
+	BaseResponse
+	Data interface{} `json:"data"`
+}
+
+// GetBcsNodeReq defines the structure of the request for getting BCS nodes.
+type GetBcsNodeReq struct {
+	BKBizID int64               `json:"bk_biz_id"`
+	Page    Page                `json:"page"`
+	Fields  []string            `json:"fields"`
+	Filter  *HostPropertyFilter `json:"filter"`
+}
+
+// Node node structural description.
+type Node struct {
+	// ID cluster auto-increment ID in cc
+	ID int64 `json:"id,omitempty" bson:"id"`
+	// BizID the business ID to which the cluster belongs
+	BizID int64 `json:"bk_biz_id,omitempty" bson:"bk_biz_id"`
+	// SupplierAccount the supplier account that this resource belongs to.
+	SupplierAccount string `json:"bk_supplier_account,omitempty" bson:"bk_supplier_account"`
+	// HostID the node ID to which the host belongs
+	HostID int64 `json:"bk_host_id,omitempty" bson:"bk_host_id"`
+	// ClusterID the node ID to which the cluster belongs
+	ClusterID int64 `json:"bk_cluster_id,omitempty" bson:"bk_cluster_id"`
+	// ClusterUID the node ID to which the cluster belongs
+	ClusterUID string `json:"cluster_uid,omitempty" bson:"cluster_uid"`
+	// HasPod this field indicates whether there is a pod in the node.
+	// if there is a pod, this field is true. If there is no pod, this
+	// field is false. this field is false when node is created by default.
+	HasPod           *bool     `json:"has_pod,omitempty" bson:"has_pod"`
+	Name             *string   `json:"name,omitempty" bson:"name"`
+	Roles            *string   `json:"roles,omitempty" bson:"roles"`
+	Unschedulable    *bool     `json:"unschedulable,omitempty" bson:"unschedulable"`
+	InternalIP       *[]string `json:"internal_ip,omitempty" bson:"internal_ip"`
+	ExternalIP       *[]string `json:"external_ip,omitempty" bson:"external_ip"`
+	HostName         *string   `json:"hostname,omitempty" bson:"hostname"`
+	RuntimeComponent *string   `json:"runtime_component,omitempty" bson:"runtime_component"`
+	KubeProxyMode    *string   `json:"kube_proxy_mode,omitempty" bson:"kube_proxy_mode"`
+	PodCidr          *string   `json:"pod_cidr,omitempty" bson:"pod_cidr"`
+}
+
+// GetBcsNodeResp defines the structure of the response for getting BCS nodes.
+type GetBcsNodeResp struct {
+	BaseResponse
+	Data *GetBcsNodeRespData `json:"data"`
+}
+
+// GetBcsNodeRespData defines the structure of the response data for getting BCS nodes.
+type GetBcsNodeRespData struct {
+	Count int64   `json:"count"`
+	Info  *[]Node `json:"info"`
+}
+
+// DeleteBcsNodeReq defines the structure of the request for deleting BCS nodes.
+type DeleteBcsNodeReq struct {
+	BKBizID *int64   `json:"bk_biz_id"`
+	IDs     *[]int64 `json:"ids"`
+}
+
+// DeleteBcsNodeResp defines the structure of the response for deleting BCS nodes.
+type DeleteBcsNodeResp struct {
+	BaseResponse
+	Data interface{} `json:"data"`
+}
+
+// GetBcsClusterReq defines the request structure for getting BCS cluster information.
+type GetBcsClusterReq struct {
+	BKBizID int64               `json:"bk_biz_id"`
+	Page    Page                `json:"page"`
+	Fields  []string            `json:"fields"`
+	Filter  *HostPropertyFilter `json:"filter"`
+}
+
+// Cluster container cluster table structure
+type Cluster struct {
+	// ID cluster auto-increment ID in cc
+	ID int64 `json:"id" bson:"id"`
+	// BizID the business ID to which the cluster belongs
+	BizID int64 `json:"bk_biz_id" bson:"bk_biz_id"`
+	// SupplierAccount the supplier account that this resource belongs to.
+	SupplierAccount string `json:"bk_supplier_account" bson:"bk_supplier_account"`
+	// Name cluster name.
+	Name *string `json:"name,omitempty" bson:"name"`
+	// SchedulingEngine scheduling engines, such as k8s, tke, etc.
+	SchedulingEngine *string `json:"scheduling_engine,omitempty" bson:"scheduling_engine"`
+	// Uid ID of the cluster itself
+	Uid *string `json:"uid,omitempty" bson:"uid"`
+	// Xid The underlying cluster ID it depends on
+	Xid *string `json:"xid,omitempty" bson:"xid"`
+	// Version cluster version
+	Version *string `json:"version,omitempty" bson:"version"`
+	// NetworkType network type, such as overlay or underlay
+	NetworkType *string `json:"network_type,omitempty" bson:"network_type"`
+	// Region the region where the cluster is located
+	Region *string `json:"region,omitempty" bson:"region"`
+	// Vpc vpc network
+	Vpc *string `json:"vpc,omitempty" bson:"vpc"`
+	// Environment cluster environment
+	Environment *string `json:"environment,omitempty" bson:"environment"`
+	// NetWork global routing network address (container overlay network) For example: ["1.1.1.0/21"]
+	NetWork *[]string `json:"network,omitempty" bson:"network"`
+}
+
+// GetBcsClusterResp defines the response structure for getting BCS cluster information.
+type GetBcsClusterResp struct {
+	BaseResponse
+	Data GetBcsClusterRespData `json:"data"`
+}
+
+// GetBcsClusterRespData defines the data structure for getting BCS cluster information.
+type GetBcsClusterRespData struct {
+	Count int64     `json:"count"`
+	Info  []Cluster `json:"info"`
+}
+
+// DeleteBcsClusterReq represents the request for deleting a BCS cluster
+type DeleteBcsClusterReq struct {
+	BKBizID *int64   `json:"bk_biz_id"`
+	IDs     *[]int64 `json:"ids"`
+}
+
+// DeleteBcsClusterResp represents the response for deleting a BCS cluster
+type DeleteBcsClusterResp struct {
+	BaseResponse
+	Data interface{} `json:"data"`
+}

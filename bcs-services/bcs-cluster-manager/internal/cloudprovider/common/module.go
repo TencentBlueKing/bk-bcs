@@ -43,6 +43,12 @@ var (
 		StepName:   "转移主机模块",
 	}
 
+	// removeDataFromCmdbStep remove data from cmdb step
+	removeDataFromCmdbStep = cloudprovider.StepInfo{
+		StepMethod: cloudprovider.RemoveDataFromCmdbAction,
+		StepName:   "移除主机数据",
+	}
+
 	// removeHostFromCmdbStep remove host from cmdb step
 	removeHostFromCmdbStep = cloudprovider.StepInfo{
 		StepMethod: cloudprovider.RemoveHostFromCmdbAction,
@@ -66,6 +72,18 @@ func BuildTransferHostModuleStep(task *proto.Task, businessID string, moduleID s
 
 	task.Steps[transferHostModuleStep.StepMethod] = transStep
 	task.StepSequence = append(task.StepSequence, transferHostModuleStep.StepMethod)
+}
+
+// BuildRemoveCmdbDataStep build common remove data from cmdb step
+func BuildRemoveCmdbDataStep(task *proto.Task, bizID string, clusterID string, nodeNames []string) {
+	removeStep := cloudprovider.InitTaskStep(removeDataFromCmdbStep, cloudprovider.WithStepSkipFailed(true))
+
+	removeStep.Params[cloudprovider.BKBizIDKey.String()] = bizID
+	removeStep.Params[cloudprovider.ClusterIDKey.String()] = clusterID
+	removeStep.Params[cloudprovider.NodeNamesKey.String()] = strings.Join(nodeNames, ",")
+
+	task.Steps[removeDataFromCmdbStep.StepMethod] = removeStep
+	task.StepSequence = append(task.StepSequence, removeDataFromCmdbStep.StepMethod)
 }
 
 // BuildRemoveHostStep build common remove host from cmdb step
@@ -716,4 +734,237 @@ func handleNotInCmdbNodeIps(ctx context.Context, notInCmdbIps []HostInfo) error 
 	}
 
 	return nil
+}
+
+// RemoveDataFromCMDBTask remove data from cmdb task
+func RemoveDataFromCMDBTask(taskID string, stepName string) error { // nolint
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"remove cmdb data from cmdb")
+	start := time.Now()
+	// get task information and validate
+	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
+	if err != nil {
+		return err
+	}
+	if step == nil {
+		return nil
+	}
+
+	// get bkBizID
+	bkBizIDString := step.Params[cloudprovider.BKBizIDKey.String()]
+	// get nodeIPs
+	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
+	nodeNamesString := step.Params[cloudprovider.NodeNamesKey.String()]
+
+	nodeNames := strings.Split(nodeNamesString, ",")
+	if len(nodeNames) == 0 {
+		blog.Errorf("RemoveDataFromCMDBTask %s failed, nodeNames empty", taskID)
+		_ = state.SkipFailure(start, stepName, fmt.Errorf("nodeNames empty"))
+		return nil
+	}
+
+	bkBizID, err := strconv.ParseInt(bkBizIDString, 10, 64)
+	if err != nil {
+		blog.Errorf("RemoveDataFromCMDBTask %s failed, invalid bkBizID, err %s", taskID, err.Error())
+		_ = state.SkipFailure(start, stepName, fmt.Errorf("invalid bkBizID, err %s", err.Error()))
+		return nil
+	}
+
+	bkNodeIDs := make([]int64, 0)
+	err = retry.Do(func() error {
+		var errLocal error
+		if bkNodeIDs, errLocal = getAllNodeID(bkBizID, clusterID, nodeNames); errLocal != nil {
+			return errLocal
+		}
+
+		return nil
+	}, retry.Attempts(3), retry.DelayType(retry.FixedDelay), retry.Delay(time.Millisecond*500))
+	if err != nil {
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
+			fmt.Sprintf("getAllNodeID failed [%s]", err))
+		blog.Errorf("RemoveDataFromCMDBTask[%s] failed: %v", taskID, err)
+		_ = state.SkipFailure(start, stepName, err)
+		return nil
+	}
+
+	if len(bkNodeIDs) > 0 {
+		err = retry.Do(func() error {
+			if errLocal := deleteAll2IDPod(bkBizID, bkNodeIDs); errLocal != nil {
+				return errLocal
+			}
+
+			return nil
+		}, retry.Attempts(3), retry.DelayType(retry.FixedDelay), retry.Delay(time.Millisecond*500))
+		if err != nil {
+			cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
+				fmt.Sprintf("deleteAll2IDPod failed [%s]", err))
+			blog.Errorf("RemoveDataFromCMDBTask[%s] failed: %v", taskID, err)
+			_ = state.SkipFailure(start, stepName, err)
+			return nil
+		}
+
+		err = retry.Do(func() error {
+			if errLocal := deleteAll2IDIDNode(bkBizID, bkNodeIDs); errLocal != nil {
+				return errLocal
+			}
+
+			return nil
+		}, retry.Attempts(3), retry.DelayType(retry.FixedDelay), retry.Delay(time.Millisecond*500))
+		if err != nil {
+			cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
+				fmt.Sprintf("deleteAll2IDIDNode failed [%s]", err))
+			blog.Errorf("RemoveDataFromCMDBTask[%s] failed: %v", taskID, err)
+			_ = state.SkipFailure(start, stepName, err)
+			return nil
+		}
+	}
+
+	blog.Infof("RemoveDataFromCMDBTask %s successful", taskID)
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"remove cmdb data from cmdb successful")
+
+	// update step
+	_ = state.UpdateStepSucc(start, stepName)
+
+	return nil
+}
+
+func deleteAll2IDPod(bkBizID int64, bkNodeID []int64) error {
+	blog.Info("start delete all pod")
+
+	cmdbClient := cmdb.GetCmdbClient()
+	if cmdbClient == nil {
+		return fmt.Errorf("cmdb client is not init")
+	}
+
+	for {
+		got, err := cmdbClient.GetBcsPod(&cmdb.GetBcsPodReq{
+			BKBizID: bkBizID,
+			Fields:  []string{"id"},
+			Page: cmdb.Page{
+				Start: 0,
+				Limit: 200,
+			},
+			Filter: &cmdb.HostPropertyFilter{
+				Condition: "AND",
+				Rules: []cmdb.Rule{
+					{
+						Field:    "bk_node_id",
+						Operator: "in",
+						Value:    bkNodeID,
+					},
+				},
+			},
+		})
+		if err != nil {
+			return err
+		}
+
+		podToDelete := make([]int64, 0)
+		for _, pod := range *got {
+			podToDelete = append(podToDelete, pod.ID)
+		}
+
+		if len(podToDelete) == 0 {
+			break
+		}
+
+		blog.Info("delete pod %v", podToDelete)
+		err = cmdbClient.DeleteBcsPod(&cmdb.DeleteBcsPodReq{
+			Data: &[]cmdb.DeleteBcsPodReqData{
+				{
+					BKBizID: &bkBizID,
+					IDs:     &podToDelete,
+				},
+			},
+		})
+		if err != nil {
+			blog.Errorf("DeleteBcsPod err: %v", err)
+			return err
+		}
+	}
+
+	blog.Info("delete all pod success")
+
+	return nil
+}
+
+func deleteAll2IDIDNode(bkBizID int64, bkNodeID []int64) error {
+	blog.Info("start delete all node")
+
+	cmdbClient := cmdb.GetCmdbClient()
+	if cmdbClient == nil {
+		return fmt.Errorf("cmdb client is not init")
+	}
+
+	blog.Infof("delete node: %v", bkNodeID)
+	err := cmdbClient.DeleteBcsNode(&cmdb.DeleteBcsNodeReq{
+		BKBizID: &bkBizID,
+		IDs:     &bkNodeID,
+	})
+	if err != nil {
+		blog.Errorf("DeleteBcsNode err: %v", err)
+		return err
+	}
+
+	blog.Info("delete all node success")
+
+	return nil
+}
+
+func getAllNodeID(bkBizID int64, bcsClusterID string, bcsNodeNames []string) ([]int64, error) {
+	blog.Info("start get all node ID")
+
+	cmdbClient := cmdb.GetCmdbClient()
+	if cmdbClient == nil {
+		return nil, fmt.Errorf("cmdb client is not init")
+	}
+
+	start := 0
+	limit := 100
+	nodeIDs := make([]int64, 0)
+	for {
+		got, err := cmdbClient.GetBcsNode(&cmdb.GetBcsNodeReq{
+			BKBizID: bkBizID,
+			Page: cmdb.Page{
+				Limit: limit,
+				Start: start,
+			},
+			Filter: &cmdb.HostPropertyFilter{
+				Condition: "AND",
+				Rules: []cmdb.Rule{
+					{
+						Field:    "cluster_uid",
+						Operator: "in",
+						Value:    []string{bcsClusterID},
+					},
+					{
+						Field:    "name",
+						Operator: "in",
+						Value:    bcsNodeNames,
+					},
+				},
+			},
+		})
+		if err != nil {
+			blog.Errorf("GetBcsNode err: %v", err)
+			return nil, err
+		}
+		nodeToDelete := make([]int64, 0)
+		for _, node := range *got {
+			nodeToDelete = append(nodeToDelete, node.ID)
+			nodeIDs = append(nodeIDs, node.ID)
+		}
+
+		if len(nodeToDelete) == 0 {
+			break
+		}
+
+		start += limit
+	}
+
+	blog.Info("get all node ID success")
+
+	return nodeIDs, nil
 }

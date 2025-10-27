@@ -38,6 +38,7 @@ func RegisterCommonActions() map[string]interface{} {
 		cloudprovider.InstallImagePullSecretAddonAction: EnsureInstallImageSecretTask,
 		cloudprovider.InstallGseAgentAction:             InstallGSEAgentTask,
 		cloudprovider.TransferHostModuleAction:          TransferHostModuleTask,
+		cloudprovider.RemoveDataFromCmdbAction:          RemoveDataFromCMDBTask,
 		cloudprovider.RemoveHostFromCmdbAction:          RemoveHostFromCMDBTask,
 		cloudprovider.JobFastExecuteScriptAction:        JobExecuteScriptTask,
 		cloudprovider.EnsureAutoScalerAction:            EnsureAutoScalerTask,
