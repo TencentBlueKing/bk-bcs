@@ -138,3 +138,51 @@ type GCPServiceAccount struct {
 	AuthProviderCertURL string `json:"auth_provider_x509_cert_url"`
 	ClientCertURL       string `json:"client_x509_cert_url"`
 }
+
+// ClusterWholeTaskMetrics cluster whole task metrics
+type ClusterWholeTaskMetrics struct {
+	ClusterId        string  `json:"clusterId"`
+	SuccessRate      float64 `json:"successRate"`
+	AvgExecutionTime float64 `json:"avgExecutionTime"`
+}
+
+// ClusterSubSuccessTaskMetrics cluster sub success task metrics
+type ClusterSubSuccessTaskMetrics struct {
+	ClusterId        string  `json:"clusterId"`
+	SuccessRate      float64 `json:"successRate"`
+	AvgExecutionTime float64 `json:"avgExecutionTime"`
+	FailTasks        int     `json:"failTasks"`
+	TaskType         string  `json:"taskType"`
+}
+
+// ClusterSubFailTaskMetrics cluster sub fail task metrics
+type ClusterSubFailTaskMetrics struct {
+	ClusterId string `json:"clusterId"`
+	TaskType  string `json:"taskType"`
+	Message   string `json:"message"`
+	FailTasks int    `json:"failTasks"`
+}
+
+// BusinessWholeTaskMetrics business whole task metrics
+type BusinessWholeTaskMetrics struct {
+	BusinessId       string  `json:"businessId"`
+	SuccessRate      float64 `json:"successRate"`
+	AvgExecutionTime float64 `json:"avgExecutionTime"`
+}
+
+// BusinessSubSuccessTaskMetrics business sub success task metrics
+type BusinessSubSuccessTaskMetrics struct {
+	BusinessId       string  `json:"businessId"`
+	SuccessRate      float64 `json:"successRate"`
+	AvgExecutionTime float64 `json:"avgExecutionTime"`
+	FailTasks        int     `json:"failTasks"`
+	TaskType         string  `json:"taskType"`
+}
+
+// BusinessSubFailTaskMetrics business sub fail task metrics
+type BusinessSubFailTaskMetrics struct {
+	BusinessId string `json:"businessId"`
+	TaskType   string `json:"taskType"`
+	Message    string `json:"message"`
+	FailTasks  int    `json:"failTasks"`
+}
