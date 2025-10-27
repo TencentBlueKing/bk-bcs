@@ -15,6 +15,7 @@ package discovery
 
 import (
 	"context"
+	"crypto/tls"
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
@@ -24,6 +25,8 @@ import (
 	"go-micro.dev/v4/registry"
 	"go-micro.dev/v4/server"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/component/bcs/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/component/bcs/projectmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/utils"
 )
@@ -32,8 +35,10 @@ const serverNameSuffix = ".bkbcs.tencent.com"
 
 // ServiceDiscovery service discovery
 type ServiceDiscovery struct {
-	ctx context.Context
-	srv micro.Service
+	ctx             context.Context
+	srv             micro.Service
+	microRgt        registry.Registry
+	clientTLSConfig *tls.Config
 }
 
 // NewServiceDiscovery :
@@ -73,6 +78,11 @@ func (s *ServiceDiscovery) init() error {
 		return err
 	}
 
+	err = s.InitComponentConfig()
+	if err != nil {
+		return err
+	}
+
 	if etcdRegistry != nil {
 		s.srv.Init(micro.Registry(etcdRegistry))
 	}
@@ -92,7 +102,7 @@ func (s *ServiceDiscovery) initEtcdRegistry() (registry.Registry, error) {
 		return nil, nil
 	}
 
-	etcdRegistry := etcd.NewRegistry(registry.Addrs(strings.Split(endpoints, ",")...))
+	s.microRgt = etcd.NewRegistry(registry.Addrs(strings.Split(endpoints, ",")...))
 
 	ca := config.G.Viper.GetString("etcd.ca")
 	cert := config.G.Viper.GetString("etcd.cert")
@@ -102,8 +112,24 @@ func (s *ServiceDiscovery) initEtcdRegistry() (registry.Registry, error) {
 		if err != nil {
 			return nil, err
 		}
-		_ = etcdRegistry.Init(registry.TLSConfig(tlsConfig))
+
+		s.clientTLSConfig = tlsConfig
+		_ = s.microRgt.Init(registry.TLSConfig(tlsConfig))
 	}
 
-	return etcdRegistry, nil
+	return s.microRgt, nil
+}
+
+// InitComponentConfig init component config
+func (s *ServiceDiscovery) InitComponentConfig() error {
+	err := projectmanager.SetClientConifg(s.clientTLSConfig, s.microRgt)
+	if err != nil {
+		return err
+	}
+
+	err = clustermanager.SetClientConifg(s.clientTLSConfig, s.microRgt)
+	if err != nil {
+		return err
+	}
+	return nil
 }

@@ -36,6 +36,7 @@ type Configuration struct {
 	IAM         *IAMConfig      `yaml:"iam_conf"`
 	Web         *WebConf        `yaml:"web"`
 	TracingConf *TracingConf    `yaml:"tracing_conf"`
+	Cmdb        *CmdbConf       `yaml:"cmdb"`
 }
 
 // init 初始化
@@ -71,6 +72,7 @@ func newConfiguration() (*Configuration, error) {
 	c.Web = defaultWebConf()
 
 	c.IAM = &IAMConfig{}
+	c.Cmdb = &CmdbConf{}
 
 	c.BKAPIGW = &BKAPIGWConf{}
 	_ = c.BKAPIGW.Init()
@@ -147,6 +149,11 @@ func (c *Configuration) ReadFrom(content []byte) error {
 	}
 	if c.Mongo.Password == "" {
 		c.Mongo.Password = MONGO_PASSWORD
+	}
+
+	// cmdb
+	if c.Cmdb.Host == "" {
+		c.Cmdb.Host = BK_CMDB_HOST
 	}
 
 	if err := c.init(); err != nil {
