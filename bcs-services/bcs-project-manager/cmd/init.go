@@ -269,7 +269,7 @@ func (p *ProjectService) initPermClient() error {
 }
 
 // initMicro init micro service
-// NOCC:golint/fnsize(设计如此)
+// nolint:funlen //(设计如此)
 func (p *ProjectService) initMicro() error {
 
 	// server listen ip
