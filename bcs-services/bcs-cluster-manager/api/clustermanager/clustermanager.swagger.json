@@ -4080,6 +4080,105 @@
         ]
       }
     },
+    "/clustermanager/v1/clusters/{clusterID}/nodes": {
+      "get": {
+        "summary": "查询Node列表信息",
+        "description": "查询指定ClusterID的节点列表信息，clusterID为-查询所有节点",
+        "operationId": "ClusterManager_ListClusterNodes",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerListClusterNodesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "clusterID",
+            "description": "集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "region",
+            "description": "region. 集群所在地域",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "vpcID",
+            "description": "vpcID. 集群私有网络id，云上集群填写",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "nodeGroupID",
+            "description": "nodeGroupID. 所属NodeGroupID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "instanceType",
+            "description": "instanceType. 机型字符串",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "description": "status. 节点状态，可能状态CREATING，RUNNING，DELETING，FAILURE，INITIALIZATION，DELETED",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "offset",
+            "description": "offset. 查询偏移量",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "limit",
+            "description": "limit. 查询限制数量",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "showPwd",
+            "description": "showPwd. 节点密码是否展示(默认不展示)",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          },
+          {
+            "name": "innerIP",
+            "description": "innerIP. 节点内网IP",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
     "/clustermanager/v1/clusters/{clusterID}/nodes/-/batch": {
       "delete": {
         "summary": "批量下架集群节点",
@@ -16642,6 +16741,43 @@
       "required": [
         "code",
         "message"
+      ]
+    },
+    "clustermanagerListClusterNodesResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerClusterNode"
+          },
+          "description": "集群节点列表",
+          "title": "data"
+        }
+      },
+      "description": "查询指定ClusterID的节点列表信息返回，如果存在",
+      "title": "ListClusterNodesResponse",
+      "required": [
+        "code",
+        "message",
+        "data"
       ]
     },
     "clustermanagerListClusterResp": {
