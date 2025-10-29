@@ -20,6 +20,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"golang.org/x/sync/errgroup"
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -87,25 +88,52 @@ func (q *StorageQuery) Fetch(ctx context.Context, groupVersion, kind string) (ma
 			Namespaces: v.GetNamespaces(),
 		})
 	}
-	resources, err := storage.ListAllMultiClusterResources(ctx, storage.ListMultiClusterResourcesReq{
+	// status查询需要全量获取
+	var allRecord bool
+	if len(q.QueryFilter.Status) != 0 {
+		allRecord = true
+	}
+	resources, total, err := storage.ListAllMultiClusterResources(ctx, allRecord, storage.ListMultiClusterResourcesReq{
 		Kind:                kind,
 		ClusteredNamespaces: clusteredNamespaces,
-		Conditions:          q.ViewFilter.ToConditions(),
+		Conditions:          q.toConditions(),
+		Sort:                q.QueryFilter.SortByStorage(),
+		Offset:              q.QueryFilter.Offset,
+		Limit:               q.QueryFilter.Limit,
 	})
 	if err != nil {
 		return nil, err
 	}
-	resources = ApplyFilter(resources, q.ViewFilter.CreateSourceFilter)
-	// 第二次过滤
-	resources = ApplyFilter(resources, q.QueryFilter.CreatorFilter, q.QueryFilter.NameFilter,
-		q.QueryFilter.StatusFilter, q.QueryFilter.LabelSelectorFilter, q.QueryFilter.IPFilter,
-		q.QueryFilter.CreateSourceFilter)
-	total := len(resources)
-	resources = q.QueryFilter.Page(resources)
+	if allRecord {
+		resources = ApplyFilter(resources, q.QueryFilter.StatusFilter)
+		total = len(resources)
+		resources = q.QueryFilter.PageWithoutSort(resources)
+	}
 	resp := buildList(ctx, resources)
 	resp["total"] = total
 	resp["perms"] = map[string]interface{}{"applyURL": applyURL}
 	return resp, nil
+}
+
+// toConditions storage query
+func (q *StorageQuery) toConditions() []*operator.Condition {
+	conditions := []*operator.Condition{}
+	// creator 过滤条件
+	conditions = append(conditions, q.creatorToCondition()...)
+
+	// name 过滤条件
+	conditions = append(conditions, q.nameToCondition()...)
+
+	// label 过滤条件
+	conditions = append(conditions, q.labelToCondition()...)
+
+	// createSource 过滤条件
+	conditions = append(conditions, q.createSourceToCondition()...)
+
+	// ip 过滤条件
+	conditions = append(conditions, q.ipToCondition()...)
+
+	return conditions
 }
 
 // FetchPreferred fetches multicluster resources.
