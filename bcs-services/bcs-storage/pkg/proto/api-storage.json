@@ -41,6 +41,16 @@
         },
         "description": "StorageDeleteBatchK8SNamespaceResourceRequest"
       },
+      "StorageDeleteClusterInfoRequest": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/DeleteClusterInfoRequest"
+            }
+          }
+        },
+        "description": "StorageDeleteClusterInfoRequest"
+      },
       "StorageDeleteCustomResourcesIndexRequest": {
         "content": {
           "application/json": {
@@ -621,6 +631,16 @@
         },
         "description": "StoragePutClusterConfigRequest"
       },
+      "StoragePutClusterInfoRequest": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/PutClusterInfoRequest"
+            }
+          }
+        },
+        "description": "StoragePutClusterInfoRequest"
+      },
       "StoragePutClusterRelationRequest": {
         "content": {
           "application/json": {
@@ -690,6 +710,16 @@
           }
         },
         "description": "StoragePutMetricRequest"
+      },
+      "StoragePutProjectInfoRequest": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/PutProjectInfoRequest"
+            }
+          }
+        },
+        "description": "StoragePutProjectInfoRequest"
       },
       "StoragePutStableVersionRequest": {
         "content": {
@@ -824,6 +854,16 @@
           }
         },
         "description": "StorageDeleteBatchK8SNamespaceResourceResponse"
+      },
+      "StorageDeleteClusterInfoResponse": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/PutClusterInfoResponse"
+            }
+          }
+        },
+        "description": "StorageDeleteClusterInfoResponse"
       },
       "StorageDeleteCustomResourcesIndexResponse": {
         "content": {
@@ -1405,6 +1445,16 @@
         },
         "description": "StoragePutClusterConfigResponse"
       },
+      "StoragePutClusterInfoResponse": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/PutClusterInfoResponse"
+            }
+          }
+        },
+        "description": "StoragePutClusterInfoResponse"
+      },
       "StoragePutClusterRelationResponse": {
         "content": {
           "application/json": {
@@ -1474,6 +1524,16 @@
           }
         },
         "description": "StoragePutMetricResponse"
+      },
+      "StoragePutProjectInfoResponse": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/PutProjectInfoResponse"
+            }
+          }
+        },
+        "description": "StoragePutProjectInfoResponse"
       },
       "StoragePutStableVersionResponse": {
         "content": {
@@ -2021,6 +2081,15 @@
           }
         },
         "title": "DeleteBatchNamespaceResourceResponse",
+        "type": "object"
+      },
+      "DeleteClusterInfoRequest": {
+        "properties": {
+          "clusterID": {
+            "type": "string"
+          }
+        },
+        "title": "DeleteClusterInfoRequest",
         "type": "object"
       },
       "DeleteClusterResourcesRequest": {
@@ -4345,6 +4414,34 @@
         "title": "PutClusterConfigResponse",
         "type": "object"
       },
+      "PutClusterInfoRequest": {
+        "properties": {
+          "clusterID": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object"
+          }
+        },
+        "title": "PutClusterInfoRequest",
+        "type": "object"
+      },
+      "PutClusterInfoResponse": {
+        "properties": {
+          "code": {
+            "format": "int32",
+            "type": "number"
+          },
+          "message": {
+            "type": "string"
+          },
+          "result": {
+            "type": "boolean"
+          }
+        },
+        "title": "PutClusterInfoResponse",
+        "type": "object"
+      },
       "PutClusterRelationRequest": {
         "properties": {
           "clusterId": {
@@ -4649,6 +4746,34 @@
           }
         },
         "title": "PutNamespaceResourcesResponse",
+        "type": "object"
+      },
+      "PutProjectInfoRequest": {
+        "properties": {
+          "data": {
+            "type": "object"
+          },
+          "projectID": {
+            "type": "string"
+          }
+        },
+        "title": "PutProjectInfoRequest",
+        "type": "object"
+      },
+      "PutProjectInfoResponse": {
+        "properties": {
+          "code": {
+            "format": "int32",
+            "type": "number"
+          },
+          "message": {
+            "type": "string"
+          },
+          "result": {
+            "type": "boolean"
+          }
+        },
+        "title": "PutProjectInfoResponse",
         "type": "object"
       },
       "PutStableVersionRequest": {
@@ -5591,6 +5716,38 @@
           }
         ],
         "summary": "Storage.DeleteBatchK8SNamespaceResource(DeleteBatchNamespaceResourceRequest)"
+      }
+    },
+    "/storage/Storage/DeleteClusterInfo": {
+      "parameters": [
+        {
+          "in": "header",
+          "name": "Micro-Namespace",
+          "required": true,
+          "schema": {
+            "default": "micro",
+            "type": "string"
+          }
+        }
+      ],
+      "post": {
+        "requestBody": {
+          "$ref": "#/components/requestBodies/StorageDeleteClusterInfoRequest"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/StorageDeleteClusterInfoResponse"
+          },
+          "default": {
+            "$ref": "#/components/responses/MicroAPIError"
+          }
+        },
+        "security": [
+          {
+            "MicroAPIToken": []
+          }
+        ],
+        "summary": "Storage.DeleteClusterInfo(DeleteClusterInfoRequest)"
       }
     },
     "/storage/Storage/DeleteCustomResources": {
@@ -7449,6 +7606,38 @@
         "summary": "Storage.PutClusterConfig(PutClusterConfigRequest)"
       }
     },
+    "/storage/Storage/PutClusterInfo": {
+      "parameters": [
+        {
+          "in": "header",
+          "name": "Micro-Namespace",
+          "required": true,
+          "schema": {
+            "default": "micro",
+            "type": "string"
+          }
+        }
+      ],
+      "post": {
+        "requestBody": {
+          "$ref": "#/components/requestBodies/StoragePutClusterInfoRequest"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/StoragePutClusterInfoResponse"
+          },
+          "default": {
+            "$ref": "#/components/responses/MicroAPIError"
+          }
+        },
+        "security": [
+          {
+            "MicroAPIToken": []
+          }
+        ],
+        "summary": "Storage.PutClusterInfo(PutClusterInfoRequest)"
+      }
+    },
     "/storage/Storage/PutClusterRelation": {
       "parameters": [
         {
@@ -7671,6 +7860,38 @@
           }
         ],
         "summary": "Storage.PutMetric(PutMetricRequest)"
+      }
+    },
+    "/storage/Storage/PutProjectInfo": {
+      "parameters": [
+        {
+          "in": "header",
+          "name": "Micro-Namespace",
+          "required": true,
+          "schema": {
+            "default": "micro",
+            "type": "string"
+          }
+        }
+      ],
+      "post": {
+        "requestBody": {
+          "$ref": "#/components/requestBodies/StoragePutProjectInfoRequest"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/StoragePutProjectInfoResponse"
+          },
+          "default": {
+            "$ref": "#/components/responses/MicroAPIError"
+          }
+        },
+        "security": [
+          {
+            "MicroAPIToken": []
+          }
+        ],
+        "summary": "Storage.PutProjectInfo(PutProjectInfoRequest)"
       }
     },
     "/storage/Storage/PutStableVersion": {
