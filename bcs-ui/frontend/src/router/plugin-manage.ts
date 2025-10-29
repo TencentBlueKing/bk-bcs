@@ -19,6 +19,7 @@ export default [
     component: Index,
     meta: {
       crdKind: 'DbPrivilege',
+      resource: window.i18n.t('nav.clusterTools'),
     },
   },
   // 日志采集
@@ -26,6 +27,9 @@ export default [
     path: 'log-collector',
     name: 'logCrdcontroller',
     component: logCollector,
+    meta: {
+      resource: window.i18n.t('nav.log'),
+    },
   },
   // DB授权配置
   {
@@ -61,11 +65,17 @@ export default [
     path: 'metric',
     name: 'metricManage',
     component: MetricManage,
+    meta: {
+      resource: window.i18n.t('nav.metric'),
+    },
   },
   // 服务网格
   {
     path: 'service-mesh',
     name: 'serviceMesh',
     component: ServiceMesh,
+    meta: {
+      resource: window.i18n.t('serviceMesh.title'),
+    },
   },
 ];

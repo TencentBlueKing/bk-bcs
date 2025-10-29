@@ -34,6 +34,7 @@ import ResourceView from './resource-view';// todo 有循环依赖
 
 import { clusterDetail } from '@/api/modules/cluster-manager';
 import cancelRequest from '@/common/cancel-request';
+import usePlatform from '@/composables/use-platform';
 import $store from '@/store';
 import useMenu from '@/views/app/use-menu';
 
@@ -45,6 +46,10 @@ const NotFound = () => import(/* webpackChunkName: 'entry' */'@/views/app/404.vu
 const Forbidden = () => import(/* webpackChunkName: 'entry' */'@/views/app/403.vue');
 const Token = () => import(/* webpackChunkName: 'entry' */'@/views/user-token/token.vue');
 const ProjectList = () => import(/* webpackChunkName: 'project' */'@/views/project-manage/project/project.vue');
+
+const { config, setDocumentTitle } = usePlatform();
+let name;
+let brandName;
 
 const router = new VueRouter({
   mode: 'history',
@@ -199,6 +204,22 @@ router.beforeEach(async (to, from, next) => {
     next({ name: '404' });
   } else {
     next();
+  }
+});
+
+router.afterEach((to) => {
+  if (config.i18n?.name && !name) {
+    name = config.i18n.name;
+    brandName = config.i18n.brandName;
+  }
+  if (to.meta?.resource) {
+    const temp = {
+      name: to.meta.resource,
+      brandName: name,
+    };
+    setDocumentTitle(temp, [brandName]);
+  } else {
+    setDocumentTitle(config.i18n);
   }
 });
 
