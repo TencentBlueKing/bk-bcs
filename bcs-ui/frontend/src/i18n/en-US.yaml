@@ -2890,6 +2890,9 @@ dashboard:
     label:
       createMoreNamespaceVars: 'You can create more variables in the namespace through {action}'
       noNamespaceVariables: No naming space variables
+      allNamespaces: All namespaces
+      projectNS: 'Project namespace {0}'
+      systemNS: 'System namespace {0}'
     msg:
       undoSuccess: Undo success
     quota:

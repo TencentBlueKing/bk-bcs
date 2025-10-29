@@ -1471,3 +1471,7 @@
 .bk-table-expand-icon>.bk-icon {
     margin-top: -6px;
 }
+
+.custom-select-popover .bk-select-search-wrapper {
+    padding: 4px 0 0;
+}

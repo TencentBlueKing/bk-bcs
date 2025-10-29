@@ -2322,6 +2322,9 @@ dashboard:
     label:
       createMoreNamespaceVars: '可通过 {action} 创建更多作用在命名空间的变量'
       noNamespaceVariables: 暂无命名空间变量
+      allNamespaces: 全部命名空间
+      projectNS: '项目命名空间{0}'
+      systemNS: '系统命名空间{0}'
     msg:
       undoSuccess: 撤回成功
     quota:

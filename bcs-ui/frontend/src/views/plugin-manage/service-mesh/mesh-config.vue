@@ -284,9 +284,7 @@
       <bk-form-item
         :label="$t('serviceMesh.label.bkToken')"
         :desc="$t('serviceMesh.tips.bkTokenDesc')"
-        property="bkToken"
-        error-display-type="normal"
-        required>
+        property="bkToken">
         <bk-input v-model="formData.observabilityConfig.tracingConfig.bkToken"></bk-input>
       </bk-form-item>
     </ContentSwitcher>
@@ -423,14 +421,6 @@ const rules = ref({
           || (formData.value.observabilityConfig.tracingConfig.endpoint
             && endpointReg.test(formData.value.observabilityConfig.tracingConfig.endpoint)),
       message: $i18n.t('serviceMesh.tips.endpointValidate'),
-      trigger: 'blur',
-    },
-  ],
-  bkToken: [
-    {
-      validator: () => !formData.value.observabilityConfig.tracingConfig.enabled
-          || !!formData.value.observabilityConfig.tracingConfig.bkToken,
-      message: $i18n.t('generic.validate.required'),
       trigger: 'blur',
     },
   ],

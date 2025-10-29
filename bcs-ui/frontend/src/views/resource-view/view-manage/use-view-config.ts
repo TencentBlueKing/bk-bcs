@@ -105,7 +105,8 @@ export default function () {
         clusterNamespaces: [
           {
             clusterID: clusterID.value,
-            namespaces: $store.state.viewNsList,
+            namespaces: $store.state.viewNs.viewNsList,
+            nsgroup: $store.state.viewNs.group,
           },
         ],
       };

@@ -62,7 +62,7 @@
               class="rounded-sm p-[8px]">
               <template v-if="!isClusterMode">
                 <bcs-tag
-                  :class="['m-[0px]', index > 0 ? 'mt-[6px]' : '']"
+                  :class="['m-[0px] mr-[4px]', index > 0 ? 'mt-[6px]' : '']"
                   v-for="(item, index) in originViewData?.clusterNamespaces"
                   :key="index">
                   <span
@@ -78,7 +78,7 @@
                     }">
                     {{
                       `${clusterNameMap[item.clusterID] || item.clusterID} / ${item.namespaces.join(', ')
-                        || $t('view.labels.allNs')}`
+                        || getNsGroup(item.nsgroup)}`
                     }}
                   </span>
                 </bcs-tag>
@@ -605,7 +605,7 @@ const handleSaveAs = async (changeView = true) => {
 };
 
 // 将查询参数同步到url
-const curNsList = computed(() => $store.state.viewNsList);
+const curNsList = computed(() => $store.state.viewNs.viewNsList);
 function handleUpdateUrlQuery(data: Partial<MultiClusterResourcesType>|undefined) {
   if (!curTmpViewData.value?.filter && isClusterMode.value) {
     // 未传入数据
@@ -701,6 +701,19 @@ const editView = async (id: string) => {
   await viewChange(id);
   handleEditView();
 };
+
+function getNsGroup(group: IGroup) {
+  switch (group) {
+    case 'all':
+      return $i18n.t('view.labels.allNs');
+    case 'all-user':
+      return $i18n.t('dashboard.ns.label.projectNS', []);
+    case 'all-system':
+      return $i18n.t('dashboard.ns.label.systemNS', []);
+    default:
+      return $i18n.t('view.labels.allNs');
+  }
+}
 
 defineExpose({
   cancelEdit,
