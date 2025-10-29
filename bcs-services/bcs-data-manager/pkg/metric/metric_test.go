@@ -52,7 +52,7 @@ func Test_GetClusterCPUMetrics(t *testing.T) {
 		IsBKMonitor: true,
 	}
 	getter := &MetricGetter{}
-	clients := types.NewClients(monitorCli, nil, nil, nil)
+	clients := types.NewClients(monitorCli, nil, nil)
 	_, err := getter.GetClusterCPUMetrics(opts, clients)
 	assert.Nil(t, err)
 	fmt.Println(getter.GetClusterCPUMetrics(opts, clients))
@@ -69,7 +69,7 @@ func Test_GetClusterMemoryMetrics(t *testing.T) {
 		IsBKMonitor: true,
 	}
 	getter := &MetricGetter{}
-	clients := types.NewClients(monitorCli, nil, nil, nil)
+	clients := types.NewClients(monitorCli, nil, nil)
 	_, err := getter.GetClusterMemoryMetrics(opts, clients)
 	assert.Nil(t, err)
 	fmt.Println(getter.GetClusterMemoryMetrics(opts, clients))
@@ -94,7 +94,7 @@ func Test_GetInstanceCount(t *testing.T) {
 		CurrentTime: time.Time{},
 	}
 	getter := &MetricGetter{}
-	clients := types.NewClients(monitorCli, nil, nil, nil)
+	clients := types.NewClients(monitorCli, nil, nil)
 	_, err := getter.GetInstanceCount(opts, clients)
 	assert.Nil(t, err)
 	fmt.Println(getter.GetInstanceCount(opts, clients))
@@ -135,7 +135,7 @@ func Test_GetNamespaceCPUMetrics(t *testing.T) {
 		CurrentTime: time.Time{},
 	}
 	getter := &MetricGetter{}
-	clients := types.NewClients(monitorCli, nil, nil, nil)
+	clients := types.NewClients(monitorCli, nil, nil)
 	_, err := getter.GetNamespaceCPUMetrics(opts, clients)
 	assert.Nil(t, err)
 	fmt.Println(getter.GetNamespaceCPUMetrics(opts, clients))
@@ -152,7 +152,7 @@ func Test_GetNamespaceInstanceCount(t *testing.T) {
 		CurrentTime: time.Time{},
 	}
 	getter := &MetricGetter{}
-	clients := types.NewClients(monitorCli, nil, nil, nil)
+	clients := types.NewClients(monitorCli, nil, nil)
 	_, err := getter.GetInstanceCount(opts, clients)
 	assert.Nil(t, err)
 	fmt.Println(getter.GetInstanceCount(opts, clients))
@@ -169,7 +169,7 @@ func Test_GetNamespaceMemoryMetrics(t *testing.T) {
 		CurrentTime: time.Time{},
 	}
 	getter := &MetricGetter{}
-	clients := types.NewClients(monitorCli, nil, nil, nil)
+	clients := types.NewClients(monitorCli, nil, nil)
 	_, err := getter.GetNamespaceMemoryMetrics(opts, clients)
 	assert.Nil(t, err)
 	fmt.Println(getter.GetNamespaceMemoryMetrics(opts, clients))
@@ -193,7 +193,7 @@ func Test_GetWorkloadCPUMetrics(t *testing.T) {
 		IsBKMonitor:  true,
 	}
 	getter := &MetricGetter{}
-	clients := types.NewClients(monitorCli, nil, nil, nil)
+	clients := types.NewClients(monitorCli, nil, nil)
 	_, err := getter.GetWorkloadCPUMetrics(opts, clients)
 	assert.Nil(t, err)
 	fmt.Println(getter.GetWorkloadCPUMetrics(opts, clients))
@@ -212,7 +212,7 @@ func Test_GetWorkloadMemoryMetrics(t *testing.T) {
 		CurrentTime:  time.Now(),
 	}
 	getter := &MetricGetter{}
-	clients := types.NewClients(monitorCli, nil, nil, nil)
+	clients := types.NewClients(monitorCli, nil, nil)
 	_, err := getter.GetWorkloadMemoryMetrics(opts, clients)
 	assert.Nil(t, err)
 	fmt.Println(getter.GetWorkloadMemoryMetrics(opts, clients))
@@ -271,7 +271,7 @@ func TestGetPodAutoscalerCount(t *testing.T) {
 		CurrentTime:       time.Now().Add(-44 * time.Minute),
 	}
 	getter := &MetricGetter{}
-	clients := types.NewClients(monitorCli, nil, nil, nil)
+	clients := types.NewClients(monitorCli, nil, nil)
 	_, err := getter.GetPodAutoscalerCount(opts, clients)
 	assert.Nil(t, err)
 }
@@ -286,7 +286,7 @@ func TestGetCACount(t *testing.T) {
 		CurrentTime: utils.FormatTime(time.Now().Add(-102*time.Minute), types.DimensionMinute),
 	}
 	getter := &MetricGetter{}
-	clients := types.NewClients(monitorCli, nil, nil, nil)
+	clients := types.NewClients(monitorCli, nil, nil)
 	count, err := getter.GetCACount(opts, clients)
 	assert.Nil(t, err)
 	assert.NotEqual(t, 0, count)
