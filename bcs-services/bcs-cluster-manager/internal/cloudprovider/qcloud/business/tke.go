@@ -1314,9 +1314,11 @@ func CheckClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDe
 		)
 		for _, ins := range instances {
 			// instances info
-			blog.Infof("provider[%s] checkClusterInstanceStatus[%s] businessID[%s] projectID[%s] cluster[%s] instanceInfo[%s:%s] status[%s]",
-				info.Cluster.GetProvider(), taskID, info.Cluster.GetBusinessID(), info.Cluster.GetProjectID(), utils.StringPtrToString(ins.InstanceId),
-				utils.StringPtrToString(ins.LanIP), info.Cluster.GetSystemID(), utils.StringPtrToString(ins.InstanceState))
+			blog.Infof("provider[%s] checkClusterInstanceStatus[%s] businessID[%s] projectID[%s] cluster[%s] "+
+				"instanceInfo[%s:%s] status[%s]", info.Cluster.GetProvider(), taskID, info.Cluster.GetBusinessID(),
+				info.Cluster.GetProjectID(), utils.StringPtrToString(ins.InstanceId),
+				utils.StringPtrToString(ins.LanIP), info.Cluster.GetSystemID(),
+				utils.StringPtrToString(ins.InstanceState))
 			switch *ins.InstanceState {
 			case api.RunningInstanceTke.String():
 				running = append(running, InstanceInfo{

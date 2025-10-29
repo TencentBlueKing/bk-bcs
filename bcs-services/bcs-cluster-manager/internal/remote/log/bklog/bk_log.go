@@ -80,7 +80,7 @@ func EnableMonitorAudit(projectID, clusterID string) error { // nolint
 
 	if err := json.Unmarshal([]byte(body), respData); err != nil {
 		metrics.ReportLibRequestMetric("bklog", "EnableMonitorAudit", "http", metrics.LibCallStatusErr, start)
-		errMsg := fmt.Errorf("parse EnableMonitorAudit response failed: %v, raw body: %s", err, string(body))
+		errMsg := fmt.Errorf("parse EnableMonitorAudit response failed: %v, raw body: %s", err, body)
 		blog.Errorf("EnableMonitorAudit failed: %v", errMsg)
 		return errMsg
 	}
