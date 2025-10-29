@@ -25496,6 +25496,324 @@ var _ interface {
 	ErrorName() string
 } = GetNodeInfoResponseValidationError{}
 
+// Validate checks the field values on ListClusterNodesRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ListClusterNodesRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListClusterNodesRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListClusterNodesRequestMultiError, or nil if none found.
+func (m *ListClusterNodesRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListClusterNodesRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 1 || l > 100 {
+		err := ListClusterNodesRequestValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 1 and 100 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetRegion()) > 100 {
+		err := ListClusterNodesRequestValidationError{
+			field:  "Region",
+			reason: "value length must be at most 100 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetVpcID()) > 32 {
+		err := ListClusterNodesRequestValidationError{
+			field:  "VpcID",
+			reason: "value length must be at most 32 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetNodeGroupID()) > 100 {
+		err := ListClusterNodesRequestValidationError{
+			field:  "NodeGroupID",
+			reason: "value length must be at most 100 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for InstanceType
+
+	// no validation rules for Status
+
+	if m.GetOffset() < 0 {
+		err := ListClusterNodesRequestValidationError{
+			field:  "Offset",
+			reason: "value must be greater than or equal to 0",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if m.GetLimit() > 5000 {
+		err := ListClusterNodesRequestValidationError{
+			field:  "Limit",
+			reason: "value must be less than or equal to 5000",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for ShowPwd
+
+	// no validation rules for InnerIP
+
+	if len(errors) > 0 {
+		return ListClusterNodesRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListClusterNodesRequestMultiError is an error wrapping multiple validation
+// errors returned by ListClusterNodesRequest.ValidateAll() if the designated
+// constraints aren't met.
+type ListClusterNodesRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListClusterNodesRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListClusterNodesRequestMultiError) AllErrors() []error { return m }
+
+// ListClusterNodesRequestValidationError is the validation error returned by
+// ListClusterNodesRequest.Validate if the designated constraints aren't met.
+type ListClusterNodesRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListClusterNodesRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListClusterNodesRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListClusterNodesRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListClusterNodesRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListClusterNodesRequestValidationError) ErrorName() string {
+	return "ListClusterNodesRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListClusterNodesRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListClusterNodesRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListClusterNodesRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListClusterNodesRequestValidationError{}
+
+// Validate checks the field values on ListClusterNodesResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ListClusterNodesResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListClusterNodesResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListClusterNodesResponseMultiError, or nil if none found.
+func (m *ListClusterNodesResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListClusterNodesResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, ListClusterNodesResponseValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, ListClusterNodesResponseValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ListClusterNodesResponseValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return ListClusterNodesResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListClusterNodesResponseMultiError is an error wrapping multiple validation
+// errors returned by ListClusterNodesResponse.ValidateAll() if the designated
+// constraints aren't met.
+type ListClusterNodesResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListClusterNodesResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListClusterNodesResponseMultiError) AllErrors() []error { return m }
+
+// ListClusterNodesResponseValidationError is the validation error returned by
+// ListClusterNodesResponse.Validate if the designated constraints aren't met.
+type ListClusterNodesResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListClusterNodesResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListClusterNodesResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListClusterNodesResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListClusterNodesResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListClusterNodesResponseValidationError) ErrorName() string {
+	return "ListClusterNodesResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListClusterNodesResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListClusterNodesResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListClusterNodesResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListClusterNodesResponseValidationError{}
+
 // Validate checks the field values on NodeConfig with the rules defined in the
 // proto definition for this message. If any rules are violated, the first
 // error encountered is returned, or nil if there are no violations.

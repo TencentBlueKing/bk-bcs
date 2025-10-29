@@ -165,3 +165,18 @@ func (cm *ClusterManager) ListCloudNodePublicPrefix(ctx context.Context,
 		utils.ToJSONString(resp))
 	return nil
 }
+
+// ListClusterNodes implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) ListClusterNodes(ctx context.Context,
+	req *cmproto.ListClusterNodesRequest, resp *cmproto.ListClusterNodesResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	na := node.NewListClusterNodeAction(cm.model)
+	na.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("ListClusterNodes", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: ListClusterNodes, req %v, resp %v", reqID, req, resp)
+	return nil
+}

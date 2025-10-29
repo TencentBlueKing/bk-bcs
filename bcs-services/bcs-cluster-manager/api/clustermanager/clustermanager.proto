@@ -323,6 +323,15 @@ service ClusterManager {
       summary : "查询Node详情信息"
     };
   }
+  rpc ListClusterNodes(ListClusterNodesRequest) returns (ListClusterNodesResponse) {
+    option (google.api.http) = {
+      get : "/clustermanager/v1/clusters/{clusterID}/nodes"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "查询指定ClusterID的节点列表信息，clusterID为-查询所有节点"
+      summary : "查询Node列表信息"
+    };
+  }
   rpc RecordNodeInfo(RecordNodeInfoRequest) returns (CommonResp) {
     option (google.api.http) = {
       post : "/clustermanager/v1/node"
@@ -7271,6 +7280,108 @@ message GetNodeInfoResponse {
   NodeInfo data = 4 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "data", description : "获取的节点信息"
   }];
+}
+
+message ListClusterNodesRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListClusterNodesRequest"
+      description : "查询指定ClusterID的节点列表信息，clusterID为-查询所有节点"
+      required : [ "clusterID" ]
+    }
+  };
+
+  string clusterID = 1 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "clusterID",
+      description : "集群ID"
+    },
+    (validate.rules).string = {min_len : 1, max_len : 100}
+  ];
+  string region = 2 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "region",
+      description : "集群所在地域"
+    },
+    (validate.rules).string = {max_len : 100}
+  ];
+  string vpcID = 3 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "vpcID",
+      description : "集群私有网络id，云上集群填写"
+    },
+    (validate.rules).string.max_len = 32
+  ];
+  string nodeGroupID = 4 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "nodeGroupID",
+      description : "所属NodeGroupID"
+    },
+    (validate.rules).string = {max_len : 100}
+  ];
+  string instanceType = 5 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "instanceType",
+      description : "机型字符串"
+    }
+  ];
+  string status = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "status", 
+    description: "节点状态，可能状态CREATING，RUNNING，DELETING，FAILURE，INITIALIZATION，DELETED"
+  }];
+  uint32 offset = 7 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "offset",
+      description : "查询偏移量"
+    },
+    (validate.rules).uint32.gte = 0
+  ];
+  uint32 limit = 8 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "limit",
+      description : "查询限制数量"
+    },
+    (validate.rules).uint32.lte = 5000
+  ];
+  bool showPwd = 9 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "showPwd",
+      description : "节点密码是否展示(默认不展示)"
+    }
+  ];
+  string innerIP = 10 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "innerIP",
+      description : "节点内网IP"
+    }
+  ];
+}
+
+message ListClusterNodesResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListClusterNodesResponse"
+      description : "查询指定ClusterID的节点列表信息返回，如果存在"
+      required : [ "code", "message", "data" ]
+    }
+  };
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "code", 
+    description: "返回错误码"
+  }];
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message",
+    description: "返回错误信息"
+  }];
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "result", 
+    description: "返回结果"
+  }];
+  repeated ClusterNode data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "集群节点列表"
+  }];
+
 }
 
 message NodeConfig {
