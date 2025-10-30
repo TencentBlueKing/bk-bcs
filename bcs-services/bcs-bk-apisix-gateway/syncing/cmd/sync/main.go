@@ -19,9 +19,8 @@ import (
 	"os"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-bk-apisix-gateway/syncing/config"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-bk-apisix-gateway/syncing/handle"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-bk-apisix-gateway/syncing/pkg"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-bk-apisix-gateway/syncing/pkg/config"
 )
 
 var configFile = flag.String("conf", "", "path to sync apisix config")
@@ -38,7 +37,7 @@ func main() {
 	// blog初始化
 	blog.InitLogs(*syncConf.Logging)
 
-	syncResources := handle.NewSyncResources(syncConf)
+	syncResources := pkg.NewSyncResources(syncConf)
 	err = syncResources.SyncGatewayResources(context.Background())
 	if err != nil {
 		blog.Errorf("sync apisix gateway resources failed: %s ", err)

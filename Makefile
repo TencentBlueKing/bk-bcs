@@ -88,7 +88,7 @@ bcs-network:ingress-controller
 bcs-services:bkcmdb-synchronizer gateway \
 	storage user-manager cluster-manager cluster-reporter nodeagent tools k8s-watch kube-agent data-manager \
 	helm-manager project-manager nodegroup-manager federation-manager powertrading mesh-manager push-manager \
-	platform-manager
+	platform-manager bk-apisix-gateway-syncing
 
 bcs-scenarios: kourse gitops
 
@@ -323,10 +323,10 @@ cluster-resources:pre
 	# go build
 	cd ${BCS_SERVICES_PATH}/cluster-resources && go mod tidy && CGO_ENABLED=0 go build ${LDFLAG}${CR_LDFLAG_EXT} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/cluster-resources/bcs-cluster-resources *.go
 
-syncing:pre
-	mkdir -p ${PACKAGEPATH}/bcs-services/syncing
-	cp -R ${BCS_CONF_SERVICES_PATH}/syncing/* ${PACKAGEPATH}/bcs-services/syncing
-	cd ${BCS_SERVICES_PATH}/bcs-bk-apisix-gateway/syncing && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/syncing/syncing ./main.go
+bk-apisix-gateway-syncing:pre
+	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-bk-apisix-gateway-syncing
+	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-bk-apisix-gateway-syncing/* ${PACKAGEPATH}/bcs-services/bcs-bk-apisix-gateway-syncing
+	cd ${BCS_SERVICES_PATH}/bcs-bk-apisix-gateway/syncing && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-bk-apisix-gateway-syncing/bcs-bk-apisix-gateway-syncing ./cmd/sync/main.go
 
 # end of bcs-service section
 

@@ -22,6 +22,8 @@ import (
 	"net/http"
 	"sync"
 	"time"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 )
 
 var (
@@ -66,24 +68,35 @@ func HttpRequest(ctx context.Context, url, method string, header http.Header, da
 		req, err = http.NewRequestWithContext(ctx, method, url, nil)
 	}
 	if err != nil {
+		blog.Errorf("Failed to create HTTP request: URL=%s, Method=%s, Error=%v", url, method, err)
 		return nil, err
 	}
 	if header != nil {
 		req.Header = header
 	}
+
+	// 记录请求信息
+	blog.Infof("Making HTTP request: URL=%s, Method=%s, Headers=%v", url, method, header)
+
 	resp, err := GetHttpClient().Do(req)
 	if err != nil {
+		blog.Errorf("HTTP request failed: URL=%s, Method=%s, Error=%v", url, method, err)
 		return nil, err
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
+		blog.Errorf("Failed to read response body: URL=%s, Method=%s, Error=%v", url, method, err)
 		return nil, err
 	}
 	if resp.StatusCode/100 != 2 {
+		blog.Errorf("HTTP request returned error status: URL=%s, Method=%s, StatusCode=%d, Status=%s, ResponseBody=%s",
+			url, method, resp.StatusCode, resp.Status, string(body))
 		return nil, fmt.Errorf("http request failed, code: %d, status: %s,message: %s", resp.StatusCode,
 			resp.Status, string(body))
 	}
+
+	blog.Infof("HTTP request successful: URL=%s, Method=%s, StatusCode=%d", url, method, resp.StatusCode)
 	return body, nil
 }

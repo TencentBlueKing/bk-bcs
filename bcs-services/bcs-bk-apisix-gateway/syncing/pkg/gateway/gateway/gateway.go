@@ -19,9 +19,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-bk-apisix-gateway/syncing/component"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-bk-apisix-gateway/syncing/config"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-bk-apisix-gateway/syncing/pkg/component"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-bk-apisix-gateway/syncing/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-bk-apisix-gateway/syncing/types"
 )
 
@@ -53,9 +55,10 @@ func (g *Gateway) GetGateway(ctx context.Context) error {
 	header := http.Header{
 		"X-BK-API-TOKEN": []string{g.syncConfig.GatewayConf.XBkApiToken},
 	}
-	_, err := component.HttpRequest(ctx,
-		g.getGatewayUrl(fmt.Sprintf(getGateway, g.syncConfig.GatewayConf.Name)), http.MethodGet, header, nil)
+	url := g.getGatewayUrl(fmt.Sprintf(getGateway, g.syncConfig.GatewayConf.Name))
+	_, err := component.HttpRequest(ctx, url, http.MethodGet, header, nil)
 	if err != nil {
+		blog.Errorf("Failed to get gateway: GatewayName=%s, URL=%s, Error=%v", g.syncConfig.GatewayConf.Name, url, err)
 		return err
 	}
 	return nil
@@ -63,13 +66,27 @@ func (g *Gateway) GetGateway(ctx context.Context) error {
 
 // CreateGateway create apisix gateway
 func (g *Gateway) CreateGateway(ctx context.Context) error {
+	// 获取证书内容（支持从文件路径读取或直接使用配置的内容）
+	caCert, err := g.syncConfig.EtcdConf.GetEtcdCaCert()
+	if err != nil {
+		return err
+	}
+	certCert, err := g.syncConfig.EtcdConf.GetEtcdCertCert()
+	if err != nil {
+		return err
+	}
+	certKey, err := g.syncConfig.EtcdConf.GetEtcdCertKey()
+	if err != nil {
+		return err
+	}
+
 	data := types.CreateGatewayReq{
 		ApisixType:     g.syncConfig.GatewayConf.ApisixType,
 		ApisixVersion:  g.syncConfig.GatewayConf.ApisixVersion,
 		Description:    g.syncConfig.GatewayConf.Description,
-		EtcdCaCert:     g.syncConfig.EtcdConf.EtcdCaCert,
-		EtcdCertCert:   g.syncConfig.EtcdConf.EtcdCertCert,
-		EtcdCertKey:    g.syncConfig.EtcdConf.EtcdCertKey,
+		EtcdCaCert:     caCert,
+		EtcdCertCert:   certCert,
+		EtcdCertKey:    certKey,
 		EtcdEndpoints:  g.syncConfig.EtcdConf.EtcdEndpoints,
 		EtcdPassword:   g.syncConfig.EtcdConf.EtcdPassword,
 		EtcdPrefix:     g.syncConfig.EtcdConf.EtcdPrefix,
@@ -88,9 +105,10 @@ func (g *Gateway) CreateGateway(ctx context.Context) error {
 		"X-BK-API-TOKEN": []string{g.syncConfig.GatewayConf.XBkApiToken},
 		"Content-Type":   []string{"application/json"},
 	}
-	_, err = component.HttpRequest(ctx,
-		g.getGatewayUrl(createGateway), http.MethodPost, header, bytes.NewReader(jsonData))
+	url := g.getGatewayUrl(createGateway)
+	_, err = component.HttpRequest(ctx, url, http.MethodPost, header, bytes.NewReader(jsonData))
 	if err != nil {
+		blog.Errorf("Failed to create gateway: GatewayName=%s, URL=%s, Error=%v", g.syncConfig.GatewayConf.Name, url, err)
 		return err
 	}
 	return nil
@@ -98,13 +116,27 @@ func (g *Gateway) CreateGateway(ctx context.Context) error {
 
 // UpdateGateway update apisix gateway
 func (g *Gateway) UpdateGateway(ctx context.Context) error {
+	// 获取证书内容（支持从文件路径读取或直接使用配置的内容）
+	caCert, err := g.syncConfig.EtcdConf.GetEtcdCaCert()
+	if err != nil {
+		return err
+	}
+	certCert, err := g.syncConfig.EtcdConf.GetEtcdCertCert()
+	if err != nil {
+		return err
+	}
+	certKey, err := g.syncConfig.EtcdConf.GetEtcdCertKey()
+	if err != nil {
+		return err
+	}
+
 	data := types.CreateGatewayReq{
 		ApisixType:     g.syncConfig.GatewayConf.ApisixType,
 		ApisixVersion:  g.syncConfig.GatewayConf.ApisixVersion,
 		Description:    g.syncConfig.GatewayConf.Description,
-		EtcdCaCert:     g.syncConfig.EtcdConf.EtcdCaCert,
-		EtcdCertCert:   g.syncConfig.EtcdConf.EtcdCertCert,
-		EtcdCertKey:    g.syncConfig.EtcdConf.EtcdCertKey,
+		EtcdCaCert:     caCert,
+		EtcdCertCert:   certCert,
+		EtcdCertKey:    certKey,
 		EtcdEndpoints:  g.syncConfig.EtcdConf.EtcdEndpoints,
 		EtcdPassword:   g.syncConfig.EtcdConf.EtcdPassword,
 		EtcdPrefix:     g.syncConfig.EtcdConf.EtcdPrefix,
@@ -123,9 +155,10 @@ func (g *Gateway) UpdateGateway(ctx context.Context) error {
 		"X-BK-API-TOKEN": []string{g.syncConfig.GatewayConf.XBkApiToken},
 		"Content-Type":   []string{"application/json"},
 	}
-	_, err = component.HttpRequest(ctx, g.getGatewayUrl(fmt.Sprintf(updateGateway, g.syncConfig.GatewayConf.Name)),
-		http.MethodPut, header, bytes.NewReader(jsonData))
+	url := g.getGatewayUrl(fmt.Sprintf(updateGateway, g.syncConfig.GatewayConf.Name))
+	_, err = component.HttpRequest(ctx, url, http.MethodPut, header, bytes.NewReader(jsonData))
 	if err != nil {
+		blog.Errorf("Failed to update gateway: GatewayName=%s, URL=%s, Error=%v", g.syncConfig.GatewayConf.Name, url, err)
 		return err
 	}
 	return nil
@@ -137,14 +170,19 @@ func (g *Gateway) PublishGateway(ctx context.Context) error {
 		"X-BK-API-TOKEN": []string{g.syncConfig.GatewayConf.XBkApiToken},
 		"Content-Type":   []string{"application/json"},
 	}
-	_, err := component.HttpRequest(ctx,
-		g.getGatewayUrl(fmt.Sprintf(publishGateway, g.syncConfig.GatewayConf.Name)), http.MethodPost, header, nil)
+	url := g.getGatewayUrl(fmt.Sprintf(publishGateway, g.syncConfig.GatewayConf.Name))
+	_, err := component.HttpRequest(ctx, url, http.MethodPost, header, nil)
 	if err != nil {
+		blog.Errorf("Failed to publish gateway: GatewayName=%s, URL=%s, Error=%v", g.syncConfig.GatewayConf.Name, url, err)
 		return err
 	}
 	return nil
 }
 
 func (g *Gateway) getGatewayUrl(gatewayUrl string) string {
-	return fmt.Sprintf("%s%s", g.syncConfig.GatewayConf.GatewayHost, gatewayUrl)
+	// 去掉 gatewayHost 的末尾的 /
+	gatewayHost := strings.TrimSuffix(g.syncConfig.GatewayConf.GatewayHost, "/")
+	// 去掉 gatewayUrl 的开头的 /，增加兼容性
+	gatewayUrl = strings.TrimPrefix(gatewayUrl, "/")
+	return fmt.Sprintf("%s/%s", gatewayHost, gatewayUrl)
 }

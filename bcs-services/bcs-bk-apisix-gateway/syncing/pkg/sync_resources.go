@@ -10,17 +10,16 @@
  * limitations under the License.
  */
 
-// Package handle xxx
-package handle
+// Package pkg xxx
+package pkg
 
 import (
 	"context"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-bk-apisix-gateway/syncing/config"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-bk-apisix-gateway/syncing/gateway/gateway"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-bk-apisix-gateway/syncing/gateway/resource"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-bk-apisix-gateway/syncing/pkg/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-bk-apisix-gateway/syncing/pkg/gateway/gateway"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-bk-apisix-gateway/syncing/pkg/gateway/resource"
 )
 
 // SyncResources xxx
