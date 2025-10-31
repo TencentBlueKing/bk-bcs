@@ -108,7 +108,7 @@ const (
 	// NodeDrainPodAction 节点驱逐pod
 	NodeDrainPodAction = "nodeDrainPod"
 	// InstallLogCollectorAddonAction 安装日志采集组件
-	InstallLogCollectorAddonAction = "installLogCollectorAddon"
+	InstallLogCollectorAddonAction = "installLogCollectorAddon" // nolint:gosec
 )
 
 var (
@@ -1585,7 +1585,8 @@ func GetTaskTimeoutConfig(ctx context.Context, projectID, clusterID string) ([]*
 	}
 
 	if len(templateConfigs) == 0 {
-		return nil, fmt.Errorf("GetTaskTimeoutConfig projectID[%s] clusterID[%s] time template config is empty", projectID, clusterID)
+		return nil, fmt.Errorf("GetTaskTimeoutConfig projectID[%s] clusterID[%s] time template config is empty",
+			projectID, clusterID)
 	}
 
 	templateConfig := templateConfigs[0]
@@ -1597,14 +1598,16 @@ func GetTaskTimeoutConfig(ctx context.Context, projectID, clusterID string) ([]*
 	}
 
 	if cloudConfig == nil {
-		return nil, fmt.Errorf("GetTaskTimeoutConfig projectID[%s] clusterID[%s] time template cloudConfig is empty", projectID, clusterID)
+		return nil, fmt.Errorf("GetTaskTimeoutConfig projectID[%s] clusterID[%s] time template cloudConfig is empty",
+			projectID, clusterID)
 	}
 
 	return cloudConfig.GetTaskTimeTemplateConfig().GetTimeoutConfig(), nil
 }
 
 // GetTaskTimeout get task timeout
-func GetTaskTimeout(ctx context.Context, projectID, clusterID, stepName string, defaultTime time.Duration) time.Duration {
+func GetTaskTimeout(
+	ctx context.Context, projectID, clusterID, stepName string, defaultTime time.Duration) time.Duration {
 	taskID := GetTaskIDFromContext(ctx)
 
 	taskTimeoutConfig, err := GetTaskTimeoutConfig(ctx, projectID, clusterID)

@@ -117,6 +117,7 @@ var ActionPermissions = map[string]string{
 	"ClusterManager.UpdateNodeAnnotations":       cluster.CanManageClusterOperation,
 	"ClusterManager.CheckDrainNode":              cluster.CanViewClusterOperation,
 	"ClusterManager.ListCloudNodePublicPrefix":   cloudaccount.CanUseCloudAccountOperation,
+	"ClusterManager.ListCloudNodes":              "",
 
 	// federation cluster
 	"ClusterManager.InitFederationCluster": "",
