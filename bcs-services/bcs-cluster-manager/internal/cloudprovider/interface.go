@@ -348,6 +348,8 @@ type ClusterManager interface {
 		opt *GetMasterSuggestedMachinesOption) ([]*proto.InstanceTemplateConfig, error)
 	// AddSubnetsToCluster cluster add subnet
 	AddSubnetsToCluster(ctx context.Context, subnet *proto.SubnetSource, opt *AddSubnetsToClusterOption) error
+	// AddClusterCidr cluster add cidr
+	AddClusterCidr(ctx context.Context, cidrs []string, opt *AddSubnetsToClusterOption) error
 	// AppendCloudNodeInfo append cloud node detailed info
 	AppendCloudNodeInfo(ctx context.Context, nodes []*proto.ClusterNode, opt *CommonOption) error
 	// CheckIfGetNodesFromCluster check cluster if can get nodes from k8s
@@ -438,6 +440,8 @@ type VPCManager interface {
 	ListBandwidthPacks(opt *CommonOption) ([]*proto.BandwidthPackageInfo, error)
 	// CheckConflictInVpcCidr check cidr if conflict with vpc cidrs
 	CheckConflictInVpcCidr(vpcID string, cidr string, opt *CheckConflictInVpcCidrOption) ([]string, error)
+	// ListRecommendCloudVpcCidr list recommend cloud vpc cidr
+	ListRecommendCloudVpcCidr(cloudID, vpcID, networkType string, mask uint32, opt *CommonOption) ([]string, error)
 	// AllocateOverlayCidr allocate overlay cidr
 	AllocateOverlayCidr(vpcId string, cluster *proto.Cluster, cidrLens []uint32,
 		reservedBlocks []*net.IPNet, opt *CommonOption) ([]string, error)

@@ -1026,6 +1026,12 @@ func (c *Cluster) CheckHighAvailabilityMasterNodes(cls *proto.Cluster, nodes []*
 	return nil
 }
 
+// AddClusterCidr add cidr to cluster
+func (c *Cluster) AddClusterCidr(ctx context.Context, cidrs []string,
+	opt *cloudprovider.AddSubnetsToClusterOption) error {
+	return business.AddClusterGrCidr(&opt.CommonOption, opt.Cluster.SystemID, cidrs)
+}
+
 func getTkeClusterNetworkType(cluster *tke.Cluster) string {
 	property := *cluster.Property
 

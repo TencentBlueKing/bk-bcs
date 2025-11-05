@@ -317,3 +317,9 @@ func (c *Cluster) CheckHighAvailabilityMasterNodes(cls *proto.Cluster, nodes []*
 	opt *cloudprovider.CheckHaMasterNodesOption) error {
 	return nil
 }
+
+// AddClusterCidr add cidr to cluster
+func (c *Cluster) AddClusterCidr(ctx context.Context, cidrs []string,
+	opt *cloudprovider.AddSubnetsToClusterOption) error {
+	return cloudprovider.ErrCloudNotImplemented
+}

@@ -277,3 +277,9 @@ func (c *VPCManager) GetClusterIpUsage(clusterId string, ipType string, opt *clo
 
 	return 0, 0, fmt.Errorf("not supported ipType[%s]", ipType)
 }
+
+// ListRecommendCloudVpcCidr get recommend vpc cidr
+func (vm *VPCManager) ListRecommendCloudVpcCidr(cloudID, vpcID, networkType string, mask uint32,
+	opt *cloudprovider.CommonOption) ([]string, error) {
+	return nil, nil
+}

@@ -22,6 +22,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud-public/business"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cidrtree"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
@@ -239,4 +240,22 @@ func (c *VPCManager) GetVpcIpUsage(
 func (c *VPCManager) GetClusterIpUsage(clusterId string, ipType string, opt *cloudprovider.CommonOption) (
 	uint32, uint32, error) {
 	return 0, 0, nil
+}
+
+// ListRecommendCloudVpcCidr list recommend cloud vpc cidr
+func (c *VPCManager) ListRecommendCloudVpcCidr(cloudID, vpcID, networkType string, mask uint32,
+	opt *cloudprovider.CommonOption) ([]string, error) {
+	var err error
+	ips := make([]*net.IPNet, 0)
+
+	if networkType == common.ClusterOverlayNetwork {
+		ips, err = business.GetVpcGrFreeIPNets(opt, cloudID, vpcID, nil)
+	} else {
+		ips, err = business.GetFreeIPNets(opt, vpcID)
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return cloudprovider.GetUsableCidrByMask(ips, int(mask)), nil
 }

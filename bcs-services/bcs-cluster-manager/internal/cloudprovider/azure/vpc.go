@@ -203,3 +203,9 @@ func (vm *VPCManager) GetClusterIpUsage(clusterId string, ipType string, opt *cl
 	uint32, uint32, error) {
 	return 0, 0, nil
 }
+
+// ListRecommendCloudVpcCidr get recommend vpc cidr
+func (vm *VPCManager) ListRecommendCloudVpcCidr(cloudID, vpcID, networkType string, mask uint32,
+	opt *cloudprovider.CommonOption) ([]string, error) {
+	return nil, nil
+}
