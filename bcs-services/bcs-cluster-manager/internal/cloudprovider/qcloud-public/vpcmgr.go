@@ -245,8 +245,10 @@ func (c *VPCManager) GetClusterIpUsage(clusterId string, ipType string, opt *clo
 // ListRecommendCloudVpcCidr list recommend cloud vpc cidr
 func (c *VPCManager) ListRecommendCloudVpcCidr(cloudID, vpcID, networkType string, mask uint32,
 	opt *cloudprovider.CommonOption) ([]string, error) {
-	var err error
-	ips := make([]*net.IPNet, 0)
+	var (
+		err error
+		ips []*net.IPNet
+	)
 
 	if networkType == common.ClusterOverlayNetwork {
 		ips, err = business.GetVpcGrFreeIPNets(opt, cloudID, vpcID, nil)
