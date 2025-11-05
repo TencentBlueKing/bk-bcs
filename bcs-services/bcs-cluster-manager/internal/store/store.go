@@ -63,6 +63,7 @@ type ClusterManagerModel interface {
 
 	// node information storage management
 	CreateNode(ctx context.Context, node *types.Node) error
+	CreateNodes(ctx context.Context, node []*types.Node) error
 	UpdateNode(ctx context.Context, node *types.Node) error
 	UpdateClusterNodeByNodeID(ctx context.Context, node *types.Node) error
 	DeleteNode(ctx context.Context, nodeID string) error
