@@ -15,12 +15,14 @@ package app
 
 import (
 	"fmt"
+	"net"
 	"os"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
+	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/common/util"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/component"
@@ -92,7 +94,13 @@ func parseConfig(op *options.UserManagerOptions) (*config.UserMgrConfig, error) 
 	userMgrConfig := config.NewUserMgrConfig()
 
 	userMgrConfig.Address = op.Address
-	userMgrConfig.IPv6Address = util.InitIPv6Address(op.IPv6Address)
+	ipv6Address := util.InitIPv6Address(op.IPv6Address)
+	// 如果没有主动配置IPv6，同时也没有从环境变量解析出可用IPv6，则不监听IPv6地址
+	if op.IPv6Address == "" && ipv6Address == net.IPv6loopback.String() &&
+		util.GetIPv6Address(os.Getenv(types.LOCALIPV6)) == "" {
+		ipv6Address = ""
+	}
+	userMgrConfig.IPv6Address = ipv6Address
 	userMgrConfig.Port = op.Port
 	userMgrConfig.InsecureAddress = op.InsecureAddress
 	userMgrConfig.InsecurePort = op.InsecurePort
