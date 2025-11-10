@@ -13,8 +13,6 @@
 package common
 
 import (
-	v1 "k8s.io/api/core/v1"
-
 	meshmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/proto/bcs-mesh-manager"
 )
 
@@ -133,7 +131,6 @@ type IstiodPilotConfig struct {
 	CPU              *HPACPUConfig     `yaml:"cpu,omitempty"`
 	Env              map[string]string `yaml:"env,omitempty"`
 	NodeSelector     map[string]string `yaml:"nodeSelector,omitempty"`
-	Tolerations      []v1.Toleration   `yaml:"tolerations,omitempty"`
 }
 
 // HPACPUConfig HPA cpu配置

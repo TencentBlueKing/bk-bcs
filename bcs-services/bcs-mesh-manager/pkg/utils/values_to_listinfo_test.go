@@ -15,8 +15,6 @@ package utils
 import (
 	"testing"
 
-	v1 "k8s.io/api/core/v1"
-
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/store/entity"
 	meshmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/proto/bcs-mesh-manager"
@@ -139,14 +137,6 @@ func TestConvertValuesToListItem(t *testing.T) {
 					},
 					NodeSelector: map[string]string{
 						"node-type": "istio",
-					},
-					Tolerations: []v1.Toleration{
-						{
-							Key:      "istio",
-							Operator: v1.TolerationOpEqual,
-							Value:    "true",
-							Effect:   v1.TaintEffectNoSchedule,
-						},
 					},
 				},
 			},

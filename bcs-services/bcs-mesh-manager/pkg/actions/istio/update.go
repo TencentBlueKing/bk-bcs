@@ -241,7 +241,7 @@ func (u *UpdateIstioAction) update(ctx context.Context) error {
 		}
 	}
 
-	// 获取values.yaml配置信息
+	// 获取控制面的实际安装values.yaml配置信息
 	values, err := u.getValues(ctx, istio)
 	if err != nil {
 		return err
@@ -279,6 +279,7 @@ func (u *UpdateIstioAction) update(ctx context.Context) error {
 		blog.Errorf("convert request to values failed, meshID: %s, err: %s", u.req.MeshID, err)
 		return err
 	}
+
 	// 提取本次更新istio时的可选配置，当配置关闭时需要移除values.yaml中的对应字段
 	updateValuesOptions := u.updateValuesOptions(u.req)
 	// 使用values.yaml中的networkID，兼容部分非平台安装的迁移数据
