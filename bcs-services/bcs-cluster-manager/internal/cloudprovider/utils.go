@@ -1640,3 +1640,32 @@ func GetTaskTimeout(
 
 	return defaultTime
 }
+
+// GetUsableCidrByMask get usable cidr by mask
+func GetUsableCidrByMask(ipnets []*net.IPNet, subnetMask int) []string {
+	result := make([]string, 0)
+
+	for _, ipnet := range ipnets {
+		ones, _ := ipnet.Mask.Size()
+		if subnetMask < ones {
+			continue
+		}
+
+		// 计算子网数量和步长
+		subnetCount := 1 << (subnetMask - ones)
+		step := 1 << (32 - subnetMask)
+		ip := ipnet.IP.To4()
+		startIP := uint32(ip[0])<<24 | uint32(ip[1])<<16 | uint32(ip[2])<<8 | uint32(ip[3])
+
+		for i := 0; i < subnetCount; i++ {
+			n := startIP + uint32(i*step)
+			currentIP := net.IPv4(byte(n>>24), byte(n>>16), byte(n>>8), byte(n))
+			if !ipnet.Contains(currentIP) {
+				continue
+			}
+			result = append(result, fmt.Sprintf("%s/%d", currentIP, subnetMask))
+		}
+	}
+
+	return result
+}
