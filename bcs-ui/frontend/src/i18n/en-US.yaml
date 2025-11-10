@@ -149,6 +149,8 @@ nav:
   tkexCRD: Kourse
   templateFile: TemplateFile
   projectQuotas: Project Quotas
+  platformProject: Platform Project
+  platformManage: Platform
 iam:
   title:
     perms: This operation requires the following permissions
@@ -429,6 +431,8 @@ generic:
     resourceID: Resource ID
     none: None
     tag: Tags
+    description: Description
+    creator: Creator
   status:
     part_failure: Part failure
     support: Support

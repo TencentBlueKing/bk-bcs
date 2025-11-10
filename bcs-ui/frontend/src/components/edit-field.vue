@@ -1,6 +1,6 @@
 <template>
   <section class="flex items-center">
-    <template v-if="!isEdit && !editMode">
+    <template v-if="!isEdit">
       <span class="break-all">{{ value || '--' }}</span>
       <span
         class="hover:text-[#3a84ff] cursor-pointer ml-[8px]"
@@ -13,12 +13,13 @@
       <bcs-input
         :value="value"
         v-bind="$attrs"
-        @input="handleInput" />
+        @input="handleInput"
+        @blur="handleBlur" />
     </slot>
   </section>
 </template>
 <script lang="ts" setup>
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 
 interface Props {
   readonly?: Boolean
@@ -26,9 +27,12 @@ interface Props {
   editMode?: Boolean
 }
 
-type Emits = (e: 'input', v: string) => void;
+type Emits = {
+  (e: 'input'|'blur', v: string): void;
+  (e: 'update:editMode', v: boolean): void;
+};
 
-withDefaults(
+const props = withDefaults(
   defineProps<Props>(),
   {
     readonly: () => false,
@@ -46,4 +50,16 @@ function setEditStatus() {
 function handleInput(v: string) {
   emit('input', v);
 }
+
+function handleBlur(v: string) {
+  emit('blur', v);
+}
+
+watch(() => props.editMode, () => {
+  isEdit.value = !!props.editMode;
+}, { immediate: true });
+
+watch(isEdit, () => {
+  emit('update:editMode', isEdit.value);
+});
 </script>

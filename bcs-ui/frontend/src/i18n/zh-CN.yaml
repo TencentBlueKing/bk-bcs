@@ -130,6 +130,8 @@ nav:
   cloudToken: 云凭证
   templateFile: 模板文件
   projectQuotas: 项目配额
+  platformProject: 项目管理
+  platformManage: 平台管理
 iam:
   title:
     perms: 该操作需要以下权限
@@ -404,6 +406,8 @@ generic:
     resourceID: 资源ID
     none: 无
     tag: 标签
+    description: 描述
+    creator: 创建人
   status:
     part_failure: 部分失败
     support: 支持

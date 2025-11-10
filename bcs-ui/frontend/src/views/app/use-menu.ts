@@ -68,6 +68,8 @@ export type MenuID =
   |'TEMPLATESET_CUSTOMOBJECT'
   |'TEMPLATE_FILE'
   |'VARIABLE'
+  |'PLATFORMMANAGE'
+  |'PLATFORMPROJECT'
   |'PROJECTMANAGE'
   |'EVENT'
   |'AUDIT'
@@ -558,6 +560,18 @@ export default function useMenu() {
           id: 'SERVICEMESH',
           icon: 'bcs-icon-log-collection',
           route: 'serviceMesh',
+        },
+      ],
+    },
+    {
+      title: $i18n.t('nav.platformManage'),
+      id: 'PLATFORMMANAGE',
+      children: [
+        {
+          title: $i18n.t('nav.platformProject'),
+          id: 'PLATFORMPROJECT',
+          icon: 'bcs-icon bcs-icon-apps',
+          route: 'platformProjectList',
         },
       ],
     },
