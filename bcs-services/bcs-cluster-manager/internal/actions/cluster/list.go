@@ -697,18 +697,13 @@ func (la *ListNodesInClusterAction) listNodes() error {
 	}
 
 	// get cluster nodes
-	k8sNodes := autils.FilterNodesRole(la.getK8sNodes(cmNodes), false)
+	k8sNodes := autils.FilterNodesRole(la.getK8sNodes(), false)
 	la.nodes = mergeClusterNodes(la.cluster, cmNodes, k8sNodes)
 
 	return nil
 }
 
-func (la *ListNodesInClusterAction) getK8sNodes(cmNodes []*cmproto.ClusterNode) []*corev1.Node {
-	if !autils.CheckIfGetNodesFromCluster(la.cluster, la.cloud, cmNodes) {
-		blog.Infof("ListNodesInClusterAction[%s] getK8sNodes clusterNodes empty", la.req.ClusterID)
-		return nil
-	}
-
+func (la *ListNodesInClusterAction) getK8sNodes() []*corev1.Node {
 	k8sNodes, err := la.k8sOp.ListClusterNodes(la.ctx, la.req.ClusterID)
 	if err != nil {
 		blog.Warnf("ListClusterNodes %s failed, %s", la.req.ClusterID, err.Error())
@@ -836,38 +831,15 @@ func (la *ListMastersInClusterAction) validate() error {
 
 // listNodes list cluster nodes
 func (la *ListMastersInClusterAction) listNodes() error {
-	cls, err := la.model.GetCluster(la.ctx, la.req.ClusterID)
+	// get cluster masters
+	masters, err := la.k8sOp.ListClusterNodes(la.ctx, la.req.ClusterID)
 	if err != nil {
-		blog.Errorf("get cluster %s failed, %s", la.req.ClusterID, err.Error())
+		blog.Warnf("ListClusterNodes %s failed, %s", la.req.ClusterID, err.Error())
 		return err
 	}
-	cloud, err := la.model.GetCloud(la.ctx, cls.Provider)
-	if err != nil {
-		blog.Errorf("get cloud %s failed, %s", cls.Provider, err.Error())
-		return err
-	}
-	clsNodes, err := getClusterNodes(la.model, cls)
-	if err != nil {
-		blog.Errorf("get cluster %s nodes failed, %s", cls.ClusterID, err.Error())
-	}
 
-	if !autils.CheckIfGetNodesFromCluster(cls, cloud, clsNodes) {
-		cmNodes := make([]*cmproto.ClusterNode, 0)
-		for node := range cls.GetMaster() {
-			cmNodes = append(cmNodes, transNodeToClusterNode(la.model, cls.GetMaster()[node]))
-		}
-		la.nodes = cmNodes
-	} else {
-		// get cluster masters
-		masters, err := la.k8sOp.ListClusterNodes(la.ctx, la.req.ClusterID)
-		if err != nil {
-			blog.Warnf("ListClusterNodes %s failed, %s", la.req.ClusterID, err.Error())
-			return err
-		}
-
-		masters = autils.FilterNodesRole(masters, true)
-		la.nodes = transK8sNodesToClusterNodes(la.req.ClusterID, masters)
-	}
+	masters = autils.FilterNodesRole(masters, true)
+	la.nodes = transK8sNodesToClusterNodes(la.req.ClusterID, masters)
 
 	// append cmdb host info
 	la.appendHostInfo()
