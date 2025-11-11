@@ -307,6 +307,8 @@ type CloudValidateManager interface {
 	CreateNodeGroupValidate(req *proto.CreateNodeGroupRequest, opt *CommonOption) error
 	// ListInstancesValidate ListInstanceTypeValidate list instance type validate
 	ListInstancesValidate(req *proto.ListCloudInstancesRequest, account *proto.Account) error
+	// AllowCrossBizNodes allow cross biz nodes
+	AllowCrossBizNodes(cluster *proto.Cluster) bool
 }
 
 // ClusterManager cloud interface for kubernetes cluster management
