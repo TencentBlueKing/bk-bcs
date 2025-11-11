@@ -956,7 +956,7 @@ func generateInstanceAdvanceInfoFromNp(cls *proto.Cluster, nodeTemplate *proto.N
 		}
 	}
 
-	if len(nodeTemplate.Taints) > 0 && (options == nil || !options.CreateCluster) {
+	if len(nodeTemplate.Taints) > 0 {
 		for _, t := range nodeTemplate.Taints {
 			advanceInfo.TaintList = append(advanceInfo.TaintList, &api.Taint{
 				Key:    qcommon.StringPtr(t.Key),
@@ -965,6 +965,7 @@ func generateInstanceAdvanceInfoFromNp(cls *proto.Cluster, nodeTemplate *proto.N
 			})
 		}
 	}
+
 	if len(nodeTemplate.DataDisks) > 0 {
 		for i, disk := range nodeTemplate.DataDisks {
 			diskSize, _ := strconv.Atoi(disk.DiskSize)

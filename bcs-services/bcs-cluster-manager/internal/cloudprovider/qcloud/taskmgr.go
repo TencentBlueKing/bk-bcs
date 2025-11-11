@@ -296,7 +296,9 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 	createClusterTask.BuildAllocateSubnetTask(task)
 	// step9: enable vpc-cni network mode when cluster enable vpc-cni
 	createClusterTask.BuildEnableVpcCniStep(task)
-	// step10: update DB info by cluster data
+	// step10: 若需要则设置节点注解
+	createClusterTask.BuildNodeAnnotationsStep(task)
+	// step11: update DB info by cluster data
 	createClusterTask.BuildUpdateTaskStatusStep(task)
 
 	// set current step
