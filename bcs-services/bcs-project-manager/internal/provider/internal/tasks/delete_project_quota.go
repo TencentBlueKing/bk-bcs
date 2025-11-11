@@ -132,9 +132,23 @@ func (dpq *deleteProjectQuota) buildFederationClusterQuotaSteps(
 
 	// 1. 审批联邦集群配额申请
 	// 2. 等待审批通过，审批通过后, 更新配额状态; 审批拒绝后, 更新配额申请状态
+
+	// 安全获取配额信息，避免空指针panic
+	cpuQuota := ""
+	if projectQuota.Quota.Cpu != nil {
+		cpuQuota = projectQuota.Quota.Cpu.DeviceQuota
+	}
+	memQuota := ""
+	if projectQuota.Quota.Mem != nil {
+		memQuota = projectQuota.Quota.Mem.DeviceQuota
+	}
+	gpuQuota := ""
+	if projectQuota.Quota.Gpu != nil {
+		memQuota = projectQuota.Quota.Gpu.DeviceQuota
+	}
 	content := fmt.Sprintf("user %s revoke for federation cluster %s namespace %s quota: cpu(%s) mem(%s) gpu(%s)",
 		dpq.Operator, projectQuota.ClusterId, projectQuota.Namespace,
-		projectQuota.Quota.Cpu.DeviceQuota, projectQuota.Quota.Mem.DeviceQuota, projectQuota.Quota.Gpu.DeviceQuota)
+		cpuQuota, memQuota, gpuQuota)
 	stepList = append(stepList, buildItsmQuotaSteps("", itsmData{
 		operator:    dpq.Operator,
 		projectCode: projectQuota.ProjectCode,
