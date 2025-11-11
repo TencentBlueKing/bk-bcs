@@ -23,6 +23,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/cache"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/utils"
+	apputils "github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/config"
 )
 
@@ -112,10 +113,48 @@ func GetClustersByProjectID(ctx context.Context, projectID string) ([]*Cluster, 
 	return clusters, nil
 }
 
+// GetAllTenantCluster get all clusters
+func GetAllTenantCluster() ([]*Cluster, error) {
+	url := fmt.Sprintf("%s/bcsapi/v4/clustermanager/v1/cluster", config.GetGlobalConfig().BcsAPI.InnerHost)
+
+	tenants, err := ListTenant(context.Background())
+	if err != nil {
+		return nil, err
+	}
+
+	clusterMap := map[string]*Cluster{}
+	clustersData := []*Cluster{}
+	for _, tenant := range tenants {
+		resp, err := GetClient().R().
+			SetAuthToken(config.GetGlobalConfig().BcsAPI.Token).
+			SetHeader(apputils.HeaderTenantID, tenant.ID).
+			Get(url)
+		if err != nil {
+			return nil, err
+		}
+
+		var clusters []*Cluster
+		if err = UnmarshalBKResult(resp, &clusters); err != nil {
+			return nil, err
+		}
+		for _, v := range clusters {
+			cls := v
+			clusterMap[v.ClusterID] = cls
+			clustersData = append(clustersData, cls)
+		}
+	}
+
+	cache.LocalCache.Set(ListClusterKeyPrefix, clusterMap, -1)
+	return clustersData, nil
+}
+
 // GetAllCluster get all clusters
 func GetAllCluster() ([]*Cluster, error) {
 	if config.GetGlobalConfig() == nil || config.GetGlobalConfig().BcsAPI == nil {
 		return nil, fmt.Errorf("bcs-api config not found")
+	}
+	if config.GetGlobalConfig().Tenant.Enable {
+		return GetAllTenantCluster()
 	}
 	url := fmt.Sprintf("%s/bcsapi/v4/clustermanager/v1/cluster", config.GetGlobalConfig().BcsAPI.InnerHost)
 

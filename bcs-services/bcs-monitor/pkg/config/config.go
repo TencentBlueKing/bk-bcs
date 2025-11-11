@@ -41,6 +41,7 @@ type Configuration struct {
 	BKMonitor   *BKMonitorConf           `yaml:"bk_monitor_conf"`
 	BKLog       *BKLogConf               `yaml:"bk_log_conf"`
 	BKBase      *BKBaseConf              `yaml:"bk_base_conf"`
+	BKUser      *BKUserConf              `yaml:"bk_user_conf"`
 	BCS         *BCSConf                 `yaml:"bcs_conf"`
 	IAM         *IAMConfig               `yaml:"iam_conf"`
 	Credentials map[string][]*Credential `yaml:"-"`
@@ -198,6 +199,9 @@ func (c *Configuration) ReadFrom(content []byte) error {
 	// bklog
 	if c.BKLog.APIServer == "" {
 		c.BKLog.APIServer = BKLOG_API_SERVER
+	}
+	if c.BKUser.APIServer == "" {
+		c.BKUser.APIServer = BKUSER_API_SERVER
 	}
 	if c.BKLog.Entrypoint == "" {
 		c.BKLog.Entrypoint = BK_LOG_HOST

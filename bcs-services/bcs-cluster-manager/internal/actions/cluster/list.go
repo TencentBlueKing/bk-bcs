@@ -34,9 +34,11 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cmdb"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/gse"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tenant"
@@ -114,7 +116,7 @@ func (la *ListAction) getSharedCluster() error {
 
 	clusterIDs := make([]string, 0)
 	for i := range clusterList {
-		if clusterList[i].GetProjectID() == la.req.ProjectID {
+		if clusterList[i].GetProjectID() == la.req.ProjectID || la.req.ProjectID == "" {
 			continue
 		}
 		la.clusterList = append(la.clusterList, shieldClusterInfo(clusterList[i]))
@@ -206,6 +208,8 @@ func (la *ListAction) filterClusterList() ([]*cmproto.Cluster, bool, error) {
 
 // listCluster cluster list
 func (la *ListAction) listCluster() error {
+	user := iauth.GetAuthAndTenantInfoFromCtx(la.ctx)
+
 	clusterList, sharedCluster, err := la.filterClusterList()
 	if err != nil {
 		return err
@@ -216,15 +220,26 @@ func (la *ListAction) listCluster() error {
 		if clusterList[i].IsShared {
 			clusterList[i].IsShared = false
 		}
+		// filter project by tenant
+		if options.GetGlobalCMOptions().TenantConfig.EnableMultiTenantMode {
+			proInfo, perr := project.GetProjectManagerClient().
+				GetProjectInfo(la.ctx, clusterList[i].GetProjectID(), true)
+			if perr != nil {
+				blog.Errorf("listCluster GetProjectInfo failed: %v", perr)
+				return perr
+			}
+			if proInfo.TenantID != user.ResourceTenantId {
+				continue
+			}
+		}
 		la.clusterList = append(la.clusterList, shieldClusterInfo(clusterList[i]))
 		clusterIDList = append(clusterIDList, clusterList[i].ClusterID)
 	}
 
 	// return cluster extraInfo
-	la.resp.ClusterExtraInfo = returnClusterExtraInfo(la.model, clusterList)
+	la.resp.ClusterExtraInfo = returnClusterExtraInfo(la.model, la.clusterList)
 
 	// projectID / operator get user perm
-	user := iauth.GetAuthAndTenantInfoFromCtx(la.ctx)
 	if la.req.ProjectID != "" && la.req.Operator != "" {
 		v3Perm, err := la.GetProjectClustersV3Perm(actions.PermInfo{ // nolint
 			ProjectID: la.req.ProjectID,

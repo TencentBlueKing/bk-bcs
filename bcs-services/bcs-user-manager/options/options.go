@@ -54,6 +54,7 @@ type UserManagerOptions struct {
 	BcsAPI           BcsAPI      `json:"bcs_api"`
 	Encrypt          Encrypt     `json:"encrypt" yaml:"encrypt"`
 	Activity         Activity    `json:"activity" yaml:"activity"`
+	Tenant           Tenant      `json:"tenant" yaml:"tenant"`
 }
 
 // TracingConf tracing config

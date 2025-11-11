@@ -108,6 +108,7 @@ func parseConfig(op *options.UserManagerOptions) (*config.UserMgrConfig, error) 
 	userMgrConfig.Activity = op.Activity
 	userMgrConfig.EnableTokenSync = op.EnableTokenSync
 	userMgrConfig.SlowSQLLatency = op.SlowSQLLatency
+	userMgrConfig.Tenant = op.Tenant
 
 	config.Tke = op.TKE
 	secretID, err := encrypt.DesDecryptFromBase([]byte(config.Tke.SecretID))

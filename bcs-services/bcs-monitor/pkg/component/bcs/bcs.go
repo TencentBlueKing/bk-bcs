@@ -14,6 +14,7 @@
 package bcs
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -22,8 +23,10 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component"
+	bkuser "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bk_user"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storage"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/utils"
 )
 
 const (
@@ -90,8 +93,58 @@ func CacheListClusters() {
 
 const listClustersCacheKey = "bcs.ListClusters"
 
+// ListTenantCluster 获取全部集群数据
+func ListTenantCluster() {
+	tenants, err := bkuser.ListTenant(context.Background())
+	if err != nil {
+		blog.Errorf("list tenants error, %s", err.Error())
+		return
+	}
+
+	clusterMap := map[string]*Cluster{}
+	for _, tenant := range tenants {
+		if tenant.Status != "enabled" {
+			continue
+		}
+		url := fmt.Sprintf("%s/bcsapi/v4/clustermanager/v1/cluster", config.G.BCS.Host)
+
+		resp, err := component.GetClient().R().
+			SetAuthToken(config.G.BCS.Token).
+			SetHeader(utils.TenantIDHeaderKey, tenant.ID).
+			Get(url)
+
+		if err != nil {
+			blog.Errorf("list clusters error, %s", err.Error())
+			return
+		}
+
+		var result []*Cluster
+		if err = component.UnmarshalBKResult(resp, &result); err != nil {
+			blog.Errorf("unmarshal clusters error, %s", err.Error())
+			return
+		}
+
+		for _, cluster := range result {
+			cls := cluster
+			if cls.IsVirtual() {
+				cls.VclusterInfo, err = parseVClusterInfo(cls.ExtraInfo.NamespaceInfo)
+				if err != nil {
+					blog.Errorf("parse clusters %s namespaceInfo %s error, %s", cls.ClusterID, cls.ExtraInfo.NamespaceInfo,
+						err.Error())
+				}
+			}
+			clusterMap[cluster.ClusterID] = cls
+		}
+	}
+	storage.LocalCache.Slot.Set(listClustersCacheKey, clusterMap, -1)
+}
+
 // ListClusters 获取集群列表
 func ListClusters() {
+	if config.G.Base.EnableMultiTenant {
+		ListTenantCluster()
+		return
+	}
 	url := fmt.Sprintf("%s/bcsapi/v4/clustermanager/v1/cluster", config.G.BCS.Host)
 
 	resp, err := component.GetClient().R().

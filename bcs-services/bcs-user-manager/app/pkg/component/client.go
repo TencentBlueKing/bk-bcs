@@ -33,6 +33,7 @@ import (
 	"k8s.io/klog/v2"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/utils"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/config"
 )
 
 const (
@@ -231,4 +232,27 @@ func GetAuditClient() *audit.Client {
 		})
 	}
 	return auditClient
+}
+
+// AuthInfo auth info, issue https://github.com/TencentBlueKing/blueking-apigateway/issues/325
+type AuthInfo struct {
+	BkAppCode   string `json:"bk_app_code"`
+	BkAppSecret string `json:"bk_app_secret"`
+	BkUserName  string `json:"bk_username"`
+}
+
+// GetBKAPIAuthorization generate bk api auth header, X-Bkapi-Authorization
+func GetBKAPIAuthorization(username string) (string, error) {
+	auth := &AuthInfo{
+		BkAppCode:   config.GetGlobalConfig().IAMConfig.AppCode,
+		BkAppSecret: config.GetGlobalConfig().IAMConfig.AppSecret,
+		BkUserName:  username,
+	}
+
+	userAuth, err := json.Marshal(auth)
+	if err != nil {
+		return "", err
+	}
+
+	return string(userAuth), nil
 }
