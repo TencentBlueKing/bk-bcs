@@ -89,6 +89,7 @@ func Run(op *options.UserManagerOptions) {
 }
 
 // parseConfig parse the option to config
+// nolint:funlen
 func parseConfig(op *options.UserManagerOptions) (*config.UserMgrConfig, error) {
 	userMgrConfig := config.NewUserMgrConfig()
 
