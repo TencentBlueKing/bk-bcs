@@ -40,7 +40,8 @@ const (
 
 const (
 	// host field info
-	fieldCloudID = "bk_cloud_id"
+	fieldCloudID     = "bk_cloud_id"
+	fieldCloudRegion = "bk_cloud_region"
 	// FieldHostIP field host ip
 	FieldHostIP      = "bk_host_innerip"
 	fieldHostIPv6    = "bk_host_innerip_v6"
@@ -82,10 +83,10 @@ const (
 )
 
 var (
-	fieldHostDetailInfo = []string{fieldCloudID, FieldHostIP, fieldHostIPv6, fieldHostOutIP, fieldHostOutIPV6,
+	fieldHostDetailInfo = []string{fieldCloudID, fieldCloudRegion, FieldHostIP, fieldHostIPv6, fieldHostOutIP, fieldHostOutIPV6,
 		fieldHostID, fieldDeviceType, fieldIDCCityName, fieldIDCCityID, fieldDeviceClass, fieldHostCPU, fieldCpuModule,
 		fieldHostMem, fieldHostDisk, fieldOperator, fieldBakOperator, fieldRack, fieldIDCName, fieldSubZoneID,
-		fieldIspName, fieldAgentId, FieldAssetId}
+		fieldIDCAreaID, fieldIDCArea, fieldIspName, fieldAgentId, FieldAssetId}
 
 	fieldHostIPSelectorInfo = []string{FieldHostIP, fieldHostIPv6, fieldCloudID, fieldHostName, fieldOsType,
 		fieldOsName, fieldHostID, fieldOperator, fieldBakOperator, fieldAgentId}
@@ -284,6 +285,7 @@ type ListHostsWithoutBizResponse struct {
 type HostDetailData struct {
 	HostData
 	BkCloudID        int64  `json:"bk_cloud_id"`
+	BkCloudRegion    string `json:"bk_cloud_region"`
 	BkHostInnerIPV6  string `json:"bk_host_innerip_v6"`
 	BkHostOutIP      string `json:"bk_host_outerip"`
 	BkHostOutIPV6    string `json:"bk_host_outerip_v6"`
@@ -296,6 +298,8 @@ type HostDetailData struct {
 	HostMem          int64  `json:"bk_mem"`
 	HostDisk         int64  `json:"bk_disk"`
 	Rack             string `json:"rack"`
+	IDCAreaID        int64  `json:"bk_idc_area_id"`
+	IDCArea          string `json:"bk_idc_area"`
 	SubZoneID        string `json:"sub_zone_id"`
 	CpuModule        string `json:"bk_cpu_module"`
 }

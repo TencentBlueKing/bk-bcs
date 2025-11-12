@@ -641,15 +641,21 @@ func UpdateClusterNodesLabels(ctx context.Context, data NodeLabelsData) error { 
 	cls, err := cloudprovider.GetStorageModel().GetCluster(ctx, data.ClusterID)
 	if err != nil {
 		blog.Errorf("updateClusterNodesLabels[%s] GetCluster[%s] failed: %v", taskID, data.ClusterID, err)
+		cloudprovider.GetStorageModel().CreateTaskStepLogWarn(context.Background(), taskID, stepName,
+			fmt.Sprintf("updateClusterNodesLabels[%s] GetCluster[%s] failed: %v", taskID, data.ClusterID, err))
 	}
 
 	hostsMap, hostIDs, err := GetCmdbNodeDetailInfo(data.NodeIPs)
 	if err != nil {
 		blog.Errorf("updateClusterNodesLabels[%s] GetCmdbNodeDetailInfo failed: %v", taskID, err)
+		cloudprovider.GetStorageModel().CreateTaskStepLogWarn(context.Background(), taskID, stepName,
+			fmt.Sprintf("updateClusterNodesLabels[%s] GetCmdbNodeDetailInfo failed: %v", taskID, err))
 	}
 	hostsTopo, err := GetNodeBizRelation(hostIDs)
 	if err != nil {
 		blog.Errorf("updateClusterNodesLabels[%s] GetNodeBizRelation failed: %v", taskID, err)
+		cloudprovider.GetStorageModel().CreateTaskStepLogWarn(context.Background(), taskID, stepName,
+			fmt.Sprintf("updateClusterNodesLabels[%s] GetNodeBizRelation failed: %v", taskID, err))
 	}
 
 	for _, node := range nodeNames {
@@ -665,6 +671,8 @@ func UpdateClusterNodesLabels(ctx context.Context, data NodeLabelsData) error { 
 
 		// cmdb labels
 		h, ok := hostsMap[node.NodeIP]
+		cloudprovider.GetStorageModel().CreateTaskStepLogWarn(context.Background(), taskID, stepName,
+			fmt.Sprintf("debug: hostsMap[%s]", hostsMap))
 		if ok {
 			labels[utils.SubZoneIDLabelKey] = h.SubZoneID
 			labels[utils.AssetIDLabelKey] = h.BkAssetID
@@ -675,6 +683,10 @@ func UpdateClusterNodesLabels(ctx context.Context, data NodeLabelsData) error { 
 			if ok1 {
 				labels[utils.BusinessIDLabelKey] = fmt.Sprintf("%d", topo.BkBizID)
 			}
+
+			labels[utils.IDCCityIDLabelKey] = h.IDCCityID
+			labels[utils.IDCAreaIDLabelKey] = fmt.Sprintf("%v", h.IDCAreaID)
+			labels[utils.RegionLabelKey] = h.BkCloudRegion
 		}
 
 		// mixed labels if cluster is mixed cluster
