@@ -325,12 +325,13 @@ func clusterCloudDefaultAdvancedSetting(cls *cmproto.Cluster, cloud *cmproto.Clo
 		if cls.ClusterAdvanceSettings.ExtraArgs == nil {
 			cls.ClusterAdvanceSettings.ExtraArgs = common.DefaultClusterConfig
 		}
+		cls.ClusterAdvanceSettings.IPVS = true
 	}
 
 	if cls.ManageType == common.ClusterManageTypeManaged {
 		cls.ClusterAdvanceSettings.AuditEnabled = true
 	}
-	
+
 }
 
 func clusterCloudNetworkSetting(cls *cmproto.Cluster) error {
