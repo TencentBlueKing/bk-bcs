@@ -106,6 +106,26 @@ func (m *ModelNode) CreateNode(ctx context.Context, node *types.Node) error {
 	return nil
 }
 
+// CreateNodes create nodes
+func (m *ModelNode) CreateNodes(ctx context.Context, nodes []*types.Node) error {
+	if nodes == nil {
+		return fmt.Errorf("nodes to be created cannot be empty")
+	}
+	if err := m.ensureTable(ctx); err != nil {
+		return err
+	}
+
+	docs := make([]interface{}, len(nodes))
+	for i, n := range nodes {
+		docs[i] = n
+	}
+
+	if _, err := m.db.Table(m.tableName).Insert(ctx, docs); err != nil {
+		return err
+	}
+	return nil
+}
+
 // UpdateNode update node
 func (m *ModelNode) UpdateNode(ctx context.Context, node *types.Node) error {
 	if err := m.ensureTable(ctx); err != nil {

@@ -453,6 +453,17 @@ service ClusterManager {
     };
   }
 
+  rpc SyncClusterNodes(SyncClusterNodesRequest) returns (SyncClusterNodesResponse) {
+    option (google.api.http) = {
+      put : "/clustermanager/v1/clusters/{clusterID}/nodes/sync"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "同步集群节点"
+      summary : "同步集群节点"
+    };
+  }
+
   //* cluster credential management
   rpc GetClusterCredential(GetClusterCredentialReq)
       returns (GetClusterCredentialResp) {
@@ -13901,6 +13912,39 @@ message UpdateNodeTaintsResponse {
   NodeOperationStatus data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "data",
     description : "返回数据"
+  }];
+}
+
+message SyncClusterNodesRequest {
+  string clusterID = 1 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "clusterID",
+      description : "更新节点所属的clusterID"
+    },
+    (validate.rules).string = {min_len : 1, max_len : 100, pattern : "^[0-9a-zA-Z-]+$"}
+  ];
+}
+
+message SyncClusterNodesResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "SyncClusterNodeResponse"
+      description : "同步集群节点"
+      required : [ "code", "message" ]
+    }
+  };
+
+  uint32 code = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) ={
+    title : "code",
+    description : "返回错误码"
+  }];
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+  bool result = 3 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
   }];
 }
 
