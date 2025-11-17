@@ -153,7 +153,11 @@ func (r *RabbitMQ) StartConsumer(
 		return err
 	}
 
-	handler.HandleMsg(messages, done)
+	err = handler.HandleMsg(messages, done)
+	if err != nil {
+		blog.Warnf("HandleMsg returned error: %s", err.Error())
+		return err
+	}
 
 	return nil
 }

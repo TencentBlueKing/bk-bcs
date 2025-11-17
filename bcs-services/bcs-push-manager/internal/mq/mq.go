@@ -47,5 +47,5 @@ type MQ interface {
 // Handler is an interface for handling messages from the message queue.
 type Handler interface {
 	// HandleMsg processes messages from a delivery channel.
-	HandleMsg(messages <-chan amqp.Delivery, done <-chan bool)
+	HandleMsg(messages <-chan amqp.Delivery, done <-chan bool) error
 }
