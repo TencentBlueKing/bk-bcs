@@ -9730,25 +9730,25 @@ message DeleteNodesRequest {
     json_schema : {
       title : "DeleteNodesRequest"
       description : "集群缩容操作，从指定集群中下架指定IP地址的节点"
-      required : [ "clusterID", "nodes" ]
+      required : ["clusterID", "nodes"]
     }
   };
 
   string clusterID = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title : "clusterID", 
+    title : "clusterID",
     description : "缩容集群ID"
   }, (validate.rules).string = {min_len : 1, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
   ];
   string nodes = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title : "nodes", 
+    title : "nodes",
     description : "需要缩容的IP列表,字符','隔开"
   }, (validate.rules).string = {min_len : 1}];
   string deleteMode = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title : "deleteMode", 
+    title : "deleteMode",
     description : "删除模式，RETAIN(移除集群，但是保留主机)，TERMINATE(只支持按量计费的机器)，默认是RETAIN"
   }];
   bool isForce = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title : "isForce", 
+    title : "isForce",
     description : "不管节点处于任何状态都强制删除，例如可能刚初始化，NotReady等"
   }];
   string operator = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
