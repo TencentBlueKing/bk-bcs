@@ -42,13 +42,13 @@ func NewResponseWrapper(fn server.HandlerFunc) server.HandlerFunc {
 		v := reflect.ValueOf(rsp)
 		codeField := v.Elem().FieldByName("Code")
 		messageField := v.Elem().FieldByName("Message")
-		if codeField.CanInterface() {
+		if codeField.IsValid() && codeField.CanInterface() {
 			if c, ok := codeField.Interface().(uint32); ok {
 				code := int(c)
 				result.ResultCode = code
 			}
 		}
-		if messageField.CanInterface() {
+		if messageField.IsValid() && messageField.CanInterface() {
 			if m, ok := messageField.Interface().(string); ok {
 				message := m
 				result.ResultContent = message

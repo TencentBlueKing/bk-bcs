@@ -154,7 +154,6 @@ func (m *Migrator) buildMeshIstio(
 	if err != nil {
 		return nil, fmt.Errorf("failed to get helm app version: %v", err)
 	}
-	meshIstio.Version = m.getIstioVersion(appVersion)
 	meshIstio.Name = opts.MeshName
 	meshIstio.ProjectCode = opts.ProjectCode
 	meshIstio.Version = m.getIstioVersion(appVersion)
@@ -528,6 +527,7 @@ func (m *Migrator) buildReleaseNames(opts *MigrateOptions) map[string]map[string
 		}
 	}
 
+	// todo：后续需要支持从集群的release name 和主集群的不一致的情况
 	for _, clusterID := range allClusters {
 		releaseNames[clusterID] = map[string]string{
 			common.ComponentIstioBase: opts.BaseReleaseName,
@@ -542,14 +542,23 @@ func (m *Migrator) buildReleaseNames(opts *MigrateOptions) map[string]map[string
 	return releaseNames
 }
 
-// getIstioVersion 获取istio版本，从chart版本中提取istio版本号
+// getIstioVersion 获取istio版本，从chart版本中提取istio大版本号
+// 支持两种格式：1.18.7 和 1.18.7-bcs.2
 func (m *Migrator) getIstioVersion(chartVersion string) string {
 	if chartVersion == "" {
 		return ""
 	}
+
+	// 先按 "-" 分割，处理 1.18.7-bcs.2 这种格式
 	parts := strings.Split(chartVersion, "-")
-	if len(parts) == 0 {
-		return ""
+	baseVersion := parts[0] // 获取 1.18.7 部分
+
+	// 再按 "." 分割，提取 major.minor 版本
+	versionParts := strings.Split(baseVersion, ".")
+	if len(versionParts) < 2 {
+		return baseVersion // 如果格式不符合预期，返回原始版本
 	}
-	return parts[0]
+
+	// 返回 major.minor 版本，如 1.18
+	return versionParts[0] + "." + versionParts[1]
 }

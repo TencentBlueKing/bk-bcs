@@ -28,6 +28,7 @@ import VueRouter from 'vue-router';
 
 import ClusterManage from './cluster-manage';
 import DeployManage from './deployment-manage';
+import PlatformManage from './platform-manage';
 import PluginManage from './plugin-manage';
 import ProjectManage from './project-manage';
 import ResourceView from './resource-view';// todo 有循环依赖
@@ -102,6 +103,7 @@ const router = new VueRouter({
         },
         ...ClusterManage,
         ...DeployManage,
+        ...PlatformManage,
         ...ProjectManage,
         ...PluginManage,
       ],

@@ -1669,3 +1669,8 @@ func GetUsableCidrByMask(ipnets []*net.IPNet, subnetMask int) []string {
 
 	return result
 }
+
+// AllowCrossBizNodes check if allow cross biz nodes
+func AllowCrossBizNodes(cls *proto.Cluster) bool {
+	return cls.Labels[WhiteListLabelKey] == common.True
+}

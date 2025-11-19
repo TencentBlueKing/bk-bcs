@@ -87,6 +87,48 @@ function _M.get_username_for_token(credential, bk_login_host)
     return data["data"]["username"]
 end
 
+-- get_username_and_tenant_for_token used for LoginTokenAuthentication
+function _M.get_username_and_tenant_for_token(credential, conf)
+    --core.log.warn("conf.bk_login_host_tenant: ", conf.bk_login_host_tenant)
+    local httpc = http.new()
+    local authorization = string.format('{"bk_app_code": "%s", "bk_app_secret": "%s"}', conf.bk_app_code, conf.bk_app_secret)
+    --core.log.warn("authorization: ", authorization)
+    local res, err = httpc:request_uri(conf.bk_login_host_tenant .. "/bk-tokens/verify/", {
+        method = "GET",
+        query = {bk_token = credential.user_token},
+        headers = {
+            ["Content-Type"] = "application/json",
+            ["X-Bkapi-Authorization"] = authorization,
+            ["X-Bk-Tenant-Id"] = "default",
+        },
+    })
+
+    if not res then
+        core.log.error("request login error: ", err)
+        return nil
+    end
+
+    if not res.body or res.status ~= 200 then
+        core.log.error("request login status: ", res.status)
+        core.log.error("request login body: ", res.body)
+        return nil
+    end
+
+    local data, err = core.json.decode(res.body)
+    if not data then
+        core.log.error("request login decode body error: ", err)
+        return nil
+    end
+    --core.log.warn("data: ", core.json.encode(data))
+
+    if data['error'] ~= nil then
+        core.log.error("request login error: ", data["error"])
+        return nil
+    end
+
+    return data
+end
+
 -- get_username_for_token_esb used for LoginTokenAuthentication
 function _M.get_username_for_token_esb(credential, conf)
     local httpc = http.new()

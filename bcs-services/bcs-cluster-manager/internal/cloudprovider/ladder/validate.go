@@ -152,3 +152,8 @@ func (c *CloudValidate) CreateNodeGroupValidate(
 
 	return nil
 }
+
+// AllowCrossBizNodes xxx
+func (c *CloudValidate) AllowCrossBizNodes(cluster *proto.Cluster) bool {
+	return false
+}

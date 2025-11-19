@@ -667,13 +667,6 @@ func GenIstiodValuesByHighAvailability(
 			for k, v := range highAvailability.DedicatedNode.NodeLabels {
 				installValues.Pilot.NodeSelector[k] = v
 			}
-			// 增加容忍, 所有节点
-			if installValues.Pilot.Tolerations == nil {
-				installValues.Pilot.Tolerations = make([]v1.Toleration, 0)
-			}
-			installValues.Pilot.Tolerations = append(installValues.Pilot.Tolerations, v1.Toleration{
-				Operator: v1.TolerationOpExists,
-			})
 		}
 	}
 	return nil

@@ -384,3 +384,8 @@ var (
 	// TransVPCIPs trans vpc nodes ip
 	TransVPCIPs ParamKey = "transVPCNodeIPs"
 )
+
+const (
+	// WhiteListLabelKey xxx
+	WhiteListLabelKey = "bkbcs.tencent.com/is-powerhub-cluster"
+)

@@ -1,5 +1,5 @@
 VERSION ?=  $(shell git describe --tags --match='v*' --dirty='.dirty')
-REGISTRY = "mirrors.tencent.com"
+REGISTRY ?= ""
 REPO ?= $(REGISTRY)/bcs
 TAG ?= $(VERSION)
 GITTAG ?= $(shell git describe --tags --match='v*' --dirty='.dirty')

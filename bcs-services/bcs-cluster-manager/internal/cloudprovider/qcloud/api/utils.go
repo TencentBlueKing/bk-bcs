@@ -370,30 +370,28 @@ func generateClusterRequestInfo(request *CreateClusterRequest) (*tke.CreateClust
 	}
 
 	// existed instance to cluster
-	if len(request.ExistedInstancesForNode) == 0 {
-		return nil, fmt.Errorf("CreateClusterRequest ExistedInstancesForNode is null")
-	}
+	if len(request.ExistedInstancesForNode) > 0 {
+		for i := range request.ExistedInstancesForNode {
+			if len(request.ExistedInstancesForNode[i].ExistedInstancesPara.InstanceIDs) == 0 {
+				return nil, fmt.Errorf("CreateClusterRequest ExistedInstancesForNode instance is null")
+			}
 
-	for i := range request.ExistedInstancesForNode {
-		if len(request.ExistedInstancesForNode[i].ExistedInstancesPara.InstanceIDs) == 0 {
-			return nil, fmt.Errorf("CreateClusterRequest ExistedInstancesForNode instance is null")
-		}
+			existedInstanceNodes := &tke.ExistedInstancesForNode{
+				NodeRole: common.StringPtr(request.ExistedInstancesForNode[i].NodeRole),
+				ExistedInstancesPara: &tke.ExistedInstancesPara{
+					InstanceIds:   common.StringPtrs(request.ExistedInstancesForNode[i].ExistedInstancesPara.InstanceIDs),
+					LoginSettings: generateLoginSet(request.ExistedInstancesForNode[i].ExistedInstancesPara.LoginSettings),
+					InstanceAdvancedSettings: generateInstanceAdvancedSetting(
+						request.ExistedInstancesForNode[i].ExistedInstancesPara.InstanceAdvancedSettings),
+				},
+			}
+			if request.ExistedInstancesForNode[i].InstanceAdvancedSettingsOverride != nil {
+				existedInstanceNodes.InstanceAdvancedSettingsOverride =
+					generateInstanceAdvancedSetting(request.ExistedInstancesForNode[i].InstanceAdvancedSettingsOverride)
+			}
 
-		existedInstanceNodes := &tke.ExistedInstancesForNode{
-			NodeRole: common.StringPtr(request.ExistedInstancesForNode[i].NodeRole),
-			ExistedInstancesPara: &tke.ExistedInstancesPara{
-				InstanceIds:   common.StringPtrs(request.ExistedInstancesForNode[i].ExistedInstancesPara.InstanceIDs),
-				LoginSettings: generateLoginSet(request.ExistedInstancesForNode[i].ExistedInstancesPara.LoginSettings),
-				InstanceAdvancedSettings: generateInstanceAdvancedSetting(
-					request.ExistedInstancesForNode[i].ExistedInstancesPara.InstanceAdvancedSettings),
-			},
+			req.ExistedInstancesForNode = append(req.ExistedInstancesForNode, existedInstanceNodes)
 		}
-		if request.ExistedInstancesForNode[i].InstanceAdvancedSettingsOverride != nil {
-			existedInstanceNodes.InstanceAdvancedSettingsOverride =
-				generateInstanceAdvancedSetting(request.ExistedInstancesForNode[i].InstanceAdvancedSettingsOverride)
-		}
-
-		req.ExistedInstancesForNode = append(req.ExistedInstancesForNode, existedInstanceNodes)
 	}
 
 	for i := range request.Addons {

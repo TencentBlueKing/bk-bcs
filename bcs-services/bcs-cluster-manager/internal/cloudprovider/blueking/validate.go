@@ -183,3 +183,8 @@ func (c *CloudValidate) CreateNodeGroupValidate(
 	req *proto.CreateNodeGroupRequest, opt *cloudprovider.CommonOption) error {
 	return nil
 }
+
+// AllowCrossBizNodes xxx
+func (c *CloudValidate) AllowCrossBizNodes(cluster *proto.Cluster) bool {
+	return cloudprovider.AllowCrossBizNodes(cluster)
+}

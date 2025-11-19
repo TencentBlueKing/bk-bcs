@@ -364,3 +364,8 @@ func (c *CloudValidate) DeleteNodesFromClusterValidate(
 	req *proto.DeleteNodesRequest, opt *cloudprovider.CommonOption) error {
 	return nil
 }
+
+// AllowCrossBizNodes xxx
+func (c *CloudValidate) AllowCrossBizNodes(cluster *proto.Cluster) bool {
+	return false
+}
