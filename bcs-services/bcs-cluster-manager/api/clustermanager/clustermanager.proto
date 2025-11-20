@@ -261,6 +261,17 @@ service ClusterManager {
     };
   }
 
+  rpc AddClusterCidr(AddClusterCidrReq) returns (AddClusterCidrResp) {
+    option (google.api.http) = {
+      post : "/clustermanager/v1/clusters/{clusterID}/cidrs"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "给集群增加ClusterCIDR"
+      summary : "给集群增加ClusterCIDR"
+    };
+  }
+
   rpc SwitchClusterUnderlayNetwork(SwitchClusterUnderlayNetworkReq) returns (SwitchClusterUnderlayNetworkResp) {
     option (google.api.http) = {
       post : "/clustermanager/v1/clusters/{clusterID}/networks/underlay"
@@ -1226,6 +1237,15 @@ service ClusterManager {
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
       description : "获取云所属地域vpc列表"
       summary : "获取云所属地域vpc列表"
+    };
+  }
+  rpc ListRecommendCloudVpcCidr(ListRecommendCloudVpcCidrRequest) returns (ListRecommendCloudVpcCidrResponse) {
+    option (google.api.http) = {
+      get : "/clustermanager/v1/clouds/{cloudID}/vpcs/recommendcidr"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据掩码获取云所属地域vpc推荐cidr"
+      summary : "根据掩码获取云所属地域vpc推荐cidr"
     };
   }
   rpc CheckCidrConflictFromVpc(CheckCidrConflictFromVpcRequest) returns (CheckCidrConflictFromVpcResponse) {
@@ -5605,6 +5625,56 @@ message AddSubnetToClusterResp {
     json_schema : {
       title : "AddSubnetToClusterResp"
       description : "集群添加子网的返回"
+      required : [ "code", "message" ]
+    }
+  };
+
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code", description : "返回错误码"
+  }];
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result", description : "返回结果"
+  }];
+  WebAnnotationsV2 web_annotations = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "web_annotations",
+    description : "用户所属的集群权限"
+  }];
+}
+
+message AddClusterCidrReq {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "AddSubnetToClusterReq"
+      description : "集群添加cidr网段请求"
+      required : [ "clusterID", "cidrs" ]
+    }
+  };
+
+  string clusterID = 1 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "clusterID",
+      description : "集群ID"
+    },
+    (validate.rules).string = {min_len : 1, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}];
+  repeated string cidrs = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "cidrs",
+    description : "添加cidr网段的资源"
+  }];
+  string operator = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "operator",
+    description : "操作人"
+  }];
+}
+
+message AddClusterCidrResp {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "AddSubnetToClusterResp"
+      description : "集群添加cidr网段的返回"
       required : [ "code", "message" ]
     }
   };
@@ -12908,6 +12978,71 @@ message ListCloudVpcsResponse {
     title : "data",
     description : "获取到的信息"
   }];
+}
+
+message ListRecommendCloudVpcCidrRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListRecommendCloudVpcCidrRequest"
+      description : "根据掩码获取云所属地域vpc推荐cidr"
+    }
+  };
+
+  string cloudID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "cloudID",
+    description : "云信息"
+  },(validate.rules).string = {min_len : 2}];
+  string region = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "region",
+    description : "云地域信息"
+  }];
+  string accountID = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "accountID",
+    description : "云凭证ID"
+  }];
+  string vpcID = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "vpcID",
+    description: "过滤查询指定vpc的信息"
+  }];
+  string networkType = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "networkType",
+    description: "集群网络类型，(underlay/overlay)"
+  }, (validate.rules).string = {in: ["underlay", "overlay"]}];
+  uint32 mask = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "mask",
+    description: "申请vpc-cni网络subnet时的网络掩码大小"
+  }];
+}
+
+message ListRecommendCloudVpcCidrResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListRecommendCloudVpcCidrResponse"
+      description : "根据掩码获取云所属地域vpc推荐cidr"
+      required : [ "code", "message" ]
+    }
+  };
+
+  uint32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+  bool result = 3 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+  CidrInfo data = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "获取到的cidr列表信息"
+  }];
+}
+
+message CidrInfo {
+  repeated string cidrs=1;
 }
 
 message CloudVpc {

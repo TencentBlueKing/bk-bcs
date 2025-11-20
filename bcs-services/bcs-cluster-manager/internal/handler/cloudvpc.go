@@ -223,3 +223,18 @@ func (cm *ClusterManager) GetMasterSuggestedMachines(ctx context.Context,
 	blog.Infof("reqID: %s, action: GetMasterSuggestedMachines, req %v, resp %v", reqID, req, resp)
 	return nil
 }
+
+// ListRecommendCloudVpcCidr implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) ListRecommendCloudVpcCidr(ctx context.Context,
+	req *cmproto.ListRecommendCloudVpcCidrRequest, resp *cmproto.ListRecommendCloudVpcCidrResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	na := cloudvpc.NewListRecommendCloudVpcCidrAction(cm.model)
+	na.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("ListRecommendCloudVpcCidr", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: ListRecommendCloudVpcCidr, req %v, resp %v", reqID, req, resp)
+	return nil
+}
