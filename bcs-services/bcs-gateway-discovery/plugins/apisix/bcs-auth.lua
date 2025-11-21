@@ -64,19 +64,40 @@ local function is_from_browser(user_agent)
     return stringx.startswith(user_agent, "Mozilla")
 end
 
+-- 获取正确的 scheme，优先使用 X-Forwarded-Proto header（当 TLS 在 CLB 上终止时）
+local function get_scheme(ctx)
+    -- 优先检查 X-Forwarded-Proto header（CLB 通常会设置此 header）
+    local forwarded_proto = core.request.header(ctx, "X-Forwarded-Proto")
+    -- core.log.warn("X-Forwarded-Proto: ", tostring(forwarded_proto), ", ctx.var.scheme: ", tostring(ctx.var.scheme))
+    
+    if forwarded_proto then
+        forwarded_proto = string.lower(forwarded_proto)
+        if forwarded_proto == "https" or forwarded_proto == "http" then
+            core.log.warn("Using X-Forwarded-Proto scheme: ", forwarded_proto)
+            return forwarded_proto
+        end
+    end
+    
+    -- 回退到 ctx.var.scheme
+    local fallback_scheme = ctx.var.scheme or "http"
+    core.log.warn("Using fallback scheme: ", fallback_scheme)
+    return fallback_scheme
+end
+
 
 local function concat_login_uri(conf, ctx)
-    local c_url = tab_concat({ctx.var.scheme, "://", ctx.var.host, ngx_escape_uri(ctx.var.request_uri)})
+    local scheme = get_scheme(ctx)
+    local c_url = tab_concat({scheme, "://", ctx.var.host, ngx_escape_uri(ctx.var.request_uri)})
     return tab_concat({conf.bk_login_host, "/plain/?size=big&c_url=", c_url})
 end
 
-local function is_ajax_request()
+local function is_ajax_request(ctx)
     local x_requested_with = core.request.header(ctx, "X-Requested-With") or ""
     return x_requested_with:lower() == "xmlhttprequest"
 end
 
 local function redirect_login(conf, ctx)
-    if is_ajax_request() then
+    if is_ajax_request(ctx) then
         return 401, {message = "bcs-auth plugin error: token is expired or is invalid"}
     end
     core.response.set_header("Location", concat_login_uri(conf, ctx))
@@ -86,7 +107,8 @@ end
 local function redirect_403(conf, ctx)
     local msg_base64 = ngx.encode_base64(tostring(ctx.var.bk_login_message))
     local msg_base64_uri = ngx_escape_uri(msg_base64)
-    core.response.set_header("Location", tab_concat({ctx.var.scheme, "://", ctx.var.host, "/403.html?msg=", msg_base64_uri}))
+    local scheme = get_scheme(ctx)
+    core.response.set_header("Location", tab_concat({scheme, "://", ctx.var.host, "/403.html?msg=", msg_base64_uri}))
     return 302
 end
 
