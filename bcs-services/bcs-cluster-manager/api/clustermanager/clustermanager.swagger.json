@@ -4240,6 +4240,47 @@
         ]
       }
     },
+    "/clustermanager/v1/clusters/{clusterID}/nodes/sync": {
+      "put": {
+        "summary": "同步集群节点",
+        "description": "同步集群节点",
+        "operationId": "ClusterManager_SyncClusterNodes",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerSyncClusterNodesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "clusterID",
+            "description": "更新节点所属的clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerSyncClusterNodesRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
     "/clustermanager/v1/clusters/{clusterID}/subnets": {
       "post": {
         "summary": "集群添加子网资源",
@@ -20188,6 +20229,44 @@
           "title": "web_annotations"
         }
       }
+    },
+    "clustermanagerSyncClusterNodesRequest": {
+      "type": "object",
+      "properties": {
+        "clusterID": {
+          "type": "string",
+          "description": "更新节点所属的clusterID",
+          "title": "clusterID"
+        }
+      }
+    },
+    "clustermanagerSyncClusterNodesResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        }
+      },
+      "description": "同步集群节点",
+      "title": "SyncClusterNodeResponse",
+      "required": [
+        "code",
+        "message"
+      ]
     },
     "clustermanagerTaint": {
       "type": "object",

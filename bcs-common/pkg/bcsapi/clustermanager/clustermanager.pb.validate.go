@@ -58800,6 +58800,240 @@ var _ interface {
 	ErrorName() string
 } = UpdateNodeTaintsResponseValidationError{}
 
+// Validate checks the field values on SyncClusterNodesRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *SyncClusterNodesRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on SyncClusterNodesRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// SyncClusterNodesRequestMultiError, or nil if none found.
+func (m *SyncClusterNodesRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *SyncClusterNodesRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 1 || l > 100 {
+		err := SyncClusterNodesRequestValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 1 and 100 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_SyncClusterNodesRequest_ClusterID_Pattern.MatchString(m.GetClusterID()) {
+		err := SyncClusterNodesRequestValidationError{
+			field:  "ClusterID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return SyncClusterNodesRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// SyncClusterNodesRequestMultiError is an error wrapping multiple validation
+// errors returned by SyncClusterNodesRequest.ValidateAll() if the designated
+// constraints aren't met.
+type SyncClusterNodesRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m SyncClusterNodesRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m SyncClusterNodesRequestMultiError) AllErrors() []error { return m }
+
+// SyncClusterNodesRequestValidationError is the validation error returned by
+// SyncClusterNodesRequest.Validate if the designated constraints aren't met.
+type SyncClusterNodesRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e SyncClusterNodesRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e SyncClusterNodesRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e SyncClusterNodesRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e SyncClusterNodesRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e SyncClusterNodesRequestValidationError) ErrorName() string {
+	return "SyncClusterNodesRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e SyncClusterNodesRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sSyncClusterNodesRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = SyncClusterNodesRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = SyncClusterNodesRequestValidationError{}
+
+var _SyncClusterNodesRequest_ClusterID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+// Validate checks the field values on SyncClusterNodesResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *SyncClusterNodesResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on SyncClusterNodesResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// SyncClusterNodesResponseMultiError, or nil if none found.
+func (m *SyncClusterNodesResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *SyncClusterNodesResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	if len(errors) > 0 {
+		return SyncClusterNodesResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// SyncClusterNodesResponseMultiError is an error wrapping multiple validation
+// errors returned by SyncClusterNodesResponse.ValidateAll() if the designated
+// constraints aren't met.
+type SyncClusterNodesResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m SyncClusterNodesResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m SyncClusterNodesResponseMultiError) AllErrors() []error { return m }
+
+// SyncClusterNodesResponseValidationError is the validation error returned by
+// SyncClusterNodesResponse.Validate if the designated constraints aren't met.
+type SyncClusterNodesResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e SyncClusterNodesResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e SyncClusterNodesResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e SyncClusterNodesResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e SyncClusterNodesResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e SyncClusterNodesResponseValidationError) ErrorName() string {
+	return "SyncClusterNodesResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e SyncClusterNodesResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sSyncClusterNodesResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = SyncClusterNodesResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = SyncClusterNodesResponseValidationError{}
+
 // Validate checks the field values on HealthRequest with the rules defined in
 // the proto definition for this message. If any rules are violated, the first
 // error encountered is returned, or nil if there are no violations.

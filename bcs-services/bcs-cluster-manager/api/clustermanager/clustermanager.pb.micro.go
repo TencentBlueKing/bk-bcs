@@ -277,6 +277,12 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		{
+			Name:    "ClusterManager.SyncClusterNodes",
+			Path:    []string{"/clustermanager/v1/clusters/{clusterID}/nodes/sync"},
+			Method:  []string{"PUT"},
+			Handler: "rpc",
+		},
+		{
 			Name:    "ClusterManager.GetClusterCredential",
 			Path:    []string{"/clustermanager/v1/clustercredential/{serverKey}"},
 			Method:  []string{"GET"},
@@ -1050,6 +1056,7 @@ type ClusterManagerService interface {
 	UpdateNodeLabels(ctx context.Context, in *UpdateNodeLabelsRequest, opts ...client.CallOption) (*UpdateNodeLabelsResponse, error)
 	UpdateNodeAnnotations(ctx context.Context, in *UpdateNodeAnnotationsRequest, opts ...client.CallOption) (*UpdateNodeAnnotationsResponse, error)
 	UpdateNodeTaints(ctx context.Context, in *UpdateNodeTaintsRequest, opts ...client.CallOption) (*UpdateNodeTaintsResponse, error)
+	SyncClusterNodes(ctx context.Context, in *SyncClusterNodesRequest, opts ...client.CallOption) (*SyncClusterNodesResponse, error)
 	// * cluster credential management
 	GetClusterCredential(ctx context.Context, in *GetClusterCredentialReq, opts ...client.CallOption) (*GetClusterCredentialResp, error)
 	UpdateClusterCredential(ctx context.Context, in *UpdateClusterCredentialReq, opts ...client.CallOption) (*UpdateClusterCredentialResp, error)
@@ -1608,6 +1615,16 @@ func (c *clusterManagerService) UpdateNodeAnnotations(ctx context.Context, in *U
 func (c *clusterManagerService) UpdateNodeTaints(ctx context.Context, in *UpdateNodeTaintsRequest, opts ...client.CallOption) (*UpdateNodeTaintsResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.UpdateNodeTaints", in)
 	out := new(UpdateNodeTaintsResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) SyncClusterNodes(ctx context.Context, in *SyncClusterNodesRequest, opts ...client.CallOption) (*SyncClusterNodesResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.SyncClusterNodes", in)
+	out := new(SyncClusterNodesResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -2870,6 +2887,7 @@ type ClusterManagerHandler interface {
 	UpdateNodeLabels(context.Context, *UpdateNodeLabelsRequest, *UpdateNodeLabelsResponse) error
 	UpdateNodeAnnotations(context.Context, *UpdateNodeAnnotationsRequest, *UpdateNodeAnnotationsResponse) error
 	UpdateNodeTaints(context.Context, *UpdateNodeTaintsRequest, *UpdateNodeTaintsResponse) error
+	SyncClusterNodes(context.Context, *SyncClusterNodesRequest, *SyncClusterNodesResponse) error
 	// * cluster credential management
 	GetClusterCredential(context.Context, *GetClusterCredentialReq, *GetClusterCredentialResp) error
 	UpdateClusterCredential(context.Context, *UpdateClusterCredentialReq, *UpdateClusterCredentialResp) error
@@ -3065,6 +3083,7 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		UpdateNodeLabels(ctx context.Context, in *UpdateNodeLabelsRequest, out *UpdateNodeLabelsResponse) error
 		UpdateNodeAnnotations(ctx context.Context, in *UpdateNodeAnnotationsRequest, out *UpdateNodeAnnotationsResponse) error
 		UpdateNodeTaints(ctx context.Context, in *UpdateNodeTaintsRequest, out *UpdateNodeTaintsResponse) error
+		SyncClusterNodes(ctx context.Context, in *SyncClusterNodesRequest, out *SyncClusterNodesResponse) error
 		GetClusterCredential(ctx context.Context, in *GetClusterCredentialReq, out *GetClusterCredentialResp) error
 		UpdateClusterCredential(ctx context.Context, in *UpdateClusterCredentialReq, out *UpdateClusterCredentialResp) error
 		UpdateClusterKubeConfig(ctx context.Context, in *UpdateClusterKubeConfigReq, out *UpdateClusterKubeConfigResp) error
@@ -3428,6 +3447,12 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.UpdateNodeTaints",
 		Path:    []string{"/clustermanager/v1/node/taints"},
+		Method:  []string{"PUT"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.SyncClusterNodes",
+		Path:    []string{"/clustermanager/v1/clusters/{clusterID}/nodes/sync"},
 		Method:  []string{"PUT"},
 		Handler: "rpc",
 	}))
@@ -4322,6 +4347,10 @@ func (h *clusterManagerHandler) UpdateNodeAnnotations(ctx context.Context, in *U
 
 func (h *clusterManagerHandler) UpdateNodeTaints(ctx context.Context, in *UpdateNodeTaintsRequest, out *UpdateNodeTaintsResponse) error {
 	return h.ClusterManagerHandler.UpdateNodeTaints(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) SyncClusterNodes(ctx context.Context, in *SyncClusterNodesRequest, out *SyncClusterNodesResponse) error {
+	return h.ClusterManagerHandler.SyncClusterNodes(ctx, in, out)
 }
 
 func (h *clusterManagerHandler) GetClusterCredential(ctx context.Context, in *GetClusterCredentialReq, out *GetClusterCredentialResp) error {
