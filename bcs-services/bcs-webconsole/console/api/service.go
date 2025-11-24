@@ -102,7 +102,7 @@ func (s *service) ListClusters(c *gin.Context) {
 		return
 	}
 
-	clusters, err := bcs.ListClusters(c.Request.Context(), project.ProjectId)
+	clusters, err := bcs.ListClusters(c.Request.Context(), project.ProjectId, project.TenantID)
 	if err != nil {
 		rest.APIError(c, i18n.T(c, "%s", err))
 		return

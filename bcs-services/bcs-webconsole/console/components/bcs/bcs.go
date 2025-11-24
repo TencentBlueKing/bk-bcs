@@ -27,6 +27,8 @@ import (
 const (
 	// TokenExpired xxx
 	TokenExpired = time.Hour * 24
+	// HeaderTenantId header tenant id
+	HeaderTenantId = "X-Bk-Tenant-Id"
 )
 
 // BCSTokenUserType xxx
@@ -57,12 +59,13 @@ func (c *Cluster) String() string {
 }
 
 // ListClusters 获取项目集群列表
-func ListClusters(ctx context.Context, projectId string) ([]*Cluster, error) {
+func ListClusters(ctx context.Context, projectId, tenantID string) ([]*Cluster, error) {
 	url := fmt.Sprintf("%s/bcsapi/v4/clustermanager/v1/cluster", config.G.BCS.InnerHost)
 
 	resp, err := components.GetClient().R().
 		SetContext(ctx).
 		SetHeaders(types.GetLaneIDByCtx(ctx)).
+		SetHeader(HeaderTenantId, tenantID).
 		SetAuthToken(config.G.BCS.Token).
 		SetQueryParam("projectID", projectId).
 		Get(url)
