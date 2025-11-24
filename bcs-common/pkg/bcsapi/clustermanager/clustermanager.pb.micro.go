@@ -565,6 +565,18 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		{
+			Name:    "ClusterManager.ListClusterTaskMetrics",
+			Path:    []string{"/clustermanager/v1/task/cluster/metrics"},
+			Method:  []string{"POST"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "ClusterManager.ListBusinessTaskMetrics",
+			Path:    []string{"/clustermanager/v1/task/business/metrics"},
+			Method:  []string{"POST"},
+			Handler: "rpc",
+		},
+		{
 			Name:    "ClusterManager.CreateAutoScalingOption",
 			Path:    []string{"/clustermanager/v1/autoscalingoption"},
 			Method:  []string{"POST"},
@@ -1104,6 +1116,8 @@ type ClusterManagerService interface {
 	DeleteTask(ctx context.Context, in *DeleteTaskRequest, opts ...client.CallOption) (*DeleteTaskResponse, error)
 	GetTask(ctx context.Context, in *GetTaskRequest, opts ...client.CallOption) (*GetTaskResponse, error)
 	ListTask(ctx context.Context, in *ListTaskRequest, opts ...client.CallOption) (*ListTaskResponse, error)
+	ListClusterTaskMetrics(ctx context.Context, in *ListClusterTaskMetricsRequest, opts ...client.CallOption) (*ListClusterTaskMetricsResponse, error)
+	ListBusinessTaskMetrics(ctx context.Context, in *ListBusinessTaskMetricsRequest, opts ...client.CallOption) (*ListBusinessTaskMetricsResponse, error)
 	// * ClusterAutoScalingOption information management *
 	CreateAutoScalingOption(ctx context.Context, in *CreateAutoScalingOptionRequest, opts ...client.CallOption) (*CreateAutoScalingOptionResponse, error)
 	UpdateAutoScalingOption(ctx context.Context, in *UpdateAutoScalingOptionRequest, opts ...client.CallOption) (*UpdateAutoScalingOptionResponse, error)
@@ -2095,6 +2109,26 @@ func (c *clusterManagerService) ListTask(ctx context.Context, in *ListTaskReques
 	return out, nil
 }
 
+func (c *clusterManagerService) ListClusterTaskMetrics(ctx context.Context, in *ListClusterTaskMetricsRequest, opts ...client.CallOption) (*ListClusterTaskMetricsResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.ListClusterTaskMetrics", in)
+	out := new(ListClusterTaskMetricsResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) ListBusinessTaskMetrics(ctx context.Context, in *ListBusinessTaskMetricsRequest, opts ...client.CallOption) (*ListBusinessTaskMetricsResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.ListBusinessTaskMetrics", in)
+	out := new(ListBusinessTaskMetricsResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *clusterManagerService) CreateAutoScalingOption(ctx context.Context, in *CreateAutoScalingOptionRequest, opts ...client.CallOption) (*CreateAutoScalingOptionResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.CreateAutoScalingOption", in)
 	out := new(CreateAutoScalingOptionResponse)
@@ -2924,6 +2958,8 @@ type ClusterManagerHandler interface {
 	DeleteTask(context.Context, *DeleteTaskRequest, *DeleteTaskResponse) error
 	GetTask(context.Context, *GetTaskRequest, *GetTaskResponse) error
 	ListTask(context.Context, *ListTaskRequest, *ListTaskResponse) error
+	ListClusterTaskMetrics(context.Context, *ListClusterTaskMetricsRequest, *ListClusterTaskMetricsResponse) error
+	ListBusinessTaskMetrics(context.Context, *ListBusinessTaskMetricsRequest, *ListBusinessTaskMetricsResponse) error
 	// * ClusterAutoScalingOption information management *
 	CreateAutoScalingOption(context.Context, *CreateAutoScalingOptionRequest, *CreateAutoScalingOptionResponse) error
 	UpdateAutoScalingOption(context.Context, *UpdateAutoScalingOptionRequest, *UpdateAutoScalingOptionResponse) error
@@ -3113,6 +3149,8 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		DeleteTask(ctx context.Context, in *DeleteTaskRequest, out *DeleteTaskResponse) error
 		GetTask(ctx context.Context, in *GetTaskRequest, out *GetTaskResponse) error
 		ListTask(ctx context.Context, in *ListTaskRequest, out *ListTaskResponse) error
+		ListClusterTaskMetrics(ctx context.Context, in *ListClusterTaskMetricsRequest, out *ListClusterTaskMetricsResponse) error
+		ListBusinessTaskMetrics(ctx context.Context, in *ListBusinessTaskMetricsRequest, out *ListBusinessTaskMetricsResponse) error
 		CreateAutoScalingOption(ctx context.Context, in *CreateAutoScalingOptionRequest, out *CreateAutoScalingOptionResponse) error
 		UpdateAutoScalingOption(ctx context.Context, in *UpdateAutoScalingOptionRequest, out *UpdateAutoScalingOptionResponse) error
 		UpdateAsOptionDeviceProvider(ctx context.Context, in *UpdateAsOptionDeviceProviderRequest, out *UpdateAsOptionDeviceProviderResponse) error
@@ -3717,6 +3755,18 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Name:    "ClusterManager.ListTask",
 		Path:    []string{"/clustermanager/v1/task"},
 		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.ListClusterTaskMetrics",
+		Path:    []string{"/clustermanager/v1/task/cluster/metrics"},
+		Method:  []string{"POST"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.ListBusinessTaskMetrics",
+		Path:    []string{"/clustermanager/v1/task/business/metrics"},
+		Method:  []string{"POST"},
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -4514,6 +4564,14 @@ func (h *clusterManagerHandler) GetTask(ctx context.Context, in *GetTaskRequest,
 
 func (h *clusterManagerHandler) ListTask(ctx context.Context, in *ListTaskRequest, out *ListTaskResponse) error {
 	return h.ClusterManagerHandler.ListTask(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) ListClusterTaskMetrics(ctx context.Context, in *ListClusterTaskMetricsRequest, out *ListClusterTaskMetricsResponse) error {
+	return h.ClusterManagerHandler.ListClusterTaskMetrics(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) ListBusinessTaskMetrics(ctx context.Context, in *ListBusinessTaskMetricsRequest, out *ListBusinessTaskMetricsResponse) error {
+	return h.ClusterManagerHandler.ListBusinessTaskMetrics(ctx, in, out)
 }
 
 func (h *clusterManagerHandler) CreateAutoScalingOption(ctx context.Context, in *CreateAutoScalingOptionRequest, out *CreateAutoScalingOptionResponse) error {

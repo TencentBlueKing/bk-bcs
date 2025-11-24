@@ -44,6 +44,7 @@ var NoAuthMethod = []string{
 	"ClusterManager.CheckCloudKubeConfigConnect",
 
 	// task resource
+	"ClusterManager.ListClusterTaskMetrics",
 
 	// cluster autoscaling
 	"ClusterManager.ListAutoScalingOption",
@@ -179,13 +180,15 @@ var ActionPermissions = map[string]string{
 	"ClusterManager.CheckCloudKubeConfigConnect": cluster.CanViewClusterOperation,
 
 	// task
-	"ClusterManager.CreateTask": cluster.CanManageClusterOperation,
-	"ClusterManager.RetryTask":  cluster.CanManageClusterOperation,
-	"ClusterManager.UpdateTask": cluster.CanManageClusterOperation,
-	"ClusterManager.DeleteTask": cluster.CanManageClusterOperation,
-	"ClusterManager.GetTask":    cluster.CanViewClusterOperation,
-	"ClusterManager.ListTask":   project.CanViewProjectOperation,
-	"ClusterManager.SkipTask":   cluster.CanViewClusterOperation,
+	"ClusterManager.CreateTask":              cluster.CanManageClusterOperation,
+	"ClusterManager.RetryTask":               cluster.CanManageClusterOperation,
+	"ClusterManager.UpdateTask":              cluster.CanManageClusterOperation,
+	"ClusterManager.DeleteTask":              cluster.CanManageClusterOperation,
+	"ClusterManager.GetTask":                 cluster.CanViewClusterOperation,
+	"ClusterManager.ListTask":                project.CanViewProjectOperation,
+	"ClusterManager.SkipTask":                cluster.CanViewClusterOperation,
+	"ClusterManager.ListClusterTaskMetrics":  "",
+	"ClusterManager.ListBusinessTaskMetrics": "",
 
 	// cluster auto scaling option
 	"ClusterManager.CreateAutoScalingOption":      cluster.CanManageClusterOperation,

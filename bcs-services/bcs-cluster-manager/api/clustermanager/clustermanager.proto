@@ -940,6 +940,26 @@ service ClusterManager {
       summary : "查询Task列表"
     };
   }
+  rpc ListClusterTaskMetrics(ListClusterTaskMetricsRequest) returns (ListClusterTaskMetricsResponse) {
+    option (google.api.http) = {
+      post : "/clustermanager/v1/task/cluster/metrics"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "集群维度统计任务成功率、耗时、失败top原因"
+      summary : "集群维度统计任务成功率、耗时、失败top原因"
+    };
+  }  
+  rpc ListBusinessTaskMetrics(ListBusinessTaskMetricsRequest) returns (ListBusinessTaskMetricsResponse) {
+    option (google.api.http) = {
+      post : "/clustermanager/v1/task/business/metrics"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "业务维度统计任务成功率、耗时、失败top原因"
+      summary : "业务维度统计任务成功率、耗时、失败top原因"
+    };
+  }  
 
   //* ClusterAutoScalingOption information management *
   rpc CreateAutoScalingOption(CreateAutoScalingOptionRequest) returns (CreateAutoScalingOptionResponse) {
@@ -10925,6 +10945,185 @@ message ListTaskResponse {
   }];
 }
 
+message ListClusterTaskMetricsRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListClusterTaskMetricsRequest"
+      description : "集群维度统计任务成功率、耗时、失败top原因请求"
+    }
+  };
+  string start = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "start", 
+    description: "任务启动时间"
+  }];
+  string end = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "end", 
+    description: "任务结束时间"
+  }];
+}
+
+message ListClusterTaskMetricsResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListClusterTaskMetricsResponse"
+      description : "集群维度统计任务成功率、耗时、失败top原因返回"
+      required : [ "code", "message" ]
+    }
+  };
+
+  uint32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code", 
+    description : "返回错误码"
+  }];
+  string message = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+  bool result = 3 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result", 
+    description : "返回结果"
+  }];
+  repeated ClusterTaskMetrics data = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data", 
+    description : "获取到的任务指标"
+  }];
+}
+
+message ListBusinessTaskMetricsRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListBusinessTaskMetricsRequest"
+      description : "业务维度统计任务成功率、耗时、失败top原因请求"
+    }
+  };
+  string start = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "start", 
+    description: "任务启动时间"
+  }];
+  string end = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "end", 
+    description: "任务结束时间"
+  }];
+}
+
+message ListBusinessTaskMetricsResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListBusinessTaskMetricsResponse"
+      description : "业务维度统计任务成功率、耗时、失败top原因返回"
+      required : [ "code", "message" ]
+    }
+  };
+
+  uint32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code", 
+    description : "返回错误码"
+  }];
+  string message = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+  bool result = 3 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result", 
+    description : "返回结果"
+  }];
+  repeated BusinessTaskMetrics data = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data", 
+    description : "获取到的任务指标"
+  }];
+}
+
+message BusinessTaskMetrics {
+  string businessId= 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "businessId",
+    description: "业务ID"
+  }];
+  double successRate= 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "successRate",
+    description: "任务成功率"
+  }];
+  double avgExecutionTime= 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "avgExecutionTime",
+    description: "任务平均耗时"
+  }];
+  repeated BussinessSubTaskMetrics subTaskMetrics = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "subTaskMetrics",
+    description: "子任务指标"
+  }];
+}
+
+message ClusterTaskMetrics {
+  string clusterId= 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "clusterId",
+    description: "集群ID"
+  }];
+  double successRate= 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "successRate",
+    description: "任务成功率"
+  }];
+  double avgExecutionTime= 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "avgExecutionTime",
+    description: "任务平均耗时"
+  }];
+  repeated ClusterSubTaskMetrics subTaskMetrics = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "clusterSubTaskMetrics",
+    description: "集群子任务指标"
+  }];
+}
+
+message ClusterSubTaskMetrics {
+  double subSuccessRate = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "subSuccessRate",
+    description: "子任务成功率"
+  }];
+  double subAvgExecutionTime = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "subAvgExecutionTime",
+    description: "子任务平均耗时"
+  }];
+  int32 subTaskFails = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "subTaskFails",
+    description: "子任务失败次数"
+  }];
+  repeated string subTaskFailReason = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "subTaskFailReason",
+    description: "子任务失败原因"
+  }];
+  string subTaskFailTopReason = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "subTaskFailTopReason",
+    description: "子任务失败top原因"
+  }];
+  string taskType = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "taskType",
+    description: "子任务类型"
+  }];
+}
+
+message BussinessSubTaskMetrics {
+  double subSuccessRate = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "subSuccessRate",
+    description: "子任务成功率"
+  }];
+  double subAvgExecutionTime = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "subAvgExecutionTime",
+    description: "子任务平均耗时"
+  }];
+  int32 subTaskFails = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "subTaskFails",
+    description: "子任务失败次数"
+  }];
+  repeated string subTaskFailReason = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "subTaskFailReason",
+    description: "子任务失败原因"
+  }];
+  string subTaskFailTopReason = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "subTaskFailTopReason",
+    description: "子任务失败top原因"
+  }];
+  string taskType = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "taskType",
+    description: "子任务类型"
+  }];
+}
 
 // ClusterAutoScalingOption request & response
 

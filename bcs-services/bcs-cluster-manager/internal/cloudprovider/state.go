@@ -268,7 +268,10 @@ func (stat *TaskState) UpdateStepFailure(start time.Time, stepName string, err e
 	stat.Task.End = end.Format(time.RFC3339)
 	stat.Task.ExecutionTime = uint32(end.Unix() - taskStart.Unix())
 	stat.Task.Status = TaskStatusFailure
-	stat.Task.Message = fmt.Sprintf("step %s running failed, %s", step.Name, err.Error())
+	stat.Task.Message, err = GenFailedMessage(stat.Task.ClusterID, step.Name, err)
+	if err != nil {
+		return err
+	}
 	stat.Task.LastUpdate = step.End
 	if err = GetStorageModel().UpdateTask(context.Background(), stat.Task); err != nil {
 		blog.Errorf("task %s fatal, update task step %s failure status failed, %s. required admin intervetion",
@@ -318,7 +321,10 @@ func (stat *TaskState) UpdateStepPartFailure(start time.Time, stepName string, e
 	}
 
 	stat.Task.Status = TaskStatusRunning
-	stat.Task.Message = fmt.Sprintf("step %s running part failed, %s", step.Name, err.Error())
+	stat.Task.Message, err = GenFailedMessage(stat.Task.ClusterID, step.Name, err)
+	if err != nil {
+		return err
+	}
 	stat.Task.LastUpdate = step.End
 
 	if stepName == stat.Task.StepSequence[len(stat.Task.StepSequence)-1] {
@@ -374,7 +380,10 @@ func (stat *TaskState) SkipFailure(start time.Time, stepName string, err error) 
 	}
 
 	stat.Task.Status = TaskStatusRunning
-	stat.Task.Message = fmt.Sprintf("step %s running failed", step.Name)
+	stat.Task.Message, err = GenFailedMessage(stat.Task.ClusterID, step.Name, err)
+	if err != nil {
+		return err
+	}
 	stat.Task.LastUpdate = step.End
 
 	if stepName == stat.Task.StepSequence[len(stat.Task.StepSequence)-1] {
