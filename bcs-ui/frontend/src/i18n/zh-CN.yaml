@@ -407,7 +407,10 @@ generic:
     none: 无
     tag: 标签
     description: 描述
-    creator: 创建人
+    managers: 管理者
+    codeMode: 源码模式
+    enabled: 已启用
+    disabled: 已停用
   status:
     part_failure: 部分失败
     support: 支持
@@ -2253,7 +2256,10 @@ projects:
     desc: 请输入项目描述
     search: 输入项目名称搜索
     bkMonitor: 申请监控中心
-    businessID: 业务ID
+    businessID: 业务 ID
+    ID: 项目 ID
+    business: 所属业务
+    goto: 前往项目
   validate:
     projectName: '请输入2-64字符，不能包含`~!@#$%^&*()+<>?:"{},./;\''''[]字符和空格'
     projectName1: 请输入2-32字符的小写字母、数字、中划线，以小写字母开头

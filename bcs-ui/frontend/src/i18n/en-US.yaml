@@ -432,7 +432,10 @@ generic:
     none: None
     tag: Tags
     description: Description
-    creator: Creator
+    managers: Managers
+    codeMode: Code Mode
+    enabled: Enabled
+    disabled: Disabled
   status:
     part_failure: Part failure
     support: Support
@@ -2820,6 +2823,9 @@ projects:
     search: Enter the project name search
     bkMonitor: Application monitor
     businessID: Business ID
+    ID: Project ID
+    business: Business
+    goto: Go to Project
   validate:
     projectName: >-
       Please enter 2-64 characters, and do not include
