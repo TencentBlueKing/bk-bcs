@@ -3356,6 +3356,8 @@ googleCloud:
     onlySupportJsonFile: >-
       Only the json file generated when a service account is created is
       supported
+importTencentCloud:
+  title: Import a public cloud cluster - Tencent Cloud
 importGoogleCloud:
   title: Import a public cloud cluster - Google Cloud
   label:

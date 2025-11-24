@@ -2714,6 +2714,8 @@ googleCloud:
       desc: >-
         当前集群规格最多管理15000个节点, 超过5000个节点需联系GKE服务团队提升集群配额, 20万个Pod, 40万个容器,
         每个节点池最多支持1000个节点, 每个节点最多支持256个Pod
+importTencentCloud:
+  title: 导入公有云集群 - 腾讯云
 importGoogleCloud:
   title: 导入公有云集群 - 谷歌云
   tips:
