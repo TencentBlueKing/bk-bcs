@@ -166,6 +166,18 @@
               </li>
             </div>
             <div
+              v-bk-tooltips="{
+                content: $t('cluster.nodeList.tips.disableBatchSettingNodes'),
+                disabled: !selections.some(item => !['RUNNING'].includes(item.status)),
+                placement: 'right'
+              }">
+              <li
+                :disabled="selections.some(item => !['RUNNING'].includes(item.status))"
+                @click="handleBatchSetNode('annotations')">
+                {{$t('dashboard.ns.action.setAnnotation')}}
+              </li>
+            </div>
+            <div
               class="h-[32px]"
               v-bk-tooltips="{
                 content: disableBatchDeleteTips,
@@ -227,7 +239,7 @@
         empty-block-class-name="bcs-table-empty-dynamic-width"
         :key="tableKey"
         :pagination="pagination"
-        :row-key="(row) => row.nodeName"
+        :row-key="(row) => row.nodeName || row.nodeID"
         @filter-change="handleFilterChange"
         @page-change="pageChange"
         @page-limit-change="pageSizeChange">
@@ -581,13 +593,16 @@
                   <i class="bcs-icon bcs-icon-more"></i>
                 </span>
                 <template #content>
-                  <ul class="bcs-dropdown-list">
+                  <ul class="bcs-dropdown-list bg-[#fff]">
                     <template v-if="row.status === 'RUNNING'">
-                      <li class="bcs-dropdown-item" @click="handleSetLabel(row)">
+                      <li class="bcs-dropdown-item" @click="handleMetadata(row, 'labels')">
                         {{$t('cluster.nodeList.button.setLabel')}}
                       </li>
                       <li class="bcs-dropdown-item" @click="handleSetTaint(row)">
                         {{$t('cluster.nodeList.button.setTaint')}}
+                      </li>
+                      <li class="bcs-dropdown-item" @click="handleMetadata(row, 'annotations')">
+                        {{$t('dashboard.ns.action.setAnnotation')}}
                       </li>
                     </template>
                     <li
@@ -635,23 +650,23 @@
         </template>
       </bcs-table>
     </div>
-    <!-- 设置标签 -->
+    <!-- 设置标签/注解 -->
     <bcs-sideslider
-      :is-show.sync="setLabelConf.isShow"
+      :is-show.sync="setMetaConf.isShow"
       :width="750"
       :before-close="handleBeforeClose"
       quick-close
       transfer>
       <template #header>
-        <span>{{setLabelConf.title}}</span>
+        <span>{{setMetaConf.title}}</span>
         <span class="sideslider-tips">{{$t('cluster.nodeList.msg.labelDesc')}}</span>
       </template>
       <template #content>
         <KeyValue
           class="key-value-content"
-          :model-value="setLabelConf.data"
-          :loading="setLabelConf.btnLoading"
-          :key-desc="setLabelConf.keyDesc"
+          :model-value="setMetaConf.data"
+          :loading="setMetaConf.btnLoading"
+          :key-desc="setMetaConf.keyDesc"
           :key-rules="[
             {
               message: $i18n.t('generic.validate.labelKey1'),
@@ -837,6 +852,8 @@ interface IMetricData {
 }
 
 type NodeMetricType = Record<string, IMetricData>;
+
+type MetaType = 'labels'|'taints'|'annotations';
 
 export default defineComponent({
   name: 'NodeList',
@@ -1220,6 +1237,7 @@ export default defineComponent({
       addNode,
       retryTask,
       setNodeLabels,
+      setNodeAnnotations,
       batchDeleteNodes,
       getAllNodeOverview,
     } = useNode();
@@ -1507,8 +1525,8 @@ export default defineComponent({
       taintConfig.value.nodes = [];
     };
 
-    // 设置标签（批量设置标签的交互有点奇怪，后续优化）
-    const setLabelConf = ref<{
+    // 设置标签/注解（批量设置标签的交互有点奇怪，后续优化）
+    const setMetaConf = ref<{
       isShow: boolean;
       btnLoading: boolean;
       keyDesc: any;
@@ -1523,12 +1541,14 @@ export default defineComponent({
       data: [],
       title: '',
     });
-    const handleSetLabel = async (selections: Record<string, any>[] | Record<string, any>) => {
-      setLabelConf.value.isShow = true;
+    const metaType = ref<'labels' | 'annotations'>('labels');
+    const handleMetadata = async (selections: Record<string, any>[] | Record<string, any>, type: 'labels' | 'annotations') => {
+      metaType.value = type;
+      setMetaConf.value.isShow = true;
       const rows = Array.isArray(selections) ? selections : [selections];
       // 批量设置时暂时只展示相同Key的项
       const labelArr = rows.reduce<any[]>((pre, row) => {
-        const label = row.labels;
+        const label = row[type];
         Object.keys(label).forEach((key) => {
           const index = pre.findIndex(item => item.key === key);
           if (index > -1) {
@@ -1546,7 +1566,7 @@ export default defineComponent({
         return pre;
       }, []).filter(item => item.repeat === rows.length);
 
-      set(setLabelConf, 'value', Object.assign(setLabelConf.value, {
+      set(setMetaConf, 'value', Object.assign(setMetaConf.value, {
         data: labelArr,
         rows,
         title: rows.length > 1
@@ -1557,7 +1577,7 @@ export default defineComponent({
       reset();
     };
     const handleLabelEditCancel = () => {
-      set(setLabelConf, 'value', Object.assign(setLabelConf.value, {
+      set(setMetaConf, 'value', Object.assign(setMetaConf.value, {
         isShow: false,
         keyDesc: '',
         rows: [],
@@ -1569,8 +1589,8 @@ export default defineComponent({
       const originLabels = JSON.parse(JSON.stringify(_originLabels));
       const newLabels = JSON.parse(JSON.stringify(_newLabels));
       // 批量编辑
-      if (setLabelConf.value.rows.length > 1) {
-        const oldLabels = setLabelConf.value.data;
+      if (setMetaConf.value.rows.length > 1) {
+        const oldLabels = setMetaConf.value.data;
         oldLabels.forEach((item) => {
           // eslint-disable-next-line no-prototype-builtins
           if (!newLabels.hasOwnProperty(item.key)) {
@@ -1586,15 +1606,26 @@ export default defineComponent({
       return newLabels;
     };
     const handleLabelEditConfirm = async (labels) => {
-      setLabelConf.value.btnLoading = true;
-      const result = await setNodeLabels({
-        clusterID: localClusterId.value,
-        nodes: setLabelConf.value.rows.map(item => ({
-          nodeName: item.nodeName,
-          labels: mergeLabels(item.labels, labels),
-        })),
-      });
-      setLabelConf.value.btnLoading = false;
+      setMetaConf.value.btnLoading = true;
+      let result = false;
+      if (metaType.value === 'labels') {
+        result = await setNodeLabels({
+          clusterID: localClusterId.value,
+          nodes: setMetaConf.value.rows.map(item => ({
+            nodeName: item.nodeName,
+            labels: mergeLabels(item.labels, labels),
+          })),
+        });
+      } else if (metaType.value === 'annotations') {
+        result = await setNodeAnnotations({
+          clusterID: localClusterId.value,
+          nodes: setMetaConf.value.rows.map(item => ({
+            nodeName: item.nodeName,
+            annotations: mergeLabels(item.annotations, labels),
+          })),
+        });
+      }
+      setMetaConf.value.btnLoading = false;
       if (result) {
         handleLabelEditCancel();
         handleResetCheckStatus();
@@ -1880,7 +1911,7 @@ export default defineComponent({
       });
     };
     // 批量设置标签和污点
-    const handleBatchSetNode = (type: 'labels'|'taints') => {
+    const handleBatchSetNode = (type: MetaType) => {
       if (!selections.value.length) return;
 
       $router.push({
@@ -2160,7 +2191,7 @@ export default defineComponent({
       nodeStatusMap,
       tableSetting,
       taintConfig,
-      setLabelConf,
+      setMetaConf,
       podConfig,
       tableLoading,
       localClusterId,
@@ -2180,7 +2211,7 @@ export default defineComponent({
       handleClearSearchSelect,
       handleGoOverview,
       handleCopy,
-      handleSetLabel,
+      handleMetadata,
       sortMetricMethod,
       handleLabelEditCancel,
       handleLabelEditConfirm,

@@ -323,7 +323,7 @@
       <!-- v-if解决keyvalue组件目前只watch一次问题 -->
       <template v-if="showAddDialog">
         <KeyValue
-          v-if="type === 'labels'"
+          v-if="kvTypes.includes(type)"
           v-model="newLabelData"
           ref="labelRef"
           :required="true"
@@ -542,7 +542,7 @@ import KeyValue from '../components/key-value.vue';
 import Taint, { ITaint } from '../components/new-taints.vue';
 
 import useProxyOperate, { SettingType } from './proxy-operate';
-import useNode from './use-node';
+import useNode, { IAnnotationsItem, ILabelsItem } from './use-node';
 
 import $bkMessage from '@/common/bkmagic';
 import { LABEL_KEY_DOMAIN, LABEL_KEY_MAXL, LABEL_KEY_PATH, LABEL_VALUE, TAINT_VALUE } from '@/common/constant';
@@ -559,7 +559,7 @@ interface Props {
 }
 const props = defineProps<Props>();
 
-const { getNodeList, batchSetNodeLabels, batchSetNodeTaints } = useNode();
+const { getNodeList, batchSetNodeLabels, batchSetNodeTaints, batchSetNodeAnnotations } = useNode();
 const {
   originDataMap,
   data,
@@ -582,27 +582,31 @@ const {
 const titleMap: Record<SettingType, string> = {
   labels: $i18n.t('cluster.nodeList.title.batchSetLabel.text'),
   taints: $i18n.t('cluster.nodeList.title.batchSetTaint.text'),
+  annotations: $i18n.t('cluster.nodeList.title.batchSetAnnotation.text'),
 };
 // 搜索文案
 const placeholderMap: Record<SettingType, string> = {
   labels: $i18n.t('cluster.nodeList.placeholder.locationTag'),
   taints: $i18n.t('cluster.nodeList.placeholder.locationTaint'),
+  annotations: $i18n.t('cluster.nodeList.placeholder.locationAnnotation'),
 };
 // 创建按钮文案
 const addBtnTextMap: Record<SettingType, string> = {
   labels: $i18n.t('cluster.nodeList.button.addLabel'),
   taints: $i18n.t('cluster.nodeList.button.addTaint'),
+  annotations: $i18n.t('cluster.nodeList.button.addAnnotation'),
 };
 
 const isLoading = ref(false);
 const effectList = ['PreferNoSchedule', 'NoExecute', 'NoSchedule'];
 const tableWrapperRef = ref<HTMLElement>();
 const curFocusCellKey = ref('');// 当前聚焦的单元格
+const kvTypes = ref(['labels', 'annotations']);
 
 // 格式化key值，key长度超出宽度时，中间省略，只展示key首尾字符
 const formatKey = (key: string, isDialog = false) => {
   let tmpKey = key;
-  const displayLen = (props.type === 'labels' || isDialog) ? 20 : 50; // defaultLength(目前240px) * 90% / 12
+  const displayLen = (kvTypes.value.includes(props.type) || isDialog) ? 20 : 50; // defaultLength(目前240px) * 90% / 12
   if (key.length > displayLen) {
     const start = key.substring(0, displayLen / 2 + 1);
     const end = key.substring(key.length - (displayLen / 2 - 1));
@@ -685,7 +689,7 @@ const addTaint = async () => {
 const confirmAdd = async () => {
   if (!await validateData()) return;
   let success: Boolean = false;
-  if (props.type === 'labels') {
+  if (kvTypes.value.includes(props.type)) {
     success = await addLabel();
   } else if (props.type === 'taints') {
     success = await addTaint();
@@ -701,7 +705,7 @@ const confirmAdd = async () => {
 };
 const validateData = async () => {
   let el: any;
-  if (props.type === 'labels') {
+  if (kvTypes.value.includes(props.type)) {
     el = labelRef.value;
   } else if (props.type === 'taints') {
     el = taintRef.value;
@@ -770,7 +774,7 @@ const showPopover = (key: string) => {
 const setKeyValue = () => {
   let validate: Boolean = true;
   batchValue.value = batchValue.value?.trim();
-  if (props.type === 'labels') {
+  if (kvTypes.value.includes(props.type)) {
     validate = new RegExp(LABEL_VALUE).test(batchValue.value);
   } else {
     validate = new RegExp(TAINT_VALUE).test(batchValue.value);
@@ -803,27 +807,38 @@ const back = () => {
   $router.back();
 };
 // 批量设置保存标签
-const saveLabels = async () => {
-  const nodes = data.value.map((row) => {
+const saveLabels = async (type: 'labels' | 'annotations') => {
+  const nodes = data.value.map<ILabelsItem | IAnnotationsItem>((row) => {
     // 过滤标记删除的key
-    const filterDeletedLabels = Object.keys(row.labels)
+    const filterDeletedLabels = Object.keys(row[type])
       .reduce((pre, key) => {
         if (colStatusMap.value[key] !== 'remove') {
           if (cellStatusMap.value[`${row.nodeName}_${key}`] !== 'remove') {
-            pre[key] = row.labels[key];
+            pre[key] = row[type][key];
           }
         }
         return pre;
       }, {});
     return {
       nodeName: row.nodeName,
-      labels: filterDeletedLabels,
-    };
+      [type]: filterDeletedLabels,
+    } as unknown as ILabelsItem | IAnnotationsItem;
   });
-  const result = await batchSetNodeLabels({
-    clusterID: props.clusterId,
-    nodes,
-  });
+  let result = {
+    fail: [],
+    success: [],
+  };
+  if (type === 'labels') {
+    result = await batchSetNodeLabels({
+      clusterID: props.clusterId,
+      nodes: nodes as ILabelsItem[],
+    });
+  } else if (type === 'annotations') {
+    result = await batchSetNodeAnnotations({
+      clusterID: props.clusterId,
+      nodes: nodes as IAnnotationsItem[],
+    });
+  }
   return result;
 };
 // 批量设置保存污点
@@ -852,8 +867,8 @@ const errorInfoDialogShow = ref(false);
 const handleSaveData = async () => {
   let result = { fail: [], success: [] };
   saving.value = true;
-  if (props.type === 'labels') {
-    result = await saveLabels();
+  if (kvTypes.value.includes(props.type)) {
+    result = await saveLabels(props.type as 'labels' | 'annotations');
   } else if (props.type === 'taints') {
     result = await saveTaints();
   }

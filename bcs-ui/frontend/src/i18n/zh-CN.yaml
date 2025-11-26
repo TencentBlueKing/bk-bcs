@@ -1336,6 +1336,7 @@ cluster:
       setTaint: 设置污点
       addLabel: 添加标签
       addTaint: 添加污点
+      addAnnotation: 添加注解
       copy:
         text: 复制
         checkedIP: 复制勾选IP
@@ -1375,6 +1376,7 @@ cluster:
       inputValue: 请输入value
       locationTag: 定位标签
       locationTaint: 定位污点
+      locationAnnotation: 定位注解
     title:
       confirmAddNode: 确定添加节点
       confirmReAddNode: 确认重新添加节点
@@ -1385,6 +1387,8 @@ cluster:
         desc: 批量设置只展示相同Key的标签
       batchSetTaint:
         text: 批量设置污点
+      batchSetAnnotation:
+        text: 批量设置注解
       tableSetting: 表格设置
       fieldDisplaySettings: 表格显示设置
       nodeSaveError: 部分节点保存失败

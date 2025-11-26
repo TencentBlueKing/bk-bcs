@@ -1673,6 +1673,7 @@ cluster:
       setTaint: Set taint
       addLabel: Add tag
       addTaint: Add taint
+      addAnnotation: Add annotation
       copy:
         text: Copy
         checkedIP: Copy check ip
@@ -1714,6 +1715,7 @@ cluster:
       inputValue: Please enter the value
       locationTag: Location tag
       locationTaint: Location taint
+      locationAnnotation: Location annotation
     title:
       confirmAddNode: Determine the additional node
       confirmReAddNode: Confirm the re-added node
@@ -1724,6 +1726,8 @@ cluster:
         desc: Batch settings only show the same key label
       batchSetTaint:
         text: Set taint batch
+      batchSetAnnotation:
+        text: Set annotation batch
       tableSetting: Table setting
       fieldDisplaySettings: Field display settings
       nodeSaveError: Some nodes failed to save
