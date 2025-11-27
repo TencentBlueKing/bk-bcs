@@ -173,6 +173,18 @@ type ClusterManagerModel interface {
 	DeleteTask(ctx context.Context, taskID string) error
 	GetTask(ctx context.Context, taskID string) (*types.Task, error)
 	ListTask(ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]*types.Task, error)
+	ListClusterWholeTaskMetrics(
+		ctx context.Context, startTime, endTime string) ([]*itypes.ClusterWholeTaskMetrics, error)
+	ListClusterSubSuccessTaskMetrics(
+		ctx context.Context, startTime, endTime string) ([]*itypes.ClusterSubSuccessTaskMetrics, error)
+	ListClusterSubFailTaskMetrics(
+		ctx context.Context, startTime, endTime string) ([]*itypes.ClusterSubFailTaskMetrics, error)
+	ListBusinessWholeTaskMetrics(
+		ctx context.Context, startTime, endTime string) ([]*itypes.BusinessWholeTaskMetrics, error)
+	ListBusinessSubSuccessTaskMetrics(
+		ctx context.Context, startTime, endTime string) ([]*itypes.BusinessSubSuccessTaskMetrics, error)
+	ListBusinessSubFailTaskMetrics(
+		ctx context.Context, startTime, endTime string) ([]*itypes.BusinessSubFailTaskMetrics, error)
 	DeleteFinishedTaskByDate(ctx context.Context, startTime, endTime string) error
 	ListMachineryTasks(ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]stypes.Task, error)
 	GetTasksFieldDistinct(ctx context.Context, fieldName string, filter interface{}) ([]string, error)

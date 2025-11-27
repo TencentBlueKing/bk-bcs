@@ -1645,3 +1645,12 @@ func GetTaskTimeout(
 func AllowCrossBizNodes(cls *proto.Cluster) bool {
 	return cls.Labels[WhiteListLabelKey] == common.True
 }
+
+// GenFailedMessage 生成错误信息
+func GenFailedMessage(clusterId, stepName string, e error) (string, error) {
+	cluster, err := GetStorageModel().GetCluster(context.Background(), clusterId)
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%s-%sFailed: %s", cluster.Provider, stepName, e.Error()), nil
+}

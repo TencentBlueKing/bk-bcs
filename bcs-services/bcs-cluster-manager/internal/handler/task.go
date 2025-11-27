@@ -133,3 +133,37 @@ func (cm *ClusterManager) SkipTask(ctx context.Context,
 	blog.Infof("reqID: %s, action: SkipTask, req %v, resp %v", reqID, req, resp)
 	return nil
 }
+
+// ListClusterTaskMetrics implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) ListClusterTaskMetrics(ctx context.Context,
+	req *cmproto.ListClusterTaskMetricsRequest, resp *cmproto.ListClusterTaskMetricsResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	ca := task.NewListClusterTaskMetricsAction(cm.model)
+	ca.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("ListClusterTaskMetrics", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: ListClusterTaskMetrics, req %v, resp.Code %d, resp.Message %s, resp.Data.Length %v",
+		reqID, req, resp.Code, resp.Message, len(resp.Data))
+	blog.V(5).Infof("reqID: %s, action: ListClusterTaskMetrics, req %v, resp %v", reqID, req, resp)
+	return nil
+}
+
+// ListBusinessTaskMetrics implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) ListBusinessTaskMetrics(ctx context.Context,
+	req *cmproto.ListBusinessTaskMetricsRequest, resp *cmproto.ListBusinessTaskMetricsResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	ca := task.NewListBusinessTaskMetricsAction(cm.model)
+	ca.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("ListBusinessTaskMetrics", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: ListBusinessTaskMetrics, req %v, resp.Code %d, resp.Message %s, resp.Data.Length %v",
+		reqID, req, resp.Code, resp.Message, len(resp.Data))
+	blog.V(5).Infof("reqID: %s, action: ListBusinessTaskMetrics, req %v, resp %v", reqID, req, resp)
+	return nil
+}

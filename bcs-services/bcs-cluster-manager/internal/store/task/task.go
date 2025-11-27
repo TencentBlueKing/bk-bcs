@@ -26,6 +26,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/util"
+	itypes "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 )
 
 const (
@@ -202,4 +203,427 @@ func (m *ModelTask) DeleteFinishedTaskByDate(ctx context.Context, startTime, end
 		return err
 	}
 	return nil
+}
+
+// ListClusterWholeTaskMetrics list clusters whole success task metrics
+func (m *ModelTask) ListClusterWholeTaskMetrics(
+	ctx context.Context, startTime, endTime string) ([]*itypes.ClusterWholeTaskMetrics, error) {
+
+	taskList := make([]*itypes.ClusterWholeTaskMetrics, 0)
+	cond := genTimeCondition(startTime, endTime)
+	successCond := genClusterWholeSuccessMetrics()
+	pipeline := append([]bson.M{cond}, successCond...)
+	err := m.db.Table(m.tableName).Aggregation(ctx, pipeline, &taskList)
+	if err != nil {
+		return nil, err
+	}
+	return taskList, nil
+}
+
+// ListClusterSubSuccessTaskMetrics list clusters sub success task metrics
+func (m *ModelTask) ListClusterSubSuccessTaskMetrics(
+	ctx context.Context, startTime, endTime string) ([]*itypes.ClusterSubSuccessTaskMetrics, error) {
+
+	taskList := make([]*itypes.ClusterSubSuccessTaskMetrics, 0)
+	cond := genTimeCondition(startTime, endTime)
+	successCond := genClusterSubSuccessTaskMetrics()
+	pipeline := append([]bson.M{cond}, successCond...)
+	err := m.db.Table(m.tableName).Aggregation(ctx, pipeline, &taskList)
+	if err != nil {
+		return nil, err
+	}
+	return taskList, nil
+}
+
+// ListClusterSubFailTaskMetrics list clusters sub fail task metrics
+func (m *ModelTask) ListClusterSubFailTaskMetrics(
+	ctx context.Context, startTime, endTime string) ([]*itypes.ClusterSubFailTaskMetrics, error) {
+
+	taskList := make([]*itypes.ClusterSubFailTaskMetrics, 0)
+	cond := genTimeCondition(startTime, endTime)
+	failCond := genClusterSubFailTaskMetrics()
+	pipeline := append([]bson.M{cond}, failCond...)
+	err := m.db.Table(m.tableName).Aggregation(ctx, pipeline, &taskList)
+	if err != nil {
+		return nil, err
+	}
+	return taskList, nil
+}
+
+// ListBusinessWholeTaskMetrics list business whole success task metrics
+func (m *ModelTask) ListBusinessWholeTaskMetrics(
+	ctx context.Context, startTime, endTime string) ([]*itypes.BusinessWholeTaskMetrics, error) {
+
+	taskList := make([]*itypes.BusinessWholeTaskMetrics, 0)
+	cond := genTimeCondition(startTime, endTime)
+	successCond := genBusinessWholeSuccessMetrics()
+	pipeline := append([]bson.M{cond}, successCond...)
+	err := m.db.Table(m.tableName).Aggregation(ctx, pipeline, &taskList)
+	if err != nil {
+		return nil, err
+	}
+	return taskList, nil
+}
+
+// ListBusinessSubSuccessTaskMetrics list business sub success task metrics
+func (m *ModelTask) ListBusinessSubSuccessTaskMetrics(
+	ctx context.Context, startTime, endTime string) ([]*itypes.BusinessSubSuccessTaskMetrics, error) {
+
+	taskList := make([]*itypes.BusinessSubSuccessTaskMetrics, 0)
+	cond := genTimeCondition(startTime, endTime)
+	successCond := genBusinessSubSuccessTaskMetrics()
+	pipeline := append([]bson.M{cond}, successCond...)
+	err := m.db.Table(m.tableName).Aggregation(ctx, pipeline, &taskList)
+	if err != nil {
+		return nil, err
+	}
+	return taskList, nil
+}
+
+// ListBusinessSubFailTaskMetrics list business sub fail task metrics
+func (m *ModelTask) ListBusinessSubFailTaskMetrics(
+	ctx context.Context, startTime, endTime string) ([]*itypes.BusinessSubFailTaskMetrics, error) {
+
+	taskList := make([]*itypes.BusinessSubFailTaskMetrics, 0)
+	cond := genTimeCondition(startTime, endTime)
+	failCond := genBusinessSubFailTaskMetrics()
+	pipeline := append([]bson.M{cond}, failCond...)
+	err := m.db.Table(m.tableName).Aggregation(ctx, pipeline, &taskList)
+	if err != nil {
+		return nil, err
+	}
+	return taskList, nil
+}
+
+// 通过时间条件筛选数据
+func genTimeCondition(startTime, endTime string) bson.M {
+	cond := bson.M{}
+
+	// 筛选时间
+	if endTime != "" {
+		cond["end"] = bson.M{
+			"$lte": endTime,
+		}
+	}
+	if startTime != "" {
+		cond["start"] = bson.M{
+			"$gte": startTime,
+		}
+	}
+
+	if len(cond) != 0 {
+		return bson.M{
+			"$match": cond,
+		}
+	}
+
+	return cond
+}
+
+// genClusterWholeSuccessMetrics 生成集群维度整体成功数据的子查询条件
+func genClusterWholeSuccessMetrics() []bson.M {
+	successCond := []bson.M{
+		{
+			"$group": bson.M{
+				"_id": "$clusterid",
+				"totalTasks": bson.M{
+					"$sum": 1,
+				}, // 总任务数
+				"successTasks": bson.M{
+					"$sum": bson.M{
+						"$cond": bson.M{
+							"if":   bson.M{"$eq": []string{"$status", "SUCCESS"}},
+							"then": 1,
+							"else": 0,
+						},
+					}, // 成功任务数
+				},
+				"avgExecutionTime": bson.M{
+					"$avg": bson.M{
+						"$cond": bson.M{
+							"if":   bson.M{"$eq": []string{"$status", "SUCCESS"}},
+							"then": "$executiontime",
+							"else": nil,
+						},
+					}, // 成功任务平均耗时
+				},
+			},
+		},
+		{
+			"$project": bson.M{
+				"_id":       0,
+				"clusterId": "$_id",
+				"successRate": bson.M{
+					"$divide": []string{"$successTasks", "$totalTasks"},
+				}, // 成功率
+				"avgExecutionTime": 1,
+			},
+		},
+	}
+	return successCond
+}
+
+// genBusinessWholeSuccessMetrics 生成查询业务维度整体成功数据的子查询条件
+func genBusinessWholeSuccessMetrics() []bson.M {
+	successCond := []bson.M{
+		{
+			"$lookup": bson.M{
+				"from":         "bcsclustermanagerv2_cluster",
+				"localField":   "clusterid",
+				"foreignField": "clusterid",
+				"as":           "cluster",
+			},
+		},
+		{
+			"$unwind": bson.M{
+				"path":                       "$cluster", // 拆开数组
+				"preserveNullAndEmptyArrays": true,       // 保留左表中没有匹配的行
+			},
+		},
+		{
+			"$group": bson.M{
+				"_id": "$cluster.businessid",
+				"totalTasks": bson.M{
+					"$sum": 1,
+				}, // 总任务数
+				"successTasks": bson.M{
+					"$sum": bson.M{
+						"$cond": bson.M{
+							"if":   bson.M{"$eq": []string{"$status", "SUCCESS"}},
+							"then": 1,
+							"else": 0,
+						},
+					}, // 成功任务数
+				},
+				"avgExecutionTime": bson.M{
+					"$avg": bson.M{
+						"$cond": bson.M{
+							"if":   bson.M{"$eq": []string{"$status", "SUCCESS"}},
+							"then": "$executiontime",
+							"else": nil,
+						},
+					}, // 成功任务平均耗时
+				},
+			},
+		},
+		{
+			"$project": bson.M{
+				"_id":        0,
+				"businessId": "$_id",
+				"successRate": bson.M{
+					"$divide": []string{"$successTasks", "$totalTasks"},
+				}, // 成功率
+				"avgExecutionTime": 1,
+			},
+		},
+	}
+	return successCond
+}
+
+// genClusterSubSuccessTaskMetrics 生成集群维度子任务成功数据的查询条件
+func genClusterSubSuccessTaskMetrics() []bson.M {
+	successCond := []bson.M{
+		{
+			"$group": bson.M{
+				"_id": bson.M{
+					"taskType":  "$tasktype",
+					"clusterId": "$clusterid",
+				},
+				"totalTasks": bson.M{
+					"$sum": 1,
+				}, // 总任务数
+				"successTasks": bson.M{
+					"$sum": bson.M{
+						"$cond": bson.M{
+							"if":   bson.M{"$eq": []string{"$status", "SUCCESS"}},
+							"then": 1,
+							"else": 0,
+						},
+					}, // 成功任务数
+				},
+				"failTasks": bson.M{
+					"$sum": bson.M{
+						"$cond": bson.M{
+							"if":   bson.M{"$eq": []string{"$status", "FAILURE"}},
+							"then": 1,
+							"else": 0,
+						},
+					}, // 失败任务数
+				},
+				"avgExecutionTime": bson.M{
+					"$avg": bson.M{
+						"$cond": bson.M{
+							"if":   bson.M{"$eq": []string{"$status", "SUCCESS"}},
+							"then": "$executiontime",
+							"else": nil,
+						},
+					}, // 成功任务平均耗时
+				},
+			},
+		},
+		{
+			"$project": bson.M{
+				"_id":       0,
+				"clusterId": "$_id.clusterId",
+				"taskType":  "$_id.taskType",
+				"successRate": bson.M{
+					"$divide": []string{"$successTasks", "$totalTasks"},
+				}, // 成功率
+				"failTasks":        "$failTasks", // 失败任务数
+				"avgExecutionTime": 1,
+			},
+		},
+	}
+	return successCond
+}
+
+// genBusinessSubSuccessTaskMetrics 生成业务维度子任务成功数据的查询条件
+func genBusinessSubSuccessTaskMetrics() []bson.M {
+	successCond := []bson.M{
+		{
+			"$lookup": bson.M{
+				"from":         "bcsclustermanagerv2_cluster",
+				"localField":   "clusterid",
+				"foreignField": "clusterid",
+				"as":           "cluster",
+			},
+		},
+		{
+			"$unwind": bson.M{
+				"path":                       "$cluster", // 拆开数组
+				"preserveNullAndEmptyArrays": true,       // 保留左表中没有匹配的行
+			},
+		},
+		{
+			"$group": bson.M{
+				"_id": bson.M{
+					"taskType":   "$tasktype",
+					"businessId": "$cluster.businessid",
+				},
+				"totalTasks": bson.M{
+					"$sum": 1,
+				}, // 总任务数
+				"successTasks": bson.M{
+					"$sum": bson.M{
+						"$cond": bson.M{
+							"if":   bson.M{"$eq": []string{"$status", "SUCCESS"}},
+							"then": 1,
+							"else": 0,
+						},
+					}, // 成功任务数
+				},
+				"failTasks": bson.M{
+					"$sum": bson.M{
+						"$cond": bson.M{
+							"if":   bson.M{"$eq": []string{"$status", "FAILURE"}},
+							"then": 1,
+							"else": 0,
+						},
+					}, // 失败任务数
+				},
+				"avgExecutionTime": bson.M{
+					"$avg": bson.M{
+						"$cond": bson.M{
+							"if":   bson.M{"$eq": []string{"$status", "SUCCESS"}},
+							"then": "$executiontime",
+							"else": nil,
+						},
+					}, // 成功任务平均耗时
+				},
+			},
+		},
+		{
+			"$project": bson.M{
+				"_id":        0,
+				"businessId": "$_id.businessId",
+				"taskType":   "$_id.taskType",
+				"successRate": bson.M{
+					"$divide": []string{"$successTasks", "$totalTasks"},
+				}, // 成功率
+				"failTasks":        "$failTasks", // 失败任务数
+				"avgExecutionTime": 1,
+			},
+		},
+	}
+	return successCond
+}
+
+// genClusterSubFailTaskMetrics 生成集群维度子任务失败数据的查询条件
+func genClusterSubFailTaskMetrics() []bson.M {
+	failCond := []bson.M{
+		{
+			"$match": bson.M{
+				"status": "FAILURE",
+			},
+		},
+		{
+			"$group": bson.M{
+				"_id": bson.M{
+					"taskType":  "$tasktype",
+					"clusterId": "$clusterid",
+					"message":   "$message",
+				},
+				"failTasks": bson.M{
+					"$sum": 1, // 失败任务数
+				},
+			},
+		},
+		{
+			"$project": bson.M{
+				"_id":       0,
+				"taskType":  "$_id.taskType",
+				"clusterId": "$_id.clusterId",
+				"message":   "$_id.message",
+				"failTasks": 1,
+			},
+		},
+	}
+	return failCond
+}
+
+// genBusinessSubFailTaskMetrics 生成业务维度子任务失败数据的查询条件
+func genBusinessSubFailTaskMetrics() []bson.M {
+	failCond := []bson.M{
+		{
+			"$match": bson.M{
+				"status": "FAILURE",
+			},
+		},
+		{
+			"$lookup": bson.M{
+				"from":         "bcsclustermanagerv2_cluster",
+				"localField":   "clusterid",
+				"foreignField": "clusterid",
+				"as":           "cluster",
+			},
+		},
+		{
+			"$unwind": bson.M{
+				"path":                       "$cluster", // 拆开数组
+				"preserveNullAndEmptyArrays": true,       // 保留左表中没有匹配的行
+			},
+		},
+		{
+			"$group": bson.M{
+				"_id": bson.M{
+					"taskType":   "$tasktype",
+					"businessId": "$cluster.businessid",
+					"message":    "$message",
+				},
+				"failTasks": bson.M{
+					"$sum": 1, // 失败任务数
+				},
+			},
+		},
+		{
+			"$project": bson.M{
+				"_id":        0,
+				"taskType":   "$_id.taskType",
+				"businessId": "$_id.businessId",
+				"message":    "$_id.message",
+				"failTasks":  1,
+			},
+		},
+	}
+	return failCond
 }

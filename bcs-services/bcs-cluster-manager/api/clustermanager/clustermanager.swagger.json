@@ -6597,6 +6597,74 @@
         ]
       }
     },
+    "/clustermanager/v1/task/business/metrics": {
+      "post": {
+        "summary": "集群维度统计任务成功率、耗时、失败top原因",
+        "description": "集群维度统计任务成功率、耗时、失败top原因",
+        "operationId": "ClusterManager_ListBusinessTaskMetrics",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerListBusinessTaskMetricsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerListBusinessTaskMetricsRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
+    "/clustermanager/v1/task/cluster/metrics": {
+      "post": {
+        "summary": "集群维度统计任务成功率、耗时、失败top原因",
+        "description": "集群维度统计任务成功率、耗时、失败top原因",
+        "operationId": "ClusterManager_ListClusterTaskMetrics",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerListClusterTaskMetricsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerListClusterTaskMetricsRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
     "/clustermanager/v1/task/{taskID}": {
       "get": {
         "summary": "查询Task",
@@ -8425,6 +8493,77 @@
         },
         "nodeGroupType": {
           "type": "string"
+        }
+      }
+    },
+    "clustermanagerBusinessTaskMetrics": {
+      "type": "object",
+      "properties": {
+        "businessId": {
+          "type": "string",
+          "description": "业务ID",
+          "title": "businessId"
+        },
+        "successRate": {
+          "type": "number",
+          "format": "double",
+          "description": "任务成功率",
+          "title": "successRate"
+        },
+        "avgExecutionTime": {
+          "type": "number",
+          "format": "double",
+          "description": "任务平均耗时",
+          "title": "avgExecutionTime"
+        },
+        "subTaskMetrics": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerBussinessSubTaskMetrics"
+          },
+          "description": "子任务指标",
+          "title": "subTaskMetrics"
+        }
+      }
+    },
+    "clustermanagerBussinessSubTaskMetrics": {
+      "type": "object",
+      "properties": {
+        "subSuccessRate": {
+          "type": "number",
+          "format": "double",
+          "description": "子任务成功率",
+          "title": "subSuccessRate"
+        },
+        "subAvgExecutionTime": {
+          "type": "number",
+          "format": "double",
+          "description": "子任务平均耗时",
+          "title": "subAvgExecutionTime"
+        },
+        "subTaskFails": {
+          "type": "integer",
+          "format": "int32",
+          "description": "子任务失败次数",
+          "title": "subTaskFails"
+        },
+        "subTaskFailReason": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "子任务失败原因",
+          "title": "subTaskFailReason"
+        },
+        "subTaskFailTopReason": {
+          "type": "string",
+          "description": "子任务失败top原因",
+          "title": "subTaskFailTopReason"
+        },
+        "taskType": {
+          "type": "string",
+          "description": "子任务类型",
+          "title": "taskType"
         }
       }
     },
@@ -10823,6 +10962,77 @@
       },
       "description": "记录节点信息，用于节点列表展示",
       "title": "ClusterNode"
+    },
+    "clustermanagerClusterSubTaskMetrics": {
+      "type": "object",
+      "properties": {
+        "subSuccessRate": {
+          "type": "number",
+          "format": "double",
+          "description": "子任务成功率",
+          "title": "subSuccessRate"
+        },
+        "subAvgExecutionTime": {
+          "type": "number",
+          "format": "double",
+          "description": "子任务平均耗时",
+          "title": "subAvgExecutionTime"
+        },
+        "subTaskFails": {
+          "type": "integer",
+          "format": "int32",
+          "description": "子任务失败次数",
+          "title": "subTaskFails"
+        },
+        "subTaskFailReason": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "子任务失败原因",
+          "title": "subTaskFailReason"
+        },
+        "subTaskFailTopReason": {
+          "type": "string",
+          "description": "子任务失败top原因",
+          "title": "subTaskFailTopReason"
+        },
+        "taskType": {
+          "type": "string",
+          "description": "子任务类型",
+          "title": "taskType"
+        }
+      }
+    },
+    "clustermanagerClusterTaskMetrics": {
+      "type": "object",
+      "properties": {
+        "clusterId": {
+          "type": "string",
+          "description": "集群ID",
+          "title": "clusterId"
+        },
+        "successRate": {
+          "type": "number",
+          "format": "double",
+          "description": "任务成功率",
+          "title": "successRate"
+        },
+        "avgExecutionTime": {
+          "type": "number",
+          "format": "double",
+          "description": "任务平均耗时",
+          "title": "avgExecutionTime"
+        },
+        "subTaskMetrics": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerClusterSubTaskMetrics"
+          },
+          "description": "集群子任务指标",
+          "title": "clusterSubTaskMetrics"
+        }
+      }
     },
     "clustermanagerCommonListResp": {
       "type": "object",
@@ -15970,6 +16180,59 @@
         "data"
       ]
     },
+    "clustermanagerListBusinessTaskMetricsRequest": {
+      "type": "object",
+      "properties": {
+        "start": {
+          "type": "string",
+          "description": "任务启动时间",
+          "title": "start"
+        },
+        "end": {
+          "type": "string",
+          "description": "任务结束时间",
+          "title": "end"
+        }
+      },
+      "description": "业务维度统计任务成功率、耗时、失败top原因请求",
+      "title": "ListBusinessTaskMetricsRequest"
+    },
+    "clustermanagerListBusinessTaskMetricsResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerBusinessTaskMetrics"
+          },
+          "description": "获取到的任务指标",
+          "title": "data"
+        }
+      },
+      "description": "业务维度统计任务成功率、耗时、失败top原因返回",
+      "title": "ListBusinessTaskMetricsResponse",
+      "required": [
+        "code",
+        "message"
+      ]
+    },
     "clustermanagerListCloudAccountPermResponse": {
       "type": "object",
       "properties": {
@@ -16826,6 +17089,59 @@
         "code",
         "message",
         "data"
+      ]
+    },
+    "clustermanagerListClusterTaskMetricsRequest": {
+      "type": "object",
+      "properties": {
+        "start": {
+          "type": "string",
+          "description": "任务启动时间",
+          "title": "start"
+        },
+        "end": {
+          "type": "string",
+          "description": "任务结束时间",
+          "title": "end"
+        }
+      },
+      "description": "集群维度统计任务成功率、耗时、失败top原因请求",
+      "title": "ListClusterTaskMetricsRequest"
+    },
+    "clustermanagerListClusterTaskMetricsResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerClusterTaskMetrics"
+          },
+          "description": "获取到的任务指标",
+          "title": "data"
+        }
+      },
+      "description": "集群维度统计任务成功率、耗时、失败top原因返回",
+      "title": "ListClusterTaskMetricsResponse",
+      "required": [
+        "code",
+        "message"
       ]
     },
     "clustermanagerListClusterV2Resp": {
