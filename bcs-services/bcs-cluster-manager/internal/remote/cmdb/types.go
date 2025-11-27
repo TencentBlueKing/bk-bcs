@@ -85,10 +85,11 @@ const (
 )
 
 var (
-	fieldHostDetailInfo = []string{fieldCloudID, fieldCloudRegion, FieldHostIP, fieldHostIPv6, fieldHostOutIP, fieldHostOutIPV6,
-		fieldHostID, fieldDeviceType, fieldIDCCityName, fieldIDCCityID, fieldDeviceClass, fieldHostCPU, fieldCpuModule,
-		fieldHostMem, fieldHostDisk, fieldOperator, fieldBakOperator, fieldRack, fieldIDCName, fieldSubZoneID,
-		fieldIDCAreaID, fieldIDCArea, fieldIspName, fieldAgentId, FieldAssetId, fieldSvrTypeName}
+	fieldHostDetailInfo = []string{fieldCloudID, fieldCloudRegion, FieldHostIP, fieldHostIPv6, fieldHostOutIP,
+		fieldHostOutIPV6, fieldHostID, fieldDeviceType, fieldIDCCityName, fieldIDCCityID, fieldDeviceClass,
+		fieldHostCPU, fieldCpuModule, fieldHostMem, fieldHostDisk, fieldOperator, fieldBakOperator, fieldRack,
+		fieldIDCName, fieldSubZoneID, fieldIDCAreaID, fieldIDCArea, fieldIspName, fieldAgentId,
+		FieldAssetId, fieldSvrTypeName}
 
 	fieldHostIPSelectorInfo = []string{FieldHostIP, fieldHostIPv6, fieldCloudID, fieldHostName, fieldOsType,
 		fieldOsName, fieldHostID, fieldOperator, fieldBakOperator, fieldAgentId}
@@ -100,8 +101,10 @@ const (
 )
 
 const (
-	QcCvm = "QC_CVM" // cvm 虚拟机
-	IdcPm = "Server" // Idc 物理机
+	// QcCvm cvm 虚拟机
+	QcCvm = "QC_CVM"
+	// IdcPm Idc 物理机
+	IdcPm = "Server"
 )
 
 // Condition xxx
