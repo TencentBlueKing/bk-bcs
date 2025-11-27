@@ -659,7 +659,7 @@
       transfer>
       <template #header>
         <span>{{setMetaConf.title}}</span>
-        <span class="sideslider-tips">{{$t('cluster.nodeList.msg.labelDesc')}}</span>
+        <span v-if="metaType === 'labels'" class="sideslider-tips">{{$t('cluster.nodeList.msg.labelDesc')}}</span>
       </template>
       <template #content>
         <KeyValue
@@ -676,7 +676,7 @@
           :value-rules="[
             {
               message: $i18n.t('generic.validate.labelKey1'),
-              validator: VALUE_REGEXP
+              validator: metaType === 'labels' ? VALUE_REGEXP : ''
             }
           ]"
           :min-items="0"
@@ -1566,12 +1566,20 @@ export default defineComponent({
         return pre;
       }, []).filter(item => item.repeat === rows.length);
 
+      let title = '';
+      if (rows.length > 1 && metaType.value === 'labels') {
+        title = $i18n.t('cluster.nodeList.title.batchSetLabel.text'); // 批量设置标签
+      } else if (rows.length > 1 && metaType.value === 'annotations') {
+        title = $i18n.t('cluster.nodeList.title.batchSetAnnotation.text'); // 批量设置注解
+      } else if (rows.length === 1 && metaType.value === 'labels') {
+        title = `${$i18n.t('cluster.nodeList.button.setLabel')}(${rows[0]?.nodeName})`; // 设置标签
+      } else if (rows.length === 1 && metaType.value === 'annotations') {
+        title = `${$i18n.t('dashboard.ns.action.setAnnotation')}(${rows[0]?.nodeName})`; // 设置注解
+      }
       set(setMetaConf, 'value', Object.assign(setMetaConf.value, {
         data: labelArr,
         rows,
-        title: rows.length > 1
-          ? $i18n.t('cluster.nodeList.title.batchSetLabel.text')
-          : `${$i18n.t('cluster.nodeList.button.setLabel')}(${rows[0]?.nodeName})`,
+        title,
         keyDesc: rows.length > 1 ? $i18n.t('cluster.nodeList.title.batchSetLabel.desc') : '',
       }));
       reset();
@@ -2269,6 +2277,7 @@ export default defineComponent({
       handleHidePodDrain,
       handleSuccess,
       getDisableDeleteTips,
+      metaType,
     };
   },
 });

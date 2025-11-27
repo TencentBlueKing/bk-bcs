@@ -347,7 +347,7 @@
           :value-rules="[
             {
               message: $t('generic.validate.label'),
-              validator: LABEL_VALUE,
+              validator: type === 'labels' ? LABEL_VALUE : '',
             }
           ]" />
         <Taint
