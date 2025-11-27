@@ -180,3 +180,18 @@ func (cm *ClusterManager) ListClusterNodes(ctx context.Context,
 	blog.Infof("reqID: %s, action: ListClusterNodes, req %v, resp %v", reqID, req, resp)
 	return nil
 }
+
+// SyncClusterNodes implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) SyncClusterNodes(ctx context.Context,
+	req *cmproto.SyncClusterNodesRequest, resp *cmproto.SyncClusterNodesResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	na := node.NewSyncClusterNodesAction(cm.model, cm.kubeOp)
+	na.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("SyncClusterNodes", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: SyncClusterNodes, req %v, resp %v", reqID, req, resp)
+	return nil
+}
