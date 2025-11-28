@@ -439,8 +439,9 @@ export default defineComponent({
       } else {
         imageID.value = clusterImage.value?.imageID;
       }
-      nodePoolConfig.value.nodeTemplate.imageInfo.imageID = '';
-      nodePoolConfig.value.nodeTemplate.imageInfo.imageName = '';
+      nodePoolConfig.value.nodeTemplate.image.imageID = '';
+      nodePoolConfig.value.nodeTemplate.image.imageName = '';
+      nodePoolConfig.value.nodeTemplate.image.imageOs = '';
       await handleGetInstanceTypes();
       // 重置机型
       nodePoolConfig.value.launchTemplate.instanceType = instanceTypesList.value
@@ -452,7 +453,7 @@ export default defineComponent({
         clusterImage.value = value;
         imageID.value = value.imageID;
       } else {
-        imageID.value = defaultValues.value.nodeTemplate?.imageInfo?.imageID || value.imageID;
+        imageID.value = defaultValues.value.nodeTemplate?.image?.imageID || value.imageID;
       }
     }
 
@@ -495,9 +496,10 @@ export default defineComponent({
           containerRuntime: defaultValues.value.nodeTemplate?.runtime?.containerRuntime || 'docker', // 运行时容器组件
           runtimeVersion: defaultValues.value.nodeTemplate?.runtime?.runtimeVersion || '19.3', // 运行时版本
         },
-        imageInfo: {
+        image: {
           imageID: '', // 镜像ID
           imageName: '', // 镜像名称
+          imageOs: '',
         },
       },
       extra: {
@@ -745,15 +747,17 @@ export default defineComponent({
 
     // 操作系统
     function handleSetOS(image) {
-      nodePoolConfig.value.nodeTemplate.imageInfo.imageName = image;
+      nodePoolConfig.value.nodeTemplate.image.imageName = image;
     };
     // 切换镜像操作
-    function handleImageChange(id) {
-      nodePoolConfig.value.nodeTemplate.imageInfo.imageID = id;
+    function handleImageChange(id, osName) {
+      nodePoolConfig.value.nodeTemplate.image.imageID = id;
+      nodePoolConfig.value.nodeTemplate.image.imageOs = osName;
       // 所选镜像为集群镜像不传
       if (id === clusterImage.value?.imageID) {
-        nodePoolConfig.value.nodeTemplate.imageInfo.imageID = '';
-        nodePoolConfig.value.nodeTemplate.imageInfo.imageName = '';
+        nodePoolConfig.value.nodeTemplate.image.imageID = '';
+        nodePoolConfig.value.nodeTemplate.image.imageName = '';
+        nodePoolConfig.value.nodeTemplate.image.imageOs = '';
       }
     }
 

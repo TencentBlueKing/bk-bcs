@@ -149,7 +149,6 @@ export default defineComponent({
         region: curCluster.value.region,
         creator: user.value.username,
       };
-      console.log(data);
       const result = await $store.dispatch('clustermanager/createNodeGroup', data);
       if (result) {
         $router.push({

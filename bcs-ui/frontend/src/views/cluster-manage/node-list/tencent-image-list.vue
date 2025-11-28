@@ -186,19 +186,11 @@ const handleGetOsList = async () => {
 };
 const handleImageChange = (imageID: string) => {
   const imageItem = imageList.value.find(item => item.imageID === imageID);
-  // 兼容平台镜像
-  const index = imageListByGroup.value.BCS_IMAGE?.children?.findIndex?.(item => item.imageID === imageID) || -1;
   if (!imageItem) return;
 
-  if (imageItem.provider === 'PRIVATE_IMAGE' && index < 0) {
-    // 私有镜像取ID
-    emits('os-change', imageItem.imageID);
-  } else {
-    // 其他镜像取名称
-    emits('os-change', props.mode === 'OS' ? imageItem.osName : imageItem.alias);
-  }
-  emits('change', imageID);
-  emits('input', imageID);
+  emits('os-change', props.mode === 'OS' ? imageItem.osName : imageItem.alias);
+  emits('change', imageID, imageItem.osName);
+  emits('input', imageID, imageItem.osName);
 };
 
 watch([
