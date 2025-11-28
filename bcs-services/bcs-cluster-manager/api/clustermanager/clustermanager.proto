@@ -702,6 +702,16 @@ service ClusterManager {
       summary : "查询NodeGroup列表"
     };
   }
+  rpc ListNodeGroupV2(ListNodeGroupV2Request) returns (ListNodeGroupV2Response) {
+    option (google.api.http) = {
+      get : "/clustermanager/v2/nodegroup"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据查询条件过滤NodeGroup列表，如果某项条件值为空，则忽略此"
+          "条件。如果所有条件都为空，则默认查询所有集群，V2版本增加分页"
+      summary : "查询NodeGroup列表"
+    };
+  }
   rpc RecommendNodeGroupConf(RecommendNodeGroupConfReq) returns (RecommendNodeGroupConfResp) {
     option (google.api.http) = {
       get : "/clustermanager/v1/cloud/{cloudID}/recommendNodeGroupConf"
@@ -9480,6 +9490,80 @@ message ListNodeGroupResponse {
   repeated NodeGroup data = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "data", 
     description : "获取到的信息"
+  }];
+}
+
+message ListNodeGroupV2Request {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListNodeGroupV2Request"
+      description : "查询nodegroup，如果填写了目标字段，则组合目标信息查询，如果全为空则为查询全量信息"
+    }
+  };
+
+  string name = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "name",
+    description: "节点组名称"
+  }];
+  string clusterID = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "clusterID",
+    description: "节点组所关联的集群，该ID为BCS集群ID"
+  }
+    //(validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+  string region = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "region",
+    description: "节点组所关联区域信息"
+  }];
+  string projectID = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "projectID",
+    description: "节点组所关联项目信息"
+  }];
+  uint32 limit = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "limit",
+    description: "每页数量"
+  }, (validate.rules).uint32.gte = 0];
+  uint32 page = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "page",
+    description: "页码"
+  }, (validate.rules).uint32.gte = 0];
+}
+
+message ListNodeGroupV2Response {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListNodeGroupV2Response"
+      description : "查询NodeGroup返回"
+      required : [ "code", "message" ]
+    }
+  };
+
+  uint32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+  bool result = 3 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+  ListNodeGroupResponseData data = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "获取到的信息"
+  }];
+}
+
+message ListNodeGroupResponseData {
+  uint32 count = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "count",
+    description : "NodeGroup数量"
+  }];
+  repeated NodeGroup results = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "results",
+    description : "返回数据"
   }];
 }
 

@@ -35700,6 +35700,413 @@ var _ interface {
 	ErrorName() string
 } = ListNodeGroupResponseValidationError{}
 
+// Validate checks the field values on ListNodeGroupV2Request with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ListNodeGroupV2Request) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListNodeGroupV2Request with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListNodeGroupV2RequestMultiError, or nil if none found.
+func (m *ListNodeGroupV2Request) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListNodeGroupV2Request) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Name
+
+	// no validation rules for ClusterID
+
+	// no validation rules for Region
+
+	// no validation rules for ProjectID
+
+	if m.GetLimit() < 0 {
+		err := ListNodeGroupV2RequestValidationError{
+			field:  "Limit",
+			reason: "value must be greater than or equal to 0",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if m.GetPage() < 0 {
+		err := ListNodeGroupV2RequestValidationError{
+			field:  "Page",
+			reason: "value must be greater than or equal to 0",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return ListNodeGroupV2RequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListNodeGroupV2RequestMultiError is an error wrapping multiple validation
+// errors returned by ListNodeGroupV2Request.ValidateAll() if the designated
+// constraints aren't met.
+type ListNodeGroupV2RequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListNodeGroupV2RequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListNodeGroupV2RequestMultiError) AllErrors() []error { return m }
+
+// ListNodeGroupV2RequestValidationError is the validation error returned by
+// ListNodeGroupV2Request.Validate if the designated constraints aren't met.
+type ListNodeGroupV2RequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListNodeGroupV2RequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListNodeGroupV2RequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListNodeGroupV2RequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListNodeGroupV2RequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListNodeGroupV2RequestValidationError) ErrorName() string {
+	return "ListNodeGroupV2RequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListNodeGroupV2RequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListNodeGroupV2Request.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListNodeGroupV2RequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListNodeGroupV2RequestValidationError{}
+
+// Validate checks the field values on ListNodeGroupV2Response with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ListNodeGroupV2Response) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListNodeGroupV2Response with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListNodeGroupV2ResponseMultiError, or nil if none found.
+func (m *ListNodeGroupV2Response) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListNodeGroupV2Response) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	if all {
+		switch v := interface{}(m.GetData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ListNodeGroupV2ResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ListNodeGroupV2ResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ListNodeGroupV2ResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return ListNodeGroupV2ResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListNodeGroupV2ResponseMultiError is an error wrapping multiple validation
+// errors returned by ListNodeGroupV2Response.ValidateAll() if the designated
+// constraints aren't met.
+type ListNodeGroupV2ResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListNodeGroupV2ResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListNodeGroupV2ResponseMultiError) AllErrors() []error { return m }
+
+// ListNodeGroupV2ResponseValidationError is the validation error returned by
+// ListNodeGroupV2Response.Validate if the designated constraints aren't met.
+type ListNodeGroupV2ResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListNodeGroupV2ResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListNodeGroupV2ResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListNodeGroupV2ResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListNodeGroupV2ResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListNodeGroupV2ResponseValidationError) ErrorName() string {
+	return "ListNodeGroupV2ResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListNodeGroupV2ResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListNodeGroupV2Response.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListNodeGroupV2ResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListNodeGroupV2ResponseValidationError{}
+
+// Validate checks the field values on ListNodeGroupResponseData with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ListNodeGroupResponseData) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListNodeGroupResponseData with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListNodeGroupResponseDataMultiError, or nil if none found.
+func (m *ListNodeGroupResponseData) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListNodeGroupResponseData) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Count
+
+	for idx, item := range m.GetResults() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, ListNodeGroupResponseDataValidationError{
+						field:  fmt.Sprintf("Results[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, ListNodeGroupResponseDataValidationError{
+						field:  fmt.Sprintf("Results[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ListNodeGroupResponseDataValidationError{
+					field:  fmt.Sprintf("Results[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return ListNodeGroupResponseDataMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListNodeGroupResponseDataMultiError is an error wrapping multiple validation
+// errors returned by ListNodeGroupResponseData.ValidateAll() if the
+// designated constraints aren't met.
+type ListNodeGroupResponseDataMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListNodeGroupResponseDataMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListNodeGroupResponseDataMultiError) AllErrors() []error { return m }
+
+// ListNodeGroupResponseDataValidationError is the validation error returned by
+// ListNodeGroupResponseData.Validate if the designated constraints aren't met.
+type ListNodeGroupResponseDataValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListNodeGroupResponseDataValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListNodeGroupResponseDataValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListNodeGroupResponseDataValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListNodeGroupResponseDataValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListNodeGroupResponseDataValidationError) ErrorName() string {
+	return "ListNodeGroupResponseDataValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListNodeGroupResponseDataValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListNodeGroupResponseData.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListNodeGroupResponseDataValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListNodeGroupResponseDataValidationError{}
+
 // Validate checks the field values on AddNodesRequest with the rules defined
 // in the proto definition for this message. If any rules are violated, the
 // first error encountered is returned, or nil if there are no violations.
