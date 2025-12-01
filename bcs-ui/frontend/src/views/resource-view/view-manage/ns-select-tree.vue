@@ -63,6 +63,7 @@
         v-model="searchKey">
       </bcs-input>
     </template>
+    <!-- 兼容 tag 功能 -->
     <div v-show="false">
       <bcs-option
         v-for="item in nsList"
@@ -76,6 +77,8 @@
       show-checkbox
       ref="treeRef"
       default-expand-all
+      check-on-click
+      :expand-on-click="false"
       @check-change="handleCheckChange">
     </bcs-big-tree>
     <template #extension>
@@ -221,6 +224,10 @@ function handleToggle(val: boolean) {
       value: curNsData.value,
       group: !curNsData.value.length && !nsgroup.value ? 'all-user' : nsgroup.value,
     });
+    // 重置 nsgroup
+    if (!curNsData.value.length && !nsgroup.value) {
+      nsgroup.value = 'all-user';
+    }
   }
 }
 
