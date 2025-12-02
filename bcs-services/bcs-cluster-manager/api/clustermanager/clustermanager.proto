@@ -1238,6 +1238,34 @@ service ClusterManager {
       summary : "获取云所属地域vpc列表"
     };
   }
+  rpc ListCloudVpcCluster(ListCloudVpcClusterRequest) returns (ListCloudVpcClusterResponse) {
+    option (google.api.http) = {
+      get : "/clustermanager/v1/clouds/{cloudID}/vpc/{vpcID}/cluster"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "获取云所属vpc下的集群列表"
+      summary : "获取云所属vpc下的集群列表"
+    };
+  }
+  rpc UpdateCloudVpcs(UpdateCloudVpcsRequest) returns (UpdateCloudVpcsResponse) {
+    option (google.api.http) = {
+      put : "/clustermanager/v1/clouds/{cloudID}/vpcs/{vpcID}"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "更新云所属vpc信息"
+      summary : "更新云所属vpc信息" 
+    };
+  }
+  rpc ListCloudVpcsPage(ListCloudVpcsPageRequest) returns (ListCloudVpcsPageResponse) {
+    option (google.api.http) = {
+      get : "/clustermanager/v1/clouds/{cloudID}/vpcs/page"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "获取云所属地域vpc列表"
+      summary : "获取云所属地域vpc列表"
+    };
+  }
   rpc CheckCidrConflictFromVpc(CheckCidrConflictFromVpcRequest) returns (CheckCidrConflictFromVpcResponse) {
     option (google.api.http) = {
       get : "/clustermanager/v1/clouds/{cloudID}/vpcs/{vpcId}/cidrconflict"
@@ -1254,6 +1282,35 @@ service ClusterManager {
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
       description : "根据vpcID获取所属vpc的子网信息"
       summary : "查询vpc子网列表"
+    };
+  }
+  rpc CreateCloudSubnets(CreateCloudSubnetsRequest) returns (CreateCloudSubnetsResponse) {
+    option (google.api.http) = {
+      post : "/clustermanager/v1/clouds/{cloudID}/subnets"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "创建所属vpc的子网信息"
+      summary : "创建所属vpc的子网信息"
+    };
+  }
+  rpc UpdateCloudSubnets(UpdateCloudSubnetsRequest) returns (UpdateCloudSubnetsResponse) {
+    option (google.api.http) = {
+      put : "/clustermanager/v1/clouds/{cloudID}/subnets/{subnetID}"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "更新所属vpc的子网信息"
+      summary : "更新所属vpc的子网信息"
+    };
+  }
+  rpc DeleteCloudSubnets(DeleteCloudSubnetsRequest) returns (DeleteCloudSubnetsResponse) {
+    option (google.api.http) = {
+      delete : "/clustermanager/v1/clouds/{cloudID}/subnets/{subnetID}"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "删除所属vpc的子网信息"
+      summary : "删除所属vpc的子网信息"
     };
   }
   rpc ListCloudSecurityGroups(ListCloudSecurityGroupsRequest) returns (ListCloudSecurityGroupsResponse) {
@@ -12937,6 +12994,82 @@ message CloudProject {
   string projectName=2;
 }
 
+message ListCloudVpcClusterRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListCloudVpcClusterRequest"
+      description : "查询云所属vpc下的集群列表"
+    }
+  };
+
+  string cloudID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "cloudID",
+    description : "云信息"
+  },(validate.rules).string = {min_len : 2}];
+  string region = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "region",
+    description : "云地域信息"
+  },(validate.rules).string = {min_len : 2}];
+  string accountID = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "accountID",
+    description : "云凭证ID"
+  }];
+  string vpcID = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "vpcID",
+    description: "过滤查询指定vpc的信息"
+  },(validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$"}];
+  uint32 offset = 5 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "offset",
+      description : "查询偏移量"
+    },
+    (validate.rules).uint32.gte = 0
+  ];
+  uint32 limit = 6 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "limit",
+      description : "查询限制数量"
+    },
+    (validate.rules).uint32.lte = 5000
+  ];
+}
+
+message ListCloudVpcClusterResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListCloudVpcClusterResponse"
+      description : "查询云所属vpc下的集群列表返回"
+      required : [ "code", "message" ]
+    }
+  };
+
+  uint32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+  bool result = 3 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+  repeated CloudCluster data = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "获取到的信息"
+  }];
+  uint32 total = 5 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "total",
+    description : "总数"
+  }];
+}
+
+message CloudCluster {
+  string clusterID  = 1;
+  repeated OverlayIPCidr overlayIPCidr = 2;
+}
+
 message ListCloudVpcsRequest {
   option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
     json_schema : {
@@ -12991,6 +13124,215 @@ message ListCloudVpcsResponse {
   repeated CloudVpc data = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "data",
     description : "获取到的信息"
+  }];
+}
+
+message UpdateCloudVpcsRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "UpdateCloudVpcsRequest"
+      description : "更新云所属vpc信息"
+    }
+  };
+
+  string cloudID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "cloudID",
+    description : "云信息"
+  },(validate.rules).string = {min_len : 2}];
+  string region = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "region",
+    description : "云地域信息"
+  }];
+  string accountID = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "accountID",
+    description : "云凭证ID"
+  }];
+  string vpcID = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "vpcID",
+    description: "过滤查询指定vpc的信息"
+  }];
+  string resourceGroupName = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "resourceGroupName",
+    description: "Azure Cloud中Vpc所属的resource group名称"
+  }];
+  string vpcName = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "vpcName",
+    description: "vpc名称"
+  }];
+}
+
+message UpdateCloudVpcsResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "UpdateCloudVpcsResponse"
+      description : "更新云所属vpc信息"
+      required : [ "code", "message" ]
+    }
+  };
+
+  uint32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+  bool result = 3 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+}
+
+message ListCloudVpcsPageRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListCloudVpcsPageRequest"
+      description : "查询云所属项目的vpc列表"
+    }
+  };
+
+  string cloudID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "cloudID",
+    description : "云信息"
+  },(validate.rules).string = {min_len : 2}];
+  string region = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "region",
+    description : "云地域信息"
+  }];
+  string accountID = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "accountID",
+    description : "云凭证ID"
+  }];
+  string vpcID = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "vpcID",
+    description: "过滤查询指定vpc的信息"
+  }];
+  string resourceGroupName = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "resourceGroupName",
+    description: "Azure Cloud中Vpc所属的resource group名称"
+  }];
+  string vpcName = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "vpcName",
+    description: "vpc名称"
+  }];
+  uint32 offset = 7 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "offset",
+      description : "查询偏移量"
+    },
+    (validate.rules).uint32.gte = 0
+  ];
+  uint32 limit = 8 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "limit",
+      description : "查询限制数量"
+    },
+    (validate.rules).uint32.lte = 5000
+  ];
+}
+
+message ListCloudVpcsPageResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListCloudVpcsPageResponse"
+      description : "查询云所属地域的vpc列表"
+      required : [ "code", "message" ]
+    }
+  };
+
+  uint32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+  bool result = 3 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+  repeated CloudVpcs data = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "获取到的信息"
+  }];
+  uint32 total = 5 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "total",
+      description : "总数"
+  }];
+}
+
+message CloudVpcs {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "CloudVpcs"
+      description : "vpc信息"
+    }
+  };
+  string vpcName=1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "vpcName",
+    description : "vpc名称"
+  }];
+  string vpcID=2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "vpcID",
+    description : "vpcID"
+  }];
+  string region = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "region",
+    description : "云地域信息"
+  }];
+  repeated string overlayCidr=4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "overlayCidr",
+    description : "Overlay CIDR"
+  }];
+  uint32 availableOverlayIpNum=5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "availableOverlayIpNum",
+    description : "可用Overlay IP数量"
+  }];
+  repeated string availableOverlayCidr=6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "availableOverlayCidr",
+    description : "可用Overlay CIDR列表"
+  }];
+  uint32 totalOverlayIpNum=7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "totalOverlayIpNum",
+    description : "Overlay IP总数"
+  }];
+  repeated string underlayCidr=8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "underlayCidr",
+    description : "underlay CIDR"
+  }];
+  uint32 availableUnderlayIpNum=9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "availableUnderlayIpNum",
+    description : "可用Underlay IP数量"
+  }];
+  repeated string availableUnderlayCidr=10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "availableUnderlayCidr",
+    description : "可用Underlay CIDR列表"
+  }];
+  uint32 totalUnderlayIpNum=11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "totalUnderlayIpNum",
+    description : "Underlay IP总数"
+  }];
+  string createTime = 12 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTime",
+    description : "创建时间"
+  }];
+  repeated OverlayIPCidr overlayIPCidr = 13 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "overlayIPCidr",
+    description : "Overlay IP CIDR"
+  }];
+}
+
+message OverlayIPCidr {
+  string cidr = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "cidr",
+    description : "Overlay IP CIDR"
+  }];
+  uint32 ipNum = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "ipNum",
+    description : "Overlay IP数量"
   }];
 }
 
@@ -13082,6 +13424,173 @@ message ListCloudSubnetsResponse {
   }];
 }
 
+message CreateCloudSubnetsRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "CreateCloudSubnetsRequest"
+      description : "创建云子网列表,适配不同云"
+    }
+  };
+
+  string cloudID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "cloudID",
+    description : "云信息"
+  },(validate.rules).string = {min_len : 2}];
+  string vpcID = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "vpcID",
+    description: "vpcID信息"
+  }, (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$"}];
+  string region = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "region",
+    description : "云地域信息"
+  }];
+  string accountID = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "accountID",
+    description : "云凭证ID"
+  }];
+  string subnetName = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "subnetName",
+    description: "子网名称"
+  }];
+  string cidrBlock = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "cidrBlock",
+    description: "子网CIDR"
+  }];
+  string zone = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "zone",
+    description: "可用区"
+  }];
+}
+
+message CreateCloudSubnetsResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "CreateCloudSubnetsResponse"
+      description : "创建子网返回"
+      required : [ "code", "message" ]
+    }
+  };
+
+  uint32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+  bool result = 3 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+  Subnet data = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "创建的子网信息"
+  }];
+}
+
+message UpdateCloudSubnetsRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "UpdateSubnetsRequest"
+      description : "更新云子网列表,适配不同云"
+    }
+  };
+
+  string cloudID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "cloudID",
+    description : "云信息"
+  },(validate.rules).string = {min_len : 2}];
+  string region = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "region",
+    description : "云地域信息"
+  }];
+  string accountID = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "accountID",
+    description : "云凭证ID"
+  }];
+  string subnetID = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "subnetID",
+    description: "subnetID"
+  },(validate.rules).string = {min_len : 1}];
+  string subnetName = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "subnetName",
+    description: "更新子网名称"
+  }];
+}
+
+message UpdateCloudSubnetsResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "UpdateCloudSubnetsResponse"
+      description : "更新子网返回"
+      required : [ "code", "message" ]
+    }
+  };
+
+  uint32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+  bool result = 3 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+}
+
+message DeleteCloudSubnetsRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "DeleteCloudSubnetsRequest"
+      description : "删除云子网列表,适配不同云"
+    }
+  };
+
+  string cloudID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "cloudID",
+    description : "云信息"
+  },(validate.rules).string = {min_len : 2}];
+  string accountID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "accountID",
+    description : "云凭证ID"
+  }];
+  string subnetID = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "subnetID",
+    description: "subnetID"
+  },(validate.rules).string = {min_len : 1}];
+  string region = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "region",
+    description : "云地域信息"
+  }];
+}
+
+message DeleteCloudSubnetsResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "DeleteCloudSubnetsResponse"
+      description : "删除子网返回"
+      required : [ "code", "message" ]
+    }
+  };
+
+  uint32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+  bool result = 3 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+}
+
 message Subnet {
   option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
     json_schema : {
@@ -13129,6 +13638,10 @@ message Subnet {
   string hwNeutronSubnetID = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "hwNeutronSubnetID",
     description : "华为对应子网(OpenStack Neutron)接口ID"
+  }];
+  uint64 totalIpAddressCount = 11 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "totalIpAddressCount",
+    description : "总 IP 数"
   }];
 }
 

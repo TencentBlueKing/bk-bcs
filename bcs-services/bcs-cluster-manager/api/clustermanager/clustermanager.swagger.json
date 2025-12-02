@@ -2340,6 +2340,145 @@
         "tags": [
           "ClusterManager"
         ]
+      },
+      "post": {
+        "summary": "创建所属vpc的子网信息",
+        "description": "创建所属vpc的子网信息",
+        "operationId": "ClusterManager_CreateCloudSubnets",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerCreateCloudSubnetsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "cloudID",
+            "description": "云信息",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerCreateCloudSubnetsRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
+    "/clustermanager/v1/clouds/{cloudID}/subnets/{subnetID}": {
+      "delete": {
+        "summary": "删除所属vpc的子网信息",
+        "description": "删除所属vpc的子网信息",
+        "operationId": "ClusterManager_DeleteCloudSubnets",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerDeleteCloudSubnetsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "cloudID",
+            "description": "云信息",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "subnetID",
+            "description": "subnetID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "accountID",
+            "description": "accountID. 云凭证ID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "region",
+            "description": "region. 云地域信息",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      },
+      "put": {
+        "summary": "更新所属vpc的子网信息",
+        "description": "更新所属vpc的子网信息",
+        "operationId": "ClusterManager_UpdateCloudSubnets",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerUpdateCloudSubnetsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "cloudID",
+            "description": "云信息",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "subnetID",
+            "description": "subnetID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerUpdateCloudSubnetsRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
       }
     },
     "/clustermanager/v1/clouds/{cloudID}/versions/{version}/modules": {
@@ -2571,6 +2710,76 @@
         ]
       }
     },
+    "/clustermanager/v1/clouds/{cloudID}/vpc/{vpcID}/cluster": {
+      "get": {
+        "summary": "获取云所属vpc下的集群列表",
+        "description": "获取云所属vpc下的集群列表",
+        "operationId": "ClusterManager_ListCloudVpcCluster",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerListCloudVpcClusterResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "cloudID",
+            "description": "云信息",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "vpcID",
+            "description": "过滤查询指定vpc的信息",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "region",
+            "description": "region. 云地域信息",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "accountID",
+            "description": "accountID. 云凭证ID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "offset",
+            "description": "offset. 查询偏移量",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "limit",
+            "description": "limit. 查询限制数量",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
     "/clustermanager/v1/clouds/{cloudID}/vpcs": {
       "get": {
         "summary": "获取云所属地域vpc列表",
@@ -2625,6 +2834,138 @@
             "in": "query",
             "required": false,
             "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
+    "/clustermanager/v1/clouds/{cloudID}/vpcs/page": {
+      "get": {
+        "summary": "获取云所属地域vpc列表",
+        "description": "获取云所属地域vpc列表",
+        "operationId": "ClusterManager_ListCloudVpcsPage",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerListCloudVpcsPageResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "cloudID",
+            "description": "云信息",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "region",
+            "description": "region. 云地域信息",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "accountID",
+            "description": "accountID. 云凭证ID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "vpcID",
+            "description": "vpcID. 过滤查询指定vpc的信息",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "resourceGroupName",
+            "description": "resourceGroupName. Azure Cloud中Vpc所属的resource group名称",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "vpcName",
+            "description": "vpcName. vpc名称",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "offset",
+            "description": "offset. 查询偏移量",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "limit",
+            "description": "limit. 查询限制数量",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
+    "/clustermanager/v1/clouds/{cloudID}/vpcs/{vpcID}": {
+      "put": {
+        "summary": "更新云所属vpc信息",
+        "description": "更新云所属vpc信息",
+        "operationId": "ClusterManager_UpdateCloudVpcs",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerUpdateCloudVpcsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "cloudID",
+            "description": "云信息",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "vpcID",
+            "description": "过滤查询指定vpc的信息",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerUpdateCloudVpcsRequest"
+            }
           }
         ],
         "tags": [
@@ -9128,6 +9469,20 @@
         }
       }
     },
+    "clustermanagerCloudCluster": {
+      "type": "object",
+      "properties": {
+        "clusterID": {
+          "type": "string"
+        },
+        "overlayIPCidr": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerOverlayIPCidr"
+          }
+        }
+      }
+    },
     "clustermanagerCloudClusterInfo": {
       "type": "object",
       "properties": {
@@ -9831,6 +10186,97 @@
           "format": "int64"
         }
       }
+    },
+    "clustermanagerCloudVpcs": {
+      "type": "object",
+      "properties": {
+        "vpcName": {
+          "type": "string",
+          "description": "vpc名称",
+          "title": "vpcName"
+        },
+        "vpcID": {
+          "type": "string",
+          "description": "vpcID",
+          "title": "vpcID"
+        },
+        "region": {
+          "type": "string",
+          "description": "云地域信息",
+          "title": "region"
+        },
+        "overlayCidr": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Overlay CIDR",
+          "title": "overlayCidr"
+        },
+        "availableOverlayIpNum": {
+          "type": "integer",
+          "format": "int64",
+          "description": "可用Overlay IP数量",
+          "title": "availableOverlayIpNum"
+        },
+        "availableOverlayCidr": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "可用Overlay CIDR列表",
+          "title": "availableOverlayCidr"
+        },
+        "totalOverlayIpNum": {
+          "type": "integer",
+          "format": "int64",
+          "description": "Overlay IP总数",
+          "title": "totalOverlayIpNum"
+        },
+        "underlayCidr": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "underlay CIDR",
+          "title": "underlayCidr"
+        },
+        "availableUnderlayIpNum": {
+          "type": "integer",
+          "format": "int64",
+          "description": "可用Underlay IP数量",
+          "title": "availableUnderlayIpNum"
+        },
+        "availableUnderlayCidr": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "可用Underlay CIDR列表",
+          "title": "availableUnderlayCidr"
+        },
+        "totalUnderlayIpNum": {
+          "type": "integer",
+          "format": "int64",
+          "description": "Underlay IP总数",
+          "title": "totalUnderlayIpNum"
+        },
+        "createTime": {
+          "type": "string",
+          "description": "创建时间",
+          "title": "createTime"
+        },
+        "overlayIPCidr": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerOverlayIPCidr"
+          },
+          "description": "Overlay IP CIDR",
+          "title": "overlayIPCidr"
+        }
+      },
+      "description": "vpc信息",
+      "title": "CloudVpcs"
     },
     "clustermanagerCluster": {
       "type": "object",
@@ -11514,6 +11960,81 @@
         }
       }
     },
+    "clustermanagerCreateCloudSubnetsRequest": {
+      "type": "object",
+      "properties": {
+        "cloudID": {
+          "type": "string",
+          "description": "云信息",
+          "title": "cloudID"
+        },
+        "vpcID": {
+          "type": "string",
+          "description": "vpcID信息",
+          "title": "vpcID"
+        },
+        "region": {
+          "type": "string",
+          "description": "云地域信息",
+          "title": "region"
+        },
+        "accountID": {
+          "type": "string",
+          "description": "云凭证ID",
+          "title": "accountID"
+        },
+        "subnetName": {
+          "type": "string",
+          "description": "子网名称",
+          "title": "subnetName"
+        },
+        "cidrBlock": {
+          "type": "string",
+          "description": "子网CIDR",
+          "title": "cidrBlock"
+        },
+        "zone": {
+          "type": "string",
+          "description": "可用区",
+          "title": "zone"
+        }
+      },
+      "description": "创建云子网列表,适配不同云",
+      "title": "CreateCloudSubnetsRequest"
+    },
+    "clustermanagerCreateCloudSubnetsResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/clustermanagerSubnet",
+          "description": "创建的子网信息",
+          "title": "data"
+        }
+      },
+      "description": "创建子网返回",
+      "title": "CreateCloudSubnetsResponse",
+      "required": [
+        "code",
+        "message"
+      ]
+    },
     "clustermanagerCreateCloudVPCRequest": {
       "type": "object",
       "properties": {
@@ -12978,6 +13499,34 @@
           "title": "data"
         }
       }
+    },
+    "clustermanagerDeleteCloudSubnetsResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        }
+      },
+      "description": "删除子网返回",
+      "title": "DeleteCloudSubnetsResponse",
+      "required": [
+        "code",
+        "message"
+      ]
     },
     "clustermanagerDeleteCloudVPCResponse": {
       "type": "object",
@@ -16699,6 +17248,90 @@
         "message"
       ]
     },
+    "clustermanagerListCloudVpcClusterResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerCloudCluster"
+          },
+          "description": "获取到的信息",
+          "title": "data"
+        },
+        "total": {
+          "type": "integer",
+          "format": "int64",
+          "description": "总数",
+          "title": "total"
+        }
+      },
+      "description": "查询云所属vpc下的集群列表返回",
+      "title": "ListCloudVpcClusterResponse",
+      "required": [
+        "code",
+        "message"
+      ]
+    },
+    "clustermanagerListCloudVpcsPageResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerCloudVpcs"
+          },
+          "description": "获取到的信息",
+          "title": "data"
+        },
+        "total": {
+          "type": "integer",
+          "format": "int64",
+          "description": "总数",
+          "title": "total"
+        }
+      },
+      "description": "查询云所属地域的vpc列表",
+      "title": "ListCloudVpcsPageResponse",
+      "required": [
+        "code",
+        "message"
+      ]
+    },
     "clustermanagerListCloudVpcsResponse": {
       "type": "object",
       "properties": {
@@ -19251,6 +19884,22 @@
       "description": "操作系统镜像",
       "title": "OsImage"
     },
+    "clustermanagerOverlayIPCidr": {
+      "type": "object",
+      "properties": {
+        "cidr": {
+          "type": "string",
+          "description": "Overlay IP CIDR",
+          "title": "cidr"
+        },
+        "ipNum": {
+          "type": "integer",
+          "format": "int64",
+          "description": "Overlay IP数量",
+          "title": "ipNum"
+        }
+      }
+    },
     "clustermanagerPerms": {
       "type": "object",
       "properties": {
@@ -19982,6 +20631,12 @@
           "type": "string",
           "description": "华为对应子网(OpenStack Neutron)接口ID",
           "title": "hwNeutronSubnetID"
+        },
+        "totalIpAddressCount": {
+          "type": "string",
+          "format": "uint64",
+          "description": "总 IP 数",
+          "title": "totalIpAddressCount"
         }
       },
       "description": "子网信息",
@@ -21445,6 +22100,66 @@
         }
       }
     },
+    "clustermanagerUpdateCloudSubnetsRequest": {
+      "type": "object",
+      "properties": {
+        "cloudID": {
+          "type": "string",
+          "description": "云信息",
+          "title": "cloudID"
+        },
+        "region": {
+          "type": "string",
+          "description": "云地域信息",
+          "title": "region"
+        },
+        "accountID": {
+          "type": "string",
+          "description": "云凭证ID",
+          "title": "accountID"
+        },
+        "subnetID": {
+          "type": "string",
+          "description": "subnetID",
+          "title": "subnetID"
+        },
+        "subnetName": {
+          "type": "string",
+          "description": "更新子网名称",
+          "title": "subnetName"
+        }
+      },
+      "description": "更新云子网列表,适配不同云",
+      "title": "UpdateSubnetsRequest"
+    },
+    "clustermanagerUpdateCloudSubnetsResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        }
+      },
+      "description": "更新子网返回",
+      "title": "UpdateCloudSubnetsResponse",
+      "required": [
+        "code",
+        "message"
+      ]
+    },
     "clustermanagerUpdateCloudVPCRequest": {
       "type": "object",
       "properties": {
@@ -21544,6 +22259,71 @@
           "title": "data"
         }
       }
+    },
+    "clustermanagerUpdateCloudVpcsRequest": {
+      "type": "object",
+      "properties": {
+        "cloudID": {
+          "type": "string",
+          "description": "云信息",
+          "title": "cloudID"
+        },
+        "region": {
+          "type": "string",
+          "description": "云地域信息",
+          "title": "region"
+        },
+        "accountID": {
+          "type": "string",
+          "description": "云凭证ID",
+          "title": "accountID"
+        },
+        "vpcID": {
+          "type": "string",
+          "description": "过滤查询指定vpc的信息",
+          "title": "vpcID"
+        },
+        "resourceGroupName": {
+          "type": "string",
+          "description": "Azure Cloud中Vpc所属的resource group名称",
+          "title": "resourceGroupName"
+        },
+        "vpcName": {
+          "type": "string",
+          "description": "vpc名称",
+          "title": "vpcName"
+        }
+      },
+      "description": "更新云所属vpc信息",
+      "title": "UpdateCloudVpcsRequest"
+    },
+    "clustermanagerUpdateCloudVpcsResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        }
+      },
+      "description": "更新云所属vpc信息",
+      "title": "UpdateCloudVpcsResponse",
+      "required": [
+        "code",
+        "message"
+      ]
     },
     "clustermanagerUpdateClusterCredentialReq": {
       "type": "object",

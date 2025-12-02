@@ -276,6 +276,66 @@ func (c *CloudValidate) ListCloudSubnetsValidate(req *proto.ListCloudSubnetsRequ
 	return nil
 }
 
+// CreateCloudSubnetsValidate xxx
+func (c *CloudValidate) CreateCloudSubnetsValidate(req *proto.CreateCloudSubnetsRequest,
+	account *proto.Account) error {
+	// call qcloud interface to check account
+	if c == nil {
+		return fmt.Errorf("%s CreateCloudSubnetsValidate request is empty", cloudName)
+	}
+	if len(req.Region) == 0 {
+		return fmt.Errorf("%s CreateCloudSubnetsValidate request lost valid region info", cloudName)
+	}
+	if len(req.VpcID) == 0 {
+		return fmt.Errorf("%s CreateCloudSubnetsValidate request lost valid vpcID info", cloudName)
+	}
+	if len(req.SubnetName) == 0 {
+		return fmt.Errorf("%s CreateCloudSubnetsValidate request lost valid subnetName info", cloudName)
+	}
+	if len(req.Zone) == 0 {
+		return fmt.Errorf("%s CreateCloudSubnetsValidate request lost valid zone info", cloudName)
+	}
+	if len(req.CidrBlock) == 0 {
+		return fmt.Errorf("%s CreateCloudSubnetsValidate request lost valid cidrBlock info", cloudName)
+	}
+	return nil
+}
+
+// UpdateCloudSubnetsValidate xxx
+func (c *CloudValidate) UpdateCloudSubnetsValidate(req *proto.UpdateCloudSubnetsRequest,
+	account *proto.Account) error {
+	// call qcloud interface to check account
+	if c == nil {
+		return fmt.Errorf("%s UpdateCloudSubnetsValidate request is empty", cloudName)
+	}
+	if len(req.Region) == 0 {
+		return fmt.Errorf("%s UpdateCloudSubnetsValidate request lost valid region info", cloudName)
+	}
+	if len(req.SubnetID) == 0 {
+		return fmt.Errorf("%s UpdateCloudSubnetsValidate request lost valid subnetID info", cloudName)
+	}
+	if len(req.SubnetName) == 0 {
+		return fmt.Errorf("%s UpdateCloudSubnetsValidate request lost valid subnetName info", cloudName)
+	}
+	return nil
+}
+
+// DeleteCloudSubnetsValidate xxx
+func (c *CloudValidate) DeleteCloudSubnetsValidate(req *proto.DeleteCloudSubnetsRequest,
+	account *proto.Account) error {
+	// call qcloud interface to check account
+	if c == nil {
+		return fmt.Errorf("%s DeleteCloudSubnetsValidate request is empty", cloudName)
+	}
+	if len(req.Region) == 0 {
+		return fmt.Errorf("%s CreateCloudSubnetsValidate request lost valid region info", cloudName)
+	}
+	if len(req.SubnetID) == 0 {
+		return fmt.Errorf("%s DeleteCloudSubnetsValidate request lost valid subnetID info", cloudName)
+	}
+	return nil
+}
+
 // ListCloudVpcsValidate xxx
 func (c *CloudValidate) ListCloudVpcsValidate(req *proto.ListCloudVpcsRequest,
 	account *proto.Account) error {
@@ -286,6 +346,21 @@ func (c *CloudValidate) ListCloudVpcsValidate(req *proto.ListCloudVpcsRequest,
 
 	if len(req.Region) == 0 {
 		return fmt.Errorf("%s ListCloudVpcsValidate request lost valid region info", cloudName)
+	}
+
+	return nil
+}
+
+// UpdateCloudVpcsValidate xxx
+func (c *CloudValidate) UpdateCloudVpcsValidate(req *proto.UpdateCloudVpcsRequest,
+	account *proto.Account) error {
+	// call qcloud interface to check account
+	if c == nil {
+		return fmt.Errorf("%s UpdateCloudVpcsValidate request is empty", cloudName)
+	}
+
+	if len(req.Region) == 0 {
+		return fmt.Errorf("%s UpdateCloudVpcsValidate request lost valid region info", cloudName)
 	}
 
 	return nil

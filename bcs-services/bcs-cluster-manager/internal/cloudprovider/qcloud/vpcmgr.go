@@ -116,6 +116,63 @@ func (c *VPCManager) ListSubnets(vpcID, zone string, opt *cloudprovider.ListNetw
 	return result, nil
 }
 
+// CreateSubnets create vpc subnets
+func (c *VPCManager) CreateSubnets(opt *cloudprovider.NetworksSubnetOption) (*proto.Subnet, error) {
+	blog.Infof("CreateSubnets input: vpcId/%s, subnetName/%s, cidrBlock/%s, zone/%s",
+		opt.Subnets.VpcId, opt.Subnets.SubnetName, opt.Subnets.CidrBlock, opt.Subnets.Zone)
+	vpcCli, err := api.NewVPCClient(&opt.CommonOption)
+	if err != nil {
+		blog.Errorf("create VPC client when failed: %v", err)
+		return nil, err
+	}
+
+	_, cidrBlock, err := net.ParseCIDR(opt.Subnets.CidrBlock)
+	if err != nil {
+		return nil, err
+	}
+
+	subnet, err := vpcCli.CreateSubnet(opt.Subnets.VpcId, opt.Subnets.SubnetName, opt.Subnets.Zone, cidrBlock)
+	if err != nil {
+		return nil, err
+	}
+
+	return &proto.Subnet{
+		VpcID:                   utils.StringPtrToString(subnet.VpcId),
+		SubnetID:                utils.StringPtrToString(subnet.SubnetId),
+		SubnetName:              utils.StringPtrToString(subnet.SubnetName),
+		CidrRange:               utils.StringPtrToString(subnet.CidrBlock),
+		Ipv6CidrRange:           utils.StringPtrToString(subnet.Ipv6CidrBlock),
+		Zone:                    utils.StringPtrToString(subnet.Zone),
+		AvailableIPAddressCount: utils.Uint64PtrToUint64(subnet.AvailableIpAddressCount),
+		TotalIpAddressCount:     utils.Uint64PtrToUint64(subnet.TotalIpAddressCount),
+	}, nil
+}
+
+// UpdateSubnets update vpc subnets
+func (c *VPCManager) UpdateSubnets(opt *cloudprovider.NetworksSubnetOption) error {
+	blog.Infof("UpdateSubnets input: subnetId/%s, subnetName/%s, enableBroadcast/%s",
+		opt.Subnets.SubnetId, opt.Subnets.SubnetName, opt.Subnets.EnableBroadcast)
+	vpcCli, err := api.NewVPCClient(&opt.CommonOption)
+	if err != nil {
+		blog.Errorf("create VPC client when failed: %v", err)
+		return err
+	}
+
+	return vpcCli.ModifySubnetAttribute(opt.Subnets.SubnetId, opt.Subnets.SubnetName, opt.Subnets.EnableBroadcast)
+}
+
+// DeleteSubnets delete vpc subnets
+func (c *VPCManager) DeleteSubnets(opt *cloudprovider.NetworksSubnetOption) error {
+	blog.Infof("DeleteSubnets input: subnetId/%s", opt.Subnets.SubnetId)
+	vpcCli, err := api.NewVPCClient(&opt.CommonOption)
+	if err != nil {
+		blog.Errorf("create VPC client when failed: %v", err)
+		return err
+	}
+
+	return vpcCli.DeleteSubnet(opt.Subnets.SubnetId)
+}
+
 // ListSecurityGroups list security groups
 func (c *VPCManager) ListSecurityGroups(opt *cloudprovider.ListNetworksOption) ([]*proto.SecurityGroup, error) {
 	vpcCli, err := api.NewVPCClient(&opt.CommonOption)
@@ -276,4 +333,105 @@ func (c *VPCManager) GetClusterIpUsage(clusterId string, ipType string, opt *clo
 	}
 
 	return 0, 0, fmt.Errorf("not supported ipType[%s]", ipType)
+}
+
+// UpdateVpcs update vpcs
+func (c *VPCManager) UpdateVpcs(vpcID, vpcName string, opt *cloudprovider.CommonOption) error {
+	vpcCli, err := api.NewVPCClient(opt)
+	if err != nil {
+		blog.Errorf("create VPC client when failed: %v", err)
+		return err
+	}
+
+	return vpcCli.ModifyVpcAttribute(vpcID, vpcName)
+}
+
+// ListVpcsByPage list vpcs by page
+func (c *VPCManager) ListVpcsByPage(opt *cloudprovider.ListNetworksOption) (int64, []*proto.CloudVpcs, error) {
+	if opt == nil {
+		return 0, nil, fmt.Errorf("opt is nil")
+	}
+	vpcCli, err := api.NewVPCClient(&opt.CommonOption)
+	if err != nil {
+		blog.Errorf("create VPC client when failed: %v", err)
+		return 0, nil, err
+	}
+
+	filter := make([]*api.Filter, 0)
+	if len(opt.VpcIds) > 0 {
+		filter = append(filter, &api.Filter{Name: "vpc-id", Values: opt.VpcIds})
+	}
+
+	if len(opt.VpcName) > 0 {
+		filter = append(filter, &api.Filter{Name: "vpc-name", Values: opt.VpcName})
+	}
+
+	vpcs, err := vpcCli.DescribeVpcsByPage(nil, filter, opt.Offset, opt.Limit)
+	if err != nil {
+		return 0, nil, err
+	}
+	result := make([]*proto.CloudVpcs, 0)
+	for _, v := range vpcs.VpcSet {
+		overlayNums, err :=
+			getIpNumsAndCidr(&opt.CommonOption, opt.CloudId, utils.StringPtrToString(v.VpcId), 1)
+		if err != nil {
+			return 0, nil, err
+		}
+		underlayNums, err :=
+			getIpNumsAndCidr(&opt.CommonOption, opt.CloudId, utils.StringPtrToString(v.VpcId), 0)
+		if err != nil {
+			return 0, nil, err
+		}
+		result = append(result, &proto.CloudVpcs{
+			VpcName:                utils.StringPtrToString(v.VpcName),
+			VpcID:                  utils.StringPtrToString(v.VpcId),
+			Region:                 opt.Region,
+			OverlayCidr:            overlayNums.CidrBlock,
+			AvailableOverlayIpNum:  uint32(overlayNums.AvailableIpAddressCount),
+			AvailableOverlayCidr:   overlayNums.AvailableCidrBlock,
+			TotalOverlayIpNum:      uint32(overlayNums.TotalIpAddressCount),
+			UnderlayCidr:           underlayNums.CidrBlock,
+			AvailableUnderlayIpNum: uint32(underlayNums.AvailableIpAddressCount),
+			AvailableUnderlayCidr:  underlayNums.AvailableCidrBlock,
+			TotalUnderlayIpNum:     uint32(underlayNums.TotalIpAddressCount),
+			CreateTime:             utils.StringPtrToString(v.CreatedTime),
+			OverlayIPCidr:          convertIPCidr(overlayNums.SubnetIPCidr),
+		})
+	}
+	return utils.Uint64PtrToInt64(vpcs.TotalCount), result, nil
+}
+
+func convertIPCidr(subnet []cidrtree.SubnetIPCidr) []*proto.OverlayIPCidr {
+	OverlayIPCidr := make([]*proto.OverlayIPCidr, 0)
+	for _, v := range subnet {
+		OverlayIPCidr = append(OverlayIPCidr, &proto.OverlayIPCidr{
+			Cidr:  v.IPCidr,
+			IpNum: v.IPNum,
+		})
+	}
+	return OverlayIPCidr
+
+}
+
+// 获取overlay/underlay ip可使用数量, 总量及cidr
+func getIpNumsAndCidr(
+	opt *cloudprovider.CommonOption, cloudId, vpcId string, assistantType int) (*cidrtree.VpcInfo, error) {
+	switch assistantType {
+	case 0:
+		vpcInfo, err := business.GetVpcIPNetAndNum(opt, vpcId)
+		if err != nil {
+			return nil, err
+		}
+		return vpcInfo, nil
+	case 1:
+		// 获取可用网段、ip总数量、总网段
+		ipInfo, err := business.GetOverlayIPNetsAndNums(opt, cloudId, vpcId, nil)
+		if err != nil {
+			return nil, err
+		}
+
+		return ipInfo, nil
+	default:
+		return nil, fmt.Errorf("assistantType[%d] not support", assistantType)
+	}
 }
