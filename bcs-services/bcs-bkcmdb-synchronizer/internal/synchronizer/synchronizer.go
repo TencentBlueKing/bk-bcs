@@ -280,7 +280,7 @@ func (s *Synchronizer) Run() {
 	//	blog.Errorf("close rabbitmq failed, err: %s", err.Error())
 	//}
 
-	workList, clusterMap, clusterList, err := s.getWorkList(podIndex, whiteList, blackList)
+	workList, clusterMap, _, err := s.getWorkList(podIndex, whiteList, blackList)
 	if err != nil {
 		blog.Errorf("get work list failed, err: %s", err.Error())
 		return
@@ -344,10 +344,11 @@ func (s *Synchronizer) Run() {
 	go func() {
 		http.HandleFunc("/restart", common.HandleRestart(gm))
 		http.HandleFunc("/list", common.HandleList(gm))
-		http.HandleFunc("/worklist", common.HandleWorkList(gm, workList))
-		http.HandleFunc("/syncStorage", s.syncStorageHandler(clusterMap))
-		http.HandleFunc("/syncStore", s.syncStoreHandler(clusterMap))
-		http.HandleFunc("/sync", s.syncHandler(clusterList))
+		http.HandleFunc("/worklist", s.workListHandler(podIndex, whiteList, blackList))
+
+		http.HandleFunc("/syncStorage", s.syncStorageHandler(podIndex, whiteList, blackList))
+		http.HandleFunc("/syncStore", s.syncStoreHandler(podIndex, whiteList, blackList))
+		http.HandleFunc("/sync", s.syncHandler(podIndex, whiteList, blackList))
 
 		if err := http.ListenAndServe(":8080", nil); err != nil {
 			blog.Errorf("Goroutine Manager start error: %v\n", err)
@@ -561,7 +562,23 @@ func (s *Synchronizer) Sync(cluster *cmp.Cluster) {
 	// go common.Recoverer(1, func() { s.syncMQ(cluster) })
 }
 
-func (s *Synchronizer) syncStorageHandler(clusterMap map[string]*cmp.Cluster) http.HandlerFunc {
+func (s *Synchronizer) workListHandler(podIndex int, whiteList, blackList []string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// 动态获取最新的工作列表
+		workList, _, _, err := s.getWorkList(podIndex, whiteList, blackList)
+		if err != nil {
+			blog.Errorf("get work list failed, err: %s", err.Error())
+			http.Error(w, "get work list failed", http.StatusInternalServerError)
+			return
+		}
+
+		for _, id := range workList {
+			fmt.Fprintf(w, "BcsClusterID: %s\n", id)
+		}
+	}
+}
+
+func (s *Synchronizer) syncStorageHandler(podIndex int, whiteList, blackList []string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		clusterId := r.URL.Query().Get("cluster")
 		if clusterId == "" {
@@ -569,23 +586,45 @@ func (s *Synchronizer) syncStorageHandler(clusterMap map[string]*cmp.Cluster) ht
 			return
 		}
 
-		bkCluster, err := s.Syncer.GetBkCluster(clusterMap[clusterId], nil, false)
+		// 动态获取最新的集群数据
+		_, clusterMap, _, err := s.getWorkList(podIndex, whiteList, blackList)
+		if err != nil {
+			blog.Errorf("get latest cluster data failed, err: %s", err.Error())
+			http.Error(w, "get latest cluster data failed", http.StatusInternalServerError)
+			return
+		}
+
+		cluster, exists := clusterMap[clusterId]
+		if !exists {
+			http.Error(w, "cluster not found", http.StatusBadRequest)
+			return
+		}
+
+		bkCluster, err := s.Syncer.GetBkCluster(cluster, nil, false)
 		if err != nil {
 			blog.Errorf("get bk cluster failed, err: %s", err.Error())
 			http.Error(w, "get bk cluster failed", http.StatusBadRequest)
 			return
 		}
 
-		go s.syncStorage(clusterMap[clusterId], bkCluster, true)
+		go s.syncStorage(cluster, bkCluster, true)
 		fmt.Fprintf(w, "BcsClusterID: %s\n syncStorage started.", clusterId)
 	}
 }
 
-func (s *Synchronizer) syncHandler(clusterList ClusterList) http.HandlerFunc {
+func (s *Synchronizer) syncHandler(podIndex int, whiteList, blackList []string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		clusterId := r.URL.Query().Get("cluster")
 		if clusterId == "" {
 			http.Error(w, "缺少cluster", http.StatusBadRequest)
+			return
+		}
+
+		// 动态获取最新的集群数据
+		_, _, clusterList, err := s.getWorkList(podIndex, whiteList, blackList)
+		if err != nil {
+			blog.Errorf("get latest cluster data failed, err: %s", err.Error())
+			http.Error(w, "get latest cluster data failed", http.StatusInternalServerError)
 			return
 		}
 
@@ -658,7 +697,7 @@ func (s *Synchronizer) syncHandler(clusterList ClusterList) http.HandlerFunc {
 	}
 }
 
-func (s *Synchronizer) syncStoreHandler(clusterMap map[string]*cmp.Cluster) http.HandlerFunc {
+func (s *Synchronizer) syncStoreHandler(podIndex int, whiteList, blackList []string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		clusterId := r.URL.Query().Get("cluster")
 		if clusterId == "" {
@@ -666,7 +705,21 @@ func (s *Synchronizer) syncStoreHandler(clusterMap map[string]*cmp.Cluster) http
 			return
 		}
 
-		bkCluster, err := s.Syncer.GetBkCluster(clusterMap[clusterId], nil, false)
+		// 动态获取最新的集群数据
+		_, clusterMap, _, err := s.getWorkList(podIndex, whiteList, blackList)
+		if err != nil {
+			blog.Errorf("get latest cluster data failed, err: %s", err.Error())
+			http.Error(w, "get latest cluster data failed", http.StatusInternalServerError)
+			return
+		}
+
+		cluster, exists := clusterMap[clusterId]
+		if !exists {
+			http.Error(w, "cluster not found", http.StatusBadRequest)
+			return
+		}
+
+		bkCluster, err := s.Syncer.GetBkCluster(cluster, nil, false)
 		if err != nil {
 			blog.Errorf("get bk cluster failed, err: %s", err.Error())
 			http.Error(w, "get bk cluster failed", http.StatusBadRequest)
