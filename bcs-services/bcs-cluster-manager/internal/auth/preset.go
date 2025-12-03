@@ -137,6 +137,7 @@ var ActionPermissions = map[string]string{
 	"ClusterManager.DeleteNodeGroup":        cluster.CanManageClusterOperation,
 	"ClusterManager.GetNodeGroup":           cluster.CanViewClusterOperation,
 	"ClusterManager.ListNodeGroup":          cluster.CanViewClusterOperation,
+	"ClusterManager.ListNodeGroupV2":        "",
 	"ClusterManager.ListClusterNodeGroup":   cluster.CanViewClusterOperation,
 	"ClusterManager.MoveNodesToGroup":       cluster.CanManageClusterOperation,
 	"ClusterManager.RemoveNodesFromGroup":   cluster.CanManageClusterOperation,

@@ -76,6 +76,8 @@ const (
 	fieldOperator    = "operator"
 	fieldBakOperator = "bk_bak_operator"
 
+	fieldSvrTypeName = "svr_type_name" // 服务器型号
+
 	// StartAt offset
 	StartAt = 0
 	// MaxLimits limit
@@ -83,10 +85,11 @@ const (
 )
 
 var (
-	fieldHostDetailInfo = []string{fieldCloudID, fieldCloudRegion, FieldHostIP, fieldHostIPv6, fieldHostOutIP, fieldHostOutIPV6,
-		fieldHostID, fieldDeviceType, fieldIDCCityName, fieldIDCCityID, fieldDeviceClass, fieldHostCPU, fieldCpuModule,
-		fieldHostMem, fieldHostDisk, fieldOperator, fieldBakOperator, fieldRack, fieldIDCName, fieldSubZoneID,
-		fieldIDCAreaID, fieldIDCArea, fieldIspName, fieldAgentId, FieldAssetId}
+	fieldHostDetailInfo = []string{fieldCloudID, fieldCloudRegion, FieldHostIP, fieldHostIPv6, fieldHostOutIP,
+		fieldHostOutIPV6, fieldHostID, fieldDeviceType, fieldIDCCityName, fieldIDCCityID, fieldDeviceClass,
+		fieldHostCPU, fieldCpuModule, fieldHostMem, fieldHostDisk, fieldOperator, fieldBakOperator, fieldRack,
+		fieldIDCName, fieldSubZoneID, fieldIDCAreaID, fieldIDCArea, fieldIspName, fieldAgentId,
+		FieldAssetId, fieldSvrTypeName}
 
 	fieldHostIPSelectorInfo = []string{FieldHostIP, fieldHostIPv6, fieldCloudID, fieldHostName, fieldOsType,
 		fieldOsName, fieldHostID, fieldOperator, fieldBakOperator, fieldAgentId}
@@ -95,6 +98,13 @@ var (
 // condition result
 const (
 	conditionBkBizID = "bk_biz_id"
+)
+
+const (
+	// QcCvm cvm 虚拟机
+	QcCvm = "QC_CVM"
+	// IdcPm Idc 物理机
+	IdcPm = "Server"
 )
 
 // Condition xxx
@@ -302,6 +312,7 @@ type HostDetailData struct {
 	IDCArea          string `json:"bk_idc_area"`
 	SubZoneID        string `json:"sub_zone_id"`
 	CpuModule        string `json:"bk_cpu_module"`
+	SvrTypeName      string `json:"svr_type_name"`
 }
 
 // BizInfo business id info

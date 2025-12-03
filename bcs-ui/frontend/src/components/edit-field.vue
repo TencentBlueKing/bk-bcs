@@ -16,6 +16,16 @@
         @input="handleInput"
         @blur="handleBlur" />
     </slot>
+    <div v-if="isEdit && hasBtn" class="flex items-center h-[32px] ml-[16px] shrink-0">
+      <bk-button
+        class="text-[12px] leading-none"
+        text
+        @click="handleSave">{{ $t('generic.button.save') }}</bk-button>
+      <bk-button
+        class="text-[12px] ml-[8px] leading-none"
+        text
+        @click="isEdit = false">{{ $t('generic.button.cancel') }}</bk-button>
+    </div>
   </section>
 </template>
 <script lang="ts" setup>
@@ -25,11 +35,13 @@ interface Props {
   readonly?: Boolean
   value?: String
   editMode?: Boolean
+  hasBtn?: Boolean
 }
 
 type Emits = {
   (e: 'input'|'blur', v: string): void;
   (e: 'update:editMode', v: boolean): void;
+  (e: 'save'): void;
 };
 
 const props = withDefaults(
@@ -37,6 +49,7 @@ const props = withDefaults(
   {
     readonly: () => false,
     editMode: () => false,
+    hasBtn: () => false,
   },
 );
 
@@ -53,6 +66,9 @@ function handleInput(v: string) {
 
 function handleBlur(v: string) {
   emit('blur', v);
+}
+function handleSave() {
+  emit('save');
 }
 
 watch(() => props.editMode, () => {

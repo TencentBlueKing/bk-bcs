@@ -752,16 +752,17 @@ func checkMultiClusterAccess(ctx context.Context, kind string, clusters []*clust
 		if clusterInfo.Status != cluster.ClusterStatusRunning {
 			continue
 		}
-		// 优先级 v.Nsgroup > v.Namespaces
-		nss, err := getNss(ctx, v.Nsgroup, projInfo.Code, v.ClusterID, v.Namespaces)
-		if err != nil {
-			return nil, "", err
-		}
-		v.Namespaces = nss
 		if !clusterInfo.IsShared {
-			newClusters = append(newClusters, v)
+			// 优先级 v.Nsgroup > v.Namespaces
+			nss, err := getNss(ctx, v.Nsgroup, projInfo.Code, v.ClusterID, v.Namespaces)
+			if err != nil {
+				return nil, "", err
+			}
+			newClusters = append(newClusters, &clusterRes.ClusterNamespaces{ClusterID: v.ClusterID, Namespaces: nss})
 			continue
 		}
+
+		// 共享集群
 
 		// kind为空情况下跳过下面的检查，允许查询各种资源
 		if kind == "" {
@@ -769,11 +770,31 @@ func checkMultiClusterAccess(ctx context.Context, kind string, clusters []*clust
 			continue
 		}
 
+		// 共享集群，如果没有命名空间，则直接返回
+		var nss []string
+		for _, ns := range v.Namespaces {
+			if ns == "" {
+				continue
+			}
+			nss = append(nss, ns)
+		}
+
 		// 命名空间为空，则查询集群下用户所有命名空间
 		if len(nss) == 0 {
-			nss, err = getActiveNs(ctx, projInfo.Code, v.ClusterID)
+			clusterNs, err := project.GetProjectNamespace(ctx, projInfo.Code, v.ClusterID)
+
 			if err != nil {
-				return nil, "", err
+				log.Error(ctx, "get project %s cluster %s ns failed, %v", projInfo.Code, v.ClusterID, err)
+				continue
+			}
+			if len(clusterNs) == 0 {
+				continue
+			}
+			for _, nsItem := range clusterNs {
+				if !nsItem.IsActive() {
+					continue
+				}
+				nss = append(nss, nsItem.Name)
 			}
 		}
 
@@ -851,13 +872,7 @@ func getNss(ctx context.Context, nsgroup, projectID, clusterID string, ns []stri
 		}
 		return nss, nil
 	default:
-		for _, n := range ns {
-			if n == "" {
-				continue
-			}
-			nss = append(nss, n)
-		}
-		return nss, nil
+		return ns, nil
 	}
 }
 

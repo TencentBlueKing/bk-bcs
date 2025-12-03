@@ -1,4 +1,4 @@
-![蓝鲸容器管理平台.png](./docs/logo/bcs_zh_v2.png)
+![蓝鲸容器调度平台.png](./docs/logo/bcs_zh_v3.png)
 
 ---
 
@@ -11,7 +11,7 @@
 > - `master` 分支在开发过程中可能处于 *不稳定或者不可用状态* ，请通过[releases](https://github.com/Tencent/bk-bcs/releases) 而非 `master` 去获取稳定的二进制文件。
 
 
-蓝鲸容器管理平台（Blueking Container Service）定位于打造云原生技术和业务实际应用场景之间的桥梁；聚焦于复杂应用场景的容器化部署技术方案的研发、整合和产品化；致力于为游戏等复杂应用提供一站式、低门槛的容器编排和服务治理服务。
+蓝鲸容器调度平台（Blueking Container Service）定位于打造云原生技术和业务实际应用场景之间的桥梁；聚焦于复杂应用场景的容器化部署技术方案的研发、整合和产品化；致力于为游戏等复杂应用提供一站式、低门槛的容器编排和服务治理服务。
 
 ## Overview
 
@@ -23,7 +23,7 @@
 - 自动创建、销毁、更新、扩缩容你的k8s集群
 - 跨云统一管理分布在不同IaaS上的k8s集群
 
-了解BCS更详细功能，请参考蓝鲸容器管理平台[白皮书](https://docs.bk.tencent.com/bcs/)
+了解BCS更详细功能，请参考蓝鲸容器调度平台[白皮书](https://docs.bk.tencent.com/bcs/)
 
 ## Features
 
@@ -81,11 +81,14 @@
 * [BK-CMDB](https://github.com/Tencent/bk-cmdb)：蓝鲸配置平台（蓝鲸CMDB）是一个面向资产及应用的企业级配置管理平台。
 * [BK-PaaS](https://github.com/Tencent/bk-PaaS)：蓝鲸PaaS平台是一个开放式的开发平台，让开发者可以方便快捷地创建、开发、部署和管理SaaS应用。
 * [BK-JOB](https://github.com/Tencent/bk-job)：蓝鲸作业平台(Job)是一套运维脚本管理系统，具备海量任务并发处理能力。
-* [BK-SOPS](https://github.com/Tencent/bk-sops)：标准运维（SOPS）是通过可视化的图形界面进行任务流程编排和执行的系统，是蓝鲸体系中一款轻量级的调度编排类SaaS产品
+* [BK-SOPS](https://github.com/Tencent/bk-sops)：标准运维（SOPS）是通过可视化的图形界面进行任务流程编排和执行的系统，是蓝鲸体系中一款轻量级的调度编排类SaaS产品。
+
+## Community Friends
+* [AICOS](https://github.com/stateioc/AICOS)：AICOS（AI Cloud Operating System）是一种结合了人工智能技术和云计算技术的综合操作系统，能够提供智能服务、优化资源分配、提高调度效率和智能传输选择。AICOS 通过集成人工智能算法，能够实现自动化决策、智能调度、智能传输和实时监控，为用户提供更为灵活、高效、安全的 AI 云操作系统服务。
 
 ## 认证
 
-**蓝鲸智云容器管理平台**通过中国**云计算开源产业联盟**组织的可信云容器解决方案评估认证——
+**蓝鲸智云容器调度平台**通过中国**云计算开源产业联盟**组织的可信云容器解决方案评估认证——
 [认证证书](./docs/overview/certificate.jpg)
 
 ## License

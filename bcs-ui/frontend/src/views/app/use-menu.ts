@@ -49,6 +49,7 @@ export type MenuID =
   |'CLUSTER'
   |'NODETEMPLATE'
   |'DEPLOYMENTMANAGE'
+  |'DEPLOYMENTMANAGEPULL'
   |'HELM'
   |'RELEASELIST'
   |'CHARTLIST'
@@ -87,7 +88,8 @@ export type MenuID =
   |'LOG'
   |'MONITOR'
   |'PROJECTQUOTAS'
-  |'SERVICEMESH';
+  |'SERVICEMESH'
+  |'BSCPCONFIG';
 
 export interface MenuItem {
   title: string
@@ -449,6 +451,42 @@ export default function useMenu() {
       ],
     },
     {
+      title: $i18n.t('nav.deploy'),
+      id: 'DEPLOYMENTMANAGEPULL',
+      route: 'releaseList',
+      children: [
+        {
+          title: 'Helm',
+          icon: 'bcs-icon-helm',
+          id: 'HELM',
+          children: [
+            {
+              title: $i18n.t('nav.releaseList'),
+              id: 'RELEASELIST',
+              route: 'releaseList',
+            },
+            {
+              title: $i18n.t('nav.chartList'),
+              id: 'CHARTLIST',
+              route: 'chartList',
+            },
+          ],
+        },
+        {
+          title: $i18n.t('nav.templateFile'),
+          id: 'TEMPLATE_FILE',
+          icon: 'bcs-icon-templete',
+          route: 'templatefile',
+        },
+        {
+          title: $i18n.t('nav.variable'),
+          icon: 'bcs-icon-var',
+          route: 'variable',
+          id: 'VARIABLE',
+        },
+      ],
+    },
+    {
       title: $i18n.t('nav.project'),
       id: 'PROJECTMANAGE',
       children: [
@@ -592,8 +630,6 @@ export default function useMenu() {
       return pre;
     }, initialValue)
   );
-  // 因为ref里面不能存有递归关闭的数据，这里缓存一份含有parent指向的map数据
-  const menusDataMap = parseTreeMenuToMap(menusData.value);
 
   const { flagsMap, getFeatureFlags } = useAppData();
   // 过滤未开启feature_flag的菜单
@@ -606,6 +642,8 @@ export default function useMenu() {
     return pre;
   }, []);
   const menus = computed<IMenu[]>(() => filterMenu(flagsMap.value, menusData.value));
+  // 因为ref里面不能存有递归关闭的数据，这里缓存一份含有parent指向的map数据
+  let menusDataMap = parseTreeMenuToMap(menus.value); // 这里使用 menus，一级菜单通过接口控制显示隐藏
   // 扁平化子菜单
   const flatLeafMenus = (menus: IMenu[], root?: IMenu) => {
     const data: IMenu[] = [];
@@ -654,6 +692,8 @@ export default function useMenu() {
     // 首次加载时获取feature_flag数据
     if (!flagsMap.value || !Object.keys(flagsMap.value)?.length) {
       await getFeatureFlags({ projectCode: route.params.projectCode });
+      // 重新计算menusDataMap
+      menusDataMap = parseTreeMenuToMap(menus.value);
     }
     // 路由配置上带有menuId（父菜单ID）或 ID（当前菜单ID）, 先判断配置的ID是否开启了feature_flag
     if (route.meta?.id && has(flagsMap.value, route.meta?.id) && !flagsMap.value[route.meta.id]) {

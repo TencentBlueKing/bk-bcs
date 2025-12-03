@@ -209,6 +209,9 @@
 
     .bk-button {
         margin-left: -1px !important;
+        &:first-child {
+            margin-left: 0 !important;
+        }
 
         >a {
             display: block;

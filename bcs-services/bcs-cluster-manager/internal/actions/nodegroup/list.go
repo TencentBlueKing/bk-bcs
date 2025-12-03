@@ -119,11 +119,12 @@ func (la *ListClusterGroupAction) Handle(
 
 // ListAction action for list online cluster credential
 type ListAction struct {
-	ctx       context.Context
-	model     store.ClusterManagerModel
-	req       *cmproto.ListNodeGroupRequest
-	resp      *cmproto.ListNodeGroupResponse
-	groupList []*cmproto.NodeGroup
+	ctx        context.Context
+	model      store.ClusterManagerModel
+	req        *cmproto.ListNodeGroupV2Request
+	resp       *cmproto.ListNodeGroupV2Response
+	totalCount uint32
+	groupList  []*cmproto.NodeGroup
 }
 
 // NewListAction create list action for cluster credential
@@ -137,12 +138,15 @@ func (la *ListAction) setResp(code uint32, msg string) {
 	la.resp.Code = code
 	la.resp.Message = msg
 	la.resp.Result = (code == common.BcsErrClusterManagerSuccess)
-	la.resp.Data = la.groupList
+	la.resp.Data = &cmproto.ListNodeGroupResponseData{
+		Count:   la.totalCount,
+		Results: la.groupList,
+	}
 }
 
 // Handle handle list cluster credential
 func (la *ListAction) Handle(
-	ctx context.Context, req *cmproto.ListNodeGroupRequest, resp *cmproto.ListNodeGroupResponse) {
+	ctx context.Context, req *cmproto.ListNodeGroupV2Request, resp *cmproto.ListNodeGroupV2Response) {
 	if req == nil || resp == nil {
 		blog.Errorf("list NodeGroup failed, req or resp is empty")
 		return
@@ -157,7 +161,7 @@ func (la *ListAction) Handle(
 		return
 	}
 
-	la.groupList, err = listNodeGroupByConds(la.model, filterNodeGroupOption{
+	totalGroupList, err := listNodeGroupByConds(la.model, filterNodeGroupOption{
 		Name:      la.req.GetName(),
 		ClusterID: la.req.GetClusterID(),
 		ProjectID: la.req.GetProjectID(),
@@ -167,7 +171,35 @@ func (la *ListAction) Handle(
 		la.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
+	la.totalCount = uint32(len(totalGroupList))
+
+	la.groupList, err = listNodeGroupByConds(la.model, filterNodeGroupOption{
+		Name:      la.req.GetName(),
+		ClusterID: la.req.GetClusterID(),
+		ProjectID: la.req.GetProjectID(),
+		Region:    la.req.GetRegion(),
+		ListOpt:   la.listOpt(),
+	})
+	if err != nil {
+		la.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
+		return
+	}
 	la.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
+}
+
+func (la *ListAction) listOpt() *storeopt.ListOption {
+	if la.req.Page == 0 || la.req.Limit == 0 {
+		return &storeopt.ListOption{}
+	}
+
+	offset := (la.req.Page - 1) * la.req.Limit
+
+	listOpt := &storeopt.ListOption{
+		Offset: int64(offset),
+		Limit:  int64(la.req.Limit),
+	}
+
+	return listOpt
 }
 
 // ListNodesAction action for list online cluster credential

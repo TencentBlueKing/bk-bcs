@@ -7,8 +7,9 @@ export interface IData {
   labels: Record<string, string>,
   taints: Record<string, string>,
   taintsEffect: Record<string, Effect>
+  annotations: Record<string, string>
 }
-export type SettingType = 'labels' | 'taints';
+export type SettingType = 'labels' | 'taints' | 'annotations';
 export type Status = 'remove' | 'add' | 'modify';// remove: 移除, add: 添加, modify: 修改
 
 export default function proxyOperate(prop: SettingType) {
@@ -39,6 +40,7 @@ export default function proxyOperate(prop: SettingType) {
       return {
         nodeName: item.nodeName,
         labels: item.labels,
+        annotations: item.annotations,
         taints, // 污点map
         taintsEffect, // 污点effect map
       };

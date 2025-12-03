@@ -21,6 +21,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/rand"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bcs"
 	bkbase "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bk_base"
@@ -35,15 +36,16 @@ import (
 
 // EnableAuditReq params
 type EnableAuditReq struct {
-	ProjectId string `json:"projectId" in:"path=projectId" validate:"required"`
-	ClusterId string `json:"clusterId" in:"path=clusterId" validate:"required"`
+	ProjectId        string `json:"projectId" in:"path=projectId" validate:"required"`
+	ClusterId        string `json:"clusterId" in:"path=clusterId" validate:"required"`
+	StorageClusterID int    `json:"storage_cluster_id"`
 }
 
 // GenCollectorConfigName generate collector config name
 func GenCollectorConfigName(clusterID string) string {
 	clusterID = strings.ToLower(clusterID)
 	clusterID = strings.ReplaceAll(clusterID, "-", "_")
-	return fmt.Sprintf("bkbcs_audit_%s", clusterID)
+	return fmt.Sprintf("bkbcs_audit_%s_%s", clusterID, rand.String(5))
 }
 
 // GenBKLogConfigName generate bk log config name
@@ -82,13 +84,15 @@ func EnableAudit(c context.Context, req *EnableAuditReq) (*any, error) {
 
 	// ensure bklog data id is created
 	if audit.CollectorConfigID == 0 {
+		collectorConfigName := GenCollectorConfigName(audit.ClusterID)
 		databusCustomResp, derr := bklog.DatabusCustomCreate(c, &bklog.DatabusCustomCreateReq{
 			BkBizID:               bizID,
-			CollectorConfigName:   GenCollectorConfigName(audit.ClusterID),
-			CollectorConfigNameEN: GenCollectorConfigName(audit.ClusterID),
+			CollectorConfigName:   collectorConfigName,
+			CollectorConfigNameEN: collectorConfigName,
 			Description:           "create by bcs",
 			CustomType:            "log",
 			CategoryID:            "host_process",
+			StorageClusterID:      req.StorageClusterID,
 			Retention:             7,
 			EsShards:              1,
 			StorageReplies:        0,
@@ -100,7 +104,7 @@ func EnableAudit(c context.Context, req *EnableAuditReq) (*any, error) {
 		}
 		audit.DataID = databusCustomResp.BkDataID
 		audit.CollectorConfigID = databusCustomResp.CollectorConfigID
-		audit.CollectorConfigName = GenCollectorConfigName(audit.ClusterID)
+		audit.CollectorConfigName = collectorConfigName
 		err = storage.GlobalStorage.UpdateAudit(c, audit.ID.Hex(), entity.M{
 			"collectorConfigID":   audit.CollectorConfigID,
 			"collectorConfigName": audit.CollectorConfigName,
@@ -247,7 +251,7 @@ func EnableAuditES(c context.Context, req *EnableAuditESReq) (*any, error) {
 	}
 
 	err = bklog.DatabusCustomUpdate(c, audit.CollectorConfigID, &bklog.DatabusCustomUpdateReq{
-		CollectorConfigName: GenCollectorConfigName(rctx.ClusterId),
+		CollectorConfigName: audit.CollectorConfigName,
 		Description:         "create by bcs",
 		CustomType:          "log",
 		CategoryID:          "host_process",

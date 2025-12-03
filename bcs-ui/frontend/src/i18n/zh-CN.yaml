@@ -407,7 +407,10 @@ generic:
     none: 无
     tag: 标签
     description: 描述
-    creator: 创建人
+    managers: 管理者
+    codeMode: 源码模式
+    enabled: 已启用
+    disabled: 已停用
   status:
     part_failure: 部分失败
     support: 支持
@@ -1333,6 +1336,7 @@ cluster:
       setTaint: 设置污点
       addLabel: 添加标签
       addTaint: 添加污点
+      addAnnotation: 添加注解
       copy:
         text: 复制
         checkedIP: 复制勾选IP
@@ -1372,6 +1376,7 @@ cluster:
       inputValue: 请输入value
       locationTag: 定位标签
       locationTaint: 定位污点
+      locationAnnotation: 定位注解
     title:
       confirmAddNode: 确定添加节点
       confirmReAddNode: 确认重新添加节点
@@ -1382,6 +1387,8 @@ cluster:
         desc: 批量设置只展示相同Key的标签
       batchSetTaint:
         text: 批量设置污点
+      batchSetAnnotation:
+        text: 批量设置注解
       tableSetting: 表格设置
       fieldDisplaySettings: 表格显示设置
       nodeSaveError: 部分节点保存失败
@@ -2253,7 +2260,10 @@ projects:
     desc: 请输入项目描述
     search: 输入项目名称搜索
     bkMonitor: 申请监控中心
-    businessID: 业务ID
+    businessID: 业务 ID
+    ID: 项目 ID
+    business: 所属业务
+    goto: 前往项目
   validate:
     projectName: '请输入2-64字符，不能包含`~!@#$%^&*()+<>?:"{},./;\''''[]字符和空格'
     projectName1: 请输入2-32字符的小写字母、数字、中划线，以小写字母开头
@@ -2708,6 +2718,8 @@ googleCloud:
       desc: >-
         当前集群规格最多管理15000个节点, 超过5000个节点需联系GKE服务团队提升集群配额, 20万个Pod, 40万个容器,
         每个节点池最多支持1000个节点, 每个节点最多支持256个Pod
+importTencentCloud:
+  title: 导入公有云集群 - 腾讯云
 importGoogleCloud:
   title: 导入公有云集群 - 谷歌云
   tips:

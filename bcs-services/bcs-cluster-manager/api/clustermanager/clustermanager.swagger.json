@@ -7823,6 +7823,76 @@
         ]
       }
     },
+    "/clustermanager/v2/nodegroup": {
+      "get": {
+        "summary": "查询NodeGroup列表",
+        "description": "根据查询条件过滤NodeGroup列表，如果某项条件值为空，则忽略此条件。如果所有条件都为空，则默认查询所有集群，V2版本增加分页",
+        "operationId": "ClusterManager_ListNodeGroupV2",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerListNodeGroupV2Response"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "name",
+            "description": "name. 节点组名称",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "description": "clusterID. 节点组所关联的集群，该ID为BCS集群ID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "region",
+            "description": "region. 节点组所关联区域信息",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "projectID",
+            "description": "projectID. 节点组所关联项目信息",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "limit",
+            "description": "limit. 每页数量",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "page",
+            "description": "page. 页码",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
     "/clustermanager/v2/nodegroup/{nodeGroupID}/groupnode": {
       "delete": {
         "summary": "回收节点组中的节点，使用query参数指定需要清理的节点",
@@ -17348,6 +17418,58 @@
       },
       "description": "查询NodeGroup返回",
       "title": "ListNodeGroupResponse",
+      "required": [
+        "code",
+        "message"
+      ]
+    },
+    "clustermanagerListNodeGroupResponseData": {
+      "type": "object",
+      "properties": {
+        "count": {
+          "type": "integer",
+          "format": "int64",
+          "description": "NodeGroup数量",
+          "title": "count"
+        },
+        "results": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerNodeGroup"
+          },
+          "description": "返回数据",
+          "title": "results"
+        }
+      }
+    },
+    "clustermanagerListNodeGroupV2Response": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/clustermanagerListNodeGroupResponseData",
+          "description": "获取到的信息",
+          "title": "data"
+        }
+      },
+      "description": "查询NodeGroup返回",
+      "title": "ListNodeGroupV2Response",
       "required": [
         "code",
         "message"

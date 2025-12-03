@@ -671,8 +671,6 @@ func UpdateClusterNodesLabels(ctx context.Context, data NodeLabelsData) error { 
 
 		// cmdb labels
 		h, ok := hostsMap[node.NodeIP]
-		cloudprovider.GetStorageModel().CreateTaskStepLogWarn(context.Background(), taskID, stepName,
-			fmt.Sprintf("debug: hostsMap[%s]", hostsMap))
 		if ok {
 			labels[utils.SubZoneIDLabelKey] = h.SubZoneID
 			labels[utils.AssetIDLabelKey] = h.BkAssetID
@@ -686,7 +684,23 @@ func UpdateClusterNodesLabels(ctx context.Context, data NodeLabelsData) error { 
 
 			labels[utils.IDCCityIDLabelKey] = h.IDCCityID
 			labels[utils.IDCAreaIDLabelKey] = fmt.Sprintf("%v", h.IDCAreaID)
-			labels[utils.RegionLabelKey] = h.BkCloudRegion
+			switch h.SvrTypeName {
+			case cmdb.QcCvm:
+				{
+					if _, find := labels[utils.RegionLabelKey]; !find {
+						regions := strings.Split(h.BkCloudRegion, "-")
+						if len(regions) >= 1 {
+							labels[utils.RegionLabelKey] = regions[1]
+						}
+					}
+				}
+			case cmdb.IdcPm:
+				{
+					// 物理机保持为空
+					labels[utils.RegionLabelKey] = ""
+				}
+			default:
+			}
 		}
 
 		// mixed labels if cluster is mixed cluster

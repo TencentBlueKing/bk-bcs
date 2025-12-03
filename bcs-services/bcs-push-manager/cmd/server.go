@@ -31,6 +31,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/discovery"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
 	grpccli "github.com/go-micro/plugins/v4/client/grpc"
 	"github.com/go-micro/plugins/v4/registry/etcd"
@@ -56,14 +57,15 @@ import (
 
 // Server encapsulates the service's dependencies and lifecycle management.
 type Server struct {
-	microService    micro.Service
-	microRegistry   registry.Registry
-	opt             *options.ServiceOptions
-	httpServer      *http.Server
-	mqClient        *rabbitmq.RabbitMQ
-	mongoServer     *mongostore.Server
-	tlsConfig       *tls.Config
-	clientTLSConfig *tls.Config
+	microService        micro.Service
+	microRegistry       registry.Registry
+	thirdpartyDiscovery *discovery.ModuleDiscovery
+	opt                 *options.ServiceOptions
+	httpServer          *http.Server
+	mqClient            *rabbitmq.RabbitMQ
+	mongoServer         *mongostore.Server
+	tlsConfig           *tls.Config
+	clientTLSConfig     *tls.Config
 
 	ctx           context.Context
 	ctxCancelFunc context.CancelFunc
@@ -88,6 +90,7 @@ func (s *Server) Init() error {
 		s.initRegistry,
 		s.initStore,
 		s.initMQ,
+		s.initThirdpartyDiscovery,
 		s.initMicro,
 		s.initHTTPGateway,
 	}
@@ -268,15 +271,23 @@ func (s *Server) initMQ() error {
 	return nil
 }
 
-// initMicro initializes the gRPC service.
-func (s *Server) initMicro() error {
+// initThirdpartyDiscovery initializes the thirdparty service discovery.
+func (s *Server) initThirdpartyDiscovery() error {
+	if !discovery.UseServiceDiscovery() {
+		s.thirdpartyDiscovery = discovery.NewModuleDiscovery(constant.ModuleThirdpartyServiceManager, s.microRegistry)
+		blog.Infof("init discovery for thirdparty service successfully")
+	}
+
 	thirdpartyOpts := &thirdparty.ClientOptions{
-		ClientTLS:     s.clientTLSConfig,
-		EtcdEndpoints: strings.Split(s.opt.Etcd.EtcdEndpoints, ","),
-		EtcdTLS:       s.opt.Etcd.TlsConfig,
+		ClientTLS: s.clientTLSConfig,
+		Discovery: s.thirdpartyDiscovery,
 	}
 	thirdparty.InitThirdpartyClient(thirdpartyOpts)
+	return nil
+}
 
+// initMicro initializes the gRPC service.
+func (s *Server) initMicro() error {
 	pushEventAction := action.NewPushEventAction(s.mongoServer.GetPushEventModel())
 	pushWhitelistAction := action.NewPushWhitelistAction(s.mongoServer.GetPushWhitelistModel())
 	pushTemplateAction := action.NewPushTemplateAction(s.mongoServer.GetPushTemplateModel())
@@ -303,6 +314,24 @@ func (s *Server) initMicro() error {
 		micro.RegisterTTL(30*time.Second),
 		micro.RegisterInterval(25*time.Second),
 		micro.Registry(s.microRegistry),
+		micro.AfterStart(func() error {
+			if !discovery.UseServiceDiscovery() && s.thirdpartyDiscovery != nil {
+				return s.thirdpartyDiscovery.Start()
+			}
+			return nil
+		}),
+		micro.BeforeStop(func() error {
+			if s.thirdpartyDiscovery != nil {
+				s.thirdpartyDiscovery.Stop()
+			}
+			return nil
+		}),
+		micro.AfterStop(func() error {
+			if err := thirdparty.CloseThirdpartyClient(); err != nil {
+				blog.Errorf("failed to close thirdparty client: %w", err)
+			}
+			return nil
+		}),
 		micro.Flags(&cli.StringFlag{
 			Name:        "f",
 			Usage:       "set config file path",
