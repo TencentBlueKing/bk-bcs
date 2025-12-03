@@ -90,8 +90,8 @@ func (s *Server) Init() error {
 		s.initRegistry,
 		s.initStore,
 		s.initMQ,
-		s.initThirdpartyDiscovery,
 		s.initMicro,
+		s.initThirdpartyDiscovery,
 		s.initHTTPGateway,
 	}
 	for _, init := range initializer {
@@ -276,13 +276,34 @@ func (s *Server) initThirdpartyDiscovery() error {
 	if !discovery.UseServiceDiscovery() {
 		s.thirdpartyDiscovery = discovery.NewModuleDiscovery(constant.ModuleThirdpartyServiceManager, s.microRegistry)
 		blog.Infof("init discovery for thirdparty service successfully")
+
+		if err := s.thirdpartyDiscovery.Start(); err != nil {
+			return fmt.Errorf("failed to start thirdparty discovery: %v", err)
+		}
+
+		maxRetries := 10
+		for i := 0; i < maxRetries; i++ {
+			services := s.thirdpartyDiscovery.GetService()
+			if len(services) > 0 && len(services[0].Nodes) > 0 {
+				blog.Infof("thirdparty service endpoints discovered successfully")
+				break
+			}
+			if i == maxRetries-1 {
+				return fmt.Errorf("thirdparty service endpoints not available after %d retries", maxRetries)
+			}
+			blog.Infof("waiting for thirdparty service endpoints, retry %d/%d", i+1, maxRetries)
+			time.Sleep(500 * time.Millisecond)
+		}
 	}
 
 	thirdpartyOpts := &thirdparty.ClientOptions{
 		ClientTLS: s.clientTLSConfig,
 		Discovery: s.thirdpartyDiscovery,
 	}
-	thirdparty.InitThirdpartyClient(thirdpartyOpts)
+	if err := thirdparty.InitThirdpartyClient(thirdpartyOpts); err != nil {
+		return fmt.Errorf("failed to initialize thirdparty client: %v", err)
+	}
+
 	return nil
 }
 
@@ -314,12 +335,6 @@ func (s *Server) initMicro() error {
 		micro.RegisterTTL(30*time.Second),
 		micro.RegisterInterval(25*time.Second),
 		micro.Registry(s.microRegistry),
-		micro.AfterStart(func() error {
-			if !discovery.UseServiceDiscovery() && s.thirdpartyDiscovery != nil {
-				return s.thirdpartyDiscovery.Start()
-			}
-			return nil
-		}),
 		micro.BeforeStop(func() error {
 			if s.thirdpartyDiscovery != nil {
 				s.thirdpartyDiscovery.Stop()

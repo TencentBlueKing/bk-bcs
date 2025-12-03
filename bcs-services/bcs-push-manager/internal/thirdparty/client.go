@@ -36,13 +36,14 @@ const (
 var thirdpartyCli Client
 
 // InitThirdpartyClient set thirdpartyCli client
-func InitThirdpartyClient(opts *ClientOptions) {
+func InitThirdpartyClient(opts *ClientOptions) error {
 	cli, err := NewClient(opts)
 	if err != nil {
 		blog.Errorf("failed to initialize thirdparty client: %v", err)
-		return
+		return err
 	}
 	thirdpartyCli = cli
+	return nil
 }
 
 // GetThirdpartyClient get thirdparty client
