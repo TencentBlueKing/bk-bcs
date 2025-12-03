@@ -171,7 +171,7 @@ func (m *ModelCluster) ListCluster(ctx context.Context, cond *operator.Condition
 	return retClusterList, nil
 }
 
-// ListCluster list clusters
+// ListClusterWithCount list clusters with count
 func (m *ModelCluster) ListClusterWithCount(ctx context.Context, cond *operator.Condition, opt *options.ListOption) (
 	[]*types.Cluster, int64, error) {
 	var (

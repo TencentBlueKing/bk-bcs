@@ -60,7 +60,8 @@ type ClusterManagerModel interface {
 	DeleteCluster(ctx context.Context, clusterID string) error
 	GetCluster(ctx context.Context, clusterID string) (*types.Cluster, error)
 	ListCluster(ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]*types.Cluster, error)
-	ListClusterWithCount(ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]*types.Cluster, int64, error)
+	ListClusterWithCount(ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]*types.Cluster,
+		int64, error)
 
 	// node information storage management
 	CreateNode(ctx context.Context, node *types.Node) error

@@ -182,7 +182,7 @@ func (m *ModelTask) ListTask(ctx context.Context, cond *operator.Condition, opt 
 	return taskList, nil
 }
 
-// ListTask list clusters
+// ListTaskWithCount list tasks with count
 func (m *ModelTask) ListTaskWithCount(ctx context.Context, cond *operator.Condition, opt *options.ListOption) (
 	[]*types.Task, int64, error) {
 	taskList := make([]*types.Task, 0)
