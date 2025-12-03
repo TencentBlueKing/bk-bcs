@@ -2820,6 +2820,12 @@ func (s *Syncer) GetProjectManagerGrpcGwClient() (pmCli *client.ProjectManagerCl
 
 // GetBkCluster get bkcluster
 func (s *Syncer) GetBkCluster(cluster *cmp.Cluster, db *gorm.DB, withDB bool) (*bkcmdbkube.Cluster, error) {
+	// Check if cluster is nil
+	if cluster == nil {
+		blog.Errorf("cluster is nil in GetBkCluster")
+		return nil, errors.New("cluster is nil")
+	}
+
 	var clusterBkBizID int64
 	if bkBizID == 0 {
 		bizid, err := strconv.ParseInt(cluster.BusinessID, 10, 64)
@@ -5470,9 +5476,9 @@ func (s *Syncer) deleteAllByClusterCluster(bkCluster *bkcmdbkube.Cluster) error 
 					Condition: "AND",
 					Rules: []client.Rule{
 						{
-							Field: "id",
+							Field:    "id",
 							Operator: "in",
-							Value: []int64{bkCluster.ID},
+							Value:    []int64{bkCluster.ID},
 						},
 					},
 				},
