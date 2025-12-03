@@ -182,6 +182,32 @@ func (m *ModelTask) ListTask(ctx context.Context, cond *operator.Condition, opt 
 	return taskList, nil
 }
 
+// ListTask list clusters
+func (m *ModelTask) ListTaskWithCount(ctx context.Context, cond *operator.Condition, opt *options.ListOption) (
+	[]*types.Task, int64, error) {
+	taskList := make([]*types.Task, 0)
+	finder := m.db.Table(m.tableName).Find(cond)
+	total, err := finder.Count(ctx)
+	if err != nil {
+		return nil, 0, err
+	}
+	if len(opt.Sort) != 0 {
+		finder = finder.WithSort(util.MapInt2MapIf(opt.Sort))
+	}
+	if opt.Offset != 0 {
+		finder = finder.WithStart(opt.Offset)
+	}
+	if opt.Limit == 0 {
+		finder = finder.WithLimit(defaultTaskListLength)
+	} else {
+		finder = finder.WithLimit(opt.Limit)
+	}
+	if err := finder.All(ctx, &taskList); err != nil {
+		return nil, 0, err
+	}
+	return taskList, total, nil
+}
+
 // DeleteFinishedTaskByDate delete finished task by date
 func (m *ModelTask) DeleteFinishedTaskByDate(ctx context.Context, startTime, endTime string) error {
 	if err := m.ensureTable(ctx); err != nil {

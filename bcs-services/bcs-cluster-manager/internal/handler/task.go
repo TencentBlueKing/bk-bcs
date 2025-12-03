@@ -104,6 +104,23 @@ func (cm *ClusterManager) ListTask(ctx context.Context,
 	return nil
 }
 
+// ListTaskV2 implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) ListTaskV2(ctx context.Context,
+	req *cmproto.ListTaskV2Request, resp *cmproto.ListTaskV2Response) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	ca := task.NewListV2Action(cm.model)
+	ca.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("ListTaskV2", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: ListTaskV2, req %v, resp.Code %d, resp.Message %s, resp.Data.Length %v",
+		reqID, req, resp.Code, resp.Message, len(resp.Data.Results))
+	blog.V(5).Infof("reqID: %s, action: ListTaskV2, req %v, resp %v", reqID, req, resp)
+	return nil
+}
+
 // RetryTask implements interface cmproto.ClusterManagerServer
 func (cm *ClusterManager) RetryTask(ctx context.Context,
 	req *cmproto.RetryTaskRequest, resp *cmproto.RetryTaskResponse) error {

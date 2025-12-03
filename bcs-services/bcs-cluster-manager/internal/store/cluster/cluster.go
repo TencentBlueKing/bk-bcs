@@ -170,3 +170,39 @@ func (m *ModelCluster) ListCluster(ctx context.Context, cond *operator.Condition
 	}
 	return retClusterList, nil
 }
+
+// ListCluster list clusters
+func (m *ModelCluster) ListClusterWithCount(ctx context.Context, cond *operator.Condition, opt *options.ListOption) (
+	[]*types.Cluster, int64, error) {
+	var (
+		err   error
+		total int64
+	)
+	retClusterList := make([]*types.Cluster, 0)
+	finder := m.db.Table(m.tableName).Find(cond)
+	if opt.Count {
+		// total 表示根据条件得到的总量
+		total, err = finder.Count(ctx)
+		if err != nil {
+			return nil, 0, err
+		}
+	}
+	if len(opt.Sort) != 0 {
+		finder = finder.WithSort(util.MapInt2MapIf(opt.Sort))
+	}
+	if opt.Offset != 0 {
+		finder = finder.WithStart(opt.Offset)
+	}
+	if opt.Limit == 0 {
+		finder = finder.WithLimit(defaultClusterListLength)
+	} else {
+		finder = finder.WithLimit(opt.Limit)
+	}
+	if opt.All {
+		finder = finder.WithLimit(0)
+	}
+	if err = finder.All(ctx, &retClusterList); err != nil {
+		return nil, 0, err
+	}
+	return retClusterList, total, nil
+}

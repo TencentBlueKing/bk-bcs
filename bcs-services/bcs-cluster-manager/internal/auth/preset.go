@@ -187,6 +187,7 @@ var ActionPermissions = map[string]string{
 	"ClusterManager.DeleteTask": cluster.CanManageClusterOperation,
 	"ClusterManager.GetTask":    cluster.CanViewClusterOperation,
 	"ClusterManager.ListTask":   project.CanViewProjectOperation,
+	"ClusterManager.ListTaskV2": project.CanViewProjectOperation,
 	"ClusterManager.SkipTask":   cluster.CanViewClusterOperation,
 
 	// cluster auto scaling option

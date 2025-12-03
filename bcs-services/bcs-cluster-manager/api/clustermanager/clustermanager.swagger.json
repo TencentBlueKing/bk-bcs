@@ -7689,6 +7689,13 @@
             "type": "string"
           },
           {
+            "name": "manageType",
+            "description": "manageType. 集群管理类型，公有云时生效，MANAGED_CLUSTER(云上托管集群)，INDEPENDENT_CLUSTER(独立集群，自行维护)",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "status",
             "description": "status. 集群状态，可能状态CREATING，RUNNING，DELETING，FALURE，INITIALIZATION，DELETED",
             "in": "query",
@@ -7718,6 +7725,13 @@
             "type": "string"
           },
           {
+            "name": "creator",
+            "description": "creator. 任务创建人",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "all",
             "description": "all. true时获取所有的集群信息,包括被软删除的集群; false时获取非DELETED状态的集群信息",
             "in": "query",
@@ -7726,8 +7740,8 @@
             "format": "boolean"
           },
           {
-            "name": "offset",
-            "description": "offset. 查询偏移量",
+            "name": "page",
+            "description": "page. 页码",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -7896,6 +7910,127 @@
             "in": "query",
             "required": false,
             "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
+    "/clustermanager/v2/task": {
+      "get": {
+        "summary": "查询Task列表",
+        "description": "根据查询条件过滤Task列表，如果某项条件值为空，则忽略此条件。如果所有条件都为空，则默认查询所有集群",
+        "operationId": "ClusterManager_ListTaskV2",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerListTaskV2Response"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "clusterID",
+            "description": "clusterID. 任务所关联的集群，该ID为BCS集群ID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "projectID",
+            "description": "projectID. 任务所关联项目信息",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "creator",
+            "description": "creator. 任务创建者",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "updater",
+            "description": "updater. 任务更新者",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "taskType",
+            "description": "taskType. 任务类型，例如CreateCluster，AddNodesToCluster，DeleteNodesFromCluster等",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "description": "status. 任务状态(INITIALIZING, RUNNING, SUCCESS, FAILED, TIMEOUT, FORCETERMINATE)",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "nodeIP",
+            "description": "nodeIP. 某些场景下通过nodeIP查询对应的任务",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "nodeGroupID",
+            "description": "nodeGroupID. 通过节点池ID过滤任务列表",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "message",
+            "description": "message. 事件信息",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "startTime",
+            "description": "startTime. 开始时间，GMT 时间戳，秒",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "endTime",
+            "description": "endTime. 结束时间，GMT 时间戳，秒",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "limit",
+            "description": "limit. 每页数量",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "page",
+            "description": "page. 页码",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
           }
         ],
         "tags": [
@@ -10593,6 +10728,23 @@
       },
       "description": "简化集群信息",
       "title": "ClusterV2"
+    },
+    "clustermanagerClusterBasicInfoData": {
+      "type": "object",
+      "properties": {
+        "total": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "results": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerClusterBasicInfo"
+          },
+          "description": "集群信息列表",
+          "title": "data"
+        }
+      }
     },
     "clustermanagerClusterBasicSetting": {
       "type": "object",
@@ -17032,10 +17184,7 @@
           "title": "result"
         },
         "data": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/clustermanagerClusterBasicInfo"
-          },
+          "$ref": "#/definitions/clustermanagerClusterBasicInfoData",
           "description": "简化集群信息列表",
           "title": "data"
         }
@@ -17635,6 +17784,58 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/clustermanagerTaskStepLogDetail"
+          },
+          "description": "返回数据",
+          "title": "results"
+        }
+      }
+    },
+    "clustermanagerListTaskV2Response": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/clustermanagerListTaskV2ResponseData",
+          "description": "获取到的任务列表信息",
+          "title": "data"
+        }
+      },
+      "description": "查询任务返回",
+      "title": "ListTaskV2Response",
+      "required": [
+        "code",
+        "message"
+      ]
+    },
+    "clustermanagerListTaskV2ResponseData": {
+      "type": "object",
+      "properties": {
+        "count": {
+          "type": "integer",
+          "format": "int64",
+          "description": "数量",
+          "title": "count"
+        },
+        "results": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerTask"
           },
           "description": "返回数据",
           "title": "results"

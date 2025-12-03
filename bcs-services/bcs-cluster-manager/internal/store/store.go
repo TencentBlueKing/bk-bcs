@@ -60,6 +60,7 @@ type ClusterManagerModel interface {
 	DeleteCluster(ctx context.Context, clusterID string) error
 	GetCluster(ctx context.Context, clusterID string) (*types.Cluster, error)
 	ListCluster(ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]*types.Cluster, error)
+	ListClusterWithCount(ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]*types.Cluster, int64, error)
 
 	// node information storage management
 	CreateNode(ctx context.Context, node *types.Node) error
@@ -173,6 +174,7 @@ type ClusterManagerModel interface {
 	DeleteTask(ctx context.Context, taskID string) error
 	GetTask(ctx context.Context, taskID string) (*types.Task, error)
 	ListTask(ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]*types.Task, error)
+	ListTaskWithCount(ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]*types.Task, int64, error)
 	DeleteFinishedTaskByDate(ctx context.Context, startTime, endTime string) error
 	ListMachineryTasks(ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]stypes.Task, error)
 	GetTasksFieldDistinct(ctx context.Context, fieldName string, filter interface{}) ([]string, error)
