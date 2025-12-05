@@ -137,6 +137,57 @@ func (cm *ClusterManager) ListCloudSubnets(ctx context.Context,
 	return nil
 }
 
+// CreateCloudSubnets implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) CreateCloudSubnets(ctx context.Context,
+	req *cmproto.CreateCloudSubnetsRequest, resp *cmproto.CreateCloudSubnetsResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	ca := cloudvpc.NewCreateSubnetsAction(cm.model)
+	ca.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("CreateCloudSubnets", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: CreateCloudSubnets, req %v, resp.Code %d, "+
+		"resp.Message %s", reqID, req, resp.Code, resp.Message)
+	blog.V(5).Infof("reqID: %s, action: CreateCloudSubnets, req %v, resp %v", reqID, req, resp)
+	return nil
+}
+
+// UpdateCloudSubnets implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) UpdateCloudSubnets(ctx context.Context,
+	req *cmproto.UpdateCloudSubnetsRequest, resp *cmproto.UpdateCloudSubnetsResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	ca := cloudvpc.NewUpdateSubnetsAction(cm.model)
+	ca.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("UpdateCloudSubnets", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: UpdateCloudSubnets, req %v, resp.Code %d, "+
+		"resp.Message %s", reqID, req, resp.Code, resp.Message)
+	blog.V(5).Infof("reqID: %s, action: UpdateCloudSubnets, req %v, resp %v", reqID, req, resp)
+	return nil
+}
+
+// DeleteCloudSubnets implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) DeleteCloudSubnets(ctx context.Context,
+	req *cmproto.DeleteCloudSubnetsRequest, resp *cmproto.DeleteCloudSubnetsResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	ca := cloudvpc.NewDeleteSubnetsAction(cm.model)
+	ca.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("DeleteCloudSubnets", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: DeleteCloudSubnets, req %v, resp.Code %d, "+
+		"resp.Message %s", reqID, req, resp.Code, resp.Message)
+	blog.V(5).Infof("reqID: %s, action: DeleteCloudSubnets, req %v, resp %v", reqID, req, resp)
+	return nil
+}
+
 // ListCloudVpcs implements interface cmproto.ClusterManagerServer
 func (cm *ClusterManager) ListCloudVpcs(ctx context.Context,
 	req *cmproto.ListCloudVpcsRequest, resp *cmproto.ListCloudVpcsResponse) error {
@@ -151,6 +202,57 @@ func (cm *ClusterManager) ListCloudVpcs(ctx context.Context,
 	blog.Infof("reqID: %s, action: ListCloudVpcs, req %v, resp.Code %d, "+
 		"resp.Message %s, resp.Data.Length %v", reqID, req, resp.Code, resp.Message, len(resp.Data))
 	blog.V(5).Infof("reqID: %s, action: ListCloudVpcs, req %v, resp %v", reqID, req, resp)
+	return nil
+}
+
+// ListCloudVpcCluster implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) ListCloudVpcCluster(ctx context.Context,
+	req *cmproto.ListCloudVpcClusterRequest, resp *cmproto.ListCloudVpcClusterResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	fa := cloudvpc.NewListCloudVpcClusterAction(cm.model)
+	fa.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("ListCloudVpcCluster", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: ListCloudVpcCluster, req %v, resp.Code %d, "+
+		"resp.Message %s, resp.Data.Length %v", reqID, req, resp.Code, resp.Message, len(resp.Data))
+	blog.V(5).Infof("reqID: %s, action: ListCloudVpcCluster, req %v, resp %v", reqID, req, resp)
+	return nil
+}
+
+// ListCloudVpcsPage implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) ListCloudVpcsPage(ctx context.Context,
+	req *cmproto.ListCloudVpcsPageRequest, resp *cmproto.ListCloudVpcsPageResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	fa := cloudvpc.NewListCloudVpcsPageAction(cm.model)
+	fa.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("ListCloudVpcsPage", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: ListCloudVpcsPage, req %v, resp.Code %d, "+
+		"resp.Message %s, resp.Data.Length %v", reqID, req, resp.Code, resp.Message, len(resp.Data))
+	blog.V(5).Infof("reqID: %s, action: ListCloudVpcsPage, req %v, resp %v", reqID, req, resp)
+	return nil
+}
+
+// UpdateCloudVpcs implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) UpdateCloudVpcs(ctx context.Context,
+	req *cmproto.UpdateCloudVpcsRequest, resp *cmproto.UpdateCloudVpcsResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	fa := cloudvpc.NewUpdateCloudVpcsAction(cm.model)
+	fa.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("UpdateCloudVpcs", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: UpdateCloudVpcs, req %v, resp.Code %d, "+
+		"resp.Message %s", reqID, req, resp.Code, resp.Message)
+	blog.V(5).Infof("reqID: %s, action: UpdateCloudVpcs, req %v, resp %v", reqID, req, resp)
 	return nil
 }
 

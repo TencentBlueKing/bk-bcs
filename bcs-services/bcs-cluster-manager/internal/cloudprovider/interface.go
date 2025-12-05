@@ -293,8 +293,16 @@ type CloudValidateManager interface {
 	ListCloudRegionClusterValidate(req *proto.ListCloudRegionClusterRequest, account *proto.Account) error
 	// ListCloudSubnetsValidate list subnets validate
 	ListCloudSubnetsValidate(req *proto.ListCloudSubnetsRequest, account *proto.Account) error
+	// CreateCloudSubnetsValidate create subnets validate
+	CreateCloudSubnetsValidate(req *proto.CreateCloudSubnetsRequest, account *proto.Account) error
+	// UpdateCloudSubnetsValidate update subnets validate
+	UpdateCloudSubnetsValidate(req *proto.UpdateCloudSubnetsRequest, account *proto.Account) error
+	// DeleteCloudSubnetsValidate delete subnets validate
+	DeleteCloudSubnetsValidate(req *proto.DeleteCloudSubnetsRequest, account *proto.Account) error
 	// ListCloudVpcsValidate list vpcs validate
 	ListCloudVpcsValidate(req *proto.ListCloudVpcsRequest, account *proto.Account) error
+	// UpdateCloudVpcsValidate update vpcs validate
+	UpdateCloudVpcsValidate(req *proto.UpdateCloudVpcsRequest, account *proto.Account) error
 	// ListSecurityGroupsValidate list SecurityGroups validate
 	ListSecurityGroupsValidate(req *proto.ListCloudSecurityGroupsRequest, account *proto.Account) error
 	// ListKeyPairsValidate list key pairs validate
@@ -430,8 +438,18 @@ type NodeGroupManager interface {
 type VPCManager interface {
 	// ListVpcs list cloud vpcs
 	ListVpcs(vpcID string, opt *ListNetworksOption) ([]*proto.CloudVpc, error)
+	// ListVpcs list cloud vpcs
+	ListVpcsByPage(opt *ListNetworksOption) (int64, []*proto.CloudVpcs, error)
+	// UpdateVpcs update cloud vpcs
+	UpdateVpcs(vpcID, vpcName string, opt *CommonOption) error
 	// ListSubnets list vpc's subnets
 	ListSubnets(vpcID string, zone string, opt *ListNetworksOption) ([]*proto.Subnet, error)
+	// CreateSubnets create vpc subnets
+	CreateSubnets(opt *NetworksSubnetOption) (*proto.Subnet, error)
+	// UpdateSubnets update vpc subnets
+	UpdateSubnets(opt *NetworksSubnetOption) error
+	// DeleteSubnets delete vpc subnets
+	DeleteSubnets(opt *NetworksSubnetOption) error
 	// ListSecurityGroups list security groups
 	ListSecurityGroups(opt *ListNetworksOption) ([]*proto.SecurityGroup, error)
 	// GetCloudNetworkAccountType get cloud account type

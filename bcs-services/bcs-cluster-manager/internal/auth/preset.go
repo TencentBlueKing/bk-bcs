@@ -219,6 +219,12 @@ var ActionPermissions = map[string]string{
 	"ClusterManager.VerifyCloudAccount":     "", // 校验账号，无须权限校验账号，无须权限
 	"ClusterManager.GetServiceRoles":        cloudaccount.CanUseCloudAccountOperation,
 	"ClusterManager.ListCloudAccountToPerm": "", // 内部接口，无须权限校验
+	"ClusterManager.ListCloudVpcCluster":    cloudaccount.CanUseCloudAccountOperation,
+	"ClusterManager.UpdateCloudVpcs":        cloudaccount.CanUseCloudAccountOperation,
+	"ClusterManager.ListCloudVpcsPage":      cloudaccount.CanUseCloudAccountOperation,
+	"ClusterManager.CreateCloudSubnets":     cloudaccount.CanUseCloudAccountOperation,
+	"ClusterManager.UpdateCloudSubnets":     cloudaccount.CanUseCloudAccountOperation,
+	"ClusterManager.DeleteCloudSubnets":     cloudaccount.CanUseCloudAccountOperation,
 
 	// cloud component paras
 	"ClusterManager.CreateCloudModuleFlag": "",

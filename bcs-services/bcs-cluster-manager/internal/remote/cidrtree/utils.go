@@ -104,6 +104,22 @@ func CidrContains(a, b *net.IPNet) bool {
 	return false
 }
 
+// GetIPNumByCidr get ip num by cidr
+func GetIPNumByCidr(cidr string) (ipnum uint32, err error) {
+	_, ipnet, err := net.ParseCIDR(cidr)
+	if err != nil {
+		return 0, err
+	}
+	prefixSize, totalSize := ipnet.Mask.Size()
+	if totalSize > 32 {
+		ipnum = 0
+		err = errors.New("currently only ipv4 cidr is supported")
+		return
+	}
+	ipnum = uint32(math.Pow(2, float64(totalSize-prefixSize)))
+	return ipnum, nil
+}
+
 // GetIPNum get ip num
 func GetIPNum(ipnet *net.IPNet) (ipnum uint32, err error) {
 	prefixSize, totalSize := ipnet.Mask.Size()
@@ -128,4 +144,19 @@ func GetIPNetsNum(frees []*net.IPNet) (uint32, error) {
 	}
 
 	return ipSurplus, nil
+}
+
+// VpcInfo vpc info
+type VpcInfo struct {
+	AvailableIpAddressCount int64          `json:"availableIpAddressCount,omitempty"`
+	TotalIpAddressCount     int64          `json:"totalIpAddressCount,omitempty"`
+	AvailableCidrBlock      []string       `json:"availableCidrBlock,omitempty"`
+	CidrBlock               []string       `json:"cidrBlock,omitempty"`
+	SubnetIPCidr            []SubnetIPCidr `json:"subnetIpcidr,omitempty"`
+}
+
+// SubnetIPCidr subnet ip cidr
+type SubnetIPCidr struct {
+	IPCidr string `json:"ipCidr,omitempty"`
+	IPNum  uint32 `json:"ipNum,omitempty"`
 }
