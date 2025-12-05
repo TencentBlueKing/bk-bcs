@@ -128,8 +128,15 @@
           </bk-table-column>
           <bk-table-column label="Ready" width="100" :resizable="false">
             <template #default="{ row }">
-              {{handleGetExtData(row.metadata.uid, 'readyCnt') || 0}}
-              / {{handleGetExtData(row.metadata.uid, 'totalCnt') || 0}}
+              <span
+                :class="{
+                  'text-[#E38B02]': (handleGetExtData(row.metadata.uid, 'readyCnt') || 0)
+                    < (handleGetExtData(row.metadata.uid, 'totalCnt') || 0)
+                }"
+              >
+                {{handleGetExtData(row.metadata.uid, 'readyCnt') || 0}}
+                / {{handleGetExtData(row.metadata.uid, 'totalCnt') || 0}}
+              </span>
             </template>
           </bk-table-column>
           <bk-table-column label="Restarts" width="100" :resizable="false">

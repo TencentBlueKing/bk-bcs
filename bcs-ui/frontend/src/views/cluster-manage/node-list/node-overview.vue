@@ -128,7 +128,9 @@
           </bk-table-column>
           <bk-table-column label="Ready" width="100">
             <template #default="{ row }">
-              {{row.readyCnt}}/{{row.totalCnt}}
+              <span :class="{ 'text-[#E38B02]': (row.readyCnt || 0) < (row.totalCnt || 0) }">
+                {{row.readyCnt}}/{{row.totalCnt}}
+              </span>
             </template>
           </bk-table-column>
           <bk-table-column label="Restarts" width="100">

@@ -211,7 +211,14 @@
             </bcs-table-column>
             <bcs-table-column label="Ready" width="100">
               <template #default="{ row }">
-                {{handleGetExtData(row.metadata.uid, 'readyCnt')}}/{{handleGetExtData(row.metadata.uid, 'totalCnt')}}
+                <span
+                  :class="{
+                    'text-[#E38B02]': (handleGetExtData(row.metadata.uid, 'readyCnt') || 0)
+                      < (handleGetExtData(row.metadata.uid, 'totalCnt') || 0)
+                  }"
+                >
+                  {{handleGetExtData(row.metadata.uid, 'readyCnt')}}/{{handleGetExtData(row.metadata.uid, 'totalCnt')}}
+                </span>
               </template>
             </bcs-table-column>
             <bcs-table-column label="Readiness Gates">
