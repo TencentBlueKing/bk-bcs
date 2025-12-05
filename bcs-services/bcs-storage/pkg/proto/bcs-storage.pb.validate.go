@@ -1017,6 +1017,669 @@ var _ interface {
 
 var _ClusterConfig_ClusterId_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 
+// Validate checks the field values on PutProjectInfoRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *PutProjectInfoRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on PutProjectInfoRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// PutProjectInfoRequestMultiError, or nil if none found.
+func (m *PutProjectInfoRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *PutProjectInfoRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if !_PutProjectInfoRequest_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+		err := PutProjectInfoRequestValidationError{
+			field:  "ProjectID",
+			reason: "value does not match regex pattern \"^[0-9a-f]{32}$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if all {
+		switch v := interface{}(m.GetData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, PutProjectInfoRequestValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, PutProjectInfoRequestValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return PutProjectInfoRequestValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return PutProjectInfoRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// PutProjectInfoRequestMultiError is an error wrapping multiple validation
+// errors returned by PutProjectInfoRequest.ValidateAll() if the designated
+// constraints aren't met.
+type PutProjectInfoRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m PutProjectInfoRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m PutProjectInfoRequestMultiError) AllErrors() []error { return m }
+
+// PutProjectInfoRequestValidationError is the validation error returned by
+// PutProjectInfoRequest.Validate if the designated constraints aren't met.
+type PutProjectInfoRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e PutProjectInfoRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e PutProjectInfoRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e PutProjectInfoRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e PutProjectInfoRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e PutProjectInfoRequestValidationError) ErrorName() string {
+	return "PutProjectInfoRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e PutProjectInfoRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sPutProjectInfoRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = PutProjectInfoRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = PutProjectInfoRequestValidationError{}
+
+var _PutProjectInfoRequest_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
+
+// Validate checks the field values on PutProjectInfoResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *PutProjectInfoResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on PutProjectInfoResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// PutProjectInfoResponseMultiError, or nil if none found.
+func (m *PutProjectInfoResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *PutProjectInfoResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	if len(errors) > 0 {
+		return PutProjectInfoResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// PutProjectInfoResponseMultiError is an error wrapping multiple validation
+// errors returned by PutProjectInfoResponse.ValidateAll() if the designated
+// constraints aren't met.
+type PutProjectInfoResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m PutProjectInfoResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m PutProjectInfoResponseMultiError) AllErrors() []error { return m }
+
+// PutProjectInfoResponseValidationError is the validation error returned by
+// PutProjectInfoResponse.Validate if the designated constraints aren't met.
+type PutProjectInfoResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e PutProjectInfoResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e PutProjectInfoResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e PutProjectInfoResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e PutProjectInfoResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e PutProjectInfoResponseValidationError) ErrorName() string {
+	return "PutProjectInfoResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e PutProjectInfoResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sPutProjectInfoResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = PutProjectInfoResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = PutProjectInfoResponseValidationError{}
+
+// Validate checks the field values on PutClusterInfoRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *PutClusterInfoRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on PutClusterInfoRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// PutClusterInfoRequestMultiError, or nil if none found.
+func (m *PutClusterInfoRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *PutClusterInfoRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 2 || l > 100 {
+		err := PutClusterInfoRequestValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 2 and 100 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !strings.HasPrefix(m.GetClusterID(), "BCS-") {
+		err := PutClusterInfoRequestValidationError{
+			field:  "ClusterID",
+			reason: "value does not have prefix \"BCS-\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_PutClusterInfoRequest_ClusterID_Pattern.MatchString(m.GetClusterID()) {
+		err := PutClusterInfoRequestValidationError{
+			field:  "ClusterID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if all {
+		switch v := interface{}(m.GetData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, PutClusterInfoRequestValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, PutClusterInfoRequestValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return PutClusterInfoRequestValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return PutClusterInfoRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// PutClusterInfoRequestMultiError is an error wrapping multiple validation
+// errors returned by PutClusterInfoRequest.ValidateAll() if the designated
+// constraints aren't met.
+type PutClusterInfoRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m PutClusterInfoRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m PutClusterInfoRequestMultiError) AllErrors() []error { return m }
+
+// PutClusterInfoRequestValidationError is the validation error returned by
+// PutClusterInfoRequest.Validate if the designated constraints aren't met.
+type PutClusterInfoRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e PutClusterInfoRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e PutClusterInfoRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e PutClusterInfoRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e PutClusterInfoRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e PutClusterInfoRequestValidationError) ErrorName() string {
+	return "PutClusterInfoRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e PutClusterInfoRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sPutClusterInfoRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = PutClusterInfoRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = PutClusterInfoRequestValidationError{}
+
+var _PutClusterInfoRequest_ClusterID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+// Validate checks the field values on PutClusterInfoResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *PutClusterInfoResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on PutClusterInfoResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// PutClusterInfoResponseMultiError, or nil if none found.
+func (m *PutClusterInfoResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *PutClusterInfoResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	if len(errors) > 0 {
+		return PutClusterInfoResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// PutClusterInfoResponseMultiError is an error wrapping multiple validation
+// errors returned by PutClusterInfoResponse.ValidateAll() if the designated
+// constraints aren't met.
+type PutClusterInfoResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m PutClusterInfoResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m PutClusterInfoResponseMultiError) AllErrors() []error { return m }
+
+// PutClusterInfoResponseValidationError is the validation error returned by
+// PutClusterInfoResponse.Validate if the designated constraints aren't met.
+type PutClusterInfoResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e PutClusterInfoResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e PutClusterInfoResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e PutClusterInfoResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e PutClusterInfoResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e PutClusterInfoResponseValidationError) ErrorName() string {
+	return "PutClusterInfoResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e PutClusterInfoResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sPutClusterInfoResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = PutClusterInfoResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = PutClusterInfoResponseValidationError{}
+
+// Validate checks the field values on DeleteClusterInfoRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *DeleteClusterInfoRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on DeleteClusterInfoRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// DeleteClusterInfoRequestMultiError, or nil if none found.
+func (m *DeleteClusterInfoRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *DeleteClusterInfoRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 2 || l > 100 {
+		err := DeleteClusterInfoRequestValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 2 and 100 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !strings.HasPrefix(m.GetClusterID(), "BCS-") {
+		err := DeleteClusterInfoRequestValidationError{
+			field:  "ClusterID",
+			reason: "value does not have prefix \"BCS-\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_DeleteClusterInfoRequest_ClusterID_Pattern.MatchString(m.GetClusterID()) {
+		err := DeleteClusterInfoRequestValidationError{
+			field:  "ClusterID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return DeleteClusterInfoRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// DeleteClusterInfoRequestMultiError is an error wrapping multiple validation
+// errors returned by DeleteClusterInfoRequest.ValidateAll() if the designated
+// constraints aren't met.
+type DeleteClusterInfoRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m DeleteClusterInfoRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m DeleteClusterInfoRequestMultiError) AllErrors() []error { return m }
+
+// DeleteClusterInfoRequestValidationError is the validation error returned by
+// DeleteClusterInfoRequest.Validate if the designated constraints aren't met.
+type DeleteClusterInfoRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DeleteClusterInfoRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DeleteClusterInfoRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DeleteClusterInfoRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DeleteClusterInfoRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DeleteClusterInfoRequestValidationError) ErrorName() string {
+	return "DeleteClusterInfoRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DeleteClusterInfoRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDeleteClusterInfoRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DeleteClusterInfoRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DeleteClusterInfoRequestValidationError{}
+
+var _DeleteClusterInfoRequest_ClusterID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
 // Validate checks the field values on GetClusterConfigRequest with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
