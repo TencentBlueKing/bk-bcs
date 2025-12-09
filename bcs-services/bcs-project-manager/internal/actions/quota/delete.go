@@ -98,8 +98,9 @@ func (da *DeleteQuotaAction) checkProjectQuotaStatus() error {
 		return errorx.NewCheckQuotaStatusErr(fmt.Sprintf("itsmSn[%s] project quota status is DELETING", itsmSn))
 	}
 
-	if da.sQuota.Status != quota.Running {
-		return errorx.NewCheckQuotaStatusErr(fmt.Sprintf("itsmSn[%s] project quota status is not RUNNING", itsmSn))
+	if da.sQuota.Status != quota.Running && da.sQuota.Status != quota.CreateFailure {
+		return errorx.NewCheckQuotaStatusErr(fmt.Sprintf("itsmSn[%s] project quota status is not "+
+			"RUNNING or CREATE_FAILURE", itsmSn))
 	}
 
 	return nil
