@@ -12199,6 +12199,12 @@
           "description": "缩容节点后置脚本, base64编码的用户脚本.",
           "title": "scaleInPostScript"
         },
+        "skipSystemInit": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "是否跳过执行系统初始化, 默认执行",
+          "title": "skipSystemInit"
+        },
         "annotations": {
           "$ref": "#/definitions/clustermanagerMapStruct",
           "description": "用户设置节点annotations",

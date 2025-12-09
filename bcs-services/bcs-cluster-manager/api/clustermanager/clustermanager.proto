@@ -4700,19 +4700,23 @@ message CreateNodeTemplateRequest {
     title: "scaleInPostScript",
     description: "缩容节点后置脚本, base64编码的用户脚本."
   }];
-  MapStruct annotations = 22 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  bool skipSystemInit = 22[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "skipSystemInit",
+    description: "是否跳过执行系统初始化, 默认执行"
+  }];
+  MapStruct annotations = 23 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "annotations",
     description: "用户设置节点annotations"
   }];
-  ImageInfo imageInfo = 23[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  ImageInfo imageInfo = 24[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "imageInfo",
     description: "节点模板镜像信息"
   }];
-  GPUArgs gpuArgs = 24[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  GPUArgs gpuArgs = 25[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "gpuArgs",
     description: "GPU参数信息"
   }];
-  MapStruct extraInfo = 25[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  MapStruct extraInfo = 26[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "extraInfo",
     description: "节点模版额外标识信息"
   }];
