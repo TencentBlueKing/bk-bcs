@@ -285,6 +285,8 @@ var (
 	DynamicMasterNodeIPListKey ParamKey = "MasterNodeIPList"
 	// DynamicImageIdKey xxx
 	DynamicImageIdKey ParamKey = "ImageId"
+	// DynamicInstanceIDListKey xxx
+	DynamicInstanceIDListKey ParamKey = "NodeInstanceIDList"
 
 	// SuccessNodeIDsKey xxx
 	// CVM Instance
@@ -388,4 +390,9 @@ var (
 const (
 	// WhiteListLabelKey xxx
 	WhiteListLabelKey = "bkbcs.tencent.com/is-powerhub-cluster"
+)
+
+const (
+	// NodeTemplateRegionLabelKey xxx
+	NodeTemplateRegionLabelKey = "node-region"
 )

@@ -117,6 +117,9 @@ func RunBKsopsJob(taskID string, stepName string) error {
 		return retErr
 	}
 
+	// inject taskID
+	ctx := cloudprovider.WithTaskIDAndStepNameForContext(context.Background(), taskID, stepName)
+
 	// render constants dynamic value parameter
 	consMap, err := RenderDynamicParaToConstants(state.Task, constants)
 	if err != nil {
@@ -130,9 +133,6 @@ func RunBKsopsJob(taskID string, stepName string) error {
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
-
-	// inject taskID
-	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
 
 	defaultTime := 120 * time.Minute
 	taskTimeout := cloudprovider.GetTaskTimeout(ctx, state.Task.GetProjectID(),

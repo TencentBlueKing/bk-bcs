@@ -53,9 +53,7 @@ func ApplyNodesFromResourcePoolTask(taskID, stepName string) error {
 	desiredNodes := step.Params[cloudprovider.ScalingNodesNumKey.String()]
 	scalingNum, _ := strconv.Atoi(desiredNodes)
 	operator := step.Params[cloudprovider.OperatorKey.String()]
-
-	// inject taskID
-	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
+	manual := state.Task.CommonParams[cloudprovider.ManualKey.String()]
 
 	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
 		ClusterID:   clusterID,
@@ -66,11 +64,16 @@ func ApplyNodesFromResourcePoolTask(taskID, stepName string) error {
 		blog.Errorf("ApplyNodesFromResourcePoolTask[%s] GetClusterDependBasicInfo for NodeGroup %s to clean Node in task %s "+
 			"step %s failed, %s", taskID, nodeGroupID, taskID, stepName, err.Error())
 		retErr := fmt.Errorf("getClusterDependBasicInfo failed, %s", err.Error())
-		blog.Infof("ApplyNodesFromResourcePoolTask[%s] begin DeleteVirtualNodes", taskID)
-		_ = cloudprovider.UpdateNodeGroupDesiredSize(nodeGroupID, scalingNum, true)
+		if manual == common.True {
+			_ = cloudprovider.UpdateVirtualNodeStatus(clusterID, nodeGroupID, taskID)
+		} else {
+			_ = cloudprovider.UpdateNodeGroupDesiredSize(nodeGroupID, scalingNum, true)
+		}
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
+
+	ctx := cloudprovider.WithTaskIDAndStepNameForContext(context.Background(), taskID, stepName)
 
 	// apply Instance from ResourcePool, get instance ipList and device idList
 	recordInstanceList, err := applyNodesFromResourcePool(ctx, dependInfo, scalingNum, operator)
@@ -78,23 +81,42 @@ func ApplyNodesFromResourcePoolTask(taskID, stepName string) error {
 		blog.Errorf("ApplyNodesFromResourcePoolTask[%s] requestInstancesFromPool for NodeGroup "+
 			"%s step %s failed, %s", taskID, nodeGroupID, stepName, err.Error())
 		retErr := fmt.Errorf("requestInstancesFromPool failed: %s", err.Error())
-		_ = cloudprovider.UpdateNodeGroupDesiredSize(nodeGroupID, scalingNum, true)
+		if manual == common.True {
+			_ = cloudprovider.UpdateVirtualNodeStatus(clusterID, nodeGroupID, taskID)
+		} else {
+			_ = cloudprovider.UpdateNodeGroupDesiredSize(nodeGroupID, scalingNum, true)
+		}
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
 
+	blog.Infof("taskID[%s],recordInstanceList.InstanceIDList:[%s], InstanceIPList:[%s], DeviceIDList:[%s]",
+		strings.Join(recordInstanceList.InstanceIDList, ","), strings.Join(recordInstanceList.InstanceIPList, ","),
+		strings.Join(recordInstanceList.DeviceIDList, ","))
+
 	err = saveNodesToDB(ctx, dependInfo, state.Task, &NodeOptions{
 		InstanceIPs: recordInstanceList.InstanceIPList,
 		DeviceIDs:   recordInstanceList.DeviceIDList,
+		InstanceIDs: recordInstanceList.InstanceIDList,
 	})
 	if err != nil {
 		blog.Errorf("ApplyNodesFromResourcePoolTask[%s] saveClusterNodes for NodeGroup %s step %s failed, %s",
 			taskID, nodeGroupID, stepName, err.Error())
 		retErr := fmt.Errorf("ApplyDesiredNodesTask failed, %s", err.Error())
 		_, _ = providerutils.DestroyDeviceList(ctx, dependInfo, recordInstanceList.DeviceIDList, operator)
-		_ = cloudprovider.UpdateNodeGroupDesiredSize(nodeGroupID, scalingNum, true)
+		if manual == common.True {
+			_ = cloudprovider.UpdateVirtualNodeStatus(clusterID, nodeGroupID, taskID)
+		} else {
+			_ = cloudprovider.UpdateNodeGroupDesiredSize(nodeGroupID, scalingNum, true)
+		}
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
+	}
+
+	// destroy virtual nodes
+	if manual == common.True {
+		blog.Infof("ApplyNodesFromResourcePoolTask[%s] begin DeleteVirtualNodes", taskID)
+		_ = cloudprovider.DeleteVirtualNodes(clusterID, nodeGroupID, taskID)
 	}
 
 	// update step
@@ -142,10 +164,15 @@ func saveNodesToDB(ctx context.Context,
 	)
 
 	// deviceID Map To InstanceIP
-	instanceToDeviceID := make(map[string]string)
+	instanceIPToDeviceID, instanceIPToID := make(map[string]string), make(map[string]string)
 	for i := range opt.InstanceIPs {
-		if _, ok := instanceToDeviceID[opt.InstanceIPs[i]]; !ok {
-			instanceToDeviceID[opt.InstanceIPs[i]] = opt.DeviceIDs[i]
+		if _, ok := instanceIPToDeviceID[opt.InstanceIPs[i]]; !ok {
+			instanceIPToDeviceID[opt.InstanceIPs[i]] = opt.DeviceIDs[i]
+		}
+	}
+	for i := range opt.InstanceIDs {
+		if _, ok := instanceIPToID[opt.InstanceIPs[i]]; !ok {
+			instanceIPToID[opt.InstanceIPs[i]] = opt.InstanceIDs[i]
 		}
 	}
 
@@ -177,6 +204,7 @@ func saveNodesToDB(ctx context.Context,
 		task.CommonParams[cloudprovider.NodeIPsKey.String()] = strings.Join(opt.InstanceIPs, ",")
 		task.CommonParams[cloudprovider.DynamicNodeIPListKey.String()] = strings.Join(opt.InstanceIPs, ",")
 		task.CommonParams[cloudprovider.NodeIDsKey.String()] = strings.Join(opt.InstanceIDs, ",")
+		task.CommonParams[cloudprovider.DynamicInstanceIDListKey.String()] = strings.Join(opt.InstanceIDs, ",")
 	}
 
 	for _, n := range nodes {
@@ -184,7 +212,8 @@ func saveNodesToDB(ctx context.Context,
 		n.NodeGroupID = info.NodeGroup.NodeGroupID
 		n.Passwd = opt.Password
 		n.Status = common.StatusInitialization
-		n.DeviceID = instanceToDeviceID[n.InnerIP]
+		n.DeviceID = instanceIPToDeviceID[n.InnerIP]
+		n.NodeID = instanceIPToID[n.InnerIP]
 		err = cloudprovider.SaveNodeInfoToDB(ctx, n, true)
 		if err != nil {
 			blog.Errorf("saveClusterNodesToDB[%s] SaveNodeInfoToDB[%s] failed: %v", taskID, n.InnerIP, err)
