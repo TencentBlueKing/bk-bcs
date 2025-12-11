@@ -383,8 +383,8 @@ var (
 	// DrainHelperKey xxx
 	DrainHelperKey ParamKey = "drainHelper"
 
-	// TransVPCIPs trans vpc nodes ip
-	TransVPCIPs ParamKey = "transVPCNodeIPs"
+	// TransVPCIPsKey trans vpc nodes ip
+	TransVPCIPsKey ParamKey = "transVPCNodeIPs"
 )
 
 const (

@@ -184,6 +184,7 @@ func addNodesToClusterTask(model store.ClusterManagerModel, cluster *proto.Clust
 		NodeSchedule: params.nodeSchedule,
 		Advance:      params.advance,
 		IsRetryTask:  true,
+		InitPassword: params.passwd,
 	})
 	if err != nil {
 		blog.Errorf("cloudprovider %s addNodes %v to Cluster %s failed, %s",
@@ -277,6 +278,7 @@ type taskParams struct {
 	nodeTemplateID string
 	nodeSchedule   bool
 	advance        *proto.NodeAdvancedInfo
+	passwd         string
 }
 
 // getTaskParams get add nodes task params
@@ -286,12 +288,17 @@ func getAddNodesTaskParams(task *proto.Task) (*taskParams, error) { // nolint
 	if task == nil || len(task.Steps) == 0 {
 		return params, nil
 	}
-
+	for k := range task.CommonParams {
+		switch k {
+		case cloudprovider.OperatorKey.String():
+			params.operator = task.CommonParams[cloudprovider.OperatorKey.String()]
+		case cloudprovider.PasswordKey.String():
+			params.passwd = task.CommonParams[cloudprovider.PasswordKey.String()]
+		}
+	}
 	for _, step := range task.Steps {
 		for k := range step.Params {
 			switch k {
-			case cloudprovider.OperatorKey.String():
-				params.operator = task.CommonParams[cloudprovider.OperatorKey.String()]
 			case cloudprovider.NodeTemplateIDKey.String():
 				params.nodeTemplateID = step.Params[cloudprovider.NodeTemplateIDKey.String()]
 			case cloudprovider.NodeSchedule.String():
