@@ -84,6 +84,21 @@ func (vm *VPCManager) ListSubnets(vpcID string, zone string,
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
+// CreateSubnets create vpc subnets
+func (vm *VPCManager) CreateSubnets(opt *cloudprovider.NetworksSubnetOption) (*cmproto.Subnet, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
+// UpdateSubnets update vpc subnets
+func (vm *VPCManager) UpdateSubnets(opt *cloudprovider.NetworksSubnetOption) error {
+	return cloudprovider.ErrCloudNotImplemented
+}
+
+// DeleteSubnets delete vpc subnets
+func (vm *VPCManager) DeleteSubnets(opt *cloudprovider.NetworksSubnetOption) error {
+	return cloudprovider.ErrCloudNotImplemented
+}
+
 // GetCloudNetworkAccountType get accoount type
 func (vm *VPCManager) GetCloudNetworkAccountType(opt *cloudprovider.CommonOption) (*cmproto.CloudAccountType, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
@@ -126,4 +141,14 @@ func (vm *VPCManager) GetVpcIpUsage(
 func (vm *VPCManager) GetClusterIpUsage(clusterId string, ipType string, opt *cloudprovider.CommonOption) (
 	uint32, uint32, error) {
 	return 0, 0, nil
+}
+
+// ListVpcsByPage list vpcs by page
+func (vm *VPCManager) ListVpcsByPage(opt *cloudprovider.ListNetworksOption) (int64, []*cmproto.CloudVpcs, error) {
+	return 0, nil, nil
+}
+
+// UpdateVpcs update vpcs
+func (vm *VPCManager) UpdateVpcs(vpcID, vpcName string, opt *cloudprovider.CommonOption) error {
+	return cloudprovider.ErrCloudNotImplemented
 }

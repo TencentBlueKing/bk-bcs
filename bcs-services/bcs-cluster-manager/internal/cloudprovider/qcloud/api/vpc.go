@@ -148,6 +148,65 @@ func (v *VpcClient) DescribeVpcs(vpcIds []string, filters []*Filter) (
 	return vpcs, nil
 }
 
+// DescribeVpcsByPage describe vpcs by page (https://cloud.tencent.com/document/api/215/15778)
+// 参数不支持同时指定VpcIds和Filters，仅需要指定其中1个参数即可
+func (v *VpcClient) DescribeVpcsByPage(vpcIds []string, filters []*Filter, offset, limit uint32) (
+	*vpc.DescribeVpcsResponseParams, error) {
+	blog.Infof("DescribeVpcsByPage input: %s, %s", utils.ToJSONString(vpcIds),
+		utils.ToJSONString(filters))
+
+	req := vpc.NewDescribeVpcsRequest()
+	req.Offset = common.StringPtr(strconv.Itoa(int(offset)))
+	req.Limit = common.StringPtr(strconv.Itoa(int(limit)))
+
+	if len(vpcIds) > 0 {
+		req.VpcIds = common.StringPtrs(vpcIds)
+	}
+
+	if len(filters) > 0 {
+		req.Filters = make([]*vpc.Filter, 0)
+		for _, v := range filters {
+			req.Filters = append(req.Filters, &vpc.Filter{
+				Name: common.StringPtr(v.Name), Values: common.StringPtrs(v.Values)})
+		}
+	}
+
+	resp, err := v.client.DescribeVpcs(req)
+	if err != nil {
+		blog.Errorf("DescribeVpcs failed, err: %s", err.Error())
+		return nil, err
+	}
+	if resp == nil || resp.Response == nil {
+		blog.Errorf("DescribeVpcs resp is nil")
+		return nil, fmt.Errorf("DescribeVpcs resp is nil")
+	}
+	blog.Infof("DescribeVpcs success, requestID: %s", *resp.Response.RequestId)
+	return resp.Response, nil
+}
+
+// ModifyVpcAttribute modify vpc attribute (https://cloud.tencent.com/document/api/215/15773)
+func (v *VpcClient) ModifyVpcAttribute(vpcId string, vpcName string) error {
+	blog.Infof("ModifyVpcAttribute input: %s, %s", vpcId, vpcName)
+
+	req := vpc.NewModifyVpcAttributeRequest()
+	req.VpcId = common.StringPtr(vpcId)
+	if vpcName != "" {
+		req.VpcName = common.StringPtr(vpcName)
+	}
+
+	resp, err := v.client.ModifyVpcAttribute(req)
+	if err != nil {
+		blog.Errorf("ModifyVpcAttribute failed, err: %s", err.Error())
+		return err
+	}
+	if resp == nil || resp.Response == nil {
+		blog.Errorf("ModifyVpcAttribute resp is nil")
+		return fmt.Errorf("ModifyVpcAttribute resp is nil")
+	}
+	blog.Infof("ModifyVpcAttribute success, requestID: %s", *resp.Response.RequestId)
+	return nil
+}
+
 // DescribeSubnets describe subnets (https://cloud.tencent.com/document/api/215/15784)
 func (v *VpcClient) DescribeSubnets(subnetIds []string, filters []*Filter) (
 	[]*vpc.Subnet, error) {
@@ -191,6 +250,32 @@ func (v *VpcClient) DescribeSubnets(subnetIds []string, filters []*Filter) (
 		total = int(*resp.Response.TotalCount)
 	}
 	return subnets, nil
+}
+
+// ModifySubnetAttribute modify subnet attribute (https://cloud.tencent.com/document/api/215/15781)
+func (v *VpcClient) ModifySubnetAttribute(subnetId, subnetName, enableBroadcast string) error {
+	blog.Infof("ModifySubnetAttribute input: %s, %s, %s", subnetId, subnetName, enableBroadcast)
+
+	req := vpc.NewModifySubnetAttributeRequest()
+	req.SubnetId = common.StringPtr(subnetId)
+	if subnetName != "" {
+		req.SubnetName = common.StringPtr(subnetName)
+	}
+	if enableBroadcast != "" {
+		req.EnableBroadcast = common.StringPtr(enableBroadcast)
+	}
+
+	resp, err := v.client.ModifySubnetAttribute(req)
+	if err != nil {
+		blog.Errorf("ModifySubnetAttribute failed, err: %s", err.Error())
+		return err
+	}
+	if resp == nil || resp.Response == nil {
+		blog.Errorf("ModifySubnetAttribute resp is nil")
+		return fmt.Errorf("ModifySubnetAttribute resp is nil")
+	}
+	blog.Infof("ModifySubnetAttribute success, requestID: %s", *resp.Response.RequestId)
+	return nil
 }
 
 // DescribeBandwidthPackages describe 带宽包资源 (https://cloud.tencent.com/document/product/215/19209)

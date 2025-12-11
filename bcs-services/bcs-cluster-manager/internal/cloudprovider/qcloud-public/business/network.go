@@ -82,6 +82,46 @@ func GetVpcCIDRBlocks(opt *cloudprovider.CommonOption, vpcId string, assistantTy
 
 }
 
+// GetVpcOverlayCIDRBlocks 获取vpc overlay 所属的cidr段
+func GetVpcOverlayCIDRBlocks(
+	opt *cloudprovider.CommonOption, vpcId string) (*cidrtree.VpcInfo, error) {
+	vpcCli, err := api.NewVPCClient(opt)
+	if err != nil {
+		return nil, err
+	}
+
+	vpcSet, err := vpcCli.DescribeVpcs([]string{vpcId}, nil)
+	if err != nil {
+		return nil, err
+	}
+	if len(vpcSet) == 0 {
+		return nil, fmt.Errorf("GetVpcOverlayCIDRBlocks DescribeVpcs[%s] empty", vpcId)
+	}
+
+	vpcInfo := &cidrtree.VpcInfo{
+		AvailableIpAddressCount: 0,
+		TotalIpAddressCount:     0,
+		AvailableCidrBlock:      []string{},
+		CidrBlock:               []string{},
+		SubnetIPCidr:            []cidrtree.SubnetIPCidr{},
+	}
+
+	for _, v := range vpcSet[0].AssistantCidrSet {
+		// 获取所有辅助AssistantType 为1的cidr
+		if v.AssistantType != nil && *v.AssistantType == 1 && v.CidrBlock != nil {
+			vpcInfo.CidrBlock = append(vpcInfo.CidrBlock, *v.CidrBlock)
+		}
+		for _, vv := range v.SubnetSet {
+			vpcInfo.SubnetIPCidr = append(vpcInfo.SubnetIPCidr, cidrtree.SubnetIPCidr{
+				IPCidr: utils.StringPtrToString(vv.CidrBlock),
+				IPNum:  uint32(utils.Uint64PtrToInt64(vv.TotalIpAddressCount)),
+			})
+		}
+	}
+	return vpcInfo, nil
+
+}
+
 // GetAllocatedSubnetsByVpc 获取vpc已分配的子网cidr段
 func GetAllocatedSubnetsByVpc(opt *cloudprovider.CommonOption, vpcId string) ([]*net.IPNet, error) {
 	vpcCli, err := api.NewVPCClient(opt)
@@ -125,6 +165,44 @@ func GetFreeIPNets(opt *cloudprovider.CommonOption, vpcId string) ([]*net.IPNet,
 
 	// 空闲IP列表
 	return cidrtree.GetFreeIPNets(allBlocks, nil, allSubnets), nil
+}
+
+// GetVpcIPNetAndNum get vpc cidr and ip nums
+func GetVpcIPNetAndNum(opt *cloudprovider.CommonOption, vpcId string) (*cidrtree.VpcInfo, error) {
+	vpcInfo := &cidrtree.VpcInfo{}
+	// 获取所有vpc cidr blocks
+	allBlocks, err := GetVpcCIDRBlocks(opt, vpcId, 0)
+	if err != nil {
+		return nil, err
+	}
+	// 获取网段及ip num
+	for _, block := range allBlocks {
+		vpcInfo.CidrBlock = append(vpcInfo.CidrBlock, block.String())
+	}
+	totalIPNum, err := cidrtree.GetIPNetsNum(allBlocks)
+	if err != nil {
+		return nil, err
+	}
+	vpcInfo.TotalIpAddressCount = totalIPNum
+
+	// 获取vpc 已使用子网列表
+	allSubnets, err := GetAllocatedSubnetsByVpc(opt, vpcId)
+	if err != nil {
+		return nil, err
+	}
+
+	// 获取可使用ip网段及数量
+	freeIPNets := cidrtree.GetFreeIPNets(allBlocks, nil, allSubnets)
+	for _, free := range freeIPNets {
+		vpcInfo.AvailableCidrBlock = append(vpcInfo.AvailableCidrBlock, free.String())
+	}
+	freeIPNum, err := cidrtree.GetIPNetsNum(freeIPNets)
+	if err != nil {
+		return nil, err
+	}
+	vpcInfo.AvailableIpAddressCount = freeIPNum
+
+	return vpcInfo, nil
 }
 
 // AllocateSubnet allocate directrouter subnet
@@ -606,6 +684,52 @@ func GetVpcGrFreeIPNets(opt *cloudprovider.CommonOption, cloudId, vpcId string,
 	}
 
 	return cidrtree.GetFreeIPNets(allBlocks, reservedBlocks, allSubnets), nil
+}
+
+// GetOverlayIPNetsAndNums get overlay cidr and ip nums
+func GetOverlayIPNetsAndNums(opt *cloudprovider.CommonOption, vpcId string) (*cidrtree.VpcInfo, error) {
+
+	// vpcID中所有的容器辅助cidr网段
+	vpcInfo, err := GetVpcOverlayCIDRBlocks(opt, vpcId)
+	if err != nil {
+		return nil, err
+	}
+
+	allBlocks := []*net.IPNet{}
+	for _, block := range vpcInfo.CidrBlock {
+		_, ipnet, errParse := net.ParseCIDR(block)
+		if errParse != nil {
+			return nil, errParse
+		}
+		allBlocks = append(allBlocks, ipnet)
+	}
+	// 获取总ip数量
+	vpcInfo.TotalIpAddressCount, err = cidrtree.GetIPNetsNum(allBlocks)
+	if err != nil {
+		return nil, err
+	}
+
+	allSubnets := []*net.IPNet{}
+	for _, block := range vpcInfo.SubnetIPCidr {
+		_, ipnet, errParse := net.ParseCIDR(block.IPCidr)
+		if errParse != nil {
+			return nil, errParse
+		}
+		allSubnets = append(allSubnets, ipnet)
+	}
+
+	// 获取可用网段
+	frees := cidrtree.GetFreeIPNets(allBlocks, nil, allSubnets)
+	for _, free := range frees {
+		vpcInfo.AvailableCidrBlock = append(vpcInfo.AvailableCidrBlock, free.String())
+	}
+	// 获取可用ip数量
+	vpcInfo.AvailableIpAddressCount, err = cidrtree.GetIPNetsNum(frees)
+	if err != nil {
+		return nil, err
+	}
+
+	return vpcInfo, nil
 }
 
 // getGrInCacheByVpc get cache gr cidr

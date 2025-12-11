@@ -393,6 +393,33 @@ type CreateNodeGroupOption struct {
 type ListNetworksOption struct {
 	CommonOption
 	ResourceGroupName string
+	VpcPage
+}
+
+// NetworksSubnetOption networks subnet option
+type NetworksSubnetOption struct {
+	CommonOption
+	ResourceGroupName string
+	Subnets
+}
+
+// Subnets 子网信息
+type Subnets struct {
+	VpcId           string
+	CidrBlock       string
+	Zone            string
+	SubnetId        string
+	SubnetName      string
+	EnableBroadcast string
+}
+
+// VpcPage vpc page
+type VpcPage struct {
+	CloudId string
+	VpcIds  []string
+	VpcName []string
+	Offset  uint32
+	Limit   uint32
 }
 
 // ListRuntimeInfoOption list runtime info option
