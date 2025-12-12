@@ -33,7 +33,7 @@ import (
 )
 
 // ApplyNodesFromResourcePoolTask apply instance from resource
-func ApplyNodesFromResourcePoolTask(taskID, stepName string) error {
+func ApplyNodesFromResourcePoolTask(taskID, stepName string) error { // nolint
 	start := time.Now()
 
 	// get task and task current step

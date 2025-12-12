@@ -112,7 +112,7 @@ func (ng *NodeGroup) UpdateNodeGroup(
 	return nil, nil
 }
 
-func (ng *NodeGroup) generateUpdateNodegroupConfigInput(group *proto.NodeGroup, cloudNg *eks.Nodegroup,
+func (ng *NodeGroup) generateUpdateNodegroupConfigInput(group *proto.NodeGroup, cloudNg *eks.Nodegroup, // nolint
 	cluster string) *eks.UpdateNodegroupConfigInput {
 	input := &eks.UpdateNodegroupConfigInput{
 		ClusterName:   &cluster,
