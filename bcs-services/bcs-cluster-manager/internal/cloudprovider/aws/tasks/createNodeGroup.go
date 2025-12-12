@@ -198,9 +198,8 @@ func generateCreateNodegroupInput(group *proto.NodeGroup, cluster *proto.Cluster
 	if len(group.Tags) != 0 {
 		nodeGroup.Tags = aws.StringMap(group.Tags)
 	}
-	if group.NodeTemplate != nil && len(group.NodeTemplate.Taints) > 0 {
-		nodeGroup.Taints = api.MapToTaints(group.NodeTemplate.Taints)
-	}
+
+	nodeGroup.Taints = api.MapToTaints(group.NodeTemplate.Taints)
 
 	lt, err := createLaunchTemplate(cluster, group, cli.EC2Client)
 	if err != nil {
