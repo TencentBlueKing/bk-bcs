@@ -441,7 +441,7 @@ func Int64PtrToInt64(num *int64) int64 {
 // if str == region, match node subnet; if str == region-clusterId, match cluster subnet
 func MatchPatternSubnet(subnetName, str string) bool {
 	var match bool
-	patterns := []string{fmt.Sprintf("^%s-[1-9]-[0-9]+", str)}
+	patterns := []string{fmt.Sprintf("^%s-[0-9]+-[0-9]+", str)}
 
 	for _, pattern := range patterns {
 		m, _ := regexp.MatchString(pattern, subnetName)
