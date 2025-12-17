@@ -35,7 +35,7 @@ var (
 	// Used for flags.
 	cfgFile         string
 	appName         = "bcs-platform-manager"
-	platformManager = "bcsplatformmanager"
+	platformManager = "platformmanager"
 
 	rootCmd = &cobra.Command{
 		Use:   appName,

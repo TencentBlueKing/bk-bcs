@@ -19,11 +19,6 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-const (
-	// APIServicePrefix API 服务前缀
-	APIServicePrefix = "/api"
-)
-
 // Configuration 配置
 type Configuration struct {
 	Viper       *viper.Viper
@@ -35,6 +30,8 @@ type Configuration struct {
 	BCS         *BCSConf        `yaml:"bcs_conf"`
 	IAM         *IAMConfig      `yaml:"iam_conf"`
 	Web         *WebConf        `yaml:"web"`
+	Cron        *CronConf       `yaml:"cron"`
+	Sign        *SignConf       `yaml:"sign"`
 	TracingConf *TracingConf    `yaml:"tracing_conf"`
 }
 
@@ -69,6 +66,8 @@ func newConfiguration() (*Configuration, error) {
 
 	c.Logging = defaultLogConf()
 	c.Web = defaultWebConf()
+	c.Cron = defaultCronConf()
+	c.Sign = defaultSignConf()
 
 	c.IAM = &IAMConfig{}
 
@@ -133,6 +132,29 @@ func (c *Configuration) ReadFrom(content []byte) error {
 	// iam env
 	if c.IAM.GatewayServer == "" {
 		c.IAM.GatewayServer = BKIAM_GATEWAY_SERVER
+	}
+
+	// sms
+	if c.Sign.SecretId == "" {
+		c.Sign.SecretId = SECRET_ID
+	}
+	if c.Sign.SecretKey == "" {
+		c.Sign.SecretKey = SECRET_KEY
+	}
+	if c.Sign.EmailEndpoint == "" {
+		c.Sign.EmailEndpoint = EMAIL_ENDPOINT
+	}
+	if c.Sign.SmsEndpoint == "" {
+		c.Sign.SmsEndpoint = SMS_ENDPOINT
+	}
+	if c.Sign.SmsSdkAppId == "" {
+		c.Sign.SmsSdkAppId = SMS_SDK_APP_ID
+	}
+	if c.Sign.SmsSignName == "" {
+		c.Sign.SmsSignName = SMS_SIGN_NAME
+	}
+	if c.Sign.Region == "" {
+		c.Sign.Region = REGION
 	}
 
 	// mongo

@@ -16,7 +16,6 @@ package api
 import (
 	"context"
 	"net/http"
-	"path"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
@@ -102,8 +101,6 @@ func (a *APIServer) newRoutes() http.Handler {
 	if routePrefix != "" && routePrefix != "/" {
 		r.Mount(routePrefix+"/", http.StripPrefix(routePrefix, registerRoutes()))
 	}
-	webApiPrefix := path.Join(config.G.Web.RoutePrefix, config.APIServicePrefix)
-	r.Mount(webApiPrefix+"/", http.StripPrefix(webApiPrefix, registerRoutes()))
 	return r
 }
 
