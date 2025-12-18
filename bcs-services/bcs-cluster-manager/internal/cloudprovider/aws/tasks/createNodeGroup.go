@@ -360,6 +360,15 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error { // no
 		return retErr
 	}
 
+	// 关闭AZRebalance进程
+	err = suspendAZRebalanceProcesses(ctx, dependInfo, asgInfo)
+	if err != nil {
+		blog.Errorf("CheckCloudNodeGroupStatusTask[%s]: suspendAZRebalanceProcesses failed: %v", taskID, err)
+		retErr := fmt.Errorf("suspendAZRebalanceProcesses failed, %s", err.Error())
+		_ = state.UpdateStepFailure(start, stepName, retErr)
+		return retErr
+	}
+
 	// update response information to task common params
 	if state.Task.CommonParams == nil {
 		state.Task.CommonParams = make(map[string]string)
@@ -442,6 +451,19 @@ func checkNodegroupStatus(rootCtx context.Context, dependInfo *cloudprovider.Clo
 	}
 
 	return asgInfo[0], ltvInfo, nil
+}
+
+func suspendAZRebalanceProcesses(ctx context.Context, dependInfo *cloudprovider.CloudDependBasicInfo,
+	asInfo *autoscaling.Group) error {
+	taskID := cloudprovider.GetTaskIDFromContext(ctx)
+
+	client, err := api.NewAutoScalingClient(dependInfo.CmOption)
+	if err != nil {
+		blog.Errorf("taskID[%s] checkNodegroupStatus get aws clientSet failed, %s", taskID, err.Error())
+		return err
+	}
+
+	return client.SuspendProcesses(asInfo.AutoScalingGroupName, []string{"AZRebalance"})
 }
 
 func deleteNodegroupLifecycleHook(ctx context.Context, dependInfo *cloudprovider.CloudDependBasicInfo,
