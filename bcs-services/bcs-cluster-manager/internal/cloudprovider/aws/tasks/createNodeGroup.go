@@ -463,7 +463,35 @@ func suspendAZRebalanceProcesses(ctx context.Context, dependInfo *cloudprovider.
 		return err
 	}
 
-	return client.SuspendProcesses(asInfo.AutoScalingGroupName, []string{"AZRebalance"})
+	pName := "AZRebalance"
+
+	err = client.SuspendProcesses(asInfo.AutoScalingGroupName, []string{pName})
+	if err != nil {
+		return err
+	}
+
+	asgs, err := client.DescribeAutoScalingGroups(&autoscaling.DescribeAutoScalingGroupsInput{
+		AutoScalingGroupNames: []*string{asInfo.AutoScalingGroupName},
+	})
+	if err != nil {
+		return err
+	}
+
+	if len(asgs) == 0 {
+		return fmt.Errorf("get autoscaling group info empty")
+	}
+	if len(asgs[0].SuspendedProcesses) == 0 {
+		return fmt.Errorf("suspend autoscaling group AZRebalance processes failed")
+	}
+
+	for _, p := range asgs[0].SuspendedProcesses {
+		if *p.ProcessName == pName {
+			blog.Infof("suspend autoscaling group AZRebalance processes successful")
+			return nil
+		}
+	}
+
+	return fmt.Errorf("suspend autoscaling group AZRebalance processes failed")
 }
 
 func deleteNodegroupLifecycleHook(ctx context.Context, dependInfo *cloudprovider.CloudDependBasicInfo,
