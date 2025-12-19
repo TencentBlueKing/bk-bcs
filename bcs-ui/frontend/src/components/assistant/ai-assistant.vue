@@ -25,7 +25,7 @@ import Assistant, { ChatHelper, IMessage, ISendData, IStartPosition, MessageStat
 import useAssistantStore from './use-assistant-store';
 
 import '@blueking/ai-blueking/dist/vue2/style.css';
-import { BCS_UI_PREFIX } from '@/common/constant';
+import { BCS_UI_PREFIX, BCS_SUB_PATH } from '@/common/constant';
 import { Preset } from '@/components/assistant/use-assistant-store';
 import { useAppData } from '@/composables/use-app';
 import $i18n from '@/i18n/i18n-setup';
@@ -120,7 +120,7 @@ const handleError = (msg: string) => {
   currentMessage.content = msg;
   loading.value = false;
 };
-const chatHelper = new ChatHelper(`${BCS_UI_PREFIX}/assistant`, handleStart, handleReceiveMessage, handleEnd, handleError, messages.value);
+const chatHelper = new ChatHelper(`${BCS_SUB_PATH}${BCS_UI_PREFIX}/assistant`, handleStart, handleReceiveMessage, handleEnd, handleError, messages.value);
 // 发送消息
 const handleSend = async (args: ISendConfig) => {
   if (!flagsMap.value.BKAI) return;

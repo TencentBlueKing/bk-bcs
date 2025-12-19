@@ -36,7 +36,7 @@ import NoticeComponent from '@blueking/notice-component-vue2';
 
 import '@blueking/notice-component-vue2/dist/style.css';
 import { bus } from '@/common/bus';
-import { BCS_UI_PREFIX } from '@/common/constant';
+import { BCS_UI_PREFIX, BCS_SUB_PATH } from '@/common/constant';
 import AiAssistant from '@/components/assistant/ai-assistant.vue';
 import { Preset } from '@/components/assistant/use-assistant-store';
 import { AiSendMsgFnInjectKey } from '@/composables/use-app';
@@ -52,7 +52,7 @@ const applyPermRef = ref<any>(null);
 const loginRef = ref<any>(null);
 
 // 通知
-const apiUrl = ref(`${BCS_UI_PREFIX}/announcements`);
+const apiUrl = ref(`${BCS_SUB_PATH}${BCS_UI_PREFIX}/announcements`);
 // 设置内容高度
 const noticeRef = ref();
 const { init } = useCalcHeight([
