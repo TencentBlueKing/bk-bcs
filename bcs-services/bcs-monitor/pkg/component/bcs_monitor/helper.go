@@ -23,6 +23,9 @@ import (
 func getQueryURL() (string, http.Header) {
 	var url string
 	header := http.Header{}
+	if config.G.Web.QueryAuth {
+		header.Add("Authorization", "Bearer admin")
+	}
 
 	if config.G.BCS.QueryURL != "" {
 		url = config.G.BCS.QueryURL

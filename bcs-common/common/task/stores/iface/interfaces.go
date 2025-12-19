@@ -29,6 +29,7 @@ type ListOption struct {
 	TaskIndexType string
 	CurrentStep   string
 	Status        string
+	StatusList    []string // support multiple statuses
 	Creator       string
 	CreatedGte    *time.Time     // CreatedGte create time greater or equal to
 	CreatedLte    *time.Time     // CreatedLte create time less or equal to

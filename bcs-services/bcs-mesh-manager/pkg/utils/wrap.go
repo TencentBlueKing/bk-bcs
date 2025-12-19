@@ -15,6 +15,8 @@ package utils
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"reflect"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -22,6 +24,7 @@ import (
 	"go-micro.dev/v4/metadata"
 	"go-micro.dev/v4/server"
 
+	projectClient "github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/clients/project"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/proto/bcs-mesh-manager"
 )
 
@@ -65,9 +68,7 @@ func renderResponse(rsp interface{}, requestID string, err error) error {
 		errCode := uint32(NoPermissionErr)
 		errMsg := err.(*authutils.PermDeniedError).Error()
 		if v.Elem().FieldByName("Code").IsValid() {
-			// code in mesh manager is *uint32 type instead of int32 type
-			codePtr := &errCode
-			v.Elem().FieldByName("Code").Set(reflect.ValueOf(codePtr))
+			v.Elem().FieldByName("Code").SetUint(uint64(errCode))
 		}
 		if v.Elem().FieldByName("Message").IsValid() {
 			v.Elem().FieldByName("Message").SetString(errMsg)
@@ -108,4 +109,39 @@ func getRequestID(ctx context.Context) string {
 	}
 
 	return requestID
+}
+
+// ParseProjectIDWrapper parse projectID from req
+func ParseProjectIDWrapper(fn server.HandlerFunc) server.HandlerFunc {
+	return func(ctx context.Context, req server.Request, rsp interface{}) (err error) {
+		body := req.Body()
+		b, err := json.Marshal(body)
+		if err != nil {
+			return fmt.Errorf("ParseProjectIDWrapper error: %s", err)
+		}
+
+		type bodyStruct struct {
+			ProjectCode string `json:"projectCode,omitempty"`
+		}
+		project := &bodyStruct{}
+		err = json.Unmarshal(b, project)
+		if err != nil {
+			return fmt.Errorf("ParseProjectIDWrapper error: %s", err)
+		}
+
+		if len(project.ProjectCode) == 0 {
+			blog.Warn("ParseProjectIDWrapper error: projectCode is empty")
+			return fn(ctx, req, rsp)
+		}
+
+		pj, err := projectClient.GetProjectByCode(ctx, project.ProjectCode)
+		if err != nil {
+			return fmt.Errorf("ParseProjectIDWrapper get projectID error, projectCode: %s, err: %s",
+				project.ProjectCode, err.Error())
+		}
+
+		ctx = context.WithValue(ctx, ProjectIDContextKey, pj.ProjectID)
+		ctx = context.WithValue(ctx, ProjectCodeContextKey, pj.ProjectCode)
+		return fn(ctx, req, rsp)
+	}
 }

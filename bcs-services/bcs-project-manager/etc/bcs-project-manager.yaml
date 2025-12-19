@@ -95,3 +95,6 @@ taskConfig:
   workerCnt: ""
 sharedClusterConfig:
   annoKeyProjCode: ""
+systemConfig:
+  systemNameSpaces:
+  - "bcs"

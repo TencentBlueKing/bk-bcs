@@ -112,56 +112,57 @@ func (ng *NodeGroup) UpdateNodeGroup(
 	return nil, nil
 }
 
-func (ng *NodeGroup) generateUpdateNodegroupConfigInput(group *proto.NodeGroup, cloudNg *eks.Nodegroup,
+func (ng *NodeGroup) generateUpdateNodegroupConfigInput(group *proto.NodeGroup, cloudNg *eks.Nodegroup, // nolint
 	cluster string) *eks.UpdateNodegroupConfigInput {
 	input := &eks.UpdateNodegroupConfigInput{
 		ClusterName:   &cluster,
 		NodegroupName: &group.CloudNodeGroupID,
 	}
 
-	if len(group.GetNodeTemplate().GetLabels()) > 0 {
-		input.Labels = &eks.UpdateLabelsPayload{
-			AddOrUpdateLabels: aws.StringMap(group.NodeTemplate.Labels),
-		}
+	// labels 和taints 使用bcs的任务添加，不用节点池自带功能
+	// if len(group.GetNodeTemplate().GetLabels()) > 0 {
+	// 	input.Labels = &eks.UpdateLabelsPayload{
+	// 		AddOrUpdateLabels: aws.StringMap(group.NodeTemplate.Labels),
+	// 	}
 
-		for k := range cloudNg.Labels {
-			if _, ok := group.NodeTemplate.Labels[k]; !ok {
-				input.Labels.RemoveLabels = append(input.Labels.RemoveLabels, aws.String(k))
-			}
-		}
-	} else if len(cloudNg.Labels) > 0 {
-		input.Labels = &eks.UpdateLabelsPayload{}
-		for k := range cloudNg.Labels {
-			input.Labels.RemoveLabels = append(input.Labels.RemoveLabels, aws.String(k))
-		}
-	}
+	// 	for k := range cloudNg.Labels {
+	// 		if _, ok := group.NodeTemplate.Labels[k]; !ok {
+	// 			input.Labels.RemoveLabels = append(input.Labels.RemoveLabels, aws.String(k))
+	// 		}
+	// 	}
+	// } else if len(cloudNg.Labels) > 0 {
+	// 	input.Labels = &eks.UpdateLabelsPayload{}
+	// 	for k := range cloudNg.Labels {
+	// 		input.Labels.RemoveLabels = append(input.Labels.RemoveLabels, aws.String(k))
+	// 	}
+	// }
 
-	if len(group.GetNodeTemplate().GetTaints()) > 0 {
-		input.Taints = &eks.UpdateTaintsPayload{
-			AddOrUpdateTaints: api.MapToAwsTaints(group.NodeTemplate.Taints),
-		}
+	// if len(group.GetNodeTemplate().GetTaints()) > 0 {
+	// 	input.Taints = &eks.UpdateTaintsPayload{
+	// 		AddOrUpdateTaints: api.MapToAwsTaints(group.NodeTemplate.Taints),
+	// 	}
 
-		for _, v := range cloudNg.Taints {
-			exit := false
-			for _, y := range group.NodeTemplate.Taints {
-				if *v.Key == y.Key {
-					exit = true
-					continue
-				}
-			}
+	// 	for _, v := range cloudNg.Taints {
+	// 		exit := false
+	// 		for _, y := range group.NodeTemplate.Taints {
+	// 			if *v.Key == y.Key {
+	// 				exit = true
+	// 				continue
+	// 			}
+	// 		}
 
-			if !exit {
-				input.Taints.RemoveTaints = append(input.Taints.RemoveTaints, &eks.Taint{
-					Key:    v.Key,
-					Value:  v.Value,
-					Effect: v.Effect,
-				})
-			}
-		}
-	} else if len(cloudNg.Taints) > 0 {
-		input.Taints = &eks.UpdateTaintsPayload{}
-		input.Taints.RemoveTaints = append(input.Taints.RemoveTaints, cloudNg.Taints...)
-	}
+	// 		if !exit {
+	// 			input.Taints.RemoveTaints = append(input.Taints.RemoveTaints, &eks.Taint{
+	// 				Key:    v.Key,
+	// 				Value:  v.Value,
+	// 				Effect: v.Effect,
+	// 			})
+	// 		}
+	// 	}
+	// } else if len(cloudNg.Taints) > 0 {
+	// 	input.Taints = &eks.UpdateTaintsPayload{}
+	// 	input.Taints.RemoveTaints = append(input.Taints.RemoveTaints, cloudNg.Taints...)
+	// }
 
 	if group.AutoScaling != nil {
 		input.ScalingConfig = &eks.NodegroupScalingConfig{
@@ -196,7 +197,7 @@ func (ng *NodeGroup) RecommendNodeGroupConf(
 
 	insTypes, err := mgr.ListNodeInstanceType(ctx, cloudprovider.InstanceInfo{
 		Region: opt.Region,
-		Cpu:    8,
+		CPU:    8,
 		Memory: 16,
 	}, opt)
 	if err != nil {

@@ -29,6 +29,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/component/watch"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	ioptions "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/install"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/log/bklog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
@@ -57,6 +59,11 @@ var (
 	uninstallVclusterComponentStep = cloudprovider.StepInfo{
 		StepMethod: cloudprovider.DeleteVclusterAction,
 		StepName:   "删除vCluster组件",
+	}
+
+	installLogCollectorAddonStep = cloudprovider.StepInfo{
+		StepMethod: cloudprovider.InstallLogCollectorAddonAction,
+		StepName:   "安装集群公共LogCollector",
 	}
 )
 
@@ -830,5 +837,131 @@ func ensureAutoScalerWithInstaller(ctx context.Context, nodeGroups []*proto.Node
 			taskID, stepName, "uninstall app successful")
 	}
 
+	return nil
+}
+
+// BuildLogCollectorAddonTaskStep build bcs log collector addon task step
+func BuildLogCollectorAddonTaskStep(task *proto.Task, cls *proto.Cluster) {
+	if cls.ManageType != common.ClusterManageTypeIndependent {
+		return
+	}
+	installStep := cloudprovider.InitTaskStep(installLogCollectorAddonStep)
+
+	installStep.Params[cloudprovider.ProjectIDKey.String()] = cls.ProjectID
+	installStep.Params[cloudprovider.ClusterIDKey.String()] = cls.ClusterID
+
+	task.Steps[installLogCollectorAddonStep.StepMethod] = installStep
+	task.StepSequence = append(task.StepSequence, installLogCollectorAddonStep.StepMethod)
+}
+
+// EnsureLogCollectorTask deploy bcs log collector addon
+func EnsureLogCollectorTask(taskID string, stepName string) error {
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start ensure bcs log collector addon task")
+	start := time.Now()
+	// get task information and validate
+	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
+	if err != nil {
+		return err
+	}
+	if step == nil {
+		return nil
+	}
+
+	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
+
+	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
+	projectID := step.Params[cloudprovider.ProjectIDKey.String()]
+
+	// InstallLogCollectorByAddon deploy bcs log collector addon
+	err = InstallLogCollectorByAddon(ctx, projectID, clusterID)
+	if err != nil {
+		blog.Errorf("EnsureLogCollectorTask[%s] failed: %v", taskID, err)
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
+			fmt.Sprintf("EnsureLogCollectorTask[%s] InstallLogCollectorByAddon failed: %v", taskID, err))
+
+		retErr := fmt.Errorf("InstallLogCollectorByAddon failed, %s", err.Error())
+		_ = state.UpdateStepFailure(start, stepName, retErr)
+		return retErr
+	}
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		fmt.Sprintf("EnsureLogCollectorTask[%s] InstallLogCollectorByAddon successful", taskID))
+
+	err = bklog.EnableMonitorAudit(projectID, clusterID)
+	if err != nil {
+		blog.Errorf("EnsureLogCollectorTask[%s] failed: %v", taskID, err)
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
+			fmt.Sprintf("EnsureLogCollectorTask[%s] EnableMonitorAudit failed: %v", taskID, err))
+
+		retErr := fmt.Errorf("bklog EnableMonitorAudit failed, %s", err.Error())
+		_ = state.UpdateStepFailure(start, stepName, retErr)
+		return retErr
+	}
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		fmt.Sprintf("EnsureLogCollectorTask[%s] EnableMonitorAudit successful", taskID))
+	// update step
+	if err := state.UpdateStepSucc(start, stepName); err != nil {
+		blog.Errorf("EnsureLogCollectorTask[%s] %s update to storage fatal", taskID, stepName)
+		return err
+	}
+
+	return nil
+}
+
+// InstallLogCollectorByAddon deploy bcs log collector addon
+func InstallLogCollectorByAddon(ctx context.Context, projectID, clusterID string) error {
+	taskID := cloudprovider.GetTaskIDFromContext(ctx)
+
+	if ioptions.GetGlobalCMOptions().ComponentDeploy.LogCollector.AddonName == "" {
+		return fmt.Errorf("LogCollector addon name is empty")
+	}
+
+	addonName := ioptions.GetGlobalCMOptions().ComponentDeploy.LogCollector.AddonName
+	installer, err := addon.GetAddonInstaller(projectID, addonName)
+	if err != nil {
+		blog.Errorf("InstallLogCollectorByAddon[%s] GetAddonInstaller failed: %v", taskID, err)
+		return err
+	}
+
+	installed, err := installer.IsInstalled(ctx, clusterID)
+	if err != nil {
+		blog.Errorf("InstallLogCollectorByAddon[%s] IsInstalled failed: %v", taskID, err)
+		return err
+	}
+
+	// if installed, uninstall it
+	if installed {
+		err = DeleteLogCollectorByAddon(ctx, projectID, clusterID, installer)
+		if err != nil {
+			blog.Errorf("InstallLogCollectorByAddon[%s] Uninstall failed: %v", taskID, err)
+			return err
+		}
+
+		blog.Infof("InstallLogCollectorByAddon[%s] Uninstall successful[%s:%s]", taskID, projectID, clusterID)
+	}
+
+	err = installer.Install(ctx, clusterID, "")
+	if err != nil {
+		blog.Errorf("InstallLogCollectorByAddon[%s] Install failed: %v", taskID, err)
+		return err
+	}
+
+	blog.Infof("InstallLogCollectorByAddon[%s] Install successful[%s:%s]", taskID, projectID, clusterID)
+	return nil
+}
+
+// DeleteLogCollectorByAddon unInstall bcs log collector addon
+func DeleteLogCollectorByAddon(ctx context.Context, projectID, clusterID string, installer install.Installer) error {
+	traceID := cloudprovider.GetTaskIDFromContext(ctx)
+
+	err := installer.Uninstall(ctx, clusterID)
+	if err != nil {
+		blog.Errorf("DeleteLogCollectorByAddon[%s] Uninstall failed: %v", traceID, err)
+		return err
+	}
+
+	blog.Infof("DeleteLogCollectorByAddon[%s] successful[%s:%s]", traceID, projectID, clusterID)
 	return nil
 }

@@ -27,6 +27,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/tasks"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/template"
+	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
@@ -189,18 +190,36 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 		NodeTemplate:  opt.NodeTemplate,
 		transVpcNodes: opt.DiffVpcNodes,
 	}
-	// step0: create cluster shield alarm step
-	createClusterTask.BuildShieldAlertStep(task)
 
 	// step: check vpc and trans diff nodes
 	createClusterTask.BuildCreateModifyInstancesVpcStep(task)
 	createClusterTask.BuildCreateCheckInstanceStateStep(task)
 	createClusterTask.BuildCheckNodeIpsInCmdbStep(task)
 
+	// step0: create cluster shield alarm step
+	createClusterTask.BuildShieldAlertStep(task)
+
+	// step3:  postAction bk-sops task
+	if opt.Cloud != nil && opt.Cloud.ClusterManagement != nil && opt.Cloud.ClusterManagement.CreateCluster != nil {
+		err := template.BuildSopsFactory{
+			StepName: template.SystemPreInit,
+			Cluster:  cls,
+			Extra: template.ExtraInfo{
+				NodeIPList:      "",
+				MasterIPList:    cloudprovider.DynamicMasterNodeIPListKey.String(),
+				ImageId:         "",
+				TranslateMethod: template.SystemBeforeInit,
+			}}.BuildSopsStep(task, opt.Cloud.ClusterManagement.CreateCluster, true)
+		if err != nil {
+			return nil, fmt.Errorf("BuildCreateClusterTask BuildBkSopsStepAction failed: %v", err)
+		}
+	}
+
 	// step1: createTKECluster and return clusterID inject common paras
 	createClusterTask.BuildCreateClusterStep(task)
 	// step2: check cluster status by clusterID
 	createClusterTask.BuildCheckClusterStatusStep(task)
+
 	// step3: check cluster nodes status
 	createClusterTask.BuildCheckClusterNodesStatusStep(task)
 
@@ -208,7 +227,8 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 	createClusterTask.BuildRegisterClsKubeConfigStep(task)
 
 	// step5: 系统初始化 postAction bkops, platform run default steps
-	if opt.Cloud != nil && opt.Cloud.ClusterManagement != nil && opt.Cloud.ClusterManagement.CreateCluster != nil {
+	if opt.Cloud != nil && opt.Cloud.ClusterManagement != nil && opt.Cloud.ClusterManagement.CreateCluster != nil &&
+		(len(opt.WorkerNodes) > 0 || cls.ManageType == icommon.ClusterManageTypeIndependent) {
 		err := template.BuildSopsFactory{
 			StepName: template.SystemInit,
 			Cluster:  cls,
@@ -223,6 +243,7 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 
 					return strings.Join(opt.WorkerNodes, ",")
 				}(),
+				TranslateMethod: template.SystemPostInit,
 			}}.BuildSopsStep(task, opt.Cloud.ClusterManagement.CreateCluster, false)
 		if err != nil {
 			return nil, fmt.Errorf("BuildCreateClusterTask BuildBkSopsStepAction failed: %v", err)
@@ -270,11 +291,16 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 		}
 	}
 
-	// step7: allocate vpc-cni subnet for cluster
+	// step7: deploy bcs log collector
+	common.BuildLogCollectorAddonTaskStep(task, cls)
+
+	// step8: allocate vpc-cni subnet for cluster
 	createClusterTask.BuildAllocateSubnetTask(task)
-	// step8: enable vpc-cni network mode when cluster enable vpc-cni
+	// step9: enable vpc-cni network mode when cluster enable vpc-cni
 	createClusterTask.BuildEnableVpcCniStep(task)
-	// step9: update DB info by cluster data
+	// step10: 若需要则设置节点注解
+	createClusterTask.BuildNodeAnnotationsStep(task)
+	// step11: update DB info by cluster data
 	createClusterTask.BuildUpdateTaskStatusStep(task)
 
 	// set current step
@@ -625,6 +651,14 @@ func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Nod
 		return nil, fmt.Errorf("BuildAddNodesToClusterTask TaskOptions is lost")
 	}
 
+	imageId := func() string {
+		if opt != nil && opt.Advance != nil && opt.Advance.NodeOs != "" {
+			return opt.Advance.NodeOs
+		}
+
+		return ""
+	}()
+
 	// format node IPs
 	nodeIPs, nodeIDs, vpcDiffNodeIds := sortNodesInfo(cls, nodes)
 
@@ -651,10 +685,15 @@ func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Nod
 	taskName := fmt.Sprintf(tkeAddNodeTaskTemplate, cls.ClusterID)
 	task.CommonParams[cloudprovider.TaskNameKey.String()] = taskName
 
-	// init instance passwd
-	passwd := utils.BuildInstancePwd()
-	if opt.Login != nil && opt.Login.GetInitLoginPassword() != "" {
-		passwd, _ = encrypt.Decrypt(nil, opt.Login.GetInitLoginPassword())
+	var passwd string
+	if opt.IsRetryTask {
+		passwd = opt.InitPassword
+	} else {
+		// init instance passwd
+		passwd = utils.BuildInstancePwd()
+		if opt.Login != nil && opt.Login.GetInitLoginPassword() != "" {
+			passwd, _ = encrypt.Decrypt(nil, opt.Login.GetInitLoginPassword())
+		}
 	}
 	task.CommonParams[cloudprovider.PasswordKey.String()] = passwd
 
@@ -676,32 +715,56 @@ func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Nod
 	addNodesTask.BuildCheckInstanceStateStep(task)
 	addNodesTask.BuildCheckNodeIpsInCmdbStep(task)
 	// step2: addNodes shield nodes alarm
-	common.BuildShieldAlertTaskStep(task, cls.GetClusterID())
-	// step3: addNodesToTKECluster add node to cluster
+	common.BuildShieldAlertTaskStep(task, cls.GetClusterID(), imageId)
+
+	// step3:  postAction bk-sops task
+	if !opt.IsRetryTask && opt.Cloud != nil && opt.Cloud.ClusterManagement != nil &&
+		opt.Cloud.ClusterManagement.AddNodesToCluster != nil {
+		err := template.BuildSopsFactory{
+			StepName: template.SystemPreInit,
+			Cluster:  cls,
+			Extra: template.ExtraInfo{
+				NodeIPList: func() string {
+					if len(addNodesTask.DiffVpcNodeIds) > 0 {
+						return ""
+					}
+					return strings.Join(addNodesTask.NodeIPs, ",")
+				}(),
+				ImageId:         "",
+				TranslateMethod: template.SystemBeforeInit,
+				AllowSkip:       true,
+			}}.BuildSopsStep(task, opt.Cloud.ClusterManagement.AddNodesToCluster, true)
+		if err != nil {
+			return nil, fmt.Errorf("BuildAddNodesToClusterTask BuildBkSopsStepAction failed: %v", err)
+		}
+	}
+
+	// step4: addNodesToTKECluster add node to cluster
 	addNodesTask.BuildAddNodesToClusterStep(task)
-	// step4: check cluster add node status
+	// step5: check cluster add node status
 	addNodesTask.BuildCheckAddNodesStatusStep(task)
-	// step5: update DB node info by instanceIP
+	// step6: update DB node info by instanceIP
 	addNodesTask.BuildUpdateAddNodeDBInfoStep(task)
 
-	// step6:  postAction bk-sops task
+	// step7:  postAction bk-sops task
 	if opt.Cloud != nil && opt.Cloud.ClusterManagement != nil && opt.Cloud.ClusterManagement.AddNodesToCluster != nil {
 		err := template.BuildSopsFactory{
 			StepName: template.SystemInit,
 			Cluster:  cls,
 			Extra: template.ExtraInfo{
-				InstancePasswd: passwd,
-				NodeIPList:     "",
-				NodeOperator:   opt.Operator,
-				ModuleID:       cloudprovider.GetScaleOutModuleID(cls, nil, opt.NodeTemplate, false),
-				BusinessID:     cloudprovider.GetBusinessID(cls, nil, opt.NodeTemplate, true),
+				InstancePasswd:  passwd,
+				NodeIPList:      "",
+				NodeOperator:    opt.Operator,
+				ModuleID:        cloudprovider.GetScaleOutModuleID(cls, nil, opt.NodeTemplate, false),
+				BusinessID:      cloudprovider.GetBusinessID(cls, nil, opt.NodeTemplate, true),
+				TranslateMethod: template.SystemPostInit,
 			}}.BuildSopsStep(task, opt.Cloud.ClusterManagement.AddNodesToCluster, false)
 		if err != nil {
 			return nil, fmt.Errorf("BuildAddNodesToClusterTask BuildBkSopsStepAction failed: %v", err)
 		}
 	}
 
-	// step7: 业务后置自定义流程: 支持标准运维任务 或者 后置脚本
+	// step8: 业务后置自定义流程: 支持标准运维任务 或者 后置脚本
 	if opt.NodeTemplate != nil && len(opt.NodeTemplate.UserScript) > 0 {
 		common.BuildJobExecuteScriptStep(task, common.JobExecParas{
 			ClusterID:        cls.ClusterID,
@@ -747,11 +810,11 @@ func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Nod
 		}
 	}
 
-	// step8: 若需要则设置节点注解
+	// step9: 若需要则设置节点注解
 	addNodesTask.BuildNodeAnnotationsStep(task)
-	// step9: 设置平台公共标签
+	// step10: 设置平台公共标签
 	addNodesTask.BuildNodeLabelsStep(task)
-	// step10: 设置节点可调度状态
+	// step11: 设置节点可调度状态
 	addNodesTask.BuildUnCordonNodesStep(task)
 
 	// set current step
@@ -1851,7 +1914,7 @@ func (t *Task) BuildSwitchClusterNetworkTask(
 	if err != nil {
 		return nil, fmt.Errorf("BuildSwitchClusterNetworkTask failed: %v", err)
 	}
-	isStaticIpModeInfo := strconv.FormatBool(opt.IsStaticIpMode)
+	isStaticIpModeInfo := strconv.FormatBool(opt.IsStaticIPMode)
 	claimExpiredSecondsInfo := strconv.Itoa(int(opt.ClaimExpiredSeconds))
 
 	// setting step details

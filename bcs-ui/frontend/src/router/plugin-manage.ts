@@ -8,6 +8,9 @@ const MetricManage = () => import(/* webpackChunkName: 'plugin' */'@/views/plugi
 // 日志采集
 const logCollector = () => import(/* webpackChunkName: 'plugin' */'@/views/plugin-manage/tools/log-collector/log-collector.vue');
 
+// 服务网格
+const ServiceMesh = () => import(/* webpackChunkName: 'plugin' */'@/views/plugin-manage/service-mesh/index.vue');
+
 export default [
   // 组件库
   {
@@ -16,6 +19,7 @@ export default [
     component: Index,
     meta: {
       crdKind: 'DbPrivilege',
+      resource: window.i18n.t('nav.clusterTools'),
     },
   },
   // 日志采集
@@ -23,6 +27,9 @@ export default [
     path: 'log-collector',
     name: 'logCrdcontroller',
     component: logCollector,
+    meta: {
+      resource: window.i18n.t('nav.log'),
+    },
   },
   // DB授权配置
   {
@@ -58,5 +65,17 @@ export default [
     path: 'metric',
     name: 'metricManage',
     component: MetricManage,
+    meta: {
+      resource: window.i18n.t('nav.metric'),
+    },
+  },
+  // 服务网格
+  {
+    path: 'service-mesh',
+    name: 'serviceMesh',
+    component: ServiceMesh,
+    meta: {
+      resource: window.i18n.t('serviceMesh.title'),
+    },
   },
 ];

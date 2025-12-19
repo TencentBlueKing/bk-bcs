@@ -122,6 +122,8 @@ userAfterInit: "用户后置初始化"
 userBeforeInit: "用户前置初始化"
 preInitJob: "前置初始化作业"
 postInitJob: "后置初始化作业"
+systemPreInit: "空闲检查"
+systemPostInit: "系统后置初始化"
 nodeMixedInit: "混部集群节点初始化"
 
 #
@@ -161,8 +163,6 @@ Region: "集群地域信息"
 ClusterVPC: "集群vpc信息"
 BusinessID: "集群所属业务ID"
 NodeOperator: "集群上下架节点操作人"
-
-
 
 # kubelet参数
 cpu-manager-policy: "要使用的 CPU 管理器策略"

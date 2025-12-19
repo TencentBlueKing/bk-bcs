@@ -14,7 +14,7 @@
 package v1http
 
 import (
-	"github.com/emicklei/go-restful"
+	restful "github.com/emicklei/go-restful/v3"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/esb/cmdb"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/jwt"
@@ -39,6 +39,8 @@ func InitV1Routers(ws *restful.WebService, service *permission.PermVerifyClient)
 	ws.Filter(middleware.TracingFilter)
 	ws.Filter(middleware.LoggingFilter)
 	ws.Filter(middleware.LanguageFilter)
+
+	ws.Route(ws.GET("/healthz").To(Health))
 
 	initUsersRouters(ws)
 	initClustersRouters(ws)

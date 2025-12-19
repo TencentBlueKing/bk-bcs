@@ -15,8 +15,8 @@ export const K8S_ANNOTATIONS_KEY = '^(?:(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA
 
 // 标签，污点正则
 export const LABEL_KEY_MAXL = '^(?=.{0,253}/|.{1,63}$)';
-export const LABEL_KEY_DOMAIN = '([a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?';
-export const LABEL_KEY_PATH = '^(?=.{0,253}\/|.{1,63}$)([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*\/)?([A-Za-z0-9]([-A-Za-z0-9_\.]*[A-Za-z0-9])?)$';
+export const LABEL_KEY_DOMAIN = '([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?';
+export const LABEL_KEY_PATH = '^(?=.{0,253}/|.{1,63}$)([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?([A-Za-z0-9]([-A-Za-z0-9_\\.]*[A-Za-z0-9])?)$';
 export const LABEL_VALUE = '^[A-Za-z0-9]([-A-Za-z0-9_.]{0,61}[A-Za-z0-9])?$';
 export const TAINT_VALUE = '^([A-Za-z0-9]([-A-Za-z0-9_.]{0,61}[A-Za-z0-9])?)?$';
 

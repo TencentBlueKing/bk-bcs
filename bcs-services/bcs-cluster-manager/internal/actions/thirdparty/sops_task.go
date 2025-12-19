@@ -169,7 +169,7 @@ func (da *DebugBkSopsTaskAction) generateBKopsStep(task *cmproto.Task) error {
 		TaskMethod: cloudprovider.BKSOPTask,
 		TaskName:   "标准运维任务",
 	}
-	step.Params[cloudprovider.BkSopsUrlKey.String()] = ""
+	step.Params[cloudprovider.BkSopsURLKey.String()] = ""
 	step.Params[cloudprovider.BkSopsBizIDKey.String()] = da.req.BusinessID
 	step.Params[cloudprovider.BkSopsTemplateIDKey.String()] = da.req.TemplateID
 	step.Params[cloudprovider.BkSopsTemplateUserKey.String()] = da.req.Operator

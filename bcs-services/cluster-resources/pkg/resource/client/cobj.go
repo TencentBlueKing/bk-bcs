@@ -42,10 +42,10 @@ import (
 	"k8s.io/kubectl/pkg/describe"
 	"k8s.io/kubectl/pkg/polymorphichelpers"
 
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/action"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/component/cluster"
 	conf "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
 	log "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
@@ -144,6 +144,17 @@ func (c *CRDClient) Get(ctx context.Context, name string, opts metav1.GetOptions
 		}
 		return ret.UnstructuredContent(), nil
 	}
+	// 普通集群的 CRD，按集群域资源检查权限
+	ret, err := c.ResClient.Get(ctx, "", name, opts)
+	if err != nil {
+		return nil, err
+	}
+	return ret.UnstructuredContent(), nil
+}
+
+// GetWihtNoCheck xxx
+func (c *CRDClient) GetWihtNoCheck(
+	ctx context.Context, name string, opts metav1.GetOptions) (map[string]interface{}, error) {
 	// 普通集群的 CRD，按集群域资源检查权限
 	ret, err := c.ResClient.Get(ctx, "", name, opts)
 	if err != nil {
@@ -366,6 +377,37 @@ func GetClustersCRDInfo(ctx context.Context, clusterIDs []string, crdName string
 			}
 			ctx = context.WithValue(ctx, ctxkey.ClusterKey, cluterInfo)
 			manifest, err := NewCRDCliByClusterID(ctx, clusterID).Get(ctx, crdName, metav1.GetOptions{})
+			if err != nil {
+				return err
+			}
+			mux.Lock()
+			defer mux.Unlock()
+			result = manifest
+			return nil
+		})
+	}
+	if err := errGroup.Wait(); err != nil && result == nil {
+		return nil, err
+	}
+
+	return formatter.FormatCRD(result), nil
+}
+
+// GetClustersCRDInfoDirect 直接获取多集群 CRD 基础信息
+func GetClustersCRDInfoDirect(
+	ctx context.Context, clusterIDs []string, crdName string) (map[string]interface{}, error) {
+	errGroup := errgroup.Group{}
+	mux := sync.Mutex{}
+	var result map[string]interface{}
+	for _, v := range clusterIDs {
+		clusterID := v
+		errGroup.Go(func() error {
+			cluterInfo, err := cluster.GetClusterInfo(ctx, clusterID)
+			if err != nil {
+				return err
+			}
+			ctx = context.WithValue(ctx, ctxkey.ClusterKey, cluterInfo)
+			manifest, err := NewCRDCliByClusterID(ctx, clusterID).GetWihtNoCheck(ctx, crdName, metav1.GetOptions{})
 			if err != nil {
 				return err
 			}

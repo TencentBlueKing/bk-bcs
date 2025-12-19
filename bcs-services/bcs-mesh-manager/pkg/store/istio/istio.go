@@ -44,7 +44,7 @@ var (
 		{
 			Name: tableName + "_name_idx",
 			Key: bson.D{
-				bson.E{Key: entity.FieldKeyMeshName, Value: 1},
+				bson.E{Key: entity.FieldKeyName, Value: 1},
 			},
 			Unique: false,
 		},
@@ -93,7 +93,11 @@ func (m *ModelMeshIstio) List(ctx context.Context, cond *operator.Condition, opt
 	if err := m.ensureTable(ctx); err != nil {
 		return 0, nil, err
 	}
-
+	cond = operator.NewBranchCondition(operator.And,
+		operator.NewLeafCondition(operator.Eq, operator.M{
+			entity.FieldKeyIsDeleted: false,
+		}), cond,
+	)
 	l := make([]*entity.MeshIstio, 0)
 	finder := m.db.Table(m.tableName).Find(cond)
 	if len(opt.Sort) != 0 {
@@ -145,7 +149,7 @@ func (m *ModelMeshIstio) Update(ctx context.Context, meshID string, entityM enti
 
 	// Set update time if not provided
 	if entityM[entity.FieldKeyUpdateTime] == nil {
-		entityM[entity.FieldKeyUpdateTime] = time.Now().Unix()
+		entityM[entity.FieldKeyUpdateTime] = time.Now().UnixMilli()
 	}
 
 	if err := m.db.Table(m.tableName).Update(ctx, cond, operator.M{"$set": entityM}); err != nil {
@@ -173,6 +177,25 @@ func (m *ModelMeshIstio) Delete(ctx context.Context, meshID string) error {
 	return nil
 }
 
+// SoftDelete soft deletes a mesh istio by its ID
+func (m *ModelMeshIstio) SoftDelete(ctx context.Context, meshID string) error {
+	if err := m.ensureTable(ctx); err != nil {
+		return err
+	}
+
+	cond := operator.NewLeafCondition(operator.Eq, operator.M{
+		entity.FieldKeyMeshID: meshID,
+	})
+
+	if err := m.db.Table(m.tableName).Update(ctx, cond, operator.M{"$set": operator.M{
+		entity.FieldKeyIsDeleted: true,
+	}}); err != nil {
+		return fmt.Errorf("soft delete mesh %s failed: %v", meshID, err)
+	}
+
+	return nil
+}
+
 // Create creates a new mesh istio
 func (m *ModelMeshIstio) Create(ctx context.Context, mesh *entity.MeshIstio) error {
 	if mesh == nil {
@@ -183,7 +206,7 @@ func (m *ModelMeshIstio) Create(ctx context.Context, mesh *entity.MeshIstio) err
 		return err
 	}
 
-	now := time.Now().Unix()
+	now := time.Now().UnixMilli()
 	mesh.CreateTime = now
 	mesh.UpdateTime = now
 

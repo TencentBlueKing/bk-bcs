@@ -19,6 +19,7 @@ interface IOptions {
   disablePerms?: boolean; // 是否禁用自动权限请求（完全交个外部控制clickable的值决定状态）
   resourceName?: string;
   actionId?: string | string[];
+  originClick?: boolean; // 是否触发原始的click事件
   // key?: string; // 防止指令替换DOM后，Vue diff Vnode时进行Vnode替换找不到节点报错问题
   permCtx?: {
     project_id: string; // 项目权限 如果实例无关，可不传
@@ -31,6 +32,7 @@ interface IOptions {
 
 const DEFAULT_OPTIONS: IOptions = {
   clickable: false,
+  originClick: false,
   offset: [12, 0],
   cls: 'bcs-cursor-element',
   disablePerms: false,
@@ -83,6 +85,10 @@ function init(el: IElement, binding: DirectiveBinding, vNode: VNode) {
     cloneEl.removeEventListener('mousemove', cloneEl.mouseMoveHandler);
   };
   cloneEl.clickHandler = async (e: Event) => {
+    if (options.originClick) {
+      el?.click?.();
+      return;
+    }
     e.stopPropagation();
     const { actionId, permCtx, resourceName } = options;
     if (!actionId || actionId.length === 0) return;

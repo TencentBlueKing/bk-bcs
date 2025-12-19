@@ -87,10 +87,21 @@ export default defineComponent({
     };
     // 校验项目Code
     const validateProjectCode = async () => {
+      const projectInfo = await getProjectList();
+      if (!projectInfo?.data?.results?.length) {
+        $store.commit('updateCurProject', {});
+        hasNoAuthorizedProject.value = true;
+        if (currentRoute.value.path !== '/') {
+          $router.replace({
+            path: '/',
+          });
+        }
+        return false;
+      }
       const projectCode = currentRoute.value.params?.projectCode;
       // 路由中不存在项目Code, 重新设置projectCode
       if (!projectCode) {
-        const { data, web_annotations } = await getProjectList();
+        const { data, web_annotations } = projectInfo;
         const authorizedProject = data?.results?.find(item => web_annotations?.perms[item.projectID]?.project_view);
 
         if (authorizedProject) {

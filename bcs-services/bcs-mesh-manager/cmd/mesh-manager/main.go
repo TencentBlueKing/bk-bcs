@@ -35,6 +35,13 @@ func main() {
 		log.Fatalf("validate options failed, err %s", err.Error())
 	}
 
+	if err := opts.SetDefault(); err != nil {
+		log.Fatalf("set default options failed, err %s", err.Error())
+	}
+
+	// 设置全局配置
+	options.GlobalOptions = opts
+
 	blog.InitLogs(opts.LogConfig)
 	defer blog.CloseLogs()
 

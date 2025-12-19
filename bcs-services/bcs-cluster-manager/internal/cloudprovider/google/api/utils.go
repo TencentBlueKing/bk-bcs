@@ -181,13 +181,14 @@ func taintTransEffect(ori string) string {
 // MapTaints map cmproto.Taint to Taint
 func MapTaints(cmt []*cmproto.Taint) []*Taint {
 	t := make([]*Taint, 0)
-	for _, v := range cmt {
-		t = append(t, &Taint{
-			Key:    v.Key,
-			Value:  v.Value,
-			Effect: taintTransEffect(v.Effect),
-		})
-	}
+	// 不同步污点到gke中，自行管理污点
+	// for _, v := range cmt {
+	// 	t = append(t, &Taint{
+	// 		Key:    v.Key,
+	// 		Value:  v.Value,
+	// 		Effect: taintTransEffect(v.Effect),
+	// 	})
+	// }
 
 	// attention: gke not support addNodes to set unScheduled nodes, thus realize this feature by taint
 	t = append(t, &Taint{

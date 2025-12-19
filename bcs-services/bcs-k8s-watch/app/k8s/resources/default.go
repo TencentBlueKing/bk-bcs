@@ -96,13 +96,13 @@ var K8sWatcherConfigList map[string]ResourceObjType
 
 // K8sClientList map[string]*dynamic.Interface,
 // CrdClientList map[string]*dynamic.Interface
-var K8sClientList, CrdClientList map[string]*dynamic.Interface // nolint
+var K8sClientList, CrdClientList map[string]*dynamic.DynamicClient // nolint
 
 // ResourceObjType used for build target watchers.
 type ResourceObjType struct {
 	ResourceName string
 	ObjType      runtime.Object
-	Client       *dynamic.Interface
+	Client       *dynamic.DynamicClient
 	Namespaced   bool
 	GroupVersion string
 }
@@ -121,13 +121,13 @@ func InitResourceList(k8sConfig *options.K8sConfig, filterConfig *options.Filter
 	}
 
 	// init k8s client list
-	K8sClientList, err = initK8sClientList(&dynamicClient, filterConfig)
+	K8sClientList, err = initK8sClientList(dynamicClient, filterConfig)
 	if err != nil {
 		return err
 	}
 
 	// init crd client list
-	CrdClientList, err = initCrdClientList(&dynamicClient, filterConfig)
+	CrdClientList, err = initCrdClientList(dynamicClient, filterConfig)
 	if err != nil {
 		return err
 	}
@@ -148,8 +148,8 @@ func InitResourceList(k8sConfig *options.K8sConfig, filterConfig *options.Filter
 }
 
 func initK8sClientList(
-	dynamicClient *dynamic.Interface, filterConfig *options.FilterConfig) (map[string]*dynamic.Interface, error) { //nolint
-	k8sClientList := map[string]*dynamic.Interface{}
+	dynamicClient *dynamic.DynamicClient, filterConfig *options.FilterConfig) (map[string]*dynamic.DynamicClient, error) { //nolint
+	k8sClientList := map[string]*dynamic.DynamicClient{}
 	for _, gv := range filterConfig.K8sGroupVersionWhiteList {
 		glog.Infof("add client into k8sClientList for %s", gv)
 		k8sClientList[gv] = dynamicClient
@@ -158,8 +158,8 @@ func initK8sClientList(
 }
 
 func initCrdClientList(
-	dynamicClient *dynamic.Interface, filterConfig *options.FilterConfig) (map[string]*dynamic.Interface, error) { //nolint
-	crdClientList := map[string]*dynamic.Interface{}
+	dynamicClient *dynamic.DynamicClient, filterConfig *options.FilterConfig) (map[string]*dynamic.DynamicClient, error) { //nolint
+	crdClientList := map[string]*dynamic.DynamicClient{}
 	for _, gv := range filterConfig.CrdGroupVersionWhiteList {
 		glog.Infof("add client into crdClientList for %s", gv)
 		crdClientList[gv] = dynamicClient

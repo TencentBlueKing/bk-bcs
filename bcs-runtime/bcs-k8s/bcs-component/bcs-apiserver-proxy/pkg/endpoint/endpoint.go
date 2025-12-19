@@ -23,7 +23,9 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
+	corev1lister "k8s.io/client-go/listers/core/v1"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-apiserver-proxy/pkg/health"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-apiserver-proxy/pkg/utils"
@@ -83,15 +85,21 @@ func NewEndpointsClient(opts ...EndpointsClientOption) (ClusterEndpointsIP, erro
 	if err != nil {
 		return nil, err
 	}
+	mNodeLister, cpNodeLister, err := defaultOptions.K8sConfig.GetNodeLister()
+	if err != nil {
+		return nil, err
+	}
 
 	ec := &endpointsClient{
 		healthOptions: defaultOptions.HealthConfig,
 		interval:      defaultOptions.Interval,
 		debug:         defaultOptions.Debug,
 
-		Mutex:           sync.Mutex{},
-		clientSet:       clientSet,
-		masterEndpoints: []utils.EndPoint{},
+		Mutex:                  sync.Mutex{},
+		clientSet:              clientSet,
+		masterNodeLister:       mNodeLister,
+		controlplaneNodeLister: cpNodeLister,
+		masterEndpoints:        []utils.EndPoint{},
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -145,8 +153,10 @@ type endpointsClient struct {
 	interval      time.Duration
 
 	sync.Mutex
-	clientSet       kubernetes.Interface
-	masterEndpoints []utils.EndPoint
+	clientSet              kubernetes.Interface
+	masterNodeLister       corev1lister.NodeLister
+	controlplaneNodeLister corev1lister.NodeLister
+	masterEndpoints        []utils.EndPoint
 
 	debug  bool
 	ctx    context.Context
@@ -177,29 +187,28 @@ func (ec *endpointsClient) Stop() {
 	ec.cancel()
 }
 
-func (ec *endpointsClient) getMaterNodes() ([]corev1.Node, error) {
+func (ec *endpointsClient) getMaterNodes() ([]*corev1.Node, error) {
 	if ec == nil {
 		return nil, ErrEndpointsClientNotInited
 	}
 
-	timeoutCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	clusterNodes, err := ec.clientSet.CoreV1().Nodes().List(timeoutCtx, metav1.ListOptions{})
+	clusterNodes, err := ec.masterNodeLister.List(labels.Everything())
 	if err != nil {
 		return nil, err
 	}
-
-	masterNodes := []corev1.Node{}
-	for _, node := range clusterNodes.Items {
-		_, ok := node.Labels[masterLabel]
-		_, ok2 := node.Labels[controlPlaneLabel]
-		if ok || ok2 {
-			masterNodes = append(masterNodes, node)
-		}
+	if len(clusterNodes) != 0 {
+		return clusterNodes, nil
 	}
 
-	return masterNodes, nil
+	clusterNodes, err = ec.controlplaneNodeLister.List(labels.Everything())
+	if err != nil {
+		return nil, err
+	}
+	if len(clusterNodes) != 0 {
+		return clusterNodes, nil
+	}
+
+	return nil, nil
 }
 
 func (ec *endpointsClient) getAPIServerEndpoints() ([]utils.EndPoint, error) {
@@ -275,7 +284,10 @@ func (ec *endpointsClient) getAPIServerEndpoints() ([]utils.EndPoint, error) {
 	return apiserverEndpoints, nil
 }
 
-func getNodeIP(node corev1.Node) (string, error) {
+func getNodeIP(node *corev1.Node) (string, error) {
+	if node == nil {
+		return "", errors.New("node is nil")
+	}
 	for _, addr := range node.Status.Addresses {
 		if addr.Type == corev1.NodeInternalIP {
 			return addr.Address, nil

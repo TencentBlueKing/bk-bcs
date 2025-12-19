@@ -146,10 +146,20 @@
                   :arrow="false"
                   trigger="click"
                   v-if="row.containerID">
-                  <bk-button
-                    style="cursor: default;"
-                    text
-                    class="ml10">{{ $t('dashboard.workload.pods.log') }}</bk-button>
+                  <span
+                    v-bk-tooltips="{
+                      content: $t('dashboard.workload.pods.logDisabledTips'),
+                      disabled: !isFileLogDisabled,
+                      interactive: false
+                    }">
+                    <bk-button
+                      :style="{ cursor: isFileLogDisabled ? 'not-allowed' : 'default' }"
+                      text
+                      :disabled="isFileLogDisabled"
+                      class="ml10">
+                      {{ $t('dashboard.workload.pods.log') }}
+                    </bk-button>
+                  </span>
                   <div slot="content">
                     <ul>
                       <a
@@ -354,10 +364,14 @@
 import { bkOverflowTips } from 'bk-magic-vue';
 import { computed, defineComponent, onMounted, ref, toRefs } from 'vue';
 
+import { filterXss } from '@blueking/xss-filter';
+
 import EventTable from './bk-monitor-event.vue';
 import useDetail from './use-detail';
 
 import { logCollectorEntrypoints } from '@/api/modules/monitor';
+import { ClusterAddonsService } from '@/api/modules/new-helm-manager';
+import { LOG_COLLECTOR } from '@/common/constant';
 import { timeFormat } from '@/common/util';
 import Metric from '@/components/metric.vue';
 import CodeEditor from '@/components/monaco-editor/new-editor.vue';
@@ -519,7 +533,7 @@ export default defineComponent({
       return {
         allowHTML: true,
         maxWidth: 480,
-        content: images.join('<br />'),
+        content: filterXss(images.join('<br />')),
       };
     };
 
@@ -548,11 +562,19 @@ export default defineComponent({
     function resolveLink(type: 'login' | 'debug', container: string) {
       window.open(`weterm://session/open/bcs?ns=${props.namespace}&pod=${metadata.value.name}&container=${container}&type=${type}&clusterId=${clusterId.value}&envId=${window.BCS_CONFIG.bkBcsEnvID}`);
     }
+    // 文件日志检索禁用逻辑
+    const isFileLogDisabled = ref(false);
+    async function handleFileLogDisabled() {
+      const result = await ClusterAddonsService.GetAddonsDetail({ $clusterId: clusterId.value, $name: LOG_COLLECTOR })
+        .catch(() => {});
+      isFileLogDisabled.value = !result?.status;
+    };
 
     onMounted(async () => {
       handleGetDetail();
       handleGetStorage();
       handleGetContainer();
+      handleFileLogDisabled();
     });
 
     return {
@@ -589,6 +611,7 @@ export default defineComponent({
       clusterNameMap,
       resolveLink,
       IS_INTERNAL: _INTERNAL_.value,
+      isFileLogDisabled,
     };
   },
 });
@@ -638,6 +661,11 @@ export default defineComponent({
     &:hover {
         background-color: #eaf3ff;
         color: #3a84ff;
+    }
+    &.disabled {
+      color: #dcdee5;
+      background-color: #fff;
+      cursor: not-allowed;
     }
 }
 </style>

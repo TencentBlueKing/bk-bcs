@@ -450,6 +450,7 @@ type DatabusCustomCreateReq struct {
 	Description           string `json:"description"`
 	CustomType            string `json:"custom_type"`
 	CategoryID            string `json:"category_id"`
+	StorageClusterID      int    `json:"storage_cluster_id"`
 	Retention             int    `json:"retention"`
 	EsShards              int    `json:"es_shards"`
 	StorageReplies        int    `json:"storage_replies"`

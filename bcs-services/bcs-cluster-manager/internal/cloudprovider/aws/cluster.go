@@ -253,7 +253,7 @@ func (c *Cluster) EnableExternalNodeSupport(cls *proto.Cluster, opt *cloudprovid
 }
 
 // ListOsImage get osimage list
-func (c *Cluster) ListOsImage(provider string, opt *cloudprovider.CommonOption) ([]*proto.OsImage, error) {
+func (c *Cluster) ListOsImage(provider, clusterID string, opt *cloudprovider.CommonOption) ([]*proto.OsImage, error) {
 	if opt == nil || opt.Account == nil || len(opt.Account.SecretID) == 0 ||
 		len(opt.Account.SecretKey) == 0 || len(opt.Region) == 0 {
 		return nil, fmt.Errorf("awsCloud ListOsImage lost authoration")

@@ -32,7 +32,7 @@ func convertHealthCheck(hc *tclb.HealthCheck) *networkextensionv1.ListenerHealth
 		return nil
 	}
 	healthCheck := &networkextensionv1.ListenerHealthCheck{}
-	if hc.HealthSwitch == nil {
+	if hc.HealthSwitch == nil || *hc.HealthSwitch == 0 {
 		healthCheck.Enabled = false
 		return healthCheck
 	}
@@ -81,6 +81,9 @@ func convertListenerAttribute(lis *tclb.Listener) *networkextensionv1.IngressLis
 	}
 	if lis.KeepaliveEnable != nil {
 		attr.KeepAliveEnable = int(*lis.KeepaliveEnable)
+	}
+	if lis.SessionType != nil {
+		attr.SessionType = *lis.SessionType
 	}
 	return attr
 }

@@ -30,6 +30,8 @@
 import { cloneDeep } from 'lodash';
 import { ref, watch } from 'vue';
 
+import { filterPlainText } from '@blueking/xss-filter';
+
 import $i18n from '@/i18n/i18n-setup';
 
 type FormValue = Pick<ClusterResource.CreateTemplateMetadataReq, 'name'|'description'>;
@@ -72,7 +74,13 @@ async function confirm() {
   const result = await metaDataFormRef.value?.validate().catch(() => false);
   if (!result) return;
 
-  emits('confirm', formData.value);
+  const data = cloneDeep(formData.value);
+  const xssDesc = filterPlainText(data.description);
+  if (data.description !== xssDesc) {
+    console.warn('Intercepted by XSS');
+  }
+  data.description = xssDesc;
+  emits('confirm', data);
 };
 
 watch(() => props.value, () => {

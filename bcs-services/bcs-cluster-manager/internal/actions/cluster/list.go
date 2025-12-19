@@ -17,6 +17,7 @@ import (
 	"errors"
 	"fmt"
 	"sort"
+	"strconv"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
@@ -696,18 +697,13 @@ func (la *ListNodesInClusterAction) listNodes() error {
 	}
 
 	// get cluster nodes
-	k8sNodes := autils.FilterNodesRole(la.getK8sNodes(cmNodes), false)
+	k8sNodes := autils.FilterNodesRole(la.getK8sNodes(), false)
 	la.nodes = mergeClusterNodes(la.cluster, cmNodes, k8sNodes)
 
 	return nil
 }
 
-func (la *ListNodesInClusterAction) getK8sNodes(cmNodes []*cmproto.ClusterNode) []*corev1.Node {
-	if !autils.CheckIfGetNodesFromCluster(la.cluster, la.cloud, cmNodes) {
-		blog.Infof("ListNodesInClusterAction[%s] getK8sNodes clusterNodes empty", la.req.ClusterID)
-		return nil
-	}
-
+func (la *ListNodesInClusterAction) getK8sNodes() []*corev1.Node {
 	k8sNodes, err := la.k8sOp.ListClusterNodes(la.ctx, la.req.ClusterID)
 	if err != nil {
 		blog.Warnf("ListClusterNodes %s failed, %s", la.req.ClusterID, err.Error())
@@ -835,38 +831,15 @@ func (la *ListMastersInClusterAction) validate() error {
 
 // listNodes list cluster nodes
 func (la *ListMastersInClusterAction) listNodes() error {
-	cls, err := la.model.GetCluster(la.ctx, la.req.ClusterID)
+	// get cluster masters
+	masters, err := la.k8sOp.ListClusterNodes(la.ctx, la.req.ClusterID)
 	if err != nil {
-		blog.Errorf("get cluster %s failed, %s", la.req.ClusterID, err.Error())
+		blog.Warnf("ListClusterNodes %s failed, %s", la.req.ClusterID, err.Error())
 		return err
 	}
-	cloud, err := la.model.GetCloud(la.ctx, cls.Provider)
-	if err != nil {
-		blog.Errorf("get cloud %s failed, %s", cls.Provider, err.Error())
-		return err
-	}
-	clsNodes, err := getClusterNodes(la.model, cls)
-	if err != nil {
-		blog.Errorf("get cluster %s nodes failed, %s", cls.ClusterID, err.Error())
-	}
 
-	if !autils.CheckIfGetNodesFromCluster(cls, cloud, clsNodes) {
-		cmNodes := make([]*cmproto.ClusterNode, 0)
-		for node := range cls.GetMaster() {
-			cmNodes = append(cmNodes, transNodeToClusterNode(la.model, cls.GetMaster()[node]))
-		}
-		la.nodes = cmNodes
-	} else {
-		// get cluster masters
-		masters, err := la.k8sOp.ListClusterNodes(la.ctx, la.req.ClusterID)
-		if err != nil {
-			blog.Warnf("ListClusterNodes %s failed, %s", la.req.ClusterID, err.Error())
-			return err
-		}
-
-		masters = autils.FilterNodesRole(masters, true)
-		la.nodes = transK8sNodesToClusterNodes(la.req.ClusterID, masters)
-	}
+	masters = autils.FilterNodesRole(masters, true)
+	la.nodes = transK8sNodesToClusterNodes(la.req.ClusterID, masters)
 
 	// append cmdb host info
 	la.appendHostInfo()
@@ -1154,6 +1127,9 @@ func (la *ListBasicInfoAction) filterClusterBasicInfoList() ([]*cmproto.Cluster,
 	if len(la.req.ClusterID) != 0 {
 		condM["clusterid"] = la.req.ClusterID
 	}
+	if len(la.req.ClusterName) != 0 {
+		condM["clustername"] = operator.M{"$regex": la.req.ClusterName}
+	}
 	condCluster := operator.NewLeafCondition(operator.Eq, condM)
 	conds = append(conds, condCluster)
 
@@ -1164,10 +1140,7 @@ func (la *ListBasicInfoAction) filterClusterBasicInfoList() ([]*cmproto.Cluster,
 	}
 	branchCond := operator.NewBranchCondition(operator.And, conds...)
 
-	listOpt := &storeopt.ListOption{
-		Offset: int64(la.req.Offset),
-		Limit:  int64(la.req.Limit),
-	}
+	listOpt := la.listOpt()
 	clusterList, err = la.model.ListCluster(la.ctx, branchCond, listOpt)
 	if err != nil && !errors.Is(err, drivers.ErrTableRecordNotFound) {
 		return nil, err
@@ -1188,7 +1161,17 @@ func (la *ListBasicInfoAction) listClusterBasicInfo() error {
 			clusterList[i].IsShared = false
 		}
 
-		la.clusterBasicInfoList = append(la.clusterBasicInfoList, clusterToClusterBasicInfo(clusterList[i]))
+		bkBizID, err := strconv.Atoi(clusterList[i].BusinessID)
+		if err != nil {
+			blog.Errorf("listClusterBasicInfo failed, invalid bkBizID %s, err %s",
+				clusterList[i].BusinessID, err.Error())
+			return err
+		}
+		maintainers := cloudprovider.GetBizMaintainers(bkBizID)
+		cbi := clusterToClusterBasicInfo(clusterList[i])
+		cbi.BizMaintainer = maintainers
+
+		la.clusterBasicInfoList = append(la.clusterBasicInfoList, cbi)
 	}
 
 	return nil
@@ -1203,7 +1186,8 @@ func (la *ListBasicInfoAction) setResp(code uint32, msg string) {
 }
 
 // Handle list cluster request
-func (la *ListBasicInfoAction) Handle(ctx context.Context, req *cmproto.ListClusterV2Req, resp *cmproto.ListClusterV2Resp) {
+func (la *ListBasicInfoAction) Handle(
+	ctx context.Context, req *cmproto.ListClusterV2Req, resp *cmproto.ListClusterV2Resp) {
 	if req == nil || resp == nil {
 		blog.Errorf("list cluster failed, req or resp is empty")
 		return
@@ -1222,4 +1206,22 @@ func (la *ListBasicInfoAction) Handle(ctx context.Context, req *cmproto.ListClus
 		return
 	}
 	la.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
+}
+
+func (la *ListBasicInfoAction) listOpt() *storeopt.ListOption {
+	listOpt := &storeopt.ListOption{
+		Offset: int64(la.req.Offset),
+		Limit:  int64(la.req.Limit),
+	}
+
+	order := 1
+	if la.req.Order == "desc" {
+		order = -1
+	}
+	if la.req.Sort != "" {
+		listOpt.Sort = map[string]int{
+			la.req.Sort: order,
+		}
+	}
+	return listOpt
 }

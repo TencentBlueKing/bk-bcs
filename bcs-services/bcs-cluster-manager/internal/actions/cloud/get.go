@@ -69,6 +69,29 @@ func (ga *GetAction) Handle(
 		cloud.CloudCredential.Secret = ""
 	}
 
+	err = ga.setTemplateNetworkConfig(cloud)
+	if err != nil {
+		ga.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
+		return
+	}
+
 	resp.Data = cloud
 	ga.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
+}
+
+func (ga *GetAction) setTemplateNetworkConfig(cloud *cmproto.Cloud) error {
+	templateConfigInfos, err := getCloudTemplateConfigInfos(ga.ctx, ga.model, ga.req.BusinessID, ga.req.CloudID)
+	if err != nil {
+		return err
+	}
+
+	if templateConfigInfos != nil {
+		for _, config := range templateConfigInfos {
+			appendConfigNetworkInfoToCloud(cloud, config.GetCloudTemplateConfig().GetCloudNetworkTemplateConfig())
+		}
+
+		dedupeAndSortNetworkInfo(cloud.NetworkInfo)
+	}
+
+	return nil
 }

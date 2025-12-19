@@ -33,6 +33,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
 	nsutils "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/namespace"
 	quotautils "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/quota"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/stringx"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
 )
 
@@ -196,7 +197,8 @@ func batchListNamespaceVariables(ctx context.Context,
 
 func loadListRetDataFromDB(namespace nsm.Namespace) *proto.NamespaceData {
 	retData := &proto.NamespaceData{
-		Name: namespace.Name,
+		Name:     namespace.Name,
+		IsSystem: stringx.StringInSlice(namespace.Name, config.GlobalConf.SystemConfig.SystemNameSpaces),
 	}
 	if namespace.ResourceQuota != nil {
 		retData.Quota = &proto.ResourceQuota{
@@ -233,6 +235,7 @@ func loadRetDatasFromCluster(ctx context.Context, clusterID string, namespaces [
 			Uid:        string(namespace.GetUID()),
 			CreateTime: namespace.GetCreationTimestamp().Format(constant.TimeLayout),
 			Status:     string(namespace.Status.Phase),
+			IsSystem:   stringx.StringInSlice(namespace.GetName(), config.GlobalConf.SystemConfig.SystemNameSpaces),
 		}
 		// get quota
 		if quota, ok := quotaMap[namespace.GetName()]; ok {

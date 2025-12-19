@@ -68,6 +68,7 @@ func ApplyExternalNodeMachinesTask(taskID string, stepName string) error { // no
 		return err
 	}
 
+	// task basic dependInfo
 	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
 		ClusterID:   clusterID,
 		CloudID:     cloudID,
@@ -85,6 +86,7 @@ func ApplyExternalNodeMachinesTask(taskID string, stepName string) error { // no
 	// inject taskID
 	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
 
+	// applyInstanceFromResourcePool apply machines from resource pool
 	recordInstanceList, err := applyInstanceFromResourcePool(ctx, dependInfo, scalingNum, operator)
 	if err != nil {
 		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
@@ -97,6 +99,7 @@ func ApplyExternalNodeMachinesTask(taskID string, stepName string) error { // no
 		return retErr
 	}
 
+	// record cluster nodes to db
 	err = recordClusterExternalNodeToDB(ctx, dependInfo, state.Task, &RecordInstanceToDBOption{
 		InstanceIPs: recordInstanceList.InstanceIPList,
 		DeviceIDs:   recordInstanceList.DeviceIDList,
@@ -107,6 +110,7 @@ func ApplyExternalNodeMachinesTask(taskID string, stepName string) error { // no
 		blog.Errorf("ApplyExternalNodeMachinesTask[%s] recordClusterExternalNodeToDB for NodeGroup %s step %s failed, %s",
 			taskID, nodeGroupID, stepName, err.Error())
 		retErr := fmt.Errorf("ApplyExternalNodeMachinesTask failed, %s", err.Error())
+		// rollback nodes
 		_, _ = destroyIDCDeviceList(ctx, dependInfo, recordInstanceList.DeviceIDList, operator)
 		_ = cloudprovider.UpdateNodeGroupDesiredSize(nodeGroupID, scalingNum, true)
 		_ = state.UpdateStepFailure(start, stepName, retErr)
@@ -150,11 +154,14 @@ func buildApplyIDCNodesRequest(group *proto.NodeGroup, operator string) *resourc
 // applyInstanceFromResourcePool 申请机器
 func applyInstanceFromResourcePool(ctx context.Context, info *cloudprovider.CloudDependBasicInfo,
 	desired int, operator string) (*RecordInstanceList, error) {
+
+	// consume resource pool
 	orderID, err := consumeDevicesFromResourcePool(ctx, info.NodeGroup, desired, operator)
 	if err != nil {
 		return nil, err
 	}
 
+	// check order state
 	record, err := checkOrderStateFromResourcePool(ctx, orderID)
 	if err != nil {
 		return nil, err
@@ -170,6 +177,7 @@ func consumeDevicesFromResourcePool(
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
 	ctx = utils.WithTraceIDForContext(ctx, taskID)
+	// apply instance
 	resp, err := tresource.GetResourceManagerClient().ApplyInstances(ctx, nodeNum,
 		buildApplyIDCNodesRequest(group, operator))
 	if err != nil {
@@ -189,6 +197,7 @@ type RecordInstanceList struct {
 	DeviceIDList   []string
 }
 
+// checkOrderStateFromResourcePool 检查资源池订单状态
 func checkOrderStateFromResourcePool(ctx context.Context, orderID string) (*RecordInstanceList, error) {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
@@ -220,7 +229,7 @@ type RecordInstanceToDBOption struct {
 	DeviceIDs   []string
 }
 
-// 录入第三方节点
+// recordClusterExternalNodeToDB 录入第三方节点
 func recordClusterExternalNodeToDB(
 	ctx context.Context, info *cloudprovider.CloudDependBasicInfo, task *proto.Task, opt *RecordInstanceToDBOption) error {
 	var (
@@ -237,6 +246,8 @@ func recordClusterExternalNodeToDB(
 	}
 
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
+
+	// ListExternalNodesByIP list external nodes
 	err = retry.Do(func() error {
 		nodes, err = business.ListExternalNodesByIP(opt.InstanceIPs, &cloudprovider.ListNodesOption{
 			Common: info.CmOption,
@@ -268,6 +279,7 @@ func recordClusterExternalNodeToDB(
 		task.CommonParams[cloudprovider.NodeIDsKey.String()] = strings.Join(opt.InstanceIDs, ",")
 	}
 
+	// save nodes to db
 	for _, n := range nodes {
 		n.ClusterID = info.NodeGroup.ClusterID
 		n.NodeGroupID = info.NodeGroup.NodeGroupID
@@ -283,7 +295,7 @@ func recordClusterExternalNodeToDB(
 	return nil
 }
 
-// 销毁归还机器
+// destroyIDCDeviceList 销毁归还机器
 func destroyIDCDeviceList(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, deviceList []string,
 	operator string) (string, error) {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
@@ -292,6 +304,8 @@ func destroyIDCDeviceList(ctx context.Context, info *cloudprovider.CloudDependBa
 	}
 
 	ctx = utils.WithTraceIDForContext(ctx, taskID)
+
+	// destroy devices
 	resp, err := tresource.GetResourceManagerClient().DestroyInstances(ctx, &resource.DestroyInstanceReq{
 		PoolID:      info.NodeGroup.GetConsumerID(),
 		SystemID:    info.Cluster.GetSystemID(),
@@ -343,6 +357,7 @@ func CheckExternalNodesEmptyTask(taskID string, stepName string) error { // noli
 		return retErr
 	}
 
+	// task common params
 	ipList := cloudprovider.ParseNodeIpOrIdFromCommonMap(
 		state.Task.CommonParams, cloudprovider.NodeIPsKey.String(), ",")
 	deviceIdList := cloudprovider.ParseNodeIpOrIdFromCommonMap(
@@ -386,6 +401,7 @@ func CheckExternalNodesEmptyTask(taskID string, stepName string) error { // noli
 	timeOutCtx, cancel := context.WithTimeout(ctx, time.Minute*10)
 	defer cancel()
 
+	// execBkSopsTask exec sops task
 	taskUrl, err := pcommon.ExecBkSopsTask(timeOutCtx, pcommon.CreateBkSopsTaskParas{
 		BizID:          bizID,
 		TemplateID:     templateID,
@@ -396,17 +412,19 @@ func CheckExternalNodesEmptyTask(taskID string, stepName string) error { // noli
 		StepName:       stepName,
 	})
 	if err != nil {
-		state.TaskUrl = taskUrl
+		state.TaskURL = taskUrl
+		// rollback external nodes
 		_ = returnExternalNodes(ctx, dependInfo, ipList, deviceIdList)
 		_ = state.UpdateStepFailure(start, stepName, err)
 		return err
 	}
 
-	state.TaskUrl = taskUrl
+	state.TaskURL = taskUrl
 	_ = state.UpdateStepSucc(start, stepName)
 	return nil
 }
 
+// returnExternalNodes return external nodes to resource manager
 func returnExternalNodes(ctx context.Context, info *cloudprovider.CloudDependBasicInfo,
 	ips, deviceIds []string) error { // nolint
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)

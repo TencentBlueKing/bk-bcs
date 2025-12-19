@@ -292,8 +292,22 @@
             "type": "string"
           },
           {
-            "name": "kind",
-            "description": "资源类型.",
+            "name": "group",
+            "description": "group.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "version",
+            "description": "version.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "resource",
+            "description": "resource.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -350,6 +364,27 @@
           {
             "name": "kind",
             "description": "资源类型.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "group",
+            "description": "group.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "version",
+            "description": "version.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "resource",
+            "description": "resource.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -10418,6 +10453,10 @@
           "items": {
             "type": "string"
           }
+        },
+        "nsgroup": {
+          "type": "string",
+          "title": "nsgroup"
         }
       }
     },
@@ -10550,6 +10589,18 @@
         "namespaced": {
           "type": "boolean",
           "title": "是否属于命名空间作用域"
+        },
+        "group": {
+          "type": "string",
+          "title": "group"
+        },
+        "version": {
+          "type": "string",
+          "title": "version"
+        },
+        "resource": {
+          "type": "string",
+          "title": "resource"
         }
       },
       "description": "创建 api resources资源对象",
@@ -11721,6 +11772,18 @@
         "format": {
           "type": "string",
           "title": "资源配置格式（manifest/formData）"
+        },
+        "group": {
+          "type": "string",
+          "title": "group"
+        },
+        "version": {
+          "type": "string",
+          "title": "version"
+        },
+        "resource": {
+          "type": "string",
+          "title": "resource"
         }
       },
       "description": "更新 api resources资源对象",

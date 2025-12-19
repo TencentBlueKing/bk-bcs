@@ -423,26 +423,15 @@ const showMore = computed(() => showMoreResource.value || searchName.value);
 const toggleMoreResource = () => {
   showMoreResource.value = !showMoreResource.value;
 };
-const tkexCRDList = computed(() => flatLeafMenus(menus.value.find(item => item.id === 'CLUSTERRESOURCE')?.children || []));
+
 const handleGetCustomResourceDefinition = async () => {
   if (!curViewData.value) return;
 
+  const clusterIDs: string[] = curViewData.value?.clusterNamespaces?.map(item => item?.clusterID) || [];
   isLoading.value = true;
-  const res = await getMultiClusterAPIResources(route.value.params?.clusterId || '', false);
+  const res = await getMultiClusterAPIResources(clusterIDs, false);
   isLoading.value = false;
-  crdData.value = Object.keys(res.resources || {}).reduce((pre, key) => {
-    const item = res.resources?.[key] || [];
-
-    const list: any[] = [];
-    for (const resource of item) {
-      if (!tkexCRDList.value.find(v => v.meta?.kind === resource.kind)) { // tkex自定义资源有单独UI展示
-        list.push(resource);
-      }
-    }
-
-    pre[key] = list;
-    return pre;
-  }, {});
+  crdData.value = res.resources || {};
 };
 // 资源统计
 const countMap = ref<Record<string, number>>({});

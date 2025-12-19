@@ -25,9 +25,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/component/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/component/project"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
@@ -753,9 +753,16 @@ func checkMultiClusterAccess(ctx context.Context, kind string, clusters []*clust
 			continue
 		}
 		if !clusterInfo.IsShared {
-			newClusters = append(newClusters, v)
+			// 优先级 v.Nsgroup > v.Namespaces
+			nss, err := getNss(ctx, v.Nsgroup, projInfo.Code, v.ClusterID, v.Namespaces)
+			if err != nil {
+				return nil, "", err
+			}
+			newClusters = append(newClusters, &clusterRes.ClusterNamespaces{ClusterID: v.ClusterID, Namespaces: nss})
 			continue
 		}
+
+		// 共享集群
 
 		// kind为空情况下跳过下面的检查，允许查询各种资源
 		if kind == "" {
@@ -771,9 +778,11 @@ func checkMultiClusterAccess(ctx context.Context, kind string, clusters []*clust
 			}
 			nss = append(nss, ns)
 		}
+
 		// 命名空间为空，则查询集群下用户所有命名空间
 		if len(nss) == 0 {
 			clusterNs, err := project.GetProjectNamespace(ctx, projInfo.Code, v.ClusterID)
+
 			if err != nil {
 				log.Error(ctx, "get project %s cluster %s ns failed, %v", projInfo.Code, v.ClusterID, err)
 				continue
@@ -839,6 +848,80 @@ func checkMultiClusterAccess(ctx context.Context, kind string, clusters []*clust
 		}
 	}
 	return result, applyURL, nil
+}
+
+// getNss 获取命名空间列表
+func getNss(ctx context.Context, nsgroup, projectID, clusterID string, ns []string) ([]string, error) {
+	var nss []string
+	var err error
+	switch nsgroup {
+	case "all-system":
+		nss = config.G.MultiCluster.SystemNamespaces
+		return nss, nil
+	case "all-user":
+		nss, err = getUserNss(ctx, projectID, clusterID)
+		if err != nil {
+			return nil, err
+		}
+		return nss, nil
+	case "all":
+		// 全量获取
+		nss, err = getActiveNs(ctx, projectID, clusterID)
+		if err != nil {
+			return nil, err
+		}
+		return nss, nil
+	default:
+		return ns, nil
+	}
+}
+
+// getActiveNs 获取项目下集群下所有活跃命名空间
+func getActiveNs(ctx context.Context, projectID, clusterID string) ([]string, error) {
+	clusterNs, err := project.GetProjectNamespace(ctx, projectID, clusterID)
+	if err != nil {
+		log.Error(ctx, "get project %s cluster %s ns failed, %v", projectID, clusterID, err)
+		return nil, err
+	}
+	if len(clusterNs) == 0 {
+		return []string{}, nil
+	}
+	nss := make([]string, 0)
+	for _, nsItem := range clusterNs {
+		if !nsItem.IsActive() {
+			continue
+		}
+		nss = append(nss, nsItem.Name)
+	}
+	return nss, nil
+}
+
+// getUserNss 获取集群下所有用户命名空间
+func getUserNss(ctx context.Context, projectID, clusterID string) ([]string, error) {
+
+	activeNs, err := getActiveNs(ctx, projectID, clusterID)
+	if err != nil {
+		return nil, err
+	}
+	nsList := []string{}
+	systemNSUniq := getSystemNSUniq()
+	for _, ns := range activeNs {
+		if _, ok := systemNSUniq[ns]; ok {
+			continue
+		}
+		nsList = append(nsList, ns)
+	}
+
+	return nsList, nil
+}
+
+// getSystemNSUniq 获取系统命名空间的唯一值
+func getSystemNSUniq() map[string]struct{} {
+	uniq := map[string]struct{}{}
+	for _, ns := range config.G.MultiCluster.SystemNamespaces {
+		uniq[ns] = struct{}{}
+	}
+	return uniq
 }
 
 // checkMultiOnlyClusterAccess 检查多集群共享集群中的资源访问权限

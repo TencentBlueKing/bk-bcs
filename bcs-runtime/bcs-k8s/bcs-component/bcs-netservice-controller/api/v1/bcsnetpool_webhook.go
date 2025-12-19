@@ -62,48 +62,49 @@ func (c *bcsNetPoolClient) Default(ctx context.Context, obj runtime.Object) erro
 var _ admission.CustomValidator = &bcsNetPoolClient{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (c *bcsNetPoolClient) ValidateCreate(ctx context.Context, obj runtime.Object) error {
+func (c *bcsNetPoolClient) ValidateCreate(ctx context.Context, obj runtime.Object) (admission.Warnings, error) {
 	pool, ok := obj.(*BCSNetPool)
 	if !ok {
-		return errors.New("object is not BCSNetPool")
+		return nil, errors.New("object is not BCSNetPool")
 	}
 
 	blog.Infof("validate create pool %s", pool.Name)
 	if net.ParseIP(pool.Spec.Net) == nil {
-		return fmt.Errorf("spec.net %s is not valid when creating bcsnetpool %s", pool.Spec.Net, pool.Name)
+		return nil, fmt.Errorf("spec.net %s is not valid when creating bcsnetpool %s", pool.Spec.Net, pool.Name)
 	}
 	if net.ParseIP(pool.Spec.Gateway) == nil {
-		return fmt.Errorf("spec.gateway is not valid %s when creating bcsnetpool %s", pool.Spec.Gateway, pool.Name)
+		return nil, fmt.Errorf("spec.gateway is not valid %s when creating bcsnetpool %s", pool.Spec.Gateway, pool.Name)
 	}
 	for _, ip := range pool.Spec.AvailableIPs {
 		if net.ParseIP(ip) == nil {
-			return fmt.Errorf("%s in spec.availableIPs is not valid when creating bcsnetpool %s", ip, pool.Name)
+			return nil, fmt.Errorf("%s in spec.availableIPs is not valid when creating bcsnetpool %s", ip, pool.Name)
 		}
 	}
-	return nil
+	return nil, nil
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (c *bcsNetPoolClient) ValidateUpdate(ctx context.Context, oldObj runtime.Object, newObj runtime.Object) error {
+func (c *bcsNetPoolClient) ValidateUpdate(ctx context.Context, oldObj runtime.Object, newObj runtime.Object) (
+	admission.Warnings, error) {
 	pool, ok := newObj.(*BCSNetPool)
 	if !ok {
-		return errors.New("object is not BCSNetPool")
+		return nil, errors.New("object is not BCSNetPool")
 	}
 	oldPool, ok2 := oldObj.(*BCSNetPool)
 	if !ok2 {
-		return errors.New("object is not BCSNetPool")
+		return nil, errors.New("object is not BCSNetPool")
 	}
 
 	blog.Infof("validate update pool %s", pool.Name)
 	if net.ParseIP(pool.Spec.Net) == nil {
-		return fmt.Errorf("spec.net %s is not valid when updating bcsnetpool %s", pool.Spec.Net, pool.Name)
+		return nil, fmt.Errorf("spec.net %s is not valid when updating bcsnetpool %s", pool.Spec.Net, pool.Name)
 	}
 	if net.ParseIP(pool.Spec.Gateway) == nil {
-		return fmt.Errorf("spec.gateway is not valid %s when updating bcsnetpool %s", pool.Spec.Gateway, pool.Name)
+		return nil, fmt.Errorf("spec.gateway is not valid %s when updating bcsnetpool %s", pool.Spec.Gateway, pool.Name)
 	}
 	for _, ip := range pool.Spec.AvailableIPs {
 		if net.ParseIP(ip) == nil {
-			return fmt.Errorf("%s in spec.availableIPs is not valid when updating bcsnetpool %s", ip, pool.Name)
+			return nil, fmt.Errorf("%s in spec.availableIPs is not valid when updating bcsnetpool %s", ip, pool.Name)
 		}
 	}
 
@@ -121,15 +122,15 @@ func (c *bcsNetPoolClient) ValidateUpdate(ctx context.Context, oldObj runtime.Ob
 	}
 
 	if err := c.checkActiveIP(ctx, delIPList, pool); err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return nil, nil
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (c *bcsNetPoolClient) ValidateDelete(ctx context.Context, obj runtime.Object) error {
-	return nil
+func (c *bcsNetPoolClient) ValidateDelete(ctx context.Context, obj runtime.Object) (admission.Warnings, error) {
+	return nil, nil
 }
 
 func (c *bcsNetPoolClient) checkActiveIP(ctx context.Context, s []string, pool *BCSNetPool) error {

@@ -81,7 +81,7 @@ func TestListNodeInstancesByInstanceID(t *testing.T) {
 	idList := []string{"ins-xxx", "ins-xxx"}
 
 	defaultCommonOption.Region = regions.Nanjing
-	instances, err := nodeManager.GetInstancesById(idList)
+	instances, err := nodeManager.GetInstancesByID(idList)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -102,7 +102,7 @@ func TestListNodeInstancesByIP(t *testing.T) {
 	IPList := []string{"xxx", "xxx", "xxx"}
 
 	defaultCommonOption.Region = regions.Nanjing
-	instances, err := nodeManager.GetInstancesByIp(IPList)
+	instances, err := nodeManager.GetInstancesByIP(IPList)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -123,7 +123,7 @@ func TestNodeManager_ListNodesByInstance(t *testing.T) {
 	instanceList := []string{"ins-xxx", "ins-xxx"}
 
 	defaultCommonOption.Region = regions.Nanjing
-	nodes, err := nodeManager.GetInstancesById(instanceList)
+	nodes, err := nodeManager.GetInstancesByID(instanceList)
 	if err != nil {
 		t.Fatal(err)
 	}

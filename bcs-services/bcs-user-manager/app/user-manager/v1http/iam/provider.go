@@ -18,7 +18,7 @@ import (
 	"strings"
 
 	"github.com/TencentBlueKing/iam-go-sdk/resource"
-	"github.com/emicklei/go-restful"
+	restful "github.com/emicklei/go-restful/v3"
 )
 
 const (

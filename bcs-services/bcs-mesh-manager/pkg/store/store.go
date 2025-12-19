@@ -30,6 +30,8 @@ type MeshManagerModel interface {
 	Create(ctx context.Context, mesh *entity.MeshIstio) error
 	// Update updates an existing mesh
 	Update(ctx context.Context, meshID string, mesh entity.M) error
+	// SoftDelete soft deletes a mesh by its ID
+	SoftDelete(ctx context.Context, meshID string) error
 	// Delete deletes a mesh by its ID
 	Delete(ctx context.Context, meshID string) error
 	// List queries a list of meshes based on conditions and options

@@ -17,6 +17,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 )
 
@@ -142,5 +143,20 @@ func (as *AutoScalingClient) DeleteLifecycleHooks(asName *string, hookName []str
 		blog.Infof("DeleteLifecycleHooks delete hooks %s successful", hook)
 	}
 
+	return nil
+}
+
+// SuspendProcesses suspend processes
+func (as *AutoScalingClient) SuspendProcesses(asName *string, processesName []string) error {
+	_, err := as.asClient.SuspendProcesses(&autoscaling.ScalingProcessQuery{
+		AutoScalingGroupName: asName,
+		ScalingProcesses:     aws.StringSlice(processesName),
+	})
+	if err != nil {
+		blog.Errorf("SuspendProcesses failed: %s", err)
+		return err
+	}
+
+	blog.Infof("SuspendProcesses suspend processes %s successful", processesName)
 	return nil
 }

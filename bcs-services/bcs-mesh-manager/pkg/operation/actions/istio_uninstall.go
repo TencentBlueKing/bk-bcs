@@ -16,16 +16,15 @@ package actions
 import (
 	"context"
 	"fmt"
-	"time"
+	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/helmmanager"
-	"helm.sh/helm/v3/pkg/storage/driver"
-	"k8s.io/utils/pointer"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/clients/helm"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/clients/k8s"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/operation"
+	opcommon "github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/operation/actions/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/store/entity"
 )
@@ -37,6 +36,7 @@ type IstioUninstallOption struct {
 	MeshID          string
 	PrimaryClusters []string
 	RemoteClusters  []string
+	OldReleaseNames map[string]map[string]string
 }
 
 // IstioUninstallAction istio卸载操作
@@ -76,6 +76,25 @@ func (i *IstioUninstallAction) Validate() error {
 	if len(i.PrimaryClusters) == 0 {
 		return fmt.Errorf("primaryClusters is required")
 	}
+	// 校验istio相关资源是否存在
+	// 检查集群中是否存在Istio资源，如果存在则不允许删除
+	allClusters := make([]string, 0, len(i.PrimaryClusters)+len(i.RemoteClusters))
+	allClusters = append(allClusters, i.PrimaryClusters...)
+	allClusters = append(allClusters, i.RemoteClusters...)
+
+	for _, cluster := range allClusters {
+		exists, details, err := k8s.CheckIstioResourceExists(context.TODO(), cluster)
+		if err != nil {
+			blog.Errorf("check istio resources failed, meshID: %s, clusterID: %s, err: %s",
+				i.MeshID, cluster, err)
+			return fmt.Errorf("check istio resources failed, meshID: %s, clusterID: %s, err: %s",
+				i.MeshID, cluster, err)
+		}
+		if exists {
+			return fmt.Errorf("cluster %s still has istio resources: %s",
+				cluster, strings.Join(details, ", "))
+		}
+	}
 	return nil
 }
 
@@ -92,13 +111,70 @@ func (i *IstioUninstallAction) Execute(ctx context.Context) error {
 	clusters = append(clusters, i.PrimaryClusters...)
 	clusters = append(clusters, i.RemoteClusters...)
 
-	// 删除集群中的istio
 	for _, cluster := range clusters {
+		// 删除istio
 		if err := i.uninstallIstio(ctx, cluster); err != nil {
 			blog.Errorf("[%s]uninstall istio for cluster %s failed, err: %s",
 				i.MeshID, cluster, err)
 			return fmt.Errorf("uninstall istio for cluster %s failed: %s", cluster, err)
 		}
+
+		// 删除集群的PodMonitor
+		if err := k8s.DeletePodMonitor(ctx, []string{cluster}); err != nil {
+			blog.Errorf("[%s]delete PodMonitor failed for cluster %s, err: %s", i.MeshID, cluster, err)
+			return fmt.Errorf("delete PodMonitor failed for cluster %s: %s", cluster, err)
+		}
+
+		// 删除集群的ServiceMonitor
+		if err := k8s.DeleteServiceMonitor(ctx, []string{cluster}); err != nil {
+			blog.Errorf("[%s]delete ServiceMonitor failed for cluster %s, err: %s", i.MeshID, cluster, err)
+			return fmt.Errorf("delete ServiceMonitor failed for cluster %s: %s", cluster, err)
+		}
+	}
+
+	// 删除主集群的Telemetry
+	if err := k8s.DeleteTelemetry(ctx, i.PrimaryClusters); err != nil {
+		blog.Errorf("[%s]delete Telemetry failed for primary clusters, err: %s", i.MeshID, err)
+		return fmt.Errorf("delete Telemetry failed for primary clusters: %s", err)
+	}
+
+	// 删除主集群的东西向网关
+	if err := i.uninstallEgressGateway(ctx, i.PrimaryClusters[0]); err != nil {
+		blog.Errorf("[%s]uninstall egress gateway failed, err: %s", i.MeshID, err)
+		return fmt.Errorf("uninstall egress gateway failed: %s", err)
+	}
+
+	// 尝试删除istio crd
+	for _, cluster := range clusters {
+		if err := k8s.DeleteIstioCrd(ctx, cluster); err != nil {
+			blog.Errorf("[%s]delete istio crd failed, err: %s", i.MeshID, err)
+			return fmt.Errorf("delete istio crd failed: %s", err)
+		}
+	}
+
+	return nil
+}
+
+// uninstallEgressGateway 卸载东西向网关
+func (i *IstioUninstallAction) uninstallEgressGateway(ctx context.Context, clusterID string) error {
+	// 获取东西向网关的release name
+	releaseName, err := opcommon.GetReleaseName(i.OldReleaseNames, clusterID, common.ComponentIstioGateway, i.MeshID)
+	if err != nil {
+		return err
+	}
+	// 如果东西向网关的release name不存在，则表示未部署
+	if releaseName == "" {
+		return nil
+	}
+
+	// 删除东西向网关
+	if err := helm.UninstallIstioComponent(
+		ctx, clusterID,
+		releaseName,
+		i.ProjectCode,
+		i.MeshID,
+	); err != nil {
+		return fmt.Errorf("uninstall egress gateway failed: %s", err)
 	}
 	return nil
 }
@@ -109,10 +185,12 @@ func (i *IstioUninstallAction) Done(err error) {
 	if err != nil {
 		blog.Errorf("[%s]istio uninstall operation failed, err: %s", i.MeshID, err)
 		m[entity.FieldKeyStatus] = common.IstioStatusUninstallingFailed
-		m[entity.FieldKeyStatusMessage] = fmt.Sprintf("卸载失败，%s", err.Error())
+		m[entity.FieldKeyStatusMessage] = fmt.Sprintf("删除失败，%s", err.Error())
 	} else {
 		blog.Infof("[%s]istio uninstall success", i.MeshID)
 		m[entity.FieldKeyStatus] = common.IstioStatusUninstalled
+		m[entity.FieldKeyIsDeleted] = true
+		m[entity.FieldKeyStatusMessage] = "删除成功"
 	}
 	// 更新mesh状态为已删除
 	updateErr := i.Model.Update(context.TODO(), i.MeshID, m)
@@ -123,66 +201,26 @@ func (i *IstioUninstallAction) Done(err error) {
 
 // uninstallIstio 卸载istio
 func (i *IstioUninstallAction) uninstallIstio(ctx context.Context, clusterID string) error {
+	// 获取Release名称
+	baseReleaseName, err := opcommon.GetReleaseName(i.OldReleaseNames, clusterID, common.ComponentIstioBase, i.MeshID)
+	if err != nil {
+		return err
+	}
+
+	istiodReleaseName, err := opcommon.GetReleaseName(i.OldReleaseNames, clusterID, common.ComponentIstiod, i.MeshID)
+	if err != nil {
+		return err
+	}
+
 	// 删除istio base
-	if err := i.uninstallIstioComponent(ctx, clusterID, common.IstioInstallBaseName); err != nil {
+	if err := helm.UninstallIstioComponent(ctx, clusterID, baseReleaseName, i.ProjectCode, i.MeshID); err != nil {
 		return fmt.Errorf("uninstall istio base failed: %s", err)
 	}
 
 	// 删除istiod
-	if err := i.uninstallIstioComponent(ctx, clusterID, common.IstioInstallIstiodName); err != nil {
+	if err := helm.UninstallIstioComponent(ctx, clusterID, istiodReleaseName, i.ProjectCode, i.MeshID); err != nil {
 		return fmt.Errorf("uninstall istiod failed: %s", err)
 	}
 
 	return nil
-}
-
-// uninstallIstioComponent 通用的istio组件卸载函数
-func (i *IstioUninstallAction) uninstallIstioComponent(ctx context.Context, clusterID, componentName string) error {
-	resp, err := helm.Uninstall(ctx, &helmmanager.UninstallReleaseV1Req{
-		ProjectCode: pointer.String(i.ProjectCode),
-		ClusterID:   pointer.String(clusterID),
-		Name:        pointer.String(componentName),
-		Namespace:   pointer.String(common.IstioNamespace),
-	})
-	if err != nil {
-		blog.Errorf("[%s]helm uninstall %s failed, clusterID: %s, err: %s",
-			i.MeshID, componentName, clusterID, err)
-		return fmt.Errorf("uninstall %s failed: %s", componentName, err)
-	}
-	if resp.Result != nil && !*resp.Result {
-		blog.Errorf("[%s]helm uninstall %s failed, meshID: %s, clusterID: %s, resp message: %s",
-			componentName, i.MeshID, clusterID, *resp.Message)
-		return fmt.Errorf("uninstall %s failed: %s", componentName, *resp.Message)
-	}
-
-	// 查询是否删除成功 查询详情 每隔5s查询一次 直到删除成功，超时2min
-	timeout := time.NewTimer(2 * time.Minute)
-	defer timeout.Stop()
-	ticker := time.NewTicker(5 * time.Second)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-timeout.C:
-			blog.Errorf("[%s]uninstall %s timeout, clusterID: %s",
-				i.MeshID, componentName, clusterID)
-			return fmt.Errorf("uninstall %s timeout for cluster %s", componentName, clusterID)
-		case <-ticker.C:
-			// 查询 release 是否存在
-			detail, err := helm.GetReleaseDetail(ctx, &helmmanager.GetReleaseDetailV1Req{
-				ProjectCode: pointer.String(i.ProjectCode),
-				ClusterID:   pointer.String(clusterID),
-				Name:        pointer.String(componentName),
-				Namespace:   pointer.String(common.IstioNamespace),
-			})
-			if err != nil {
-				blog.Errorf("[%s]get %s release status failed, clusterID: %s, err: %v",
-					i.MeshID, componentName, clusterID, err)
-				return fmt.Errorf("get %s release status failed: %v", componentName, err)
-			}
-			if detail != nil && detail.Message != nil && *detail.Message == driver.ErrReleaseNotFound.Error() {
-				return nil
-			}
-		}
-	}
 }

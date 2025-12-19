@@ -158,6 +158,8 @@ export function useAppData() {
     PROJECT_LIST: false,
     AZURECLOUD: true,
     IMPORTSOPSCLUSTER: true,
+    PLATFORMMANAGE: false, // 平台管理默认不开启
+    DEPLOYMENTMANAGEPULL: false,
   };
   async function getFeatureFlags(params: { projectCode: string }) {
     const data = await featureFlagsApi(params).catch(() => ({}));

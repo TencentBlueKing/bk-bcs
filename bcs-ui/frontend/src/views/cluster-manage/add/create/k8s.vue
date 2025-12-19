@@ -105,6 +105,9 @@
                 </bk-form-item>
                 <bk-form-item :label="$t('cluster.labels.env')" property="environment" error-display-type="normal" required>
                   <bk-radio-group v-model="basicInfo.environment">
+                    <bk-radio v-if="runEnv === 'dev'" value="stag">
+                      UAT
+                    </bk-radio>
                     <bk-radio value="debug">
                       {{ $t('cluster.env.debug') }}
                     </bk-radio>
@@ -392,7 +395,7 @@
 </template>
 <script lang="ts" setup>
 import { merge } from 'lodash';
-import { computed, getCurrentInstance, onMounted, ref, watch } from 'vue';
+import { computed, getCurrentInstance, nextTick, onMounted, ref, watch } from 'vue';
 
 import { ICloudRegion, INodeManCloud } from '../../types/types';
 
@@ -423,6 +426,8 @@ const steps = ref([
 ]);
 const nodePodNumList = ref([32, 64, 128, 256]);
 const activeTabName = ref<typeof steps.value[number]['name']>('basicInfo');
+
+const runEnv = ref(window.RUN_ENV);
 
 // 基本信息
 const basicInfo = ref({
@@ -637,12 +642,12 @@ const masterConfig = ref<{
 // 动态 i18n 问题，这里使用computed
 const masterConfigRules = computed(() => ({
   master: [{
-    message: basicInfo.value.environment === 'debug'
-      ? $i18n.t('cluster.create.validate.masterNum135')
-      : $i18n.t('cluster.create.validate.masterNum35'),
+    message: basicInfo.value.environment === 'prod'
+      ? $i18n.t('cluster.create.validate.masterNum35')
+      : $i18n.t('cluster.create.validate.masterNum135'),
     trigger: 'custom',
     validator: () => {
-      const maxMasterNum = basicInfo.value.environment === 'debug' ? [1, 3, 5] : [3, 5];
+      const maxMasterNum = basicInfo.value.environment === 'prod' ? [3, 5] : [1, 3, 5];
       return masterConfig.value.master.length && maxMasterNum.includes(masterConfig.value.master.length);
     },
   }],
@@ -837,7 +842,8 @@ const handleCreateCluster = async () => {
 // 校验master节点
 const validateMaster = async () => {
   const $refs = proxy?.$refs || {};
-  proxy?.$forceUpdate();
+  // proxy?.$forceUpdate();
+  await nextTick();
   return await ($refs.masterRef as any)?.validate().catch(() => false);
 };
 // 校验node节点

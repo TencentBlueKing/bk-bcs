@@ -325,3 +325,8 @@ func (c *CloudValidate) ListKeyPairsValidate(req *proto.ListKeyPairsRequest, acc
 
 	return nil
 }
+
+// AllowCrossBizNodes xxx
+func (c *CloudValidate) AllowCrossBizNodes(cluster *proto.Cluster) bool {
+	return false
+}

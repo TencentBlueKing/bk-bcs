@@ -28,7 +28,6 @@ type MeshIstio struct {
 	MeshID        string `bson:"meshID" json:"meshID" validate:"required"`
 	Name          string `bson:"name" json:"name" validate:"required"`
 	NetworkID     string `bson:"networkID" json:"networkID" validate:"required"`
-	ProjectID     string `bson:"projectID" json:"projectID" validate:"required"`
 	ProjectCode   string `bson:"projectCode" json:"projectCode" validate:"required"`
 	Description   string `bson:"description" json:"description"`
 	Version       string `bson:"version" json:"version" validate:"required"`
@@ -39,13 +38,17 @@ type MeshIstio struct {
 	UpdateTime    int64  `bson:"updateTime" json:"updateTime"`
 	CreateBy      string `bson:"createBy" json:"createBy"`
 	UpdateBy      string `bson:"updateBy" json:"updateBy"`
+	IsDeleted     bool   `bson:"isDeleted" json:"isDeleted"`
+	Revision      string `bson:"revision" json:"revision"`
 
 	// Mesh configuration
-	ControlPlaneMode string   `bson:"controlPlaneMode" json:"controlPlaneMode"`
-	ClusterMode      string   `bson:"clusterMode" json:"clusterMode"`
-	PrimaryClusters  []string `bson:"primaryClusters" json:"primaryClusters"`
-	RemoteClusters   []string `bson:"remoteClusters" json:"remoteClusters"`
-	DifferentNetwork bool     `bson:"differentNetwork" json:"differentNetwork"`
+	MultiClusterEnabled bool             `bson:"multiClusterEnabled" json:"multiClusterEnabled"`
+	ClbID               string           `bson:"clbID" json:"clbID"`
+	ControlPlaneMode    string           `bson:"controlPlaneMode" json:"controlPlaneMode"`
+	ClusterMode         string           `bson:"clusterMode" json:"clusterMode"`
+	PrimaryClusters     []string         `bson:"primaryClusters" json:"primaryClusters"`
+	RemoteClusters      []*RemoteCluster `bson:"remoteClusters" json:"remoteClusters"`
+	DifferentNetwork    bool             `bson:"differentNetwork" json:"differentNetwork"`
 
 	// Feature configurations
 	FeatureConfigs map[string]*FeatureConfig `bson:"featureConfigs" json:"featureConfigs"`
@@ -54,6 +57,18 @@ type MeshIstio struct {
 	SidecarResourceConfig *ResourceConfig      `bson:"sidecarResourceConfig" json:"sidecarResourceConfig"`
 	HighAvailability      *HighAvailability    `bson:"highAvailability" json:"highAvailability"`
 	ObservabilityConfig   *ObservabilityConfig `bson:"observabilityConfig" json:"observabilityConfig"`
+
+	// Cluster release names mapping
+	ReleaseNames map[string]map[string]string `bson:"releaseNames" json:"releaseNames"`
+}
+
+// RemoteCluster represents remote cluster information
+type RemoteCluster struct {
+	ClusterID string `bson:"clusterID" json:"clusterID"`
+	// 纳入服务网格管理时间
+	JoinTime int64 `bson:"joinTime" json:"joinTime"`
+	// 集群状态
+	Status string `bson:"status" json:"status"`
 }
 
 // ResourceConfig represents resource configuration for sidecar
@@ -90,6 +105,7 @@ type ObservabilityConfig struct {
 
 // MetricsConfig represents metrics configuration
 type MetricsConfig struct {
+	MetricsEnabled             bool `bson:"metricsEnabled" json:"metricsEnabled"`
 	ControlPlaneMetricsEnabled bool `bson:"controlPlaneMetricsEnabled" json:"controlPlaneMetricsEnabled"`
 	DataPlaneMetricsEnabled    bool `bson:"dataPlaneMetricsEnabled" json:"dataPlaneMetricsEnabled"`
 }
@@ -125,35 +141,44 @@ type FeatureConfig struct {
 	SupportVersions []string `bson:"supportVersions" json:"supportVersions"`
 }
 
-// Transfer2Proto converts MeshIstio entity to proto message
+// Transfer2ProtoForDetail converts MeshIstio entity to proto message
 // nolint:funlen
-func (m *MeshIstio) Transfer2Proto() *meshmanager.IstioListItem {
-	// TODO: 考虑直接序列化转换数据，避免逐个赋值
-	istioListItem := &meshmanager.IstioListItem{
-		MeshID:           m.MeshID,
-		Name:             m.Name,
-		ProjectID:        m.ProjectID,
-		ProjectCode:      m.ProjectCode,
-		NetworkID:        m.NetworkID,
-		Description:      m.Description,
-		ChartVersion:     m.ChartVersion,
-		Version:          m.Version,
-		Status:           m.Status,
-		StatusMessage:    m.StatusMessage,
-		CreateTime:       m.CreateTime,
-		UpdateTime:       m.UpdateTime,
-		CreateBy:         m.CreateBy,
-		UpdateBy:         m.UpdateBy,
-		ControlPlaneMode: m.ControlPlaneMode,
-		ClusterMode:      m.ClusterMode,
-		PrimaryClusters:  m.PrimaryClusters,
-		RemoteClusters:   m.RemoteClusters,
-		DifferentNetwork: m.DifferentNetwork,
+func (m *MeshIstio) Transfer2ProtoForDetail() *meshmanager.IstioDetailInfo {
+	istioDetailInfo := &meshmanager.IstioDetailInfo{
+		MeshID:              m.MeshID,
+		Name:                m.Name,
+		ProjectCode:         m.ProjectCode,
+		NetworkID:           m.NetworkID,
+		Description:         m.Description,
+		ChartVersion:        m.ChartVersion,
+		Version:             m.Version,
+		Status:              m.Status,
+		StatusMessage:       m.StatusMessage,
+		CreateTime:          m.CreateTime,
+		UpdateTime:          m.UpdateTime,
+		CreateBy:            m.CreateBy,
+		UpdateBy:            m.UpdateBy,
+		ControlPlaneMode:    m.ControlPlaneMode,
+		ClusterMode:         m.ClusterMode,
+		PrimaryClusters:     m.PrimaryClusters,
+		DifferentNetwork:    m.DifferentNetwork,
+		MultiClusterEnabled: wrapperspb.Bool(m.MultiClusterEnabled),
+		ClbID:               wrapperspb.String(m.ClbID),
+		Revision:            m.Revision,
 	}
+	remoteClusters := make([]*meshmanager.RemoteCluster, 0, len(m.RemoteClusters))
+	for _, cluster := range m.RemoteClusters {
+		remoteClusters = append(remoteClusters, &meshmanager.RemoteCluster{
+			ClusterID: cluster.ClusterID,
+			JoinTime:  cluster.JoinTime,
+			Status:    cluster.Status,
+		})
+	}
+	istioDetailInfo.RemoteClusters = remoteClusters
 
 	// 转换 Sidecar 资源配置
 	if m.SidecarResourceConfig != nil {
-		istioListItem.SidecarResourceConfig = &meshmanager.ResourceConfig{
+		istioDetailInfo.SidecarResourceConfig = &meshmanager.ResourceConfig{
 			CpuRequest:    wrapperspb.String(m.SidecarResourceConfig.CpuRequest),
 			CpuLimit:      wrapperspb.String(m.SidecarResourceConfig.CpuLimit),
 			MemoryRequest: wrapperspb.String(m.SidecarResourceConfig.MemoryRequest),
@@ -163,7 +188,7 @@ func (m *MeshIstio) Transfer2Proto() *meshmanager.IstioListItem {
 
 	// 转换高可用配置
 	if m.HighAvailability != nil {
-		istioListItem.HighAvailability = &meshmanager.HighAvailability{
+		istioDetailInfo.HighAvailability = &meshmanager.HighAvailability{
 			AutoscaleEnabled:                   wrapperspb.Bool(m.HighAvailability.AutoscaleEnabled),
 			AutoscaleMin:                       wrapperspb.Int32(m.HighAvailability.AutoscaleMin),
 			AutoscaleMax:                       wrapperspb.Int32(m.HighAvailability.AutoscaleMax),
@@ -172,7 +197,7 @@ func (m *MeshIstio) Transfer2Proto() *meshmanager.IstioListItem {
 		}
 
 		if m.HighAvailability.ResourceConfig != nil {
-			istioListItem.HighAvailability.ResourceConfig = &meshmanager.ResourceConfig{
+			istioDetailInfo.HighAvailability.ResourceConfig = &meshmanager.ResourceConfig{
 				CpuRequest:    wrapperspb.String(m.HighAvailability.ResourceConfig.CpuRequest),
 				CpuLimit:      wrapperspb.String(m.HighAvailability.ResourceConfig.CpuLimit),
 				MemoryRequest: wrapperspb.String(m.HighAvailability.ResourceConfig.MemoryRequest),
@@ -181,7 +206,7 @@ func (m *MeshIstio) Transfer2Proto() *meshmanager.IstioListItem {
 		}
 
 		if m.HighAvailability.DedicatedNode != nil {
-			istioListItem.HighAvailability.DedicatedNode = &meshmanager.DedicatedNode{
+			istioDetailInfo.HighAvailability.DedicatedNode = &meshmanager.DedicatedNode{
 				Enabled:    wrapperspb.Bool(m.HighAvailability.DedicatedNode.Enabled),
 				NodeLabels: m.HighAvailability.DedicatedNode.NodeLabels,
 			}
@@ -190,11 +215,12 @@ func (m *MeshIstio) Transfer2Proto() *meshmanager.IstioListItem {
 
 	// 转换可观测性配置
 	if m.ObservabilityConfig != nil {
-		istioListItem.ObservabilityConfig = &meshmanager.ObservabilityConfig{}
+		istioDetailInfo.ObservabilityConfig = &meshmanager.ObservabilityConfig{}
 
 		// 转换指标配置
 		if m.ObservabilityConfig.MetricsConfig != nil {
-			istioListItem.ObservabilityConfig.MetricsConfig = &meshmanager.MetricsConfig{
+			istioDetailInfo.ObservabilityConfig.MetricsConfig = &meshmanager.MetricsConfig{
+				MetricsEnabled:             wrapperspb.Bool(m.ObservabilityConfig.MetricsConfig.MetricsEnabled),
 				ControlPlaneMetricsEnabled: wrapperspb.Bool(m.ObservabilityConfig.MetricsConfig.ControlPlaneMetricsEnabled),
 				DataPlaneMetricsEnabled:    wrapperspb.Bool(m.ObservabilityConfig.MetricsConfig.DataPlaneMetricsEnabled),
 			}
@@ -202,7 +228,7 @@ func (m *MeshIstio) Transfer2Proto() *meshmanager.IstioListItem {
 
 		// 转换日志收集配置
 		if m.ObservabilityConfig.LogCollectorConfig != nil {
-			istioListItem.ObservabilityConfig.LogCollectorConfig = &meshmanager.LogCollectorConfig{
+			istioDetailInfo.ObservabilityConfig.LogCollectorConfig = &meshmanager.LogCollectorConfig{
 				Enabled:           wrapperspb.Bool(m.ObservabilityConfig.LogCollectorConfig.Enabled),
 				AccessLogEncoding: wrapperspb.String(m.ObservabilityConfig.LogCollectorConfig.AccessLogEncoding),
 				AccessLogFormat:   wrapperspb.String(m.ObservabilityConfig.LogCollectorConfig.AccessLogFormat),
@@ -211,7 +237,7 @@ func (m *MeshIstio) Transfer2Proto() *meshmanager.IstioListItem {
 
 		// 转换链路追踪配置
 		if m.ObservabilityConfig.TracingConfig != nil {
-			istioListItem.ObservabilityConfig.TracingConfig = &meshmanager.TracingConfig{
+			istioDetailInfo.ObservabilityConfig.TracingConfig = &meshmanager.TracingConfig{
 				Enabled:              wrapperspb.Bool(m.ObservabilityConfig.TracingConfig.Enabled),
 				Endpoint:             wrapperspb.String(m.ObservabilityConfig.TracingConfig.Endpoint),
 				BkToken:              wrapperspb.String(m.ObservabilityConfig.TracingConfig.BkToken),
@@ -222,15 +248,16 @@ func (m *MeshIstio) Transfer2Proto() *meshmanager.IstioListItem {
 
 	// 转换特性配置
 	if len(m.FeatureConfigs) > 0 {
-		istioListItem.FeatureConfigs = make(map[string]*meshmanager.FeatureConfig)
+		istioDetailInfo.FeatureConfigs = make(map[string]*meshmanager.FeatureConfig)
 		for name, config := range m.FeatureConfigs {
 			// 只转换支持的特性
 			if !slices.Contains(common.SupportedFeatures, name) {
 				continue
 			}
-			istioListItem.FeatureConfigs[name] = &meshmanager.FeatureConfig{
+			istioDetailInfo.FeatureConfigs[name] = &meshmanager.FeatureConfig{
 				Name:            config.Name,
 				Description:     config.Description,
+				Value:           config.Value,
 				DefaultValue:    config.DefaultValue,
 				AvailableValues: config.AvailableValues,
 				SupportVersions: config.SupportVersions,
@@ -238,27 +265,63 @@ func (m *MeshIstio) Transfer2Proto() *meshmanager.IstioListItem {
 		}
 	}
 
+	return istioDetailInfo
+}
+
+// Transfer2ProtoForListItems converts MeshIstio entity to proto message
+func (m *MeshIstio) Transfer2ProtoForListItems() *meshmanager.IstioListItem {
+	istioListItem := &meshmanager.IstioListItem{
+		MeshID:          m.MeshID,
+		Name:            m.Name,
+		ProjectCode:     m.ProjectCode,
+		Version:         m.Version,
+		Status:          m.Status,
+		StatusMessage:   m.StatusMessage,
+		CreateTime:      m.CreateTime,
+		ChartVersion:    m.ChartVersion,
+		PrimaryClusters: m.PrimaryClusters,
+	}
+	remoteClusters := make([]*meshmanager.RemoteCluster, 0, len(m.RemoteClusters))
+	for _, cluster := range m.RemoteClusters {
+		remoteClusters = append(remoteClusters, &meshmanager.RemoteCluster{
+			ClusterID: cluster.ClusterID,
+			JoinTime:  cluster.JoinTime,
+			Status:    cluster.Status,
+		})
+	}
+	istioListItem.RemoteClusters = remoteClusters
 	return istioListItem
 }
 
 // TransferFromProto converts InstallIstioRequest to MeshIstio entity
 // nolint:funlen
-func (m *MeshIstio) TransferFromProto(req *meshmanager.IstioRequest) {
+func (m *MeshIstio) TransferFromProto(req *meshmanager.IstioInstallRequest) {
 	// 转换基本字段
 	m.Name = req.Name.GetValue()
-	m.ProjectID = req.ProjectID.GetValue()
-	m.ProjectCode = req.ProjectCode.GetValue()
+	m.ProjectCode = req.ProjectCode
 	m.Description = req.Description.GetValue()
 	m.Version = req.Version.GetValue()
 	m.ControlPlaneMode = req.ControlPlaneMode.GetValue()
-	m.ClusterMode = req.ClusterMode.GetValue()
 	m.PrimaryClusters = req.PrimaryClusters
-	m.RemoteClusters = req.RemoteClusters
 	m.DifferentNetwork = req.DifferentNetwork.GetValue()
-	m.CreateTime = time.Now().Unix()
-	m.UpdateTime = time.Now().Unix()
-	m.CreateBy = "system" // TODO: get from context
-	m.UpdateBy = "system" // TODO: get from context
+	m.MultiClusterEnabled = req.MultiClusterEnabled.GetValue()
+	m.RemoteClusters = make([]*RemoteCluster, 0, len(req.RemoteClusters))
+	if req.MultiClusterEnabled.GetValue() {
+		for i := range req.RemoteClusters {
+			cluster := req.RemoteClusters[i]
+			joinTime := time.Now().UnixMilli()
+			m.RemoteClusters = append(m.RemoteClusters, &RemoteCluster{
+				ClusterID: cluster.ClusterID,
+				JoinTime:  joinTime,
+				Status:    common.RemoteClusterStatusInstalling,
+			})
+			cluster.JoinTime = joinTime
+			cluster.Status = common.RemoteClusterStatusInstalling
+		}
+		m.ClusterMode = common.MultiClusterModePrimaryRemote
+	}
+	m.ClbID = req.ClbID.GetValue()
+	m.Revision = req.Revision.GetValue()
 
 	// 转换 Sidecar 资源配置
 	if req.SidecarResourceConfig != nil {
@@ -318,6 +381,7 @@ func (m *MeshIstio) TransferFromProto(req *meshmanager.IstioRequest) {
 		}
 		if req.ObservabilityConfig.MetricsConfig != nil {
 			m.ObservabilityConfig.MetricsConfig = &MetricsConfig{
+				MetricsEnabled:             req.ObservabilityConfig.MetricsConfig.MetricsEnabled.GetValue(),
 				ControlPlaneMetricsEnabled: req.ObservabilityConfig.MetricsConfig.ControlPlaneMetricsEnabled.GetValue(),
 				DataPlaneMetricsEnabled:    req.ObservabilityConfig.MetricsConfig.DataPlaneMetricsEnabled.GetValue(),
 			}
@@ -335,6 +399,7 @@ func (m *MeshIstio) TransferFromProto(req *meshmanager.IstioRequest) {
 			m.FeatureConfigs[name] = &FeatureConfig{
 				Name:            config.Name,
 				Description:     config.Description,
+				Value:           config.Value,
 				DefaultValue:    config.DefaultValue,
 				AvailableValues: config.AvailableValues,
 				SupportVersions: config.SupportVersions,

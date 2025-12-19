@@ -60,6 +60,7 @@ func RegisterCommonActions() map[string]interface{} {
 		cloudprovider.CheckNodeIpsInCmdbAction:           CheckNodeIpsInCMDBTask,
 		cloudprovider.CheckNodePodsAction:                CheckNodePodsTask,
 		cloudprovider.NodeDrainPodAction:                 NodeDrainPodTask,
+		cloudprovider.InstallLogCollectorAddonAction:     EnsureLogCollectorTask,
 	}
 }
 
@@ -72,6 +73,7 @@ const (
 // * backgroup task running depends on machinery framework
 
 // RunBKsopsJob running bksops job and wait for results
+// nolint: funlen
 func RunBKsopsJob(taskID string, stepName string) error {
 	// step1: get BKops url and para by taskID
 	// step2: create bkops task
@@ -95,7 +97,7 @@ func RunBKsopsJob(taskID string, stepName string) error {
 		taskID, taskID, stepName, step.System, step.Status, step.Params)
 
 	// get bksops common parameter
-	url := step.Params[cloudprovider.BkSopsUrlKey.String()]
+	url := step.Params[cloudprovider.BkSopsURLKey.String()]
 	bizID := step.Params[cloudprovider.BkSopsBizIDKey.String()]
 	templateID := step.Params[cloudprovider.BkSopsTemplateIDKey.String()]
 	operator := step.Params[cloudprovider.BkSopsTemplateUserKey.String()]
@@ -115,6 +117,9 @@ func RunBKsopsJob(taskID string, stepName string) error {
 		return retErr
 	}
 
+	// inject taskID
+	ctx := cloudprovider.WithTaskIDAndStepNameForContext(context.Background(), taskID, stepName)
+
 	// render constants dynamic value parameter
 	consMap, err := RenderDynamicParaToConstants(state.Task, constants)
 	if err != nil {
@@ -129,10 +134,11 @@ func RunBKsopsJob(taskID string, stepName string) error {
 		return retErr
 	}
 
-	// inject taskID
-	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
+	defaultTime := 120 * time.Minute
+	taskTimeout := cloudprovider.GetTaskTimeout(ctx, state.Task.GetProjectID(),
+		state.Task.GetClusterID(), stepName, defaultTime)
 
-	timeOutCtx, cancel := context.WithTimeout(ctx, time.Minute*60)
+	timeOutCtx, cancel := context.WithTimeout(ctx, taskTimeout)
 	defer cancel()
 
 	taskUrl, err := ExecBkSopsTask(timeOutCtx, CreateBkSopsTaskParas{
@@ -146,9 +152,10 @@ func RunBKsopsJob(taskID string, stepName string) error {
 		StepName:       stepName,
 	})
 	if err != nil {
-		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
-			fmt.Sprintf("run bksops job failed [%s]", err))
-		state.TaskUrl = taskUrl
+		msg := fmt.Sprintf("run bksops job failed: [%v], url: [%s]", err, taskUrl)
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName, msg)
+
+		state.TaskURL = taskUrl
 		if step.GetSkipOnFailed() {
 			_ = state.SkipFailure(start, stepName, err)
 			return nil
@@ -158,9 +165,9 @@ func RunBKsopsJob(taskID string, stepName string) error {
 	}
 
 	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
-		"run bksops job successful")
+		fmt.Sprintf("run bksops job successful, url:[%s]", taskUrl))
 
-	state.TaskUrl = taskUrl
+	state.TaskURL = taskUrl
 	_ = state.UpdateStepSucc(start, stepName)
 	return nil
 }
@@ -198,7 +205,7 @@ func ExecBkSopsTask(ctx context.Context, paras CreateBkSopsTaskParas) (string, e
 	blog.Infof("execBkSopsTask[%s] createBkSopsTask successful: taskID[%v]", taskID, taskResp.TaskID)
 
 	// update bksops taskUrl to task
-	_ = cloudprovider.SetTaskStepParas(taskID, paras.StepName, cloudprovider.BkSopsTaskUrlKey.String(),
+	_ = cloudprovider.SetTaskStepParas(taskID, paras.StepName, cloudprovider.BkSopsTaskURLKey.String(),
 		taskResp.TaskURL)
 
 	startTaskReq := startBkSopsTaskParas{
@@ -209,7 +216,9 @@ func ExecBkSopsTask(ctx context.Context, paras CreateBkSopsTaskParas) (string, e
 	err = startBkSopsTask(ctx, startTaskReq)
 	if err != nil {
 		blog.Errorf("execBkSopsTask[%s] startBkSopsTask failed: %v", taskID, err)
-		return taskResp.TaskURL, err
+		retErr := fmt.Errorf("execBkSopsTask[%s] startBkSopsTask err: %v, url: %s",
+			taskID, err, taskResp.TaskURL)
+		return taskResp.TaskURL, retErr
 	}
 	blog.Infof("execBkSopsTask[%s] startBkSopsTask successful", taskID)
 
@@ -236,8 +245,8 @@ func ExecBkSopsTask(ctx context.Context, paras CreateBkSopsTaskParas) (string, e
 			data.Data.State == SUSPENDED.String() {
 			blog.Errorf("RunBKsopsJob[%s] execBkSopsTask GetTaskStatus[%s] failed: status[%s]",
 				taskID, getTaskStatusReq.TaskID, data.Data.State)
-			retErr := fmt.Errorf("execBkSopsTask GetTaskStatus %s %s err: %v, url: %s",
-				getTaskStatusReq.TaskID, data.Data.State, err, taskResp.TaskURL)
+			retErr := fmt.Errorf("execBkSopsTask GetTaskStatus %s %s err: %v",
+				getTaskStatusReq.TaskID, data.Data.State, err)
 			return retErr
 		}
 

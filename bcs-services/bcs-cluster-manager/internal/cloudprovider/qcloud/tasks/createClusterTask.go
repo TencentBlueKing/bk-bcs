@@ -198,12 +198,7 @@ func generateClusterAdvancedInfo(cluster *proto.Cluster) *api.ClusterAdvancedSet
 		ExtraArgs:          &api.ClusterExtraArgs{},
 		NetworkType:        cluster.ClusterAdvanceSettings.NetworkType,
 		DeletionProtection: cluster.ClusterAdvanceSettings.DeletionProtection,
-	}
-
-	if options.GetEditionInfo().IsInnerEdition() {
-		advancedInfo.AuditEnabled = true
-	} else {
-		advancedInfo.AuditEnabled = cluster.ClusterAdvanceSettings.AuditEnabled
+		AuditEnabled:       cluster.ClusterAdvanceSettings.AuditEnabled,
 	}
 
 	// extraArgs
@@ -307,11 +302,13 @@ func handleClusterMasterNodes(ctx context.Context, req *api.CreateClusterRequest
 		req.ExistedInstancesForNode = make([]*api.ExistedInstancesForNode, 0)
 	}
 
-	// single disk & many disk
+	// empty disk instance
 	if len(filterDisk.SingleDiskInstance) > 0 {
 		req.ExistedInstancesForNode = append(req.ExistedInstancesForNode,
 			generateMasterExistedInstance(api.MASTER_ETCD.String(), passwd, filterDisk.SingleDiskInstance, false, info.Cluster))
 	}
+
+	// exist disk instance
 	if len(filterDisk.ManyDiskInstance) > 0 {
 		req.ExistedInstancesForNode = append(req.ExistedInstancesForNode,
 			generateMasterExistedInstance(api.MASTER_ETCD.String(), passwd, filterDisk.ManyDiskInstance, true, info.Cluster))
@@ -366,13 +363,13 @@ func handleClusterWorkerNodes(ctx context.Context, req *api.CreateClusterRequest
 
 	blog.Infof("handleClusterWorkerNodes[%s] FilterNodesByDataDisk result[%+v]", taskID, filterDisk)
 
-	// single disk
+	// empty disk
 	if len(filterDisk.SingleDiskInstance) > 0 {
 		req.ExistedInstancesForNode = append(req.ExistedInstancesForNode,
 			generateWorkerExistedInstance(info, filterDisk.SingleDiskInstance, filterDisk.SingleDiskInstanceIP, passwd,
 				false, operator))
 	}
-	// many disk
+	// exist disk
 	if len(filterDisk.ManyDiskInstance) > 0 {
 		req.ExistedInstancesForNode = append(req.ExistedInstancesForNode,
 			generateWorkerExistedInstance(info, filterDisk.ManyDiskInstance, filterDisk.ManyDiskInstanceIP, passwd,
@@ -501,7 +498,8 @@ func CreateClusterShieldAlarmTask(taskID string, stepName string) error {
 
 	// step login started here
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
-	nodes := cloudprovider.ParseNodeIpOrIdFromCommonMap(step.Params, cloudprovider.NodeIPsKey.String(), ",")
+	nodes := cloudprovider.ParseNodeIpOrIdFromCommonMap(state.Task.CommonParams,
+		cloudprovider.NodeIPsKey.String(), ",")
 
 	cluster, err := cloudprovider.GetStorageModel().GetCluster(context.Background(), clusterID)
 	if err != nil {
@@ -535,6 +533,22 @@ func CreateClusterShieldAlarmTask(taskID string, stepName string) error {
 			blog.Infof("CreateClusterShieldAlarmTask[%s] ShieldHostAlarmConfig successful", taskID)
 		}
 	}
+
+	if len(masterIPs) > 0 {
+		state.Task.CommonParams[cloudprovider.DynamicMasterNodeIPListKey.String()] = strings.Join(masterIPs, ",")
+	}
+	if len(nodes) > 0 {
+		state.Task.CommonParams[cloudprovider.DynamicNodeIPListKey.String()] = strings.Join(nodes, ",")
+	}
+
+	clusterImageId, errLocal := cloudprovider.GetClusterImage(ctx, cluster)
+	if errLocal != nil {
+		blog.Errorf("CreateClusterShieldAlarmTask[%s] GetClusterImage failed: %v", taskID, errLocal)
+		_ = state.UpdateStepFailure(start, stepName, errLocal)
+		return errLocal
+	}
+	blog.Infof("CreateClusterShieldAlarmTask[%s] GetClusterImage success: %v", taskID, clusterImageId)
+	state.Task.CommonParams[cloudprovider.DynamicImageIdKey.String()] = clusterImageId
 
 	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
 		"shield host alarm config successful")
@@ -577,7 +591,7 @@ func createTkeCluster(ctx context.Context, info *cloudprovider.CloudDependBasicI
 	}
 
 	// image info
-	imageID, err := transImageNameToImageID(info.CmOption, info.Cluster.ClusterBasicSettings.OS)
+	imageID, err := TransImageNameToImageID(info.CmOption, info.Cluster.ClusterBasicSettings.OS)
 	if err != nil {
 		blog.Errorf("createTkeCluster[%s]: transImageNameToImageID for cluster[%s] failed, %v",
 			taskID, info.Cluster.ClusterID, err)
@@ -781,20 +795,20 @@ func CreateModifyInstancesVpcTask(taskID string, stepName string) error {
 	var nodes []cloudprovider.NodeData
 	_ = json.Unmarshal([]byte(nodeBytes), &nodes)
 
-	nodeIds := make([]string, 0)
+	nodeIDs := make([]string, 0)
 	for i := range nodes {
-		nodeIds = append(nodeIds, nodes[i].NodeId)
+		nodeIDs = append(nodeIDs, nodes[i].NodeID)
 	}
 
 	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
-		fmt.Sprintf("nodes %+v start to trans vpc[%s]", nodeIds, dependInfo.Cluster.GetVpcID()))
+		fmt.Sprintf("nodes %+v start to trans vpc[%s]", nodeIDs, dependInfo.Cluster.GetVpcID()))
 
-	err = business.ModifyInstancesVpcAttribute(ctx, dependInfo.Cluster.GetVpcID(), nodeIds, dependInfo.CmOption)
+	err = business.ModifyInstancesVpcAttribute(ctx, dependInfo.Cluster.GetVpcID(), nodeIDs, dependInfo.CmOption)
 	if err != nil {
 		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
-			fmt.Sprintf("modify nodes %+v vpc failed %s", nodeIds, err.Error()))
+			fmt.Sprintf("modify nodes %+v vpc failed %s", nodeIDs, err.Error()))
 		blog.Errorf("CreateModifyInstancesVpcTask[%s]: ModifyInstancesVpcAttribute for vpc[%v] nodes %+v failed, %s",
-			taskID, dependInfo.Cluster.GetVpcID(), nodeIds, err.Error())
+			taskID, dependInfo.Cluster.GetVpcID(), nodeIDs, err.Error())
 		retErr := fmt.Errorf("ModifyInstancesVpcAttribute err, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
@@ -854,18 +868,18 @@ func CreateCheckInstanceStateTask(taskID string, stepName string) error {
 	var nodes []cloudprovider.NodeData
 	_ = json.Unmarshal([]byte(nodeBytes), &nodes)
 
-	nodeIds := make([]string, 0)
+	nodeIDs := make([]string, 0)
 	for i := range nodes {
-		nodeIds = append(nodeIds, nodes[i].NodeId)
+		nodeIDs = append(nodeIDs, nodes[i].NodeID)
 	}
 
-	instanceList, err := business.CheckCvmInstanceState(ctx, nodeIds,
+	instanceList, err := business.CheckCvmInstanceState(ctx, nodeIDs,
 		&cloudprovider.ListNodesOption{Common: dependInfo.CmOption})
 	if err != nil {
 		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
 			fmt.Sprintf("check cvm instance state failed [%s]", err))
 		blog.Errorf("CreateCheckInstanceStateTask[%s]: CheckCvmInstanceState for nodes[%v] failed, %s",
-			taskID, nodeIds, err.Error())
+			taskID, nodeIDs, err.Error())
 		retErr := fmt.Errorf("CheckCvmInstanceState err, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
@@ -903,7 +917,7 @@ func CreateCheckInstanceStateTask(taskID string, stepName string) error {
 	}
 
 	// update task common data
-	state.Task.CommonParams[cloudprovider.TransVPCIPs.String()] =
+	state.Task.CommonParams[cloudprovider.TransVPCIPsKey.String()] =
 		strings.Join(instanceList.GetNodeIps(true), ",")
 	state.Task.CommonParams[cloudprovider.NodeIPsKey.String()] = strings.Join(dbNodeIps, ",")
 	state.Task.CommonParams[cloudprovider.NodeIDsKey.String()] = strings.Join(dbNodeIds, ",")
@@ -1105,6 +1119,26 @@ func CheckTkeClusterStatusTask(taskID string, stepName string) error {
 
 	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
 		"check tke cluster status successful")
+
+	if dependInfo.Cluster.ManageType == icommon.ClusterManageTypeIndependent {
+		cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+			"start enable cluster audit without collection")
+		err = business.EnableClusterAudit(ctx, dependInfo.Cluster, &cloudprovider.EnableClusterAuditOption{
+			CommonOption:      *dependInfo.CmOption,
+			WithoutCollection: true,
+		})
+		if err != nil {
+			cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
+				fmt.Sprintf("enable cluster audit failed:[%v]", err))
+			blog.Errorf("CheckTkeClusterStatusTask[%s] EnableClusterAudit[%s] failed: %v",
+				taskID, clusterID, err)
+			retErr := fmt.Errorf("checkClusterStatus[%s] EnableClusterAudit failed:[%v]", clusterID, err.Error())
+			_ = state.UpdateStepFailure(start, stepName, retErr)
+			return retErr
+		}
+		cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+			"enable cluster audit without collection successful")
+	}
 
 	// update step
 	if err = state.UpdateStepSucc(start, stepName); err != nil {

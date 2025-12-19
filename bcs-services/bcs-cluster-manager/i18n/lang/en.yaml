@@ -119,6 +119,8 @@ userAfterInit: "user post init"
 userBeforeInit: "user pre init"
 preInitJob: "pre init job"
 postInitJob: "post init job"
+systemPreInit: "cluster nodes idle check"
+systemPostInit: "system post init"
 nodeMixedInit: "cluster nodes mixed init"
 
 #

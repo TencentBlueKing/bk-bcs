@@ -1,6 +1,5 @@
-<!-- eslint-disable vue/no-v-html -->
 <template>
-  <div :class="['bcs-md-preview markdown-body', theme]" v-html="html"></div>
+  <div :class="['bcs-md-preview markdown-body', theme]" v-bk-xss-html="html"></div>
 </template>
 
 <script>
@@ -41,6 +40,7 @@ export default defineComponent({
     const render = (value) => {
       html.value = md.render(value);
     };
+
     watch(code, () => {
       render(code.value);
     });

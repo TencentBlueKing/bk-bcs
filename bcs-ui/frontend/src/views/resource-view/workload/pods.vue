@@ -3,7 +3,7 @@
     <BaseLayout title="Pods" kind="Pod" category="pods" type="workloads" ref="baseLayoutRef">
       <template
         #search="{
-          curNsList, isViewConfigShow, showFilter,
+          curNsList, isViewConfigShow, showFilter, curNsGroup,
           clusterID, handleShowViewConfig, handleNsChange }">
         <template v-if="showFilter">
           <div class="flex items-start justify-end flex-1 pl-[24px] text-[12px] h-[32px] z-10">
@@ -24,7 +24,7 @@
               {{$t('k8s.namespace')}}
             </span>
             <NsSelect
-              :value="curNsList"
+              :value="{ list: curNsList, group: curNsGroup }"
               class="flex-1 bg-[#fff] max-w-[240px] mr-[8px]"
               :cluster-id="clusterID"
               display-tag
@@ -128,8 +128,15 @@
           </bk-table-column>
           <bk-table-column label="Ready" width="100" :resizable="false">
             <template #default="{ row }">
-              {{handleGetExtData(row.metadata.uid, 'readyCnt') || 0}}
-              / {{handleGetExtData(row.metadata.uid, 'totalCnt') || 0}}
+              <span
+                :class="{
+                  'text-[#E38B02]': (handleGetExtData(row.metadata.uid, 'readyCnt') || 0)
+                    < (handleGetExtData(row.metadata.uid, 'totalCnt') || 0)
+                }"
+              >
+                {{handleGetExtData(row.metadata.uid, 'readyCnt') || 0}}
+                / {{handleGetExtData(row.metadata.uid, 'totalCnt') || 0}}
+              </span>
             </template>
           </bk-table-column>
           <bk-table-column label="Restarts" width="100" :resizable="false">
@@ -207,7 +214,7 @@ import { cloneDeep } from 'lodash';
 import { computed, defineComponent, ref, watch } from 'vue';
 
 import sourceTableCell from '../common/source-table-cell.vue';
-import NsSelect from '../view-manage/ns-select.vue';
+import NsSelect from '../view-manage/ns-select-tree.vue';
 import useViewConfig from '../view-manage/use-view-config';
 
 import { ISearchSelectValue } from '@/@types/bkui-vue';

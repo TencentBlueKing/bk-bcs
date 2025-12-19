@@ -31,6 +31,7 @@ type filterNodeGroupOption struct {
 	ClusterID string
 	ProjectID string
 	Region    string
+	ListOpt   *storeopt.ListOption
 }
 
 // listNodeGroupByConds list node groups
@@ -59,7 +60,10 @@ func listNodeGroupByConds(model store.ClusterManagerModel, options filterNodeGro
 	condStatus := operator.NewLeafCondition(operator.Ne, operator.M{"status": common.StatusDeleted})
 	branchCond := operator.NewBranchCondition(operator.And, cond, condStatus)
 
-	groups, err := model.ListNodeGroup(context.Background(), branchCond, &storeopt.ListOption{})
+	if options.ListOpt == nil {
+		options.ListOpt = &storeopt.ListOption{}
+	}
+	groups, err := model.ListNodeGroup(context.Background(), branchCond, options.ListOpt)
 	if err != nil {
 		return nil, err
 	}

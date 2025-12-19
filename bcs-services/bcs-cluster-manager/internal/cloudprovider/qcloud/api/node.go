@@ -209,8 +209,8 @@ func (nc *NodeClient) ListImages() ([]*cvm.Image, error) {
 	return imageList, nil
 }
 
-// GetInstancesById get instances list by ids
-func (nc *NodeClient) GetInstancesById(ids []string) ([]*cvm.Instance, error) {
+// GetInstancesByID get instances list by ids
+func (nc *NodeClient) GetInstancesByID(ids []string) ([]*cvm.Instance, error) {
 	req := cvm.NewDescribeInstancesRequest()
 	req.Limit = common.Int64Ptr(limit)
 
@@ -251,8 +251,8 @@ func (nc *NodeClient) GetInstancesById(ids []string) ([]*cvm.Instance, error) {
 	return response.InstanceSet, nil
 }
 
-// GetInstancesByIp trans IPList to cloud Instance, filter max 5 values
-func (nc *NodeClient) GetInstancesByIp(ips []string) ([]*cvm.Instance, error) {
+// GetInstancesByIP trans IPList to cloud Instance, filter max 5 values
+func (nc *NodeClient) GetInstancesByIP(ips []string) ([]*cvm.Instance, error) {
 	req := cvm.NewDescribeInstancesRequest()
 	req.Limit = common.Int64Ptr(limit)
 
@@ -378,27 +378,36 @@ func (nc *NodeClient) DescribeImages(imageType string) ([]*cvm.Image, error) {
 		}
 	}
 
-	images := make([]*cvm.Image, 0)
-	got, total := 0, 0
-	first := true
-	for got < total || first {
-		first = false
-		req.Offset = common.Uint64Ptr(uint64(got))
+	var (
+		initOffset   uint64
+		imageListLen = 100
+
+		images = make([]*cvm.Image, 0)
+	)
+
+	for {
+		if imageListLen != 100 {
+			break
+		}
+		req.Offset = common.Uint64Ptr(initOffset)
+		req.Limit = common.Uint64Ptr(uint64(100))
+
 		resp, err := nc.client.DescribeImages(req)
 		if err != nil {
-			blog.Errorf("DescribeImages failed, err: %s", err.Error())
+			blog.Errorf("cvm client DescribeImages failed, %s", err.Error())
 			return nil, err
 		}
-		if resp == nil || resp.Response == nil {
-			blog.Errorf("DescribeImages resp is nil")
-			return nil, fmt.Errorf("DescribeImages resp is nil")
+		// check response
+		response := resp.Response
+		if response == nil {
+			blog.Errorf("cvm client ListImages DescribeImages but lost response information")
+			return nil, cloudprovider.ErrCloudLostResponse
 		}
-		blog.Infof("DescribeImages success, requestID: %s", *resp.Response.RequestId)
 
-		images = append(images, resp.Response.ImageSet...)
+		images = append(images, response.ImageSet...)
 
-		got += len(resp.Response.ImageSet)
-		total = int(*resp.Response.TotalCount)
+		imageListLen = len(response.ImageSet)
+		initOffset += 100
 	}
 
 	blog.Infof("nodeClient DescribeImages successful")
@@ -439,6 +448,7 @@ func getCvmImagesByImageType(provider string, opt *cloudprovider.CommonOption) (
 	return cvmImages, nil
 }
 
+// getCvmImageByImageName get cvm image by imageName, imageName maybe id or name
 func getCvmImageByImageName(imageName string, opt *cloudprovider.CommonOption) (*cvm.Image, error) {
 	cli, err := GetCVMClient(opt)
 	if err != nil {
@@ -450,14 +460,16 @@ func getCvmImageByImageName(imageName string, opt *cloudprovider.CommonOption) (
 		return image, nil
 	}
 
-	imageID, err := cli.GetImageIDByImageName(imageName, opt)
+	var imageId string
+	imageId, err = cli.GetImageIDByImageName(imageName, opt)
 	if err != nil {
-		return nil, fmt.Errorf("getCvmImageByImageName[%s] GetImageIDByImageName failed: %v", imageName, err)
+		imageId = imageName
+		blog.Errorf("getCvmImageByImageName[%s] GetImageIDByImageName failed: %v", imageName, err)
 	}
 
-	cvmImage, err := cli.GetImageByImageID(imageID)
+	cvmImage, err := cli.GetImageByImageID(imageId)
 	if err != nil {
-		return nil, fmt.Errorf("getCvmImageByImageName[%s] GetImageByImageID failed: %v", imageID, err)
+		return nil, fmt.Errorf("getCvmImageByImageName[%s] GetImageByImageID failed: %v", imageId, err)
 	}
 
 	err = setImageNameCacheData(opt.Region, imageName, cvmImage)
@@ -533,14 +545,14 @@ func (nc *NodeClient) ListKeyPairs() ([]*cvm.KeyPair, error) {
 }
 
 // ModifyInstancesVpcAttribute 修改实例vpc属性(vpc必须存在对应可用区的子网)
-func (nc *NodeClient) ModifyInstancesVpcAttribute(vpcId string, subnet string, instanceIds []string) error {
+func (nc *NodeClient) ModifyInstancesVpcAttribute(vpcID string, subnet string, instanceIds []string) error {
 	req := cvm.NewModifyInstancesVpcAttributeRequest()
 	if len(instanceIds) > 0 {
 		req.InstanceIds = common.StringPtrs(instanceIds)
 	}
 	req.ReserveHostName = common.BoolPtr(true)
 	req.VirtualPrivateCloud = &cvm.VirtualPrivateCloud{
-		VpcId:    common.StringPtr(vpcId),
+		VpcId:    common.StringPtr(vpcID),
 		SubnetId: common.StringPtr(subnet),
 	}
 
@@ -554,6 +566,6 @@ func (nc *NodeClient) ModifyInstancesVpcAttribute(vpcId string, subnet string, i
 		return fmt.Errorf("ModifyInstancesVpcAttribute[%+v] lost validate response", instanceIds)
 	}
 
-	blog.Infof("ModifyInstancesVpcAttribute[%+v] vpc[%s] subnet[%s] successful", instanceIds, vpcId, subnet)
+	blog.Infof("ModifyInstancesVpcAttribute[%+v] vpc[%s] subnet[%s] successful", instanceIds, vpcID, subnet)
 	return nil
 }

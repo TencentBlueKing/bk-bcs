@@ -39,6 +39,8 @@ const (
 	GroupTemplate = "ng"
 	// NotifyTemplate notify template
 	NotifyTemplate = "nf"
+	// TemplateConfig template config
+	TemplateConfig = "tc"
 )
 
 // CheckClusterConnection check cluster connection when delete cluster or other scenes
@@ -185,7 +187,7 @@ func FormatTaskTime(t *proto.Task) {
 	}
 }
 
-// Passwd flag
+// Passwd pwd flag
 var Passwd = []string{"password", "passwd"}
 
 // HandleTaskStepData handle task step data(hidden passwd, step name)
@@ -197,8 +199,8 @@ func HandleTaskStepData(ctx context.Context, task *proto.Task) {
 				task.Steps[i].TaskName, task.Steps[i].Translate)
 
 			for k := range task.Steps[i].Params {
-				if utils.StringInSlice(k, []string{cloudprovider.BkSopsTaskUrlKey.String(),
-					cloudprovider.ShowSopsUrlKey.String(), cloudprovider.ConnectClusterKey.String(),
+				if utils.StringInSlice(k, []string{cloudprovider.BkSopsTaskURLKey.String(),
+					cloudprovider.ShowSopsURLKey.String(), cloudprovider.ConnectClusterKey.String(),
 					cloudprovider.InstallGseAgentKey.String()}) {
 					continue
 				}
@@ -215,6 +217,22 @@ func HandleTaskStepData(ctx context.Context, task *proto.Task) {
 			}
 		}
 	}
+}
+
+// CheckTaskStepPartFailureStatus check task is success status && task step has part failure status
+func CheckTaskStepPartFailureStatus(task *proto.Task) bool {
+	if task == nil || task.Steps == nil {
+		return false
+	}
+	if task.Status != cloudprovider.TaskStatusSuccess {
+		return false
+	}
+	for _, step := range task.Steps {
+		if step.Status == cloudprovider.TaskStatusPartFailure {
+			return true
+		}
+	}
+	return false
 }
 
 // GenerateTemplateID generate random templateID

@@ -130,6 +130,8 @@ nav:
   cloudToken: 云凭证
   templateFile: 模板文件
   projectQuotas: 项目配额
+  platformProject: 项目管理
+  platformManage: 平台管理
 iam:
   title:
     perms: 该操作需要以下权限
@@ -142,6 +144,7 @@ iam:
   button:
     apply: 去申请
     apply2: 申请权限
+    applied: 已申请
   actionMap:
     project_create: 项目创建
     project_view: 项目查看
@@ -344,6 +347,7 @@ generic:
     know: 我知道了
     confirmSave: 确定保存
     detail: 详情
+    detail1: 查看详情
     remove: 移除
   label:
     key: 键
@@ -401,6 +405,12 @@ generic:
     resourceName: 资源名称
     resourceID: 资源ID
     none: 无
+    tag: 标签
+    description: 描述
+    managers: 管理者
+    codeMode: 源码模式
+    enabled: 已启用
+    disabled: 已停用
   status:
     part_failure: 部分失败
     support: 支持
@@ -445,6 +455,10 @@ generic:
     halfSuccess: 部分成功
     terminate: 退出
     waiting: 等待
+    installing: 安装中
+    installFailed: 安装失败
+    uninstalling: 卸载中
+    uninstallFailed: 卸载失败
   validate:
     name: 仅支持字母，数字和字符(-)，且以字母开头
     repeatKey: 重复键
@@ -457,7 +471,6 @@ generic:
     required1: taints不能有空字段
     annotationValueEmpty: 注解值不能为空
     labelKey1: 仅支持字母，数字和字符(-_./)，且需以字母数字开头和结尾
-    labelValue: 仅支持字母，数字和字符(-_.)，且需以字母数字开头和结尾
     kindName: 名称只能包含数字、字母、中划线(-)、下划线(_)、点(.)，开头结尾必须是数字或字母
     fileName: 文件名称只能包含数字、字母、中划线(-)、下划线(_)、点(.)，开头结尾必须是数字或字母
     notRootName: 用户名不能为root
@@ -503,6 +516,10 @@ generic:
       ipInUsed: 'IP已被 {name}{id} 占用'
       ipRegionNotMatched: '待选节点所属地域需与集群保持一致, 集群地域: {0}'
       ipVpcNotMatched: '待选节点所属VPC需与集群保持一致, 待选节点VPC: {0}, 集群VPC: {1}'
+      ipDiskNumNotMatched: 待选节点必须存在/dev/vdb数据盘
+      ipAgentAbnormal: Agent状态异常
+      ipNotGpu: 待选节点非 GPU 节点
+      ipIsGpu: 待选节点为 GPU 节点
     selected:
       text2: '已选择{remainCount}个节点'
     label:
@@ -778,8 +795,8 @@ cluster:
       masterNum135: 仅支持1台、3台或5台主机
       quota: CPU配额最少40核，内存配额最少40GiB
       regionDiff: '节点地域需要与集群地域保持一致，节点地域：{region1}，集群地域：{region2}'
-      vpcDiff: '节点VPC需要与集群VPC保存一致，节点VPC：{vpc1}，集群VPC：{vpc2}'
       emptyKubeConfig: 请先测试kubeconfig可用性
+      maxNum50: 最多支持50个节点
     button:
       createCluster: 创建集群
       addHost: 添加服务器
@@ -986,6 +1003,11 @@ cluster:
         name: 节点池名称
         detail: 查看节点池详情
         serviceRole: IAM角色
+        type:
+          title: 节点池类型
+          tips: 默认使用平台提供 GPU 镜像
+        CVM: 普通 CVM 节点池
+        GPU: GPU 节点池
       title:
         nodeConfig: 节点配置
         initConfig: 初始化配置
@@ -1314,6 +1336,7 @@ cluster:
       setTaint: 设置污点
       addLabel: 添加标签
       addTaint: 添加污点
+      addAnnotation: 添加注解
       copy:
         text: 复制
         checkedIP: 复制勾选IP
@@ -1337,6 +1360,7 @@ cluster:
       disableImportClusterAction: 导入集群，节点管理功能不可用
       disableImportClusterAddNode: 导入集群不支持从已有服务器添加节点
       hasNotNodePoolNode: 选择的节点中有非节点池添加的节点
+      notNodePoolNode: 该节点为非节点池添加的节点
       disableBatchSettingNodes: 选中的节点中有非正常状态的节点
       undo: 恢复
       batchUndo: 批量恢复
@@ -1352,6 +1376,7 @@ cluster:
       inputValue: 请输入value
       locationTag: 定位标签
       locationTaint: 定位污点
+      locationAnnotation: 定位注解
     title:
       confirmAddNode: 确定添加节点
       confirmReAddNode: 确认重新添加节点
@@ -1362,6 +1387,8 @@ cluster:
         desc: 批量设置只展示相同Key的标签
       batchSetTaint:
         text: 批量设置污点
+      batchSetAnnotation:
+        text: 批量设置注解
       tableSetting: 表格设置
       fieldDisplaySettings: 表格显示设置
       nodeSaveError: 部分节点保存失败
@@ -1396,6 +1423,9 @@ cluster:
       termination: 终止宽限时间
       drainRisk: 驱逐风险
       isDrainOnly: 仅展示可驱逐的 Pod
+      nodeType: 节点类型
+      cvmNode: 普通 CVM 节点
+      gpuNode: GPU 节点
     metric:
       cpuUsageAndRequestUsage: CPU使用率/装箱率
       memUsageAndRequestUsage: 内存使用率/装箱率
@@ -2230,7 +2260,10 @@ projects:
     desc: 请输入项目描述
     search: 输入项目名称搜索
     bkMonitor: 申请监控中心
-    businessID: 业务ID
+    businessID: 业务 ID
+    ID: 项目 ID
+    business: 所属业务
+    goto: 前往项目
   validate:
     projectName: '请输入2-64字符，不能包含`~!@#$%^&*()+<>?:"{},./;\''''[]字符和空格'
     projectName1: 请输入2-32字符的小写字母、数字、中划线，以小写字母开头
@@ -2303,6 +2336,9 @@ dashboard:
     label:
       createMoreNamespaceVars: '可通过 {action} 创建更多作用在命名空间的变量'
       noNamespaceVariables: 暂无命名空间变量
+      allNamespaces: 全部命名空间
+      projectNS: '项目命名空间{0}'
+      systemNS: '系统命名空间{0}'
     msg:
       undoSuccess: 撤回成功
     quota:
@@ -2357,7 +2393,7 @@ dashboard:
       reason: 原因
       scaleNum: 实例数量
     button:
-      yaml: 查看YAML配置
+      yaml: 查看YAML
       restart: 滚动重启
       onDelete: 手动重启
       applyURL: 申请访问
@@ -2382,6 +2418,7 @@ dashboard:
       filelog: 文件日志检索
       search: 请入名称、镜像、IP、Node搜索
       confirm: 确认删除以下Pod
+      logDisabledTips: 集群未安装 bklog-collector
     editor:
       yamlMode:
         confirm: 确认切换为 YAML 模式？
@@ -2681,6 +2718,8 @@ googleCloud:
       desc: >-
         当前集群规格最多管理15000个节点, 超过5000个节点需联系GKE服务团队提升集群配额, 20万个Pod, 40万个容器,
         每个节点池最多支持1000个节点, 每个节点最多支持256个Pod
+importTencentCloud:
+  title: 导入公有云集群 - 腾讯云
 importGoogleCloud:
   title: 导入公有云集群 - 谷歌云
   tips:
@@ -2913,6 +2952,8 @@ tke:
     publicImage: 公共镜像
     marketImage: 市场镜像
     privateImage: 私有镜像
+    bcsImage: 平台镜像
+    clusterImage: 集群镜像
     ipNum: IP数量
     zone: 可用区
     staticIpMode: 固定 Pod IP
@@ -3044,6 +3085,7 @@ tke:
     hasSelected: 已选择
     zone: 'VPC-CNI网络插件的Pod IP没有使用此可用区, 请选择其他可用区'
     imageUsedInCluster: 有集群正在使用
+    currentClusterUsed: 当前集群使用
     subnetZone: VPC-CNI网络插件的Pod IP绑定在集群节点上，Pod IP可用区必须与集群节点(包含控制面与Node节点)可用区保持一致
     noAvailableIp: 无可用IP
     subnetInUsed: '子网已被集群 {0} 使用'
@@ -3213,3 +3255,116 @@ diff:
   delete: 删除
   change: 变化
   add: 新增
+serviceMesh:
+  title: 服务网格
+  create: 新建网格
+  status:
+    'on': 已开启
+    'off': 已关闭
+  label:
+    name: 网格名称
+    ID: 网格 ID
+    version: 版本
+    status: 状态
+    cluster: 关联集群
+    createTime: 创建时间
+    scene: 观测场景
+    basicInfo: 基础信息
+    network: 网格特性配置
+    master: 高可用配置
+    create: 新建网格
+    info: 网格信息
+    description: 描述
+    clusterConfig: 集群配置
+    primaryClusters: 主集群
+    featureConfig: 特性设置
+    egressMode: Egress 流量模式
+    sidecarOn: Sidecar 就绪保障
+    sidecarOff: Sidecar 停止保障
+    sidecarResource: Sidecar 资源
+    cpuRequest: CPU 预留
+    cpuLimit: CPU 限制
+    memoryRequest: 内存预留
+    memoryLimit: 内存限制
+    dnsCapture: DNS 代理转发
+    dnsAutoAllocate: 自动分配 IP
+    http10: 支持 HTTP/1.0
+    excludeIPs: 排除 IP 范围
+    observability: 可观测性
+    metrics: 指标采集
+    controlPlane: 控制面指标上报
+    dataPlane: 数据面指标上报
+    logOutput: 日志输出
+    logType: 日志输出类型
+    logFormat: 日志输出格式
+    tracing: 全链路追踪
+    sampleRate: 采样率
+    endpoint: 上报地址
+    bkToken: 上报 TOKEN
+    highAvailability: 控制面高可用配置
+    replicas: 副本数
+    resource: 资源
+    cpuPercent: CPU 平均利用率
+    replicaMin: 最小副本
+    replicaMax: 最大副本
+    dedicatedNode: 专属节点
+    multiCluster: 多集群
+    differentNetwork: 集群网络连通性
+    connected: 已打通
+    notConnected: 未打通（暂不支持）
+    clbID: 东西向网关 CLB
+    subClusters: 从集群
+    tableEmpty: 暂无数据，请先添加集群
+    clusterRegion: 集群地域
+    joinTime: 加入时间
+    networkID: 网络 ID
+  placeholder:
+    search: 搜索网格名称/版本/状态/关联集群
+    ips: 请输入 IP，多个 IP 用回车分隔
+  tips:
+    delete: 确认删除该网格？
+    subTitle: '网格名称：{name}'
+    primaryClusterDesc: 用于部署 istio 网格控制面
+    clusterEnabled: 此集群不匹配当前所选 k8s 版本
+    maxlength: 最多输入 2000 个字符
+    cpuValidate: 须大于或等于 CPU 预留
+    memoryValidate: 须大于或等于内存预留
+    endpointValidate: '仅支持大小写字母、数字、字符( . : / )'
+    disabledVirtual: 不支持vcluster部署
+    disabledShare: 不支持共享集群部署
+    disabledFederation: 不支持联邦集群部署
+    autoscaleMax: 最大副本数不能小于最小副本数
+    isInstalled: 集群已部署
+    egressModeDesc:
+      title: 配置网格内服务对外访问的放通策略。
+      registryOnly: Registry Only：仅支持访问网格自动发现的服务与手动注册的服务
+      allowAny: Allow Any：可访问任何地址
+    sidecarOnDesc: >-
+      使用 HoldApplicationUntilProxyStarts 功能，配置业务容器等待 Sidecar 完成启动后再启动，确保业务容器运行依赖
+      Sidecar 的 Pod 正常运行
+    sidecarOffDesc: 开启后 Sidecar 停止需要等待业务容器中进程完全终止，将一定程度增加 Pod 停止时长，建议对业务进程无法随时关闭的服务开启
+    dnsCaptureDesc: >-
+      当 Istio 代理 DNS 时，所有来自应用程序的 DNS 请求将会被重定向到
+      Sidecar，如果请求被代理处理，它将直接给应用返回响应，避免了对上游 DNS 服务器的往返
+    dnsAutoAllocateDesc: DNS 代理支持自动为未明确指定地址的 ServiceEntry 分配地址
+    http10Desc: Istio 默认情况下不支持HTTP/1.0，更倾向于使用HTTP/1.1 或HTTP/2 协议。如果需要支持HTTP/1.0，需要单独开启
+    excludeIPsDesc: >-
+      对应 excludeIPRanges ，默认情况下，Sidecar 会接管当前 Pod 内所有的流量，如果想让针对特定的 IP 的访问不经过
+      Sidecar 代理， 则可以配置此选项，配置后对该 IP 范围的请求流量将无法使用 Istio 流量管理、可观测性等特性。配置变更后仅对新增
+      Pod 生效，存量 Pod 需重启后生效。
+    dataPlaneDesc: 如果集群规模较大，需要评估监控数据给远端存储可能会造成的压力
+    sampleRateDesc: >-
+      网格采集并持久化调用 Tracing 的采样比例。Sidecar 采集与上报数据消耗资源与带宽和数据量成正相关，请按需配置，开发测试环境建议
+      100%，生产环境建议 1%
+    endpointDesc: 对应蓝鲸监控的上报地址
+    bkTokenDesc: 蓝鲸监控 APM 设置中获取
+    dedicatedNodeDesc: 设置标签将 istio 控制面调度到专用的节点上，前提是需要节点上已存在对应的 label
+    differentNetworkDesc: 通过云联网打通容器网络，或者自研云内要求在同一个 vpc
+    clbIDDesc: 用于从集群连接主集群控制面，填写一个 clb id
+    subClustersDesc: 构建多集群，用于加入主机群控制面
+    disabledClustersDesc: 集群被占用
+    cancelTitle: 确认关闭多集群？
+    cancelSubTitle: 关闭后，已填写的内容将会被清空。
+    clearClustersTip: 请先清空集群
+    revisionDesc: >-
+      用于指定控制面版本，命名空间需要添加标签来使用对应版本控制面，如istio.io/rev=1-18-bcs-2。仅首次安装可以指定后续不可修改，未指定则使用默认值。

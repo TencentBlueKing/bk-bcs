@@ -273,8 +273,22 @@ export default defineComponent({
     },
     // CRD资源分两种，普通和定制，customized 用来区分普通和定制
     customized: {
-      type: Boolean,
+      type: [Boolean, String],
       default: false,
+    },
+    // CRD资源的版本
+    version: {
+      type: String,
+      default: '',
+    },
+    // CRD资源的分组
+    group: {
+      type: String,
+      default: '',
+    },
+    resource: {
+      type: String,
+      default: '',
     },
     // CRD资源的作用域
     scope: {
@@ -297,6 +311,9 @@ export default defineComponent({
       defaultOriginal,
       customized,
       scope,
+      version,
+      group,
+      resource,
     } = toRefs(props);
     const { clientHeight } = document.body;
 
@@ -370,19 +387,29 @@ export default defineComponent({
       if (!isEdit.value) return null;
       isLoading.value = true;
       let res: any = null;
-      if (type.value === 'crd') {
+      if (customized.value && customized.value !== 'false') {
         res = await customResourceDetail({
           format: 'manifest',
           $clusterId: clusterId.value,
           $name: name.value,
-          kind: kind.value,
           namespace: namespace.value,
+          group: group.value,
+          version: version.value,
+          resource: resource.value,
         }, { needRes: true }).catch(() => ({
           data: {
             manifest: {},
             manifestExt: {},
           },
         }));
+      } else if (type.value === 'crd') {
+        res = await $store.dispatch('dashboard/retrieveCustomResourceDetail', {
+          $crd: crd.value,
+          $category: category.value,
+          $name: name.value,
+          namespace: namespace.value,
+          $clusterId: clusterId.value,
+        });
       } else {
         res = await $store.dispatch('dashboard/getResourceDetail', {
           $namespaceId: namespace.value,
@@ -573,10 +600,13 @@ export default defineComponent({
     };
     const handleCreateResource = async () => {
       let result = false;
-      if (customized.value) { // 创建普通crd资源
+      if (customized.value && customized.value !== 'false') { // 创建普通crd资源
         result = await createCustomResource({
           $clusterId: clusterId.value,
           format: 'manifest',
+          group: group.value,
+          version: version.value,
+          resource: resource.value,
           namespaced: scope.value === 'Namespaced',
           rawData: detail.value,
         }).catch((err) => {
@@ -634,9 +664,12 @@ export default defineComponent({
         defaultInfo: true,
         confirmFn: async () => {
           let result = false;
-          if (customized.value) {
+          if (customized.value && customized.value !== 'false') {
             result = await updateCustomResource({
               $clusterId: clusterId.value,
+              group: group.value,
+              version: version.value,
+              resource: resource.value,
               format: 'manifest',
               rawData: detail.value,
             }).catch((err) => {

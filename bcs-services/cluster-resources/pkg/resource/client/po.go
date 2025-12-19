@@ -218,8 +218,11 @@ func (c *PodClient) GetPVCMountInfo(
 
 // ExecCommand 在指定容器中执行命令，获取 stdout, stderr
 func (c *PodClient) ExecCommand(
-	namespace, podName, containerName string, cmds []string,
+	ctx context.Context, namespace, podName, containerName string, cmds []string,
 ) (string, string, error) {
+	if err := c.permValidate(ctx, action.View, namespace); err != nil {
+		return "", "", err
+	}
 	clientSet, err := kubernetes.NewForConfig(c.conf.Rest)
 	if err != nil {
 		return "", "", err
@@ -250,8 +253,9 @@ func (c *PodClient) ExecCommand(
 		Stdout: &stdout,
 		Stderr: &stderr,
 	})
+
 	if err != nil {
-		return "", "", err
+		return "", "", errorx.New(errcode.General, i18n.GetMsg(ctx, "获取容器环境变量失败，请确认容器处于 Running 状态"))
 	}
 	return stdout.String(), stderr.String(), err
 }

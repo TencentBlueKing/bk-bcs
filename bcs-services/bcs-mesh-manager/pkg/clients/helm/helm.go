@@ -20,6 +20,8 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/helmmanager"
+	"helm.sh/helm/v3/pkg/storage/driver"
+	"k8s.io/utils/pointer"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/common"
 )
@@ -147,4 +149,132 @@ func GetReleaseDetail(
 	defer closeFunc()
 
 	return helmManagerClient.HelmManagerClient.GetReleaseDetailV1(ctx, req)
+}
+
+// UninstallIstioComponent 通用的istio组件卸载函数
+func UninstallIstioComponent(ctx context.Context, clusterID, componentName, projectCode, meshID string) error {
+	resp, err := Uninstall(ctx, &helmmanager.UninstallReleaseV1Req{
+		ProjectCode: pointer.String(projectCode),
+		ClusterID:   pointer.String(clusterID),
+		Name:        pointer.String(componentName),
+		Namespace:   pointer.String(common.IstioNamespace),
+	})
+	if err != nil {
+		blog.Errorf("[%s]helm uninstall %s failed, clusterID: %s, err: %s",
+			meshID, componentName, clusterID, err)
+		return fmt.Errorf("uninstall %s failed: %s", componentName, err)
+	}
+	if resp.Result != nil && !*resp.Result {
+		blog.Errorf("[%s]helm uninstall %s failed, meshID: %s, clusterID: %s, resp message: %s",
+			componentName, meshID, clusterID, *resp.Message)
+		return fmt.Errorf("uninstall %s failed: %s", componentName, *resp.Message)
+	}
+
+	// 查询是否删除成功 查询详情 每隔5s查询一次 直到删除成功，超时2min
+	timeout := time.NewTimer(2 * time.Minute)
+	defer timeout.Stop()
+	ticker := time.NewTicker(5 * time.Second)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-timeout.C:
+			blog.Errorf("[%s]uninstall %s timeout, clusterID: %s",
+				meshID, componentName, clusterID)
+			return fmt.Errorf("uninstall %s timeout for cluster %s", componentName, clusterID)
+		case <-ticker.C:
+			// 查询 release 是否存在
+			detail, err := GetReleaseDetail(ctx, &helmmanager.GetReleaseDetailV1Req{
+				ProjectCode: pointer.String(projectCode),
+				ClusterID:   pointer.String(clusterID),
+				Name:        pointer.String(componentName),
+				Namespace:   pointer.String(common.IstioNamespace),
+			})
+			if err != nil {
+				blog.Errorf("[%s]get %s release status failed, clusterID: %s, err: %v",
+					meshID, componentName, clusterID, err)
+				return fmt.Errorf("get %s release status failed: %v", componentName, err)
+			}
+			if detail != nil && detail.Message != nil && *detail.Message == driver.ErrReleaseNotFound.Error() {
+				return nil
+			}
+		}
+	}
+}
+
+// InstallComponentOption istio安装组件参数
+type InstallComponentOption struct {
+	ChartVersion  string
+	ClusterID     string
+	ComponentName string
+	ChartName     string
+	ProjectCode   string
+	MeshID        string
+	NetworkID     string
+	ChartRepo     string
+}
+
+// InstallComponent 通用安装istio组件方法
+func InstallComponent(
+	ctx context.Context,
+	opt *InstallComponentOption,
+	valuesGenFunc func() (string, error),
+) error {
+	values, err := valuesGenFunc()
+	if err != nil {
+		return fmt.Errorf("gen %s values failed: %s", opt.ComponentName, err)
+	}
+	blog.Infof("install %s values: %s for cluster: %s, mesh: %s, network: %s",
+		opt.ComponentName, values, opt.ClusterID, opt.MeshID, opt.NetworkID)
+
+	resp, err := Install(ctx, &helmmanager.InstallReleaseV1Req{
+		ProjectCode: pointer.String(opt.ProjectCode),
+		ClusterID:   pointer.String(opt.ClusterID),
+		Name:        pointer.String(opt.ComponentName),
+		Namespace:   pointer.String(common.IstioNamespace),
+		Chart:       pointer.String(opt.ChartName),
+		Repository:  pointer.String(opt.ChartRepo),
+		Version:     pointer.String(opt.ChartVersion),
+		Values:      []string{values},
+		Args:        []string{"--wait"},
+	})
+	if err != nil {
+		blog.Errorf("install %s failed, err: %s", opt.ComponentName, err)
+		return fmt.Errorf("install %s failed: %s", opt.ComponentName, err)
+	}
+	if resp.Result != nil && !*resp.Result {
+		blog.Errorf("install %s failed, err: %s", opt.ComponentName, *resp.Message)
+		return fmt.Errorf("install %s failed: %s", opt.ComponentName, *resp.Message)
+	}
+	// 查询是否安装成功
+	timeout := time.NewTimer(2 * time.Minute)
+	defer timeout.Stop()
+	ticker := time.NewTicker(5 * time.Second)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-timeout.C:
+			blog.Errorf("install %s timeout for cluster %s", opt.ComponentName, opt.ClusterID)
+			return fmt.Errorf("install %s timeout for cluster %s", opt.ComponentName, opt.ClusterID)
+		case <-ticker.C:
+			release, err := GetReleaseDetail(ctx, &helmmanager.GetReleaseDetailV1Req{
+				ProjectCode: pointer.String(opt.ProjectCode),
+				ClusterID:   pointer.String(opt.ClusterID),
+				Name:        pointer.String(opt.ComponentName),
+				Namespace:   pointer.String(common.IstioNamespace),
+			})
+			blog.Infof("[loop]get %s release: %+v, err: %s, cluster: %s", opt.ComponentName, release, err, opt.ClusterID)
+			if err != nil {
+				blog.Errorf("get %s release failed, err: %s", opt.ComponentName, err)
+				return fmt.Errorf("get %s release failed: %s", opt.ComponentName, err)
+			}
+			if release.Data != nil && release.Data.Status != nil {
+				if *release.Data.Status == ReleaseStatusDeployed {
+					blog.Infof("install %s success for cluster %s", opt.ComponentName, opt.ClusterID)
+					return nil
+				}
+			}
+		}
+	}
 }

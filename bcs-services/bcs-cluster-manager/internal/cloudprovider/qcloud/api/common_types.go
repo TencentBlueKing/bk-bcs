@@ -1132,3 +1132,92 @@ func (r *DescribeInstanceCreateProgressResponse) ToJsonString() string {
 	b, _ := json.Marshal(r)
 	return string(b)
 }
+
+// Predefined struct for user
+type EnableClusterAuditRequestParams struct {
+	// 集群ID
+	ClusterId *string `json:"ClusterId,omitempty" name:"ClusterId"`
+
+	// CLS日志集ID
+	LogsetId *string `json:"LogsetId,omitempty" name:"LogsetId"`
+
+	// 集群所属产品标识
+	ProductName *string `json:"ProductName,omitempty" name:"ProductName"`
+
+	// CLS日志主题ID
+	TopicId *string `json:"TopicId,omitempty" name:"TopicId"`
+
+	// topic所在region，默认为集群当前region
+	TopicRegion *string `json:"TopicRegion,omitempty" name:"TopicRegion"`
+
+	// 是否仅开启审计不采集
+	WithoutCollection *bool `json:"WithoutCollection,omitempty" name:"WithoutCollection"`
+}
+
+type EnableClusterAuditRequest struct {
+	*tchttp.BaseRequest
+
+	// 集群ID
+	ClusterId *string `json:"ClusterId,omitempty" name:"ClusterId"`
+
+	// CLS日志集ID
+	LogsetId *string `json:"LogsetId,omitempty" name:"LogsetId"`
+
+	// 集群所属产品标识
+	ProductName *string `json:"ProductName,omitempty" name:"ProductName"`
+
+	// CLS日志主题ID
+	TopicId *string `json:"TopicId,omitempty" name:"TopicId"`
+
+	// topic所在region，默认为集群当前region
+	TopicRegion *string `json:"TopicRegion,omitempty" name:"TopicRegion"`
+
+	// 是否仅开启审计不采集
+	WithoutCollection *bool `json:"WithoutCollection,omitempty" name:"WithoutCollection"`
+}
+
+func (r *EnableClusterAuditRequest) ToJsonString() string {
+	b, _ := json.Marshal(r)
+	return string(b)
+}
+
+// FromJsonString It is highly **NOT** recommended to use this function
+// because it has no param check, nor strict type check
+func (r *EnableClusterAuditRequest) FromJsonString(s string) error {
+	f := make(map[string]interface{})
+	if err := json.Unmarshal([]byte(s), &f); err != nil {
+		return err
+	}
+	delete(f, "ClusterId")
+	delete(f, "LogsetId")
+	delete(f, "ProductName")
+	delete(f, "TopicId")
+	delete(f, "TopicRegion")
+	delete(f, "WithoutCollection")
+	if len(f) > 0 {
+		return tcerr.NewTencentCloudSDKError("ClientError.BuildRequestError", "EnableClusterAuditRequest has unknown keys!", "")
+	}
+	return json.Unmarshal([]byte(s), &r)
+}
+
+// Predefined struct for user
+type EnableClusterAuditResponseParams struct {
+	// 唯一请求 ID，由服务端生成，每次请求都会返回（若请求因其他原因未能抵达服务端，则该次请求不会获得 RequestId）。定位问题时需要提供该次请求的 RequestId。
+	RequestId *string `json:"RequestId,omitempty" name:"RequestId"`
+}
+
+type EnableClusterAuditResponse struct {
+	*tchttp.BaseResponse
+	Response *EnableClusterAuditResponseParams `json:"Response"`
+}
+
+func (r *EnableClusterAuditResponse) ToJsonString() string {
+	b, _ := json.Marshal(r)
+	return string(b)
+}
+
+// FromJsonString It is highly **NOT** recommended to use this function
+// because it has no param check, nor strict type check
+func (r *EnableClusterAuditResponse) FromJsonString(s string) error {
+	return json.Unmarshal([]byte(s), &r)
+}

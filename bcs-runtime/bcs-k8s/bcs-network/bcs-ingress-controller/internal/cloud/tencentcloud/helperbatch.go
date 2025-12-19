@@ -158,6 +158,12 @@ func (c *Clb) batchCreate4LayerListener(
 		if len(listener.Spec.ListenerAttribute.LbPolicy) != 0 {
 			req.Scheduler = tcommon.StringPtr(listener.Spec.ListenerAttribute.LbPolicy)
 		}
+		if listener.Spec.ListenerAttribute.SessionType != "" {
+			req.SessionType = tcommon.StringPtr(listener.Spec.ListenerAttribute.SessionType)
+			if listener.Spec.ListenerAttribute.SessionType == SessionTypeQUICCID {
+				req.Scheduler = tcommon.StringPtr("WRR")
+			}
+		}
 		req.HealthCheck = transIngressHealtchCheck(listener.Spec.ListenerAttribute.HealthCheck)
 	}
 	req.Certificate = transIngressCertificate(listener.Spec.Certificate)
@@ -328,6 +334,9 @@ func (c *Clb) createL4ListenerWithoutTg(
 		}
 		if len(listener.Spec.ListenerAttribute.LbPolicy) != 0 {
 			req.Scheduler = tcommon.StringPtr(listener.Spec.ListenerAttribute.LbPolicy)
+		}
+		if listener.Spec.ListenerAttribute.SessionType != "" {
+			req.SessionType = tcommon.StringPtr(listener.Spec.ListenerAttribute.SessionType)
 		}
 		req.HealthCheck = transIngressHealtchCheck(listener.Spec.ListenerAttribute.HealthCheck)
 	}

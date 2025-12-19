@@ -38,7 +38,9 @@
             disabled: !!applyUrl
           }"
         >
-          <bk-button theme="primary" :disabled="!applyUrl" @click="goApplyUrl">{{ $t('iam.button.apply') }}</bk-button>
+          <bk-button theme="primary" :disabled="!applyUrl" @click="goApplyUrl">
+            {{ hasApplied ? $t('iam.button.applied') : $t('iam.button.apply') }}
+          </bk-button>
         </div>
         <bk-button theme="default" @click="hide">{{ $t('generic.button.cancel') }}</bk-button>
       </div>
@@ -65,6 +67,7 @@ export default {
       actionsMap,
       isLoading: false,
       config: null,
+      hasApplied: false, // 是否已申请
     };
   },
   computed: {
@@ -85,6 +88,7 @@ export default {
       this.dialogConf.isShow = false;
       this.applyUrl = '';
       this.actionList = [{}];
+      this.hasApplied = false;
     },
     async show(callbackData = {}) {
       this.dialogConf.isShow = true;
@@ -102,14 +106,27 @@ export default {
       this.actionList = action_list;
     },
     goApplyUrl() {
+      if (this.hasApplied) {
+        // 刷新页面
+        window.location.reload();
+        return;
+      }
       window.open(this.applyUrl);
-      this.hide();
+      this.hasApplied = true;
     },
   },
 };
 </script>
 
 <style lang="postcss" scoped>
+:deep(.bk-dialog-wrapper .bk-dialog) {
+  top: 50%;
+
+  .bk-dialog-content.bk-dialog-content-drag {
+    transform: translateY(-50%);
+  }
+}
+
 .permission-modal {
   .permission-header {
     text-align: center;

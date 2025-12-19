@@ -164,22 +164,22 @@ var _ interface {
 	ErrorName() string
 } = WebAnnotationsValidationError{}
 
-// Validate checks the field values on ListIstioVersionRequest with the rules
+// Validate checks the field values on ListIstioConfigRequest with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
-func (m *ListIstioVersionRequest) Validate() error {
+func (m *ListIstioConfigRequest) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on ListIstioVersionRequest with the
-// rules defined in the proto definition for this message. If any rules are
+// ValidateAll checks the field values on ListIstioConfigRequest with the rules
+// defined in the proto definition for this message. If any rules are
 // violated, the result is a list of violation errors wrapped in
-// ListIstioVersionRequestMultiError, or nil if none found.
-func (m *ListIstioVersionRequest) ValidateAll() error {
+// ListIstioConfigRequestMultiError, or nil if none found.
+func (m *ListIstioConfigRequest) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *ListIstioVersionRequest) validate(all bool) error {
+func (m *ListIstioConfigRequest) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -187,19 +187,19 @@ func (m *ListIstioVersionRequest) validate(all bool) error {
 	var errors []error
 
 	if len(errors) > 0 {
-		return ListIstioVersionRequestMultiError(errors)
+		return ListIstioConfigRequestMultiError(errors)
 	}
 
 	return nil
 }
 
-// ListIstioVersionRequestMultiError is an error wrapping multiple validation
-// errors returned by ListIstioVersionRequest.ValidateAll() if the designated
+// ListIstioConfigRequestMultiError is an error wrapping multiple validation
+// errors returned by ListIstioConfigRequest.ValidateAll() if the designated
 // constraints aren't met.
-type ListIstioVersionRequestMultiError []error
+type ListIstioConfigRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m ListIstioVersionRequestMultiError) Error() string {
+func (m ListIstioConfigRequestMultiError) Error() string {
 	var msgs []string
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -208,11 +208,11 @@ func (m ListIstioVersionRequestMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m ListIstioVersionRequestMultiError) AllErrors() []error { return m }
+func (m ListIstioConfigRequestMultiError) AllErrors() []error { return m }
 
-// ListIstioVersionRequestValidationError is the validation error returned by
-// ListIstioVersionRequest.Validate if the designated constraints aren't met.
-type ListIstioVersionRequestValidationError struct {
+// ListIstioConfigRequestValidationError is the validation error returned by
+// ListIstioConfigRequest.Validate if the designated constraints aren't met.
+type ListIstioConfigRequestValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -220,24 +220,24 @@ type ListIstioVersionRequestValidationError struct {
 }
 
 // Field function returns field value.
-func (e ListIstioVersionRequestValidationError) Field() string { return e.field }
+func (e ListIstioConfigRequestValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e ListIstioVersionRequestValidationError) Reason() string { return e.reason }
+func (e ListIstioConfigRequestValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e ListIstioVersionRequestValidationError) Cause() error { return e.cause }
+func (e ListIstioConfigRequestValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e ListIstioVersionRequestValidationError) Key() bool { return e.key }
+func (e ListIstioConfigRequestValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e ListIstioVersionRequestValidationError) ErrorName() string {
-	return "ListIstioVersionRequestValidationError"
+func (e ListIstioConfigRequestValidationError) ErrorName() string {
+	return "ListIstioConfigRequestValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e ListIstioVersionRequestValidationError) Error() string {
+func (e ListIstioConfigRequestValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -249,14 +249,14 @@ func (e ListIstioVersionRequestValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sListIstioVersionRequest.%s: %s%s",
+		"invalid %sListIstioConfigRequest.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = ListIstioVersionRequestValidationError{}
+var _ error = ListIstioConfigRequestValidationError{}
 
 var _ interface {
 	Field() string
@@ -264,24 +264,24 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = ListIstioVersionRequestValidationError{}
+} = ListIstioConfigRequestValidationError{}
 
-// Validate checks the field values on ListIstioVersionResponse with the rules
+// Validate checks the field values on ListIstioConfigResponse with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
-func (m *ListIstioVersionResponse) Validate() error {
+func (m *ListIstioConfigResponse) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on ListIstioVersionResponse with the
+// ValidateAll checks the field values on ListIstioConfigResponse with the
 // rules defined in the proto definition for this message. If any rules are
 // violated, the result is a list of violation errors wrapped in
-// ListIstioVersionResponseMultiError, or nil if none found.
-func (m *ListIstioVersionResponse) ValidateAll() error {
+// ListIstioConfigResponseMultiError, or nil if none found.
+func (m *ListIstioConfigResponse) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *ListIstioVersionResponse) validate(all bool) error {
+func (m *ListIstioConfigResponse) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -298,7 +298,7 @@ func (m *ListIstioVersionResponse) validate(all bool) error {
 		switch v := interface{}(m.GetWebAnnotations()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, ListIstioVersionResponseValidationError{
+				errors = append(errors, ListIstioConfigResponseValidationError{
 					field:  "WebAnnotations",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -306,7 +306,7 @@ func (m *ListIstioVersionResponse) validate(all bool) error {
 			}
 		case interface{ Validate() error }:
 			if err := v.Validate(); err != nil {
-				errors = append(errors, ListIstioVersionResponseValidationError{
+				errors = append(errors, ListIstioConfigResponseValidationError{
 					field:  "WebAnnotations",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -315,7 +315,7 @@ func (m *ListIstioVersionResponse) validate(all bool) error {
 		}
 	} else if v, ok := interface{}(m.GetWebAnnotations()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
-			return ListIstioVersionResponseValidationError{
+			return ListIstioConfigResponseValidationError{
 				field:  "WebAnnotations",
 				reason: "embedded message failed validation",
 				cause:  err,
@@ -327,7 +327,7 @@ func (m *ListIstioVersionResponse) validate(all bool) error {
 		switch v := interface{}(m.GetData()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, ListIstioVersionResponseValidationError{
+				errors = append(errors, ListIstioConfigResponseValidationError{
 					field:  "Data",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -335,7 +335,7 @@ func (m *ListIstioVersionResponse) validate(all bool) error {
 			}
 		case interface{ Validate() error }:
 			if err := v.Validate(); err != nil {
-				errors = append(errors, ListIstioVersionResponseValidationError{
+				errors = append(errors, ListIstioConfigResponseValidationError{
 					field:  "Data",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -344,7 +344,7 @@ func (m *ListIstioVersionResponse) validate(all bool) error {
 		}
 	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
-			return ListIstioVersionResponseValidationError{
+			return ListIstioConfigResponseValidationError{
 				field:  "Data",
 				reason: "embedded message failed validation",
 				cause:  err,
@@ -353,19 +353,19 @@ func (m *ListIstioVersionResponse) validate(all bool) error {
 	}
 
 	if len(errors) > 0 {
-		return ListIstioVersionResponseMultiError(errors)
+		return ListIstioConfigResponseMultiError(errors)
 	}
 
 	return nil
 }
 
-// ListIstioVersionResponseMultiError is an error wrapping multiple validation
-// errors returned by ListIstioVersionResponse.ValidateAll() if the designated
+// ListIstioConfigResponseMultiError is an error wrapping multiple validation
+// errors returned by ListIstioConfigResponse.ValidateAll() if the designated
 // constraints aren't met.
-type ListIstioVersionResponseMultiError []error
+type ListIstioConfigResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m ListIstioVersionResponseMultiError) Error() string {
+func (m ListIstioConfigResponseMultiError) Error() string {
 	var msgs []string
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -374,11 +374,11 @@ func (m ListIstioVersionResponseMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m ListIstioVersionResponseMultiError) AllErrors() []error { return m }
+func (m ListIstioConfigResponseMultiError) AllErrors() []error { return m }
 
-// ListIstioVersionResponseValidationError is the validation error returned by
-// ListIstioVersionResponse.Validate if the designated constraints aren't met.
-type ListIstioVersionResponseValidationError struct {
+// ListIstioConfigResponseValidationError is the validation error returned by
+// ListIstioConfigResponse.Validate if the designated constraints aren't met.
+type ListIstioConfigResponseValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -386,24 +386,24 @@ type ListIstioVersionResponseValidationError struct {
 }
 
 // Field function returns field value.
-func (e ListIstioVersionResponseValidationError) Field() string { return e.field }
+func (e ListIstioConfigResponseValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e ListIstioVersionResponseValidationError) Reason() string { return e.reason }
+func (e ListIstioConfigResponseValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e ListIstioVersionResponseValidationError) Cause() error { return e.cause }
+func (e ListIstioConfigResponseValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e ListIstioVersionResponseValidationError) Key() bool { return e.key }
+func (e ListIstioConfigResponseValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e ListIstioVersionResponseValidationError) ErrorName() string {
-	return "ListIstioVersionResponseValidationError"
+func (e ListIstioConfigResponseValidationError) ErrorName() string {
+	return "ListIstioConfigResponseValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e ListIstioVersionResponseValidationError) Error() string {
+func (e ListIstioConfigResponseValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -415,14 +415,14 @@ func (e ListIstioVersionResponseValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sListIstioVersionResponse.%s: %s%s",
+		"invalid %sListIstioConfigResponse.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = ListIstioVersionResponseValidationError{}
+var _ error = ListIstioConfigResponseValidationError{}
 
 var _ interface {
 	Field() string
@@ -430,24 +430,24 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = ListIstioVersionResponseValidationError{}
+} = ListIstioConfigResponseValidationError{}
 
-// Validate checks the field values on IstioVersionAndFeatures with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the first error encountered is returned, or nil if there are no violations.
-func (m *IstioVersionAndFeatures) Validate() error {
+// Validate checks the field values on IstioConfigData with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *IstioConfigData) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on IstioVersionAndFeatures with the
-// rules defined in the proto definition for this message. If any rules are
+// ValidateAll checks the field values on IstioConfigData with the rules
+// defined in the proto definition for this message. If any rules are
 // violated, the result is a list of violation errors wrapped in
-// IstioVersionAndFeaturesMultiError, or nil if none found.
-func (m *IstioVersionAndFeatures) ValidateAll() error {
+// IstioConfigDataMultiError, or nil if none found.
+func (m *IstioConfigData) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *IstioVersionAndFeatures) validate(all bool) error {
+func (m *IstioConfigData) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -461,7 +461,7 @@ func (m *IstioVersionAndFeatures) validate(all bool) error {
 			switch v := interface{}(item).(type) {
 			case interface{ ValidateAll() error }:
 				if err := v.ValidateAll(); err != nil {
-					errors = append(errors, IstioVersionAndFeaturesValidationError{
+					errors = append(errors, IstioConfigDataValidationError{
 						field:  fmt.Sprintf("IstioVersions[%v]", idx),
 						reason: "embedded message failed validation",
 						cause:  err,
@@ -469,7 +469,7 @@ func (m *IstioVersionAndFeatures) validate(all bool) error {
 				}
 			case interface{ Validate() error }:
 				if err := v.Validate(); err != nil {
-					errors = append(errors, IstioVersionAndFeaturesValidationError{
+					errors = append(errors, IstioConfigDataValidationError{
 						field:  fmt.Sprintf("IstioVersions[%v]", idx),
 						reason: "embedded message failed validation",
 						cause:  err,
@@ -478,7 +478,7 @@ func (m *IstioVersionAndFeatures) validate(all bool) error {
 			}
 		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
 			if err := v.Validate(); err != nil {
-				return IstioVersionAndFeaturesValidationError{
+				return IstioConfigDataValidationError{
 					field:  fmt.Sprintf("IstioVersions[%v]", idx),
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -486,6 +486,93 @@ func (m *IstioVersionAndFeatures) validate(all bool) error {
 			}
 		}
 
+	}
+
+	if all {
+		switch v := interface{}(m.GetSidecarResourceConfig()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, IstioConfigDataValidationError{
+					field:  "SidecarResourceConfig",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, IstioConfigDataValidationError{
+					field:  "SidecarResourceConfig",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetSidecarResourceConfig()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return IstioConfigDataValidationError{
+				field:  "SidecarResourceConfig",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetHighAvailability()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, IstioConfigDataValidationError{
+					field:  "HighAvailability",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, IstioConfigDataValidationError{
+					field:  "HighAvailability",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetHighAvailability()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return IstioConfigDataValidationError{
+				field:  "HighAvailability",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetObservabilityConfig()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, IstioConfigDataValidationError{
+					field:  "ObservabilityConfig",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, IstioConfigDataValidationError{
+					field:  "ObservabilityConfig",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetObservabilityConfig()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return IstioConfigDataValidationError{
+				field:  "ObservabilityConfig",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
 	}
 
 	{
@@ -506,7 +593,7 @@ func (m *IstioVersionAndFeatures) validate(all bool) error {
 				switch v := interface{}(val).(type) {
 				case interface{ ValidateAll() error }:
 					if err := v.ValidateAll(); err != nil {
-						errors = append(errors, IstioVersionAndFeaturesValidationError{
+						errors = append(errors, IstioConfigDataValidationError{
 							field:  fmt.Sprintf("FeatureConfigs[%v]", key),
 							reason: "embedded message failed validation",
 							cause:  err,
@@ -514,7 +601,7 @@ func (m *IstioVersionAndFeatures) validate(all bool) error {
 					}
 				case interface{ Validate() error }:
 					if err := v.Validate(); err != nil {
-						errors = append(errors, IstioVersionAndFeaturesValidationError{
+						errors = append(errors, IstioConfigDataValidationError{
 							field:  fmt.Sprintf("FeatureConfigs[%v]", key),
 							reason: "embedded message failed validation",
 							cause:  err,
@@ -523,7 +610,7 @@ func (m *IstioVersionAndFeatures) validate(all bool) error {
 				}
 			} else if v, ok := interface{}(val).(interface{ Validate() error }); ok {
 				if err := v.Validate(); err != nil {
-					return IstioVersionAndFeaturesValidationError{
+					return IstioConfigDataValidationError{
 						field:  fmt.Sprintf("FeatureConfigs[%v]", key),
 						reason: "embedded message failed validation",
 						cause:  err,
@@ -535,19 +622,19 @@ func (m *IstioVersionAndFeatures) validate(all bool) error {
 	}
 
 	if len(errors) > 0 {
-		return IstioVersionAndFeaturesMultiError(errors)
+		return IstioConfigDataMultiError(errors)
 	}
 
 	return nil
 }
 
-// IstioVersionAndFeaturesMultiError is an error wrapping multiple validation
-// errors returned by IstioVersionAndFeatures.ValidateAll() if the designated
-// constraints aren't met.
-type IstioVersionAndFeaturesMultiError []error
+// IstioConfigDataMultiError is an error wrapping multiple validation errors
+// returned by IstioConfigData.ValidateAll() if the designated constraints
+// aren't met.
+type IstioConfigDataMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m IstioVersionAndFeaturesMultiError) Error() string {
+func (m IstioConfigDataMultiError) Error() string {
 	var msgs []string
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -556,11 +643,11 @@ func (m IstioVersionAndFeaturesMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m IstioVersionAndFeaturesMultiError) AllErrors() []error { return m }
+func (m IstioConfigDataMultiError) AllErrors() []error { return m }
 
-// IstioVersionAndFeaturesValidationError is the validation error returned by
-// IstioVersionAndFeatures.Validate if the designated constraints aren't met.
-type IstioVersionAndFeaturesValidationError struct {
+// IstioConfigDataValidationError is the validation error returned by
+// IstioConfigData.Validate if the designated constraints aren't met.
+type IstioConfigDataValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -568,24 +655,22 @@ type IstioVersionAndFeaturesValidationError struct {
 }
 
 // Field function returns field value.
-func (e IstioVersionAndFeaturesValidationError) Field() string { return e.field }
+func (e IstioConfigDataValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e IstioVersionAndFeaturesValidationError) Reason() string { return e.reason }
+func (e IstioConfigDataValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e IstioVersionAndFeaturesValidationError) Cause() error { return e.cause }
+func (e IstioConfigDataValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e IstioVersionAndFeaturesValidationError) Key() bool { return e.key }
+func (e IstioConfigDataValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e IstioVersionAndFeaturesValidationError) ErrorName() string {
-	return "IstioVersionAndFeaturesValidationError"
-}
+func (e IstioConfigDataValidationError) ErrorName() string { return "IstioConfigDataValidationError" }
 
 // Error satisfies the builtin error interface
-func (e IstioVersionAndFeaturesValidationError) Error() string {
+func (e IstioConfigDataValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -597,14 +682,14 @@ func (e IstioVersionAndFeaturesValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sIstioVersionAndFeatures.%s: %s%s",
+		"invalid %sIstioConfigData.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = IstioVersionAndFeaturesValidationError{}
+var _ error = IstioConfigDataValidationError{}
 
 var _ interface {
 	Field() string
@@ -612,7 +697,7 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = IstioVersionAndFeaturesValidationError{}
+} = IstioConfigDataValidationError{}
 
 // Validate checks the field values on IstioVersion with the rules defined in
 // the proto definition for this message. If any rules are violated, the first
@@ -829,120 +914,35 @@ var _ interface {
 	ErrorName() string
 } = FeatureConfigValidationError{}
 
-// Validate checks the field values on IstioRequest with the rules defined in
-// the proto definition for this message. If any rules are violated, the first
-// error encountered is returned, or nil if there are no violations.
-func (m *IstioRequest) Validate() error {
+// Validate checks the field values on IstioInstallRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *IstioInstallRequest) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on IstioRequest with the rules defined
-// in the proto definition for this message. If any rules are violated, the
-// result is a list of violation errors wrapped in IstioRequestMultiError, or
-// nil if none found.
-func (m *IstioRequest) ValidateAll() error {
+// ValidateAll checks the field values on IstioInstallRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// IstioInstallRequestMultiError, or nil if none found.
+func (m *IstioInstallRequest) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *IstioRequest) validate(all bool) error {
+func (m *IstioInstallRequest) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
 
 	var errors []error
 
-	if all {
-		switch v := interface{}(m.GetMeshID()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, IstioRequestValidationError{
-					field:  "MeshID",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, IstioRequestValidationError{
-					field:  "MeshID",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetMeshID()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return IstioRequestValidationError{
-				field:  "MeshID",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
-
-	if all {
-		switch v := interface{}(m.GetProjectID()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, IstioRequestValidationError{
-					field:  "ProjectID",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, IstioRequestValidationError{
-					field:  "ProjectID",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetProjectID()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return IstioRequestValidationError{
-				field:  "ProjectID",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
-
-	if all {
-		switch v := interface{}(m.GetProjectCode()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, IstioRequestValidationError{
-					field:  "ProjectCode",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, IstioRequestValidationError{
-					field:  "ProjectCode",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetProjectCode()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return IstioRequestValidationError{
-				field:  "ProjectCode",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
+	// no validation rules for ProjectCode
 
 	if all {
 		switch v := interface{}(m.GetName()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, IstioRequestValidationError{
+				errors = append(errors, IstioInstallRequestValidationError{
 					field:  "Name",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -950,7 +950,7 @@ func (m *IstioRequest) validate(all bool) error {
 			}
 		case interface{ Validate() error }:
 			if err := v.Validate(); err != nil {
-				errors = append(errors, IstioRequestValidationError{
+				errors = append(errors, IstioInstallRequestValidationError{
 					field:  "Name",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -959,7 +959,7 @@ func (m *IstioRequest) validate(all bool) error {
 		}
 	} else if v, ok := interface{}(m.GetName()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
-			return IstioRequestValidationError{
+			return IstioInstallRequestValidationError{
 				field:  "Name",
 				reason: "embedded message failed validation",
 				cause:  err,
@@ -971,7 +971,7 @@ func (m *IstioRequest) validate(all bool) error {
 		switch v := interface{}(m.GetVersion()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, IstioRequestValidationError{
+				errors = append(errors, IstioInstallRequestValidationError{
 					field:  "Version",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -979,7 +979,7 @@ func (m *IstioRequest) validate(all bool) error {
 			}
 		case interface{ Validate() error }:
 			if err := v.Validate(); err != nil {
-				errors = append(errors, IstioRequestValidationError{
+				errors = append(errors, IstioInstallRequestValidationError{
 					field:  "Version",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -988,7 +988,7 @@ func (m *IstioRequest) validate(all bool) error {
 		}
 	} else if v, ok := interface{}(m.GetVersion()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
-			return IstioRequestValidationError{
+			return IstioInstallRequestValidationError{
 				field:  "Version",
 				reason: "embedded message failed validation",
 				cause:  err,
@@ -1000,7 +1000,7 @@ func (m *IstioRequest) validate(all bool) error {
 		switch v := interface{}(m.GetControlPlaneMode()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, IstioRequestValidationError{
+				errors = append(errors, IstioInstallRequestValidationError{
 					field:  "ControlPlaneMode",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -1008,7 +1008,7 @@ func (m *IstioRequest) validate(all bool) error {
 			}
 		case interface{ Validate() error }:
 			if err := v.Validate(); err != nil {
-				errors = append(errors, IstioRequestValidationError{
+				errors = append(errors, IstioInstallRequestValidationError{
 					field:  "ControlPlaneMode",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -1017,7 +1017,7 @@ func (m *IstioRequest) validate(all bool) error {
 		}
 	} else if v, ok := interface{}(m.GetControlPlaneMode()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
-			return IstioRequestValidationError{
+			return IstioInstallRequestValidationError{
 				field:  "ControlPlaneMode",
 				reason: "embedded message failed validation",
 				cause:  err,
@@ -1029,7 +1029,7 @@ func (m *IstioRequest) validate(all bool) error {
 		switch v := interface{}(m.GetClusterMode()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, IstioRequestValidationError{
+				errors = append(errors, IstioInstallRequestValidationError{
 					field:  "ClusterMode",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -1037,7 +1037,7 @@ func (m *IstioRequest) validate(all bool) error {
 			}
 		case interface{ Validate() error }:
 			if err := v.Validate(); err != nil {
-				errors = append(errors, IstioRequestValidationError{
+				errors = append(errors, IstioInstallRequestValidationError{
 					field:  "ClusterMode",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -1046,7 +1046,7 @@ func (m *IstioRequest) validate(all bool) error {
 		}
 	} else if v, ok := interface{}(m.GetClusterMode()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
-			return IstioRequestValidationError{
+			return IstioInstallRequestValidationError{
 				field:  "ClusterMode",
 				reason: "embedded message failed validation",
 				cause:  err,
@@ -1058,7 +1058,7 @@ func (m *IstioRequest) validate(all bool) error {
 		switch v := interface{}(m.GetDescription()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, IstioRequestValidationError{
+				errors = append(errors, IstioInstallRequestValidationError{
 					field:  "Description",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -1066,7 +1066,7 @@ func (m *IstioRequest) validate(all bool) error {
 			}
 		case interface{ Validate() error }:
 			if err := v.Validate(); err != nil {
-				errors = append(errors, IstioRequestValidationError{
+				errors = append(errors, IstioInstallRequestValidationError{
 					field:  "Description",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -1075,7 +1075,7 @@ func (m *IstioRequest) validate(all bool) error {
 		}
 	} else if v, ok := interface{}(m.GetDescription()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
-			return IstioRequestValidationError{
+			return IstioInstallRequestValidationError{
 				field:  "Description",
 				reason: "embedded message failed validation",
 				cause:  err,
@@ -1083,11 +1083,45 @@ func (m *IstioRequest) validate(all bool) error {
 		}
 	}
 
+	for idx, item := range m.GetRemoteClusters() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, IstioInstallRequestValidationError{
+						field:  fmt.Sprintf("RemoteClusters[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, IstioInstallRequestValidationError{
+						field:  fmt.Sprintf("RemoteClusters[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return IstioInstallRequestValidationError{
+					field:  fmt.Sprintf("RemoteClusters[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
 	if all {
 		switch v := interface{}(m.GetDifferentNetwork()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, IstioRequestValidationError{
+				errors = append(errors, IstioInstallRequestValidationError{
 					field:  "DifferentNetwork",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -1095,7 +1129,7 @@ func (m *IstioRequest) validate(all bool) error {
 			}
 		case interface{ Validate() error }:
 			if err := v.Validate(); err != nil {
-				errors = append(errors, IstioRequestValidationError{
+				errors = append(errors, IstioInstallRequestValidationError{
 					field:  "DifferentNetwork",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -1104,7 +1138,7 @@ func (m *IstioRequest) validate(all bool) error {
 		}
 	} else if v, ok := interface{}(m.GetDifferentNetwork()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
-			return IstioRequestValidationError{
+			return IstioInstallRequestValidationError{
 				field:  "DifferentNetwork",
 				reason: "embedded message failed validation",
 				cause:  err,
@@ -1116,7 +1150,7 @@ func (m *IstioRequest) validate(all bool) error {
 		switch v := interface{}(m.GetSidecarResourceConfig()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, IstioRequestValidationError{
+				errors = append(errors, IstioInstallRequestValidationError{
 					field:  "SidecarResourceConfig",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -1124,7 +1158,7 @@ func (m *IstioRequest) validate(all bool) error {
 			}
 		case interface{ Validate() error }:
 			if err := v.Validate(); err != nil {
-				errors = append(errors, IstioRequestValidationError{
+				errors = append(errors, IstioInstallRequestValidationError{
 					field:  "SidecarResourceConfig",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -1133,7 +1167,7 @@ func (m *IstioRequest) validate(all bool) error {
 		}
 	} else if v, ok := interface{}(m.GetSidecarResourceConfig()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
-			return IstioRequestValidationError{
+			return IstioInstallRequestValidationError{
 				field:  "SidecarResourceConfig",
 				reason: "embedded message failed validation",
 				cause:  err,
@@ -1145,7 +1179,7 @@ func (m *IstioRequest) validate(all bool) error {
 		switch v := interface{}(m.GetHighAvailability()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, IstioRequestValidationError{
+				errors = append(errors, IstioInstallRequestValidationError{
 					field:  "HighAvailability",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -1153,7 +1187,7 @@ func (m *IstioRequest) validate(all bool) error {
 			}
 		case interface{ Validate() error }:
 			if err := v.Validate(); err != nil {
-				errors = append(errors, IstioRequestValidationError{
+				errors = append(errors, IstioInstallRequestValidationError{
 					field:  "HighAvailability",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -1162,7 +1196,7 @@ func (m *IstioRequest) validate(all bool) error {
 		}
 	} else if v, ok := interface{}(m.GetHighAvailability()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
-			return IstioRequestValidationError{
+			return IstioInstallRequestValidationError{
 				field:  "HighAvailability",
 				reason: "embedded message failed validation",
 				cause:  err,
@@ -1174,7 +1208,7 @@ func (m *IstioRequest) validate(all bool) error {
 		switch v := interface{}(m.GetObservabilityConfig()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, IstioRequestValidationError{
+				errors = append(errors, IstioInstallRequestValidationError{
 					field:  "ObservabilityConfig",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -1182,7 +1216,7 @@ func (m *IstioRequest) validate(all bool) error {
 			}
 		case interface{ Validate() error }:
 			if err := v.Validate(); err != nil {
-				errors = append(errors, IstioRequestValidationError{
+				errors = append(errors, IstioInstallRequestValidationError{
 					field:  "ObservabilityConfig",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -1191,7 +1225,7 @@ func (m *IstioRequest) validate(all bool) error {
 		}
 	} else if v, ok := interface{}(m.GetObservabilityConfig()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
-			return IstioRequestValidationError{
+			return IstioInstallRequestValidationError{
 				field:  "ObservabilityConfig",
 				reason: "embedded message failed validation",
 				cause:  err,
@@ -1217,7 +1251,7 @@ func (m *IstioRequest) validate(all bool) error {
 				switch v := interface{}(val).(type) {
 				case interface{ ValidateAll() error }:
 					if err := v.ValidateAll(); err != nil {
-						errors = append(errors, IstioRequestValidationError{
+						errors = append(errors, IstioInstallRequestValidationError{
 							field:  fmt.Sprintf("FeatureConfigs[%v]", key),
 							reason: "embedded message failed validation",
 							cause:  err,
@@ -1225,7 +1259,7 @@ func (m *IstioRequest) validate(all bool) error {
 					}
 				case interface{ Validate() error }:
 					if err := v.Validate(); err != nil {
-						errors = append(errors, IstioRequestValidationError{
+						errors = append(errors, IstioInstallRequestValidationError{
 							field:  fmt.Sprintf("FeatureConfigs[%v]", key),
 							reason: "embedded message failed validation",
 							cause:  err,
@@ -1234,7 +1268,7 @@ func (m *IstioRequest) validate(all bool) error {
 				}
 			} else if v, ok := interface{}(val).(interface{ Validate() error }); ok {
 				if err := v.Validate(); err != nil {
-					return IstioRequestValidationError{
+					return IstioInstallRequestValidationError{
 						field:  fmt.Sprintf("FeatureConfigs[%v]", key),
 						reason: "embedded message failed validation",
 						cause:  err,
@@ -1245,19 +1279,107 @@ func (m *IstioRequest) validate(all bool) error {
 		}
 	}
 
+	if all {
+		switch v := interface{}(m.GetMultiClusterEnabled()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, IstioInstallRequestValidationError{
+					field:  "MultiClusterEnabled",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, IstioInstallRequestValidationError{
+					field:  "MultiClusterEnabled",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetMultiClusterEnabled()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return IstioInstallRequestValidationError{
+				field:  "MultiClusterEnabled",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetClbID()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, IstioInstallRequestValidationError{
+					field:  "ClbID",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, IstioInstallRequestValidationError{
+					field:  "ClbID",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetClbID()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return IstioInstallRequestValidationError{
+				field:  "ClbID",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetRevision()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, IstioInstallRequestValidationError{
+					field:  "Revision",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, IstioInstallRequestValidationError{
+					field:  "Revision",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetRevision()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return IstioInstallRequestValidationError{
+				field:  "Revision",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
 	if len(errors) > 0 {
-		return IstioRequestMultiError(errors)
+		return IstioInstallRequestMultiError(errors)
 	}
 
 	return nil
 }
 
-// IstioRequestMultiError is an error wrapping multiple validation errors
-// returned by IstioRequest.ValidateAll() if the designated constraints aren't met.
-type IstioRequestMultiError []error
+// IstioInstallRequestMultiError is an error wrapping multiple validation
+// errors returned by IstioInstallRequest.ValidateAll() if the designated
+// constraints aren't met.
+type IstioInstallRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m IstioRequestMultiError) Error() string {
+func (m IstioInstallRequestMultiError) Error() string {
 	var msgs []string
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -1266,11 +1388,11 @@ func (m IstioRequestMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m IstioRequestMultiError) AllErrors() []error { return m }
+func (m IstioInstallRequestMultiError) AllErrors() []error { return m }
 
-// IstioRequestValidationError is the validation error returned by
-// IstioRequest.Validate if the designated constraints aren't met.
-type IstioRequestValidationError struct {
+// IstioInstallRequestValidationError is the validation error returned by
+// IstioInstallRequest.Validate if the designated constraints aren't met.
+type IstioInstallRequestValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -1278,22 +1400,24 @@ type IstioRequestValidationError struct {
 }
 
 // Field function returns field value.
-func (e IstioRequestValidationError) Field() string { return e.field }
+func (e IstioInstallRequestValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e IstioRequestValidationError) Reason() string { return e.reason }
+func (e IstioInstallRequestValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e IstioRequestValidationError) Cause() error { return e.cause }
+func (e IstioInstallRequestValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e IstioRequestValidationError) Key() bool { return e.key }
+func (e IstioInstallRequestValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e IstioRequestValidationError) ErrorName() string { return "IstioRequestValidationError" }
+func (e IstioInstallRequestValidationError) ErrorName() string {
+	return "IstioInstallRequestValidationError"
+}
 
 // Error satisfies the builtin error interface
-func (e IstioRequestValidationError) Error() string {
+func (e IstioInstallRequestValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -1305,14 +1429,14 @@ func (e IstioRequestValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sIstioRequest.%s: %s%s",
+		"invalid %sIstioInstallRequest.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = IstioRequestValidationError{}
+var _ error = IstioInstallRequestValidationError{}
 
 var _ interface {
 	Field() string
@@ -1320,7 +1444,512 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = IstioRequestValidationError{}
+} = IstioInstallRequestValidationError{}
+
+// Validate checks the field values on IstioUpdateRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *IstioUpdateRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on IstioUpdateRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// IstioUpdateRequestMultiError, or nil if none found.
+func (m *IstioUpdateRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *IstioUpdateRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for MeshID
+
+	// no validation rules for ProjectCode
+
+	if all {
+		switch v := interface{}(m.GetName()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, IstioUpdateRequestValidationError{
+					field:  "Name",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, IstioUpdateRequestValidationError{
+					field:  "Name",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetName()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return IstioUpdateRequestValidationError{
+				field:  "Name",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetControlPlaneMode()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, IstioUpdateRequestValidationError{
+					field:  "ControlPlaneMode",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, IstioUpdateRequestValidationError{
+					field:  "ControlPlaneMode",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetControlPlaneMode()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return IstioUpdateRequestValidationError{
+				field:  "ControlPlaneMode",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetClusterMode()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, IstioUpdateRequestValidationError{
+					field:  "ClusterMode",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, IstioUpdateRequestValidationError{
+					field:  "ClusterMode",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetClusterMode()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return IstioUpdateRequestValidationError{
+				field:  "ClusterMode",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetDescription()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, IstioUpdateRequestValidationError{
+					field:  "Description",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, IstioUpdateRequestValidationError{
+					field:  "Description",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetDescription()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return IstioUpdateRequestValidationError{
+				field:  "Description",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	for idx, item := range m.GetRemoteClusters() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, IstioUpdateRequestValidationError{
+						field:  fmt.Sprintf("RemoteClusters[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, IstioUpdateRequestValidationError{
+						field:  fmt.Sprintf("RemoteClusters[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return IstioUpdateRequestValidationError{
+					field:  fmt.Sprintf("RemoteClusters[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if all {
+		switch v := interface{}(m.GetDifferentNetwork()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, IstioUpdateRequestValidationError{
+					field:  "DifferentNetwork",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, IstioUpdateRequestValidationError{
+					field:  "DifferentNetwork",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetDifferentNetwork()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return IstioUpdateRequestValidationError{
+				field:  "DifferentNetwork",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetSidecarResourceConfig()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, IstioUpdateRequestValidationError{
+					field:  "SidecarResourceConfig",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, IstioUpdateRequestValidationError{
+					field:  "SidecarResourceConfig",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetSidecarResourceConfig()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return IstioUpdateRequestValidationError{
+				field:  "SidecarResourceConfig",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetHighAvailability()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, IstioUpdateRequestValidationError{
+					field:  "HighAvailability",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, IstioUpdateRequestValidationError{
+					field:  "HighAvailability",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetHighAvailability()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return IstioUpdateRequestValidationError{
+				field:  "HighAvailability",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetObservabilityConfig()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, IstioUpdateRequestValidationError{
+					field:  "ObservabilityConfig",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, IstioUpdateRequestValidationError{
+					field:  "ObservabilityConfig",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetObservabilityConfig()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return IstioUpdateRequestValidationError{
+				field:  "ObservabilityConfig",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	{
+		sorted_keys := make([]string, len(m.GetFeatureConfigs()))
+		i := 0
+		for key := range m.GetFeatureConfigs() {
+			sorted_keys[i] = key
+			i++
+		}
+		sort.Slice(sorted_keys, func(i, j int) bool { return sorted_keys[i] < sorted_keys[j] })
+		for _, key := range sorted_keys {
+			val := m.GetFeatureConfigs()[key]
+			_ = val
+
+			// no validation rules for FeatureConfigs[key]
+
+			if all {
+				switch v := interface{}(val).(type) {
+				case interface{ ValidateAll() error }:
+					if err := v.ValidateAll(); err != nil {
+						errors = append(errors, IstioUpdateRequestValidationError{
+							field:  fmt.Sprintf("FeatureConfigs[%v]", key),
+							reason: "embedded message failed validation",
+							cause:  err,
+						})
+					}
+				case interface{ Validate() error }:
+					if err := v.Validate(); err != nil {
+						errors = append(errors, IstioUpdateRequestValidationError{
+							field:  fmt.Sprintf("FeatureConfigs[%v]", key),
+							reason: "embedded message failed validation",
+							cause:  err,
+						})
+					}
+				}
+			} else if v, ok := interface{}(val).(interface{ Validate() error }); ok {
+				if err := v.Validate(); err != nil {
+					return IstioUpdateRequestValidationError{
+						field:  fmt.Sprintf("FeatureConfigs[%v]", key),
+						reason: "embedded message failed validation",
+						cause:  err,
+					}
+				}
+			}
+
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetMultiClusterEnabled()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, IstioUpdateRequestValidationError{
+					field:  "MultiClusterEnabled",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, IstioUpdateRequestValidationError{
+					field:  "MultiClusterEnabled",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetMultiClusterEnabled()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return IstioUpdateRequestValidationError{
+				field:  "MultiClusterEnabled",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetClbID()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, IstioUpdateRequestValidationError{
+					field:  "ClbID",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, IstioUpdateRequestValidationError{
+					field:  "ClbID",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetClbID()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return IstioUpdateRequestValidationError{
+				field:  "ClbID",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetRevision()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, IstioUpdateRequestValidationError{
+					field:  "Revision",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, IstioUpdateRequestValidationError{
+					field:  "Revision",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetRevision()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return IstioUpdateRequestValidationError{
+				field:  "Revision",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return IstioUpdateRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// IstioUpdateRequestMultiError is an error wrapping multiple validation errors
+// returned by IstioUpdateRequest.ValidateAll() if the designated constraints
+// aren't met.
+type IstioUpdateRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m IstioUpdateRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m IstioUpdateRequestMultiError) AllErrors() []error { return m }
+
+// IstioUpdateRequestValidationError is the validation error returned by
+// IstioUpdateRequest.Validate if the designated constraints aren't met.
+type IstioUpdateRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e IstioUpdateRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e IstioUpdateRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e IstioUpdateRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e IstioUpdateRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e IstioUpdateRequestValidationError) ErrorName() string {
+	return "IstioUpdateRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e IstioUpdateRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sIstioUpdateRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = IstioUpdateRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = IstioUpdateRequestValidationError{}
 
 // Validate checks the field values on ObservabilityConfig with the rules
 // defined in the proto definition for this message. If any rules are
@@ -2589,6 +3218,35 @@ func (m *MetricsConfig) validate(all bool) error {
 	var errors []error
 
 	if all {
+		switch v := interface{}(m.GetMetricsEnabled()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, MetricsConfigValidationError{
+					field:  "MetricsEnabled",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, MetricsConfigValidationError{
+					field:  "MetricsEnabled",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetMetricsEnabled()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return MetricsConfigValidationError{
+				field:  "MetricsEnabled",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
 		switch v := interface{}(m.GetControlPlaneMetricsEnabled()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
@@ -2723,6 +3381,116 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = MetricsConfigValidationError{}
+
+// Validate checks the field values on RemoteCluster with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *RemoteCluster) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on RemoteCluster with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in RemoteClusterMultiError, or
+// nil if none found.
+func (m *RemoteCluster) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *RemoteCluster) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for ClusterID
+
+	// no validation rules for ClusterName
+
+	// no validation rules for Region
+
+	// no validation rules for JoinTime
+
+	// no validation rules for Status
+
+	if len(errors) > 0 {
+		return RemoteClusterMultiError(errors)
+	}
+
+	return nil
+}
+
+// RemoteClusterMultiError is an error wrapping multiple validation errors
+// returned by RemoteCluster.ValidateAll() if the designated constraints
+// aren't met.
+type RemoteClusterMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m RemoteClusterMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m RemoteClusterMultiError) AllErrors() []error { return m }
+
+// RemoteClusterValidationError is the validation error returned by
+// RemoteCluster.Validate if the designated constraints aren't met.
+type RemoteClusterValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e RemoteClusterValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e RemoteClusterValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e RemoteClusterValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e RemoteClusterValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e RemoteClusterValidationError) ErrorName() string { return "RemoteClusterValidationError" }
+
+// Error satisfies the builtin error interface
+func (e RemoteClusterValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sRemoteCluster.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = RemoteClusterValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = RemoteClusterValidationError{}
 
 // Validate checks the field values on InstallIstioResponse with the rules
 // defined in the proto definition for this message. If any rules are
@@ -2901,6 +3669,10 @@ func (m *ListIstioRequest) validate(all bool) error {
 	// no validation rules for Name
 
 	// no validation rules for Status
+
+	// no validation rules for Version
+
+	// no validation rules for ClusterID
 
 	if val := m.GetPage(); val <= 0 || val > 10000 {
 		err := ListIstioRequestValidationError{
@@ -3332,166 +4104,51 @@ func (m *IstioListItem) validate(all bool) error {
 
 	// no validation rules for StatusMessage
 
-	// no validation rules for NetworkID
-
 	// no validation rules for ChartVersion
 
 	// no validation rules for CreateTime
-
-	// no validation rules for UpdateTime
-
-	// no validation rules for CreateBy
-
-	// no validation rules for UpdateBy
-
-	// no validation rules for ProjectID
 
 	// no validation rules for ProjectCode
 
 	// no validation rules for Name
 
-	// no validation rules for Description
-
 	// no validation rules for Version
 
-	// no validation rules for ControlPlaneMode
+	for idx, item := range m.GetRemoteClusters() {
+		_, _ = idx, item
 
-	// no validation rules for ClusterMode
-
-	// no validation rules for DifferentNetwork
-
-	if all {
-		switch v := interface{}(m.GetSidecarResourceConfig()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, IstioListItemValidationError{
-					field:  "SidecarResourceConfig",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, IstioListItemValidationError{
-					field:  "SidecarResourceConfig",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetSidecarResourceConfig()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return IstioListItemValidationError{
-				field:  "SidecarResourceConfig",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
-
-	if all {
-		switch v := interface{}(m.GetHighAvailability()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, IstioListItemValidationError{
-					field:  "HighAvailability",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, IstioListItemValidationError{
-					field:  "HighAvailability",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetHighAvailability()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return IstioListItemValidationError{
-				field:  "HighAvailability",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
-
-	if all {
-		switch v := interface{}(m.GetObservabilityConfig()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, IstioListItemValidationError{
-					field:  "ObservabilityConfig",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, IstioListItemValidationError{
-					field:  "ObservabilityConfig",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetObservabilityConfig()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return IstioListItemValidationError{
-				field:  "ObservabilityConfig",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
-
-	{
-		sorted_keys := make([]string, len(m.GetFeatureConfigs()))
-		i := 0
-		for key := range m.GetFeatureConfigs() {
-			sorted_keys[i] = key
-			i++
-		}
-		sort.Slice(sorted_keys, func(i, j int) bool { return sorted_keys[i] < sorted_keys[j] })
-		for _, key := range sorted_keys {
-			val := m.GetFeatureConfigs()[key]
-			_ = val
-
-			// no validation rules for FeatureConfigs[key]
-
-			if all {
-				switch v := interface{}(val).(type) {
-				case interface{ ValidateAll() error }:
-					if err := v.ValidateAll(); err != nil {
-						errors = append(errors, IstioListItemValidationError{
-							field:  fmt.Sprintf("FeatureConfigs[%v]", key),
-							reason: "embedded message failed validation",
-							cause:  err,
-						})
-					}
-				case interface{ Validate() error }:
-					if err := v.Validate(); err != nil {
-						errors = append(errors, IstioListItemValidationError{
-							field:  fmt.Sprintf("FeatureConfigs[%v]", key),
-							reason: "embedded message failed validation",
-							cause:  err,
-						})
-					}
-				}
-			} else if v, ok := interface{}(val).(interface{ Validate() error }); ok {
-				if err := v.Validate(); err != nil {
-					return IstioListItemValidationError{
-						field:  fmt.Sprintf("FeatureConfigs[%v]", key),
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, IstioListItemValidationError{
+						field:  fmt.Sprintf("RemoteClusters[%v]", idx),
 						reason: "embedded message failed validation",
 						cause:  err,
-					}
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, IstioListItemValidationError{
+						field:  fmt.Sprintf("RemoteClusters[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
 				}
 			}
-
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return IstioListItemValidationError{
+					field:  fmt.Sprintf("RemoteClusters[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
 		}
+
 	}
+
+	// no validation rules for MonitoringLink
 
 	if len(errors) > 0 {
 		return IstioListItemMultiError(errors)
@@ -3570,6 +4227,365 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = IstioListItemValidationError{}
+
+// Validate checks the field values on IstioDetailInfo with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *IstioDetailInfo) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on IstioDetailInfo with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// IstioDetailInfoMultiError, or nil if none found.
+func (m *IstioDetailInfo) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *IstioDetailInfo) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for MeshID
+
+	// no validation rules for Status
+
+	// no validation rules for StatusMessage
+
+	// no validation rules for NetworkID
+
+	// no validation rules for ChartVersion
+
+	// no validation rules for CreateTime
+
+	// no validation rules for UpdateTime
+
+	// no validation rules for CreateBy
+
+	// no validation rules for UpdateBy
+
+	// no validation rules for ProjectCode
+
+	// no validation rules for Name
+
+	// no validation rules for Description
+
+	// no validation rules for Version
+
+	// no validation rules for ControlPlaneMode
+
+	// no validation rules for ClusterMode
+
+	for idx, item := range m.GetRemoteClusters() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, IstioDetailInfoValidationError{
+						field:  fmt.Sprintf("RemoteClusters[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, IstioDetailInfoValidationError{
+						field:  fmt.Sprintf("RemoteClusters[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return IstioDetailInfoValidationError{
+					field:  fmt.Sprintf("RemoteClusters[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	// no validation rules for DifferentNetwork
+
+	if all {
+		switch v := interface{}(m.GetSidecarResourceConfig()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, IstioDetailInfoValidationError{
+					field:  "SidecarResourceConfig",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, IstioDetailInfoValidationError{
+					field:  "SidecarResourceConfig",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetSidecarResourceConfig()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return IstioDetailInfoValidationError{
+				field:  "SidecarResourceConfig",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetHighAvailability()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, IstioDetailInfoValidationError{
+					field:  "HighAvailability",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, IstioDetailInfoValidationError{
+					field:  "HighAvailability",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetHighAvailability()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return IstioDetailInfoValidationError{
+				field:  "HighAvailability",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetObservabilityConfig()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, IstioDetailInfoValidationError{
+					field:  "ObservabilityConfig",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, IstioDetailInfoValidationError{
+					field:  "ObservabilityConfig",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetObservabilityConfig()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return IstioDetailInfoValidationError{
+				field:  "ObservabilityConfig",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	{
+		sorted_keys := make([]string, len(m.GetFeatureConfigs()))
+		i := 0
+		for key := range m.GetFeatureConfigs() {
+			sorted_keys[i] = key
+			i++
+		}
+		sort.Slice(sorted_keys, func(i, j int) bool { return sorted_keys[i] < sorted_keys[j] })
+		for _, key := range sorted_keys {
+			val := m.GetFeatureConfigs()[key]
+			_ = val
+
+			// no validation rules for FeatureConfigs[key]
+
+			if all {
+				switch v := interface{}(val).(type) {
+				case interface{ ValidateAll() error }:
+					if err := v.ValidateAll(); err != nil {
+						errors = append(errors, IstioDetailInfoValidationError{
+							field:  fmt.Sprintf("FeatureConfigs[%v]", key),
+							reason: "embedded message failed validation",
+							cause:  err,
+						})
+					}
+				case interface{ Validate() error }:
+					if err := v.Validate(); err != nil {
+						errors = append(errors, IstioDetailInfoValidationError{
+							field:  fmt.Sprintf("FeatureConfigs[%v]", key),
+							reason: "embedded message failed validation",
+							cause:  err,
+						})
+					}
+				}
+			} else if v, ok := interface{}(val).(interface{ Validate() error }); ok {
+				if err := v.Validate(); err != nil {
+					return IstioDetailInfoValidationError{
+						field:  fmt.Sprintf("FeatureConfigs[%v]", key),
+						reason: "embedded message failed validation",
+						cause:  err,
+					}
+				}
+			}
+
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetMultiClusterEnabled()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, IstioDetailInfoValidationError{
+					field:  "MultiClusterEnabled",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, IstioDetailInfoValidationError{
+					field:  "MultiClusterEnabled",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetMultiClusterEnabled()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return IstioDetailInfoValidationError{
+				field:  "MultiClusterEnabled",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetClbID()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, IstioDetailInfoValidationError{
+					field:  "ClbID",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, IstioDetailInfoValidationError{
+					field:  "ClbID",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetClbID()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return IstioDetailInfoValidationError{
+				field:  "ClbID",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for Revision
+
+	if len(errors) > 0 {
+		return IstioDetailInfoMultiError(errors)
+	}
+
+	return nil
+}
+
+// IstioDetailInfoMultiError is an error wrapping multiple validation errors
+// returned by IstioDetailInfo.ValidateAll() if the designated constraints
+// aren't met.
+type IstioDetailInfoMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m IstioDetailInfoMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m IstioDetailInfoMultiError) AllErrors() []error { return m }
+
+// IstioDetailInfoValidationError is the validation error returned by
+// IstioDetailInfo.Validate if the designated constraints aren't met.
+type IstioDetailInfoValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e IstioDetailInfoValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e IstioDetailInfoValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e IstioDetailInfoValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e IstioDetailInfoValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e IstioDetailInfoValidationError) ErrorName() string { return "IstioDetailInfoValidationError" }
+
+// Error satisfies the builtin error interface
+func (e IstioDetailInfoValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sIstioDetailInfo.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = IstioDetailInfoValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = IstioDetailInfoValidationError{}
 
 // Validate checks the field values on UpdateIstioResponse with the rules
 // defined in the proto definition for this message. If any rules are
@@ -4258,3 +5274,502 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = GetIstioDetailResponseValidationError{}
+
+// Validate checks the field values on GetClusterInfoRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetClusterInfoRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetClusterInfoRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetClusterInfoRequestMultiError, or nil if none found.
+func (m *GetClusterInfoRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetClusterInfoRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+		err := GetClusterInfoRequestValidationError{
+			field:  "ProjectCode",
+			reason: "value length must be between 1 and 32 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return GetClusterInfoRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetClusterInfoRequestMultiError is an error wrapping multiple validation
+// errors returned by GetClusterInfoRequest.ValidateAll() if the designated
+// constraints aren't met.
+type GetClusterInfoRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetClusterInfoRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetClusterInfoRequestMultiError) AllErrors() []error { return m }
+
+// GetClusterInfoRequestValidationError is the validation error returned by
+// GetClusterInfoRequest.Validate if the designated constraints aren't met.
+type GetClusterInfoRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetClusterInfoRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetClusterInfoRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetClusterInfoRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetClusterInfoRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetClusterInfoRequestValidationError) ErrorName() string {
+	return "GetClusterInfoRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetClusterInfoRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetClusterInfoRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetClusterInfoRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetClusterInfoRequestValidationError{}
+
+// Validate checks the field values on GetClusterInfoResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetClusterInfoResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetClusterInfoResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetClusterInfoResponseMultiError, or nil if none found.
+func (m *GetClusterInfoResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetClusterInfoResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for RequestID
+
+	if all {
+		switch v := interface{}(m.GetData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, GetClusterInfoResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, GetClusterInfoResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return GetClusterInfoResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return GetClusterInfoResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetClusterInfoResponseMultiError is an error wrapping multiple validation
+// errors returned by GetClusterInfoResponse.ValidateAll() if the designated
+// constraints aren't met.
+type GetClusterInfoResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetClusterInfoResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetClusterInfoResponseMultiError) AllErrors() []error { return m }
+
+// GetClusterInfoResponseValidationError is the validation error returned by
+// GetClusterInfoResponse.Validate if the designated constraints aren't met.
+type GetClusterInfoResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetClusterInfoResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetClusterInfoResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetClusterInfoResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetClusterInfoResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetClusterInfoResponseValidationError) ErrorName() string {
+	return "GetClusterInfoResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetClusterInfoResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetClusterInfoResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetClusterInfoResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetClusterInfoResponseValidationError{}
+
+// Validate checks the field values on ClusterInfoData with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *ClusterInfoData) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ClusterInfoData with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ClusterInfoDataMultiError, or nil if none found.
+func (m *ClusterInfoData) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ClusterInfoData) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	for idx, item := range m.GetClusters() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, ClusterInfoDataValidationError{
+						field:  fmt.Sprintf("Clusters[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, ClusterInfoDataValidationError{
+						field:  fmt.Sprintf("Clusters[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ClusterInfoDataValidationError{
+					field:  fmt.Sprintf("Clusters[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return ClusterInfoDataMultiError(errors)
+	}
+
+	return nil
+}
+
+// ClusterInfoDataMultiError is an error wrapping multiple validation errors
+// returned by ClusterInfoData.ValidateAll() if the designated constraints
+// aren't met.
+type ClusterInfoDataMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ClusterInfoDataMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ClusterInfoDataMultiError) AllErrors() []error { return m }
+
+// ClusterInfoDataValidationError is the validation error returned by
+// ClusterInfoData.Validate if the designated constraints aren't met.
+type ClusterInfoDataValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ClusterInfoDataValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ClusterInfoDataValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ClusterInfoDataValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ClusterInfoDataValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ClusterInfoDataValidationError) ErrorName() string { return "ClusterInfoDataValidationError" }
+
+// Error satisfies the builtin error interface
+func (e ClusterInfoDataValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sClusterInfoData.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ClusterInfoDataValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ClusterInfoDataValidationError{}
+
+// Validate checks the field values on ClusterInfo with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *ClusterInfo) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ClusterInfo with the rules defined in
+// the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in ClusterInfoMultiError, or
+// nil if none found.
+func (m *ClusterInfo) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ClusterInfo) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for ClusterID
+
+	// no validation rules for ClusterName
+
+	// no validation rules for ClusterType
+
+	// no validation rules for IsShared
+
+	// no validation rules for IsInstalled
+
+	// no validation rules for Status
+
+	// no validation rules for Version
+
+	// no validation rules for Region
+
+	if len(errors) > 0 {
+		return ClusterInfoMultiError(errors)
+	}
+
+	return nil
+}
+
+// ClusterInfoMultiError is an error wrapping multiple validation errors
+// returned by ClusterInfo.ValidateAll() if the designated constraints aren't met.
+type ClusterInfoMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ClusterInfoMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ClusterInfoMultiError) AllErrors() []error { return m }
+
+// ClusterInfoValidationError is the validation error returned by
+// ClusterInfo.Validate if the designated constraints aren't met.
+type ClusterInfoValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ClusterInfoValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ClusterInfoValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ClusterInfoValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ClusterInfoValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ClusterInfoValidationError) ErrorName() string { return "ClusterInfoValidationError" }
+
+// Error satisfies the builtin error interface
+func (e ClusterInfoValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sClusterInfo.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ClusterInfoValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ClusterInfoValidationError{}

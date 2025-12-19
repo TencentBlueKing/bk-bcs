@@ -266,6 +266,7 @@ func (sw *SdkWrapper) CreateListener(region string, req *tclb.CreateListenerRequ
 		newReq.Certificate = req.Certificate
 		newReq.SniSwitch = req.SniSwitch
 		newReq.KeepaliveEnable = req.KeepaliveEnable
+		newReq.SessionType = req.SessionType
 		if req.EndPort != nil {
 			newReq.EndPort = req.EndPort
 		}

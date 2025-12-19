@@ -225,7 +225,7 @@ func (aks *AksServiceImpl) CheckInstanceType(ctx context.Context, location, inst
 		}
 	}
 	// 机型不存在
-	return false, cloudprovider.ErrVmInstanceType
+	return false, cloudprovider.ErrVMInstanceType
 }
 
 // ListKeyPairs keyPairs list

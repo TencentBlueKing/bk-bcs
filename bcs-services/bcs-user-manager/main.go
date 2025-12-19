@@ -74,8 +74,14 @@ func main() {
 	defer func() {
 		if etcdRegistry != nil {
 			// waiting for api gateway to close all connections
-			_ = etcdRegistry.Deregister()
-			time.Sleep(time.Second * 5)
+			blog.Infof("deregister etcd registry")
+			err = etcdRegistry.Deregister()
+			if err != nil {
+				blog.Errorf("deregister etcd registry failed: %v", err.Error())
+				os.Exit(1)
+			}
+			time.Sleep(time.Second * 10)
+			blog.Infof("deregister etcd registry done")
 		}
 		component.GetAuditClient().Close()
 	}()

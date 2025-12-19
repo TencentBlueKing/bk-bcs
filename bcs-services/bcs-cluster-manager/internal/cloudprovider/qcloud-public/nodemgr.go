@@ -54,10 +54,10 @@ func (nm *NodeManager) GetZoneList(opt *cloudprovider.GetZoneListOption) ([]*pro
 	var (
 		zoneSubnetNum map[string]uint32
 	)
-	if len(opt.VpcId) > 0 {
-		zoneSubnetNum, err = business.GetZoneAvailableSubnetsByVpc(&opt.CommonOption, opt.VpcId)
+	if len(opt.VpcID) > 0 {
+		zoneSubnetNum, err = business.GetZoneAvailableSubnetsByVpc(&opt.CommonOption, opt.VpcID)
 		if err != nil {
-			blog.Errorf("GetZoneList GetZoneAvailableSubnetsByVpc[%s] failed: %v", opt.VpcId, err)
+			blog.Errorf("GetZoneList GetZoneAvailableSubnetsByVpc[%s] failed: %v", opt.VpcID, err)
 			return nil, err
 		}
 	}
@@ -243,7 +243,7 @@ func (nm *NodeManager) ListNodeInstanceType(
 	ctx context.Context, info cloudprovider.InstanceInfo, opt *cloudprovider.CommonOption) (
 	[]*proto.InstanceType, error) {
 	blog.Infof("ListNodeInstanceType zone: %s, nodeFamily: %s, cpu: %d, memory: %d",
-		info.Zone, info.NodeFamily, info.Cpu, info.Memory)
+		info.Zone, info.NodeFamily, info.CPU, info.Memory)
 
 	return nm.getCloudInstanceType(info, opt)
 }
@@ -263,7 +263,6 @@ func (nm *NodeManager) getCloudInstanceType(info cloudprovider.InstanceInfo, opt
 	if err != nil {
 		return nil, err
 	}
-
 	list := make([]*proto.InstanceType, 0)
 	instanceMap := make(map[string][]string) // instanceType: []zone
 	for _, v := range cloudInstanceTypes {
@@ -312,7 +311,7 @@ func (nm *NodeManager) getCloudInstanceType(info cloudprovider.InstanceInfo, opt
 	// filter result instanceTypes
 	result := make([]*proto.InstanceType, 0)
 	for _, item := range list {
-		if info.Cpu > 0 && item.Cpu != info.Cpu {
+		if info.CPU > 0 && item.Cpu != info.CPU {
 			continue
 		}
 		if info.Memory > 0 && item.Memory != info.Memory {

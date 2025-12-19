@@ -61,6 +61,10 @@ func (la *ListQuotaAction) doHost(ctx context.Context, req *proto.ListProjectQuo
 			"quotaType": quota.Host,
 		}))
 
+		conds = append(conds, operator.NewLeafCondition(operator.Ne, operator.M{
+			"status": quota.Deleted,
+		}))
+
 		if req.ProjectID != "" {
 			conds = append(conds, operator.NewLeafCondition(operator.Eq, operator.M{
 				"projectId": la.req.GetProjectID(),
@@ -158,6 +162,10 @@ func (la *ListQuotaAction) doFed(req *proto.ListProjectQuotasRequest,
 
 	conds = append(conds, operator.NewLeafCondition(operator.Eq, operator.M{
 		"quotaType": quota.Federation,
+	}))
+
+	conds = append(conds, operator.NewLeafCondition(operator.Ne, operator.M{
+		"status": quota.Deleted,
 	}))
 
 	if req.ProjectID != "" {

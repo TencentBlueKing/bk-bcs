@@ -118,12 +118,13 @@ func (la *ListNodeTypeAction) listCloudInstancetypes() error {
 		Region:       la.req.Region,
 		Zone:         la.req.Zone,
 		NodeFamily:   la.req.NodeFamily,
-		Cpu:          la.req.Cpu,
+		CPU:          la.req.Cpu,
 		Memory:       la.req.Memory,
 		BizID:        la.req.BizID,
 		Provider:     la.req.Provider,
 		ResourceType: la.req.ResourceType,
 		ProjectID:    la.req.ProjectID,
+		InstanceType: la.req.InstanceType,
 	}, cmOption)
 	if err != nil {
 		return err

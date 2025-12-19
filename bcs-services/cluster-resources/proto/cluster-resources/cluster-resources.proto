@@ -3105,6 +3105,9 @@ message ClusterNamespaces {
 		title: "集群 ID"
 	}, (validate.rules).string = {min_len: 13, max_len: 14}];
 	repeated string namespaces = 2;
+	string nsgroup = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "nsgroup"
+	}, (validate.rules).string = {in : ["", "all-system", "all-user", "all"]}];
 }
 
 message LabelSelector {
@@ -3913,9 +3916,15 @@ message GetApiResourcesObjectReq {
 	string namespace = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "命名空间"
 	}, (validate.rules).string = {max_len: 64}];
-	string kind = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-		title: "资源类型"
-	}, (validate.rules).string = {min_len: 1, max_len: 128}];
+	string group = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "group"
+	}];
+	string version = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "version"
+	}, (validate.rules).string = {min_len: 1}];
+	string resource = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "resource"
+	}, (validate.rules).string = {min_len: 1}];
 }
 
 message CreateApiResourcesObjectReq {
@@ -3935,6 +3944,15 @@ message CreateApiResourcesObjectReq {
 	bool namespaced = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "是否属于命名空间作用域"
 	}];
+	string group = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "group"
+	}];
+	string version = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "version"
+	}, (validate.rules).string = {min_len: 1}];
+	string resource = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "resource"
+	}, (validate.rules).string = {min_len: 1}];
 }
 
 message UpdateApiResourcesObjectReq {
@@ -3951,6 +3969,15 @@ message UpdateApiResourcesObjectReq {
 	string format = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "资源配置格式（manifest/formData）"
 	}, (validate.rules).string = {in: ["", "manifest"]}];
+	string group = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "group"
+	}];
+	string version = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "version"
+	}, (validate.rules).string = {min_len: 1}];
+	string resource = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "resource"
+	}, (validate.rules).string = {min_len: 1}];	
 }
 
 message DeleteApiResourcesObjectReq {
@@ -3972,4 +3999,13 @@ message DeleteApiResourcesObjectReq {
 	string kind = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "资源类型"
 	}, (validate.rules).string = {max_len: 128}];
+	string group = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "group"
+	}];
+	string version = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "version"
+	}, (validate.rules).string = {min_len: 1}];
+	string resource = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "resource"
+	}, (validate.rules).string = {min_len: 1}];	
 }

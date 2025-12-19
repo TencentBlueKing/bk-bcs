@@ -4,7 +4,7 @@ import jp from 'jsonpath';
 import { isEqual } from 'lodash';
 import { computed, defineComponent, onBeforeUnmount, PropType, provide, reactive, ref, toRef, toRefs, watch } from 'vue';
 
-import NSSelect from '../view-manage/ns-select.vue';
+import NSSelect from '../view-manage/ns-select-tree.vue';
 import useViewConfig from '../view-manage/use-view-config';
 import Rollback from '../workload/rollback.vue';
 
@@ -93,7 +93,7 @@ export default defineComponent({
     },
     // CRD资源分两种，普通和定制，customized 用来区分普通和定制
     customized: {
-      type: Boolean,
+      type: [Boolean, String],
       default: false,
     },
   },
@@ -231,11 +231,13 @@ export default defineComponent({
     // 显示过滤条件
     const showFilter = computed(() => !isClusterScopeCRD.value && isClusterMode.value);
     // 命名空间变更
-    const curNsList = computed(() => $store.state.viewNsList);
-    const handleNsChange = (nsList: string[]) => {
+    const curNsList = computed(() => $store.state.viewNs.viewNsList);
+    const curNsGroup = computed(() => $store.state.viewNs.group);
+    const handleNsChange = ({ value, group }: { value: string[], group: string }) => {
       if (!isClusterMode.value) return; // 自定义视图模式下命名空间只能在配置面板修改
 
-      $store.commit('updateViewNsList', nsList);
+      $store.commit('updateViewNsList', value);
+      $store.commit('updateViewNsGroup', group);
     };
 
     // 表格数据
@@ -404,14 +406,16 @@ export default defineComponent({
       return res.data?.manifest;
     };
     // 自定义资源详情(源码模式)
-    const handleGetCustomObjectDetail = async ({ namespace, name, clusterID }) => {
+    const handleGetCustomObjectDetail = async ({ namespace, name, clusterID, version, resource, group }) => {
       detailLoading.value = true;
       const res = await customResourceDetail({
         format: 'manifest',
         $clusterId: clusterID,
         $name: name,
-        kind: kind.value,
+        group,
         namespace,
+        version,
+        resource,
       }, { needRes: true }).catch(() => ({
         data: {
           manifest: {},
@@ -435,6 +439,9 @@ export default defineComponent({
           name: row?.metadata?.name,
           namespace,
           clusterID: curDetailRow.value.extData?.clusterID,
+          version: crdOptions.value?.version,
+          resource: crdOptions.value?.resource,
+          group: crdOptions.value?.group,
         });
       } else {
         curDetailRow.value.data = await handleGetResourceDetail({
@@ -509,6 +516,11 @@ export default defineComponent({
       const { name, namespace, uid } = row.metadata || {};
       const editMode = handleGetExtData(uid, 'editMode');
       if (editMode === 'yaml') {
+        const crdQuery = {
+          group: crdOptions.value.group,
+          version: crdOptions.value.version,
+          resource: crdOptions.value.resource,
+        };
         $router.push({
           name: 'dashboardResourceUpdate',
           params: {
@@ -522,6 +534,7 @@ export default defineComponent({
             kind: kind.value,
             crd: crd.value,
             customized: customized.value,
+            ...crdQuery,
           },
         });
       } else {
@@ -573,12 +586,15 @@ export default defineComponent({
     const confirmDelete = async () => {
       const { name, namespace, uid } = curDetailRow.value.data?.metadata || {};
       let result = false;
-      if (customized.value) {
+      if (customized.value && customized.value !== 'false') {
         result = await deleteCRDResource({
           namespace,
           kind: kind.value,
           $clusterId: handleGetExtData(uid, 'clusterID'),
           $name: name,
+          group: crdOptions.value.group,
+          version: crdOptions.value.version,
+          resource: crdOptions.value.resource,
         }).then(() => true)
           .catch(() => false);
       } else if (type.value === 'crd') {
@@ -705,8 +721,10 @@ export default defineComponent({
       isLoading.value = true;
       await handleGetNsData();
       // 首次加载
-      if (!isEntry.value && nsList.value[0]?.name && !currentRoute.value?.query?.namespace && !curNsList.value.length) {
-        $store.commit('updateViewNsList', [nsList.value[0].name]);
+      if (!isEntry.value && !currentRoute.value?.query?.namespace && !curNsList.value.length && !$store.state.viewNs.group) {
+        // 没有命名空间记忆，默认选中 [项目命名空间]
+        $store.commit('updateViewNsList', []);
+        $store.commit('updateViewNsGroup', 'all-user');
       } else {
         // 切换集群，判断当前选中的命名空间是否在新的命名空间列表中
         const newNs = curNsList.value?.reduce<string[]>((acc, cur) => {
@@ -732,15 +750,17 @@ export default defineComponent({
     }, { immediate: true });
 
     // 同步命名空间到query
-    watch(curNsList, () => {
+    watch([() => curNsList.value, () => curNsGroup.value], () => {
       const urlQuery = $router.currentRoute?.query || {};
       // 不是集群模式 / 命名空间未改变 / 清空命名空间，直接返回
+      // || (!urlQuery.namespace && !curNsList.value.join(','))
       if (!isClusterMode.value
         || urlQuery.namespace === curNsList.value.join(',')
-        || (!urlQuery.namespace && !curNsList.value.join(','))) return;
+        || (urlQuery.nsgroup === curNsGroup.value)) return;
       const data = {
         ...urlQuery,
         namespace: curNsList.value.join(','),
+        nsgroup: curNsGroup.value,
       };
       // 删除值为空的参数
       Object.keys(data).forEach((key) => {
@@ -809,6 +829,7 @@ export default defineComponent({
       showFilter,
       clusterID,
       curNsList,
+      curNsGroup,
       handleNsChange,
       isViewConfigShow,
       isClusterMode,
@@ -831,6 +852,7 @@ export default defineComponent({
         clusterID: this.clusterID,
         handleNsChange: this.handleNsChange,
         curNsList: this.curNsList,
+        curNsGroup: this.curNsGroup,
         showFilter: this.showFilter,
         isViewConfigShow: this.isViewConfigShow,
       });
@@ -843,11 +865,9 @@ export default defineComponent({
               this.isViewConfigShow ? '!border-[#3a84ff] text-[#3a84ff]' : 'text-[#979BA5] hover:!border-[#979BA5]',
             ]}
             v-bk-trace_click={{
-              module: 'view',
-              operation: 'filter2',
-              desc: '视图筛选按钮2',
-              username: $store.state.user.username,
-              projectCode: $store.getters.curProjectCode,
+              ct: 'view',
+              act: 'filter2',
+              d: '视图筛选按钮2',
             }}
             onClick={this.handleShowViewConfig}>
               <i class="bk-icon icon-funnel text-[14px]"></i>
@@ -859,7 +879,7 @@ export default defineComponent({
               {this.$t('k8s.namespace')}
             </span>
             <NSSelect
-              value={this.curNsList}
+              value={{list: this.curNsList, group: this.curNsGroup}}
               clusterId={this.clusterID}
               class="flex-1 bg-[#fff] max-w-[240px] mr-[8px]"
               displayTag={true}
@@ -882,8 +902,7 @@ export default defineComponent({
     };
 
     return (
-      <div class="flex flex-col relative h-full"
-        v-bkloading={{ isLoading: this.isLoading, opacity: 1, color: '#f5f7fa' }}>
+      <div class="flex flex-col relative h-full">
         <ContentHeader
           class="flex-[0_0_auto] !h-[66px] !border-b-0 !shadow-none !bg-inherit"
           {
@@ -929,7 +948,8 @@ export default defineComponent({
             </bk-alert>
           ) : null
         }
-        <div class="dashboard-content flex-1 px-[24px] pb-[16px] overflow-auto">
+        <div class="dashboard-content flex-1 px-[24px] pb-[16px] overflow-auto"
+          v-bkloading={{ isLoading: this.isLoading, opacity: 1, color: '#f5f7fa' }}>
           {
               this.$scopedSlots.default?.({
                 clusterNameMap: this.clusterNameMap,
@@ -1090,6 +1110,7 @@ export default defineComponent({
           scope={this.scope}
           formUpdate={this.formUpdate}
           customized={this.customized}
+          crdOptions={this.crdOptions}
           cancel={() => this.showCreateDialog = false} />
       </div>
     );

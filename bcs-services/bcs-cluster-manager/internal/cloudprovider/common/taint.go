@@ -285,7 +285,7 @@ type NodeTaintData struct {
 }
 
 // UpdateClusterNodesTaints update cluster taints
-func UpdateClusterNodesTaints(ctx context.Context, data NodeTaintData) error {
+func UpdateClusterNodesTaints(ctx context.Context, data NodeTaintData) error { // nolint
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
 	k8sOperator := clusterops.NewK8SOperator(options.GetGlobalCMOptions(), cloudprovider.GetStorageModel())
@@ -329,20 +329,43 @@ func UpdateClusterNodesTaints(ctx context.Context, data NodeTaintData) error {
 	blog.Infof("UpdateClusterNodesTaints[%s] ListClusterNodesByIPsOrNames successful[%v]", taskID, nodeNames)
 
 	for _, node := range nodeNames {
-		// user defined labels
-		taints := data.Taints
-		if taints == nil {
-			taints = make([]*proto.Taint, 0)
+		// user defined taints
+		taints := make([]*proto.Taint, 0)
+		for _, t := range data.Taints {
+			taints = append(taints, &proto.Taint{
+				Key:    t.Key,
+				Value:  t.Value,
+				Effect: t.Effect,
+			})
+		}
+		if len(taints) == 0 {
+			blog.Infof("UpdateClusterNodesTaints[%s] node[%s] taints empty", taskID, node.NodeIP)
+			continue
 		}
 
-		// merge source node labels
+		// merge source node labels, abandon old taint
 		for i := range node.NodeTaint {
+			// 过滤node.NodeTaint[i]中存在和taints中相同key和effect的污点, 使用新增加的
+			exit := false
+			for x := range taints {
+				if taints[x].Key == node.NodeTaint[i].Key && node.NodeTaint[i].Key != cutils.BCSNodeGroupTaintKey {
+					exit = true
+					break
+				}
+			}
+			if exit {
+				blog.Infof("UpdateClusterNodesTaints[%s] node[%s] filter taints[%s]",
+					taskID, node.NodeIP, node.NodeTaint[i].Key)
+				continue
+			}
+
 			taints = append(taints, &proto.Taint{
 				Key:    node.NodeTaint[i].Key,
 				Value:  node.NodeTaint[i].Value,
 				Effect: node.NodeTaint[i].Effect,
 			})
 		}
+
 		err := k8sOperator.UpdateNodeTaints(ctx, data.ClusterID, node.NodeName, utils.TaintToK8sTaint(taints))
 		if err != nil {
 			blog.Errorf("UpdateClusterNodesTaints[%s] ip[%s] failed: %v", taskID, node.NodeName, err)

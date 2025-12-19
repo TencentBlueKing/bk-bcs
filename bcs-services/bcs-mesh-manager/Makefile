@@ -47,6 +47,13 @@ proto-fmt:
 build:fmt
 	go build  -ldflags $(LDFLAG) -o bin/bcs-mesh-manager ./cmd/mesh-manager/main.go
 
+# build migrate tool
+build-migrate:
+	go build  -ldflags $(LDFLAG) -o bin/bcs-mesh-manager-migrate ./cmd/mesh-manager-migrate/
+
+# build all
+build-all: build build-migrate
+
 # test
 test:
 	go test -v ./cmd/... ./pkg/... -cover -count=1 -vet=off

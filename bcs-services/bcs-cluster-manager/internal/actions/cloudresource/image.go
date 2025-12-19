@@ -14,6 +14,7 @@ package cloudresource
 
 import (
 	"context"
+	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
@@ -22,6 +23,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
 // ListCloudOsImageAction list action for osimage
@@ -99,28 +101,39 @@ func (la *ListCloudOsImageAction) listCloudImageOs() error {
 
 	var (
 		imageOsList []*cmproto.OsImage
+		barrier     = utils.NewRoutinePool(5)
+		lock        = sync.Mutex{}
 	)
+	defer barrier.Close()
 
 	switch la.req.Provider {
 	case common.AllImageProvider:
 		providers := []string{common.PublicImageProvider, common.MarketImageProvider,
-			common.PrivateImageProvider, common.BCSImageProvider}
+			common.PrivateImageProvider, common.BCSImageProvider, common.ClusterImageProvider}
 		for i := range providers {
-			images, errLocal := clsMgr.ListOsImage(providers[i], cmOption)
-			if errLocal != nil {
-				blog.Errorf("ListCloudOsImageAction listCloudImageOs[%s] failed: %v", providers[i], err)
-				continue
-			}
-
-			imageOsList = append(imageOsList, images...)
+			barrier.Add(1)
+			go func(provider string) {
+				defer func() {
+					barrier.Done()
+				}()
+				images, errLocal := clsMgr.ListOsImage(provider, la.req.ClusterID, cmOption)
+				if errLocal != nil {
+					blog.Errorf("ListCloudOsImageAction listCloudImageOs[%s] failed: %v", provider, err)
+					return
+				}
+				lock.Lock()
+				imageOsList = append(imageOsList, images...)
+				lock.Unlock()
+			}(providers[i])
 		}
 	default:
 		// get image os list
-		imageOsList, err = clsMgr.ListOsImage(la.req.Provider, cmOption)
+		imageOsList, err = clsMgr.ListOsImage(la.req.Provider, la.req.ClusterID, cmOption)
+		if err != nil {
+			return err
+		}
 	}
-	if err != nil {
-		return err
-	}
+	barrier.Wait()
 
 	la.OsImageList = imageOsList
 	return nil
@@ -148,6 +161,27 @@ func (la *ListCloudOsImageAction) appendImageRelativeCluster() {
 						ClusterID:   cls.ClusterID,
 					})
 				}
+			}
+		}
+	}
+
+	if la.req.ClusterID != "" {
+		cluster, err := actions.GetClusterInfoByClusterID(la.model, la.req.ClusterID)
+		if err != nil {
+			blog.Errorf("GetClusterInfoByClusterID[%s] appendImageRelativeCluster failed: %v",
+				la.req.ClusterID, err)
+			return
+		}
+
+		for i := range la.OsImageList {
+			if cluster.GetClusterBasicSettings().GetOS() == la.OsImageList[i].Alias {
+				if la.OsImageList[i].Clusters == nil {
+					la.OsImageList[i].Clusters = make([]*cmproto.ClusterInfo, 0)
+				}
+				la.OsImageList[i].Clusters = append(la.OsImageList[i].Clusters, &cmproto.ClusterInfo{
+					ClusterName: cluster.ClusterName,
+					ClusterID:   cluster.ClusterID,
+				})
 			}
 		}
 	}

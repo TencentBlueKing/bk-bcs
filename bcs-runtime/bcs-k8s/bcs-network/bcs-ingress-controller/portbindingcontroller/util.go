@@ -17,6 +17,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 	"github.com/pkg/errors"
 	k8scorev1 "k8s.io/api/core/v1"
@@ -111,3 +112,23 @@ func checkPodNeedReconcile(oldPod, newPod *k8scorev1.Pod) bool {
 
 	return false
 }
+
+func getPortBindingUnreadyTimestamp(portBinding *networkextensionv1.PortBinding) time.Time {
+	if portBinding == nil {
+		return time.Time{}
+	}
+
+	timeStr := portBinding.Annotations[constant.AnnotationForPortBindingNotReadyTimestamp]
+	if timeStr == "" {
+		return time.Time{}
+	}
+
+	ts, err := time.Parse(time.RFC3339Nano, timeStr)
+	if err != nil {
+		blog.Warnf("parse not ready timestamp[%s] failed, err: %s", timeStr, err.Error())
+		return time.Time{}
+	}
+
+	return ts
+}
+	

@@ -159,7 +159,7 @@ func (c *Cluster) EnableExternalNodeSupport(cls *cmproto.Cluster, opt *cloudprov
 }
 
 // ListOsImage list image os
-func (c *Cluster) ListOsImage(provider string, opt *cloudprovider.CommonOption) ([]*cmproto.OsImage, error) {
+func (c *Cluster) ListOsImage(provider, clusterID string, opt *cloudprovider.CommonOption) ([]*cmproto.OsImage, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 

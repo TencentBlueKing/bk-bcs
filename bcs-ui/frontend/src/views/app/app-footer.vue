@@ -11,7 +11,7 @@
     </div>
     <div v-else>
       <div class="mb5 link">
-        <span v-html="config.i18n.footerInfoHTML"></span>
+        <span v-bk-xss-html="config.i18n.footerInfoHTML"></span>
       </div>
       <p>{{ config.footerCopyrightContent }}</p>
     </div>
@@ -26,6 +26,7 @@ export default defineComponent({
   name: 'BcsFooter',
   setup() {
     const { config } = usePlatform();
+
     return {
       config,
       PAAS_HOST: window.PAAS_HOST,

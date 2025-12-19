@@ -22,17 +22,24 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 )
 
+const (
+	// LocalIPEnv local ip environment variable
+	LocalIPEnv = "LOCAL_IP"
+)
+
 // MeshManagerOptions options for mesh manager
 type MeshManagerOptions struct {
 	conf.LogConfig
 	ServerConfig
 	ClientConfig
-	Etcd        *EtcdConfig    `json:"etcd"`
-	Mongo       *MongoConfig   `json:"mongo"`
-	Gateway     *GatewayConfig `json:"gateway"`
-	IAM         IAMConfig      `json:"iam"`
-	Auth        AuthConfig     `json:"auth"`
-	IstioConfig *IstioConfig   `json:"istio"`
+	Etcd        *EtcdConfig       `json:"etcd"`
+	Mongo       *MongoConfig      `json:"mongo"`
+	Gateway     *GatewayConfig    `json:"gateway"`
+	IAM         IAMConfig         `json:"iam"`
+	Auth        AuthConfig        `json:"auth"`
+	IstioConfig *IstioConfig      `json:"istio"`
+	Monitoring  *MonitoringConfig `json:"monitoring"`
+	Pipeline    *PipelineConfig   `json:"pipeline"`
 }
 
 // Parse parse
@@ -129,17 +136,84 @@ type IAMConfig struct {
 	ApplyPermAddress string `json:"applyPermAddress"`
 }
 
+// CredentialScope define credentials scope for a single resource
+type CredentialScope struct {
+	ProjectCode string `json:"projectCode" yaml:"projectCode"`
+	ClusterID   string `json:"clusterID" yaml:"clusterID"`
+	ProjectID   string `json:"projectID" yaml:"projectID"`
+	Namespace   string `json:"namespace" yaml:"namespace"`
+}
+
 // AuthConfig config for auth
 type AuthConfig struct {
 	Enable bool `json:"enable"`
 	// jwt key
 	PublicKeyFile  string `json:"publicKeyFile"`
 	PrivateKeyFile string `json:"privateKeyFile"`
+	PublicKey      string `json:"publicKey"`
+	PrivateKey     string `json:"privateKey"`
+	// 不鉴权接口，使用逗号分隔，格式 `MeshManager.Health,MeshManager.Health`
+	NoAuthMethod string `json:"noAuthMethod"`
 	// client 类型用户权限，使用 json 格式，key 为 client 名称，values 为拥有的权限，'*' 表示所有
 	// 如：`{"admin": ["*"], "client_a": ["MeshManager.ListTasks"]}`
 	ClientPermissions string `json:"clientPermissions"`
-	// 不鉴权接口，使用逗号分隔，格式 `MeshManager.Health,MeshManager.Health`
-	NoAuthMethod string `json:"noAuthMethod"`
+}
+
+// MonitoringConfig monitoring configuration
+type MonitoringConfig struct {
+	Domain   string `json:"domain"`
+	DashName string `json:"dashName"`
+}
+
+// PipelineConfig pipeline configuration
+type PipelineConfig struct {
+	DevOpsToken     string `json:"devOpsToken"`
+	BKDevOpsUrl     string `json:"bkDevOpsUrl"`
+	AppCode         string `json:"appCode"`
+	AppSecret       string `json:"appSecret"`
+	DevopsUID       string `json:"devopsUID"`
+	BkUsername      string `json:"bkUsername"`
+	DevopsProjectID string `json:"devopsProjectID"`
+	PipelineID      string `json:"pipelineID"`
+	Collection      string `json:"collection"`
+	EnableGroup     bool   `json:"enableGroup"`
+	Enable          bool   `json:"enable"`
+}
+
+// Validate validate pipeline config
+func (p *PipelineConfig) Validate() error {
+	if !p.Enable {
+		return nil
+	}
+	// 所有字段都必须提供
+	if p.BKDevOpsUrl == "" {
+		return fmt.Errorf("pipeline config: bkDevOpsUrl is required")
+	}
+	if p.AppCode == "" {
+		return fmt.Errorf("pipeline config: appCode is required")
+	}
+	if p.AppSecret == "" {
+		return fmt.Errorf("pipeline config: appSecret is required")
+	}
+	if p.DevopsProjectID == "" {
+		return fmt.Errorf("pipeline config: devopsProjectID is required")
+	}
+	if p.DevopsUID == "" {
+		return fmt.Errorf("pipeline config: devopsUID is required")
+	}
+	if p.BkUsername == "" {
+		return fmt.Errorf("pipeline config: bkUsername is required")
+	}
+	if p.DevOpsToken == "" {
+		return fmt.Errorf("pipeline config: devOpsToken is required")
+	}
+	if p.Collection == "" {
+		return fmt.Errorf("pipeline config: collection is required")
+	}
+	if p.PipelineID == "" {
+		return fmt.Errorf("pipeline config: pipelineID is required")
+	}
+	return nil
 }
 
 // loadConfigFile loading json config file
@@ -160,5 +234,36 @@ func (o *MeshManagerOptions) Validate() error {
 	if err := o.IstioConfig.Validate(); err != nil {
 		return err
 	}
+
+	// validate pipeline config
+	if o.Pipeline != nil {
+		if err := o.Pipeline.Validate(); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
+
+// SetDefault set default options
+func (o *MeshManagerOptions) SetDefault() error {
+	if o.ServerConfig.Address == "" {
+		localIP, err := getLocalIP()
+		if err != nil {
+			return err
+		}
+		o.ServerConfig.Address = localIP
+	}
+	return nil
+}
+
+func getLocalIP() (string, error) {
+	localIP := os.Getenv(LocalIPEnv)
+	if localIP == "" {
+		return "", fmt.Errorf("env %s is empty", LocalIPEnv)
+	}
+	return localIP, nil
+}
+
+// GlobalOptions global mesh manager options
+var GlobalOptions *MeshManagerOptions

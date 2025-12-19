@@ -399,10 +399,12 @@ const validate = async () => {
   const result = await Promise.all(data).then(() => true)
     .catch(() => false);
   if (!result) {
-    // 自动滚动到第一个错误的位置
-    const errDom = document?.querySelectorAll('.bk-schema-form-item__error-tips');
-    errDom[0]?.scrollIntoView({
-      block: 'center',
+    // 自动滚动到第一个错误的位置，使用 scrollIntoView 会有一个高度改变问题，导致表单内 tab上边框被隐藏
+    nextTick(() => {
+      const errDom = document?.querySelector?.('.bk-schema-form-item__error-tips') as HTMLElement | null;
+      errDom?.setAttribute?.('tabindex', '-1'); // 设置tabindex focus 才会生效
+      errDom?.focus?.();
+      errDom?.removeAttribute?.('tabindex');
     });
   }
   return result;
@@ -467,7 +469,7 @@ const handleCollapseChange = (value: boolean) => {
 
 watch(() => props.value, async () => {
   if (!props.value && props.isEdit) return;// 编辑态时不初始化表单
-  if (props.isAdd) {
+  if (!props.value && props.isAdd) {
     // 非编辑态时默认初始化一条数据
     schemaFormData.value = [cloneDeep(initFormData)];
     return;

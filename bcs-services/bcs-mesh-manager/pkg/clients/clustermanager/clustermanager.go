@@ -10,20 +10,22 @@
  * limitations under the License.
  */
 
-// Package helm 获取helm manager client
-package helm
+// Package clustermanager 获取clustermanager client
+package clustermanager
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/common"
 )
 
-// GetClient 获取helm manager client
+// GetClient 获取clustermanager client
 func GetClient() (clustermanager.ClusterManagerClient, func(), error) {
-	clustermanagerClient, closeFunc, err := clustermanager.GetClient(common.ServiceDomain)
+	clustermanagerClient, closeFunc, err := clustermanager.GetClient(common.ClusterManagerServiceDomain)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -46,4 +48,27 @@ func GetClusterInfo(ctx context.Context, projectID, clusterID string) (*clusterm
 		return nil, err
 	}
 	return clusterInfo.Data, nil
+}
+
+// ListProjectClusters 获取项目下的集群列表
+func ListProjectClusters(ctx context.Context, projectID string) ([]*clustermanager.Cluster, error) {
+	clustermanagerClient, closeFunc, err := GetClient()
+	if err != nil {
+		blog.Errorf("get clustermanager client failed: %s", err.Error())
+		return nil, err
+	}
+	defer closeFunc()
+
+	resp, err := clustermanagerClient.ListProjectCluster(ctx, &clustermanager.ListProjectClusterReq{
+		ProjectID: projectID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if !resp.Result {
+		return nil, fmt.Errorf("list project clusters failed: %s", resp.Message)
+	}
+
+	return resp.Data, nil
 }

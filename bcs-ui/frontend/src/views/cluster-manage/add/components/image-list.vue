@@ -28,7 +28,7 @@
         <div
           class="flex items-center justify-between"
           v-bk-tooltips="{
-            content: item.clusters ? item.clusters.join(',') : '--',
+            content: item.clusters ? item.clusters.map(v => v.clusterID).join(',') : '--',
             disabled: !item.clusters.length
           }">
           <span class="flex items-center">

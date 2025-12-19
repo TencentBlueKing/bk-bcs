@@ -28,10 +28,14 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/helmmanager"
 	discovery "github.com/Tencent/bk-bcs/bcs-common/pkg/discovery"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
 	trace "github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/micro"
+	middleauth "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 	grpccli "github.com/go-micro/plugins/v4/client/grpc"
 	"github.com/go-micro/plugins/v4/registry/etcd"
 	grpcsvr "github.com/go-micro/plugins/v4/server/grpc"
@@ -47,6 +51,7 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/cmd/mesh-manager/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/clients/k8s"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/handler"
@@ -66,8 +71,10 @@ type Server struct {
 	httpServer *http.Server
 	opt        *options.MeshManagerOptions
 
-	discovery            *discovery.ModuleDiscovery
-	helmManagerDiscovery *discovery.ModuleDiscovery
+	discovery               *discovery.ModuleDiscovery
+	helmManagerDiscovery    *discovery.ModuleDiscovery
+	projectDiscovery        *discovery.ModuleDiscovery
+	clusterManagerDiscovery *discovery.ModuleDiscovery
 
 	model        store.MeshManagerModel
 	mongoOptions *mongo.Options
@@ -96,14 +103,13 @@ func (s *Server) Init() error {
 		s.initTLSConfig,
 		s.initRegistry,
 		s.initModel,
-		// s.initIAMClient,
-		// s.initJWTClient,
-		// s.initSkipClients,
-		// s.initSkipHandler,
+		s.initIAMClient,
+		s.initJWTClient,
 		s.initDiscovery,
 		s.initMicro,
 		s.initHTTPService,
 		s.initK8sClient,
+		s.initPipelineConfig,
 	}
 
 	// init
@@ -236,11 +242,18 @@ func (s *Server) initModel() error {
 	// init store
 	s.model = store.New(mongoDB)
 	blog.Info("init store successfully")
+
 	return nil
 }
 
 // init micro service
 func (s *Server) initMicro() error {
+	// init micro auth middleware, middleware will check user perm
+	authWrapper := middleauth.NewGoMicroAuth(auth.GetJWTClient()).
+		EnableSkipHandler(auth.SkipHandler).
+		EnableSkipClient(auth.SkipClient).
+		SetCheckUserPerm(auth.CheckUserPerm)
+
 	opts := []micro.Option{
 		micro.Server(grpcsvr.NewServer(
 			grpcsvr.AuthTLS(s.tlsConfig),
@@ -265,8 +278,9 @@ func (s *Server) initMicro() error {
 		micro.WrapHandler(
 			utils.ResponseWrapper,
 			utils.RequestLogWarpper,
-			// authWrapper.AuthenticationFunc,
-			// authWrapper.AuthorizationFunc,
+			authWrapper.AuthenticationFunc,
+			utils.ParseProjectIDWrapper,
+			authWrapper.AuthorizationFunc,
 			trace.NewTracingWrapper(),
 		),
 	}
@@ -297,6 +311,12 @@ func (s *Server) microAfterStart() error {
 	if err := s.helmManagerDiscovery.Start(); err != nil {
 		return err
 	}
+	if err := s.projectDiscovery.Start(); err != nil {
+		return err
+	}
+	if err := s.clusterManagerDiscovery.Start(); err != nil {
+		return err
+	}
 	return s.discovery.Start()
 }
 
@@ -305,6 +325,8 @@ func (s *Server) microAfterStop() error {
 		return nil
 	}
 	s.helmManagerDiscovery.Stop()
+	s.projectDiscovery.Stop()
+	s.clusterManagerDiscovery.Stop()
 	s.discovery.Stop()
 	return nil
 }
@@ -316,6 +338,8 @@ func (s *Server) initHTTPService() error {
 		runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{
 			// 设置为true，表示输出未设置的值
 			MarshalOptions: protojson.MarshalOptions{EmitUnpopulated: true},
+			// 允许未知字段，避免前端传入未定义字段时报错
+			UnmarshalOptions: protojson.UnmarshalOptions{DiscardUnknown: true},
 		}),
 	)
 	grpcDialOpts := []grpc.DialOption{}
@@ -340,6 +364,9 @@ func (s *Server) initHTTPService() error {
 	// init http server
 	smux := http.NewServeMux()
 	smux.Handle("/", router)
+	smux.Handle("/meshmanager/swagger/", http.StripPrefix("/meshmanager/swagger/",
+		http.FileServer(http.Dir("/data/bcs/swagger/"))),
+	)
 
 	httpAddress := net.JoinHostPort(s.opt.Address, strconv.Itoa(int(s.opt.HTTPPort)))
 
@@ -374,8 +401,17 @@ func (s *Server) initDiscovery() error {
 		// enable discovery helm manager module
 		s.helmManagerDiscovery = discovery.NewModuleDiscovery(common.HelmManagerServiceDomain, s.microRegistry)
 		helmmanager.SetClientConfig(s.clientTLSConfig, s.helmManagerDiscovery)
+		// enable discovery project manager module
+		s.projectDiscovery = discovery.NewModuleDiscovery(common.ProjectManagerServiceName, s.microRegistry)
+		bcsproject.SetClientConfig(s.clientTLSConfig, s.projectDiscovery)
+		// enable discovery cluster manager module
+		s.clusterManagerDiscovery = discovery.NewModuleDiscovery(common.ClusterManagerServiceDomain, s.microRegistry)
+		clustermanager.SetClientConfig(s.clientTLSConfig, s.clusterManagerDiscovery)
+		blog.Info("init project client successfully")
 	} else {
 		helmmanager.SetClientConfig(s.clientTLSConfig, nil)
+		bcsproject.SetClientConfig(s.clientTLSConfig, nil)
+		clustermanager.SetClientConfig(s.clientTLSConfig, nil)
 	}
 	blog.Info("init discovery for cluster manager successfully")
 	return nil
@@ -383,4 +419,75 @@ func (s *Server) initDiscovery() error {
 
 func (s *Server) initK8sClient() error {
 	return k8s.InitClient(s.opt.Gateway.Endpoint, s.opt.Gateway.Token)
+}
+
+// init jwt client
+func (s *Server) initJWTClient() error {
+	conf := auth.JWTClientConfig{
+		Enable:         s.opt.Auth.Enable,
+		PublicKey:      s.opt.Auth.PublicKey,
+		PrivateKey:     s.opt.Auth.PrivateKey,
+		PublicKeyFile:  s.opt.Auth.PublicKeyFile,
+		PrivateKeyFile: s.opt.Auth.PrivateKeyFile,
+	}
+	if _, err := auth.NewJWTClient(conf); err != nil {
+		blog.Error("init jwt client error, %s", err.Error())
+		return err
+	}
+	blog.Info("init jwt client successfully")
+	return nil
+}
+
+// initIAMClient init iam client for perm
+func (s *Server) initIAMClient() error {
+	iamClient, err := iam.NewIamClient(&iam.Options{
+		SystemID:    s.opt.IAM.SystemID,
+		AppCode:     s.opt.IAM.AppCode,
+		AppSecret:   s.opt.IAM.AppSecret,
+		External:    s.opt.IAM.External,
+		GateWayHost: s.opt.IAM.GatewayServer,
+		IAMHost:     s.opt.IAM.IAMServer,
+		BkiIAMHost:  s.opt.IAM.BkiIAMServer,
+		Metric:      s.opt.IAM.Metric,
+		Debug:       s.opt.IAM.Debug,
+	})
+	if err != nil {
+		return err
+	}
+	auth.IAMClient = iamClient
+	auth.InitPermClient(iamClient)
+	blog.Info("init iam client successfully")
+
+	// 初始化权限检查模块的 mesh model
+	auth.SetMeshModel(s.model)
+
+	return nil
+}
+
+// initPipelineConfig 初始化pipeline配置
+func (s *Server) initPipelineConfig() error {
+	// 用户未配置，则初始化一个禁用的配置
+	if s.opt.Pipeline == nil {
+		utils.InitPipelineConfig(&utils.PipelineConfig{Enable: false})
+		return nil
+	}
+
+	config := &utils.PipelineConfig{
+		BKDevOpsUrl:     s.opt.Pipeline.BKDevOpsUrl,
+		AppCode:         s.opt.Pipeline.AppCode,
+		AppSecret:       s.opt.Pipeline.AppSecret,
+		DevopsProjectID: s.opt.Pipeline.DevopsProjectID,
+		DevopsUID:       s.opt.Pipeline.DevopsUID,
+		BkUsername:      s.opt.Pipeline.BkUsername,
+		DevOpsToken:     s.opt.Pipeline.DevOpsToken,
+		Collection:      s.opt.Pipeline.Collection,
+		PipelineID:      s.opt.Pipeline.PipelineID,
+		EnableGroup:     s.opt.Pipeline.EnableGroup,
+		Enable:          s.opt.Pipeline.Enable,
+	}
+
+	// 初始化Pipeline配置
+	utils.InitPipelineConfig(config)
+	blog.Infof("pipeline config initialized successfully")
+	return nil
 }

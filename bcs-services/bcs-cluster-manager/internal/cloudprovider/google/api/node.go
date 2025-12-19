@@ -92,7 +92,7 @@ func (n *NodeManager) ListNodeInstanceType(
 	ctx context.Context, info cloudprovider.InstanceInfo, opt *cloudprovider.CommonOption) (
 	[]*proto.InstanceType, error) {
 	blog.Infof("ListNodeInstanceType zone: %s, nodeFamily: %s, cpu: %d, memory: %d",
-		info.Zone, info.NodeFamily, info.Cpu, info.Memory)
+		info.Zone, info.NodeFamily, info.CPU, info.Memory)
 
 	client, err := NewComputeServiceClient(opt)
 	if err != nil {
@@ -112,8 +112,8 @@ func (n *NodeManager) ListNodeInstanceType(
 
 	var instanceTypes = make([]*proto.InstanceType, 0)
 	for _, item := range result {
-		if info.Cpu > 0 {
-			if item.Cpu != info.Cpu {
+		if info.CPU > 0 {
+			if item.Cpu != info.CPU {
 				continue
 			}
 		}

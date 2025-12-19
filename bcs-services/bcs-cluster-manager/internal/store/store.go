@@ -44,6 +44,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/resourcequota"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/scalingoption"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/task"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/templateconfig"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/tke"
 	stypes "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/types"
 	itypes "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
@@ -209,6 +210,15 @@ type ClusterManagerModel interface {
 	GetCloudModuleFlag(ctx context.Context, cloudID, version, module, flag string) (*types.CloudModuleFlag, error)
 	ListCloudModuleFlag(ctx context.Context, cond *operator.Condition,
 		opt *options.ListOption) ([]*types.CloudModuleFlag, error)
+
+	// TemplateConfig storage management
+	CreateTemplateConfig(ctx context.Context, config *types.TemplateConfig) error
+	UpdateTemplateConfig(ctx context.Context, config *types.TemplateConfig) error
+	DeleteTemplateConfig(ctx context.Context, templateConfigID string) error
+	GetTemplateConfig(ctx context.Context, businessID, provider, configType string) (*types.TemplateConfig, error)
+	GetTemplateConfigByID(ctx context.Context, templateConfigID string) (*types.TemplateConfig, error)
+	ListTemplateConfigs(
+		ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]*types.TemplateConfig, error)
 }
 
 // ModelSet a set of client
@@ -232,10 +242,12 @@ type ModelSet struct {
 	*moduleflag.ModelCloudModuleFlag
 	*machinery.ModelMachineryTask
 	*notifytemplate.ModelNotifyTemplate
+	*templateconfig.ModelTemplateConfig
 }
 
 // NewModelSet create model set
 func NewModelSet(mongoOptions *mongo.Options) (ClusterManagerModel, error) {
+	// init db
 	db, err := mongo.NewDB(mongoOptions)
 	if err != nil {
 		blog.Errorf("init mongo db failed, err %s", err.Error())
@@ -272,6 +284,7 @@ func NewModelSet(mongoOptions *mongo.Options) (ClusterManagerModel, error) {
 		ModelCloudModuleFlag:   moduleflag.New(db),
 		ModelMachineryTask:     mTaskDb,
 		ModelNotifyTemplate:    notifytemplate.New(db),
+		ModelTemplateConfig:    templateconfig.New(db),
 	}
 
 	return storeClient, nil
@@ -311,6 +324,7 @@ func NewModelEtcd(opts ...itypes.Option) (EtcdStoreInterface, error) {
 		}
 	}
 
+	// set etcd client config
 	var conf client.Config
 	if etcdOptions.TLSConfig != nil {
 		conf = client.Config{

@@ -37,8 +37,8 @@ var _ server.Option
 func NewMeshManagerEndpoints() []*api.Endpoint {
 	return []*api.Endpoint{
 		{
-			Name:    "MeshManager.ListIstioVersion",
-			Path:    []string{"/meshmanager/v1/mesh/istio/version"},
+			Name:    "MeshManager.ListIstioConfig",
+			Path:    []string{"/meshmanager/v1/mesh/istio/config"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
@@ -72,26 +72,32 @@ func NewMeshManagerEndpoints() []*api.Endpoint {
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
+		{
+			Name:    "MeshManager.GetClusterInfo",
+			Path:    []string{"/meshmanager/v1/mesh/clusters"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
 	}
 }
 
 // Client API for MeshManager service
 
 type MeshManagerService interface {
-	// ===== 版本管理相关 =====
-	// 获取当前开放的istio版本
-	ListIstioVersion(ctx context.Context, in *ListIstioVersionRequest, opts ...client.CallOption) (*ListIstioVersionResponse, error)
-	// ===== Istio 相关 =====
+	// 获取当前开放的istio版本和配置信息
+	ListIstioConfig(ctx context.Context, in *ListIstioConfigRequest, opts ...client.CallOption) (*ListIstioConfigResponse, error)
 	// 安装istio
-	InstallIstio(ctx context.Context, in *IstioRequest, opts ...client.CallOption) (*InstallIstioResponse, error)
+	InstallIstio(ctx context.Context, in *IstioInstallRequest, opts ...client.CallOption) (*InstallIstioResponse, error)
 	// 获取istio列表
 	ListIstio(ctx context.Context, in *ListIstioRequest, opts ...client.CallOption) (*ListIstioResponse, error)
 	// 更新istio配置
-	UpdateIstio(ctx context.Context, in *IstioRequest, opts ...client.CallOption) (*UpdateIstioResponse, error)
+	UpdateIstio(ctx context.Context, in *IstioUpdateRequest, opts ...client.CallOption) (*UpdateIstioResponse, error)
 	// 删除istio
 	DeleteIstio(ctx context.Context, in *DeleteIstioRequest, opts ...client.CallOption) (*DeleteIstioResponse, error)
 	// 获取istio详情
 	GetIstioDetail(ctx context.Context, in *GetIstioDetailRequest, opts ...client.CallOption) (*GetIstioDetailResponse, error)
+	// 获取项目下的集群信息
+	GetClusterInfo(ctx context.Context, in *GetClusterInfoRequest, opts ...client.CallOption) (*GetClusterInfoResponse, error)
 }
 
 type meshManagerService struct {
@@ -106,9 +112,9 @@ func NewMeshManagerService(name string, c client.Client) MeshManagerService {
 	}
 }
 
-func (c *meshManagerService) ListIstioVersion(ctx context.Context, in *ListIstioVersionRequest, opts ...client.CallOption) (*ListIstioVersionResponse, error) {
-	req := c.c.NewRequest(c.name, "MeshManager.ListIstioVersion", in)
-	out := new(ListIstioVersionResponse)
+func (c *meshManagerService) ListIstioConfig(ctx context.Context, in *ListIstioConfigRequest, opts ...client.CallOption) (*ListIstioConfigResponse, error) {
+	req := c.c.NewRequest(c.name, "MeshManager.ListIstioConfig", in)
+	out := new(ListIstioConfigResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -116,7 +122,7 @@ func (c *meshManagerService) ListIstioVersion(ctx context.Context, in *ListIstio
 	return out, nil
 }
 
-func (c *meshManagerService) InstallIstio(ctx context.Context, in *IstioRequest, opts ...client.CallOption) (*InstallIstioResponse, error) {
+func (c *meshManagerService) InstallIstio(ctx context.Context, in *IstioInstallRequest, opts ...client.CallOption) (*InstallIstioResponse, error) {
 	req := c.c.NewRequest(c.name, "MeshManager.InstallIstio", in)
 	out := new(InstallIstioResponse)
 	err := c.c.Call(ctx, req, out, opts...)
@@ -136,7 +142,7 @@ func (c *meshManagerService) ListIstio(ctx context.Context, in *ListIstioRequest
 	return out, nil
 }
 
-func (c *meshManagerService) UpdateIstio(ctx context.Context, in *IstioRequest, opts ...client.CallOption) (*UpdateIstioResponse, error) {
+func (c *meshManagerService) UpdateIstio(ctx context.Context, in *IstioUpdateRequest, opts ...client.CallOption) (*UpdateIstioResponse, error) {
 	req := c.c.NewRequest(c.name, "MeshManager.UpdateIstio", in)
 	out := new(UpdateIstioResponse)
 	err := c.c.Call(ctx, req, out, opts...)
@@ -166,41 +172,52 @@ func (c *meshManagerService) GetIstioDetail(ctx context.Context, in *GetIstioDet
 	return out, nil
 }
 
+func (c *meshManagerService) GetClusterInfo(ctx context.Context, in *GetClusterInfoRequest, opts ...client.CallOption) (*GetClusterInfoResponse, error) {
+	req := c.c.NewRequest(c.name, "MeshManager.GetClusterInfo", in)
+	out := new(GetClusterInfoResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for MeshManager service
 
 type MeshManagerHandler interface {
-	// ===== 版本管理相关 =====
-	// 获取当前开放的istio版本
-	ListIstioVersion(context.Context, *ListIstioVersionRequest, *ListIstioVersionResponse) error
-	// ===== Istio 相关 =====
+	// 获取当前开放的istio版本和配置信息
+	ListIstioConfig(context.Context, *ListIstioConfigRequest, *ListIstioConfigResponse) error
 	// 安装istio
-	InstallIstio(context.Context, *IstioRequest, *InstallIstioResponse) error
+	InstallIstio(context.Context, *IstioInstallRequest, *InstallIstioResponse) error
 	// 获取istio列表
 	ListIstio(context.Context, *ListIstioRequest, *ListIstioResponse) error
 	// 更新istio配置
-	UpdateIstio(context.Context, *IstioRequest, *UpdateIstioResponse) error
+	UpdateIstio(context.Context, *IstioUpdateRequest, *UpdateIstioResponse) error
 	// 删除istio
 	DeleteIstio(context.Context, *DeleteIstioRequest, *DeleteIstioResponse) error
 	// 获取istio详情
 	GetIstioDetail(context.Context, *GetIstioDetailRequest, *GetIstioDetailResponse) error
+	// 获取项目下的集群信息
+	GetClusterInfo(context.Context, *GetClusterInfoRequest, *GetClusterInfoResponse) error
 }
 
 func RegisterMeshManagerHandler(s server.Server, hdlr MeshManagerHandler, opts ...server.HandlerOption) error {
 	type meshManager interface {
-		ListIstioVersion(ctx context.Context, in *ListIstioVersionRequest, out *ListIstioVersionResponse) error
-		InstallIstio(ctx context.Context, in *IstioRequest, out *InstallIstioResponse) error
+		ListIstioConfig(ctx context.Context, in *ListIstioConfigRequest, out *ListIstioConfigResponse) error
+		InstallIstio(ctx context.Context, in *IstioInstallRequest, out *InstallIstioResponse) error
 		ListIstio(ctx context.Context, in *ListIstioRequest, out *ListIstioResponse) error
-		UpdateIstio(ctx context.Context, in *IstioRequest, out *UpdateIstioResponse) error
+		UpdateIstio(ctx context.Context, in *IstioUpdateRequest, out *UpdateIstioResponse) error
 		DeleteIstio(ctx context.Context, in *DeleteIstioRequest, out *DeleteIstioResponse) error
 		GetIstioDetail(ctx context.Context, in *GetIstioDetailRequest, out *GetIstioDetailResponse) error
+		GetClusterInfo(ctx context.Context, in *GetClusterInfoRequest, out *GetClusterInfoResponse) error
 	}
 	type MeshManager struct {
 		meshManager
 	}
 	h := &meshManagerHandler{hdlr}
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
-		Name:    "MeshManager.ListIstioVersion",
-		Path:    []string{"/meshmanager/v1/mesh/istio/version"},
+		Name:    "MeshManager.ListIstioConfig",
+		Path:    []string{"/meshmanager/v1/mesh/istio/config"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
@@ -234,6 +251,12 @@ func RegisterMeshManagerHandler(s server.Server, hdlr MeshManagerHandler, opts .
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "MeshManager.GetClusterInfo",
+		Path:    []string{"/meshmanager/v1/mesh/clusters"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
 	return s.Handle(s.NewHandler(&MeshManager{h}, opts...))
 }
 
@@ -241,11 +264,11 @@ type meshManagerHandler struct {
 	MeshManagerHandler
 }
 
-func (h *meshManagerHandler) ListIstioVersion(ctx context.Context, in *ListIstioVersionRequest, out *ListIstioVersionResponse) error {
-	return h.MeshManagerHandler.ListIstioVersion(ctx, in, out)
+func (h *meshManagerHandler) ListIstioConfig(ctx context.Context, in *ListIstioConfigRequest, out *ListIstioConfigResponse) error {
+	return h.MeshManagerHandler.ListIstioConfig(ctx, in, out)
 }
 
-func (h *meshManagerHandler) InstallIstio(ctx context.Context, in *IstioRequest, out *InstallIstioResponse) error {
+func (h *meshManagerHandler) InstallIstio(ctx context.Context, in *IstioInstallRequest, out *InstallIstioResponse) error {
 	return h.MeshManagerHandler.InstallIstio(ctx, in, out)
 }
 
@@ -253,7 +276,7 @@ func (h *meshManagerHandler) ListIstio(ctx context.Context, in *ListIstioRequest
 	return h.MeshManagerHandler.ListIstio(ctx, in, out)
 }
 
-func (h *meshManagerHandler) UpdateIstio(ctx context.Context, in *IstioRequest, out *UpdateIstioResponse) error {
+func (h *meshManagerHandler) UpdateIstio(ctx context.Context, in *IstioUpdateRequest, out *UpdateIstioResponse) error {
 	return h.MeshManagerHandler.UpdateIstio(ctx, in, out)
 }
 
@@ -263,4 +286,8 @@ func (h *meshManagerHandler) DeleteIstio(ctx context.Context, in *DeleteIstioReq
 
 func (h *meshManagerHandler) GetIstioDetail(ctx context.Context, in *GetIstioDetailRequest, out *GetIstioDetailResponse) error {
 	return h.MeshManagerHandler.GetIstioDetail(ctx, in, out)
+}
+
+func (h *meshManagerHandler) GetClusterInfo(ctx context.Context, in *GetClusterInfoRequest, out *GetClusterInfoResponse) error {
+	return h.MeshManagerHandler.GetClusterInfo(ctx, in, out)
 }

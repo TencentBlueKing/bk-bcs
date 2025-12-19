@@ -163,17 +163,17 @@ set +x
 
 #### k8s 网络配置
 
-| 环境变量           | 默认值                                                                                      | 说明                                                                                          |
-| ------------------ | ------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| 环境变量           | 默认值                                                            | 说明                                                                                          |
+| ------------------ |----------------------------------------------------------------| --------------------------------------------------------------------------------------------- |
 | `K8S_CTRL_IP`      | 控制平面默认是自身。<br />工作平面默认是中控机 ip，如果开启了 apiserver hpa，则是 VIP<br /> | 访问控制平面 ip。<br />                                                                       |
-| `K8S_SVC_CIDR`     | `10.96.0.0/12`                                                                              | 集群 svc ipv4 网段                                                                            |
-| `K8S_POD_CIDR`     | `10.244.0.0/16`                                                                             | 集群 pod ipv4 网段                                                                            |
-| `K8S_SVC_CIDRv6`   | `fd00::1234:5678:1:0/112`                                                                   | 集群 svc ipv6 网段（`K8S_IPv6_STATUS`不为`Disable`时有效）                                    |
-| `K8S_POD_CIDRv6`   | `fd00::1234:5678:0/104`                                                                     | 集群 pod ipv6 网段（`K8S_IPv6_STATUS`不为`Disable`时有效）                                    |
-| `K8S_MASK`         | `24`                                                                                        | 集群 pod ipv4 掩码长度                                                                        |
-| `K8S_IPv6_MASK`    | `120`                                                                                       | 集群 pod ipv6 掩码长度                                                                        |
-| `K8S_CNI`          | `flannel`                                                                                   | CNI 插件，现仅支持 `flannel`                                                                  |
-| `ENABLE_MULTUS_HA` | `true`                                                                                      | [MULTUS_CNI](https://k8snetworkplumbingwg.github.io/multus-cni/docs/quickstart.html) 默认启用 |
+| `K8S_SVC_CIDR`     | `10.96.0.0/12`                                                 | 集群 svc ipv4 网段                                                                            |
+| `K8S_POD_CIDR`     | `10.240.0.0/12`                                                | 集群 pod ipv4 网段                                                                            |
+| `K8S_SVC_CIDRv6`   | `fd00::1234:5678:1:0/112`                                      | 集群 svc ipv6 网段（`K8S_IPv6_STATUS`不为`Disable`时有效）                                    |
+| `K8S_POD_CIDRv6`   | `fd00::1234:5678:0/104`                                        | 集群 pod ipv6 网段（`K8S_IPv6_STATUS`不为`Disable`时有效）                                    |
+| `K8S_MASK`         | `24`                                                           | 集群 pod ipv4 掩码长度                                                                        |
+| `K8S_IPv6_MASK`    | `120`                                                          | 集群 pod ipv6 掩码长度                                                                        |
+| `K8S_CNI`          | `flannel`                                                      | CNI 插件，现仅支持 `flannel`                                                                  |
+| `ENABLE_MULTUS_HA` | `true`                                                         | [MULTUS_CNI](https://k8snetworkplumbingwg.github.io/multus-cni/docs/quickstart.html) 默认启用 |
 
 #### CRI 环境变量
 
@@ -206,7 +206,7 @@ set +x
 | `APISERVER_HA_MODE`       | `bcs-apiserver-proxy`       | 模式选择，支持 [bcs-apiserver-proxy](https://github.com/TencentBlueKing/bk-bcs/blob/625be3183d99ee3500123016a6dea99d78165565/docs/features/bcs-apiserver-proxy/bcs-apiserver-proxy.md#L1), [kube-vip](https://kube-vip.io/), third-party(直接使用) |
 | `VIP`                     |                             | VIP 地址，可配置与集群内不冲突的 ip 地址                                                                                                                                                                                                                |
 | `VS_PORT`                 | `6443`                      | bap 代理端口                                                                                                                                                                                                                                |
-| `APISERVER_PROXY_VERSION` | `v1.29.0-alpha.130-tencent` | bap 镜像版本                                                                                                                                                                                                                                |
+| `APISERVER_PROXY_VERSION` | `v1.31.0-alpha.43` | bap 镜像版本                                                                                                                                                                                                                                |
 | `PROXY_TOOL_PATH`         | `/usr/bin`                  | bap 工具安装目录                                                                                                                                                                                                                              |
 | `PERSIST_DIR`             | `/root/.bcs`                | bap 持久化目录                                                                                                                                                                                                                               |
 | `LVS_SCHEDULER`           | `rr`                        | bap 负载均衡策略                                                                                                                                                                                                                              |

@@ -1,0 +1,49 @@
+{
+  "server_config": {
+    "address": "${localIp}",
+    "port": ${serverPort},
+    "httpport": ${serverHttpPort},
+    "servercert": "${serverCert}",
+    "serverkey": "${serverKey}",
+    "serverca": "${serverCA}"
+  },
+  "client_config": {
+    "clientcert": "${clientCert}",
+    "clientkey": "${clientKey}",
+    "clientca": "${clientCA}"
+  },
+  "mongodb": {
+    "endpoints": "${mongoEndpoints}",
+    "connecttimeout": ${mongoConnectTimeout},
+    "database": "${mongoDatabase}",
+    "username": "${mongoUsername}",
+    "password": "${mongoPassword}"
+  },
+  "etcd": {
+    "endpoints": "${etcdEndpoints}",
+    "cert": "${etcdCert}",
+    "key": "${etcdKey}",
+    "ca": "${etcdCA}"
+  },
+  "rabbitmq": {
+    "host": "${rabbitmqHost}",
+    "port": ${rabbitmqPort},
+    "username": "${rabbitmqUsername}",
+    "password": "${rabbitmqPassword}",
+    "vhost": "${rabbitmqVhost}",
+    "source_exchange": "${rabbitmqSourceExchange}"
+  },
+  "log_config": {
+    "log_dir": "${logDir}",
+    "log_max_size": ${logMaxSize},
+    "log_max_num": ${logMaxNum},
+    "logtostderr": ${logToStderr},
+    "alsologtostderr": ${alsoLogToStderr},
+    "v": ${logVerbosity},
+    "stderrthreshold": "${stderrThreshold}"
+  },
+  "notification": {
+    "bk_app_code": "${bkAppCode}",
+    "bk_app_secret": "${bkAppSecret}"
+  }
+}

@@ -26,12 +26,12 @@
 import VeeValidate from 'vee-validate';
 import Vue from 'vue';
 
-import BkTrace from '@blueking/bk-trace';
+import BkTrace from '@blueking/bk-trace-core';
+import { BkXssFilterDirective } from '@blueking/xss-filter';
 
 import '@/common/bkmagic';
 import '@/fonts/svg-icon/iconcool';
 import '@/fonts/font-icon/iconcool';
-import '@/views/app/performance';
 import '@blueking/bkui-library';
 import App from '@/App.vue';
 import { bus } from '@/common/bus';
@@ -51,28 +51,6 @@ import store from '@/store';
 import BcsErrorPlugin from '@/views/app/bcs-error';
 import k8sIngress from '@/views/deploy-manage/templateset/ingress/k8s-ingress.vue';
 
-window.BkTrace = new BkTrace({
-  url: `${BCS_UI_PREFIX}/report`,
-  struct: {
-    module: '',
-    operation: '',
-    desc: '',
-    username: '',
-    projectCode: '',
-    to: '',
-    from: '',
-    error: {},
-    performance: {},
-    navID: () => {
-      let menu = store.state.curNav;
-      while (menu?.parent) {
-        menu = menu?.parent;
-      }
-      return menu?.id || '';
-    },
-  },
-});
-
 Vue.config.devtools = process.env.NODE_ENV === 'development';
 Vue.prototype.$chainable = chainable;
 
@@ -82,6 +60,24 @@ Vue.use(focus);
 Vue.use(bkmagic2);
 Vue.use(VeeValidate, {
   fieldsBagName: '_veeFields',
+});
+Vue.use(BkXssFilterDirective);
+// 数据上报插件
+Vue.use(BkTrace, {
+  url: `${BCS_UI_PREFIX}/report`,
+  appCode: 'bk_bcs',
+  appVersion: BK_BCS_VERSION,
+  // 空间类型
+  spaceType: 'project',
+  // 当前项目 ID
+  spaceID: () => {
+    try {
+      return store.getters?.curProjectCode;
+    } catch (e) {
+      console.error(e);
+      return '';
+    }
+  },
 });
 Vue.mixin(config);
 Vue.component('BkbcsInput', bkbcsInput);

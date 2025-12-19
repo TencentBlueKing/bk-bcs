@@ -12,6 +12,12 @@
 
 package common
 
+import (
+	"encoding/json"
+
+	_struct "github.com/golang/protobuf/ptypes/struct"
+)
+
 // MapInt2MapIf converts map[string]int to map[string]interface{}
 func MapInt2MapIf(m map[string]int) map[string]interface{} {
 	newM := make(map[string]interface{})
@@ -19,4 +25,18 @@ func MapInt2MapIf(m map[string]int) map[string]interface{} {
 		newM[k] = v
 	}
 	return newM
+}
+
+// MarshalInterfaceToValue trans interface to Struct
+func MarshalInterfaceToValue(data interface{}) (*_struct.Struct, error) {
+	b, err := json.Marshal(data)
+	if err != nil {
+		return nil, err
+	}
+	resultStruct := &_struct.Struct{}
+	err = resultStruct.UnmarshalJSON(b)
+	if err != nil {
+		return nil, err
+	}
+	return resultStruct, nil
 }

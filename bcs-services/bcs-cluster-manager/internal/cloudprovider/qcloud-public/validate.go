@@ -49,7 +49,7 @@ func (c *CloudValidate) CreateCloudAccountValidate(account *proto.Account) error
 		return fmt.Errorf("%s CreateCloudAccountValidate account is null", cloudName)
 	}
 	if len(account.SecretID) == 0 || len(account.SecretKey) == 0 {
-		return fmt.Errorf("%s CreateClusterValidate opt lost valid crendential info", cloudName)
+		return fmt.Errorf("%s CreateCloudAccountValidate opt lost valid crendential info", cloudName)
 	}
 
 	_, err := business.GetCloudRegions(&cloudprovider.CommonOption{
@@ -116,6 +116,20 @@ func (c *CloudValidate) CreateClusterValidate(req *proto.CreateClusterReq, opt *
 	// cluster category
 	if len(req.ClusterCategory) == 0 {
 		req.ClusterCategory = common.Builder
+	}
+
+	// cluster add nodes limit
+	maxNodeLimit := func() uint32 {
+		if opt == nil || opt.CommonConf.CreateClusterNodesLimit == 0 {
+			return common.CreateClusterNodesLimit
+		}
+
+		return opt.CommonConf.CreateClusterNodesLimit
+	}()
+	if len(req.Nodes) > int(maxNodeLimit) {
+		errMsg := fmt.Errorf("create cluster nodes count exceed maxNodeLimit: %d", maxNodeLimit)
+		blog.Errorf(errMsg.Error())
+		return errMsg
 	}
 
 	return nil
@@ -453,4 +467,9 @@ func (c *CloudValidate) CreateNodeGroupValidate(req *proto.CreateNodeGroupReques
 	}
 
 	return nil
+}
+
+// AllowCrossBizNodes xxx
+func (c *CloudValidate) AllowCrossBizNodes(cluster *proto.Cluster) bool {
+	return false
 }

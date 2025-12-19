@@ -1,0 +1,36 @@
+{{ $HostName := (first .Values.ingress.rules).host }}
+
+===================================================================================================================================
+|     __                               __      __  ____                                                                           |
+|    / /_   _____ _____         ____  / /___ _/ /_/ __/___  _________ ___            ____ ___  ____ _____  ____ _____ ____  _____ |
+|   / __ \ / ___// ___/______  / __ \/ / __ `/ __/ /_/ __ \/ ___/ __ `__ \  ______  / __ `__ \/ __ `/ __ \/ __ `/ __ `/ _ \/ ___/ |
+|  / /_/ // /__ (__  )/_____/ / /_/ / / /_/ / /_/ __/ /_/ / /  / / / / / / /_____/ / / / / / / /_/ / / / / /_/ / /_/ /  __/ /     |
+| /_.___/ \___//____/        / .___/_/\__,_/\__/_/  \____/_/  /_/ /_/ /_/         /_/ /_/ /_/\__,_/_/ /_/\__,_/\__, /\___/_/      |
+|                           /_/                                                                               /____/              |
+===================================================================================================================================
+
+Welcome to deploy bcs-platform-manager!
+
+Blueking Container Service (BCS) cluster resource layer provide Restful API for SaaS / OpenAPI.
+
+** Please be patient while the chart is being deployed **
+
+0. use commands as followed to check deploy status:
+
+    helm status {{ .Release.Name }} -n {{ .Release.Namespace }}
+    
+    helm get all {{ .Release.Name }} -n {{ .Release.Namespace }}
+
+1. If enabled ingress and ensure domain was points to correct ip, you can call api to check service status
+
+    # Get Service Healthz Status
+    curl http://{{ $HostName }}/platformmanager/v1/-/healthz
+
+    # Get Service ready Status
+    curl http://{{ $HostName }}/platformmanager/v1/-/ready
+
+2. To uninstall helm chart, execute commands as followed:
+
+    helm uninstall {{ .Release.Name }} -n {{ .Release.Namespace }}
+    
+    kubectl delete pvc -l app.kubernetes.io/instance={{ .Release.Name }} -n {{ .Release.Namespace }}

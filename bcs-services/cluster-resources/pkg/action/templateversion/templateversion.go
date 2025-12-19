@@ -20,6 +20,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"github.com/coreos/go-semver/semver"
+	"github.com/feiin/go-xss"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
@@ -369,7 +370,7 @@ func (t *TemplateVersionAction) Create(ctx context.Context, req *clusterRes.Crea
 
 		// 允许覆盖的情况下直接覆盖
 		updateTemplateVersion := entity.M{
-			"description": req.GetDescription(),
+			"description": xss.FilterXSS(req.GetDescription(), xss.XssOption{}),
 			"version":     req.GetVersion(),
 			"content":     req.GetContent(),
 			"creator":     userName,
@@ -384,7 +385,7 @@ func (t *TemplateVersionAction) Create(ctx context.Context, req *clusterRes.Crea
 
 	templateVersion := &entity.TemplateVersion{
 		ProjectCode:   p.Code,
-		Description:   req.GetDescription(),
+		Description:   xss.FilterXSS(req.GetDescription(), xss.XssOption{}),
 		TemplateName:  tmp.Name,
 		TemplateSpace: tmp.TemplateSpace,
 		Version:       req.GetVersion(),

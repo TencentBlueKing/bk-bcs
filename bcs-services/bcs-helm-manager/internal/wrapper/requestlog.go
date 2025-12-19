@@ -29,7 +29,7 @@ func RequestLogWarpper(fn server.HandlerFunc) server.HandlerFunc {
 		// get metadata
 		md, _ := metadata.FromContext(ctx)
 		ctx = context.WithValue(ctx, contextx.LangContectKey, i18n.GetLangFromCookies(md))
-		blog.Infof("receive %s, metadata: %v, req: %v", req.Method(), md, req.Body())
+		blog.V(6).Infof("receive %s, metadata: %v, req: %v", req.Method(), md, req.Body())
 		return fn(ctx, req, rsp)
 	}
 }

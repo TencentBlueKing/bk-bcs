@@ -1448,7 +1448,8 @@ func (cli *TkeClient) getCommonImages() ([]*OSImage, error) {
 }
 
 // DescribeOsImages pull common images
-func (cli *TkeClient) DescribeOsImages(provider string, bcsImageNameList []string, opt *cloudprovider.CommonOption) ([]*OSImage, error) {
+func (cli *TkeClient) DescribeOsImages(provider, clusterID string, bcsImageNameList []string,
+	opt *cloudprovider.CommonOption) ([]*OSImage, error) {
 	if cli == nil {
 		return nil, cloudprovider.ErrServerIsNil
 	}
@@ -1457,6 +1458,7 @@ func (cli *TkeClient) DescribeOsImages(provider string, bcsImageNameList []strin
 
 	switch provider {
 	case icommon.MarketImageProvider:
+		// market image provider
 		for _, v := range utils.ImageOsList {
 			if provider == v.Provider {
 				images = append(images, &OSImage{
@@ -1472,8 +1474,10 @@ func (cli *TkeClient) DescribeOsImages(provider string, bcsImageNameList []strin
 		}
 		return images, nil
 	case icommon.PublicImageProvider:
+		// public image provider
 		return cli.getCommonImages()
 	case icommon.PrivateImageProvider:
+		// private image provider
 		cvmImages, err := getCvmImagesByImageType(provider, opt)
 		if err != nil {
 			return nil, fmt.Errorf("DescribeOsImages[%s] DescribeImages failed: %v", provider, err)
@@ -1490,6 +1494,7 @@ func (cli *TkeClient) DescribeOsImages(provider string, bcsImageNameList []strin
 		}
 		return images, nil
 	case icommon.BCSImageProvider:
+		// bcs image provider
 		if len(bcsImageNameList) > 0 {
 			for _, imageName := range bcsImageNameList {
 				image, err := getCvmImageByImageName(imageName, opt)
@@ -1506,7 +1511,27 @@ func (cli *TkeClient) DescribeOsImages(provider string, bcsImageNameList []strin
 				})
 			}
 		}
+		return images, nil
+	case icommon.ClusterImageProvider:
+		// cluster image provider
+		if clusterID != "" {
+			cls, _ := cloudprovider.GetClusterByID(clusterID)
+			if cls != nil {
+				clusterImageOs := cls.GetClusterBasicSettings().GetOS()
+				image, err := getCvmImageByImageName(clusterImageOs, opt)
+				if err != nil {
+					return nil, fmt.Errorf("qcloud clusterImageOs getCvmImageByImageName[%s] failed: %v", clusterImageOs, err)
+				}
 
+				images = append(images, &OSImage{
+					Alias:   image.ImageName,
+					Arch:    image.Architecture,
+					OsName:  image.OsName,
+					Status:  image.ImageState,
+					ImageId: image.ImageId,
+				})
+			}
+		}
 		return images, nil
 	default:
 	}
@@ -1616,4 +1641,36 @@ func (cli *TkeClient) GetTkeAppChartVersionByName(clusterType string, appName st
 	}
 
 	return "", nil
+}
+
+// EnableClusterAudit 开启集群审计
+func (cli *TkeClient) EnableClusterAudit(clusterID, logsetId, topicId, topicRegion string, withoutCollection bool) error {
+	if cli == nil {
+		return cloudprovider.ErrServerIsNil
+	}
+	if len(clusterID) == 0 {
+		return fmt.Errorf("EnableClusterAudit failed: clusterID is empty")
+	}
+
+	req := NewEnableClusterAuditRequest()
+	req.ClusterId = common.StringPtr(clusterID)
+	req.LogsetId = common.StringPtr(logsetId)
+	req.TopicId = common.StringPtr(topicId)
+	req.TopicRegion = common.StringPtr(topicRegion)
+	req.WithoutCollection = common.BoolPtr(withoutCollection)
+
+	resp, err := cli.tkeCommon.EnableClusterAudit(req)
+	if err != nil {
+		blog.Errorf("EnableClusterAudit[%s] failed: %v", clusterID, err)
+		return err
+	}
+
+	// check response
+	if resp == nil || resp.Response == nil {
+		blog.Errorf("EnableClusterAudit[%s] but lost response information", clusterID)
+		return cloudprovider.ErrCloudLostResponse
+	}
+	blog.Infof("RequestId[%s] tke client EnableClusterAudit response successful", *resp.Response.RequestId)
+
+	return nil
 }

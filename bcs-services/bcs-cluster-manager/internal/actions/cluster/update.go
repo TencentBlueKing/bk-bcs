@@ -31,7 +31,6 @@ import (
 	cmcommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/nodetemplate"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/taskserver"
 )
@@ -840,11 +839,11 @@ func (ua *AddNodesAction) getClusterNodesByIPs(nodeMgr cloudprovider.NodeManager
 }
 
 // cloudCheckValidate cloud check
-func (ua *AddNodesAction) cloudCheckValidate() error {
+func (ua *AddNodesAction) cloudCheckValidate() (bool, error) {
 	validate, err := cloudprovider.GetCloudValidateMgr(ua.cloud.CloudProvider)
 	if err != nil {
 		blog.Errorf("AddNodesAction cloudCheckValidate failed: %v", err)
-		return err
+		return false, err
 	}
 	err = validate.AddNodesToClusterValidate(ua.req,
 		&cloudprovider.CommonOption{
@@ -853,30 +852,12 @@ func (ua *AddNodesAction) cloudCheckValidate() error {
 			}})
 	if err != nil {
 		blog.Errorf("AddNodesAction cloudCheckValidate failed: %v", err)
-		return err
+		return false, err
 	}
 
-	return nil
-}
+	allowCrossBiz := validate.AllowCrossBizNodes(ua.cluster)
 
-func (ua *AddNodesAction) checkNodesInstanceType() (string, error) {
-	var (
-		baseType = ""
-	)
-	// use first node as base type
-	if len(ua.nodes) > 0 {
-		baseType = ua.nodes[0].InstanceType
-
-		// check all nodes have same InstanceType
-		for i, node := range ua.nodes {
-			if node.InstanceType != baseType {
-				return "", fmt.Errorf("node[%d] has different InstanceType[%s]",
-					i, node.InstanceType)
-			}
-		}
-	}
-
-	return baseType, nil
+	return allowCrossBiz, nil
 }
 
 // validate check
@@ -892,18 +873,20 @@ func (ua *AddNodesAction) validate() error {
 	}
 
 	// cloud validate
-	err = ua.cloudCheckValidate()
+	allowCrossBiz, err := ua.cloudCheckValidate()
 	if err != nil {
 		return err
 	}
 
 	// check operator host permission
-	canUse := CheckUseNodesPermForUser(ua.cluster.BusinessID, ua.req.Operator, ua.req.Nodes)
-	if !canUse {
-		errMsg := fmt.Errorf("add nodes failed: user[%s] no perm to use nodes[%v] in bizID[%s]",
-			ua.req.Operator, ua.req.Nodes, ua.cluster.BusinessID)
-		blog.Errorf(errMsg.Error())
-		return errMsg
+	if !allowCrossBiz {
+		canUse := CheckUseNodesPermForUser(ua.cluster.BusinessID, ua.req.Operator, ua.req.Nodes)
+		if !canUse {
+			errMsg := fmt.Errorf("add nodes failed: user[%s] no perm to use nodes[%v] in bizID[%s]",
+				ua.req.Operator, ua.req.Nodes, ua.cluster.BusinessID)
+			blog.Errorf(errMsg.Error())
+			return errMsg
+		}
 	}
 
 	// check managed_type nodes
@@ -922,56 +905,7 @@ func (ua *AddNodesAction) validate() error {
 		return err
 	}
 
-	// handle GPU nodes
-	if ua.req.Advance != nil && ua.req.Advance.GetIsGPUNode() {
-		insType, errLocal := ua.checkNodesInstanceType()
-		if errLocal != nil {
-			return errLocal
-		}
-		// 使用平台默认的GPU模版
-		if ua.req.GetNodeTemplateID() == "" {
-			tpl, errList := ua.listDefaultGpuTemplates(insType)
-			if errList != nil {
-				return errList
-			}
-
-			ua.req.NodeTemplateID = tpl.NodeTemplateID
-			ua.nodeTemplate = tpl
-		}
-	}
-
 	return nil
-}
-
-func (ua *AddNodesAction) listDefaultGpuTemplates(insType string) (*cmproto.NodeTemplate, error) {
-	condM := make(operator.M)
-	condM[nodetemplate.ProjectIDKey] = common.Default
-	cond := operator.NewLeafCondition(operator.Eq, condM)
-	platTemplates, err := ua.model.ListNodeTemplate(ua.ctx, cond, &options.ListOption{All: true})
-	if err != nil {
-		return nil, err
-	}
-
-	var (
-		template *cmproto.NodeTemplate
-	)
-	for i := range platTemplates {
-		templateType, ok := platTemplates[i].GetExtraInfo()[common.TemplateType]
-		if !ok {
-			continue
-		}
-		instanceType, ok := platTemplates[i].GetExtraInfo()[common.TemplateInstanceType]
-		if !ok {
-			continue
-		}
-
-		if templateType == common.TemplateGpu && instanceType == insType {
-			template = platTemplates[i]
-			break
-		}
-	}
-
-	return template, nil
 }
 
 func (ua *AddNodesAction) setResp(code uint32, msg string) {
