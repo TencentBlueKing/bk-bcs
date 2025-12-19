@@ -459,7 +459,7 @@ func suspendAZRebalanceProcesses(ctx context.Context, dependInfo *cloudprovider.
 
 	client, err := api.NewAutoScalingClient(dependInfo.CmOption)
 	if err != nil {
-		blog.Errorf("taskID[%s] checkNodegroupStatus get aws clientSet failed, %s", taskID, err.Error())
+		blog.Errorf("taskID[%s] suspendAZRebalanceProcesses get aws clientSet failed, %s", taskID, err.Error())
 		return err
 	}
 
@@ -470,28 +470,42 @@ func suspendAZRebalanceProcesses(ctx context.Context, dependInfo *cloudprovider.
 		return err
 	}
 
-	asgs, err := client.DescribeAutoScalingGroups(&autoscaling.DescribeAutoScalingGroupsInput{
-		AutoScalingGroupNames: []*string{asInfo.AutoScalingGroupName},
-	})
-	if err != nil {
-		return err
-	}
-
-	if len(asgs) == 0 {
-		return fmt.Errorf("get autoscaling group info empty")
-	}
-	if len(asgs[0].SuspendedProcesses) == 0 {
-		return fmt.Errorf("suspend autoscaling group AZRebalance processes failed")
-	}
-
-	for _, p := range asgs[0].SuspendedProcesses {
-		if *p.ProcessName == pName {
-			blog.Infof("suspend autoscaling group AZRebalance processes successful")
+	ctx, cancel := context.WithTimeout(context.TODO(), 2*time.Minute)
+	defer cancel()
+	err = loop.LoopDoFunc(ctx, func() error {
+		asgs, dErr := client.DescribeAutoScalingGroups(&autoscaling.DescribeAutoScalingGroupsInput{
+			AutoScalingGroupNames: []*string{asInfo.AutoScalingGroupName},
+		})
+		if dErr != nil {
+			blog.Errorf("taskID[%s] DescribeAutoScalingGroups failed, %s", taskID, dErr.Error())
 			return nil
 		}
+
+		if len(asgs) == 0 {
+			blog.Errorf("taskID[%s] get autoscaling group info empty", taskID)
+			return nil
+		}
+		if len(asgs[0].SuspendedProcesses) == 0 {
+			blog.Errorf("taskID[%s] suspend autoscaling group processes empty", taskID)
+			return nil
+		}
+
+		for _, p := range asgs[0].SuspendedProcesses {
+			if *p.ProcessName == pName {
+				blog.Infof("suspend autoscaling group AZRebalance processes successful")
+				return loop.EndLoop
+			}
+		}
+
+		return nil
+	}, loop.LoopInterval(5*time.Second))
+	if err != nil {
+		blog.Errorf("suspendAZRebalanceProcesses[%s]: failed: %v", taskID, err)
+		retErr := fmt.Errorf("suspendAZRebalanceProcesses failed, %s", err.Error())
+		return retErr
 	}
 
-	return fmt.Errorf("suspend autoscaling group AZRebalance processes failed")
+	return nil
 }
 
 func deleteNodegroupLifecycleHook(ctx context.Context, dependInfo *cloudprovider.CloudDependBasicInfo,
@@ -500,7 +514,7 @@ func deleteNodegroupLifecycleHook(ctx context.Context, dependInfo *cloudprovider
 
 	client, err := api.NewAutoScalingClient(dependInfo.CmOption)
 	if err != nil {
-		blog.Errorf("taskID[%s] checkNodegroupStatus get aws clientSet failed, %s", taskID, err.Error())
+		blog.Errorf("taskID[%s] deleteNodegroupLifecycleHook get aws clientSet failed, %s", taskID, err.Error())
 		return err
 	}
 
@@ -509,8 +523,8 @@ func deleteNodegroupLifecycleHook(ctx context.Context, dependInfo *cloudprovider
 	err = loop.LoopDoFunc(ctx, func() error {
 		hooks, dErr := client.DescribeLifecycleHooks(asInfo.AutoScalingGroupName)
 		if dErr != nil {
-			blog.Errorf("taskID[%s] deleteAsLifecycleHooks failed: %v", taskID, dErr)
-			return dErr
+			blog.Errorf("taskID[%s] DescribeLifecycleHooks failed: %v", taskID, dErr)
+			return nil
 		}
 
 		if len(hooks) == 0 {
@@ -524,7 +538,8 @@ func deleteNodegroupLifecycleHook(ctx context.Context, dependInfo *cloudprovider
 
 		dErr = client.DeleteLifecycleHooks(asInfo.AutoScalingGroupName, data)
 		if dErr != nil {
-			return dErr
+			blog.Errorf("taskID[%s] DeleteLifecycleHooks failed: %v", taskID, dErr)
+			return nil
 		}
 
 		return loop.EndLoop
