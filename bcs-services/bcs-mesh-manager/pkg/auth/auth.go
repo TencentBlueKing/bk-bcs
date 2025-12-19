@@ -21,6 +21,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
+	middleauth "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 	jwtGo "github.com/golang-jwt/jwt/v4"
 	"go-micro.dev/v4/server"
 
@@ -150,4 +151,14 @@ func parseClientPermissions(config string) (map[string][]string, error) {
 	}
 
 	return clientPermissions, nil
+}
+
+// GetUserFromCtx 通过 ctx 获取当前用户
+func GetUserFromCtx(ctx context.Context) string {
+	authUser, err := middleauth.GetUserFromContext(ctx)
+	if err != nil {
+		blog.Errorf("get user from context failed, err: %s", err)
+		return ""
+	}
+	return authUser.GetUsername()
 }

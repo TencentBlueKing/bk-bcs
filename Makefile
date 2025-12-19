@@ -81,13 +81,14 @@ bcs-component:kube-sche apiserver-proxy \
 	webhook-server \
 	general-pod-autoscaler cluster-autoscaler \
 	netservice-controller external-privilege \
-	image-loader
+	image-loader mesh-proxy
 
 bcs-network:ingress-controller
 
 bcs-services:bkcmdb-synchronizer gateway \
 	storage user-manager cluster-manager cluster-reporter nodeagent tools k8s-watch kube-agent data-manager \
-	helm-manager project-manager nodegroup-manager federation-manager powertrading mesh-manager push-manager api-gateway-syncing
+	helm-manager project-manager nodegroup-manager federation-manager powertrading mesh-manager push-manager \
+	platform-manager api-gateway-syncing bk-apisix-gateway-syncing bk-apisix-gateway
 
 bcs-scenarios: kourse gitops
 
@@ -250,6 +251,11 @@ external-privilege:pre
 	cp -R ${BCS_CONF_COMPONENT_PATH}/bcs-external-privilege ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
 	cd ${BCS_COMPONENT_PATH}/bcs-external-privilege && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-external-privilege/bcs-external-privilege ./main.go
 
+mesh-proxy:pre
+	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/
+	cp -R ${BCS_CONF_COMPONENT_PATH}/bcs-mesh-proxy ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
+	cd ${BCS_COMPONENT_PATH}/bcs-mesh-proxy && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-mesh-proxy/bcs-mesh-proxy ./cmd/mesh-proxy/main.go
+
 bkcmdb-synchronizer:
 	mkdir -p ${PACKAGEPATH}/bcs-services
 	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-bkcmdb-synchronizer ${PACKAGEPATH}/bcs-services
@@ -291,6 +297,11 @@ project-manager:pre
 	cd ${BCS_SERVICES_PATH}/bcs-project-manager && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-project-manager/bcs-project-migration ./script/migrations/project/migrate.go
 	cd ${BCS_SERVICES_PATH}/bcs-project-manager && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-project-manager/bcs-variable-migration ./script/migrations/variable/migrate.go
 
+platform-manager:pre
+	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-platform-manager
+	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-platform-manager/* ${PACKAGEPATH}/bcs-services/bcs-platform-manager
+	cd ${BCS_SERVICES_PATH}/bcs-platform-manager && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-platform-manager/bcs-platform-manager ./main.go
+
 CR_LDFLAG_EXT=" -X github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/version.Version=${VERSION} \
  -X github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/version.GitCommit=${GITHASH} \
  -X github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/version.BuildTime=${BUILDTIME}"
@@ -312,6 +323,11 @@ cluster-resources:pre
 	cp ${BCS_SERVICES_PATH}/cluster-resources/pkg/i18n/locale/lc_msgs.yaml ${PACKAGEPATH}/bcs-services/cluster-resources/lc_msgs.yaml
 	# go build
 	cd ${BCS_SERVICES_PATH}/cluster-resources && go mod tidy && CGO_ENABLED=0 go build ${LDFLAG}${CR_LDFLAG_EXT} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/cluster-resources/bcs-cluster-resources *.go
+
+bk-apisix-gateway-syncing:pre
+	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-bk-apisix-gateway-syncing
+	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-bk-apisix-gateway-syncing/* ${PACKAGEPATH}/bcs-services/bcs-bk-apisix-gateway-syncing
+	cd ${BCS_SERVICES_PATH}/bcs-bk-apisix-gateway/syncing && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-bk-apisix-gateway-syncing/bcs-bk-apisix-gateway-syncing ./cmd/sync/main.go
 
 # end of bcs-service section
 

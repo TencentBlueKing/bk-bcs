@@ -22,7 +22,7 @@ import (
 
 	traceUtil "github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/utils"
 	"github.com/dustin/go-humanize"
-	"github.com/emicklei/go-restful"
+	restful "github.com/emicklei/go-restful/v3"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/propagation"
 	semconv "go.opentelemetry.io/otel/semconv/v1.10.0"

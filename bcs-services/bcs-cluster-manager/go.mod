@@ -3,8 +3,8 @@ module github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager
 go 1.21
 
 replace (
-	github.com/Tencent/bk-bcs/bcs-common => github.com/evanlixin/bk-bcs/bcs-common v0.0.0-20250626092457-bb04116c4b34
-	github.com/Tencent/bk-bcs/bcs-services/pkg => github.com/evanlixin/bk-bcs/bcs-services/pkg v0.0.0-20250626092457-bb04116c4b34
+	github.com/Tencent/bk-bcs/bcs-common => github.com/evanlixin/bk-bcs/bcs-common v0.0.0-20251219081340-800069d3a93d
+	github.com/Tencent/bk-bcs/bcs-services/pkg => github.com/evanlixin/bk-bcs/bcs-services/pkg v0.0.0-20251219081340-800069d3a93d
 	k8s.io/api => k8s.io/api v0.26.1
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.26.1
 	k8s.io/apimachinery => k8s.io/apimachinery v0.26.1
@@ -24,11 +24,10 @@ require (
 	github.com/RichardKnop/machinery/v2 v2.0.11
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20250521083331-e37404b7dd2a
 	github.com/Tencent/bk-bcs/bcs-common/common/encryptv2 v0.0.0-20230908045126-c9d09981a9c5
-	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20240418123107-72b120390195
+	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20250728085520-0a1d3fa13c6b
 	github.com/apparentlymart/go-cidr v1.1.0
 	github.com/avast/retry-go v2.7.0+incompatible
 	github.com/aws/aws-sdk-go v1.55.5
-	github.com/emicklei/go-restful v2.15.0+incompatible
 	github.com/envoyproxy/protoc-gen-validate v1.0.4
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-micro/plugins/v4/registry/etcd v1.1.0
@@ -48,7 +47,7 @@ require (
 	github.com/prometheus/client_golang v1.19.0
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/as v1.0.398
-	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common v1.0.1133
+	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common v1.1.13
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/cvm v1.0.376
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tag v1.0.768
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tke v1.0.1133
@@ -57,7 +56,7 @@ require (
 	go.etcd.io/etcd/client/v3 v3.5.5
 	go.mongodb.org/mongo-driver v1.13.1
 	golang.org/x/oauth2 v0.18.0
-	golang.org/x/tools v0.13.0
+	golang.org/x/tools v0.21.1-0.20240508182429-e35e4ccd0d2d
 	google.golang.org/api v0.155.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20240318140521-94a12d6c2237
 	google.golang.org/grpc v1.62.1
@@ -79,6 +78,7 @@ require github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/cbs v1.0.1052
 require (
 	github.com/Azure/azure-sdk-for-go/profile/p20200901 v0.1.1
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerservice/armcontainerservice/v3 v3.0.0
+	github.com/emicklei/go-restful/v3 v3.11.0
 	k8s.io/klog/v2 v2.100.1
 )
 
@@ -94,7 +94,7 @@ require (
 	github.com/AzureAD/microsoft-authentication-library-for-go v1.1.1 // indirect
 	github.com/MakeNowJust/heredoc v1.0.0 // indirect
 	github.com/Microsoft/go-winio v0.6.1 // indirect
-	github.com/ProtonMail/go-crypto v1.0.0 // indirect
+	github.com/ProtonMail/go-crypto v1.1.3 // indirect
 	github.com/RichardKnop/logging v0.0.0-20190827224416-1a693bdd4fae // indirect
 	github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common v0.0.0-20220330120237-0bbed74dcf6d // indirect
 	github.com/TencentBlueKing/bk-audit-go-sdk v0.0.6 // indirect
@@ -110,10 +110,9 @@ require (
 	github.com/coreos/go-semver v0.3.0 // indirect
 	github.com/coreos/go-systemd/v22 v22.3.2 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
-	github.com/cyphar/filepath-securejoin v0.2.4 // indirect
+	github.com/cyphar/filepath-securejoin v0.2.5 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dustin/go-humanize v1.0.0 // indirect
-	github.com/emicklei/go-restful/v3 v3.9.0 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/evanphx/json-patch v4.12.0+incompatible // indirect
 	github.com/evanphx/json-patch/v5 v5.5.0 // indirect
@@ -124,13 +123,13 @@ require (
 	github.com/go-acme/lego/v4 v4.4.0 // indirect
 	github.com/go-errors/errors v1.0.1 // indirect
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
-	github.com/go-git/go-billy/v5 v5.5.0 // indirect
-	github.com/go-git/go-git/v5 v5.12.0 // indirect
+	github.com/go-git/go-billy/v5 v5.6.0 // indirect
+	github.com/go-git/go-git/v5 v5.13.0 // indirect
 	github.com/go-logr/logr v1.4.1 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
 	github.com/go-openapi/jsonreference v0.20.0 // indirect
-	github.com/go-openapi/swag v0.19.14 // indirect
+	github.com/go-openapi/swag v0.19.15 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-playground/validator/v10 v10.19.0 // indirect
@@ -202,7 +201,7 @@ require (
 	github.com/samuel/go-zookeeper v0.0.0-20201211165307-7117e9ea2414 // indirect
 	github.com/sergi/go-diff v1.3.2-0.20230802210424-5b0b94c5c0d3 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
-	github.com/skeema/knownhosts v1.2.2 // indirect
+	github.com/skeema/knownhosts v1.3.0 // indirect
 	github.com/spf13/cobra v1.6.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/streadway/amqp v1.0.0 // indirect
@@ -233,13 +232,13 @@ require (
 	go.uber.org/atomic v1.7.0 // indirect
 	go.uber.org/multierr v1.6.0 // indirect
 	go.uber.org/zap v1.19.0 // indirect
-	golang.org/x/crypto v0.21.0 // indirect
-	golang.org/x/mod v0.12.0 // indirect
-	golang.org/x/net v0.23.0 // indirect
-	golang.org/x/sync v0.6.0 // indirect
-	golang.org/x/sys v0.18.0 // indirect
-	golang.org/x/term v0.18.0 // indirect
-	golang.org/x/text v0.14.0 // indirect
+	golang.org/x/crypto v0.31.0 // indirect
+	golang.org/x/mod v0.17.0 // indirect
+	golang.org/x/net v0.33.0 // indirect
+	golang.org/x/sync v0.10.0 // indirect
+	golang.org/x/sys v0.28.0 // indirect
+	golang.org/x/term v0.27.0 // indirect
+	golang.org/x/text v0.21.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto v0.0.0-20240123012728-ef4313101c80 // indirect

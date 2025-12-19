@@ -44,7 +44,7 @@
       </bcs-table-column>
       <bcs-table-column :label="$t('generic.label.updator')" min-width="100">
         <template #default="{ row }">
-          <bk-user-display-name :user-id="handleGetExtData(row.metadata.uid, 'updater')"></bk-user-display-name>
+          {{ handleGetExtData(row.metadata.uid, 'updater') || '--' }}
         </template>
       </bcs-table-column>
       <bcs-table-column :label="$t('generic.label.action')" width="150">
@@ -60,98 +60,94 @@
       </template>
     </bcs-table>
     <!-- 创建 & 更新 -->
-    <bcs-sideslider
-      :is-show.sync="isShowCreate"
+    <FixedSideslider
+      :is-show="isShowCreate"
       :title="title"
       quick-close
-      :width="660">
-      <template #content>
-        <bk-form
-          :model="formData"
-          :rules="rules"
-          form-type="vertical"
-          class="grid grid-cols-2 gap-x-[35px] p-[30px]"
-          ref="formRef">
-          <bk-form-item class="mt-[8px]" :label="$t('generic.label.cluster1')" required>
-            <bcs-input readonly :value="curCluster?.clusterName"></bcs-input>
-          </bk-form-item>
-          <bk-form-item
-            property="metadata.namespace"
-            :label="$t('k8s.namespace')"
-            error-display-type="normal"
-            required>
-            <NamespaceSelect :disabled="!!currentRow" :cluster-id="clusterId" v-model="formData.metadata.namespace" />
-          </bk-form-item>
-          <bk-form-item
-            property="metadata.name"
-            :label="$t('generic.label.name')"
-            error-display-type="normal"
-            required>
-            <bcs-input :disabled="!!currentRow" v-model="formData.metadata.name"></bcs-input>
-          </bk-form-item>
-          <bk-form-item
-            property="spec.appName"
-            :label="$t('plugin.tools.biz')"
-            desc-type="icon"
-            :desc="$t('plugin.tools.bizTips')"
-            error-display-type="normal"
-            required>
-            <bcs-input v-model="formData.spec.appName"></bcs-input>
-          </bk-form-item>
-          <bk-form-item
-            property="spec.targetDb"
-            :label="$t('plugin.tools.DBAddress')"
-            error-display-type="normal"
-            required>
-            <bcs-input v-model="formData.spec.targetDb"></bcs-input>
-          </bk-form-item>
-          <bk-form-item
-            property="spec.dbType"
-            :label="$t('plugin.tools.DBType')"
-            error-display-type="normal"
-            required>
-            <bcs-select v-model="formData.spec.dbType">
-              <bcs-option id="mysql" name="mysql"></bcs-option>
-              <bcs-option id="spider" name="spider"></bcs-option>
-            </bcs-select>
-          </bk-form-item>
-          <bk-form-item
-            property="spec.callUser"
-            :label="$t('plugin.tools.user')"
-            desc-type="icon"
-            :desc="$t('plugin.tools.userTips')"
-            error-display-type="normal"
-            required>
-            <bcs-input v-model="formData.spec.callUser"></bcs-input>
-          </bk-form-item>
-          <bk-form-item
-            property="spec.dbName"
-            :label="$t('plugin.tools.DBName')"
-            desc-type="icon"
-            :desc="$t('plugin.tools.DBTips')"
-            error-display-type="normal"
-            required>
-            <bcs-input v-model="formData.spec.dbName"></bcs-input>
-          </bk-form-item>
-          <bk-form-item
-            class="col-span-2"
-            property="spec.podSelector"
-            desc-type="icon"
-            :desc="$t('plugin.tools.DBAuthTips')"
-            :label="$t('generic.label.labelManage')"
-            error-display-type="normal"
-            required>
-            <KeyValue v-model="formData.spec.podSelector" />
-          </bk-form-item>
-          <div>
-            <bcs-button :loading="saving" theme="primary" @click="createOrUpdateCrd">
-              {{ currentRow ? $t('generic.button.update') : $t('generic.button.create') }}
-            </bcs-button>
-            <bcs-button @click="isShowCreate = false">{{ $t('generic.button.cancel') }}</bcs-button>
-          </div>
-        </bk-form>
-      </template>
-    </bcs-sideslider>
+      :width="660"
+      :ok-text="currentRow ? $t('generic.button.update') : $t('generic.button.create')"
+      :btn-loading="saving"
+      @confirm="createOrUpdateCrd"
+      @cancel="isShowCreate = false">
+      <bk-form
+        :model="formData"
+        :rules="rules"
+        form-type="vertical"
+        class="grid grid-cols-2 gap-x-[35px] p-[24px]"
+        ref="formRef">
+        <bk-form-item class="mt-[8px]" :label="$t('generic.label.cluster1')" required>
+          <bcs-input readonly :value="curCluster?.clusterName"></bcs-input>
+        </bk-form-item>
+        <bk-form-item
+          property="metadata.namespace"
+          :label="$t('k8s.namespace')"
+          error-display-type="normal"
+          required>
+          <NamespaceSelect :disabled="!!currentRow" :cluster-id="clusterId" v-model="formData.metadata.namespace" />
+        </bk-form-item>
+        <bk-form-item
+          property="metadata.name"
+          :label="$t('generic.label.name')"
+          error-display-type="normal"
+          required>
+          <bcs-input :disabled="!!currentRow" v-model="formData.metadata.name"></bcs-input>
+        </bk-form-item>
+        <bk-form-item
+          property="spec.appName"
+          :label="$t('plugin.tools.biz')"
+          desc-type="icon"
+          :desc="$t('plugin.tools.bizTips')"
+          error-display-type="normal"
+          required>
+          <bcs-input v-model="formData.spec.appName"></bcs-input>
+        </bk-form-item>
+        <bk-form-item
+          property="spec.targetDb"
+          :label="$t('plugin.tools.DBAddress')"
+          error-display-type="normal"
+          required>
+          <bcs-input v-model="formData.spec.targetDb"></bcs-input>
+        </bk-form-item>
+        <bk-form-item
+          property="spec.dbType"
+          :label="$t('plugin.tools.DBType')"
+          error-display-type="normal"
+          required>
+          <bcs-select v-model="formData.spec.dbType">
+            <bcs-option id="mysql" name="mysql"></bcs-option>
+            <bcs-option id="spider" name="spider"></bcs-option>
+          </bcs-select>
+        </bk-form-item>
+        <bk-form-item
+          property="spec.callUser"
+          :label="$t('plugin.tools.user')"
+          desc-type="icon"
+          :desc="$t('plugin.tools.userTips')"
+          error-display-type="normal"
+          required>
+          <bcs-input v-model="formData.spec.callUser"></bcs-input>
+        </bk-form-item>
+        <bk-form-item
+          property="spec.dbName"
+          :label="$t('plugin.tools.DBName')"
+          desc-type="icon"
+          :desc="$t('plugin.tools.DBTips')"
+          error-display-type="normal"
+          required>
+          <bcs-input v-model="formData.spec.dbName"></bcs-input>
+        </bk-form-item>
+        <bk-form-item
+          class="col-span-2"
+          property="spec.podSelector"
+          desc-type="icon"
+          :desc="$t('plugin.tools.DBAuthTips')"
+          :label="$t('generic.label.labelManage')"
+          error-display-type="normal"
+          required>
+          <KeyValue v-model="formData.spec.podSelector" />
+        </bk-form-item>
+      </bk-form>
+    </FixedSideslider>
     <!-- 详情 -->
     <bcs-sideslider
       :is-show.sync="isShowDetail"
@@ -230,6 +226,7 @@ import { ref } from 'vue';
 import useCustomCrdList from './use-custom-crd';
 
 import { formatDate } from '@/common/util';
+import FixedSideslider from '@/components/fixed-sideslider.vue';
 import BcsContent from '@/components/layout/Content.vue';
 import NamespaceSelect from '@/components/namespace-selector/namespace-select.vue';
 import $i18n from '@/i18n/i18n-setup';

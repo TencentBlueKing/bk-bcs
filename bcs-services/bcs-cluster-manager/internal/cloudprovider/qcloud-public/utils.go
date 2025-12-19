@@ -370,11 +370,12 @@ func (cn *CreateVirtualClusterTask) BuildCreateNamespaceStep(task *proto.Task) {
 // BuildCreateResourceQuotaStep host集群创建命名空间资源配额
 func (cn *CreateVirtualClusterTask) BuildCreateResourceQuotaStep(task *proto.Task) {
 	common.BuildCreateResourceQuotaTaskStep(task, cn.HostCluster.ClusterID, common.ResourceQuotaDetail{
-		Name:        cn.Namespace.Name,
-		CpuRequests: cn.Namespace.Quota.CpuRequests,
-		CpuLimits:   cn.Namespace.Quota.CpuLimits,
-		MemRequests: cn.Namespace.Quota.MemoryRequests,
-		MemLimits:   cn.Namespace.Quota.MemoryLimits,
+		Name:          cn.Namespace.Name,
+		CpuRequests:   cn.Namespace.Quota.CpuRequests,
+		CpuLimits:     cn.Namespace.Quota.CpuLimits,
+		MemRequests:   cn.Namespace.Quota.MemoryRequests,
+		MemLimits:     cn.Namespace.Quota.MemoryLimits,
+		ServiceLimits: strconv.FormatUint(uint64(cn.Cluster.GetNetworkSettings().GetMaxServiceNum()), 10),
 	})
 }
 
@@ -920,7 +921,7 @@ var (
 func (cl ClusterLevel) GetCpuMemConfig(cpu, mem int) cloudprovider.MachineConfig {
 	if cpu > 0 && mem > 0 {
 		return cloudprovider.MachineConfig{
-			Cpu: cpu,
+			CPU: cpu,
 			Mem: mem,
 		}
 	}
@@ -928,23 +929,23 @@ func (cl ClusterLevel) GetCpuMemConfig(cpu, mem int) cloudprovider.MachineConfig
 	switch cl {
 	case level100:
 		return cloudprovider.MachineConfig{
-			Cpu: 8,
+			CPU: 8,
 			Mem: 16,
 		}
 	case level500:
 		return cloudprovider.MachineConfig{
-			Cpu: 16,
+			CPU: 16,
 			Mem: 32,
 		}
 	case level1000:
 		return cloudprovider.MachineConfig{
-			Cpu: 48,
+			CPU: 48,
 			Mem: 128,
 		}
 	}
 
 	return cloudprovider.MachineConfig{
-		Cpu: 16,
+		CPU: 16,
 		Mem: 32,
 	}
 }

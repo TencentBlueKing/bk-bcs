@@ -17,8 +17,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"sync"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/audit"
 	goReq "github.com/parnurzeal/gorequest"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
@@ -32,14 +34,6 @@ func GetAuthAppHeader() map[string]string {
 		"Content-Type": "application/json",
 		"X-Bkapi-Authorization": fmt.Sprintf(`{"bk_app_code": "%s", "bk_app_secret": "%s"}`,
 			config.GlobalConf.App.Code, config.GlobalConf.App.Secret),
-	}
-}
-
-// GetBcsGatewayAuthHeader 获取BCS网关认证header
-func GetBcsGatewayAuthHeader() map[string]string {
-	return map[string]string{
-		"Accept":        "application/json",
-		"Authorization": fmt.Sprintf(`Bearer %s`, config.GlobalConf.BcsGateway.Token),
 	}
 }
 
@@ -112,4 +106,37 @@ func Request(req goReq.SuperAgent, timeout int, proxy string, headers map[string
 	}
 
 	return body, nil
+}
+
+var (
+	auditClient *audit.Client
+	auditOnce   sync.Once
+)
+
+// GetAuditClient 获取审计客户端
+func GetAuditClient() *audit.Client {
+	if auditClient == nil {
+		auditOnce.Do(func() {
+			auditClient =
+				audit.NewClient(config.GlobalConf.BcsGateway.Host, config.GlobalConf.BcsGateway.Token, nil)
+		})
+	}
+	return auditClient
+}
+
+// GetAuthHeader 获取蓝鲸网关通用认证头
+func GetAuthHeader() map[string]string {
+	return map[string]string{
+		"Content-Type": "application/json",
+		"X-Bkapi-Authorization": fmt.Sprintf(`{"bk_app_code": "%s", "bk_app_secret": "%s", "bk_username": "%s"}`,
+			config.GlobalConf.App.Code, config.GlobalConf.App.Secret, config.GlobalConf.App.BkUsername),
+	}
+}
+
+// GetBcsGatewayAuthHeader 获取BCS网关认证header
+func GetBcsGatewayAuthHeader() map[string]string {
+	return map[string]string{
+		"Accept":        "application/json",
+		"Authorization": fmt.Sprintf(`Bearer %s`, config.GlobalConf.BcsGateway.Token),
+	}
 }

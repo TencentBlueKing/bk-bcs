@@ -74,41 +74,62 @@ export default [
         path: 'workloads/deployments',
         name: 'dashboardWorkloadDeployments',
         component: DashboardWorkloadDeployments,
+        meta: {
+          resource: 'Deployments',
+        },
       },
       // dashboard workload daemonsets
       {
         path: 'workloads/daemonsets',
         name: 'dashboardWorkloadDaemonSets',
         component: DashboardWorkloadDaemonSets,
+        meta: {
+          resource: 'DaemonSets',
+        },
       },
       // dashboard workload statefulsets
       {
         path: 'workloads/statefulsets',
         name: 'dashboardWorkloadStatefulSets',
         component: DashboardWorkloadStatefulSets,
+        meta: {
+          resource: 'StatefulSets',
+        },
       },
       // dashboard workload cronjobs
       {
         path: 'workloads/cronjobs',
         name: 'dashboardWorkloadCronJobs',
         component: DashboardWorkloadCronJobs,
+        meta: {
+          resource: 'CronJobs',
+        },
       },
       // dashboard workload jobs
       {
         path: 'workloads/jobs',
         name: 'dashboardWorkloadJobs',
         component: DashboardWorkloadJobs,
+        meta: {
+          resource: 'Jobs',
+        },
       },
       // dashboard workload pods
       {
         path: 'workloads/pods',
         name: 'dashboardWorkloadPods',
         component: DashboardWorkloadPods,
+        meta: {
+          resource: 'Pods',
+        },
       },
       {
         path: 'crds',
         name: 'dashboardCRD',
         component: DashboardCRD,
+        meta: {
+          resource: 'CRDs',
+        },
       },
       // dashboard gamestatefulsets
       {
@@ -116,6 +137,9 @@ export default [
         name: 'dashboardGameStatefulSets',
         props: route => ({ ...route.params, crd: route.query.crd }),
         component: DashboardGameStatefulSets,
+        meta: {
+          resource: 'GameStatefulSets',
+        },
       },
       // dashboard gamedeployments
       {
@@ -123,6 +147,9 @@ export default [
         name: 'dashboardGameDeployments',
         props: route => ({ ...route.params, crd: route.query.crd }),
         component: DashboardGameDeployments,
+        meta: {
+          resource: 'GameDeployments',
+        },
       },
       // dashboard hookTemplates
       {
@@ -130,6 +157,9 @@ export default [
         name: 'dashboardHookTemplates',
         props: route => ({ ...route.params, crd: route.query.crd }),
         component: DashboardHookTemplates,
+        meta: {
+          resource: 'HookTemplates',
+        },
       },
       // dashboard customobjects
       {
@@ -154,18 +184,27 @@ export default [
         path: 'networks/ingress',
         name: 'dashboardNetworkIngress',
         component: DashboardNetworkIngress,
+        meta: {
+          resource: 'Ingress',
+        },
       },
       // network service
       {
         path: 'networks/service',
         name: 'dashboardNetworkService',
         component: DashboardNetworkService,
+        meta: {
+          resource: 'Services',
+        },
       },
       // network endpoints
       {
         path: 'networks/endpoints',
         name: 'dashboardNetworkEndpoints',
         component: DashboardNetworkEndpoints,
+        meta: {
+          resource: 'Endpoints',
+        },
       },
       // storage
       {
@@ -180,18 +219,27 @@ export default [
         path: 'storages/persistent-volumes',
         name: 'dashboardStoragePersistentVolumes',
         component: DashboardStoragePersistentVolumes,
+        meta: {
+          resource: 'PersistentVolumes',
+        },
       },
       // storage persistent-volumes-claims
       {
         path: 'storages/persistent-volumes-claims',
         name: 'dashboardStoragePersistentVolumesClaims',
         component: DashboardStoragePersistentVolumesClaims,
+        meta: {
+          resource: 'PersistentVolumeClaims',
+        },
       },
       // storage storage-class
       {
         path: 'storages/storage-class',
         name: 'dashboardStorageStorageClass',
         component: DashboardStorageStorageClass,
+        meta: {
+          resource: 'StorageClass',
+        },
       },
       // configs
       {
@@ -206,18 +254,27 @@ export default [
         path: 'configs/config-maps',
         name: 'dashboardConfigsConfigMaps',
         component: DashboardConfigsConfigMaps,
+        meta: {
+          resource: 'ConfigMaps',
+        },
       },
       // configs secrets
       {
         path: 'configs/secrets',
         name: 'dashboardConfigsSecrets',
         component: DashboardConfigsSecrets,
+        meta: {
+          resource: 'Secrets',
+        },
       },
       // configs bscp-configs
       {
         path: 'configs/bscp-configs',
         name: 'dashboardConfigsBscpConfigs',
         component: dashboardConfigsBscpConfigs,
+        meta: {
+          resource: 'BscpConfigs',
+        },
       },
       // rbac
       {
@@ -232,12 +289,18 @@ export default [
         path: 'rbac/service-accounts',
         name: 'dashboardRbacServiceAccounts',
         component: DashboardRbacServiceAccounts,
+        meta: {
+          resource: 'ServiceAccounts',
+        },
       },
       // hpa
       {
         path: 'hpa',
         name: 'dashboardHPA',
         component: DashboardHPA,
+        meta: {
+          resource: 'HPA',
+        },
       },
     ],
   },

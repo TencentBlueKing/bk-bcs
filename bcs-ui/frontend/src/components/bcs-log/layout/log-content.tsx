@@ -8,6 +8,7 @@ import TransformStringPixel from '../common/transform-string-pixel';
 import '../style/log.css';
 import { formatTime } from '@/common/util';
 import $i18n from '@/i18n/i18n-setup';
+import { filterXss } from '@blueking/xss-filter';
 
 export interface ILogData {
   log: string;
@@ -230,7 +231,11 @@ export default defineComponent({
                                     }
                                     <span class="log-item-content"
                                         style={{ 'margin-left': this.showTimeStamp && data.breakLine ? '150px' : '' }}
-                                        domProps-InnerHTML={data.html}>
+                                        domProps-InnerHTML={filterXss(data.html, {
+                                          whiteList: {},
+                                          stripIgnoreTag: true,
+                                          stripIgnoreTagBody: ['script'],
+                                        })}>
                                     </span>
                                 </div>
                           ),

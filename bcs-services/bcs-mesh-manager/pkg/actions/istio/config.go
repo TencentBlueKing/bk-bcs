@@ -86,6 +86,7 @@ func (l *ListIstioConfigAction) buildConfigData() *meshmanager.IstioConfigData {
 		IstioVersions:         istioVersions,
 		SidecarResourceConfig: common.GetDefaultSidecarResourceConfig(),
 		HighAvailability:      common.GetDefaultHighAvailabilityConfig(),
+		ObservabilityConfig:   common.GetDefaultObservabilityConfig(),
 		FeatureConfigs:        l.buildFeaturesForVersion(istioVersions, l.istioConfig.FeatureConfigs),
 	}
 }

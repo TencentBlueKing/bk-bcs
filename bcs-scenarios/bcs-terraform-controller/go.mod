@@ -2,16 +2,14 @@ module github.com/Tencent/bk-bcs/bcs-scenarios/bcs-terraform-controller
 
 go 1.23.0
 
-toolchain go1.23.2
-
 replace (
 	github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager => ../bcs-gitops-manager
 	github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-vaultplugin-server => ../bcs-gitops-vaultplugin-server
 	github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-workflow => ../bcs-gitops-workflow
+	github.com/argoproj/gitops-engine => github.com/argoproj/gitops-engine v0.7.1-0.20250227212003-4fd18478f594
 	github.com/smarty/assertions => github.com/smartystreets/assertions v1.15.1
 
 	github.com/smartystreets/assertions => github.com/smarty/assertions v1.15.0
-	github.com/argoproj/gitops-engine => github.com/argoproj/gitops-engine v0.7.1-0.20250227212003-4fd18478f594
 	k8s.io/api => k8s.io/api v0.31.0
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.31.0
 	k8s.io/apimachinery => k8s.io/apimachinery v0.31.0
@@ -66,7 +64,7 @@ require (
 	google.golang.org/protobuf v1.36.5
 	k8s.io/api v0.32.1
 	k8s.io/apimachinery v0.32.1
-	k8s.io/client-go v0.32.1
+	k8s.io/client-go v11.0.1-0.20190816222228-6d55c1b1f1ca+incompatible
 	k8s.io/code-generator v0.31.0
 	sigs.k8s.io/controller-runtime v0.20.2
 )

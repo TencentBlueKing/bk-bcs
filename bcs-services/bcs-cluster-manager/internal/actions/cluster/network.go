@@ -40,8 +40,8 @@ type SwitchClusterUnderlayNetworkAction struct {
 	task    *cmproto.Task
 }
 
-// NewSwitchClusterUnderlayNetworkAction create on/off underlay network action
-func NewSwitchClusterUnderlayNetworkAction(model store.ClusterManagerModel) *SwitchClusterUnderlayNetworkAction {
+// NewSwitchClsNetworkAction create on/off underlay network action
+func NewSwitchClsNetworkAction(model store.ClusterManagerModel) *SwitchClusterUnderlayNetworkAction {
 	return &SwitchClusterUnderlayNetworkAction{
 		model: model,
 	}
@@ -104,7 +104,7 @@ func (sa *SwitchClusterUnderlayNetworkAction) checkClusterNetworkStatus() (bool,
 		Disable:      sa.req.Disable,
 
 		SubnetSource:        sa.req.Subnet,
-		IsStaticIpMode:      sa.req.IsStaticIpMode,
+		IsStaticIPMode:      sa.req.IsStaticIpMode,
 		ClaimExpiredSeconds: sa.req.GetClaimExpiredSeconds(),
 	})
 }
@@ -209,7 +209,7 @@ func (sa *SwitchClusterUnderlayNetworkAction) switchClusterNetworkTask() error {
 		Operator:            sa.req.GetOperator(),
 		Cloud:               sa.cloud,
 		Disable:             sa.req.Disable,
-		IsStaticIpMode:      sa.req.IsStaticIpMode,
+		IsStaticIPMode:      sa.req.IsStaticIpMode,
 		ClaimExpiredSeconds: sa.req.ClaimExpiredSeconds,
 	})
 	if err != nil {

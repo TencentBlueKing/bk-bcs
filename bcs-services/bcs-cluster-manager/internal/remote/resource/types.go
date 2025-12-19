@@ -197,6 +197,7 @@ type InstanceSpec struct {
 	Cpu          uint32
 	Mem          uint32
 	ResourceType string
+	InstanceType string
 }
 
 // ResourcePoolInfo resource pool info

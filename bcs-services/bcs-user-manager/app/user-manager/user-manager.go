@@ -33,7 +33,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/i18n"
-	"github.com/emicklei/go-restful"
+	restful "github.com/emicklei/go-restful/v3"
 	"github.com/go-micro/plugins/v4/registry/etcd"
 	"github.com/golang-migrate/migrate/v4/source/iofs"
 	"go-micro.dev/v4/registry"

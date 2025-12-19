@@ -191,7 +191,7 @@ func JobExecuteScriptTask(taskID string, stepName string) error {
 		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
 			fmt.Sprintf("execute script failed [%s]", err))
 		blog.Errorf("JobExecuteScriptTask[%s] ExecuteScriptByJob failed: %v", taskID, err)
-		state.TaskUrl = url
+		state.TaskURL = url
 		if step.GetSkipOnFailed() {
 			_ = state.SkipFailure(start, stepName, err)
 			return nil
@@ -204,7 +204,7 @@ func JobExecuteScriptTask(taskID string, stepName string) error {
 		"execute job script successful")
 
 	// update step
-	state.TaskUrl = url
+	state.TaskURL = url
 	_ = state.UpdateStepSucc(start, stepName)
 
 	return nil
@@ -244,7 +244,7 @@ func ExecuteScriptByJob(ctx context.Context, stepName, bizID, content string, ip
 	blog.Infof("task[%s] ExecuteScriptByJob[%v] ExecuteScript successful", taskID, jobID)
 
 	// update job taskUrl to task
-	_ = cloudprovider.SetTaskStepParas(taskID, stepName, cloudprovider.BkSopsTaskUrlKey.String(),
+	_ = cloudprovider.SetTaskStepParas(taskID, stepName, cloudprovider.BkSopsTaskURLKey.String(),
 		job.GetJobTaskLink(jobID))
 
 	// check status

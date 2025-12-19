@@ -14,6 +14,7 @@ package cloudprovider
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net"
@@ -40,7 +41,9 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/alarm/tmp"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cmdb"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/nodeman"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/nodetemplate"
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/templateconfig"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
@@ -104,6 +107,8 @@ const (
 	AddNodesShieldAlarmAction = "addNodesShieldAlarm"
 	// NodeDrainPodAction 节点驱逐pod
 	NodeDrainPodAction = "nodeDrainPod"
+	// InstallLogCollectorAddonAction 安装日志采集组件
+	InstallLogCollectorAddonAction = "installLogCollectorAddon" // nolint:gosec
 )
 
 var (
@@ -809,6 +814,44 @@ func GetClusterMasterIPList(cluster *proto.Cluster) []string {
 	return masterIPs
 }
 
+// GetClusterImage get cluster image info
+func GetClusterImage(ctx context.Context, cls *proto.Cluster) (string, error) {
+	cloud, err := GetStorageModel().GetCloud(context.Background(), cls.GetProvider())
+	if err != nil {
+		blog.Errorf("GetClusterImage[%s:%s] get cloud failed: %v",
+			cls.GetClusterID(), cls.GetProvider(), err)
+		return "", err
+	}
+
+	nodeMgr, err := GetNodeMgr(cloud.CloudProvider)
+	if err != nil {
+		blog.Errorf("get cloudprovider %s NodeManager getCloudZones failed, %s", cloud.CloudProvider, err.Error())
+		return "", err
+	}
+	cmOption, err := GetCredential(&CredentialData{
+		Cloud:     cloud,
+		AccountID: cls.CloudAccountID,
+	})
+	if err != nil {
+		blog.Errorf("get credential for cloudprovider %s/%s getCloudZones failed, %s",
+			cloud.CloudID, cloud.CloudProvider, err.Error())
+		return "", err
+	}
+	cmOption.Region = cls.Region
+
+	imageId, err := nodeMgr.GetCVMImageIDByImageName(cls.GetClusterBasicSettings().GetOS(), cmOption)
+	if err == nil {
+		blog.Errorf("GetClusterImage[%s] GetCVMImageIDByImageName success: %v",
+			cls.GetClusterBasicSettings().GetOS(), imageId)
+		return imageId, nil
+	}
+
+	blog.Infof("GetClusterImage[%s] GetCVMImageIDByImageName failed: %v",
+		cls.GetClusterBasicSettings().GetOS(), err)
+
+	return cls.GetClusterBasicSettings().GetOS(), nil
+}
+
 // StepOptions xxx
 type StepOptions struct {
 	SkipFailed bool
@@ -1496,4 +1539,109 @@ func GetCloudBizTags(ctx context.Context, bizId int64, operator string) (map[str
 		common.KeySecondBiz: business2.BizLevel2Name + fmt.Sprintf("_%v", business2.BizLevel2Id),
 		common.KeyOperator:  operator,
 	}, nil
+}
+
+// GetGpuNodeTemplate get gpu node template by instanceType
+func GetGpuNodeTemplate(insType string) (*proto.NodeTemplate, error) {
+	condM := make(operator.M)
+	condM[nodetemplate.ProjectIDKey] = common.Default
+	condM[nodetemplate.NameKey] = insType
+	cond := operator.NewLeafCondition(operator.Eq, condM)
+	nodeTemplates, err := GetStorageModel().ListNodeTemplate(context.Background(), cond, &storeopt.ListOption{All: true})
+	if err != nil {
+		blog.Errorf("GetGpuNodeTemplate ListNodeTemplate ins[%s], err:%s", insType, err.Error())
+		return nil, fmt.Errorf("GetGpuNodeTemplate ins[%s], err:%s", insType, err.Error())
+	}
+
+	for i := range nodeTemplates {
+		templateType, ok := nodeTemplates[i].GetExtraInfo()[common.TemplateType]
+		if !ok {
+			continue
+		}
+		if templateType == common.TemplateGpu {
+			return nodeTemplates[i], nil
+		}
+	}
+
+	return nil, fmt.Errorf("GetGpuNodeTemplate ins[%s] is empty", insType)
+}
+
+// GetTaskTimeoutConfig get task timeout config
+func GetTaskTimeoutConfig(ctx context.Context, projectID, clusterID string) ([]*proto.TimeoutConfig, error) {
+	condM := make(operator.M)
+	if projectID != "" {
+		condM[templateconfig.ProjectIDKey] = projectID
+	}
+	if clusterID != "" {
+		condM[templateconfig.ClusterIDKey] = clusterID
+	}
+
+	condM[templateconfig.ConfigTypeKey] = common.TaskTimeConfigType
+	cond := operator.NewLeafCondition(operator.Eq, condM)
+
+	templateConfigs, err := GetStorageModel().ListTemplateConfigs(ctx, cond, &storeopt.ListOption{})
+	if err != nil {
+		return nil, fmt.Errorf("list template config failed: %v", err)
+	}
+
+	if len(templateConfigs) == 0 {
+		return nil, fmt.Errorf("GetTaskTimeoutConfig projectID[%s] clusterID[%s] time template config is empty",
+			projectID, clusterID)
+	}
+
+	templateConfig := templateConfigs[0]
+
+	var cloudConfig *proto.CloudTemplateConfig
+	if err := json.Unmarshal([]byte(templateConfig.ConfigContent), &cloudConfig); err != nil {
+		blog.Errorf("GetTaskTimeoutConfig unmarshal cloud config content failed: %v", err)
+		return nil, err
+	}
+
+	if cloudConfig == nil {
+		return nil, fmt.Errorf("GetTaskTimeoutConfig projectID[%s] clusterID[%s] time template cloudConfig is empty",
+			projectID, clusterID)
+	}
+
+	return cloudConfig.GetTaskTimeTemplateConfig().GetTimeoutConfig(), nil
+}
+
+// GetTaskTimeout get task timeout
+func GetTaskTimeout(
+	ctx context.Context, projectID, clusterID, stepName string, defaultTime time.Duration) time.Duration {
+	taskID := GetTaskIDFromContext(ctx)
+
+	taskTimeoutConfig, err := GetTaskTimeoutConfig(ctx, projectID, clusterID)
+	if err != nil {
+		blog.Errorf("GetTaskTimeout[%s] projectID[%s] clusterID[%s] failed: %v",
+			taskID, projectID, clusterID, err)
+		return defaultTime
+	}
+
+	if len(taskTimeoutConfig) == 0 {
+		return defaultTime
+	}
+
+	var baseStepName string
+	if strings.Contains(stepName, BKSOPTask) {
+		baseStepName = BKSOPTask
+	} else {
+		str := strings.Split(stepName, "-")
+		if len(str) > 1 {
+			baseStepName = str[1]
+		}
+	}
+
+	for i := range taskTimeoutConfig {
+		if baseStepName == taskTimeoutConfig[i].GetStepName() {
+			configTimeout := taskTimeoutConfig[i].GetTimeout()
+			return time.Duration(configTimeout) * time.Minute
+		}
+	}
+
+	return defaultTime
+}
+
+// AllowCrossBizNodes check if allow cross biz nodes
+func AllowCrossBizNodes(cls *proto.Cluster) bool {
+	return cls.Labels[WhiteListLabelKey] == common.True
 }

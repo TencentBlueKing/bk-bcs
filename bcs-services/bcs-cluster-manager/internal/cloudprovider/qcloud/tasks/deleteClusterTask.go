@@ -96,7 +96,7 @@ func DeleteTKEClusterTask(taskID string, stepName string) error {
 		}
 	}
 
-	err = business.DeleteTkeClusterByClusterId(ctx, dependInfo.CmOption, dependInfo.Cluster.SystemID, deleteMode)
+	err = business.DeleteTkeClusterByClusterID(ctx, dependInfo.CmOption, dependInfo.Cluster.SystemID, deleteMode)
 	if err != nil {
 		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
 			fmt.Sprintf("delete tke cluster failed [%s]", err))

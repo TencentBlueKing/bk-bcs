@@ -16,17 +16,20 @@ package istio
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/clients/k8s"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/operation"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/operation/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/store/entity"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/utils"
 	meshmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/proto/bcs-mesh-manager"
 )
 
@@ -107,27 +110,69 @@ func (d *DeleteIstioAction) Validate(ctx context.Context) (*entity.MeshIstio, er
 		return nil, common.NewCodeMessageError(common.NotFoundErrorCode, "mesh not found", nil)
 	}
 
-	// 检查集群中是否存在Istio资源，如果存在则不允许删除
-	allClusters := make([]string, 0, len(meshIstio.PrimaryClusters)+len(meshIstio.RemoteClusters))
-	allClusters = append(allClusters, meshIstio.PrimaryClusters...)
-	allClusters = append(allClusters, meshIstio.RemoteClusters...)
+	remoteClusters := make([]string, 0, len(meshIstio.RemoteClusters))
+	for _, cluster := range meshIstio.RemoteClusters {
+		remoteClusters = append(remoteClusters, cluster.ClusterID)
+	}
+	allClusters := utils.MergeSlices(meshIstio.PrimaryClusters, remoteClusters)
+	// 并发检查所有集群的Istio资源
+	type checkResult struct {
+		clusterID string
+		exists    bool
+		err       error
+		details   []string
+	}
+
+	resultChan := make(chan checkResult, len(allClusters))
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
 
 	for _, clusterID := range allClusters {
-		exists, err := k8s.CheckIstioResourceExists(ctx, clusterID)
-		if err != nil {
-			blog.Errorf("check istio resources failed, meshID: %s, clusterID: %s, err: %s",
-				d.req.MeshID, clusterID, err)
-			return nil, common.NewCodeMessageError(common.InnerErrorCode, "check istio resources failed", err)
-		}
+		go func(cid string) {
+			// 为每个集群检查设置30秒超时
+			checkCtx, checkCancel := context.WithTimeout(ctx, 30*time.Second)
+			defer checkCancel()
 
-		if exists {
-			blog.Errorf("cluster still has istio resources, meshID: %s, clusterID: %s",
-				d.req.MeshID, clusterID)
-			return nil, common.NewCodeMessageError(
-				common.InnerErrorCode,
-				fmt.Sprintf("cluster %s still has istio resources", clusterID),
-				nil,
-			)
+			exists, details, err := k8s.CheckIstioResourceExists(checkCtx, cid)
+			select {
+			case resultChan <- checkResult{
+				clusterID: cid,
+				exists:    exists,
+				err:       err,
+				details:   details,
+			}:
+			case <-ctx.Done():
+				// 如果context被取消，直接退出
+				return
+			}
+		}(clusterID)
+	}
+
+	// 收集结果，遇到错误或发现资源立即返回
+	completedCount := 0
+	for completedCount < len(allClusters) {
+		select {
+		case result := <-resultChan:
+			completedCount++
+
+			if result.err != nil {
+				blog.Errorf("check istio resources failed, meshID: %s, clusterID: %s, err: %s",
+					d.req.MeshID, result.clusterID, result.err)
+				cancel()
+				return nil, common.NewCodeMessageError(common.InnerErrorCode, "check istio resources failed", result.err)
+			}
+
+			if result.exists {
+				blog.Errorf("cluster still has istio resources, meshID: %s, clusterID: %s, resources: %v",
+					d.req.MeshID, result.clusterID, result.details)
+				cancel()
+				errMsg := fmt.Sprintf("cluster %s still has istio resources: %s",
+					result.clusterID, strings.Join(result.details, ", "))
+				return nil, common.NewCodeMessageError(common.InnerErrorCode, errMsg, nil)
+			}
+
+		case <-ctx.Done():
+			return nil, common.NewCodeMessageError(common.InnerErrorCode, "check istio resources timeout", ctx.Err())
 		}
 	}
 
@@ -138,8 +183,10 @@ func (d *DeleteIstioAction) Validate(ctx context.Context) (*entity.MeshIstio, er
 func (d *DeleteIstioAction) delete(ctx context.Context, meshIstio *entity.MeshIstio) error {
 	// 更新mesh状态为删除中
 	updateFields := entity.M{
-		entity.FieldKeyStatus:     common.IstioStatusUninstalling,
-		entity.FieldKeyUpdateTime: time.Now().Unix(),
+		entity.FieldKeyStatus:        common.IstioStatusUninstalling,
+		entity.FieldKeyUpdateBy:      auth.GetUserFromCtx(ctx),
+		entity.FieldKeyUpdateTime:    time.Now().UnixMilli(),
+		entity.FieldKeyStatusMessage: "删除中",
 	}
 	if err := d.model.Update(ctx, d.req.MeshID, updateFields); err != nil {
 		errMsg := fmt.Sprintf("update mesh status failed, meshID: %s", d.req.MeshID)
@@ -147,6 +194,10 @@ func (d *DeleteIstioAction) delete(ctx context.Context, meshIstio *entity.MeshIs
 		return common.NewCodeMessageError(common.DBErrorCode, errMsg, err)
 	}
 
+	remoteClusters := make([]string, 0, len(meshIstio.RemoteClusters))
+	for _, cluster := range meshIstio.RemoteClusters {
+		remoteClusters = append(remoteClusters, cluster.ClusterID)
+	}
 	// 异步删除istio
 	action := actions.NewIstioUninstallAction(
 		&actions.IstioUninstallOption{
@@ -154,7 +205,8 @@ func (d *DeleteIstioAction) delete(ctx context.Context, meshIstio *entity.MeshIs
 			ProjectCode:     meshIstio.ProjectCode,
 			MeshID:          d.req.MeshID,
 			PrimaryClusters: meshIstio.PrimaryClusters,
-			RemoteClusters:  meshIstio.RemoteClusters,
+			RemoteClusters:  remoteClusters,
+			OldReleaseNames: meshIstio.ReleaseNames,
 		},
 	)
 	// 异步执行，5分钟超时

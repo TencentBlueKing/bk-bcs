@@ -62,7 +62,7 @@
               class="rounded-sm p-[8px]">
               <template v-if="!isClusterMode">
                 <bcs-tag
-                  :class="['m-[0px]', index > 0 ? 'mt-[6px]' : '']"
+                  :class="['m-[0px] mr-[4px]', index > 0 ? 'mt-[6px]' : '']"
                   v-for="(item, index) in originViewData?.clusterNamespaces"
                   :key="index">
                   <span
@@ -78,7 +78,7 @@
                     }">
                     {{
                       `${clusterNameMap[item.clusterID] || item.clusterID} / ${item.namespaces.join(', ')
-                        || $t('view.labels.allNs')}`
+                        || getNsGroup(item.nsgroup)}`
                     }}
                   </span>
                 </bcs-tag>
@@ -180,11 +180,9 @@
             theme="primary"
             class="min-w-[88px]"
             v-bk-trace.click="{
-              module: 'view',
-              operation: 'query',
-              desc: '视图查询操作',
-              username: $store.state.user.username,
-              projectCode: $store.getters.curProjectCode,
+              ct: 'view',
+              act: 'query',
+              d: '视图查询操作',
             }"
             @click="handleQuery">
             {{ $t('view.button.query') }}
@@ -237,11 +235,9 @@
           :loading="saving"
           :disabled="disabledSaveBtn"
           v-bk-trace.click="{
-            module: 'view',
-            operation: 'save',
-            desc: '视图保存操作',
-            username: $store.state.user.username,
-            projectCode: $store.getters.curProjectCode,
+            ct: 'view',
+            act: 'save',
+            d: '视图保存操作',
           }"
           @click="handleSaveView">
           {{ $t('generic.button.save') }}
@@ -270,11 +266,9 @@
             :disabled="!viewName"
             theme="primary"
             v-bk-trace.click="{
-              module: 'view',
-              operation: 'save',
-              desc: '视图保存操作',
-              username: $store.state.user.username,
-              projectCode: $store.getters.curProjectCode,
+              ct: 'view',
+              act: 'save',
+              d: '视图保存操作',
             }"
             @click="handleSaveAs(false)">
             {{ $t('generic.button.save') }}
@@ -283,11 +277,9 @@
             :loading="saving"
             :disabled="!viewName"
             v-bk-trace.click="{
-              module: 'view',
-              operation: 'save',
-              desc: '视图保存操作',
-              username: $store.state.user.username,
-              projectCode: $store.getters.curProjectCode,
+              ct: 'view',
+              act: 'save',
+              d: '视图保存操作',
             }"
             @click="handleSaveAs">
             {{ $t('view.button.confirmAndChangeView') }}
@@ -368,6 +360,7 @@ const {
   curViewData,
   curViewName,
   curCrdData,
+  viewDetailData,
   getViewConfigDetail,
   createViewConfig,
   deleteViewConfig,
@@ -405,14 +398,6 @@ const parseCurTmpViewData = computed(() => {
 // 更新视图临时条件数据
 const handleUpdateTmpViewData = debounce((data: IViewData|undefined = undefined) => {
   $store.commit('updateTmpViewData', cloneDeep(data));
-  // 数据上报
-  window.BkTrace?.startReported({
-    module: 'view',
-    operation: 'auto-query',
-    desc: '视图输入查询',
-    username: $store.state.user.username,
-    projectCode: $store.getters.curProjectCode,
-  });
 }, 300);
 
 const showResetBtn = ref(false);
@@ -569,6 +554,7 @@ const handleDeleteView = () => {
     title: $i18n.t('view.tips.confirmDelete'),
     clsName: 'custom-info-confirm default-info',
     subTitle: originViewData.value.name,
+    theme: 'danger',
     confirmFn: async () => {
       const result = await deleteViewConfig({ $id: originViewData.value.id || '' });
       if (result) {
@@ -600,7 +586,8 @@ const handleShowSaveAsDialog = () => {
 const handleSaveAs = async (changeView = true) => {
   saving.value = true;
   const result = await createViewConfig({
-    ...curTmpViewData.value,
+    clusterNamespaces: curViewData.value.clusterNamespaces,
+    filter: (viewDetailData.value?.tmpViewData?.filter || {}),
     name: viewName.value,
   });
   if (result?.id) {
@@ -618,7 +605,7 @@ const handleSaveAs = async (changeView = true) => {
 };
 
 // 将查询参数同步到url
-const curNsList = computed(() => $store.state.viewNsList);
+const curNsList = computed(() => $store.state.viewNs.viewNsList);
 function handleUpdateUrlQuery(data: Partial<MultiClusterResourcesType>|undefined) {
   if (!curTmpViewData.value?.filter && isClusterMode.value) {
     // 未传入数据
@@ -714,6 +701,19 @@ const editView = async (id: string) => {
   await viewChange(id);
   handleEditView();
 };
+
+function getNsGroup(group: IGroup) {
+  switch (group) {
+    case 'all':
+      return $i18n.t('view.labels.allNs');
+    case 'all-user':
+      return $i18n.t('dashboard.ns.label.projectNS', []);
+    case 'all-system':
+      return $i18n.t('dashboard.ns.label.systemNS', []);
+    default:
+      return $i18n.t('view.labels.allNs');
+  }
+}
 
 defineExpose({
   cancelEdit,

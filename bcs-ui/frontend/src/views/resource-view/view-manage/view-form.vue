@@ -80,7 +80,11 @@
             </bcs-option>
           </bcs-option-group>
         </bcs-select>
-        <NSSelect v-model="item.namespaces" :cluster-id="item.clusterID" class="flex-1 w-0" />
+        <NSSelect
+          :value="{ list: item.namespaces, group: item.nsgroup }"
+          :cluster-id="item.clusterID"
+          class="flex-1 w-0"
+          @change="(val) => handleNsChange(val, item)" />
         <i
           :class="[
             'bk-icon icon-plus-circle-shape cursor-pointer',
@@ -204,7 +208,7 @@ import TenantUserSelector from '@blueking/bk-user-selector/vue2';
 // import BkUserSelector from '@blueking/user-selector';
 import BatchClusterSelect from './batch-cluster-select.vue';
 import LabelSelector from './label-selector.vue';
-import NSSelect from './ns-select.vue';
+import NSSelect from './ns-select-tree.vue';
 import Field from './view-field.vue';
 
 import '@blueking/bk-user-selector/vue2/vue2.css';
@@ -270,11 +274,12 @@ const sourceValue = computed(() => {
   // 其他来源
   return '';
 });
-const displayClusterNamespaces = computed(() => {
+const displayClusterNamespaces = computed<IClusterNamespace[]>(() => {
   if (!viewData.value.clusterNamespaces?.length) {
     return [{
       clusterID: '',
       namespaces: [],
+      nsgroup: 'all-user',
     }];
   }
   return viewData.value.clusterNamespaces;
@@ -338,7 +343,10 @@ const hoverClusterID = ref<string>();
 const { clusterList, clusterNameMap, clusterListByType, collapseList, handleToggleCollapse } = useClusterGroup();
 const clusters = computed(() => viewData.value.clusterNamespaces?.map(item => item.clusterID));
 const clusterNsMap = computed(() => viewData.value.clusterNamespaces?.reduce((pre, item) => {
-  pre[item.clusterID] = item.namespaces;
+  pre[item.clusterID] = {
+    namespaces: item.namespaces,
+    nsgroup: item.nsgroup,
+  };
   return pre;
 }, {}));
 
@@ -346,7 +354,8 @@ const clusterNsMap = computed(() => viewData.value.clusterNamespaces?.reduce((pr
 const handleBatchAddCluster = (clusters: string[]) => {
   viewData.value.clusterNamespaces = clusters.map(clusterID => ({
     clusterID,
-    namespaces: clusterNsMap.value[clusterID] || [],
+    namespaces: clusterNsMap.value[clusterID]?.namespaces || [],
+    nsgroup: clusterNsMap.value[clusterID]?.nsgroup || 'all-user',
   }));
 };
 
@@ -366,6 +375,7 @@ const handleAddClusterAndNs = () => {
   viewData.value.clusterNamespaces.push({
     clusterID: nextClusterID,
     namespaces: [],
+    nsgroup: 'all-user',
   });
 };
 // 删除集群和命名空间
@@ -381,6 +391,7 @@ const handleClusterChange = (index: number, clusterID: string) => {
     viewData.value.clusterNamespaces.push({
       clusterID,
       namespaces: [],
+      nsgroup: '',
     });
   } else {
     viewData.value.clusterNamespaces[index].namespaces = [];
@@ -455,6 +466,11 @@ function handleSourceChange(v: string) {
     viewData.value.filter.createSource.chart = { chartName: v || '' };
   }
 }
+
+function handleNsChange({ value, group }: { value: string[], group: IGroup }, item: IClusterNamespace) {
+  item.namespaces = value;
+  item.nsgroup = group;
+};
 
 watch(() => props.data, () => {
   if (isEqual(props.data, viewData.value)) return;

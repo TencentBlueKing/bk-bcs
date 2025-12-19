@@ -23,7 +23,7 @@
           @click="changeMode('yaml')">{{ $t('templateFile.button.yamlMode') }}</bk-button>
       </div>
       <div>{{ $t('templateFile.tag.latestUpdate') + ' : ' }}
-        <bk-user-display-name :user-id="fileMetadata?.updator"></bk-user-display-name>
+        {{ fileMetadata?.updator }}
         {{ (fileMetadata?.updateAt && formatTime(fileMetadata.updateAt * 1000, 'yyyy-MM-dd hh:mm:ss')) || '--' }}</div>
     </template>
     <!-- 表单模式 & 源码模式 -->
@@ -360,14 +360,6 @@ async function createTemplateVersion(versionData: { version: string; versionDesc
 // 保存草稿态
 async function handleSaveDraft() {
   if (!fileMetadata.value?.id || !versionDetail.value.content) return;
-
-  let isValid;
-  if (editMode.value === 'form') {
-    isValid = await formMode.value?.validate();
-  } else if (editMode.value === 'yaml') {
-    isValid = await yamlMode.value?.validate();
-  }
-  if (!isValid) return;
 
   versionDetail.value.content = await handleGetReqData();
   // 表单模式 并且 formToYaml 接口报错时不保存

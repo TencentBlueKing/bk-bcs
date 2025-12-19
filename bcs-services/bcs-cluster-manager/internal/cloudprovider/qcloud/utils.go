@@ -474,11 +474,12 @@ func (cn *CreateVirtualClusterTask) BuildCreateNamespaceStep(task *proto.Task) {
 // BuildCreateResourceQuotaStep host集群创建命名空间资源配额
 func (cn *CreateVirtualClusterTask) BuildCreateResourceQuotaStep(task *proto.Task) {
 	common.BuildCreateResourceQuotaTaskStep(task, cn.HostCluster.ClusterID, common.ResourceQuotaDetail{
-		Name:        cn.Namespace.Name,
-		CpuRequests: cn.Namespace.Quota.CpuRequests,
-		CpuLimits:   cn.Namespace.Quota.CpuLimits,
-		MemRequests: cn.Namespace.Quota.MemoryRequests,
-		MemLimits:   cn.Namespace.Quota.MemoryLimits,
+		Name:          cn.Namespace.Name,
+		CpuRequests:   cn.Namespace.Quota.CpuRequests,
+		CpuLimits:     cn.Namespace.Quota.CpuLimits,
+		MemRequests:   cn.Namespace.Quota.MemoryRequests,
+		MemLimits:     cn.Namespace.Quota.MemoryLimits,
+		ServiceLimits: strconv.FormatUint(uint64(cn.Cluster.GetNetworkSettings().GetMaxServiceNum()), 10),
 	})
 }
 
@@ -1103,7 +1104,7 @@ func (sn *SwitchClusterNetworkTaskOption) BuildAllocateClusterSubnetTask(task *p
 
 	allocateSubnetStep.Params[cloudprovider.ClusterIDKey.String()] = sn.Cluster.ClusterID
 	allocateSubnetStep.Params[cloudprovider.SubnetInfoKey.String()] = sn.SubnetInfo
-	allocateSubnetStep.Params[cloudprovider.IsStaticIpModeKey.String()] = sn.IsStaticIpModeInfo
+	allocateSubnetStep.Params[cloudprovider.IsStaticIPModeKey.String()] = sn.IsStaticIpModeInfo
 	allocateSubnetStep.Params[cloudprovider.ClaimExpiredSecondsKey.String()] = sn.ClaimExpiredSecondsInfo
 
 	task.Steps[allocateClusterSubnetStep.StepMethod] = allocateSubnetStep
@@ -1116,7 +1117,7 @@ func (sn *SwitchClusterNetworkTaskOption) BuildClusterOpenVpcCniStep(task *proto
 
 	openVpcCniStep.Params[cloudprovider.ClusterIDKey.String()] = sn.Cluster.ClusterID
 	openVpcCniStep.Params[cloudprovider.SubnetInfoKey.String()] = sn.SubnetInfo
-	openVpcCniStep.Params[cloudprovider.IsStaticIpModeKey.String()] = sn.IsStaticIpModeInfo
+	openVpcCniStep.Params[cloudprovider.IsStaticIPModeKey.String()] = sn.IsStaticIpModeInfo
 	openVpcCniStep.Params[cloudprovider.ClaimExpiredSecondsKey.String()] = sn.ClaimExpiredSecondsInfo
 
 	task.Steps[openClusterVpcCniStep.StepMethod] = openVpcCniStep

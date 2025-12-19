@@ -25,4 +25,5 @@ var ActionPermissions = map[string]string{
 	"MeshManager.DeleteIstio":    namespace.CanDeleteNamespaceScopedResourceOperation,
 	"MeshManager.GetIstioDetail": namespace.CanViewNamespaceScopedResourceOperation,
 	"MeshManager.ListIstio":      project.CanViewProjectOperation,
+	"MeshManager.GetClusterInfo": project.CanViewProjectOperation,
 }

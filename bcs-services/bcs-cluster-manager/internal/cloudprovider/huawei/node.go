@@ -181,7 +181,7 @@ func (nm *NodeManager) ListNodeInstanceType(
 
 		cpu, _ := strconv.Atoi(v.Vcpus)
 		memory := uint32(v.Ram / 1024)
-		if info.Cpu > 0 && cpu != int(info.Cpu) {
+		if info.CPU > 0 && cpu != int(info.CPU) {
 			continue
 		}
 		if info.Memory > 0 && memory != info.Memory {

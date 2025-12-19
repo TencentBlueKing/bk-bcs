@@ -69,9 +69,9 @@ func NewAPIRouter(crs *clusterResourcesService) *mux.Router {
 
 	// events 接口代理
 	r.Methods("GET").Path("/clusterresources/api/v1/projects/{projectCode}/clusters/{clusterID}/events").
-		Handler(httpx.ParseClusterIDMiddleware(http.HandlerFunc(StorageEvents(crs))))
+		Handler(httpx.ParseClusterIDMiddleware(http.HandlerFunc(StorageEvents(crs)), false))
 	r.Methods("POST").Path("/clusterresources/api/v1/projects/{projectCode}/clusters/{clusterID}/events").
-		Handler(httpx.ParseClusterIDMiddleware(http.HandlerFunc(StorageEvents(crs))))
+		Handler(httpx.ParseClusterIDMiddleware(http.HandlerFunc(StorageEvents(crs)), true))
 	// import template
 	r.Methods("POST").Path("/clusterresources/api/v1/projects/{projectCode}/import/template").
 		HandlerFunc(ImportTemplate(crs))

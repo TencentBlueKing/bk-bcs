@@ -32,7 +32,7 @@ func convertHealthCheck(hc *tclb.HealthCheck) *networkextensionv1.ListenerHealth
 		return nil
 	}
 	healthCheck := &networkextensionv1.ListenerHealthCheck{}
-	if hc.HealthSwitch == nil {
+	if hc.HealthSwitch == nil || *hc.HealthSwitch == 0 {
 		healthCheck.Enabled = false
 		return healthCheck
 	}

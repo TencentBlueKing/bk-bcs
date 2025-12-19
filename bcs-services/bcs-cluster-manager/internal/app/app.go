@@ -47,7 +47,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/micro"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
-	restful "github.com/emicklei/go-restful"
+	restful "github.com/emicklei/go-restful/v3"
 	"github.com/go-micro/plugins/v4/registry/etcd"
 	microgrpcserver "github.com/go-micro/plugins/v4/server/grpc"
 	"github.com/gorilla/mux"
@@ -168,9 +168,10 @@ type ClusterManager struct {
 	// daemon process
 	daemon daemon.DaemonInterface
 
-	ctx           context.Context
-	ctxCancelFunc context.CancelFunc
-	stopCh        chan struct{}
+	ctx                context.Context
+	ctxCancelFunc      context.CancelFunc
+	stopCh             chan struct{}
+	microsvcShutdownCh chan struct{}
 }
 
 // NewClusterManager create cluster manager
@@ -178,10 +179,11 @@ func NewClusterManager(opt *options.ClusterManagerOptions) *ClusterManager {
 	ctx, cancel := context.WithCancel(context.Background())
 	options.SetGlobalCMOptions(opt)
 	return &ClusterManager{
-		opt:           opt,
-		ctx:           ctx,
-		ctxCancelFunc: cancel,
-		stopCh:        make(chan struct{}),
+		opt:                opt,
+		ctx:                ctx,
+		ctxCancelFunc:      cancel,
+		stopCh:             make(chan struct{}),
+		microsvcShutdownCh: make(chan struct{}),
 	}
 }
 
@@ -1022,6 +1024,9 @@ func (cm *ClusterManager) initMicro() error { // nolint
 				cm.cidrDisc.Stop()
 			}
 			cm.disc.Stop()
+			waitTime := 10 * time.Second
+			time.Sleep(waitTime)
+			cm.microsvcShutdownCh <- struct{}{}
 			return nil
 		}),
 		microsvc.AfterStop(func() error {
@@ -1080,15 +1085,22 @@ func (cm *ClusterManager) initSignalHandler() {
 		select {
 		case e := <-interrupt:
 			blog.Infof("receive interrupt %s, do close", e.String())
-			cm.close()
+			cm.close(true)
 		case <-cm.stopCh:
 			blog.Infof("stop channel, do close")
-			cm.close()
+			cm.close(false)
 		}
 	}()
 }
 
-func (cm *ClusterManager) close() {
+func (cm *ClusterManager) close(isImmediateShutdown bool) {
+	if isImmediateShutdown {
+		select {
+		case <-cm.microsvcShutdownCh:
+		case <-time.After(10 * time.Second):
+		}
+	}
+
 	closeCtx, closeCancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer closeCancel()
 	helm.GetHelmManagerClient().Stop()

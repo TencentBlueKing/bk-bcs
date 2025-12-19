@@ -12,6 +12,12 @@
 
 package randhostport
 
+import (
+	corev1 "k8s.io/api/core/v1"
+
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-webhook-server/internal/types"
+)
+
 const (
 	pluginName                        = "randhostport"
 	pluginAnnotationKey               = pluginName + ".webhook.bkbcs.tencent.com"
@@ -40,8 +46,12 @@ const (
 
 	// PatchPathContainerHostPort path for patching container port
 	PatchPathContainerHostPort = "/spec/containers/%v/ports/%v/hostPort"
+	// PatchPathInitContainerHostPort path for patching init container port
+	PatchPathInitContainerHostPort = "/spec/initContainers/%v/ports/%v/hostPort"
 	// PatchPathContainerContainerPort path for patching container port
 	PatchPathContainerContainerPort = "/spec/containers/%v/ports/%v/containerPort"
+	// PatchPathInitContainerContainerPort path for patching container port
+	PatchPathInitContainerContainerPort = "/spec/initContainers/%v/ports/%v/containerPort"
 	// PatchPathContainerEnv path for patching container env
 	PatchPathContainerEnv = "/spec/containers/%v/env"
 	// PatchPathInitContainerEnv path for patching init container env
@@ -55,3 +65,15 @@ const (
 	// PatchPathAffinityPatchPath path for patching pod antiAffinity
 	PatchPathAffinityPatchPath = "/podAntiAffinity/requiredDuringSchedulingIgnoredDuringExecution"
 )
+
+// ContainerPortsParams is params for container port injection
+type ContainerPortsParams struct {
+	RetPatches                  []types.PatchOperation
+	ContainerPortsIndexList     [][]int
+	InitContainerPortsIndexList [][]int
+	Pod                         *corev1.Pod
+	AlsoChangeContainerPort     bool
+	HostPorts                   []*PortEntry
+	ContainerPortList           []int32
+	HostPortMapping             map[uint64]uint64
+}

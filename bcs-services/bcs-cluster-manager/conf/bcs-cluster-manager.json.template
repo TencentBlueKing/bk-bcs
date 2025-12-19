@@ -133,7 +133,12 @@
         "registry": "${bcsImageRegistry}",
         "bcsApiGateway": "${bcsCAApiGateway}",
         "token": "${bcsCAToken}",
-        "bcsClusterUrl": "${bcsClusterUrl}"
+        "bcsClusterUrl": "${bcsClusterUrl}",
+        "logCollector": {
+            "httpServer": "${bcsHttpServer}",
+            "addonName": "${bcsLogCollectorAddonName}",
+            "token": "${bcsUserToken}"
+        }
     },
     "user": {
         "enable": ${bcsUserEnable},

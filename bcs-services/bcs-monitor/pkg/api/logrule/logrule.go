@@ -200,6 +200,10 @@ func CreateLogRule(c context.Context, req *CreateLogRuleReq) (*string, error) {
 // @Success 200
 // @Router  /log_collector/rules/:id [put]
 func UpdateLogRule(c context.Context, req *UpdateLogRuleReq) (*string, error) {
+	if err := req.Validate(); err != nil {
+		return nil, err
+	}
+
 	rctx, err := rest.GetRestContext(c)
 	if err != nil {
 		return nil, err

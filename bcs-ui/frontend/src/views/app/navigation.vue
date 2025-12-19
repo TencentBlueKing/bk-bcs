@@ -19,31 +19,59 @@
       </template>
       <template #header>
         <!-- 顶部菜单 -->
-        <ol class="flex flex-1 w-[0] text-[14px] text-[#96a2b9] overflow-hidden" ref="navRef">
-          <li
+        <ol
+          class="flex flex-1 w-[0] text-[14px] text-[#96a2b9] overflow-hidden"
+          ref="navRef">
+          <bcs-popover
             v-for="(item, index) in menus"
-            :class="[
-              'mr-[40px] hover:text-[#d3d9e4] cursor-pointer whitespace-nowrap',
-              {
-                'text-[#d3d9e4]': activeNav.id === item.id,
-                'opacity-0': (index >= breakIndex) && (breakIndex > -1)
-              }
-            ]"
-            :key="index"
+            :key="`${item.title}-${index}`"
+            class="mr-[40px]"
+            theme="light"
+            offset="0, 4"
+            placement="bottom"
             ref="navItemRefs"
-            @click="handleChangeMenu(item)">
-            <a
+            ext-cls="header-nav-item"
+            :arrow="false"
+            :tippy-options="{
+              trigger: 'manual',
+            }">
+            <li
               :class="[
-                'text-[#96a2b9] hover:text-[#d3d9e4]',
+                'hover:text-[#d3d9e4] cursor-pointer whitespace-nowrap',
                 {
                   'text-[#d3d9e4]': activeNav.id === item.id,
+                  'opacity-0': (index >= breakIndex) && (breakIndex > -1)
                 }
               ]"
-              :href="resolveMenuLink(item)"
-              @click.prevent>
-              {{ item.title }}
-            </a>
-          </li>
+              @click="handleChangeMenu(item, index)">
+              <a
+                :class="[
+                  'text-[#96a2b9] hover:text-[#d3d9e4]',
+                  {
+                    'text-[#d3d9e4]': activeNav.id === item.id,
+                  }
+                ]"
+                :href="resolveMenuLink(item)"
+                @click.prevent>
+                {{ item.title }}
+              </a>
+            </li>
+            <template slot="content">
+              <ul>
+                <li
+                  v-for="headerNavItem in item.children"
+                  :key="headerNavItem.id"
+                  :class="[
+                    'flex items-center cursor-pointer px-[16px] h-[40px] bg-[#182132] text-[#96A2B9] text-[14px]',
+                    'hover:text-[#d3d9e4] hover:bg-[rgb(48,56,71)]',
+                    { 'text-[#d3d9e4] bg-[rgb(48,56,71)]': activeSubNav.id === headerNavItem.id }
+                  ]"
+                  @click="handleChangeMenu(headerNavItem, index)">
+                  {{headerNavItem.title}}
+                </li>
+              </ul>
+            </template>
+          </bcs-popover>
         </ol>
         <!-- 折叠的菜单 -->
         <PopoverSelector class="w-[24px] relative right-[24px]" v-show="breakIndex > -1">
@@ -70,11 +98,9 @@
           ]"
           v-if="showPreVersionBtn"
           v-bk-trace.click="{
-            module: 'app',
-            operation: 'backToLegacy',
-            desc: '返回旧版',
-            username: $store.state.user.username,
-            projectCode: $store.getters.curProjectCode,
+            ct: 'app',
+            act: 'backToLegacy',
+            d: '返回旧版',
           }"
           @click="backToPreVersion">
           {{ $t('bcs.preVersion') }}
@@ -204,7 +230,10 @@ export default defineComponent({
     // 特性开关
     const { flagsMap } = useAppData();
 
-    const { menusData: menus, leafMenus } = useMenu();
+    // 支持下拉的一级菜单
+    const pullMenus = ['DEPLOYMENTMANAGEPULL'];
+
+    const { menus, leafMenus } = useMenu();
     const { config } = usePlatform();
     const appLogo = computed(() => config.appLogo || logoSvg);
     const appName = computed(() => config.i18n.productName);
@@ -227,7 +256,10 @@ export default defineComponent({
     const showFeatures = ref(false);
     const user = computed(() => $store.state.user);
     const curProject = computed(() => $store.state.curProject);
-    const activeNav = computed(() => findCurrentNav(menus.value) || {});
+    // 当前一级导航
+    const activeNav = computed(() => $store.state.curNav?.root || {});
+    // 当前二级导航
+    const activeSubNav = computed(() => findCurrentNav(activeNav.value?.children || []) || {});
     // 当前路由
     const route = computed(() => toRef(reactive($router), 'currentRoute').value);
     const hideMenu = computed(() => !!route.value.meta?.hideMenu || !!route.value.matched?.[0]?.meta?.hideMenu);
@@ -254,7 +286,7 @@ export default defineComponent({
         const navWrapperWidth = navRef.value?.clientWidth;
         let tmpWidth = 24;// 最小宽度
         const index = navItemRefs.value?.findIndex((item) => {
-          tmpWidth += (item.clientWidth + 40); // 40: margin-right: 40px
+          tmpWidth += (item.$el.clientWidth + 40); // 40: margin-right: 40px
           return tmpWidth >= navWrapperWidth;
         });
         breakIndex.value = index;
@@ -283,12 +315,22 @@ export default defineComponent({
       return href;
     };
     // 切换菜单
-    const handleChangeMenu = (item: IMenu) => {
+    const handleChangeMenu = (item: IMenu, index?: number) => {
+      if (index !== undefined && pullMenus.includes(item.id)) {
+        navItemRefs.value?.[index]?.showHandler?.();
+        return;
+      }
+      (index !== undefined) && navItemRefs.value?.[index]?.hideHandler?.();
+
       const name = item.route || item.children?.[0]?.route || '404';
       if (route.value.name === name) return;
 
       // 更新当前一级导航信息
-      $store.commit('updateCurNav', item);
+      if (item.parent) {
+        $store.commit('updateCurNav', item.parent);
+      } else {
+        $store.commit('updateCurNav', item);
+      }
       $router.push({
         name,
         params: {
@@ -418,6 +460,7 @@ export default defineComponent({
       breakIndex,
       hiddenMenus,
       activeNav,
+      activeSubNav,
       needMenu,
       curProject,
       openSideMenu,
@@ -447,6 +490,13 @@ export default defineComponent({
 });
 
 </script>
+<style lang="postcss">
+.header-nav-item .tippy-tooltip {
+  padding: 0px;
+  border-radius: 0px;
+  box-shadow: none;
+}
+</style>
 <style lang="postcss" scoped>
 .header-icon {
   display: flex;

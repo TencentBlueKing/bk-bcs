@@ -10453,6 +10453,10 @@
           "items": {
             "type": "string"
           }
+        },
+        "nsgroup": {
+          "type": "string",
+          "title": "nsgroup"
         }
       }
     },

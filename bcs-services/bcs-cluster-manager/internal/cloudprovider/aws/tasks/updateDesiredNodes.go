@@ -668,8 +668,14 @@ func checkClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDe
 			if ok && utils.CheckNodeIfReady(n) {
 				running = append(running, getEksNodeIDFromNode(n))
 				ipv4, _ := utils.GetNodeIPAddress(n)
-				successIP = append(successIP, ipv4[0])
+				if len(ipv4) > 0 {
+					successIP = append(successIP, ipv4[0])
+				}
 			} else {
+				if n == nil {
+					blog.Errorf("checkClusterInstanceStatus[%s] nodeName[%s] not found", taskID, ins)
+					continue
+				}
 				failure = append(failure, getEksNodeIDFromNode(n))
 			}
 		}
@@ -682,6 +688,9 @@ func checkClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDe
 
 	// set cluster node status
 	for _, n := range addFailureNodes {
+		if n == "" {
+			continue
+		}
 		err = cloudprovider.UpdateNodeStatusByInstanceID(n, common.StatusAddNodesFailed)
 		if err != nil {
 			blog.Errorf("checkClusterInstanceStatus[%s] UpdateNodeStatusByInstanceID[%s] failed: %v", taskID, n, err)
@@ -693,6 +702,9 @@ func checkClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDe
 
 // getEksNodeIDFromNode get nodeId from k8s node
 func getEksNodeIDFromNode(node *corev1.Node) string {
+	if node == nil || node.Spec.ProviderID == "" {
+		return ""
+	}
 	nodeInfo := strings.Split(node.Spec.ProviderID, "/")
 	if len(nodeInfo) == 0 {
 		return ""

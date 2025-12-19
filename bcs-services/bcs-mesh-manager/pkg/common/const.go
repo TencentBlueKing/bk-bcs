@@ -20,6 +20,8 @@ const (
 	HelmManagerServiceDomain = "helmmanager.bkbcs.tencent.com"
 	// ProjectManagerServiceName project manager service name
 	ProjectManagerServiceName = "project.bkbcs.tencent.com"
+	// ClusterManagerServiceDomain domain name for cluster manager
+	ClusterManagerServiceDomain = "clustermanager.bkbcs.tencent.com"
 
 	// MicroMetaKeyHTTPPort http port in micro-service meta
 	MicroMetaKeyHTTPPort = "httpport"
@@ -51,7 +53,9 @@ const (
 	// IstioInstallIstiodName istiod安装名称
 	IstioInstallIstiodName = "bcs-istio-istiod"
 	// IstioInstallIstioGatewayName istio gateway安装名称
-	IstioInstallIstioGatewayName = "bcs-istio-ingress-gateway"
+	IstioInstallIstioGatewayName = "bcs-istio-eastwestgateway"
+	// EastWestGatewayServiceName eastwestgateway service name
+	EastWestGatewayServiceName = "bcs-istio-eastwestgateway"
 )
 
 const (
@@ -68,8 +72,8 @@ const (
 	ControlPlaneModeIndependent = "independent"
 
 	// MultiClusterModePrimaryRemote 主从架构
-	MultiClusterModePrimaryRemote = "primaryPemote"
-	// MultiClusterModeMultiPrimary 主从架构
+	MultiClusterModePrimaryRemote = "primaryRemote"
+	// MultiClusterModeMultiPrimary 多主架构
 	MultiClusterModeMultiPrimary = "multiPrimary"
 
 	// AccessLogEncodingJSON 日志编码json
@@ -103,6 +107,16 @@ const (
 	IstioStatusUpdateFailed = "update-failed"
 )
 
+// RemoteClusterStatus 从集群状态
+const (
+	// RemoteClusterStatusRunning 从集群运行中
+	RemoteClusterStatusRunning = "running"
+	// RemoteClusterStatusInstalling 从集群安装中
+	RemoteClusterStatusInstalling = "installing"
+	// RemoteClusterStatusInstallFailed 从集群安装失败
+	RemoteClusterStatusInstallFailed = "install-failed"
+)
+
 // shared cluster
 const (
 	// AnnotationKeyProjectCode namespace 的 projectcode 注解 key 默认值
@@ -121,4 +135,6 @@ const (
 	MeshManagerGetIstioDetail = "MeshManager.GetIstioDetail"
 	// MeshManagerListIstio 获取Istio列表接口
 	MeshManagerListIstio = "MeshManager.ListIstio"
+	// MeshManagerGetClusterInfo 获取集群信息接口
+	MeshManagerGetClusterInfo = "MeshManager.GetClusterInfo"
 )

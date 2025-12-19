@@ -17,7 +17,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
-	"github.com/emicklei/go-restful"
+	restful "github.com/emicklei/go-restful/v3"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/lib"
 )

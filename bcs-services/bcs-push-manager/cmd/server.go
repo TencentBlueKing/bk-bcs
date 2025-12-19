@@ -30,6 +30,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
+	"github.com/Tencent/bk-bcs/bcs-common/common/version"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/discovery"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
 	grpccli "github.com/go-micro/plugins/v4/client/grpc"
 	"github.com/go-micro/plugins/v4/registry/etcd"
@@ -48,22 +50,22 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-push-manager/internal/handler"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-push-manager/internal/mq/rabbitmq"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-push-manager/internal/options"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-push-manager/internal/requester"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-push-manager/internal/store"
+	mongostore "github.com/Tencent/bk-bcs/bcs-services/bcs-push-manager/internal/store/mongo"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-push-manager/internal/thirdparty"
 	pb "github.com/Tencent/bk-bcs/bcs-services/bcs-push-manager/proto"
 )
 
 // Server encapsulates the service's dependencies and lifecycle management.
 type Server struct {
-	microService    micro.Service
-	microRegistry   registry.Registry
-	opt             *options.ServiceOptions
-	httpServer      *http.Server
-	mqClient        *rabbitmq.RabbitMQ
-	mongoStore      *store.Store
-	tlsConfig       *tls.Config
-	clientTLSConfig *tls.Config
+	microService        micro.Service
+	microRegistry       registry.Registry
+	thirdpartyDiscovery *discovery.ModuleDiscovery
+	opt                 *options.ServiceOptions
+	httpServer          *http.Server
+	mqClient            *rabbitmq.RabbitMQ
+	mongoServer         *mongostore.Server
+	tlsConfig           *tls.Config
+	clientTLSConfig     *tls.Config
 
 	ctx           context.Context
 	ctxCancelFunc context.CancelFunc
@@ -89,6 +91,7 @@ func (s *Server) Init() error {
 		s.initStore,
 		s.initMQ,
 		s.initMicro,
+		s.initThirdpartyDiscovery,
 		s.initHTTPGateway,
 	}
 	for _, init := range initializer {
@@ -247,11 +250,14 @@ func (s *Server) initStore() error {
 		MaxPoolSize:           0,
 		MinPoolSize:           0,
 	}
-	mongoStore, err := store.NewStore(mongoOptions)
+	instance, err := mongo.NewDB(mongoOptions)
 	if err != nil {
-		return fmt.Errorf("failed to initialize MongoDB: %v", err)
+		return fmt.Errorf("storage create mongo instance failed, %s", err.Error())
 	}
-	s.mongoStore = mongoStore
+	if pingErr := instance.Ping(); pingErr != nil {
+		return fmt.Errorf("storage connection test failed, %s", pingErr.Error())
+	}
+	s.mongoServer = mongostore.NewServer(instance)
 	return nil
 }
 
@@ -265,26 +271,47 @@ func (s *Server) initMQ() error {
 	return nil
 }
 
+// initThirdpartyDiscovery initializes the thirdparty service discovery.
+func (s *Server) initThirdpartyDiscovery() error {
+	if !discovery.UseServiceDiscovery() {
+		s.thirdpartyDiscovery = discovery.NewModuleDiscovery(constant.ModuleThirdpartyServiceManager, s.microRegistry)
+		blog.Infof("init discovery for thirdparty service successfully")
+
+		if err := s.thirdpartyDiscovery.Start(); err != nil {
+			return fmt.Errorf("failed to start thirdparty discovery: %v", err)
+		}
+
+		maxRetries := 10
+		for i := 0; i < maxRetries; i++ {
+			services := s.thirdpartyDiscovery.GetService()
+			if len(services) > 0 && len(services[0].Nodes) > 0 {
+				blog.Infof("thirdparty service endpoints discovered successfully")
+				break
+			}
+			if i == maxRetries-1 {
+				return fmt.Errorf("thirdparty service endpoints not available after %d retries", maxRetries)
+			}
+			blog.Infof("waiting for thirdparty service endpoints, retry %d/%d", i+1, maxRetries)
+			time.Sleep(500 * time.Millisecond)
+		}
+	}
+
+	thirdpartyOpts := &thirdparty.ClientOptions{
+		ClientTLS: s.clientTLSConfig,
+		Discovery: s.thirdpartyDiscovery,
+	}
+	if err := thirdparty.InitThirdpartyClient(thirdpartyOpts); err != nil {
+		return fmt.Errorf("failed to initialize thirdparty client: %v", err)
+	}
+
+	return nil
+}
+
 // initMicro initializes the gRPC service.
 func (s *Server) initMicro() error {
-	realAuthToken, err := encrypt.DesDecryptFromBase([]byte(s.opt.Gateway.Token))
-	if err != nil {
-		return fmt.Errorf("init thirdPartyServiceCli failed, encrypt token error: %s", err.Error())
-	}
-	thirdpartyOpts := &thirdparty.ClientOptions{
-		ClientTLS:     s.clientTLSConfig,
-		EtcdEndpoints: strings.Split(s.opt.Etcd.EtcdEndpoints, ","),
-		EtcdTLS:       s.opt.Etcd.TlsConfig,
-		BaseOptions: requester.BaseOptions{
-			Endpoint: s.opt.Gateway.Endpoint,
-			Token:    string(realAuthToken),
-		},
-	}
-	thirdparty.InitThirdpartyClient(thirdpartyOpts)
-
-	pushEventAction := action.NewPushEventAction(s.mongoStore.PushEvent)
-	pushWhitelistAction := action.NewPushWhitelistAction(s.mongoStore.PushWhitelist)
-	pushTemplateAction := action.NewPushTemplateAction(s.mongoStore.PushTemplate)
+	pushEventAction := action.NewPushEventAction(s.mongoServer.GetPushEventModel())
+	pushWhitelistAction := action.NewPushWhitelistAction(s.mongoServer.GetPushWhitelistModel())
+	pushTemplateAction := action.NewPushTemplateAction(s.mongoServer.GetPushTemplateModel())
 
 	svcHandler := handler.NewPushManagerService(
 		pushEventAction,
@@ -304,10 +331,22 @@ func (s *Server) initMicro() error {
 		micro.Context(s.ctx),
 		micro.Metadata(map[string]string{constant.MicroMetaKeyHTTPPort: strconv.Itoa(int(s.opt.HTTPPort))}),
 		micro.Address(net.JoinHostPort(s.opt.ServerConfig.Address, strconv.Itoa(int(s.opt.Port)))),
-		micro.Version(s.opt.ServerConfig.Version),
+		micro.Version(version.BcsVersion),
 		micro.RegisterTTL(30*time.Second),
 		micro.RegisterInterval(25*time.Second),
 		micro.Registry(s.microRegistry),
+		micro.BeforeStop(func() error {
+			if s.thirdpartyDiscovery != nil {
+				s.thirdpartyDiscovery.Stop()
+			}
+			return nil
+		}),
+		micro.AfterStop(func() error {
+			if err := thirdparty.CloseThirdpartyClient(); err != nil {
+				blog.Errorf("failed to close thirdparty client: %w", err)
+			}
+			return nil
+		}),
 		micro.Flags(&cli.StringFlag{
 			Name:        "f",
 			Usage:       "set config file path",
@@ -376,8 +415,8 @@ func (s *Server) startRabbitMQConsumer(ctx context.Context) error {
 	// Create notification action with dependencies
 	notificationAction := &action.NotificationAction{
 		ThirdpartyClient: thirdparty.GetThirdpartyClient(),
-		WhitelistStore:   s.mongoStore.PushWhitelist,
-		EventStore:       s.mongoStore.PushEvent,
+		WhitelistStore:   s.mongoServer.GetPushWhitelistModel(),
+		EventStore:       s.mongoServer.GetPushEventModel(),
 		MaxRetry:         3,
 		RetryInterval:    5 * time.Second,
 	}

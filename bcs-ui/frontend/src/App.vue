@@ -3,7 +3,8 @@
   <div id="app">
     <NoticeComponent :api-url="apiUrl" ref="noticeRef" id="bcs-notice-com" @show-alert-change="init" />
     <Navigation>
-      <RouterView />
+      <!-- 等待用户信息获取完成后才能进入视图 -->
+      <RouterView v-if="user.username && !isLoading" />
       <template #sideMenu>
         <RouterView name="sideMenu" />
       </template>
@@ -39,7 +40,7 @@ import { bus } from '@/common/bus';
 import { BCS_UI_PREFIX, BCS_SUB_PATH } from '@/common/constant';
 import AiAssistant from '@/components/assistant/ai-assistant.vue';
 import { Preset } from '@/components/assistant/use-assistant-store';
-import { AiSendMsgFnInjectKey } from '@/composables/use-app';
+import { AiSendMsgFnInjectKey, useAppData } from '@/composables/use-app';
 import useCalcHeight from '@/composables/use-calc-height';
 import usePlatform from '@/composables/use-platform';
 import PermDialog from '@/views/app/apply-perm.vue';
@@ -47,7 +48,9 @@ import BkPaaSLogin from '@/views/app/login.vue';
 import Navigation from '@/views/app/navigation.vue';
 
 
+const { getUserInfo, user } = useAppData();
 const { config, getPlatformInfo, setDocumentTitle, setShortcutIcon } = usePlatform();
+const isLoading = ref(false);
 const applyPermRef = ref<any>(null);
 const loginRef = ref<any>(null);
 
@@ -142,16 +145,25 @@ const observerNoticeEl = () => {
 };
 
 onMounted(async () => {
-  validateResourceVersion();
-  validateAllowDomains();
+  try {
+    isLoading.value = true;
+    validateResourceVersion();
+    validateAllowDomains();
 
-  await getPlatformInfo();
-  window.$loginModal = loginRef.value;
-  setTimeout(() => {
-    observerNoticeEl();
-  });
-  setDocumentTitle(config.i18n);
-  setShortcutIcon(config.favicon);
+    await getPlatformInfo();
+    window.$loginModal = loginRef.value;
+    setTimeout(() => {
+      observerNoticeEl();
+    });
+    await getUserInfo();
+    setDocumentTitle(config.i18n);
+    setShortcutIcon(config.favicon);
+    isLoading.value = false;
+  } catch (error) {
+    // 捕获可能的异常信息
+    isLoading.value = false;
+    console.error(error);
+  }
 });
 
 onBeforeUnmount(() => {

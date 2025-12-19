@@ -28,7 +28,6 @@ type MeshIstio struct {
 	MeshID        string `bson:"meshID" json:"meshID" validate:"required"`
 	Name          string `bson:"name" json:"name" validate:"required"`
 	NetworkID     string `bson:"networkID" json:"networkID" validate:"required"`
-	ProjectID     string `bson:"projectID" json:"projectID" validate:"required"`
 	ProjectCode   string `bson:"projectCode" json:"projectCode" validate:"required"`
 	Description   string `bson:"description" json:"description"`
 	Version       string `bson:"version" json:"version" validate:"required"`
@@ -40,13 +39,16 @@ type MeshIstio struct {
 	CreateBy      string `bson:"createBy" json:"createBy"`
 	UpdateBy      string `bson:"updateBy" json:"updateBy"`
 	IsDeleted     bool   `bson:"isDeleted" json:"isDeleted"`
+	Revision      string `bson:"revision" json:"revision"`
 
 	// Mesh configuration
-	ControlPlaneMode string   `bson:"controlPlaneMode" json:"controlPlaneMode"`
-	ClusterMode      string   `bson:"clusterMode" json:"clusterMode"`
-	PrimaryClusters  []string `bson:"primaryClusters" json:"primaryClusters"`
-	RemoteClusters   []string `bson:"remoteClusters" json:"remoteClusters"`
-	DifferentNetwork bool     `bson:"differentNetwork" json:"differentNetwork"`
+	MultiClusterEnabled bool             `bson:"multiClusterEnabled" json:"multiClusterEnabled"`
+	ClbID               string           `bson:"clbID" json:"clbID"`
+	ControlPlaneMode    string           `bson:"controlPlaneMode" json:"controlPlaneMode"`
+	ClusterMode         string           `bson:"clusterMode" json:"clusterMode"`
+	PrimaryClusters     []string         `bson:"primaryClusters" json:"primaryClusters"`
+	RemoteClusters      []*RemoteCluster `bson:"remoteClusters" json:"remoteClusters"`
+	DifferentNetwork    bool             `bson:"differentNetwork" json:"differentNetwork"`
 
 	// Feature configurations
 	FeatureConfigs map[string]*FeatureConfig `bson:"featureConfigs" json:"featureConfigs"`
@@ -58,6 +60,15 @@ type MeshIstio struct {
 
 	// Cluster release names mapping
 	ReleaseNames map[string]map[string]string `bson:"releaseNames" json:"releaseNames"`
+}
+
+// RemoteCluster represents remote cluster information
+type RemoteCluster struct {
+	ClusterID string `bson:"clusterID" json:"clusterID"`
+	// 纳入服务网格管理时间
+	JoinTime int64 `bson:"joinTime" json:"joinTime"`
+	// 集群状态
+	Status string `bson:"status" json:"status"`
 }
 
 // ResourceConfig represents resource configuration for sidecar
@@ -133,28 +144,37 @@ type FeatureConfig struct {
 // Transfer2ProtoForDetail converts MeshIstio entity to proto message
 // nolint:funlen
 func (m *MeshIstio) Transfer2ProtoForDetail() *meshmanager.IstioDetailInfo {
-	// TODO: 考虑直接序列化转换数据，避免逐个赋值
 	istioDetailInfo := &meshmanager.IstioDetailInfo{
-		MeshID:           m.MeshID,
-		Name:             m.Name,
-		ProjectID:        m.ProjectID,
-		ProjectCode:      m.ProjectCode,
-		NetworkID:        m.NetworkID,
-		Description:      m.Description,
-		ChartVersion:     m.ChartVersion,
-		Version:          m.Version,
-		Status:           m.Status,
-		StatusMessage:    m.StatusMessage,
-		CreateTime:       m.CreateTime,
-		UpdateTime:       m.UpdateTime,
-		CreateBy:         m.CreateBy,
-		UpdateBy:         m.UpdateBy,
-		ControlPlaneMode: m.ControlPlaneMode,
-		ClusterMode:      m.ClusterMode,
-		PrimaryClusters:  m.PrimaryClusters,
-		RemoteClusters:   m.RemoteClusters,
-		DifferentNetwork: m.DifferentNetwork,
+		MeshID:              m.MeshID,
+		Name:                m.Name,
+		ProjectCode:         m.ProjectCode,
+		NetworkID:           m.NetworkID,
+		Description:         m.Description,
+		ChartVersion:        m.ChartVersion,
+		Version:             m.Version,
+		Status:              m.Status,
+		StatusMessage:       m.StatusMessage,
+		CreateTime:          m.CreateTime,
+		UpdateTime:          m.UpdateTime,
+		CreateBy:            m.CreateBy,
+		UpdateBy:            m.UpdateBy,
+		ControlPlaneMode:    m.ControlPlaneMode,
+		ClusterMode:         m.ClusterMode,
+		PrimaryClusters:     m.PrimaryClusters,
+		DifferentNetwork:    m.DifferentNetwork,
+		MultiClusterEnabled: wrapperspb.Bool(m.MultiClusterEnabled),
+		ClbID:               wrapperspb.String(m.ClbID),
+		Revision:            m.Revision,
 	}
+	remoteClusters := make([]*meshmanager.RemoteCluster, 0, len(m.RemoteClusters))
+	for _, cluster := range m.RemoteClusters {
+		remoteClusters = append(remoteClusters, &meshmanager.RemoteCluster{
+			ClusterID: cluster.ClusterID,
+			JoinTime:  cluster.JoinTime,
+			Status:    cluster.Status,
+		})
+	}
+	istioDetailInfo.RemoteClusters = remoteClusters
 
 	// 转换 Sidecar 资源配置
 	if m.SidecarResourceConfig != nil {
@@ -253,7 +273,6 @@ func (m *MeshIstio) Transfer2ProtoForListItems() *meshmanager.IstioListItem {
 	istioListItem := &meshmanager.IstioListItem{
 		MeshID:          m.MeshID,
 		Name:            m.Name,
-		ProjectID:       m.ProjectID,
 		ProjectCode:     m.ProjectCode,
 		Version:         m.Version,
 		Status:          m.Status,
@@ -261,29 +280,48 @@ func (m *MeshIstio) Transfer2ProtoForListItems() *meshmanager.IstioListItem {
 		CreateTime:      m.CreateTime,
 		ChartVersion:    m.ChartVersion,
 		PrimaryClusters: m.PrimaryClusters,
-		RemoteClusters:  m.RemoteClusters,
 	}
+	remoteClusters := make([]*meshmanager.RemoteCluster, 0, len(m.RemoteClusters))
+	for _, cluster := range m.RemoteClusters {
+		remoteClusters = append(remoteClusters, &meshmanager.RemoteCluster{
+			ClusterID: cluster.ClusterID,
+			JoinTime:  cluster.JoinTime,
+			Status:    cluster.Status,
+		})
+	}
+	istioListItem.RemoteClusters = remoteClusters
 	return istioListItem
 }
 
 // TransferFromProto converts InstallIstioRequest to MeshIstio entity
 // nolint:funlen
-func (m *MeshIstio) TransferFromProto(req *meshmanager.IstioRequest) {
+func (m *MeshIstio) TransferFromProto(req *meshmanager.IstioInstallRequest) {
 	// 转换基本字段
 	m.Name = req.Name.GetValue()
-	m.ProjectID = req.ProjectID.GetValue()
-	m.ProjectCode = req.ProjectCode.GetValue()
+	m.ProjectCode = req.ProjectCode
 	m.Description = req.Description.GetValue()
 	m.Version = req.Version.GetValue()
 	m.ControlPlaneMode = req.ControlPlaneMode.GetValue()
-	m.ClusterMode = req.ClusterMode.GetValue()
 	m.PrimaryClusters = req.PrimaryClusters
-	m.RemoteClusters = req.RemoteClusters
 	m.DifferentNetwork = req.DifferentNetwork.GetValue()
-	m.CreateTime = time.Now().Unix()
-	m.UpdateTime = time.Now().Unix()
-	m.CreateBy = "system" // TODO: get from context
-	m.UpdateBy = "system" // TODO: get from context
+	m.MultiClusterEnabled = req.MultiClusterEnabled.GetValue()
+	m.RemoteClusters = make([]*RemoteCluster, 0, len(req.RemoteClusters))
+	if req.MultiClusterEnabled.GetValue() {
+		for i := range req.RemoteClusters {
+			cluster := req.RemoteClusters[i]
+			joinTime := time.Now().UnixMilli()
+			m.RemoteClusters = append(m.RemoteClusters, &RemoteCluster{
+				ClusterID: cluster.ClusterID,
+				JoinTime:  joinTime,
+				Status:    common.RemoteClusterStatusInstalling,
+			})
+			cluster.JoinTime = joinTime
+			cluster.Status = common.RemoteClusterStatusInstalling
+		}
+		m.ClusterMode = common.MultiClusterModePrimaryRemote
+	}
+	m.ClbID = req.ClbID.GetValue()
+	m.Revision = req.Revision.GetValue()
 
 	// 转换 Sidecar 资源配置
 	if req.SidecarResourceConfig != nil {

@@ -22,6 +22,7 @@ import (
 	"gopkg.in/yaml.v2"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/cmd/mesh-manager/options"
+	clustermanagerclient "github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/clients/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/clients/helm"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/store"
@@ -107,8 +108,7 @@ func (l *GetIstioDetailAction) getDetail(ctx context.Context) (*meshmanager.Isti
 	// istio 状态不在安装中才需要查询 release 的 values 信息
 	clusterID := meshIstio.PrimaryClusters[0]
 	namespace := common.IstioNamespace
-	istiodName := common.IstioInstallIstiodName
-
+	istiodName := meshIstio.ReleaseNames[clusterID][common.ComponentIstiod]
 	// 调用 RPC 接口获取 release 详情
 	release, err := helm.GetReleaseDetail(
 		ctx,
@@ -128,7 +128,6 @@ func (l *GetIstioDetailAction) getDetail(ctx context.Context) (*meshmanager.Isti
 		return nil, fmt.Errorf("get release detail failed, clusterID: %s, release is nil", clusterID)
 	}
 
-	// 检查 release values 是否为空
 	if len(release.Data.Values) == 0 {
 		blog.Errorf("release values is empty, clusterID: %s", clusterID)
 		return nil, fmt.Errorf("release values is empty, clusterID: %s", clusterID)
@@ -142,12 +141,24 @@ func (l *GetIstioDetailAction) getDetail(ctx context.Context) (*meshmanager.Isti
 		return nil, fmt.Errorf("unmarshal istiod values failed, clusterID: %s", clusterID)
 	}
 
-	// 基于实际的部署配置构建返回的 IstioListItem
+	// 基于实际的部署配置构建返回的 IstioDetailInfo
 	result, err := utils.ConvertValuesToIstioDetailInfo(meshIstio, istiodValues)
 	if err != nil {
 		blog.Errorf("build istio list item failed, clusterID: %s, err: %s", clusterID, err.Error())
 		return nil, fmt.Errorf("build istio list item failed, clusterID: %s", clusterID)
 	}
+
+	// 下发从集群的名称和地域信息
+	l.buildRemoteClusterInfo(ctx, result)
+
+	// 转换资源配置单位
+	if err := utils.NormalizeResourcesConfig(result); err != nil {
+		blog.Errorf("normalize resources failed, clusterID: %s, err: %s",
+			clusterID, err.Error())
+		return nil, fmt.Errorf("normalize istio detail resources failed, clusterID: %s, err: %s",
+			clusterID, err.Error())
+	}
+
 	return result, nil
 }
 
@@ -170,4 +181,25 @@ func (l *GetIstioDetailAction) buildQueryConditions() *operator.Condition {
 		return operator.NewBranchCondition(operator.And, conditions...)
 	}
 	return operator.NewBranchCondition(operator.And)
+}
+
+// buildRemoteClusterInfo 构建从集群的名称和地域信息
+func (l *GetIstioDetailAction) buildRemoteClusterInfo(ctx context.Context, detailInfo *meshmanager.IstioDetailInfo) {
+	if detailInfo == nil || detailInfo.RemoteClusters == nil {
+		return
+	}
+
+	for i := range detailInfo.RemoteClusters {
+		clusterInfo, err := clustermanagerclient.GetClusterInfo(
+			ctx,
+			utils.GetProjectIDFromCtx(ctx),
+			detailInfo.RemoteClusters[i].ClusterID,
+		)
+		if err != nil {
+			blog.Errorf("get cluster info failed, clusterID: %s, err: %s", detailInfo.RemoteClusters[i].ClusterID, err.Error())
+			continue
+		}
+		detailInfo.RemoteClusters[i].ClusterName = clusterInfo.ClusterName
+		detailInfo.RemoteClusters[i].Region = clusterInfo.Region
+	}
 }

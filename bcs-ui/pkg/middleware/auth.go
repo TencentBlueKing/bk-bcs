@@ -46,6 +46,7 @@ func NeedProjectAuthorization(next http.Handler) http.Handler {
 		ctx := r.Context()
 		// 新增泳道特性
 		ctx = contextx.WithLaneIdCtx(ctx, r.Header)
+		ctx = contextx.WithGrpcLaneIdCtx(ctx, r.Header)
 		claims, err := decodeBCSJwtFromContext(ctx, r)
 		if err != nil {
 			rest.AbortWithUnauthorized(w, r, http.StatusUnauthorized, err.Error())

@@ -30,21 +30,21 @@ import (
 // NotificationAction defines the action for handling notification messages.
 type NotificationAction struct {
 	ThirdpartyClient third.Client
-	WhitelistStore   mongo.PushWhitelistStore
-	EventStore       mongo.PushEventStore
+	WhitelistStore   *mongo.ModelPushWhitelist
+	EventStore       *mongo.ModelPushEvent
 	MaxRetry         int
 	RetryInterval    time.Duration
 	Chn              *amqp.Channel
 }
 
 // HandleMsg handles the consumption of notification messages from RabbitMQ.
-func (n *NotificationAction) HandleMsg(messages <-chan amqp.Delivery, done <-chan bool) {
+func (n *NotificationAction) HandleMsg(messages <-chan amqp.Delivery, done <-chan bool) error {
 	for {
 		select {
 		case msg, ok := <-messages:
 			if !ok {
-				blog.Infof("message channel closed")
-				return
+				blog.Error("rabbitmq: consumer channel closed")
+				return fmt.Errorf(constant.ErrChannelClosed)
 			}
 			pushMsg, err := mq.UnmarshalPushEventMessage(msg.Body)
 			if err != nil {
@@ -120,7 +120,7 @@ func (n *NotificationAction) HandleMsg(messages <-chan amqp.Delivery, done <-cha
 			}
 		case <-done:
 			blog.Infof("received done signal, exiting consumption")
-			return
+			return nil
 		}
 	}
 }
@@ -133,14 +133,21 @@ func (n *NotificationAction) sendNotification(pushType string, pushMsg *mq.PushE
 			req := pushMsg.ToRtxRequest()
 			return n.ThirdpartyClient.SendRtx(req)
 		}
+		return fmt.Errorf("cannot send %s notification: ThirdpartyClient is nil", pushType)
 	case constant.PushTypeMail:
 		if n.ThirdpartyClient != nil {
 			req := pushMsg.ToMailRequest()
 			return n.ThirdpartyClient.SendMail(req)
 		}
+		return fmt.Errorf("cannot send %s notification: ThirdpartyClient is nil", pushType)
+	case constant.PushTypeMsg:
+		if n.ThirdpartyClient != nil {
+			req := pushMsg.ToMsgRequest()
+			return n.ThirdpartyClient.SendMsg(req)
+		}
+		return fmt.Errorf("cannot send %s notification: ThirdpartyClient is nil", pushType)
 	default:
 		blog.Infof("unknown notification type: %s", pushType)
 		return fmt.Errorf("unknown notification type: %s", pushType)
 	}
-	return nil
 }

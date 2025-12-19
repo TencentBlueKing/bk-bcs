@@ -134,7 +134,18 @@ CSS文件目前禁止添加新样式，准备通过[tailwindui](https://tailwind
 - 按钮组件bk-button在有icon的时候需要注意:
   1. <bk-button icon="xx">{{xxx}}</bk-button> :不换行icon和文字间无间隙
   2. <bk-button icon="xx">
-      {{xxx}}</bk-button>  ：换行后，icon和文字间有间隙，和magicbox展示的带icon的button的效果是一样的
+      {{xxx}}
+     </bk-button>  ：换行后，icon和文字间有间隙，和magicbox展示的带icon的button的效果是一样的
+- 项目统一将组件库的前缀修改了
+  Vue.use(bcsMagic, {
+    namespace: 'bcs',
+  });
+  使用组件库组件前缀 ‘bk-xxx’、‘bcs-xxx’ 的区别：
+  1. 使用 bcs-xxx 实际是使用了组件库的组件，bk-xxx 使用的是 @/components/bk-magic-2.0 下的组件，会把组件库的组件包多一层;
+  2. 在使用组件实例方法或属性时，bk-xxx 的组件需要从 $children[0] 获取实例;
+  3. bcs-xxx 的组件可以直接获取实例。
+  注：popconfirm 组件只能使用 bcs 前缀，用法跟 bk-xxx 一样。
+
 ### TODO
 
 - 代码编辑器逐步替换为 `monaco-editor/new-editor`，以前`monaco-editor/editor.vue`、`ace-editor`和`k8s-create/yaml-mode`不要再使用

@@ -314,6 +314,7 @@ async function listTemplateSpace() {
 
 // 收藏操作
 async function handleFavorite(space) {
+  hidePopover();
   if (space.fav) {
     await TemplateSetService.UnCollectFolder({ $templateSpaceID: space.id });
   } else {
@@ -360,11 +361,13 @@ function showCreateFileDialog() {
   showNameDialog.value = true;
 };
 function showRenameSpaceDialog(space: ITemplateSpaceData) {
+  hidePopover();
   curEditSpace.value = cloneDeep(space);
   curType.value = 'rename';
   showNameDialog.value = true;
 }
 function showCloneSpaceDialog(space: ITemplateSpaceData) {
+  hidePopover();
   curEditSpace.value = cloneDeep(space);
   curType.value = 'clone';
   showNameDialog.value = true;
@@ -430,6 +433,7 @@ function exportTemplateSpaceAll() {
 };
 // 导出单个文件夹
 function exportTemplateSpace(space: ITemplateSpaceData) {
+  hidePopover();
   const templateSpaceNames = [space.name];
   downloadTemplateFile(templateSpaceNames);
 };
@@ -481,6 +485,7 @@ function handleDelete() {
 
 // 添加模板文件
 function addTemplateFile(space: ITemplateSpaceData) {
+  hidePopover();
   if (!space.id) return;
   $router.push({
     name: 'addTemplateFile',
@@ -492,6 +497,7 @@ function addTemplateFile(space: ITemplateSpaceData) {
 
 // 删除工作空间
 async function deleteSpace(space: ITemplateSpaceData) {
+  hidePopover();
   if (!space.id) return;
   $bkInfo({
     type: 'warning',

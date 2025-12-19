@@ -19,6 +19,7 @@ import (
 	"os"
 	"strings"
 
+	jwtauth "github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
 	authutils "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
@@ -29,6 +30,15 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/iam"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest"
+)
+
+const (
+	// InnerClientHeaderKey is the key for client in header
+	InnerClientHeaderKey = "X-Bcs-Client"
+	// AuthorizationHeaderKey is the key for authorization in header
+	AuthorizationHeaderKey = "Authorization"
+	// CustomUsernameHeaderKey is the key for custom username in header
+	CustomUsernameHeaderKey = "X-Bcs-Username"
 )
 
 // AuthenticationRequired API类型, 兼容多种认证模式
@@ -241,11 +251,44 @@ func initContextWithBCSJwt(r *http.Request, c *rest.Context) bool {
 	if err != nil {
 		return false
 	}
+	username := getUsername(r, claims)
 
+	claims.UserName = username
 	c.BindBCS = claims
-	c.Username = claims.UserName
 	c.TenantId = claims.TenantId
+	c.Username = username
 	return true
+}
+
+// getUsername 获取用户名
+func getUsername(r *http.Request, claims *rest.UserClaimsInfo) string {
+	clientName := ""
+	username := claims.UserName
+	if claims.SubType == jwtauth.Client.String() {
+		clientName = claims.ClientID
+	}
+
+	if len(claims.BKAppCode) != 0 {
+		clientName = claims.BKAppCode
+	}
+
+	if clientName != "" {
+		cusUsername := r.Header.Get(CustomUsernameHeaderKey)
+		if cusUsername != "" {
+			username = cusUsername
+		}
+	}
+
+	// 优先级 username > clientName > innerClientHeader
+	if username != "" {
+		return username
+	}
+
+	if clientName != "" {
+		return clientName
+	}
+
+	return r.Header.Get(InnerClientHeaderKey)
 }
 
 func initContextWithAPIGW(r *http.Request, c *rest.Context) bool {

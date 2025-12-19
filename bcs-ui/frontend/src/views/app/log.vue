@@ -1,4 +1,3 @@
-<!-- eslint-disable vue/no-v-html -->
 <!-- eslint-disable vue/no-mutating-props -->
 <template>
   <bcs-dialog
@@ -26,7 +25,7 @@
       </div>
       <div class="layout-right">
         <div class="content-wraper">
-          <div v-html="logContent" class="markdowm-container" />
+          <div v-bk-xss-html="logContent" class="markdowm-container" />
         </div>
       </div>
     </div>

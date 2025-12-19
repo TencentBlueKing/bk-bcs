@@ -173,6 +173,8 @@ func (la *ListCloudInstancesAction) listCloudInstancesByIPs() error {
 					return ""
 				}(),
 				CloudRegionNode: true,
+				DataDiskNum:     n.GetDataDiskNum(),
+				IsGpuNode:       n.IsGpuNode,
 			})
 
 			continue

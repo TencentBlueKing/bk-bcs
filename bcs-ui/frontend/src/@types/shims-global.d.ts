@@ -50,7 +50,6 @@ interface Window {
   readonly BK_USER_HOST: string
   readonly PREFERRED_DOMAINS: string
   $loginModal: any
-  BkTrace: any
   readonly BK_STATIC_URL: string
   readonly BCS_NAMESPACE_PREFIX: string
   readonly BK_LOG_HOST: string

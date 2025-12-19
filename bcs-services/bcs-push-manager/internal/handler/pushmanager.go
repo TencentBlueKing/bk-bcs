@@ -265,19 +265,29 @@ func (p *PushManagerService) sendEventToMQ(req *pb.CreatePushEventRequest, rsp *
 		return fmt.Errorf("rsp is nil")
 	}
 
-	title := event.EventDetail.Fields[constant.EventDetailKeyTitle]
-	content := event.EventDetail.Fields[constant.EventDetailKeyContent]
-	receiversStr := event.EventDetail.Fields[constant.EventDetailKeyReceivers]
-	receivers := strings.Split(receiversStr, ",")
 	pushChannelsStr := event.EventDetail.Fields[constant.EventDetailKeyTypes]
 	pushChannels := strings.Split(pushChannelsStr, ",")
 	message := &mq.PushEventMessage{
-		EventID:   rsp.EventId,
-		Type:      pushChannels,
-		Title:     title,
-		Content:   content,
-		Receivers: receivers,
-		Extra:     event.EventDetail.Fields,
+		EventID: rsp.EventId,
+		Type:    pushChannels,
+		Extra:   event.EventDetail.Fields,
+	}
+	for _, channel := range pushChannels {
+		switch channel {
+		case constant.PushTypeRtx:
+			message.RTXReceivers = strings.Split(event.EventDetail.Fields[constant.EventDetailKeyRTXReceivers], ",")
+			message.RTXContent = event.EventDetail.Fields[constant.EventDetailKeyRTXContent]
+			message.RTXTitle = event.EventDetail.Fields[constant.EventDetailKeyRTXTitle]
+		case constant.PushTypeMail:
+			message.MailReceivers = strings.Split(event.EventDetail.Fields[constant.EventDetailKeyMailReceivers], ",")
+			message.MailContent = event.EventDetail.Fields[constant.EventDetailKeyMailContent]
+			message.MailTitle = event.EventDetail.Fields[constant.EventDetailKeyMailTitle]
+		case constant.PushTypeMsg:
+			message.MsgReceivers = strings.Split(event.EventDetail.Fields[constant.EventDetailKeyMsgReceivers], ",")
+			message.MsgContent = event.EventDetail.Fields[constant.EventDetailKeyMsgContent]
+		default:
+			blog.Errorf("unexpected notification type: %s, skipping", channel)
+		}
 	}
 	body, err := message.Marshal()
 	if err != nil {

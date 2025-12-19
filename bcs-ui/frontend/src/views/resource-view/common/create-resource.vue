@@ -87,7 +87,7 @@ const props = defineProps({
   },
   // CRD资源分两种，普通和定制，customized 用来区分普通和定制
   customized: {
-    type: Boolean,
+    type: [Boolean, String],
     default: false,
   },
   // CRD信息

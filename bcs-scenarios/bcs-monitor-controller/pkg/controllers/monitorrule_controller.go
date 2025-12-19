@@ -144,8 +144,11 @@ func (r *MonitorRuleReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 
 		if currentRule != nil {
 			blog.Infof("currentRules: %s, monitorRule: %s", utils.ToJsonString(currentRule), utils.ToJsonString(monitorRule))
-			mergeRules := patch.ThreeWayMergeMonitorRule(monitorRule.Spec.Scenario, originalRules,
+			mergeRules, updatedRules := patch.ThreeWayMergeMonitorRule(monitorRule.Spec.Scenario, originalRules,
 				currentRule.Spec.Rules, monitorRule.Spec.Rules)
+			if len(updatedRules) != 0 {
+				blog.Infof("[updated rules]%s: %s", monitorRule.Spec.BizID, utils.ToJsonString(updatedRules))
+			}
 
 			// 这里的修改不会实际应用到cr上，只在reconcile中使用
 			monitorRule.Spec.Rules = mergeRules

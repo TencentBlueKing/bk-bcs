@@ -55,11 +55,6 @@ local schema = {
             default = "/clusters/(BCS-K8S-[0-9]+)/(.*)",
             description = "regex pattern which will be used to extract clusterID ($1) and request uri ($2) from url",
         },
-        clustermanager_upstream_name = {
-            type = "string",
-            default = "clustermanager-http",
-            description = "clustermanager upstream name",
-        },
         grayscale_clusterid_pattern = {
             type = "string",
             default = "BCS-K8S-2[0-9]+",
@@ -136,6 +131,12 @@ local attr_schema = {
             maxnum = 60,
             default = 60,
         },
+        clustermanager_upstream_name = {
+            type = "string",
+            default = "clustermanager-http",
+            description = "clustermanager upstream name",
+        },
+
     },
 }
 
@@ -182,6 +183,54 @@ local function check_tcp_node_health(host, port)
     end
 end
 
+local function check_apiserver_version(host, port)
+    -- 创建HTTP客户端实例
+    local httpc = http.new()
+
+    -- 配置客户端参数
+    httpc:set_timeout(5000)  -- 总超时5秒（连接+发送+接收）
+
+    -- 发起HTTPS请求
+    local uri = string.format("https://%s:%s/version", host, port)
+    local ok, err = httpc:connect({
+        scheme = "https",
+        host = host,
+        port = port,
+        ssl_verify = false,  -- 跳过证书验证
+        ssl_server_name = host  -- SNI支持
+    })
+
+    if not ok then
+        core.log.error("HTTPS failed to connect to ", host, ":", port, " - ", err)
+        return false
+    end
+
+    -- 发送HTTP请求
+    local res, err = httpc:request({
+        method = "GET",
+        path = "/version",
+        headers = {
+            ["Host"] = host,
+            ["Connection"] = "close"
+        }
+    })
+
+    -- 清理连接
+    httpc:close()
+
+    -- 处理响应
+    if not res then
+        core.log.error("Failed to connect to ", host, ":", port, " - ", err)
+        return false
+    end
+
+    if res.status ~= 200 then
+        core.log.error('HTTP status ', res.status, ' from ', host, ':', port)
+        return false
+    else
+        return true
+    end
+end
 
 local function set_upstream(upstream_info, ctx, conf)
     local nodes = upstream_info.nodes
@@ -212,13 +261,33 @@ local function set_upstream(upstream_info, ctx, conf)
 
     core.log.info("upstream_info: ", core.json.delay_encode(upstream_info, true))
 
-    local ok, err = upstream.check_schema(upstream_info)
+    -- Create a clean copy for schema validation, only include standard upstream properties
+    -- Exclude APISIX internal properties like parent, nodes_ref, original_nodes, modifiedIndex, createdIndex
+    local upstream_for_validation = {
+        type = upstream_info.type,
+        nodes = upstream_info.nodes,
+        timeout = upstream_info.timeout,
+        scheme = upstream_info.scheme,
+        pass_host = upstream_info.pass_host,
+        upstream_host = upstream_info.upstream_host,
+        name = upstream_info.name,
+        desc = upstream_info.desc,
+        hash_on = upstream_info.hash_on,
+        key = upstream_info.key,
+        checks = upstream_info.checks,
+        retries = upstream_info.retries,
+        retry_timeout = upstream_info.retry_timeout,
+        keepalive_pool = upstream_info.keepalive_pool,
+    }
+
+    local ok, err = upstream.check_schema(upstream_for_validation)
     if not ok then
         core.log.error("failed to validate generated upstream: ", err)
         return 500, err
     end
 
-    upstream_info.parent = ctx.matched_route
+    -- Use the original upstream_info (with all properties) for actual routing
+    upstream_info.parent = upstream_info.parent or ctx.matched_route
     ctx.matched_upstream = upstream_info
     upstream.set_by_route(ctx.matched_route, ctx)
 end
@@ -336,14 +405,13 @@ local function periodly_sync_cluster_credentials_in_master()
             end
         end
 
-        -- 检查cluster_credential中的clientModule是否为空
-        if cluster_credential["clientModule"] == "" then
-            -- 如果为空，则创建一个空表来存储健康节点
+        -- 定义一个通用的节点健康检查函数
+        local function check_nodes_health(upstream_nodes, check_func, cluster_credential)
             local healthy_nodes = {}
             -- 遍历upstream_nodes中的每个节点
             for _, node in ipairs(upstream_nodes) do
-                -- 调用check_tcp_node_health函数检查节点的健康状态
-                local is_healthy = check_tcp_node_health(node.host, node.port)
+                -- 调用指定的检查函数检查节点的健康状态
+                local is_healthy = check_func(node.host, node.port)
                 -- 如果节点健康，则将其添加到healthy_nodes表中
                 if is_healthy then
                     table_insert(healthy_nodes, node)
@@ -352,8 +420,14 @@ local function periodly_sync_cluster_credentials_in_master()
                     core.log.warn("Cluster ", cluster_credential["clusterID"], " Node ", node.host, ":", node.port, " is unhealthy")
                 end
             end
-            -- 将upstream_nodes更新为只包含健康节点的列表
-            upstream_nodes = healthy_nodes
+            return healthy_nodes
+        end
+
+        -- 根据clientModule的值选择不同的健康检查方式
+        if cluster_credential["clientModule"] == "" then
+            upstream_nodes = check_nodes_health(upstream_nodes, check_tcp_node_health, cluster_credential)
+        elseif cluster_credential["clientModule"] == "apiserver-version" then
+            upstream_nodes = check_nodes_health(upstream_nodes, check_apiserver_version, cluster_credential)
         end
 
 
@@ -445,8 +519,9 @@ local function traffic_to_clustermanager(conf, ctx, clusterID, upstream_uri)
             return set_upstream(upstream, ctx, conf)
         end
     end
+
     ctx.var.upstream_uri = clustermanager_tunnel_path .. clusterID .. "/" .. upstream_uri
-    local upstream = bcs_upstreams_util.get_upstream_by_name(conf.clustermanager_upstream_name)
+    local upstream = bcs_upstreams_util.get_upstream_by_name(attr.clustermanager_upstream_name)
     return set_upstream(upstream, ctx, conf)
     -- ctx.upstream_id = conf.clustermanager_upstream_name
 end
@@ -458,7 +533,15 @@ local function traffic_to_cluster_apiserver(conf, ctx, cluster_credential, upstr
         core.request.set_header(ctx, "Authorization", "Bearer " .. cluster_credential["user_token"])
     end
     cluster_credential["upstream"]["timeout"] = conf.timeout
-    return set_upstream(cluster_credential["upstream"], ctx, conf)
+
+    -- 不直接传递cluster_credential["upstream"]，因为会set_upstream 方法中会修改upstream，导致产生nodes_ref，parent，original_nodes 等字段 upstream.check_schema失败
+    local upstream = core.table.deepcopy(cluster_credential["upstream"])
+    -- Remove nodes_ref/parent/original_nodes to avoid JSON encoding issues with memory references
+    -- cluster_credential["upstream"]["nodes_ref"] = nil
+    -- cluster_credential["upstream"]["parent"] = nil
+    -- cluster_credential["upstream"]["original_nodes"] = nil
+    
+    return set_upstream(upstream, ctx, conf)
 end
 
 function _M.check_schema(conf)
@@ -501,9 +584,6 @@ function _M.access(conf, ctx)
         end
     end
 
-    ctx.upstream_scheme = "https"
-    ctx.var.upstream_scheme = "https"
-
     local cluster_credential = credential_worker_cache(clusterID, nil, load_cluster_info, clusterID)
     if cluster_credential then
         core.log.debug(
@@ -517,6 +597,10 @@ function _M.access(conf, ctx)
         traffic_to_clustermanager(conf, ctx, clusterID, upstream_uri)
         return
     end
+    
+    -- 设置upstream_scheme为https，只有apiserver的upstream需要设置为https
+    ctx.upstream_scheme = "https"
+    ctx.var.upstream_scheme = "https"
     traffic_to_cluster_apiserver(conf, ctx, cluster_credential, upstream_uri)
 end
 

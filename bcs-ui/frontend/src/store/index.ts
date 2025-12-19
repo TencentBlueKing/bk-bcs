@@ -86,7 +86,10 @@ const store = new Vuex.Store<{
   tmpViewData: IViewData | undefined // 非编辑态时临时视图数据
   editViewData: IViewData | undefined // 编辑态时视图数据
   crdData: ICrdData | undefined
-  viewNsList: string[] // 集群视图命名空间缓存
+  viewNs: {
+    viewNsList: string[]
+    group: string
+  } // 集群视图命名空间缓存
   globalPageSize: number
   hideSharedCluster: boolean
   isViewEditable: boolean // 视图编辑态
@@ -131,7 +134,7 @@ const store = new Vuex.Store<{
         'globalPageSize',
         'dashboardViewID',
         'hideSharedCluster',
-        'viewNsList',
+        'viewNs',
       ],
       mutationEffect: [
         {
@@ -171,7 +174,10 @@ const store = new Vuex.Store<{
     tmpViewData: {},
     editViewData: {},
     crdData: {},
-    viewNsList: [],
+    viewNs: {
+      viewNsList: [],
+      group: '',
+    },
     globalPageSize: 10,
     hideSharedCluster: true,
     isViewEditable: false,
@@ -277,7 +283,10 @@ const store = new Vuex.Store<{
       state.isViewConfigShow = !!data;
     },
     updateViewNsList(state, data = []) {
-      state.viewNsList = data;
+      state.viewNs.viewNsList = data;
+    },
+    updateViewNsGroup(state, data = '') {
+      state.viewNs.group = data;
     },
   },
   actions: {

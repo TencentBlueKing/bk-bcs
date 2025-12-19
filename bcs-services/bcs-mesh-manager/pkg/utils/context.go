@@ -29,40 +29,12 @@ const (
 	ProjectCodeContextKey ContextKey = "projectCode"
 	// RequestIDContextKey requestID for request
 	RequestIDContextKey ContextKey = "requestID"
-	// TraceIDContextKey trace id for tracing
-	TraceIDContextKey ContextKey = "traceID"
-	// UsernameContextKey username for request
-	UsernameContextKey ContextKey = "username"
-	// MeshIDContextKey meshID context key
-	MeshIDContextKey ContextKey = "meshID"
-	// PrimaryClustersContextKey primaryClusters context key
-	PrimaryClustersContextKey ContextKey = "primaryClusters"
-	// RemoteClustersContextKey remoteClusters context key
-	RemoteClustersContextKey ContextKey = "remoteClusters"
 )
 
 // GetProjectIDFromCtx 通过 ctx 获取 projectID
 func GetProjectIDFromCtx(ctx context.Context) string {
 	id, _ := ctx.Value(ProjectIDContextKey).(string)
 	return id
-}
-
-// GetMeshIDFromCtx 通过 ctx 获取 meshID
-func GetMeshIDFromCtx(ctx context.Context) string {
-	id, _ := ctx.Value(MeshIDContextKey).(string)
-	return id
-}
-
-// GetPrimaryClustersFromCtx 通过 ctx 获取 primaryClusters
-func GetPrimaryClustersFromCtx(ctx context.Context) []string {
-	clusters, _ := ctx.Value(PrimaryClustersContextKey).([]string)
-	return clusters
-}
-
-// GetRemoteClustersFromCtx 通过 ctx 获取 remoteClusters
-func GetRemoteClustersFromCtx(ctx context.Context) []string {
-	clusters, _ := ctx.Value(RemoteClustersContextKey).([]string)
-	return clusters
 }
 
 // GetUserFromCtx 通过 ctx 获取当前用户

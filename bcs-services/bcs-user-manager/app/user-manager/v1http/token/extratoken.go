@@ -23,7 +23,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
 	cmdb "github.com/Tencent/bk-bcs/bcs-common/pkg/esb/cmdbv3"
-	"github.com/emicklei/go-restful"
+	restful "github.com/emicklei/go-restful/v3"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/component"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/encrypt"

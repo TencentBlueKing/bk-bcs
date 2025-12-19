@@ -243,7 +243,7 @@ func (c *Cluster) EnableExternalNodeSupport(cls *proto.Cluster, opt *cloudprovid
 }
 
 // ListOsImage list image os
-func (c *Cluster) ListOsImage(provider string, opt *cloudprovider.CommonOption) ([]*proto.OsImage, error) {
+func (c *Cluster) ListOsImage(provider, clusterID string, opt *cloudprovider.CommonOption) ([]*proto.OsImage, error) {
 	if opt == nil || opt.Account == nil {
 		return nil, cloudprovider.ErrCloudCredentialLost
 	}

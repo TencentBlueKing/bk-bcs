@@ -19,11 +19,12 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
-	"go.mongodb.org/mongo-driver/bson"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-push-manager/internal/constant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-push-manager/internal/store/mongo"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-push-manager/internal/store/types"
@@ -32,11 +33,11 @@ import (
 
 // PushEventAction defines the business logic for handling push event operations.
 type PushEventAction struct {
-	store mongo.PushEventStore
+	store *mongo.ModelPushEvent
 }
 
 // NewPushEventAction creates a new PushEventAction instance.
-func NewPushEventAction(store mongo.PushEventStore) *PushEventAction {
+func NewPushEventAction(store *mongo.ModelPushEvent) *PushEventAction {
 	return &PushEventAction{
 		store: store,
 	}
@@ -60,6 +61,12 @@ func (a *PushEventAction) CreatePushEvent(ctx context.Context, req *pb.CreatePus
 	}
 	if !a.isValidPushLevel(req.Event.PushLevel) {
 		req.Event.PushLevel = constant.AlertLevelWarning
+	}
+
+	if err := validateDomainMatch(req.Event.Domain, req.Domain); err != nil {
+		rsp.Code = uint32(constant.ResponseCodeBadRequest)
+		rsp.Message = err.Error()
+		return nil
 	}
 
 	// convert to internal type
@@ -103,6 +110,7 @@ func (a *PushEventAction) CreatePushEvent(ctx context.Context, req *pb.CreatePus
 		return nil
 	}
 
+	// convert MetricData (optional)
 	if req.Event.MetricData != nil {
 		event.MetricData = types.MetricData{
 			MetricValue: req.Event.MetricData.MetricValue,
@@ -110,10 +118,6 @@ func (a *PushEventAction) CreatePushEvent(ctx context.Context, req *pb.CreatePus
 		if req.Event.MetricData.Timestamp != nil {
 			event.MetricData.Timestamp = req.Event.MetricData.Timestamp.AsTime()
 		}
-	} else {
-		rsp.Code = uint32(constant.ResponseCodeBadRequest)
-		rsp.Message = constant.ResponseMsgMetricDataRequired
-		return nil
 	}
 
 	// call store layer
@@ -146,8 +150,25 @@ func (a *PushEventAction) DeletePushEvent(ctx context.Context, req *pb.DeletePus
 		return nil
 	}
 
+	event, err := a.store.GetPushEvent(ctx, req.EventId)
+	if err != nil {
+		rsp.Code = uint32(constant.ResponseCodeInternalError)
+		rsp.Message = fmt.Sprintf("failed to get push event: %v", err)
+		return nil
+	}
+	if event == nil {
+		rsp.Code = uint32(constant.ResponseCodeNotFound)
+		rsp.Message = constant.ResponseMsgPushEventNotFound
+		return nil
+	}
+	if err := validateDomainMatch(event.Domain, req.Domain); err != nil {
+		rsp.Code = uint32(constant.ResponseCodeBadRequest)
+		rsp.Message = err.Error()
+		return nil
+	}
+
 	// call store layer
-	err := a.store.DeletePushEvent(ctx, req.EventId)
+	err = a.store.DeletePushEvent(ctx, req.EventId)
 	if err != nil {
 		rsp.Code = uint32(constant.ResponseCodeInternalError)
 		rsp.Message = fmt.Sprintf("failed to delete push event: %v", err)
@@ -185,6 +206,12 @@ func (a *PushEventAction) GetPushEvent(ctx context.Context, req *pb.GetPushEvent
 	if event == nil {
 		rsp.Code = uint32(constant.ResponseCodeNotFound)
 		rsp.Message = constant.ResponseMsgPushEventNotFound
+		return nil
+	}
+
+	if err := validateDomainMatch(event.Domain, req.Domain); err != nil {
+		rsp.Code = uint32(constant.ResponseCodeBadRequest)
+		rsp.Message = err.Error()
 		return nil
 	}
 
@@ -232,7 +259,7 @@ func (a *PushEventAction) ListPushEvents(ctx context.Context, req *pb.ListPushEv
 
 	// set default pagination
 	page := int64(req.Page)
-	if page <= 0 {
+	if page < 1 {
 		page = constant.DefaultPage
 	}
 	pageSize := int64(req.PageSize)
@@ -241,7 +268,7 @@ func (a *PushEventAction) ListPushEvents(ctx context.Context, req *pb.ListPushEv
 	}
 
 	// build filter
-	filter := bson.M{"domain": req.Domain}
+	filter := operator.M{"domain": req.Domain}
 	if req.RuleId != "" {
 		filter["rule_id"] = req.RuleId
 	}
@@ -252,13 +279,12 @@ func (a *PushEventAction) ListPushEvents(ctx context.Context, req *pb.ListPushEv
 		filter["push_level"] = req.PushLevel
 	}
 	if req.StartTime != nil && req.EndTime != nil {
-		filter["created_at"] = bson.M{
+		filter["created_at"] = operator.M{
 			"$gte": req.StartTime.AsTime(),
 			"$lte": req.EndTime.AsTime(),
 		}
 	}
 
-	// call store layer
 	events, total, err := a.store.ListPushEvents(ctx, filter, page, pageSize)
 	if err != nil {
 		rsp.Code = uint32(constant.ResponseCodeInternalError)
@@ -322,9 +348,25 @@ func (a *PushEventAction) UpdatePushEvent(ctx context.Context, req *pb.UpdatePus
 		rsp.Message = constant.ResponseMsgEventRequired
 		return nil
 	}
+	event, err := a.store.GetPushEvent(ctx, req.EventId)
+	if err != nil {
+		rsp.Code = uint32(constant.ResponseCodeInternalError)
+		rsp.Message = fmt.Sprintf("failed to get push event: %v", err)
+		return nil
+	}
+	if event == nil {
+		rsp.Code = uint32(constant.ResponseCodeNotFound)
+		rsp.Message = constant.ResponseMsgPushEventNotFound
+		return nil
+	}
+	if err := validateDomainMatch(event.Domain, req.Domain); err != nil {
+		rsp.Code = uint32(constant.ResponseCodeBadRequest)
+		rsp.Message = err.Error()
+		return nil
+	}
 
 	// build update fields
-	updateFields := bson.M{}
+	updateFields := operator.M{}
 	if req.Event.RuleId != "" {
 		updateFields["rule_id"] = req.Event.RuleId
 	}
@@ -368,10 +410,10 @@ func (a *PushEventAction) UpdatePushEvent(ctx context.Context, req *pb.UpdatePus
 		return nil
 	}
 
-	update := bson.M{"$set": updateFields}
+	update := operator.M{"$set": updateFields}
 
 	// call store layer
-	err := a.store.UpdatePushEvent(ctx, req.EventId, update)
+	err = a.store.UpdatePushEvent(ctx, req.EventId, update)
 	if err != nil {
 		rsp.Code = uint32(constant.ResponseCodeInternalError)
 		rsp.Message = fmt.Sprintf("failed to update push event: %v", err)
@@ -412,22 +454,53 @@ func (a *PushEventAction) isValidPushLevel(level string) bool {
 func (a *PushEventAction) validateEventDetail(detail *types.EventDetail, rsp *pb.CreatePushEventResponse) error {
 	fields := detail.Fields
 
-	requiredFields := []string{
-		constant.EventDetailKeyContent,
-		constant.EventDetailKeyReceivers,
-		constant.EventDetailKeyTitle,
-	}
+	pushTypes := strings.Split(fields[constant.EventDetailKeyTypes], ",")
 
-	for _, field := range requiredFields {
-		if fields[field] == "" {
+	for _, pushType := range pushTypes {
+		switch pushType {
+		case constant.PushTypeRtx:
+			requiredRTXFields := []string{
+				constant.EventDetailKeyRTXReceivers,
+				constant.EventDetailKeyRTXContent,
+				constant.EventDetailKeyRTXTitle,
+			}
+			for _, field := range requiredRTXFields {
+				if fields[field] == "" {
+					rsp.Code = uint32(constant.ResponseCodeBadRequest)
+					rsp.Message = fmt.Sprintf("event detail missing required non-empty field for RTX: %s", field)
+					return errors.New("invalid event detail")
+				}
+			}
+		case constant.PushTypeMail:
+			requiredMailFields := []string{
+				constant.EventDetailKeyMailReceivers,
+				constant.EventDetailKeyMailContent,
+				constant.EventDetailKeyMailTitle,
+			}
+			for _, field := range requiredMailFields {
+				if fields[field] == "" {
+					rsp.Code = uint32(constant.ResponseCodeBadRequest)
+					rsp.Message = fmt.Sprintf("event detail missing required non-empty field for Mail: %s", field)
+					return errors.New("invalid event detail")
+				}
+			}
+		case constant.PushTypeMsg:
+			requiredMsgFields := []string{
+				constant.EventDetailKeyMsgReceivers,
+				constant.EventDetailKeyMsgContent,
+			}
+			for _, field := range requiredMsgFields {
+				if fields[field] == "" {
+					rsp.Code = uint32(constant.ResponseCodeBadRequest)
+					rsp.Message = fmt.Sprintf("event detail missing required non-empty field for Msg: %s", field)
+					return errors.New("invalid event detail")
+				}
+			}
+		default:
 			rsp.Code = uint32(constant.ResponseCodeBadRequest)
-			rsp.Message = fmt.Sprintf("event detail missing required non-empty field: %s", field)
+			rsp.Message = fmt.Sprintf("event detail contains invalid push type: %s", pushType)
 			return errors.New("invalid event detail")
 		}
-	}
-
-	if fields[constant.EventDetailKeyTypes] == "" {
-		fields[constant.EventDetailKeyTypes] = constant.PushTypeRtx
 	}
 
 	return nil

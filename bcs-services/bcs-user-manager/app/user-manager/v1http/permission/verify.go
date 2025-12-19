@@ -687,6 +687,9 @@ func addAudit(pCtx context.Context, user, projectCode, method, actionID string, 
 		SetContext(auditCtx).SetResource(resource).SetAction(action).SetResult(result).Do()
 
 	// activity
+	if resource.ResourceType == "k8s_resource" {
+		return
+	}
 	err := sqlstore.CreateActivity([]*models.Activity{
 		{
 			ProjectCode:  resource.ProjectCode,

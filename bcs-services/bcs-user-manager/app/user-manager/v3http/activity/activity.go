@@ -18,7 +18,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/i18n"
-	"github.com/emicklei/go-restful"
+	restful "github.com/emicklei/go-restful/v3"
 	"github.com/gorilla/schema"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/component"
@@ -148,6 +148,12 @@ func PushActivities(request *restful.Request, response *restful.Response) {
 			blog.Errorf("get project failed, err %s", err.Error())
 			continue
 		}
+
+		// 暂不记录
+		if v.ResourceType == "k8s_resource" {
+			continue
+		}
+
 		activities = append(activities, &models.Activity{
 			ProjectCode:  project.ProjectCode,
 			ResourceType: v.ResourceType,

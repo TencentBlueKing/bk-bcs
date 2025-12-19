@@ -74,16 +74,11 @@ var NoAuthMethod = []string{
 	"ClusterManager.GetClustersMetaData",
 
 	// 节点相关
-	"ClusterManager.GetNodeInfo",
-	"ClusterManager.GetNodeInfo",
 	"ClusterManager.CheckNodeInCluster",
-	"ClusterManager.CheckDrainNode",
 
 	// cluster credential
 
 	// nodeGroup resource
-	"ClusterManager.GetExternalNodeScriptByGroupID",
-	"ClusterManager.RecommendNodeGroupConf",
 
 	// cloud template
 	"ClusterManager.GetCloud",
@@ -98,75 +93,37 @@ var NoAuthMethod = []string{
 	"ClusterManager.CheckCloudKubeConfigConnect",
 
 	// task resource
-	"ClusterManager.RetryTask",
-	"ClusterManager.GetTask",
-	"ClusterManager.ListTask",
-	"ClusterManager.SkipTask",
 
 	// cluster autoscaling
-	"ClusterManager.GetAutoScalingOption",
 	"ClusterManager.ListAutoScalingOption",
 	"ClusterManager.SyncAutoScalingOption",
-	"ClusterManager.UpdateAsOptionDeviceProvider",
 
 	// cloud account
-	"ClusterManager.CreateCloudAccount",
-	"ClusterManager.ListCloudAccount",
 	"ClusterManager.ListCloudAccountToPerm",
-	"ClusterManager.GetServiceRoles",
 
 	// cloud module flag
 	"ClusterManager.ListCloudModuleFlag",
 
 	// common interface && support interface
 	"ClusterManager.ListCloudRegions",
-	"ClusterManager.GetCloudRegions",
-	"ClusterManager.GetCloudRegionZones",
-	"ClusterManager.ListCloudRegionCluster",
-	"ClusterManager.ListCloudSubnets",
-	"ClusterManager.ListCloudSecurityGroups",
-	"ClusterManager.ListCloudInstanceTypes",
-	"ClusterManager.ListCloudDiskTypes",
-	"ClusterManager.ListCloudOsImage",
 	"ClusterManager.ListCloudRuntimeInfo",
-	"ClusterManager.ListCloudInstances",
-	"ClusterManager.ListKeypairs",
-	"ClusterManager.ListCloudProjects",
-	"ClusterManager.ListCloudVpcs",
-	"ClusterManager.ListCloudInstancesByPost",
-	"ClusterManager.GetResourceGroups",
 
 	"ClusterManager.ListOperationLogs",
-	"ClusterManager.ListTaskStepLogs",
 	"ClusterManager.ListTaskRecords",
 	"ClusterManager.ListResourceSchema",
 	"ClusterManager.GetResourceSchema",
 
 	"ClusterManager.QueryPermByActionID",
 	"ClusterManager.ListBKCloud",
-	"ClusterManager.ListCCTopology",
-	"ClusterManager.GetBkSopsTemplateList",
-	"ClusterManager.GetBkSopsTemplateInfo",
+	"ClusterManager.ListCCTopology", // 集群id非必须
 	"ClusterManager.GetInnerTemplateValues",
 	"ClusterManager.DebugBkSopsTask",
 	"ClusterManager.Health",
 
-	"ClusterManager.GetBatchCustomSetting",
-	"ClusterManager.GetBizTopologyHost",
-	"ClusterManager.GetTopologyNodes",
-	"ClusterManager.GetScopeHostCheck",
-	"ClusterManager.GetCloudAccountType",
-	"ClusterManager.GetCloudBandwidthPackages",
-	"ClusterManager.GetTopologyHostIdsNodes",
-	"ClusterManager.GetHostsDetails",
 	"ClusterManager.VerifyCloudAccount",
-	"ClusterManager.CheckCidrConflictFromVpc",
-	"ClusterManager.GetMasterSuggestedMachines",
-	"ClusterManager.ListCloudNodePublicPrefix",
-	"ClusterManager.GetClusterSharedProject",
 }
 
-// ActionPermissions action 对应权限中心的权限
+// ActionPermissions actions perms
 var ActionPermissions = map[string]string{
 	// cluster
 	"ClusterManager.CreateCluster":                cluster.CanCreateClusterOperation,
@@ -177,8 +134,8 @@ var ActionPermissions = map[string]string{
 	"ClusterManager.GetCluster":                   cluster.CanViewClusterOperation,
 	"ClusterManager.ListProjectCluster":           project.CanViewProjectOperation,
 	"ClusterManager.ListCluster":                  project.CanViewProjectOperation,
-	"ClusterManager.ListClusterV2":                "",
-	"ClusterManager.ListBusinessCluster":          "",
+	"ClusterManager.ListClusterV2":                project.CanViewProjectOperation,
+	"ClusterManager.ListBusinessCluster":          "", // 内部接口，无须权限校验
 	"ClusterManager.ListCommonCluster":            "",
 	"ClusterManager.CreateVirtualCluster":         cluster.CanCreateClusterOperation,
 	"ClusterManager.DeleteVirtualCluster":         cluster.CanDeleteClusterOperation,
@@ -186,6 +143,8 @@ var ActionPermissions = map[string]string{
 	"ClusterManager.AddSubnetToCluster":           cluster.CanManageClusterOperation,
 	"ClusterManager.UpdateClusterModule":          cluster.CanManageClusterOperation,
 	"ClusterManager.SwitchClusterUnderlayNetwork": cluster.CanManageClusterOperation,
+	"ClusterManager.GetClusterSharedProject":      cluster.CanViewClusterOperation,
+	"ClusterManager.GetClustersMetaData":          "",
 
 	// node
 	"ClusterManager.AddNodesToCluster":           cluster.CanManageClusterOperation,
@@ -205,16 +164,19 @@ var ActionPermissions = map[string]string{
 	"ClusterManager.UpdateNodeLabels":            cluster.CanManageClusterOperation,
 	"ClusterManager.UpdateNodeTaints":            cluster.CanManageClusterOperation,
 	"ClusterManager.UpdateNodeAnnotations":       cluster.CanManageClusterOperation,
+	"ClusterManager.CheckDrainNode":              cluster.CanViewClusterOperation,
+	"ClusterManager.ListCloudNodePublicPrefix":   cloudaccount.CanUseCloudAccountOperation,
+	"ClusterManager.ListCloudNodes":              "",
 
 	// federation cluster
 	"ClusterManager.InitFederationCluster": "",
-	"ClusterManager.AddFederatedCluster":   "",
+	"ClusterManager.AddFederatedCluster":   cluster.CanCreateClusterOperation,
 
 	// cluster credential
 	"ClusterManager.GetClusterCredential":    cluster.CanManageClusterOperation,
 	"ClusterManager.UpdateClusterCredential": cluster.CanManageClusterOperation,
 	"ClusterManager.UpdateClusterKubeConfig": cluster.CanManageClusterOperation,
-	"ClusterManager.DeleteClusterCredential": "",
+	"ClusterManager.DeleteClusterCredential": cluster.CanManageClusterOperation,
 	"ClusterManager.ListClusterCredential":   "",
 
 	// nodeGroup
@@ -223,6 +185,7 @@ var ActionPermissions = map[string]string{
 	"ClusterManager.DeleteNodeGroup":        cluster.CanManageClusterOperation,
 	"ClusterManager.GetNodeGroup":           cluster.CanViewClusterOperation,
 	"ClusterManager.ListNodeGroup":          cluster.CanViewClusterOperation,
+	"ClusterManager.ListNodeGroupV2":        "",
 	"ClusterManager.ListClusterNodeGroup":   cluster.CanViewClusterOperation,
 	"ClusterManager.MoveNodesToGroup":       cluster.CanManageClusterOperation,
 	"ClusterManager.RemoveNodesFromGroup":   cluster.CanManageClusterOperation,
@@ -231,16 +194,16 @@ var ActionPermissions = map[string]string{
 	"ClusterManager.ListNodesInGroup":       cluster.CanViewClusterOperation,
 	"ClusterManager.ListNodesInGroupV2":     cluster.CanViewClusterOperation,
 	"ClusterManager.UpdateGroupAsTimeRange": cluster.CanManageClusterOperation,
-	"ClusterManager.RecommendNodeGroupConf": "",
+	"ClusterManager.RecommendNodeGroupConf": cloudaccount.CanUseCloudAccountOperation,
 
 	"ClusterManager.UpdateGroupDesiredNode":         cluster.CanManageClusterOperation,
 	"ClusterManager.UpdateGroupDesiredSize":         cluster.CanManageClusterOperation,
 	"ClusterManager.UpdateGroupMinMaxSize":          cluster.CanManageClusterOperation,
 	"ClusterManager.EnableNodeGroupAutoScale":       cluster.CanManageClusterOperation,
 	"ClusterManager.DisableNodeGroupAutoScale":      cluster.CanManageClusterOperation,
-	"ClusterManager.GetExternalNodeScriptByGroupID": cluster.CanManageClusterOperation,
+	"ClusterManager.GetExternalNodeScriptByGroupID": cluster.CanViewClusterOperation,
 	"ClusterManager.TransNodeGroupToNodeTemplate":   cluster.CanManageClusterOperation,
-	"ClusterManager.CleanDbHistoryData":             "",
+	"ClusterManager.CleanDbHistoryData":             "", // health类，无须权限
 	"ClusterManager.GetProjectResourceQuotaUsage":   project.CanViewProjectOperation,
 
 	// cloud template
@@ -251,15 +214,19 @@ var ActionPermissions = map[string]string{
 	"ClusterManager.ListCloud":   "",
 
 	// vpc control
-	"ClusterManager.CreateCloudVPC": "",
-	"ClusterManager.UpdateCloudVPC": "",
-	"ClusterManager.DeleteCloudVPC": "",
-	"ClusterManager.ListCloudVPC":   "",
-	"ClusterManager.GetVPCCidr":     "",
+	"ClusterManager.CreateCloudVPC":             "",
+	"ClusterManager.UpdateCloudVPC":             "",
+	"ClusterManager.DeleteCloudVPC":             "",
+	"ClusterManager.ListCloudVPC":               "",
+	"ClusterManager.GetVPCCidr":                 "",
+	"ClusterManager.CheckCidrConflictFromVpc":   cloudaccount.CanUseCloudAccountOperation,
+	"ClusterManager.GetCloudBandwidthPackages":  cloudaccount.CanUseCloudAccountOperation,
+	"ClusterManager.GetMasterSuggestedMachines": cloudaccount.CanUseCloudAccountOperation,
+	"ClusterManager.ListCloudVpcs":              cloudaccount.CanUseCloudAccountOperation,
 
 	// kubeconfig
 	"ClusterManager.CheckCloudKubeConfig":        "",
-	"ClusterManager.CheckCloudKubeConfigConnect": "",
+	"ClusterManager.CheckCloudKubeConfigConnect": cluster.CanViewClusterOperation,
 
 	// task
 	"ClusterManager.CreateTask": cluster.CanManageClusterOperation,
@@ -267,15 +234,19 @@ var ActionPermissions = map[string]string{
 	"ClusterManager.UpdateTask": cluster.CanManageClusterOperation,
 	"ClusterManager.DeleteTask": cluster.CanManageClusterOperation,
 	"ClusterManager.GetTask":    cluster.CanViewClusterOperation,
-	"ClusterManager.ListTask":   cluster.CanViewClusterOperation,
+	"ClusterManager.ListTask":   project.CanViewProjectOperation,
+	"ClusterManager.SkipTask":   cluster.CanViewClusterOperation,
+
 	// cluster auto scaling option
-	"ClusterManager.CreateAutoScalingOption": cluster.CanManageClusterOperation,
-	"ClusterManager.UpdateAutoScalingOption": cluster.CanManageClusterOperation,
-	"ClusterManager.DeleteAutoScalingOption": cluster.CanManageClusterOperation,
-	"ClusterManager.GetAutoScalingOption":    cluster.CanViewClusterOperation,
-	"ClusterManager.ListAutoScalingOption":   cluster.CanViewClusterOperation,
-	"ClusterManager.UpdateAutoScalingStatus": cluster.CanManageClusterOperation,
-	"ClusterManager.SyncAutoScalingOption":   cluster.CanManageClusterOperation,
+	"ClusterManager.CreateAutoScalingOption":      cluster.CanManageClusterOperation,
+	"ClusterManager.UpdateAutoScalingOption":      cluster.CanManageClusterOperation,
+	"ClusterManager.DeleteAutoScalingOption":      cluster.CanManageClusterOperation,
+	"ClusterManager.GetAutoScalingOption":         cluster.CanViewClusterOperation,
+	"ClusterManager.ListAutoScalingOption":        cluster.CanViewClusterOperation,
+	"ClusterManager.UpdateAutoScalingStatus":      cluster.CanManageClusterOperation,
+	"ClusterManager.SyncAutoScalingOption":        "",
+	"ClusterManager.UpdateAsOptionDeviceProvider": cluster.CanManageClusterOperation,
+
 	// NodeTemplate
 	"ClusterManager.CreateNodeTemplate": project.CanEditProjectOperation,
 	"ClusterManager.UpdateNodeTemplate": project.CanEditProjectOperation,
@@ -283,14 +254,20 @@ var ActionPermissions = map[string]string{
 	"ClusterManager.ListNodeTemplate":   project.CanViewProjectOperation,
 	"ClusterManager.GetNodeTemplate":    project.CanViewProjectOperation,
 
+	// NotifyTemplate
+	"ClusterManager.CreateNotifyTemplate": project.CanViewProjectOperation,
+	"ClusterManager.DeleteNotifyTemplate": project.CanViewProjectOperation,
+	"ClusterManager.ListNotifyTemplate":   project.CanViewProjectOperation,
+
 	// cloud account
-	"ClusterManager.CreateCloudAccount":  cloudaccount.CanCreateCloudAccountOperation,
-	"ClusterManager.UpdateCloudAccount":  cloudaccount.CanManageCloudAccountOperation,
-	"ClusterManager.DeleteCloudAccount":  cloudaccount.CanManageCloudAccountOperation,
-	"ClusterManager.ListCloudAccount":    cloudaccount.CanUseCloudAccountOperation,
-	"ClusterManager.MigrateCloudAccount": "",
-	"ClusterManager.VerifyCloudAccount":  "",
-	"ClusterManager.GetServiceRoles":     "",
+	"ClusterManager.CreateCloudAccount":     cloudaccount.CanCreateCloudAccountOperation,
+	"ClusterManager.UpdateCloudAccount":     cloudaccount.CanManageCloudAccountOperation,
+	"ClusterManager.DeleteCloudAccount":     cloudaccount.CanManageCloudAccountOperation,
+	"ClusterManager.ListCloudAccount":       cloudaccount.CanUseCloudAccountOperation,
+	"ClusterManager.MigrateCloudAccount":    "", // 内部接口
+	"ClusterManager.VerifyCloudAccount":     "", // 校验账号，无须权限校验账号，无须权限
+	"ClusterManager.GetServiceRoles":        cloudaccount.CanUseCloudAccountOperation,
+	"ClusterManager.ListCloudAccountToPerm": "", // 内部接口，无须权限校验
 
 	// cloud component paras
 	"ClusterManager.CreateCloudModuleFlag": "",
@@ -300,36 +277,48 @@ var ActionPermissions = map[string]string{
 
 	// common interface
 	"ClusterManager.ListCloudRegions":         "",
-	"ClusterManager.GetCloudRegions":          "",
-	"ClusterManager.GetCloudRegionZones":      "",
-	"ClusterManager.ListCloudRegionCluster":   "",
-	"ClusterManager.ListCloudSubnets":         "",
-	"ClusterManager.ListCloudSecurityGroups":  "",
-	"ClusterManager.ListCloudInstanceTypes":   "",
-	"ClusterManager.ListCloudDiskTypes":       "",
-	"ClusterManager.ListCloudOsImage":         "",
+	"ClusterManager.GetCloudRegions":          cloudaccount.CanUseCloudAccountOperation,
+	"ClusterManager.GetCloudRegionZones":      cloudaccount.CanUseCloudAccountOperation,
+	"ClusterManager.ListCloudRegionCluster":   cloudaccount.CanUseCloudAccountOperation,
+	"ClusterManager.ListCloudSubnets":         cloudaccount.CanUseCloudAccountOperation,
+	"ClusterManager.ListCloudSecurityGroups":  cloudaccount.CanUseCloudAccountOperation,
+	"ClusterManager.ListCloudInstanceTypes":   cloudaccount.CanUseCloudAccountOperation,
+	"ClusterManager.ListCloudDiskTypes":       cloudaccount.CanUseCloudAccountOperation,
+	"ClusterManager.ListCloudOsImage":         cloudaccount.CanUseCloudAccountOperation,
 	"ClusterManager.ListCloudRuntimeInfo":     "",
-	"ClusterManager.ListCloudInstances":       "",
+	"ClusterManager.ListCloudInstances":       cloudaccount.CanUseCloudAccountOperation,
 	"ClusterManager.ListOperationLogs":        "",
-	"ClusterManager.ListTaskStepLogs":         "",
-	"ClusterManager.TaskRecords":              "",
+	"ClusterManager.ListProjectOperationLogs": project.CanViewProjectOperation,
+	"ClusterManager.ListTaskStepLogs":         project.CanViewProjectOperation,
 	"ClusterManager.ListResourceSchema":       "",
 	"ClusterManager.GetResourceSchema":        "",
 	"ClusterManager.QueryPermByActionID":      "",
-	"ClusterManager.ListCloudInstancesByPost": "",
+	"ClusterManager.ListCloudInstancesByPost": cloudaccount.CanUseCloudAccountOperation,
+	"ClusterManager.GetResourceGroups":        cloudaccount.CanUseCloudAccountOperation,
+	"ClusterManager.GetCloudAccountType":      cloudaccount.CanUseCloudAccountOperation,
+	"ClusterManager.ListCloudProjects":        cloudaccount.CanUseCloudAccountOperation,
+	"ClusterManager.ListKeypairs":             cloudaccount.CanUseCloudAccountOperation,
+	"ClusterManager.ListTaskRecords":          "",
 
-	"ClusterManager.ListBKCloud":            "",
-	"ClusterManager.ListCCTopology":         "",
-	"ClusterManager.GetBkSopsTemplateList":  "",
-	"ClusterManager.GetBkSopsTemplateInfo":  "",
-	"ClusterManager.GetInnerTemplateValues": "",
-	"ClusterManager.DebugBkSopsTask":        "",
+	"ClusterManager.ListBKCloud":              "",
+	"ClusterManager.ListCCTopology":           cluster.CanViewClusterOperation,
+	"ClusterManager.GetBkSopsTemplateList":    CanOperatorBiz,
+	"ClusterManager.GetBkSopsTemplateInfo":    CanOperatorBiz,
+	"ClusterManager.GetInnerTemplateValues":   "",
+	"ClusterManager.DebugBkSopsTask":          "",
+	"ClusterManager.GetBatchCustomSetting":    CanOperatorBiz,
+	"ClusterManager.GetBizTopologyHost":       CanOperatorBiz,
+	"ClusterManager.GetHostsDetails":          CanOperatorBiz,
+	"ClusterManager.GetProviderResourceUsage": "",
+	"ClusterManager.GetScopeHostCheck":        CanOperatorBiz,
+	"ClusterManager.GetTopologyHostIdsNodes":  CanOperatorBiz,
+	"ClusterManager.GetTopologyNodes":         CanOperatorBiz,
 
 	"ClusterManager.Health": "",
 
 	// template config
-	"ClusterManager.CreateTemplateConfig": "",
-	"ClusterManager.DeleteTemplateConfig": "",
-	"ClusterManager.ListTemplateConfig":   "",
-	"ClusterManager.UpdateTemplateConfig": "",
+	"ClusterManager.CreateTemplateConfig": "", // 内部接口，无须权限校验
+	"ClusterManager.DeleteTemplateConfig": "", // 内部接口，无须权限校验
+	"ClusterManager.ListTemplateConfig":   "", // 内部接口，无须权限校验
+	"ClusterManager.UpdateTemplateConfig": "", // 内部接口，无须权限校验
 }

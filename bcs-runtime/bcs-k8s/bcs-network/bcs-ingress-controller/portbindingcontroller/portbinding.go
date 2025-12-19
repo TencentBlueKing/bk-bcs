@@ -240,27 +240,24 @@ func (pbh *portBindingHandler) patchPortBindingAnnotation(
 // 处理portBinding状态变化
 func (pbh *portBindingHandler) postPortBindingUpdateStatus(rawStatus, updateStatus string,
 	portBinding *networkextensionv1.PortBinding) error {
-	if rawStatus == updateStatus {
-		return nil
-	}
-
-	// 如果portBinding状态由NotReady/nil转为Ready,则统计Ready时间并清理NotReady时间戳
+	// 如果portBinding为Ready,则统计Ready时间并清理NotReady时间戳
 	if updateStatus == constant.PortBindingStatusReady {
-		if notReadyTimeStr, ok := portBinding.Annotations[constant.
-			AnnotationForPortBindingNotReadyTimestamp]; ok && notReadyTimeStr != "" {
-			if notReadyTime, err := time.Parse(time.RFC3339Nano, notReadyTimeStr); err != nil {
-				blog.Warnf("parse not ready timestamp failed, err: %s", err.Error())
-			} else {
-				// 上报绑定时间到Metric
-				metrics.ReportPortBindMetric(notReadyTime)
-			}
-			if err := pbh.patchPortBindingAnnotation(portBinding, ""); err != nil {
-				blog.Warnf(err.Error())
-				return err
-			}
+		unreadyTs := getPortBindingUnreadyTimestamp(portBinding)
+		if unreadyTs.IsZero() {
+			return nil
+		}
+		metrics.ReportPortBindTimestamp(unreadyTs)
+		if err := pbh.patchPortBindingAnnotation(portBinding, ""); err != nil {
+			blog.Warnf(err.Error())
+			return err
 		}
 	} else if updateStatus == constant.PortBindingStatusNotReady {
-		// 如果portBinding状态由Ready/nil转为Not Ready,则设置NotReady时间戳
+		unreadyTs := getPortBindingUnreadyTimestamp(portBinding)
+		// 如果portbinding上已经有NotReady时间戳，则不另外处理
+		if !unreadyTs.IsZero() {
+			return nil
+		}
+		// 如果portBinding状态由Ready/nil转为Not Ready,且之前没有NotReady时间戳，则设置NotReady时间戳
 		if err := pbh.patchPortBindingAnnotation(portBinding, time.Now().Format(time.RFC3339Nano)); err != nil {
 			blog.Warnf(err.Error())
 			return err

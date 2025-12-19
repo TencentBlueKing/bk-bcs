@@ -17,6 +17,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
 )
@@ -34,13 +35,16 @@ func FormatCRD(manifest map[string]interface{}) map[string]interface{} {
 
 // FormatCObj ...
 func FormatCObj(manifest map[string]interface{}) map[string]interface{} {
-	return CommonFormatRes(manifest)
+	ret := CommonFormatRes(manifest)
+	ret["podLabelSelector"] = parsePodLabelSelector(manifest)
+	return ret
 }
 
 // FormatGWorkload ...
 func FormatGWorkload(manifest map[string]interface{}) map[string]interface{} {
 	ret := CommonFormatRes(manifest)
 	ret["images"] = parseContainerImages(manifest, "spec.template.spec.containers")
+	ret["podLabelSelector"] = parsePodLabelSelector(manifest)
 	return ret
 }
 
@@ -144,4 +148,17 @@ func parseCRDAdditionalColumns(manifest map[string]interface{}) (addColumns []in
 		addColumns = append(addColumns, col)
 	}
 	return addColumns
+}
+
+// parsePodLabelSelector 获取 Pod Label Selector
+func parsePodLabelSelector(manifest map[string]interface{}) string {
+	labels := mapx.GetMap(manifest, "spec.template.metadata.labels")
+	for k, v := range labels {
+		if k == constants.PodLabelSelector {
+			if value, ok := v.(string); ok {
+				return fmt.Sprintf("%s=%s", constants.PodLabelSelector, value)
+			}
+		}
+	}
+	return ""
 }

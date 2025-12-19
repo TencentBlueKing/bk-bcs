@@ -17,6 +17,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -110,6 +111,9 @@ func (ca *CreateVirtualClusterAction) constructCluster(cloud *cmproto.Cloud) (*c
 			ca.req.Ns.Annotations = make(map[string]string, 0)
 		}
 		ca.req.Ns.Annotations[utils.NamespaceVcluster] = cls.ClusterID
+		if networkSettings := cls.GetNetworkSettings(); networkSettings != nil {
+			ca.req.Ns.Quota.ServiceLimits = strconv.FormatUint(uint64(networkSettings.GetMaxServiceNum()), 10)
+		}
 
 		nsInfo, _ := json.Marshal(ca.req.Ns)
 

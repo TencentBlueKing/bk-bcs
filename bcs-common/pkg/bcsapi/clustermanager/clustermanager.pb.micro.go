@@ -205,6 +205,12 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		{
+			Name:    "ClusterManager.ListClusterNodes",
+			Path:    []string{"/clustermanager/v1/clusters/{clusterID}/nodes"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
 			Name:    "ClusterManager.RecordNodeInfo",
 			Path:    []string{"/clustermanager/v1/node"},
 			Method:  []string{"POST"},
@@ -411,6 +417,12 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 		{
 			Name:    "ClusterManager.ListNodeGroup",
 			Path:    []string{"/clustermanager/v1/nodegroup"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "ClusterManager.ListNodeGroupV2",
+			Path:    []string{"/clustermanager/v2/nodegroup"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
@@ -823,6 +835,12 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		{
+			Name:    "ClusterManager.ListProjectOperationLogs",
+			Path:    []string{"/clustermanager/v1/projects/{projectID}/operationlogs"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
 			Name:    "ClusterManager.ListTaskStepLogs",
 			Path:    []string{"/clustermanager/v1/tasksteplogs"},
 			Method:  []string{"GET"},
@@ -1026,6 +1044,7 @@ type ClusterManagerService interface {
 	// * node management
 	GetNode(ctx context.Context, in *GetNodeRequest, opts ...client.CallOption) (*GetNodeResponse, error)
 	GetNodeInfo(ctx context.Context, in *GetNodeInfoRequest, opts ...client.CallOption) (*GetNodeInfoResponse, error)
+	ListClusterNodes(ctx context.Context, in *ListClusterNodesRequest, opts ...client.CallOption) (*ListClusterNodesResponse, error)
 	RecordNodeInfo(ctx context.Context, in *RecordNodeInfoRequest, opts ...client.CallOption) (*CommonResp, error)
 	UpdateNode(ctx context.Context, in *UpdateNodeRequest, opts ...client.CallOption) (*UpdateNodeResponse, error)
 	UpdateClusterModule(ctx context.Context, in *UpdateClusterModuleRequest, opts ...client.CallOption) (*UpdateClusterModuleResponse, error)
@@ -1066,6 +1085,7 @@ type ClusterManagerService interface {
 	GetNodeGroup(ctx context.Context, in *GetNodeGroupRequest, opts ...client.CallOption) (*GetNodeGroupResponse, error)
 	ListClusterNodeGroup(ctx context.Context, in *ListClusterNodeGroupRequest, opts ...client.CallOption) (*ListClusterNodeGroupResponse, error)
 	ListNodeGroup(ctx context.Context, in *ListNodeGroupRequest, opts ...client.CallOption) (*ListNodeGroupResponse, error)
+	ListNodeGroupV2(ctx context.Context, in *ListNodeGroupV2Request, opts ...client.CallOption) (*ListNodeGroupV2Response, error)
 	RecommendNodeGroupConf(ctx context.Context, in *RecommendNodeGroupConfReq, opts ...client.CallOption) (*RecommendNodeGroupConfResp, error)
 	MoveNodesToGroup(ctx context.Context, in *MoveNodesToGroupRequest, opts ...client.CallOption) (*MoveNodesToGroupResponse, error)
 	RemoveNodesFromGroup(ctx context.Context, in *RemoveNodesFromGroupRequest, opts ...client.CallOption) (*RemoveNodesFromGroupResponse, error)
@@ -1141,6 +1161,8 @@ type ClusterManagerService interface {
 	ListCloudRuntimeInfo(ctx context.Context, in *ListCloudRuntimeInfoRequest, opts ...client.CallOption) (*ListCloudRuntimeInfoResponse, error)
 	// Operation logs
 	ListOperationLogs(ctx context.Context, in *ListOperationLogsRequest, opts ...client.CallOption) (*ListOperationLogsResponse, error)
+	// Operation logs
+	ListProjectOperationLogs(ctx context.Context, in *ListOperationLogsRequest, opts ...client.CallOption) (*ListOperationLogsResponse, error)
 	// Task Step logs
 	ListTaskStepLogs(ctx context.Context, in *ListTaskStepLogsRequest, opts ...client.CallOption) (*ListTaskStepLogsResponse, error)
 	// Task records
@@ -1473,6 +1495,16 @@ func (c *clusterManagerService) GetNode(ctx context.Context, in *GetNodeRequest,
 func (c *clusterManagerService) GetNodeInfo(ctx context.Context, in *GetNodeInfoRequest, opts ...client.CallOption) (*GetNodeInfoResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.GetNodeInfo", in)
 	out := new(GetNodeInfoResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) ListClusterNodes(ctx context.Context, in *ListClusterNodesRequest, opts ...client.CallOption) (*ListClusterNodesResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.ListClusterNodes", in)
+	out := new(ListClusterNodesResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -1823,6 +1855,16 @@ func (c *clusterManagerService) ListClusterNodeGroup(ctx context.Context, in *Li
 func (c *clusterManagerService) ListNodeGroup(ctx context.Context, in *ListNodeGroupRequest, opts ...client.CallOption) (*ListNodeGroupResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.ListNodeGroup", in)
 	out := new(ListNodeGroupResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) ListNodeGroupV2(ctx context.Context, in *ListNodeGroupV2Request, opts ...client.CallOption) (*ListNodeGroupV2Response, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.ListNodeGroupV2", in)
+	out := new(ListNodeGroupV2Response)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -2510,6 +2552,16 @@ func (c *clusterManagerService) ListOperationLogs(ctx context.Context, in *ListO
 	return out, nil
 }
 
+func (c *clusterManagerService) ListProjectOperationLogs(ctx context.Context, in *ListOperationLogsRequest, opts ...client.CallOption) (*ListOperationLogsResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.ListProjectOperationLogs", in)
+	out := new(ListOperationLogsResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *clusterManagerService) ListTaskStepLogs(ctx context.Context, in *ListTaskStepLogsRequest, opts ...client.CallOption) (*ListTaskStepLogsResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.ListTaskStepLogs", in)
 	out := new(ListTaskStepLogsResponse)
@@ -2823,6 +2875,7 @@ type ClusterManagerHandler interface {
 	// * node management
 	GetNode(context.Context, *GetNodeRequest, *GetNodeResponse) error
 	GetNodeInfo(context.Context, *GetNodeInfoRequest, *GetNodeInfoResponse) error
+	ListClusterNodes(context.Context, *ListClusterNodesRequest, *ListClusterNodesResponse) error
 	RecordNodeInfo(context.Context, *RecordNodeInfoRequest, *CommonResp) error
 	UpdateNode(context.Context, *UpdateNodeRequest, *UpdateNodeResponse) error
 	UpdateClusterModule(context.Context, *UpdateClusterModuleRequest, *UpdateClusterModuleResponse) error
@@ -2863,6 +2916,7 @@ type ClusterManagerHandler interface {
 	GetNodeGroup(context.Context, *GetNodeGroupRequest, *GetNodeGroupResponse) error
 	ListClusterNodeGroup(context.Context, *ListClusterNodeGroupRequest, *ListClusterNodeGroupResponse) error
 	ListNodeGroup(context.Context, *ListNodeGroupRequest, *ListNodeGroupResponse) error
+	ListNodeGroupV2(context.Context, *ListNodeGroupV2Request, *ListNodeGroupV2Response) error
 	RecommendNodeGroupConf(context.Context, *RecommendNodeGroupConfReq, *RecommendNodeGroupConfResp) error
 	MoveNodesToGroup(context.Context, *MoveNodesToGroupRequest, *MoveNodesToGroupResponse) error
 	RemoveNodesFromGroup(context.Context, *RemoveNodesFromGroupRequest, *RemoveNodesFromGroupResponse) error
@@ -2938,6 +2992,8 @@ type ClusterManagerHandler interface {
 	ListCloudRuntimeInfo(context.Context, *ListCloudRuntimeInfoRequest, *ListCloudRuntimeInfoResponse) error
 	// Operation logs
 	ListOperationLogs(context.Context, *ListOperationLogsRequest, *ListOperationLogsResponse) error
+	// Operation logs
+	ListProjectOperationLogs(context.Context, *ListOperationLogsRequest, *ListOperationLogsResponse) error
 	// Task Step logs
 	ListTaskStepLogs(context.Context, *ListTaskStepLogsRequest, *ListTaskStepLogsResponse) error
 	// Task records
@@ -3015,6 +3071,7 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		UpdateVirtualClusterQuota(ctx context.Context, in *UpdateVirtualClusterQuotaReq, out *UpdateVirtualClusterQuotaResp) error
 		GetNode(ctx context.Context, in *GetNodeRequest, out *GetNodeResponse) error
 		GetNodeInfo(ctx context.Context, in *GetNodeInfoRequest, out *GetNodeInfoResponse) error
+		ListClusterNodes(ctx context.Context, in *ListClusterNodesRequest, out *ListClusterNodesResponse) error
 		RecordNodeInfo(ctx context.Context, in *RecordNodeInfoRequest, out *CommonResp) error
 		UpdateNode(ctx context.Context, in *UpdateNodeRequest, out *UpdateNodeResponse) error
 		UpdateClusterModule(ctx context.Context, in *UpdateClusterModuleRequest, out *UpdateClusterModuleResponse) error
@@ -3050,6 +3107,7 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		GetNodeGroup(ctx context.Context, in *GetNodeGroupRequest, out *GetNodeGroupResponse) error
 		ListClusterNodeGroup(ctx context.Context, in *ListClusterNodeGroupRequest, out *ListClusterNodeGroupResponse) error
 		ListNodeGroup(ctx context.Context, in *ListNodeGroupRequest, out *ListNodeGroupResponse) error
+		ListNodeGroupV2(ctx context.Context, in *ListNodeGroupV2Request, out *ListNodeGroupV2Response) error
 		RecommendNodeGroupConf(ctx context.Context, in *RecommendNodeGroupConfReq, out *RecommendNodeGroupConfResp) error
 		MoveNodesToGroup(ctx context.Context, in *MoveNodesToGroupRequest, out *MoveNodesToGroupResponse) error
 		RemoveNodesFromGroup(ctx context.Context, in *RemoveNodesFromGroupRequest, out *RemoveNodesFromGroupResponse) error
@@ -3118,6 +3176,7 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		GetCloudBandwidthPackages(ctx context.Context, in *GetCloudBandwidthPackagesRequest, out *GetCloudBandwidthPackagesResponse) error
 		ListCloudRuntimeInfo(ctx context.Context, in *ListCloudRuntimeInfoRequest, out *ListCloudRuntimeInfoResponse) error
 		ListOperationLogs(ctx context.Context, in *ListOperationLogsRequest, out *ListOperationLogsResponse) error
+		ListProjectOperationLogs(ctx context.Context, in *ListOperationLogsRequest, out *ListOperationLogsResponse) error
 		ListTaskStepLogs(ctx context.Context, in *ListTaskStepLogsRequest, out *ListTaskStepLogsResponse) error
 		ListTaskRecords(ctx context.Context, in *ListTaskRecordsRequest, out *ListTaskRecordsResponse) error
 		CleanDbHistoryData(ctx context.Context, in *CleanDbHistoryDataRequest, out *CleanDbHistoryDataResponse) error
@@ -3316,6 +3375,12 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.GetNodeInfo",
 		Path:    []string{"/clustermanager/v1/node/{innerIP}/info"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.ListClusterNodes",
+		Path:    []string{"/clustermanager/v1/clusters/{clusterID}/nodes"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
@@ -3526,6 +3591,12 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.ListNodeGroup",
 		Path:    []string{"/clustermanager/v1/nodegroup"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.ListNodeGroupV2",
+		Path:    []string{"/clustermanager/v2/nodegroup"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
@@ -3938,6 +4009,12 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.ListProjectOperationLogs",
+		Path:    []string{"/clustermanager/v1/projects/{projectID}/operationlogs"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.ListTaskStepLogs",
 		Path:    []string{"/clustermanager/v1/tasksteplogs"},
 		Method:  []string{"GET"},
@@ -4224,6 +4301,10 @@ func (h *clusterManagerHandler) GetNodeInfo(ctx context.Context, in *GetNodeInfo
 	return h.ClusterManagerHandler.GetNodeInfo(ctx, in, out)
 }
 
+func (h *clusterManagerHandler) ListClusterNodes(ctx context.Context, in *ListClusterNodesRequest, out *ListClusterNodesResponse) error {
+	return h.ClusterManagerHandler.ListClusterNodes(ctx, in, out)
+}
+
 func (h *clusterManagerHandler) RecordNodeInfo(ctx context.Context, in *RecordNodeInfoRequest, out *CommonResp) error {
 	return h.ClusterManagerHandler.RecordNodeInfo(ctx, in, out)
 }
@@ -4362,6 +4443,10 @@ func (h *clusterManagerHandler) ListClusterNodeGroup(ctx context.Context, in *Li
 
 func (h *clusterManagerHandler) ListNodeGroup(ctx context.Context, in *ListNodeGroupRequest, out *ListNodeGroupResponse) error {
 	return h.ClusterManagerHandler.ListNodeGroup(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) ListNodeGroupV2(ctx context.Context, in *ListNodeGroupV2Request, out *ListNodeGroupV2Response) error {
+	return h.ClusterManagerHandler.ListNodeGroupV2(ctx, in, out)
 }
 
 func (h *clusterManagerHandler) RecommendNodeGroupConf(ctx context.Context, in *RecommendNodeGroupConfReq, out *RecommendNodeGroupConfResp) error {
@@ -4634,6 +4719,10 @@ func (h *clusterManagerHandler) ListCloudRuntimeInfo(ctx context.Context, in *Li
 
 func (h *clusterManagerHandler) ListOperationLogs(ctx context.Context, in *ListOperationLogsRequest, out *ListOperationLogsResponse) error {
 	return h.ClusterManagerHandler.ListOperationLogs(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) ListProjectOperationLogs(ctx context.Context, in *ListOperationLogsRequest, out *ListOperationLogsResponse) error {
+	return h.ClusterManagerHandler.ListProjectOperationLogs(ctx, in, out)
 }
 
 func (h *clusterManagerHandler) ListTaskStepLogs(ctx context.Context, in *ListTaskStepLogsRequest, out *ListTaskStepLogsResponse) error {

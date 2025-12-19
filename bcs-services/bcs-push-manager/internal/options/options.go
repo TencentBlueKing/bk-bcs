@@ -24,20 +24,13 @@ type ServiceOptions struct {
 	conf.LogConfig `json:"log_config"`
 	ServerConfig   `json:"server_config"`
 	ClientConfig   `json:"client_config"`
-	Gateway        *GatewayConfig    `json:"gateway"`
-	Mongo          *MongoOption      `json:"mongodb"`
-	Etcd           *EtcdOption       `json:"etcd"`
-	Thirdparty     *ThirdpartyOption `json:"thirdparty"`
-	RabbitMQ       *RabbitMQOption   `json:"rabbitmq"`
-	BkAppCode      string            `json:"bk_app_code"`
-	BkAppSecret    string            `json:"bk_app_secret"`
-	BkUserName     string            `json:"bk_username"`
+	Mongo          *MongoOption    `json:"mongodb"`
+	Etcd           *EtcdOption     `json:"etcd"`
+	RabbitMQ       *RabbitMQOption `json:"rabbitmq"`
 }
 
 // ServerConfig defines the config for the server.
 type ServerConfig struct {
-	Name       string `json:"name"`
-	Version    string `json:"version"`
 	Address    string `json:"address"`
 	Port       uint   `json:"port"`
 	HTTPPort   uint   `json:"httpport"`
@@ -79,15 +72,6 @@ type RabbitMQOption struct {
 	SourceExchange string `json:"source_exchange"`
 }
 
-// ThirdpartyOption defines the options for thirdparty services.
-type ThirdpartyOption struct {
-	Endpoint      string      `json:"endpoint"`
-	Token         string      `json:"token"`
-	ClientTLS     *tls.Config `json:"-"`
-	EtcdEndpoints string      `json:"etcdEndpoints"`
-	EtcdTLS       *tls.Config `json:"-"`
-}
-
 // ClientConfig config for client
 type ClientConfig struct {
 	ClientCert string `json:"clientcert"`
@@ -102,9 +86,7 @@ func NewServiceOptions() *ServiceOptions {
 		ServerConfig: ServerConfig{},
 		Mongo:        &MongoOption{},
 		Etcd:         &EtcdOption{},
-		Thirdparty:   &ThirdpartyOption{},
 		RabbitMQ:     &RabbitMQOption{},
-		Gateway:      &GatewayConfig{},
 	}
 }
 
@@ -116,10 +98,4 @@ type Credential struct {
 	Username                string
 	Password                string
 	PasswordSet             bool
-}
-
-// GatewayConfig bcs gateway config
-type GatewayConfig struct {
-	Endpoint string `json:"endpoint"`
-	Token    string `json:"token"`
 }

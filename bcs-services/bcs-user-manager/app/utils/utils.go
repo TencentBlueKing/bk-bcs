@@ -23,7 +23,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	bhttp "github.com/Tencent/bk-bcs/bcs-common/common/http"
 	"github.com/asaskevich/govalidator"
-	"github.com/emicklei/go-restful"
+	restful "github.com/emicklei/go-restful/v3"
 	"github.com/go-playground/locales/en"
 	ut "github.com/go-playground/universal-translator"
 	"gopkg.in/go-playground/validator.v9"

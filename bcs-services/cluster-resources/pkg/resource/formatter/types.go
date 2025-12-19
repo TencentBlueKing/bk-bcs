@@ -68,7 +68,7 @@ type LightMetricTarget struct {
 	Type               v2beta2.MetricTargetType
 	Value              string
 	AverageValue       string
-	AverageUtilization int
+	AverageUtilization *int
 }
 
 // LightMetricSource xxx
@@ -90,7 +90,7 @@ type LightHPAMetricSpec struct {
 type LightMetricValueStatus struct {
 	Value              string
 	AverageValue       string
-	AverageUtilization int
+	AverageUtilization *int
 }
 
 // LightMetricStatus xxx

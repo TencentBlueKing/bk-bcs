@@ -307,7 +307,7 @@ func (c *Cluster) CheckClusterCidrAvailable(cls *proto.Cluster, opt *cloudprovid
 }
 
 // ListOsImage list image os
-func (c *Cluster) ListOsImage(provider string, opt *cloudprovider.CommonOption) ([]*proto.OsImage, error) {
+func (c *Cluster) ListOsImage(provider, clusterID string, opt *cloudprovider.CommonOption) ([]*proto.OsImage, error) {
 	if opt == nil || opt.Account == nil || len(opt.Account.SecretID) == 0 || len(opt.Region) == 0 {
 		return nil, fmt.Errorf("huawei ListOsImage lost authoration")
 	}

@@ -37,43 +37,36 @@ func ConvertValuesToIstioDetailInfo(
 		blog.Errorf("istiodValues is nil")
 		return nil, fmt.Errorf("istiodValues is nil")
 	}
-	blog.Infof("istiodValues: %+v", istiodValues)
-
 	// 使用 Transfer2Proto 方法进行基础转换
 	result := meshIstio.Transfer2ProtoForDetail()
 
-	// 从实际的部署配置中提取资源配置
+	// 同步values中的revision
+	if istiodValues.Revision != nil {
+		result.Revision = *istiodValues.Revision
+	}
+	if istiodValues.Global != nil && istiodValues.Global.Network != nil {
+		result.NetworkID = *istiodValues.Global.Network
+	}
+
+	// 同步values中的资源配置
 	if istiodValues.Global != nil &&
 		istiodValues.Global.Proxy != nil &&
 		istiodValues.Global.Proxy.Resources != nil {
 		result.SidecarResourceConfig = convertResourceConfigValues(istiodValues.Global.Proxy.Resources)
 	}
 
-	// 从实际的部署配置中提取高可用配置
+	// 同步values中的高可用配置
 	if istiodValues.Pilot != nil {
 		convertHighAvailabilityValues(istiodValues.Pilot, result)
 	}
 
-	// 从实际的部署配置中提取可观测性配置
+	// 同步values中的可观测性配置
 	if istiodValues.MeshConfig != nil {
 		convertObservabilityConfigValues(istiodValues, result)
 	}
 
-	// 从实际的部署配置中提取功能特性配置
+	// 同步values中的功能特性配置
 	convertFeatureConfigs(istiodValues, result)
-
-	// TODO: 以下 istiodValues 字段目前未在 BuildIstioListItem 中使用：
-	// - istiodValues.IstiodRemote (远程 istiod 配置)
-	// - istiodValues.Telemetry (遥测配置)
-	// - istiodValues.Global.MeshID (网格ID)
-	// - istiodValues.Global.Network (网络)
-	// - istiodValues.Global.ConfigCluster (配置集群)
-	// - istiodValues.Global.OmitSidecarInjectorConfigMap (是否省略 sidecar 注入器配置映射)
-	// - istiodValues.Global.RemotePilotAddress (远程 pilot 地址)
-	// - istiodValues.Global.ExternalIstiod (外部 istiod)
-	// - istiodValues.MultiCluster (多集群配置)
-	// - istiodValues.Pilot.ConfigMap (配置映射)
-	// - istiodValues.Pilot.Env 中的其他环境变量（除了 PILOT_HTTP10）
 
 	return result, nil
 }
@@ -195,8 +188,10 @@ func convertObservabilityConfigValues(
 	if result.ObservabilityConfig.TracingConfig == nil {
 		result.ObservabilityConfig.TracingConfig = &meshmanager.TracingConfig{}
 	}
-	result.ObservabilityConfig.TracingConfig.Enabled =
-		wrapperspb.Bool(meshConfig.EnableTracing != nil && *meshConfig.EnableTracing)
+	if meshConfig.EnableTracing != nil {
+		result.ObservabilityConfig.TracingConfig.Enabled =
+			wrapperspb.Bool(*meshConfig.EnableTracing)
+	}
 
 	// 先看istio版本
 	if IsVersionSupported(result.Version, ">=1.21") {
@@ -323,7 +318,7 @@ func convertExitOnZeroActiveConnections(
 		istiodValues.MeshConfig.DefaultConfig.ProxyMetadata != nil &&
 		istiodValues.MeshConfig.DefaultConfig.ProxyMetadata.ExitOnZeroActiveConnections != nil {
 		setFeatureConfig(result, common.FeatureExitOnZeroActiveConnections,
-			fmt.Sprintf("%t", *istiodValues.MeshConfig.DefaultConfig.ProxyMetadata.ExitOnZeroActiveConnections))
+			*istiodValues.MeshConfig.DefaultConfig.ProxyMetadata.ExitOnZeroActiveConnections)
 	}
 }
 

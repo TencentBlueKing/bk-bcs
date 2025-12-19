@@ -7,44 +7,159 @@
         <template #label>
           <StepTabLabel :title="$t('generic.title.basicInfo1')" :step-num="1" :active="activeTabName === steps[0].name" />
         </template>
-        <bk-form :ref="steps[0].formRef" :model="basicInfo" :rules="basicInfoRules">
+        <bk-form
+          class="k8s-form grid grid-cols-2 grid-rows-1 gap-[16px]"
+          :ref="steps[0].formRef"
+          :model="basicInfo"
+          :rules="basicInfoRules">
           <!-- <bk-form-item :label="$t('cluster.labels.clusterType')">
             {{ type || '--' }}
           </bk-form-item> -->
-          <bk-form-item :label="$t('cluster.labels.name')" property="clusterName" error-display-type="normal" required>
-            <bk-input
-              :maxlength="64"
-              :placeholder="$t('cluster.create.validate.name')"
-              class="max-w-[600px]"
-              v-model.trim="basicInfo.clusterName">
-            </bk-input>
-          </bk-form-item>
-          <bk-form-item :label="$t('cluster.labels.env')" property="environment" error-display-type="normal" required>
-            <bk-radio-group v-model="basicInfo.environment">
-              <bk-radio value="stag" v-if="runEnv === 'dev'">
-                UAT
-              </bk-radio>
-              <bk-radio :disabled="runEnv === 'dev'" value="debug">
-                {{ $t('cluster.env.debug') }}
-              </bk-radio>
-              <bk-radio :disabled="runEnv === 'dev'" value="prod">
-                {{ $t('cluster.env.prod') }}
-              </bk-radio>
-            </bk-radio-group>
-          </bk-form-item>
-          <bk-form-item :label="$t('cluster.create.label.clusterVersion')" property="clusterBasicSettings.version" error-display-type="normal" required>
-            <bcs-select
-              class="max-w-[600px]"
-              :loading="templateLoading"
-              v-model="basicInfo.clusterBasicSettings.version"
-              searchable
-              :clearable="false">
-              <bcs-option v-for="item in versionList" :key="item" :id="item" :name="item"></bcs-option>
-            </bcs-select>
-          </bk-form-item>
-          <bk-form-item :label="$t('cluster.create.label.desc')">
-            <bk-input maxlength="100" class="max-w-[600px]" v-model="basicInfo.description" type="textarea"></bk-input>
-          </bk-form-item>
+          <DescList size="middle" :title="$t('cluster.create.label.clusterInfo')">
+            <bk-form-item :label="$t('cluster.labels.name')" property="clusterName" error-display-type="normal" required>
+              <bk-input
+                :maxlength="64"
+                :placeholder="$t('cluster.create.validate.name')"
+                class="max-w-[600px]"
+                v-model.trim="basicInfo.clusterName">
+              </bk-input>
+            </bk-form-item>
+            <bk-form-item :label="$t('cluster.create.label.clusterVersion')" property="clusterBasicSettings.version" error-display-type="normal" required>
+              <bcs-select
+                class="max-w-[600px]"
+                :loading="templateLoading"
+                v-model="basicInfo.clusterBasicSettings.version"
+                searchable
+                :clearable="false">
+                <bcs-option v-for="item in versionList" :key="item" :id="item" :name="item"></bcs-option>
+              </bcs-select>
+            </bk-form-item>
+            <bk-form-item
+              :label="$t('k8s.label')"
+              property="labels"
+              error-display-type="normal">
+              <KeyValue
+                v-model="basicInfo.labels"
+                class="max-w-[600px]"
+                :key-rules="[
+                  {
+                    message: $t('generic.validate.label'),
+                    validator: LABEL_KEY_REGEXP,
+                  }
+                ]"
+                :value-rules="[
+                  {
+                    message: $t('generic.validate.label'),
+                    validator: LABEL_KEY_REGEXP,
+                  }
+                ]" />
+            </bk-form-item>
+            <bk-form-item :label="$t('cluster.create.label.desc')">
+              <bk-input maxlength="100" class="max-w-[600px]" v-model="basicInfo.description" type="textarea"></bk-input>
+            </bk-form-item>
+          </DescList>
+          <div>
+            <DescList size="middle" :title="$t('cluster.labels.env')">
+              <bk-form-item :label="$t('cluster.create.label.region')" property="region" error-display-type="normal" required>
+                <bcs-select
+                  class="max-w-[600px]"
+                  v-model="networkConfig.region"
+                  :loading="regionLoading"
+                  searchable
+                  :clearable="false">
+                  <bcs-option
+                    v-for="item in regionList"
+                    :key="item.region" :id="item.region" :name="item.regionName"></bcs-option>
+                </bcs-select>
+              </bk-form-item>
+              <bk-form-item
+                :label="$t('tke.label.nodemanArea')"
+                property="clusterBasicSettings.area.bkCloudID"
+                error-display-type="normal"
+                required>
+                <NodeManArea
+                  class="max-w-[600px]"
+                  disabled
+                  v-model="basicInfo.clusterBasicSettings.area.bkCloudID" />
+              </bk-form-item>
+              <bk-form-item :label="$t('cluster.labels.env')" property="environment" error-display-type="normal" required>
+                <bk-radio-group v-model="basicInfo.environment">
+                  <bk-radio value="stag" v-if="runEnv === 'dev'">
+                    UAT
+                  </bk-radio>
+                  <bk-radio :disabled="runEnv === 'dev'" value="debug">
+                    {{ $t('cluster.env.debug') }}
+                  </bk-radio>
+                  <bk-radio :disabled="runEnv === 'dev'" value="prod">
+                    {{ $t('cluster.env.prod') }}
+                  </bk-radio>
+                </bk-radio-group>
+              </bk-form-item>
+            </DescList>
+            <DescList class="mt-[24px]" size="middle" :title="$t('cluster.title.clusterConfig')">
+              <bk-form-item
+                :label="$t('cluster.create.label.system')"
+                property="clusterBasicSettings.OS"
+                error-display-type="normal"
+                required>
+                <ImageList
+                  class="max-w-[600px]"
+                  v-model="imageID"
+                  :region="networkConfig.region"
+                  :cloud-i-d="basicInfo.provider"
+                  init-data
+                  @os-change="handleSetOS" />
+              </bk-form-item>
+              <bk-form-item
+                :label="$t('cluster.create.label.containerRuntime')"
+                property="clusterAdvanceSettings.containerRuntime"
+                error-display-type="normal"
+                required>
+                <bk-radio-group
+                  v-model="basicInfo.clusterAdvanceSettings.containerRuntime"
+                  @change="handleRuntimeChange">
+                  <bk-radio
+                    value="containerd"
+                    :disabled="!runtimeModuleParamsMap['containerd']"
+                  >
+                    <span
+                      v-bk-tooltips="{
+                        content: $t('tke.tips.notSupportInCurrentClusterVersion'),
+                        disabled: runtimeModuleParamsMap['containerd']
+                      }">
+                      containerd
+                    </span>
+                  </bk-radio>
+                  <bk-radio
+                    value="docker"
+                    :disabled="!runtimeModuleParamsMap['docker']"
+                  >
+                    <span
+                      v-bk-tooltips="{
+                        content: $t('tke.tips.notSupportInCurrentClusterVersion'),
+                        disabled: runtimeModuleParamsMap['docker']
+                      }">
+                      docker
+                    </span>
+                  </bk-radio>
+                </bk-radio-group>
+              </bk-form-item>
+              <bk-form-item
+                :label="$t('cluster.create.label.runtimeVersion')"
+                property="clusterAdvanceSettings.runtimeVersion"
+                error-display-type="normal"
+                required>
+                <RuntimeVersions
+                  class="max-w-[50%]"
+                  :version="basicInfo.clusterBasicSettings.version"
+                  :container-runtime="basicInfo.clusterAdvanceSettings.containerRuntime"
+                  :cloud-id="basicInfo.provider"
+                  init-data
+                  v-model="basicInfo.clusterAdvanceSettings.runtimeVersion"
+                  @data-change="handleVersions" />
+              </bk-form-item>
+            </DescList>
+          </div>
         </bk-form>
       </bcs-tab-panel>
       <!-- 网络配置 -->
@@ -63,6 +178,7 @@
               v-model="networkConfig.region"
               :loading="regionLoading"
               searchable
+              disabled
               :clearable="false">
               <bcs-option
                 v-for="item in regionList"
@@ -246,7 +362,7 @@
       <bcs-tab-panel :name="steps[2].name" :disabled="steps[2].disabled">
         <template #label>
           <StepTabLabel
-            :title="$t('cluster.detail.title.master')"
+            :title="$t('cluster.detail.title.controlConfig')"
             :step-num="3"
             :active="activeTabName === steps[2].name"
             :disabled="steps[2].disabled" />
@@ -358,7 +474,11 @@
           </template>
         </bk-alert>
         <bk-form :ref="steps[3].formRef" :model="nodesConfig" :rules="nodesConfigRules" class="mt-[16px]">
-          <bk-form-item :label-width="0.1" class="tips-offset" property="nodes" error-display-type="normal">
+          <bk-form-item
+            class="tips-offset"
+            error-display-type="normal"
+            :label-width="0.1"
+            :property="manageType === 'INDEPENDENT_CLUSTER' ? 'nodes' : ''">
             <ApplyHost
               :region="networkConfig.region"
               :cloud-id="basicInfo.provider"
@@ -415,7 +535,9 @@ import { computed, defineComponent, getCurrentInstance, onMounted, ref, watch } 
 
 import { cloudList } from '@/api/modules/cluster-manager';
 import $bkMessage from '@/common/bkmagic';
+import { LABEL_KEY_REGEXP } from '@/common/constant';
 import ConfirmDialog from '@/components/comfirm-dialog.vue';
+import DescList from '@/components/desc-list.vue';
 import BcsContent from '@/components/layout/Content.vue';
 import { useProject } from '@/composables/use-app';
 import $i18n from '@/i18n/i18n-setup';
@@ -423,9 +545,13 @@ import $router from '@/router';
 import $store from '@/store';
 import ApplyHost from '@/views/cluster-manage/add/components/apply-host.vue';
 import clusterScaleData from '@/views/cluster-manage/add/components/cluster-scale.json';
+import NodeManArea from '@/views/cluster-manage/add/components/nodeman-area.vue';
+import RuntimeVersions from '@/views/cluster-manage/add/components/runtime-versions.vue';
 import StepTabLabel from '@/views/cluster-manage/add/components/step-tab-label.vue';
+import KeyValue from '@/views/cluster-manage/components/key-value.vue';
 import TemplateSelector from '@/views/cluster-manage/components/template-selector.vue';
 import VpcCni from '@/views/cluster-manage/components/vpc-cni.vue';
+import ImageList from '@/views/cluster-manage/node-list/tencent-image-list.vue';
 
 interface IScale {
   level: string
@@ -437,7 +563,19 @@ interface IScale {
 }
 export default defineComponent({
   name: 'TencentCloud',
-  components: { ConfirmDialog, BcsContent, TemplateSelector, ApplyHost, StepTabLabel, VpcCni },
+  components: {
+    ConfirmDialog,
+    BcsContent,
+    TemplateSelector,
+    ApplyHost,
+    StepTabLabel,
+    VpcCni,
+    DescList,
+    ImageList,
+    NodeManArea,
+    RuntimeVersions,
+    KeyValue,
+  },
   setup() {
     const runEnv = ref(window.RUN_ENV);
     const steps = ref([
@@ -455,8 +593,17 @@ export default defineComponent({
       clusterBasicSettings: {
         version: '',
         isAutoUpgradeClusterLevel: true,
+        area: {
+          bkCloudID: 0,
+        },
+        OS: '',
       },
+      labels: {},
       description: '',
+      clusterAdvanceSettings: {
+        containerRuntime: '', // 运行时
+        runtimeVersion: '', // 运行时版本
+      },
     });
     const basicInfoRules = ref({
       clusterName: [
@@ -478,6 +625,45 @@ export default defineComponent({
           required: true,
           message: $i18n.t('generic.validate.required'),
           trigger: 'blur',
+        },
+      ],
+      region: [
+        {
+          message: $i18n.t('generic.validate.required'),
+          trigger: 'custom',
+          validator: () => !!networkConfig.value.region,
+        },
+      ],
+      'clusterBasicSettings.OS': [
+        {
+          required: true,
+          message: $i18n.t('generic.validate.required'),
+          trigger: 'blur',
+        },
+      ],
+      'clusterAdvanceSettings.containerRuntime': [
+        {
+          required: true,
+          message: $i18n.t('generic.validate.required'),
+          trigger: 'blur',
+        },
+      ],
+      'clusterAdvanceSettings.runtimeVersion': [
+        {
+          required: true,
+          message: $i18n.t('generic.validate.required'),
+          trigger: 'blur',
+        },
+      ],
+      labels: [
+        {
+          message: $i18n.t('generic.validate.label'),
+          trigger: 'custom',
+          validator: () => {
+            const { labels } = basicInfo.value;
+            const rule = new RegExp(LABEL_KEY_REGEXP);
+            return Object.keys(labels).every(key => rule.test(key) && rule.test(labels[key]));
+          },
         },
       ],
     });
@@ -607,6 +793,11 @@ export default defineComponent({
           trigger: 'custom',
           validator: () => !!nodesConfig.value.nodes.length || (skipAddNodes.value && manageType.value === 'INDEPENDENT_CLUSTER'),
         },
+        {
+          message: $i18n.t('cluster.create.validate.maxNum50'),
+          trigger: 'custom',
+          validator: () => nodesConfig.value.nodes.length <= 50 || (skipAddNodes.value && manageType.value === 'INDEPENDENT_CLUSTER'),
+        },
       ],
     }));
 
@@ -649,6 +840,28 @@ export default defineComponent({
       });
       regionLoading.value = false;
     };
+    // 操作系统
+    const imageID = ref('');
+    const handleSetOS = (image: string) => {
+      basicInfo.value.clusterBasicSettings.OS = image;
+    };
+    // 运行时组件变更
+    const handleRuntimeChange = (flagName: string) => {
+      basicInfo.value.clusterAdvanceSettings.runtimeVersion = runtimeModuleParamsMap.value[flagName]?.defaultValue;
+    };
+    watch(() => networkConfig.value.region, () => {
+      basicInfo.value.clusterBasicSettings.OS = '';
+      imageID.value = '';
+    });
+    // 运行时组件
+    const runtimeModuleParamsMap = ref<Record<string, IRuntimeModuleParams>>({});
+    function handleVersions(runtimeModuleParams, runtimeParamsMap) {
+      runtimeModuleParamsMap.value = runtimeParamsMap;
+      // 初始化默认运行时
+      basicInfo.value.clusterAdvanceSettings.containerRuntime = runtimeModuleParams?.[0]?.flagName || '';
+      basicInfo.value.clusterAdvanceSettings.runtimeVersion = runtimeModuleParams?.[0]?.defaultValue || '';
+    }
+
     watch(() => basicInfo.value.environment, () => {
       networkConfig.value.networkSettings.cidrStep = '';
       networkConfig.value.vpcID = '';
@@ -909,6 +1122,12 @@ export default defineComponent({
       validateNodes,
       vpcRemoteSearch,
       handleSetSubnetSourceNew,
+      imageID,
+      handleSetOS,
+      handleRuntimeChange,
+      runtimeModuleParamsMap,
+      handleVersions,
+      LABEL_KEY_REGEXP,
     };
   },
 });

@@ -344,7 +344,10 @@
   </div>
 </template>
 <script lang="ts">
+import { cloneDeep } from 'lodash';
 import { computed, defineComponent, getCurrentInstance, onMounted, ref, watch } from 'vue';
+
+import { filterPlainText } from '@blueking/xss-filter';
 
 import ActionDoc from '../components/action-doc.vue';
 
@@ -679,29 +682,43 @@ export default defineComponent({
       } else {
         data.scaleOutExtraAddons = {};
       }
+
+      // xss
+      const cloneFormData = cloneDeep(formData.value);
+      const xssDesc = filterPlainText(cloneFormData.desc);
+      if (cloneFormData.desc !== xssDesc) {
+        console.warn('Intercepted by XSS');
+      }
+      cloneFormData.desc = xssDesc;
+
       let result = false;
-      if (isEdit.value) {
-        result = await $store.dispatch('clustermanager/updateNodeTemplate', {
-          $nodeTemplateId: props.nodeTemplateID,
-          ...formData.value,
-          ...data,
-          updater: user.value.username,
-        });
-      } else {
-        result = await $store.dispatch('clustermanager/createNodeTemplate', {
-          ...formData.value,
-          ...data,
-          creator: user.value.username,
-        });
+      try {
+        if (isEdit.value) {
+          result = await $store.dispatch('clustermanager/updateNodeTemplate', {
+            $nodeTemplateId: props.nodeTemplateID,
+            ...cloneFormData,
+            ...data,
+            updater: user.value.username,
+          });
+        } else {
+          result = await $store.dispatch('clustermanager/createNodeTemplate', {
+            ...cloneFormData,
+            ...data,
+            creator: user.value.username,
+          });
+        }
+        if (result) {
+          $bkMessage({
+            theme: 'success',
+            message: isEdit.value ? $i18n.t('generic.msg.success.edit') : $i18n.t('generic.msg.success.create'),
+          });
+          $router.push({ name: 'nodeTemplate' });
+        }
+      } catch (error) {
+        console.error('操作失败:', error);
+      } finally {
+        btnLoading.value = false;
       }
-      if (result) {
-        $bkMessage({
-          theme: 'success',
-          message: isEdit.value ? $i18n.t('generic.msg.success.edit') : $i18n.t('generic.msg.success.create'),
-        });
-        $router.push({ name: 'nodeTemplate' });
-      }
-      btnLoading.value = false;
     };
     const handleCancel = () => {
       $router.back();

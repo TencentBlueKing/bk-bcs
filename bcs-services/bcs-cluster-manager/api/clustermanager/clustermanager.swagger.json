@@ -1717,6 +1717,13 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "instanceType",
+            "description": "instanceType. 机型类别，可用参数CVM、GPU，如果为空则默认获取全部机型",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -1868,7 +1875,7 @@
           },
           {
             "name": "provider",
-            "description": "provider. 镜像提供方，可选值:PUBLIC_IMAGE(公共镜像),PRIVATE_IMAGE(私有镜像),SHARED_IMAGE(共享镜像),MARKET_IMAGE(市场镜像), ALL所有镜像",
+            "description": "provider. 镜像提供方，可选值:PUBLIC_IMAGE(公共镜像),PRIVATE_IMAGE(私有镜像),SHARED_IMAGE(共享镜像),MARKET_IMAGE(市场镜像),CLUSTER_IMAGE(集群使用镜像)，ALL所有镜像",
             "in": "query",
             "required": false,
             "type": "string"
@@ -1876,6 +1883,13 @@
           {
             "name": "projectID",
             "description": "projectID. 容器平台项目ID, 使用某个镜像的集群信息列表",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "description": "clusterID. 集群ID, 集群正在使用的镜像会添加额外信息",
             "in": "query",
             "required": false,
             "type": "string"
@@ -4066,6 +4080,105 @@
         ]
       }
     },
+    "/clustermanager/v1/clusters/{clusterID}/nodes": {
+      "get": {
+        "summary": "查询Node列表信息",
+        "description": "查询指定ClusterID的节点列表信息，clusterID为-查询所有节点",
+        "operationId": "ClusterManager_ListClusterNodes",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerListClusterNodesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "clusterID",
+            "description": "集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "region",
+            "description": "region. 集群所在地域",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "vpcID",
+            "description": "vpcID. 集群私有网络id，云上集群填写",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "nodeGroupID",
+            "description": "nodeGroupID. 所属NodeGroupID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "instanceType",
+            "description": "instanceType. 机型字符串",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "description": "status. 节点状态，可能状态CREATING，RUNNING，DELETING，FAILURE，INITIALIZATION，DELETED",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "offset",
+            "description": "offset. 查询偏移量",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "limit",
+            "description": "limit. 查询限制数量",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "showPwd",
+            "description": "showPwd. 节点密码是否展示(默认不展示)",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          },
+          {
+            "name": "innerIP",
+            "description": "innerIP. 节点内网IP",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
     "/clustermanager/v1/clusters/{clusterID}/nodes/-/batch": {
       "delete": {
         "summary": "批量下架集群节点",
@@ -6001,6 +6114,165 @@
         ]
       }
     },
+    "/clustermanager/v1/projects/{projectID}/operationlogs": {
+      "get": {
+        "summary": "查询操作日志列表",
+        "description": "查询操作日志列表",
+        "operationId": "ClusterManager_ListProjectOperationLogs",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerListOperationLogsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "description": "默认为空, 过滤项目维度的操作审计",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "resourceType",
+            "description": "resourceType. 资源类型,可选值: cluster, autoscalingoption, cloud, cloudvpc, nodegroup, task",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "resourceID",
+            "description": "resourceID. 资源ID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "startTime",
+            "description": "startTime. 开始时间，GMT 时间戳，秒",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "endTime",
+            "description": "endTime. 结束时间，GMT 时间戳，秒",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "limit",
+            "description": "limit. 每页数量",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "page",
+            "description": "page. 页码",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "simple",
+            "description": "simple. 只展示 operationLogs 信息",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          },
+          {
+            "name": "taskIDNull",
+            "description": "taskIDNull. 默认false,过滤taskID为空的场景; 当为true时,不过滤taskID为空的",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          },
+          {
+            "name": "clusterID",
+            "description": "clusterID. 默认为空, 过滤集群维度的操作审计",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "description": "status. 默认为空, 任务状态筛选",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "taskType",
+            "description": "taskType. 默认为空, 任务类型筛选",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "v2",
+            "description": "v2. 是否使用v2的查询版本",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          },
+          {
+            "name": "ipList",
+            "description": "ipList. 通过,隔开ipList过滤任务",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "taskID",
+            "description": "taskID. 默认为空, 过滤任务维度的操作审计",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "taskName",
+            "description": "taskName. 默认为空, 过滤任务名称维度的操作审计",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "resourceName",
+            "description": "resourceName. 默认为空, 过滤资源名称维度的操作审计",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "opUser",
+            "description": "opUser. 默认为空, 发起者筛选",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
     "/clustermanager/v1/projects/{projectID}/providers/{providerID}/autoscaler/resource_usage": {
       "get": {
         "summary": "获取项目维度用户CA资源使用情况",
@@ -7358,6 +7630,27 @@
             "required": false,
             "type": "integer",
             "format": "int64"
+          },
+          {
+            "name": "clusterName",
+            "description": "clusterName. 集群名称",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "sort",
+            "description": "sort. 根据某个字段排序",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "order",
+            "description": "order. 升序或者降序",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -7399,6 +7692,76 @@
             "schema": {
               "$ref": "#/definitions/clustermanagerAddNodesV2Request"
             }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
+    "/clustermanager/v2/nodegroup": {
+      "get": {
+        "summary": "查询NodeGroup列表",
+        "description": "根据查询条件过滤NodeGroup列表，如果某项条件值为空，则忽略此条件。如果所有条件都为空，则默认查询所有集群，V2版本增加分页",
+        "operationId": "ClusterManager_ListNodeGroupV2",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerListNodeGroupV2Response"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "name",
+            "description": "name. 节点组名称",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "description": "clusterID. 节点组所关联的集群，该ID为BCS集群ID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "region",
+            "description": "region. 节点组所关联区域信息",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "projectID",
+            "description": "projectID. 节点组所关联项目信息",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "limit",
+            "description": "limit. 每页数量",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "page",
+            "description": "page. 页码",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
           }
         ],
         "tags": [
@@ -8886,6 +9249,12 @@
           },
           "description": "镜像白名单",
           "title": "whiteImageOsName"
+        },
+        "createClusterNodesLimit": {
+          "type": "integer",
+          "format": "int64",
+          "description": "创建集群时最大添加节点数",
+          "title": "createClusterNodesLimit"
         }
       },
       "description": "用于记录云公共配置信息",
@@ -9215,6 +9584,18 @@
           "format": "boolean",
           "description": "是否是该云的某个地域节点",
           "title": "cloudRegionNode"
+        },
+        "dataDiskNum": {
+          "type": "integer",
+          "format": "int64",
+          "description": "节点数据盘数量",
+          "title": "dataDiskNum"
+        },
+        "isGpuNode": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "该节点是否是GPU节点",
+          "title": "isGpuNode"
         }
       },
       "description": "记录节点信息，用于节点列表展示",
@@ -9253,6 +9634,11 @@
           "$ref": "#/definitions/clustermanagerCloudNetworkTemplateConfig",
           "description": "云模板网络配置信息",
           "title": "cloudNetworkTemplateConfig"
+        },
+        "taskTimeTemplateConfig": {
+          "$ref": "#/definitions/clustermanagerTaskTimeTemplateConfig",
+          "description": "任务时间配置信息",
+          "title": "taskTimeTemplateConfig"
         }
       },
       "description": "云模板配置信息",
@@ -10085,6 +10471,11 @@
           "format": "boolean",
           "description": "是否为共享集群,默认false",
           "title": "is_shared"
+        },
+        "biz_maintainer": {
+          "type": "string",
+          "description": "业务运维人",
+          "title": "biz_maintainer"
         }
       },
       "description": "简化集群信息",
@@ -11807,6 +12198,12 @@
           "type": "string",
           "description": "缩容节点后置脚本, base64编码的用户脚本.",
           "title": "scaleInPostScript"
+        },
+        "skipSystemInit": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "是否跳过执行系统初始化, 默认执行",
+          "title": "skipSystemInit"
         },
         "annotations": {
           "$ref": "#/definitions/clustermanagerMapStruct",
@@ -16422,6 +16819,43 @@
         "message"
       ]
     },
+    "clustermanagerListClusterNodesResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerClusterNode"
+          },
+          "description": "集群节点列表",
+          "title": "data"
+        }
+      },
+      "description": "查询指定ClusterID的节点列表信息返回，如果存在",
+      "title": "ListClusterNodesResponse",
+      "required": [
+        "code",
+        "message",
+        "data"
+      ]
+    },
     "clustermanagerListClusterResp": {
       "type": "object",
       "properties": {
@@ -16658,6 +17092,58 @@
       },
       "description": "查询NodeGroup返回",
       "title": "ListNodeGroupResponse",
+      "required": [
+        "code",
+        "message"
+      ]
+    },
+    "clustermanagerListNodeGroupResponseData": {
+      "type": "object",
+      "properties": {
+        "count": {
+          "type": "integer",
+          "format": "int64",
+          "description": "NodeGroup数量",
+          "title": "count"
+        },
+        "results": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerNodeGroup"
+          },
+          "description": "返回数据",
+          "title": "results"
+        }
+      }
+    },
+    "clustermanagerListNodeGroupV2Response": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/clustermanagerListNodeGroupResponseData",
+          "description": "获取到的信息",
+          "title": "data"
+        }
+      },
+      "description": "查询NodeGroup返回",
+      "title": "ListNodeGroupV2Response",
       "required": [
         "code",
         "message"
@@ -17332,6 +17818,9 @@
         },
         "memoryLimits": {
           "type": "string"
+        },
+        "serviceLimits": {
+          "type": "string"
         }
       }
     },
@@ -17611,6 +18100,18 @@
           "type": "string",
           "description": "机型计费模型，POSTPAID_BY_HOUR按小时后付费，PREPAID包年包月",
           "title": "chargeType"
+        },
+        "dataDiskNum": {
+          "type": "integer",
+          "format": "int64",
+          "description": "节点数据盘数量",
+          "title": "dataDiskNum"
+        },
+        "isGpuNode": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "节点是否是GPU节点",
+          "title": "isGpuNode"
         }
       },
       "description": "记录节点信息，用于维护节点状态，被cluster与nodegroup使用",
@@ -20070,6 +20571,21 @@
         }
       }
     },
+    "clustermanagerTaskTimeTemplateConfig": {
+      "type": "object",
+      "properties": {
+        "timeoutConfig": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerTimeoutConfig"
+          },
+          "description": "任务步骤超时时间配置",
+          "title": "timeoutConfig"
+        }
+      },
+      "description": "任务时间配置信息",
+      "title": "taskTimeTemplateConfig"
+    },
     "clustermanagerTemplateConfigInfo": {
       "type": "object",
       "properties": {
@@ -20220,6 +20736,24 @@
       },
       "description": "autoScale定时扩缩配置",
       "title": "TimeRange"
+    },
+    "clustermanagerTimeoutConfig": {
+      "type": "object",
+      "properties": {
+        "stepName": {
+          "type": "string",
+          "description": "步骤名",
+          "title": "stepName"
+        },
+        "timeout": {
+          "type": "integer",
+          "format": "int64",
+          "description": "超时时间，单位为分钟",
+          "title": "timeout"
+        }
+      },
+      "description": "任务步骤超时时间配置",
+      "title": "timeoutConfig"
     },
     "clustermanagerTransNodeGroupToNodeTemplateResponse": {
       "type": "object",

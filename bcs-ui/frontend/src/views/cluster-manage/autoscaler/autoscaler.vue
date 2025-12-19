@@ -251,7 +251,7 @@
           </template>
         </bcs-table-column>
         <bcs-table-column :label="$t('cluster.ca.nodePool.label.system')" show-overflow-tooltip>
-          <template #default="{ row }">{{ row.nodeOS || '--' }}</template>
+          <template #default="{ row }">{{ row.nodeTemplate?.image?.imageName || clusterOS || '--' }}</template>
         </bcs-table-column>
         <bcs-table-column :label="$t('tkeCa.label.provider.text')" show-overflow-tooltip v-if="curCluster.provider === 'tencentCloud'">
           <template #default="{ row }">
@@ -1862,6 +1862,8 @@ export default defineComponent({
     };
     // 克隆节点
     const handleClonePool = (row) => {
+      const $refs = proxy?.$refs || {};
+      $refs[row.nodeGroupID] && ($refs[row.nodeGroupID] as any).hideHandler();
       $router.push({
         name: 'nodePool',
         params: {
@@ -1877,6 +1879,8 @@ export default defineComponent({
     };
     // 编辑节点规格
     const handleEditPool = (row) => {
+      const $refs = proxy?.$refs || {};
+      $refs[row.nodeGroupID] && ($refs[row.nodeGroupID] as any).hideHandler();
       $router.push({
         name: 'editNodePool',
         params: {

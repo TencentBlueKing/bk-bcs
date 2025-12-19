@@ -72,6 +72,20 @@ func LoadConf(filePath string) (*ClusterResourcesConf, error) {
 		conf.Global.SharedCluster.AnnotationKeyProjectCode = constant.ProjectCodeAnnoKey
 	}
 
+	if len(conf.Global.MultiCluster.SystemNamespaces) == 0 {
+		conf.Global.MultiCluster.SystemNamespaces = []string{
+			"bcs-blackbox-job",
+			"bcs-system",
+			"bk-system",
+			"bkmonitor-operator",
+			"kube-node-lease",
+			"kube-public",
+			"kube-system",
+			"kube-flannel",
+			"tkex-ieg-weterm",
+		}
+	}
+
 	if conf.Redis.Password == "" {
 		conf.Redis.Password = envs.RedisPassword
 	}
@@ -365,6 +379,7 @@ type MultiClusterConf struct {
 	EnabledQueryFromStorageKinds []string             `yaml:"enabledQueryFromStorageKinds"`
 	EnabledCountKinds            []string             `yaml:"enabledCountKinds"`
 	BlacklistForAPIServerQuery   []ProjectClusterConf `yaml:"blacklistForAPIServerQuery"`
+	SystemNamespaces             []string             `yaml:"systemNamespaces"`
 }
 
 // ProjectClusterConf 项目集群配置

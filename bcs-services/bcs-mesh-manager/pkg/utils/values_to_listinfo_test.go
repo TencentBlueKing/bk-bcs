@@ -15,8 +15,6 @@ package utils
 import (
 	"testing"
 
-	v1 "k8s.io/api/core/v1"
-
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/store/entity"
 	meshmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/proto/bcs-mesh-manager"
@@ -47,7 +45,6 @@ func TestConvertValuesToListItem(t *testing.T) {
 			meshIstio: &entity.MeshIstio{
 				MeshID:           "test-mesh",
 				Name:             "test-istio",
-				ProjectID:        "test-project",
 				ProjectCode:      "test-code",
 				NetworkID:        "test-network",
 				Description:      "test description",
@@ -77,7 +74,6 @@ func TestConvertValuesToListItem(t *testing.T) {
 			meshIstio: &entity.MeshIstio{
 				MeshID:       "test-mesh",
 				Name:         "test-istio",
-				ProjectID:    "test-project",
 				NetworkID:    "test-network",
 				Version:      "1.24.0",
 				ChartVersion: "1.24.0",
@@ -116,7 +112,6 @@ func TestConvertValuesToListItem(t *testing.T) {
 			meshIstio: &entity.MeshIstio{
 				MeshID:       "test-mesh",
 				Name:         "test-istio",
-				ProjectID:    "test-project",
 				NetworkID:    "test-network",
 				Version:      "1.24.0",
 				ChartVersion: "1.24.0",
@@ -142,14 +137,6 @@ func TestConvertValuesToListItem(t *testing.T) {
 					},
 					NodeSelector: map[string]string{
 						"node-type": "istio",
-					},
-					Tolerations: []v1.Toleration{
-						{
-							Key:      "istio",
-							Operator: v1.TolerationOpEqual,
-							Value:    "true",
-							Effect:   v1.TaintEffectNoSchedule,
-						},
 					},
 				},
 			},
@@ -195,7 +182,6 @@ func TestConvertValuesToListItem(t *testing.T) {
 			meshIstio: &entity.MeshIstio{
 				MeshID:       "test-mesh",
 				Name:         "test-istio",
-				ProjectID:    "test-project",
 				NetworkID:    "test-network",
 				Version:      "1.24.0",
 				ChartVersion: "1.24.0",
@@ -267,7 +253,6 @@ func TestConvertValuesToListItem(t *testing.T) {
 			meshIstio: &entity.MeshIstio{
 				MeshID:       "test-mesh",
 				Name:         "test-istio",
-				ProjectID:    "test-project",
 				NetworkID:    "test-network",
 				Version:      "1.20.0",
 				ChartVersion: "1.20.0",
@@ -314,7 +299,6 @@ func TestConvertValuesToListItem(t *testing.T) {
 			meshIstio: &entity.MeshIstio{
 				MeshID:       "test-mesh",
 				Name:         "test-istio",
-				ProjectID:    "test-project",
 				NetworkID:    "test-network",
 				Version:      "1.24.0",
 				ChartVersion: "1.24.0",
@@ -327,7 +311,7 @@ func TestConvertValuesToListItem(t *testing.T) {
 					DefaultConfig: &common.DefaultConfig{
 						HoldApplicationUntilProxyStarts: boolPtr(true),
 						ProxyMetadata: &common.ProxyMetadata{
-							ExitOnZeroActiveConnections: boolPtr(true),
+							ExitOnZeroActiveConnections: strPtr("true"),
 							IstioMetaDnsCapture:         strPtr("true"),
 							IstioMetaDnsAutoAllocate:    strPtr("true"),
 						},
@@ -410,7 +394,6 @@ func TestConvertValuesToListItem(t *testing.T) {
 			meshIstio: &entity.MeshIstio{
 				MeshID:           "complete-mesh",
 				Name:             "complete-istio",
-				ProjectID:        "complete-project",
 				ProjectCode:      "complete-code",
 				NetworkID:        "complete-network",
 				Description:      "complete test",
@@ -421,7 +404,7 @@ func TestConvertValuesToListItem(t *testing.T) {
 				ControlPlaneMode: "PRIMARY",
 				ClusterMode:      "MULTI",
 				PrimaryClusters:  []string{"cluster1", "cluster2"},
-				RemoteClusters:   []string{"cluster3"},
+				RemoteClusters:   []*entity.RemoteCluster{{ClusterID: "cluster3"}},
 				DifferentNetwork: true,
 				CreateTime:       1640995200,
 				UpdateTime:       1640995300,
@@ -447,6 +430,9 @@ func TestConvertValuesToListItem(t *testing.T) {
 							},
 						},
 						ExcludeIPRanges: strPtr("192.168.0.0/16"),
+					},
+					MultiCluster: &common.IstiodMultiClusterConfig{
+						ClusterName: strPtr("complete-cluster"),
 					},
 				},
 				Pilot: &common.IstiodPilotConfig{
@@ -501,7 +487,7 @@ func TestConvertValuesToListItem(t *testing.T) {
 					DefaultConfig: &common.DefaultConfig{
 						HoldApplicationUntilProxyStarts: boolPtr(false),
 						ProxyMetadata: &common.ProxyMetadata{
-							ExitOnZeroActiveConnections: boolPtr(false),
+							ExitOnZeroActiveConnections: strPtr("false"),
 							IstioMetaDnsCapture:         strPtr("false"),
 							IstioMetaDnsAutoAllocate:    strPtr("false"),
 						},
@@ -516,9 +502,6 @@ func TestConvertValuesToListItem(t *testing.T) {
 				IstiodRemote: &common.IstiodRemoteConfig{
 					Enabled:       boolPtr(true),
 					InjectionPath: strPtr("/inject"),
-				},
-				MultiCluster: &common.IstiodMultiClusterConfig{
-					ClusterName: strPtr("complete-cluster"),
 				},
 			},
 			wantErr: false,

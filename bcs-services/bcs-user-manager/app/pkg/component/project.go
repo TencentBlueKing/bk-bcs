@@ -19,7 +19,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
-	"github.com/emicklei/go-restful"
+	restful "github.com/emicklei/go-restful/v3"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/cache"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/constant"

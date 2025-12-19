@@ -361,6 +361,7 @@ func protoClusterNamespacesToEntity(ns []*clusterRes.ClusterNamespaces) []entity
 	for _, v := range ns {
 		result = append(result, entity.ClusterNamespaces{
 			ClusterID:  v.ClusterID,
+			Nsgroup:    v.Nsgroup,
 			Namespaces: v.Namespaces})
 	}
 	return result

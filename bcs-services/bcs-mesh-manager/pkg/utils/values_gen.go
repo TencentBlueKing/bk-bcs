@@ -22,6 +22,7 @@ import (
 	"github.com/imdario/mergo"
 	"gopkg.in/yaml.v2"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	pointer "k8s.io/utils/pointer"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/common"
@@ -111,59 +112,87 @@ func MergeValues(defaultValues, customValues string) (string, error) {
 	return string(merged), nil
 }
 
+// GenBaseValuesOption base组件安装参数
+type GenBaseValuesOption struct {
+	InstallModel    string
+	ChartValuesPath string
+	ChartVersion    string
+	Revision        string
+}
+
 // GenBaseValues 获取base组件的配置的values
 func GenBaseValues(
-	installOption *common.IstioInstallOption,
+	opt *GenBaseValuesOption,
 ) (string, error) {
 	values, err := GetConfigChartValues(
-		installOption.ChartValuesPath,
+		opt.ChartValuesPath,
 		common.ComponentIstioBase,
-		installOption.ChartVersion,
+		opt.ChartVersion,
 	)
 	if err != nil {
 		return "", err
 	}
-	blog.Infof("getBaseValues values: %s for cluster: %s, mesh: %s, network: %s",
-		values, installOption.PrimaryClusters, installOption.MeshID, installOption.NetworkID)
+	baseValues := &common.BaseValues{
+		Global: &common.BaseGlobalConfig{},
+	}
+	if opt.Revision != "" {
+		baseValues.Revision = &opt.Revision
+	}
+	// 从集群安装时，修改externalIstiod字段为true
+	if opt.InstallModel == common.IstioInstallModeRemote {
+		baseValues.Global.ExternalIstiod = pointer.Bool(true)
+	}
+	customValues, err := yaml.Marshal(baseValues)
+	if err != nil {
+		blog.Errorf("marshal istiod values failed: %s", err)
+		return "", err
+	}
+	mergedValues, err := MergeValues(values, string(customValues))
+	if err != nil {
+		blog.Errorf("merge istiod values failed: %s", err)
+		return "", err
+	}
 
-	return values, nil
+	return mergedValues, nil
+}
+
+// GenIstiodValuesOption istiod安装组件参数
+type GenIstiodValuesOption struct {
+	InstallModel          string
+	ClusterID             string
+	NetworkID             string
+	CLBIP                 string
+	PrimaryClusters       []string
+	MeshID                string
+	ChartVersion          string
+	ChartValuesPath       string
+	Version               string
+	ObservabilityConfig   *meshmanager.ObservabilityConfig
+	HighAvailability      *meshmanager.HighAvailability
+	FeatureConfigs        map[string]*meshmanager.FeatureConfig
+	SidecarResourceConfig *meshmanager.ResourceConfig
+	Revision              string
 }
 
 // GenIstiodValues 获取istiod组件的配置的values
 func GenIstiodValues(
-	installModel string,
-	remotePilotAddress string,
-	installOption *common.IstioInstallOption,
+	opt *GenIstiodValuesOption,
 ) (string, error) {
-	values, err := GetConfigChartValues(installOption.ChartValuesPath, common.ComponentIstiod, installOption.ChartVersion)
-	if err != nil {
-		blog.Errorf("get istiod values failed: %s", err)
-		return "", err
-	}
-	blog.Infof("get istiod values: %s for cluster: %s, mesh: %s, network: %s",
-		values, installOption.PrimaryClusters, installOption.MeshID, installOption.NetworkID)
-	clusterName := strings.ToLower(installOption.PrimaryClusters[0])
-	primaryClusterName := strings.ToLower(installOption.PrimaryClusters[0])
+	clusterName := strings.ToLower(opt.ClusterID)
 	installValues := &common.IstiodInstallValues{
 		Global: &common.IstiodGlobalConfig{
-			MeshID:  &installOption.MeshID,
-			Network: &installOption.NetworkID,
-		},
-		MultiCluster: &common.IstiodMultiClusterConfig{
-			ClusterName: &clusterName,
+			MeshID:  &opt.MeshID,
+			Network: &opt.NetworkID,
 		},
 	}
-	// 获取安装参数
-	// 主集群
-	if installModel == common.IstioInstallModePrimary {
-		installValues.Global.ExternalIstiod = pointer.Bool(true)
+	if opt.Revision != "" {
+		installValues.Revision = &opt.Revision
 	}
-
-	// 从集群
-	if installModel == common.IstioInstallModeRemote {
+	// 从集群istiod配置
+	if opt.InstallModel == common.IstioInstallModeRemote {
 		installValues.IstiodRemote = &common.IstiodRemoteConfig{
 			Enabled:       pointer.Bool(true),
-			InjectionPath: pointer.String(fmt.Sprintf("/inject/cluster/%s/net/%s", primaryClusterName, installOption.NetworkID)),
+			InjectionPath: pointer.String(fmt.Sprintf("/inject/cluster/%s/net/%s", clusterName, opt.NetworkID)),
 		}
 		if installValues.Pilot == nil {
 			installValues.Pilot = &common.IstiodPilotConfig{}
@@ -174,26 +203,54 @@ func GenIstiodValues(
 		}
 		installValues.Telemetry.Enabled = pointer.Bool(false)
 		installValues.Global.ConfigCluster = pointer.Bool(true)
-		installValues.Global.RemotePilotAddress = pointer.String(remotePilotAddress)
+		installValues.Global.RemotePilotAddress = pointer.String(opt.CLBIP)
 		installValues.Global.OmitSidecarInjectorConfigMap = pointer.Bool(true)
+		installValues.Global.MultiCluster = &common.IstiodMultiClusterConfig{
+			ClusterName: &clusterName,
+		}
+		customValues, err := yaml.Marshal(installValues)
+		if err != nil {
+			blog.Errorf("marshal istiod values failed: %s", err)
+			return "", err
+		}
+		return string(customValues), nil
+	}
+
+	primaryClusterName := ""
+	if len(opt.PrimaryClusters) > 0 {
+		primaryClusterName = strings.ToLower(opt.PrimaryClusters[0])
+	}
+	// 主集群
+	if opt.InstallModel == common.IstioInstallModePrimary {
+		installValues.Global.ExternalIstiod = pointer.Bool(true)
+		installValues.Global.MultiCluster = &common.IstiodMultiClusterConfig{
+			ClusterName: &primaryClusterName,
+		}
+	}
+
+	values, err := GetConfigChartValues(opt.ChartValuesPath, common.ComponentIstiod, opt.ChartVersion)
+
+	if err != nil {
+		blog.Errorf("get istiod values failed: %s", err)
+		return "", err
 	}
 	// proxy resource
-	err = GenIstiodValuesBySidecarResource(installOption.SidecarResourceConfig, installValues)
+	err = GenIstiodValuesBySidecarResource(opt.SidecarResourceConfig, installValues)
 	if err != nil {
 		blog.Errorf("gen istiod values by sidecar resource failed: %s", err)
 		return "", err
 	}
 	// 填充feature的参数配置
-	GenIstiodValuesByFeature(installOption.FeatureConfigs, installValues)
+	GenIstiodValuesByFeature(opt.FeatureConfigs, installValues)
 
 	// 填充observability的参数配置
-	err = GenIstiodValuesByObservability(installOption.Version, installOption.ObservabilityConfig, installValues)
+	err = GenIstiodValuesByObservability(opt.Version, opt.ObservabilityConfig, installValues)
 	if err != nil {
 		blog.Errorf("gen istiod values by observability failed: %s", err)
 		return "", err
 	}
 	// 填充高可用配置
-	err = GenIstiodValuesByHighAvailability(installOption.HighAvailability, installValues)
+	err = GenIstiodValuesByHighAvailability(opt.HighAvailability, installValues)
 	if err != nil {
 		blog.Errorf("gen istiod values by high availability failed: %s", err)
 		return "", err
@@ -208,15 +265,58 @@ func GenIstiodValues(
 		blog.Errorf("merge istiod values failed: %s", err)
 		return "", err
 	}
-
-	blog.Infof("gen istiod values: %s for cluster: %s, mesh: %s, network: %s",
-		mergedValues, installOption.PrimaryClusters, installOption.MeshID, installOption.NetworkID)
 	return mergedValues, nil
 }
 
-// setResourceRequirement 通用的资源设置函数
+// GenEgressGatewayValuesOption eastwestgateway组件安装参数
+type GenEgressGatewayValuesOption struct {
+	ChartValuesPath string
+	ChartVersion    string
+	CLBID           string
+	NetworkID       string
+	Revision        string
+}
+
+const (
+	// KeyServiceAnnotationCLBID service annotation clb id
+	KeyServiceAnnotationCLBID = "service.kubernetes.io/tke-existed-lbid"
+)
+
+// GenEgressGatewayValues 生成eastwestgateway组件的values
+func GenEgressGatewayValues(
+	opt *GenEgressGatewayValuesOption,
+) (string, error) {
+	values, err := GetConfigChartValues(opt.ChartValuesPath, common.ComponentIstioGateway, opt.ChartVersion)
+	if err != nil {
+		blog.Errorf("get istiod values failed: %s", err)
+		return "", err
+	}
+
+	eastwestGatewayValues := &common.EastwestGatewayValues{
+		Revision:       opt.Revision,
+		NetworkGateway: opt.NetworkID,
+		Service: common.Service{
+			Annotations: map[string]string{
+				KeyServiceAnnotationCLBID: opt.CLBID,
+			},
+		},
+	}
+	customValues, err := yaml.Marshal(eastwestGatewayValues)
+	if err != nil {
+		blog.Errorf("marshal eastwestgateway values failed: %s", err)
+		return "", err
+	}
+	mergedValues, err := MergeValues(values, string(customValues))
+	if err != nil {
+		blog.Errorf("merge eastwestgateway values failed: %s", err)
+		return "", err
+	}
+	return mergedValues, nil
+}
+
+// setResourceRequirement 资源设置函数
 func setResourceRequirement(
-	resources **common.ResourceConfig,
+	resources *common.ResourceConfig,
 	resourceType v1.ResourceName,
 	value string,
 	isLimit bool,
@@ -224,32 +324,34 @@ func setResourceRequirement(
 	if value == "" {
 		return nil
 	}
-
-	// 初始化 Resources 结构
-	if *resources == nil {
-		*resources = &common.ResourceConfig{}
+	quantity, err := resource.ParseQuantity(value)
+	if err != nil {
+		return fmt.Errorf("parse quantity %s failed: %s", value, err)
+	}
+	if quantity.IsZero() {
+		return nil
 	}
 
 	// 设置对应的资源值
 	if isLimit {
-		if (*resources).Limits == nil {
-			(*resources).Limits = &common.ResourceLimits{}
+		if resources.Limits == nil {
+			resources.Limits = &common.ResourceLimits{}
 		}
 		switch resourceType {
 		case v1.ResourceCPU:
-			(*resources).Limits.CPU = pointer.String(value)
+			resources.Limits.CPU = pointer.String(value)
 		case v1.ResourceMemory:
-			(*resources).Limits.Memory = pointer.String(value)
+			resources.Limits.Memory = pointer.String(value)
 		}
 	} else {
-		if (*resources).Requests == nil {
-			(*resources).Requests = &common.ResourceRequests{}
+		if resources.Requests == nil {
+			resources.Requests = &common.ResourceRequests{}
 		}
 		switch resourceType {
 		case v1.ResourceCPU:
-			(*resources).Requests.CPU = pointer.String(value)
+			resources.Requests.CPU = pointer.String(value)
 		case v1.ResourceMemory:
-			(*resources).Requests.Memory = pointer.String(value)
+			resources.Requests.Memory = pointer.String(value)
 		}
 	}
 
@@ -258,7 +360,7 @@ func setResourceRequirement(
 
 // applyResourceConfig 应用资源配置到指定的 Resources 对象
 func applyResourceConfig(
-	resources **common.ResourceConfig,
+	resources *common.ResourceConfig,
 	resourceConfig *meshmanager.ResourceConfig,
 ) error {
 	if resourceConfig == nil {
@@ -308,9 +410,11 @@ func GenIstiodValuesBySidecarResource(
 	if installValues.Global.Proxy == nil {
 		installValues.Global.Proxy = &common.IstioProxyConfig{}
 	}
+	if installValues.Global.Proxy.Resources == nil {
+		installValues.Global.Proxy.Resources = &common.ResourceConfig{}
+	}
 
-	// 使用通用函数应用资源配置
-	return applyResourceConfig(&installValues.Global.Proxy.Resources, sidecarResourceConfig)
+	return applyResourceConfig(installValues.Global.Proxy.Resources, sidecarResourceConfig)
 }
 
 // GenIstiodValuesByFeature 根据featureConfigs生成istiod的values
@@ -347,7 +451,7 @@ func GenIstiodValuesByFeature(
 				installValues.MeshConfig.DefaultConfig.ProxyMetadata = &common.ProxyMetadata{}
 			}
 			// nolint:lll
-			installValues.MeshConfig.DefaultConfig.ProxyMetadata.ExitOnZeroActiveConnections = pointer.Bool(featureConfig.Value == common.StringTrue)
+			installValues.MeshConfig.DefaultConfig.ProxyMetadata.ExitOnZeroActiveConnections = pointer.String(featureConfig.Value)
 		case common.FeatureIstioMetaDnsCapture:
 			if installValues.MeshConfig == nil {
 				installValues.MeshConfig = &common.IstiodMeshConfig{}
@@ -547,8 +651,10 @@ func GenIstiodValuesByHighAvailability(
 
 	// pilot资源设置
 	if highAvailability.ResourceConfig != nil {
-		// 使用通用函数应用资源配置
-		if err := applyResourceConfig(&installValues.Pilot.Resources, highAvailability.ResourceConfig); err != nil {
+		if installValues.Pilot.Resources == nil {
+			installValues.Pilot.Resources = &common.ResourceConfig{}
+		}
+		if err := applyResourceConfig(installValues.Pilot.Resources, highAvailability.ResourceConfig); err != nil {
 			return err
 		}
 	}
@@ -561,13 +667,6 @@ func GenIstiodValuesByHighAvailability(
 			for k, v := range highAvailability.DedicatedNode.NodeLabels {
 				installValues.Pilot.NodeSelector[k] = v
 			}
-			// 增加容忍, 所有节点
-			if installValues.Pilot.Tolerations == nil {
-				installValues.Pilot.Tolerations = make([]v1.Toleration, 0)
-			}
-			installValues.Pilot.Tolerations = append(installValues.Pilot.Tolerations, v1.Toleration{
-				Operator: v1.TolerationOpExists,
-			})
 		}
 	}
 	return nil

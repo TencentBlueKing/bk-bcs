@@ -41,8 +41,8 @@ func init() {
 	metrics.Registry.MustRegister(portAllocateFailedGauge)
 }
 
-// ReportPortBindMetric report port bind metrics
-func ReportPortBindMetric(started time.Time) {
+// ReportPortBindTimestamp report port bind metrics
+func ReportPortBindTimestamp(started time.Time) {
 	portBindLatency.WithLabelValues().Observe(time.Since(started).Seconds())
 }
 

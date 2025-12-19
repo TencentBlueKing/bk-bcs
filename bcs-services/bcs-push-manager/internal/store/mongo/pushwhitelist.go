@@ -10,7 +10,6 @@
  * limitations under the License.
  */
 
-// Package mongo provides a MongoDB-based implementation of the data store interfaces.
 package mongo
 
 import (
@@ -18,150 +17,220 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-push-manager/internal/constant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-push-manager/internal/store/types"
 )
 
-// PushWhitelistStore defines the storage interface for push whitelists.
-type PushWhitelistStore interface {
-	CreatePushWhitelist(ctx context.Context, whitelist *types.PushWhitelist) error
-	DeletePushWhitelist(ctx context.Context, whitelistID string) error
-	GetPushWhitelist(ctx context.Context, whitelistID string) (*types.PushWhitelist, error)
-	ListPushWhitelists(ctx context.Context, filter bson.M, page, pageSize int64) ([]*types.PushWhitelist, int64, error)
-	UpdatePushWhitelist(ctx context.Context, whitelistID string, update bson.M) error
-	IsDimensionWhitelisted(ctx context.Context, domain string, dimension types.Dimension) (bool, error)
-}
-
-// pushWhitelistStore is a MongoDB-based implementation of PushWhitelistStore.
-type pushWhitelistStore struct {
-	collection *mongo.Collection
-}
-
-// NewPushWhitelistStore creates a new PushWhitelistStore instance.
-func NewPushWhitelistStore(db *mongo.Database) PushWhitelistStore {
-	return &pushWhitelistStore{
-		collection: db.Collection(types.CollectionPushWhitelist),
+var (
+	modelPushWhitelistIndexes = []drivers.Index{
+		{
+			Key: bson.D{
+				bson.E{Key: pushDomainKey, Value: 1},
+				bson.E{Key: pushWhitelistUniqueKey, Value: 1},
+			},
+			Name:   pushWhitelistTableName + "_1",
+			Unique: true,
+		},
+		{
+			Key: bson.D{
+				bson.E{Key: pushWhitelistUniqueKey, Value: 1},
+			},
+			Name:   pushWhitelistUniqueKey + "_1",
+			Unique: true,
+		},
 	}
+)
+
+// ModelPushWhitelist is a MongoDB-based implementation of PushWhitelistStore.
+type ModelPushWhitelist struct {
+	Public
+}
+
+// NewModelPushWhitelist creates a new PushWhitelistStore instance.
+func NewModelPushWhitelist(db drivers.DB) *ModelPushWhitelist {
+	return &ModelPushWhitelist{
+		Public: Public{
+			TableName: tableNamePrefix + pushWhitelistTableName,
+			Indexes:   modelPushWhitelistIndexes,
+			DB:        db,
+		}}
 }
 
 // CreatePushWhitelist inserts a new push whitelist into the database.
-func (s *pushWhitelistStore) CreatePushWhitelist(ctx context.Context, whitelist *types.PushWhitelist) error {
+func (m *ModelPushWhitelist) CreatePushWhitelist(ctx context.Context, whitelist *types.PushWhitelist) error {
+	if err := ensureTable(ctx, &m.Public); err != nil {
+		return fmt.Errorf("ensure table failed: %v", err)
+	}
+	if whitelist == nil {
+		return fmt.Errorf("push whitelist is nil")
+	}
+
 	whitelist.ID = primitive.NewObjectID()
 	whitelist.CreatedAt = time.Now()
 	whitelist.UpdatedAt = time.Now()
 
-	_, err := s.collection.InsertOne(ctx, whitelist)
-	return err
+	_, err := m.DB.Table(m.TableName).Insert(ctx, []interface{}{whitelist})
+	if err != nil {
+		return fmt.Errorf("create push whitelist failed: %v", err)
+	}
+	return nil
 }
 
 // DeletePushWhitelist soft-deletes a push whitelist from the database by its ID.
-func (s *pushWhitelistStore) DeletePushWhitelist(ctx context.Context, whitelistID string) error {
-	filter := bson.M{"whitelist_id": whitelistID}
+func (m *ModelPushWhitelist) DeletePushWhitelist(ctx context.Context, whitelistID string) error {
+	if err := ensureTable(ctx, &m.Public); err != nil {
+		return fmt.Errorf("ensure table failed: %v", err)
+	}
+	if whitelistID == "" {
+		return fmt.Errorf("whitelistID is empty")
+	}
+
+	cond := operator.NewLeafCondition(operator.Eq, operator.M{
+		pushWhitelistUniqueKey: whitelistID,
+	})
+
 	now := time.Now()
-	update := bson.M{
-		"$set": bson.M{
+	update := operator.M{
+		"$set": operator.M{
 			"deleted_at": &now,
 			"updated_at": now,
 		},
 	}
-	_, err := s.collection.UpdateOne(ctx, filter, update)
-	return err
+
+	if err := m.DB.Table(m.TableName).Update(ctx, cond, update); err != nil {
+		return fmt.Errorf("delete push whitelist failed: %v", err)
+	}
+	return nil
 }
 
 // GetPushWhitelist retrieves a single push whitelist from the database by its ID.
-func (s *pushWhitelistStore) GetPushWhitelist(ctx context.Context, whitelistID string) (*types.PushWhitelist, error) {
+func (m *ModelPushWhitelist) GetPushWhitelist(ctx context.Context, whitelistID string) (*types.PushWhitelist, error) {
+	if err := ensureTable(ctx, &m.Public); err != nil {
+		return nil, fmt.Errorf("ensure table failed: %v", err)
+	}
+	if whitelistID == "" {
+		return nil, fmt.Errorf("whitelistID cannot be empty")
+	}
+
+	cond := operator.NewBranchCondition(operator.And,
+		operator.NewLeafCondition(operator.Eq, operator.M{
+			pushWhitelistUniqueKey: whitelistID,
+		}),
+		operator.NewBranchCondition(operator.Or,
+			operator.NewLeafCondition(operator.Eq, operator.M{"deleted_at": nil}),
+			operator.NewLeafCondition(operator.Eq, operator.M{"deleted_at": operator.M{"$exists": false}}),
+		),
+	)
+
 	var whitelist types.PushWhitelist
-	filter := bson.M{
-		"whitelist_id": whitelistID,
-		"$or": []bson.M{
-			{"deleted_at": bson.M{"$exists": false}},
-			{"deleted_at": nil},
-		},
+	if err := m.DB.Table(m.TableName).Find(cond).One(ctx, &whitelist); err != nil {
+		return nil, fmt.Errorf("get push whitelist failed: %v", err)
 	}
-	err := s.collection.FindOne(ctx, filter).Decode(&whitelist)
-	if err == mongo.ErrNoDocuments {
-		return nil, nil
-	}
-	return &whitelist, err
+	return &whitelist, nil
 }
 
 // ListPushWhitelists retrieves a list of push whitelists from the database with filtering and pagination.
-func (s *pushWhitelistStore) ListPushWhitelists(ctx context.Context, filter bson.M, page, pageSize int64) ([]*types.PushWhitelist, int64, error) {
-	filter["$or"] = []bson.M{
-		{"deleted_at": bson.M{"$exists": false}},
-		{"deleted_at": nil},
+func (m *ModelPushWhitelist) ListPushWhitelists(ctx context.Context, filter operator.M, page, pageSize int64) ([]*types.PushWhitelist, int64, error) {
+	if err := ensureTable(ctx, &m.Public); err != nil {
+		return nil, 0, fmt.Errorf("ensure table failed: %v", err)
 	}
-	findOptions := options.Find()
-	findOptions.SetSkip((page - 1) * pageSize)
-	findOptions.SetLimit(pageSize)
-	findOptions.SetSort(bson.M{"created_at": -1})
 
-	cursor, err := s.collection.Find(ctx, filter, findOptions)
-	if err != nil {
-		return nil, 0, err
+	cond := operator.NewBranchCondition(operator.Or,
+		operator.NewLeafCondition(operator.Eq, operator.M{"deleted_at": nil}),
+		operator.NewLeafCondition(operator.Eq, operator.M{"deleted_at": operator.M{"$exists": false}}),
+	)
+
+	if filter != nil {
+		cond = operator.NewBranchCondition(operator.And, cond, operator.NewLeafCondition(operator.Eq, filter))
 	}
-	defer cursor.Close(ctx)
 
 	var whitelists []*types.PushWhitelist
-	if err = cursor.All(ctx, &whitelists); err != nil {
-		return nil, 0, err
+	finder := m.DB.Table(m.TableName).Find(cond)
+	if page > 1 {
+		finder = finder.WithStart((page - 1) * pageSize)
+	}
+	if pageSize > 0 {
+		finder = finder.WithLimit(pageSize)
+	}
+	if err := finder.All(ctx, &whitelists); err != nil {
+		return nil, 0, fmt.Errorf("list push whitelists failed: %v", err)
 	}
 
-	total, err := s.collection.CountDocuments(ctx, filter)
+	total, err := finder.Count(ctx)
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, fmt.Errorf("count push whitelists failed: %v", err)
 	}
 
 	return whitelists, total, nil
 }
 
 // UpdatePushWhitelist updates a push whitelist in the database.
-func (s *pushWhitelistStore) UpdatePushWhitelist(ctx context.Context, whitelistID string, update bson.M) error {
-	filter := bson.M{
-		"whitelist_id": whitelistID,
-		"$or": []bson.M{
-			{"deleted_at": bson.M{"$exists": false}},
-			{"deleted_at": nil},
-		},
+func (m *ModelPushWhitelist) UpdatePushWhitelist(ctx context.Context, whitelistID string, update operator.M) error {
+	if err := ensureTable(ctx, &m.Public); err != nil {
+		return fmt.Errorf("ensure table failed: %v", err)
 	}
-	if update["$set"] == nil {
-		update["$set"] = bson.M{}
+	if whitelistID == "" {
+		return fmt.Errorf("whitelistID cannot be empty")
 	}
-	update["$set"].(bson.M)["updated_at"] = time.Now()
-	_, err := s.collection.UpdateOne(ctx, filter, update)
-	return err
+
+	cond := operator.NewBranchCondition(operator.And,
+		operator.NewLeafCondition(operator.Eq, operator.M{
+			pushWhitelistUniqueKey: whitelistID,
+		}),
+		operator.NewBranchCondition(operator.Or,
+			operator.NewLeafCondition(operator.Eq, operator.M{"deleted_at": nil}),
+			operator.NewLeafCondition(operator.Eq, operator.M{"deleted_at": operator.M{"$exists": false}}),
+		),
+	)
+	if update == nil {
+		return fmt.Errorf("update cannot be nil")
+	}
+	set, ok := update["$set"].(operator.M)
+	if !ok {
+		return fmt.Errorf("invalid update format: $set must be operator.M type")
+	}
+	if set == nil {
+		set = operator.M{}
+		update["$set"] = set
+	}
+	set["updated_at"] = time.Now()
+
+	if err := m.DB.Table(m.TableName).Update(ctx, cond, update); err != nil {
+		return fmt.Errorf("update push whitelist failed: %v", err)
+	}
+	return nil
 }
 
 // IsDimensionWhitelisted checks if a given domain and dimension are whitelisted, active, and approved.
-func (s *pushWhitelistStore) IsDimensionWhitelisted(ctx context.Context, domain string, dimension types.Dimension) (bool, error) {
-	now := time.Now()
-	filter := bson.M{
-		"domain":           domain,
-		"approval_status":  constant.ApprovalStatusApproved,
-		"whitelist_status": constant.WhitelistStatusActive,
-		"$or": []bson.M{
-			{"deleted_at": bson.M{"$exists": false}},
-			{"deleted_at": nil},
-		},
+func (m *ModelPushWhitelist) IsDimensionWhitelisted(ctx context.Context, domain string, dimension types.Dimension) (bool, error) {
+	if err := ensureTable(ctx, &m.Public); err != nil {
+		return false, fmt.Errorf("ensure table failed: %v", err)
 	}
-	cursor, err := s.collection.Find(ctx, filter)
-	if err != nil {
-		return false, fmt.Errorf("find whitelist failed: %w", err)
-	}
-	defer cursor.Close(ctx)
 
-	for cursor.Next(ctx) {
-		var wl types.PushWhitelist
-		if err := cursor.Decode(&wl); err != nil {
-			blog.Errorf("decode push whitelist failed, document may be corrupted: %v", err)
-			continue
-		}
+	now := time.Now()
+	cond := operator.NewBranchCondition(operator.And,
+		operator.NewLeafCondition(operator.Eq, operator.M{
+			"domain":           domain,
+			"approval_status":  constant.ApprovalStatusApproved,
+			"whitelist_status": constant.WhitelistStatusActive,
+		}),
+		operator.NewBranchCondition(operator.Or,
+			operator.NewLeafCondition(operator.Eq, operator.M{"deleted_at": nil}),
+			operator.NewLeafCondition(operator.Eq, operator.M{"deleted_at": operator.M{"$exists": false}}),
+		),
+	)
+
+	var whitelists []*types.PushWhitelist
+	if err := m.DB.Table(m.TableName).Find(cond).All(ctx, &whitelists); err != nil {
+		return false, fmt.Errorf("find whitelist failed: %v", err)
+	}
+
+	for _, wl := range whitelists {
 		match, _ := mapEqualsDetail(wl.Dimension.Fields, dimension.Fields)
 		if !match {
 			continue
@@ -170,14 +239,17 @@ func (s *pushWhitelistStore) IsDimensionWhitelisted(ctx context.Context, domain 
 			continue
 		}
 		if !wl.EndTime.IsZero() && wl.EndTime.Before(now) {
-			update := bson.M{"$set": bson.M{"whitelist_status": constant.WhitelistStatusExpired, "updated_at": now}}
-			_, _ = s.collection.UpdateOne(ctx, bson.M{"_id": wl.ID}, update)
-			continue
+			update := operator.M{"$set": operator.M{
+				"whitelist_status": constant.WhitelistStatusExpired,
+				"updated_at":       now,
+			}}
+			cond := operator.NewLeafCondition(operator.Eq, operator.M{"_id": wl.ID})
+			if err := m.DB.Table(m.TableName).Update(ctx, cond, update); err != nil {
+				return false, fmt.Errorf("update expired whitelist status failed: %v", err)
+			}
+			return false, nil
 		}
 		return true, nil
-	}
-	if err := cursor.Err(); err != nil {
-		return false, fmt.Errorf("cursor error: %w", err)
 	}
 	return false, nil
 }

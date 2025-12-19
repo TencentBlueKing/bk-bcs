@@ -20,6 +20,39 @@
     "application/json"
   ],
   "paths": {
+    "/meshmanager/v1/mesh/clusters": {
+      "get": {
+        "summary": "获取项目下的集群信息",
+        "description": "获取项目下的集群信息",
+        "operationId": "MeshManager_GetClusterInfo",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/meshmanagerGetClusterInfoResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "description": "projectCode. 项目编码",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "MeshManager"
+        ]
+      }
+    },
     "/meshmanager/v1/mesh/istio/config": {
       "get": {
         "summary": "获取当前开放的istio版本和配置信息",
@@ -106,7 +139,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/meshmanagerIstioRequest"
+              "$ref": "#/definitions/meshmanagerIstioInstallRequest"
             }
           }
         ],
@@ -268,11 +301,6 @@
             "schema": {
               "type": "object",
               "properties": {
-                "projectID": {
-                  "type": "string",
-                  "description": "项目ID",
-                  "title": "projectID"
-                },
                 "projectCode": {
                   "type": "string",
                   "description": "项目编码",
@@ -283,11 +311,6 @@
                   "description": "网格名称",
                   "title": "name"
                 },
-                "version": {
-                  "type": "string",
-                  "description": "使用的版本，例如 1.18",
-                  "title": "version"
-                },
                 "controlPlaneMode": {
                   "type": "string",
                   "description": "安装模式[independent：独立控制面（默认）；hosting：托管控制面]",
@@ -295,7 +318,7 @@
                 },
                 "clusterMode": {
                   "type": "string",
-                  "description": "多集群集群模式[primaryPemote：主从架构（默认）；multiPrimary：多主架构]",
+                  "description": "多集群集群模式[primaryRemote：主从架构（默认）；multiPrimary：多主架构]",
                   "title": "clusterMode"
                 },
                 "description": {
@@ -303,18 +326,10 @@
                   "description": "文字描述",
                   "title": "description"
                 },
-                "primaryClusters": {
-                  "type": "array",
-                  "items": {
-                    "type": "string"
-                  },
-                  "description": "主集群列表，使用BCS集群ID",
-                  "title": "primaryClusters"
-                },
                 "remoteClusters": {
                   "type": "array",
                   "items": {
-                    "type": "string"
+                    "$ref": "#/definitions/meshmanagerRemoteCluster"
                   },
                   "description": "远程/从集群列表,多集群模式下填写",
                   "title": "remoteClusters"
@@ -346,9 +361,23 @@
                   },
                   "description": "功能特性[跟随版本关联的特性]",
                   "title": "featureConfigs"
+                },
+                "multiClusterEnabled": {
+                  "type": "boolean",
+                  "description": "是否开启多集群",
+                  "title": "multiClusterEnabled"
+                },
+                "clbID": {
+                  "type": "string",
+                  "description": "东西向网关clbID",
+                  "title": "clbID"
+                },
+                "revision": {
+                  "type": "string",
+                  "description": "istio revision",
+                  "title": "revision"
                 }
-              },
-              "title": "istio配置信息"
+              }
             }
           }
         ],
@@ -359,6 +388,66 @@
     }
   },
   "definitions": {
+    "meshmanagerClusterInfo": {
+      "type": "object",
+      "properties": {
+        "clusterID": {
+          "type": "string",
+          "description": "集群ID",
+          "title": "clusterID"
+        },
+        "clusterName": {
+          "type": "string",
+          "description": "集群名称",
+          "title": "clusterName"
+        },
+        "clusterType": {
+          "type": "string",
+          "description": "集群类型",
+          "title": "clusterType"
+        },
+        "isShared": {
+          "type": "boolean",
+          "description": "是否为共享集群",
+          "title": "isShared"
+        },
+        "isInstalled": {
+          "type": "boolean",
+          "description": "是否已安装istio",
+          "title": "isInstalled"
+        },
+        "status": {
+          "type": "string",
+          "description": "集群状态",
+          "title": "status"
+        },
+        "version": {
+          "type": "string",
+          "description": "集群版本",
+          "title": "version"
+        },
+        "region": {
+          "type": "string",
+          "description": "集群所属区域",
+          "title": "region"
+        }
+      },
+      "title": "集群信息"
+    },
+    "meshmanagerClusterInfoData": {
+      "type": "object",
+      "properties": {
+        "clusters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/meshmanagerClusterInfo"
+          },
+          "description": "集群信息",
+          "title": "clusters"
+        }
+      },
+      "title": "集群信息数据"
+    },
     "meshmanagerDedicatedNode": {
       "type": "object",
       "properties": {
@@ -391,7 +480,7 @@
         "requestID": {
           "type": "string"
         },
-        "webAnnotations": {
+        "web_annotations": {
           "$ref": "#/definitions/meshmanagerWebAnnotations"
         }
       },
@@ -401,7 +490,7 @@
         "code",
         "message",
         "requestID",
-        "webAnnotations"
+        "web_annotations"
       ]
     },
     "meshmanagerFeatureConfig": {
@@ -446,6 +535,32 @@
       },
       "title": "功能特性配置"
     },
+    "meshmanagerGetClusterInfoResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "message": {
+          "type": "string"
+        },
+        "requestID": {
+          "type": "string"
+        },
+        "data": {
+          "$ref": "#/definitions/meshmanagerClusterInfoData"
+        }
+      },
+      "description": "获取项目下的集群信息响应",
+      "title": "GetClusterInfoResponse",
+      "required": [
+        "code",
+        "message",
+        "requestID",
+        "data"
+      ]
+    },
     "meshmanagerGetIstioDetailResponse": {
       "type": "object",
       "properties": {
@@ -459,7 +574,7 @@
         "requestID": {
           "type": "string"
         },
-        "webAnnotations": {
+        "web_annotations": {
           "$ref": "#/definitions/meshmanagerWebAnnotations"
         },
         "data": {
@@ -472,7 +587,7 @@
         "code",
         "message",
         "requestID",
-        "webAnnotations",
+        "web_annotations",
         "data"
       ]
     },
@@ -540,7 +655,7 @@
           "description": "请求 ID",
           "title": "request id"
         },
-        "webAnnotations": {
+        "web_annotations": {
           "$ref": "#/definitions/meshmanagerWebAnnotations",
           "description": "权限信息",
           "title": "web_annotations"
@@ -557,7 +672,7 @@
         "code",
         "message",
         "requestID",
-        "webAnnotations",
+        "web_annotations",
         "data"
       ]
     },
@@ -581,6 +696,11 @@
           "$ref": "#/definitions/meshmanagerHighAvailability",
           "description": "高可用配置",
           "title": "highAvailability"
+        },
+        "observabilityConfig": {
+          "$ref": "#/definitions/meshmanagerObservabilityConfig",
+          "description": "可观测性配置",
+          "title": "observabilityConfig"
         },
         "featureConfigs": {
           "type": "object",
@@ -643,11 +763,6 @@
           "description": "更新者",
           "title": "updateBy"
         },
-        "projectID": {
-          "type": "string",
-          "description": "项目ID",
-          "title": "projectID"
-        },
         "projectCode": {
           "type": "string",
           "description": "项目编码",
@@ -675,7 +790,7 @@
         },
         "clusterMode": {
           "type": "string",
-          "description": "多集群集群模式,primaryPemote：主从架构（默认）；multiPrimary：多主架构]",
+          "description": "多集群集群模式,primaryRemote：主从架构（默认）；multiPrimary：多主架构]",
           "title": "clusterMode"
         },
         "primaryClusters": {
@@ -689,7 +804,7 @@
         "remoteClusters": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/definitions/meshmanagerRemoteCluster"
           },
           "description": "远程集群列表",
           "title": "remoteClusters"
@@ -721,98 +836,29 @@
           },
           "description": "功能特性[跟随版本关联的特性]",
           "title": "featureConfigs"
+        },
+        "multiClusterEnabled": {
+          "type": "boolean",
+          "description": "是否开启多集群",
+          "title": "multiClusterEnabled"
+        },
+        "clbID": {
+          "type": "string",
+          "description": "东西向网关clbID",
+          "title": "clbID"
+        },
+        "revision": {
+          "type": "string",
+          "description": "版本",
+          "title": "revision"
         }
       },
       "description": "istio列表项",
       "title": "IstioListItem"
     },
-    "meshmanagerIstioListItem": {
+    "meshmanagerIstioInstallRequest": {
       "type": "object",
       "properties": {
-        "meshID": {
-          "type": "string",
-          "description": "网格ID",
-          "title": "meshID"
-        },
-        "status": {
-          "type": "string",
-          "description": "状态[running：运行中；installing：安装中；installed：安装完成；failed：安装失败；uninstalling：卸载中；uninstalled：卸载完成；uninstalling-failed：卸载失败；updating：配置更新中；update-failed：配置更新失败]",
-          "title": "status"
-        },
-        "statusMessage": {
-          "type": "string",
-          "description": "状态消息，状态为failed时，会返回失败原因",
-          "title": "statusMessage"
-        },
-        "chartVersion": {
-          "type": "string",
-          "description": "chart版本",
-          "title": "chartVersion"
-        },
-        "createTime": {
-          "type": "string",
-          "format": "int64",
-          "description": "创建时间",
-          "title": "createTime"
-        },
-        "projectID": {
-          "type": "string",
-          "description": "项目ID",
-          "title": "projectID"
-        },
-        "projectCode": {
-          "type": "string",
-          "description": "项目编码",
-          "title": "projectCode"
-        },
-        "name": {
-          "type": "string",
-          "description": "名称",
-          "title": "name"
-        },
-        "version": {
-          "type": "string",
-          "description": "使用的版本",
-          "title": "version"
-        },
-        "primaryClusters": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "description": "主集群列表",
-          "title": "primaryClusters"
-        },
-        "remoteClusters": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "description": "远程集群列表",
-          "title": "remoteClusters"
-        },
-        "monitoringLink": {
-          "type": "string",
-          "description": "监测链接",
-          "title": "monitoringLink"
-        }
-      },
-      "description": "istio列表项",
-      "title": "IstioListItem"
-    },
-    "meshmanagerIstioRequest": {
-      "type": "object",
-      "properties": {
-        "meshID": {
-          "type": "string",
-          "description": "网格ID",
-          "title": "meshID"
-        },
-        "projectID": {
-          "type": "string",
-          "description": "项目ID",
-          "title": "projectID"
-        },
         "projectCode": {
           "type": "string",
           "description": "项目编码",
@@ -835,7 +881,7 @@
         },
         "clusterMode": {
           "type": "string",
-          "description": "多集群集群模式[primaryPemote：主从架构（默认）；multiPrimary：多主架构]",
+          "description": "多集群集群模式[primaryRemote：主从架构（默认）；multiPrimary：多主架构]",
           "title": "clusterMode"
         },
         "description": {
@@ -854,7 +900,7 @@
         "remoteClusters": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/definitions/meshmanagerRemoteCluster"
           },
           "description": "远程/从集群列表,多集群模式下填写",
           "title": "remoteClusters"
@@ -886,9 +932,93 @@
           },
           "description": "功能特性[跟随版本关联的特性]",
           "title": "featureConfigs"
+        },
+        "multiClusterEnabled": {
+          "type": "boolean",
+          "description": "是否开启多集群",
+          "title": "multiClusterEnabled"
+        },
+        "clbID": {
+          "type": "string",
+          "description": "东西向网关clbID",
+          "title": "clbID"
+        },
+        "revision": {
+          "type": "string",
+          "description": "istio revision",
+          "title": "revision"
         }
       },
       "title": "istio配置信息"
+    },
+    "meshmanagerIstioListItem": {
+      "type": "object",
+      "properties": {
+        "meshID": {
+          "type": "string",
+          "description": "网格ID",
+          "title": "meshID"
+        },
+        "status": {
+          "type": "string",
+          "description": "状态[running：运行中；installing：安装中；installed：安装完成；failed：安装失败；uninstalling：卸载中；uninstalled：卸载完成；uninstalling-failed：卸载失败；updating：配置更新中；update-failed：配置更新失败]",
+          "title": "status"
+        },
+        "statusMessage": {
+          "type": "string",
+          "description": "状态消息，状态为failed时，会返回失败原因",
+          "title": "statusMessage"
+        },
+        "chartVersion": {
+          "type": "string",
+          "description": "chart版本",
+          "title": "chartVersion"
+        },
+        "createTime": {
+          "type": "string",
+          "format": "int64",
+          "description": "创建时间",
+          "title": "createTime"
+        },
+        "projectCode": {
+          "type": "string",
+          "description": "项目编码",
+          "title": "projectCode"
+        },
+        "name": {
+          "type": "string",
+          "description": "名称",
+          "title": "name"
+        },
+        "version": {
+          "type": "string",
+          "description": "使用的版本",
+          "title": "version"
+        },
+        "primaryClusters": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "主集群列表",
+          "title": "primaryClusters"
+        },
+        "remoteClusters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/meshmanagerRemoteCluster"
+          },
+          "description": "远程集群列表",
+          "title": "remoteClusters"
+        },
+        "monitoringLink": {
+          "type": "string",
+          "description": "监测链接",
+          "title": "monitoringLink"
+        }
+      },
+      "description": "istio列表项",
+      "title": "IstioListItem"
     },
     "meshmanagerIstioVersion": {
       "type": "object",
@@ -935,7 +1065,7 @@
           "description": "请求 ID",
           "title": "request id"
         },
-        "webAnnotations": {
+        "web_annotations": {
           "$ref": "#/definitions/meshmanagerWebAnnotations",
           "description": "权限信息",
           "title": "web_annotations"
@@ -952,7 +1082,7 @@
         "code",
         "message",
         "requestID",
-        "webAnnotations",
+        "web_annotations",
         "data"
       ]
     },
@@ -989,7 +1119,7 @@
         "requestID": {
           "type": "string"
         },
-        "webAnnotations": {
+        "web_annotations": {
           "$ref": "#/definitions/meshmanagerWebAnnotations"
         },
         "data": {
@@ -1002,7 +1132,7 @@
         "code",
         "message",
         "requestID",
-        "webAnnotations",
+        "web_annotations",
         "data"
       ]
     },
@@ -1068,6 +1198,38 @@
         }
       },
       "title": "可观测性配置"
+    },
+    "meshmanagerRemoteCluster": {
+      "type": "object",
+      "properties": {
+        "clusterID": {
+          "type": "string",
+          "description": "集群ID",
+          "title": "clusterID"
+        },
+        "clusterName": {
+          "type": "string",
+          "description": "集群名称",
+          "title": "clusterName"
+        },
+        "region": {
+          "type": "string",
+          "description": "集群所属区域",
+          "title": "region"
+        },
+        "joinTime": {
+          "type": "string",
+          "format": "int64",
+          "description": "纳入服务网格管理时间",
+          "title": "joinTime"
+        },
+        "status": {
+          "type": "string",
+          "description": "集群状态[running：运行中；installing：安装中；install-failed：安装失败",
+          "title": "status"
+        }
+      },
+      "title": "从集群信息"
     },
     "meshmanagerResourceConfig": {
       "type": "object",
@@ -1135,7 +1297,7 @@
         "requestID": {
           "type": "string"
         },
-        "webAnnotations": {
+        "web_annotations": {
           "$ref": "#/definitions/meshmanagerWebAnnotations"
         }
       },
@@ -1145,7 +1307,7 @@
         "code",
         "message",
         "requestID",
-        "webAnnotations"
+        "web_annotations"
       ]
     },
     "meshmanagerWebAnnotations": {

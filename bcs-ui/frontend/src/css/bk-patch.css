@@ -175,6 +175,10 @@
         position: relative;
         top: 1px;
     }
+
+    &:not(.bk-button-text) {
+        min-width: 88px;
+    }
 }
 
 .bk-text-button {
@@ -205,6 +209,9 @@
 
     .bk-button {
         margin-left: -1px !important;
+        &:first-child {
+            margin-left: 0 !important;
+        }
 
         >a {
             display: block;
@@ -1466,4 +1473,8 @@
 
 .bk-table-expand-icon>.bk-icon {
     margin-top: -6px;
+}
+
+.custom-select-popover .bk-select-search-wrapper {
+    padding: 4px 0 0;
 }

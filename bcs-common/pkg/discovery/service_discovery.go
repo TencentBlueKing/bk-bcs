@@ -103,6 +103,8 @@ const (
 	ZookeeperServiceName = "bcs-zookeeper"
 	// ZookeeperHeadlessServiceName zookeeper headless 服务名称
 	ZookeeperHeadlessServiceName = "bcs-zookeeper-headless"
+	// ThirdpartyServiceName thirdparty 服务名称
+	ThirdpartyServiceName = "bcs-thirdparty-service"
 
 	// 服务的端口
 

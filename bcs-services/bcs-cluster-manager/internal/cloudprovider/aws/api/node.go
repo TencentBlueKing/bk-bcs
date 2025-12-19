@@ -74,7 +74,7 @@ type NodeManager struct {
 func (nm *NodeManager) ListNodeInstanceType(ctx context.Context, info cloudprovider.InstanceInfo,
 	opt *cloudprovider.CommonOption) ([]*proto.InstanceType, error) {
 	blog.Infof("ListNodeInstanceType region: %s, nodeFamily: %s, cpu: %d, memory: %d",
-		info.Region, info.NodeFamily, info.Cpu, info.Memory)
+		info.Region, info.NodeFamily, info.CPU, info.Memory)
 
 	client, err := NewEC2Client(opt)
 	if err != nil {
@@ -127,7 +127,7 @@ func convertToInstanceType(info cloudprovider.InstanceInfo,
 		}
 		if v.VCpuInfo != nil && v.VCpuInfo.DefaultVCpus != nil {
 			t.Cpu = uint32(*v.VCpuInfo.DefaultVCpus)
-			if info.Cpu != 0 && t.Cpu != info.Cpu {
+			if info.CPU != 0 && t.Cpu != info.CPU {
 				continue
 			}
 		}

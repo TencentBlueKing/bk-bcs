@@ -26,9 +26,9 @@ import (
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/dynamic"
 
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/action"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/component/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/component/project"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
@@ -206,6 +206,33 @@ func (c *ResClient) ApplyWithoutPerm(
 	namespace := mapx.GetStr(manifest, "metadata.namespace")
 	if name == "" {
 		return nil, errorx.New(errcode.ValidateErr, i18n.GetMsg(ctx, "metadata.name 必须指定"))
+	}
+	old, err := c.cli.Resource(c.res).Namespace(namespace).Get(ctx, name, metav1.GetOptions{})
+	if err != nil && errors.IsNotFound(err) {
+		if !errors.IsNotFound(err) {
+			return nil, c.handleErr(ctx, err)
+		}
+		ret, errr := c.cli.Resource(c.res).Namespace(namespace).Create(
+			ctx, &unstructured.Unstructured{Object: manifest}, opts)
+		return ret, c.handleErr(ctx, errr)
+	}
+	_ = mapx.SetItems(manifest, "metadata.resourceVersion", old.GetResourceVersion())
+	ret, err := c.cli.Resource(c.res).Namespace(namespace).Update(
+		ctx, &unstructured.Unstructured{Object: manifest}, metav1.UpdateOptions{DryRun: opts.DryRun})
+	return ret, c.handleErr(ctx, err)
+}
+
+// Apply 创建或更新资源
+func (c *ResClient) Apply(
+	ctx context.Context, manifest map[string]interface{}, opts metav1.CreateOptions,
+) (*unstructured.Unstructured, error) {
+	name := mapx.GetStr(manifest, "metadata.name")
+	namespace := mapx.GetStr(manifest, "metadata.namespace")
+	if name == "" {
+		return nil, errorx.New(errcode.ValidateErr, i18n.GetMsg(ctx, "metadata.name 必须指定"))
+	}
+	if err := c.permValidate(ctx, action.Update, namespace); err != nil {
+		return nil, err
 	}
 	old, err := c.cli.Resource(c.res).Namespace(namespace).Get(ctx, name, metav1.GetOptions{})
 	if err != nil && errors.IsNotFound(err) {

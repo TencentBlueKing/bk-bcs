@@ -16,13 +16,15 @@ import (
 	"context"
 	"encoding/json"
 	"reflect"
+	"sync"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/audit"
 	"go-micro.dev/v4/server"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/auth"
-	audit_client "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/audit"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/contextx"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
 )
@@ -33,7 +35,28 @@ func NewAuditWrapper(fn server.HandlerFunc) server.HandlerFunc {
 		startTime := time.Now()
 		err := fn(ctx, req, rsp)
 		endTime := time.Now()
-		go addAudit(ctx, req, rsp, startTime, endTime)
+		result := audit.ActionResult{
+			Status: audit.ActivityStatusSuccess,
+		}
+		v := reflect.ValueOf(rsp)
+		codeField := v.Elem().FieldByName("Code")
+		messageField := v.Elem().FieldByName("Message")
+		if codeField.IsValid() && codeField.CanInterface() {
+			if c, ok := codeField.Interface().(uint32); ok {
+				code := int(c)
+				result.ResultCode = code
+			}
+		}
+		if messageField.IsValid() && messageField.CanInterface() {
+			if m, ok := messageField.Interface().(string); ok {
+				message := m
+				result.ResultContent = message
+			}
+		}
+		if result.ResultCode != errorx.Success {
+			result.Status = audit.ActivityStatusFailed
+		}
+		go addAudit(ctx, req, result, startTime, endTime)
 		return err
 	}
 }
@@ -214,8 +237,10 @@ var auditFuncMap = map[string]func(req server.Request) (audit.Resource, audit.Ac
 	},
 }
 
+var mu sync.Mutex
+
 // addAudit 添加审计
-func addAudit(ctx context.Context, req server.Request, rsp interface{}, startTime, endTime time.Time) {
+func addAudit(ctx context.Context, req server.Request, result audit.ActionResult, startTime, endTime time.Time) {
 	// get method audit func
 	fn, ok := auditFuncMap[req.Method()]
 	if !ok {
@@ -246,32 +271,14 @@ func addAudit(ctx context.Context, req server.Request, rsp interface{}, startTim
 		ActivityType: act.ActivityType,
 	}
 
-	// get action result
-	result := audit.ActionResult{
-		Status: audit.ActivityStatusSuccess,
-	}
-
-	// get handle result
-	v := reflect.ValueOf(rsp)
-	codeField := v.Elem().FieldByName("Code")
-	messageField := v.Elem().FieldByName("Message")
-	if codeField.CanInterface() {
-		code := int(codeField.Interface().(uint32))
-		result.ResultCode = code
-	}
-	if messageField.CanInterface() {
-		message := messageField.Interface().(string)
-		result.ResultContent = message
-	}
-	if result.ResultCode != errorx.Success {
-		result.Status = audit.ActivityStatusFailed
-	}
-
+	mu.Lock()
+	defer mu.Unlock()
 	// add audit
-	auditAction := audit_client.GetAuditClient().R()
+	auditAction := component.GetAuditClient().R()
 	if act.ActivityType == audit.ActivityTypeView {
 		// 查看类型不用记录 activity
 		auditAction.DisableActivity()
 	}
-	_ = auditAction.SetContext(auditCtx).SetResource(resource).SetAction(action).SetResult(result).Do()
+	err := auditAction.SetContext(auditCtx).SetResource(resource).SetAction(action).SetResult(result).Do()
+	logging.Error("add audit failed, err: %v", err)
 }

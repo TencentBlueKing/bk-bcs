@@ -166,6 +166,18 @@
               </li>
             </div>
             <div
+              v-bk-tooltips="{
+                content: $t('cluster.nodeList.tips.disableBatchSettingNodes'),
+                disabled: !selections.some(item => !['RUNNING'].includes(item.status)),
+                placement: 'right'
+              }">
+              <li
+                :disabled="selections.some(item => !['RUNNING'].includes(item.status))"
+                @click="handleBatchSetNode('annotations')">
+                {{$t('dashboard.ns.action.setAnnotation')}}
+              </li>
+            </div>
+            <div
               class="h-[32px]"
               v-bk-tooltips="{
                 content: disableBatchDeleteTips,
@@ -227,7 +239,7 @@
         empty-block-class-name="bcs-table-empty-dynamic-width"
         :key="tableKey"
         :pagination="pagination"
-        :row-key="(row) => row.nodeName"
+        :row-key="(row) => row.nodeName || row.nodeID"
         @filter-change="handleFilterChange"
         @page-change="pageChange"
         @page-limit-change="pageSizeChange">
@@ -353,7 +365,13 @@
               :status-color-map="nodeStatusColorMap"
               v-else
             >
-              <span class="bcs-ellipsis flex-1">{{ nodeStatusMap[row.status.toLowerCase()] }}</span>
+              <span
+                :class="['bcs-ellipsis flex-1', row.failedReason ? 'bcs-border-tips !flex-none' : '']"
+                v-bk-tooltips="{
+                  content: row.failedReason,
+                  disabled: !row.failedReason
+                }">
+                {{ nodeStatusMap[row.status.toLowerCase()] }}</span>
             </StatusIcon>
           </template>
         </bcs-table-column>
@@ -534,13 +552,21 @@
               <bk-button v-else-if="row.status === 'REMOVABLE'" text class="mr10" @click="handleEnableNode(row)">
                 {{ $t('generic.button.uncordon.text') }}
               </bk-button>
-              <bk-button
-                text
-                v-if="['REMOVE-FAILURE', 'REMOVE-CA-FAILURE', 'REMOVABLE'].includes(row.status)"
-                class="mr10"
-                @click="handleSchedulerNode(row)">
-                {{ $t('generic.button.drain.text') }}
-              </bk-button>
+              <span
+                v-bk-tooltips="{
+                  content: $t('generic.button.drain.tips'),
+                  disabled: ['REMOVABLE', 'REMOVE-FAILURE', 'REMOVE-CA-FAILURE'].includes(row.status),
+                  placement: 'top',
+                  interactive: false
+                }">
+                <bk-button
+                  text
+                  :disabled="!['REMOVE-FAILURE', 'REMOVE-CA-FAILURE', 'REMOVABLE'].includes(row.status)"
+                  class="mr10"
+                  @click="handleSchedulerNode(row)">
+                  {{ $t('generic.button.drain.text') }}
+                </bk-button>
+              </span>
               <bk-button
                 class="mr10"
                 text
@@ -567,23 +593,32 @@
                   <i class="bcs-icon bcs-icon-more"></i>
                 </span>
                 <template #content>
-                  <ul class="bcs-dropdown-list">
+                  <ul class="bcs-dropdown-list bg-[#fff]">
                     <template v-if="row.status === 'RUNNING'">
-                      <li class="bcs-dropdown-item" @click="handleSetLabel(row)">
+                      <li class="bcs-dropdown-item" @click="handleMetadata(row, 'labels')">
                         {{$t('cluster.nodeList.button.setLabel')}}
                       </li>
                       <li class="bcs-dropdown-item" @click="handleSetTaint(row)">
                         {{$t('cluster.nodeList.button.setTaint')}}
                       </li>
+                      <li class="bcs-dropdown-item" @click="handleMetadata(row, 'annotations')">
+                        {{$t('dashboard.ns.action.setAnnotation')}}
+                      </li>
                     </template>
                     <li
-                      :class="['bcs-dropdown-item', { disabled: isKubeConfigOrAgentImportCluster || isCloudSelfNode(row) || isGkeManagedCluster }]"
+                      :class="[
+                        'bcs-dropdown-item',
+                        { disabled: isKubeConfigOrAgentImportCluster || isCloudSelfNode(row) || isGkeManagedCluster
+                          || !['REMOVE-FAILURE', 'ADD-FAILURE', 'REMOVABLE', 'NOTREADY'].includes(row.status)
+                        }
+                      ]"
                       v-bk-tooltips="{
-                        disabled: !isKubeConfigOrAgentImportCluster && !isCloudSelfNode(row),
-                        content: $t('cluster.nodeList.tips.disableImportClusterAction'),
+                        disabled: !isKubeConfigOrAgentImportCluster
+                          && !isCloudSelfNode(row)
+                          && ['REMOVE-FAILURE', 'ADD-FAILURE', 'REMOVABLE', 'NOTREADY'].includes(row.status),
+                        content: getDisableDeleteTips(row),
                         placement: 'right'
                       }"
-                      v-if="['REMOVE-FAILURE', 'ADD-FAILURE', 'REMOVABLE', 'NOTREADY'].includes(row.status)"
                       :disabled="!row.inner_ip"
                       @click="handleDeleteNode(row)"
                     >
@@ -615,23 +650,23 @@
         </template>
       </bcs-table>
     </div>
-    <!-- 设置标签 -->
+    <!-- 设置标签/注解 -->
     <bcs-sideslider
-      :is-show.sync="setLabelConf.isShow"
+      :is-show.sync="setMetaConf.isShow"
       :width="750"
       :before-close="handleBeforeClose"
       quick-close
       transfer>
       <template #header>
-        <span>{{setLabelConf.title}}</span>
-        <span class="sideslider-tips">{{$t('cluster.nodeList.msg.labelDesc')}}</span>
+        <span>{{setMetaConf.title}}</span>
+        <span v-if="metaType === 'labels'" class="sideslider-tips">{{$t('cluster.nodeList.msg.labelDesc')}}</span>
       </template>
       <template #content>
         <KeyValue
           class="key-value-content"
-          :model-value="setLabelConf.data"
-          :loading="setLabelConf.btnLoading"
-          :key-desc="setLabelConf.keyDesc"
+          :model-value="setMetaConf.data"
+          :loading="setMetaConf.btnLoading"
+          :key-desc="setMetaConf.keyDesc"
           :key-rules="[
             {
               message: $i18n.t('generic.validate.labelKey1'),
@@ -641,7 +676,7 @@
           :value-rules="[
             {
               message: $i18n.t('generic.validate.labelKey1'),
-              validator: VALUE_REGEXP
+              validator: metaType === 'labels' ? VALUE_REGEXP : ''
             }
           ]"
           :min-items="0"
@@ -693,11 +728,17 @@
       @hidden="closeLog"
       :quick-close="true"
       transfer>
+      <template #header>
+        <div class="flex items-center">
+          <TaskIcon :font-size="'16px'" :status="logSideDialogConf.status" />
+          <span>{{logSideDialogConf.title || ' '}}</span>
+        </div>
+      </template>
       <div slot="content">
         <div v-bkloading="{ isLoading: logSideDialogConf.loading }">
           <TaskLog
             :data="logSideDialogConf.taskData"
-            :enable-auto-refresh="['INITIALIZATION', 'DELETING'].includes(logSideDialogConf.status)"
+            :enable-auto-refresh="['LOADING', 'WAITING'].includes(logSideDialogConf.status)"
             enable-statistics
             type="multi-task"
             :status="logSideDialogConf.status"
@@ -779,6 +820,7 @@ import ClusterSelect from '@/components/cluster-selector/cluster-select.vue';
 import KeyValue, { IData } from '@/components/key-value.vue';
 import LoadingIcon from '@/components/loading-icon.vue';
 import StatusIcon from '@/components/status-icon';
+import TaskIcon from '@/components/task-icon.vue';
 import { ICluster, useAppData } from '@/composables/use-app';
 import useInterval from '@/composables/use-interval';
 import usePage from '@/composables/use-page';
@@ -811,6 +853,8 @@ interface IMetricData {
 
 type NodeMetricType = Record<string, IMetricData>;
 
+type MetaType = 'labels'|'taints'|'annotations';
+
 export default defineComponent({
   name: 'NodeList',
   components: {
@@ -825,6 +869,7 @@ export default defineComponent({
     BcsCascade,
     TopoSelector,
     DeleteNode,
+    TaskIcon,
   },
   props: {
     clusterId: {
@@ -1192,6 +1237,7 @@ export default defineComponent({
       addNode,
       retryTask,
       setNodeLabels,
+      setNodeAnnotations,
       batchDeleteNodes,
       getAllNodeOverview,
     } = useNode();
@@ -1381,6 +1427,16 @@ export default defineComponent({
       return $i18n.t('cluster.ca.nodePool.nodes.action.delete.tips');
     });
 
+    const getDisableDeleteTips = (row) => {
+      if (isKubeConfigOrAgentImportCluster.value) {
+        return $i18n.t('cluster.nodeList.tips.disableImportClusterAction');
+      }
+      if (row.clusterCategory === 'importer' && !row.nodeGroupID) {
+        return $i18n.t('cluster.nodeList.tips.notNodePoolNode');
+      }
+      return $i18n.t('cluster.ca.nodePool.nodes.action.delete.tips');
+    };
+
     const handleGoOverview = (row) => {
       $router.push({
         name: 'clusterNodeOverview',
@@ -1469,8 +1525,8 @@ export default defineComponent({
       taintConfig.value.nodes = [];
     };
 
-    // 设置标签（批量设置标签的交互有点奇怪，后续优化）
-    const setLabelConf = ref<{
+    // 设置标签/注解（批量设置标签的交互有点奇怪，后续优化）
+    const setMetaConf = ref<{
       isShow: boolean;
       btnLoading: boolean;
       keyDesc: any;
@@ -1485,12 +1541,14 @@ export default defineComponent({
       data: [],
       title: '',
     });
-    const handleSetLabel = async (selections: Record<string, any>[] | Record<string, any>) => {
-      setLabelConf.value.isShow = true;
+    const metaType = ref<'labels' | 'annotations'>('labels');
+    const handleMetadata = async (selections: Record<string, any>[] | Record<string, any>, type: 'labels' | 'annotations') => {
+      metaType.value = type;
+      setMetaConf.value.isShow = true;
       const rows = Array.isArray(selections) ? selections : [selections];
       // 批量设置时暂时只展示相同Key的项
       const labelArr = rows.reduce<any[]>((pre, row) => {
-        const label = row.labels;
+        const label = row[type];
         Object.keys(label).forEach((key) => {
           const index = pre.findIndex(item => item.key === key);
           if (index > -1) {
@@ -1508,18 +1566,26 @@ export default defineComponent({
         return pre;
       }, []).filter(item => item.repeat === rows.length);
 
-      set(setLabelConf, 'value', Object.assign(setLabelConf.value, {
+      let title = '';
+      if (rows.length > 1 && metaType.value === 'labels') {
+        title = $i18n.t('cluster.nodeList.title.batchSetLabel.text'); // 批量设置标签
+      } else if (rows.length > 1 && metaType.value === 'annotations') {
+        title = $i18n.t('cluster.nodeList.title.batchSetAnnotation.text'); // 批量设置注解
+      } else if (rows.length === 1 && metaType.value === 'labels') {
+        title = `${$i18n.t('cluster.nodeList.button.setLabel')}(${rows[0]?.nodeName})`; // 设置标签
+      } else if (rows.length === 1 && metaType.value === 'annotations') {
+        title = `${$i18n.t('dashboard.ns.action.setAnnotation')}(${rows[0]?.nodeName})`; // 设置注解
+      }
+      set(setMetaConf, 'value', Object.assign(setMetaConf.value, {
         data: labelArr,
         rows,
-        title: rows.length > 1
-          ? $i18n.t('cluster.nodeList.title.batchSetLabel.text')
-          : `${$i18n.t('cluster.nodeList.button.setLabel')}(${rows[0]?.nodeName})`,
+        title,
         keyDesc: rows.length > 1 ? $i18n.t('cluster.nodeList.title.batchSetLabel.desc') : '',
       }));
       reset();
     };
     const handleLabelEditCancel = () => {
-      set(setLabelConf, 'value', Object.assign(setLabelConf.value, {
+      set(setMetaConf, 'value', Object.assign(setMetaConf.value, {
         isShow: false,
         keyDesc: '',
         rows: [],
@@ -1531,8 +1597,8 @@ export default defineComponent({
       const originLabels = JSON.parse(JSON.stringify(_originLabels));
       const newLabels = JSON.parse(JSON.stringify(_newLabels));
       // 批量编辑
-      if (setLabelConf.value.rows.length > 1) {
-        const oldLabels = setLabelConf.value.data;
+      if (setMetaConf.value.rows.length > 1) {
+        const oldLabels = setMetaConf.value.data;
         oldLabels.forEach((item) => {
           // eslint-disable-next-line no-prototype-builtins
           if (!newLabels.hasOwnProperty(item.key)) {
@@ -1548,15 +1614,26 @@ export default defineComponent({
       return newLabels;
     };
     const handleLabelEditConfirm = async (labels) => {
-      setLabelConf.value.btnLoading = true;
-      const result = await setNodeLabels({
-        clusterID: localClusterId.value,
-        nodes: setLabelConf.value.rows.map(item => ({
-          nodeName: item.nodeName,
-          labels: mergeLabels(item.labels, labels),
-        })),
-      });
-      setLabelConf.value.btnLoading = false;
+      setMetaConf.value.btnLoading = true;
+      let result = false;
+      if (metaType.value === 'labels') {
+        result = await setNodeLabels({
+          clusterID: localClusterId.value,
+          nodes: setMetaConf.value.rows.map(item => ({
+            nodeName: item.nodeName,
+            labels: mergeLabels(item.labels, labels),
+          })),
+        });
+      } else if (metaType.value === 'annotations') {
+        result = await setNodeAnnotations({
+          clusterID: localClusterId.value,
+          nodes: setMetaConf.value.rows.map(item => ({
+            nodeName: item.nodeName,
+            annotations: mergeLabels(item.annotations, labels),
+          })),
+        });
+      }
+      setMetaConf.value.btnLoading = false;
       if (result) {
         handleLabelEditCancel();
         handleResetCheckStatus();
@@ -1645,7 +1722,8 @@ export default defineComponent({
       curCheckedNodes.value = [];
     };
     const handleDeleteNode = async (row) => {
-      if (isKubeConfigOrAgentImportCluster.value || isCloudSelfNode(row) || isGkeManagedCluster.value) return;
+      if (isKubeConfigOrAgentImportCluster.value || isCloudSelfNode(row) || isGkeManagedCluster.value
+        || !['REMOVE-FAILURE', 'ADD-FAILURE', 'REMOVABLE', 'NOTREADY', 'APPLY-FAILURE'].includes(row.status)) return;
 
       curCheckedNodes.value = [row];
       showDeleteDialog.value = true;
@@ -1841,7 +1919,7 @@ export default defineComponent({
       });
     };
     // 批量设置标签和污点
-    const handleBatchSetNode = (type: 'labels'|'taints') => {
+    const handleBatchSetNode = (type: MetaType) => {
       if (!selections.value.length) return;
 
       $router.push({
@@ -1897,7 +1975,15 @@ export default defineComponent({
       });
     };
     // 查看日志
-    const logSideDialogConf = ref({
+    const logSideDialogConf = ref<{
+      isShow: boolean;
+      title: string;
+      taskID: string;
+      taskData: any[];
+      row: any;
+      loading: boolean;
+      status: string;
+    }>({
       isShow: false,
       title: '',
       taskID: '', // 最新任务ID
@@ -2116,7 +2202,7 @@ export default defineComponent({
       nodeStatusMap,
       tableSetting,
       taintConfig,
-      setLabelConf,
+      setMetaConf,
       podConfig,
       tableLoading,
       localClusterId,
@@ -2136,7 +2222,7 @@ export default defineComponent({
       handleClearSearchSelect,
       handleGoOverview,
       handleCopy,
-      handleSetLabel,
+      handleMetadata,
       sortMetricMethod,
       handleLabelEditCancel,
       handleLabelEditConfirm,
@@ -2194,6 +2280,8 @@ export default defineComponent({
       handleHidePodDrain,
       handleSuccess,
       overviewsLoading,
+      getDisableDeleteTips,
+      metaType,
     };
   },
 });

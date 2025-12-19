@@ -15,28 +15,35 @@ package thirdparty
 
 import (
 	"crypto/tls"
+	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/go-micro/plugins/v4/client/grpc"
-	"github.com/go-micro/plugins/v4/registry/etcd"
-	"go-micro.dev/v4/client"
-	"go-micro.dev/v4/registry"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/discovery"
+	headerpkg "github.com/Tencent/bk-bcs/bcs-common/pkg/header"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/metadata"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-push-manager/internal/constant"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-push-manager/internal/requester"
 	third "github.com/Tencent/bk-bcs/bcs-services/bcs-push-manager/pkg/bcsapi/thirdparty-service"
+)
+
+const (
+	innerClientName = "bcs-push-manager"
 )
 
 var thirdpartyCli Client
 
 // InitThirdpartyClient set thirdpartyCli client
-func InitThirdpartyClient(opts *ClientOptions) {
+func InitThirdpartyClient(opts *ClientOptions) error {
 	cli, err := NewClient(opts)
 	if err != nil {
 		blog.Errorf("failed to initialize thirdparty client: %v", err)
-		return
+		return err
 	}
 	thirdpartyCli = cli
+	return nil
 }
 
 // GetThirdpartyClient get thirdparty client
@@ -44,45 +51,86 @@ func GetThirdpartyClient() Client {
 	return thirdpartyCli
 }
 
+// CloseThirdpartyClient closes the thirdparty client connection
+func CloseThirdpartyClient() error {
+	if thirdpartyCli != nil {
+		return thirdpartyCli.Close()
+	}
+	return nil
+}
+
 // Client client interface
 type Client interface {
 	SendRtx(req *third.SendRtxRequest) error
 	SendMail(req *third.SendMailRequest) error
+	SendMsg(req *third.SendMsgRequest) error
+	Close() error
 }
 
 // ClientOptions options for create client
 type ClientOptions struct {
-	ClientTLS     *tls.Config
-	EtcdEndpoints []string
-	EtcdTLS       *tls.Config
-	requester.BaseOptions
+	ClientTLS *tls.Config
+	Discovery *discovery.ModuleDiscovery
 }
 
 // NewClient create client with options
 func NewClient(opts *ClientOptions) (Client, error) {
-	if opts.Sender == nil {
-		opts.Sender = requester.NewRequester()
+	var addr string
+
+	if discovery.UseServiceDiscovery() {
+		addr = fmt.Sprintf("%s:%d", discovery.ThirdpartyServiceName, discovery.ServiceGrpcPort)
+	} else {
+		// etcd 服务发现
+		if opts.Discovery == nil {
+			return nil, fmt.Errorf("thirdparty service module not enable discovery")
+		}
+		nodeServer, err := opts.Discovery.GetRandomServiceNode()
+		if err != nil {
+			return nil, fmt.Errorf("failed to get random service node: %v", err)
+		}
+		addr = nodeServer.Address
 	}
 
-	// init thirdparty manager cli
-	c := grpc.NewClient(
-		client.Registry(etcd.NewRegistry(
-			registry.Addrs(opts.EtcdEndpoints...),
-			registry.TLSConfig(opts.EtcdTLS)),
-		),
-		grpc.AuthTLS(opts.ClientTLS),
-	)
+	header := map[string]string{
+		"x-content-type": "application/grpc+proto",
+		"Content-Type":   "application/grpc",
+	}
+	md := metadata.New(header)
+	var grpcOpts []grpc.DialOption
+	grpcOpts = append(grpcOpts, grpc.WithDefaultCallOptions(grpc.Header(&md)))
+	auth := &bcsapi.Authentication{InnerClientName: innerClientName}
+	grpcOpts = append(grpcOpts, grpc.WithUnaryInterceptor(headerpkg.LaneHeaderInterceptor()))
 
-	cli := third.NewBcsThirdpartyService(constant.ModuleThirdpartyServiceManager, c)
+	if opts.ClientTLS != nil {
+		grpcOpts = append(grpcOpts, grpc.WithTransportCredentials(credentials.NewTLS(opts.ClientTLS)))
+	} else {
+		grpcOpts = append(grpcOpts, grpc.WithTransportCredentials(insecure.NewCredentials()))
+		auth.Insecure = true
+	}
+	grpcOpts = append(grpcOpts, grpc.WithPerRPCCredentials(auth))
+
+	conn, err := grpc.Dial(addr, grpcOpts...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to dial grpc server %s: %v", addr, err)
+	}
+
 	return &thirdpartyClient{
-		debug:         false,
-		opts:          opts,
-		thirdpartySvc: cli,
+		thirdpartySvc: third.NewBcsThirdpartyServiceClient(conn),
+		conn:          conn,
 	}, nil
 }
 
 type thirdpartyClient struct {
-	debug         bool
-	opts          *ClientOptions
-	thirdpartySvc third.BcsThirdpartyService
+	thirdpartySvc third.BcsThirdpartyServiceClient
+	conn          *grpc.ClientConn
+}
+
+// Close closes the grpc connection
+func (t *thirdpartyClient) Close() error {
+	if t.conn != nil {
+		if err := t.conn.Close(); err != nil {
+			return err
+		}
+	}
+	return nil
 }

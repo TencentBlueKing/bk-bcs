@@ -3105,6 +3105,9 @@ message ClusterNamespaces {
 		title: "集群 ID"
 	}, (validate.rules).string = {min_len: 13, max_len: 14}];
 	repeated string namespaces = 2;
+	string nsgroup = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "nsgroup"
+	}, (validate.rules).string = {in : ["", "all-system", "all-user", "all"]}];
 }
 
 message LabelSelector {

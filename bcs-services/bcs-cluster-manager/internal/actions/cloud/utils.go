@@ -37,7 +37,8 @@ func appendConfigNetworkInfoToCloud(cloud *cmproto.Cloud, config *cmproto.CloudN
 }
 
 // getCloudTemplateConfigInfos get cloud template config infos
-func getCloudTemplateConfigInfos(ctx context.Context, model store.ClusterManagerModel, businessID, cloudID string) ([]*cmproto.TemplateConfigInfo, error) {
+func getCloudTemplateConfigInfos(ctx context.Context, model store.ClusterManagerModel,
+	businessID, cloudID string) ([]*cmproto.TemplateConfigInfo, error) {
 	// if businessID is empty, no need to get template config
 	if businessID == "" {
 		return nil, nil
@@ -82,8 +83,6 @@ func dedupeAndSortNetworkInfo(networkInfo *cmproto.CloudNetworkInfo) {
 	networkInfo.ServiceSteps = dedupeAndSortUint32(networkInfo.ServiceSteps)
 	networkInfo.UnderlaySteps = dedupeAndSortUint32(networkInfo.UnderlaySteps)
 	networkInfo.UnderlayAutoSteps = dedupeAndSortUint32(networkInfo.UnderlayAutoSteps)
-
-	return
 }
 
 // dedupeAndSortEnvCidrSteps dedupe and sort env cidr steps
@@ -99,6 +98,8 @@ func dedupeAndSortEnvCidrSteps(steps []*cmproto.EnvCidrStep) []*cmproto.EnvCidrS
 		if step == nil {
 			continue
 		}
+		// nolint:govet
+		// conversion from uint32 to string yields a string of one rune, not a string of digits
 		key := step.Env + string(step.Step)
 		if _, exist := exists[key]; !exist {
 			exists[key] = struct{}{}

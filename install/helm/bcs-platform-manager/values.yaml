@@ -1,0 +1,209 @@
+# bcs-platform-manager
+global:
+  secret:
+    autoGenerate: false
+    bcsServerCerts: bcs-server-certs
+    bcsClientCerts: bcs-client-certs
+    bcsClientCertsWithoutEncrypted: bcs-client-certs-without-encrypted
+    etcdCerts: bcs-etcd-certs
+    bcsGatewayCerts: bcs-gateway-certs
+
+  # 占位符, 和 bcs-service-stack 保持一致
+  bkAPP:
+    systemID: ""
+    appCode: ""
+    appSecret: ""
+  bkIAM:
+    gateWayHost: ""
+    iamHost: ""
+    bkiamHost: ""
+  storage:
+    etcd:
+      endpoints: ["bcs-etcd:2379"]
+    redis:
+      password: ""
+    mongodb:
+      endpoint: ""
+      username: ""
+      password: ""
+  env:
+    BK_BCS_gatewayToken: ""
+
+storage:
+  mongodb:
+    endpoint: ""
+    username: ""
+    password: ""
+  redis:
+    password: ""
+
+enabled: true
+
+image:
+  registry: "hub.bktencent.com"
+  repository: blueking/bcs-platform-manager
+  pullPolicy: IfNotPresent
+  tag: v1.29.9
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: "bcs-platform-manager"
+
+## 副本数量
+replicaCount: 1
+
+## 资源配额
+resources:
+  requests:
+    cpu: 1
+    memory: 512Mi
+  limits:
+    cpu: 2
+    memory: 1Gi
+
+## 环境变量
+envs: {}
+
+## 服务配置
+svcConf:
+  web:
+    route_prefix: "/bcsapi/v4/platformmanager/v1"
+    
+  logging:
+    log_dir: "./tmp/logs"
+    log_max_size: 500
+    log_max_num: 3
+    logtostderr: true
+  
+  ## 基础相关配置
+  base_conf:
+    http_port: 8099
+    bind_address: ""
+    app_code: ""
+    app_secret: ""
+    system_id: ""
+    visitors_white_list: ["admin"]
+    
+  iam_conf:
+    gateway_server: ""
+    
+  bcs_conf:
+    host: "http://bcs-api-gateway.bcs-system.svc.cluster.local"
+    token: ""
+    jwt_public_key: ""
+    readAuthTokenFromEnv: true
+
+  ## Etcd 相关配置
+  etcd:
+    endpoints: "bcs-etcd:2379"
+    cert: "/data/bcs/cert/etcd/etcd.pem"
+    key: "/data/bcs/cert/etcd/etcd-key.pem"
+    ca: "/data/bcs/cert/etcd/etcd-ca.pem"
+
+  ## Redis 配置信息
+  redis:
+    address: "bcs-redis-master:6379"
+    db: 2
+    password: ""
+    ## 以下项非必须可不启用
+    # dialTimeout: 2
+    # readTimeout: 1
+    # writeTimeout: 1
+    # poolSize: 64
+    # minIdleConns: 64
+
+  ## Mongo 配置信息
+  mongo:
+    address: ""
+    authdatabase: admin
+    database: bcsplatformmanager
+    username: "root"
+    password: ""
+    connecttimeout: 5
+    maxpoolsize: 0
+    minpoolsize: 0
+
+  tracing:
+    enabled: false
+    endpoint: ""
+    token: ""
+
+## 挂载的 server. etcd cert 和 jwt key 对应的 secret 名称
+secret:
+  bcsServerCerts: bcs-server-certs
+  bcsClientCerts: bcs-client-certs
+  bcsClientCertsWithoutEncrypted: bcs-client-certs-without-encrypted
+  etcdCerts: bcs-etcd-certs
+  bcsGatewayCerts: bcs-gateway-certs
+
+## Pod 注解配置
+podAnnotations: {}
+
+## Pod 安全性上下文
+podSecurityContext:
+  {}
+  # fsGroup: 2000
+
+## 容器安全性上下文
+securityContext:
+  {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+## 扩缩容配置
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
+
+## 网络配置类
+ingress:
+  enabled: false
+  className: ""
+  rules:
+    - host: bcs-cr.example.com
+      paths:
+        - path: /metrics
+          portNumber: 9092
+        - path: /
+          portNumber: 9091
+  tls: []
+
+service:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 8099
+      targetPort: 8099
+      protocol: TCP
+
+## 权限控制类
+serviceAccount:
+  create: true
+  name: bcs-platform-manager
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+## 指标，监控等
+metrics:
+  enabled: false
+
+  serviceMonitor:
+    enabled: false
+    interval: ""
+    scrapeTimeout: ""
+
+## 蓝鲸日志采集
+bkLogCollection:
+  enabled: false
+  dataId: 1

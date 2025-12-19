@@ -1,8 +1,6 @@
 {
   "server_config": {
-    "name": "${serverName}",
-    "version": "${serverVersion}",
-    "address": "${serverAddress}",
+    "address": "${localIp}",
     "port": ${serverPort},
     "httpport": ${serverHttpPort},
     "servercert": "${serverCert}",
@@ -27,10 +25,6 @@
     "key": "${etcdKey}",
     "ca": "${etcdCA}"
   },
-  "gateway": {
-    "endpoint": "${bcsGatewayEndpoint}",
-    "token": "${bcsGatewayToken}"
-  },
   "rabbitmq": {
     "host": "${rabbitmqHost}",
     "port": ${rabbitmqPort},
@@ -50,7 +44,6 @@
   },
   "notification": {
     "bk_app_code": "${bkAppCode}",
-    "bk_app_secret": "${bkAppSecret}",
-    "bk_username": "${bkUsername}"
+    "bk_app_secret": "${bkAppSecret}"
   }
 }

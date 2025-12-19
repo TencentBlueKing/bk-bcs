@@ -29,7 +29,8 @@ import (
 
 // ConfigType xxx
 var ConfigType = map[string]struct{}{
-	common.CloudConfigType: {},
+	common.CloudConfigType:    {},
+	common.TaskTimeConfigType: {},
 }
 
 func checkTemplateConfigType(confType string) bool {
@@ -40,8 +41,8 @@ func checkTemplateConfigType(confType string) bool {
 }
 
 // getTemplateConfigInfos list all templateConfigInfos
-func getTemplateConfigInfos(
-	ctx context.Context, model store.ClusterManagerModel, businessID, projectID, clusterID, provider, confType string, opt *options.ListOption) ([]*proto.TemplateConfigInfo, error) {
+func getTemplateConfigInfos(ctx context.Context, model store.ClusterManagerModel, businessID, projectID, clusterID,
+	provider, confType string, opt *options.ListOption) ([]*proto.TemplateConfigInfo, error) {
 	condM := make(operator.M)
 	//! we don't setting bson tag in proto file
 	//! all fields are in lowcas

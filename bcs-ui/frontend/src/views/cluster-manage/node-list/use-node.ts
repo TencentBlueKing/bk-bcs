@@ -5,6 +5,7 @@ import {
   cordonNodes,
   getK8sNodes,
   schedulerNode as handleSchedulerNode,
+  setNodeAnnotations as handleSetNodeAnnotations,
   setNodeLabels as handleSetNodeLabels,
   setNodeTaints as handleSetNodeTaints,
   taskDetail as taskDetailAPI,
@@ -22,7 +23,8 @@ export interface INodesParams {
   nodeIP: string[];
   nodes: string[];
   nodeTemplateID?: string;
-  login?: any
+  login?: any;
+  advance?: any;
 }
 
 export interface INodeCordonParams {
@@ -44,6 +46,11 @@ export interface ITaint {
 export interface ITaintsItem {
   nodeName: string
   taints: Array<ITaint>
+}
+
+export interface IAnnotationsItem {
+  nodeName: string
+  annotations: Record<string, string>
 }
 
 export interface ILabelsAndTaintsParams<T> {
@@ -83,8 +90,8 @@ export default function useNode() {
     });
   };
   // 添加节点
-  const addNode = async (params: Pick<INodesParams, 'clusterId' | 'nodeIps' | 'nodeTemplateID' | 'login'>) => {
-    const { clusterId, nodeIps = [], nodeTemplateID = '', login } = params;
+  const addNode = async (params: Pick<INodesParams, 'clusterId' | 'nodeIps' | 'nodeTemplateID' | 'login' | 'advance'>) => {
+    const { clusterId, nodeIps = [], nodeTemplateID = '', login, advance } = params;
     if (!clusterId || !nodeIps.length) {
       console.warn('clusterId or is nodes is empty');
       return;
@@ -94,6 +101,7 @@ export default function useNode() {
       nodes: nodeIps,
       nodeTemplateID,
       login,
+      advance,
       operator: store.state.user?.username,
     });
     result && $bkMessage({
@@ -255,6 +263,12 @@ export default function useNode() {
       .catch(() => false);
     return result;
   };
+  // 设置节点注解
+  const setNodeAnnotations = async (params: ILabelsAndTaintsParams<IAnnotationsItem>) => {
+    const result = await handleSetNodeAnnotations(params).then(() => true)
+      .catch(() => false);
+    return result;
+  };
   // 批量设置节点标签，返回data,以处理个别节点标签设置失败的情况
   const batchSetNodeLabels = async (params: ILabelsAndTaintsParams<ILabelsItem>) => {
     const result = await handleSetNodeLabels(params).then(data => data)
@@ -265,6 +279,12 @@ export default function useNode() {
   // 设置节点污点，返回data,以处理个别节点污点设置失败的情况
   const batchSetNodeTaints = async (params: ILabelsAndTaintsParams<ITaintsItem>) => {
     const result = await handleSetNodeTaints(params).then(data => data)
+      .catch(() => false);
+    return result;
+  };
+  // 批量设置节点注解，返回data,以处理个别节点注解设置失败的情况
+  const batchSetNodeAnnotations = async (params: ILabelsAndTaintsParams<IAnnotationsItem>) => {
+    const result = await handleSetNodeAnnotations(params).then(data => data)
       .catch(() => false);
     return result;
   };
@@ -296,8 +316,10 @@ export default function useNode() {
     retryTask,
     setNodeLabels,
     setNodeTaints,
+    setNodeAnnotations,
     batchSetNodeLabels,
     batchSetNodeTaints,
+    batchSetNodeAnnotations,
     batchDeleteNodes,
     taskDetail,
     getAllNodeOverview,

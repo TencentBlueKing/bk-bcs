@@ -28,6 +28,7 @@ import VueRouter from 'vue-router';
 
 import ClusterManage from './cluster-manage';
 import DeployManage from './deployment-manage';
+import PlatformManage from './platform-manage';
 import PluginManage from './plugin-manage';
 import ProjectManage from './project-manage';
 import ResourceView from './resource-view';// todo 有循环依赖
@@ -35,6 +36,7 @@ import ResourceView from './resource-view';// todo 有循环依赖
 import { clusterDetail } from '@/api/modules/cluster-manager';
 import cancelRequest from '@/common/cancel-request';
 import { useAppData } from '@/composables/use-app';
+import usePlatform from '@/composables/use-platform';
 import $store from '@/store';
 import useMenu from '@/views/app/use-menu';
 
@@ -46,6 +48,10 @@ const NotFound = () => import(/* webpackChunkName: 'entry' */'@/views/app/404.vu
 const Forbidden = () => import(/* webpackChunkName: 'entry' */'@/views/app/403.vue');
 const Token = () => import(/* webpackChunkName: 'entry' */'@/views/user-token/token.vue');
 const ProjectList = () => import(/* webpackChunkName: 'project' */'@/views/project-manage/project/project.vue');
+
+const { config, setDocumentTitle } = usePlatform();
+let name;
+let brandName;
 
 const router = new VueRouter({
   mode: 'history',
@@ -98,6 +104,7 @@ const router = new VueRouter({
         },
         ...ClusterManage,
         ...DeployManage,
+        ...PlatformManage,
         ...ProjectManage,
         ...PluginManage,
       ],
@@ -158,8 +165,9 @@ router.beforeEach(async (to, from, next) => {
           newPath = `${SITE_URL}/projects/${projectCode}${redirectPath?.replace(SITE_URL, '')}`;
         }
         let name;
+        let newPathRoute;
         try {
-          const newPathRoute = router.resolve(newPath);
+          newPathRoute = router.resolve(newPath);
           name = newPathRoute.route.matched?.[newPathRoute.route.matched.length - 1]?.name;
         } catch (err) {
           console.warn(err);
@@ -170,6 +178,7 @@ router.beforeEach(async (to, from, next) => {
         next({
           name,
           params: { // 防止被路由规则的 params 覆盖
+            ...(newPathRoute?.route?.params || {}),
             projectCode,
             clusterId,
           },
@@ -196,24 +205,29 @@ router.beforeEach(async (to, from, next) => {
     await getUserInfo();
   }
   // 校验路由是否开启
-  const { validateRouteEnable, getNavByRoute } = useMenu();
+  const { validateRouteEnable } = useMenu();
   const result = await validateRouteEnable(to);
   if (!result) {
     // 未开启菜单项
     next({ name: '404' });
   } else {
-    // 数据上报
-    window.BkTrace?.startReported({
-      module: 'router',
-      operation: 'router',
-      desc: '路由跳转',
-      username: $store.state.user.username,
-      projectCode: to.params.projectCode,
-      to: to.name,
-      from: from.name,
-      navID: getNavByRoute(to)?.id,
-    }, 'router');
     next();
+  }
+});
+
+router.afterEach((to) => {
+  if (config.i18n?.name && !name) {
+    name = config.i18n.name;
+    brandName = config.i18n.brandName;
+  }
+  if (to.meta?.resource) {
+    const temp = {
+      name: to.meta.resource,
+      brandName: name,
+    };
+    setDocumentTitle(temp, [brandName]);
+  } else {
+    setDocumentTitle(config.i18n);
   }
 });
 

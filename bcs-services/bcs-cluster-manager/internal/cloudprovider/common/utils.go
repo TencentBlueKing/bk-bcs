@@ -502,7 +502,10 @@ func updateClusterNodesAnnotations(ctx context.Context, data NodeAnnotationsData
 	blog.Infof("updateClusterNodesAnnotations[%s] ListClusterNodesByIPsOrNames successful[%v]", taskID, nodeNames)
 
 	for _, name := range nodeNames {
-		annotations := data.annotations
+		annotations := make(map[string]string)
+		for k, v := range data.annotations {
+			annotations[k] = v
+		}
 
 		if len(annotations) == 0 {
 			blog.Infof("updateClusterNodesAnnotations[%s] node[%s] annotations empty", taskID, name)
@@ -639,6 +642,8 @@ func UpdateClusterNodesLabels(ctx context.Context, data NodeLabelsData) error { 
 	cls, err := cloudprovider.GetStorageModel().GetCluster(ctx, data.ClusterID)
 	if err != nil {
 		blog.Errorf("updateClusterNodesLabels[%s] GetCluster[%s] failed: %v", taskID, data.ClusterID, err)
+		cloudprovider.GetStorageModel().CreateTaskStepLogWarn(context.Background(), taskID, stepName,
+			fmt.Sprintf("updateClusterNodesLabels[%s] GetCluster[%s] failed: %v", taskID, data.ClusterID, err))
 	}
 
 	ctx, err = tenant.WithTenantIdByResourceForContext(ctx, tenant.ResourceMetaData{ProjectId: cls.ProjectID})
@@ -650,10 +655,14 @@ func UpdateClusterNodesLabels(ctx context.Context, data NodeLabelsData) error { 
 	hostsMap, hostIDs, err := GetCmdbNodeDetailInfo(ctx, data.NodeIPs)
 	if err != nil {
 		blog.Errorf("updateClusterNodesLabels[%s] GetCmdbNodeDetailInfo failed: %v", taskID, err)
+		cloudprovider.GetStorageModel().CreateTaskStepLogWarn(context.Background(), taskID, stepName,
+			fmt.Sprintf("updateClusterNodesLabels[%s] GetCmdbNodeDetailInfo failed: %v", taskID, err))
 	}
 	hostsTopo, err := GetNodeBizRelation(ctx, hostIDs)
 	if err != nil {
 		blog.Errorf("updateClusterNodesLabels[%s] GetNodeBizRelation failed: %v", taskID, err)
+		cloudprovider.GetStorageModel().CreateTaskStepLogWarn(context.Background(), taskID, stepName,
+			fmt.Sprintf("updateClusterNodesLabels[%s] GetNodeBizRelation failed: %v", taskID, err))
 	}
 
 	for _, node := range nodeNames {
@@ -678,6 +687,26 @@ func UpdateClusterNodesLabels(ctx context.Context, data NodeLabelsData) error { 
 			topo, ok1 := hostsTopo[int(h.BKHostID)]
 			if ok1 {
 				labels[utils.BusinessIDLabelKey] = fmt.Sprintf("%d", topo.BkBizID)
+			}
+
+			labels[utils.IDCCityIDLabelKey] = h.IDCCityID
+			labels[utils.IDCAreaIDLabelKey] = fmt.Sprintf("%v", h.IDCAreaID)
+			switch h.SvrTypeName {
+			case cmdb.QcCvm:
+				{
+					if _, find := labels[utils.RegionLabelKey]; !find {
+						regions := strings.Split(h.BkCloudRegion, "-")
+						if len(regions) > 1 {
+							labels[utils.RegionLabelKey] = regions[1]
+						}
+					}
+				}
+			case cmdb.IdcPm:
+				{
+					// 物理机保持为空
+					labels[utils.RegionLabelKey] = ""
+				}
+			default:
 			}
 		}
 
@@ -811,11 +840,12 @@ func canDelete(pod v1.Pod) bool { // nolint
 
 // ResourceQuotaDetail resource quota info
 type ResourceQuotaDetail struct {
-	Name        string `json:"name"`
-	CpuRequests string `json:"cpuRequests"`
-	CpuLimits   string `json:"cpuLimits"`
-	MemRequests string `json:"memRequests"`
-	MemLimits   string `json:"memLimits"`
+	Name          string `json:"name"`
+	CpuRequests   string `json:"cpuRequests"`
+	CpuLimits     string `json:"cpuLimits"`
+	MemRequests   string `json:"memRequests"`
+	MemLimits     string `json:"memLimits"`
+	ServiceLimits string `json:"serviceLimits"`
 }
 
 // BuildCreateResourceQuotaTaskStep build create resource quota task step
@@ -901,11 +931,12 @@ func CreateNamespaceResourceQuota(ctx context.Context, clusterID string, quota R
 
 	k8sOperator := clusterops.NewK8SOperator(options.GetGlobalCMOptions(), cloudprovider.GetStorageModel())
 	err := k8sOperator.CreateResourceQuota(ctx, clusterID, clusterops.ResourceQuotaInfo{
-		Name:        quota.Name,
-		CpuRequests: quota.CpuRequests,
-		CpuLimits:   quota.CpuLimits,
-		MemRequests: quota.MemRequests,
-		MemLimits:   quota.MemLimits,
+		Name:          quota.Name,
+		CpuRequests:   quota.CpuRequests,
+		CpuLimits:     quota.CpuLimits,
+		MemRequests:   quota.MemRequests,
+		MemLimits:     quota.MemLimits,
+		ServiceLimits: quota.ServiceLimits,
 	})
 	if err != nil {
 		blog.Errorf("CreateNamespaceResourceQuota[%s] resource[%s:%s] failed: %v", taskID,

@@ -149,6 +149,8 @@ nav:
   tkexCRD: Kourse
   templateFile: TemplateFile
   projectQuotas: Project Quotas
+  platformProject: Platform Project
+  platformManage: Platform
 iam:
   title:
     perms: This operation requires the following permissions
@@ -370,6 +372,7 @@ generic:
     know: I Know
     confirmSave: Confirm save
     detail: Detail
+    detail1: Detail
     remove: Remove
   label:
     basicConfig: Basic config
@@ -427,6 +430,12 @@ generic:
     resourceName: Resource name
     resourceID: Resource ID
     none: None
+    tag: Tags
+    description: Description
+    managers: Managers
+    codeMode: Code Mode
+    enabled: Enabled
+    disabled: Disabled
   status:
     part_failure: Part failure
     support: Support
@@ -471,6 +480,10 @@ generic:
     halfSuccess: Half success
     terminate: Terminate
     waiting: Waiting
+    installing: Installing
+    installFailed: Install Failed
+    uninstalling: Uninstalling
+    uninstallFailed: Uninstall Failed
   validate:
     repeatKey: Repeat key
     required: Requiring item
@@ -482,9 +495,6 @@ generic:
     annotations: 'only support letters, numbers, space and characters (-_./)'
     labelKey1: >-
       Only support the letters, numbers and characters (-_./), and need to start
-      with the letter number
-    labelValue: >-
-      Only support the letters, numbers and characters (-_.), and need to start
       with the letter number
     kindName: >-
       The name can only include numbers, letters, mid-line lines (-), down line
@@ -549,6 +559,10 @@ generic:
       ipVpcNotMatched: >-
         The VPC that belongs to the election node must be consistent with the
         cluster. The selected node VPC: {0}, cluster VPC: {1}
+      ipDiskNumNotMatched: Selected nodes must have /dev/vdb data disk
+      ipAgentAbnormal: Agent status is abnormal
+      ipNotGpu: The election node is not a GPU node
+      ipIsGpu: The election node is a GPU node
     selected:
       text2: '{remainCount} items'
     label:
@@ -911,10 +925,8 @@ cluster:
       regionDiff: >-
         The node area needs to be consistent with the cluster area, node area:
         {region1}, cluster area: {region2}
-      vpcDiff: >-
-        Node VPC needs to be consistent with the cluster VPC, node VPC: {VPC1},
-        cluster VPC: {VPC2}
       emptyKubeConfig: please run kubeconfig usability testing
+      maxNum50: The maximum number of nodes is 50
     button:
       createCluster: Create Cluster
       addHost: Add server
@@ -1223,6 +1235,11 @@ cluster:
         name: Node pool name
         detail: View node pool details
         serviceRole: Service role
+        type:
+          title: Node Pool Type
+          tips: Default use of GPU image provided by the platform
+        CVM: CVM
+        GPU: GPU
       title:
         nodeConfig: Node configuration
         initConfig: Initialization configuration
@@ -1656,6 +1673,7 @@ cluster:
       setTaint: Set taint
       addLabel: Add tag
       addTaint: Add taint
+      addAnnotation: Add annotation
       copy:
         text: Copy
         checkedIP: Copy check ip
@@ -1679,6 +1697,7 @@ cluster:
       disableImportClusterAction: 'Kubeconfig imports cluster, node management function is unavailable'
       disableImportClusterAddNode: Importing a cluster does not support adding nodes from existing servers.
       hasNotNodePoolNode: There are nodes added by non-node pools among the selected nodes.
+      notNodePoolNode: This node is added by non-node pools.
       disableBatchSettingNodes: There are abnormal nodes among the selected nodes.
       undo: undo
       batchUndo: Batch undo
@@ -1696,6 +1715,7 @@ cluster:
       inputValue: Please enter the value
       locationTag: Location tag
       locationTaint: Location taint
+      locationAnnotation: Location annotation
     title:
       confirmAddNode: Determine the additional node
       confirmReAddNode: Confirm the re-added node
@@ -1706,6 +1726,8 @@ cluster:
         desc: Batch settings only show the same key label
       batchSetTaint:
         text: Set taint batch
+      batchSetAnnotation:
+        text: Set annotation batch
       tableSetting: Table setting
       fieldDisplaySettings: Field display settings
       nodeSaveError: Some nodes failed to save
@@ -1745,6 +1767,9 @@ cluster:
       termination: Termination grace period
       drainRisk: Drain Risk
       isDrainOnly: Only show will be evicted Pods
+      nodeType: Node Type
+      cvmNode: CVM
+      gpuNode: GPU
     metric:
       cpuUsageAndRequestUsage: CPU usage rate/packing rate
       memUsageAndRequestUsage: Memory usage/packing rate
@@ -2802,6 +2827,9 @@ projects:
     search: Enter the project name search
     bkMonitor: Application monitor
     businessID: Business ID
+    ID: Project ID
+    business: Business
+    goto: Go to Project
   validate:
     projectName: >-
       Please enter 2-64 characters, and do not include
@@ -2876,6 +2904,9 @@ dashboard:
     label:
       createMoreNamespaceVars: 'You can create more variables in the namespace through {action}'
       noNamespaceVariables: No naming space variables
+      allNamespaces: All namespaces
+      projectNS: 'Project namespace {0}'
+      systemNS: 'System namespace {0}'
     msg:
       undoSuccess: Undo success
     quota:
@@ -2970,6 +3001,7 @@ dashboard:
       filelog: Log Retrieval
       search: 'Please enter the name, mirror image, IP, node search'
       confirm: Confirm the Multi-Delete PODs below
+      logDisabledTips: The cluster does not have bklog-collector installed
     editor:
       yamlMode:
         confirm: Are you sure you want to switch to YAML mode?
@@ -3328,6 +3360,8 @@ googleCloud:
     onlySupportJsonFile: >-
       Only the json file generated when a service account is created is
       supported
+importTencentCloud:
+  title: Import a public cloud cluster - Tencent Cloud
 importGoogleCloud:
   title: Import a public cloud cluster - Google Cloud
   label:
@@ -3581,6 +3615,8 @@ tke:
     publicImage: Public image
     marketImage: Market image
     privateImage: Private image
+    bcsImage: BCS image
+    clusterImage: Cluster image
     apiServerCLB:
       text: CLB
       internet: Internet
@@ -3779,6 +3815,7 @@ tke:
       The Pod IP of the VPC-CNI network plugin is not using this availability
       zone, please choose another availability zone
     imageUsedInCluster: A cluster is using this
+    currentClusterUsed: Current cluster usage
     subnetZone: >-
       The Pod IP of the VPC-CNI network plugin is bound to the cluster nodes,
       and the availability zone of the Pod IP must be consistent with the
@@ -4001,3 +4038,151 @@ diff:
   delete: Delete
   change: Change
   add: Add
+serviceMesh:
+  title: Service Mesh
+  create: Create Mesh
+  status:
+    'on': 'ON'
+    'off': 'OFF'
+  label:
+    name: Mesh Name
+    ID: Mesh ID
+    version: Version
+    status: Status
+    cluster: Associated Cluster
+    createTime: Creation Time
+    scene: Observation Scenario
+    basicInfo: Basic Information
+    network: Mesh Feature Configuration
+    master: High Availability Configuration
+    create: Create Mesh
+    info: Mesh Information
+    description: Description
+    clusterConfig: Cluster Configuration
+    primaryClusters: Primary Cluster
+    featureConfig: Feature Settings
+    egressMode: Egress Traffic Mode
+    sidecarOn: Sidecar Readiness Guarantee
+    sidecarOff: Sidecar Termination Guarantee
+    sidecarResource: Sidecar Resources
+    cpuRequest: CPU Request
+    cpuLimit: CPU Limit
+    memoryRequest: Memory Request
+    memoryLimit: Memory Limit
+    dnsCapture: DNS Proxy Forwarding
+    dnsAutoAllocate: Auto Allocate IP
+    http10: Support HTTP/1.0
+    excludeIPs: Exclude IP Ranges
+    observability: Observability
+    metrics: Metrics Collection
+    controlPlane: Control Plane Metrics Reporting
+    dataPlane: Data Plane Metrics Reporting
+    logOutput: Log Output
+    logType: Log Output Type
+    logFormat: Log Output Format
+    tracing: Distributed Tracing
+    sampleRate: Sampling Rate
+    endpoint: Reporting Endpoint
+    bkToken: Reporting Token
+    highAvailability: Control Plane HA Configuration
+    replicas: Replicas
+    resource: Resources
+    cpuPercent: CPU Utilization
+    replicaMin: Minimum Replicas
+    replicaMax: Maximum Replicas
+    dedicatedNode: Dedicated Node
+    multiCluster: Multi-cluster
+    differentNetwork: Cluster network connectivity
+    connected: Connected
+    notConnected: Not connected (currently not supported)
+    clbID: East West Gateway CLB
+    subClusters: Sub Clusters
+    tableEmpty: 'No data available, please add cluster first'
+    clusterRegion: Region
+    joinTime: Join Time
+    networkID: Network ID
+  placeholder:
+    search: Search mesh name/version/status/associated cluster
+    ips: 'Please enter IPs, separate multiple IPs with Enter'
+  tips:
+    delete: Confirm to delete this mesh?
+    subTitle: 'Mesh Name: {name}'
+    primaryClusterDesc: Used for deploying istio control plane
+    clusterEnabled: This cluster does not match the currently selected k8s version
+    maxlength: 'Maximum length: 2000'
+    cpuValidate: CPU limit must be greater than or equal to CPU request
+    memoryValidate: memory limit must be greater than or equal to memory request
+    endpointValidate: >-
+      Only uppercase and lowercase letters, numbers, and characters ( . : / )
+      are supported
+    disabledVirtual: VCluster is not supported
+    disabledShare: Shared cluster is not supported
+    disabledFederation: Federation cluster is not supported
+    autoscaleMax: >-
+      The maximum number of replicas cannot be less than the minimum number of
+      replicas
+    isInstalled: Already installed
+    egressModeDesc:
+      title: Configure outbound traffic policy for services within the mesh.
+      registryOnly: >-
+        Registry Only:Only supports accessing services automatically discovered
+        by the mesh and manually registered services
+      allowAny: 'Allow Any:Can access any address'
+    sidecarOnDesc: >-
+      Using HoldApplicationUntilProxyStarts feature to configure business
+      containers to wait for Sidecar to complete startup before starting,
+      ensuring Pods that depend on Sidecar run normally
+    sidecarOffDesc: >-
+      When enabled, Sidecar termination will wait for complete termination of
+      processes in business containers, which will increase Pod termination time
+      to some extent. Recommended for services whose processes cannot be
+      terminated at any time
+    dnsCaptureDesc: >-
+      When Istio proxies DNS, all DNS requests from applications will be
+      redirected to Sidecar. If the request is processed by the proxy, it will
+      directly return the response to the application, avoiding round trips to
+      upstream DNS servers
+    dnsAutoAllocateDesc: >-
+      DNS proxy supports automatically allocating addresses for ServiceEntries
+      without explicitly specified addresses
+    http10Desc: >-
+      By default, Istio does not support HTTP/1.0 and prefers to use HTTP/1.1 or
+      HTTP/2 protocols. If HTTP/1.0 support is required, it needs to be enabled
+      separately.
+    excludeIPsDesc: >-
+      Corresponding to excludeIPRanges, by default, the Sidecar will handle all
+      traffic within the current Pod. If you want to bypass the Sidecar proxy
+      for specific IPs, you can configure this option. Once configured, traffic
+      to the specified IP ranges will not utilize Istio's traffic management,
+      observability, and other features. Configuration changes will only take
+      effect for newly created Pods; existing Pods will require a restart to
+      apply the changes.
+    dataPlaneDesc: >-
+      For large-scale clusters, need to evaluate the potential pressure on
+      remote storage caused by monitoring data
+    sampleRateDesc: >-
+      Sampling ratio for mesh to collect and persist tracing calls. Sidecar data
+      collection and reporting consume resources and bandwidth proportional to
+      data volume. Configure as needed, recommended 100% for dev/test
+      environments and 1% for production
+    endpointDesc: Corresponding reporting endpoint of BlueKing Monitor
+    bkTokenDesc: Obtain from BlueKing Monitor APM settings
+    dedicatedNodeDesc: >-
+      Set labels to schedule istio control plane to dedicated nodes, provided
+      that corresponding labels already exist on the nodes
+    differentNetworkDesc: >-
+      Connect container networks through cloud networking, or independently
+      develop cloud based requirements on the same VPC
+    clbIDDesc: >-
+      Used to connect from the cluster to the main cluster control plane, fill
+      in a clb id
+    subClustersDesc: Build multiple clusters for joining the host group control surface
+    disabledClustersDesc: Cluster is occupied
+    cancelTitle: Are you sure to close the multi cluster?
+    cancelSubTitle: 'After closing, the filled in content will be cleared.'
+    clearClustersTip: Please clear the cluster first
+    revisionDesc: >-
+      Used to specify the control surface version, namespaces need to add labels
+      to use the corresponding version control surface, such as Istio.
+      io/rev=1-18-bcs-2. Only the first installation can specify that subsequent
+      modifications cannot be made, otherwise the default value will be used.

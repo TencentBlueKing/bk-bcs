@@ -22,7 +22,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/rest"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
 )
 
 // UserPermRequestRedirect 用户权限申请URL
@@ -40,7 +39,7 @@ func (s *service) UserPermRequestRedirect(c *gin.Context) {
 	}
 
 	redirectUrl, err := iam.MakeResourceApplyUrl(c.Request.Context(),
-		project.ProjectId, clusterId, route.GetNamespace(c), "", "")
+		project.ProjectId, clusterId, "", "", project.TenantID)
 	if err != nil {
 		rest.APIError(c, i18n.T(c, "%s", err))
 		return

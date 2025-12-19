@@ -23,7 +23,7 @@ import (
 	"os"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/emicklei/go-restful"
+	restful "github.com/emicklei/go-restful/v3"
 	coreV1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"

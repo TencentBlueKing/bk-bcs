@@ -14,7 +14,7 @@
 package v3http
 
 import (
-	"github.com/emicklei/go-restful"
+	restful "github.com/emicklei/go-restful/v3"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/jwt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/middleware"

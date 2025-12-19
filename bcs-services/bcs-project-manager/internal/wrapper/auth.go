@@ -44,7 +44,6 @@ var NoAuthEndpoints = []string{
 	"BCSProject.ListAuthorizedProjects",
 	"BCSProject.GetProjectActive",
 	"Business.ListBusiness",
-	"Namespace.ListNamespaces",
 	"Namespace.WithdrawNamespace",
 	"Namespace.SyncNamespace",
 }
@@ -139,6 +138,7 @@ type resourceID struct {
 	ClusterID       string `json:"clusterID,omitempty"`
 	Namespace       string `json:"namespace,omitempty"`
 	Name            string `json:"name,omitempty"`
+	QuotaId         string `json:"quotaId,omitempty"`
 }
 
 // check check and convert resourceID
@@ -166,6 +166,14 @@ func (r *resourceID) check() error {
 		}
 		r.ProjectID = p.ProjectID
 	}
+	if r.QuotaId != "" && r.ProjectID == "" {
+		quota, err := store.GetModel().GetProjectQuotaById(context.Background(), r.QuotaId)
+		if err != nil {
+			return errorx.NewReadableErr(errorx.ProjectQuotaNotExistsErr, "项目配额不存在")
+		}
+		r.ProjectID = quota.ProjectId
+	}
+
 	return nil
 }
 
@@ -187,6 +195,8 @@ func CheckUserPerm(ctx context.Context, req server.Request, user middleauth.Auth
 	if uErr := json.Unmarshal(b, resourceID); uErr != nil {
 		return false, uErr
 	}
+
+	logging.Info("CheckUserPerm: method/%s, resource: %+v", req.Method(), *resourceID)
 
 	if !stringx.StringInSlice(req.Method(), NoNeedCheckResourceIDEndpoints) {
 		if e := resourceID.check(); e != nil {

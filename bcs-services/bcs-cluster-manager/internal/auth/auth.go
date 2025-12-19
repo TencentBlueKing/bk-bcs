@@ -28,6 +28,7 @@ import (
 	authutils "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
 	"go-micro.dev/v4/server"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 )
@@ -76,7 +77,10 @@ type resourceID struct {
 	ServerKey   string `json:"serverKey,omitempty"` // same as clusterID
 	InnerIP     string `json:"innerIP,omitempty"`   // 节点表示
 	CloudID     string `json:"cloudID,omitempty"`
-	AccountID   string `json:"accountID,omitempty"` // 云账号
+	AccountID   string `json:"accountID,omitempty"`  // 云账号
+	BusinessID  string `json:"businessID,omitempty"` // 业务Id
+	ScopeType   string `json:"scopeType,omitempty"`  // 资源范围类型(biz/biz_set)
+	ScopeId     string `json:"scopeId,omitempty"`    // 资源范围ID(业务ID/业务集ID)
 }
 
 func checkResourceID(resourceID *resourceID) error {
@@ -207,11 +211,43 @@ func callIAM(user middleware.AuthUser, action string, resourceID resourceID) (bo
 		allow, url, err := cloudAccountIam.CanManageCloudAccount(user.GetUsername(),
 			resourceID.ProjectID, resourceID.AccountID)
 		return allow, url, nil, err
+	case cloudaccount.CanCreateCloudAccountOperation:
+		allow, url, err := cloudAccountIam.CanCreateCloudAccount(user.GetUsername(), resourceID.ProjectID)
+		return allow, url, nil, err
 	case cloudaccount.CanUseCloudAccountOperation:
+		// 存在account id 非必输的情况，跳过权限校验
+		if resourceID.AccountID == "" {
+			return true, "", nil, nil
+		}
 		allow, url, err := cloudAccountIam.CanUseCloudAccount(user.GetUsername(),
 			resourceID.ProjectID, resourceID.AccountID)
 		return allow, url, nil, err
+	case CanOperatorBiz:
+		// 业务下操作人权限校验
+		bizID := resourceID.BusinessID
+		if bizID == "" && resourceID.ScopeType == string(common.Biz) {
+			bizID = resourceID.ScopeId
+		}
+		// 其他情况则不进行权限校验
+		if bizID == "" {
+			return true, "", nil, nil
+		}
+		allow, err := checkUserBizPerm(user.GetUsername(), bizID)
+		return allow, "", nil, err
 	default:
 		return false, "", nil, errors.New("permission denied")
 	}
+}
+
+const (
+	// CanOperatorBiz 操作人可操作业务
+	CanOperatorBiz = "CanOperatorBiz"
+)
+
+// 包被循环调用，只能使用SetCheckBizPerm设置
+var checkUserBizPerm func(username string, businessID string) (bool, error)
+
+// SetCheckBizPerm xxx
+func SetCheckBizPerm(f func(username string, businessID string) (bool, error)) {
+	checkUserBizPerm = f
 }

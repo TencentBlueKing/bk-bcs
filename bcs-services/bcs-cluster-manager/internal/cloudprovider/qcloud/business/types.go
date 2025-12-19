@@ -61,7 +61,7 @@ func GetNodeInstanceDataDiskInfo(
 		return nil, err
 	}
 
-	instanceList, err := client.GetInstancesById(instanceIDs)
+	instanceList, err := client.GetInstancesByID(instanceIDs)
 	if err != nil {
 		blog.Errorf("GetNodeInstanceDataDiskInfo[%+v] failed: %v", instanceIDs, err)
 		return nil, err
@@ -103,7 +103,7 @@ func FilterNodesByDataDisk(instanceIDs []string, opt *cloudprovider.CommonOption
 	}
 
 	for i := range instanceDisk {
-		if instanceDisk[i].DiskCount <= 1 {
+		if instanceDisk[i].DiskCount < 1 {
 			filter.SingleDiskInstance = append(filter.SingleDiskInstance, instanceDisk[i].InstanceID)
 			filter.SingleDiskInstanceIP = append(filter.SingleDiskInstanceIP, instanceDisk[i].InstanceIP)
 			continue

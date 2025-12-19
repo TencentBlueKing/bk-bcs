@@ -17,7 +17,6 @@ const (
 	// ===== 基础信息 =====
 	FieldKeyMeshID        = "meshID"
 	FieldKeyNetworkID     = "networkID"
-	FieldKeyProjectID     = "projectID"
 	FieldKeyProjectCode   = "projectCode"
 	FieldKeyDescription   = "description"
 	FieldKeyChartVersion  = "chartVersion"
@@ -31,11 +30,14 @@ const (
 	FieldKeyVersion       = "version"
 
 	// ===== Mesh 配置 =====
-	FieldKeyControlPlaneMode = "controlPlaneMode"
-	FieldKeyClusterMode      = "clusterMode"
-	FieldKeyPrimaryClusters  = "primaryClusters"
-	FieldKeyRemoteClusters   = "remoteClusters"
-	FieldKeyDifferentNetwork = "differentNetwork"
+	FieldKeyControlPlaneMode    = "controlPlaneMode"
+	FieldKeyClusterMode         = "clusterMode"
+	FieldKeyPrimaryClusters     = "primaryClusters"
+	FieldKeyRemoteClusters      = "remoteClusters"
+	FieldKeyDifferentNetwork    = "differentNetwork"
+	FieldKeyMultiClusterEnabled = "multiClusterEnabled"
+	FieldKeyClbID               = "clbID"
+	FieldKeyRevision            = "revision"
 
 	// ===== 特性配置 =====
 	FieldKeyFeatureConfigs = "featureConfigs"
@@ -63,7 +65,7 @@ const (
 	FieldKeyObservabilityConfig        = "observabilityConfig"
 	FieldKeyMetricsConfig              = "metricsConfig"
 	FieldKeyLogCollectorConfig         = "logCollectorConfig"
-	FieldKeyTracingConfig              = "tracingConfig"
+	FieldKeyTracingConfig              = "tracing"
 	FieldKeyTraceSamplingPercent       = "traceSamplingPercent"
 	FieldKeyMetricsEnabled             = "metricsEnabled"
 	FieldKeyControlPlaneMetricsEnabled = "controlPlaneMetricsEnabled"

@@ -19,7 +19,7 @@ import (
 	"strconv"
 	"time"
 
-	gorestful "github.com/emicklei/go-restful"
+	gorestful "github.com/emicklei/go-restful/v3"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/utils/metrics"

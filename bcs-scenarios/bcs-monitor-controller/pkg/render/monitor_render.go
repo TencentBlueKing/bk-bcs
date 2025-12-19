@@ -137,6 +137,9 @@ func (r *MonitorRender) renderMonitorRule(appMonitor *monitorextensionv1.AppMoni
 				if ruleEnhance.WhereOr != "" {
 					rawRule.WhereOr(ruleEnhance.WhereOr)
 				}
+				if ruleEnhance.NoticeTemplateAbnormalAppend != "" {
+					rawRule.Notice.Template.Abnormal.Content = fmt.Sprintf("%s\n%s", rawRule.Notice.Template.Abnormal.Content, ruleEnhance.NoticeTemplateAbnormalAppend)
+				}
 
 				// 单独指定的Rule优先级更高
 				for _, rule := range ruleEnhance.Rules {

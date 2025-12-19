@@ -15,6 +15,7 @@ package operationlog
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
 
@@ -50,6 +51,17 @@ func NewListOperationLogsAction(model store.ClusterManagerModel) *ListOperationL
 func (ua *ListOperationLogsAction) validate() error {
 	if err := ua.req.Validate(); err != nil {
 		return err
+	}
+
+	if ua.req.GetProjectID() != "" && ua.req.GetClusterID() != "" {
+		cluster, err := ua.model.GetCluster(ua.ctx, ua.req.GetClusterID())
+		if err != nil {
+			return err
+		}
+
+		if cluster.GetProjectID() != ua.req.GetProjectID() {
+			return fmt.Errorf("project[%s] not match cluster[%s]", ua.req.GetProjectID(), ua.req.GetClusterID())
+		}
 	}
 
 	return nil
@@ -259,7 +271,7 @@ func (ua *ListOperationLogsAction) appendTasks(taskIDs []string) error {
 			for i := range t.Steps {
 				for k := range t.Steps[i].Params {
 					if utils.StringInSlice(k,
-						[]string{cloudprovider.BkSopsTaskUrlKey.String(), cloudprovider.ShowSopsUrlKey.String()}) {
+						[]string{cloudprovider.BkSopsTaskURLKey.String(), cloudprovider.ShowSopsURLKey.String()}) {
 						continue
 					}
 					delete(t.Steps[i].Params, k)
@@ -287,6 +299,10 @@ func (ua *ListOperationLogsAction) appendTasks(taskIDs []string) error {
 				cloudprovider.CleanNodeGroupNodes.String()}, t.TaskType) &&
 				t.GetCommonParams()[cloudprovider.ManualKey.String()] != common.True {
 				allowRetry = false
+			}
+
+			if autils.CheckTaskStepPartFailureStatus(t) {
+				ua.resp.Data.Results[i].Status = cloudprovider.TaskStatusPartFailure
 			}
 
 			ua.resp.Data.Results[i].AllowRetry = allowRetry

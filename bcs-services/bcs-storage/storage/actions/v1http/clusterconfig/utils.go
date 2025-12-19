@@ -22,7 +22,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
-	"github.com/emicklei/go-restful"
+	restful "github.com/emicklei/go-restful/v3"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/lib"
 	storageErr "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/errors"

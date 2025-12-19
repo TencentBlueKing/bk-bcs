@@ -1,66 +1,14 @@
-
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  creationTimestamp: null
   name: operator
 rules:
 - apiGroups:
   - monitorextension.bkbcs.tencent.com
   resources:
   - monitorrules
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - monitorextension.bkbcs.tencent.com
-  resources:
-  - monitorrules/finalizers
-  verbs:
-  - update
-- apiGroups:
-  - monitorextension.bkbcs.tencent.com
-  resources:
-  - monitorrules/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - monitorextension.bkbcs.tencent.com
-  resources:
   - noticegroups
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - monitorextension.bkbcs.tencent.com
-  resources:
-  - noticegroups/finalizers
-  verbs:
-  - update
-- apiGroups:
-  - monitorextension.bkbcs.tencent.com
-  resources:
-  - noticegroups/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - monitorextension.bkbcs.tencent.com
-  resources:
   - panels
   verbs:
   - create
@@ -73,12 +21,16 @@ rules:
 - apiGroups:
   - monitorextension.bkbcs.tencent.com
   resources:
+  - monitorrules/finalizers
+  - noticegroups/finalizers
   - panels/finalizers
   verbs:
   - update
 - apiGroups:
   - monitorextension.bkbcs.tencent.com
   resources:
+  - monitorrules/status
+  - noticegroups/status
   - panels/status
   verbs:
   - get

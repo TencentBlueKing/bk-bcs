@@ -132,3 +132,20 @@ func GetDefaultHighAvailabilityConfig() *meshmanager.HighAvailability {
 		},
 	}
 }
+
+// GetDefaultObservabilityConfig 获取默认可观测性配置
+func GetDefaultObservabilityConfig() *meshmanager.ObservabilityConfig {
+	return &meshmanager.ObservabilityConfig{
+		LogCollectorConfig: &meshmanager.LogCollectorConfig{
+			Enabled:           wrapperspb.Bool(false),
+			AccessLogEncoding: wrapperspb.String("TEXT"),
+			AccessLogFormat:   wrapperspb.String(""),
+		},
+		TracingConfig: &meshmanager.TracingConfig{
+			Enabled:              wrapperspb.Bool(false),
+			Endpoint:             wrapperspb.String(""),
+			BkToken:              wrapperspb.String(""),
+			TraceSamplingPercent: wrapperspb.Int32(10),
+		},
+	}
+}

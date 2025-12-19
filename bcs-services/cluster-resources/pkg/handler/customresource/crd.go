@@ -20,9 +20,9 @@ import (
 
 	respUtil "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/resp"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/web"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/featureflag"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/component/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
 	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"

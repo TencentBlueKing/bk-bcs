@@ -194,6 +194,7 @@ func parseRedisConfig(redisOp options.RedisConfig) (config.RedisConfig, error) {
 		return conf, fmt.Errorf("error decrypting redis config and exit: %s", err.Error())
 	}
 	conf.RedisMode = redisOp.RedisMode
+	conf.MasterName = redisOp.MasterName
 	conf.Addr = redisOp.Addr
 	conf.Password = string(redisPassword)
 	conf.DialTimeout = redisOp.DialTimeout

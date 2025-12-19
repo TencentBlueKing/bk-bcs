@@ -74,12 +74,15 @@ var (
 	clusterOsType          = "CM.cluster.ClusterOsType"
 	clusterK8sVersion      = "CM.cluster.ClusterK8sVersion"
 	clusterProvider        = "CM.cluster.ClusterProvider"
+	clusterImageId         = "CM.cluster.ClusterImageId"
 
 	// node render info
 	// NOCC:gas/crypto(误报)
 	nodePasswd           = "CM.node.NodePasswd"           // nolint
 	nodeCPUManagerPolicy = "CM.node.NodeCPUManagerPolicy" // nolint
 	nodeIPList           = "CM.node.NodeIPList"           // nolint
+	nodeInstanceID       = "CM.node.NodeInstanceIDList"   // nolint
+	nodeNodeRegion       = "CM.node.NodeRegion"           // nolint
 
 	// nodeGroup render info
 	nodeGroupID = "CM.nodeGroup.NodeGroupID"

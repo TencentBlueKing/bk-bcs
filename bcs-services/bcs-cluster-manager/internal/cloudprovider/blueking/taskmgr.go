@@ -129,7 +129,8 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 	task.CommonParams[cloudprovider.TaskNameKey.String()] = taskName
 
 	// step1: call bkops preAction operation 创建集群
-	if opt.Cloud != nil && opt.Cloud.ClusterManagement != nil && opt.Cloud.ClusterManagement.CreateCluster != nil {
+	if opt.Cloud != nil && opt.Cloud.ClusterManagement != nil &&
+		opt.Cloud.ClusterManagement.CreateCluster != nil {
 		step := &template.BkSopsStepAction{
 			TaskName: template.SystemInit,
 			Actions:  opt.Cloud.ClusterManagement.CreateCluster.PreActions,
@@ -378,10 +379,11 @@ func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Nod
 		return nil, fmt.Errorf("BuildAddNodesToClusterTask TaskOptions is lost")
 	}
 
-	// format node IPs
-	nodeIPs := make([]string, 0)
+	// format node IPs and node IDs
+	nodeIPs, nodeIDs := make([]string, 0), make([]string, 0)
 	for i := range nodes {
 		nodeIPs = append(nodeIPs, nodes[i].InnerIP)
+		nodeIDs = append(nodeIDs, nodes[i].NodeID)
 	}
 
 	// init task information
@@ -408,48 +410,45 @@ func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Nod
 	taskName := fmt.Sprintf(addClusterNodesTaskTemplate, cls.ClusterID)
 	task.CommonParams[cloudprovider.TaskNameKey.String()] = taskName
 
-	// step1: call bkops operation
-	// preAction bcs sops task
-	if opt.Cloud != nil && opt.Cloud.ClusterManagement != nil && opt.Cloud.ClusterManagement.AddNodesToCluster != nil {
-		step := &template.BkSopsStepAction{
-			TaskName: template.SystemInit,
-			Actions:  opt.Cloud.ClusterManagement.AddNodesToCluster.PreActions,
-			Plugins:  opt.Cloud.ClusterManagement.AddNodesToCluster.Plugins,
-		}
-		err := step.BuildBkSopsStepAction(task, cls, template.ExtraInfo{
-			NodeIPList:      strings.Join(nodeIPs, ","),
-			NodeOperator:    opt.Operator,
-			BusinessID:      cls.BusinessID,
-			Operator:        opt.Operator,
-			TranslateMethod: addNodesToClusterStep.StepMethod,
-		})
-		if err != nil {
-			return nil, fmt.Errorf("BuildAddNodesToClusterTask BuildBkSopsStepAction failed: %v", err)
-		}
-	}
-
-	// 混部集群需要执行混部节点流程
-	if cls.GetIsMixed() && opt.Cloud != nil && opt.Cloud.ClusterManagement != nil &&
-		opt.Cloud.ClusterManagement.CommonMixedAction != nil {
-		err := template.BuildSopsFactory{
-			StepName: template.NodeMixedInitCh,
-			Cluster:  cls,
-			Extra: template.ExtraInfo{
-				NodeIPList:      "",
-				ShowSopsUrl:     true,
-				TranslateMethod: template.NodeMixedInit,
-			}}.BuildSopsStep(task, opt.Cloud.ClusterManagement.CommonMixedAction, false)
-		if err != nil {
-			return nil, fmt.Errorf("BuildScalingNodesTask BuildBkSopsStepAction failed: %v", err)
-		}
-	}
-
-	// step2: update DB node info by instanceIP
 	addNodesTask := AddNodesTaskOption{
-		Cluster: cls,
-		Cloud:   opt.Cloud,
-		NodeIps: nodeIPs,
+		Cluster:      cls,
+		Cloud:        opt.Cloud,
+		NodeIps:      nodeIPs,
+		NodeTemplate: opt.NodeTemplate,
 	}
+
+	// step1:  preAction user task
+	if err := t.addNodesUserPreInitBkSops(task, cls, nodeIPs, nodeIDs, opt); err != nil {
+		return nil, err
+	}
+
+	// step2: call bkops operation
+	// preAction bcs sops task
+	if err := t.addNodesSystemInitBkSops(task, cls, nodeIPs, opt); err != nil {
+		return nil, err
+	}
+
+	// step3: 业务后置自定义流程: 支持标准运维任务 或者 后置脚本
+	t.addNodesExecUserScript(task, cls, nodeIPs, opt)
+
+	// business post define sops task or script
+	if err := t.addNodesUserPostBkSops(task, cls, nodeIPs, opt); err != nil {
+		return nil, err
+	}
+
+	// step5: 混部集群需要执行混部节点流程
+	if err := t.addNodesMixedClsBkSops(task, cls, nodeIPs, opt); err != nil {
+		return nil, err
+	}
+
+	// step6: 设置节点标签
+	addNodesTask.BuildNodeLabelsStep(task)
+	// step7: 设置节点污点
+	addNodesTask.BuildNodeTaintsTaskStep(task)
+	// step8: 设置节点注解
+	addNodesTask.BuildNodeAnnotationsStep(task)
+
+	// step9: update DB node info by instanceIP
 	addNodesTask.BuildUpdateAddNodeDbInfoStep(task)
 
 	// set current step
@@ -462,11 +461,121 @@ func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Nod
 
 	task.CommonParams[cloudprovider.JobTypeKey.String()] = cloudprovider.AddNodeJob.String()
 	task.CommonParams[cloudprovider.NodeIPsKey.String()] = strings.Join(nodeIPs, ",")
-
+	task.CommonParams[cloudprovider.NodeIDsKey.String()] = strings.Join(nodeIDs, ",")
 	return task, nil
 }
 
+func (t *Task) addNodesUserPreInitBkSops(
+	task *proto.Task, cls *proto.Cluster, nodeIPs, nodeIDs []string, opt *cloudprovider.AddNodesOption) error {
+	if opt.NodeTemplate != nil && opt.NodeTemplate.ScaleOutExtraAddons != nil &&
+		len(opt.NodeTemplate.ScaleOutExtraAddons.PreActions) > 0 {
+		err := template.BuildSopsFactory{
+			StepName: template.UserCustomPreInit,
+			Cluster:  cls,
+			Extra: template.ExtraInfo{
+				NodeIPList:     strings.Join(nodeIPs, ","),
+				InstanceIDList: strings.Join(nodeIDs, ","),
+				NodeRegion: func() string {
+					if opt.NodeTemplate != nil && opt.NodeTemplate.Labels != nil {
+						return opt.NodeTemplate.Labels[cloudprovider.NodeTemplateRegionLabelKey]
+					}
+					return ""
+				}(),
+				TranslateMethod: template.UserCustomBeforeInit,
+				AllowSkip:       true,
+				NodeOperator:    opt.Operator,
+				ShowSopsUrl:     true,
+			}}.BuildSopsStep(task, opt.NodeTemplate.ScaleOutExtraAddons, true)
+		if err != nil {
+			return fmt.Errorf("BuildAddNodesToClusterTask BuildBkSopsStepAction failed: %v", err)
+		}
+	}
+	return nil
+}
+
+// addNodesSystemInitBkSops 构建系统初始化步骤
+func (t *Task) addNodesSystemInitBkSops(
+	task *proto.Task, cls *proto.Cluster, nodeIPs []string, opt *cloudprovider.AddNodesOption) error {
+	if opt.Cloud != nil && opt.Cloud.ClusterManagement != nil &&
+		opt.Cloud.ClusterManagement.AddNodesToCluster != nil && !opt.NodeTemplate.GetSkipSystemInit() {
+		step := &template.BkSopsStepAction{
+			TaskName: template.SystemInit,
+			Actions:  opt.Cloud.ClusterManagement.AddNodesToCluster.PreActions,
+			Plugins:  opt.Cloud.ClusterManagement.AddNodesToCluster.Plugins,
+		}
+		err := step.BuildBkSopsStepAction(task, cls, template.ExtraInfo{
+			NodeIPList:      strings.Join(nodeIPs, ","),
+			NodeOperator:    opt.Operator,
+			ModuleID:        cloudprovider.GetScaleOutModuleID(cls, nil, opt.NodeTemplate, false),
+			BusinessID:      cloudprovider.GetBusinessID(cls, nil, opt.NodeTemplate, true),
+			Operator:        opt.Operator,
+			TranslateMethod: addNodesToClusterStep.StepMethod,
+		})
+		if err != nil {
+			return fmt.Errorf("BuildAddNodesToClusterTask BuildBkSopsStepAction failed: %v", err)
+		}
+	}
+	return nil
+}
+
+// addNodesExecUserScript 构建用户脚本步骤
+func (t *Task) addNodesExecUserScript(
+	task *proto.Task, cls *proto.Cluster, nodeIPs []string, opt *cloudprovider.AddNodesOption) {
+	if opt.NodeTemplate != nil && len(opt.NodeTemplate.UserScript) > 0 {
+		common.BuildJobExecuteScriptStep(task, common.JobExecParas{
+			ClusterID:        cls.ClusterID,
+			Content:          opt.NodeTemplate.UserScript,
+			NodeIps:          strings.Join(nodeIPs, ","),
+			Operator:         opt.Operator,
+			StepName:         common.PostInitStepJob,
+			AllowSkipJobTask: opt.NodeTemplate.AllowSkipScaleOutWhenFailed,
+			Translate:        common.PostInitJob,
+		})
+	}
+}
+
+// addNodesUserPostBkSops 构建用户后置步骤
+func (t *Task) addNodesUserPostBkSops(
+	task *proto.Task, cls *proto.Cluster, nodeIPs []string, opt *cloudprovider.AddNodesOption) error {
+	if opt.NodeTemplate != nil && opt.NodeTemplate.ScaleOutExtraAddons != nil {
+		err := template.BuildSopsFactory{
+			StepName: template.UserAfterInit,
+			Cluster:  cls,
+			Extra: template.ExtraInfo{
+				NodeIPList:      strings.Join(nodeIPs, ","),
+				NodeOperator:    opt.Operator,
+				ShowSopsUrl:     true,
+				TranslateMethod: template.UserPostInit,
+			}}.BuildSopsStep(task, opt.NodeTemplate.ScaleOutExtraAddons, false)
+		if err != nil {
+			return fmt.Errorf("BuildScalingNodesTask business BuildBkSopsStepAction failed: %v", err)
+		}
+	}
+	return nil
+}
+
+// addNodesMixedClsBkSops 构建混部集群步骤
+func (t *Task) addNodesMixedClsBkSops(
+	task *proto.Task, cls *proto.Cluster, nodeIPs []string, opt *cloudprovider.AddNodesOption) error {
+	if cls.GetIsMixed() && opt.Cloud != nil && opt.Cloud.ClusterManagement != nil &&
+		opt.Cloud.ClusterManagement.CommonMixedAction != nil {
+		err := template.BuildSopsFactory{
+			StepName: template.NodeMixedInitCh,
+			Cluster:  cls,
+			Extra: template.ExtraInfo{
+				NodeIPList:      strings.Join(nodeIPs, ","),
+				ShowSopsUrl:     true,
+				TranslateMethod: template.NodeMixedInit,
+			}}.BuildSopsStep(task, opt.Cloud.ClusterManagement.CommonMixedAction, false)
+		if err != nil {
+			return fmt.Errorf("BuildScalingNodesTask BuildBkSopsStepAction failed: %v", err)
+		}
+	}
+	return nil
+}
+
 // BuildRemoveNodesFromClusterTask build removeNodes task
+// nolint: funlen
 func (t *Task) BuildRemoveNodesFromClusterTask(cls *proto.Cluster, nodes []*proto.Node,
 	opt *cloudprovider.DeleteNodesOption) (*proto.Task, error) {
 	// removeNodesFromCluster has two steps:
@@ -514,7 +623,37 @@ func (t *Task) BuildRemoveNodesFromClusterTask(cls *proto.Cluster, nodes []*prot
 	taskName := fmt.Sprintf(deleteClusterNodesTaskTemplate, cls.ClusterID)
 	task.CommonParams[cloudprovider.TaskNameKey.String()] = taskName
 
-	// step1: build bkops task
+	// step1: 业务自定义缩容流程: 支持 缩容节点前置脚本和前置标准运维流程
+	if opt.NodeTemplate != nil && len(opt.NodeTemplate.ScaleInPreScript) > 0 {
+		common.BuildJobExecuteScriptStep(task, common.JobExecParas{
+			ClusterID:        cls.ClusterID,
+			Content:          opt.NodeTemplate.ScaleInPreScript,
+			NodeIps:          strings.Join(nodeIPs, ","),
+			Operator:         opt.Operator,
+			StepName:         common.PreInitStepJob,
+			AllowSkipJobTask: opt.NodeTemplate.AllowSkipScaleInWhenFailed,
+			Translate:        common.PreInitJob,
+		})
+	}
+
+	// business define sops task
+	if opt.NodeTemplate != nil && opt.NodeTemplate.ScaleInExtraAddons != nil {
+		err := template.BuildSopsFactory{
+			StepName: template.UserPreInit,
+			Cluster:  cls,
+			Extra: template.ExtraInfo{
+				NodeIPList:      strings.Join(nodeIPs, ","),
+				NodeOperator:    opt.Operator,
+				ShowSopsUrl:     true,
+				TranslateMethod: template.UserBeforeInit,
+			}}.BuildSopsStep(task, opt.NodeTemplate.ScaleInExtraAddons, true)
+		if err != nil {
+			return nil, fmt.Errorf("BuildRemoveNodesFromClusterTask business "+
+				"BuildBkSopsStepAction failed: %v", err)
+		}
+	}
+
+	// step2: build bkops task
 	// validate bkops config
 	if opt.Cloud != nil && opt.Cloud.ClusterManagement != nil &&
 		opt.Cloud.ClusterManagement.DeleteNodesFromCluster != nil {
@@ -526,7 +665,8 @@ func (t *Task) BuildRemoveNodesFromClusterTask(cls *proto.Cluster, nodes []*prot
 		err := step.BuildBkSopsStepAction(task, cls, template.ExtraInfo{
 			NodeIPList:      strings.Join(nodeIPs, ","),
 			NodeOperator:    opt.Operator,
-			BusinessID:      cls.BusinessID,
+			BusinessID:      cloudprovider.GetBusinessID(cls, nil, opt.NodeTemplate, false),
+			ModuleID:        cloudprovider.GetScaleInModuleID(nil, opt.NodeTemplate),
 			Operator:        opt.Operator,
 			TranslateMethod: removeNodesFromClusterStep.StepMethod,
 		})
@@ -535,7 +675,7 @@ func (t *Task) BuildRemoveNodesFromClusterTask(cls *proto.Cluster, nodes []*prot
 		}
 	}
 
-	// step2: update node DB info
+	// step3: update node DB info
 	removeNodesTask := &RemoveNodesTaskOption{Cluster: cls, NodeIps: nodeIPs}
 	removeNodesTask.BuildUpdateRemoveNodeDbInfoStep(task)
 
@@ -934,8 +1074,91 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 	updateDesiredNodes.BuildApplyInstanceStep(task)
 
 	// 检测是否存在bkcc/检测是否安装agent/空闲检查等流程
+	// step2: 业务扩容节点前置自定义流程
+	if err := t.updateDesiredNodesUserPreInitBkSops(task, group, opt); err != nil {
+		return nil, err
+	}
 
-	// step2: call sops task to add nodes to cluster: install agent & trans module
+	// step3: call sops task to add nodes to cluster: install agent & trans module
+	if err := t.updateDesiredNodesSysInitBkSops(task, group, opt); err != nil {
+		return nil, err
+	}
+
+	// transfer host module
+	moduleID := cloudprovider.GetTransModuleInfo(opt.Cluster, opt.AsOption, opt.NodeGroup)
+	if moduleID != "" {
+		common.BuildTransferHostModuleStep(task, opt.Cluster.BusinessID, moduleID, "")
+	}
+
+	// step4: 业务扩容节点后置自定义流程: 支持job后置脚本和标准运维任务
+	t.updateDesiredNodesUserScript(task, group, opt)
+
+	// business define sops task
+	if err := t.updateDesiredNodesUserPostBkSops(task, group, opt); err != nil {
+		return nil, err
+	}
+
+	// 混部集群需要执行混部节点流程
+	if err := t.updateDesiredNodesMixedClsBkSops(task, opt); err != nil {
+		return nil, err
+	}
+
+	// step5: annotation nodes
+	updateDesiredNodes.BuildNodeAnnotationsStep(task)
+	// step6: nodes common labels: sZoneID / bizID
+	updateDesiredNodes.BuildNodeCommonLabelsStep(task)
+	// set node taint
+	common.BuildNodeTaintsTaskStep(task, opt.Cluster.ClusterID, nil, cloudprovider.GetTaintsByNg(opt.NodeGroup))
+	// step7: set resourcePool labels
+	updateDesiredNodes.BuildResourcePoolDeviceLabelStep(task)
+	// step8: unCordon nodes
+	updateDesiredNodes.BuildUnCordonNodesStep(task)
+
+	// set current step
+	if len(task.StepSequence) == 0 {
+		return nil, fmt.Errorf("BuildUpdateDesiredNodesTask task StepSequence empty")
+	}
+	task.CurrentStep = task.StepSequence[0]
+
+	// set common parameters && JobType
+	task.CommonParams[cloudprovider.ClusterIDKey.String()] = group.ClusterID
+	task.CommonParams[cloudprovider.ScalingNodesNumKey.String()] = strconv.Itoa(int(desired))
+	// Job-type
+	task.CommonParams[cloudprovider.JobTypeKey.String()] = cloudprovider.UpdateNodeGroupDesiredNodeJob.String()
+	task.CommonParams[cloudprovider.ManualKey.String()] = strconv.FormatBool(opt.Manual)
+
+	return task, nil
+}
+
+func (t *Task) updateDesiredNodesUserPreInitBkSops(
+	task *proto.Task, group *proto.NodeGroup, opt *cloudprovider.UpdateDesiredNodeOption) error {
+	if group.NodeTemplate != nil && group.NodeTemplate.ScaleOutExtraAddons != nil &&
+		len(group.NodeTemplate.ScaleOutExtraAddons.PreActions) > 0 {
+		err := template.BuildSopsFactory{
+			StepName: template.UserCustomPreInit,
+			Cluster:  opt.Cluster,
+			Extra: template.ExtraInfo{
+				NodeIPList:     "",
+				InstanceIDList: "",
+				NodeRegion:     group.Region,
+				NodeOperator:   opt.Operator,
+				ModuleID: cloudprovider.GetScaleOutModuleID(opt.Cluster, opt.AsOption, group.NodeTemplate,
+					true),
+				BusinessID:      cloudprovider.GetBusinessID(opt.Cluster, opt.AsOption, group.NodeTemplate, true),
+				TranslateMethod: template.UserCustomBeforeInit,
+				ShowSopsUrl:     true,
+				AllowSkip:       true,
+			}}.BuildSopsStep(task, group.NodeTemplate.ScaleOutExtraAddons, true)
+		if err != nil {
+			return fmt.Errorf("BuildUpdateDesiredNodesTask platform BuildBkSopsStepAction failed: %v", err)
+		}
+	}
+	return nil
+}
+
+// updateDesiredNodesSysInitBkSops 构建更新期望节点数的系统初始化步骤
+func (t *Task) updateDesiredNodesSysInitBkSops(
+	task *proto.Task, group *proto.NodeGroup, opt *cloudprovider.UpdateDesiredNodeOption) error {
 	if opt.Cloud != nil && opt.Cloud.ClusterManagement != nil &&
 		opt.Cloud.ClusterManagement.AddNodesToCluster != nil && !group.GetNodeTemplate().GetSkipSystemInit() {
 		step := &template.BkSopsStepAction{
@@ -953,17 +1176,15 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 			TranslateMethod: addNodesToClusterStep.StepMethod,
 		})
 		if err != nil {
-			return nil, fmt.Errorf("BuildUpdateDesiredNodesTask BuildBkSopsStepAction failed: %v", err)
+			return fmt.Errorf("BuildUpdateDesiredNodesTask BuildBkSopsStepAction failed: %v", err)
 		}
 	}
+	return nil
+}
 
-	// transfer host module
-	moduleID := cloudprovider.GetTransModuleInfo(opt.Cluster, opt.AsOption, opt.NodeGroup)
-	if moduleID != "" {
-		common.BuildTransferHostModuleStep(task, opt.Cluster.BusinessID, moduleID, "")
-	}
-
-	// step3: 业务扩容节点后置自定义流程: 支持job后置脚本和标准运维任务
+// updateDesiredNodesUserScript 构建更新期望节点数的用户脚本步骤
+func (t *Task) updateDesiredNodesUserScript(
+	task *proto.Task, group *proto.NodeGroup, opt *cloudprovider.UpdateDesiredNodeOption) {
 	if group.NodeTemplate != nil && len(group.NodeTemplate.UserScript) > 0 {
 		common.BuildJobExecuteScriptStep(task, common.JobExecParas{
 			ClusterID:        group.ClusterID,
@@ -975,8 +1196,11 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 			Translate:        common.PostInitJob,
 		})
 	}
+}
 
-	// business define sops task
+// updateDesiredNodesUserPostBkSops 构建更新期望节点数的用户后置步骤
+func (t *Task) updateDesiredNodesUserPostBkSops(
+	task *proto.Task, group *proto.NodeGroup, opt *cloudprovider.UpdateDesiredNodeOption) error {
 	if group.NodeTemplate != nil && group.NodeTemplate.ScaleOutExtraAddons != nil {
 		err := template.BuildSopsFactory{
 			StepName: template.UserAfterInit,
@@ -988,11 +1212,14 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 				TranslateMethod: template.UserPostInit,
 			}}.BuildSopsStep(task, group.NodeTemplate.ScaleOutExtraAddons, false)
 		if err != nil {
-			return nil, fmt.Errorf("BuildUpdateDesiredNodesTask business BuildBkSopsStepAction failed: %v", err)
+			return fmt.Errorf("BuildUpdateDesiredNodesTask business BuildBkSopsStepAction failed: %v", err)
 		}
 	}
+	return nil
+}
 
-	// 混部集群需要执行混部节点流程
+// updateDesiredNodesMixedClsBkSops 构建更新期望节点数的混部集群步骤
+func (t *Task) updateDesiredNodesMixedClsBkSops(task *proto.Task, opt *cloudprovider.UpdateDesiredNodeOption) error {
 	if opt.Cluster.GetIsMixed() && opt.Cloud != nil && opt.Cloud.ClusterManagement != nil &&
 		opt.Cloud.ClusterManagement.CommonMixedAction != nil {
 		err := template.BuildSopsFactory{
@@ -1004,35 +1231,10 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 				TranslateMethod: template.NodeMixedInit,
 			}}.BuildSopsStep(task, opt.Cloud.ClusterManagement.CommonMixedAction, false)
 		if err != nil {
-			return nil, fmt.Errorf("BuildUpdateDesiredNodesTask BuildBkSopsStepAction failed: %v", err)
+			return fmt.Errorf("BuildUpdateDesiredNodesTask BuildBkSopsStepAction failed: %v", err)
 		}
 	}
-
-	// step4: annotation nodes
-	updateDesiredNodes.BuildNodeAnnotationsStep(task)
-	// step5: nodes common labels: sZoneID / bizID
-	updateDesiredNodes.BuildNodeCommonLabelsStep(task)
-	// set node taint
-	common.BuildNodeTaintsTaskStep(task, opt.Cluster.ClusterID, nil, cloudprovider.GetTaintsByNg(opt.NodeGroup))
-	// step6: set resourcePool labels
-	updateDesiredNodes.BuildResourcePoolDeviceLabelStep(task)
-	// step7: unCordon nodes
-	updateDesiredNodes.BuildUnCordonNodesStep(task)
-
-	// set current step
-	if len(task.StepSequence) == 0 {
-		return nil, fmt.Errorf("BuildUpdateDesiredNodesTask task StepSequence empty")
-	}
-	task.CurrentStep = task.StepSequence[0]
-
-	// set common parameters && JobType
-	task.CommonParams[cloudprovider.ClusterIDKey.String()] = group.ClusterID
-	task.CommonParams[cloudprovider.ScalingNodesNumKey.String()] = strconv.Itoa(int(desired))
-	// Job-type
-	task.CommonParams[cloudprovider.JobTypeKey.String()] = cloudprovider.UpdateNodeGroupDesiredNodeJob.String()
-	task.CommonParams[cloudprovider.ManualKey.String()] = strconv.FormatBool(opt.Manual)
-
-	return task, nil
+	return nil
 }
 
 // BuildSwitchNodeGroupAutoScalingTask switch nodegroup auto scaling

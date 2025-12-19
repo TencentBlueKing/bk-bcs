@@ -70,7 +70,7 @@ func GetProjectNamespace(ctx context.Context, projectID, clusterID string) ([]Na
 
 // GetVariable get project from project code
 func GetVariable(ctx context.Context, projectCode, clusterID, namespace string) ([]VariableValue, error) {
-	return projMgrCli.getVariable(ctx, projectCode, clusterID, namespace)
+	return getVariable(ctx, projectCode, clusterID, namespace)
 }
 
 // FromContext 通过 Context 获取项目信息

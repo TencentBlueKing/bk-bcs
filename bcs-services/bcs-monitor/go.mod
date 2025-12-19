@@ -13,6 +13,7 @@ require (
 	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20230602131736-2c6f5ea23f31
 	github.com/chonla/format v0.0.0-20220105105701-1119f4a3f36f
 	github.com/dustin/go-humanize v1.0.0
+	github.com/feiin/go-xss v1.3.0
 	github.com/fsnotify/fsnotify v1.6.0
 	github.com/ggicci/httpin v0.19.0
 	github.com/gin-contrib/sse v0.1.0
@@ -40,7 +41,7 @@ require (
 	github.com/prometheus/prometheus v1.8.2-0.20220308163432-03831554a519
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/viper v1.12.0
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 	github.com/swaggo/http-swagger v1.3.4
 	github.com/swaggo/swag v1.8.1
 	github.com/thanos-io/thanos v0.26.0
@@ -69,8 +70,9 @@ require (
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.41 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.17.0 // indirect
 	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
-	github.com/cyphar/filepath-securejoin v0.2.4 // indirect
+	github.com/cyphar/filepath-securejoin v0.2.5 // indirect
 	github.com/fatih/color v1.15.0 // indirect
+	github.com/feiin/pkg v0.2.1 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/frankban/quicktest v1.14.4 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.8 // indirect
@@ -93,7 +95,7 @@ require (
 	github.com/onsi/ginkgo/v2 v2.11.0 // indirect
 	github.com/openzipkin/zipkin-go v0.3.0 // indirect
 	github.com/pjbgf/sha1cd v0.3.0 // indirect
-	github.com/skeema/knownhosts v1.2.2 // indirect
+	github.com/skeema/knownhosts v1.3.0 // indirect
 	github.com/smartystreets/assertions v1.2.0 // indirect
 	github.com/swaggo/files v0.0.0-20220610200504-28940afbdbfe // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
@@ -123,7 +125,7 @@ require (
 	github.com/Masterminds/semver/v3 v3.1.1 // indirect
 	github.com/Microsoft/go-winio v0.6.1 // indirect
 	github.com/NYTimes/gziphandler v1.1.1 // indirect
-	github.com/ProtonMail/go-crypto v1.0.0 // indirect
+	github.com/ProtonMail/go-crypto v1.1.3 // indirect
 	github.com/TencentBlueKing/iam-go-sdk v1.0.1 // indirect
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
 	github.com/alecthomas/units v0.0.0-20211218093645-b94a6e3cc137 // indirect
@@ -151,8 +153,8 @@ require (
 	github.com/facette/natsort v0.0.0-20181210072756-2cd4dd1e2dcb // indirect
 	github.com/felixge/fgprof v0.9.1 // indirect
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
-	github.com/go-git/go-billy/v5 v5.5.0 // indirect
-	github.com/go-git/go-git/v5 v5.12.0 // indirect
+	github.com/go-git/go-billy/v5 v5.6.0 // indirect
+	github.com/go-git/go-git/v5 v5.13.0 // indirect
 	github.com/go-kit/kit v0.12.0 // indirect
 	github.com/go-logfmt/logfmt v0.5.1 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect

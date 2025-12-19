@@ -538,7 +538,7 @@ func (cm *ClusterManager) SwitchClusterUnderlayNetwork(ctx context.Context,
 		return err
 	}
 	start := time.Now()
-	na := clusterac.NewSwitchClusterUnderlayNetworkAction(cm.model)
+	na := clusterac.NewSwitchClsNetworkAction(cm.model)
 	na.Handle(ctx, req, resp)
 	metrics.ReportAPIRequestMetric("SwitchClusterUnderlayNetwork", "grpc",
 		strconv.Itoa(int(resp.Code)), start)

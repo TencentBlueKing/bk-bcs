@@ -59,7 +59,7 @@
           {{row.scopeName || '--'}}
         </template>
       </bcs-table-column>
-      <bcs-table-column :label="$t('generic.label.action')" width="180" fixed="right">
+      <bcs-table-column :label="$t('generic.label.action')" width="160">
         <template #default="{ row }">
           <span
             class="mr10"
@@ -222,7 +222,10 @@
 <script lang="ts">
 import BkForm from 'bk-magic-vue/lib/form';
 import BkFormItem from 'bk-magic-vue/lib/form-item';
+import { cloneDeep } from 'lodash';
 import { computed, defineComponent, onMounted, ref, watch } from 'vue';
+
+import { filterPlainText } from '@blueking/xss-filter';
 
 import useVariable, { IParams, Pick } from './use-variable';
 import exampleData from './variable.json';
@@ -404,15 +407,22 @@ export default defineComponent({
       const validate = await formRef.value?.validate();
       if (!validate) return;
 
+      const cloneFormData = cloneDeep(formData.value);
+      const xssDesc = filterPlainText(cloneFormData.desc);
+      if (cloneFormData.desc !== xssDesc) {
+        console.warn('Intercepted by XSS');
+      }
+      cloneFormData.desc = xssDesc;
+
       dialogLoading.value = true;
       let result = false;
       if (currentRow.value) {
         result = await handleUpdateVariable({
           $variableID: currentRow.value.id,
-          ...formData.value,
+          ...cloneFormData,
         });
       } else {
-        result = await handleCreateVariable(formData.value);
+        result = await handleCreateVariable(cloneFormData);
       }
       dialogLoading.value = false;
 

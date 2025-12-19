@@ -148,8 +148,8 @@ func (s *CustomRegistry) parseRequest(r *http.Request, body interface{}) error {
 // RegistryAuth convergence every proxy's auth request(to registry). Proxy will
 // transfer auth request to master, master will cache the bearer-token to reduce
 // the pressure on the upstream-registry.
-func (s *CustomRegistry) authRegistry(ctx context.Context, originalHost string, authenticateHeader string) (string,
-	error) {
+func (s *CustomRegistry) authRegistry(ctx context.Context, originalHost string, authenticateHeader string,
+	checkToken func(bearerToken string) (bool, error)) (string, error) {
 	registry := s.op.FilterRegistryMappingByOriginal(originalHost)
 	if registry == nil {
 		return "", errors.Errorf("options not have registry config for original host '%s'", originalHost)
@@ -171,7 +171,7 @@ func (s *CustomRegistry) authRegistry(ctx context.Context, originalHost string, 
 	if err != nil {
 		return "", errors.Wrapf(err, "parse auth request failed")
 	}
-	tokenResult, err := registryauth.HandleRegistryUnauthorized(ctx, authReq, registry)
+	tokenResult, err := registryauth.HandleRegistryUnauthorized(ctx, authReq, registry, checkToken)
 	if err != nil {
 		return "", errors.Wrapf(err, "handle registry unauthorized failed")
 	}
@@ -234,7 +234,28 @@ func (s *CustomRegistry) RegistryGetManifest(_ http.ResponseWriter, r *http.Requ
 			if authenticateHeader == "" {
 				return "", errors.Errorf("get-manifest response not have authenticate header")
 			}
-			bearerToken, err = s.authRegistry(ctx, req.OriginalHost, authenticateHeader)
+			bearerToken, err = s.authRegistry(ctx, req.OriginalHost, authenticateHeader,
+				func(token string) (bool, error) {
+					checkReq := &utils.HTTPRequest{
+						Url:    "https://" + getManifestUrl,
+						Method: http.MethodGet,
+						Header: map[string]string{
+							"Authorization": "Bearer " + token,
+						},
+					}
+					checkResp, _, checkErr := utils.SendHTTPRequestReturnResponse(ctx, checkReq)
+					switch {
+					case checkResp == nil:
+						return false, fmt.Errorf("unexpected request: %v", checkErr)
+					case checkResp.StatusCode < 300:
+						return true, nil
+					case checkResp.StatusCode == http.StatusUnauthorized:
+						return false, nil
+					default:
+						return false, fmt.Errorf("unexpected status code '%d': %v",
+							checkResp.StatusCode, checkErr)
+					}
+				})
 			if err != nil {
 				return "", errors.Wrapf(err, "get-manifest auth to registry failed")
 			}
@@ -376,6 +397,8 @@ func (s *CustomRegistry) downloadLayerFromMaster(ctx context.Context, req *apicl
 	return s.distributeDownloadLayerTask(ctx, downloadReq, contentLength)
 }
 
+// distributeDownloadLayerTask will distribute the layer download task to other nodes.
+// If the layer is small, it will download on master
 func (s *CustomRegistry) distributeDownloadLayerTask(ctx context.Context, req *downloadLayer, contentLength int64) (
 	*apiclient.CommonDownloadLayerResponse, error) {
 	// master should download directly if small layer
@@ -704,7 +727,7 @@ func (s *CustomRegistry) requestDownloadLayer(ctx context.Context, req *download
 	return contentLength, nil
 }
 
-// TransferLayerTCP transfer layer with tcp
+// TransferLayerTCP transfer layer with tcp. Will serve the local layer-file from http
 func (s *CustomRegistry) TransferLayerTCP(rw http.ResponseWriter, r *http.Request) (interface{}, error) {
 	requestFile := r.URL.Query().Get("file")
 	if requestFile == "" {

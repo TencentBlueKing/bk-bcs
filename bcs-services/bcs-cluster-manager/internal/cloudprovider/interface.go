@@ -307,6 +307,8 @@ type CloudValidateManager interface {
 	CreateNodeGroupValidate(req *proto.CreateNodeGroupRequest, opt *CommonOption) error
 	// ListInstancesValidate ListInstanceTypeValidate list instance type validate
 	ListInstancesValidate(req *proto.ListCloudInstancesRequest, account *proto.Account) error
+	// AllowCrossBizNodes allow cross biz nodes
+	AllowCrossBizNodes(cluster *proto.Cluster) bool
 }
 
 // ClusterManager cloud interface for kubernetes cluster management
@@ -336,7 +338,7 @@ type ClusterManager interface {
 	// EnableExternalNodeSupport enable cluster support external node
 	EnableExternalNodeSupport(cls *proto.Cluster, opt *EnableExternalNodeOption) error
 	// ListOsImage get osimage list
-	ListOsImage(provider string, opt *CommonOption) ([]*proto.OsImage, error)
+	ListOsImage(provider, clusterID string, opt *CommonOption) ([]*proto.OsImage, error)
 	// ListProjects get cloud projects list
 	ListProjects(opt *CommonOption) ([]*proto.CloudProject, error)
 	// CheckClusterEndpointStatus check cluster endpoint status

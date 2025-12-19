@@ -223,6 +223,8 @@
 import { merge } from 'lodash';
 import { computed, defineComponent, onMounted, ref, toRefs } from 'vue';
 
+import { filterPlainText } from '@blueking/xss-filter';
+
 import { getClusterImportCategory, getClusterTypeName, useClusterInfo, useClusterList } from '../cluster/use-cluster';
 import ClusterVisibleRange from '../components/cluster-visible-range.vue';
 import EditFormItem from '../components/edit-form-item.vue';
@@ -350,7 +352,11 @@ export default defineComponent({
     };
     // 修改集群描述
     const handleClusterDescChange = async (description) => {
-      handleModifyCluster({ description });
+      const xssDescription = filterPlainText(description);
+      if (description !== xssDescription) {
+        console.warn('Intercepted by XSS');
+      }
+      handleModifyCluster({ description: xssDescription });
     };
     // 修改标签
     const isEdit = ref(false);

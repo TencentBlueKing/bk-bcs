@@ -25,6 +25,16 @@ type UpdateValuesOptions struct {
 	AutoscaleEnabled          *bool
 	DedicatedNodeEnabled      *bool
 	EnableTracing             *bool
+	// Sidecar 资源配置删除标志
+	DeleteSidecarCpuRequest    bool
+	DeleteSidecarMemoryRequest bool
+	DeleteSidecarCpuLimit      bool
+	DeleteSidecarMemoryLimit   bool
+	// HighAvailability 资源配置删除标志
+	DeleteHACpuRequest    bool
+	DeleteHAMemoryRequest bool
+	DeleteHACpuLimit      bool
+	DeleteHAMemoryLimit   bool
 }
 
 func getMapValue(m interface{}, key string) (interface{}, bool) {
@@ -87,6 +97,9 @@ func ProcessValues(values string, options *UpdateValuesOptions) (string, error) 
 
 	// 处理 meshConfig 配置
 	processMeshConfig(defaultValuesMap, options)
+
+	// 处理资源相关配置
+	processResourceConfig(defaultValuesMap, options)
 
 	resultBytes, err := yaml.Marshal(defaultValuesMap)
 	if err != nil {
@@ -173,16 +186,86 @@ func deleteMeshTracingFields(defaultValuesMap map[string]interface{}) {
 		// 删除 extensionProviders 字段（用于 OpenTelemetry）
 		deleteMapKey(defaultMeshConfig, common.FieldKeyExtensionProviders)
 
-		// 删除 defaultConfig.tracingConfig.zipkin 字段
+		// 删除 defaultConfig.tracingConfig 整个字段
 		if defaultConfig, ok := getMapValue(defaultMeshConfig, common.FieldKeyDefaultConfig); ok {
-			if tracingConfig, ok := getMapValue(defaultConfig, common.FieldKeyTracingConfig); ok {
-				deleteMapKey(tracingConfig, common.FieldKeyZipkin)
-			}
+			deleteMapKey(defaultConfig, common.FieldKeyTracingConfig)
 		}
 	}
 
 	// 删除 pilot 中的 traceSampling 字段
 	if defaultPilotConfig, ok := defaultValuesMap[common.FieldKeyPilot]; ok {
 		deleteMapKey(defaultPilotConfig, common.FieldKeyTraceSampling)
+	}
+}
+
+// processResourceConfig 处理资源相关的配置
+func processResourceConfig(defaultValuesMap map[string]interface{}, options *UpdateValuesOptions) {
+	if options == nil {
+		return
+	}
+
+	// 处理 Sidecar 资源配置删除
+	if options.DeleteSidecarCpuRequest {
+		deleteSidecarResourceField(defaultValuesMap, common.FieldKeyCPU, common.FieldKeyRequests)
+	}
+	if options.DeleteSidecarMemoryRequest {
+		deleteSidecarResourceField(defaultValuesMap, common.FieldKeyMemory, common.FieldKeyRequests)
+	}
+	if options.DeleteSidecarCpuLimit {
+		deleteSidecarResourceField(defaultValuesMap, common.FieldKeyCPU, common.FieldKeyLimits)
+	}
+	if options.DeleteSidecarMemoryLimit {
+		deleteSidecarResourceField(defaultValuesMap, common.FieldKeyMemory, common.FieldKeyLimits)
+	}
+
+	// 处理 HighAvailability 资源配置删除
+	if options.DeleteHACpuRequest {
+		deleteHAResourceField(defaultValuesMap, common.FieldKeyCPU, common.FieldKeyRequests)
+	}
+	if options.DeleteHAMemoryRequest {
+		deleteHAResourceField(defaultValuesMap, common.FieldKeyMemory, common.FieldKeyRequests)
+	}
+	if options.DeleteHACpuLimit {
+		deleteHAResourceField(defaultValuesMap, common.FieldKeyCPU, common.FieldKeyLimits)
+	}
+	if options.DeleteHAMemoryLimit {
+		deleteHAResourceField(defaultValuesMap, common.FieldKeyMemory, common.FieldKeyLimits)
+	}
+}
+
+// deleteSidecarResourceField 删除 Sidecar 指定的资源字段
+func deleteSidecarResourceField(defaultValuesMap map[string]interface{}, resourceType, fieldType string) {
+	// Sidecar 资源配置路径: global.proxy.resources.{requests|limits}.{cpu|memory}
+	if globalConfig, ok := defaultValuesMap[common.FieldKeyGlobal]; ok {
+		if proxyConfig, ok := getMapValue(globalConfig, common.FieldKeyProxy); ok {
+			if resources, ok := getMapValue(proxyConfig, common.FieldKeyResources); ok {
+				if fieldType == common.FieldKeyRequests {
+					if requests, ok := getMapValue(resources, common.FieldKeyRequests); ok {
+						deleteMapKey(requests, resourceType)
+					}
+				} else if fieldType == common.FieldKeyLimits {
+					if limits, ok := getMapValue(resources, common.FieldKeyLimits); ok {
+						deleteMapKey(limits, resourceType)
+					}
+				}
+			}
+		}
+	}
+}
+
+// deleteHAResourceField 删除 HighAvailability 指定的资源字段
+func deleteHAResourceField(defaultValuesMap map[string]interface{}, resourceType, fieldType string) {
+	if pilotConfig, ok := defaultValuesMap[common.FieldKeyPilot]; ok {
+		if resources, ok := getMapValue(pilotConfig, common.FieldKeyResources); ok {
+			if fieldType == common.FieldKeyRequests {
+				if requests, ok := getMapValue(resources, common.FieldKeyRequests); ok {
+					deleteMapKey(requests, resourceType)
+				}
+			} else if fieldType == common.FieldKeyLimits {
+				if limits, ok := getMapValue(resources, common.FieldKeyLimits); ok {
+					deleteMapKey(limits, resourceType)
+				}
+			}
+		}
 	}
 }

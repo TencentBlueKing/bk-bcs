@@ -1,6 +1,7 @@
 <template>
   <bk-select
     searchable
+    :disabled="disabled"
     :clearable="false"
     :loading="nodemanCloudLoading"
     :value="value"
@@ -30,6 +31,10 @@ import { INodeManCloud } from '@/views/cluster-manage/types/types';
 defineProps({
   value: {
     type: Number,
+  },
+  disabled: {
+    type: Boolean,
+    default: false,
   },
 });
 const emits = defineEmits(['input', 'change', 'list-change']);

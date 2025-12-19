@@ -128,8 +128,8 @@ func restyErrHook(r *resty.Request, err error) {
 }
 
 func restyAfterResponseHook(c *resty.Client, r *resty.Response) error {
-	klog.Infof("[%s] REQ: %s", utils.GetRequestIDFromContext(r.Request.Context()), restyReqToCurl(r.Request))
-	klog.Infof("[%s] RESP: %s", utils.GetRequestIDFromContext(r.Request.Context()), restyResponseToCurl(r))
+	klog.V(6).Infof("[%s] REQ: %s", utils.GetRequestIDFromContext(r.Request.Context()), restyReqToCurl(r.Request))
+	klog.V(6).Infof("[%s] RESP: %s", utils.GetRequestIDFromContext(r.Request.Context()), restyResponseToCurl(r))
 	return nil
 }
 

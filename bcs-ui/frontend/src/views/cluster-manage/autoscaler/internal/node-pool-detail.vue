@@ -82,7 +82,7 @@
             {{ imageProvider || '--'}}
           </bk-form-item>
           <bk-form-item :label="$t('cluster.ca.nodePool.label.system')">
-            {{clusterOS || '--'}}
+            {{nodePoolData.nodeTemplate?.imageInfo?.imageName || clusterOS || '--'}}
           </bk-form-item>
           <bk-form-item :label="$t('cluster.ca.nodePool.create.containerRuntime.title')">
             {{`${clusterData.clusterAdvanceSettings
@@ -224,7 +224,7 @@
       >
         <bcs-table-column :label="$t('generic.label.kind')" prop="diskType">
           <template #default="{ row }">
-            {{ diskTypeMap[row.diskType] }}
+            {{ diskTypeMap[row.diskType] || '--' }}
           </template>
         </bcs-table-column>
         <bcs-table-column :label="$t('generic.label.size')" prop="diskSize">

@@ -34,12 +34,22 @@ import (
 const (
 	// UserBeforeInit before init
 	UserBeforeInit = "userBeforeInit"
+	// UserCustomBeforeInit custom before init
+	UserCustomBeforeInit = "userCustomBeforeInit"
 	// UserPostInit post init
 	UserPostInit = "userAfterInit"
+	// SystemBeforeInit bksops system pre init
+	SystemBeforeInit = "systemPreInit"
+	// SystemPostInit bksops system init
+	SystemPostInit = "systemPostInit"
+	// SystemPreInit bksops system pre init
+	SystemPreInit = "空闲检查"
 	// SystemInit bksops system init
-	SystemInit = "系统初始化"
+	SystemInit = "系统后置初始化"
 	// UserAfterInit bksops user after init
 	UserAfterInit = "用户后置初始化"
+	// UserCustomPreInit bksops user custom pre init
+	UserCustomPreInit = "用户前置初始化"
 	// UserPreInit bksops user pre init
 	UserPreInit = "缩容节点清理"
 	// NodeMixedInit mixed init
@@ -56,6 +66,8 @@ var (
 		nodeIPList:         "NodeIPList",
 		externalNodeScript: "ExternalNodeScript",
 		clusterKubeConfig:  "KubeConfig",
+		clusterImageId:     "ImageId",
+		nodeInstanceID:     "NodeInstanceIDList",
 	}
 )
 
@@ -75,6 +87,10 @@ type ExtraInfo struct {
 	TranslateMethod    string
 	GroupCreator       string
 	GroupColocation    bool
+	ImageId            string
+	AllowSkip          bool
+	InstanceIDList     string
+	NodeRegion         string
 }
 
 // BuildSopsFactory xxx
@@ -174,9 +190,10 @@ func GenerateBKopsStep(taskMethod, taskName, stepName string, cls *proto.Cluster
 		TaskName:     taskName,
 		SkipOnFailed: plugin.AllowSkipWhenFailed,
 		Translate:    info.TranslateMethod,
+		AllowSkip:    info.AllowSkip,
 	}
-	step.Params[cloudprovider.BkSopsUrlKey.String()] = plugin.Link
-	step.Params[cloudprovider.ShowSopsUrlKey.String()] = fmt.Sprintf("%v", info.ShowSopsUrl)
+	step.Params[cloudprovider.BkSopsURLKey.String()] = plugin.Link
+	step.Params[cloudprovider.ShowSopsURLKey.String()] = fmt.Sprintf("%v", info.ShowSopsUrl)
 
 	constants := make(map[string]string)
 	// 变量values值分3类: 1.标准参数  2.直接渲染参数 3.template渲染参数
@@ -298,7 +315,7 @@ func getTemplateParameterByName(name string, cluster *proto.Cluster, extra Extra
 		if len(extra.ClusterKubeConfig) == 0 {
 			return clusterKubeConfig, nil
 		}
-		return extra.ExternalNodeScript, nil
+		return extra.ClusterKubeConfig, nil
 	case nodeOperator:
 		return extra.NodeOperator, nil
 	case templateBusinessID:
@@ -324,6 +341,21 @@ func getTemplateParameterByName(name string, cluster *proto.Cluster, extra Extra
 		return cluster.GetClusterBasicSettings().GetVersion(), nil
 	case clusterProvider:
 		return cluster.GetProvider(), nil
+	case clusterImageId:
+		if len(extra.ImageId) == 0 {
+			return clusterImageId, nil
+		}
+		return extra.ImageId, nil
+	case nodeInstanceID:
+		if len(extra.InstanceIDList) == 0 {
+			return nodeInstanceID, nil
+		}
+		return extra.InstanceIDList, nil
+	case nodeNodeRegion:
+		if extra.NodeRegion != "" {
+			return extra.NodeRegion, nil
+		}
+		return cluster.GetRegion(), nil
 	default:
 	}
 

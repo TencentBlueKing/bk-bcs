@@ -198,6 +198,11 @@ type SharedClusterConfig struct {
 	AnnoKeyProjCode string `yaml:"annoKeyProjCode"`
 }
 
+// SystemCommonConfig 系统公共配置
+type SystemCommonConfig struct {
+	SystemNameSpaces []string `yaml:"systemNameSpaces"`
+}
+
 // ProjectConfig 项目的配置信息
 type ProjectConfig struct {
 	Etcd                       EtcdConfig                     `yaml:"etcd"`
@@ -223,6 +228,7 @@ type ProjectConfig struct {
 	TaskConfig                 TaskConfig                     `yaml:"taskConfig"`
 	SharedClusterConfig        SharedClusterConfig            `yaml:"sharedClusterConfig"`
 	EnableMultiTenant          bool                           `yaml:"enableMultiTenant"`
+	SystemConfig               SystemCommonConfig             `yaml:"systemConfig"`
 }
 
 func (conf *ProjectConfig) initServerAddress() {

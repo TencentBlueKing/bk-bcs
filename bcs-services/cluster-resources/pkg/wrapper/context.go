@@ -24,12 +24,12 @@ import (
 	"go-micro.dev/v4/metadata"
 	"go-micro.dev/v4/server"
 
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runmode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runtime"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/component/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/component/project"
 	conf "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"

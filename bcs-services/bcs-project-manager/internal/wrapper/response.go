@@ -18,6 +18,7 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/audit"
 	authutils "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
 	"go-micro.dev/v4/errors"
 	"go-micro.dev/v4/server"
@@ -35,7 +36,28 @@ func NewResponseWrapper(fn server.HandlerFunc) server.HandlerFunc {
 		err := fn(ctx, req, rsp)
 		requestID := ctx.Value(ctxkey.RequestIDKey).(string)
 		endTime := time.Now()
-		go addAudit(ctx, req, rsp, startTime, endTime)
+		result := audit.ActionResult{
+			Status: audit.ActivityStatusSuccess,
+		}
+		v := reflect.ValueOf(rsp)
+		codeField := v.Elem().FieldByName("Code")
+		messageField := v.Elem().FieldByName("Message")
+		if codeField.IsValid() && codeField.CanInterface() {
+			if c, ok := codeField.Interface().(uint32); ok {
+				code := int(c)
+				result.ResultCode = code
+			}
+		}
+		if messageField.IsValid() && messageField.CanInterface() {
+			if m, ok := messageField.Interface().(string); ok {
+				message := m
+				result.ResultContent = message
+			}
+		}
+		if result.ResultCode != errorx.Success {
+			result.Status = audit.ActivityStatusFailed
+		}
+		go addAudit(ctx, req, result, startTime, endTime)
 		return RenderResponse(rsp, requestID, err)
 	}
 }

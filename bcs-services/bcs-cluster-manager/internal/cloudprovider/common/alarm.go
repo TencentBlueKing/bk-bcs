@@ -32,10 +32,11 @@ var (
 	}
 )
 
-// BuildShieldAlertTaskStep 屏蔽节点告警
-func BuildShieldAlertTaskStep(task *proto.Task, clusterId string) {
+// BuildShieldAlertTaskStep 屏蔽节点告警 && 集群节点镜像处理
+func BuildShieldAlertTaskStep(task *proto.Task, clusterId string, imageId string) {
 	shieldStep := cloudprovider.InitTaskStep(addNodesShieldAlarmStep, cloudprovider.WithStepSkipFailed(true))
 	shieldStep.Params[cloudprovider.ClusterIDKey.String()] = clusterId
+	shieldStep.Params[cloudprovider.ImageIdKey.String()] = imageId
 
 	task.Steps[addNodesShieldAlarmStep.StepMethod] = shieldStep
 	task.StepSequence = append(task.StepSequence, addNodesShieldAlarmStep.StepMethod)
@@ -60,6 +61,7 @@ func AddNodesShieldAlarmTask(taskID string, stepName string) error {
 
 	// extract valid info
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
+	imageId := step.Params[cloudprovider.ImageIdKey.String()]
 
 	ipList := cloudprovider.ParseNodeIpOrIdFromCommonMap(state.Task.GetCommonParams(),
 		cloudprovider.NodeIPsKey.String(), ",")
@@ -92,6 +94,20 @@ func AddNodesShieldAlarmTask(taskID string, stepName string) error {
 		blog.Errorf("AddNodesShieldAlarmTask[%s] ShieldHostAlarmConfig failed: %v", taskID, err)
 	} else {
 		blog.Infof("AddNodesShieldAlarmTask[%s] ShieldHostAlarmConfig success", taskID)
+	}
+
+	// handle image
+	if imageId != "" {
+		state.Task.CommonParams[cloudprovider.DynamicImageIdKey.String()] = imageId
+	} else {
+		clusterImageId, errLocal := cloudprovider.GetClusterImage(ctx, cluster)
+		if errLocal != nil {
+			blog.Errorf("AddNodesShieldAlarmTask[%s] GetClusterImage failed: %v", taskID, errLocal)
+			_ = state.UpdateStepFailure(start, stepName, errLocal)
+			return errLocal
+		}
+		blog.Infof("AddNodesShieldAlarmTask[%s] GetClusterImage success: %v", taskID, clusterImageId)
+		state.Task.CommonParams[cloudprovider.DynamicImageIdKey.String()] = clusterImageId
 	}
 
 	// update step

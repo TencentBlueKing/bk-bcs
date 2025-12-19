@@ -773,6 +773,9 @@ url("@/fonts/font-icon/fonts/iconcool.eot?#iefix") format("embedded-opentype");
 .bcs-icon-abnormal:before {
 	content: "\e242";
 }
+.bcs-icon-half-success-line:before {
+	content: "\e24c";
+}
 .bcs-icon-binding:before {
 	content: "\e1fa";
 }
@@ -905,6 +908,9 @@ url("@/fonts/font-icon/fonts/iconcool.eot?#iefix") format("embedded-opentype");
 .bcs-icon-wenjian:before {
 	content: "\e22e";
 }
+.bcs-icon-jiazai:before {
+	content: "\e24f";
+}
 .bcs-icon-setting:before {
 	content: "\e22f";
 }
@@ -925,6 +931,18 @@ url("@/fonts/font-icon/fonts/iconcool.eot?#iefix") format("embedded-opentype");
 }
 .bcs-icon-crd-3:before {
 	content: "\e23a";
+}
+.bcs-icon-circle-correct-filled:before {
+	content: "\e250";
+}
+.bcs-icon-circle-terminate-filled:before {
+	content: "\e24d";
+}
+.bcs-icon-circle-wrong-filled:before {
+	content: "\e251";
+}
+.bcs-icon-waiting:before {
+	content: "\e24e";
 }
 .bcs-icon-batch-edit:before {
 	content: "\e23b";

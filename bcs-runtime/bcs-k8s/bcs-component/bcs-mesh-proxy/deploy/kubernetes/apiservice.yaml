@@ -1,0 +1,56 @@
+apiVersion: apiregistration.k8s.io/v1
+kind: APIService
+metadata:
+  name: v1alpha3.networking.istio.io
+spec:
+  group: networking.istio.io
+  groupPriorityMinimum: 1000
+  insecureSkipTLSVerify: true
+  service:
+    name: istio-crd
+    namespace: istio-system
+    port: 61011
+  version: v1alpha3
+---
+apiVersion: apiregistration.k8s.io/v1
+kind: APIService
+metadata:
+  name: v1beta1.networking.istio.io
+spec:
+  group: networking.istio.io
+  groupPriorityMinimum: 1000
+  insecureSkipTLSVerify: true
+  service:
+    name: istio-crd
+    namespace: istio-system
+    port: 61011
+  version: v1beta1
+  versionPriority: 10
+---
+apiVersion: apiregistration.k8s.io/v1
+kind: APIService
+metadata:
+  name: v1.security.istio.io
+spec:
+  group: security.istio.io
+  groupPriorityMinimum: 1000
+  insecureSkipTLSVerify: true
+  service:
+    name: istio-crd
+    namespace: istio-system
+    port: 61011
+  version: v1
+---
+apiVersion: apiregistration.k8s.io/v1
+kind: APIService
+metadata:
+  name: v1alpha1.telemetry.istio.io
+spec:
+  group: telemetry.istio.io
+  groupPriorityMinimum: 1000
+  insecureSkipTLSVerify: true
+  service:
+    name: istio-crd
+    namespace: istio-system
+    port: 61011
+  version: v1alpha1 

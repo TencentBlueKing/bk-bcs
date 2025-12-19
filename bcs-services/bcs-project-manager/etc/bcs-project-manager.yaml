@@ -104,3 +104,6 @@ bkUser:
   host: ""
   timeout: 10
   debug: false
+systemConfig:
+  systemNameSpaces:
+  - "bcs"

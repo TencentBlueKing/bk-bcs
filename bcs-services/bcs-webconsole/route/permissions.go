@@ -160,8 +160,7 @@ func initContextWithIAMProject(c *gin.Context, authCtx *AuthContext) error {
 		return nil
 	}
 
-	namespace := GetNamespace(c)
-	allow, err := iam.IsAllowedWithResource(c.Request.Context(), authCtx.ProjectId, authCtx.ClusterId, namespace,
+	allow, err := iam.IsAllowedWithResource(c.Request.Context(), authCtx.ProjectId, authCtx.ClusterId, "",
 		authCtx.Username, authCtx.TenantId)
 	if err != nil {
 		return err

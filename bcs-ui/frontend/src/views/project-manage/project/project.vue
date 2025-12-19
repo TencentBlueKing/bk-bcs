@@ -157,7 +157,7 @@ export default defineComponent({
       isLoading.value = true;
       const { data, web_annotations: webPerms } = await getProjectList({
         searchKey: keyword.value,
-        offset: pagination.value.current - 1,
+        offset: (pagination.value.current - 1) * pagination.value.limit,
         limit: pagination.value.limit,
       });
       projectList.value = data.results;

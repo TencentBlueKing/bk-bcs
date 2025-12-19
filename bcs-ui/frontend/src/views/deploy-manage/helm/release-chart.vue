@@ -1,6 +1,8 @@
 <!-- eslint-disable max-len -->
 <template>
-  <BcsContent :title="isEdit ? releaseName : $t('deploy.helm.chartInstall')" v-bkloading="{ isLoading }"
+  <BcsContent
+    :title="isEdit ? releaseName : $t('deploy.helm.chartInstall')"
+    v-bkloading="{ isLoading }"
     ref="contentRef">
     <!-- 基本信息 -->
     <div class="bcs-border min-h-[320px] bg-[#fff] flex">
@@ -10,8 +12,12 @@
         <div class="text-[12px] text-[#b2b5bd] mt-[8px] mb-[4px] px-[20px] text-ellipsis">
           {{ chartData.latestDescription }}
         </div>
-        <bcs-popconfirm trigger="click" :confirm-text="$t('cluster.nodeList.button.copy.text')" v-if="isEdit"
-          :disabled="!releaseDetail.notes" @confirm="handleCopyNotes">
+        <bcs-popconfirm
+          trigger="click"
+          :confirm-text="$t('cluster.nodeList.button.copy.text')"
+          v-if="isEdit"
+          :disabled="!releaseDetail.notes"
+          @confirm="handleCopyNotes">
           <bcs-button text size="small" :disabled="!releaseDetail.notes">{{ $t('deploy.helm.showNotes') }}</bcs-button>
           <template #content>
             <pre class="break-words whitespace-pre-wrap">{{ releaseDetail.notes }}</pre>
@@ -21,21 +27,25 @@
       <div class="flex-1">
         <div class="px-[20px] h-[40px] flex items-center text-[14px] border-bottom">{{ $t('deploy.helm.args') }}</div>
         <!-- form组件实现强依赖 bk-form 名称 -->
-        <bk-form form-type="vertical" class="px-[20px] py-[14px] grid grid-cols-2 gap-[20px] max-w-[800px]"
-          :model="releaseData" :rules="rules" ref="formRef">
+        <bk-form
+          form-type="vertical"
+          class="px-[20px] py-[14px] grid grid-cols-2 gap-[20px] max-w-[800px]"
+          :model="releaseData"
+          :rules="rules"
+          ref="formRef">
           <bk-form-item :label="$t('generic.label.name')" required property="name" error-display-type="normal">
             <bcs-input :maxlength="53" :disabled="isEdit" v-model="releaseData.name"></bcs-input>
           </bk-form-item>
-          <bk-form-item :label="$t('generic.label.version')" required property="chartVersion"
-            error-display-type="normal">
+          <bk-form-item :label="$t('generic.label.version')" required property="chartVersion" error-display-type="normal">
             <div class="flex items-center">
-              <bcs-select class="flex-1" :loading="versionLoading" searchable :clearable="false"
-                v-model="releaseData.chartVersion">
+              <bcs-select class="flex-1" :loading="versionLoading" searchable :clearable="false" v-model="releaseData.chartVersion">
                 <bcs-option v-for="item in versionList" :key="item.version" :id="item.version" :name="item.version">
                 </bcs-option>
               </bcs-select>
-              <span class="bcs-icon-btn flex items-center justify-center w-[32px] h-[32px] ml-[-1px]"
-                style="border: 1px solid #c4c6cc" v-bk-tooltips="$t('generic.button.refresh')"
+              <span
+                class="bcs-icon-btn flex items-center justify-center w-[32px] h-[32px] ml-[-1px]"
+                style="border: 1px solid #c4c6cc"
+                v-bk-tooltips="$t('generic.button.refresh')"
                 @click="handleGetVersionList">
                 <i class="bcs-icon bcs-icon-reset"></i>
               </span>
@@ -45,30 +55,25 @@
             <ClusterSelect :disabled="isEdit" searchable cluster-type="all" class="!w-[auto]" v-model="clusterID">
             </ClusterSelect>
           </bk-form-item>
-          <bk-form-item :label="$t('k8s.namespace')" :desc="$t('deploy.helm.chartNSTips')" desc-type="icon" required
-            property="namespace" error-display-type="normal">
-            <NamespaceSelect :disabled="isEdit" :cluster-id="clusterID" :clearable="false"
-              v-model="releaseData.namespace">
+          <bk-form-item :label="$t('k8s.namespace')" :desc="$t('deploy.helm.chartNSTips')" desc-type="icon" required property="namespace" error-display-type="normal">
+            <NamespaceSelect :disabled="isEdit" :cluster-id="clusterID" :clearable="false" v-model="releaseData.namespace">
             </NamespaceSelect>
           </bk-form-item>
-          <bk-form-item :label="$t('deploy.helm.upgradeDesc')" property="description" required
-            error-display-type="normal" v-if="releaseName">
+          <bk-form-item :label="$t('deploy.helm.upgradeDesc')" property="description" required error-display-type="normal" v-if="releaseName">
             <bcs-input type="textarea" v-model="args['--description']"></bcs-input>
           </bk-form-item>
         </bk-form>
       </div>
     </div>
     <!-- Values信息 -->
-    <bcs-tab class="mt-[20px]" :active.sync="activeTab" v-bkloading="{ isLoading: versionDetailLoading }"
-      v-if="showTab">
+    <bcs-tab class="mt-[20px]" :active.sync="activeTab" v-bkloading="{ isLoading: versionDetailLoading }" v-if="showTab">
       <bcs-tab-panel name="values" :label="$t('deploy.helm.chartFlags')">
         <bcs-alert class="mb-[10px]" type="info" :title="$t('deploy.helm.defaultDesc')">
         </bcs-alert>
         <div class="flex items-center bcs-border h-[64px] bg-[#f9fbfd] px-[16px]">
           <template v-if="!isEdit || !lockValues">
             <span class="text-[14px]">{{ $t('deploy.helm.valuesFile') }}:</span>
-            <bcs-select class="w-[360px] bg-[#fff] ml-[10px]" :clearable="false" searchable
-              v-model="valuesData.valueFile">
+            <bcs-select class="w-[360px] bg-[#fff] ml-[10px]" :clearable="false" searchable v-model="valuesData.valueFile">
               <bcs-option v-for="item in valuesFileList" :key="item" :id="item" :name="item">
               </bcs-option>
             </bcs-select>
@@ -77,11 +82,9 @@
             </span>
           </template>
           <bcs-checkbox v-model="lockValues" class="flex flex-1 release-chart-lock-checkbox" v-if="isEdit">
-            <div class="flex"
-              :title="$t('deploy.helm.defaultLockedValuesContent', { version: releaseDetail.chartVersion })">
+            <div class="flex" :title="$t('deploy.helm.defaultLockedValuesContent', { version: releaseDetail.chartVersion })">
               {{ lockValues ? $t('deploy.helm.locked') : $t('deploy.helm.unlocked') }}
-              <i18n path="deploy.helm.defaultLockedValuesContent"
-                class="flex-1 text-[#979ba5] text-[12px] bcs-ellipsis">
+              <i18n path="deploy.helm.defaultLockedValuesContent" class="flex-1 text-[#979ba5] text-[12px] bcs-ellipsis">
                 <span place="version">{{ releaseDetail.chartVersion }}</span>
               </i18n>
             </div>
@@ -140,22 +143,37 @@
             <span class="bcs-icon-btn" v-bk-tooltips="$t('deploy.helm.flags.desc')">
               <i class="bcs-icon bcs-icon-info-circle"></i>
             </span>
-            <KeyValue v-show="showCustomArgs" class="mt-[5px] max-w-[600px]" :show-header="false" :show-footer="false"
+            <KeyValue
+              v-show="showCustomArgs"
+              class="mt-[5px] max-w-[600px]"
+              :show-header="false"
+              :show-footer="false"
               :key-rules="[{
-    message: $t('deploy.helm.keyTips'),
-    validator: '^--'
-  }]" :model-value="customArgs" :min-items="0" :unique-key="false" key-required ref="keyValueRef">
+                message: $t('deploy.helm.keyTips'),
+                validator: '^--'
+              }]"
+              :model-value="customArgs"
+              :min-items="0"
+              :unique-key="false"
+              key-required
+              ref="keyValueRef">
             </KeyValue>
           </div>
         </div>
       </bcs-tab-panel>
     </bcs-tab>
     <!-- 预览 -->
-    <bcs-sideslider :is-show.sync="showPreview" quick-close :width="1000" :title="$t('generic.title.preview')"
+    <bcs-sideslider
+      :is-show.sync="showPreview"
+      quick-close :width="1000"
+      :title="$t('generic.title.preview')"
       @hidden="isPreview = false">
       <template #content>
-        <ChartFileTree :contents="previewData.newContents" v-bkloading="{ isLoading: previewLoading }"
-          class="bcs-sideslider-content" style="height: calc(100vh - 100px)" />
+        <ChartFileTree
+          :contents="previewData.newContents"
+          v-bkloading="{ isLoading: previewLoading }"
+          class="bcs-sideslider-content"
+          style="height: calc(100vh - 100px)" />
       </template>
     </bcs-sideslider>
     <!-- diff -->
@@ -166,30 +184,48 @@
         <span class="flex-1">{{ $t('generic.title.curVersion') }}: {{ releaseDetail.chartVersion }}</span>
         <span class="flex-1">{{ $t('deploy.helm.upgrade') }}: {{ releaseData.chartVersion }}</span>
       </div>
-      <CodeEditor v-bkloading="{ isLoading: confirmLoading }" diff-editor full-screen :value="previewData.newContent"
-        :original="previewData.oldContent" class="grid !min-h-[460px]" readonly>
+      <CodeEditor
+        v-bkloading="{ isLoading: confirmLoading }"
+        diff-editor full-screen
+        :value="previewData.newContent"
+        :original="previewData.oldContent"
+        class="grid !min-h-[460px]"
+        readonly>
       </CodeEditor>
       <template #footer>
-        <bcs-button theme="primary" :disabled="!Object.keys(previewData).length" :loading="confirmLoading"
-          @click="handleConfirmUpdate">{{ $t('generic.button.confirm') }}</bcs-button>
-        <bcs-button :disabled="confirmLoading"
-          @click="showDiffDialog = false">{{ $t('generic.button.cancel') }}</bcs-button>
+        <bcs-button
+          theme="primary"
+          :disabled="!Object.keys(previewData).length"
+          :loading="confirmLoading"
+          @click="handleConfirmUpdate">
+          {{ $t('generic.button.confirm') }}
+        </bcs-button>
+        <bcs-button
+          :disabled="confirmLoading"
+          @click="showDiffDialog = false">
+          {{ $t('generic.button.cancel') }}
+        </bcs-button>
       </template>
     </bcs-dialog>
     <!-- 操作 -->
     <div class="mt-[20px]">
-      <bcs-button theme="primary" :loading="releaseLoading" :disabled="releaseLoading" v-authority="{
-    clickable: !isEdit,
-    actionId: 'namespace_scoped_update',
-    resourceName: releaseData.namespace,
-    disablePerms: !isEdit,
-    permCtx: {
-      resource_type: 'namespace',
-      project_id: projectID,
-      cluster_id: clusterID,
-      name: releaseData.namespace
-    }
-  }" @click="handleReleaseOrUpdateChart">
+      <bcs-button
+        theme="primary"
+        :loading="releaseLoading"
+        :disabled="releaseLoading"
+        v-authority="{
+          clickable: !isEdit,
+          actionId: 'namespace_scoped_update',
+          resourceName: releaseData.namespace,
+          disablePerms: !isEdit,
+          permCtx: {
+            resource_type: 'namespace',
+            project_id: projectID,
+            cluster_id: clusterID,
+            name: releaseData.namespace
+          }
+        }"
+        @click="handleReleaseOrUpdateChart">
         {{ isEdit ? $t('generic.button.update') : $t('deploy.helm.install') }}
       </bcs-button>
       <bcs-button :loading="releaseLoading" :disabled="releaseLoading" @click="handleShowPreview">
@@ -204,6 +240,8 @@
 <script lang="ts">
 import { computed, defineComponent, onMounted, ref, toRefs, watch } from 'vue';
 
+import { filterPlainText } from '@blueking/xss-filter';
+
 import ChartFileTree from './chart-file-tree.vue';
 import useHelm from './use-helm';
 
@@ -212,8 +250,8 @@ import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import ClusterSelect from '@/components/cluster-selector/cluster-select.vue';
 import KeyValue, { IData } from '@/components/key-value.vue';
 import BcsContent from '@/components/layout/Content.vue';
-import CodeEditor from '@/components/monaco-editor/new-editor.vue';
 import AiEditor from '@/components/monaco-editor/ai-editor.vue';
+import CodeEditor from '@/components/monaco-editor/new-editor.vue';
 import NamespaceSelect from '@/components/namespace-selector/namespace-select.vue';
 import { useCluster, useProject } from '@/composables/use-app';
 import $i18n from '@/i18n/i18n-setup';
@@ -387,7 +425,7 @@ export default defineComponent({
       () => [
         releaseData.value,
         valuesData.value,
-        AiEditorRef.value?.content
+        AiEditorRef.value?.content,
       ],
       () => {
         isFormChanged.value = true;
@@ -461,7 +499,7 @@ export default defineComponent({
     };
     // 获取提交参数
     const handleGetReleaseParams = () => {
-      if(AiEditorRef.value?.content) {
+      if (AiEditorRef.value?.content) {
         valuesData.value.valueFileContent = AiEditorRef.value?.content;
       }
       const { namespace, name, chartVersion } = releaseData.value;
@@ -475,6 +513,13 @@ export default defineComponent({
       const commands = data.map((item) => {
         if (item.key === '--timeout') {
           return `${item.key}=${item.value}s`;
+        }
+        if (item.key === '--description') {
+          const result = filterPlainText(item.value);
+          if (result !== item.value) {
+            console.warn('Intercepted by XSS');
+          }
+          return `${item.key}=${result}`;
         }
         return `${item.key}=${item.value}`;
       });

@@ -596,7 +596,7 @@ func (c *Cluster) EnableExternalNodeSupport(cls *proto.Cluster, opt *cloudprovid
 		if opt == nil || opt.Operator == "" || opt.EnablePara == nil {
 			return fmt.Errorf("qcloud EnableExternalNodeSupport lost valid paras")
 		}
-		if opt.EnablePara.NetworkType == "" || opt.EnablePara.SubnetId == "" || opt.EnablePara.ClusterCIDR == "" {
+		if opt.EnablePara.NetworkType == "" || opt.EnablePara.SubnetID == "" || opt.EnablePara.ClusterCIDR == "" {
 			return fmt.Errorf("qcloud EnableExternalNodeSupport enableexternal paras empty")
 		}
 
@@ -614,7 +614,7 @@ func (c *Cluster) EnableExternalNodeSupport(cls *proto.Cluster, opt *cloudprovid
 		err := cli.EnableExternalNodeSupport(cls.SystemID, api.EnableExternalNodeConfig{ // nolint
 			NetworkType: opt.EnablePara.NetworkType,
 			ClusterCIDR: opt.EnablePara.ClusterCIDR,
-			SubnetId:    opt.EnablePara.SubnetId,
+			SubnetId:    opt.EnablePara.SubnetID,
 			Enabled:     opt.EnablePara.Enabled,
 		})
 		if err != nil {
@@ -633,7 +633,7 @@ func (c *Cluster) EnableExternalNodeSupport(cls *proto.Cluster, opt *cloudprovid
 }
 
 // ListOsImage list image os
-func (c *Cluster) ListOsImage(provider string, opt *cloudprovider.CommonOption) ([]*proto.OsImage, error) {
+func (c *Cluster) ListOsImage(provider, clusterID string, opt *cloudprovider.CommonOption) ([]*proto.OsImage, error) {
 	if opt == nil || opt.Account == nil || len(opt.Account.SecretID) == 0 ||
 		len(opt.Account.SecretKey) == 0 || len(opt.Region) == 0 {
 		return nil, fmt.Errorf("qcloud ListOsImage lost authoration")
@@ -646,7 +646,7 @@ func (c *Cluster) ListOsImage(provider string, opt *cloudprovider.CommonOption) 
 		return nil, err
 	}
 
-	cloudImages, err := cli.DescribeOsImages(provider, nil, opt)
+	cloudImages, err := cli.DescribeOsImages(provider, "", nil, opt)
 	if err != nil {
 		return nil, err
 	}
@@ -801,9 +801,9 @@ func (c *Cluster) GetMasterSuggestedMachines(level, vpcId string,
 		instanceTemplate = make([]*proto.InstanceTemplateConfig, 0)
 	)
 
-	machineConfig := clusterLevel.GetCpuMemConfig(opt.Cpu, opt.Mem)
+	machineConfig := clusterLevel.GetCpuMemConfig(opt.CPU, opt.Mem)
 
-	mtZones, zoneInstanceTypes, err := getZoneMachineTypes(machineConfig.Cpu, machineConfig.Mem, opt.CommonOption)
+	mtZones, zoneInstanceTypes, err := getZoneMachineTypes(machineConfig.CPU, machineConfig.Mem, opt.CommonOption)
 	if err != nil {
 		blog.Errorf("GetMasterSuggestedMachines getZoneMachineTypes failed: %v", err)
 		return nil, err
@@ -909,7 +909,7 @@ func getZoneMachineTypes(
 
 	nodeCli := &NodeManager{}
 	instanceTypes, err := nodeCli.getCloudInstanceType(cloudprovider.InstanceInfo{
-		Cpu:    uint32(cpu),
+		CPU:    uint32(cpu),
 		Memory: uint32(mem),
 	}, &opt)
 	if err != nil {

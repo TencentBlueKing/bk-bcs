@@ -13,8 +13,6 @@
 package common
 
 import (
-	v1 "k8s.io/api/core/v1"
-
 	meshmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/proto/bcs-mesh-manager"
 )
 
@@ -34,7 +32,7 @@ const (
 	FieldKeyExtensionProviders        = "extensionProviders"
 	FieldKeyTraceSampling             = "traceSampling"
 	FieldKeyDefaultConfig             = "defaultConfig"
-	FieldKeyTracingConfig             = "tracingConfig"
+	FieldKeyTracingConfig             = "tracing"
 	FieldKeyAccessLogFile             = "accessLogFile"
 	FieldKeyAccessLogFormat           = "accessLogFormat"
 	FieldKeyAccessLogEncoding         = "accessLogEncoding"
@@ -42,20 +40,47 @@ const (
 	FieldKeyAutoscaleMin              = "autoscaleMin"
 	FieldKeyAutoscaleMax              = "autoscaleMax"
 	FieldKeyCPU                       = "cpu"
+	FieldKeyMemory                    = "memory"
 	FieldKeyDedicatedNode             = "dedicatedNode"
 	FieldKeyDedicatedNodeEnabled      = "enabled"
 	FieldKeyDedicatedNodeNodeSelector = "nodeSelector"
 	FieldKeyDedicatedNodeTolerations  = "tolerations"
 	FieldKeyZipkin                    = "zipkin"
 	FieldKeyZipkinAddress             = "address"
+	FieldKeyResources                 = "resources"
+	FieldKeyRequests                  = "requests"
+	FieldKeyLimits                    = "limits"
+	FieldKeyProxy                     = "proxy"
 )
+
+// BaseValues base组件的values
+type BaseValues struct {
+	Global   *BaseGlobalConfig `yaml:"global,omitempty"`
+	Revision *string           `yaml:"defaultRevision,omitempty"`
+}
+
+// BaseGlobalConfig base组件的global配置
+type BaseGlobalConfig struct {
+	ExternalIstiod *bool `yaml:"externalIstiod,omitempty"`
+}
+
+// EastwestGatewayValues eastwestgateway组件的values
+type EastwestGatewayValues struct {
+	Revision       string  `yaml:"revision,omitempty"`
+	NetworkGateway string  `yaml:"networkGateway,omitempty"`
+	Service        Service `yaml:"service,omitempty"`
+}
+
+// Service service配置
+type Service struct {
+	Annotations map[string]string `yaml:"annotations,omitempty"`
+}
 
 // IstioInstallOption istio安装操作选项
 type IstioInstallOption struct {
 	ChartValuesPath string
 	ChartRepo       string
 
-	ProjectID             string
 	ProjectCode           string
 	Name                  string
 	Description           string
@@ -63,25 +88,29 @@ type IstioInstallOption struct {
 	ControlPlaneMode      string
 	ClusterMode           string
 	PrimaryClusters       []string
-	RemoteClusters        []string
+	RemoteClusters        []*meshmanager.RemoteCluster
 	SidecarResourceConfig *meshmanager.ResourceConfig
 	HighAvailability      *meshmanager.HighAvailability
 	ObservabilityConfig   *meshmanager.ObservabilityConfig
 	FeatureConfigs        map[string]*meshmanager.FeatureConfig
 
-	MeshID       string
-	NetworkID    string
-	ChartVersion string
+	MeshID              string
+	NetworkID           string
+	ChartVersion        string
+	MultiClusterEnabled bool
+	CLBID               string
+	CLBIP               string
+	Revision            string
 }
 
 // IstiodInstallValues istiod安装参数
 type IstiodInstallValues struct {
-	IstiodRemote *IstiodRemoteConfig       `yaml:"istiodRemote,omitempty"`
-	Pilot        *IstiodPilotConfig        `yaml:"pilot,omitempty"`
-	Telemetry    *IstiodTelemetryConfig    `yaml:"telemetry,omitempty"`
-	Global       *IstiodGlobalConfig       `yaml:"global,omitempty"`
-	MultiCluster *IstiodMultiClusterConfig `yaml:"multiCluster,omitempty"`
-	MeshConfig   *IstiodMeshConfig         `yaml:"meshConfig,omitempty"`
+	IstiodRemote *IstiodRemoteConfig    `yaml:"istiodRemote,omitempty"`
+	Pilot        *IstiodPilotConfig     `yaml:"pilot,omitempty"`
+	Telemetry    *IstiodTelemetryConfig `yaml:"telemetry,omitempty"`
+	Global       *IstiodGlobalConfig    `yaml:"global,omitempty"`
+	MeshConfig   *IstiodMeshConfig      `yaml:"meshConfig,omitempty"`
+	Revision     *string                `yaml:"revision,omitempty"`
 }
 
 // IstiodRemoteConfig istiod远程配置
@@ -102,7 +131,6 @@ type IstiodPilotConfig struct {
 	CPU              *HPACPUConfig     `yaml:"cpu,omitempty"`
 	Env              map[string]string `yaml:"env,omitempty"`
 	NodeSelector     map[string]string `yaml:"nodeSelector,omitempty"`
-	Tolerations      []v1.Toleration   `yaml:"tolerations,omitempty"`
 }
 
 // HPACPUConfig HPA cpu配置
@@ -117,13 +145,14 @@ type IstiodTelemetryConfig struct {
 
 // IstiodGlobalConfig global配置
 type IstiodGlobalConfig struct {
-	MeshID                       *string           `yaml:"meshID,omitempty"`
-	Network                      *string           `yaml:"network,omitempty"`
-	ConfigCluster                *bool             `yaml:"configCluster,omitempty"`
-	OmitSidecarInjectorConfigMap *bool             `yaml:"omitSidecarInjectorConfigMap,omitempty"`
-	RemotePilotAddress           *string           `yaml:"remotePilotAddress,omitempty"`
-	ExternalIstiod               *bool             `yaml:"externalIstiod,omitempty"`
-	Proxy                        *IstioProxyConfig `yaml:"proxy,omitempty"`
+	MeshID                       *string                   `yaml:"meshID,omitempty"`
+	Network                      *string                   `yaml:"network,omitempty"`
+	ConfigCluster                *bool                     `yaml:"configCluster,omitempty"`
+	OmitSidecarInjectorConfigMap *bool                     `yaml:"omitSidecarInjectorConfigMap,omitempty"`
+	RemotePilotAddress           *string                   `yaml:"remotePilotAddress,omitempty"`
+	ExternalIstiod               *bool                     `yaml:"externalIstiod,omitempty"`
+	Proxy                        *IstioProxyConfig         `yaml:"proxy,omitempty"`
+	MultiCluster                 *IstiodMultiClusterConfig `yaml:"multiCluster,omitempty"`
 }
 
 // IstioProxyConfig proxy配置
@@ -177,7 +206,7 @@ type OutboundTrafficPolicy struct {
 type DefaultConfig struct {
 	HoldApplicationUntilProxyStarts *bool          `yaml:"holdApplicationUntilProxyStarts,omitempty"`
 	ProxyMetadata                   *ProxyMetadata `yaml:"proxyMetadata,omitempty"`
-	TracingConfig                   *TracingConfig `yaml:"tracingConfig,omitempty"`
+	TracingConfig                   *TracingConfig `yaml:"tracing,omitempty"`
 }
 
 // TracingConfig 追踪配置
@@ -192,7 +221,7 @@ type ZipkinConfig struct {
 
 // ProxyMetadata proxy metadata
 type ProxyMetadata struct {
-	ExitOnZeroActiveConnections *bool   `yaml:"EXIT_ON_ZERO_ACTIVE_CONNECTIONS,omitempty"`
+	ExitOnZeroActiveConnections *string `yaml:"EXIT_ON_ZERO_ACTIVE_CONNECTIONS,omitempty"`
 	IstioMetaDnsCapture         *string `yaml:"ISTIO_META_DNS_CAPTURE,omitempty"`
 	IstioMetaDnsAutoAllocate    *string `yaml:"ISTIO_META_DNS_AUTO_ALLOCATE,omitempty"`
 }

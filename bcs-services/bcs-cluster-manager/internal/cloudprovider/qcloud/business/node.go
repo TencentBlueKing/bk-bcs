@@ -186,9 +186,14 @@ func InstanceToNode(inst *cvm.Instance, zoneInfo map[string]*proto.ZoneInfo) *pr
 		InstanceType: *inst.InstanceType,
 		CPU:          uint32(*inst.CPU),
 		Mem:          uint32(*inst.Memory),
-		GPU:          0,
-		VPC:          *inst.VirtualPrivateCloud.VpcId,
-		ZoneID:       *inst.Placement.Zone,
+		GPU: func() uint32 {
+			if inst.GPUInfo != nil {
+				return uint32(*inst.GPUInfo.GPUCount)
+			}
+			return 0
+		}(),
+		VPC:    *inst.VirtualPrivateCloud.VpcId,
+		ZoneID: *inst.Placement.Zone,
 		Zone: func() uint32 {
 			if zone != nil {
 				zoneID, _ := strconv.ParseUint(zone.ZoneID, 10, 32)
@@ -202,6 +207,9 @@ func InstanceToNode(inst *cvm.Instance, zoneInfo map[string]*proto.ZoneInfo) *pr
 				return zone.ZoneName
 			}
 			return ""
+		}(),
+		IsGpuNode: func() bool {
+			return inst.GPUInfo != nil
 		}(),
 	}
 	return node
@@ -256,7 +264,7 @@ func TransInstanceIDsToNodes(
 		return nil, err
 	}
 
-	cloudInstances, err := client.GetInstancesById(ids)
+	cloudInstances, err := client.GetInstancesByID(ids)
 	if err != nil {
 		blog.Errorf("cvm client GetInstancesById len(%d) failed, %s", len(ids), err.Error())
 		return nil, err
@@ -302,7 +310,7 @@ func TransIPsToNodes(ips []string, opt *cloudprovider.ListNodesOption) ([]*proto
 		blog.Errorf("create CVM client when transIPsToNodes failed, %s", err.Error())
 		return nil, err
 	}
-	cloudInstances, err := client.GetInstancesByIp(ips)
+	cloudInstances, err := client.GetInstancesByIP(ips)
 	if err != nil {
 		blog.Errorf("cvm client transIPsToNodes GetInstancesByIp len(%d) "+
 			"ip address failed, %s", len(ips), err.Error())
@@ -339,6 +347,7 @@ func TransIPsToNodes(ips []string, opt *cloudprovider.ListNodesOption) ([]*proto
 			nodeMap[node.NodeID] = node
 			node.InnerIP = ip
 			node.Region = opt.Common.Region
+			node.DataDiskNum = uint32(len(inst.DataDisks))
 
 			// check node vpc and cluster vpc
 			if opt.ClusterVPCID != "" && !strings.EqualFold(node.VPC, opt.ClusterVPCID) {
@@ -442,7 +451,7 @@ func CheckCvmInstanceState(ctx context.Context, ids []string,
 
 	// wait all nodes to be ready
 	err = loop.LoopDoFunc(timeContext, func() error {
-		cloudInstances, errLocal := client.GetInstancesById(ids)
+		cloudInstances, errLocal := client.GetInstancesByID(ids)
 		if errLocal != nil {
 			blog.Errorf("cvm client GetInstancesById len(%d) failed, %s", len(ids), err.Error())
 			return nil
@@ -500,7 +509,7 @@ func CheckCvmInstanceState(ctx context.Context, ids []string,
 	if errors.Is(err, context.DeadlineExceeded) {
 		blog.Errorf("CheckCvmInstanceState[%s] GetInstancesById timeout failed: %v", taskId, err)
 
-		cloudInstances, errLocal := client.GetInstancesById(ids)
+		cloudInstances, errLocal := client.GetInstancesByID(ids)
 		if errLocal != nil {
 			blog.Errorf("cvm client GetInstancesById len(%d) failed, %s", len(ids), err.Error())
 			return nil, errLocal

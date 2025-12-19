@@ -1,6 +1,6 @@
 module github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-vaultplugin-server
 
-go 1.19
+go 1.21
 
 replace (
 	github.com/argoproj/gitops-engine => github.com/argoproj/gitops-engine v0.7.1-0.20230906152414-b0fffe419a0f

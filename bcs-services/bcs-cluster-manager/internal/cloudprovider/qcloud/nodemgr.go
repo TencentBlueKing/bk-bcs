@@ -220,8 +220,8 @@ func (nm *NodeManager) ListNodesByInstanceID(ids []string, opt *cloudprovider.Li
 // ListNodeInstanceType list node type by zone and node family
 func (nm *NodeManager) ListNodeInstanceType(ctx context.Context, info cloudprovider.InstanceInfo,
 	opt *cloudprovider.CommonOption) ([]*proto.InstanceType, error) {
-	blog.Infof("ListNodeInstanceType zone: %s, nodeFamily: %s, cpu: %d, memory: %d",
-		info.Zone, info.NodeFamily, info.Cpu, info.Memory)
+	blog.Infof("ListNodeInstanceType zone: %s, nodeFamily: %s, cpu: %d, memory: %d, instanceType: %s",
+		info.Zone, info.NodeFamily, info.CPU, info.Memory, info.InstanceType)
 
 	if options.GetEditionInfo().IsInnerEdition() {
 		return nm.getInnerInstanceTypes(ctx, info)
@@ -246,7 +246,7 @@ func (nm *NodeManager) getInnerInstanceTypes(ctx context.Context, info cloudprov
 
 	if utils.StringInSlice(quoteGrayMode, []string{project.QuotaGrayOverMode, project.QuotaGrayNormalMode}) &&
 		info.Provider != resource.SelfPool {
-		targetTypes, err = nm.GetInstanceTypeByProjectQuotaList(info.ProjectID, info.Region, info.Provider)
+		targetTypes, err = nm.GetInstanceTypeByProjectQuotaList(info.ProjectID, info.Region, info.Provider, info.InstanceType)
 		if err != nil {
 			blog.Errorf("GetProjectManagerClient GetNodeGroupAndZoneResourceQuotas[%s:%s] failed: %v",
 				info.ProjectID, info.Region, err)
@@ -258,10 +258,11 @@ func (nm *NodeManager) getInnerInstanceTypes(ctx context.Context, info cloudprov
 		targetTypes, err = tresource.GetResourceManagerClient().GetInstanceTypes(context.Background(),
 			info.Region, resource.InstanceSpec{
 				BizID:        info.BizID,
-				Cpu:          info.Cpu,
+				Cpu:          info.CPU,
 				Mem:          info.Memory,
 				Provider:     info.Provider,
 				ResourceType: info.ResourceType,
+				InstanceType: info.InstanceType,
 			})
 		if err != nil {
 			blog.Errorf("resourceManager ListNodeInstanceType failed: %v", err)
@@ -356,7 +357,7 @@ func (nm *NodeManager) getInnerInstanceTypes(ctx context.Context, info cloudprov
 
 // GetInstanceTypeByProjectQuotaList get instanceType from zoneResource by project quota list info
 func (nm *NodeManager) GetInstanceTypeByProjectQuotaList(
-	projectId, region string, provider string) ([]resource.InstanceType, error) {
+	projectId, region string, provider string, instanceType string) ([]resource.InstanceType, error) {
 	listProjectQuotasData, err := project.GetProjectManagerClient().ListProjectQuotas(projectId,
 		project.ProjectQuotaHostType, project.ProjectQuotaProvider)
 	if err != nil {
@@ -380,6 +381,21 @@ func (nm *NodeManager) GetInstanceTypeByProjectQuotaList(
 			continue
 		}
 
+		if instanceType != "" {
+			gpuNum := zoneResources.GetGpu()
+			switch instanceType {
+			case icommon.CvmInstanceType:
+				if gpuNum != 0 {
+					continue
+				}
+			case icommon.GpuInstanceType:
+				if gpuNum == 0 {
+					continue
+				}
+			default:
+			}
+		}
+
 		availableQuota := zoneResources.GetQuotaNum() - zoneResources.GetQuotaUsed()
 		// instanceType sell status
 		status := icommon.InstanceSell
@@ -391,7 +407,7 @@ func (nm *NodeManager) GetInstanceTypeByProjectQuotaList(
 			NodeType:       zoneResources.GetInstanceType(),
 			Cpu:            zoneResources.GetCpu(),
 			Memory:         zoneResources.GetMem(),
-			Gpu:            zoneResources.GetCpu(),
+			Gpu:            zoneResources.GetGpu(),
 			Status:         status,
 			Zones:          []string{zoneResources.GetZoneName()},
 			Provider:       provider,
@@ -471,14 +487,27 @@ func (nm *NodeManager) getCloudInstanceType(info cloudprovider.InstanceInfo, opt
 	// filter result instanceTypes
 	result := make([]*proto.InstanceType, 0)
 	for _, item := range list {
-		if info.Cpu > 0 {
-			if item.Cpu != info.Cpu {
+		if info.CPU > 0 {
+			if item.Cpu != info.CPU {
 				continue
 			}
 		}
 		if info.Memory > 0 {
 			if item.Memory != info.Memory {
 				continue
+			}
+		}
+		if info.InstanceType != "" {
+			switch info.InstanceType {
+			case icommon.CvmInstanceType:
+				if item.Gpu != 0 {
+					continue
+				}
+			case icommon.GpuInstanceType:
+				if item.Gpu == 0 {
+					continue
+				}
+			default:
 			}
 		}
 		result = append(result, item)

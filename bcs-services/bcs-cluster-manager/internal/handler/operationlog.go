@@ -39,6 +39,21 @@ func (cm *ClusterManager) ListOperationLogs(ctx context.Context,
 	return nil
 }
 
+// ListProjectOperationLogs implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) ListProjectOperationLogs(ctx context.Context,
+	req *cmproto.ListOperationLogsRequest, resp *cmproto.ListOperationLogsResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	ca := operationlog.NewListOperationLogsAction(cm.model)
+	ca.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("ListOperationLogsV2", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: ListOperationLogsV2, req %v, resp %v", reqID, req, resp)
+	return nil
+}
+
 // ListTaskStepLogs implements interface cmproto.ClusterManagerServer
 func (cm *ClusterManager) ListTaskStepLogs(ctx context.Context,
 	req *cmproto.ListTaskStepLogsRequest, resp *cmproto.ListTaskStepLogsResponse) error {

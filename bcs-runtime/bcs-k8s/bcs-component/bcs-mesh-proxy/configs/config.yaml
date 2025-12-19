@@ -1,0 +1,63 @@
+# mesh-proxy 配置文件
+
+# 本集群配置（程序部署的集群）
+localCluster:
+  # 是否使用in-cluster配置（推荐在k8s集群内运行时使用）
+  useInClusterConfig: true
+  
+  # 如果不使用in-cluster配置，则需要手动指定以下配置
+  # apiServer: "https://kubernetes.default.svc"
+  # bearerToken: ""
+  # clientCertPath: ""
+  # clientKeyPath: ""
+  # caCertPath: ""
+  
+  # 连接超时时间
+  timeout: 30s
+
+# 代理配置
+proxy:
+  # 监听端口
+  port: 61011
+  
+  # 是否跳过TLS验证
+  insecureSkipTLSVerify: true
+  
+  # 请求超时时间
+  requestTimeout: 60s
+  
+  # 允许的API组和版本
+  allowedAPIGroups:
+    - "networking.istio.io"
+    - "security.istio.io"
+    - "telemetry.istio.io"
+  
+  # TLS配置
+  tls:
+    # 是否启用TLS
+    enabled: false
+    # 证书文件路径
+    certFile: ""
+    # 密钥文件路径
+    keyFile: ""
+    # 客户端认证模式: "NoClientCert", "RequestClientCert", "RequireAnyClientCert", "VerifyClientCertIfGiven", "RequireAndVerifyClientCert"
+    clientAuth: "NoClientCert"
+    # CA证书文件路径（用于验证客户端证书）
+    caFile: ""
+
+# 认证配置
+auth:
+  # 是否启用认证
+  enabled: false
+  
+  # 认证类型: "none", "bearer", "cert"
+  type: "none"
+  
+  # Bearer Token
+  bearerToken: ""
+  
+  # 客户端证书路径
+  clientCertPath: ""
+  
+  # 客户端密钥路径
+  clientKeyPath: "" 
