@@ -25,6 +25,7 @@ import (
 	"time"
 
 	bkcmdbkube "configcenter/src/kube/types" // nolint
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
@@ -2819,6 +2820,12 @@ func (s *Syncer) GetProjectManagerGrpcGwClient() (pmCli *client.ProjectManagerCl
 
 // GetBkCluster get bkcluster
 func (s *Syncer) GetBkCluster(cluster *cmp.Cluster, db *gorm.DB, withDB bool) (*bkcmdbkube.Cluster, error) {
+	// Check if cluster is nil
+	if cluster == nil {
+		blog.Errorf("cluster is nil in GetBkCluster")
+		return nil, errors.New("cluster is nil")
+	}
+
 	var clusterBkBizID int64
 	if bkBizID == 0 {
 		bizid, err := strconv.ParseInt(cluster.BusinessID, 10, 64)
@@ -5465,6 +5472,16 @@ func (s *Syncer) deleteAllByClusterCluster(bkCluster *bkcmdbkube.Cluster) error 
 					Limit: 10,
 					Start: 0,
 				},
+				Filter: &client.PropertyFilter{
+					Condition: "AND",
+					Rules: []client.Rule{
+						{
+							Field:    "id",
+							Operator: "in",
+							Value:    []int64{bkCluster.ID},
+						},
+					},
+				},
 			},
 		}, nil, false)
 		if err != nil {
@@ -5501,6 +5518,16 @@ func (s *Syncer) deleteAllByClusterNode(bkCluster *bkcmdbkube.Cluster) error {
 				Page: client.Page{
 					Limit: 100,
 					Start: 0,
+				},
+				Filter: &client.PropertyFilter{
+					Condition: "AND",
+					Rules: []client.Rule{
+						{
+							Field:    "cluster_uid",
+							Operator: "in",
+							Value:    []string{bkCluster.Uid},
+						},
+					},
 				},
 			},
 		}, nil, false)
@@ -5539,6 +5566,16 @@ func (s *Syncer) deleteAllByClusterNamespace(bkCluster *bkcmdbkube.Cluster) erro
 				Page: client.Page{
 					Limit: 200,
 					Start: 0,
+				},
+				Filter: &client.PropertyFilter{
+					Condition: "AND",
+					Rules: []client.Rule{
+						{
+							Field:    "cluster_uid",
+							Operator: "in",
+							Value:    []string{bkCluster.Uid},
+						},
+					},
 				},
 			},
 		}, nil, false)

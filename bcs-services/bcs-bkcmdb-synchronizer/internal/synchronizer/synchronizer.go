@@ -29,10 +29,14 @@ import (
 	"time"
 
 	bkcmdbkube "configcenter/src/kube/types" // nolint
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
+	pmp "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
 	cmp "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
 	amqp "github.com/rabbitmq/amqp091-go"
+
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/client"
 	cm "github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/client/clustermanager"
@@ -125,6 +129,12 @@ func (s *Synchronizer) Init() {
 	}
 
 	s.initSharedClusterConf()
+
+	// 添加metrics初始化
+	err = s.initMetrics()
+	if err != nil {
+		blog.Errorf("init metrics failed, err: %s", err.Error())
+	}
 }
 
 func (s *Synchronizer) initTlsConfig() error {
@@ -176,6 +186,37 @@ func (s *Synchronizer) initSharedClusterConf() {
 	if s.Syncer.BkcmdbSynchronizerOption.SharedCluster.AnnotationKeyProjCode == "" {
 		s.Syncer.BkcmdbSynchronizerOption.SharedCluster.AnnotationKeyProjCode = "io.tencent.bcs.projectcode"
 	}
+}
+
+// initMetrics 初始化metrics相关组件
+func (s *Synchronizer) initMetrics() error {
+	blog.Infof("init metrics...")
+
+	// 设置默认端口
+	if s.BkcmdbSynchronizerOption.Metrics.Port == 0 {
+		s.BkcmdbSynchronizerOption.Metrics.Port = 8082
+	}
+
+	// 启动metrics服务器
+	go func() {
+		mux := http.NewServeMux()
+		mux.Handle("/metrics", promhttp.Handler())
+
+		addr := fmt.Sprintf(":%d", s.BkcmdbSynchronizerOption.Metrics.Port)
+		blog.Infof("starting metrics server on %s", addr)
+
+		if err := http.ListenAndServe(addr, mux); err != nil {
+			blog.Errorf("metrics server failed to start: %v", err)
+		}
+	}()
+
+	blog.Infof("init metrics success on port %d", s.BkcmdbSynchronizerOption.Metrics.Port)
+	blog.Infof("CMDB metrics registered:")
+	blog.Infof("  - bkbcs_cmdbsynchronizer_cmdb_requests_total (Counter)")
+	blog.Infof("  - bkbcs_cmdbsynchronizer_cmdb_request_duration_seconds (Histogram)")
+	blog.Infof("  - bkbcs_cmdbsynchronizer_cmdb_requests_in_flight (Gauge)")
+
+	return nil
 }
 
 // Run run the synchronizer
@@ -232,12 +273,6 @@ func (s *Synchronizer) Run() {
 	//	return
 	//}
 
-	cmCli, err := s.getClusterManagerGrpcGwClient()
-	if err != nil {
-		blog.Errorf("get cluster manager grpc gw client failed, err: %s", err.Error())
-		return
-	}
-
 	blog.Infof("start sync at %s", time.Now().Format("2006-01-02 15:04:05"))
 
 	//err = s.MQ.Close()
@@ -245,31 +280,11 @@ func (s *Synchronizer) Run() {
 	//	blog.Errorf("close rabbitmq failed, err: %s", err.Error())
 	//}
 
-	lcReq := cmp.ListClusterReq{}
-	//if s.BkcmdbSynchronizerOption.Synchronizer.Env != "stag" {
-	//	lcReq.Environment = s.BkcmdbSynchronizerOption.Synchronizer.Env
-	//}
-
-	resp, err := cmCli.Cli.ListCluster(cmCli.Ctx, &lcReq)
+	workList, clusterMap, _, err := s.getWorkList(podIndex, whiteList, blackList)
 	if err != nil {
-		blog.Errorf("list cluster failed, err: %s", err.Error())
+		blog.Errorf("get work list failed, err: %s", err.Error())
 		return
 	}
-
-	clusters := resp.Data
-
-	clusterMap := make(map[string]*cmp.Cluster)
-	var clusterList ClusterList
-
-	s.runCluster(clusters, whiteList, blackList, clusterMap, &clusterList)
-
-	blog.Infof("clusterList: %v", clusterList)
-
-	sort.Sort(clusterList)
-
-	replicas := s.BkcmdbSynchronizerOption.Synchronizer.Replicas
-
-	workList := clusterList[podIndex*len(clusterList)/replicas : (podIndex+1)*len(clusterList)/replicas]
 
 	blog.Infof("workList: %v", workList)
 
@@ -284,39 +299,38 @@ func (s *Synchronizer) Run() {
 		time.Sleep(time.Second * 10)
 		ticker := time.NewTicker(10 * time.Minute)
 		defer ticker.Stop()
+		prevWorkList, prevClusterMap := workList, clusterMap
 		for ; true; <-ticker.C {
-			respT, errT := cmCli.Cli.ListCluster(cmCli.Ctx, &lcReq)
-			if errT != nil {
-				blog.Errorf("list cluster failed, err: %s", errT.Error())
+			workListT, clusterMapT, _, err := s.getWorkList(podIndex, whiteList, blackList)
+			if err != nil {
+				blog.Errorf("get work list failed, err: %s", err.Error())
 				continue
 			}
 
-			clustersT := respT.Data
-
-			clusterMapT := make(map[string]*cmp.Cluster)
-			var clusterListT ClusterList
-
-			s.runCluster(clustersT, whiteList, blackList, clusterMapT, &clusterListT)
-
-			blog.Infof("clusterListT: %v", clusterListT)
-
-			sort.Sort(clusterListT)
-
-			workListT := clusterListT[podIndex*len(clusterListT)/replicas : (podIndex+1)*len(clusterListT)/replicas]
-
 			for _, wT := range workListT {
-				if exist, _ := common.InArray(wT, workList); !exist {
-					blog.Infof("%s started", wT)
+				if exist, _ := common.InArray(wT, prevWorkList); !exist {
+					blog.Infof("%s started, performing full sync first", wT)
+					// 发现新集群时，先进行一次全量同步
+					s.startSyncStorage(clusterMapT[wT])
 					gm.Start(wT, clusterMapT[wT])
 				}
 			}
 
-			for _, wT := range workList {
+			for _, wT := range prevWorkList {
 				if exist, _ := common.InArray(wT, workListT); !exist {
 					blog.Infof("%s stopped", wT)
-					gm.Stop(wT, clusterMapT[wT])
+					gm.Stop(wT, prevClusterMap[wT])
 				}
 			}
+
+			// 只有主Pod（podIndex=0）负责清理CMDB中多余的集群数据
+			if podIndex == 0 {
+				err := s.cleanupOrphanedClustersInCMDB(clusterMapT)
+				if err != nil {
+					blog.Errorf("cleanup orphaned clusters failed: %s", err.Error())
+				}
+			}
+			prevWorkList, prevClusterMap = workListT, clusterMapT
 		}
 	}()
 
@@ -330,10 +344,11 @@ func (s *Synchronizer) Run() {
 	go func() {
 		http.HandleFunc("/restart", common.HandleRestart(gm))
 		http.HandleFunc("/list", common.HandleList(gm))
-		http.HandleFunc("/worklist", common.HandleWorkList(gm, workList))
-		http.HandleFunc("/syncStorage", s.syncStorageHandler(clusterMap))
-		http.HandleFunc("/syncStore", s.syncStoreHandler(clusterMap))
-		http.HandleFunc("/sync", s.syncHandler(clusterList))
+		http.HandleFunc("/worklist", s.workListHandler(podIndex, whiteList, blackList))
+
+		http.HandleFunc("/syncStorage", s.syncStorageHandler(podIndex, whiteList, blackList))
+		http.HandleFunc("/syncStore", s.syncStoreHandler(podIndex, whiteList, blackList))
+		http.HandleFunc("/sync", s.syncHandler(podIndex, whiteList, blackList))
 
 		if err := http.ListenAndServe(":8080", nil); err != nil {
 			blog.Errorf("Goroutine Manager start error: %v\n", err)
@@ -357,13 +372,14 @@ func (s *Synchronizer) Run() {
 		defer ticker.Stop()
 		for ; true; <-ticker.C {
 			blog.Infof("ticker syncStorage")
-			for _, w := range workList {
-				bkCluster, err := s.Syncer.GetBkCluster(clusterMap[w], nil, false)
-				if err != nil {
-					blog.Errorf("get bk cluster failed, err: %s", err.Error())
-					continue
-				}
-				go s.syncStorage(clusterMap[w], bkCluster, false)
+			workListS, clusterMapS, _, err := s.getWorkList(podIndex, whiteList, blackList)
+			if err != nil {
+				blog.Errorf("get work list failed, err: %s", err.Error())
+				continue
+			}
+
+			for _, w := range workListS {
+				go s.startSyncStorage(clusterMapS[w])
 				time.Sleep(time.Minute)
 			}
 		}
@@ -411,7 +427,15 @@ func (s *Synchronizer) Run() {
 	defer tickerChecker.Stop()
 	for ; true; <-tickerChecker.C {
 		blog.Infof("tickerChecker")
-		for _, w := range workList {
+		// 重新获取最新的workList和clusterMap
+		workListT, clusterMapT, _, err := s.getWorkList(podIndex, whiteList, blackList)
+		if err != nil {
+			blog.Errorf("get work list failed, err: %s", err.Error())
+			continue
+		}
+
+		for _, w := range workListT {
+			cluster := clusterMapT[w]
 			chnQ, _ := s.MQ.GetChannel()
 			if qInfo, errQ := chnQ.QueueInspect(w); errQ != nil {
 				blog.Errorf("Failed to inspect the queue %s: %v", w, errQ)
@@ -422,7 +446,7 @@ func (s *Synchronizer) Run() {
 					if err != nil {
 						blog.Errorf("Failed to delete the queue %s: %v", w, err)
 					}
-					gm.Restart(w, clusterMap[w])
+					gm.Restart(w, cluster)
 					//bkCluster, err := s.Syncer.GetBkCluster(clusterMap[w])
 					//if err != nil {
 					//	blog.Errorf("get bk cluster failed, err: %s", err.Error())
@@ -435,17 +459,71 @@ func (s *Synchronizer) Run() {
 			}
 			chnQ.Close()
 			if exit, _ := common.InArray(w, gm.List()); !exit {
-				gm.Start(w, clusterMap[w])
+				gm.Start(w, cluster)
 				blog.Infof("%s restarted", w)
 			}
 		}
 	}
 }
 
+// startSyncStorage start sync storage for cluster
+func (s *Synchronizer) startSyncStorage(cluster *cmp.Cluster) {
+	// Check if cluster is nil
+	if cluster == nil {
+		blog.Errorf("cluster is nil in startSyncStorage")
+		return
+	}
+
+	if err := s.Syncer.SyncCluster(cluster); err != nil {
+		blog.Errorf("sync cluster failed, err: %s", err.Error())
+		return
+	}
+
+	bkCluster, err := s.Syncer.GetBkCluster(cluster, nil, false)
+	if err != nil {
+		blog.Errorf("get bk cluster failed for %s, err: %s", cluster.ClusterID, err.Error())
+		return
+	}
+
+	// 执行全量同步
+	s.syncStorage(cluster, bkCluster, false)
+}
+
+// getWorkList get work list for podIndex
+func (s *Synchronizer) getWorkList(podIndex int, whiteList, blackList []string) (ClusterList, map[string]*cmp.Cluster, ClusterList, error) {
+	cmCli, err := s.getClusterManagerGrpcGwClient()
+	if err != nil {
+		blog.Errorf("get cluster manager grpc gw client failed, err: %s", err.Error())
+		return nil, nil, nil, err
+	}
+
+	lcReq := cmp.ListClusterReq{}
+	resp, err := cmCli.Cli.ListCluster(cmCli.Ctx, &lcReq)
+	if err != nil {
+		blog.Errorf("list cluster failed, err: %s", err.Error())
+		return nil, nil, nil, err
+	}
+
+	clusters := resp.Data
+
+	clusterMap := make(map[string]*cmp.Cluster)
+	var clusterList ClusterList
+	s.runCluster(clusters, whiteList, blackList, clusterMap, &clusterList)
+
+	blog.Infof("clusterList: %v", clusterList)
+
+	sort.Sort(clusterList)
+
+	replicas := s.BkcmdbSynchronizerOption.Synchronizer.Replicas
+	workList := clusterList[podIndex*len(clusterList)/replicas : (podIndex+1)*len(clusterList)/replicas]
+	blog.Infof("workList: %v", workList)
+	return workList, clusterMap, clusterList, nil
+}
+
 func (s *Synchronizer) runCluster(clusters []*cmp.Cluster, whiteList, blackList []string,
 	clusterMap map[string]*cmp.Cluster, clusterList *ClusterList) {
 	for _, cluster := range clusters {
-		blog.Infof("clusterID: %s", cluster.ClusterID)
+		blog.Infof("Synchronizer.runCluster clusterID: %s", cluster.ClusterID)
 		if len(whiteList) > 0 {
 			if exit, _ := common.InArray(cluster.ClusterID, whiteList); !exit {
 				continue
@@ -484,7 +562,23 @@ func (s *Synchronizer) Sync(cluster *cmp.Cluster) {
 	// go common.Recoverer(1, func() { s.syncMQ(cluster) })
 }
 
-func (s *Synchronizer) syncStorageHandler(clusterMap map[string]*cmp.Cluster) http.HandlerFunc {
+func (s *Synchronizer) workListHandler(podIndex int, whiteList, blackList []string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// 动态获取最新的工作列表
+		workList, _, _, err := s.getWorkList(podIndex, whiteList, blackList)
+		if err != nil {
+			blog.Errorf("get work list failed, err: %s", err.Error())
+			http.Error(w, "get work list failed", http.StatusInternalServerError)
+			return
+		}
+
+		for _, id := range workList {
+			fmt.Fprintf(w, "BcsClusterID: %s\n", id)
+		}
+	}
+}
+
+func (s *Synchronizer) syncStorageHandler(podIndex int, whiteList, blackList []string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		clusterId := r.URL.Query().Get("cluster")
 		if clusterId == "" {
@@ -492,23 +586,45 @@ func (s *Synchronizer) syncStorageHandler(clusterMap map[string]*cmp.Cluster) ht
 			return
 		}
 
-		bkCluster, err := s.Syncer.GetBkCluster(clusterMap[clusterId], nil, false)
+		// 动态获取最新的集群数据
+		_, clusterMap, _, err := s.getWorkList(podIndex, whiteList, blackList)
+		if err != nil {
+			blog.Errorf("get latest cluster data failed, err: %s", err.Error())
+			http.Error(w, "get latest cluster data failed", http.StatusInternalServerError)
+			return
+		}
+
+		cluster, exists := clusterMap[clusterId]
+		if !exists {
+			http.Error(w, "cluster not found", http.StatusBadRequest)
+			return
+		}
+
+		bkCluster, err := s.Syncer.GetBkCluster(cluster, nil, false)
 		if err != nil {
 			blog.Errorf("get bk cluster failed, err: %s", err.Error())
 			http.Error(w, "get bk cluster failed", http.StatusBadRequest)
 			return
 		}
 
-		go s.syncStorage(clusterMap[clusterId], bkCluster, true)
+		go s.syncStorage(cluster, bkCluster, true)
 		fmt.Fprintf(w, "BcsClusterID: %s\n syncStorage started.", clusterId)
 	}
 }
 
-func (s *Synchronizer) syncHandler(clusterList ClusterList) http.HandlerFunc {
+func (s *Synchronizer) syncHandler(podIndex int, whiteList, blackList []string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		clusterId := r.URL.Query().Get("cluster")
 		if clusterId == "" {
 			http.Error(w, "缺少cluster", http.StatusBadRequest)
+			return
+		}
+
+		// 动态获取最新的集群数据
+		_, _, clusterList, err := s.getWorkList(podIndex, whiteList, blackList)
+		if err != nil {
+			blog.Errorf("get latest cluster data failed, err: %s", err.Error())
+			http.Error(w, "get latest cluster data failed", http.StatusInternalServerError)
 			return
 		}
 
@@ -581,7 +697,7 @@ func (s *Synchronizer) syncHandler(clusterList ClusterList) http.HandlerFunc {
 	}
 }
 
-func (s *Synchronizer) syncStoreHandler(clusterMap map[string]*cmp.Cluster) http.HandlerFunc {
+func (s *Synchronizer) syncStoreHandler(podIndex int, whiteList, blackList []string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		clusterId := r.URL.Query().Get("cluster")
 		if clusterId == "" {
@@ -589,7 +705,21 @@ func (s *Synchronizer) syncStoreHandler(clusterMap map[string]*cmp.Cluster) http
 			return
 		}
 
-		bkCluster, err := s.Syncer.GetBkCluster(clusterMap[clusterId], nil, false)
+		// 动态获取最新的集群数据
+		_, clusterMap, _, err := s.getWorkList(podIndex, whiteList, blackList)
+		if err != nil {
+			blog.Errorf("get latest cluster data failed, err: %s", err.Error())
+			http.Error(w, "get latest cluster data failed", http.StatusInternalServerError)
+			return
+		}
+
+		cluster, exists := clusterMap[clusterId]
+		if !exists {
+			http.Error(w, "cluster not found", http.StatusBadRequest)
+			return
+		}
+
+		bkCluster, err := s.Syncer.GetBkCluster(cluster, nil, false)
 		if err != nil {
 			blog.Errorf("get bk cluster failed, err: %s", err.Error())
 			http.Error(w, "get bk cluster failed", http.StatusBadRequest)
@@ -801,4 +931,95 @@ func (s *Synchronizer) getProjectManagerGrpcGwClient() (pmCli *client.ProjectMan
 	}
 	pmCli, err = pm.NewProjectManagerGrpcGwClient(opts)
 	return pmCli, err
+}
+
+// cleanupOrphanedClustersInCMDB 清理CMDB中孤立的集群数据
+// 只有主Pod（podIndex=0）会执行此操作，避免重复删除
+func (s *Synchronizer) cleanupOrphanedClustersInCMDB(clusterMapT map[string]*cmp.Cluster) error {
+	blog.Infof("start cleanup orphaned clusters in CMDB")
+
+	// 1. 构建ClusterManager中有效的集群ID列表
+	validClusterMap := make(map[string]bool)
+	for clusterID := range clusterMapT {
+		validClusterMap[clusterID] = true
+	}
+
+	pmCli, err := s.Syncer.GetProjectManagerGrpcGwClient()
+	if err != nil {
+		blog.Errorf("get project manager client failed: %v", err)
+		return fmt.Errorf("get project manager client failed: %v", err)
+	}
+
+	// 2. 获取所有业务ID - 通过项目获取业务信息
+	projectResp, err := pmCli.Cli.ListProjects(pmCli.Ctx, &pmp.ListProjectsRequest{})
+	if err != nil {
+		blog.Errorf("get all projects from project manager failed: %v", err)
+		return fmt.Errorf("get all projects from project manager failed: %v", err)
+	}
+
+	if projectResp.Data == nil || len(projectResp.Data.Results) == 0 {
+		blog.Infof("no projects found, skipping cleanup")
+		return nil
+	}
+
+	// 3. 从项目中提取唯一的业务ID，避免重复处理
+	uniqueBusinessMap := make(map[string]string)
+	for _, project := range projectResp.Data.Results {
+		uniqueBusinessMap[project.BusinessID] = project.BusinessName
+	}
+
+	blog.Infof("found %d projects from project manager, extracted %d unique businesses", len(projectResp.Data.Results), len(uniqueBusinessMap))
+
+	// 4. 遍历所有唯一的业务ID，获取CMDB中的集群
+	totalOrphanedCount := 0
+	for bizIDStr, bizName := range uniqueBusinessMap {
+		bizID, err := strconv.ParseInt(bizIDStr, 10, 64)
+		if err != nil {
+			blog.Errorf("parse business ID %s failed: %v", bizIDStr, err)
+			continue
+		}
+
+		blog.Infof("checking orphaned clusters for business %d (%s)", bizID, bizName)
+
+		cmdbClusters, err := s.Syncer.CMDBClient.GetBcsCluster(&client.GetBcsClusterRequest{
+			CommonRequest: client.CommonRequest{
+				BKBizID: bizID,
+				Fields:  []string{"id", "uid"},
+				Page: client.Page{
+					Limit: 200,
+					Start: 0,
+				},
+			},
+		}, nil, false)
+		if err != nil {
+			blog.Errorf("get CMDB clusters for biz %d failed: %v", bizID, err)
+			continue
+		}
+
+		// 4. 找出CMDB中存在但ClusterManager中不存在的集群
+		orphanedCount := 0
+		for _, cmdbCluster := range *cmdbClusters {
+			if !validClusterMap[cmdbCluster.Uid] {
+				blog.Infof("found orphaned cluster in CMDB for biz %d: %s, start deletion", bizID, cmdbCluster.Uid)
+
+				// 设置BizID，因为从CMDB查询的集群数据中可能没有包含此字段
+				cmdbCluster.BizID = bizID
+				err = s.Syncer.DeleteAllByCluster(&cmdbCluster)
+				if err != nil {
+					blog.Errorf("delete orphaned cluster %s in biz %d failed: %v", cmdbCluster.Uid, bizID, err)
+				} else {
+					blog.Infof("successfully deleted orphaned cluster %s from CMDB in biz %d", cmdbCluster.Uid, bizID)
+					orphanedCount++
+				}
+			}
+		}
+
+		if orphanedCount > 0 {
+			blog.Infof("cleaned up %d orphaned clusters for business %d (%s)", orphanedCount, bizID, bizName)
+		}
+		totalOrphanedCount += orphanedCount
+	}
+
+	blog.Infof("cleanup orphaned clusters completed, deleted %d clusters total across all businesses", totalOrphanedCount)
+	return nil
 }
