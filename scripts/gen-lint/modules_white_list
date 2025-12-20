@@ -27,7 +27,6 @@ bcs-services/bcs-cli/bcs-data-manager
 bcs-services/bcs-cli/bcs-project-manager
 bcs-services/bcs-cli/bcs-user-manager
 # bcs-services/bcs-cluster-manager
-bcs-services/bcs-cluster-reporter
 # bcs-services/bcs-data-manager
 bcs-services/bcs-gateway-discovery
 # bcs-services/bcs-helm-manager
