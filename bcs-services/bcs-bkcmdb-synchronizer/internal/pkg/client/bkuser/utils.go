@@ -34,14 +34,12 @@ func GetGatewayAuthAndTenantInfo(ctx context.Context, auth *client.AuthInfo, use
 		// 多租户模式下，优先使用传入的user，否则根据租户获取用户名
 		if user != "" {
 			auth.BkUserName = user
-		} else {
-			if auth.BkUserName != "" {
-				bkUserName, err := GetBkUserNameByTenantLoginName(ctx, tenantId, auth.BkUserName, true)
-				if err != nil {
-					return "", "", fmt.Errorf("get bkUserName by tenant failed: %v", err)
-				}
-				auth.BkUserName = bkUserName
+		} else if auth.BkUserName != "" {
+			bkUserName, err := GetBkUserNameByTenantLoginName(ctx, tenantId, auth.BkUserName, true)
+			if err != nil {
+				return "", "", fmt.Errorf("get bkUserName by tenant failed: %v", err)
 			}
+			auth.BkUserName = bkUserName
 		}
 	} else {
 		// 非多租户模式，直接使用传入的user.否则直接使用auth bkUserName

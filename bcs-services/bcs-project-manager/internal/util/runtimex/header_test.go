@@ -21,11 +21,11 @@ import (
 )
 
 func TestCustomMatcher(t *testing.T) {
-	ret, _ := CustomHeaderMatcher(headerkey.RequestIDKey)
-	assert.Equal(t, headerkey.RequestIDKey, ret)
+	ret, _ := CustomHeaderMatcher(string(headerkey.RequestIDKey))
+	assert.Equal(t, string(headerkey.RequestIDKey), ret)
 
-	ret, _ = CustomHeaderMatcher(headerkey.UsernameKey)
-	assert.Equal(t, headerkey.UsernameKey, ret)
+	ret, _ = CustomHeaderMatcher(string(headerkey.UsernameKey))
+	assert.Equal(t, string(headerkey.UsernameKey), ret)
 
 	ret, _ = CustomHeaderMatcher("Content-Type")
 	assert.Equal(t, "grpcgateway-Content-Type", ret)

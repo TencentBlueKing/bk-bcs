@@ -307,6 +307,7 @@ type CommonConfig struct {
 	SystemNameSpaces string `json:"systemNameSpaces"`
 }
 
+// BkUserConfig for bk user config
 type BkUserConfig struct {
 	AppCode   string `json:"appCode"`
 	AppSecret string `json:"appSecret"`

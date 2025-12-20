@@ -16,9 +16,9 @@ package tasks
 import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/task"
 	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/provider/utils"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/provider/common/steps"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/provider/utils"
 )
 
 const (

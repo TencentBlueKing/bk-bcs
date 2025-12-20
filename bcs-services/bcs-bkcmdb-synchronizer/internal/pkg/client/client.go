@@ -11,14 +11,14 @@
  */
 
 // Package client define client interface
+// nolint:gci
 package client
 
 import (
+	bkcmdbkube "configcenter/src/kube/types" // nolint
 	"context"
 
-	bkcmdbkube "configcenter/src/kube/types" // nolint
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
-	//pmp "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
 	cmp "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
 	"google.golang.org/grpc"
 	"gorm.io/gorm"
@@ -65,17 +65,21 @@ type CMDBClient interface {
 	GetHostsByBiz(ctx context.Context, bkBizID int64, hostIP []string) (*[]HostData, error)
 
 	// GetBcsNamespace returns the BCS namespace information for the given request.
-	GetBcsNamespace(ctx context.Context, request *GetBcsNamespaceRequest, db *gorm.DB, withDB bool) (*[]bkcmdbkube.Namespace, error)
+	GetBcsNamespace(ctx context.Context, request *GetBcsNamespaceRequest, db *gorm.DB, withDB bool) (
+		*[]bkcmdbkube.Namespace, error)
 	// GetBcsNode returns the BCS node information for the given request.
 	GetBcsNode(ctx context.Context, request *GetBcsNodeRequest, db *gorm.DB, withDB bool) (*[]bkcmdbkube.Node, error)
 	// GetBcsWorkload returns the BCS workload information for the given request.
-	GetBcsWorkload(ctx context.Context, request *GetBcsWorkloadRequest, db *gorm.DB, withDB bool) (*[]interface{}, error)
+	GetBcsWorkload(ctx context.Context, request *GetBcsWorkloadRequest, db *gorm.DB, withDB bool) (*[]interface{},
+		error)
 	// GetBcsPod returns the BCS pod information for the given request.
 	GetBcsPod(ctx context.Context, request *GetBcsPodRequest, db *gorm.DB, withDB bool) (*[]bkcmdbkube.Pod, error)
 	// GetBcsCluster returns the BCS cluster information for the given request.
-	GetBcsCluster(ctx context.Context, request *GetBcsClusterRequest, db *gorm.DB, withDB bool) (*[]bkcmdbkube.Cluster, error)
+	GetBcsCluster(ctx context.Context, request *GetBcsClusterRequest, db *gorm.DB, withDB bool) (*[]bkcmdbkube.Cluster,
+		error)
 	// GetBcsContainer retrieves the BCS container information based on the provided request.
-	GetBcsContainer(ctx context.Context, request *GetBcsContainerRequest, db *gorm.DB, withDB bool) (*[]Container, error)
+	GetBcsContainer(ctx context.Context, request *GetBcsContainerRequest, db *gorm.DB, withDB bool) (*[]Container,
+		error)
 
 	// CreateBcsNode creates a new BCS node with the given request.
 	CreateBcsNode(ctx context.Context, request *CreateBcsNodeRequest, db *gorm.DB) (*[]int64, error)

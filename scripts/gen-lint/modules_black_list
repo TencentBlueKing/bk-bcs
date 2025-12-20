@@ -39,3 +39,5 @@ bcs-services/bcs-helm-manager
 bcs-services/bcs-data-manager
 bcs-services/bcs-nodegroup-manager
 bcs-services/bcs-bscp
+bcs-services/bcs-cluster-reporter
+bcs-ui

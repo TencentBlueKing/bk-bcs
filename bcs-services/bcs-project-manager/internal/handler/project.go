@@ -14,6 +14,9 @@ package handler
 
 import (
 	"context"
+
+	middleauth "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/actions/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/cmdb"
@@ -25,7 +28,6 @@ import (
 	projutil "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/tenant"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
-	middleauth "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 )
 
 var (
@@ -188,18 +190,6 @@ func (p *ProjectHandler) ListProjects(ctx context.Context,
 	}
 	projutil.PatchBusinessName(ctx, resp.Data.Results)
 	return nil
-}
-
-func getProjectAllPerms(projectIds []string) map[string]map[string]bool {
-	perms := make(map[string]map[string]bool)
-	for _, id := range projectIds {
-		perms[id] = make(map[string]bool)
-		perms[id][auth.ProjectCreate] = true
-		perms[id][auth.ProjectView] = true
-		perms[id][auth.ProjectEdit] = true
-		perms[id][auth.ProjectDelete] = true
-	}
-	return perms
 }
 
 // ListAuthorizedProjects query authorized project info list

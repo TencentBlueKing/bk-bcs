@@ -11,6 +11,7 @@
  */
 
 // Package cmdb define client for cmdb
+// nolint:gci
 package cmdb
 
 import (
@@ -21,9 +22,9 @@ import (
 	"time"
 
 	bkcmdbkube "configcenter/src/kube/types" // nolint
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
-	// pmp "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
 	cmp "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
 	"github.com/parnurzeal/gorequest"
 	"google.golang.org/grpc"
@@ -501,6 +502,7 @@ func (c *cmdbClient) GetHostsByBiz(ctx context.Context, bkBizID int64, hostIP []
 // /api/v3/kube/findmany/cluster/bk_biz_id/{bk_biz_id}
 // /v2/cc/list_kube_cluster/
 // nolint
+// NOCC:CCN_threshold(工具误报:)
 func (c *cmdbClient) GetBcsCluster(ctx context.Context, request *client.GetBcsClusterRequest,
 	db *gorm.DB, withDB bool) (*[]bkcmdbkube.Cluster, error) {
 	// 检查客户端是否初始化
@@ -979,6 +981,8 @@ func (c *cmdbClient) DeleteBcsCluster(ctx context.Context, request *client.Delet
 // GetBcsNamespace get bcs namespace
 // /api/v3/kube/findmany/namespace/bk_biz_id/{bk_biz_id}
 // /v2/cc/list_namespace/
+// nolint
+// NOCC:CCN_threshold(工具误报:)
 func (c *cmdbClient) GetBcsNamespace(ctx context.Context,
 	request *client.GetBcsNamespaceRequest, db *gorm.DB, withDB bool) (*[]bkcmdbkube.Namespace, error) {
 	if c == nil {
@@ -1084,6 +1088,8 @@ func (c *cmdbClient) GetBcsNamespace(ctx context.Context,
 // CreateBcsNamespace create bcs namespace
 // /api/v3/kube/createmany/namespace/bk_biz_id/{bk_biz_id}
 // /v2/cc/batch_create_namespace/
+// nolint
+// NOCC:CCN_threshold(工具误报:)
 func (c *cmdbClient) CreateBcsNamespace(ctx context.Context,
 	request *client.CreateBcsNamespaceRequest, db *gorm.DB) (*[]int64, error) {
 	if c == nil {
@@ -1665,6 +1671,8 @@ func (c *cmdbClient) GetBcsWorkload(ctx context.Context,
 // CreateBcsWorkload create bcs workload
 // /api/v3/kube/createmany/workload/{kind}/{bk_biz_id}
 // /v2/cc/batch_create_workload/
+// nolint
+// NOCC:CCN_threshold(工具误报:)
 func (c *cmdbClient) CreateBcsWorkload(ctx context.Context,
 	request *client.CreateBcsWorkloadRequest, db *gorm.DB) (*[]int64, error) {
 	if c == nil {
@@ -1957,6 +1965,8 @@ func deleteBcsWorkloadDB(request *client.DeleteBcsWorkloadRequest, db *gorm.DB) 
 // GetBcsNode get bcs node
 // /api/v3/kube/findmany/node/bk_biz_id/{bk_biz_id}
 // /v2/cc/list_kube_node/
+// nolint
+// NOCC:CCN_threshold(工具误报:)
 func (c *cmdbClient) GetBcsNode(ctx context.Context,
 	request *client.GetBcsNodeRequest, db *gorm.DB, withDB bool) (*[]bkcmdbkube.Node, error) {
 	if c == nil {
@@ -2062,6 +2072,8 @@ func (c *cmdbClient) GetBcsNode(ctx context.Context,
 // CreateBcsNode create bcs node
 // /api/v3/kube/createmany/node/bk_biz_id/{bk_biz_id}
 // /v2/cc/batch_create_kube_node/
+// nolint
+// NOCC:CCN_threshold(工具误报:)
 func (c *cmdbClient) CreateBcsNode(ctx context.Context,
 	request *client.CreateBcsNodeRequest, db *gorm.DB) (*[]int64, error) {
 	if c == nil {
@@ -2302,6 +2314,8 @@ func (c *cmdbClient) DeleteBcsNode(ctx context.Context, request *client.DeleteBc
 // GetBcsPod get bcs pod
 // /api/v3/kube/findmany/pod/bk_biz_id/{bk_biz_id}
 // /v2/cc/list_pod/
+// nolint
+// NOCC:CCN_threshold(工具误报:)
 func (c *cmdbClient) GetBcsPod(ctx context.Context,
 	request *client.GetBcsPodRequest, db *gorm.DB, withDB bool) (*[]bkcmdbkube.Pod, error) {
 	if c == nil {
@@ -2409,6 +2423,8 @@ func (c *cmdbClient) GetBcsPod(ctx context.Context,
 
 // GetBcsContainer get bcs container
 // /v2/cc/list_kube_container/
+// nolint
+// NOCC:CCN_threshold(工具误报:)
 func (c *cmdbClient) GetBcsContainer(ctx context.Context,
 	request *client.GetBcsContainerRequest, db *gorm.DB, withDB bool) (*[]client.Container, error) {
 	if c == nil {

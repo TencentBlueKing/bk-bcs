@@ -75,7 +75,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/alarm/tmp"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/audit"
 	ssmAuth "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/auth"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/bk_user"
+	bkuser "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/bk_user"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cache"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cmdb"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
@@ -416,7 +416,7 @@ func (cm *ClusterManager) initRemoteClient() error { // nolint
 	}
 
 	// init bkUser client
-	err = bk_user.SetBkUserClient(bk_user.Options{
+	err = bkuser.SetBkUserClient(bkuser.Options{
 		AppCode:   cm.opt.BkUser.AppCode,
 		AppSecret: cm.opt.BkUser.AppSecret,
 		Server:    cm.opt.BkUser.Server,

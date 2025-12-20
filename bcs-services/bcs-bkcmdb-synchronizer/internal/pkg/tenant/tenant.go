@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package tenant tenant related functions
 package tenant
 
 import (
@@ -85,7 +86,7 @@ func GetTenantIdFromContext(ctx context.Context) string {
 	}
 
 	if tenantId == "" {
-		tenantId = constants.DefaultTenantId
+		tenantId = string(constants.DefaultTenantId)
 	}
 
 	return tenantId

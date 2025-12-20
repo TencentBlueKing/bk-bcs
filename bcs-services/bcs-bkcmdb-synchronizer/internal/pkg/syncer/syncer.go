@@ -12,6 +12,7 @@
 
 // Package syncer define syncer methods
 // NOCC:tosa/comment_ratio(ignore),gofmt/notformat(ignore)
+// nolint:gci
 package syncer
 
 import (
@@ -26,9 +27,9 @@ import (
 	"time"
 
 	bkcmdbkube "configcenter/src/kube/types" // nolint
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
-	//pmp "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
 	cmp "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/storage"
 	gdv1alpha1 "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/storage/tkex/gamedeployment/v1alpha1"
@@ -234,7 +235,8 @@ func (s *Syncer) SyncCluster(ctx context.Context, cluster *cmp.Cluster) error {
 }
 
 // SyncNodes sync nodes
-func (s *Syncer) SyncNodes(ctx context.Context, cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
+func (s *Syncer) SyncNodes(ctx context.Context, cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster,
+	db *gorm.DB) error {
 	// GetBcsStorageClient is a function that returns a BCS storage client.
 	storageCli, err := s.GetBcsStorageClient()
 	if err != nil {
@@ -2920,7 +2922,8 @@ func (s *Syncer) CreateBkNodes(ctx context.Context,
 }
 
 // ComparePod compare pod
-func (s *Syncer) ComparePod(ctx context.Context, bkPod *bkcmdbkube.Pod, k8sPod *storage.Pod, db *gorm.DB) (needToRecreate bool) {
+func (s *Syncer) ComparePod(ctx context.Context, bkPod *bkcmdbkube.Pod, k8sPod *storage.Pod, db *gorm.DB) (
+	needToRecreate bool) {
 	needToRecreate = false
 	// bkContainers, err := s.CMDBClient.GetBcsContainer(&client.GetBcsContainerRequest{
 	//	CommonRequest: client.CommonRequest{
@@ -3228,7 +3231,8 @@ func (s *Syncer) UpdateBkNodes(ctx context.Context,
 }
 
 // DeleteBkNodes delete bknodes
-func (s *Syncer) DeleteBkNodes(ctx context.Context, bkCluster *bkcmdbkube.Cluster, toDelete *[]int64, db *gorm.DB) error {
+func (s *Syncer) DeleteBkNodes(ctx context.Context, bkCluster *bkcmdbkube.Cluster, toDelete *[]int64,
+	db *gorm.DB) error {
 	if len(*toDelete) == 0 {
 		return nil
 	}
@@ -3441,7 +3445,8 @@ func (s *Syncer) UpdateBkNamespaces(ctx context.Context,
 }
 
 // DeleteBkNamespaces delete bknamespaces
-func (s *Syncer) DeleteBkNamespaces(ctx context.Context, bkCluster *bkcmdbkube.Cluster, toDelete *[]int64, db *gorm.DB) error {
+func (s *Syncer) DeleteBkNamespaces(ctx context.Context, bkCluster *bkcmdbkube.Cluster, toDelete *[]int64,
+	db *gorm.DB) error {
 	if len(*toDelete) > 0 {
 		for i := 0; i < len(*toDelete); i++ {
 			var section []int64
@@ -5133,7 +5138,8 @@ func (s *Syncer) CreateBkPods(ctx context.Context,
 }
 
 // DeleteBkPods delete bkpods
-func (s *Syncer) DeleteBkPods(ctx context.Context, bkCluster *bkcmdbkube.Cluster, toDelete *[]int64, db *gorm.DB) error {
+func (s *Syncer) DeleteBkPods(ctx context.Context, bkCluster *bkcmdbkube.Cluster, toDelete *[]int64,
+	db *gorm.DB) error {
 	if len(*toDelete) > 0 {
 		for i := 0; i < len(*toDelete); i += 100 {
 			var ids []int64

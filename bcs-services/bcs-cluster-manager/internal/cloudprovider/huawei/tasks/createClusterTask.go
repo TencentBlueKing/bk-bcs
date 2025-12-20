@@ -108,15 +108,39 @@ func CreateCCEClusterTask(taskID string, stepName string) error {
 	return nil
 }
 
+// createCluster creates a Huawei CCE cluster or retrieves an existing one
+// This function handles the cluster creation process for Huawei Cloud Container Engine (CCE).
+// It performs the following operations:
+// 1. Creates a CCE client using the provided cloud management options
+// 2. If clsId is provided, retrieves existing cluster information and updates the SystemID
+// 3. If clsId is empty, creates a new cluster using the provided request
+// 4. Updates the cluster's SystemID in the storage model after successful creation
+// 5. Handles special cases for prepaid clusters where a job ID is returned instead
+//
+// Parameters:
+//   - ctx: context containing task ID and other contextual information
+//   - info: CloudDependBasicInfo containing cluster configuration and cloud credentials
+//   - request: CreateClusterRequest with all cluster creation parameters
+//   - clsId: existing cluster system ID (empty string for new cluster creation)
+//
+// Returns:
+//   - string: cluster system ID (UUID from Huawei Cloud)
+//   - string: job ID for prepaid clusters or empty string for postpaid clusters
+//   - error: nil if successful, otherwise returns the error encountered during execution
+//
+// The function handles both new cluster creation and existing cluster retrieval scenarios.
+// For prepaid clusters, it may return a job ID that can be used to track the creation progress.
 func createCluster(ctx context.Context, info *cloudprovider.CloudDependBasicInfo,
 	request *api.CreateClusterRequest, clsId string) (string, string, error) {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
+	// get cce client
 	client, err := api.NewCceClient(info.CmOption)
 	if err != nil {
 		return "", "", err
 	}
 
+	// get job id
 	jobId := ""
 	if clsId != "" {
 		cluster, errGet := client.GetCceCluster(clsId)
@@ -129,6 +153,7 @@ func createCluster(ctx context.Context, info *cloudprovider.CloudDependBasicInfo
 		// update cluster systemID
 		info.Cluster.SystemID = *cluster.Metadata.Uid
 	} else {
+		// create cluster
 		rsp, err := client.CreateCluster(request)
 		if err != nil {
 			return "", "", err
@@ -156,6 +181,23 @@ func createCluster(ctx context.Context, info *cloudprovider.CloudDependBasicInfo
 }
 
 // CheckCCEClusterStatusTask check cluster status
+// This function monitors the status of a CCE (Cloud Container Engine) cluster creation operation.
+// It performs the following operations:
+// 1. Retrieves the current task state and step information
+// 2. Gets cluster dependency information including cloud and project details
+// 3. Checks the actual cluster status in Huawei Cloud Platform
+// 4. Updates the task step status based on the cluster creation result
+//
+// Parameters:
+//   - taskID: unique identifier for the task being executed
+//   - stepName: name of the current step in the task workflow
+//
+// Returns:
+//   - error: nil if successful, otherwise returns the error encountered during execution
+//
+// The function will skip execution if the step has already been completed successfully.
+// It handles various failure scenarios including timeout and abnormal status conditions.
+// The function supports both cluster creation via systemID and job-based creation via jobID.
 func CheckCCEClusterStatusTask(taskID string, stepName string) error {
 	start := time.Now()
 	// get task and task current step
@@ -185,6 +227,7 @@ func CheckCCEClusterStatusTask(taskID string, stepName string) error {
 		return retErr
 	}
 
+	// get dependent basic info
 	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
 		ClusterID: clusterID,
 		CloudID:   cloudID,
@@ -222,6 +265,26 @@ func CheckCCEClusterStatusTask(taskID string, stepName string) error {
 	return nil
 }
 
+// checkClusterStatus check cluster status in Huawei Cloud
+// This function monitors the status of a CCE (Cloud Container Engine) cluster creation operation.
+// It performs the following operations:
+// 1. Retrieves the current task state and step information
+// 2. Gets cluster dependency information including cloud and project details
+// 3. Checks the actual cluster status in Huawei Cloud Platform
+// 4. Updates the task step status based on the cluster creation result
+//
+// Parameters:
+//   - ctx: context containing task ID and other contextual information
+//   - info: CloudDependBasicInfo containing cluster configuration and cloud credentials
+//   - systemID: existing cluster system ID (empty string for new cluster creation)
+//   - jobID: job ID for prepaid clusters or empty string for postpaid clusters
+//
+// Returns:
+//   - error: nil if successful, otherwise returns the error encountered during execution
+//
+// The function will skip execution if the step has already been completed successfully.
+// It handles various failure scenarios including timeout and abnormal status conditions.
+// The function supports both cluster creation via systemID and job-based creation via jobID.
 func checkClusterStatus(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, systemID, jobID string) error {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
@@ -233,6 +296,7 @@ func checkClusterStatus(ctx context.Context, info *cloudprovider.CloudDependBasi
 		return retErr
 	}
 
+	// set timeout
 	ctx, cancel := context.WithTimeout(ctx, 30*time.Minute)
 	defer cancel()
 
@@ -274,6 +338,7 @@ func checkClusterStatus(ctx context.Context, info *cloudprovider.CloudDependBasi
 		blog.Infof("checkClusterStatus[%s] cluster[%s] current status[%s]", taskID,
 			info.Cluster.ClusterID, *cluster.Status.Phase)
 
+		// switch cluster status
 		switch *cluster.Status.Phase {
 		case api.Creating:
 			blog.Infof("checkClusterStatus[%s] cluster[%s] creating", taskID, info.Cluster.ClusterID)
@@ -298,6 +363,25 @@ func checkClusterStatus(ctx context.Context, info *cloudprovider.CloudDependBasi
 }
 
 // CreateCCENodeGroupTask create cce node group
+// This function creates a node group for a Huawei CCE (Cloud Container Engine) cluster.
+// It performs the following operations:
+// 1. Retrieves the current task state and step information
+// 2. Gets cluster dependency information including cloud and project details
+// 3. Creates a CCE client to interact with Huawei Cloud APIs
+// 4. Lists existing node groups to check for duplicates or conflicts
+// 5. Creates the new node group with specified configuration
+// 6. Updates the task step status based on the creation result
+//
+// Parameters:
+//   - taskID: unique identifier for the task being executed
+//   - stepName: name of the current step in the task workflow
+//
+// Returns:
+//   - error: nil if successful, otherwise returns the error encountered during execution
+//
+// The function will skip execution if the step has already been completed successfully.
+// It handles various failure scenarios including client creation failures and API errors.
+// The node group configuration is retrieved from task parameters and cluster settings.
 func CreateCCENodeGroupTask(taskID string, stepName string) error { // nolint
 	start := time.Now()
 
@@ -331,6 +415,7 @@ func CreateCCENodeGroupTask(taskID string, stepName string) error { // nolint
 		return retErr
 	}
 
+	// get cce client
 	cceCli, err := api.NewCceClient(dependInfo.CmOption)
 	if err != nil {
 		blog.Errorf("CreateCCENodeGroupTask[%s]: get cce client in task %s step %s failed, %s",
@@ -340,6 +425,7 @@ func CreateCCENodeGroupTask(taskID string, stepName string) error { // nolint
 		return err
 	}
 
+	// get all node groups
 	ngs, err := cceCli.ListClusterNodeGroups(dependInfo.Cluster.SystemID)
 	if err != nil {
 		blog.Errorf("CreateCCENodeGroupTask[%s]: get cce all nodegroup in task %s step %s failed, %s",
@@ -349,6 +435,7 @@ func CreateCCENodeGroupTask(taskID string, stepName string) error { // nolint
 		return err
 	}
 
+	// get node group
 	nodeGroup, errGet := actions.GetNodeGroupByGroupID(cloudprovider.GetStorageModel(), nodeGroupID)
 	if errGet != nil {
 		blog.Errorf("CreateCCENodeGroupTask[%s]: GetNodeGroupByGroupID for cluster %s in task %s "+
@@ -369,6 +456,7 @@ func CreateCCENodeGroupTask(taskID string, stepName string) error { // nolint
 		}
 	}
 
+	// if node group already exists, update node group cloud node group id
 	if found {
 		nodeGroup.CloudNodeGroupID = cloudNodeGroupID
 		err = updateNodeGroupCloudNodeGroupID(nodeGroup.NodeGroupID, nodeGroup)
@@ -435,6 +523,26 @@ func CreateCCENodeGroupTask(taskID string, stepName string) error { // nolint
 }
 
 // CheckCCENodeGroupsStatusTask check cce nodegroups status
+// This function monitors the status of CCE (Cloud Container Engine) node group creation operations.
+// It performs the following operations:
+// 1. Retrieves the current task state and step information
+// 2. Gets cluster dependency information including cloud and project details
+// 3. Creates a CCE client to interact with Huawei Cloud APIs
+// 4. Retrieves node group information from the storage model
+// 5. Monitors the node group creation status until completion or failure
+// 6. Updates the task step status based on the node group creation result
+//
+// Parameters:
+//   - taskID: unique identifier for the task being executed
+//   - stepName: name of the current step in the task workflow
+//
+// Returns:
+//   - error: nil if successful, otherwise returns the error encountered during execution
+//
+// The function will skip execution if the step has already been completed successfully.
+// It handles various failure scenarios including client creation failures, node group retrieval errors,
+// and status monitoring timeouts. The function continuously polls the node group status until it reaches
+// a terminal state (Available or Error).
 func CheckCCENodeGroupsStatusTask(taskID string, stepName string) error { // nolint
 	start := time.Now()
 	// get task and task current step
@@ -484,6 +592,7 @@ func CheckCCENodeGroupsStatusTask(taskID string, stepName string) error { // nol
 		return retErr
 	}
 
+	// inject taskID
 	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
 
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Minute)
@@ -547,6 +656,24 @@ func CheckCCENodeGroupsStatusTask(taskID string, stepName string) error { // nol
 }
 
 // CheckCCEClusterNodesStatusTask check cluster nodes status
+// This function monitors the status of nodes in a CCE (Cloud Container Engine) cluster node group.
+// It performs the following operations:
+// 1. Retrieves the current task state and step information
+// 2. Gets cluster dependency information including cloud and project details
+// 3. Checks the actual node status in the specified node group
+// 4. Updates node information in the database after successful validation
+// 5. Updates the task step status based on the node status check result
+//
+// Parameters:
+//   - taskID: unique identifier for the task being executed
+//   - stepName: name of the current step in the task workflow
+//
+// Returns:
+//   - error: nil if successful, otherwise returns the error encountered during execution
+//
+// The function will skip execution if the step has already been completed successfully.
+// It handles various failure scenarios including timeout and abnormal node status conditions.
+// The function validates node readiness and updates the database with current node information.
 func CheckCCEClusterNodesStatusTask(taskID string, stepName string) error {
 	start := time.Now()
 	// get task and task current step
@@ -613,6 +740,7 @@ func CheckCCEClusterNodesStatusTask(taskID string, stepName string) error {
 	return nil
 }
 
+// checkClusterNodesStatus check cluster nodes status
 func checkClusterNodesStatus(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, // nolint
 	nodeGroupID string) error {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
@@ -631,6 +759,7 @@ func checkClusterNodesStatus(ctx context.Context, info *cloudprovider.CloudDepen
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Minute)
 	defer cancel()
 
+	// get cloud node group id
 	cloudNodeGroupID := nodeGroup.CloudNodeGroupID
 	err = loop.LoopDoFunc(ctx, func() error {
 		nodePool, errLocal := cceCli.GetClusterNodePool(info.Cluster.SystemID, cloudNodeGroupID)
@@ -662,6 +791,7 @@ func checkClusterNodesStatus(ctx context.Context, info *cloudprovider.CloudDepen
 	return nil
 }
 
+// updateNodeToDB update node to db
 func updateNodeToDB(ctx context.Context, info *cloudprovider.CloudDependBasicInfo,
 	nodeGroupID string) ([]string, error) {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
@@ -683,6 +813,7 @@ func updateNodeToDB(ctx context.Context, info *cloudprovider.CloudDependBasicInf
 		return nil, fmt.Errorf("list nodes err, %s", err)
 	}
 
+	// add success nodes
 	for _, n := range nodes {
 		node := &proto.Node{
 			NodeID:       *n.Metadata.Uid,
@@ -774,6 +905,24 @@ func RegisterCCEClusterKubeConfigTask(taskID string, stepName string) error {
 }
 
 // UpdateCreateClusterDBInfoTask update cluster DB info
+// This function updates cluster database information after successful cluster creation.
+// It performs the following operations:
+// 1. Retrieves the current task state and step information
+// 2. Gets cluster dependency information including cloud and project details
+// 3. Updates cluster module names by querying business module information
+// 4. Synchronizes cluster status and configuration in the database
+// 5. Updates the task step status based on the database update result
+//
+// Parameters:
+//   - taskID: unique identifier for the task being executed
+//   - stepName: name of the current step in the task workflow
+//
+// Returns:
+//   - error: nil if successful, otherwise returns the error encountered during execution
+//
+// The function will skip execution if the step has already been completed successfully.
+// It handles various failure scenarios including dependency retrieval errors and database update failures.
+// The function ensures cluster information is properly synchronized between cloud provider and local database.
 func UpdateCreateClusterDBInfoTask(taskID string, stepName string) error {
 	start := time.Now()
 	// get task and task current step
@@ -850,7 +999,7 @@ func UpdateCreateClusterDBInfoTask(taskID string, stepName string) error {
 
 	// sync cluster perms
 	ctx, err = tenant.WithTenantIdByResourceForContext(ctx, tenant.ResourceMetaData{
-		ProjectId:   dependInfo.Cluster.GetProjectID(),
+		ProjectId: dependInfo.Cluster.GetProjectID(),
 	})
 	if err != nil {
 		blog.Errorf("UpdateCreateClusterDBInfoTask WithTenantIdByResourceForContext failed: %v", err)

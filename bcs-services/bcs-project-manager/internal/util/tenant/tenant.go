@@ -153,7 +153,7 @@ func getHeaderTenantIdFromCtx(ctx context.Context) string {
 	if !ok {
 		return ""
 	}
-	tenantId, _ := md.Get(headerkey.TenantIdKey)
+	tenantId, _ := md.Get(string(headerkey.TenantIdKey))
 	return tenantId
 }
 

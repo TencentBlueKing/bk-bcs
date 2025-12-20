@@ -129,6 +129,7 @@ func NewListAuthorizedProj(model store.ProjectModel) *ListAuthorizedProject {
 }
 
 // Do xxx
+// nolint:funlen
 func (lap *ListAuthorizedProject) Do(ctx context.Context,
 	req *proto.ListAuthorizedProjReq) (*map[string]interface{}, error) {
 	var (
@@ -143,8 +144,8 @@ func (lap *ListAuthorizedProject) Do(ctx context.Context,
 	if tenant.IsMultiTenantEnabled() {
 		if err == nil && authUser.Username != "" {
 			// username 为空时，该接口请求没有意义, any 标识用户有无限制项目权限
-			ids, any, err := auth.ListAuthorizedProjectIDs(authUser.Username, tenant.GetTenantIdFromContext(ctx))
-			if err != nil {
+			ids, any, lerr := auth.ListAuthorizedProjectIDs(authUser.Username, tenant.GetTenantIdFromContext(ctx))
+			if lerr != nil {
 				logging.Error("get user project permissions failed, err: %s", err.Error())
 				return nil, nil
 			}

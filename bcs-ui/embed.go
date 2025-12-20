@@ -30,6 +30,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/config"
 )
 
+// nolint:typecheck
+//
 //go:embed frontend/dist frontend/static CHANGELOG
 var frontendAssets embed.FS
 

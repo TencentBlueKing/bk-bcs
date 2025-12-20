@@ -58,7 +58,7 @@ func QueryUserInfoByTenantLoginName(ctx context.Context, tenantId, loginNames st
 	proxy := ""
 
 	req := gorequest.New().Get(path).
-		Set(headerkey.TenantIdKey, tenantId).
+		Set(string(headerkey.TenantIdKey), tenantId).
 		Query(fmt.Sprintf("%s=%s", "lookup_field", "login_name")).
 		Query(fmt.Sprintf("%s=%s", "lookups", loginNames)).
 		SetDebug(config.GlobalConf.BkUser.Debug)
@@ -147,6 +147,6 @@ func GetAuthHeader(ctx context.Context) (map[string]string, error) {
 		"Content-Type": "application/json",
 		"X-Bkapi-Authorization": fmt.Sprintf(`{"bk_app_code": "%s", "bk_app_secret": "%s", "bk_username": "%s"}`,
 			config.GlobalConf.App.Code, config.GlobalConf.App.Secret, bkUserName),
-		headerkey.TenantIdKey: tenantId,
+		string(headerkey.TenantIdKey): tenantId,
 	}, nil
 }

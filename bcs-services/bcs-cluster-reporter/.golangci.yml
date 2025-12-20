@@ -1,6 +1,11 @@
 run:
   timeout: 10m
-  skip-dirs:
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
+  exclude-use-default: false
+  exclude-dirs:
     - bcs-services/bcs-upgrader
     - bcs-services/bcs-service-prometheus
     - bcs-network
@@ -8,10 +13,7 @@ run:
     - bcs-runtime/bcs-k8s/bcs-component/bcs-cc-agent
     - bcs-runtime/bcs-k8s/bcs-component/bcs-cpuset-device
     - .*/third_party/*
-    - api/*
-    - internal/cloudprovider/component/*
-    - internal/cloudprovider/qcloud/api/common_*
-  skip-files:
+  exclude-files:
     - .*\.docs\.go$
     - .*\.gen\.go$
     - .*\.pb\.go$
@@ -19,39 +21,35 @@ run:
     - .*\.pb.micro\.go$
     - .*\.pb.validate\.go$
     - .*\_test\.go$
-    - internal/cloudprovider/qcloud/tasks/createNodeGroup.go
-    - internal/cloudprovider/qcloud/tasks/createNodeGroup.go
-    - internal/cloudprovider/qcloud/tasks/createClusterTask.go
-    - internal/remote/resource/tresource/resource.go
-issues:
-  max-issues-per-linter: 0
-  max-same-issues: 0
-  exclude-use-default: false
+
 linters:
   disable-all: true
   enable:
-    #    - errcheck
-    #    - gosimple
-    #    - govet
-    #    - ineffassign
+    - errcheck
+    - gosimple
+    - govet
+    - ineffassign
     - staticcheck
-    #    - unused
-    #    - funlen
-    #    - gci
-    #    - goconst
-    #    - gocritic
-    #    - gocyclo
-    #    - gofmt
-    #    - goheader
-    #    - goimports
-    #    - gosec
-    #    - lll
-    #    - misspell
-    #    - nakedret
-    #    - revive
-    #    - unconvert
-    #    - unparam
+    - unused
+    - funlen
+    - gci
+    - goconst
+    - gocritic
+    - gocyclo
+    - gofmt
+    - goheader
+    - goimports
+    - gosec
+    - lll
+    - misspell
+    - nakedret
+    - revive
+    - unconvert
+    - unparam
+
 linters-settings:
+  staticcheck:
+    checks: ["all", "-SA1006", "-SA1019"]
   errcheck:
     exclude-functions:
       - (*os.File).Close
@@ -60,6 +58,9 @@ linters-settings:
       - github.com/go-chi/render.Render
       - io.Copy
       - os.RemoveAll
+      - fmt.Fprint
+      - fmt.Fprintf
+      - fmt.Fprintln
   lll:
     line-length: 120
   funlen:
@@ -68,7 +69,10 @@ linters-settings:
   gocyclo:
     min-complexity: 30
   govet:
-    check-shadowing: true
+    enable:
+      - shadow
+    disable:
+      - printf
   goimports:
     local-prefixes: github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter
   gci:

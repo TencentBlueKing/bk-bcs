@@ -10,8 +10,8 @@
  * limitations under the License.
  */
 
-// Package bk_user xxx
-package bk_user
+// Package bkuser bk user related functions
+package bkuser
 
 import (
 	"context"

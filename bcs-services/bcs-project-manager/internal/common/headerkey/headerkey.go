@@ -13,11 +13,14 @@
 // Package headerkey xxx
 package headerkey
 
+// ContextKey is the key for context value
+type ContextKey string
+
 const (
 	// RequestIDKey xxx
-	RequestIDKey = "X-Request-Id"
+	RequestIDKey ContextKey = "X-Request-Id"
 	// UsernameKey xxx
-	UsernameKey = "X-Project-Username"
+	UsernameKey ContextKey = "X-Project-Username"
 	// TenantIdKey xxx
-	TenantIdKey = "X-Bk-Tenant-Id"
+	TenantIdKey ContextKey = "X-Bk-Tenant-Id"
 )

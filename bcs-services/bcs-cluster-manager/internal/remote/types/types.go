@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package types remote types
 package types
 
 import (

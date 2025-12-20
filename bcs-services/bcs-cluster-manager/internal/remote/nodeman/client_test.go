@@ -17,19 +17,13 @@ import (
 	"testing"
 )
 
-/*
-AppCode:   "bk_bcs_app",
-	AppSecret: "95349c90-dfb3-4e4e-8710-a61cbd176630",
-	Server:    "https://bkapi.bk-tenant-dev.woa.com/api/bk-user/prod",
-*/
-
 // NewClient xxx
 func NewClient() *Client {
 	cli, _ := NewNodeManClient(Options{
-		AppCode:    "bk_bcs_app",
-		AppSecret:  "95349c90-dfb3-4e4e-8710-a61cbd176630",
+		AppCode:    "xxx",
+		AppSecret:  "xxx",
 		BKUserName: "xxx",
-		Server:     "https://bkapi.bk-tenant-dev.woa.com/api/bk-nodeman/prod",
+		Server:     "https://bkapi.example.com/api/bk-nodeman/prod",
 		Debug:      true,
 	})
 

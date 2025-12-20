@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-package bk_user
+package bkuser
 
 import (
 	"context"
@@ -18,9 +18,9 @@ import (
 )
 
 var opts = Options{
-	AppCode:   "bk_bcs_app",
-	AppSecret: "95349c90-dfb3-4e4e-8710-a61cbd176630",
-	Server:    "https://bkapi.bk-tenant-dev.woa.com/api/bk-user/prod",
+	AppCode:   "xxx",
+	AppSecret: "xxx",
+	Server:    "https://bkapi.example.com/api/bk-user/prod",
 	Debug:     true,
 }
 

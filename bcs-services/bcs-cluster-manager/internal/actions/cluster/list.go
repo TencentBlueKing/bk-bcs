@@ -10,6 +10,8 @@
  * limitations under the License.
  */
 
+// Package cluster define cluster actions
+// NOCC:tosa/comment_ratio(ignore)
 package cluster
 
 import (
@@ -146,6 +148,7 @@ func (la *ListAction) getSharedCluster() error {
 	return nil
 }
 
+// filterClusterList filter cluster list
 func (la *ListAction) filterClusterList() ([]*cmproto.Cluster, bool, error) {
 	var (
 		sharedCluster = true
@@ -343,6 +346,7 @@ func NewListProjectClusterAction(model store.ClusterManagerModel, iam iam.PermCl
 	}
 }
 
+// validate validate request
 func (la *ListProjectClusterAction) validate() error {
 	if err := la.req.Validate(); err != nil {
 		return err
@@ -500,6 +504,7 @@ func (la *ListProjectClusterAction) GetProjectClustersV3Perm(user actions.PermIn
 	return v3ResultPerm, nil
 }
 
+// setResp set response
 func (la *ListProjectClusterAction) setResp(code uint32, msg string) {
 	la.resp.Code = code
 	la.resp.Message = msg
@@ -545,6 +550,7 @@ func NewListCommonClusterAction(model store.ClusterManagerModel) *ListCommonClus
 	}
 }
 
+// validate validate request
 func (la *ListCommonClusterAction) validate() error {
 	if err := la.req.Validate(); err != nil {
 		return err
@@ -719,6 +725,7 @@ func (la *ListNodesInClusterAction) listNodes() error {
 	return nil
 }
 
+// getK8sNodes get k8s nodes
 func (la *ListNodesInClusterAction) getK8sNodes() []*corev1.Node {
 	k8sNodes, err := la.k8sOp.ListClusterNodes(la.ctx, la.req.ClusterID)
 	if err != nil {
@@ -761,6 +768,7 @@ func (la *ListNodesInClusterAction) Handle(ctx context.Context,
 	la.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 }
 
+// appendCloudNodeInfo append cloud node info
 func (la *ListNodesInClusterAction) appendCloudNodeInfo() {
 	clsMgr, err := cloudprovider.GetClusterMgr(la.cloud.CloudProvider)
 	if err != nil {
@@ -1233,6 +1241,7 @@ func (la *ListBasicInfoAction) Handle(
 	la.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 }
 
+// listOpt list option
 func (la *ListBasicInfoAction) listOpt() *storeopt.ListOption {
 	listOpt := &storeopt.ListOption{
 		Offset: int64(la.req.Offset),

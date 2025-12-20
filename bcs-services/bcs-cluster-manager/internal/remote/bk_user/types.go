@@ -10,7 +10,8 @@
  * limitations under the License.
  */
 
-package bk_user
+// Package bkuser bk user related types
+package bkuser
 
 // AuthInfo auth app
 type AuthInfo struct {

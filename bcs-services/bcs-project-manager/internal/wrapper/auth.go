@@ -60,7 +60,7 @@ func NewAuthHeaderAdapter(fn server.HandlerFunc) server.HandlerFunc {
 		if !ok {
 			return errors.New("failed to get micro's metadata")
 		}
-		if username, ok := md.Get(headerkey.UsernameKey); ok {
+		if username, ok := md.Get(string(headerkey.UsernameKey)); ok {
 			ctx = metadata.Set(ctx, middleauth.CustomUsernameHeaderKey, username)
 		}
 		return fn(ctx, req, rsp)
@@ -224,7 +224,8 @@ func CheckUserPerm(ctx context.Context, req server.Request, user middleauth.Auth
 	return allow, nil
 }
 
-func callIAM(ctx context.Context, user middleauth.AuthUser, action string, resourceID resourceID) (bool, string, []authutils.ResourceAction, error) {
+func callIAM(ctx context.Context, user middleauth.AuthUser, action string, resourceID resourceID) (bool, string,
+	[]authutils.ResourceAction, error) {
 	var isSharedCluster bool
 	if resourceID.ClusterID != "" {
 		cluster, err := clustermanager.GetCluster(ctx, resourceID.ClusterID)

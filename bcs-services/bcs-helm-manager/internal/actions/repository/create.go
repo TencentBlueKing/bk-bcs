@@ -57,6 +57,7 @@ type CreateRepositoryAction struct {
 func (c *CreateRepositoryAction) Handle(ctx context.Context,
 	req *helmmanager.CreateRepositoryReq, resp *helmmanager.CreateRepositoryResp) error {
 
+	// validate request and response
 	if req == nil || resp == nil {
 		blog.Errorf("create repository failed, req or resp is empty")
 		return common.ErrHelmManagerReqOrRespEmpty.GenError()
@@ -109,6 +110,7 @@ func (c *CreateRepositoryAction) create(takeover bool, data *helmmanager.Reposit
 		return errors.New("repo is exist")
 	}
 
+	// ensure project
 	projectHandler := c.platform.User(repo.User{
 		Name:     data.GetCreateBy(),
 		Password: data.GetPassword(),
@@ -119,6 +121,7 @@ func (c *CreateRepositoryAction) create(takeover bool, data *helmmanager.Reposit
 		return nil
 	}
 
+	// create repository to repo
 	if err := c.createRepository2Repo(takeover, projectHandler, r); err != nil {
 		c.setResp(common.ErrHelmManagerCreateActionFailed, err.Error(), nil)
 		blog.Errorf("create repository failed, create to repo failed, %s, project: %s, type: %s, name: %s",
@@ -126,12 +129,14 @@ func (c *CreateRepositoryAction) create(takeover bool, data *helmmanager.Reposit
 		return nil
 	}
 
+	// create repository to model
 	if err := c.model.CreateRepository(c.ctx, r); err != nil {
 		blog.Errorf("create repository failed, create repository in model failed, %s, param: %v", err.Error(), r)
 		c.setResp(common.ErrHelmManagerCreateActionFailed, err.Error(), nil)
 		return nil
 	}
 
+	// create public repo if not exist
 	if err := c.createPublicRepoIfNotExist(data); err != nil {
 		blog.Errorf("create repository failed, init public repo failed, %s, param: %v", err.Error(), r)
 		c.setResp(common.ErrHelmManagerCreateActionFailed, err.Error(), nil)
@@ -155,6 +160,7 @@ func (c *CreateRepositoryAction) createRepository2Repo(
 		return nil
 	}
 
+	// create repository to repo
 	repoURL, err := handler.Create(c.ctx, &repo.Repository{
 		Remote:         data.Remote,
 		RemoteURL:      data.RemoteURL,
@@ -189,6 +195,7 @@ func (c *CreateRepositoryAction) createPublicRepoIfNotExist(data *helmmanager.Re
 	if err == nil {
 		return nil
 	}
+	// create public repo to model
 	now := time.Now().Unix()
 	err = c.model.CreateRepository(context.TODO(), &entity.Repository{
 		TenantID:          contextx.GetTenantIDFromContext(c.ctx),
@@ -245,6 +252,7 @@ type CreatePersonalRepositoryAction struct {
 func (c *CreatePersonalRepositoryAction) Handle(ctx context.Context,
 	req *helmmanager.CreatePersonalRepoReq, resp *helmmanager.CreatePersonalRepoResp) error {
 
+	// validate request and response
 	if req == nil || resp == nil {
 		blog.Errorf("create repository failed, req or resp is empty")
 		return common.ErrHelmManagerReqOrRespEmpty.GenError()
@@ -291,6 +299,7 @@ func (c *CreatePersonalRepositoryAction) create(data *helmmanager.Repository) er
 		return nil
 	}
 
+	// ensure project
 	projectHandler := c.platform.User(repo.User{
 		Name:     data.GetCreateBy(),
 		Password: data.GetPassword(),
@@ -324,6 +333,7 @@ func (c *CreatePersonalRepositoryAction) createRepository2Repo(
 
 	handler := projectHandler.Repository(repo.GetRepositoryType(data.Type), data.Name)
 
+	// create repository to repo
 	repoURL, err := handler.Create(c.ctx, &repo.Repository{
 		Remote:         data.Remote,
 		RemoteURL:      data.RemoteURL,

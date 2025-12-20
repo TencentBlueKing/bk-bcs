@@ -24,18 +24,18 @@ import (
 // CustomHeaderMatcher for http header
 func CustomHeaderMatcher(key string) (string, bool) {
 	switch key {
-	case headerkey.RequestIDKey:
-		return headerkey.RequestIDKey, true
-	case headerkey.UsernameKey:
-		return headerkey.UsernameKey, true
+	case string(headerkey.RequestIDKey):
+		return string(headerkey.RequestIDKey), true
+	case string(headerkey.UsernameKey):
+		return string(headerkey.UsernameKey), true
 	case constants.Traceparent:
 		return constants.GrpcTraceparent, true
 	case middleware.InnerClientHeaderKey:
 		return middleware.InnerClientHeaderKey, true
 	case middleware.CustomUsernameHeaderKey:
 		return middleware.CustomUsernameHeaderKey, true
-	case headerkey.TenantIdKey:
-		return headerkey.TenantIdKey, true
+	case string(headerkey.TenantIdKey):
+		return string(headerkey.TenantIdKey), true
 	default:
 		return runtime.DefaultHeaderMatcher(key)
 	}

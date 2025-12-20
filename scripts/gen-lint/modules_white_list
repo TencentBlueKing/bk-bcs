@@ -43,5 +43,4 @@ bcs-services/bcs-webconsole
 bcs-services/cluster-resources
 bcs-services/bcs-mesh-manager
 bcs-services/pkg
-bcs-ui
 # install/cryptool

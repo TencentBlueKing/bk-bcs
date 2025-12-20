@@ -61,7 +61,7 @@ func CheckUserResourceTenantAttrFunc(fn server.HandlerFunc) server.HandlerFunc {
 		}
 
 		var (
-			tenantId       = ""
+			tenantId       string
 			headerTenantId = GetHeaderTenantIdFromCtx(ctx)
 			user           = GetAuthUserInfoFromCtx(ctx)
 		)
@@ -131,13 +131,14 @@ func GetResourceTenantId(ctx context.Context, req server.Request) (string, error
 }
 
 // getTenantIdByResource get tenant id by resource
+// NOCC:CCN_threshold(工具误报:)
 func getTenantIdByResource(ctx context.Context, resource resourceID) (string, error) {
 	var (
 		projectID = resource.ProjectID
 	)
 
 	if projectID == "" && resource.ClusterID != "" {
-		cluster, err := store.GetStoreModel().GetCluster(context.TODO(), resource.ClusterID)
+		cluster, err := store.GetStoreModel().GetCluster(ctx, resource.ClusterID)
 		if err != nil {
 			return "", err
 		}
@@ -146,7 +147,7 @@ func getTenantIdByResource(ctx context.Context, resource resourceID) (string, er
 	}
 
 	if projectID == "" && resource.ServerKey != "" {
-		cluster, err := store.GetStoreModel().GetCluster(context.TODO(), resource.ServerKey)
+		cluster, err := store.GetStoreModel().GetCluster(ctx, resource.ServerKey)
 		if err != nil {
 			return "", err
 		}
@@ -155,7 +156,7 @@ func getTenantIdByResource(ctx context.Context, resource resourceID) (string, er
 	}
 
 	if projectID == "" && resource.NodeGroupID != "" {
-		group, err := store.GetStoreModel().GetNodeGroup(context.TODO(), resource.NodeGroupID)
+		group, err := store.GetStoreModel().GetNodeGroup(ctx, resource.NodeGroupID)
 		if err != nil {
 			return "", err
 		}
@@ -164,11 +165,11 @@ func getTenantIdByResource(ctx context.Context, resource resourceID) (string, er
 	}
 
 	if projectID == "" && resource.InnerIP != "" {
-		node, err := store.GetStoreModel().GetNodeByIP(context.TODO(), resource.InnerIP)
+		node, err := store.GetStoreModel().GetNodeByIP(ctx, resource.InnerIP)
 		if err != nil {
 			return "", err
 		}
-		cluster, err := store.GetStoreModel().GetCluster(context.TODO(), node.ClusterID)
+		cluster, err := store.GetStoreModel().GetCluster(ctx, node.ClusterID)
 		if err != nil {
 			return "", err
 		}
@@ -177,7 +178,7 @@ func getTenantIdByResource(ctx context.Context, resource resourceID) (string, er
 	}
 
 	if projectID == "" && resource.TaskID != "" {
-		task, err := store.GetStoreModel().GetTask(context.TODO(), resource.TaskID)
+		task, err := store.GetStoreModel().GetTask(ctx, resource.TaskID)
 		if err != nil {
 			return "", err
 		}
@@ -185,7 +186,7 @@ func getTenantIdByResource(ctx context.Context, resource resourceID) (string, er
 	}
 
 	if projectID == "" && resource.CloudID != "" && resource.AccountID != "" {
-		cloud, err := store.GetStoreModel().GetCloudAccount(context.TODO(),
+		cloud, err := store.GetStoreModel().GetCloudAccount(ctx,
 			resource.CloudID, resource.AccountID, false)
 		if err != nil {
 			return "", err
@@ -198,7 +199,7 @@ func getTenantIdByResource(ctx context.Context, resource resourceID) (string, er
 		return "", fmt.Errorf("projectID is empty")
 	}
 
-	pro, err := project.GetProjectManagerClient().GetProjectInfo(context.TODO(), projectID, true)
+	pro, err := project.GetProjectManagerClient().GetProjectInfo(ctx, projectID, true)
 	if err != nil {
 		return "", err
 	}

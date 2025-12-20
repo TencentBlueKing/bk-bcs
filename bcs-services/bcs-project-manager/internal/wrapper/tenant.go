@@ -80,7 +80,7 @@ func CheckUserResourceTenantAttrFunc(fn server.HandlerFunc) server.HandlerFunc {
 		}
 
 		var (
-			tenantId = ""
+			tenantId string
 			// 用户请求的资源租户ID
 			headerTenantId = GetHeaderTenantIdFromCtx(ctx)
 			// 认证后的用户信息以及所属租户信息
@@ -142,8 +142,8 @@ func getResourceTenantId(ctx context.Context, req server.Request) (string, error
 		return "", err
 	}
 	r := &resourceID{}
-	if err := json.Unmarshal(b, r); err != nil {
-		return "", err
+	if lerr := json.Unmarshal(b, r); lerr != nil {
+		return "", lerr
 	}
 
 	// 选择第一个非空值作为查询参数
@@ -171,6 +171,6 @@ func getResourceTenantId(ctx context.Context, req server.Request) (string, error
 // GetHeaderTenantIdFromCtx get tenantID from header
 func GetHeaderTenantIdFromCtx(ctx context.Context) string {
 	md, _ := metadata.FromContext(ctx)
-	tenantId, _ := md.Get(headerkey.TenantIdKey)
+	tenantId, _ := md.Get(string(headerkey.TenantIdKey))
 	return tenantId
 }

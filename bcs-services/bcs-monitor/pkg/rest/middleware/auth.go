@@ -349,6 +349,5 @@ func ServiceEnable(next http.Handler) http.Handler {
 		}
 		w.Write([]byte(`{"code": 0, "data": {}, "message": "service is not available"}`))
 		w.WriteHeader(http.StatusOK)
-		return
 	})
 }

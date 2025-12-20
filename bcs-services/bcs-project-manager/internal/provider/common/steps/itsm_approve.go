@@ -16,15 +16,15 @@ package steps
 import (
 	"context"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/tenant"
 	"time"
 
 	common_task "github.com/Tencent/bk-bcs/bcs-common/common/task"
 	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/itsm/v2"
+	v2 "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/itsm/v2"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/provider/utils"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/tenant"
 )
 
 const (
@@ -74,8 +74,8 @@ func (s itsmApproveStep) DoWork(task *types.Task) error {
 
 	// 查询单据状态，当前不会超时。后续可根据默认超时时间取消该单据(30天等)
 	err = common_task.LoopDoFunc(context.Background(), func() error {
-		ticket, err := v2.ListTicketsApprovalResult(ctx, []string{sn})
-		if err != nil {
+		ticket, lerr := v2.ListTicketsApprovalResult(ctx, []string{sn})
+		if lerr != nil {
 			logging.Error("itsmApproveStep[%s] ListTicketsApprovalResult failed: %v", task.GetTaskID(), err)
 			return nil
 		}

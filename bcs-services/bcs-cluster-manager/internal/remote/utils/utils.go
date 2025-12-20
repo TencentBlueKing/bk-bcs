@@ -22,7 +22,7 @@ import (
 	gocache "github.com/patrickmn/go-cache"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/bk_user"
+	bkuser "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/bk_user"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cache"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tenant"
@@ -84,7 +84,7 @@ func GetBkUserNameByTenantLoginName(ctx context.Context, tenantId, loginName str
 		}
 	}
 
-	data, err := bk_user.GetBkUserClient().QueryUserInfoByTenantLoginName(ctx, tenantId, loginName)
+	data, err := bkuser.GetBkUserClient().QueryUserInfoByTenantLoginName(ctx, tenantId, loginName)
 	if err != nil {
 		blog.Errorf("GetBkUserNameByTenantLoginName QueryUserInfoByTenantLoginName failed, err: %v", err)
 		return "", err

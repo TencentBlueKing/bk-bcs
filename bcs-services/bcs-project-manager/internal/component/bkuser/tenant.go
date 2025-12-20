@@ -54,7 +54,7 @@ func ListTenants(ctx context.Context, tenantId string) ([]TenantData, error) {
 	proxy := ""
 
 	req := gorequest.New().Get(path).
-		Set(headerkey.TenantIdKey, tenantId).
+		Set(string(headerkey.TenantIdKey), tenantId).
 		SetDebug(config.GlobalConf.BkUser.Debug)
 
 	// 获取返回数据

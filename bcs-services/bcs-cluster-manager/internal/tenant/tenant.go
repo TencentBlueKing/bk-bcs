@@ -10,11 +10,13 @@
  * limitations under the License.
  */
 
+// Package tenant tenant related functions
 package tenant
 
 import (
 	"context"
 	"fmt"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"

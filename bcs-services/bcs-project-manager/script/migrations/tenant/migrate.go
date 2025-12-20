@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package tenant 初始化项目租户信息
 package tenant
 
 import (
@@ -42,6 +43,7 @@ func initDB() error {
 	return nil
 }
 
+// InitProject 初始化项目
 func InitProject() error {
 	err := initDB()
 	if err != nil {

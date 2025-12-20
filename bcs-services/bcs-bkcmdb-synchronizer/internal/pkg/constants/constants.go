@@ -10,11 +10,15 @@
  * limitations under the License.
  */
 
+// Package constants define constants
 package constants
+
+// ContextKey is the key for context value
+type ContextKey string
 
 const (
 	// BkTenantIdHeaderKey is the header name of X-Bk-Tenant-Id.
-	BkTenantIdHeaderKey = "X-Bk-Tenant-Id"
+	BkTenantIdHeaderKey ContextKey = "X-Bk-Tenant-Id"
 	// DefaultTenantId default tenant id
-	DefaultTenantId = "default"
+	DefaultTenantId ContextKey = "default"
 )

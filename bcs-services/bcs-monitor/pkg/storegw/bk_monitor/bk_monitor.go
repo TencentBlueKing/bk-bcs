@@ -158,7 +158,6 @@ func (s *BKMonitorStore) Series(r *storepb.SeriesRequest, srv storepb.Store_Seri
 	blog.Infow(clientutil.DumpPromQL(r), "request_id", store.RequestIDValue(ctx), "minTime", r.MinTime, "maxTime",
 		r.MaxTime, "step", r.QueryHints.StepMillis)
 
-	// step 固定1分钟
 	// 注意: 目前实现的 aggrChunk 为 Raw 格式, 不支持降采样, 支持参考 https://thanos.io/tip/components/compact.md/
 	step := int64(clientutil.MinStepSeconds)
 
@@ -172,7 +171,6 @@ func (s *BKMonitorStore) Series(r *storepb.SeriesRequest, srv storepb.Store_Seri
 	}
 	if metricName == "" {
 		return nil
-		// return errors.New("metric name is required")
 	}
 
 	// bcs 聚合 metrics 忽略
@@ -205,8 +203,6 @@ func (s *BKMonitorStore) Series(r *storepb.SeriesRequest, srv storepb.Store_Seri
 
 	// series 数据, 这里只查询最近 SeriesStepDeltaSeconds
 	if r.SkipChunks {
-		// end = time.Now().Unix()
-		// start = end - clientutil.SeriesStepDeltaSeconds
 		return s.getMatcherSeries(r, srv, clusterID, cluster.BKBizID, project.TenantId)
 	}
 
