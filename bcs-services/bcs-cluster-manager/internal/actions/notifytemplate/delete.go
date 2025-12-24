@@ -98,7 +98,7 @@ func (da *DeleteAction) Handle(
 		TaskID:       "",
 		Message:      fmt.Sprintf("项目[%s]删除通知模板信息[%s]", da.project.GetName(), req.NotifyTemplateID),
 		OpUser:       auth.GetUserFromCtx(ctx),
-		CreateTime:   time.Now().Format(time.RFC3339),
+		CreateTime:   time.Now().UTC().Format(time.RFC3339),
 		ProjectID:    req.ProjectID,
 		ResourceName: da.project.GetName(),
 	})

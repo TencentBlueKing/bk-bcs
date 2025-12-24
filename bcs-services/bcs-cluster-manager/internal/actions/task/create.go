@@ -43,7 +43,7 @@ func NewCreateAction(model store.ClusterManagerModel) *CreateAction {
 }
 
 func (ca *CreateAction) createTask() error {
-	timeStr := time.Now().Format(time.RFC3339)
+	timeStr := time.Now().UTC().Format(time.RFC3339)
 	t := &cmproto.Task{
 		TaskID:       uuid.New().String(),
 		TaskType:     ca.req.TaskType,

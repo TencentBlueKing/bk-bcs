@@ -17,6 +17,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
@@ -28,6 +29,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/util"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
@@ -244,6 +246,10 @@ func (la *ListPermDataAction) listCloudAccount() error {
 		if !cloudAccounts[i].Enable {
 			continue
 		}
+		// format time
+		cloudAccounts[i].CreatTime = util.TransStrToUTCStr(time.RFC3339Nano, cloudAccounts[i].CreatTime)
+		cloudAccounts[i].UpdateTime = util.TransStrToUTCStr(time.RFC3339Nano, cloudAccounts[i].UpdateTime)
+
 		cloudAccounts[i].Account.SecretKey = ""
 		cloudAccounts[i].Account.SecretID = ""
 		la.cloudAccountList = append(la.cloudAccountList, cloudAccounts[i])

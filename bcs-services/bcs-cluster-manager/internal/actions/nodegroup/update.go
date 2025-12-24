@@ -81,7 +81,7 @@ func (ua *UpdateAction) validate() error {
 
 // modifyNodeGroupField trans request args to node group
 func (ua *UpdateAction) modifyNodeGroupField() {
-	timeStr := time.Now().Format(time.RFC3339)
+	timeStr := time.Now().UTC().Format(time.RFC3339)
 	// update field if required
 	group := ua.group
 	group.UpdateTime = timeStr
@@ -528,7 +528,7 @@ func (ua *UpdateAction) Handle(
 		}(),
 		Message:      fmt.Sprintf("集群%s节点池%s更新配置信息", ua.req.ClusterID, ua.req.NodeGroupID),
 		OpUser:       req.Updater,
-		CreateTime:   time.Now().Format(time.RFC3339),
+		CreateTime:   time.Now().UTC().Format(time.RFC3339),
 		ClusterID:    ua.cluster.ClusterID,
 		ProjectID:    ua.cluster.ProjectID,
 		ResourceName: ua.group.GetName(),
@@ -672,7 +672,7 @@ func (ua *MoveNodeAction) Handle(
 		TaskID:       "",
 		Message:      fmt.Sprintf("集群%s移入节点至节点池%s", ua.cluster.ClusterID, req.NodeGroupID),
 		OpUser:       ua.group.Updater,
-		CreateTime:   time.Now().Format(time.RFC3339),
+		CreateTime:   time.Now().UTC().Format(time.RFC3339),
 		ClusterID:    ua.group.ClusterID,
 		ProjectID:    ua.group.ProjectID,
 		ResourceName: ua.group.GetName(),
@@ -1076,7 +1076,7 @@ func (ua *UpdateDesiredNodeAction) Handle(
 		TaskID:       ua.task.TaskID,
 		Message:      fmt.Sprintf("集群%s扩容节点池%s节点数至%v", ua.cluster.ClusterID, req.NodeGroupID, req.DesiredNode),
 		OpUser:       ua.group.Updater,
-		CreateTime:   time.Now().Format(time.RFC3339),
+		CreateTime:   time.Now().UTC().Format(time.RFC3339),
 		ClusterID:    ua.cluster.ClusterID,
 		ProjectID:    ua.cluster.ProjectID,
 		ResourceName: ua.group.GetName(),
@@ -1173,7 +1173,7 @@ func (ua *UpdateDesiredSizeAction) Handle(
 		TaskID:       "",
 		Message:      fmt.Sprintf("更新集群%s节点池%s期望扩容节点数至%d", destGroup.ClusterID, req.NodeGroupID, req.DesiredSize),
 		OpUser:       req.Operator,
-		CreateTime:   time.Now().Format(time.RFC3339),
+		CreateTime:   time.Now().UTC().Format(time.RFC3339),
 		ClusterID:    destGroup.ClusterID,
 		ProjectID:    destGroup.ProjectID,
 		ResourceName: destGroup.GetName(),
@@ -1260,7 +1260,7 @@ func (ua *UpdateGroupMinMaxAction) Handle(
 		Message: fmt.Sprintf("集群[%s]修改NodeGroup[%s]最小最大的扩容限额[min%d][max%d]", destGroup.ClusterID,
 			req.NodeGroupID, req.MinSize, req.MaxSize),
 		OpUser:       req.Operator,
-		CreateTime:   time.Now().Format(time.RFC3339),
+		CreateTime:   time.Now().UTC().Format(time.RFC3339),
 		ClusterID:    destGroup.ClusterID,
 		ProjectID:    destGroup.ProjectID,
 		ResourceName: destGroup.GetName(),
@@ -1373,7 +1373,7 @@ func (ua *UpdateGroupAsTimeRangeAction) Handle(
 		TaskID:       "",
 		Message:      fmt.Sprintf("集群[%s]更新节点池[%s]定时扩缩容策略", destGroup.ClusterID, req.NodeGroupID),
 		OpUser:       auth.GetUserFromCtx(ctx),
-		CreateTime:   time.Now().Format(time.RFC3339),
+		CreateTime:   time.Now().UTC().Format(time.RFC3339),
 		ClusterID:    destGroup.ClusterID,
 		ProjectID:    destGroup.ProjectID,
 		ResourceName: destGroup.GetName(),

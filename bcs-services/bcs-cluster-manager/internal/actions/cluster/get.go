@@ -61,8 +61,6 @@ func (ga *GetAction) getCluster() error {
 	if err != nil {
 		return err
 	}
-	cluster.CreateTime = utils.TransTimeFormat(cluster.CreateTime)
-	cluster.UpdateTime = utils.TransTimeFormat(cluster.UpdateTime)
 	ga.cluster = shieldClusterInfo(cluster)
 
 	if ga.cluster != nil && ga.cluster.NetworkSettings != nil {

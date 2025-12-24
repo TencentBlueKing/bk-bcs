@@ -73,7 +73,7 @@ func (ua *RecordNodeDataAction) recordNodes() error { // nolint
 			TaskID:       "",
 			Message:      "录入节点详情信息",
 			OpUser:       auth.GetUserFromCtx(ua.ctx),
-			CreateTime:   time.Now().Format(time.RFC3339),
+			CreateTime:   time.Now().UTC().Format(time.RFC3339),
 			ClusterID:    cluster.ClusterID,
 			ProjectID:    cluster.ProjectID,
 			ResourceName: cluster.ClusterName,

@@ -18,6 +18,7 @@ import (
 	"errors"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
@@ -131,6 +132,9 @@ func (m *ModelClusterCredential) GetClusterCredential(ctx context.Context, serve
 		}
 		return nil, false, err
 	}
+	// 兼容旧数据
+	retCluster.CreateTime = util.TransStrToUTCStr(time.RFC3339Nano, retCluster.CreateTime)
+	retCluster.UpdateTime = util.TransStrToUTCStr(time.RFC3339Nano, retCluster.UpdateTime)
 	return retCluster, true, nil
 }
 

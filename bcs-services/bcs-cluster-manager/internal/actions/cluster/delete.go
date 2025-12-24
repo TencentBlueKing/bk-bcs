@@ -281,7 +281,7 @@ func (da *DeleteAction) releaseClusterCIDR(cls *cmproto.Cluster) error { // noli
 			updateCidr := cidr
 			updateCidr.Status = common.TkeCidrStatusAvailable
 			updateCidr.Cluster = ""
-			updateCidr.UpdateTime = time.Now().Format(time.RFC3339)
+			updateCidr.UpdateTime = time.Now().UTC().Format(time.RFC3339)
 			err = da.model.UpdateTkeCidr(da.ctx, updateCidr)
 			if err != nil {
 				blog.Errorf("delete cluster release cidr[%s] failed: %v", cls.NetworkSettings.ClusterIPv4CIDR, err)
@@ -451,7 +451,7 @@ func (da *DeleteAction) Handle(ctx context.Context, req *cmproto.DeleteClusterRe
 		TaskID:       da.tasks.TaskID,
 		Message:      fmt.Sprintf("删除%s集群%s", da.cluster.Provider, da.cluster.ClusterID),
 		OpUser:       da.req.Operator,
-		CreateTime:   time.Now().Format(time.RFC3339),
+		CreateTime:   time.Now().UTC().Format(time.RFC3339),
 		ClusterID:    da.cluster.ClusterID,
 		ProjectID:    da.cluster.ProjectID,
 		ResourceName: da.cluster.GetClusterName(),
@@ -838,7 +838,7 @@ func (da *DeleteNodesAction) Handle(ctx context.Context, req *cmproto.DeleteNode
 		TaskID:       da.task.TaskID,
 		Message:      fmt.Sprintf("集群%s下架节点", da.cluster.ClusterID),
 		OpUser:       da.req.Operator,
-		CreateTime:   time.Now().Format(time.RFC3339),
+		CreateTime:   time.Now().UTC().Format(time.RFC3339),
 		ClusterID:    da.cluster.ClusterID,
 		ProjectID:    da.cluster.ProjectID,
 		ResourceName: da.cluster.ClusterName,

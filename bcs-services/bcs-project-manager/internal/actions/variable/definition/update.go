@@ -15,7 +15,6 @@ package definition
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
@@ -78,7 +77,6 @@ func (ca *UpdateAction) updateVariable() (*vdm.VariableDefinition, error) {
 		vdm.FieldKeyName:        ca.req.GetName(),
 		vdm.FieldKeyDescription: ca.req.GetDesc(),
 		vdm.FieldKeyScope:       ca.req.GetScope(),
-		vdm.FieldKeyUpdateTime:  time.Now().Format(time.RFC3339),
 	}
 	if authUser, err := middleware.GetUserFromContext(ca.ctx); err == nil {
 		vd[vdm.FieldKeyUpdater] = authUser.GetUsername()

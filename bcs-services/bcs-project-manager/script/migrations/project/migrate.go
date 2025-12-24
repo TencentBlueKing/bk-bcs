@@ -38,11 +38,11 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
 	pm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/stringx"
+	timeutil "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/time"
 )
 
 const (
 	mysqlTableName = "projects"
-	timeLayout     = "2006-01-02T15:04:05Z"
 )
 
 var (
@@ -191,6 +191,8 @@ func migrateCCData() {
 	projectsMap := map[string]pm.Project{}
 	fmt.Printf("total projects length in bcs: %d\n", len(projects))
 	for _, project := range projects {
+		project.CreateTime = timeutil.TransStrToUTCStr(time.RFC3339Nano, project.CreateTime)
+		project.UpdateTime = timeutil.TransStrToUTCStr(time.RFC3339Nano, project.UpdateTime)
 		projectsMap[project.ProjectID] = project
 	}
 	for _, ccProject := range ccProjects {
@@ -266,8 +268,6 @@ func initBuiltInProject() error {
 		DeptID:            "0",
 		CenterID:          "0",
 		IsSecret:          false,
-		CreateTime:        time.Now().Format(timeLayout),
-		UpdateTime:        time.Now().Format(timeLayout),
 	}
 	_, err := model.GetProject(context.Background(), p.ProjectID)
 	if err == nil {
@@ -301,8 +301,6 @@ func insertProject(p BCSCCProjectData) error {
 		CenterID:    strconv.Itoa(int(p.CenterID)),
 		CenterName:  p.CenterName,
 		IsSecret:    p.IsSecrecy,
-		CreateTime:  p.CreatedAt.Format(timeLayout),
-		UpdateTime:  p.CreatedAt.Format(timeLayout),
 	}
 	return model.CreateProject(context.Background(), project)
 }
@@ -313,7 +311,6 @@ func updateProject(c BCSCCProjectData, p pm.Project) error {
 	p.Kind = getStrKind(c.Kind)
 	p.BusinessID = getBusinessID(c.CCAppID)
 	p.DeployType = getDeployType(c.DeployType)
-	p.UpdateTime = c.UpdatedAt.Format(timeLayout)
 	return model.UpdateProject(context.Background(), &p)
 }
 

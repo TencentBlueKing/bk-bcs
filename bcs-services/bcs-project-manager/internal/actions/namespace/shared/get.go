@@ -14,6 +14,7 @@ package shared
 
 import (
 	"context"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	corev1 "k8s.io/api/core/v1"
@@ -73,7 +74,7 @@ func (a *SharedNamespaceAction) GetNamespace(ctx context.Context,
 	retData := &proto.NamespaceData{
 		Name:       namespace.GetName(),
 		Uid:        string(namespace.GetUID()),
-		CreateTime: namespace.GetCreationTimestamp().Format(constant.TimeLayout),
+		CreateTime: namespace.GetCreationTimestamp().UTC().Format(time.RFC3339),
 		Status:     string(namespace.Status.Phase),
 		IsSystem:   stringx.StringInSlice(namespace.GetName(), config.GlobalConf.SystemConfig.SystemNameSpaces),
 	}

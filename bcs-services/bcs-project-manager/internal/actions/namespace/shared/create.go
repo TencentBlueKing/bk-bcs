@@ -17,7 +17,6 @@ import (
 	"fmt"
 	"math"
 	"strings"
-	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -62,7 +61,6 @@ func (a *SharedNamespaceAction) CreateNamespace(ctx context.Context,
 		ProjectCode: req.GetProjectCode(),
 		ClusterID:   req.GetClusterID(),
 		Name:        req.GetName(),
-		CreateTime:  time.Now().Format(time.RFC3339),
 		Creator:     username,
 		Managers:    username,
 		ResourceQuota: &nsm.Quota{

@@ -98,7 +98,7 @@ func (l *ImportClusterReleaseAction) importClusterRelease() error {
 	if err != nil {
 		return err
 	}
-	updateTime, _ := time.Parse(common.TimeFormat, detail.UpdateTime)
+	updateTime, _ := time.Parse(time.RFC3339, detail.UpdateTime)
 	// 在DB中记录该Release
 	return l.model.CreateRelease(l.ctx, &entity.Release{
 		Name:         l.req.GetName(),

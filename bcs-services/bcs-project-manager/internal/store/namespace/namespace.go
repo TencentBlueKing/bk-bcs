@@ -17,6 +17,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
@@ -149,6 +150,7 @@ func (m *ModelNamespace) CreateNamespace(ctx context.Context, ns *Namespace) err
 	if err := m.ensureTable(ctx); err != nil {
 		return err
 	}
+	ns.CreateTime = time.Now().UTC().Format(time.RFC3339)
 	if _, err := m.db.Table(m.tableName).Insert(ctx, []interface{}{ns}); err != nil {
 		return err
 	}

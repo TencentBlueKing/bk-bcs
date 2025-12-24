@@ -14,7 +14,6 @@ package project
 
 import (
 	"context"
-	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 
@@ -80,7 +79,6 @@ func (ua *UpdateV2Action) validate() error {
 }
 
 func (ua *UpdateV2Action) updateProjectV2(p *pm.Project) error {
-	p.UpdateTime = time.Now().Format(time.RFC3339)
 	// 从 context 中获取 username
 	if authUser, err := middleware.GetUserFromContext(ua.ctx); err == nil {
 		p.Updater = authUser.GetUsername()

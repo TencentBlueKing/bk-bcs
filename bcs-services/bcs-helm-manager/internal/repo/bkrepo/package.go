@@ -27,7 +27,6 @@ import (
 	"github.com/chartmuseum/helm-push/pkg/helm"
 	"k8s.io/helm/pkg/chartutil"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/repo"
 )
 
@@ -409,7 +408,7 @@ func getDateFromRawMessage(raw json.RawMessage) string {
 	if err != nil {
 		return string(data)
 	}
-	return time.UnixMilli(int64(i)).Format(common.TimeFormat)
+	return time.UnixMilli(int64(i)).UTC().Format(time.RFC3339)
 }
 
 // deleteChart

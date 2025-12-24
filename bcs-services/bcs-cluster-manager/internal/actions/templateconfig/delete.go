@@ -104,7 +104,7 @@ func (da *DeleteAction) Handle(
 		TaskID:       "",
 		Message:      fmt.Sprintf("业务[%s]删除模板配置[%s]", req.BusinessID, req.TemplateConfigID),
 		OpUser:       auth.GetUserFromCtx(ctx),
-		CreateTime:   time.Now().Format(time.RFC3339),
+		CreateTime:   time.Now().UTC().Format(time.RFC3339),
 		ProjectID:    req.ProjectID,
 		ResourceName: da.project.GetName(),
 	})

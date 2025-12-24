@@ -14,6 +14,7 @@ package independent
 
 import (
 	"context"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	corev1 "k8s.io/api/core/v1"
@@ -55,7 +56,7 @@ func (c *IndependentNamespaceAction) GetNamespace(ctx context.Context,
 		Name:        ns.GetName(),
 		Uid:         string(ns.GetUID()),
 		Status:      string(ns.Status.Phase),
-		CreateTime:  ns.GetCreationTimestamp().Format(constant.TimeLayout),
+		CreateTime:  ns.GetCreationTimestamp().UTC().Format(time.RFC3339),
 		Labels:      []*proto.Label{},
 		Annotations: []*proto.Annotation{},
 		IsSystem:    stringx.StringInSlice(ns.GetName(), config.GlobalConf.SystemConfig.SystemNameSpaces),

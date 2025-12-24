@@ -142,8 +142,8 @@ func (h *Handler) AddTkeCidr(request *restful.Request, response *restful.Respons
 			IPNumber:   tkeCidr.IPNumber,
 			Status:     tkeCidr.Status,
 			Cluster:    "",
-			CreateTime: now.Format(time.RFC3339),
-			UpdateTime: now.Format(time.RFC3339),
+			CreateTime: now.UTC().Format(time.RFC3339),
+			UpdateTime: now.UTC().Format(time.RFC3339),
 		})
 		if err != nil {
 			code = httpCodeClientError
@@ -225,7 +225,7 @@ func (h *Handler) ApplyTkeCidr(request *restful.Request, response *restful.Respo
 	updatedTkeCidr := tkeCidr
 	updatedTkeCidr.Status = common.TkeCidrStatusUsed
 	updatedTkeCidr.Cluster = form.Cluster
-	updatedTkeCidr.UpdateTime = time.Now().Format(time.RFC3339)
+	updatedTkeCidr.UpdateTime = time.Now().UTC().Format(time.RFC3339)
 	err = h.model.UpdateTkeCidr(request.Request.Context(), updatedTkeCidr)
 	if err != nil {
 		code = httpCodeClientError
@@ -296,7 +296,7 @@ func (h *Handler) ReleaseTkeCidr(request *restful.Request, response *restful.Res
 	updatedTkeCidr := tkeCidr
 	updatedTkeCidr.Status = common.TkeCidrStatusAvailable
 	updatedTkeCidr.Cluster = ""
-	updatedTkeCidr.UpdateTime = time.Now().Format(time.RFC3339)
+	updatedTkeCidr.UpdateTime = time.Now().UTC().Format(time.RFC3339)
 	err = h.model.UpdateTkeCidr(request.Request.Context(), updatedTkeCidr)
 	if err != nil {
 		code = httpCodeClientError

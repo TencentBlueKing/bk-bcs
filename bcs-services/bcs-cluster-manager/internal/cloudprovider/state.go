@@ -148,10 +148,10 @@ func (stat *TaskState) IsReadyToStep(stepName string) (*proto.Step, error) {
 					return nil, fmt.Errorf("task %s step %s already success", stat.Task.TaskID, stepName)
 				}
 				stat.Task.CurrentStep = stepName
-				step.Start = time.Now().Format(time.RFC3339)
+				step.Start = time.Now().UTC().Format(time.RFC3339)
 				step.Status = TaskStatusRunning
 				step.Message = "step ready to run"
-				step.LastUpdate = time.Now().Format(time.RFC3339)
+				step.LastUpdate = time.Now().UTC().Format(time.RFC3339)
 				stat.Task.Steps[name] = step
 				_ = GetStorageModel().UpdateTask(context.Background(), stat.Task)
 				return step, nil
@@ -170,10 +170,10 @@ func (stat *TaskState) IsReadyToStep(stepName string) (*proto.Step, error) {
 		return nil, fmt.Errorf("step %s don't turn to run, task already failed", stepName)
 	}
 
-	curStep.Start = time.Now().Format(time.RFC3339)
+	curStep.Start = time.Now().UTC().Format(time.RFC3339)
 	curStep.Status = TaskStatusRunning
 	curStep.Message = "step ready to run"
-	curStep.LastUpdate = time.Now().Format(time.RFC3339)
+	curStep.LastUpdate = time.Now().UTC().Format(time.RFC3339)
 
 	stat.Task.Status = TaskStatusRunning
 	stat.Task.Message = fmt.Sprintf("step %s is running", stepName)
@@ -194,8 +194,8 @@ func (stat *TaskState) UpdateStepSucc(start time.Time, stepName string) error {
 	step := stat.Task.Steps[stepName]
 	end := time.Now()
 	step.ExecutionTime = uint32(end.Unix() - start.Unix())
-	step.Start = start.Format(time.RFC3339)
-	step.End = end.Format(time.RFC3339)
+	step.Start = start.UTC().Format(time.RFC3339)
+	step.End = end.UTC().Format(time.RFC3339)
 	step.Status = TaskStatusSuccess
 	/*
 		if stat.PartFailure {
@@ -217,7 +217,7 @@ func (stat *TaskState) UpdateStepSucc(start time.Time, stepName string) error {
 	if stepName == stat.Task.StepSequence[len(stat.Task.StepSequence)-1] {
 		// last step in task, just make whole task success
 		taskStart, _ := time.Parse(time.RFC3339, stat.Task.Start)
-		stat.Task.End = end.Format(time.RFC3339)
+		stat.Task.End = end.UTC().Format(time.RFC3339)
 		stat.Task.ExecutionTime = uint32(end.Unix() - taskStart.Unix())
 		stat.Task.Status = TaskStatusSuccess
 		stat.Task.Message = "whole task is done" // nolint
@@ -255,8 +255,8 @@ func (stat *TaskState) UpdateStepFailure(start time.Time, stepName string, err e
 	step := stat.Task.Steps[stepName]
 	end := time.Now()
 	step.ExecutionTime = uint32(end.Unix() - start.Unix())
-	step.Start = start.Format(time.RFC3339)
-	step.End = end.Format(time.RFC3339)
+	step.Start = start.UTC().Format(time.RFC3339)
+	step.End = end.UTC().Format(time.RFC3339)
 	step.Status = TaskStatusFailure
 	step.LastUpdate = step.End
 	step.Message = fmt.Sprintf("running failed, %s", err.Error())
@@ -265,7 +265,7 @@ func (stat *TaskState) UpdateStepFailure(start time.Time, stepName string, err e
 	}
 
 	taskStart, _ := time.Parse(time.RFC3339, stat.Task.Start)
-	stat.Task.End = end.Format(time.RFC3339)
+	stat.Task.End = end.UTC().Format(time.RFC3339)
 	stat.Task.ExecutionTime = uint32(end.Unix() - taskStart.Unix())
 	stat.Task.Status = TaskStatusFailure
 	stat.Task.Message = fmt.Sprintf("step %s running failed, %s", step.Name, err.Error())
@@ -303,8 +303,8 @@ func (stat *TaskState) UpdateStepPartFailure(start time.Time, stepName string, e
 	step := stat.Task.Steps[stepName]
 	end := time.Now()
 	step.ExecutionTime = uint32(end.Unix() - start.Unix())
-	step.Start = start.Format(time.RFC3339)
-	step.End = end.Format(time.RFC3339)
+	step.Start = start.UTC().Format(time.RFC3339)
+	step.End = end.UTC().Format(time.RFC3339)
 	step.Status = TaskStatusPartFailure
 
 	step.LastUpdate = step.End
@@ -324,7 +324,7 @@ func (stat *TaskState) UpdateStepPartFailure(start time.Time, stepName string, e
 	if stepName == stat.Task.StepSequence[len(stat.Task.StepSequence)-1] {
 		// last step in task, just make whole task success
 		taskStart, _ := time.Parse(time.RFC3339, stat.Task.Start)
-		stat.Task.End = end.Format(time.RFC3339)
+		stat.Task.End = end.UTC().Format(time.RFC3339)
 		stat.Task.ExecutionTime = uint32(end.Unix() - taskStart.Unix())
 		stat.Task.Status = TaskStatusSuccess
 		stat.Task.Message = "whole task is done"
@@ -364,8 +364,8 @@ func (stat *TaskState) SkipFailure(start time.Time, stepName string, err error) 
 	step := stat.Task.Steps[stepName]
 	end := time.Now()
 	step.ExecutionTime = uint32(end.Unix() - start.Unix())
-	step.Start = start.Format(time.RFC3339)
-	step.End = end.Format(time.RFC3339)
+	step.Start = start.UTC().Format(time.RFC3339)
+	step.End = end.UTC().Format(time.RFC3339)
 	step.Status = TaskStatusFailure
 	step.LastUpdate = step.End
 	step.Message = fmt.Sprintf("running failed, %s", err.Error())
@@ -380,7 +380,7 @@ func (stat *TaskState) SkipFailure(start time.Time, stepName string, err error) 
 	if stepName == stat.Task.StepSequence[len(stat.Task.StepSequence)-1] {
 		// last step in task, just make whole task success
 		taskStart, _ := time.Parse(time.RFC3339, stat.Task.Start)
-		stat.Task.End = end.Format(time.RFC3339)
+		stat.Task.End = end.UTC().Format(time.RFC3339)
 		stat.Task.ExecutionTime = uint32(end.Unix() - taskStart.Unix())
 		stat.Task.Status = TaskStatusSuccess
 		stat.Task.Message = "whole task is done"

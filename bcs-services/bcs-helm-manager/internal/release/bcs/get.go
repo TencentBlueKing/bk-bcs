@@ -14,12 +14,12 @@ package bcs
 
 import (
 	"context"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"helm.sh/helm/v3/pkg/chartutil"
 	"k8s.io/apimachinery/pkg/runtime"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/release"
 )
 
@@ -45,7 +45,7 @@ func (c *cluster) get(ctx context.Context, op release.GetOption) (*release.Relea
 		Chart:        rl.Chart.Name(),
 		ChartVersion: chartVersion,
 		AppVersion:   rl.Chart.AppVersion(),
-		UpdateTime:   rl.Info.LastDeployed.Local().Format(common.TimeFormat),
+		UpdateTime:   rl.Info.LastDeployed.UTC().Format(time.RFC3339),
 		Description:  rl.Info.Description,
 		Values:       valuesYaml,
 		Manifest:     rl.Manifest,

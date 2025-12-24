@@ -213,7 +213,7 @@ func releaseClusterCIDR(cls *cmproto.Cluster) error {
 			updateCidr := cidr
 			updateCidr.Status = common.TkeCidrStatusAvailable
 			updateCidr.Cluster = ""
-			updateCidr.UpdateTime = time.Now().Format(time.RFC3339)
+			updateCidr.UpdateTime = time.Now().UTC().Format(time.RFC3339)
 			err = cloudprovider.GetStorageModel().UpdateTkeCidr(context.Background(), updateCidr)
 			if err != nil {
 				return err

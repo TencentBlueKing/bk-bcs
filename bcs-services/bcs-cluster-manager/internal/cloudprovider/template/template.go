@@ -169,7 +169,7 @@ func GetPluginByAction(action *proto.Action, actionName string) *proto.BKOpsPlug
 // GenerateBKopsStep generate common bk-sops step
 func GenerateBKopsStep(taskMethod, taskName, stepName string, cls *proto.Cluster, plugin *proto.BKOpsPlugin,
 	info ExtraInfo) (*proto.Step, error) {
-	now := time.Now().Format(time.RFC3339)
+	now := time.Now().UTC().Format(time.RFC3339)
 
 	if taskName == "" {
 		taskName = SystemInit

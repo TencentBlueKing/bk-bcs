@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"sort"
 	"strconv"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
@@ -44,6 +45,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/util"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tenant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
@@ -122,6 +124,9 @@ func (la *ListAction) getSharedCluster() error {
 		if clusterList[i].GetProjectID() == la.req.ProjectID || la.req.ProjectID == "" {
 			continue
 		}
+		// 兼容旧数据
+		clusterList[i].CreateTime = util.TransStrToUTCStr(time.RFC3339Nano, clusterList[i].CreateTime)
+		clusterList[i].UpdateTime = util.TransStrToUTCStr(time.RFC3339Nano, clusterList[i].UpdateTime)
 		la.clusterList = append(la.clusterList, shieldClusterInfo(clusterList[i]))
 		clusterIDs = append(clusterIDs, clusterList[i].ClusterID)
 	}
@@ -236,6 +241,8 @@ func (la *ListAction) listCluster() error {
 				continue
 			}
 		}
+		clusterList[i].CreateTime = util.TransStrToUTCStr(time.RFC3339Nano, clusterList[i].CreateTime)
+		clusterList[i].UpdateTime = util.TransStrToUTCStr(time.RFC3339Nano, clusterList[i].UpdateTime)
 		la.clusterList = append(la.clusterList, shieldClusterInfo(clusterList[i]))
 		clusterIDList = append(clusterIDList, clusterList[i].ClusterID)
 	}
@@ -390,6 +397,9 @@ func (la *ListProjectClusterAction) listProjectCluster() error {
 			clusterList[i].IsShared = false
 		}
 
+		// 兼容旧数据
+		clusterList[i].CreateTime = util.TransStrToUTCStr(time.RFC3339Nano, clusterList[i].CreateTime)
+		clusterList[i].UpdateTime = util.TransStrToUTCStr(time.RFC3339Nano, clusterList[i].UpdateTime)
 		if clusterList[i].Status == common.StatusRunning {
 			runningCluster = append(runningCluster, shieldClusterInfo(clusterList[i]))
 		} else {
@@ -589,6 +599,9 @@ func (la *ListCommonClusterAction) listCluster() error {
 				len(clusterList[i].GetSharedRanges().GetBizs()) > 0) {
 			continue
 		}
+		// 兼容旧数据
+		clusterList[i].CreateTime = util.TransStrToUTCStr(time.RFC3339Nano, clusterList[i].CreateTime)
+		clusterList[i].UpdateTime = util.TransStrToUTCStr(time.RFC3339Nano, clusterList[i].UpdateTime)
 
 		// 平台共享集群
 		la.clusterList = append(la.clusterList, shieldClusterInfo(clusterList[i]))
@@ -1040,6 +1053,9 @@ func getSharedCluster(projectId string, bizId string, model store.ClusterManager
 		if clusterList[i].ProjectID == projectId {
 			continue
 		}
+		// 兼容旧数据
+		clusterList[i].CreateTime = util.TransStrToUTCStr(time.RFC3339Nano, clusterList[i].CreateTime)
+		clusterList[i].UpdateTime = util.TransStrToUTCStr(time.RFC3339Nano, clusterList[i].UpdateTime)
 		// 是否共享给当前项目/业务
 		if clusterList[i].SharedRanges != nil && ((len(clusterList[i].SharedRanges.GetProjectIdOrCodes()) > 0 &&
 			utils.StringContainInSlice(projectId, clusterList[i].SharedRanges.ProjectIdOrCodes)) ||

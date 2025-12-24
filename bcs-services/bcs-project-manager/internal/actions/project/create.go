@@ -17,7 +17,6 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 
@@ -103,8 +102,6 @@ func (ca *CreateAction) createProject() error {
 		IsSecret:          ca.req.IsSecret,
 		Labels:            ca.req.Labels,
 		Annotations:       ca.req.Annotations,
-		CreateTime:        time.Now().Format(time.RFC3339),
-		UpdateTime:        time.Now().Format(time.RFC3339),
 	}
 	// 从 context 中获取 username
 	if authUser, err := middleware.GetUserFromContext(ca.ctx); err == nil {

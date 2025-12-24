@@ -113,7 +113,7 @@ func (da *DeleteAction) Handle(
 		TaskID:       "",
 		Message:      fmt.Sprintf("删除云组件参数[%s]", da.req.CloudID),
 		OpUser:       auth.GetUserFromCtx(da.ctx),
-		CreateTime:   time.Now().Format(time.RFC3339),
+		CreateTime:   time.Now().UTC().Format(time.RFC3339),
 	})
 	if err != nil {
 		blog.Errorf("DeleteCloudModuleFlag[%s] CreateOperationLog failed: %v", da.req.CloudID, err)

@@ -65,7 +65,7 @@ func (ua *UpdateAction) updateModuleFlagList() error { // nolint
 
 func (ua *UpdateAction) updateCloudModuleFlag(
 	destModuleFlag *cmproto.CloudModuleFlag, flagInfo *cmproto.FlagInfo) error {
-	timeStr := time.Now().Format(time.RFC3339)
+	timeStr := time.Now().UTC().Format(time.RFC3339)
 	destModuleFlag.UpdateTime = timeStr
 	destModuleFlag.Updater = ua.req.Operator
 
@@ -146,7 +146,7 @@ func (ua *UpdateAction) Handle(
 		TaskID:       "",
 		Message:      fmt.Sprintf("更新云组件参数[%s]", ua.req.CloudID),
 		OpUser:       auth.GetUserFromCtx(ua.ctx),
-		CreateTime:   time.Now().Format(time.RFC3339),
+		CreateTime:   time.Now().UTC().Format(time.RFC3339),
 	})
 	if err != nil {
 		blog.Errorf("UpdateCloudModuleFlag[%s] CreateOperationLog failed: %v", ua.req.CloudID, err)
