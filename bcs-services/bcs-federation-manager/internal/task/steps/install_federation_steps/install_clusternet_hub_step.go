@@ -14,6 +14,7 @@
 package steps
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -82,7 +83,7 @@ func (s InstallClusternetHubStep) DoWork(t *types.Task) error {
 	}
 
 	// create helm release
-	err = helm.GetHelmClient().InstallClusternetHub(&helm.ReleaseBaseOptions{
+	err = helm.GetHelmClient().InstallClusternetHub(context.Background(), &helm.ReleaseBaseOptions{
 		ProjectID:       projectId,
 		ClusterID:       clusterId,
 		SkipWhenExisted: true,

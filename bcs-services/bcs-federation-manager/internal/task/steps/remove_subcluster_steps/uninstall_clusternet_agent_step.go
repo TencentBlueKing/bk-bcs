@@ -14,6 +14,7 @@
 package steps
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -72,7 +73,7 @@ func (s UninstallClusternetAgentStep) DoWork(t *types.Task) error {
 		return fedsteps.ParamsNotFoundError(t.TaskID, fedsteps.SubClusterIdKey)
 	}
 
-	err := helm.GetHelmClient().UninstallClusternetAgent(&helm.BcsClusternetAgentOptions{
+	err := helm.GetHelmClient().UninstallClusternetAgent(context.Background(), &helm.BcsClusternetAgentOptions{
 		ReleaseBaseOptions: helm.ReleaseBaseOptions{
 			ProjectID: hostProjectId,
 			ClusterID: hostClusterId,

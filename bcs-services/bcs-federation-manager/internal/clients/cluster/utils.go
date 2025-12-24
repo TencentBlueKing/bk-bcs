@@ -14,26 +14,15 @@
 package cluster
 
 import (
-	"context"
 	"fmt"
 	"regexp"
 
-	"go-micro.dev/v4/metadata"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-federation-manager/internal/common"
 	clusternet "github.com/clusternet/clusternet/pkg/generated/clientset/versioned"
 )
-
-// get metadata context for request cluster manager by go-micro grpc service discovery
-func (c *clusterClient) getMetadataCtx(ctx context.Context) context.Context {
-	return metadata.NewContext(ctx, metadata.Metadata{
-		common.BcsHeaderClientKey:   common.InnerModuleName,
-		common.BcsHeaderUsernameKey: common.InnerModuleName,
-	})
-}
 
 // get kube client for request user cluster by bcs gateway
 func (h *clusterClient) getKubeClientByClusterId(clusterId string) (*kubernetes.Clientset, error) {

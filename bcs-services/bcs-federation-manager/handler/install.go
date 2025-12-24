@@ -149,7 +149,7 @@ func (f *FederationManager) UnInstallFederation(ctx context.Context,
 
 	// uninstall bcs-unified-apiserver
 	// NOCC:vetshadow/shadow(设计如此:这里err可以被覆盖)
-	if err := f.helmCli.UninstallUnifiedApiserver(&helm.BcsUnifiedApiserverOptions{
+	if err := f.helmCli.UninstallUnifiedApiserver(ctx, &helm.BcsUnifiedApiserverOptions{
 		ReleaseBaseOptions: helm.ReleaseBaseOptions{
 			ProjectID: hostCluster.GetProjectID(),
 			ClusterID: hostCluster.GetClusterID(),
@@ -160,7 +160,7 @@ func (f *FederationManager) UnInstallFederation(ctx context.Context,
 
 	// uninstall bcs-clusternet-controller
 	// NOCC:vetshadow/shadow(设计如此:这里err可以被覆盖)
-	if err := f.helmCli.UninstallClusternetController(&helm.ReleaseBaseOptions{
+	if err := f.helmCli.UninstallClusternetController(ctx, &helm.ReleaseBaseOptions{
 		ProjectID: hostCluster.GetProjectID(),
 		ClusterID: hostCluster.GetClusterID(),
 	}); err != nil {
@@ -169,7 +169,7 @@ func (f *FederationManager) UnInstallFederation(ctx context.Context,
 
 	// uninstall bcs-clusternet-scheduler
 	// NOCC:vetshadow/shadow(设计如此:这里err可以被覆盖)
-	if err := f.helmCli.UninstallClusternetScheduler(&helm.ReleaseBaseOptions{
+	if err := f.helmCli.UninstallClusternetScheduler(ctx, &helm.ReleaseBaseOptions{
 		ProjectID: hostCluster.GetProjectID(),
 		ClusterID: hostCluster.GetClusterID(),
 	}); err != nil {
@@ -178,7 +178,7 @@ func (f *FederationManager) UnInstallFederation(ctx context.Context,
 
 	// uninstall bcs-clusternet-hub
 	// NOCC:vetshadow/shadow(设计如此:这里err可以被覆盖)
-	if err := f.helmCli.UninstallClusternetHub(&helm.ReleaseBaseOptions{
+	if err := f.helmCli.UninstallClusternetHub(ctx, &helm.ReleaseBaseOptions{
 		ProjectID: hostCluster.GetProjectID(),
 		ClusterID: hostCluster.GetClusterID(),
 	}); err != nil {

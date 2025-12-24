@@ -14,6 +14,7 @@
 package steps
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -73,7 +74,7 @@ func (s UninstallEstimatorAgentStep) DoWork(t *types.Task) error {
 		return fedsteps.ParamsNotFoundError(t.TaskID, fedsteps.SubClusterIdKey)
 	}
 
-	err := helm.GetHelmClient().UninstallEstimatorAgent(&helm.BcsEstimatorAgentOptions{
+	err := helm.GetHelmClient().UninstallEstimatorAgent(context.Background(), &helm.BcsEstimatorAgentOptions{
 		ReleaseBaseOptions: helm.ReleaseBaseOptions{
 			ProjectID: hostProjectId,
 			ClusterID: hostClusterId,

@@ -363,16 +363,17 @@ func (s *Server) initClusterCli() error {
 		return fmt.Errorf("init clusterCli failed, encrypt token error: %s", err.Error())
 	}
 	opts := &cluster.ClientOptions{
-		ClientTLS:     s.clientTLSConfig,
-		EtcdEndpoints: strings.Split(s.opt.Etcd.EtcdEndpoints, ","),
-		EtcdTLS:       s.opt.Etcd.tlsConfig,
+		ClientTLS: s.clientTLSConfig,
 		BaseOptions: requester.BaseOptions{
 			Endpoint: s.opt.Gateway.Endpoint,
 			Token:    string(realAuthToken),
+			Sender:   requester.NewRequester(),
 		},
 	}
 
-	cluster.SetClusterClient(opts)
+	if err := cluster.SetClusterClient(opts); err != nil {
+		return fmt.Errorf("failed to set cluster client: %v", err)
+	}
 	s.clusterCli = cluster.GetClusterClient()
 
 	blog.Infof("init cluster client successfully")
@@ -386,17 +387,18 @@ func (s *Server) initHelmCli() error {
 		return fmt.Errorf("init helmCli failed, encrypt token error: %s", err.Error())
 	}
 	opts := &helm.ClientOptions{
-		ClientTLS:     s.clientTLSConfig,
-		EtcdEndpoints: strings.Split(s.opt.Etcd.EtcdEndpoints, ","),
-		EtcdTLS:       s.opt.Etcd.tlsConfig,
+		ClientTLS: s.clientTLSConfig,
 		BaseOptions: requester.BaseOptions{
 			Endpoint: s.opt.Gateway.Endpoint,
 			Token:    string(realAuthToken),
+			Sender:   requester.NewRequester(),
 		},
 		Charts: s.opt.Deploy,
 	}
 
-	helm.SetHelmClient(opts)
+	if err := helm.SetHelmClient(opts); err != nil {
+		return fmt.Errorf("failed to set helm client: %v", err)
+	}
 	s.helmCli = helm.GetHelmClient()
 
 	blog.Infof("init helm manager client successfully")
@@ -414,6 +416,7 @@ func (s *Server) initUserCli() error {
 		BaseOptions: requester.BaseOptions{
 			Endpoint: s.opt.Gateway.Endpoint,
 			Token:    string(realAuthToken),
+			Sender:   requester.NewRequester(),
 		},
 	}
 
@@ -435,10 +438,13 @@ func (s *Server) initProjectCli() error {
 		BaseOptions: requester.BaseOptions{
 			Endpoint: s.opt.Gateway.Endpoint,
 			Token:    string(realAuthToken),
+			Sender:   requester.NewRequester(),
 		},
 	}
 
-	project.SetProjectClient(opts)
+	if err := project.SetProjectClient(opts); err != nil {
+		return fmt.Errorf("failed to set project client: %v", err)
+	}
 	s.projectCli = project.GetProjectClient()
 
 	blog.Infof("init project client successfully")
@@ -588,10 +594,13 @@ func (s *Server) initThirdpartyCli() error {
 		BaseOptions: requester.BaseOptions{
 			Endpoint: s.opt.Gateway.Endpoint,
 			Token:    string(realAuthToken),
+			Sender:   requester.NewRequester(),
 		},
 	}
 
-	thirdparty.InitThirdpartyClient(opts)
+	if err := thirdparty.InitThirdpartyClient(opts); err != nil {
+		return fmt.Errorf("failed to initialize thirdparty client: %v", err)
+	}
 	s.thirdCli = thirdparty.GetThirdpartyClient()
 
 	// init thirdparty client successfully

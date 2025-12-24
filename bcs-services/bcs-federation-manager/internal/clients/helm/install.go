@@ -25,12 +25,12 @@ import (
 )
 
 // IsInstalled check if the release is installed
-func (h *helmClient) IsInstalled(opt *HelmOptions) (bool, error) {
-	resp, err := h.helmSvc.GetReleaseDetailV1(h.getMetadataCtx(context.Background()), &helmmanager.GetReleaseDetailV1Req{
-		ProjectCode: opt.ProjectID, // 兼容ProjectCode和ProjectId
-		ClusterID:   opt.ClusterID,
-		Namespace:   opt.Namespace,
-		Name:        opt.ReleaseName,
+func (h *helmClient) IsInstalled(ctx context.Context, opt *HelmOptions) (bool, error) {
+	resp, err := h.helmSvc.GetReleaseDetailV1(h.getMetadataCtx(ctx), &helmmanager.GetReleaseDetailV1Req{
+		ProjectCode: &opt.ProjectID, // 兼容ProjectCode和ProjectId
+		ClusterID:   &opt.ClusterID,
+		Namespace:   &opt.Namespace,
+		Name:        &opt.ReleaseName,
 	})
 	if err != nil {
 		blog.Errorf("[HelmManager] GetReleaseDetail %s failed, err: %s", opt.ReleaseName, err.Error())
@@ -42,19 +42,19 @@ func (h *helmClient) IsInstalled(opt *HelmOptions) (bool, error) {
 		return false, err
 	}
 	// not found release
-	if resp.Code != 0 {
-		blog.Infof("[HelmManager] GetReleaseDetail %s failed, code: %d, message: %s", opt.ReleaseName, resp.Code, resp.Message)
+	if resp.Code != nil && *resp.Code != 0 {
+		blog.Infof("[HelmManager] GetReleaseDetail %s failed, code: %v, message: %v", opt.ReleaseName, resp.Code, resp.Message)
 		return false, nil
 	}
 
-	blog.Infof("[HelmManager] [%s:%s] GetReleaseDetail success[%s:%s] status: %s",
+	blog.Infof("[HelmManager] [%s:%s] GetReleaseDetail success[%s:%s] status: %v",
 		resp.Data.Chart, resp.Data.ChartVersion, resp.Data.Namespace, resp.Data.Name, resp.Data.Status)
 
 	return true, nil
 }
 
 // InstallRelease install release
-func (h *helmClient) InstallRelease(opt *HelmOptions, helmValues ...string) error {
+func (h *helmClient) InstallRelease(ctx context.Context, opt *HelmOptions, helmValues ...string) error {
 	if h.debug {
 		blog.Infof("[HelmManager] Debug InstallRelease: %+v, values: %v", opt, helmValues)
 		return nil
@@ -65,7 +65,7 @@ func (h *helmClient) InstallRelease(opt *HelmOptions, helmValues ...string) erro
 	// if chart version is empty, use latest version
 	if opt.ChartVersion == "" {
 		// if not specify version, use latest version
-		v, err := h.getChartLatestVersion(opt.ProjectID, repo, opt.ChartName)
+		v, err := h.getChartLatestVersion(h.getMetadataCtx(ctx), opt.ProjectID, repo, opt.ChartName)
 		if err != nil {
 			blog.Errorf("[HelmManager] getChartLatestVersion failed: %v", err)
 			return err
@@ -80,20 +80,20 @@ func (h *helmClient) InstallRelease(opt *HelmOptions, helmValues ...string) erro
 	}
 
 	req := &helmmanager.InstallReleaseV1Req{
-		ProjectCode: opt.ProjectID,
-		ClusterID:   opt.ClusterID,
-		Namespace:   opt.Namespace,
-		Name:        opt.ReleaseName,
-		Chart:       opt.ChartName,
-		Repository:  repo,
-		Version:     opt.ChartVersion,
+		ProjectCode: &opt.ProjectID,
+		ClusterID:   &opt.ClusterID,
+		Namespace:   &opt.Namespace,
+		Name:        &opt.ReleaseName,
+		Chart:       &opt.ChartName,
+		Repository:  &repo,
+		Version:     &opt.ChartVersion,
 		Values:      value,
 		Args:        []string{DefaultArgsFlagInsecure, DefaultArgsFlagWait},
 	}
 
 	resp := &helmmanager.InstallReleaseV1Resp{}
 	err = retry.Do(func() error {
-		resp, iErr := h.helmSvc.InstallReleaseV1(h.getMetadataCtx(context.Background()), req)
+		resp, iErr := h.helmSvc.InstallReleaseV1(h.getMetadataCtx(ctx), req)
 		if iErr != nil {
 			blog.Errorf("[HelmManager] InstallRelease failed, err: %s", err.Error())
 			return iErr
@@ -103,9 +103,9 @@ func (h *helmClient) InstallRelease(opt *HelmOptions, helmValues ...string) erro
 			return fmt.Errorf("InstallRelease failed, resp is empty")
 		}
 
-		if resp.Code != 0 || !resp.Result {
-			blog.Errorf("[HelmManager] InstallRelease failed, code: %d, message: %s", resp.Code, resp.Message)
-			return fmt.Errorf("InstallRelease failed, code: %d, message: %s", resp.Code, resp.Message)
+		if (resp.Code != nil && *resp.Code != 0) || (resp.Result != nil && !*resp.Result) {
+			blog.Errorf("[HelmManager] InstallRelease failed, code: %v, message: %v", resp.Code, resp.Message)
+			return fmt.Errorf("InstallRelease failed, code: %v, message: %v", resp.Code, resp.Message)
 		}
 
 		return nil
@@ -117,21 +117,24 @@ func (h *helmClient) InstallRelease(opt *HelmOptions, helmValues ...string) erro
 	return nil
 }
 
-func (h *helmClient) getChartLatestVersion(project string, repo, chart string) (string, error) {
-	resp, err := h.helmSvc.GetChartDetailV1(h.getMetadataCtx(context.Background()), &helmmanager.GetChartDetailV1Req{
-		ProjectCode: project,
-		RepoName:    repo,
-		Name:        chart,
+func (h *helmClient) getChartLatestVersion(ctx context.Context, project string, repo, chart string) (string, error) {
+	resp, err := h.helmSvc.GetChartDetailV1(h.getMetadataCtx(ctx), &helmmanager.GetChartDetailV1Req{
+		ProjectCode: &project,
+		RepoName:    &repo,
+		Name:        &chart,
 	})
 	if err != nil {
 		blog.Errorf("[HelmManager] getChartLatestVersion failed: %v", err)
 		return "", err
 	}
 
-	if resp.Code != 0 || !resp.Result {
+	if (resp.Code != nil && *resp.Code != 0) || (resp.Result != nil && !*resp.Result) {
 		blog.Errorf("[HelmManager] getChartLatestVersion[%s] failed: %v", resp.RequestID, resp.Message)
 		return "", err
 	}
+	if resp.Data == nil || resp.Data.LatestVersion == nil {
+		return "", fmt.Errorf("getChartLatestVersion failed, resp.Data.LatestVersion is nil")
+	}
 
-	return resp.Data.LatestVersion, nil
+	return *resp.Data.LatestVersion, nil
 }
