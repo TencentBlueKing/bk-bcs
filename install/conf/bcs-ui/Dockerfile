@@ -1,5 +1,4 @@
-FROM alpine
-RUN apk --update --no-cache add ca-certificates bash vim curl
+FROM tencentos/tencentos4-minimal
 COPY bcs-ui /bcs-ui
 ENTRYPOINT ["/bcs-ui"]
 CMD []
