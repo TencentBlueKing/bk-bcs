@@ -12,6 +12,7 @@
 
 // Package syncer define syncer methods
 // NOCC:tosa/comment_ratio(ignore),gofmt/notformat(ignore)
+// nolint
 package syncer
 
 import (

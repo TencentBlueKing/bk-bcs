@@ -155,7 +155,8 @@ func ValidateProjectCluster(c *gin.Context, authCtx *AuthContext) error {
 
 // initContextWithIAMProject Dev环境, 可以设置环境变量
 func initContextWithIAMProject(c *gin.Context, authCtx *AuthContext) error {
-	allow, err := iam.IsAllowedWithResource(c.Request.Context(), authCtx.ProjectId, authCtx.ClusterId, "",
+	namespace := GetNamespace(c)
+	allow, err := iam.IsAllowedWithResource(c.Request.Context(), authCtx.ProjectId, authCtx.ClusterId, namespace,
 		authCtx.Username)
 	if err != nil {
 		return err

@@ -11,6 +11,7 @@
  */
 
 // Package synchronizer define methods for synchronizer
+// nolint
 package synchronizer
 
 import (
@@ -189,6 +190,7 @@ func (s *Synchronizer) initSharedClusterConf() {
 }
 
 // initMetrics 初始化metrics相关组件
+// nolint
 func (s *Synchronizer) initMetrics() error {
 	blog.Infof("init metrics...")
 
@@ -490,7 +492,8 @@ func (s *Synchronizer) startSyncStorage(cluster *cmp.Cluster) {
 }
 
 // getWorkList get work list for podIndex
-func (s *Synchronizer) getWorkList(podIndex int, whiteList, blackList []string) (ClusterList, map[string]*cmp.Cluster, ClusterList, error) {
+func (s *Synchronizer) getWorkList(podIndex int, whiteList, blackList []string) (ClusterList, map[string]*cmp.Cluster,
+	ClusterList, error) {
 	cmCli, err := s.getClusterManagerGrpcGwClient()
 	if err != nil {
 		blog.Errorf("get cluster manager grpc gw client failed, err: %s", err.Error())
@@ -968,7 +971,8 @@ func (s *Synchronizer) cleanupOrphanedClustersInCMDB(clusterMapT map[string]*cmp
 		uniqueBusinessMap[project.BusinessID] = project.BusinessName
 	}
 
-	blog.Infof("found %d projects from project manager, extracted %d unique businesses", len(projectResp.Data.Results), len(uniqueBusinessMap))
+	blog.Infof("found %d projects from project manager, extracted %d unique businesses", len(projectResp.Data.Results),
+		len(uniqueBusinessMap))
 
 	// 4. 遍历所有唯一的业务ID，获取CMDB中的集群
 	totalOrphanedCount := 0

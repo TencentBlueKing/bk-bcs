@@ -11,6 +11,7 @@
  */
 
 // Package cmdb define client for cmdb
+// nolint
 package cmdb
 
 import (
@@ -21,6 +22,7 @@ import (
 	"time"
 
 	bkcmdbkube "configcenter/src/kube/types" // nolint
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
 	pmp "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
@@ -178,7 +180,9 @@ func (c *cmdbClient) GetStorageClient() (bcsapi.Storage, error) {
 }
 
 // instrumentRequest 包装HTTP请求并收集metrics
-func (c *cmdbClient) instrumentRequest(method, endpoint string, fn func() (gorequest.Response, []byte, []error)) (gorequest.Response, []byte, []error) {
+// nolint
+func (c *cmdbClient) instrumentRequest(method, endpoint string, fn func() (gorequest.Response, []byte,
+	[]error)) (gorequest.Response, []byte, []error) {
 	start := time.Now()
 
 	// 增加正在处理的请求数
@@ -2144,6 +2148,7 @@ func (c *cmdbClient) DeleteBcsNode(request *client.DeleteBcsNodeRequest, db *gor
 // GetBcsPod get bcs pod
 // /api/v3/kube/findmany/pod/bk_biz_id/{bk_biz_id}
 // /v2/cc/list_pod/
+// nolint funlen
 func (c *cmdbClient) GetBcsPod(request *client.GetBcsPodRequest, db *gorm.DB, withDB bool) (*[]bkcmdbkube.Pod, error) {
 	if c == nil {
 		return nil, ErrServerNotInit
@@ -2241,6 +2246,7 @@ func (c *cmdbClient) GetBcsPod(request *client.GetBcsPodRequest, db *gorm.DB, wi
 
 // GetBcsContainer get bcs container
 // /v2/cc/list_kube_container/
+// nolint funlen
 func (c *cmdbClient) GetBcsContainer(
 	request *client.GetBcsContainerRequest, db *gorm.DB, withDB bool) (*[]client.Container, error) {
 	if c == nil {
