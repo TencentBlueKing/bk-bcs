@@ -88,6 +88,8 @@ func (s *Step) SetAlias(alias string) *Step {
 
 // GetParam return step param by key
 func (s *Step) GetParam(key string) (string, bool) {
+	s.paramsLock.Lock()
+	defer s.paramsLock.Unlock()
 	if value, ok := s.Params[key]; ok {
 		return value, true
 	}
@@ -96,6 +98,8 @@ func (s *Step) GetParam(key string) (string, bool) {
 
 // AddParam set step param by key,value
 func (s *Step) AddParam(key, value string) *Step {
+	s.paramsLock.Lock()
+	defer s.paramsLock.Unlock()
 	if s.Params == nil {
 		s.Params = make(map[string]string, 0)
 	}
@@ -105,6 +109,8 @@ func (s *Step) AddParam(key, value string) *Step {
 
 // GetParams return all step params
 func (s *Step) GetParams() map[string]string {
+	s.paramsLock.Lock()
+	defer s.paramsLock.Unlock()
 	if s.Params == nil {
 		s.Params = make(map[string]string, 0)
 	}
@@ -113,6 +119,8 @@ func (s *Step) GetParams() map[string]string {
 
 // SetParams set step params by map
 func (s *Step) SetParams(params map[string]string) {
+	s.paramsLock.Lock()
+	defer s.paramsLock.Unlock()
 	if s.Params == nil {
 		s.Params = make(map[string]string, 0)
 	}
@@ -123,6 +131,8 @@ func (s *Step) SetParams(params map[string]string) {
 
 // SetNewParams replace all params by new params
 func (s *Step) SetNewParams(params map[string]string) *Step {
+	s.paramsLock.Lock()
+	defer s.paramsLock.Unlock()
 	s.Params = params
 	return s
 }
