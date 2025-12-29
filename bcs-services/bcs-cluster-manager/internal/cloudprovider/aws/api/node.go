@@ -116,9 +116,9 @@ func convertToInstanceType(info cloudprovider.InstanceInfo,
 	for _, v := range cloudInstanceTypes {
 		t := &proto.InstanceType{}
 		if v.InstanceType != nil {
-			t.TypeName = *v.InstanceType
-			t.NodeType = *v.InstanceType
-			family := strings.Split(*v.InstanceType, ".")
+			t.TypeName = aws.StringValue(v.InstanceType)
+			t.NodeType = aws.StringValue(v.InstanceType)
+			family := strings.Split(aws.StringValue(v.InstanceType), ".")
 			t.NodeFamily = family[0]
 			if info.NodeFamily != "" && t.NodeFamily != info.NodeFamily {
 				continue
@@ -126,13 +126,13 @@ func convertToInstanceType(info cloudprovider.InstanceInfo,
 			t.Status = common.InstanceSell
 		}
 		if v.VCpuInfo != nil && v.VCpuInfo.DefaultVCpus != nil {
-			t.Cpu = uint32(*v.VCpuInfo.DefaultVCpus)
+			t.Cpu = uint32(aws.Int64Value(v.VCpuInfo.DefaultVCpus))
 			if info.CPU != 0 && t.Cpu != info.CPU {
 				continue
 			}
 		}
 		if v.MemoryInfo != nil && v.MemoryInfo.SizeInMiB != nil {
-			memGb := math.Ceil(float64(*v.MemoryInfo.SizeInMiB / 1024)) // nolint
+			memGb := math.Ceil(float64(aws.Int64Value(v.MemoryInfo.SizeInMiB) / 1024)) // nolint
 			t.Memory = uint32(memGb)
 			if info.Memory != 0 && t.Memory != info.Memory {
 				continue
@@ -142,7 +142,7 @@ func convertToInstanceType(info cloudprovider.InstanceInfo,
 			var gpuCount uint32
 			for _, g := range v.GpuInfo.Gpus {
 				if g.Count != nil {
-					gpuCount += uint32(*g.Count)
+					gpuCount += uint32(aws.Int64Value(g.Count))
 				}
 			}
 			t.Gpu = gpuCount
@@ -184,8 +184,8 @@ func (nm *NodeManager) ListKeyPairs(opt *cloudprovider.ListNetworksOption) ([]*p
 	keyPairs := make([]*proto.KeyPair, 0)
 	for _, v := range cloudKeyPairs {
 		k := &proto.KeyPair{
-			KeyName: *v.KeyName,
-			KeyID:   *v.KeyPairId,
+			KeyName: aws.StringValue(v.KeyName),
+			KeyID:   aws.StringValue(v.KeyPairId),
 		}
 		keyPairs = append(keyPairs, k)
 	}
@@ -267,7 +267,7 @@ func (nm *NodeManager) transInstanceIDsToNodes(ids []string, opt *cloudprovider.
 
 		nodeMap[node.NodeID] = node
 		// default get first privateIP
-		node.InnerIP = *inst.PrivateIpAddress
+		node.InnerIP = aws.StringValue(inst.PrivateIpAddress)
 		node.Region = opt.Common.Region
 
 		// check node vpc and cluster vpc
@@ -285,12 +285,22 @@ func (nm *NodeManager) transInstanceIDsToNodes(ids []string, opt *cloudprovider.
 // @param Instance: aws instance information, can not be nil;
 // @return Node: cluster-manager node information;
 func InstanceToNode(inst *ec2.Instance) *proto.Node {
+	blog.Infof("instance id: %s", aws.StringValue(inst.InstanceId))
+	blog.Infof("instance private dns name: %s", aws.StringValue(inst.PrivateDnsName))
+	blog.Infof("instance type: %s", aws.StringValue(inst.InstanceType))
+	blog.Infof("instance vpc id: %s", aws.StringValue(inst.VpcId))
 	node := &proto.Node{
-		NodeID:       *inst.InstanceId,
-		NodeName:     *inst.PrivateDnsName,
-		InstanceType: *inst.InstanceType,
-		VPC:          *inst.VpcId,
-		ZoneID:       *inst.Placement.AvailabilityZone,
+		NodeID:       aws.StringValue(inst.InstanceId),
+		NodeName:     aws.StringValue(inst.PrivateDnsName),
+		InstanceType: aws.StringValue(inst.InstanceType),
+		VPC:          aws.StringValue(inst.VpcId),
+		ZoneID: func() string {
+			if inst.Placement != nil {
+				aws.StringValue(inst.Placement.AvailabilityZone)
+				blog.Infof("instance availability zone %s", aws.StringValue(inst.Placement.AvailabilityZone))
+			}
+			return ""
+		}(),
 	}
 	return node
 }
@@ -353,9 +363,9 @@ func (nm *NodeManager) GetZoneList(opt *cloudprovider.GetZoneListOption) ([]*pro
 	var zonesInfo []*proto.ZoneInfo
 	for _, z := range zones {
 		zonesInfo = append(zonesInfo, &proto.ZoneInfo{
-			ZoneID:    *z.ZoneId,
-			Zone:      *z.ZoneId,
-			ZoneName:  *z.ZoneName,
+			ZoneID:    aws.StringValue(z.ZoneId),
+			Zone:      aws.StringValue(z.ZoneId),
+			ZoneName:  aws.StringValue(z.ZoneName),
 			ZoneState: BCSRegionStateAvailable,
 		})
 	}
@@ -386,7 +396,7 @@ func checkRoleForPolicies(client *IAMClient, roleName, roleType string) bool {
 	case "nodeGroup":
 		index := 0
 		for _, policy := range resp {
-			switch *policy.PolicyArn {
+			switch aws.StringValue(policy.PolicyArn) {
 			case EKSRolePolicyWorkerNode:
 				index++
 			case EKSRolePolicyContainerRegistryReadOnly:
@@ -398,7 +408,7 @@ func checkRoleForPolicies(client *IAMClient, roleName, roleType string) bool {
 		return index == 3
 	case "cluster":
 		for _, policy := range resp {
-			if *policy.PolicyArn == EksClusterRole {
+			if aws.StringValue(policy.PolicyArn) == EksClusterRole {
 				return true
 			}
 		}
@@ -425,12 +435,12 @@ func (nm *NodeManager) GetServiceRoles(opt *cloudprovider.CommonOption, roleType
 	result := make([]*proto.ServiceRoleInfo, 0)
 
 	for _, r := range roles {
-		if checkRoleForPolicies(client, *r.RoleName, roleType) {
+		if checkRoleForPolicies(client, aws.StringValue(r.RoleName), roleType) {
 			result = append(result, &proto.ServiceRoleInfo{
-				RoleName:    *r.RoleName,
-				RoleID:      *r.RoleId,
-				Arn:         *r.Arn,
-				Description: *r.Description,
+				RoleName:    aws.StringValue(r.RoleName),
+				RoleID:      aws.StringValue(r.RoleId),
+				Arn:         aws.StringValue(r.Arn),
+				Description: aws.StringValue(r.Description),
 			})
 		}
 	}
