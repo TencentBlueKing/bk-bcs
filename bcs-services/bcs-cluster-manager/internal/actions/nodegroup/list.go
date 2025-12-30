@@ -15,11 +15,11 @@ package nodegroup
 import (
 	"context"
 	"fmt"
+	v1 "k8s.io/api/core/v1"
 	"sort"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
-	v1 "k8s.io/api/core/v1"
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
@@ -83,7 +83,7 @@ func (la *ListClusterGroupAction) Handle(
 		enableCA = true
 	}
 
-	groupList, err = listNodeGroupByConds(la.model, filterNodeGroupOption{
+	groupList, _, err = listNodeGroupByConds(la.model, filterNodeGroupOption{
 		ClusterID: la.req.GetClusterID(),
 	})
 	if err != nil {
@@ -123,8 +123,8 @@ type ListAction struct {
 	model      store.ClusterManagerModel
 	req        *cmproto.ListNodeGroupV2Request
 	resp       *cmproto.ListNodeGroupV2Response
-	totalCount uint32
 	groupList  []*cmproto.NodeGroup
+	totalCount uint32
 }
 
 // NewListAction create list action for cluster credential
@@ -161,19 +161,7 @@ func (la *ListAction) Handle(
 		return
 	}
 
-	totalGroupList, err := listNodeGroupByConds(la.model, filterNodeGroupOption{
-		Name:      la.req.GetName(),
-		ClusterID: la.req.GetClusterID(),
-		ProjectID: la.req.GetProjectID(),
-		Region:    la.req.GetRegion(),
-	})
-	if err != nil {
-		la.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
-		return
-	}
-	la.totalCount = uint32(len(totalGroupList))
-
-	la.groupList, err = listNodeGroupByConds(la.model, filterNodeGroupOption{
+	groupList, totalCount, err := listNodeGroupByConds(la.model, filterNodeGroupOption{
 		Name:      la.req.GetName(),
 		ClusterID: la.req.GetClusterID(),
 		ProjectID: la.req.GetProjectID(),
@@ -184,23 +172,36 @@ func (la *ListAction) Handle(
 		la.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
+
+	la.groupList = groupList
+	la.totalCount = uint32(totalCount)
 	la.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 }
 
 func (la *ListAction) listOpt() *storeopt.ListOption {
-	if la.req.Page == 0 || la.req.Limit == 0 {
-		return &storeopt.ListOption{}
+	pagination := &storeopt.ListOption{All: true}
+	if la.req.Page == 0 && la.req.Limit == 0 {
+		return pagination
 	}
 
-	offset := (la.req.Page - 1) * la.req.Limit
+	pagination.All = false
+	pagination.Sort = map[string]int{"createtime": -1}
 
-	listOpt := &storeopt.ListOption{
-		Offset: int64(offset),
-		Limit:  int64(la.req.Limit),
+	if la.req.Limit > 0 {
+		pagination.Limit = int64(la.req.Limit)
 	}
 
-	return listOpt
+	if la.req.Page > 0 {
+		offset := int64(la.req.Page) - 1
+		pagination.Offset = offset * pagination.Limit
+	}
+
+	return pagination
 }
+
+const (
+	nodegroupListDefaultLimit = 100
+)
 
 // ListNodesAction action for list online cluster credential
 type ListNodesAction struct {
