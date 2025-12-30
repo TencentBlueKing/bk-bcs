@@ -296,8 +296,8 @@ func InstanceToNode(inst *ec2.Instance) *proto.Node {
 		VPC:          aws.StringValue(inst.VpcId),
 		ZoneID: func() string {
 			if inst.Placement != nil {
-				aws.StringValue(inst.Placement.AvailabilityZone)
 				blog.Infof("instance availability zone %s", aws.StringValue(inst.Placement.AvailabilityZone))
+				return aws.StringValue(inst.Placement.AvailabilityZone)
 			}
 			return ""
 		}(),
