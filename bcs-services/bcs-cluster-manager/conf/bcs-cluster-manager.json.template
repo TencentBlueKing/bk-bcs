@@ -137,7 +137,8 @@
         "logCollector": {
             "httpServer": "${bcsHttpServer}",
             "addonName": "${bcsLogCollectorAddonName}",
-            "token": "${bcsUserToken}"
+            "token": "${bcsUserToken}",
+            "storageClusterId": ${bcsLogCollectorStorageClusterId}
         }
     },
     "user": {
