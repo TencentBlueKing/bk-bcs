@@ -347,7 +347,7 @@ func (m *ModelProject) SearchProjects(ctx context.Context, ids []string, limitID
 	matchPipline := bson.D{{"$match", matchElement}}
 	pipeline := mongo.Pipeline{}
 	countPipeline := mongo.Pipeline{}
-	if kind != "" || searchKey != "" || len(limitIDs) != 0 || tenantId != ""{
+	if kind != "" || searchKey != "" || len(limitIDs) != 0 || tenantId != "" {
 		pipeline = append(pipeline, matchPipline)
 		countPipeline = append(countPipeline, matchPipline)
 	}
@@ -395,6 +395,8 @@ func (m *ModelProject) SearchProjects(ctx context.Context, ids []string, limitID
 			{"projectID", 1},
 			{"name", 1},
 			{"projectCode", 1},
+			{"tenantID", 1},
+			{"tenantProjectCode", 1},
 			{"useBKRes", 1},
 			{"description", 1},
 			{"isOffline", 1},

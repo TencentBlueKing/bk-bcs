@@ -19,7 +19,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/discovery"
 	"github.com/patrickmn/go-cache"
 	"go-micro.dev/v4/registry"
@@ -27,6 +26,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runmode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runtime"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/component/project/bcsproject"
 	log "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
 )
 
@@ -138,6 +138,7 @@ func fetchProjInfo(ctx context.Context, projectID string) (*Project, error) {
 		ID:         p.Data.ProjectID,
 		Code:       p.Data.ProjectCode,
 		BusinessID: p.Data.BusinessID,
+		TenantID:   p.Data.TenantID,
 	}, nil
 }
 
