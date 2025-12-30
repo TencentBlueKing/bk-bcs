@@ -133,6 +133,10 @@ func (ca *CreateQuotaAction) createProjectQuota() error {
 			"quota.hostResources.instanceType": ca.req.GetQuota().GetZoneResources().GetInstanceType(),
 		}))
 
+		conds = append(conds, operator.NewLeafCondition(operator.Ne, operator.M{
+			"status": quota.Deleted,
+		}))
+
 		cond := operator.NewBranchCondition(operator.And, conds...)
 
 		Quotas, _, err := ca.model.ListProjectQuotas(ca.ctx, cond, &page.Pagination{All: true})

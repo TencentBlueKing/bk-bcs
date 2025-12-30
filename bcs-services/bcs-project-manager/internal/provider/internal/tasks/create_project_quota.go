@@ -126,8 +126,8 @@ func (cpq *createProjectQuota) buildFederationClusterQuotaSteps() ([]*types.Step
 
 	// 1. 审批联邦集群配额申请
 	// 2. 等待审批通过，审批通过后, 更新配额状态; 审批拒绝后, 更新配额申请状态
-	content := fmt.Sprintf("user %s apply for federation cluster %s quota: cpu(%s) mem(%s) gpu(%s)",
-		cpq.projectQuota.GetCreator(), cpq.projectQuota.GetClusterId(),
+	content := fmt.Sprintf("user %s apply for federation cluster %s namespace %s quota: cpu(%s) mem(%s) gpu(%s)",
+		cpq.projectQuota.GetCreator(), cpq.projectQuota.GetClusterId(), cpq.projectQuota.GetNameSpace(),
 		cpq.projectQuota.GetQuota().GetCpu().GetDeviceQuota(), cpq.projectQuota.GetQuota().GetMem().GetDeviceQuota(),
 		cpq.projectQuota.GetQuota().GetGpu().GetDeviceQuota())
 
