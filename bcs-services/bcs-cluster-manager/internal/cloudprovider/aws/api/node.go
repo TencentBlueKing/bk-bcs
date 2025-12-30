@@ -285,10 +285,10 @@ func (nm *NodeManager) transInstanceIDsToNodes(ids []string, opt *cloudprovider.
 // @param Instance: aws instance information, can not be nil;
 // @return Node: cluster-manager node information;
 func InstanceToNode(inst *ec2.Instance) *proto.Node {
-	blog.Infof("instance id: %s", aws.StringValue(inst.InstanceId))
-	blog.Infof("instance private dns name: %s", aws.StringValue(inst.PrivateDnsName))
-	blog.Infof("instance type: %s", aws.StringValue(inst.InstanceType))
-	blog.Infof("instance vpc id: %s", aws.StringValue(inst.VpcId))
+	blog.Infof("cloudName aws InstanceToNode InstanceId[%s], PrivateDnsName[%s], InstanceType[%s], VpcId[%s]",
+		aws.StringValue(inst.InstanceId), aws.StringValue(inst.PrivateDnsName),
+		aws.StringValue(inst.InstanceType), aws.StringValue(inst.VpcId))
+
 	node := &proto.Node{
 		NodeID:       aws.StringValue(inst.InstanceId),
 		NodeName:     aws.StringValue(inst.PrivateDnsName),
@@ -296,7 +296,7 @@ func InstanceToNode(inst *ec2.Instance) *proto.Node {
 		VPC:          aws.StringValue(inst.VpcId),
 		ZoneID: func() string {
 			if inst.Placement != nil {
-				blog.Infof("instance availability zone %s", aws.StringValue(inst.Placement.AvailabilityZone))
+				blog.Infof("cloudName aws InstanceToNode AvailabilityZone[%s]", aws.StringValue(inst.Placement.AvailabilityZone))
 				return aws.StringValue(inst.Placement.AvailabilityZone)
 			}
 			return ""

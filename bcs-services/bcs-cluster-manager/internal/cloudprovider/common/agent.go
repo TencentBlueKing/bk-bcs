@@ -282,7 +282,7 @@ func InstallGSEAgentTask(taskID string, stepName string) error { // nolint
 			return errLocal
 		}
 
-		blog.Infof("InstallGSEAgentTask %s checking job detail[%#v]", taskID, detail)
+		blog.Infof("InstallGSEAgentTask %s checking job ID[%d], detail[%#v]", taskID, job.JobID, detail)
 
 		switch detail.Status {
 		case nodeman.JobRunning:
