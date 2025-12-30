@@ -20,9 +20,12 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/parnurzeal/gorequest"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/actions/namespace/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
@@ -88,7 +91,7 @@ func CreateTicket(username string, serviceID int, fields []map[string]interface{
 }
 
 // SubmitCreateNamespaceTicket create new itsm create namespace ticket
-func SubmitCreateNamespaceTicket(username, projectCode, clusterID, namespace string,
+func SubmitCreateNamespaceTicket(ctx context.Context, username, projectCode, clusterID, namespace string,
 	cpuLimits, memoryLimits int) (*CreateTicketData, error) {
 	var serviceID int
 	itsmConf := config.GlobalConf.ITSM
@@ -105,6 +108,9 @@ func SubmitCreateNamespaceTicket(username, projectCode, clusterID, namespace str
 	} else {
 		serviceID = itsmConf.CreateNamespaceServiceID
 	}
+
+	approvers := getItsmApprover(ctx, clusterID)
+
 	fields := []map[string]interface{}{
 		{
 			"key":   "title",
@@ -130,12 +136,16 @@ func SubmitCreateNamespaceTicket(username, projectCode, clusterID, namespace str
 			"key":   "MEMORY_LIMITS",
 			"value": memoryLimits,
 		},
+		{
+			"key":   "APPROVER",
+			"value": approvers,
+		},
 	}
 	return CreateTicket(username, serviceID, fields)
 }
 
 // SubmitUpdateNamespaceTicket create new itsm update namespace ticket
-func SubmitUpdateNamespaceTicket(username, projectCode, clusterID, namespace string,
+func SubmitUpdateNamespaceTicket(ctx context.Context, username, projectCode, clusterID, namespace string,
 	cpuLimits, memoryLimits, oldCPULimits, oldMemoryLimits int) (*CreateTicketData, error) {
 	var serviceID int
 	itsmConf := config.GlobalConf.ITSM
@@ -152,6 +162,9 @@ func SubmitUpdateNamespaceTicket(username, projectCode, clusterID, namespace str
 	} else {
 		serviceID = itsmConf.UpdateNamespaceServiceID
 	}
+
+	approvers := getItsmApprover(ctx, clusterID)
+
 	fields := []map[string]interface{}{
 		{
 			"key":   "title",
@@ -184,6 +197,10 @@ func SubmitUpdateNamespaceTicket(username, projectCode, clusterID, namespace str
 		{
 			"key":   "OLD_MEMORY_LIMITS",
 			"value": oldMemoryLimits,
+		},
+		{
+			"key":   "APPROVER",
+			"value": approvers,
 		},
 	}
 	return CreateTicket(username, serviceID, fields)
@@ -267,4 +284,28 @@ func SubmitQuotaManagerCommonTicket(username, projectCode, clusterID, content st
 		},
 	}
 	return CreateTicket(username, serviceID, fields)
+}
+
+func getItsmApprover(ctx context.Context, clusterID string) string {
+	// 1. check if cluster is bcs shared or project shared
+	// 2. bcs shared: use config approver first, if the config is empty, get cluster creator and updater
+	// 3. project shared: use cluster creator and updater
+	cluster, err := clustermanager.GetCluster(ctx, clusterID, false)
+	if err != nil {
+		blog.Warnf("getItsmApprover GetCluster[%s] failed, err: %v", clusterID, err)
+		return common.GetBcsApprovers()
+	}
+
+	if cluster.GetIsShared() && len(cluster.GetSharedRanges().GetProjectIdOrCodes()) == 0 {
+		if bcsApprovers := common.GetBcsApprovers(); bcsApprovers != "" {
+			return bcsApprovers
+		}
+	}
+
+	if clusterApprovers := common.GetClusterApprovers(cluster); clusterApprovers != "" {
+		return clusterApprovers
+	}
+
+	blog.Warnf("getItsmApprover GetClusterApprovers[%s] is empty", clusterID)
+	return common.GetBcsApprovers()
 }

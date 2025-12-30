@@ -55,7 +55,7 @@ func SyncNamespace(ctx context.Context, projectCode, clusterID string, namespace
 	}
 	// nolint
 	defer mu.Unlock(context.TODO())
-	cluster, err := clustermanager.GetCluster(ctx, clusterID)
+	cluster, err := clustermanager.GetCluster(ctx, clusterID, true)
 	if err != nil {
 		logging.Error("get cluster %s from cluster-manager failed, err: %s", clusterID, err.Error())
 		return err

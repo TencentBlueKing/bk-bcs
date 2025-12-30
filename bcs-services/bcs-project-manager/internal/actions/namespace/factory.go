@@ -41,7 +41,7 @@ func NewNamespaceFactory(model store.ProjectModel) *NamespaceFactory {
 // Action get action by clusterID
 func (f *NamespaceFactory) Action(ctx context.Context, clusterID, projectIDOrCode string) (
 	action.NamespaceAction, error) {
-	cluster, err := clustermanager.GetCluster(ctx, clusterID)
+	cluster, err := clustermanager.GetCluster(ctx, clusterID, true)
 	if err != nil {
 		logging.Error("get cluster %s from cluster-manager failed, err: %s", cluster, err.Error())
 		return nil, err

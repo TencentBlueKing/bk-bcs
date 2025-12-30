@@ -38,12 +38,15 @@ var (
 )
 
 // GetCluster get cluster by clusterID
-func GetCluster(ctx context.Context, clusterID string) (*clustermanager.Cluster, error) {
+func GetCluster(ctx context.Context, clusterID string, isCache bool) (*clustermanager.Cluster, error) {
 	// 1. if hit, get from cache
 	c := cache.GetCache()
-	if cluster, exists := c.Get(fmt.Sprintf(CacheKeyClusterPrefix, clusterID)); exists {
-		return cluster.(*clustermanager.Cluster), nil
+	if isCache {
+		if cluster, exists := c.Get(fmt.Sprintf(CacheKeyClusterPrefix, clusterID)); exists {
+			return cluster.(*clustermanager.Cluster), nil
+		}
 	}
+
 	cli, closeCon, err := clustermanager.GetClient(common.ServiceDomain)
 	if err != nil {
 		logging.Error("get cluster manager client failed, err: %s", err.Error())
