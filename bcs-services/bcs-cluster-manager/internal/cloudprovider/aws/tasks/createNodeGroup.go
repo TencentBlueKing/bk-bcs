@@ -33,6 +33,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/aws/api"
 	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
 const (
@@ -360,11 +361,11 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error { // no
 		return retErr
 	}
 
-	// 关闭AZRebalance进程
-	err = suspendAZRebalanceProcesses(ctx, dependInfo, asgInfo)
+	// 关闭aws进程
+	err = suspendAWSProcesses(ctx, dependInfo, asgInfo)
 	if err != nil {
-		blog.Errorf("CheckCloudNodeGroupStatusTask[%s]: suspendAZRebalanceProcesses failed: %v", taskID, err)
-		retErr := fmt.Errorf("suspendAZRebalanceProcesses failed, %s", err.Error())
+		blog.Errorf("CheckCloudNodeGroupStatusTask[%s]: suspendAWSProcesses failed: %v", taskID, err)
+		retErr := fmt.Errorf("suspendAWSProcesses failed, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
@@ -453,19 +454,19 @@ func checkNodegroupStatus(rootCtx context.Context, dependInfo *cloudprovider.Clo
 	return asgInfo[0], ltvInfo, nil
 }
 
-func suspendAZRebalanceProcesses(ctx context.Context, dependInfo *cloudprovider.CloudDependBasicInfo,
+func suspendAWSProcesses(ctx context.Context, dependInfo *cloudprovider.CloudDependBasicInfo,
 	asInfo *autoscaling.Group) error {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
 	client, err := api.NewAutoScalingClient(dependInfo.CmOption)
 	if err != nil {
-		blog.Errorf("taskID[%s] suspendAZRebalanceProcesses get aws clientSet failed, %s", taskID, err.Error())
+		blog.Errorf("taskID[%s] suspendAWSProcesses get aws clientSet failed, %s", taskID, err.Error())
 		return err
 	}
 
-	pName := "AZRebalance"
+	pNames := []string{"AZRebalance", "HealthCheck", "ReplaceUnhealthy"}
 
-	err = client.SuspendProcesses(asInfo.AutoScalingGroupName, []string{pName})
+	err = client.SuspendProcesses(asInfo.AutoScalingGroupName, pNames)
 	if err != nil {
 		return err
 	}
@@ -490,18 +491,23 @@ func suspendAZRebalanceProcesses(ctx context.Context, dependInfo *cloudprovider.
 			return nil
 		}
 
+		i := 0
 		for _, p := range asgs[0].SuspendedProcesses {
-			if *p.ProcessName == pName {
-				blog.Infof("suspend autoscaling group AZRebalance processes successful")
-				return loop.EndLoop
+			if utils.StringInSlice(*p.ProcessName, pNames) {
+				blog.Infof("suspend autoscaling group %s processes successful", *p.ProcessName)
+				i++
 			}
+		}
+		if i == len(pNames) {
+			blog.Infof("suspend autoscaling group all processes successful")
+			return loop.EndLoop
 		}
 
 		return nil
 	}, loop.LoopInterval(5*time.Second))
 	if err != nil {
-		blog.Errorf("suspendAZRebalanceProcesses[%s]: failed: %v", taskID, err)
-		retErr := fmt.Errorf("suspendAZRebalanceProcesses failed, %s", err.Error())
+		blog.Errorf("suspendAWSProcesses[%s]: failed: %v", taskID, err)
+		retErr := fmt.Errorf("suspendAWSProcesses failed, %s", err.Error())
 		return retErr
 	}
 
