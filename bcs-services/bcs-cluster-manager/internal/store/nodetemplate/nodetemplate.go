@@ -17,6 +17,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
@@ -152,6 +153,10 @@ func (m *ModelNodeTemplate) GetNodeTemplate(ctx context.Context, projectID, temp
 		return nil, err
 	}
 
+	// 兼容旧数据
+	nodeTemplate.UpdateTime = util.TransStrToUTCStr(time.RFC3339Nano, nodeTemplate.UpdateTime)
+	nodeTemplate.CreateTime = util.TransStrToUTCStr(time.RFC3339Nano, nodeTemplate.CreateTime)
+
 	return nodeTemplate, nil
 }
 
@@ -169,6 +174,9 @@ func (m *ModelNodeTemplate) GetNodeTemplateByID(ctx context.Context, templateID 
 		return nil, err
 	}
 
+	// 兼容旧数据
+	nodeTemplate.UpdateTime = util.TransStrToUTCStr(time.RFC3339Nano, nodeTemplate.UpdateTime)
+	nodeTemplate.CreateTime = util.TransStrToUTCStr(time.RFC3339Nano, nodeTemplate.CreateTime)
 	return nodeTemplate, nil
 }
 

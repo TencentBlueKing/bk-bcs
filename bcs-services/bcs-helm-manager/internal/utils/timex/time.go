@@ -10,65 +10,27 @@
  * limitations under the License.
  */
 
-// Package time xxx
-package time
+// Package timex xxx
+package timex
 
-import (
-	"time"
-)
+import "time"
 
 const (
-	format = "2006-01-02 15:04:05"
-	// DefaultTimeZone 默认时区
-	DefaultTimeZone = "Asia/Shanghai"
+	// BkrepoDateTime time format
+	BkrepoDateTime = "2006-01-02T15:04:05.999"
 )
-
-// GetStoredTimestamp return the timestamp of given time for storage
-func GetStoredTimestamp(t time.Time) int64 {
-	return t.UTC().Unix()
-}
-
-// TransTimeFormat trans time.RFC3339 to format that user easy to read
-func TransTimeFormat(input string) string {
-	formatTime, err := time.Parse(time.RFC3339, input)
-	if err != nil {
-		return input
-	}
-
-	return formatTime.Format(format)
-}
-
-// TransTsToTime trans timestamp to time
-func TransTsToTime(timestamp int64) time.Time {
-	return time.Unix(timestamp, 0)
-}
-
-// TransTsToStr trans timestamp to time string
-func TransTsToStr(timestamp int64) string {
-	if timestamp <= 0 {
-		return ""
-	}
-
-	t := TransTsToTime(timestamp)
-	formattedTime := t.UTC().Format(time.RFC3339)
-	return formattedTime
-}
-
-// TransStrToTs trans  time string totimestamp
-func TransStrToTs(input string) int64 {
-	t, err := time.Parse(time.RFC3339Nano, input)
-	if err != nil {
-		return 0
-	}
-
-	return t.UnixMilli()
-}
 
 // TransStrToUTCStr trans time string to utc RFC3339 time string
 func TransStrToUTCStr(timeType, input string) string {
 	switch timeType {
 	case time.RFC3339Nano:
 		t, err := time.Parse(time.RFC3339Nano, input)
+		if err != nil {
+			return input
+		}
+		return t.UTC().Format(time.RFC3339)
+	case BkrepoDateTime:
+		t, err := time.Parse(BkrepoDateTime, input)
 		if err != nil {
 			return input
 		}

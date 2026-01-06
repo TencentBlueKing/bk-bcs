@@ -55,6 +55,7 @@ func GetCmdbClient() *Client {
 }
 
 // 检查业务下的角色用户是否存在
+// nolint:unused
 func checkUserBizPerm(ctx context.Context, username string, businessID string) (bool, error) {
 	if businessID == "" {
 		return false, errors.New("permission denied")

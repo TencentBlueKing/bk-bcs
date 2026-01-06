@@ -48,7 +48,7 @@ func NewCreateAction(model store.ClusterManagerModel) *CreateAction {
 func (ca *CreateAction) importCloudModuleFlagList() error {
 	moduleFlagList := make([]*cmproto.CloudModuleFlag, 0)
 
-	timeStr := time.Now().Format(time.RFC3339)
+	timeStr := time.Now().UTC().Format(time.RFC3339)
 	for i := range ca.req.FlagList {
 		moduleFlagList = append(moduleFlagList, &cmproto.CloudModuleFlag{
 			CloudID:       ca.req.CloudID,
@@ -133,7 +133,7 @@ func (ca *CreateAction) Handle(ctx context.Context,
 		TaskID:       "",
 		Message:      fmt.Sprintf("录入云组件参数[%s]", ca.req.CloudID),
 		OpUser:       auth.GetUserFromCtx(ca.ctx),
-		CreateTime:   time.Now().Format(time.RFC3339),
+		CreateTime:   time.Now().UTC().Format(time.RFC3339),
 	})
 	if err != nil {
 		blog.Errorf("CreateCloudModuleFlag[%s] CreateOperationLog failed: %v", ca.req.CloudID, err)

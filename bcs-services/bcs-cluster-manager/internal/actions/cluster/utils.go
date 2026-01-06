@@ -43,6 +43,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/passcc"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/util"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tenant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
@@ -989,8 +990,8 @@ func clusterToClusterBasicInfo(cluster *proto.Cluster) *proto.ClusterBasicInfo {
 		ClusterType:     cluster.ClusterType,
 		Labels:          cluster.Labels,
 		Creator:         cluster.Creator,
-		CreateTime:      cluster.CreateTime,
-		UpdateTime:      cluster.UpdateTime,
+		CreateTime:      util.TransStrToUTCStr(time.RFC3339Nano, cluster.CreateTime),
+		UpdateTime:      util.TransStrToUTCStr(time.RFC3339Nano, cluster.UpdateTime),
 		SystemID:        cluster.SystemID,
 		ManageType:      cluster.ManageType,
 		Status:          cluster.Status,

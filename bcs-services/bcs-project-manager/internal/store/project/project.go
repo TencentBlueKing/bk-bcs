@@ -17,6 +17,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
@@ -26,6 +27,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/page"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/dbtable"
+	timeutil "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/time"
 )
 
 const (
@@ -176,6 +178,8 @@ func (m *ModelProject) CreateProject(ctx context.Context, project *Project) erro
 	if err := m.ensureTable(ctx); err != nil {
 		return err
 	}
+	project.CreateTime = time.Now().UTC().Format(time.RFC3339)
+	project.UpdateTime = time.Now().UTC().Format(time.RFC3339)
 	if _, err := m.db.Table(m.tableName).Insert(ctx, []interface{}{project}); err != nil {
 		return err
 	}
@@ -193,6 +197,8 @@ func (m *ModelProject) GetProject(ctx context.Context, projectIDOrCode string) (
 	if err := m.db.Table(m.tableName).Find(cond).One(ctx, retProject); err != nil {
 		return nil, err
 	}
+	retProject.CreateTime = timeutil.TransStrToUTCStr(time.RFC3339Nano, retProject.CreateTime)
+	retProject.UpdateTime = timeutil.TransStrToUTCStr(time.RFC3339Nano, retProject.UpdateTime)
 	return retProject, nil
 }
 
@@ -244,6 +250,8 @@ func (m *ModelProject) GetProjectByField(ctx context.Context, pf *ProjectField) 
 	if err := m.db.Table(m.tableName).Find(cond).One(ctx, retProject); err != nil {
 		return nil, err
 	}
+	retProject.CreateTime = timeutil.TransStrToUTCStr(time.RFC3339Nano, retProject.CreateTime)
+	retProject.UpdateTime = timeutil.TransStrToUTCStr(time.RFC3339Nano, retProject.UpdateTime)
 	return retProject, nil
 }
 
@@ -255,6 +263,8 @@ func (m *ModelProject) UpdateProject(ctx context.Context, project *Project) erro
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{
 		FieldKeyProjectID: project.ProjectID,
 	})
+	project.UpdateTime = time.Now().UTC().Format(time.RFC3339)
+
 	// update project info
 	return m.db.Table(m.tableName).Upsert(ctx, cond, operator.M{"$set": project})
 }

@@ -51,7 +51,7 @@ func NewUpdateAction(model store.ClusterManagerModel) *UpdateAction {
 
 // updateTemplateConfig update templateConfig
 func (ca *UpdateAction) updateTemplateConfig() error {
-	timeStr := time.Now().Format(time.RFC3339)
+	timeStr := time.Now().UTC().Format(time.RFC3339)
 
 	templateConfigContent, err := json.Marshal(ca.req.CloudTemplateConfig)
 	if err != nil {
@@ -113,7 +113,7 @@ func (ca *UpdateAction) Handle(ctx context.Context,
 		TaskID:       "",
 		Message:      fmt.Sprintf("业务[%s]在[%s]修改[%s]类型模板配置", req.BusinessID, req.Provider, req.ConfigType),
 		OpUser:       auth.GetUserFromCtx(ctx),
-		CreateTime:   time.Now().Format(time.RFC3339),
+		CreateTime:   time.Now().UTC().Format(time.RFC3339),
 		ResourceName: ca.project.Name,
 		ProjectID:    ca.project.ProjectID,
 		ClusterID:    ca.req.ClusterID,

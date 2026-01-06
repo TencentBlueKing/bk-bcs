@@ -275,10 +275,10 @@ func migrateVariableDefinition() error {
 		}
 		vd.Default = temp.Value
 		if variable.Created != nil {
-			vd.CreateTime = variable.Created.Format(timeLayout)
+			vd.CreateTime = variable.Created.UTC().Format(timeLayout)
 		}
 		if variable.Updated != nil {
-			vd.UpdateTime = variable.Updated.Format(timeLayout)
+			vd.UpdateTime = variable.Updated.UTC().Format(timeLayout)
 		}
 		if err := doUpsertVariableDefinition(model, vd); err != nil {
 			fmt.Printf("upsert variable definition key [%s] in project [%s] failed, err: %s\n",

@@ -95,8 +95,8 @@ func (r *Repository) Transfer2Proto(ctx context.Context) *helmmanager.Repository
 		Password:    common.GetStringP(r.Password),
 		CreateBy:    common.GetStringP(r.CreateBy),
 		UpdateBy:    common.GetStringP(r.UpdateBy),
-		CreateTime:  common.GetStringP(time.Unix(r.CreateTime, 0).Local().String()),
-		UpdateTime:  common.GetStringP(time.Unix(r.UpdateTime, 0).Local().String()),
+		CreateTime:  common.GetStringP(time.Unix(r.CreateTime, 0).UTC().Format(time.RFC3339)),
+		UpdateTime:  common.GetStringP(time.Unix(r.UpdateTime, 0).UTC().Format(time.RFC3339)),
 	}
 }
 

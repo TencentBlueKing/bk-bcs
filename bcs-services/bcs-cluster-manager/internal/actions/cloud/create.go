@@ -45,7 +45,7 @@ func NewCreateAction(model store.ClusterManagerModel) *CreateAction {
 }
 
 func (ca *CreateAction) createCloud() error {
-	timeStr := time.Now().Format(time.RFC3339)
+	timeStr := time.Now().UTC().Format(time.RFC3339)
 	cloud := &cmproto.Cloud{
 		CloudID:             ca.req.CloudID,
 		Name:                ca.req.Name,
@@ -121,7 +121,7 @@ func (ca *CreateAction) Handle(ctx context.Context,
 		TaskID:       "",
 		Message:      fmt.Sprintf("创建云[%s]模板", req.CloudID),
 		OpUser:       req.Creator,
-		CreateTime:   time.Now().Format(time.RFC3339),
+		CreateTime:   time.Now().UTC().Format(time.RFC3339),
 		ResourceName: ca.cloud.Name,
 	})
 	if err != nil {

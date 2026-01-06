@@ -16,7 +16,6 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 
@@ -115,7 +114,6 @@ func (ua *UpdateAction) validate() error {
 }
 
 func (ua *UpdateAction) updateProject(p *pm.Project) error {
-	p.UpdateTime = time.Now().Format(time.RFC3339)
 	// 从 context 中获取 username
 	if authUser, err := tenant.GetAuthUserInfoFromCtx(ua.ctx); err == nil {
 		p.Updater = authUser.GetUsername()

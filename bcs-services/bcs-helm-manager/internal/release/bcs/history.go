@@ -15,11 +15,11 @@ package bcs
 import (
 	"context"
 	"sort"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"helm.sh/helm/v3/pkg/chartutil"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/release"
 )
 
@@ -47,7 +47,7 @@ func (c *cluster) history(ctx context.Context, op release.HelmHistoryOption) ([]
 			Chart:        v.Chart.Name(),
 			ChartVersion: chartVersion,
 			AppVersion:   v.Chart.AppVersion(),
-			UpdateTime:   v.Info.LastDeployed.Local().Format(common.TimeFormat),
+			UpdateTime:   v.Info.LastDeployed.UTC().Format(time.RFC3339),
 			Description:  v.Info.Description,
 			Values:       valuesYaml,
 		})

@@ -58,7 +58,7 @@ func NewCreateVirtualClusterAction(model store.ClusterManagerModel,
 }
 
 func (ca *CreateVirtualClusterAction) constructCluster(cloud *cmproto.Cloud) (*cmproto.Cluster, error) {
-	createTime := time.Now().Format(time.RFC3339)
+	createTime := time.Now().UTC().Format(time.RFC3339)
 	cls := &cmproto.Cluster{
 		ClusterID:   ca.req.ClusterID,
 		ClusterName: ca.req.ClusterName,
@@ -304,7 +304,7 @@ func (ca *CreateVirtualClusterAction) Handle(ctx context.Context, req *cmproto.C
 		TaskID:       ca.task.TaskID,
 		Message:      fmt.Sprintf("创建%s虚拟集群%s", cls.Provider, cls.ClusterID),
 		OpUser:       cls.Creator,
-		CreateTime:   time.Now().Format(time.RFC3339),
+		CreateTime:   time.Now().UTC().Format(time.RFC3339),
 		ClusterID:    cls.ClusterID,
 		ProjectID:    ca.req.ProjectID,
 		ResourceName: ca.req.GetClusterName(),

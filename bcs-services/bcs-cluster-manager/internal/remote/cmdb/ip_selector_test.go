@@ -42,7 +42,7 @@ var gseCli = GetGseTestClient()
 func TestGetHostCountByObject(t *testing.T) {
 	cli := getNewClient()
 
-	cnt, err := GetHostCountByObject(cli, 2, Object{
+	cnt, err := GetHostCountByObject(context.Background(), cli, 2, Object{
 		ObjectName: "biz",
 		ObjectID:   2,
 	})
@@ -51,7 +51,7 @@ func TestGetHostCountByObject(t *testing.T) {
 	}
 	t.Log(cnt)
 
-	cnt, err = GetHostCountByObject(cli, 2, Object{
+	cnt, err = GetHostCountByObject(context.Background(), cli, 2, Object{
 		ObjectName: "biz",
 		ObjectID:   2,
 	})
@@ -78,7 +78,7 @@ func TestGetBizHostDetailedData(t *testing.T) {
 	gseCli = GetGseTestClient()
 
 	current := time.Now()
-	hostInfo, err := GetBizHostDetailedData(cmdb, gseCli, 100275, []HostModuleInfo{
+	hostInfo, err := GetBizHostDetailedData(context.Background(), cmdb, gseCli, 100275, []HostModuleInfo{
 		{
 			ObjectID:   "biz",
 			InstanceID: 100275,
@@ -118,7 +118,7 @@ func TestGetBizTopoHostFilter(t *testing.T) {
 		Alive:         &b,
 		SearchContent: "253.227",
 	}
-	hosts, err := cli.GetBizTopoHostData(2, []HostModuleInfo{
+	hosts, err := cli.GetBizTopoHostData(context.Background(), 2, []HostModuleInfo{
 		{
 			ObjectID:   "biz",
 			InstanceID: 2,
@@ -145,7 +145,7 @@ func TestGetCheckNodesFilter(t *testing.T) {
 		Ipv6List: nil,
 		KeyList:  []string{"VM", "centos"},
 	}
-	hosts, err := cli.GetBizTopoHostData(2, []HostModuleInfo{
+	hosts, err := cli.GetBizTopoHostData(context.Background(), 2, []HostModuleInfo{
 		{
 			ObjectID:   "biz",
 			InstanceID: 2,

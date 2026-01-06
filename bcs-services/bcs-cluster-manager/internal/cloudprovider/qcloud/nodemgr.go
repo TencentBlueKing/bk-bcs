@@ -19,8 +19,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	// "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"

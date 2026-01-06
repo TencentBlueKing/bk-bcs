@@ -42,7 +42,7 @@ func NewCreateAction(model store.ClusterManagerModel) *CreateAction {
 }
 
 func (ca *CreateAction) createCloudVPC() error {
-	timeStr := time.Now().Format(time.RFC3339)
+	timeStr := time.Now().UTC().Format(time.RFC3339)
 	cloudVPC := &cmproto.CloudVPC{
 		CloudID:       ca.req.CloudID,
 		Region:        ca.req.Region,
@@ -100,7 +100,7 @@ func (ca *CreateAction) Handle(ctx context.Context,
 		TaskID:       "",
 		Message:      fmt.Sprintf("创建云[%s]vpc网络[%s]", req.CloudID, req.VpcID),
 		OpUser:       req.Creator,
-		CreateTime:   time.Now().Format(time.RFC3339),
+		CreateTime:   time.Now().UTC().Format(time.RFC3339),
 		ResourceName: ca.req.GetVpcName(),
 	})
 	if err != nil {

@@ -41,7 +41,7 @@ func NewUpdateAction(model store.ClusterManagerModel) *UpdateAction {
 }
 
 func (ua *UpdateAction) updateCloudVPC(destCloudVPC *cmproto.CloudVPC) error {
-	timeStr := time.Now().Format(time.RFC3339)
+	timeStr := time.Now().UTC().Format(time.RFC3339)
 	destCloudVPC.UpdateTime = timeStr
 	destCloudVPC.Updater = ua.req.Updater
 
@@ -125,7 +125,7 @@ func (ua *UpdateAction) Handle(
 		TaskID:       "",
 		Message:      fmt.Sprintf("更新云[%s]vpc网络[%s]信息", req.CloudID, req.VpcID),
 		OpUser:       req.Updater,
-		CreateTime:   time.Now().Format(time.RFC3339),
+		CreateTime:   time.Now().UTC().Format(time.RFC3339),
 		ResourceName: destCloudVPC.GetVpcName(),
 	})
 	if err != nil {

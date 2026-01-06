@@ -70,7 +70,7 @@ func (ca *CreateAction) applyClusterCIDR(cls *cmproto.Cluster) error { // nolint
 }
 
 func (ca *CreateAction) constructCluster(cloud *cmproto.Cloud) (*cmproto.Cluster, error) {
-	createTime := time.Now().Format(time.RFC3339)
+	createTime := time.Now().UTC().Format(time.RFC3339)
 	cls := &cmproto.Cluster{
 		ClusterID:   ca.req.ClusterID,
 		ClusterName: ca.req.ClusterName,
@@ -366,7 +366,7 @@ func (ca *CreateAction) generateClusterID(cls *cmproto.Cluster) error {
 }
 
 func (ca *CreateAction) createNodegroupInDB(cls *cmproto.Cluster) error {
-	timeStr := time.Now().Format(time.RFC3339)
+	timeStr := time.Now().UTC().Format(time.RFC3339)
 	if ca.req.NodeGroups != nil {
 		for _, ng := range ca.req.NodeGroups {
 			ng.NodeGroupID = autils.GenerateTemplateID(autils.GroupTemplate)
@@ -507,7 +507,7 @@ func (ca *CreateAction) Handle(ctx context.Context, req *cmproto.CreateClusterRe
 		TaskID:       ca.task.TaskID,
 		Message:      fmt.Sprintf("创建%s集群%s", cls.Provider, cls.ClusterID),
 		OpUser:       cls.Creator,
-		CreateTime:   time.Now().Format(time.RFC3339),
+		CreateTime:   time.Now().UTC().Format(time.RFC3339),
 		ClusterID:    cls.ClusterID,
 		ProjectID:    req.ProjectID,
 		ResourceName: cls.GetClusterName(),

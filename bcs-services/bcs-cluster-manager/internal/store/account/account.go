@@ -17,6 +17,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
@@ -162,6 +163,9 @@ func (m *ModelCloudAccount) GetCloudAccount(ctx context.Context,
 	if err := m.db.Table(m.tableName).Find(cond).One(ctx, cloudAccount); err != nil {
 		return nil, err
 	}
+	// 兼容旧数据
+	cloudAccount.CreatTime = util.TransStrToUTCStr(time.RFC3339Nano, cloudAccount.CreatTime)
+	cloudAccount.UpdateTime = util.TransStrToUTCStr(time.RFC3339Nano, cloudAccount.UpdateTime)
 	if cloudAccount.Account != nil && !skipDecrypt {
 		if err := util.DecryptCloudAccountData(nil, cloudAccount.Account); err != nil {
 			// Compatible with older versions and only output error

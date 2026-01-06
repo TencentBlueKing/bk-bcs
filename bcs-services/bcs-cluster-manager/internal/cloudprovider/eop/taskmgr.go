@@ -92,7 +92,7 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 		return nil, fmt.Errorf("BuildCreateClusterTask TaskOptions is lost")
 	}
 
-	nowStr := time.Now().Format(time.RFC3339)
+	nowStr := time.Now().UTC().Format(time.RFC3339)
 	task := &proto.Task{
 		TaskID:         uuid.New().String(),
 		TaskType:       cloudprovider.GetTaskType(cloudName, cloudprovider.CreateCluster),
@@ -164,7 +164,7 @@ func (t *Task) BuildDeleteClusterTask(
 	}
 
 	// init task information
-	nowStr := time.Now().Format(time.RFC3339)
+	nowStr := time.Now().UTC().Format(time.RFC3339)
 	task := &proto.Task{
 		TaskID:         uuid.New().String(),
 		TaskType:       cloudprovider.GetTaskType(cloudName, cloudprovider.DeleteCluster),

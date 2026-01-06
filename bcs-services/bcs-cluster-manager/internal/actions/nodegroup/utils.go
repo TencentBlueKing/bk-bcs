@@ -14,6 +14,7 @@ package nodegroup
 
 import (
 	"context"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 
@@ -22,6 +23,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/util"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
@@ -68,6 +70,8 @@ func listNodeGroupByConds(model store.ClusterManagerModel, options filterNodeGro
 		return nil, err
 	}
 	for i := range groups {
+		groups[i].CreateTime = util.TransStrToUTCStr(time.RFC3339Nano, groups[i].CreateTime)
+		groups[i].UpdateTime = util.TransStrToUTCStr(time.RFC3339Nano, groups[i].UpdateTime)
 		groupList = append(groupList, removeSensitiveInfo(groups[i]))
 	}
 	return groupList, nil

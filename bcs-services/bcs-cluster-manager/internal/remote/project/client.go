@@ -17,15 +17,15 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
 	blog "k8s.io/klog/v2"
-
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
 )
 
 // ProjectClient xxx
+// nolint:revive
 type ProjectClient struct {
 	Healthz   HealthzClient
 	Project   BCSProjectClient

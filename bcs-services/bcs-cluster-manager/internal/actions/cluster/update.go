@@ -235,7 +235,7 @@ func (ua *UpdateAction) updateCluster() error {
 			}
 		}
 	}
-	ua.cluster.UpdateTime = time.Now().Format(time.RFC3339)
+	ua.cluster.UpdateTime = time.Now().UTC().Format(time.RFC3339)
 
 	// update DB clusterInfo & passcc cluster
 	err = ua.model.UpdateCluster(ua.ctx, ua.cluster)
@@ -319,7 +319,7 @@ func (ua *UpdateAction) Handle(ctx context.Context, req *cmproto.UpdateClusterRe
 		TaskID:       "",
 		Message:      fmt.Sprintf("集群%s修改基本信息", ua.cluster.ClusterID),
 		OpUser:       auth.GetUserFromCtx(ua.ctx),
-		CreateTime:   time.Now().Format(time.RFC3339),
+		CreateTime:   time.Now().UTC().Format(time.RFC3339),
 		ClusterID:    ua.cluster.ClusterID,
 		ProjectID:    ua.cluster.ProjectID,
 		ResourceName: ua.cluster.ClusterName,
@@ -437,7 +437,7 @@ func (ua *UpdateNodeAction) Handle(ctx context.Context, req *cmproto.UpdateNodeR
 		TaskID:       "",
 		Message:      "更新node信息",
 		OpUser:       auth.GetUserFromCtx(ua.ctx),
-		CreateTime:   time.Now().Format(time.RFC3339),
+		CreateTime:   time.Now().UTC().Format(time.RFC3339),
 		ClusterID:    ua.req.ClusterID,
 	})
 	if err != nil {
@@ -985,7 +985,7 @@ func (ua *AddNodesAction) Handle(
 			TaskID:       task.TaskID,
 			Message:      fmt.Sprintf("集群%s添加节点", ua.cluster.ClusterID),
 			OpUser:       req.Operator,
-			CreateTime:   time.Now().Format(time.RFC3339),
+			CreateTime:   time.Now().UTC().Format(time.RFC3339),
 			ClusterID:    ua.cluster.ClusterID,
 			ProjectID:    ua.cluster.ProjectID,
 			ResourceName: ua.cluster.ClusterName,

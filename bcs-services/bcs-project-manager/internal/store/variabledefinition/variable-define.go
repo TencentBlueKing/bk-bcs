@@ -28,6 +28,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/dbtable"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/entity"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/stringx"
+	timeutil "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/time"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
 )
 
@@ -269,6 +270,12 @@ func (m *ModelVariableDefinition) CreateVariableDefinition(ctx context.Context, 
 	if err := m.ensureTable(ctx); err != nil {
 		return err
 	}
+	if vd.CreateTime == "" {
+		vd.CreateTime = time.Now().UTC().Format(time.RFC3339)
+	}
+	if vd.UpdateTime == "" {
+		vd.UpdateTime = time.Now().UTC().Format(time.RFC3339)
+	}
 	if _, err := m.db.Table(m.tableName).Insert(ctx, []interface{}{vd}); err != nil {
 		return err
 	}
@@ -288,6 +295,8 @@ func (m *ModelVariableDefinition) GetVariableDefinition(ctx context.Context,
 	if err := m.db.Table(m.tableName).Find(cond).One(ctx, retVariableDefinition); err != nil {
 		return nil, err
 	}
+	retVariableDefinition.CreateTime = timeutil.TransStrToUTCStr(time.RFC3339Nano, retVariableDefinition.CreateTime)
+	retVariableDefinition.UpdateTime = timeutil.TransStrToUTCStr(time.RFC3339Nano, retVariableDefinition.UpdateTime)
 	return retVariableDefinition, nil
 }
 
@@ -305,6 +314,8 @@ func (m *ModelVariableDefinition) GetVariableDefinitionByKey(ctx context.Context
 	if err := m.db.Table(m.tableName).Find(cond).One(ctx, retVariableDefinition); err != nil {
 		return nil, err
 	}
+	retVariableDefinition.CreateTime = timeutil.TransStrToUTCStr(time.RFC3339Nano, retVariableDefinition.CreateTime)
+	retVariableDefinition.UpdateTime = timeutil.TransStrToUTCStr(time.RFC3339Nano, retVariableDefinition.UpdateTime)
 	return retVariableDefinition, nil
 }
 
@@ -323,6 +334,8 @@ func (m *ModelVariableDefinition) UpdateVariableDefinition(
 		FieldKeyID:        vd.GetString(FieldKeyID),
 		FieldKeyIsDeleted: false,
 	})
+	// update time
+	vd[FieldKeyUpdateTime] = time.Now().UTC().Format(time.RFC3339)
 
 	if err := m.db.Table(m.tableName).Update(ctx, cond, operator.M{"$set": vd}); err != nil {
 		return nil, err
@@ -347,7 +360,7 @@ func (m *ModelVariableDefinition) DeleteVariableDefinitions(ctx context.Context,
 		operator.NewLeafCondition(operator.Eq, operator.M{FieldKeyIsDeleted: false}))
 	return m.db.Table(m.tableName).UpdateMany(ctx, cond, operator.M{"$set": operator.M{
 		FieldKeyIsDeleted:  true,
-		FieldKeyDeleteTime: time.Now().Format(time.RFC3339),
+		FieldKeyDeleteTime: time.Now().UTC().Format(time.RFC3339),
 	}})
 }
 

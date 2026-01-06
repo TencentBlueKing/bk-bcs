@@ -623,7 +623,7 @@ func updateDestCloudFields(destCloud, cloud *cmproto.Cloud) {
 
 // updateCloudConfig update cloud config template
 func (cm *ClusterManager) updateCloudConfig(cloud *cmproto.Cloud) error {
-	timeStr := time.Now().Format(time.RFC3339)
+	timeStr := time.Now().UTC().Format(time.RFC3339)
 	cloud.UpdateTime = timeStr
 
 	destCloud, err := cm.model.GetCloud(cm.ctx, cloud.CloudID)

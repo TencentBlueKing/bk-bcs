@@ -1088,7 +1088,7 @@ func UpdateAKSNodesToDBTask(taskID string, stepName string) error {
 
 	// sync cluster perms
 	ctx, err = tenant.WithTenantIdByResourceForContext(ctx, tenant.ResourceMetaData{
-		ProjectId:   dependInfo.Cluster.GetProjectID(),
+		ProjectId: dependInfo.Cluster.GetProjectID(),
 	})
 	if err != nil {
 		blog.Errorf("UpdateAKSNodesToDBTask WithTenantIdByResourceForContext failed: %v", err)

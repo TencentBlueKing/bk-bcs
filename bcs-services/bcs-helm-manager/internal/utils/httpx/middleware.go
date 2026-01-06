@@ -260,6 +260,7 @@ func CheckUserResourceTenantMiddleware(next http.Handler) http.Handler {
 
 		// get tenant id
 		headerTenantId := r.Header.Get(contextx.TenantIDHeaderKey)
+		// nolint:ineffassign,staticcheck
 		tenantId := func() string {
 			if headerTenantId != "" {
 				return headerTenantId
@@ -271,6 +272,7 @@ func CheckUserResourceTenantMiddleware(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 		return
 		// get resource tenant id
+		// nolint:govet
 		resourceTenantId, err := GetResourceTenantId(r.Context())
 		if err != nil {
 			msg := fmt.Errorf("CheckUserResourceTenantAttrFunc GetResourceTenantId failed, err: %s", err.Error())
@@ -286,6 +288,5 @@ func CheckUserResourceTenantMiddleware(next http.Handler) http.Handler {
 		}
 
 		next.ServeHTTP(w, r)
-		return
 	})
 }

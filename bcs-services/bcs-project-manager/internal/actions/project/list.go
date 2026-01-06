@@ -14,6 +14,7 @@ package project
 
 import (
 	"context"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
@@ -28,6 +29,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/stringx"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/tenant"
+	timeutil "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/time"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
 )
 
@@ -111,7 +113,10 @@ func (la *ListAction) listProjects() ([]*pm.Project, int64, error) {
 	}
 	projectList := []*pm.Project{}
 	for i := range projects {
-		projectList = append(projectList, &projects[i])
+		projectEle := projects[i]
+		projectEle.CreateTime = timeutil.TransStrToUTCStr(time.RFC3339Nano, projectEle.CreateTime)
+		projectEle.UpdateTime = timeutil.TransStrToUTCStr(time.RFC3339Nano, projectEle.UpdateTime)
+		projectList = append(projectList, &projectEle)
 	}
 	return projectList, total, nil
 }
@@ -251,7 +256,10 @@ func (lap *ListAuthorizedProject) Do(ctx context.Context,
 
 	projectList := []*pm.Project{}
 	for i := range projects {
-		projectList = append(projectList, &projects[i])
+		projectEle := projects[i]
+		projectEle.CreateTime = timeutil.TransStrToUTCStr(time.RFC3339Nano, projectEle.CreateTime)
+		projectEle.UpdateTime = timeutil.TransStrToUTCStr(time.RFC3339Nano, projectEle.UpdateTime)
+		projectList = append(projectList, &projectEle)
 	}
 	data := map[string]interface{}{
 		"total":   uint32(total),

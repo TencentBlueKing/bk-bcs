@@ -145,7 +145,7 @@ func (ua *UpdateVirtualClusterQuotaAction) Handle(ctx context.Context, req *cmpr
 		TaskID:       "",
 		Message:      fmt.Sprintf("更新虚拟集群[%s]配额", ua.req.ClusterID),
 		OpUser:       auth.GetUserFromCtx(ua.ctx),
-		CreateTime:   time.Now().Format(time.RFC3339),
+		CreateTime:   time.Now().UTC().Format(time.RFC3339),
 		ClusterID:    ua.req.ClusterID,
 		ProjectID:    ua.cluster.ProjectID,
 		ResourceName: ua.cluster.ClusterName,

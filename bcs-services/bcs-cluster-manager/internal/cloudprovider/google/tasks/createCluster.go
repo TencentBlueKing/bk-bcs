@@ -40,6 +40,7 @@ import (
 )
 
 // CreateGKEClusterTask call google interface to create cluster
+// nolint:funlen
 func CreateGKEClusterTask(taskID string, stepName string) error {
 	start := time.Now()
 

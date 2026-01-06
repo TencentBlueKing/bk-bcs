@@ -21,7 +21,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	//"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
+	// "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
@@ -52,7 +52,7 @@ func NewCreateAction(model store.ClusterManagerModel) *CreateAction {
 
 // createTemplateConfig create templateConfig
 func (ca *CreateAction) createTemplateConfig() error {
-	timeStr := time.Now().Format(time.RFC3339)
+	timeStr := time.Now().UTC().Format(time.RFC3339)
 	templateID := autils.GenerateTemplateID(autils.TemplateConfig)
 
 	templateConfigContent, err := json.Marshal(ca.req.CloudTemplateConfig)
@@ -117,7 +117,7 @@ func (ca *CreateAction) Handle(ctx context.Context,
 		TaskID:       "",
 		Message:      fmt.Sprintf("业务[%s]在[%s]创建[%s]类型模板配置", req.BusinessID, req.Provider, req.ConfigType),
 		OpUser:       auth.GetUserFromCtx(ctx),
-		CreateTime:   time.Now().Format(time.RFC3339),
+		CreateTime:   time.Now().UTC().Format(time.RFC3339),
 		ResourceName: ca.project.Name,
 		ProjectID:    ca.project.ProjectID,
 		ClusterID:    ca.req.ClusterID,

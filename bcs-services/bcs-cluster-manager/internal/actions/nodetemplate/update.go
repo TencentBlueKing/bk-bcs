@@ -18,8 +18,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	// "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/auth"
@@ -47,7 +47,7 @@ func NewUpdateAction(model store.ClusterManagerModel) *UpdateAction {
 
 // NOCC:CCN_threshold(工具误报:),golint/fnsize(设计如此:)
 func (ua *UpdateAction) updateNodeTemplate(destNodeTemplate *cmproto.NodeTemplate) error {
-	timeStr := time.Now().Format(time.RFC3339)
+	timeStr := time.Now().UTC().Format(time.RFC3339)
 	destNodeTemplate.UpdateTime = timeStr
 	destNodeTemplate.Updater = ua.req.Updater
 
@@ -207,7 +207,7 @@ func (ua *UpdateAction) Handle(
 		TaskID:       "",
 		Message:      fmt.Sprintf("项目[%s]更新节点模版信息[%s]", ua.project.GetName(), req.NodeTemplateID),
 		OpUser:       auth.GetUserFromCtx(ctx),
-		CreateTime:   time.Now().Format(time.RFC3339),
+		CreateTime:   time.Now().UTC().Format(time.RFC3339),
 		ProjectID:    req.ProjectID,
 		ResourceName: ua.project.GetName(),
 	})

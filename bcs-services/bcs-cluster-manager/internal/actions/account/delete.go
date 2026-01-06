@@ -103,7 +103,7 @@ func (da *DeleteAction) Handle(
 		TaskID:       "",
 		Message:      fmt.Sprintf("删除云账号信息[%s]", da.req.AccountID),
 		OpUser:       auth.GetUserFromCtx(ctx),
-		CreateTime:   time.Now().Format(time.RFC3339),
+		CreateTime:   time.Now().UTC().Format(time.RFC3339),
 		ResourceName: account.AccountName,
 	})
 	if err != nil {

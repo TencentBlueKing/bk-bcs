@@ -17,6 +17,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
@@ -141,6 +142,9 @@ func (m *ModelCluster) GetCluster(ctx context.Context, clusterID string) (*types
 	if err := m.db.Table(m.tableName).Find(cond).One(ctx, retCluster); err != nil {
 		return nil, err
 	}
+	// 兼容旧数据
+	retCluster.CreateTime = util.TransStrToUTCStr(time.RFC3339Nano, retCluster.CreateTime)
+	retCluster.UpdateTime = util.TransStrToUTCStr(time.RFC3339Nano, retCluster.UpdateTime)
 	return retCluster, nil
 }
 

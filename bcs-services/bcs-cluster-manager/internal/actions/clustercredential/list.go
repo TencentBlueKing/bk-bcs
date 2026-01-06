@@ -15,6 +15,7 @@ package clustercredential
 
 import (
 	"context"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
@@ -23,6 +24,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/util"
 )
 
 // ListAction action for list online cluster credential
@@ -67,7 +69,12 @@ func (la *ListAction) listClusterCredential() error {
 	if err != nil {
 		return err
 	}
-	la.clusterCredentialList = append(la.clusterCredentialList, clusterCredentialList...)
+	for _, clusterCredential := range clusterCredentialList {
+		// 兼容旧数据
+		clusterCredential.CreateTime = util.TransStrToUTCStr(time.RFC3339Nano, clusterCredential.CreateTime)
+		clusterCredential.UpdateTime = util.TransStrToUTCStr(time.RFC3339Nano, clusterCredential.UpdateTime)
+		la.clusterCredentialList = append(la.clusterCredentialList, clusterCredential)
+	}
 	return nil
 }
 

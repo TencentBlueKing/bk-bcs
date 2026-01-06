@@ -143,7 +143,7 @@ func (ua *DrainNodeAction) Handle(ctx context.Context, req *cmproto.DrainNodeReq
 		TaskID:       ua.task.TaskID,
 		Message:      fmt.Sprintf("集群[%s]节点pod迁移", ua.req.ClusterID),
 		OpUser:       auth.GetUserFromCtx(ua.ctx),
-		CreateTime:   time.Now().Format(time.RFC3339),
+		CreateTime:   time.Now().UTC().Format(time.RFC3339),
 		ClusterID:    ua.req.ClusterID,
 		ProjectID:    ua.cluster.ProjectID,
 		ResourceName: ua.cluster.ClusterName,
@@ -178,7 +178,7 @@ func (ua *DrainNodeAction) createDispatchTask() error {
 // BuildUpdateDesiredNodesTask build update desired nodes task
 func (ua *DrainNodeAction) buildDrainPodTask() (*cmproto.Task, error) {
 	// generate main task
-	nowStr := time.Now().Format(time.RFC3339)
+	nowStr := time.Now().UTC().Format(time.RFC3339)
 	task := &cmproto.Task{
 		TaskID:         uuid.New().String(),
 		TaskType:       cloudprovider.NodeDrainPodTask.String(),
@@ -213,7 +213,7 @@ func (ua *DrainNodeAction) buildDrainPodTask() (*cmproto.Task, error) {
 }
 
 func (ua *DrainNodeAction) generateDrainPodStep(task *cmproto.Task) error {
-	now := time.Now().Format(time.RFC3339)
+	now := time.Now().UTC().Format(time.RFC3339)
 
 	stepName := cloudprovider.NodeDrainPodAction + "-" + utils.RandomString(8)
 	step := &cmproto.Step{

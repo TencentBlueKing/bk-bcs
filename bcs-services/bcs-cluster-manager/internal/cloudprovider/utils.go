@@ -409,7 +409,7 @@ func UpdateClusterCredentialByConfig(clusterID string, config *types.Config) err
 	}
 
 	// need to handle crypt
-	now := time.Now().Format(time.RFC3339)
+	now := time.Now().UTC().Format(time.RFC3339)
 	err := GetStorageModel().PutClusterCredential(context.Background(), &proto.ClusterCredential{
 		ServerKey:     clusterID,
 		ClusterID:     clusterID,
@@ -903,7 +903,7 @@ func InitTaskStep(stepInfo StepInfo, opts ...StepOption) *proto.Step {
 		opt(defaultOptions)
 	}
 
-	nowStr := time.Now().Format(time.RFC3339)
+	nowStr := time.Now().UTC().Format(time.RFC3339)
 	return &proto.Step{
 		Name:   stepInfo.StepMethod,
 		System: "api",

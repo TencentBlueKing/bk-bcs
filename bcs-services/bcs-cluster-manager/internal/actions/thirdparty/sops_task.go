@@ -124,7 +124,7 @@ func CreateDispatchTask(ctx context.Context, model store.ClusterManagerModel, ta
 // BuildUpdateDesiredNodesTask build update desired nodes task
 func (da *DebugBkSopsTaskAction) buildDebugSopsTask(ctx context.Context) (*cmproto.Task, error) {
 	// generate main task
-	nowStr := time.Now().Format(time.RFC3339)
+	nowStr := time.Now().UTC().Format(time.RFC3339)
 	task := &cmproto.Task{
 		TaskID:         uuid.New().String(),
 		TaskType:       cloudprovider.DebugBkSopsTask.String(),
@@ -162,7 +162,7 @@ func (da *DebugBkSopsTaskAction) buildDebugSopsTask(ctx context.Context) (*cmpro
 }
 
 func (da *DebugBkSopsTaskAction) generateBKopsStep(task *cmproto.Task) error {
-	now := time.Now().Format(time.RFC3339)
+	now := time.Now().UTC().Format(time.RFC3339)
 
 	stepName := cloudprovider.BKSOPTask + "-" + utils.RandomString(8)
 	step := &cmproto.Step{

@@ -644,7 +644,7 @@ func UpdateEKSNodesToDBTask(taskID string, stepName string) error {
 	}
 
 	ctx, err = tenant.WithTenantIdByResourceForContext(ctx, tenant.ResourceMetaData{
-		ProjectId:   dependInfo.Cluster.GetProjectID(),
+		ProjectId: dependInfo.Cluster.GetProjectID(),
 	})
 	if err != nil {
 		blog.Errorf("UpdateEKSNodesToDBTask WithTenantIdByResourceForContext failed: %v", err)

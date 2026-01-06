@@ -52,7 +52,7 @@ func NewCreateAction(model store.ClusterManagerModel, iam iam.PermClient) *Creat
 }
 
 func (ca *CreateAction) createCloudAccount() error {
-	timeStr := time.Now().Format(time.RFC3339)
+	timeStr := time.Now().UTC().Format(time.RFC3339)
 	accountID := generateAccountID(ca.cloud)
 	cloudAccount := &cmproto.CloudAccount{
 		CloudID:     ca.req.CloudID,
@@ -132,7 +132,7 @@ func (ca *CreateAction) Handle(ctx context.Context,
 		TaskID:       "",
 		Message:      fmt.Sprintf("创建云账号信息[%s]", ca.resp.Data.AccountID),
 		OpUser:       auth.GetUserFromCtx(ctx),
-		CreateTime:   time.Now().Format(time.RFC3339),
+		CreateTime:   time.Now().UTC().Format(time.RFC3339),
 		ResourceName: ca.req.AccountName,
 	})
 	if err != nil {

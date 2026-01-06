@@ -37,7 +37,7 @@ func getNewClient() *Client {
 
 func TestClient_QueryHostNumByBizID(t *testing.T) {
 	cli := getNewClient()
-	hosts, _, err := cli.QueryHostByBizID(1, Page{
+	hosts, _, err := cli.QueryHostByBizID(context.Background(), 1, Page{
 		Start: 0,
 		Limit: 1,
 	})
@@ -52,7 +52,7 @@ func TestClient_QueryHostInfoWithoutBiz(t *testing.T) {
 	cli := getNewClient()
 
 	ips := []string{"x"}
-	hostList, err := cli.QueryHostInfoWithoutBiz(FieldHostIP, ips, Page{
+	hostList, err := cli.QueryHostInfoWithoutBiz(context.Background(), FieldHostIP, ips, Page{
 		Start: 0,
 		Limit: len(ips),
 	})
@@ -69,7 +69,7 @@ func TestClient_QueryHostInfoWithoutBiz(t *testing.T) {
 func TestClient_FindHostBizRelations(t *testing.T) {
 	cli := getNewClient()
 
-	hostBizRelations, err := cli.FindHostBizRelations([]int{2, 3})
+	hostBizRelations, err := cli.FindHostBizRelations(context.Background(), []int{2, 3})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -83,7 +83,7 @@ func TestClient_FindHostBizRelations(t *testing.T) {
 func TestClient_TransHostToRecycleModule(t *testing.T) {
 	cli := getNewClient()
 
-	err := cli.TransHostToRecycleModule(1, []int{2, 3})
+	err := cli.TransHostToRecycleModule(context.Background(), 1, []int{2, 3})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -93,7 +93,7 @@ func TestClient_TransHostToRecycleModule(t *testing.T) {
 
 func TestClient_GetBusinessMaintainer(t *testing.T) {
 	cli := getNewClient()
-	data, err := cli.GetBusinessMaintainer(1)
+	data, err := cli.GetBusinessMaintainer(context.Background(), 1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -103,7 +103,7 @@ func TestClient_GetBusinessMaintainer(t *testing.T) {
 
 func TestClient_GetBS2IDByBizID(t *testing.T) {
 	cli := getNewClient()
-	id, err := cli.GetBS2IDByBizID(1)
+	id, err := cli.GetBS2IDByBizID(context.Background(), 1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -114,7 +114,7 @@ func TestClient_GetBS2IDByBizID(t *testing.T) {
 func TestClient_SearchBizInstTopo(t *testing.T) {
 	cli := getNewClient()
 
-	topos, err := cli.SearchBizInstTopo(100148)
+	topos, err := cli.SearchBizInstTopo(context.Background(), 100148)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -147,7 +147,7 @@ func TestClient_ListTopology(t *testing.T) {
 func TestClient_FindHostTopoRelation(t *testing.T) {
 	cli := getNewClient()
 
-	cnt, data, err := cli.FindHostTopoRelation(100148, Page{
+	cnt, data, err := cli.FindHostTopoRelation(context.Background(), 100148, Page{
 		Start: 0,
 		Limit: 200,
 	})
@@ -162,7 +162,7 @@ func TestClient_FindHostTopoRelation(t *testing.T) {
 func TestFetchAllHostTopoRelByBizID(t *testing.T) {
 	cli := getNewClient()
 
-	data, err := cli.FetchAllHostTopoRelationsByBizID(100148)
+	data, err := cli.FetchAllHostTopoRelationsByBizID(context.Background(), 100148)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -173,7 +173,7 @@ func TestFetchAllHostTopoRelByBizID(t *testing.T) {
 func TestClient_SearchCloudAreaByCloudID(t *testing.T) {
 	cli := getNewClient()
 
-	data, err := cli.SearchCloudAreaByCloudID(0)
+	data, err := cli.SearchCloudAreaByCloudID(context.Background(), 0)
 	if err != nil {
 		t.Fatal(err)
 	}

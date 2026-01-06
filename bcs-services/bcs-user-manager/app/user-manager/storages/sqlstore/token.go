@@ -269,6 +269,7 @@ func (u *realTokenStore) GetProjectClients(projectCode string) []models.BcsClien
 	var err error
 	var tokens []models.BcsClientUser
 	start := time.Now()
+	// nolint:lll
 	u.db.Raw(`SELECT c.project_code, c.name, c.manager, c.authority_user, c.created_by, c.created_at, c.updated_at, `+
 		`u.expires_at, u.user_token, u.tenant_id FROM bcs_clients AS c JOIN bcs_users AS u on u.name = c.name WHERE u.user_type = ? `+
 		`AND u.deleted_at IS NULL AND c.deleted_at IS NULL AND c.project_code = ?`, models.PlainUser, projectCode).
@@ -287,6 +288,7 @@ func (u *realTokenStore) GetProjectClients(projectCode string) []models.BcsClien
 func (u *realTokenStore) GetClient(projectCode, name string) *models.BcsClientUser {
 	var client models.BcsClientUser
 	start := time.Now()
+	// nolint:lll
 	u.db.Raw(`SELECT c.project_code, c.name, c.manager, c.authority_user, c.created_by, c.created_at, c.updated_at, `+
 		`u.expires_at, u.user_token, u.tenant_id FROM bcs_clients AS c JOIN bcs_users AS u on u.name = c.name WHERE u.user_type = ? `+
 		`AND u.deleted_at IS NULL AND c.deleted_at IS NULL AND c.project_code = ? AND c.name = ?`,

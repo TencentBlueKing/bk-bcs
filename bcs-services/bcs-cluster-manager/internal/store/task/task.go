@@ -17,6 +17,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
@@ -157,6 +158,8 @@ func (m *ModelTask) GetTask(ctx context.Context, taskID string) (*types.Task, er
 	if err := m.db.Table(m.tableName).Find(cond).One(ctx, task); err != nil {
 		return nil, err
 	}
+	task.Start = util.TransStrToUTCStr(time.RFC3339Nano, task.Start)
+	task.End = util.TransStrToUTCStr(time.RFC3339Nano, task.End)
 	return task, nil
 }
 

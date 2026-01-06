@@ -14,6 +14,7 @@ package shared
 
 import (
 	"context"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	corev1 "k8s.io/api/core/v1"
@@ -233,7 +234,7 @@ func loadRetDatasFromCluster(ctx context.Context, clusterID string, namespaces [
 		retData := &proto.NamespaceData{
 			Name:       namespace.GetName(),
 			Uid:        string(namespace.GetUID()),
-			CreateTime: namespace.GetCreationTimestamp().Format(constant.TimeLayout),
+			CreateTime: namespace.GetCreationTimestamp().UTC().Format(time.RFC3339),
 			Status:     string(namespace.Status.Phase),
 			IsSystem:   stringx.StringInSlice(namespace.GetName(), config.GlobalConf.SystemConfig.SystemNameSpaces),
 		}

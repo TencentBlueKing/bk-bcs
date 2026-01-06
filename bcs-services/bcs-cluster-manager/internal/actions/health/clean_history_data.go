@@ -140,7 +140,7 @@ func (ha *CleanDBDataAction) Handle(
 			return ""
 		}(),
 		OpUser:     auth.GetUserFromCtx(ha.ctx),
-		CreateTime: time.Now().Format(time.RFC3339),
+		CreateTime: time.Now().UTC().Format(time.RFC3339),
 	})
 	if err != nil {
 		blog.Errorf("CleanDbHistoryData CreateOperationLog failed: %v", err)

@@ -17,8 +17,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	// "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/auth"
@@ -98,7 +98,7 @@ func (da *DeleteAction) Handle(
 		TaskID:       "",
 		Message:      fmt.Sprintf("项目[%s]删除节点模板信息[%s]", da.project.GetName(), req.NodeTemplateID),
 		OpUser:       auth.GetUserFromCtx(ctx),
-		CreateTime:   time.Now().Format(time.RFC3339),
+		CreateTime:   time.Now().UTC().Format(time.RFC3339),
 		ProjectID:    req.ProjectID,
 		ResourceName: da.project.GetName(),
 	})

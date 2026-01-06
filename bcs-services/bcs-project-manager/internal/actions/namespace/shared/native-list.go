@@ -16,13 +16,13 @@ import (
 	"context"
 	"encoding/json"
 	"strings"
+	"time"
 
 	spb "google.golang.org/protobuf/types/known/structpb"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/actions/namespace/common"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/constant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clientset"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
@@ -67,7 +67,7 @@ func (a *SharedNamespaceAction) ListNativeNamespaces(ctx context.Context,
 			Uid:         string(namespace.GetUID()),
 			Name:        namespace.GetName(),
 			Status:      string(namespace.Status.Phase),
-			CreateTime:  namespace.GetCreationTimestamp().Format(constant.TimeLayout),
+			CreateTime:  namespace.GetCreationTimestamp().UTC().Format(time.RFC3339),
 			ProjectID:   p.ProjectID,
 			ProjectCode: p.ProjectCode,
 		}

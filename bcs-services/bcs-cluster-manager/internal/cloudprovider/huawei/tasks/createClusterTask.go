@@ -923,6 +923,7 @@ func RegisterCCEClusterKubeConfigTask(taskID string, stepName string) error {
 // The function will skip execution if the step has already been completed successfully.
 // It handles various failure scenarios including dependency retrieval errors and database update failures.
 // The function ensures cluster information is properly synchronized between cloud provider and local database.
+// nolint:funlen
 func UpdateCreateClusterDBInfoTask(taskID string, stepName string) error {
 	start := time.Now()
 	// get task and task current step

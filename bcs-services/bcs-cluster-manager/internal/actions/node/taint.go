@@ -104,7 +104,7 @@ func (ua *UpdateNodeTaintsAction) updateNodeTaints() error { // nolint
 		TaskID:       "",
 		Message:      fmt.Sprintf("集群%s更新节点污点", ua.req.ClusterID),
 		OpUser:       auth.GetUserFromCtx(ua.ctx),
-		CreateTime:   time.Now().Format(time.RFC3339),
+		CreateTime:   time.Now().UTC().Format(time.RFC3339),
 		ClusterID:    ua.req.ClusterID,
 		ProjectID:    ua.cluster.ProjectID,
 		ResourceName: ua.cluster.ClusterName,

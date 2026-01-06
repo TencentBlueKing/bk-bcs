@@ -17,6 +17,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
@@ -152,6 +153,10 @@ func (m *ModelCloud) GetCloud(ctx context.Context, cloudID string) (*types.Cloud
 	if err := m.db.Table(m.tableName).Find(cond).One(ctx, cloud); err != nil {
 		return nil, err
 	}
+
+	// 兼容旧数据
+	cloud.CreatTime = util.TransStrToUTCStr(time.RFC3339Nano, cloud.CreatTime)
+	cloud.UpdateTime = util.TransStrToUTCStr(time.RFC3339Nano, cloud.UpdateTime)
 
 	if cloud.CloudCredential != nil {
 		if err := util.DecryptCredentialData(nil, cloud.CloudCredential); err != nil {
