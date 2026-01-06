@@ -17,12 +17,12 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
-	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
 )
 
 // ResourceMetaData xxx
@@ -36,11 +36,13 @@ type ResourceMetaData struct {
 // WithTenantIdByResourceForContext set tenantID by resource to context
 func WithTenantIdByResourceForContext(ctx context.Context, resource ResourceMetaData) (context.Context, error) {
 	if !options.GetGlobalCMOptions().TenantConfig.EnableMultiTenantMode {
+		// nolint:staticcheck
 		return context.WithValue(ctx, common.BkTenantIdHeaderKey, common.BkDefaultTenantId), nil
 	}
 
 	// 优先使用resource中的租户ID
 	if resource.TenantId != "" {
+		// nolint:staticcheck
 		return context.WithValue(ctx, common.BkTenantIdHeaderKey, resource.TenantId), nil
 	}
 
@@ -76,11 +78,13 @@ func WithTenantIdByResourceForContext(ctx context.Context, resource ResourceMeta
 	}
 
 	// 注入租户信息
+	// nolint:staticcheck
 	return context.WithValue(ctx, common.BkTenantIdHeaderKey, pro.TenantID), nil
 }
 
 // WithTenantIdFromContext set tenantID to context
 func WithTenantIdFromContext(ctx context.Context, tenantId string) context.Context {
+	// nolint:staticcheck
 	return context.WithValue(ctx, common.BkTenantIdHeaderKey, tenantId)
 }
 

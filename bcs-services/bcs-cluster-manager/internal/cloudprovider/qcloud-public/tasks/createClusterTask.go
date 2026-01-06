@@ -1366,6 +1366,7 @@ func openClusterAdminKubeConfig(ctx context.Context, info *cloudprovider.CloudDe
 }
 
 // UpdateCreateClusterDBInfoTask update cluster DB info
+// nolint:funlen
 func UpdateCreateClusterDBInfoTask(taskID string, stepName string) error {
 	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
 		"start update cluster db info")
@@ -1450,7 +1451,7 @@ func UpdateCreateClusterDBInfoTask(taskID string, stepName string) error {
 
 	// sync cluster perms
 	ctx, err = tenant.WithTenantIdByResourceForContext(ctx, tenant.ResourceMetaData{
-		ProjectId:   dependInfo.Cluster.GetProjectID(),
+		ProjectId: dependInfo.Cluster.GetProjectID(),
 	})
 	if err != nil {
 		blog.Errorf("UpdateCreateClusterDBInfoTask WithTenantIdByResourceForContext failed: %v", err)

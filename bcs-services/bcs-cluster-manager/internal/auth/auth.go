@@ -175,7 +175,8 @@ func CheckUserPerm(ctx context.Context, req server.Request, user middleware.Auth
 	return allow, nil
 }
 
-func callIAM(user middleware.AuthUser, action string, resourceID resourceID) (bool, string, []authutils.ResourceAction, error) {
+func callIAM(
+	user middleware.AuthUser, action string, resourceID resourceID) (bool, string, []authutils.ResourceAction, error) {
 	// Iam client
 	projectIam, err := GetProjectIamClient(user.GetTenantId())
 	if err != nil {

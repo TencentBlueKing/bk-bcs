@@ -15,7 +15,7 @@ package auth
 import (
 	"testing"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/utils"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/types"
 )
 
 var server = &ClientAuth{
@@ -24,7 +24,7 @@ var server = &ClientAuth{
 }
 
 func TestClientAuth_GetAccessToken(t *testing.T) {
-	token, err := server.GetAccessToken(utils.BkAppUser{
+	token, err := server.GetAccessToken(types.BkAppUser{
 		BkAppCode:   "xxx",
 		BkAppSecret: "xxx",
 	})

@@ -221,6 +221,7 @@ func TokenAuthenticateV2(request *restful.Request, response *restful.Response, c
 
 	request.SetAttribute(constant.CurrentUserAttr, user)
 	request.SetAttribute(constant.CurrentTenantID, getTenantID(user.TenantID, request))
+	// nolint:staticcheck
 	ctx := context.WithValue(request.Request.Context(), constant.CurrentTenantID, getTenantID(user.TenantID, request))
 	request.Request = request.Request.WithContext(ctx)
 	chain.ProcessFilter(request, response)
@@ -358,6 +359,7 @@ func TokenAuthAuthenticate(request *restful.Request, response *restful.Response,
 
 	request.SetAttribute(constant.CurrentUserAttr, user)
 	request.SetAttribute(constant.CurrentTenantID, getTenantID(user.TenantID, request))
+	// nolint:staticcheck
 	ctx := context.WithValue(request.Request.Context(), constant.CurrentTenantID, getTenantID(user.TenantID, request))
 	request.Request = request.Request.WithContext(ctx)
 	chain.ProcessFilter(request, response)

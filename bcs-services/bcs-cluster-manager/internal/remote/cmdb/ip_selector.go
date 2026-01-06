@@ -43,7 +43,7 @@ func NewIpSelector(cmdb *Client, gse gse.Interface) IPSelector {
 }
 
 type ipSelectorClient struct {
-	ctx  context.Context
+	ctx  context.Context // nolint:unused
 	cmdb *Client
 	gse  gse.Interface
 }
@@ -191,7 +191,8 @@ func GetBizHostDetailedData(ctx context.Context, cmdb *Client, gseCli gse.Interf
 }
 
 // GetHostAgentStatus by supplyName
-func GetHostAgentStatus(ctx context.Context, gseCli gse.Interface, hosts []HostDetailInfo) map[string]gse.HostAgentStatus {
+func GetHostAgentStatus(
+	ctx context.Context, gseCli gse.Interface, hosts []HostDetailInfo) map[string]gse.HostAgentStatus {
 	supplyAccountHost := make(map[string][]HostDetailInfo, 0)
 	for _, host := range hosts {
 		if host.Ip == "" {

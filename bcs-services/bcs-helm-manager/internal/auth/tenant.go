@@ -63,6 +63,7 @@ func CheckUserResourceTenantAttrFunc(fn server.HandlerFunc) server.HandlerFunc {
 		// 暂不校验
 		return fn(ctx, req, rsp)
 		// get resource tenant id
+		// nolint:govet
 		resourceTenantId, err := GetResourceTenantId(ctx, req)
 		if err != nil {
 			blog.Errorf("CheckUserResourceTenantAttrFunc GetResourceTenantId failed, err: %s", err.Error())
