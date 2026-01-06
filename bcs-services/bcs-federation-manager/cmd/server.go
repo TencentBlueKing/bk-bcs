@@ -117,6 +117,7 @@ func (s *Server) Init() error {
 		s.initTaskManager,
 		s.initMicro,
 		s.initHTTPService,
+		s.initSyncNamespaceQuotaTicker,
 	}
 
 	// init

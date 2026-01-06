@@ -268,7 +268,7 @@ func TestGetPerGPUResource_ParseError(t *testing.T) {
 func TestGetGPUTypeAndResourceName(t *testing.T) {
 	// 创建测试用的GPUInjector配置
 	conf := &InjectorConfig{
-		GPUResourceMap: map[string]map[corev1.ResourceName]InjectInfo{
+		ResourceMap: map[string]map[corev1.ResourceName]InjectInfo{
 			"L20": {
 				corev1.ResourceName("nvidia.com/gpu"): InjectInfo{
 					ResourceList: []ResourceCoefficient{
@@ -383,5 +383,209 @@ func TestGetGPUTypeAndResourceName(t *testing.T) {
 		_, _, err := gi.getGPUTypeAndResourceName(pod)
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "pod test/pod4 has different gpu resource")
+	})
+}
+
+// TestGetInfoWithNsRules test getGPUTypeAndResourceName with namespace specific rules
+func TestGetInfoWithNsRules(t *testing.T) {
+	conf := &InjectorConfig{
+		ResourceMap: map[string]map[corev1.ResourceName]InjectInfo{
+			"V100": {
+				corev1.ResourceName("nvidia.com/gpu"): InjectInfo{
+					ResourceList: []ResourceCoefficient{
+						{Name: corev1.ResourceCPU, Coefficient: 4000, Unit: "m"},
+					},
+				},
+			},
+		},
+		NamespaceResourceMap: map[string]map[string]map[corev1.ResourceName]InjectInfo{
+			"special-ns": {
+				"V100": {
+					corev1.ResourceName("nvidia.com/gpu"): InjectInfo{
+						ResourceList: []ResourceCoefficient{
+							{Name: corev1.ResourceCPU, Coefficient: 6000, Unit: "m"},
+						},
+					},
+				},
+				"T4": {
+					corev1.ResourceName("nvidia.com/gpu"): InjectInfo{
+						ResourceList: []ResourceCoefficient{
+							{Name: corev1.ResourceCPU, Coefficient: 2000, Unit: "m"},
+						},
+					},
+				},
+			},
+			"another-ns": {
+				"T4": {
+					corev1.ResourceName("amd.com/gpu"): InjectInfo{
+						ResourceList: []ResourceCoefficient{
+							{Name: corev1.ResourceCPU, Coefficient: 2000, Unit: "m"},
+						},
+					},
+				},
+			},
+		},
+	}
+	gi := &Injector{conf: conf}
+
+	t.Run("namespace匹配且GPU类型匹配 - 应该找到namespace特定规则", func(t *testing.T) {
+		pod := &corev1.Pod{
+			ObjectMeta: metav1.ObjectMeta{
+				Annotations: map[string]string{pluginAnnotationKey: "V100"},
+				Namespace:   "special-ns",
+				Name:        "pod1",
+			},
+			Spec: corev1.PodSpec{
+				Containers: []corev1.Container{
+					{
+						Resources: corev1.ResourceRequirements{
+							Requests: corev1.ResourceList{
+								"nvidia.com/gpu": resource.MustParse("1"),
+							},
+						},
+					},
+				},
+			},
+		}
+
+		gpuType, resourceName, err := gi.getGPUTypeAndResourceName(pod)
+		assert.NoError(t, err)
+		assert.Equal(t, "V100", gpuType)
+		assert.Equal(t, corev1.ResourceName("nvidia.com/gpu"), resourceName)
+	})
+
+	t.Run("namespace匹配但GPU类型不匹配 - 应该回退到默认规则", func(t *testing.T) {
+		pod := &corev1.Pod{
+			ObjectMeta: metav1.ObjectMeta{
+				Annotations: map[string]string{pluginAnnotationKey: "V100"},
+				Namespace:   "special-ns",
+				Name:        "pod2",
+			},
+			Spec: corev1.PodSpec{
+				Containers: []corev1.Container{
+					{
+						Resources: corev1.ResourceRequirements{
+							Requests: corev1.ResourceList{
+								"nvidia.com/gpu": resource.MustParse("1"),
+							},
+						},
+					},
+				},
+			},
+		}
+
+		// 即使 namespace 有 T4 的配置，但 pod 使用的是 V100，应该能找到默认的 V100 配置
+		gpuType, resourceName, err := gi.getGPUTypeAndResourceName(pod)
+		assert.NoError(t, err)
+		assert.Equal(t, "V100", gpuType)
+		assert.Equal(t, corev1.ResourceName("nvidia.com/gpu"), resourceName)
+	})
+
+	t.Run("namespace不匹配 - 应该使用默认规则", func(t *testing.T) {
+		pod := &corev1.Pod{
+			ObjectMeta: metav1.ObjectMeta{
+				Annotations: map[string]string{pluginAnnotationKey: "V100"},
+				Namespace:   "normal-ns",
+				Name:        "pod3",
+			},
+			Spec: corev1.PodSpec{
+				Containers: []corev1.Container{
+					{
+						Resources: corev1.ResourceRequirements{
+							Requests: corev1.ResourceList{
+								"nvidia.com/gpu": resource.MustParse("1"),
+							},
+						},
+					},
+				},
+			},
+		}
+
+		gpuType, resourceName, err := gi.getGPUTypeAndResourceName(pod)
+		assert.NoError(t, err)
+		assert.Equal(t, "V100", gpuType)
+		assert.Equal(t, corev1.ResourceName("nvidia.com/gpu"), resourceName)
+	})
+
+	t.Run("namespace匹配且GPU类型匹配但resource name不同 - 应该能找到", func(t *testing.T) {
+		pod := &corev1.Pod{
+			ObjectMeta: metav1.ObjectMeta{
+				Annotations: map[string]string{pluginAnnotationKey: "T4"},
+				Namespace:   "another-ns",
+				Name:        "pod4",
+			},
+			Spec: corev1.PodSpec{
+				Containers: []corev1.Container{
+					{
+						Resources: corev1.ResourceRequirements{
+							Requests: corev1.ResourceList{
+								"amd.com/gpu": resource.MustParse("1"),
+							},
+						},
+					},
+				},
+			},
+		}
+
+		gpuType, resourceName, err := gi.getGPUTypeAndResourceName(pod)
+		assert.NoError(t, err)
+		assert.Equal(t, "T4", gpuType)
+		assert.Equal(t, corev1.ResourceName("amd.com/gpu"), resourceName)
+	})
+
+	t.Run("namespace匹配但resource name不匹配 - 应该找不到", func(t *testing.T) {
+		pod := &corev1.Pod{
+			ObjectMeta: metav1.ObjectMeta{
+				Annotations: map[string]string{pluginAnnotationKey: "T4"},
+				Namespace:   "another-ns",
+				Name:        "pod5",
+			},
+			Spec: corev1.PodSpec{
+				Containers: []corev1.Container{
+					{
+						Resources: corev1.ResourceRequirements{
+							Requests: corev1.ResourceList{
+								"nvidia.com/gpu": resource.MustParse("1"),
+							},
+						},
+					},
+				},
+			},
+		}
+
+		gpuType, resourceName, err := gi.getGPUTypeAndResourceName(pod)
+		assert.NoError(t, err)
+		// 应该找不到匹配的配置
+		assert.Equal(t, "", gpuType)
+		assert.Equal(t, corev1.ResourceName(""), resourceName)
+	})
+
+	t.Run("namespace和默认规则都包含相同GPU类型 - namespace规则优先", func(t *testing.T) {
+		// 这个测试验证 getGPUTypeAndResourceName 能够同时检查两种规则
+		// 虽然在实际的 doInject 中会优先使用 namespace 规则，但 getGPUTypeAndResourceName
+		// 需要能够识别出两种规则中都存在的 GPU 类型
+		pod := &corev1.Pod{
+			ObjectMeta: metav1.ObjectMeta{
+				Annotations: map[string]string{pluginAnnotationKey: "V100"},
+				Namespace:   "special-ns",
+				Name:        "pod6",
+			},
+			Spec: corev1.PodSpec{
+				Containers: []corev1.Container{
+					{
+						Resources: corev1.ResourceRequirements{
+							Requests: corev1.ResourceList{
+								"nvidia.com/gpu": resource.MustParse("1"),
+							},
+						},
+					},
+				},
+			},
+		}
+
+		gpuType, resourceName, err := gi.getGPUTypeAndResourceName(pod)
+		assert.NoError(t, err)
+		assert.Equal(t, "V100", gpuType)
+		assert.Equal(t, corev1.ResourceName("nvidia.com/gpu"), resourceName)
 	})
 }
