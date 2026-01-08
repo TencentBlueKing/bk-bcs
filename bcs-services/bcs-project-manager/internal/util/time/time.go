@@ -38,9 +38,14 @@ func TransTimeFormat(input string) string {
 	return formatTime.Format(format)
 }
 
-// TransTsToTime trans timestamp to time
+// TransTsToTime trans timestamp to  time
 func TransTsToTime(timestamp int64) time.Time {
 	return time.Unix(timestamp, 0)
+}
+
+// TransTsToMilliTime trans timestamp to Milli time
+func TransTsToMilliTime(timestamp int64) time.Time {
+	return time.UnixMilli(timestamp)
 }
 
 // TransTsToStr trans timestamp to time string
@@ -48,13 +53,12 @@ func TransTsToStr(timestamp int64) string {
 	if timestamp <= 0 {
 		return ""
 	}
-
-	t := TransTsToTime(timestamp)
+	t := TransTsToMilliTime(timestamp)
 	formattedTime := t.Format(time.RFC3339)
 	return formattedTime
 }
 
-// TransStrToTs trans  time string totimestamp
+// TransStrToTs trans  time string to timestamp
 func TransStrToTs(input string) int64 {
 	t, err := time.Parse(time.RFC3339Nano, input)
 	if err != nil {

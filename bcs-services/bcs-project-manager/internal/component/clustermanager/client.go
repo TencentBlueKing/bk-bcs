@@ -103,8 +103,13 @@ func GetResourceUsage(ctx context.Context, projectID, provider string) (
 	}
 	defer closeCon()
 	req := &clustermanager.GetProjectResourceQuotaUsageRequest{
-		ProjectID:  projectID,
-		ProviderID: provider,
+		ProjectID: projectID,
+		ProviderID: func(provider string) string {
+			if findProvider, ok := common.ProviderMap[provider]; ok {
+				return findProvider
+			}
+			return provider
+		}(provider),
 	}
 	resp, err := cli.GetProjectResourceQuotaUsage(ctx, req)
 	if err != nil {

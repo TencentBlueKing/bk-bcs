@@ -55,3 +55,15 @@ const (
 	// LangCookieName 语言版本 Cookie 名称
 	LangCookieName = "blueking_language"
 )
+
+const (
+	// ProviderInternal xxx
+	ProviderInternal = "internal"
+	// ProviderSelfProvision xxx
+	ProviderSelfProvision = "selfProvisionCloud"
+)
+
+// ProviderMap provider map
+var ProviderMap = map[string]string{
+	ProviderInternal: ProviderSelfProvision,
+}

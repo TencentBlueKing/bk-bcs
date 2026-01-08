@@ -2927,6 +2927,18 @@ message ProjectQuota {
     title: "annotations",
     description: "资源quota的注解配置"
   }];
+  QuotaAttr quotaAttr = 24[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "quotaAttr",
+    description: "额度属性"
+  }];
+  bool quotaSharedEnabled = 25[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "quotaSharedEnabled",
+    description: "是否启用额度共享"
+  }];
+  repeated QuotaSharedProject quotaSharedProjectList = 26[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "quotaSharedProjectList",
+    description: "额度共享配置"
+  }];
 }
 
 message NodeGroup {
@@ -3114,6 +3126,127 @@ message CreateProjectQuotaRequest {
     title: "annotations",
     description: "资源quota的注解配置"
   }];
+  QuotaAttr quotaAttr = 15[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "quotaAttr",
+    description: "额度属性"
+  }];
+  google.protobuf.BoolValue quotaSharedEnabled = 16[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "quotaSharedEnabled",
+    description: "是否启用额度共享"
+  }];
+  repeated QuotaSharedProject quotaSharedProjectList = 17[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "quotaSharedProjectList",
+    description: "额度共享配置"
+  }];
+}
+
+message QuotaAttr {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "QuotaAttr"
+      description : "项目属性"
+    }
+  };
+  string sourceBkBizIDs = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "sourceBkBizIDs",
+    description: "资源来源业务ID列表，资源来源 [all]不限业务; [100148]可使用100148业务 [1068, 100148]资源可来源于多个业务"
+  }];
+
+  string SourceBkBizNames = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "SourceBkBizNames",
+    description: "资源来源业务名称"
+  }];
+
+  string computeType = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "computeType",
+    description: "计算类型，计算类型 [General 通算, Intelligent智算]"
+  }];
+
+  string purchaseDurationType = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "purchaseDurationType",
+    description: "购买时长类型，【once一次性、periodic周期性】 目前对于整机额度来说仅支持一次性购买"
+  }];
+
+  string purchaseDurationSettings = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "purchaseDurationSettings",
+    description: "购买时长配置, 可能存在不限制时长"
+  }];
+
+  string startTime = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "startTime",
+    description: "开始供应时间 UTC格式：2024-01-25 23:59:59"
+  }];
+
+  string endTime = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "endTime",
+    description: "截止供应时间 UTC格式：2024-01-31 23:59:59"
+  }];
+}
+
+message QuotaLimit {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ProjectQuota"
+      description : "项目配额信息(支持不同类型)"
+    }
+  };
+  int64 quotaNum = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "quotaNum",
+    description: "配额数量（整机数量）"
+  }];
+}
+
+message QuotaSharedProject {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "QuotaSharedProject"
+      description : "被共享的项目配置"
+    }
+  };
+  string projectID = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "projectID",
+    description: "项目ID"
+  }];
+
+  string projectCode = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "projectCode",
+    description: "项目Code"
+  }];
+
+  string projectName = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "projectName",
+    description: "项目名称"
+  }];
+
+  string shareStrategy = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "shareStrategy",
+    description: "共享策略 [elastic弹性共享模式, rigid刚性共享模式]"
+  }];
+
+  QuotaLimit usageLimit = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "usageLimit",
+    description: "使用上限配置"
+  }];
+
+  QuotaLimit usedAmount = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "usedAmount",
+    description: "已使用量"
+  }];
+
+  string shareStartTime = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "shareStartTime",
+    description: "共享开始时间"
+  }];
+
+  string shareEndTime = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "shareEndTime",
+    description: "共享结束时间"
+  }];
+
+  string status = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "status",
+    description: "共享状态，[active生效中, expired已过期, suspended已暂停]"
+  }];
 }
 
 message GetProjectQuotaRequest {
@@ -3164,6 +3297,18 @@ message UpdateProjectQuotaRequest {
   map<string, string> annotations = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "annotations",
     description: "资源quota的注解配置"
+  }];
+  QuotaAttr quotaAttr = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "quotaAttr",
+    description: "额度属性"
+  }];
+  google.protobuf.BoolValue quotaSharedEnabled = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "quotaSharedEnabled",
+    description: "是否启用额度共享"
+  }];
+  repeated QuotaSharedProject quotaSharedProjectList = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "quotaSharedProjectList",
+    description: "额度共享配置"
   }];
 }
 
@@ -3217,6 +3362,18 @@ message UpdateProjectV2Request {
   map<string, string> annotations = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "annotations",
     description: "project的注解配置"
+  }];
+  QuotaAttr quotaAttr = 12[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "quotaAttr",
+    description: "额度属性"
+  }];
+  bool quotaSharedEnabled = 13[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "quotaSharedEnabled",
+    description: "是否启用额度共享"
+  }];
+  repeated QuotaSharedProject quotaSharedProjectList = 14[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "quotaSharedProjectList",
+    description: "额度共享配置"
   }];
 }
 
@@ -3299,6 +3456,14 @@ message ListProjectQuotasRequest{
   string provider = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "provider",
     description: "云底层资源提供方"
+  }];
+  uint32 page = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "page",
+    description: "页码"
+  }];
+  uint32 limit = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "limit",
+    description: "每页数量"
   }];
 }
 

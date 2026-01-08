@@ -72,6 +72,8 @@ func (cpq *scaleDownProjectQuota) Steps(defineSteps []task.StepBuilder) []*types
 	switch cpq.projectQuota.QuotaType {
 	case quota.Host:
 		return cpq.buildScaleDownHostQuotaSteps()
+	case quota.SelfHost:
+		return cpq.buildScaleDownHostQuotaSteps()
 	case quota.Shared:
 		return cpq.buildScaleDownSharedQuotaSteps()
 	case quota.Federation:
@@ -90,10 +92,12 @@ func (cpq *scaleDownProjectQuota) buildScaleDownHostQuotaSteps() []*types.Step {
 
 	// 1. 审批调增整机资源配额申请
 	// 2. 等待审批通过，审批通过后, 更新配额大小; 审批拒绝后, 更新配额申请状态
-	content := fmt.Sprintf("user %s scale down project %s CA resources quota: region(%s) zone(%s) instanceType(%s) "+
-		"quota(%v)", cpq.operator, cpq.projectQuota.ProjectCode,
+	content := fmt.Sprintf("user(%s) scale down project(%s) CA "+
+		"resource region(%s) zone(%s) instanceType(%s) quota(%v) to (%v)",
+		cpq.operator, cpq.projectQuota.ProjectCode,
 		cpq.projectQuota.Quota.HostResources.Region, cpq.projectQuota.Quota.HostResources.ZoneId,
-		cpq.projectQuota.Quota.HostResources.InstanceType, cpq.resource.GetZoneResources().GetQuotaNum())
+		cpq.projectQuota.Quota.HostResources.InstanceType, cpq.projectQuota.Quota.HostResources.QuotaNum,
+		cpq.resource.GetZoneResources().GetQuotaNum())
 
 	stepList = append(stepList, buildItsmQuotaSteps("", itsmData{
 		operator:    cpq.operator,
@@ -113,8 +117,12 @@ func (cpq *scaleDownProjectQuota) buildScaleDownSharedQuotaSteps() []*types.Step
 
 	// 1. 审批共享集群配额申请
 	// 2. 等待审批通过，审批通过后, 更新配额状态; 审批拒绝后, 更新配额申请状态
-	content := fmt.Sprintf("user %s scale down shared cluster %s quota: cpu(%s) mem(%s)",
-		cpq.operator, cpq.projectQuota.ClusterId,
+
+	// 安全获取配额信息，避免空指针panic
+	cpuQuota, memQuota, _ := getProjectQuotasSafely(cpq.projectQuota)
+	content := fmt.Sprintf("user %s scale down shared cluster %s "+
+		"quota: cpu(%s) mem(%s) to cpu(%s) mem(%s)",
+		cpq.operator, cpq.projectQuota.ClusterId, cpuQuota, memQuota,
 		cpq.resource.GetCpu().GetDeviceQuota(), cpq.resource.GetMem().GetDeviceQuota())
 
 	stepList = append(stepList, buildItsmQuotaSteps("", itsmData{
@@ -137,8 +145,12 @@ func (cpq *scaleDownProjectQuota) buildScaleDownFederationQuotaSteps() []*types.
 	// 1. 审批联邦集群配额申请
 	// 2. 等待审批通过，审批通过后, 更新配额状态; 审批拒绝后, 更新配额申请状态
 
-	content := fmt.Sprintf("user %s scale down federation cluster %s namespace %s quota: cpu(%s) mem(%s) gpu(%s)",
+	// 安全获取配额信息，避免空指针panic
+	cpuQuota, memQuota, gpuQuota := getProjectQuotasSafely(cpq.projectQuota)
+	content := fmt.Sprintf("user(%s) scale down federation cluster(%s) "+
+		"namespace(%s) quota: cpu(%s) mem(%s) gpu(%s) to cpu(%s) mem(%s) gpu(%s)",
 		cpq.operator, cpq.projectQuota.ClusterId, cpq.projectQuota.Namespace,
+		cpuQuota, memQuota, gpuQuota,
 		cpq.resource.GetCpu().GetDeviceQuota(), cpq.resource.GetMem().GetDeviceQuota(),
 		cpq.resource.GetGpu().GetDeviceQuota())
 	stepList = append(stepList, buildItsmQuotaSteps("", itsmData{
