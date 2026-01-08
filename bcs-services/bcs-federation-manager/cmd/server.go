@@ -613,11 +613,14 @@ func (s *Server) initThirdpartyCli() error {
 func (s *Server) initSyncNamespaceQuotaTicker() error {
 
 	cli := handler.NewFedNamespaceControllerManager()
-	err := cli.StartLoop(s.ctx, s.store, s.taskmanager, s.clusterCli)
-	if err != nil {
-		blog.Errorf("FedNamespaceControllerManager start loop failed, err %s", err.Error())
-		return err
-	}
+
+	go func() {
+		err := cli.StartLoop(s.ctx, s.store, s.taskmanager, s.clusterCli)
+		if err != nil {
+			blog.Errorf("FedNamespaceControllerManager start loop failed, err %s", err.Error())
+			s.ctxCancelFunc()
+		}
+	}()
 
 	// init start namespace quota ticker successfully
 	blog.Infof("init sync namespace quota ticker successfully")
