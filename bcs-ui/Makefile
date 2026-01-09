@@ -24,7 +24,7 @@ LDFLAG=-ldflags "-X github.com/Tencent/bk-bcs/bcs-common/common/version.BcsVersi
 
 .PHONY: build_frontend
 build_frontend:
-	cd frontend; npm install; npm run build
+	cd frontend; npm install --legacy-peer-deps; npm run build
 
 .PHONY: build_ui
 build_ui:
