@@ -14,6 +14,7 @@
 package constants
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/config"
@@ -39,7 +40,21 @@ const (
 
 	// BluekingLanguage switch cookies constant
 	BluekingLanguage = "blueking_language"
+	// TenantIDHeaderKey tenant id header key
+	TenantIDHeaderKey = "X-Bk-Tenant-Id"
+	// DefaultTenantID default tenant id
+	DefaultTenantID = "default"
+	// ContextTenantKey context tenant key
+	ContextTenantKey = contextKey("tenant")
 )
 
 // ServiceDomain service domain
 var ServiceDomain = fmt.Sprintf("%s%s", config.G.Base.ModuleName, ".bkbcs.tencent.com")
+
+// GetTenantIDFromContext 从 context 中获取租户 ID
+func GetTenantIDFromContext(ctx context.Context) string {
+	if tenantID, ok := ctx.Value(ContextTenantKey).(string); ok {
+		return tenantID
+	}
+	return DefaultTenantID
+}

@@ -93,7 +93,7 @@ export default defineComponent({
         hasNoAuthorizedProject.value = true;
         if (currentRoute.value.path !== '/') {
           $router.replace({
-            path: '/',
+            path: '/bcs',
           });
         }
         return false;

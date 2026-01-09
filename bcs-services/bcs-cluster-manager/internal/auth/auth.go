@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -30,7 +31,10 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cmdb"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tenant"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
 // ClientPermissions client 类型用户拥有的权限，clientID -> actions
@@ -233,22 +237,45 @@ func callIAM(
 		if bizID == "" {
 			return true, "", nil, nil
 		}
-		allow, err := checkUserBizPerm(user.GetUsername(), bizID)
+		ctx := tenant.WithTenantIdFromContext(context.Background(), user.GetTenantId())
+		allow, err := checkUserBizPerm(ctx, user.GetUsername(), bizID)
 		return allow, "", nil, err
 	default:
 		return false, "", nil, errors.New("permission denied")
 	}
 }
 
+func checkUserBizPerm(ctx context.Context, username string, businessID string) (bool, error) {
+	if businessID == "" {
+		return false, errors.New("permission denied")
+	}
+	bizID, err := strconv.Atoi(businessID)
+	if err != nil {
+		errMsg := fmt.Errorf("strconv BusinessID to int failed: %v", err)
+		blog.Errorf(errMsg.Error())
+		return false, errMsg
+	}
+
+	// query biz hosts
+	businessData, err := cmdb.GetCmdbClient().GetBusinessMaintainer(ctx, bizID)
+	if err != nil {
+		blog.Errorf("getUserHasPermHosts GetBusinessMaintainer failed: %v", err)
+		return false, err
+	}
+	var userList []string
+	userList = append(userList, strings.Split(businessData.BKBizMaintainer, ",")...)
+	userList = append(userList, strings.Split(businessData.BkBizProductor, ",")...)
+	userList = append(userList, strings.Split(businessData.BkBizTester, ",")...)
+	userList = append(userList, strings.Split(businessData.BkBizDeveloper, ",")...)
+	userList = append(userList, strings.Split(businessData.Operator, ",")...)
+	if utils.StringInSlice(username, userList) {
+		return true, nil
+	}
+	return false, errors.New("permission denied, need scope of blueking bkcc business permition:" +
+		"[bk_biz_maintainer|bk_biz_productor|bk_biz_tester|bk_biz_developer]")
+}
+
 const (
 	// CanOperatorBiz 操作人可操作业务
 	CanOperatorBiz = "CanOperatorBiz"
 )
-
-// 包被循环调用，只能使用SetCheckBizPerm设置
-var checkUserBizPerm func(username string, businessID string) (bool, error)
-
-// SetCheckBizPerm xxx
-func SetCheckBizPerm(f func(username string, businessID string) (bool, error)) {
-	checkUserBizPerm = f
-}

@@ -19,6 +19,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/component"
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/config"
+	"github.com/Tencent/bk-bcs/bcs-ui/pkg/constants"
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/contextx"
 )
 
@@ -48,6 +49,7 @@ func RegisterSystem(ctx context.Context) error {
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
 		SetHeader("X-Bkapi-Authorization", authHeader).
+		SetHeader(constants.TenantIDHeaderKey, "system").
 		SetHeaders(contextx.GetLaneIDByCtx(ctx)).
 		Post(url)
 
@@ -75,6 +77,7 @@ func GetCurrentAnnouncements(ctx context.Context, lang string) ([]Announcement, 
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
 		SetHeader("X-Bkapi-Authorization", authHeader).
+		SetHeader(constants.TenantIDHeaderKey, constants.GetTenantIDFromContext(ctx)).
 		SetHeaders(contextx.GetLaneIDByCtx(ctx)).
 		Get(url)
 

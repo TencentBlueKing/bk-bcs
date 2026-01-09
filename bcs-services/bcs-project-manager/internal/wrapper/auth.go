@@ -179,6 +179,7 @@ func (r *resourceID) check() error {
 
 // CheckUserPerm implementation for CheckUserPerm interface
 func CheckUserPerm(ctx context.Context, req server.Request, user middleauth.AuthUser) (bool, error) {
+	ctx = tenant.WithTenantIdFromContext(ctx, user.GetTenantId())
 	logging.Info("CheckUserPerm: method/%s, user: %s/%s", req.Method(), tenant.GetTenantIdFromContext(ctx),
 		user.GetUsername())
 

@@ -65,6 +65,11 @@ var NoCheckTenantMethod = []string{
 
 	// common interface && support interface
 
+	// Operator Biz
+	"ClusterManager.GetBizTopologyHost",
+	"ClusterManager.GetTopologyNodes",
+	"ClusterManager.GetTopologyHostIdsNodes",
+	"ClusterManager.GetHostsDetails",
 }
 
 // NoAuthMethod 不需要用户身份认证的方法
