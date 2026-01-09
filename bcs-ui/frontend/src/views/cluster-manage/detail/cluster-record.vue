@@ -2,14 +2,13 @@
   <div>
     <Row>
       <template #left>
-        <bcs-date-picker
-          :shortcuts="shortcuts"
-          type="datetimerange"
-          shortcut-close
-          :use-shortcut-text="false"
-          :clearable="false"
-          v-model="timeRange">
-        </bcs-date-picker>
+        <DatePicker
+          :placeholder="$t('generic.placeholder.searchDate')"
+          class="bg-[#fff]"
+          :model-value="zoneDate"
+          :timezone.sync="timezone"
+          @update:modelValue="handleValueChange"
+        />
       </template>
       <template #right>
         <bcs-search-select
@@ -36,7 +35,10 @@
       @page-change="pageChange"
       @page-limit-change="pageLimitChange"
       @header-dragend="handleHeaderDragend(tableRef)">
-      <bk-table-column :label="$t('generic.label.time')" prop="createTime" width="170" fixed :resizable="false">
+      <bk-table-column :label="$t('generic.label.time')" prop="createTime" width="200" fixed resizable>
+        <template #default="{ row }">
+          {{ formatTimeWithTimezone(row.createTime) }}
+        </template>
       </bk-table-column>
       <bk-table-column :label="$t('generic.label.resourceName')" prop="resourceName" show-overflow-tooltip>
         <template #default="{ row }">
@@ -117,14 +119,17 @@
 <script lang="ts" setup>
 import { computed, onBeforeMount, onBeforeUnmount, ref, watch } from 'vue';
 
+import DatePicker from '@blueking/date-picker/vue2';
 import TaskLog from '@blueking/task-log/vue2';
 
 import { useTask } from '../cluster/use-cluster';
 
 import '@blueking/task-log/vue2/vue2.css';
+import '@blueking/date-picker/vue2/vue2.css';
 import { clusterOperationLogs, clusterTaskRecords, taskLogsDownloadURL, taskRetry } from '@/api/modules/cluster-manager';
 import { parseUrl } from '@/api/request';
 import $bkMessage from '@/common/bkmagic';
+import { formatTimeWithTimezone, getBrowserTimezoneId } from '@/common/util';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import Row from '@/components/layout/Row.vue';
 import StatusIcon from '@/components/status-icon';
@@ -141,44 +146,6 @@ const props = defineProps<Props>();
 const hideRetryStatus = ref(['SUCCESS', 'RUNNING']);
 
 const timeRange = ref<Date[]>([]);
-// 快捷时间配置
-const shortcuts = ref([
-  {
-    text: $i18n.t('units.time.today'),
-    value() {
-      const end = new Date();
-      const start = new Date(end.getFullYear(), end.getMonth(), end.getDate());
-      return [start, end];
-    },
-  },
-  {
-    text: $i18n.t('units.time.lastDays'),
-    value() {
-      const end = new Date();
-      const start = new Date();
-      start.setTime(start.getTime() - 3600 * 1000 * 24 * 7);
-      return [start, end];
-    },
-  },
-  {
-    text: $i18n.t('units.time.last15Days'),
-    value() {
-      const end = new Date();
-      const start = new Date();
-      start.setTime(start.getTime() - 3600 * 1000 * 24 * 15);
-      return [start, end];
-    },
-  },
-  {
-    text: $i18n.t('units.time.last30Days'),
-    value() {
-      const end = new Date();
-      const start = new Date();
-      start.setTime(start.getTime() - 3600 * 1000 * 24 * 30);
-      return [start, end];
-    },
-  },
-]);
 
 const isLoading = ref(false);
 const list = ref<any[]>([]);
@@ -408,6 +375,15 @@ function handleSkip(data) {
       taskConfig.value.loading = false;
     },
   });
+}
+
+// 时间选择
+const zoneDate = ref([]);
+const timezone = ref(getBrowserTimezoneId());
+function handleValueChange(v, info) {
+  const [start, end] = info;
+  timeRange.value = [start.formatText, end.formatText];
+  zoneDate.value = v;
 }
 
 watch(

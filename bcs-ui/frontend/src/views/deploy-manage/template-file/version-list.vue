@@ -38,7 +38,7 @@
       </bcs-table-column>
       <bcs-table-column :label="$t('generic.label.updatedAt')" prop="createAt">
         <template #default="{ row }">
-          {{ formatTime(row.createAt * 1000, 'yyyy-MM-dd hh:mm:ss') }}
+          {{ formatTimeWithTimezone(row.createAt * 1000) }}
         </template>
       </bcs-table-column>
       <bcs-table-column :label="$t('generic.label.action')" width="140" fixed="right">
@@ -69,7 +69,7 @@ import { store as fileStore } from './use-store';
 import { IListTemplateMetadataItem, ITemplateVersionItem } from '@/@types/cluster-resource-patch';
 import { TemplateSetService } from '@/api/modules/new-cluster-resource';
 import $bkMessage from '@/common/bkmagic';
-import { formatTime } from '@/common/util';
+import { formatTimeWithTimezone } from '@/common/util';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import usePage from '@/composables/use-page';
 import useSearch from '@/composables/use-search';

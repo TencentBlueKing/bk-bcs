@@ -108,7 +108,11 @@
           <bk-user-display-name :user-id="row.updateBy"></bk-user-display-name>
         </template>
       </bcs-table-column>
-      <bcs-table-column :label="$t('cluster.labels.updatedAt')" prop="updateTime" width="200"></bcs-table-column>
+      <bcs-table-column :label="$t('cluster.labels.updatedAt')" prop="updateTime" width="200">
+        <template #default="{ row }">
+          {{ formatTimeWithTimezone(row.updateTime) }}
+        </template>
+      </bcs-table-column>
       <bcs-table-column :label="$t('generic.label.action')" width="220" fixed="right">
         <template #default="{ row }">
           <bcs-button
@@ -375,6 +379,9 @@
               prop="updateTime"
               width="180"
               show-overflow-tooltip>
+              <template #default="{ row }">
+                {{ formatTimeWithTimezone(row.updateTime) || '--' }}
+              </template>
             </bcs-table-column>
             <bcs-table-column
               :label="$t('generic.label.status')"
@@ -474,7 +481,7 @@ import ChartFileTree from './chart-file-tree.vue';
 import useHelm from './use-helm';
 
 import $bkMessage from '@/common/bkmagic';
-import { copyText } from '@/common/util';
+import { copyText, formatTimeWithTimezone } from '@/common/util';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import ClusterSelect from '@/components/cluster-selector/cluster-select.vue';
 import BcsContent from '@/components/layout/Content.vue';
@@ -886,6 +893,7 @@ export default defineComponent({
       showManifest,
       manifest,
       curRevision,
+      formatTimeWithTimezone,
     };
   },
 });

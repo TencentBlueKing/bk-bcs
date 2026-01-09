@@ -32,7 +32,9 @@
               v-if="item.version && item.latestDeployVersion === item.version"
               class="px-[6px] h-[20px] leading-[20px] flex-shrink-0">LatestDeployed</bcs-tag>
           </span>
-          <span class="text-[#a2a6b0]">{{ (item?.createAt && formatDate(item.createAt * 1000)) || '--' }}</span>
+          <span class="text-[#a2a6b0]">
+            {{ (item?.createAt && formatTimeWithTimezone(item.createAt * 1000)) || '--' }}
+          </span>
         </div>
         <span
           class="text-[#a2a6b0] bcs-ellipsis"
@@ -52,7 +54,7 @@ import { computed, onActivated, ref, watch } from 'vue';
 
 import { ITemplateVersionItem } from '@/@types/cluster-resource-patch';
 import { TemplateSetService  } from '@/api/modules/new-cluster-resource';
-import { formatDate } from '@/common/util';
+import { formatTimeWithTimezone } from '@/common/util';
 import SelectExtension from '@/components/select-extension.vue';
 
 const props = defineProps({

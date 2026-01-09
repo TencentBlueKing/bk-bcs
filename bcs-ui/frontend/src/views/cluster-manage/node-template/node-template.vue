@@ -55,8 +55,16 @@
             <bk-user-display-name :user-id="row.updater"></bk-user-display-name>
           </template>
         </bcs-table-column>
-        <bcs-table-column :label="$t('cluster.labels.createdAt')" prop="createTime"></bcs-table-column>
-        <bcs-table-column :label="$t('cluster.labels.updatedAt')" prop="updateTime"></bcs-table-column>
+        <bcs-table-column :label="$t('cluster.labels.createdAt')" prop="createTime">
+          <template #default="{ row }">
+            {{row.createTime ? formatTimeWithTimezone(row.createTime) : '--'}}
+          </template>
+        </bcs-table-column>
+        <bcs-table-column :label="$t('cluster.labels.updatedAt')" prop="updateTime">
+          <template #default="{ row }">
+            {{row.updateTime ? formatTimeWithTimezone(row.updateTime) : '--'}}
+          </template>
+        </bcs-table-column>
         <bcs-table-column :label="$t('generic.label.action')" width="180">
           <template #default="{ row }">
             <bk-button text @click="handleEdit(row)">{{$t('generic.button.edit')}}</bk-button>
@@ -90,6 +98,7 @@ import { defineComponent, onMounted, ref } from 'vue';
 import NodeTemplateDetail from './node-template-detail.vue';
 
 import $bkMessage from '@/common/bkmagic';
+import { formatTimeWithTimezone } from '@/common/util';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import BcsContent from '@/components/layout/Content.vue';
 import usePage from '@/composables/use-page';
@@ -183,6 +192,7 @@ export default defineComponent({
       handleAddTemplate,
       handleShowDetail,
       handleDeleteDetail,
+      formatTimeWithTimezone,
     };
   },
 });

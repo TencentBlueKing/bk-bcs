@@ -4,6 +4,7 @@
     <div class="flex justify-end mb-[20px]">
       <template v-if="!hideClusterAndNamespace">
         <ClusterSelect
+          class="mr-[5px]"
           v-model="params.clusterId"
           cluster-type="all"
           searchable
@@ -16,23 +17,19 @@
           :list="namespaceList"
           :loading="namespaceLoading"
           v-model="params.namespace"
-          class="w-[180px] ml-[5px]"
+          class="w-[180px] mr-[5px]"
           @change="handleInitEventData">
         </NamespaceSelect>
       </template>
-      <bcs-date-picker
+      <DatePicker
         :placeholder="$t('generic.placeholder.searchDate')"
-        :shortcuts="shortcuts"
-        class="ml-[5px] max-w-[320px]"
-        type="datetimerange"
-        placement="bottom"
-        shortcut-close
-        transfer
-        v-model="params.date"
-        @change="handleInitEventData">
-      </bcs-date-picker>
+        class="bg-[#fff] mr-[5px]"
+        :model-value="zoneDate"
+        :timezone.sync="timezone"
+        @update:modelValue="handleValueChange"
+      />
       <bcs-search-select
-        class="flex-1 ml-[5px] bg-[#fff]"
+        class="flex-1 bg-[#fff]"
         clearable
         filter
         :show-condition="false"
@@ -52,9 +49,9 @@
       class="bcs-event-table"
       @page-change="handlePageChange"
       @page-limit-change="handlePageLimitChange">
-      <bcs-table-column :label="$t('generic.label.time')" prop="eventTime" width="180">
+      <bcs-table-column :label="$t('generic.label.time')" prop="eventTime" width="200">
         <template #default="{ row }">
-          {{formatDate(row.eventTime)}}
+          {{formatTimeWithTimezone(row.eventTime, timezone)}}
         </template>
       </bcs-table-column>
       <bcs-table-column :label="$t('projects.eventQuery.module')" prop="component" width="210" show-overflow-tooltip>
@@ -89,8 +86,11 @@
 <script lang="ts">
 import { computed, defineComponent, onMounted, ref, toRefs, watch } from 'vue';
 
+import DatePicker from '@blueking/date-picker/vue2';
+
+import '@blueking/date-picker/vue2/vue2.css';
 import { storageEvents } from '@/api/modules/storage';
-import { formatDate } from '@/common/util';
+import { formatTimeWithTimezone, getBrowserTimezoneId } from '@/common/util';
 import ClusterSelect from '@/components/cluster-selector/cluster-select.vue';
 import NamespaceSelect from '@/components/namespace-selector/namespace-select.vue';
 import { IProject, useCluster  } from '@/composables/use-app';
@@ -100,7 +100,7 @@ import { useSelectItemsNamespace } from '@/views/cluster-manage/namespace/use-na
 
 export default defineComponent({
   name: 'EventQuery',
-  components: { ClusterSelect, NamespaceSelect },
+  components: { ClusterSelect, NamespaceSelect, DatePicker },
   props: {
     // 资源类型
     kinds: {
@@ -166,53 +166,6 @@ export default defineComponent({
 
     const { clusterList } = useCluster();
     const { namespaceList, namespaceLoading, getNamespaceData } = useSelectItemsNamespace();
-    const shortcuts = ref([
-      {
-        text: $i18n.t('projects.eventQuery.lastHour'),
-        value() {
-          const end = new Date();
-          const start = new Date();
-          start.setTime(start.getTime() - 3600 * 1000);
-          return [start, end];
-        },
-      },
-      {
-        text: $i18n.t('projects.eventQuery.last6Hours'),
-        value() {
-          const end = new Date();
-          const start = new Date();
-          start.setTime(start.getTime() - 3600 * 1000 * 6);
-          return [start, end];
-        },
-      },
-      {
-        text: $i18n.t('projects.eventQuery.last24Hours'),
-        value() {
-          const end = new Date();
-          const start = new Date();
-          start.setTime(start.getTime() - 3600 * 1000 * 24);
-          return [start, end];
-        },
-      },
-      {
-        text: $i18n.t('projects.eventQuery.last3Days'),
-        value() {
-          const end = new Date();
-          const start = new Date();
-          start.setTime(start.getTime() - 3600 * 1000 * 24 * 3);
-          return [start, end];
-        },
-      },
-      {
-        text: $i18n.t('units.time.lastDays'),
-        value() {
-          const end = new Date();
-          const start = new Date();
-          start.setTime(start.getTime() - 3600 * 1000 * 24 * 7);
-          return [start, end];
-        },
-      },
-    ]);
     const componentList = [
       'kubelet',
       'default-scheduler',
@@ -458,6 +411,16 @@ export default defineComponent({
       params.value.searchSelect = [];
     };
 
+    // 时间选择
+    const zoneDate = ref([]);
+    const timezone = ref(getBrowserTimezoneId());
+    function handleValueChange(v, info) {
+      const [start, end] = info;
+      params.value.date = [start.formatText, end.formatText];
+      zoneDate.value = v;
+      handleInitEventData();
+    }
+
     onMounted(async () => {
       eventLoading.value = true;
       await getNamespaceData({ clusterId: params.value.clusterId }, nsRequired.value);
@@ -472,16 +435,18 @@ export default defineComponent({
       events,
       pagination,
       eventLoading,
-      shortcuts,
       searchEmpty,
       namespaceList,
       namespaceLoading,
+      zoneDate,
+      timezone,
       handleClearSearchData,
-      formatDate,
       handlePageChange,
       handlePageLimitChange,
       handleClusterChange,
       handleInitEventData,
+      handleValueChange,
+      formatTimeWithTimezone,
     };
   },
 });

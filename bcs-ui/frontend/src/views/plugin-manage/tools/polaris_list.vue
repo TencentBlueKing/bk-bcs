@@ -104,7 +104,7 @@
               {{ $t('plugin.tools.syncTime') }}：{{ row.status.syncStatus.lastSyncLatency || '--' }}
             </p>
             <p class="bcs-ellipsis leading-[24px]" :title="row.status.syncStatus.lastSyncTime">
-              {{ $t('plugin.tools.lastSyncTime') }}：{{ formatDate(row.status.syncStatus.lastSyncTime) || '--' }}
+              {{ $t('plugin.tools.lastSyncTime') }}：{{ formatTimeWithTimezone(row.status.syncStatus.lastSyncTime) || '--' }}
             </p>
           </div>
           <div v-else>--</div>
@@ -121,7 +121,7 @@
             {{ $t('cluster.labels.updatedAt') }}：
             {{
               row.status && row.status.applyStatus
-                ? (formatDate(row.status.applyStatus.lastApplyTime) || '--')
+                ? (formatTimeWithTimezone(row.status.applyStatus.lastApplyTime) || '--')
                 : '--'
             }}
           </p>
@@ -307,7 +307,7 @@ import { ref, watch } from 'vue';
 
 import useCustomCrdList from './use-custom-crd';
 
-import { formatDate } from '@/common/util';
+import { formatTimeWithTimezone } from '@/common/util';
 import BcsContent from '@/components/layout/Content.vue';
 import NamespaceSelect from '@/components/namespace-selector/namespace-select.vue';
 import $i18n from '@/i18n/i18n-setup';

@@ -1,6 +1,6 @@
 import { Decimal } from 'decimal.js';
 
-import { formatBytes, formatDate } from '@/common/util';
+import { formatBytes, formatDate, formatTimeWithTimezone } from '@/common/util';
 
 export default function (unit) {
   const axisLabel = (value) => {
@@ -40,7 +40,7 @@ export default function (unit) {
       },
       extraCssText: 'white-space: break-spaces;',
       formatter: (params) => {
-        const date = formatDate(params?.[0]?.axisValue * 1000, 'YYYY-MM-DD hh:mm:ss');
+        const date = formatTimeWithTimezone(params?.[0]?.axisValue * 1000);
         let ret = `<div>${date}</div>`;
         params.forEach((p) => {
           ret += `<div>${p.seriesName}：${axisLabel(p.value?.[1])}</div>`;

@@ -542,15 +542,13 @@
       :is-show="showRecord"
       @cancel="handleRecordCancel">
       <div class="mb15 flex-between">
-        <bcs-date-picker
-          :shortcuts="shortcuts"
-          type="datetimerange"
-          shortcut-close
-          :use-shortcut-text="false"
-          :clearable="false"
-          v-model="timeRange"
-          @change="handleTimeRangeChange">
-        </bcs-date-picker>
+        <DatePicker
+          :placeholder="$t('generic.placeholder.searchDate')"
+          class="bg-[#fff]"
+          :model-value="zoneDate"
+          :timezone.sync="timezone"
+          @update:modelValue="handleValueChange"
+        />
         <bcs-input
           class="w-[360px]"
           right-icon="bk-icon icon-search"
@@ -600,12 +598,12 @@
               </bcs-table-column>
               <bcs-table-column :label="$t('cluster.ca.nodePool.records.label.startTime')" width="180" show-overflow-tooltip>
                 <template #default="{ row: key }">
-                  {{ row.task.steps[key].start }}
+                  {{ formatTimeWithTimezone(row.task.steps[key].start) }}
                 </template>
               </bcs-table-column>
               <bcs-table-column :label="$t('cluster.ca.nodePool.records.label.endTime')" width="180" show-overflow-tooltip>
                 <template #default="{ row: key }">
-                  {{ row.task.steps[key].end }}
+                  {{ formatTimeWithTimezone(row.task.steps[key].end) }}
                 </template>
               </bcs-table-column>
               <!-- 设置宽度为了保持和外面表格对齐 -->
@@ -659,10 +657,14 @@
           :key="JSON.stringify(filterValues.resourceID)"
           show-overflow-tooltip>
         </bcs-table-column>
-        <bcs-table-column :label="$t('cluster.ca.nodePool.records.label.startTime')" width="180" prop="createTime" show-overflow-tooltip></bcs-table-column>
+        <bcs-table-column :label="$t('cluster.ca.nodePool.records.label.startTime')" width="180" prop="createTime" show-overflow-tooltip>
+          <template #default="{ row }">
+            {{row.task ? formatTimeWithTimezone(row.task.start) : '--'}}
+          </template>
+        </bcs-table-column>
         <bcs-table-column :label="$t('cluster.ca.nodePool.records.label.endTime')" width="180" show-overflow-tooltip>
           <template #default="{ row }">
-            {{row.task ? row.task.end : '--'}}
+            {{row.task ? formatTimeWithTimezone(row.task.end) : '--'}}
           </template>
         </bcs-table-column>
         <bcs-table-column :label="$t('generic.label.execTime2')" width="90" show-overflow-tooltip>
@@ -777,15 +779,18 @@
 <script lang="ts">
 import { computed, defineComponent, getCurrentInstance, onActivated, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
+import DatePicker from '@blueking/date-picker/vue2';
+
 import PodDrain from '../components/pod-drain.vue';
 import useNode from '../node-list/use-node';
 
 import AutoScalerFormItem from './components/form-item.vue';
 
+import '@blueking/date-picker/vue2/vue2.css';
 import { updateClusterAutoScalingProviders } from '@/api/modules/cluster-manager';
 import { clusterOverview } from '@/api/modules/monitor';
 import $bkMessage from '@/common/bkmagic';
-import { copyText, formatBytes, takesTimeFormat } from '@/common/util';
+import { copyText, formatBytes, formatTimeWithTimezone, getBrowserTimezoneId, takesTimeFormat } from '@/common/util';
 import { CheckType } from '@/components/across-check.vue';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import Row from '@/components/layout/Row.vue';
@@ -815,6 +820,7 @@ export default defineComponent({
     Row,
     PodDrain,
     WrapperDialog,
+    DatePicker,
   },
   props: {
     clusterId: {
@@ -1686,43 +1692,7 @@ export default defineComponent({
       FORCETERMINATE: 'red',
       NOTSTARTED: 'gray',
     };
-    const shortcuts = ref([
-      {
-        text: $i18n.t('units.time.today'),
-        value() {
-          const end = new Date();
-          const start = new Date(end.getFullYear(), end.getMonth(), end.getDate());
-          return [start, end];
-        },
-      },
-      {
-        text: $i18n.t('units.time.lastDays'),
-        value() {
-          const end = new Date();
-          const start = new Date();
-          start.setTime(start.getTime() - 3600 * 1000 * 24 * 7);
-          return [start, end];
-        },
-      },
-      {
-        text: $i18n.t('units.time.last15Days'),
-        value() {
-          const end = new Date();
-          const start = new Date();
-          start.setTime(start.getTime() - 3600 * 1000 * 24 * 15);
-          return [start, end];
-        },
-      },
-      {
-        text: $i18n.t('units.time.last30Days'),
-        value() {
-          const end = new Date();
-          const start = new Date();
-          start.setTime(start.getTime() - 3600 * 1000 * 24 * 30);
-          return [start, end];
-        },
-      },
-    ]);
+
     const expandRowKeys = ref<any[]>([]);
     const timeRange = ref<Date[]>([]);
     const showRecord = ref(false);
@@ -1738,6 +1708,15 @@ export default defineComponent({
     watch(searchIp, () => {
       reSearchRecordList();
     });
+    // 时间选择
+    const zoneDate = ref<Date[]>([]);
+    const timezone = ref(getBrowserTimezoneId());
+    function handleValueChange(v, info) {
+      const [start, end] = info;
+      timeRange.value = [start.formatText, end.formatText];
+      zoneDate.value = v;
+      reSearchRecordList();
+    }
 
     const reSearchRecordList = () => {
       recordPagination.value.current = 1;
@@ -1752,9 +1731,6 @@ export default defineComponent({
       recordPagination.value.limit = limit;
       handleGetRecordList();
     };
-    const handleTimeRangeChange = () => {
-      reSearchRecordList();
-    };
     const handleShowRecord = (row) => {
       const end = new Date();
       const start = new Date();
@@ -1763,6 +1739,7 @@ export default defineComponent({
         start,
         end,
       ];
+      zoneDate.value = [...timeRange.value];
       filterValues.value = {
         taskType: [],
         status: [],
@@ -2030,8 +2007,6 @@ export default defineComponent({
       showRecord,
       timeRange,
       recordLoading,
-      handleTimeRangeChange,
-      shortcuts,
       recordPagination,
       recordList,
       recordPageChange,
@@ -2087,6 +2062,10 @@ export default defineComponent({
       handleBeforeClose,
       handleHidePodDrain,
       handleSuccess,
+      zoneDate,
+      timezone,
+      handleValueChange,
+      formatTimeWithTimezone,
     };
   },
 });

@@ -72,7 +72,7 @@
           </bk-table-column>
           <bk-table-column :label="$t('cluster.labels.createdAt')" prop="create_time" min-width="100">
             <template slot-scope="{ row }">
-              {{ row.create_time || '--' }}
+              {{ formatTimeWithTimezone(row.create_time) || '--' }}
             </template>
           </bk-table-column>
           <bk-table-column :label="$t('generic.label.createdBy')" prop="creator" min-width="100">
@@ -123,7 +123,7 @@
 <script>
 import ConditionsDialog from './conditions-dialog';
 
-import { catchErrorHandler } from '@/common/util';
+import { catchErrorHandler, formatTimeWithTimezone } from '@/common/util';
 import ClusterSelectComb from '@/components/cluster-selector/cluster-select-comb.vue';
 import BcsContent from '@/components/layout/Content.vue';
 import Row from '@/components/layout/Row.vue';
@@ -196,6 +196,7 @@ export default {
     },
   },
   methods: {
+    formatTimeWithTimezone,
     /**
              * 初始化入口
              */

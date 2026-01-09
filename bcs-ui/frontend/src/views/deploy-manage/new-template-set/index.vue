@@ -59,7 +59,11 @@
             <bk-user-display-name :user-id="row.updateBy"></bk-user-display-name>
           </template>
         </bcs-table-column>
-        <bcs-table-column :label="$t('generic.label.updatedAt')" prop="updateTime"></bcs-table-column>
+        <bcs-table-column :label="$t('generic.label.updatedAt')" prop="updateTime">
+          <template #default="{ row }">
+            {{ formatTimeWithTimezone(row.updateTime) }}
+          </template>
+        </bcs-table-column>
         <bcs-table-column :label="$t('generic.label.action')" width="160">
           <template #default="{ row }">
             <bcs-button text class="mr-[5px]" @click="editTemplateSet(row)">{{ $t('generic.button.edit') }}</bcs-button>
@@ -148,6 +152,7 @@ import { computed, onBeforeMount, ref } from 'vue';
 import VersionList from './version-list.vue';
 
 import { HelmManagerService } from '@/api/modules/new-helm-manager';
+import { formatTimeWithTimezone } from '@/common/util';
 // import $bkMessage from '@/common/bkmagic';
 // import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import BcsContent from '@/components/layout/Content.vue';

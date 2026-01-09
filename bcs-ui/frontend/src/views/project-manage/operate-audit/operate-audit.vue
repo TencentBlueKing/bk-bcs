@@ -38,15 +38,13 @@
                 @clear="activityStatusClear">
               </bk-selector>
             </div>
-            <div class="left range-picker">
-              <bk-date-picker
-                :placeholder="$t('generic.placeholder.searchDate')"
-                :shortcuts="shortcuts"
-                :type="'datetimerange'"
-                :placement="'bottom-end'"
-                @change="change">
-              </bk-date-picker>
-            </div>
+            <DatePicker
+              :placeholder="$t('generic.placeholder.searchDate')"
+              class="bg-[#fff] mr-[10px]"
+              :model-value="zoneDate"
+              :timezone.sync="timezone"
+              @update:modelValue="change"
+            />
             <div class="left">
               <bk-button type="primary" :title="$t('generic.button.query')" icon="search" @click="handleClick">
                 {{$t('generic.button.query')}}
@@ -62,7 +60,11 @@
           size="medium"
           @page-change="pageChange"
           @page-limit-change="changePageSize">
-          <bk-table-column :label="$t('generic.label.time')" prop="activityTime"></bk-table-column>
+          <bk-table-column :label="$t('generic.label.time')" prop="activityTime">
+            <template #default="{ row }">
+              {{formatTimeWithTimezone(row.activityTime, timezone)}}
+            </template>
+          </bk-table-column>
           <bk-table-column :label="$t('projects.operateAudit.opType')" prop="activityType"></bk-table-column>
           <bk-table-column :label="$t('projects.operateAudit.objType')">
             <template slot-scope="{ row }">
@@ -100,13 +102,17 @@
 </template>
 
 <script>
+import DatePicker from '@blueking/date-picker/vue2';
+
+import '@blueking/date-picker/vue2/vue2.css';
 import { activityLogs, activityLogsResourceTypes } from '@/api/modules/user-manager';
+import { formatTimeWithTimezone, getBrowserTimezoneId } from '@/common/util';
 import BcsContent from '@/components/layout/Content.vue';
 import Row from '@/components/layout/Row.vue';
 
 export default {
   name: 'OperateAudit',
-  components: { BcsContent, Row },
+  components: { BcsContent, Row, DatePicker },
   data() {
     // 操作类型下拉框 list
     const activityTypeList = [
@@ -196,43 +202,8 @@ export default {
       pageCountList: pageCountData,
       pageCountListIndex: '10',
       bkMessageInstance: null,
-      shortcuts: [
-        {
-          text: this.$t('units.time.today'),
-          value() {
-            const end = new Date();
-            const start = new Date(end.getFullYear(), end.getMonth(), end.getDate());
-            return [start, end];
-          },
-        },
-        {
-          text: this.$t('units.time.lastDays'),
-          value() {
-            const end = new Date();
-            const start = new Date();
-            start.setTime(start.getTime() - 3600 * 1000 * 24 * 7);
-            return [start, end];
-          },
-        },
-        {
-          text: this.$t('units.time.last15Days'),
-          value() {
-            const end = new Date();
-            const start = new Date();
-            start.setTime(start.getTime() - 3600 * 1000 * 24 * 15);
-            return [start, end];
-          },
-        },
-        {
-          text: this.$t('units.time.last30Days'),
-          value() {
-            const end = new Date();
-            const start = new Date();
-            start.setTime(start.getTime() - 3600 * 1000 * 24 * 30);
-            return [start, end];
-          },
-        },
-      ],
+      zoneDate: [],
+      timezone: getBrowserTimezoneId(),
     };
   },
   computed: {
@@ -258,6 +229,7 @@ export default {
     this.bkMessageInstance?.close();
   },
   methods: {
+    formatTimeWithTimezone,
     /**
      * 分页大小更改
      *
@@ -424,8 +396,10 @@ export default {
      *
      * @param {string} newValue 变化前的值
      */
-    change(newValue) {
-      this.dataRange = newValue;
+    change(v, info) {
+      const [start, end] = info;
+      this.dataRange = [start.formatText, end.formatText];
+      this.zoneDate = v;
     },
 
     /**

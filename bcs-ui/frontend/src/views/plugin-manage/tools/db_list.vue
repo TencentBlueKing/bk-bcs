@@ -39,7 +39,7 @@
       </bcs-table-column>
       <bcs-table-column :label="$t('cluster.labels.createdAt')" min-width="100">
         <template #default="{ row }">
-          {{ formatDate(handleGetExtData(row.metadata.uid, 'createTime')) || '--' }}
+          {{ formatTimeWithTimezone(handleGetExtData(row.metadata.uid, 'createTime')) || '--' }}
         </template>
       </bcs-table-column>
       <bcs-table-column :label="$t('generic.label.updator')" min-width="100">
@@ -225,7 +225,7 @@ import { ref } from 'vue';
 
 import useCustomCrdList from './use-custom-crd';
 
-import { formatDate } from '@/common/util';
+import { formatTimeWithTimezone } from '@/common/util';
 import FixedSideslider from '@/components/fixed-sideslider.vue';
 import BcsContent from '@/components/layout/Content.vue';
 import NamespaceSelect from '@/components/namespace-selector/namespace-select.vue';

@@ -191,10 +191,10 @@
           <bk-user-display-name :user-id="clusterData.creator"></bk-user-display-name>
         </bk-form-item>
         <bk-form-item :label="$t('cluster.labels.createdAt')">
-          {{ clusterData.createTime || '--' }}
+          {{ clusterData.createTime ? formatTimeWithTimezone(clusterData.createTime) : '--' }}
         </bk-form-item>
         <bk-form-item :label="$t('cluster.labels.updatedAt')">
-          {{ clusterData.updateTime || '--' }}
+          {{ clusterData.updateTime ? formatTimeWithTimezone(clusterData.updateTime) : '--' }}
         </bk-form-item>
       </DescList>
       <bk-sideslider
@@ -232,6 +232,7 @@ import EditFormItem from '../components/edit-form-item.vue';
 import { modifyCluster } from '@/api/modules/cluster-manager';
 import $bkMessage from '@/common/bkmagic';
 import { CLUSTER_ENV, LABEL_KEY_REGEXP } from '@/common/constant';
+import { formatTimeWithTimezone } from '@/common/util';
 import DescList from '@/components/desc-list.vue';
 import KeyValue from '@/components/key-value.vue';
 import LoadingIcon from '@/components/loading-icon.vue';
@@ -492,6 +493,7 @@ export default defineComponent({
       rangeEdit,
       handleVisibleRangeChange,
       editable,
+      formatTimeWithTimezone,
     };
   },
 });

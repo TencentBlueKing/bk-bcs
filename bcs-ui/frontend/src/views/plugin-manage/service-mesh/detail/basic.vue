@@ -51,7 +51,7 @@
         </bcs-table-column>
         <bcs-table-column width="160" :label="$t('serviceMesh.label.joinTime')" show-overflow-tooltip>
           <template #default="{ row }">
-            {{ row.joinTime ? timeFormat(Number(row.joinTime)) : '--' }}
+            {{ row.joinTime ? formatTimeWithTimezone(Number(row.joinTime)) : '--' }}
           </template>
         </bcs-table-column>
         <template #empty>
@@ -70,7 +70,7 @@ import ContentSwitcher from '../content-switcher.vue';
 
 import FieldItem from './field-item.vue';
 
-import { timeFormat } from '@/common/util';
+import { formatTimeWithTimezone } from '@/common/util';
 
 defineProps({
   data: {

@@ -77,7 +77,7 @@
       </bcs-table-column>
       <bcs-table-column :label="$t('generic.label.updatedAt')" prop="updateAt">
         <template #default="{ row }">
-          {{ formatTime(row.updateAt * 1000, 'yyyy-MM-dd hh:mm:ss') }}
+          {{ formatTimeWithTimezone(row.updateAt * 1000) }}
         </template>
       </bcs-table-column>
       <bcs-table-column :label="$t('generic.label.action')" width="180" fixed="right">
@@ -169,7 +169,7 @@ import VersionList from './version-list.vue';
 import { IListTemplateMetadataItem, ITemplateSpaceData } from '@/@types/cluster-resource-patch';
 import { TemplateSetService } from '@/api/modules/new-cluster-resource';
 import $bkMessage from '@/common/bkmagic';
-import { formatTime } from '@/common/util';
+import { formatTimeWithTimezone } from '@/common/util';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import Row from '@/components/layout/Row.vue';
 import PopoverSelector from '@/components/popover-selector.vue';

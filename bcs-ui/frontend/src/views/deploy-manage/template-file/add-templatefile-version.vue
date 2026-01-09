@@ -24,7 +24,7 @@
       </div>
       <div>{{ $t('templateFile.tag.latestUpdate') + ' : ' }}
         {{ fileMetadata?.updator }}
-        {{ (fileMetadata?.updateAt && formatTime(fileMetadata.updateAt * 1000, 'yyyy-MM-dd hh:mm:ss')) || '--' }}</div>
+        {{ (fileMetadata?.updateAt && formatTimeWithTimezone(fileMetadata.updateAt * 1000)) || '--' }}</div>
     </template>
     <!-- 表单模式 & 源码模式 -->
     <div
@@ -158,7 +158,7 @@ import YamlMode from './yaml-mode.vue';
 import { IListTemplateMetadataItem, ITemplateVersionItem } from '@/@types/cluster-resource-patch';
 import { ResourceService, TemplateSetService } from '@/api/modules/new-cluster-resource';
 import $bkMessage from '@/common/bkmagic';
-import { formatTime } from '@/common/util';
+import { formatTimeWithTimezone } from '@/common/util';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import BcsContent from '@/components/layout/Content.vue';
 import $i18n from '@/i18n/i18n-setup';

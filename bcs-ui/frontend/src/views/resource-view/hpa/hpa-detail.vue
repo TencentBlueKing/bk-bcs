@@ -53,7 +53,7 @@
           </bk-table-column>
           <bk-table-column :label="$t('k8s.lastTransitionTime')" prop="lastTransitionTime">
             <template #default="{ row }">
-              {{ formatTime(row.lastTransitionTime, 'yyyy-MM-dd hh:mm:ss') }}
+              {{ timeZoneTransForm(row.lastTransitionTime) }}
             </template>
           </bk-table-column>
           <bk-table-column :label="$t('dashboard.workload.label.reason')">
@@ -96,7 +96,7 @@ import { defineComponent } from 'vue';
 
 import StatusIcon from '../../../components/status-icon';
 
-import { formatTime } from '@/common/util';
+import { timeZoneTransForm } from '@/common/util';
 import EventQueryTable from '@/views/project-manage/event-query/event-query-table.vue';
 
 export default defineComponent({
@@ -127,7 +127,7 @@ export default defineComponent({
     };
 
     return {
-      formatTime,
+      timeZoneTransForm,
       handleTransformObjToArr,
     };
   },

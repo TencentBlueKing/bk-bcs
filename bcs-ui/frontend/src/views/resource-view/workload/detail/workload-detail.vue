@@ -66,7 +66,7 @@
         </div>
         <div class="info-item">
           <span class="label">{{ $t('cluster.labels.createdAt') }}</span>
-          <span class="value">{{ timeFormat(manifestExt.createTime) }}</span>
+          <span class="value">{{ formatTimeWithTimezone(manifestExt.createTime) }}</span>
         </div>
         <div class="info-item">
           <span class="label">{{ $t('k8s.age') }}</span>
@@ -394,7 +394,7 @@ import useDetail from './use-detail';
 import { userPermsByAction } from '@/api/modules/user-manager';
 import { crdEnlargeCapacityChange, enlargeCapacityChange } from '@/api/base';
 import $bkMessage from '@/common/bkmagic';
-import { timeFormat } from '@/common/util';
+import { formatTimeWithTimezone } from '@/common/util';
 import BcsLog from '@/components/bcs-log/log-dialog.vue';
 import Metric from '@/components/metric.vue';
 import CodeEditor from '@/components/monaco-editor/new-editor.vue';
@@ -875,7 +875,7 @@ export default defineComponent({
       yaml,
       showYamlPanel,
       kindsNames,
-      timeFormat,
+      formatTimeWithTimezone,
       handleShowYamlPanel,
       gotoPodDetail,
       handleGetExtData,

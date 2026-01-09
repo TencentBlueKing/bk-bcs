@@ -37,7 +37,7 @@
       <div class="workload-main-info">
         <div class="info-item">
           <span class="label">{{ $t('container.label.startedAt') }}</span>
-          <span class="value" v-bk-overflow-tips>{{ detail ? timeFormat(detail.startedAt) : '--' }}</span>
+          <span class="value" v-bk-overflow-tips>{{ detail ? formatTimeWithTimezone(detail.startedAt) : '--' }}</span>
         </div>
         <div class="info-item">
           <span class="label">{{ $t('container.label.restartCnt') }}</span>
@@ -181,7 +181,7 @@
 import { bkOverflowTips } from 'bk-magic-vue';
 import { computed, defineComponent, onMounted, ref, toRefs } from 'vue';
 
-import { timeFormat } from '@/common/util';
+import { formatTimeWithTimezone } from '@/common/util';
 import Metric from '@/components/metric.vue';
 import $store from '@/store';
 
@@ -309,7 +309,7 @@ export default defineComponent({
       labels,
       envs,
       lastState,
-      timeFormat,
+      formatTimeWithTimezone,
       handleGetDetail,
       handleGetContainerEnv,
     };
