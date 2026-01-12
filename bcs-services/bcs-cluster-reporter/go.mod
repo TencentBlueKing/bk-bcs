@@ -7,7 +7,7 @@ toolchain go1.23.2
 replace (
 	github.com/prometheus/common => github.com/prometheus/common v0.42.0
 	// 引用 release-1.18-fix-go 分支，主要改动移除pilot/pkg/xds/fake.go 修复go1.21+编译问题
-	istio.io/istio => github.com/silenceper/istio v0.0.0-20250527074856-9dba4a758551 
+	istio.io/istio => github.com/silenceper/istio v0.0.0-20250527074856-9dba4a758551
 	k8s.io/api => k8s.io/api v0.27.3
 	k8s.io/apimachinery => k8s.io/apimachinery v0.27.3
 	k8s.io/cli-runtime => k8s.io/cli-runtime v0.27.3
@@ -48,6 +48,7 @@ require (
 	k8s.io/api v0.31.2
 	k8s.io/apiextensions-apiserver v0.29.0
 	k8s.io/apimachinery v0.31.2
+	k8s.io/apiserver v0.31.2
 	k8s.io/cli-runtime v0.29.0
 	k8s.io/client-go v11.0.0+incompatible
 	k8s.io/klog v1.0.0
@@ -297,7 +298,6 @@ require (
 	howett.net/plist v1.0.0 // indirect
 	istio.io/client-go v1.18.6 // indirect
 	istio.io/pkg v0.0.0-20231206023657-0332a732de8d // indirect
-	k8s.io/apiserver v0.31.2 // indirect
 	k8s.io/component-base v0.31.2 // indirect
 	k8s.io/kube-openapi v0.0.0-20240228011516-70dd3763d340 // indirect
 	oras.land/oras-go v1.2.4 // indirect

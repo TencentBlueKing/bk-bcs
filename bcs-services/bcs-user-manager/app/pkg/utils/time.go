@@ -23,11 +23,9 @@ type JSONTime struct {
 	time.Time
 }
 
-const timeLayout = "2006-01-02 15:04:05"
-
 // MarshalJSON marshal json
 func (t *JSONTime) MarshalJSON() ([]byte, error) {
-	return []byte(fmt.Sprintf("\"%s\"", t.Time.Format(timeLayout))), nil
+	return []byte(fmt.Sprintf("\"%s\"", t.UTC().Format(time.RFC3339))), nil
 }
 
 // UnmarshalJSON unmarshal json
@@ -38,6 +36,6 @@ func (t *JSONTime) UnmarshalJSON(b []byte) error {
 		return nil
 	}
 	var err error
-	t.Time, err = time.Parse(timeLayout, s)
+	t.Time, err = time.Parse(time.RFC3339, s)
 	return err
 }
