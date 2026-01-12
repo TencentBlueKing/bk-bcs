@@ -1454,6 +1454,12 @@ func NewBCSProjectQuotaEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		{
+			Name:    "BCSProjectQuota.ListProjectQuotasV2",
+			Path:    []string{"/bcsproject/v2/projectQuotas/projects/{projectIDOrCode}/quotas"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
 			Name:    "BCSProjectQuota.GetProjectQuotasUsage",
 			Path:    []string{"/bcsproject/v1/projectQuotas/{quotaId}/usage"},
 			Method:  []string{"GET"},
@@ -1474,6 +1480,7 @@ type BCSProjectQuotaService interface {
 	// DeleteProjectQuota 退回资源额度
 	DeleteProjectQuota(ctx context.Context, in *DeleteProjectQuotaRequest, opts ...client.CallOption) (*ProjectQuotaResponse, error)
 	ListProjectQuotas(ctx context.Context, in *ListProjectQuotasRequest, opts ...client.CallOption) (*ListProjectQuotasResponse, error)
+	ListProjectQuotasV2(ctx context.Context, in *ListProjectQuotasV2Request, opts ...client.CallOption) (*ListProjectQuotasV2Response, error)
 	GetProjectQuotasUsage(ctx context.Context, in *GetProjectQuotasUsageReq, opts ...client.CallOption) (*GetProjectQuotasUsageResp, error)
 }
 
@@ -1559,6 +1566,16 @@ func (c *bCSProjectQuotaService) ListProjectQuotas(ctx context.Context, in *List
 	return out, nil
 }
 
+func (c *bCSProjectQuotaService) ListProjectQuotasV2(ctx context.Context, in *ListProjectQuotasV2Request, opts ...client.CallOption) (*ListProjectQuotasV2Response, error) {
+	req := c.c.NewRequest(c.name, "BCSProjectQuota.ListProjectQuotasV2", in)
+	out := new(ListProjectQuotasV2Response)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *bCSProjectQuotaService) GetProjectQuotasUsage(ctx context.Context, in *GetProjectQuotasUsageReq, opts ...client.CallOption) (*GetProjectQuotasUsageResp, error) {
 	req := c.c.NewRequest(c.name, "BCSProjectQuota.GetProjectQuotasUsage", in)
 	out := new(GetProjectQuotasUsageResp)
@@ -1581,6 +1598,7 @@ type BCSProjectQuotaHandler interface {
 	// DeleteProjectQuota 退回资源额度
 	DeleteProjectQuota(context.Context, *DeleteProjectQuotaRequest, *ProjectQuotaResponse) error
 	ListProjectQuotas(context.Context, *ListProjectQuotasRequest, *ListProjectQuotasResponse) error
+	ListProjectQuotasV2(context.Context, *ListProjectQuotasV2Request, *ListProjectQuotasV2Response) error
 	GetProjectQuotasUsage(context.Context, *GetProjectQuotasUsageReq, *GetProjectQuotasUsageResp) error
 }
 
@@ -1593,6 +1611,7 @@ func RegisterBCSProjectQuotaHandler(s server.Server, hdlr BCSProjectQuotaHandler
 		ScaleDownProjectQuota(ctx context.Context, in *ScaleDownProjectQuotaRequest, out *ScaleDownProjectQuotaResponse) error
 		DeleteProjectQuota(ctx context.Context, in *DeleteProjectQuotaRequest, out *ProjectQuotaResponse) error
 		ListProjectQuotas(ctx context.Context, in *ListProjectQuotasRequest, out *ListProjectQuotasResponse) error
+		ListProjectQuotasV2(ctx context.Context, in *ListProjectQuotasV2Request, out *ListProjectQuotasV2Response) error
 		GetProjectQuotasUsage(ctx context.Context, in *GetProjectQuotasUsageReq, out *GetProjectQuotasUsageResp) error
 	}
 	type BCSProjectQuota struct {
@@ -1642,6 +1661,12 @@ func RegisterBCSProjectQuotaHandler(s server.Server, hdlr BCSProjectQuotaHandler
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "BCSProjectQuota.ListProjectQuotasV2",
+		Path:    []string{"/bcsproject/v2/projectQuotas/projects/{projectIDOrCode}/quotas"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "BCSProjectQuota.GetProjectQuotasUsage",
 		Path:    []string{"/bcsproject/v1/projectQuotas/{quotaId}/usage"},
 		Method:  []string{"GET"},
@@ -1680,6 +1705,10 @@ func (h *bCSProjectQuotaHandler) DeleteProjectQuota(ctx context.Context, in *Del
 
 func (h *bCSProjectQuotaHandler) ListProjectQuotas(ctx context.Context, in *ListProjectQuotasRequest, out *ListProjectQuotasResponse) error {
 	return h.BCSProjectQuotaHandler.ListProjectQuotas(ctx, in, out)
+}
+
+func (h *bCSProjectQuotaHandler) ListProjectQuotasV2(ctx context.Context, in *ListProjectQuotasV2Request, out *ListProjectQuotasV2Response) error {
+	return h.BCSProjectQuotaHandler.ListProjectQuotasV2(ctx, in, out)
 }
 
 func (h *bCSProjectQuotaHandler) GetProjectQuotasUsage(ctx context.Context, in *GetProjectQuotasUsageReq, out *GetProjectQuotasUsageResp) error {

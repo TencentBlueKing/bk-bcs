@@ -113,6 +113,18 @@ func (p *ProjectQuotaHandler) ListProjectQuotas(ctx context.Context,
 	return nil
 }
 
+// ListProjectQuotasV2 list project quotas records
+func (p *ProjectQuotaHandler) ListProjectQuotasV2(ctx context.Context,
+	req *proto.ListProjectQuotasV2Request, resp *proto.ListProjectQuotasV2Response) error {
+	la := aquota.NewListQuotaV2Action(p.model)
+	e := la.Do(ctx, req, resp)
+	if e != nil {
+		return e
+	}
+
+	return nil
+}
+
 // GetProjectQuotasUsage get project quotas usage
 func (p *ProjectQuotaHandler) GetProjectQuotasUsage(ctx context.Context,
 	req *proto.GetProjectQuotasUsageReq, resp *proto.GetProjectQuotasUsageResp) error {

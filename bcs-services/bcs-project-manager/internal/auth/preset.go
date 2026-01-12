@@ -61,5 +61,6 @@ var ActionPermissions = map[string]string{
 	"BCSProjectQuota.ScaleDownProjectQuota": project.CanEditProjectOperation,
 	"BCSProjectQuota.DeleteProjectQuota":    project.CanCreateProjectOperation,
 	"BCSProjectQuota.ListProjectQuotas":     project.CanViewProjectOperation,
+	"BCSProjectQuota.ListProjectQuotasV2":   project.CanViewProjectOperation,
 	"BCSProjectQuota.GetProjectQuotasUsage": project.CanViewProjectOperation,
 }

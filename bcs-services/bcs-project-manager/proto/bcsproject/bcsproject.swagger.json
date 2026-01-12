@@ -227,22 +227,6 @@
             "in": "query",
             "required": false,
             "type": "string"
-          },
-          {
-            "name": "page",
-            "description": "page. 页码",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int64"
-          },
-          {
-            "name": "limit",
-            "description": "limit. 每页数量",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int64"
           }
         ],
         "tags": [
@@ -2087,6 +2071,90 @@
         ]
       }
     },
+    "/bcsproject/v2/projectQuotas/projects/{projectIDOrCode}/quotas": {
+      "get": {
+        "summary": "查询项目资源quota列表",
+        "description": "通过查询参数过滤项目quota列表, 支持分页和全量数据",
+        "operationId": "BCSProjectQuota_ListProjectQuotasV2",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bcsprojectListProjectQuotasV2Response"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectIDOrCode",
+            "description": "项目ID 或者 项目Code",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "quotaId",
+            "description": "quotaId. 配额Id",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "quotaName",
+            "description": "quotaName. 配额中文名称",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "businessID",
+            "description": "businessID. 项目绑定的蓝鲸CMDB中业务ID信息",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "quotaType",
+            "description": "quotaType. 资源类型(目前支持CA整机资源、共享集群维度资源)",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "provider",
+            "description": "provider. 云底层资源提供方",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "description": "page. 分页页面",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "limit",
+            "description": "limit. 分页限制",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "BCSProjectQuota"
+        ]
+      }
+    },
     "/bcsproject/v2/projects/{projectID}": {
       "put": {
         "summary": "更新项目",
@@ -3389,6 +3457,37 @@
       "title": "ListProjectQuotasData"
     },
     "bcsprojectListProjectQuotasResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "data": {
+          "$ref": "#/definitions/bcsprojectListProjectQuotasData",
+          "description": "返回项目quota信息, 包含总量及项目quota列表",
+          "title": "data"
+        },
+        "requestID": {
+          "type": "string",
+          "description": "请求 ID",
+          "title": "request id"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/bcsprojectPerms",
+          "description": "项目更多信息，主要是权限相关",
+          "title": "web_annotations"
+        }
+      }
+    },
+    "bcsprojectListProjectQuotasV2Response": {
       "type": "object",
       "properties": {
         "code": {

@@ -31,6 +31,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
 	pm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/quota"
+	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
 )
 
 func checkProjectValidate(model store.ProjectModel, projectId, projectCode, name string) (*pm.Project, error) {
@@ -141,6 +142,77 @@ func getQuotaUsage(q *quota.ProjectQuota) {
 		if gpu.AsApproximateFloat64() != 0 {
 			q.Quota.Gpu.DeviceQuotaUsed = strconv.FormatFloat(gpu.AsApproximateFloat64(), 'f', 2, 64)
 		}
+	}
+}
+
+func getQuotaUsageForProto(q *proto.ProjectQuota) {
+	// 初始化配额使用量为0
+	if q.Quota != nil && q.Quota.Cpu != nil {
+		q.Quota.Cpu.DeviceQuotaUsed = "0"
+	}
+	if q.Quota != nil && q.Quota.Mem != nil {
+		q.Quota.Mem.DeviceQuotaUsed = "0"
+	}
+	if q.Quota != nil && q.Quota.Gpu != nil {
+		q.Quota.Gpu.DeviceQuotaUsed = "0"
+	}
+
+	// 获取集群ID
+	var clusterID string
+	if q.Labels != nil {
+		clusterID = q.Labels["federation.bkbcs.tencent.com/host-cluster-id"]
+	}
+	if clusterID == "" {
+		return
+	}
+	quotaStorage, quotaErr := bcsstorage.GetMultiClusterResourceQuota(clusterID, q.QuotaName)
+
+	if quotaErr != nil {
+		logging.Error("bcsstorage.GetMultiClusterResourceQuota err: %v", quotaErr)
+	}
+
+	if quotaStorage != nil {
+		// 获取CPU使用量
+		setCPUUsageForProto(q, quotaStorage)
+		// 获取内存使用量,单位转换为GB
+		setMemUsageForProto(q, quotaStorage)
+		// 获取GPU使用量
+		setGPUUsageForProto(q, quotaStorage)
+	}
+}
+
+// setCPUUsageForProto CPU
+func setCPUUsageForProto(q *proto.ProjectQuota, quotaStorage *bcsstorage.MultiClusterResourceQuota) {
+	cpu := quotaStorage.Status.TotalQuota.Used["cpu"]
+	if cpu.AsApproximateFloat64() != 0 && q.Quota != nil && q.Quota.Cpu != nil {
+		q.Quota.Cpu.DeviceQuotaUsed = strconv.FormatFloat(cpu.AsApproximateFloat64(), 'f', 2, 64)
+	}
+}
+
+// setMemUsageForProto 设置 Memery 使用量
+func setMemUsageForProto(q *proto.ProjectQuota, quotaStorage *bcsstorage.MultiClusterResourceQuota) {
+	memory := quotaStorage.Status.TotalQuota.Used["memory"]
+	if memory.AsApproximateFloat64() != 0 && q.Quota != nil && q.Quota.Mem != nil {
+		q.Quota.Mem.DeviceQuotaUsed = strconv.FormatFloat(memory.AsApproximateFloat64()/1024/1024/1024, 'f', 2, 64)
+	}
+}
+
+// setGPUUsageForProto 设置GPU使用量（按优先级：华为GPU -> NVIDIA GPU -> 通用GPU）
+func setGPUUsageForProto(q *proto.ProjectQuota, quotaStorage *bcsstorage.MultiClusterResourceQuota) {
+	// 获取华为GPU使用量
+	gpuHuawei := quotaStorage.Status.TotalQuota.Used["requests.huawei.com/Ascend910"]
+	if gpuHuawei.AsApproximateFloat64() != 0 {
+		q.Quota.Gpu.DeviceQuotaUsed = strconv.FormatFloat(gpuHuawei.AsApproximateFloat64(), 'f', 2, 64)
+	}
+	// 获取NVIDIA GPU使用量
+	gpuNvdia := quotaStorage.Status.TotalQuota.Used["requests.nvidia.com/gpu"]
+	if gpuNvdia.AsApproximateFloat64() != 0 {
+		q.Quota.Gpu.DeviceQuotaUsed = strconv.FormatFloat(gpuNvdia.AsApproximateFloat64(), 'f', 2, 64)
+	}
+	// 获取通用GPU使用量
+	gpu := quotaStorage.Status.TotalQuota.Used["gpu"]
+	if gpu.AsApproximateFloat64() != 0 {
+		q.Quota.Gpu.DeviceQuotaUsed = strconv.FormatFloat(gpu.AsApproximateFloat64(), 'f', 2, 64)
 	}
 }
 
