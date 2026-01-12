@@ -23,7 +23,12 @@ import (
 	"github.com/go-chi/chi/v5"
 	httpSwagger "github.com/swaggo/http-swagger"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/api/pod"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/api/cloudvpc"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/api/cluster"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/api/cmdb"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/api/project"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/api/task"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/api/templateconfig"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/rest"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/rest/middleware"
@@ -109,14 +114,39 @@ func (a *APIServer) newRoutes() http.Handler {
 
 func registerRoutes() http.Handler {
 	r := chi.NewRouter()
-	// 日志相关接口
 
-	r.Route("/projects/{projectId}/clusters/{clusterId}", func(route chi.Router) {
-		route.Use(middleware.AuthenticationRequired, middleware.ProjectParse, middleware.ClusterAuthorization)
-		route.Use(middleware.VisitorsRequired, middleware.Tracing, middleware.Audit)
+	r.Route("/", func(route chi.Router) {
+		route.Use(middleware.AuthenticationRequired, middleware.Tracing, middleware.Audit)
 
-		route.Get("/containers", rest.Handle(pod.GetPodContainers))
+		// vpc 相关接口
+		route.Post("/cloudvpc", rest.Handle(cloudvpc.CreateCloudVPC))
+		route.Put("/cloudvpc", rest.Handle(cloudvpc.UpdateCloudVPC))
+
+		// templateconfig 相关接口
+		route.Post("/templateconfigs", rest.Handle(templateconfig.CreateTemplateConfig))
+		route.Delete("/templateconfigs/{templateConfigID}", rest.Handle(templateconfig.DeleteTemplateConfig))
+
+		// cluster 相关接口
+		route.Get("/cluster", rest.Handle(cluster.ListCluster))
+		route.Put("/cluster/{clusterID}/operator", rest.Handle(cluster.UpdateClusterOperator))
+		route.Put("/cluster/{clusterID}/project_business", rest.Handle(cluster.UpdateClusterProjectBusiness))
+
+		// task 相关接口
+		route.Get("/task/{taskID}", rest.Handle(task.GetTask))
+		route.Put("/task/{taskID}/retry", rest.Handle(task.RetryTask))
+		route.Put("/task/{taskID}/skip", rest.Handle(task.SkipTask))
+
+		// cmdb 相关接口
+		route.Put("/cmdb/delete_all", rest.Handle(cmdb.DeleteAllByBkBizIDAndBkClusterID))
+		route.Post("/cmdb/business", rest.Handle(cmdb.GetBusiness))
+
+		// project 相关接口
+		route.Get("/project", rest.Handle(project.ListProject))
+		route.Get("/project/{projectIDOrCode}", rest.Handle(project.GetProject))
+		route.Put("/project/{projectID}/managers", rest.Handle(project.UpdateProjectManagers))
+		route.Put("/project/{projectID}/business", rest.Handle(project.UpdateProjectBusiness))
 	})
+
 	return r
 }
 

@@ -18,8 +18,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/go-chi/render"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/component/bcs"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/component/bcs/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/component/bcs/projectmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/rest"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/utils"
 )
@@ -41,17 +41,17 @@ func ProjectParse(next http.Handler) http.Handler {
 
 		ctx := utils.WithLaneIdCtx(r.Context(), r.Header)
 		r = r.WithContext(ctx)
-		project, err := bcs.GetProject(ctx, config.G.BCS, projectIDOrCode)
+		project, err := projectmanager.GetProject(ctx, projectIDOrCode)
 		if err != nil {
 			blog.Errorf("get project error for project %s, error: %s", projectIDOrCode, err.Error())
 			_ = render.Render(w, r, rest.AbortWithBadRequestError(restContext, err))
 			return
 		}
-		restContext.ProjectId = project.ProjectId
-		restContext.ProjectCode = project.Code
+		restContext.ProjectId = project.ProjectID
+		restContext.ProjectCode = project.ProjectCode
 
 		// get cluster info
-		cls, err := bcs.GetCluster(restContext.ClusterId)
+		cls, err := clustermanager.GetCluster(ctx, restContext.ClusterId)
 		if err != nil {
 			_ = render.Render(w, r, rest.AbortWithWithForbiddenError(restContext, err))
 			return

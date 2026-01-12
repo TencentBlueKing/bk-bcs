@@ -46,6 +46,18 @@ var (
 	}
 )
 
+func init() {
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is etc/bcs-platform-manager.yml)")
+
+	// 自定义 help 函数, 需要主动关闭 runGroup
+	defaultHelpFn := rootCmd.HelpFunc()
+	rootCmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
+		defaultHelpFn(cmd, args)
+
+		stopCmd(cmd)
+	})
+}
+
 // Execute :xxx
 func Execute() {
 	rootCmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
@@ -101,18 +113,6 @@ func Execute() {
 func stopCmd(cmd *cobra.Command) {
 	_, _, opt := cmdOption(cmd)
 	opt.cancel()
-}
-
-func init() {
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is etc/bcs-platform-manager.yml)")
-
-	// 自定义 help 函数, 需要主动关闭 runGroup
-	defaultHelpFn := rootCmd.HelpFunc()
-	rootCmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
-		defaultHelpFn(cmd, args)
-
-		stopCmd(cmd)
-	})
 }
 
 func initConfig() {
