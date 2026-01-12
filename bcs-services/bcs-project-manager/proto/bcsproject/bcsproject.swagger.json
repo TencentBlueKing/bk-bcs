@@ -339,6 +339,14 @@
             "in": "path",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "onlyDeleteInfo",
+            "description": "onlyDeleteInfo. 默认为false。设置为true时，仅删除所记录的信息，不会触发任何自动化流程。",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
           }
         ],
         "tags": [

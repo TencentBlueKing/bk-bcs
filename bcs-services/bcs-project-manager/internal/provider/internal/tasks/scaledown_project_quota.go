@@ -97,7 +97,7 @@ func (cpq *scaleDownProjectQuota) buildScaleDownHostQuotaSteps() []*types.Step {
 		cpq.operator, cpq.projectQuota.ProjectCode,
 		cpq.projectQuota.Quota.HostResources.Region, cpq.projectQuota.Quota.HostResources.ZoneId,
 		cpq.projectQuota.Quota.HostResources.InstanceType, cpq.projectQuota.Quota.HostResources.QuotaNum,
-		cpq.resource.GetZoneResources().GetQuotaNum())
+		cpq.projectQuota.Quota.HostResources.QuotaNum-cpq.resource.GetZoneResources().GetQuotaNum())
 
 	stepList = append(stepList, buildItsmQuotaSteps("", itsmData{
 		operator:    cpq.operator,

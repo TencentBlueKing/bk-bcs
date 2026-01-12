@@ -127,8 +127,7 @@ func (ca *CreateQuotaAction) createProjectQuota() error {
 		QuotaSharedProjectList: quota.TransProto2QuotaSharedProjects(ca.req.GetQuotaSharedProjectList()),
 	}
 
-	if (ca.req.GetQuotaType() == string(quota.Host) ||
-		ca.req.GetQuotaType() == string(quota.SelfHost)) && ca.req.Quota != nil {
+	if (ca.req.GetQuotaType() == string(quota.Host)) && ca.req.Quota != nil {
 		var conds []*operator.Condition
 
 		conds = append(conds, operator.NewLeafCondition(operator.Eq, operator.M{

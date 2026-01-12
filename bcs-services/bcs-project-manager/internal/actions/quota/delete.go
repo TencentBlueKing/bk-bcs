@@ -73,16 +73,18 @@ func (da *DeleteQuotaAction) validate() error {
 	}
 	da.sQuota = sQuota
 
-	t, err := da.getTask()
-	if err != nil {
-		return err
-	}
-	da.currentTask = t
+	if !da.req.GetOnlyDeleteInfo() {
+		t, err := da.getTask()
+		if err != nil {
+			return err
+		}
+		da.currentTask = t
 
-	// check quota status
-	err = da.checkProjectQuotaStatus()
-	if err != nil {
-		return err
+		// check quota status
+		err = da.checkProjectQuotaStatus()
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -98,21 +100,20 @@ func (da *DeleteQuotaAction) checkProjectQuotaStatus() error {
 		return errorx.NewCheckQuotaStatusErr(fmt.Sprintf("itsmSn[%s] project quota status is DELETING", itsmSn))
 	}
 
-	if da.sQuota.Status != quota.Running && da.sQuota.Status != quota.CreateFailure {
+	if da.sQuota.Status != quota.Running &&
+		da.sQuota.Status != quota.CreateFailure && da.sQuota.Status != quota.DeleteFailure {
 		return errorx.NewCheckQuotaStatusErr(fmt.Sprintf("itsmSn[%s] project quota status is not "+
-			"RUNNING or CREATE_FAILURE", itsmSn))
+			"RUNNING or CREATE_FAILURE or DELETE_FAILURE, currentStatus:[%s]", itsmSn, da.sQuota.Status))
 	}
 
 	return nil
 }
 
 // createProjectQuota create project quota && associate with provider
-func (da *DeleteQuotaAction) updateProjectQuota() error {
-	da.sQuota.Status = quota.Deleting
-
+func (da *DeleteQuotaAction) updateProjectQuota(status quota.ProjectQuotaStatusType) error {
 	err := da.model.UpdateProjectQuotaByField(da.ctx, entity.M{
 		quota.FieldKeyQuotaId: da.sQuota.QuotaId,
-		quota.FieldKeyStatus:  quota.Deleting.String(),
+		quota.FieldKeyStatus:  status.String(),
 	})
 	if err != nil {
 		return errorx.NewDBErr(err.Error())
@@ -157,7 +158,17 @@ func (da *DeleteQuotaAction) Do(ctx context.Context,
 		return errorx.NewReadableErr(errorx.ParamErr, err.Error())
 	}
 
-	if err := da.updateProjectQuota(); err != nil {
+	if da.req.GetOnlyDeleteInfo() {
+		da.sQuota.Status = quota.Deleted
+		if err := da.updateProjectQuota(da.sQuota.Status); err != nil {
+			return err
+		}
+		resp.Data = da.pQuota
+		return nil
+	}
+
+	da.sQuota.Status = quota.Deleting
+	if err := da.updateProjectQuota(da.sQuota.Status); err != nil {
 		return err
 	}
 	if err := da.dispatchTask(); err != nil {

@@ -3392,6 +3392,10 @@ message DeleteProjectQuotaRequest {
     title: "quotaId",
     description: "项目资源quotaId"
   }, (validate.rules).string = {max_len: 128, pattern: "^[0-9a-zA-Z-]+$"}];
+  bool onlyDeleteInfo = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "onlyDeleteInfo",
+    description : "默认为false。设置为true时，仅删除所记录的信息，不会触发任何自动化流程。"
+  }];
 }
 
 message ProjectQuotaResponse{
