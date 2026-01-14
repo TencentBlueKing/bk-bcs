@@ -1,5 +1,5 @@
 # Build the manager binary
-FROM golang:1.18 as builder
+FROM golang:1.23 as builder
 
 WORKDIR /workspace
 # Copy the Go Modules manifests
@@ -11,9 +11,11 @@ COPY main.go main.go
 COPY api/ api/
 COPY controllers/ controllers/
 COPY internal/ internal/
+COPY pkg/ pkg/
+COPY vendor/ vendor/
 
 # Build
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -o bcs-netservice-controller main.go
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -mod=vendor -a -o bcs-netservice-controller main.go
 
 # Use distroless as minimal base image to package the manager binary
 # Refer to https://github.com/GoogleContainerTools/distroless for more details

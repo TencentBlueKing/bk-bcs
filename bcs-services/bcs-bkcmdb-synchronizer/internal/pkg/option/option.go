@@ -24,6 +24,7 @@ type BkcmdbSynchronizerOption struct {
 	RabbitMQ      RabbitMQConfig      `json:"rabbitmq"`
 	CMDB          CMDBConfig          `json:"cmdb"`
 	SharedCluster SharedClusterConfig `json:"shared_cluster"`
+	Metrics       MetricsConfig       `json:"metrics"`
 }
 
 // SynchronizerConfig synchronizer config
@@ -75,4 +76,9 @@ type CMDBConfig struct {
 // SharedClusterConfig shared cluster config
 type SharedClusterConfig struct {
 	AnnotationKeyProjCode string `json:"annotation_key_proj_code"`
+}
+
+// MetricsConfig metrics config
+type MetricsConfig struct {
+	Port int `json:"port"`
 }

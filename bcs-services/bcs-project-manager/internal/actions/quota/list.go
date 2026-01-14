@@ -43,36 +43,135 @@ func NewListQuotaAction(model store.ProjectModel) *ListQuotaAction {
 	}
 }
 
-func (la *ListQuotaAction) doHost(ctx context.Context, req *proto.ListProjectQuotasRequest,
-	pquota []*proto.ProjectQuota) ([]*proto.ProjectQuota, error) {
+func (la *ListQuotaAction) doSelfHost(req *proto.ListProjectQuotasRequest,
+	pquota []*proto.ProjectQuota) ([]*proto.ProjectQuota, int64, error) {
 	p, err := la.model.GetProject(la.ctx, req.ProjectID)
 	if err != nil {
-		return pquota, errorx.NewDBErr(err.Error())
+		return pquota, 0, errorx.NewDBErr(err.Error())
 	}
 
 	if p == nil {
-		return pquota, errorx.NewReadableErr(errorx.ParamErr, "project not found")
+		return pquota, 0, errorx.NewReadableErr(errorx.ParamErr, "project not found")
 	}
-
+	var totalCount int64
 	if _, ok := p.Labels["quota-gray"]; ok {
 		var conds []*operator.Condition
-
-		conds = append(conds, operator.NewLeafCondition(operator.Eq, operator.M{
-			"quotaType": quota.Host,
-		}))
-
-		if req.ProjectID != "" {
+		if req.GetQuotaId() != "" {
 			conds = append(conds, operator.NewLeafCondition(operator.Eq, operator.M{
-				"projectId": la.req.GetProjectID(),
+				"quotaId": req.GetQuotaId(),
 			}))
 		}
+		if req.GetQuotaName() != "" {
+			conds = append(conds, operator.NewLeafCondition(operator.Eq, operator.M{
+				"quotaName": req.GetQuotaName(),
+			}))
+		}
+		if req.GetProjectID() != "" {
+			conds = append(conds, operator.NewLeafCondition(operator.Eq, operator.M{
+				"projectId": req.GetProjectID(),
+			}))
+		}
+		if req.GetProjectCode() != "" {
+			conds = append(conds, operator.NewLeafCondition(operator.Eq, operator.M{
+				"projectCode": req.GetProjectCode(),
+			}))
+		}
+		if req.GetBusinessID() != "" {
+			conds = append(conds, operator.NewLeafCondition(operator.Eq, operator.M{
+				"businessId": req.GetBusinessID(),
+			}))
+		}
+		if req.GetProvider() != "" {
+			conds = append(conds, operator.NewLeafCondition(operator.Eq, operator.M{
+				"provider": req.GetProvider(),
+			}))
+		}
+		conds = append(conds, operator.NewLeafCondition(operator.Eq, operator.M{
+			"quotaType": quota.SelfHost,
+		}))
+		conds = append(conds, operator.NewLeafCondition(operator.Ne, operator.M{
+			"status": quota.Deleted,
+		}))
 
 		cond := operator.NewBranchCondition(operator.And, conds...)
 
-		quotas, _, errQ := la.model.ListProjectQuotas(la.ctx, cond, &page.Pagination{All: true})
-		if err != nil {
-			return pquota, errorx.NewDBErr(errQ.Error())
+		quotas, total, errQ := la.model.ListProjectQuotas(la.ctx, cond, la.paginationOpt())
+		if errQ != nil {
+			return pquota, 0, errorx.NewDBErr(errQ.Error())
 		}
+
+		totalCount = total
+		for _, q := range quotas {
+			tmp := q
+			pquota = append(pquota, quota.TransStore2ProtoQuota(&tmp))
+		}
+	}
+	// if totalCount > 0 {
+	//	 pq, errU := la.doHostUsage(ctx, req, pquota, p)
+	//	 if errU != nil {
+	//		 return pquota, 0, errU
+	//	 }
+	//	 pquota = pq
+	// }
+	return pquota, totalCount, nil
+}
+
+func (la *ListQuotaAction) doHost(ctx context.Context,
+	req *proto.ListProjectQuotasRequest,
+	pquota []*proto.ProjectQuota) ([]*proto.ProjectQuota, int64, error) {
+	p, err := la.model.GetProject(la.ctx, req.ProjectID)
+	if err != nil {
+		return pquota, 0, errorx.NewDBErr(err.Error())
+	}
+	if p == nil {
+		return pquota, 0, errorx.NewReadableErr(errorx.ParamErr, "project not found")
+	}
+	var totalCount int64
+	if _, ok := p.Labels["quota-gray"]; ok {
+		var conds []*operator.Condition
+		if req.GetQuotaId() != "" {
+			conds = append(conds, operator.NewLeafCondition(operator.Eq, operator.M{
+				"quotaId": req.GetQuotaId(),
+			}))
+		}
+		if req.GetQuotaName() != "" {
+			conds = append(conds, operator.NewLeafCondition(operator.Eq, operator.M{
+				"quotaName": req.GetQuotaName(),
+			}))
+		}
+		if req.GetProjectID() != "" {
+			conds = append(conds, operator.NewLeafCondition(operator.Eq, operator.M{
+				"projectId": req.GetProjectID(),
+			}))
+		}
+		if req.GetProjectCode() != "" {
+			conds = append(conds, operator.NewLeafCondition(operator.Eq, operator.M{
+				"projectCode": req.GetProjectCode(),
+			}))
+		}
+		if req.GetBusinessID() != "" {
+			conds = append(conds, operator.NewLeafCondition(operator.Eq, operator.M{
+				"businessId": req.GetBusinessID(),
+			}))
+		}
+		if req.GetProvider() != "" {
+			conds = append(conds, operator.NewLeafCondition(operator.Eq, operator.M{
+				"provider": req.GetProvider(),
+			}))
+		}
+		conds = append(conds, operator.NewLeafCondition(operator.Eq, operator.M{
+			"quotaType": quota.Host,
+		}))
+		conds = append(conds, operator.NewLeafCondition(operator.Ne, operator.M{
+			"status": quota.Deleted,
+		}))
+		cond := operator.NewBranchCondition(operator.And, conds...)
+
+		quotas, total, errQ := la.model.ListProjectQuotas(la.ctx, cond, la.paginationOpt())
+		if errQ != nil {
+			return pquota, 0, errorx.NewDBErr(errQ.Error())
+		}
+		totalCount = total
 
 		for _, q := range quotas {
 			tmp := q
@@ -80,19 +179,22 @@ func (la *ListQuotaAction) doHost(ctx context.Context, req *proto.ListProjectQuo
 		}
 	}
 
-	pq, errU := la.doHostUsage(ctx, req, pquota, p)
-	if errU != nil {
-		return pquota, errU
+	if totalCount > 0 {
+		pq, errU := la.doHostUsage(ctx, req, pquota, p)
+		if errU != nil {
+			return pquota, 0, errU
+		}
+		pquota = pq
 	}
-	pquota = pq
 
-	return pquota, nil
+	return pquota, totalCount, nil
 }
 
-func (la *ListQuotaAction) doHostUsage(ctx context.Context, req *proto.ListProjectQuotasRequest,
+func (la *ListQuotaAction) doHostUsage(ctx context.Context,
+	req *proto.ListProjectQuotasRequest,
 	pquota []*proto.ProjectQuota, p *project.Project) ([]*proto.ProjectQuota, error) {
 	// 获取指定项目和提供商的资源使用情况
-	pqs, errC := clustermanager.GetResourceUsage(ctx, req.ProjectID, req.Provider)
+	pqs, errC := clustermanager.GetResourceUsage(ctx, p.ProjectID, req.Provider)
 
 	if errC != nil {
 		return pquota, errC
@@ -149,28 +251,56 @@ func (la *ListQuotaAction) doHostUsage(ctx context.Context, req *proto.ListProje
 			})
 		}
 	}
+
 	return pquota, nil
 }
 
 func (la *ListQuotaAction) doFed(req *proto.ListProjectQuotasRequest,
-	pquota []*proto.ProjectQuota) ([]*proto.ProjectQuota, error) {
+	pquota []*proto.ProjectQuota) ([]*proto.ProjectQuota, int64, error) {
 	var conds []*operator.Condition
 
+	if req.GetQuotaId() != "" {
+		conds = append(conds, operator.NewLeafCondition(operator.Eq, operator.M{
+			"quotaId": req.GetQuotaId(),
+		}))
+	}
+	if req.GetQuotaName() != "" {
+		conds = append(conds, operator.NewLeafCondition(operator.Eq, operator.M{
+			"quotaName": req.GetQuotaName(),
+		}))
+	}
+	if req.GetProjectID() != "" {
+		conds = append(conds, operator.NewLeafCondition(operator.Eq, operator.M{
+			"projectId": req.GetProjectID(),
+		}))
+	}
+	if req.GetProjectCode() != "" {
+		conds = append(conds, operator.NewLeafCondition(operator.Eq, operator.M{
+			"projectCode": req.GetProjectCode(),
+		}))
+	}
+	if req.GetBusinessID() != "" {
+		conds = append(conds, operator.NewLeafCondition(operator.Eq, operator.M{
+			"businessId": req.GetBusinessID(),
+		}))
+	}
+	if req.GetProvider() != "" {
+		conds = append(conds, operator.NewLeafCondition(operator.Eq, operator.M{
+			"provider": req.GetProvider(),
+		}))
+	}
 	conds = append(conds, operator.NewLeafCondition(operator.Eq, operator.M{
 		"quotaType": quota.Federation,
 	}))
-
-	if req.ProjectID != "" {
-		conds = append(conds, operator.NewLeafCondition(operator.Eq, operator.M{
-			"projectId": la.req.GetProjectID(),
-		}))
-	}
+	conds = append(conds, operator.NewLeafCondition(operator.Ne, operator.M{
+		"status": quota.Deleted,
+	}))
 
 	cond := operator.NewBranchCondition(operator.And, conds...)
 
-	Quotas, _, err := la.model.ListProjectQuotas(la.ctx, cond, &page.Pagination{All: true})
+	Quotas, total, err := la.model.ListProjectQuotas(la.ctx, cond, la.paginationOpt())
 	if err != nil {
-		return pquota, errorx.NewDBErr(err.Error())
+		return pquota, 0, errorx.NewDBErr(err.Error())
 	}
 
 	for _, q := range Quotas {
@@ -178,7 +308,7 @@ func (la *ListQuotaAction) doFed(req *proto.ListProjectQuotasRequest,
 		getQuotaUsage(&tmp)
 		pquota = append(pquota, quota.TransStore2ProtoQuota(&tmp))
 	}
-	return pquota, nil
+	return pquota, total, nil
 }
 
 // Do list projectquotas
@@ -190,28 +320,72 @@ func (la *ListQuotaAction) Do(ctx context.Context,
 	la.resp = resp
 
 	var PQ []*proto.ProjectQuota
+	var totalCount int64
 
-	if req.ProjectID != "" && req.GetQuotaType() != string(quota.Federation) {
-		pq, err := la.doHost(ctx, req, PQ)
+	if req.ProjectID != "" && req.GetQuotaType() != string(quota.Federation) &&
+		req.GetQuotaType() != string(quota.Host) {
+		pq, total, err := la.doSelfHost(req, PQ)
 		if err != nil {
 			return err
 		}
 		PQ = pq
+		totalCount = total
 	}
 
-	if req.GetQuotaType() != string(quota.Host) {
-		pq, err := la.doFed(req, PQ)
+	if req.ProjectID != "" && req.GetQuotaType() != string(quota.Federation) &&
+		req.GetQuotaType() != string(quota.SelfHost) {
+		pq, total, err := la.doHost(ctx, req, PQ)
 		if err != nil {
 			return err
 		}
 		PQ = pq
+		totalCount = total
+	}
+
+	if req.GetQuotaType() != string(quota.Host) &&
+		req.GetQuotaType() != string(quota.SelfHost) {
+		pq, total, err := la.doFed(req, PQ)
+		if err != nil {
+			return err
+		}
+		PQ = pq
+		totalCount = total
 	}
 
 	// 设置响应数据
 	resp.Data = &proto.ListProjectQuotasData{
-		Total:   uint32(len(PQ)),
+		Total:   uint32(totalCount),
 		Results: PQ,
 	}
 
 	return nil
+}
+
+const (
+	listProjectQuotasPageLimit = 100
+)
+
+func (la *ListQuotaAction) paginationOpt() *page.Pagination {
+	pagination := &page.Pagination{All: true}
+	if la.req.Page == 0 && la.req.Limit == 0 {
+		return pagination
+	}
+
+	pagination.All = false
+	pagination.Sort = map[string]int{"createtime": -1}
+
+	if la.req.Page > 0 {
+		offset := int64(la.req.Page) - 1
+		pagination.Offset = offset
+	} else {
+		pagination.Offset = 0
+	}
+
+	if la.req.Limit > 0 {
+		pagination.Limit = int64(la.req.Limit)
+	} else {
+		pagination.Limit = listProjectQuotasPageLimit
+	}
+
+	return pagination
 }

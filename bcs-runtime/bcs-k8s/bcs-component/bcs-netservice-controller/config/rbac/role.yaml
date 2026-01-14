@@ -1,0 +1,94 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: manager-role
+rules:
+- apiGroups:
+  - coordination.k8s.io
+  resources:
+  - leases
+  verbs:
+  - create
+  - delete
+  - get
+  - update
+- apiGroups:
+  - netservice.bkbcs.tencent.com
+  resources:
+  - bcsnetipclaims
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - netservice.bkbcs.tencent.com
+  resources:
+  - bcsnetipclaims/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - netservice.bkbcs.tencent.com
+  resources:
+  - bcsnetipclaims/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - netservice.bkbcs.tencent.com
+  resources:
+  - bcsnetips
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - netservice.bkbcs.tencent.com
+  resources:
+  - bcsnetips/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - netservice.bkbcs.tencent.com
+  resources:
+  - bcsnetpools
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - netservice.bkbcs.tencent.com
+  resources:
+  - bcsnetpools/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - netservice.bkbcs.tencent.com
+  resources:
+  - bcsnetpools/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - netservice.bkbcs.tencent.com
+  resources:
+  - pods
+  verbs:
+  - get
+  - list

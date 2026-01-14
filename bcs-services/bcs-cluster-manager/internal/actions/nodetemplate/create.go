@@ -105,6 +105,7 @@ func (ca *CreateAction) createNodeTemplate() error {
 		Desc:              ca.req.Desc,
 		ScaleInPostScript: scaleInPostScript,
 		ScaleInPreScript:  scaleInPreScript,
+		SkipSystemInit:    ca.req.SkipSystemInit,
 		Annotations: func() map[string]string {
 			if ca.req.Annotations == nil || len(ca.req.Annotations.Values) == 0 {
 				return nil

@@ -204,7 +204,6 @@ export default function useMenu() {
               meta: {
                 kind: 'BscpConfig',
               },
-              tag: 'NEW',
             },
             {
               title: 'ConfigMaps',
@@ -224,7 +223,6 @@ export default function useMenu() {
             },
           ],
           id: 'CONFIGURATION',
-          tag: 'NEW',
         },
         {
           title: $i18n.t('nav.storage'),

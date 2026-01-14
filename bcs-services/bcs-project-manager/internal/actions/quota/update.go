@@ -92,6 +92,18 @@ func (ua *UpdateQuotaAction) updateProjectQuota() error {
 		ua.sQuota.Annotations = ua.req.Annotations
 	}
 
+	if ua.req.QuotaAttr != nil {
+		ua.sQuota.QuotaAttr = quota.TransProto2QuotaAttr(ua.req.QuotaAttr)
+	}
+
+	if ua.req.QuotaSharedEnabled != nil {
+		ua.sQuota.QuotaSharedEnabled = ua.req.QuotaSharedEnabled.GetValue()
+	}
+
+	if ua.req.QuotaSharedProjectList != nil {
+		ua.sQuota.QuotaSharedProjectList = quota.TransProto2QuotaSharedProjects(ua.req.QuotaSharedProjectList)
+	}
+
 	err := ua.model.UpdateProjectQuota(ua.ctx, ua.sQuota)
 	if err != nil {
 		return errorx.NewDBErr(err.Error())

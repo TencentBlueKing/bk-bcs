@@ -21,9 +21,6 @@ ENV watchDisableCrd=false
 # 默认不添加labelSelector
 ENV watchLabelSelectors="{}"
 
-ENV TZ="Asia/Shanghai"
-RUN ln -fs /usr/share/zoneinfo/${TZ} /etc/localtime && echo ${TZ} > /etc/timezone
-
 WORKDIR /data/bcs/bcs-k8s-watch/
 CMD ["/data/bcs/bcs-k8s-watch/container-start.sh"]
 

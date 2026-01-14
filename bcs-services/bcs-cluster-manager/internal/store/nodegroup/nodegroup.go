@@ -157,7 +157,7 @@ func (m *ModelNodeGroup) GetNodeGroup(ctx context.Context, nodeGroupID string) (
 	return group, nil
 }
 
-// ListNodeGroup list clusters
+// ListNodeGroup list node group
 func (m *ModelNodeGroup) ListNodeGroup(ctx context.Context, cond *operator.Condition, opt *options.ListOption) (
 	[]*types.NodeGroup, error) {
 	groups := make([]*types.NodeGroup, 0)
@@ -173,7 +173,6 @@ func (m *ModelNodeGroup) ListNodeGroup(ctx context.Context, cond *operator.Condi
 	} else {
 		finder = finder.WithLimit(opt.Limit)
 	}
-
 	if opt.All {
 		finder = finder.WithLimit(0)
 	}
@@ -182,4 +181,10 @@ func (m *ModelNodeGroup) ListNodeGroup(ctx context.Context, cond *operator.Condi
 		return nil, err
 	}
 	return groups, nil
+}
+
+// CountNodeGroup count node group
+func (m *ModelNodeGroup) CountNodeGroup(ctx context.Context, cond *operator.Condition) (
+	int64, error) {
+	return m.db.Table(m.tableName).Find(cond).Count(ctx)
 }

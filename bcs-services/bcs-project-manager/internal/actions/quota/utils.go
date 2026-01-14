@@ -53,7 +53,7 @@ func checkClusterValidate(ctx context.Context, clusterId string) (*bcsapiCluster
 		return nil, nil
 	}
 
-	cls, err := clustermanager.GetCluster(ctx, clusterId)
+	cls, err := clustermanager.GetCluster(ctx, clusterId, true)
 	if err != nil {
 		return nil, err
 	}

@@ -379,10 +379,11 @@ func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Nod
 		return nil, fmt.Errorf("BuildAddNodesToClusterTask TaskOptions is lost")
 	}
 
-	// format node IPs
-	nodeIPs := make([]string, 0)
+	// format node IPs and node IDs
+	nodeIPs, nodeIDs := make([]string, 0), make([]string, 0)
 	for i := range nodes {
 		nodeIPs = append(nodeIPs, nodes[i].InnerIP)
+		nodeIDs = append(nodeIDs, nodes[i].NodeID)
 	}
 
 	// init task information
@@ -416,13 +417,18 @@ func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Nod
 		NodeTemplate: opt.NodeTemplate,
 	}
 
-	// step1: call bkops operation
+	// step1:  preAction user task
+	if err := t.addNodesUserPreInitBkSops(task, cls, nodeIPs, nodeIDs, opt); err != nil {
+		return nil, err
+	}
+
+	// step2: call bkops operation
 	// preAction bcs sops task
 	if err := t.addNodesSystemInitBkSops(task, cls, nodeIPs, opt); err != nil {
 		return nil, err
 	}
 
-	// step2: 业务后置自定义流程: 支持标准运维任务 或者 后置脚本
+	// step3: 业务后置自定义流程: 支持标准运维任务 或者 后置脚本
 	t.addNodesExecUserScript(task, cls, nodeIPs, opt)
 
 	// business post define sops task or script
@@ -430,19 +436,19 @@ func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Nod
 		return nil, err
 	}
 
-	// step3: 混部集群需要执行混部节点流程
+	// step5: 混部集群需要执行混部节点流程
 	if err := t.addNodesMixedClsBkSops(task, cls, nodeIPs, opt); err != nil {
 		return nil, err
 	}
 
-	// step4: 设置节点标签
+	// step6: 设置节点标签
 	addNodesTask.BuildNodeLabelsStep(task)
-	// step5: 设置节点污点
+	// step7: 设置节点污点
 	addNodesTask.BuildNodeTaintsTaskStep(task)
-	// step6: 设置节点注解
+	// step8: 设置节点注解
 	addNodesTask.BuildNodeAnnotationsStep(task)
 
-	// step7: update DB node info by instanceIP
+	// step9: update DB node info by instanceIP
 	addNodesTask.BuildUpdateAddNodeDbInfoStep(task)
 
 	// set current step
@@ -455,8 +461,36 @@ func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Nod
 
 	task.CommonParams[cloudprovider.JobTypeKey.String()] = cloudprovider.AddNodeJob.String()
 	task.CommonParams[cloudprovider.NodeIPsKey.String()] = strings.Join(nodeIPs, ",")
-
+	task.CommonParams[cloudprovider.NodeIDsKey.String()] = strings.Join(nodeIDs, ",")
 	return task, nil
+}
+
+func (t *Task) addNodesUserPreInitBkSops(
+	task *proto.Task, cls *proto.Cluster, nodeIPs, nodeIDs []string, opt *cloudprovider.AddNodesOption) error {
+	if opt.NodeTemplate != nil && opt.NodeTemplate.ScaleOutExtraAddons != nil &&
+		len(opt.NodeTemplate.ScaleOutExtraAddons.PreActions) > 0 {
+		err := template.BuildSopsFactory{
+			StepName: template.UserCustomPreInit,
+			Cluster:  cls,
+			Extra: template.ExtraInfo{
+				NodeIPList:     strings.Join(nodeIPs, ","),
+				InstanceIDList: strings.Join(nodeIDs, ","),
+				NodeRegion: func() string {
+					if opt.NodeTemplate != nil && opt.NodeTemplate.Labels != nil {
+						return opt.NodeTemplate.Labels[cloudprovider.NodeTemplateRegionLabelKey]
+					}
+					return ""
+				}(),
+				TranslateMethod: template.UserCustomBeforeInit,
+				AllowSkip:       true,
+				NodeOperator:    opt.Operator,
+				ShowSopsUrl:     true,
+			}}.BuildSopsStep(task, opt.NodeTemplate.ScaleOutExtraAddons, true)
+		if err != nil {
+			return fmt.Errorf("BuildAddNodesToClusterTask BuildBkSopsStepAction failed: %v", err)
+		}
+	}
+	return nil
 }
 
 // addNodesSystemInitBkSops 构建系统初始化步骤
@@ -1040,8 +1074,12 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 	updateDesiredNodes.BuildApplyInstanceStep(task)
 
 	// 检测是否存在bkcc/检测是否安装agent/空闲检查等流程
+	// step2: 业务扩容节点前置自定义流程
+	if err := t.updateDesiredNodesUserPreInitBkSops(task, group, opt); err != nil {
+		return nil, err
+	}
 
-	// step2: call sops task to add nodes to cluster: install agent & trans module
+	// step3: call sops task to add nodes to cluster: install agent & trans module
 	if err := t.updateDesiredNodesSysInitBkSops(task, group, opt); err != nil {
 		return nil, err
 	}
@@ -1052,7 +1090,7 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 		common.BuildTransferHostModuleStep(task, opt.Cluster.BusinessID, moduleID, "")
 	}
 
-	// step3: 业务扩容节点后置自定义流程: 支持job后置脚本和标准运维任务
+	// step4: 业务扩容节点后置自定义流程: 支持job后置脚本和标准运维任务
 	t.updateDesiredNodesUserScript(task, group, opt)
 
 	// business define sops task
@@ -1065,15 +1103,15 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 		return nil, err
 	}
 
-	// step4: annotation nodes
+	// step5: annotation nodes
 	updateDesiredNodes.BuildNodeAnnotationsStep(task)
-	// step5: nodes common labels: sZoneID / bizID
+	// step6: nodes common labels: sZoneID / bizID
 	updateDesiredNodes.BuildNodeCommonLabelsStep(task)
 	// set node taint
 	common.BuildNodeTaintsTaskStep(task, opt.Cluster.ClusterID, nil, cloudprovider.GetTaintsByNg(opt.NodeGroup))
-	// step6: set resourcePool labels
+	// step7: set resourcePool labels
 	updateDesiredNodes.BuildResourcePoolDeviceLabelStep(task)
-	// step7: unCordon nodes
+	// step8: unCordon nodes
 	updateDesiredNodes.BuildUnCordonNodesStep(task)
 
 	// set current step
@@ -1090,6 +1128,32 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 	task.CommonParams[cloudprovider.ManualKey.String()] = strconv.FormatBool(opt.Manual)
 
 	return task, nil
+}
+
+func (t *Task) updateDesiredNodesUserPreInitBkSops(
+	task *proto.Task, group *proto.NodeGroup, opt *cloudprovider.UpdateDesiredNodeOption) error {
+	if group.NodeTemplate != nil && group.NodeTemplate.ScaleOutExtraAddons != nil &&
+		len(group.NodeTemplate.ScaleOutExtraAddons.PreActions) > 0 {
+		err := template.BuildSopsFactory{
+			StepName: template.UserCustomPreInit,
+			Cluster:  opt.Cluster,
+			Extra: template.ExtraInfo{
+				NodeIPList:     "",
+				InstanceIDList: "",
+				NodeRegion:     group.Region,
+				NodeOperator:   opt.Operator,
+				ModuleID: cloudprovider.GetScaleOutModuleID(opt.Cluster, opt.AsOption, group.NodeTemplate,
+					true),
+				BusinessID:      cloudprovider.GetBusinessID(opt.Cluster, opt.AsOption, group.NodeTemplate, true),
+				TranslateMethod: template.UserCustomBeforeInit,
+				ShowSopsUrl:     true,
+				AllowSkip:       true,
+			}}.BuildSopsStep(task, group.NodeTemplate.ScaleOutExtraAddons, true)
+		if err != nil {
+			return fmt.Errorf("BuildUpdateDesiredNodesTask platform BuildBkSopsStepAction failed: %v", err)
+		}
+	}
+	return nil
 }
 
 // updateDesiredNodesSysInitBkSops 构建更新期望节点数的系统初始化步骤

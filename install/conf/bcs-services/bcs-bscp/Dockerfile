@@ -1,5 +1,4 @@
-FROM alpine
-RUN apk --update --no-cache add ca-certificates bash vim curl
+FROM tencentos/tencentos4-minimal
 COPY hyper/bscp-ui /bscp-ui
 COPY hyper/bk-bscp-apiserver /bk-bscp/bk-bscp-apiserver
 COPY hyper/bk-bscp-authserver /bk-bscp/bk-bscp-authserver

@@ -47,3 +47,21 @@ func StringInSlice(str string, list []string) bool {
 	}
 	return false
 }
+
+// RemoveDuplicateEmptyValues 删除 Slice 中的空字符串
+func RemoveDuplicateEmptyValues(list []string) []string {
+	result := []string{}
+	for _, item := range list {
+		if item != "" {
+			result = append(result, item)
+		}
+	}
+	return result
+}
+
+// RemoveDuplicateAndEmptyValues 删除 Slice 中的重复字符串和空字符串
+func RemoveDuplicateAndEmptyValues(strs []string) []string {
+	strs = RemoveDuplicateEmptyValues(strs)
+	strs = RemoveDuplicateValues(strs)
+	return strs
+}

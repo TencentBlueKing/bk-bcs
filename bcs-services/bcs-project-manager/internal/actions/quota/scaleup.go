@@ -73,6 +73,10 @@ func (sa *ScaleUpQuotaAction) validate() error {
 		if sa.req.GetQuota().GetZoneResources() == nil {
 			return errorx.NewParamErr("zoneResources is required")
 		}
+	case quota.SelfHost:
+		if sa.req.GetQuota().GetZoneResources() == nil {
+			return errorx.NewParamErr("zoneResources is required")
+		}
 	case quota.Shared:
 		if sa.req.GetQuota().GetCpu() == nil && sa.req.GetQuota().GetMem() == nil {
 			return errorx.NewParamErr("cpu or mem is required")

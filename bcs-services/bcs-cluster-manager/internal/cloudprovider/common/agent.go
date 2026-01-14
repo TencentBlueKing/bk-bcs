@@ -269,6 +269,9 @@ func InstallGSEAgentTask(taskID string, stepName string) error { // nolint
 	}
 	blog.Infof("InstallGSEAgentTask %s install gse agent job(%d) url %s", taskID, job.JobID, job.JobURL)
 
+	// 休眠10秒，避免任务过快查询导致节点还未开始安装返回成功
+	time.Sleep(10 * time.Second)
+
 	// check status
 	ctx, cancel := context.WithTimeout(context.TODO(), 10*time.Minute)
 	defer cancel()
@@ -278,6 +281,9 @@ func InstallGSEAgentTask(taskID string, stepName string) error { // nolint
 			blog.Errorf("InstallGSEAgentTask %s failed, get job detail err %s", taskID, errLocal.Error())
 			return errLocal
 		}
+
+		blog.Infof("InstallGSEAgentTask %s checking job ID[%d], detail[%#v]", taskID, job.JobID, detail)
+
 		switch detail.Status {
 		case nodeman.JobRunning:
 			cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,

@@ -689,7 +689,7 @@ func UpdateClusterNodesLabels(ctx context.Context, data NodeLabelsData) error { 
 				{
 					if _, find := labels[utils.RegionLabelKey]; !find {
 						regions := strings.Split(h.BkCloudRegion, "-")
-						if len(regions) >= 1 {
+						if len(regions) > 1 {
 							labels[utils.RegionLabelKey] = regions[1]
 						}
 					}

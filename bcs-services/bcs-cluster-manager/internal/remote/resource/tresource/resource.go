@@ -400,16 +400,16 @@ func (rm *ResManClient) GetInstanceTypesV2(ctx context.Context, region string, s
 
 		// target instance types
 		targetTypes = append(targetTypes, resource.InstanceType{
-			NodeType:       *pool.GetBaseConfig().InstanceType,
+			NodeType:       pool.GetBaseConfig().GetInstanceType(),
 			TypeName:       labels[InstanceSpecs.String()],
 			NodeFamily:     "",
-			Cpu:            *pool.GetBaseConfig().Cpu,
-			Memory:         *pool.GetBaseConfig().Mem,
-			Gpu:            *pool.GetBaseConfig().Gpu,
+			Cpu:            pool.GetBaseConfig().GetCpu(),
+			Memory:         pool.GetBaseConfig().GetMem(),
+			Gpu:            pool.GetBaseConfig().GetGpu(),
 			Status:         status,
 			UnitPrice:      0,
 			Zones:          []string{pool.GetBaseConfig().GetZone().GetZone()},
-			Provider:       *pool.Provider,
+			Provider:       pool.GetProvider(),
 			ResourcePoolID: pool.GetId(),
 			SystemDisk: func() *resource.DataDisk {
 				if pool.GetBaseConfig().GetSystemDisk() != nil {

@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// nolint
 package client
 
 import (
@@ -18,6 +19,7 @@ import (
 	"math/big"
 
 	bkcmdbkube "configcenter/src/kube/types" // nolint
+
 	pmp "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
 	cmp "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
 	bcsregistry "github.com/Tencent/bk-bcs/bcs-common/pkg/registry"

@@ -59,26 +59,43 @@ func isGPUContainer(c corev1.Container, gpuResourceName corev1.ResourceName) boo
 
 func (gi *Injector) getGPUTypeAndResourceName(pod *corev1.Pod) (string, corev1.ResourceName, error) {
 	gpuType := pod.Annotations[pluginAnnotationKey]
-	foundGPUType := false
-	for t := range gi.conf.GPUResourceMap {
-		if t == gpuType {
-			foundGPUType = true
-			break
+	namespace := pod.Namespace
+
+	// 收集所有可能的 GPU resource map（包括 namespace 特定规则和原有规则）
+	allResourceMaps := make([]map[corev1.ResourceName]InjectInfo, 0)
+
+	// 优先检查 namespace 特定规则
+	if gi.conf.NamespaceResourceMap != nil {
+		if nsResourceMap, nsExists := gi.conf.NamespaceResourceMap[namespace]; nsExists {
+			if gpuTypeMap, gpuTypeExists := nsResourceMap[gpuType]; gpuTypeExists {
+				allResourceMaps = append(allResourceMaps, gpuTypeMap)
+			}
 		}
 	}
-	if !foundGPUType {
+
+	// 检查原有规则
+	if gi.conf.ResourceMap != nil {
+		if gpuTypeMap, gpuTypeExists := gi.conf.ResourceMap[gpuType]; gpuTypeExists {
+			allResourceMaps = append(allResourceMaps, gpuTypeMap)
+		}
+	}
+
+	// 如果没有找到任何匹配的 gpuType，返回空
+	if len(allResourceMaps) == 0 {
 		return "", "", nil
 	}
 
 	gpuResourceKey := corev1.ResourceName("")
-	gpuResourceMap := make(map[corev1.ResourceName]bool)
+	ResourceMap := make(map[corev1.ResourceName]bool)
 	for _, container := range pod.Spec.Containers {
 		for reqKey := range container.Resources.Requests {
 			found := false
-			for _, gpuResource := range gi.conf.GPUResourceMap {
+			// 在所有可能的 GPU resource map 中查找
+			// namespace特定规则会优先匹配
+			for _, gpuResource := range allResourceMaps {
 				for k := range gpuResource {
 					if reqKey == k {
-						gpuResourceMap[k] = true
+						ResourceMap[k] = true
 						gpuResourceKey = k
 						found = true
 						break
@@ -91,12 +108,12 @@ func (gi *Injector) getGPUTypeAndResourceName(pod *corev1.Pod) (string, corev1.R
 		}
 	}
 
-	if len(gpuResourceMap) == 0 {
+	if len(ResourceMap) == 0 {
 		return "", "", nil
 	}
-	if len(gpuResourceMap) > 1 {
-		blog.Warnf("pod %s/%s has different gpu resource %v", pod.Namespace, pod.Name, gpuResourceMap)
-		return "", "", fmt.Errorf("pod %s/%s has different gpu resource %v", pod.Namespace, pod.Name, gpuResourceMap)
+	if len(ResourceMap) > 1 {
+		blog.Warnf("pod %s/%s has different gpu resource %v", pod.Namespace, pod.Name, ResourceMap)
+		return "", "", fmt.Errorf("pod %s/%s has different gpu resource %v", pod.Namespace, pod.Name, ResourceMap)
 	}
 	return gpuType, gpuResourceKey, nil
 }

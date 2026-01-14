@@ -17,24 +17,29 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"net/url"
 
-	"github.com/go-micro/plugins/v4/client/grpc"
-	"github.com/go-micro/plugins/v4/registry/etcd"
-	"go-micro.dev/v4/client"
-	"go-micro.dev/v4/metadata"
-	"go-micro.dev/v4/registry"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/metadata"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-federation-manager/internal/clients/requester"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-federation-manager/internal/common"
 )
 
 var projectCli Client
 
 // SetProjectClient set project client
-func SetProjectClient(opts *ClientOptions) {
-	cli := NewClient(opts)
+func SetProjectClient(opts *ClientOptions) error {
+	cli, err := NewClient(opts)
+	if err != nil {
+		blog.Errorf("failed to set project client: %v", err)
+		return fmt.Errorf("failed to set project client: %v", err)
+	}
 	projectCli = cli
+	return nil
 }
 
 // GetProjectClient get project client
@@ -49,49 +54,62 @@ type Client interface {
 
 // ClientOptions options for create client
 type ClientOptions struct {
-	ClientTLS     *tls.Config
-	EtcdEndpoints []string
-	EtcdTLS       *tls.Config
+	ClientTLS *tls.Config
 	requester.BaseOptions
 }
 
 // NewClient create client with options
-func NewClient(opts *ClientOptions) Client {
-	header := make(map[string]string)
-	header[common.HeaderAuthorizationKey] = fmt.Sprintf("Bearer %s", opts.Token)
-	header[common.BcsHeaderClientKey] = common.InnerModuleName
-	if opts.Sender == nil {
-		opts.Sender = requester.NewRequester()
+func NewClient(opts *ClientOptions) (Client, error) {
+	header := map[string]string{
+		"x-content-type": "application/grpc+proto",
+		"Content-Type":   "application/grpc",
+	}
+	if len(opts.Token) != 0 {
+		header["Authorization"] = fmt.Sprintf("Bearer %s", opts.Token)
+	}
+	md := metadata.New(header)
+	var grpcOpts []grpc.DialOption
+	grpcOpts = append(grpcOpts, grpc.WithDefaultCallOptions(grpc.Header(&md)))
+	if opts.ClientTLS != nil {
+		grpcOpts = append(grpcOpts, grpc.WithTransportCredentials(credentials.NewTLS(opts.ClientTLS)))
+	} else {
+		grpcOpts = append(grpcOpts, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	}
+	var conn *grpc.ClientConn
+	// 解析 URL
+	parsedURL, err := url.Parse(opts.Endpoint)
+	if err != nil {
+		return nil, fmt.Errorf("error parsing URL: %s", err.Error())
+	}
+	conn, err = grpc.NewClient(parsedURL.Host, grpcOpts...)
+	if err != nil {
+		return nil, fmt.Errorf("dial bcs service failed:%s", err.Error())
 	}
 
-	// init project manager cli
-	c := grpc.NewClient(
-		client.Registry(etcd.NewRegistry(
-			registry.Addrs(opts.EtcdEndpoints...),
-			registry.TLSConfig(opts.EtcdTLS)),
-		),
-		grpc.AuthTLS(opts.ClientTLS),
-	)
-	cli := bcsproject.NewBCSProjectService(common.ModuleProjectManager, c)
+	if conn == nil {
+		return nil, fmt.Errorf("conn is nil")
+	}
 
 	return &projectClient{
-		debug:         false,
-		opts:          opts,
-		defaultHeader: header,
-		projectSvc:    cli,
-	}
+		opts:       opts,
+		projectSvc: bcsproject.NewBCSProjectClient(conn),
+		conn:       conn,
+	}, nil
 }
 
 type projectClient struct {
-	debug         bool
-	opts          *ClientOptions
-	defaultHeader map[string]string
-	projectSvc    bcsproject.BCSProjectService
+	opts       *ClientOptions
+	projectSvc bcsproject.BCSProjectClient
+	conn       *grpc.ClientConn
 }
 
+// get metadata context for request project manager by go-micro grpc service discovery
 func (c *projectClient) getMetadataCtx(ctx context.Context) context.Context {
-	return metadata.NewContext(ctx, metadata.Metadata{
-		common.BcsHeaderClientKey:   common.InnerModuleName,
-		common.BcsHeaderUsernameKey: common.InnerModuleName,
-	})
+	header := map[string]string{
+		"x-content-type": "application/grpc+proto",
+		"Content-Type":   "application/grpc",
+	}
+	header["Authorization"] = fmt.Sprintf("Bearer %s", c.opts.Token)
+	md := metadata.New(header)
+	return metadata.NewOutgoingContext(ctx, md)
 }

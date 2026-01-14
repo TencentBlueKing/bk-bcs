@@ -81,6 +81,8 @@ var (
 	nodePasswd           = "CM.node.NodePasswd"           // nolint
 	nodeCPUManagerPolicy = "CM.node.NodeCPUManagerPolicy" // nolint
 	nodeIPList           = "CM.node.NodeIPList"           // nolint
+	nodeInstanceID       = "CM.node.NodeInstanceIDList"   // nolint
+	nodeNodeRegion       = "CM.node.NodeRegion"           // nolint
 
 	// nodeGroup render info
 	nodeGroupID = "CM.nodeGroup.NodeGroupID"

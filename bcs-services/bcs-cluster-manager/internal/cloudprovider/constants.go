@@ -285,6 +285,8 @@ var (
 	DynamicMasterNodeIPListKey ParamKey = "MasterNodeIPList"
 	// DynamicImageIdKey xxx
 	DynamicImageIdKey ParamKey = "ImageId"
+	// DynamicInstanceIDListKey xxx
+	DynamicInstanceIDListKey ParamKey = "NodeInstanceIDList"
 
 	// SuccessNodeIDsKey xxx
 	// CVM Instance
@@ -381,11 +383,16 @@ var (
 	// DrainHelperKey xxx
 	DrainHelperKey ParamKey = "drainHelper"
 
-	// TransVPCIPs trans vpc nodes ip
-	TransVPCIPs ParamKey = "transVPCNodeIPs"
+	// TransVPCIPsKey trans vpc nodes ip
+	TransVPCIPsKey ParamKey = "transVPCNodeIPs"
 )
 
 const (
 	// WhiteListLabelKey xxx
 	WhiteListLabelKey = "bkbcs.tencent.com/is-powerhub-cluster"
+)
+
+const (
+	// NodeTemplateRegionLabelKey xxx
+	NodeTemplateRegionLabelKey = "node-region"
 )

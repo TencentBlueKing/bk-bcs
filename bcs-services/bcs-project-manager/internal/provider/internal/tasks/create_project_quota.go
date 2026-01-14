@@ -54,6 +54,8 @@ func (cpq *createProjectQuota) Steps(defineSteps []task.StepBuilder) []*types.St
 	switch cpq.projectQuota.QuotaType {
 	case quota.Host.String():
 		return cpq.buildCaInstanceTypesQuotaSteps()
+	case quota.SelfHost.String():
+		return cpq.buildCaInstanceTypesQuotaSteps()
 	case quota.Shared.String():
 		return cpq.buildSharedClusterQuotaSteps()
 	case quota.Federation.String():
@@ -79,10 +81,13 @@ func (cpq *createProjectQuota) buildCaInstanceTypesQuotaSteps() []*types.Step {
 
 	// 1. 审批联邦集群配额申请
 	// 2. 等待审批通过，审批通过后, 更新配额状态; 审批拒绝后, 更新配额申请状态
-	content := fmt.Sprintf("user %s apply for project %s CA resources quota: region(%s) "+ // nolint
-		"zone(%s) instanceType(%s) quota(%v)", cpq.projectQuota.GetCreator(), cpq.projectQuota.GetProjectCode(),
-		cpq.projectQuota.GetQuota().GetZoneResources().Region, cpq.projectQuota.GetQuota().GetZoneResources().ZoneId,
-		cpq.projectQuota.GetQuota().GetZoneResources().InstanceType,
+	content := fmt.Sprintf("user(%s) apply project(%s) CA resources "+
+		"region(%s) zone(%s) instanceType(%s) for quota(%v)",
+		cpq.projectQuota.GetCreator(),
+		cpq.projectQuota.GetProjectCode(),
+		cpq.projectQuota.GetQuota().GetZoneResources().GetRegion(),
+		cpq.projectQuota.GetQuota().GetZoneResources().GetZoneId(),
+		cpq.projectQuota.GetQuota().GetZoneResources().GetInstanceType(),
 		cpq.projectQuota.GetQuota().GetZoneResources().GetQuotaNum())
 
 	stepList = append(stepList, buildItsmQuotaSteps("", itsmData{
@@ -103,7 +108,7 @@ func (cpq *createProjectQuota) buildSharedClusterQuotaSteps() []*types.Step {
 
 	// 1. 审批共享集群配额申请
 	// 2. 等待审批通过，审批通过后, 更新配额状态; 审批拒绝后, 更新配额申请状态
-	content := fmt.Sprintf("user %s apply for shared cluster %s quota: cpu(%s) mem(%s)",
+	content := fmt.Sprintf("user(%s) apply shared cluster(%s) for quota: cpu(%s) mem(%s)",
 		cpq.projectQuota.GetCreator(), cpq.projectQuota.GetClusterId(),
 		cpq.projectQuota.GetQuota().GetCpu().GetDeviceQuota(), cpq.projectQuota.GetQuota().GetMem().GetDeviceQuota())
 
@@ -126,8 +131,9 @@ func (cpq *createProjectQuota) buildFederationClusterQuotaSteps() ([]*types.Step
 
 	// 1. 审批联邦集群配额申请
 	// 2. 等待审批通过，审批通过后, 更新配额状态; 审批拒绝后, 更新配额申请状态
-	content := fmt.Sprintf("user %s apply for federation cluster %s quota: cpu(%s) mem(%s) gpu(%s)",
-		cpq.projectQuota.GetCreator(), cpq.projectQuota.GetClusterId(),
+	content := fmt.Sprintf("user(%s) apply federation cluster(%s) namespace(%s) "+
+		"for quota: cpu(%s) mem(%s) gpu(%s)",
+		cpq.projectQuota.GetCreator(), cpq.projectQuota.GetClusterId(), cpq.projectQuota.GetNameSpace(),
 		cpq.projectQuota.GetQuota().GetCpu().GetDeviceQuota(), cpq.projectQuota.GetQuota().GetMem().GetDeviceQuota(),
 		cpq.projectQuota.GetQuota().GetGpu().GetDeviceQuota())
 
@@ -165,7 +171,7 @@ func (cpq *createProjectQuota) buildFederationClusterQuotaSteps() ([]*types.Step
 func (cpq *createProjectQuota) BuildTask(info types.TaskInfo, opts ...types.TaskOption) (*types.Task, error) {
 	t := types.NewTask(&info, opts...)
 	if len(cpq.Steps(nil)) == 0 {
-		return nil, fmt.Errorf("task steps empty")
+		return nil, fmt.Errorf("quotaType[%s] task steps empty", cpq.projectQuota.GetQuotaType())
 	}
 
 	for _, step := range cpq.Steps(nil) {

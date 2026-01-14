@@ -21,6 +21,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpserver"
+	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
@@ -36,6 +37,7 @@ import (
 	netservicev1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-netservice-controller/api/v1"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-netservice-controller/controllers"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-netservice-controller/internal/httpsvr"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-netservice-controller/internal/nodecidr"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-netservice-controller/internal/option"
 )
 
@@ -50,8 +52,17 @@ func init() {
 	//+kubebuilder:scaffold:scheme
 }
 
-// nolint
-func main() {
+var rootCmd = &cobra.Command{
+	Use:   "bcs-netservice-controller",
+	Short: "BCS Netservice Controller",
+	Long:  "BCS Netservice Controller manages network IP pools and IP claims for Kubernetes",
+	// 默认执行 controller 逻辑，保持100%兼容原有行为
+	Run: runController,
+}
+
+// runController 执行controller逻辑
+// nolint:funlen
+func runController(cmd *cobra.Command, args []string) {
 	opts := &option.ControllerOption{}
 
 	var verbosity int
@@ -75,6 +86,7 @@ func main() {
 
 	flag.UintVar(&opts.HttpServerPort, "http_svr_port", 8088, "port for controller http server")
 
+	// 解析 flag，兼容原有的命令行参数解析方式
 	flag.Parse()
 	opts.Verbosity = int32(verbosity)
 
@@ -142,6 +154,19 @@ func main() {
 	setupLog.Info("starting manager")
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
 		setupLog.Error(err, "problem running manager")
+		os.Exit(1)
+	}
+}
+
+// nolint
+func main() {
+	// 添加 node-cidr subcommand
+	rootCmd.AddCommand(nodecidr.NewNodeCidrCommand(scheme))
+
+	// 执行 cobra 命令
+	// 如果不加任何 subcommand，默认执行 controller 逻辑
+	if err := rootCmd.Execute(); err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}
 }

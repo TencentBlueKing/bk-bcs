@@ -15,6 +15,7 @@ package types
 
 import (
 	"errors"
+	"sync"
 	"time"
 )
 
@@ -70,6 +71,7 @@ type Task struct {
 	CallbackResult      string            `json:"callbackResult"`
 	CallbackMessage     string            `json:"callbackMessage"`
 	CommonParams        map[string]string `json:"commonParams"`
+	commonParamsLock    sync.Mutex        `json:"-"`
 	CommonPayload       string            `json:"commonPayload"`
 	Status              string            `json:"status"`
 	Message             string            `json:"message"`
@@ -89,6 +91,7 @@ type Step struct {
 	Alias               string            `json:"alias"`
 	Executor            string            `json:"executor"`
 	Params              map[string]string `json:"params"`
+	paramsLock          sync.Mutex        `json:"-"`
 	Payload             string            `json:"payload"`
 	Status              string            `json:"status"`
 	Message             string            `json:"message"`

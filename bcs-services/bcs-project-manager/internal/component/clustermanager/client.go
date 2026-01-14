@@ -38,12 +38,15 @@ var (
 )
 
 // GetCluster get cluster by clusterID
-func GetCluster(ctx context.Context, clusterID string) (*clustermanager.Cluster, error) {
+func GetCluster(ctx context.Context, clusterID string, isCache bool) (*clustermanager.Cluster, error) {
 	// 1. if hit, get from cache
 	c := cache.GetCache()
-	if cluster, exists := c.Get(fmt.Sprintf(CacheKeyClusterPrefix, clusterID)); exists {
-		return cluster.(*clustermanager.Cluster), nil
+	if isCache {
+		if cluster, exists := c.Get(fmt.Sprintf(CacheKeyClusterPrefix, clusterID)); exists {
+			return cluster.(*clustermanager.Cluster), nil
+		}
 	}
+
 	cli, closeCon, err := clustermanager.GetClient(common.ServiceDomain)
 	if err != nil {
 		logging.Error("get cluster manager client failed, err: %s", err.Error())
@@ -100,8 +103,13 @@ func GetResourceUsage(ctx context.Context, projectID, provider string) (
 	}
 	defer closeCon()
 	req := &clustermanager.GetProjectResourceQuotaUsageRequest{
-		ProjectID:  projectID,
-		ProviderID: provider,
+		ProjectID: projectID,
+		ProviderID: func(provider string) string {
+			if findProvider, ok := common.ProviderMap[provider]; ok {
+				return findProvider
+			}
+			return provider
+		}(provider),
 	}
 	resp, err := cli.GetProjectResourceQuotaUsage(ctx, req)
 	if err != nil {

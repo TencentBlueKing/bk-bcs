@@ -13815,6 +13815,8 @@ func (m *CreateNodeTemplateRequest) validate(all bool) error {
 		}
 	}
 
+	// no validation rules for SkipSystemInit
+
 	if all {
 		switch v := interface{}(m.GetAnnotations()).(type) {
 		case interface{ ValidateAll() error }:

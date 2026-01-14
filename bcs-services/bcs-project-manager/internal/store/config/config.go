@@ -47,6 +47,8 @@ const (
 	ConfigDeleteNamespaceItsmServiceName = "删除共享集群命名空间"
 	// QuotaManagerCommonItsmServiceID used to create an itsm ticket when quota manager
 	QuotaManagerCommonItsmServiceID = "quota_manager_common_itsm_service_id"
+	// ConfigKeyNamespaceItsmApprovers used to set namespace itsm approvers
+	ConfigKeyNamespaceItsmApprovers = "namespace_itsm_approvers"
 )
 
 // NOCC:deadcode/unused(设计如此:)

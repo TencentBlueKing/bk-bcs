@@ -32,6 +32,8 @@ import (
 const (
 	// UserBeforeInit before init
 	UserBeforeInit = "userBeforeInit"
+	// UserCustomBeforeInit custom before init
+	UserCustomBeforeInit = "userCustomBeforeInit"
 	// UserPostInit post init
 	UserPostInit = "userAfterInit"
 	// SystemBeforeInit bksops system pre init
@@ -44,6 +46,8 @@ const (
 	SystemInit = "系统后置初始化"
 	// UserAfterInit bksops user after init
 	UserAfterInit = "用户后置初始化"
+	// UserCustomPreInit bksops user custom pre init
+	UserCustomPreInit = "用户前置初始化"
 	// UserPreInit bksops user pre init
 	UserPreInit = "缩容节点清理"
 	// NodeMixedInit mixed init
@@ -61,6 +65,7 @@ var (
 		externalNodeScript: "ExternalNodeScript",
 		clusterKubeConfig:  "KubeConfig",
 		clusterImageId:     "ImageId",
+		nodeInstanceID:     "NodeInstanceIDList",
 	}
 )
 
@@ -82,6 +87,8 @@ type ExtraInfo struct {
 	GroupColocation    bool
 	ImageId            string
 	AllowSkip          bool
+	InstanceIDList     string
+	NodeRegion         string
 }
 
 // BuildSopsFactory xxx
@@ -332,6 +339,16 @@ func getTemplateParameterByName(name string, cluster *proto.Cluster, extra Extra
 			return clusterImageId, nil
 		}
 		return extra.ImageId, nil
+	case nodeInstanceID:
+		if len(extra.InstanceIDList) == 0 {
+			return nodeInstanceID, nil
+		}
+		return extra.InstanceIDList, nil
+	case nodeNodeRegion:
+		if extra.NodeRegion != "" {
+			return extra.NodeRegion, nil
+		}
+		return cluster.GetRegion(), nil
 	default:
 	}
 

@@ -375,11 +375,11 @@ volumeClaimTmpl:
                 searchable: true
                 datasource:
                   - label: ReadWriteOnce
-                    value: RWO
+                    value: ReadWriteOnce
                   - label: ReadOnlyMany
-                    value: ROX
+                    value: ReadOnlyMany
                   - label: ReadWriteMany
-                    value: RWX
+                    value: ReadWriteMany
         ui:group:
           props:
             showTitle: false

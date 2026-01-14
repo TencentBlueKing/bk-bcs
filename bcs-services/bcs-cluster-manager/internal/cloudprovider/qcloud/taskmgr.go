@@ -685,10 +685,15 @@ func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Nod
 	taskName := fmt.Sprintf(tkeAddNodeTaskTemplate, cls.ClusterID)
 	task.CommonParams[cloudprovider.TaskNameKey.String()] = taskName
 
-	// init instance passwd
-	passwd := utils.BuildInstancePwd()
-	if opt.Login != nil && opt.Login.GetInitLoginPassword() != "" {
-		passwd, _ = encrypt.Decrypt(nil, opt.Login.GetInitLoginPassword())
+	var passwd string
+	if opt.IsRetryTask {
+		passwd = opt.InitPassword
+	} else {
+		// init instance passwd
+		passwd = utils.BuildInstancePwd()
+		if opt.Login != nil && opt.Login.GetInitLoginPassword() != "" {
+			passwd, _ = encrypt.Decrypt(nil, opt.Login.GetInitLoginPassword())
+		}
 	}
 	task.CommonParams[cloudprovider.PasswordKey.String()] = passwd
 

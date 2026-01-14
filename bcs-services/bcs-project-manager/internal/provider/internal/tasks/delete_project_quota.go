@@ -64,6 +64,8 @@ func (dpq *deleteProjectQuota) Steps(defineSteps []task.StepBuilder) []*types.St
 	switch quotaData.QuotaType {
 	case quota.Host:
 		return dpq.buildCaInstanceTypesQuotaSteps(quotaData)
+	case quota.SelfHost:
+		return dpq.buildCaInstanceTypesQuotaSteps(quotaData)
 	case quota.Shared:
 		return dpq.buildSharedClusterQuotaSteps(quotaData)
 	case quota.Federation:
@@ -88,8 +90,9 @@ func (dpq *deleteProjectQuota) buildCaInstanceTypesQuotaSteps(projectQuota *quot
 
 	// 1. 审批联邦集群配额申请
 	// 2. 等待审批通过，审批通过后, 更新配额状态; 审批拒绝后, 更新配额申请状态
-	content := fmt.Sprintf("user %s revoke for project %s CA resources quota(%s): region(%s) zone(%s) "+
-		"instanceType(%s) quota(%v)", dpq.Operator, projectQuota.ProjectCode, projectQuota.QuotaName,
+	content := fmt.Sprintf("user(%s) revoke project(%s) CA resources quota_name(%s) region(%s) "+
+		"zone(%s) instanceType(%s) for quota_num(%v)", dpq.Operator,
+		projectQuota.ProjectCode, projectQuota.QuotaName,
 		projectQuota.Quota.HostResources.Region, projectQuota.Quota.HostResources.ZoneId,
 		projectQuota.Quota.HostResources.InstanceType, projectQuota.Quota.HostResources.QuotaNum)
 	stepList = append(stepList, buildItsmQuotaSteps("", itsmData{
@@ -110,9 +113,11 @@ func (dpq *deleteProjectQuota) buildSharedClusterQuotaSteps(projectQuota *quota.
 
 	// 1. 审批联邦集群配额申请
 	// 2. 等待审批通过，审批通过后, 更新配额状态; 审批拒绝后, 更新配额申请状态
-	content := fmt.Sprintf("user %s revoke for project %s shared cluster(%s) quota(%s): cpu(%s) mem(%s)",
+	cpuQuota, memQuota, _ := getProjectQuotasSafely(projectQuota)
+	content := fmt.Sprintf("user(%s) revoke project(%s) shared cluster(%s) for "+
+		"quota_name(%s): cpu(%s) mem(%s)",
 		dpq.Operator, projectQuota.ProjectCode, projectQuota.ClusterId, projectQuota.QuotaName,
-		projectQuota.Quota.Cpu.DeviceQuota, projectQuota.Quota.Mem.DeviceQuota)
+		cpuQuota, memQuota)
 	stepList = append(stepList, buildItsmQuotaSteps("", itsmData{
 		operator:    dpq.Operator,
 		projectCode: projectQuota.ProjectCode,
@@ -134,19 +139,9 @@ func (dpq *deleteProjectQuota) buildFederationClusterQuotaSteps(
 	// 2. 等待审批通过，审批通过后, 更新配额状态; 审批拒绝后, 更新配额申请状态
 
 	// 安全获取配额信息，避免空指针panic
-	cpuQuota := ""
-	if projectQuota.Quota.Cpu != nil {
-		cpuQuota = projectQuota.Quota.Cpu.DeviceQuota
-	}
-	memQuota := ""
-	if projectQuota.Quota.Mem != nil {
-		memQuota = projectQuota.Quota.Mem.DeviceQuota
-	}
-	gpuQuota := ""
-	if projectQuota.Quota.Gpu != nil {
-		memQuota = projectQuota.Quota.Gpu.DeviceQuota
-	}
-	content := fmt.Sprintf("user %s revoke for federation cluster %s namespace %s quota: cpu(%s) mem(%s) gpu(%s)",
+	cpuQuota, memQuota, gpuQuota := getProjectQuotasSafely(projectQuota)
+	content := fmt.Sprintf("user(%s) revoke federation cluster(%s) namespace(%s)"+
+		" for quota: cpu(%s) mem(%s) gpu(%s)",
 		dpq.Operator, projectQuota.ClusterId, projectQuota.Namespace,
 		cpuQuota, memQuota, gpuQuota)
 	stepList = append(stepList, buildItsmQuotaSteps("", itsmData{
