@@ -76,7 +76,7 @@ func (la *ListQuotaAction) doHost(ctx context.Context, req *proto.ListProjectQuo
 		cond := operator.NewBranchCondition(operator.And, conds...)
 
 		quotas, _, errQ := la.model.ListProjectQuotas(la.ctx, cond, &page.Pagination{All: true})
-		if err != nil {
+		if errQ != nil {
 			return pquota, errorx.NewDBErr(errQ.Error())
 		}
 
@@ -178,12 +178,12 @@ func (la *ListQuotaAction) doFed(req *proto.ListProjectQuotasRequest,
 
 	cond := operator.NewBranchCondition(operator.And, conds...)
 
-	Quotas, _, err := la.model.ListProjectQuotas(la.ctx, cond, &page.Pagination{All: true})
+	quotas, _, err := la.model.ListProjectQuotas(la.ctx, cond, &page.Pagination{All: true})
 	if err != nil {
 		return pquota, errorx.NewDBErr(err.Error())
 	}
 
-	for _, q := range Quotas {
+	for _, q := range quotas {
 		tmp := q
 		getQuotaUsage(&tmp)
 		pquota = append(pquota, quota.TransStore2ProtoQuota(&tmp))
@@ -252,14 +252,14 @@ func (la *ListQuotaV2Action) Do(ctx context.Context,
 	la.req = req
 	la.resp = resp
 
-	var PQ []*proto.ProjectQuota
+	var pqs []*proto.ProjectQuota
 
 	err := la.validate()
 	if err != nil {
 		return err
 	}
 
-	pQuotas, count, err := la.getProjectQuotas(ctx, req, PQ)
+	pQuotas, count, err := la.getProjectQuotas(ctx, req, pqs)
 	if err != nil {
 		return err
 	}
@@ -285,6 +285,14 @@ func (la *ListQuotaV2Action) validate() error {
 
 	if la.req.GetQuotaType() == "" {
 		return errorx.NewParamErr("quota type is required")
+	}
+
+	if la.req.Page <= 0 {
+		la.req.Page = 1
+	}
+
+	if la.req.Limit <= 0 {
+		la.req.Limit = page.DefaultPageLimit
 	}
 
 	proj, err := la.model.GetProject(context.TODO(), la.req.GetProjectIDOrCode())
@@ -344,7 +352,7 @@ func (la *ListQuotaV2Action) getProjectQuotas(ctx context.Context, req *proto.Li
 
 	cond := operator.NewBranchCondition(operator.And, conds...)
 
-	quotas, total, err := la.model.ListProjectQuotas(ctx, cond, la.paginationOpt())
+	quotas, total, err := la.model.ListProjectQuotas(ctx, cond, la.getPaginationOpt())
 	if err != nil {
 		return nil, 0, errorx.NewDBErr(fmt.Sprintf("ListProjectQuotas failed,"+
 			" req:[%s], err:[%s]", req.String(), err.Error()))
@@ -358,31 +366,13 @@ func (la *ListQuotaV2Action) getProjectQuotas(ctx context.Context, req *proto.Li
 	return pQuotas, total, nil
 }
 
-const (
-	listProjectQuotasPageLimit = 100
-)
-
-func (la *ListQuotaV2Action) paginationOpt() *page.Pagination {
-	pagination := &page.Pagination{All: true}
-	if la.req.Page == 0 && la.req.Limit == 0 {
-		return pagination
-	}
-
-	pagination.All = false
+func (la *ListQuotaV2Action) getPaginationOpt() *page.Pagination {
+	pagination := &page.Pagination{All: false}
 	pagination.Sort = map[string]int{"createtime": -1}
 
-	if la.req.Page > 0 {
-		offset := int64(la.req.Page) - 1
-		pagination.Offset = offset
-	} else {
-		pagination.Offset = 0
-	}
-
-	if la.req.Limit > 0 {
-		pagination.Limit = int64(la.req.Limit)
-	} else {
-		pagination.Limit = listProjectQuotasPageLimit
-	}
+	offset := int64(la.req.Page - 1)
+	pagination.Offset = offset
+	pagination.Limit = int64(la.req.Limit)
 
 	return pagination
 }
