@@ -68,7 +68,7 @@ func ProjectAuthorization(next http.Handler) http.Handler {
 		username := restContext.Username
 
 		// check cluster
-		cls, err := clustermanager.GetCluster(r.Context(), clusterID)
+		cls, err := clustermanager.GetCluster(r.Context(), clusterID, "")
 		if err != nil {
 			_ = render.Render(w, r, rest.AbortWithWithForbiddenError(restContext, err))
 			return
@@ -113,7 +113,7 @@ func ClusterAuthorization(next http.Handler) http.Handler {
 		username := restContext.Username
 
 		// check cluster
-		cls, err := clustermanager.GetCluster(r.Context(), clusterID)
+		cls, err := clustermanager.GetCluster(r.Context(), clusterID, "")
 		if err != nil {
 			_ = render.Render(w, r, rest.AbortWithWithForbiddenError(restContext, err))
 			return

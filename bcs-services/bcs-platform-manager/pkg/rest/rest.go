@@ -32,6 +32,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/rest/tracing"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/utils"
 )
 
 var (
@@ -155,23 +156,30 @@ func Handle[In, Out any](handle HandlerFunc[In, Out]) http.HandlerFunc {
 		in, err := decodeReq[In](r)
 		if err != nil {
 			blog.Errorf("handle decode request failed, err: %s", err)
-			_ = render.Render(w, r, AbortWithJSONError(restContext, err))
+			_ = render.Render(w, r, utils.ParamsError(err))
 			return
 		}
 
 		err = Struct(r.Context(), in)
 		if err != nil {
 			blog.Errorf("valid request param failed, err: %s", err)
-			_ = render.Render(w, r, AbortWithJSONError(restContext, err))
+			_ = render.Render(w, r, utils.ParamsError(err))
 			return
 		}
 
 		result, err := handle(r.Context(), in)
 		if err != nil {
+			v, ok := err.(*utils.ErrResp)
+			if ok {
+				_ = render.Render(w, r, v)
+				return
+			}
+
 			_ = render.Render(w, r, AbortWithJSONError(restContext, err))
 			return
 		}
-		_ = render.Render(w, r, APIResponse(restContext, result))
+
+		_ = render.Render(w, r, &utils.SuccessResp{Data: result})
 	}
 }
 

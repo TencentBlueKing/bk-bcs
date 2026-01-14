@@ -24,7 +24,7 @@ import (
 
 // TemplateConfigAction templateconfig action interface
 type TemplateConfigAction interface { // nolint
-	CreateTemplateConfig(ctx context.Context, req *clustermanager.CreateTemplateConfigRequest) (bool, error)
+	CreateTemplateConfig(ctx context.Context, req *types.CreateTemplateConfigReq) (bool, error)
 	DeleteTemplateConfig(ctx context.Context, req *types.DeleteTemplateConfigReq) (bool, error)
 }
 
@@ -38,8 +38,32 @@ func NewTemplateConfigActionAction() TemplateConfigAction {
 
 // CreateTemplateConfig create templateconfig
 func (a *Action) CreateTemplateConfig(ctx context.Context,
-	req *clustermanager.CreateTemplateConfigRequest) (bool, error) {
-	result, err := clustermgr.CreateTemplateConfig(ctx, req)
+	req *types.CreateTemplateConfigReq) (bool, error) {
+	result, err := clustermgr.CreateTemplateConfig(ctx, &clustermanager.CreateTemplateConfigRequest{
+		BusinessID: req.BusinessID,
+		ProjectID:  req.ProjectID,
+		ClusterID:  req.ClusterID,
+		Provider:   req.Provider,
+		ConfigType: req.ConfigType,
+		CloudTemplateConfig: &clustermanager.CloudTemplateConfig{
+			CloudNetworkTemplateConfig: &clustermanager.CloudNetworkTemplateConfig{
+				CidrSteps: func() []*clustermanager.EnvCidrStep {
+					steps := make([]*clustermanager.EnvCidrStep, 0)
+					for _, step := range req.CloudTemplateConfig.CloudNetworkTemplateConfig.CidrSteps {
+						steps = append(steps, &clustermanager.EnvCidrStep{
+							Env:  step.Env,
+							Step: step.Step,
+						})
+					}
+					return steps
+				}(),
+				ServiceSteps:      req.CloudTemplateConfig.CloudNetworkTemplateConfig.ServiceSteps,
+				PerNodePodNum:     req.CloudTemplateConfig.CloudNetworkTemplateConfig.PerNodePodNum,
+				UnderlaySteps:     req.CloudTemplateConfig.CloudNetworkTemplateConfig.UnderlaySteps,
+				UnderlayAutoSteps: req.CloudTemplateConfig.CloudNetworkTemplateConfig.UnderlayAutoSteps,
+			},
+		},
+	})
 	if err != nil {
 		return false, err
 	}

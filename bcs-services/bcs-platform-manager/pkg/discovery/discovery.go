@@ -27,6 +27,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/component/bcs/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/component/bcs/projectmanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/component/bcs/pushmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/utils"
 )
@@ -131,5 +132,11 @@ func (s *ServiceDiscovery) InitComponentConfig() error {
 	if err != nil {
 		return err
 	}
+
+	err = pushmanager.SetClientConifg(s.clientTLSConfig, s.microRgt)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

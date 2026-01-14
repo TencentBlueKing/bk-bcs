@@ -28,20 +28,63 @@ type ListProjectsReq struct {
 
 // ListProjectsResp response for list project
 type ListProjectsResp struct {
-	CreateTime  string `json:"createTime"`
-	Creator     string `json:"creator"`
-	ProjectID   string `json:"projectID"`
-	Name        string `json:"name"`
-	ProjectCode string `json:"projectCode"`
-	Description string `json:"description"`
-	IsOffline   bool   `json:"isOffline"`
-	BusinessID  string `json:"businessID"`
-	Link        string `json:"link"`
+	Total   uint32              `json:"total"`
+	Results []*ListProjectsData `json:"results"`
+}
+
+// ListProjectsData response for list project
+type ListProjectsData struct {
+	ProjectID    string `json:"projectID"`
+	Name         string `json:"name"`
+	ProjectCode  string `json:"projectCode"`
+	Description  string `json:"description"`
+	Creator      string `json:"creator"`
+	IsOffline    bool   `json:"isOffline"`
+	BusinessID   string `json:"businessID"`
+	BusinessName string `json:"businessName"`
+	Managers     string `json:"managers"`
+	CreateTime   string `json:"createTime"`
+	Link         string `json:"link"`
 }
 
 // GetProjectsReq request for get project
 type GetProjectsReq struct {
 	ProjectIDOrCode string `json:"projectIDOrCode" in:"path=projectIDOrCode"`
+}
+
+// GetProjectsResp response for get project
+type GetProjectsResp struct {
+	CreateTime   string            `json:"createTime"`
+	UpdateTime   string            `json:"updateTime"`
+	Creator      string            `json:"creator"`
+	Updater      string            `json:"updater"`
+	Managers     string            `json:"managers"`
+	ProjectID    string            `json:"projectID"`
+	Name         string            `json:"name"`
+	ProjectCode  string            `json:"projectCode"`
+	UseBKRes     bool              `json:"useBKRes"`
+	Description  string            `json:"description"`
+	IsOffline    bool              `json:"isOffline"`
+	Kind         string            `json:"kind"`
+	BusinessID   string            `json:"businessID"`
+	BusinessName string            `json:"businessName"`
+	Labels       map[string]string `json:"labels"`
+	Annotations  map[string]string `json:"annotations"`
+}
+
+// UpdateProjectReq request for update project
+type UpdateProjectReq struct {
+	ProjectID   string            `json:"projectID" in:"path=projectID"`
+	Managers    string            `json:"managers"`
+	BusinessID  string            `json:"businessID"`
+	Name        string            `json:"name"`
+	ProjectCode string            `json:"projectCode"`
+	UseBKRes    bool              `json:"useBKRes"`
+	Description string            `json:"description"`
+	Kind        string            `json:"kind"`
+	IsOffline   bool              `json:"isOffline"`
+	Labels      map[string]string `json:"labels"`
+	Annotations map[string]string `json:"annotations"`
 }
 
 // UpdateProjectManagersReq request for update project managers
@@ -54,4 +97,10 @@ type UpdateProjectManagersReq struct {
 type UpdateProjectBusinessReq struct {
 	ProjectID  string `json:"projectID" in:"path=projectID"`
 	BusinessID string `json:"businessID"`
+}
+
+// UpdateProjectIsOfflineReq request for update project isoffline
+type UpdateProjectIsOfflineReq struct {
+	ProjectID string `json:"projectID" in:"path=projectID"`
+	IsOffline bool   `json:"isOffline"`
 }

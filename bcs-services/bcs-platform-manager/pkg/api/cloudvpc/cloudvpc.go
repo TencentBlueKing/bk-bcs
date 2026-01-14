@@ -16,9 +16,8 @@ package cloudvpc
 import (
 	"context"
 
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
-
 	actions "github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/actions/cloudvpc"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/types"
 )
 
 // CreateCloudVPC 创建VPC
@@ -27,7 +26,7 @@ import (
 // @Produce json
 // @Success 200 {bool} bool
 // @Router  /cloudvpc [post]
-func CreateCloudVPC(ctx context.Context, req *clustermanager.CreateCloudVPCRequest) (*bool, error) {
+func CreateCloudVPC(ctx context.Context, req *types.CreateCloudVPCReq) (*bool, error) {
 	result, err := actions.NewCloudVPCAction().CreateCloudVPC(ctx, req)
 	if err != nil {
 		return nil, err
@@ -42,11 +41,26 @@ func CreateCloudVPC(ctx context.Context, req *clustermanager.CreateCloudVPCReque
 // @Produce json
 // @Success 200 {bool} bool
 // @Router  /cloudvpc [put]
-func UpdateCloudVPC(ctx context.Context, req *clustermanager.UpdateCloudVPCRequest) (*bool, error) {
+func UpdateCloudVPC(ctx context.Context, req *types.UpdateCloudVPCReq) (*bool, error) {
 	result, err := actions.NewCloudVPCAction().UpdateCloudVPC(ctx, req)
 	if err != nil {
 		return nil, err
 	}
 
 	return &result, nil
+}
+
+// GetCloudVPCRecommendCIDR 获取云VPC推荐CIDR列表
+// @Summary 获取云VPC推荐CIDR列表
+// @Tags    Logs
+// @Produce json
+// @Success 200 {bool} bool
+// @Router  /cloudvpc [get]
+func GetCloudVPCRecommendCIDR(ctx context.Context, req *types.GetCloudVPCRecommendCIDRReq) (*types.GetCloudVPCRecommendCIDRResp, error) {
+	result, err := actions.NewCloudVPCAction().GetCloudVPCRecommendCIDR(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }

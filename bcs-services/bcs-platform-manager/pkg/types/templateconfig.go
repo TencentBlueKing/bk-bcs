@@ -13,6 +13,36 @@
 // Package types pod types
 package types
 
+// CreateTemplateConfigReq create template config request
+type CreateTemplateConfigReq struct {
+	BusinessID          string               `json:"businessID"`
+	ProjectID           string               `json:"projectID"`
+	ClusterID           string               `json:"clusterID"`
+	Provider            string               `json:"provider"`
+	ConfigType          string               `json:"configType"`
+	CloudTemplateConfig *CloudTemplateConfig `json:"cloudTemplateConfig"`
+}
+
+// CloudTemplateConfig cloud template config
+type CloudTemplateConfig struct {
+	CloudNetworkTemplateConfig *CloudNetworkTemplateConfig `json:"cloudNetworkTemplateConfig"`
+}
+
+// CloudNetworkTemplateConfig cloud network template config
+type CloudNetworkTemplateConfig struct {
+	CidrSteps         []*EnvCidrStep `json:"cidrSteps"`
+	ServiceSteps      []uint32       `json:"serviceSteps"`
+	PerNodePodNum     []uint32       `json:"perNodePodNum"`
+	UnderlaySteps     []uint32       `json:"underlaySteps"`
+	UnderlayAutoSteps []uint32       `json:"underlayAutoSteps"`
+}
+
+// EnvCidrStep env cidr step
+type EnvCidrStep struct {
+	Env  string `json:"env"`
+	Step uint32 `json:"step"`
+}
+
 // DeleteTemplateConfigReq delete template config request
 type DeleteTemplateConfigReq struct {
 	TemplateConfigID string `json:"cloudID" in:"path=templateConfigID"`

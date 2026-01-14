@@ -22,6 +22,27 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/config"
 )
 
+// ListTask 获取任务列表
+/*func ListTask(ctx context.Context, req *clustermanager.ListTaskV2Request) (*clustermanager.ListTaskV2ResponseData, error) {
+	cli, close, err := clustermanager.GetClient(config.ServiceDomain)
+	if err != nil {
+		return nil, err
+	}
+
+	defer Close(close)
+
+	p, err := cli.ListTaskV2(ctx, req)
+	if err != nil {
+		return nil, fmt.Errorf("ListTask error: %s", err)
+	}
+
+	if p.Code != 0 {
+		return nil, fmt.Errorf("ListTask error, code: %d, message: %s", p.Code, p.GetMessage())
+	}
+
+	return p.Data, nil
+}*/
+
 // GetTask 获取任务详情
 func GetTask(ctx context.Context, req *clustermanager.GetTaskRequest) (*clustermanager.Task, error) {
 	cli, close, err := clustermanager.GetClient(config.ServiceDomain)
@@ -80,6 +101,27 @@ func SkipTask(ctx context.Context, req *clustermanager.SkipTaskRequest) (bool, e
 
 	if p.Code != 0 {
 		return false, fmt.Errorf("SkipTask error, code: %d, message: %s", p.Code, p.GetMessage())
+	}
+
+	return p.Result, nil
+}
+
+// UpdateTask 更新当前任务
+func UpdateTask(ctx context.Context, req *clustermanager.UpdateTaskRequest) (bool, error) {
+	cli, close, err := clustermanager.GetClient(config.ServiceDomain)
+	if err != nil {
+		return false, err
+	}
+
+	defer Close(close)
+
+	p, err := cli.UpdateTask(ctx, req)
+	if err != nil {
+		return false, fmt.Errorf("UpdateTask error: %s", err)
+	}
+
+	if p.Code != 0 {
+		return false, fmt.Errorf("UpdateTask error, code: %d, message: %s", p.Code, p.GetMessage())
 	}
 
 	return p.Result, nil

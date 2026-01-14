@@ -25,6 +25,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/component"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/component/cmdb"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/component/notice"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/discovery"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/storage"
@@ -96,4 +97,6 @@ func InitClient() {
 		Server:     config.G.Cmdb.Host,
 		Debug:      config.G.Cmdb.Debug,
 	})
+
+	notice.InitNotice()
 }

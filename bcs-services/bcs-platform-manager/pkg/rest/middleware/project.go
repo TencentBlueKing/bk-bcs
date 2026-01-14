@@ -51,7 +51,7 @@ func ProjectParse(next http.Handler) http.Handler {
 		restContext.ProjectCode = project.ProjectCode
 
 		// get cluster info
-		cls, err := clustermanager.GetCluster(ctx, restContext.ClusterId)
+		cls, err := clustermanager.GetCluster(ctx, restContext.ClusterId, "")
 		if err != nil {
 			_ = render.Render(w, r, rest.AbortWithWithForbiddenError(restContext, err))
 			return

@@ -16,8 +16,6 @@ package templateconfig
 import (
 	"context"
 
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
-
 	actions "github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/actions/templateconfig"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/types"
 )
@@ -28,7 +26,7 @@ import (
 // @Produce json
 // @Success 200 {bool} bool
 // @Router  /templateConfig [post]
-func CreateTemplateConfig(ctx context.Context, req *clustermanager.CreateTemplateConfigRequest) (*bool, error) {
+func CreateTemplateConfig(ctx context.Context, req *types.CreateTemplateConfigReq) (*bool, error) {
 	result, err := actions.NewTemplateConfigActionAction().CreateTemplateConfig(ctx, req)
 	if err != nil {
 		return nil, err

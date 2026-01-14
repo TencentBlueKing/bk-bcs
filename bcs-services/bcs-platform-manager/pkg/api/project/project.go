@@ -28,7 +28,7 @@ import (
 // @Produce json
 // @Success 200 {array} types.ListProjectsResp
 // @Router  /project [get]
-func ListProject(ctx context.Context, req *types.ListProjectsReq) (*[]*types.ListProjectsResp, error) {
+func ListProject(ctx context.Context, req *types.ListProjectsReq) (*types.ListProjectsResp, error) {
 	result, err := actions.NewProjectAction().ListProject(ctx, &bcsproject.ListProjectsRequest{
 		ProjectIDs:  req.ProjectIDs,
 		Names:       req.Names,
@@ -44,7 +44,7 @@ func ListProject(ctx context.Context, req *types.ListProjectsReq) (*[]*types.Lis
 		return nil, err
 	}
 
-	return &result, nil
+	return result, nil
 }
 
 // GetProject 获取项目详情
@@ -53,13 +53,28 @@ func ListProject(ctx context.Context, req *types.ListProjectsReq) (*[]*types.Lis
 // @Produce json
 // @Success 200 {struct} bcsproject.Project
 // @Router  /project/{projectIDOrCode} [get]
-func GetProject(ctx context.Context, req *types.GetProjectsReq) (*bcsproject.Project, error) {
+func GetProject(ctx context.Context, req *types.GetProjectsReq) (*types.GetProjectsResp, error) {
 	result, err := actions.NewProjectAction().GetProject(ctx, req.ProjectIDOrCode)
 	if err != nil {
 		return nil, err
 	}
 
 	return result, nil
+}
+
+// UpdateProject 更新项目
+// @Summary 更新项目
+// @Tags    Logs
+// @Produce json
+// @Success 200 {bool} bool
+// @Router  /project/{projectID} [put]
+func UpdateProject(ctx context.Context, req *types.UpdateProjectReq) (*bool, error) {
+	result, err := actions.NewProjectAction().UpdateProject(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	return &result, nil
 }
 
 // UpdateProjectManagers 更新项目managers
@@ -85,6 +100,21 @@ func UpdateProjectManagers(ctx context.Context, req *types.UpdateProjectManagers
 // @Router  /project/{projectID}/business [put]
 func UpdateProjectBusiness(ctx context.Context, req *types.UpdateProjectBusinessReq) (*bool, error) {
 	result, err := actions.NewProjectAction().UpdateProjectBusiness(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	return &result, nil
+}
+
+// UpdateProjectIsOffline 更新项目IsOffline
+// @Summary 更新项目IsOffline
+// @Tags    Logs
+// @Produce json
+// @Success 200 {bool} bool
+// @Router  /project/{projectID}/isOffline [put]
+func UpdateProjectIsOffline(ctx context.Context, req *types.UpdateProjectIsOfflineReq) (*bool, error) {
+	result, err := actions.NewProjectAction().UpdateProjectIsOffline(ctx, req)
 	if err != nil {
 		return nil, err
 	}

@@ -63,3 +63,45 @@ func UpdateCloudVPC(ctx context.Context, req *clustermanager.UpdateCloudVPCReque
 
 	return p.Result, nil
 }
+
+// ListCloudSubnets 获取cloud vpc下的子网列表
+func ListCloudSubnets(ctx context.Context, req *clustermanager.ListCloudSubnetsRequest) ([]*clustermanager.Subnet, error) {
+	cli, close, err := clustermanager.GetClient(config.ServiceDomain)
+	if err != nil {
+		return nil, err
+	}
+
+	defer Close(close)
+
+	p, err := cli.ListCloudSubnets(ctx, req)
+	if err != nil {
+		return nil, fmt.Errorf("ListCloudSubnets error: %s", err)
+	}
+
+	if p.Code != 0 {
+		return nil, fmt.Errorf("ListCloudSubnets error, code: %d, message: %s", p.Code, p.GetMessage())
+	}
+
+	return p.Data, nil
+}
+
+// ListRecommendCloudVpcCidr 获取cloud vpc 推荐cidr列表
+/*func ListRecommendCloudVpcCidr(ctx context.Context, req *clustermanager.ListRecommendCloudVpcCidrRequest) (*clustermanager.CidrInfo, error) {
+	cli, close, err := clustermanager.GetClient(config.ServiceDomain)
+	if err != nil {
+		return nil, err
+	}
+
+	defer Close(close)
+
+	p, err := cli.ListRecommendCloudVpcCidr(ctx, req)
+	if err != nil {
+		return nil, fmt.Errorf("ListRecommendCloudVpcCidr error: %s", err)
+	}
+
+	if p.Code != 0 {
+		return nil, fmt.Errorf("ListRecommendCloudVpcCidr error, code: %d, message: %s", p.Code, p.GetMessage())
+	}
+
+	return p.Data, nil
+}*/

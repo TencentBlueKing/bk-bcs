@@ -20,6 +20,21 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/types"
 )
 
+// ListTask 获取任务列表
+// @Summary 任务列表
+// @Tags    Logs
+// @Produce json
+// @Success 200 {array} types.Task
+// @Router  /task [get]
+func ListTask(ctx context.Context, req *types.ListTaskReq) (*types.ListTaskResp, error) {
+	result, err := actions.NewTaskAction().ListTask(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
 // GetTask 获取任务详情
 // @Summary 任务详情
 // @Tags    Logs
@@ -51,13 +66,28 @@ func RetryTask(ctx context.Context, req *types.RetryTaskkReq) (*bool, error) {
 }
 
 // SkipTask 跳过当前任务
-// @Summary 跳过当前失败任务
+// @Summary 跳过当前任务
 // @Tags    Logs
 // @Produce json
 // @Success 200 {bool} bool
 // @Router  /task/{taskID}/skip [put]
 func SkipTask(ctx context.Context, req *types.SkipTaskReq) (*bool, error) {
 	result, err := actions.NewTaskAction().SkipTask(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	return &result, nil
+}
+
+// UpdateTask 更新当前任务
+// @Summary 更新当前任务
+// @Tags    Logs
+// @Produce json
+// @Success 200 {bool} bool
+// @Router  /task/{taskID} [put]
+func UpdateTask(ctx context.Context, req *types.UpdateTaskReq) (*bool, error) {
+	result, err := actions.NewTaskAction().UpdateTask(ctx, req)
 	if err != nil {
 		return nil, err
 	}

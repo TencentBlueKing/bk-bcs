@@ -65,7 +65,7 @@ func ListAllProject(ctx context.Context) ([]*bcsproject.Project, error) {
 }
 
 // ListProject list project from project manager
-func ListProject(ctx context.Context, req *bcsproject.ListProjectsRequest) ([]*bcsproject.Project, error) {
+func ListProject(ctx context.Context, req *bcsproject.ListProjectsRequest) (*bcsproject.ListProjectData, error) {
 	cli, close, err := bcsproject.GetClient(config.ServiceDomain)
 	if err != nil {
 		return nil, fmt.Errorf("GetClient error: %s", err)
@@ -82,7 +82,7 @@ func ListProject(ctx context.Context, req *bcsproject.ListProjectsRequest) ([]*b
 		return nil, fmt.Errorf("ListProject error, code: %d, message: %s", p.Code, p.GetMessage())
 	}
 
-	return p.Data.GetResults(), nil
+	return p.Data, nil
 }
 
 // UpdateProjectV2 update project from project manager

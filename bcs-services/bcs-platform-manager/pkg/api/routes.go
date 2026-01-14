@@ -26,6 +26,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/api/cloudvpc"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/api/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/api/cmdb"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/api/nodegroup"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/api/operation"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/api/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/api/task"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/api/templateconfig"
@@ -121,6 +123,7 @@ func registerRoutes() http.Handler {
 		// vpc 相关接口
 		route.Post("/cloudvpc", rest.Handle(cloudvpc.CreateCloudVPC))
 		route.Put("/cloudvpc", rest.Handle(cloudvpc.UpdateCloudVPC))
+		route.Get("/cloudvpc/recommendcidr", rest.Handle(cloudvpc.GetCloudVPCRecommendCIDR))
 
 		// templateconfig 相关接口
 		route.Post("/templateconfigs", rest.Handle(templateconfig.CreateTemplateConfig))
@@ -128,13 +131,25 @@ func registerRoutes() http.Handler {
 
 		// cluster 相关接口
 		route.Get("/cluster", rest.Handle(cluster.ListCluster))
+		route.Get("/cluster/{clusterID}", rest.Handle(cluster.GetCluster))
+		route.Get("/cluster/{clusterID}/overview", rest.Handle(cluster.GetClusterOverview))
+		route.Get("/cluster/{clusterID}/basicinfo", rest.Handle(cluster.GetClusterBasicInfo))
+		route.Get("/cluster/{clusterID}/networkconfig", rest.Handle(cluster.GetClusterNewworkConfig))
+		route.Get("/cluster/{clusterID}/controlplaneconfig", rest.Handle(cluster.GetClusterControlPlaneConfig))
+		route.Put("/cluster/{clusterID}/basicinfo", rest.Handle(cluster.UpdateClusterBasicInfo))
+		route.Put("/cluster/{clusterID}/networkconfig", rest.Handle(cluster.UpdateClusterNetworkConfig))
+		route.Put("/cluster/{clusterID}/controlplaneconfig", rest.Handle(cluster.UpdateClusterControlPlaneConfig))
 		route.Put("/cluster/{clusterID}/operator", rest.Handle(cluster.UpdateClusterOperator))
 		route.Put("/cluster/{clusterID}/project_business", rest.Handle(cluster.UpdateClusterProjectBusiness))
+		route.Post("/cluster/{clusterID}/cidrs", rest.Handle(cluster.AddClusterCidr))
+		route.Post("/cluster/{clusterID}/subnets", rest.Handle(cluster.AddSubnetToCluster))
 
 		// task 相关接口
+		route.Get("/task", rest.Handle(task.ListTask))
 		route.Get("/task/{taskID}", rest.Handle(task.GetTask))
 		route.Put("/task/{taskID}/retry", rest.Handle(task.RetryTask))
 		route.Put("/task/{taskID}/skip", rest.Handle(task.SkipTask))
+		route.Put("/task/{taskID}", rest.Handle(task.UpdateTask))
 
 		// cmdb 相关接口
 		route.Put("/cmdb/delete_all", rest.Handle(cmdb.DeleteAllByBkBizIDAndBkClusterID))
@@ -143,8 +158,21 @@ func registerRoutes() http.Handler {
 		// project 相关接口
 		route.Get("/project", rest.Handle(project.ListProject))
 		route.Get("/project/{projectIDOrCode}", rest.Handle(project.GetProject))
+		route.Put("/project/{projectID}", rest.Handle(project.UpdateProject))
 		route.Put("/project/{projectID}/managers", rest.Handle(project.UpdateProjectManagers))
 		route.Put("/project/{projectID}/business", rest.Handle(project.UpdateProjectBusiness))
+		//route.Put("/project/{projectID}/isOffline", rest.Handle(project.UpdateProjectIsOffline))
+
+		// operation log 相关接口
+		route.Get("/operationlogs", rest.Handle(operation.ListOperationLogs))
+
+		// nodegroup 相关接口
+		route.Get("/nodegroup", rest.Handle(nodegroup.ListNodeGroup))
+		route.Get("/nodegroup/{nodeGroupID}", rest.Handle(nodegroup.GetNodeGroup))
+		route.Post("/nodegroup/{nodeGroupID}/autoscale/enable", rest.Handle(nodegroup.EnableNodeGroupAutoScale))
+		route.Post("/nodegroup/{nodeGroupID}/autoscale/disable", rest.Handle(nodegroup.DisableNodeGroupAutoScale))
+		route.Put("/nodegroup/{nodeGroupID}", rest.Handle(nodegroup.UpdateNodeGroup))
+		route.Post("/nodegroup/{nodeGroupID}/boundsize", rest.Handle(nodegroup.UpdateGroupMinMaxSize))
 	})
 
 	return r

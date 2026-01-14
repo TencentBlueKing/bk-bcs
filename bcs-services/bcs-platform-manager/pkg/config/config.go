@@ -37,6 +37,7 @@ type Configuration struct {
 	Web         *WebConf        `yaml:"web"`
 	TracingConf *TracingConf    `yaml:"tracing_conf"`
 	Cmdb        *CmdbConf       `yaml:"cmdb"`
+	Notice      *NoticeConf     `yaml:"notice"`
 }
 
 // init 初始化
@@ -73,6 +74,16 @@ func newConfiguration() (*Configuration, error) {
 
 	c.IAM = &IAMConfig{}
 	c.Cmdb = &CmdbConf{}
+	c.Notice = &NoticeConf{
+		Type: "pushmanager", // 默认使用pushmanager
+		PushManager: PushManagerOptions{
+			Domain:    "platformmanager",
+			Dimension: map[string]string{},
+			BkBizName: "",
+			Types:     []string{},
+			PushLevel: "warning",
+		},
+	}
 
 	c.BKAPIGW = &BKAPIGWConf{}
 	_ = c.BKAPIGW.Init()
