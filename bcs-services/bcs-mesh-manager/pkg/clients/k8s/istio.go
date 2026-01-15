@@ -254,7 +254,7 @@ func DeleteIstioCrd(ctx context.Context, clusterID string) error {
 }
 
 // DeployTelemetry 部署Telemetry资源用于链路追踪
-func DeployTelemetry(ctx context.Context, clusterID []string, randomSamplingPercnt int) error {
+func DeployTelemetry(ctx context.Context, clusterID []string, randomSamplingPercnt float32) error {
 	for _, cluster := range clusterID {
 		if err := DeployResourceByYAML(
 			ctx,

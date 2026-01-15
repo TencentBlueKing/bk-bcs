@@ -126,7 +126,7 @@ type IstiodPilotConfig struct {
 	AutoscaleMin     *int32            `yaml:"autoscaleMin,omitempty"`
 	AutoscaleMax     *int32            `yaml:"autoscaleMax,omitempty"`
 	ReplicaCount     *int32            `yaml:"replicaCount,omitempty"`
-	TraceSampling    *float64          `yaml:"traceSampling,omitempty"`
+	TraceSampling    *float32          `yaml:"traceSampling,omitempty"`
 	ConfigMap        *bool             `yaml:"configMap,omitempty"`
 	CPU              *HPACPUConfig     `yaml:"cpu,omitempty"`
 	Env              map[string]string `yaml:"env,omitempty"`

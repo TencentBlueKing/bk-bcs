@@ -161,10 +161,16 @@ func (i *IstioInstallAction) deployTelemetry(ctx context.Context) error {
 		return nil
 	}
 
+	// istio 1.21以上版本才通过Telemetry API下发
+	if !utils.IsVersionSupported(i.ChartVersion, ">=1.21") {
+		blog.Infof("[%s]istio version %s is less than 1.21, skip deploying Telemetry resource", i.MeshID, i.ChartVersion)
+		return nil
+	}
+
 	// 下发Telemetry 资源
-	traceSamplingPercent := 1
+	traceSamplingPercent := float32(1)
 	if i.ObservabilityConfig.TracingConfig.TraceSamplingPercent != nil {
-		traceSamplingPercent = int(i.ObservabilityConfig.TracingConfig.TraceSamplingPercent.GetValue())
+		traceSamplingPercent = float32(i.ObservabilityConfig.TracingConfig.TraceSamplingPercent.GetValue())
 	}
 
 	if err := k8s.DeployTelemetry(ctx, i.PrimaryClusters, traceSamplingPercent); err != nil {

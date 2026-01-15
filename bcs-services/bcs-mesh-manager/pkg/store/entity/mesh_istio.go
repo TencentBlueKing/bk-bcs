@@ -119,10 +119,10 @@ type LogCollectorConfig struct {
 
 // TracingConfig represents tracing configuration
 type TracingConfig struct {
-	Enabled              bool   `bson:"enabled" json:"enabled"`
-	Endpoint             string `bson:"endpoint" json:"endpoint"`
-	BkToken              string `bson:"bkToken" json:"bkToken"`
-	TraceSamplingPercent int32  `bson:"traceSamplingPercent" json:"traceSamplingPercent"`
+	Enabled              bool    `bson:"enabled" json:"enabled"`
+	Endpoint             string  `bson:"endpoint" json:"endpoint"`
+	BkToken              string  `bson:"bkToken" json:"bkToken"`
+	TraceSamplingPercent float32 `bson:"traceSamplingPercent" json:"traceSamplingPercent"`
 }
 
 // FeatureConfig represents a feature configuration
@@ -241,7 +241,7 @@ func (m *MeshIstio) Transfer2ProtoForDetail() *meshmanager.IstioDetailInfo {
 				Enabled:              wrapperspb.Bool(m.ObservabilityConfig.TracingConfig.Enabled),
 				Endpoint:             wrapperspb.String(m.ObservabilityConfig.TracingConfig.Endpoint),
 				BkToken:              wrapperspb.String(m.ObservabilityConfig.TracingConfig.BkToken),
-				TraceSamplingPercent: wrapperspb.Int32(m.ObservabilityConfig.TracingConfig.TraceSamplingPercent),
+				TraceSamplingPercent: wrapperspb.Float(m.ObservabilityConfig.TracingConfig.TraceSamplingPercent),
 			}
 		}
 	}

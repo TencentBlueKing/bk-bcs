@@ -567,7 +567,7 @@ func GenIstiodValuesByTracing(
 			if installValues.Pilot == nil {
 				installValues.Pilot = &common.IstiodPilotConfig{}
 			}
-			installValues.Pilot.TraceSampling = pointer.Float64(float64(tracingConfig.TraceSamplingPercent.GetValue()) / 100)
+			installValues.Pilot.TraceSampling = pointer.Float32(tracingConfig.TraceSamplingPercent.GetValue())
 		}
 
 		if installValues.MeshConfig.ExtensionProviders == nil {
@@ -618,7 +618,7 @@ func GenIstiodValuesByTracing(
 		if installValues.Pilot == nil {
 			installValues.Pilot = &common.IstiodPilotConfig{}
 		}
-		installValues.Pilot.TraceSampling = pointer.Float64(float64(tracingConfig.TraceSamplingPercent.GetValue()) / 100)
+		installValues.Pilot.TraceSampling = pointer.Float32(tracingConfig.TraceSamplingPercent.GetValue())
 	}
 	return nil
 }
