@@ -59,6 +59,7 @@ blueking:
   features: 功能特性
   features1: 产品功能特性
   apiToken: 个人密钥
+  userCenter: 个人中心
   signOut: 退出登录
   desktop: 蓝鲸桌面
   help: 帮助

@@ -25,8 +25,9 @@
         :placeholder="$t('generic.placeholder.searchDate')"
         class="bg-[#fff] mr-[5px]"
         :model-value="zoneDate"
-        :timezone.sync="timezone"
+        :timezone="timezone"
         @update:modelValue="handleValueChange"
+        @update:timezone="handleTimezoneChange"
       />
       <bcs-search-select
         class="flex-1 bg-[#fff]"
@@ -415,10 +416,18 @@ export default defineComponent({
     const zoneDate = ref([]);
     const timezone = ref(getBrowserTimezoneId());
     function handleValueChange(v, info) {
+      if (v.length === 0) {
+        params.value.date = [];
+        return;
+      }
       const [start, end] = info;
       params.value.date = [start.formatText, end.formatText];
       zoneDate.value = v;
       handleInitEventData();
+    }
+    function handleTimezoneChange(value) {
+      zoneDate.value = [];
+      timezone.value = value;
     }
 
     onMounted(async () => {
@@ -446,6 +455,7 @@ export default defineComponent({
       handleClusterChange,
       handleInitEventData,
       handleValueChange,
+      handleTimezoneChange,
       formatTimeWithTimezone,
     };
   },

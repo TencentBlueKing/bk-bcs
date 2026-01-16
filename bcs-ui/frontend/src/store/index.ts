@@ -77,6 +77,8 @@ const store = new Vuex.Store<{
   user: {
     username: string,
     tenant_id: string,
+    language: 'zh-CN' | 'en-US'
+    time_zone: string,
   }
   openSideMenu: boolean
   isEn: boolean
@@ -135,6 +137,7 @@ const store = new Vuex.Store<{
         'dashboardViewID',
         'hideSharedCluster',
         'viewNs',
+        'user',
       ],
       mutationEffect: [
         {

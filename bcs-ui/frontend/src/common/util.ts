@@ -29,6 +29,10 @@ import utc from 'dayjs/plugin/utc';
 import { every } from 'lodash';
 import moment from 'moment';
 
+import { VUEX_STROAGE_KEY } from '@/common/constant';
+
+const storage = JSON.parse(localStorage.getItem(VUEX_STROAGE_KEY) || '{}');
+
 // 初始化 dayjs 插件
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -914,14 +918,23 @@ export function registerEvent(target, eventType, cb) {
  */
 export function getBrowserTimezoneId(): string {
   try {
-    // 使用 Intl API 获取时区 ID
-    if (Intl?.DateTimeFormat) {
-      return Intl.DateTimeFormat().resolvedOptions().timeZone;
+    // 使用接口的时区
+    if (storage?.user?.time_zone) return storage.user.time_zone;
+    // 优先使用 dayjs 的 tz.guess() 方法
+    if (dayjs?.tz?.guess) {
+      const timezone = dayjs.tz.guess();
+      if (timezone) return timezone;
     }
 
-    // 降级处理：根据时区偏移推测常见时区
+    // 降级方案1：使用 Intl API 获取时区 ID
+    if (Intl?.DateTimeFormat) {
+      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      if (timezone) return timezone;
+    }
+
+    // 降级方案2：根据时区偏移推测常见时区
     const offset = -new Date().getTimezoneOffset() / 60;
-    const timezoneMap = {
+    const timezoneMap: Record<string, string> = {
       '-12': 'Pacific/Baker_Island',
       '-11': 'Pacific/Midway',
       '-10': 'Pacific/Honolulu',

@@ -42,8 +42,9 @@
               :placeholder="$t('generic.placeholder.searchDate')"
               class="bg-[#fff] mr-[10px]"
               :model-value="zoneDate"
-              :timezone.sync="timezone"
+              :timezone="timezone"
               @update:modelValue="change"
+              @update:timezone="handleTimezoneChange"
             />
             <div class="left">
               <bk-button type="primary" :title="$t('generic.button.query')" icon="search" @click="handleClick">
@@ -397,9 +398,17 @@ export default {
      * @param {string} newValue 变化前的值
      */
     change(v, info) {
+      if (v.length === 0) {
+        this.dataRange = [];
+        return;
+      }
       const [start, end] = info;
       this.dataRange = [start.formatText, end.formatText];
       this.zoneDate = v;
+    },
+    handleTimezoneChange(value) {
+      this.zoneDate = [];
+      this.timezone = value;
     },
 
     /**

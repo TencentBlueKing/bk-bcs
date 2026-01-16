@@ -546,8 +546,9 @@
           :placeholder="$t('generic.placeholder.searchDate')"
           class="bg-[#fff]"
           :model-value="zoneDate"
-          :timezone.sync="timezone"
+          :timezone="timezone"
           @update:modelValue="handleValueChange"
+          @update:timezone="handleTimezoneChange"
         />
         <bcs-input
           class="w-[360px]"
@@ -1712,10 +1713,18 @@ export default defineComponent({
     const zoneDate = ref<Date[]>([]);
     const timezone = ref(getBrowserTimezoneId());
     function handleValueChange(v, info) {
+      if (v.length === 0) {
+        timeRange.value = [];
+        return;
+      }
       const [start, end] = info;
       timeRange.value = [start.formatText, end.formatText];
       zoneDate.value = v;
       reSearchRecordList();
+    }
+    function handleTimezoneChange(value) {
+      zoneDate.value = [];
+      timezone.value = value;
     }
 
     const reSearchRecordList = () => {
@@ -2065,6 +2074,7 @@ export default defineComponent({
       zoneDate,
       timezone,
       handleValueChange,
+      handleTimezoneChange,
       formatTimeWithTimezone,
     };
   },

@@ -148,6 +148,7 @@
           </span>
           <template #content>
             <ul>
+              <li class="bcs-dropdown-item" @click="handleGotoUserCenter">{{ $t('blueking.userCenter') }}</li>
               <li
                 :class="[
                   'bcs-dropdown-item',
@@ -402,6 +403,10 @@ export default defineComponent({
     const handleShowFeatures = () => {
       showFeatures.value = true;
     };
+    // 跳转个人中心
+    const handleGotoUserCenter = () => {
+      window.open(`${window.BCS_API_HOST}/bkuser/personal-center`);
+    };
     // 跳转用户token
     const handleGotoUserToken = () => {
       if (route.value.name === 'token' || !curProject.value.projectID) return;
@@ -478,6 +483,7 @@ export default defineComponent({
       handleGotoHelp,
       handleShowSystemLog,
       handleShowFeatures,
+      handleGotoUserCenter,
       handleGotoUserToken,
       handleLogout,
       handleToggleClickNav,

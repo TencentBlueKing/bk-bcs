@@ -6,8 +6,9 @@
           :placeholder="$t('generic.placeholder.searchDate')"
           class="bg-[#fff]"
           :model-value="zoneDate"
-          :timezone.sync="timezone"
+          :timezone="timezone"
           @update:modelValue="handleValueChange"
+          @update:timezone="handleTimezoneChange"
         />
       </template>
       <template #right>
@@ -381,9 +382,16 @@ function handleSkip(data) {
 const zoneDate = ref([]);
 const timezone = ref(getBrowserTimezoneId());
 function handleValueChange(v, info) {
+  if (v.length === 0) {
+    return;
+  }
   const [start, end] = info;
   timeRange.value = [start.formatText, end.formatText];
   zoneDate.value = v;
+}
+function handleTimezoneChange(value) {
+  zoneDate.value = [];
+  timezone.value = value;
 }
 
 watch(
