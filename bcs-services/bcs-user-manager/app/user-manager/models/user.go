@@ -62,6 +62,8 @@ type Userinfo struct {
 	UserName  string `json:"username"`
 	AvatarUrl string `json:"avatar_url"`
 	TenantID  string `json:"tenant_id"`
+	Language  string `json:"language"`
+	TimeZone  string `json:"time_zone"`
 }
 
 // BcsClientUser client user table 平台账号

@@ -381,7 +381,7 @@ func GetClusterEventDataID(ctx context.Context, host, clusterID string) (*Cluste
 		return nil, err
 	}
 
-	url := fmt.Sprintf("%s/metadata_query_bcs_related_data_link_info", host)
+	url := fmt.Sprintf("%s/app/metadata/query_bcs_related_data_link_info", host)
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
 		SetHeader(utils.TenantIDHeaderKey, utils.GetTenantIDFromContext(ctx)).

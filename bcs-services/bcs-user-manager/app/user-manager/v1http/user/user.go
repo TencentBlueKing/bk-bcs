@@ -23,6 +23,7 @@ import (
 	"github.com/dchest/uniuri"
 	restful "github.com/emicklei/go-restful/v3"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/component"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/constant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
@@ -315,6 +316,15 @@ func GetCurrentUserInfo(request *restful.Request, response *restful.Response) {
 	if user, ok := request.Attribute(constant.CurrentUserAttr).(*models.BcsUser); ok {
 		userInfo.UserName = user.Name
 		userInfo.TenantID = user.TenantID
+	}
+
+	bkUserInfo, err := component.GetBKUserInfo(request.Request.Context(), userInfo.TenantID, userInfo.UserName)
+	if err != nil {
+		blog.Warnf("failed to get bk user info: %s", err.Error())
+	}
+	if bkUserInfo != nil {
+		userInfo.Language = bkUserInfo.Language
+		userInfo.TimeZone = bkUserInfo.TimeZone
 	}
 
 	data := utils.CreateResponseData(nil, "success", *userInfo)

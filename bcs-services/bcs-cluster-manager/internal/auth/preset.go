@@ -35,6 +35,7 @@ var NoCheckTenantMethod = []string{
 	// cloud template
 	"ClusterManager.GetCloud",
 	"ClusterManager.ListCloud",
+	"ClusterManager.ListCloudRegions",
 
 	// vpc control
 	"ClusterManager.ListCloudVPC",
@@ -70,6 +71,13 @@ var NoCheckTenantMethod = []string{
 	"ClusterManager.GetTopologyNodes",
 	"ClusterManager.GetTopologyHostIdsNodes",
 	"ClusterManager.GetHostsDetails",
+	"ClusterManager.GetBkSopsTemplateList",
+	"ClusterManager.GetBkSopsTemplateInfo",
+	"ClusterManager.GetInnerTemplateValues",
+	"ClusterManager.DebugBkSopsTask",
+	"ClusterManager.GetBatchCustomSetting",
+	"ClusterManager.GetProviderResourceUsage",
+	"ClusterManager.GetScopeHostCheck",
 }
 
 // NoAuthMethod 不需要用户身份认证的方法

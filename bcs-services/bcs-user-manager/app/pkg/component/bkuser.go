@@ -70,3 +70,51 @@ func ListTenant(ctx context.Context) ([]BkTenant, error) {
 
 	return result.Data, nil
 }
+
+// GetBKUserInfoResp get bk user info response
+type GetBKUserInfoResp struct {
+	Data BKUserInfo `json:"data"`
+}
+
+// BKUserInfo bk user info
+type BKUserInfo struct {
+	BKUsername  string `json:"bk_username"`
+	TenantID    string `json:"tenant_id"`
+	LoginName   string `json:"login_name"`
+	DisplayName string `json:"display_name"`
+	Language    string `json:"language"`
+	TimeZone    string `json:"time_zone"`
+}
+
+// GetBKUserInfo get bk user info
+func GetBKUserInfo(ctx context.Context, tenantID, username string) (*BKUserInfo, error) {
+	url := fmt.Sprintf("%s/%s/%s/", BKUserAPIServer, "api/v3/open/tenant/users", username)
+
+	authInfo, err := GetBKAPIAuthorization("")
+	if err != nil {
+		return nil, err
+	}
+	resp, err := GetClient().R().
+		SetContext(ctx).
+		SetHeader(apputils.HeaderTenantID, tenantID).
+		SetHeader("X-Bkapi-Authorization", authInfo).
+		Get(url)
+
+	if err != nil {
+
+		return nil, err
+	}
+
+	if !resp.IsSuccess() {
+		return nil, errors.Errorf("http code %d != 200, body: %s", resp.StatusCode(), resp.Body())
+	}
+
+	result := &GetBKUserInfoResp{}
+	err = json.Unmarshal(resp.Body(), result)
+	if err != nil {
+		return nil, errors.Errorf("unmarshal resp body error, %s", err.Error())
+	}
+
+	return &result.Data, nil
+
+}
