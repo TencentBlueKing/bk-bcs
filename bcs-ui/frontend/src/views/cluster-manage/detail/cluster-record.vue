@@ -380,7 +380,7 @@ function handleSkip(data) {
 
 // 时间选择
 const zoneDate = ref([]);
-const timezone = ref(getBrowserTimezoneId());
+const timezone = ref(user.value?.time_zone || getBrowserTimezoneId());
 function handleValueChange(v, info) {
   if (v.length === 0) {
     return;

@@ -198,4 +198,5 @@ var BCS_NAMESPACE_PREFIX = '<%= process.env.BK_BCS_NAMESPACE_PREFIX %>'
 var BK_LOG_HOST = '<%= process.env.BK_LOG_HOST %>'
 var BK_DOMAIN = '<%= process.env.BK_DOMAIN %>'
 var BK_SHARED_RES_BASE_JS_URL = '<%= process.env.BK_SHARED_RES_BASE_JS_URL %>'
+var BK_USER_UI_HOST = '<%= process.env.BK_USER_UI_HOST %>'
 ```

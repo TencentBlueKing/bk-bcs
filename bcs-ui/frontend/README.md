@@ -72,6 +72,9 @@ BK_BKMONITOR_HOST = ''
 # 允许加载的域名
 BK_PREFERRED_DOMAINS = ''
 
+# 用户管理个人中心地址
+BK_USER_UI_HOST = ''
+
 ```
 
 3. 开发

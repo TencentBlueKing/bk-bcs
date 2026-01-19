@@ -137,7 +137,6 @@ const store = new Vuex.Store<{
         'dashboardViewID',
         'hideSharedCluster',
         'viewNs',
-        'user',
       ],
       mutationEffect: [
         {

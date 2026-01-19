@@ -29,9 +29,6 @@ import utc from 'dayjs/plugin/utc';
 import { every } from 'lodash';
 import moment from 'moment';
 
-import { VUEX_STROAGE_KEY } from '@/common/constant';
-
-const storage = JSON.parse(localStorage.getItem(VUEX_STROAGE_KEY) || '{}');
 
 // 初始化 dayjs 插件
 dayjs.extend(utc);
@@ -918,8 +915,6 @@ export function registerEvent(target, eventType, cb) {
  */
 export function getBrowserTimezoneId(): string {
   try {
-    // 使用接口的时区
-    if (storage?.user?.time_zone) return storage.user.time_zone;
     // 优先使用 dayjs 的 tz.guess() 方法
     if (dayjs?.tz?.guess) {
       const timezone = dayjs.tz.guess();
@@ -1022,5 +1017,21 @@ export function formatTimeWithTimezone(time: string | number, timezoneId?: strin
     console.warn('Failed to format time with timezone:', error);
     // 降级处理：使用本地时间格式
     return dayjs(time).format('YYYY-MM-DD HH:mm:ss');
+  }
+}
+
+/**
+ * 获取特定时区指定字符串时间对应的 Unix 时间戳（秒级）
+ * @param {string} timeString - 时间字符串，如 '2025-01-16 12:00:00'
+ * @param {string} timezoneId - 时区ID，如 'Asia/Shanghai'、'America/New_York'。如果不传，使用浏览器时区
+ * @returns {number} Unix 时间戳（秒级，10位数字）
+ */
+export function getUnixTimestampWithTimezone(timeString: string, timezoneId?: string): number {
+  try {
+    const dayjsObj = dayjs.tz(timeString, timezoneId || getBrowserTimezoneId());
+    return dayjsObj.unix();
+  } catch (error) {
+    console.warn('Failed to get unix timestamp with timezone:', error);
+    return dayjs(timeString).unix();
   }
 }

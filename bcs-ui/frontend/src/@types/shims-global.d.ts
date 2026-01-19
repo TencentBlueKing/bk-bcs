@@ -56,6 +56,7 @@ interface Window {
   readonly BK_DOMAIN: string
   readonly BK_SHARED_RES_BASE_JS_URL: string
   readonly BK_CC_HOST: string
+  readonly BK_USER_UI_HOST: string
 }
 
 declare const BK_BCS_WELCOME: string;

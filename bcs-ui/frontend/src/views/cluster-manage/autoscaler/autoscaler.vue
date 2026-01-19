@@ -1711,7 +1711,7 @@ export default defineComponent({
     });
     // 时间选择
     const zoneDate = ref<Date[]>([]);
-    const timezone = ref(getBrowserTimezoneId());
+    const timezone = ref(user.value?.time_zone || getBrowserTimezoneId());
     function handleValueChange(v, info) {
       if (v.length === 0) {
         timeRange.value = [];

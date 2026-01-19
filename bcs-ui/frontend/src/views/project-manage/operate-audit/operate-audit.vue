@@ -204,7 +204,7 @@ export default {
       pageCountListIndex: '10',
       bkMessageInstance: null,
       zoneDate: [],
-      timezone: getBrowserTimezoneId(),
+      timezone: this.$store.state.user?.time_zone || getBrowserTimezoneId(),
     };
   },
   computed: {

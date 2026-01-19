@@ -405,7 +405,7 @@ export default defineComponent({
     };
     // 跳转个人中心
     const handleGotoUserCenter = () => {
-      window.open(`${window.BCS_API_HOST}/bkuser/personal-center`);
+      window.open(`${window.BK_USER_UI_HOST}${window.BK_USER_UI_HOST.endsWith('/') ? '' : '/'}personal-center`);
     };
     // 跳转用户token
     const handleGotoUserToken = () => {
