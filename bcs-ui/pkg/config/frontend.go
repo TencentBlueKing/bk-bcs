@@ -32,6 +32,7 @@ type HostConf struct {
 	BKMonitorHost         string `yaml:"bk_monitor_host"`         // 蓝鲸监控
 	BKSREHOST             string `yaml:"bk_sre_host"`             // 申请服务器地址
 	BKUserHost            string `yaml:"bk_user_host"`            // 用户中心地址
+	BKUserUIHost          string `yaml:"bk_user_ui_host"`         // 用户中心UI地址
 	BKLogHost             string `yaml:"bk_log_host"`             // 日志平台地址
 	BKSharedResURL        string `yaml:"bk_shared_res_url"`       // 对应运维公共变量bkSharedResUrl, PaaS环境变量BKPAAS_SHARED_RES_URL
 	BKSharedResBaseJSURL  string `yaml:"-"`                       // 规则是${bkSharedResUrl}/${目录名 aka app_code}/base.js
