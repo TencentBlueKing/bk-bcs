@@ -41,7 +41,7 @@
                 :value="isSpecifiedZoneList"
                 class="w-[auto]"
                 @change="handleZoneChange">
-                <bk-radio :value="false" :disabled="isEdit">
+                <bk-radio :value="false" :disabled="isEdit || isQuotaGrayAndSelf">
                   <TextTips :text="$t('cluster.ca.nodePool.create.az.random')" />
                 </bk-radio>
                 <bk-radio :value="true" :disabled="isEdit">
@@ -118,9 +118,20 @@
               @page-change="pageChange"
               @page-limit-change="pageSizeChange"
               @row-click="handleCheckInstanceType">
-              <bcs-table-column :label="$t('generic.ipSelector.label.serverModel')" prop="typeName" show-overflow-tooltip>
+              <bcs-table-column
+                fixed="left"
+                :label="$t('generic.ipSelector.label.serverModel')"
+                prop="typeName"
+                min-width="180"
+                show-overflow-tooltip
+              >
                 <template #default="{ row }">
-                  <span v-bk-tooltips="{ disabled: row.status !== 'SOLD_OUT', content: $t('cluster.ca.nodePool.create.instanceTypeConfig.status.soldOut') }">
+                  <span
+                    v-bk-tooltips="{
+                      disabled: row.status !== 'SOLD_OUT',
+                      content: $t('cluster.ca.nodePool.create.instanceTypeConfig.status.soldOut')
+                    }"
+                  >
                     <bcs-radio
                       :value="nodePoolConfig.launchTemplate.instanceType === row.nodeType"
                       :disabled="row.status === 'SOLD_OUT' || isEdit">
@@ -129,18 +140,69 @@
                   </span>
                 </template>
               </bcs-table-column>
-              <bcs-table-column :label="$t('generic.label.specifications')" min-width="160" show-overflow-tooltip prop="nodeType"></bcs-table-column>
-              <bcs-table-column label="CPU" prop="cpu" width="80" align="right">
+              <bcs-table-column
+                v-if="isQuotaGrayAndSelf"
+                :label="$t('cluster.ca.nodePool.label.bizIDs')"
+                min-width="160"
+                show-overflow-tooltip
+              >
+                <template #default="{ row }">
+                  <span>{{ row.extraInfo?.providerBizIDs || '--' }}</span>
+                </template>
+              </bcs-table-column>
+              <bcs-table-column
+                v-if="isQuotaGrayAndSelf"
+                :label="$t('cluster.ca.nodePool.label.availableQuota')"
+                min-width="100"
+                show-overflow-tooltip
+              >
+                <template #default="{ row }">
+                  <span>{{ row.availableQuota || '--' }}</span>
+                </template>
+              </bcs-table-column>
+              <!-- <bcs-table-column
+                :label="$t('generic.label.specifications')"
+                min-width="160"
+                show-overflow-tooltip
+                prop="nodeType">
+              </bcs-table-column> -->
+              <bcs-table-column
+                label="CPU"
+                prop="cpu"
+                width="80"
+                align="right"
+              >
                 <template #default="{ row }">
                   <span>{{ `${row.cpu}${$t('units.suffix.cores')}` }}</span>
                 </template>
               </bcs-table-column>
-              <bcs-table-column :label="$t('generic.label.mem')" prop="memory" width="80" align="right">
+              <bcs-table-column
+                :label="$t('generic.label.mem')"
+                prop="memory"
+                width="80"
+                align="right"
+              >
                 <template #default="{ row }">
                   <span>{{ row.memory }}G</span>
                 </template>
               </bcs-table-column>
-              <bcs-table-column label="GPU" prop="gpu" width="80" align="center"></bcs-table-column>
+              <bcs-table-column
+                label="GPU"
+                prop="gpu"
+                width="80"
+                align="center">
+              </bcs-table-column>
+              <bcs-table-column
+                v-if="isQuotaGrayAndSelf"
+                :label="$t('cluster.ca.nodePool.label.providerTime')"
+                min-width="160"
+                width="420"
+                show-overflow-tooltip
+              >
+                <template #default="{ row }">
+                  <span>{{ `${row.extraInfo?.providerStartTime} - ${row.extraInfo?.providerEndTime}` }}</span>
+                </template>
+              </bcs-table-column>
             </bcs-table>
             <p
               class="text-[12px] text-[#ea3636] error-tips"
@@ -362,7 +424,7 @@
   </div>
 </template>
 <script lang="ts">
-import { sortBy } from 'lodash';
+import { has, sortBy } from 'lodash';
 import { computed, defineComponent, onMounted, ref, toRefs, watch } from 'vue';
 
 import { cloudsZones } from '@/api/modules/cluster-manager';
@@ -410,6 +472,7 @@ export default defineComponent({
       const provider = $router.currentRoute?.query?.provider;
       return provider === 'yunti' || provider === 'self' ? provider : 'yunti';
     });
+    const isQuotaGrayAndSelf = computed(() => has($store.state.curProject?.labels, 'quota-gray') && resourcePoolProvider.value === 'self');
     const { defaultValues, cluster, isEdit, schema } = toRefs(props);
     const nodeConfigRef = ref<any>(null);
     const formRef = ref<any>(null);
@@ -556,8 +619,8 @@ export default defineComponent({
     const showZoneList = ref(false);
     const zoneList = ref<any[]>([]);
     const zoneListLoading = ref(false);
-    const isSpecifiedZoneList = computed(() => (!!nodePoolConfig.value.autoScaling?.zones?.length)
-    || showZoneList.value);
+    const isSpecifiedZoneList = computed(() => (isQuotaGrayAndSelf.value && !props.isEdit)
+    || (!!nodePoolConfig.value.autoScaling?.zones?.length) || showZoneList.value);
     const handleGetZoneList = async () => {
       zoneListLoading.value = true;
       zoneList.value = await cloudsZones({
@@ -931,6 +994,7 @@ export default defineComponent({
       imageID,
       handleImageListInit,
       handleImageChange,
+      isQuotaGrayAndSelf,
     };
   },
 });

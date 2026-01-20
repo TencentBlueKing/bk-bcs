@@ -1008,6 +1008,9 @@ cluster:
           tips: 默认使用平台提供 GPU 镜像
         CVM: 普通 CVM 节点池
         GPU: GPU 节点池
+        bizIDs: 来源业务
+        availableQuota: 剩余额度
+        providerTime: 提供时间
       title:
         nodeConfig: 节点配置
         initConfig: 初始化配置

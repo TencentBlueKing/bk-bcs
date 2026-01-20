@@ -1240,6 +1240,9 @@ cluster:
           tips: Default use of GPU image provided by the platform
         CVM: CVM
         GPU: GPU
+        bizIDs: Business
+        availableQuota: Available Quota
+        providerTime: Provide duration
       title:
         nodeConfig: Node configuration
         initConfig: Initialization configuration
