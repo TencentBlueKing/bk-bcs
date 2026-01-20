@@ -1021,17 +1021,24 @@ export function formatTimeWithTimezone(time: string | number, timezoneId?: strin
 }
 
 /**
- * 获取特定时区指定字符串时间对应的 Unix 时间戳（秒级）
- * @param {string} timeString - 时间字符串，如 '2025-01-16 12:00:00'
- * @param {string} timezoneId - 时区ID，如 'Asia/Shanghai'、'America/New_York'。如果不传，使用浏览器时区
- * @returns {number} Unix 时间戳（秒级，10位数字）
+ * 获取特定时区的当前日期对象
+ * @param {string} timezone - 时区ID，如 'Asia/Shanghai'、'America/New_York'。如果不传，使用浏览器时区
+ * @returns {Date} 当前日期
  */
-export function getUnixTimestampWithTimezone(timeString: string, timezoneId?: string): number {
-  try {
-    const dayjsObj = dayjs.tz(timeString, timezoneId || getBrowserTimezoneId());
-    return dayjsObj.unix();
-  } catch (error) {
-    console.warn('Failed to get unix timestamp with timezone:', error);
-    return dayjs(timeString).unix();
-  }
+export function getDateInTimezone(timezone?: string) {
+  const tz = timezone || getBrowserTimezoneId();
+  return dayjs().tz(tz)
+    .toDate();
+}
+
+/**
+   * 指定时区转 UTC 时间戳
+   * @param time 时间字符串或 Date 对象
+   * @param sourceTimezone 源时区 ID
+   * @param milliseconds 是否返回毫秒级时间戳，默认 false（秒级）
+   * @returns UTC 时间戳
+   */
+export function timezoneToUTC(time: string | Date, sourceTimezone: string, milliseconds = false): number {
+  const dayjsObj = dayjs.tz(time, sourceTimezone);
+  return milliseconds ? dayjsObj.valueOf() : dayjsObj.unix();
 }

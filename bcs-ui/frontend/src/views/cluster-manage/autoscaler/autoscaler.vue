@@ -791,7 +791,7 @@ import '@blueking/date-picker/vue2/vue2.css';
 import { updateClusterAutoScalingProviders } from '@/api/modules/cluster-manager';
 import { clusterOverview } from '@/api/modules/monitor';
 import $bkMessage from '@/common/bkmagic';
-import { copyText, formatBytes, formatTimeWithTimezone, getBrowserTimezoneId, takesTimeFormat } from '@/common/util';
+import { copyText, formatBytes, formatTimeWithTimezone, getBrowserTimezoneId, getDateInTimezone, takesTimeFormat, timezoneToUTC } from '@/common/util';
 import { CheckType } from '@/components/across-check.vue';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import Row from '@/components/layout/Row.vue';
@@ -1741,8 +1741,8 @@ export default defineComponent({
       handleGetRecordList();
     };
     const handleShowRecord = (row) => {
-      const end = new Date();
-      const start = new Date();
+      const end = getDateInTimezone(timezone.value);
+      const start = getDateInTimezone(timezone.value);
       start.setTime(start.getTime() - 3600 * 1000 * 24 * 7);
       timeRange.value = [
         start,
@@ -1780,8 +1780,8 @@ export default defineComponent({
       const { results = [], count = 0 } = await $store.dispatch('clustermanager/clusterAutoScalingLogsV2', {
         resourceType: 'nodegroup',
         resourceID: resourceID?.[0],
-        startTime: Math.floor(new Date(timeRange.value[0]).getTime() / 1000) || '',
-        endTime: Math.floor(new Date(timeRange.value[1]).getTime() / 1000) || '',
+        startTime: timezoneToUTC(timeRange.value[0], timezone.value) || '',
+        endTime: timezoneToUTC(timeRange.value[1], timezone.value) || '',
         limit: recordPagination.value.limit,
         page: recordPagination.value.current,
         status: status?.[0],

@@ -107,7 +107,7 @@ import DatePicker from '@blueking/date-picker/vue2';
 
 import '@blueking/date-picker/vue2/vue2.css';
 import { activityLogs, activityLogsResourceTypes } from '@/api/modules/user-manager';
-import { formatTimeWithTimezone, getBrowserTimezoneId } from '@/common/util';
+import { formatTimeWithTimezone, getBrowserTimezoneId, timezoneToUTC } from '@/common/util';
 import BcsContent from '@/components/layout/Content.vue';
 import Row from '@/components/layout/Row.vue';
 
@@ -306,8 +306,8 @@ export default {
           activity_type: activityType || '',
           resource_type: resourceType || '',
           status: activityStatus || '',
-          start_time: beginTime ? new Date(beginTime).getTime() / 1000 : '',
-          end_time: endTime ? new Date(endTime).getTime() / 1000 : '',
+          start_time: beginTime ? timezoneToUTC(beginTime, this.timezone) : '',
+          end_time: endTime ? timezoneToUTC(endTime, this.timezone) : '',
         }, { globalError: false }).catch(() => ({ items: [], count: 0 }));
 
         this.dataList = [];

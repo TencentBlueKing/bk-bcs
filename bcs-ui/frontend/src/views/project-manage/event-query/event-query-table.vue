@@ -91,7 +91,7 @@ import DatePicker from '@blueking/date-picker/vue2';
 
 import '@blueking/date-picker/vue2/vue2.css';
 import { storageEvents } from '@/api/modules/storage';
-import { formatTimeWithTimezone, getBrowserTimezoneId } from '@/common/util';
+import { formatTimeWithTimezone, getBrowserTimezoneId, timezoneToUTC } from '@/common/util';
 import ClusterSelect from '@/components/cluster-selector/cluster-select.vue';
 import NamespaceSelect from '@/components/namespace-selector/namespace-select.vue';
 import { IProject, useCluster  } from '@/composables/use-app';
@@ -358,8 +358,8 @@ export default defineComponent({
         kind: parseSearchSelectValue.value.kinds.join(',') || (Array.isArray(kinds.value) ? kinds.value : [kinds.value]).join(','), // 对象
         'extraInfo.namespace': params.value.namespace, // 命名空间
         'extraInfo.name': parseSearchSelectValue.value.names.join(',') || (Array.isArray(name.value) ? name.value : [name.value]).join(','),
-        timeBegin: start ? parseInt(`${new Date(start).getTime() / 1000}`) : '', // 开始时间
-        timeEnd: end ? parseInt(`${new Date(end).getTime() / 1000}`) : '', // 结束时间
+        timeBegin: start ? timezoneToUTC(start, timezone.value) : '', // 开始时间
+        timeEnd: end ? timezoneToUTC(end, timezone.value) : '', // 结束时间
         level: parseSearchSelectValue.value.level, // 事件级别
         component: parseSearchSelectValue.value.component, // 组件
       }, { needRes: true }).catch(() => ({ data: [], total: 0 }));
@@ -416,6 +416,8 @@ export default defineComponent({
     const zoneDate = ref([]);
     const timezone = ref($store.state.user?.time_zone || getBrowserTimezoneId());
     function handleValueChange(v, info) {
+      console.log(v, info);
+
       if (v.length === 0) {
         params.value.date = [];
         return;

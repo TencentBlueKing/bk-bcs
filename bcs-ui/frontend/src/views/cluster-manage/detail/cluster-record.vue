@@ -130,7 +130,7 @@ import '@blueking/date-picker/vue2/vue2.css';
 import { clusterOperationLogs, clusterTaskRecords, taskLogsDownloadURL, taskRetry } from '@/api/modules/cluster-manager';
 import { parseUrl } from '@/api/request';
 import $bkMessage from '@/common/bkmagic';
-import { formatTimeWithTimezone, getBrowserTimezoneId } from '@/common/util';
+import { formatTimeWithTimezone, getBrowserTimezoneId, getDateInTimezone, timezoneToUTC } from '@/common/util';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import Row from '@/components/layout/Row.vue';
 import StatusIcon from '@/components/status-icon';
@@ -226,8 +226,8 @@ async function getOperationLogs() {
 
   isLoading.value = true;
   const { results, count } = await clusterOperationLogs({
-    startTime: Math.ceil(new Date(timeRange.value[0]).getTime() / 1000),
-    endTime: Math.ceil(new Date(timeRange.value[1]).getTime() / 1000),
+    startTime: timezoneToUTC(timeRange.value[0], timezone.value),
+    endTime: timezoneToUTC(timeRange.value[1], timezone.value),
     clusterID: props.clusterId,
     limit: pagination.value.limit,
     page: pagination.value.current,
@@ -245,8 +245,8 @@ async function getDownloadTaskRecords() {
   if (!props.clusterId) return;
 
   const { url } = parseUrl('get', taskLogsDownloadURL, {
-    startTime: Math.ceil(new Date(timeRange.value[0]).getTime() / 1000),
-    endTime: Math.ceil(new Date(timeRange.value[1]).getTime() / 1000),
+    startTime: timezoneToUTC(timeRange.value[0], timezone.value),
+    endTime: timezoneToUTC(timeRange.value[1], timezone.value),
     clusterID: props.clusterId,
     limit: pagination.value.limit,
     page: pagination.value.current,
@@ -413,8 +413,8 @@ watch(searchSelectValue, () => {
 
 onBeforeMount(() => {
   // 初始化默认时间
-  const end = new Date();
-  const start = new Date();
+  const end = getDateInTimezone(timezone.value);
+  const start = getDateInTimezone(timezone.value);
   start.setTime(start.getTime() - 3600 * 1000 * 24 * 7);
   timeRange.value = [
     start,
