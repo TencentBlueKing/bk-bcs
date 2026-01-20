@@ -1,6 +1,6 @@
 import { Decimal } from 'decimal.js';
 
-import { formatBytes, formatDate, formatTimeWithTimezone } from '@/common/util';
+import { formatBytes, formatTimeWithTimezone } from '@/common/util';
 
 export default function (unit) {
   const axisLabel = (value) => {
@@ -77,8 +77,8 @@ export default function (unit) {
         axisLabel: {
           color: '#868b97',
           formatter: (value) => {
-            const time = formatDate(value * 1000, 'hh:mm');
-            const date = formatDate(value * 1000, 'MM-DD');
+            const time = formatTimeWithTimezone(value * 1000, '', 'hh:mm');
+            const date = formatTimeWithTimezone(value * 1000, '', 'MM-DD');
             return `${time}\n${date}`;
           },
         },

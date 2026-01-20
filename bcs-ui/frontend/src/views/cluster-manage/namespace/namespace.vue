@@ -136,7 +136,7 @@
             v-bk-tooltips="{ content: $t('dashboard.ns.tips.notEnabledNamespace') }">--</span>
         </template>
       </bcs-table-column>
-      <bcs-table-column :label="$t('cluster.labels.createdAt')">
+      <bcs-table-column :label="$t('cluster.labels.createdAt')" min-width="200" show-overflow-tooltip>
         <template #default="{ row }">
           {{ row.createTime ? formatTimeWithTimezone(row.createTime) : '--' }}
         </template>

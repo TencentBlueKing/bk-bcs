@@ -599,12 +599,12 @@
               </bcs-table-column>
               <bcs-table-column :label="$t('cluster.ca.nodePool.records.label.startTime')" width="180" show-overflow-tooltip>
                 <template #default="{ row: key }">
-                  {{ formatTimeWithTimezone(row.task.steps[key].start) }}
+                  {{ formatTimeWithTimezone(row.task.steps[key].start, timezone) }}
                 </template>
               </bcs-table-column>
               <bcs-table-column :label="$t('cluster.ca.nodePool.records.label.endTime')" width="180" show-overflow-tooltip>
                 <template #default="{ row: key }">
-                  {{ formatTimeWithTimezone(row.task.steps[key].end) }}
+                  {{ formatTimeWithTimezone(row.task.steps[key].end, timezone) }}
                 </template>
               </bcs-table-column>
               <!-- 设置宽度为了保持和外面表格对齐 -->
@@ -660,12 +660,12 @@
         </bcs-table-column>
         <bcs-table-column :label="$t('cluster.ca.nodePool.records.label.startTime')" width="180" prop="createTime" show-overflow-tooltip>
           <template #default="{ row }">
-            {{row.task ? formatTimeWithTimezone(row.task.start) : '--'}}
+            {{row.task ? formatTimeWithTimezone(row.task.start, timezone) : '--'}}
           </template>
         </bcs-table-column>
         <bcs-table-column :label="$t('cluster.ca.nodePool.records.label.endTime')" width="180" show-overflow-tooltip>
           <template #default="{ row }">
-            {{row.task ? formatTimeWithTimezone(row.task.end) : '--'}}
+            {{row.task ? formatTimeWithTimezone(row.task.end, timezone) : '--'}}
           </template>
         </bcs-table-column>
         <bcs-table-column :label="$t('generic.label.execTime2')" width="90" show-overflow-tooltip>

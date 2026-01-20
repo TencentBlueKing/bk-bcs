@@ -203,6 +203,7 @@ const store = new Vuex.Store<{
      */
     updateUser(state, user) {
       state.user = Object.assign({}, user);
+      window.timezone = user.time_zone;
     },
 
     /**

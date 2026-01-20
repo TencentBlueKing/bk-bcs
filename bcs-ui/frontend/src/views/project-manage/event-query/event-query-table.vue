@@ -416,8 +416,6 @@ export default defineComponent({
     const zoneDate = ref([]);
     const timezone = ref($store.state.user?.time_zone || getBrowserTimezoneId());
     function handleValueChange(v, info) {
-      console.log(v, info);
-
       if (v.length === 0) {
         params.value.date = [];
         return;

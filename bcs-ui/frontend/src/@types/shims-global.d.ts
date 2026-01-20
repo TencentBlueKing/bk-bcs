@@ -34,6 +34,7 @@ interface Window {
   _project_id_: string
   bus: any
   mainComponent: any
+  timezone: string
   readonly BCS_API_HOST: string
   readonly DEVOPS_BCS_API_URL: string
   readonly i18n: {

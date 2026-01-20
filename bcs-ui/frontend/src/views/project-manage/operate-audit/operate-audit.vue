@@ -61,7 +61,7 @@
           size="medium"
           @page-change="pageChange"
           @page-limit-change="changePageSize">
-          <bk-table-column :label="$t('generic.label.time')" prop="activityTime">
+          <bk-table-column :label="$t('generic.label.time')" prop="activityTime" min-width="150">
             <template #default="{ row }">
               {{formatTimeWithTimezone(row.activityTime, timezone)}}
             </template>

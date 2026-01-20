@@ -38,7 +38,7 @@
       @header-dragend="handleHeaderDragend(tableRef)">
       <bk-table-column :label="$t('generic.label.time')" prop="createTime" width="200" fixed resizable>
         <template #default="{ row }">
-          {{ formatTimeWithTimezone(row.createTime) }}
+          {{ formatTimeWithTimezone(row.createTime, timezone) }}
         </template>
       </bk-table-column>
       <bk-table-column :label="$t('generic.label.resourceName')" prop="resourceName" show-overflow-tooltip>

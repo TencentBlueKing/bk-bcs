@@ -75,7 +75,7 @@
           <bk-user-display-name :user-id="row.updator"></bk-user-display-name>
         </template>
       </bcs-table-column>
-      <bcs-table-column :label="$t('generic.label.updatedAt')" prop="updateAt">
+      <bcs-table-column :label="$t('generic.label.updatedAt')" prop="updateAt" show-overflow-tooltip>
         <template #default="{ row }">
           {{ formatTimeWithTimezone(row.updateAt * 1000) }}
         </template>

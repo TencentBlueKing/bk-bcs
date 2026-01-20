@@ -183,10 +183,7 @@ units:
   time:
     1h: 1小时
     24h: 24小时
-    today: 今天
     lastDays: 近7天
-    last15Days: 近15天
-    last30Days: 近30天
     nDays: '{num}天'
     nMonths: '{0} 月'
     nYears: '{0} 年'

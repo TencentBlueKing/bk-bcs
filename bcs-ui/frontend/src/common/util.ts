@@ -915,7 +915,9 @@ export function registerEvent(target, eventType, cb) {
  */
 export function getBrowserTimezoneId(): string {
   try {
-    // 优先使用 dayjs 的 tz.guess() 方法
+    // 优先使用 window.timezone
+    if (window.timezone) return window.timezone;
+    // 使用 dayjs 的 tz.guess() 方法
     if (dayjs?.tz?.guess) {
       const timezone = dayjs.tz.guess();
       if (timezone) return timezone;
@@ -999,7 +1001,7 @@ function normalizeTimestamp(timestamp: number): number {
  * @param {string} timezoneId - 时区ID，如 'Asia/Shanghai'、'America/New_York'
  * @returns {string} 格式化后的时间字符串，如 '2025-12-12 12:12:12+0800'
  */
-export function formatTimeWithTimezone(time: string | number, timezoneId?: string): string {
+export function formatTimeWithTimezone(time: string | number, timezoneId?: string, formatStr = 'YYYY-MM-DD HH:mm:ssZ'): string {
   try {
     let processedTime = time;
 
@@ -1012,7 +1014,7 @@ export function formatTimeWithTimezone(time: string | number, timezoneId?: strin
     const dayjsObj = dayjs(processedTime).tz(timezoneId ? timezoneId : getBrowserTimezoneId());
 
     // 格式化为 YYYY-MM-DD HH:mm:ssZ 格式
-    return dayjsObj.format('YYYY-MM-DD HH:mm:ssZ');
+    return dayjsObj.format(formatStr);
   } catch (error) {
     console.warn('Failed to format time with timezone:', error);
     // 降级处理：使用本地时间格式
