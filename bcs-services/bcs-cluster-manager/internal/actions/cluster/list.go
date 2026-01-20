@@ -1040,6 +1040,7 @@ type ListBasicInfoAction struct {
 	req   *cmproto.ListClusterV2Req
 	resp  *cmproto.ListClusterV2Resp
 
+	total                uint64
 	clusterBasicInfoList []*cmproto.ClusterBasicInfo
 }
 
@@ -1084,12 +1085,7 @@ func (la *ListBasicInfoAction) validate() error {
 }
 
 // filterClusterBasicInfoList filter cluster list
-func (la *ListBasicInfoAction) filterClusterBasicInfoList() ([]*cmproto.Cluster, error) {
-	var (
-		clusterList []*cmproto.Cluster
-		err         error
-	)
-
+func (la *ListBasicInfoAction) filterClusterBasicInfoList() ([]*cmproto.Cluster, int64, error) {
 	conds := make([]*operator.Condition, 0)
 	condM := make(operator.M)
 
@@ -1118,6 +1114,9 @@ func (la *ListBasicInfoAction) filterClusterBasicInfoList() ([]*cmproto.Cluster,
 	if len(la.req.ClusterType) != 0 {
 		condM["clustertype"] = la.req.ClusterType
 	}
+	if len(la.req.ManageType) != 0 {
+		condM["managetype"] = la.req.ManageType
+	}
 	if len(la.req.Status) != 0 {
 		condM["status"] = la.req.Status
 	}
@@ -1126,6 +1125,9 @@ func (la *ListBasicInfoAction) filterClusterBasicInfoList() ([]*cmproto.Cluster,
 	}
 	if len(la.req.ClusterID) != 0 {
 		condM["clusterid"] = la.req.ClusterID
+	}
+	if len(la.req.Creator) != 0 {
+		condM["creator"] = la.req.Creator
 	}
 	if len(la.req.ClusterName) != 0 {
 		condM["clustername"] = operator.M{"$regex": la.req.ClusterName}
@@ -1141,21 +1143,22 @@ func (la *ListBasicInfoAction) filterClusterBasicInfoList() ([]*cmproto.Cluster,
 	branchCond := operator.NewBranchCondition(operator.And, conds...)
 
 	listOpt := la.listOpt()
-	clusterList, err = la.model.ListCluster(la.ctx, branchCond, listOpt)
+	clusterList, total, err := la.model.ListClusterWithCount(la.ctx, branchCond, listOpt)
 	if err != nil && !errors.Is(err, drivers.ErrTableRecordNotFound) {
-		return nil, err
+		return nil, 0, err
 	}
 
-	return clusterList, nil
+	return clusterList, total, nil
 }
 
 // listCluster cluster list
 func (la *ListBasicInfoAction) listClusterBasicInfo() error {
-	clusterList, err := la.filterClusterBasicInfoList()
+	clusterList, total, err := la.filterClusterBasicInfoList()
 	if err != nil {
 		return err
 	}
 
+	la.total = uint64(total)
 	for i := range clusterList {
 		if clusterList[i].IsShared {
 			clusterList[i].IsShared = false
@@ -1182,7 +1185,10 @@ func (la *ListBasicInfoAction) setResp(code uint32, msg string) {
 	la.resp.Code = code
 	la.resp.Message = msg
 	la.resp.Result = (code == common.BcsErrClusterManagerSuccess)
-	la.resp.Data = la.clusterBasicInfoList
+	la.resp.Data = &cmproto.ClusterBasicInfoData{
+		Total:   la.total,
+		Results: la.clusterBasicInfoList,
+	}
 }
 
 // Handle list cluster request
@@ -1210,8 +1216,9 @@ func (la *ListBasicInfoAction) Handle(
 
 func (la *ListBasicInfoAction) listOpt() *storeopt.ListOption {
 	listOpt := &storeopt.ListOption{
-		Offset: int64(la.req.Offset),
+		Offset: int64((la.req.Page - 1) * la.req.Limit),
 		Limit:  int64(la.req.Limit),
+		Count:  true,
 	}
 
 	order := 1

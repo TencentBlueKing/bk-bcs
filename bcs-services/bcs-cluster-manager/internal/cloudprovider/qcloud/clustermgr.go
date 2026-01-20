@@ -1222,3 +1222,9 @@ func getSurplusCidrNum(mulList []string, step uint32) uint32 {
 
 	return step * uint32(surplusCidrCnt)
 }
+
+// AddClusterCidr add cidr to cluster
+func (c *Cluster) AddClusterCidr(ctx context.Context, cidrs []string,
+	opt *cloudprovider.AddSubnetsToClusterOption) error {
+	return cloudprovider.ErrCloudNotImplemented
+}

@@ -563,3 +563,18 @@ func (cm *ClusterManager) GetClusterSharedProject(ctx context.Context,
 	blog.Infof("reqID: %s, action: GetClusterSharedProject, req %v, resp %v", reqID, req, resp)
 	return nil
 }
+
+// AddClusterCidr implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) AddClusterCidr(ctx context.Context,
+	req *cmproto.AddClusterCidrReq, resp *cmproto.AddClusterCidrResp) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	na := clusterac.NewAddClusterCidrAction(cm.model)
+	na.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("AddClusterCidr", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: AddClusterCidr, req %v, resp %v", reqID, req, resp)
+	return nil
+}

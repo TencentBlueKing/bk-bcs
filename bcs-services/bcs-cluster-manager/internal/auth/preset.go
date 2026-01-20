@@ -96,6 +96,7 @@ var ActionPermissions = map[string]string{
 	"ClusterManager.SwitchClusterUnderlayNetwork": cluster.CanManageClusterOperation,
 	"ClusterManager.GetClusterSharedProject":      cluster.CanViewClusterOperation,
 	"ClusterManager.GetClustersMetaData":          "",
+	"ClusterManager.AddClusterCidr":               cluster.CanManageClusterOperation,
 
 	// node
 	"ClusterManager.AddNodesToCluster":           cluster.CanManageClusterOperation,
@@ -170,6 +171,7 @@ var ActionPermissions = map[string]string{
 	"ClusterManager.DeleteCloudVPC":             "",
 	"ClusterManager.ListCloudVPC":               "",
 	"ClusterManager.GetVPCCidr":                 "",
+	"ClusterManager.ListRecommendCloudVpcCidr":  cloudaccount.CanUseCloudAccountOperation,
 	"ClusterManager.CheckCidrConflictFromVpc":   cloudaccount.CanUseCloudAccountOperation,
 	"ClusterManager.GetCloudBandwidthPackages":  cloudaccount.CanUseCloudAccountOperation,
 	"ClusterManager.GetMasterSuggestedMachines": cloudaccount.CanUseCloudAccountOperation,
@@ -186,6 +188,7 @@ var ActionPermissions = map[string]string{
 	"ClusterManager.DeleteTask": cluster.CanManageClusterOperation,
 	"ClusterManager.GetTask":    cluster.CanViewClusterOperation,
 	"ClusterManager.ListTask":   project.CanViewProjectOperation,
+	"ClusterManager.ListTaskV2": project.CanViewProjectOperation,
 	"ClusterManager.SkipTask":   cluster.CanViewClusterOperation,
 
 	// cluster auto scaling option

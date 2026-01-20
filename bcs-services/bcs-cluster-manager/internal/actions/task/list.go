@@ -14,6 +14,7 @@ package task
 
 import (
 	"context"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
@@ -123,6 +124,127 @@ func (la *ListAction) Handle(
 		return
 	}
 	if err := la.listTask(); err != nil {
+		la.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
+		return
+	}
+	la.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
+}
+
+// ListV2Action action for list online cluster credential
+type ListV2Action struct {
+	ctx      context.Context
+	model    store.ClusterManagerModel
+	req      *cmproto.ListTaskV2Request
+	resp     *cmproto.ListTaskV2Response
+	TaskList []*cmproto.Task
+	count    int64
+}
+
+// NewListV2Action create list action for cluster credential
+func NewListV2Action(model store.ClusterManagerModel) *ListV2Action {
+	return &ListV2Action{
+		model: model,
+	}
+}
+
+func (la *ListV2Action) listV2Task() error {
+	condM := make(operator.M)
+	condArr := make([]*operator.Condition, 0)
+
+	if len(la.req.ClusterID) != 0 {
+		condM["clusterid"] = la.req.ClusterID
+	}
+	if len(la.req.ProjectID) != 0 {
+		condM["projectid"] = la.req.ProjectID
+	}
+	if len(la.req.Creator) != 0 {
+		condM["creator"] = la.req.Creator
+	}
+	if len(la.req.Updater) != 0 {
+		condM["updater"] = la.req.Updater
+	}
+	if len(la.req.TaskType) != 0 {
+		condM["tasktype"] = la.req.TaskType
+	}
+	if len(la.req.Status) != 0 {
+		condM["status"] = la.req.Status
+	}
+	if len(la.req.NodeGroupID) != 0 {
+		condM["nodegroupid"] = la.req.NodeGroupID
+	}
+
+	if len(condM) > 0 {
+		condArr = append(condArr, operator.NewLeafCondition(operator.Eq, condM))
+	}
+
+	if la.req.StartTime > 0 && la.req.EndTime > 0 {
+		condS := make(operator.M)
+		condT := make(operator.M)
+		condS["start"] = time.Unix(int64(la.req.StartTime), 0).Format(time.RFC3339)
+		condT["start"] = time.Unix(int64(la.req.EndTime), 0).Format(time.RFC3339)
+		condArr = append(condArr, operator.NewLeafCondition(operator.Gte, condS))
+		condArr = append(condArr, operator.NewLeafCondition(operator.Lte, condT))
+	}
+
+	// default listTask descending sort by start
+	tasks, count, err := la.model.ListTaskWithCount(la.ctx, operator.NewBranchCondition(operator.And, condArr...),
+		&storeopt.ListOption{
+			Offset: int64((la.req.Page - 1) * la.req.Limit),
+			Limit:  int64(la.req.Limit),
+			Sort: map[string]int{
+				"start": -1,
+			},
+		})
+	if err != nil {
+		return err
+	}
+	for i := range tasks {
+		utils.HandleTaskStepData(la.ctx, tasks[i])
+		// actions.FormatTaskTime(&tasks[i])
+
+		if len(la.req.NodeIP) > 0 {
+			exist := iutils.StringContainInSlice(la.req.NodeIP, tasks[i].NodeIPList)
+			if exist {
+				la.TaskList = append(la.TaskList, tasks[i])
+			} else {
+				// 如果ip过滤不通过，总数需要减一
+				count--
+			}
+		} else {
+			la.TaskList = append(la.TaskList, tasks[i])
+		}
+	}
+	la.count = count
+
+	return nil
+}
+
+func (la *ListV2Action) setResp(code uint32, msg string) {
+	la.resp.Code = code
+	la.resp.Message = msg
+	la.resp.Result = (code == common.BcsErrClusterManagerSuccess)
+	la.resp.Data = &cmproto.ListTaskV2ResponseData{
+		Count:   uint32(la.count),
+		Results: la.TaskList,
+	}
+}
+
+// Handle list cluster credential
+func (la *ListV2Action) Handle(
+	ctx context.Context, req *cmproto.ListTaskV2Request, resp *cmproto.ListTaskV2Response) {
+	if req == nil || resp == nil {
+		blog.Errorf("list Task failed, req or resp is empty")
+		return
+	}
+	la.ctx = ctx
+	la.req = req
+	la.resp = resp
+
+	if err := req.Validate(); err != nil {
+		la.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
+		return
+	}
+	if err := la.listV2Task(); err != nil {
 		la.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
