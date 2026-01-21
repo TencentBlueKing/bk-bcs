@@ -10,22 +10,16 @@
  * limitations under the License.
  */
 
-package bcs
+// Package types pod types
+package types
 
-import (
-	"context"
-	"testing"
-
-	"github.com/stretchr/testify/assert"
-
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/config"
-	bcstesting "github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/testing"
-)
-
-func TestGetProject(t *testing.T) {
-	ctx := context.Background()
-
-	project, err := GetProject(ctx, config.G.BCS, bcstesting.GetTestProjectId())
-	assert.NoError(t, err)
-	assert.Equal(t, project.ProjectId, bcstesting.GetTestProjectId())
+// Project 项目信息
+type Project struct {
+	Name          string `json:"name"`
+	ProjectId     string `json:"projectID"`
+	Code          string `json:"projectCode"`
+	CcBizID       string `json:"businessID"`
+	Creator       string `json:"creator"`
+	Kind          string `json:"kind"`
+	RawCreateTime string `json:"createTime"`
 }
