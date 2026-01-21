@@ -24,7 +24,7 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/pkg/errors"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/component/bcs"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/component/bcs/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/component/iam"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/rest"
@@ -68,7 +68,7 @@ func ProjectAuthorization(next http.Handler) http.Handler {
 		username := restContext.Username
 
 		// check cluster
-		cls, err := bcs.GetCluster(clusterID)
+		cls, err := clustermanager.GetCluster(r.Context(), clusterID)
 		if err != nil {
 			_ = render.Render(w, r, rest.AbortWithWithForbiddenError(restContext, err))
 			return
@@ -113,7 +113,7 @@ func ClusterAuthorization(next http.Handler) http.Handler {
 		username := restContext.Username
 
 		// check cluster
-		cls, err := bcs.GetCluster(clusterID)
+		cls, err := clustermanager.GetCluster(r.Context(), clusterID)
 		if err != nil {
 			_ = render.Render(w, r, rest.AbortWithWithForbiddenError(restContext, err))
 			return

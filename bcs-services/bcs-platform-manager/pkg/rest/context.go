@@ -22,7 +22,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/golang-jwt/jwt/v4"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/component/bcs"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/types"
 )
 
 func init() {
@@ -44,8 +44,8 @@ type Context struct {
 	BindEnv       *EnvToken       `json:"bind_env"`
 	BindBCS       *UserClaimsInfo `json:"bind_bcs"`
 	BindAPIGW     *APIGWToken     `json:"bind_apigw"`
-	BindCluster   *bcs.Cluster    `json:"bind_cluster"`
-	BindProject   *bcs.Project    `json:"bind_project"`
+	BindCluster   *types.Cluster  `json:"bind_cluster"`
+	BindProject   *types.Project  `json:"bind_project"`
 }
 
 // WriteAttachment 提供附件下载能力
