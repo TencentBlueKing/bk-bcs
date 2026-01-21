@@ -180,7 +180,9 @@
     <bcs-form-item :label="$t('deploy.image.lastUpdatedBy')">
       <bk-user-display-name :user-id="data.updator"></bk-user-display-name>
     </bcs-form-item>
-    <bcs-form-item :label="$t('deploy.image.LastUpdatedAt')">{{ data.updated_at }}</bcs-form-item>
+    <bcs-form-item :label="$t('deploy.image.LastUpdatedAt')">
+      {{ data.updated_at ? formatTimeWithTimezone(data.updated_at) : '--' }}
+    </bcs-form-item>
     <bcs-form-item :label="$t('generic.label.memo')">{{ data.description || '--' }}</bcs-form-item>
   </bcs-form>
 </template>
@@ -190,6 +192,7 @@ import { computed, PropType, ref, watch } from 'vue';
 import LogLabel from './log-label.vue';
 import { IRuleData } from './use-log';
 
+import { formatTimeWithTimezone } from '@/common/util';
 import useFormLabel from '@/composables/use-form-label';
 import $i18n from '@/i18n/i18n-setup';
 
