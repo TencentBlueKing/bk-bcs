@@ -581,6 +581,9 @@ func (ua *AddNodesAction) addNodesToCluster() error {
 			if len(ua.req.Login.GetKeyPair().GetKeyPublic()) > 0 {
 				loginInfo.KeyPair.KeyPublic, _ = encrypt.Encrypt(nil, ua.req.Login.GetKeyPair().GetKeyPublic())
 			}
+			if len(ua.req.Login.GetKeyPair().GetKeyID()) > 0 {
+				loginInfo.KeyPair.KeyID = ua.req.Login.GetKeyPair().GetKeyID()
+			}
 			return loginInfo
 		}(),
 		Advance:      ua.req.GetAdvance(),
