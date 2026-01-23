@@ -15,11 +15,11 @@ package nodegroup
 import (
 	"context"
 	"fmt"
-	v1 "k8s.io/api/core/v1"
 	"sort"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	v1 "k8s.io/api/core/v1"
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
@@ -200,6 +200,7 @@ func (la *ListAction) listOpt() *storeopt.ListOption {
 }
 
 const (
+	// nolint:unused
 	nodegroupListDefaultLimit = 100
 )
 

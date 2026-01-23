@@ -119,6 +119,8 @@ type UserMgrConfig struct {
 
 	// 操作记录清理
 	Activity options.Activity
+	// 共享集群权限配置
+	SharedCluster options.SharedCluster
 }
 
 var (
