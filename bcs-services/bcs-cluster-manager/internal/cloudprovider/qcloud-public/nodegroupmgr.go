@@ -335,6 +335,9 @@ func (ng *NodeGroup) generateModifyClusterNodePoolInput(
 		req.OsName = &group.NodeTemplate.NodeOS
 	}
 
+	// 忽略更新存量的已存在的节点
+	req.IgnoreExistedNode = common.BoolPtr(true)
+
 	kubeletParas := cutils.GetKubeletParas(group.NodeTemplate)
 	if paras, ok := kubeletParas[intercommon.Kubelet]; ok {
 		if req.ExtraArgs == nil {
