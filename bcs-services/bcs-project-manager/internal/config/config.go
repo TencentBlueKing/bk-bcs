@@ -162,6 +162,13 @@ type BCSCCConfig struct {
 	UseGateway bool   `yaml:"useGateway" usage:"whether to access the bcscc through a gateway"`
 }
 
+// StorageConfig 请求Storage的服务配置
+type StorageConfig struct {
+	Host  string `yaml:"host"`
+	Token string `yaml:"token"`
+	Debug bool   `yaml:"debug"`
+}
+
 // BCSGatewayConfig BCS 网关配置
 type BCSGatewayConfig struct {
 	Host  string `yaml:"host" usage:"bcs api gateway host"`
@@ -214,6 +221,7 @@ type ProjectConfig struct {
 	TaskConfig                 TaskConfig                   `yaml:"taskConfig"`
 	SharedClusterConfig        SharedClusterConfig          `yaml:"sharedClusterConfig"`
 	SystemConfig               SystemCommonConfig           `yaml:"systemConfig"`
+	Storage                    StorageConfig                `yaml:"storage"`
 }
 
 func (conf *ProjectConfig) initServerAddress() {

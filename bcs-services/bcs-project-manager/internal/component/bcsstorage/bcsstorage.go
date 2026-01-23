@@ -21,6 +21,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
+	pm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/project"
 )
 
 var (
@@ -39,6 +40,19 @@ type GetMultiClusterResourceQuotaResponse struct {
 // QuotaInfo 定义了资源配额信息的结构体
 type QuotaInfo struct {
 	Data MultiClusterResourceQuota `json:"data"` // 多集群资源配额数据
+}
+
+// SyncProjectDataRequest sync project data to storage request
+type SyncProjectDataRequest struct {
+	Data map[string]interface{} `json:"data"`
+}
+
+// StorageResponse sync project data to storage response
+type StorageResponse struct {
+	Result  bool        `json:"result"`
+	Code    int         `json:"code"`
+	Message string      `json:"message"`
+	Data    interface{} `json:"data"`
 }
 
 // GetMultiClusterResourceQuota 根据集群ID和配额名称获取多集群资源配额信息
@@ -92,4 +106,62 @@ func GetMultiClusterResourceQuota(clusterID, name string) (*MultiClusterResource
 	}
 
 	return nil, fmt.Errorf("GetMultiClusterResourceQuota failed")
+}
+
+// SyncProjectData 同步项目数据
+func SyncProjectData(p *pm.Project) error {
+	var (
+		// 构造请求URL
+		reqURL = fmt.Sprintf("%s/bcsapi/v4/storage/projects/%s", config.GlobalConf.Storage.Host, p.ProjectID)
+
+		// 响应数据结构
+		respData = &StorageResponse{}
+	)
+
+	// 发起HTTP PUT请求同步项目数据到storage
+	_, _, errs := gorequest.New().
+		Timeout(defaultTimeOut).
+		Put(reqURL).
+		Set("Content-Type", "application/json").
+		Set("Accept", "application/json").
+		Set("Authorization", fmt.Sprintf(`Bearer %s`, config.GlobalConf.Storage.Token)).
+		Send(SyncProjectDataRequest{Data: map[string]interface{}{
+			"createTime":  p.CreateTime,
+			"creator":     p.Creator,
+			"Managers":    p.Managers,
+			"projectID":   p.ProjectID,
+			"name":        p.Name,
+			"projectCode": p.ProjectCode,
+			"useBKRes":    p.UseBKRes,
+			"description": p.Description,
+			"isOffline":   p.IsOffline,
+			"kind":        p.Kind,
+			"businessID":  p.BusinessID,
+			"isSecret":    p.IsSecret,
+			"projectType": p.ProjectType,
+			"deployType":  p.DeployType,
+			"bgID":        p.BGID,
+			"bgName":      p.BGName,
+			"deptID":      p.DeptID,
+			"deptName":    p.DeptName,
+			"centerID":    p.CenterID,
+			"centerName":  p.CenterName,
+			"labels":      p.Labels,
+			"annotations": p.Annotations,
+		}}).
+		EndStruct(&respData)
+	if len(errs) > 0 {
+		logging.Error("SyncProjectData err: %v", errs[0])
+		return errs[0]
+	}
+
+	// 检查响应结果
+	if !respData.Result {
+		logging.Error("SyncProjectData failed: %s", respData.Message)
+		return fmt.Errorf(respData.Message)
+	}
+
+	logging.Info("SyncProjectData %s successfully", reqURL)
+
+	return nil
 }
