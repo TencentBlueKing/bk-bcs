@@ -17,7 +17,6 @@ import (
 	"encoding/json"
 
 	cm "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/cmanager"
 	"github.com/stretchr/testify/mock"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -27,7 +26,7 @@ type MockCmClient struct {
 	mock.Mock
 }
 
-func NewMockCmClient() cmanager.ClusterManagerClient {
+func NewMockCmClient() *MockCmClient {
 	return &MockCmClient{}
 }
 
@@ -35,7 +34,7 @@ func (m *MockCmClient) GetClusterManagerConnWithURL() (*grpc.ClientConn, error) 
 	return nil, nil
 }
 
-func (m *MockCmClient) GetClusterManagerClient() (cm.ClusterManagerClient, error) {
+func (m *MockCmClient) GetClusterManagerClient() (*MockCm, error) {
 	return NewMockCm(), nil
 }
 
@@ -47,11 +46,8 @@ func (m *MockCmClient) GetClusterManagerConn() (*grpc.ClientConn, error) {
 	return conn, nil
 }
 
-func (m *MockCmClient) NewGrpcClientWithHeader(ctx context.Context, conn *grpc.ClientConn) *cmanager.ClusterManagerClientWithHeader {
-	return &cmanager.ClusterManagerClientWithHeader{
-		Cli: NewMockCm(),
-		Ctx: ctx,
-	}
+func (m *MockCmClient) NewGrpcClientWithHeader(ctx context.Context, conn *grpc.ClientConn) {
+	return
 }
 
 // MockCm mock cm
@@ -60,7 +56,7 @@ type MockCm struct {
 }
 
 // NewMockCm new mock cm
-func NewMockCm() cm.ClusterManagerClient {
+func NewMockCm() *MockCm {
 	mockCm := &MockCm{}
 	rawClusters := []byte("{\"code\":0,\"message\":\"success\",\"result\":true,\"data\":[{\"clusterID\":\"BCS-MESOS-10039\",\"clusterName\":\"mesos测试\",\"federationClusterID\":\"\",\"provider\":\"bluekingCloud\",\"region\":\"sz\",\"vpcID\":\"\",\"projectID\":\"ab2b254938e84f6b86b466cc22e730b1\",\"businessID\":\"100148\",\"environment\":\"stag\",\"engineType\":\"mesos\",\"isExclusive\":true,\"clusterType\":\"single\",\"labels\":{\"bellketest\":\"test\"},\"creator\":\"boweiguan\",\"createTime\":\"2021-11-23T21:59:32+08:00\",\"updateTime\":\"2021-11-23T22:06:27+08:00\",\"bcsAddons\":{},\"extraAddons\":{},\"systemID\":\"\",\"manageType\":\"INDEPENDENT_CLUSTER\",\"master\":{\"\":{\"nodeID\":\"\",\"innerIP\":\"\",\"instanceType\":\"\",\"CPU\":0,\"mem\":0,\"GPU\":0,\"status\":\"RUNNING\",\"zoneID\":\"\",\"nodeGroupID\":\"\",\"clusterID\":\"\",\"VPC\":\"\",\"region\":\"\",\"passwd\":\"\",\"zone\":0,\"deviceID\":\"\"}},\"networkSettings\":{\"clusterIPv4CIDR\":\"\",\"serviceIPv4CIDR\":\"\",\"maxNodePodNum\":0,\"maxServiceNum\":0,\"enableVPCCni\":false,\"eniSubnetIDs\":[],\"subnetSource\":null,\"isStaticIpMode\":false,\"claimExpiredSeconds\":0,\"multiClusterCIDR\":[],\"cidrStep\":0},\"clusterBasicSettings\":{\"OS\":\"Tencent tlinux release 2.2 (Final)\",\"version\":\"1.16\",\"clusterTags\":{},\"versionName\":\"BCS-MESOS-10039\"},\"clusterAdvanceSettings\":{\"IPVS\":false,\"containerRuntime\":\"\",\"runtimeVersion\":\"\",\"extraArgs\":{}},\"nodeSettings\":{\"dockerGraphPath\":\"/data/bcs/service/docker\",\"mountTarget\":\"/data\",\"unSchedulable\":1,\"labels\":{},\"extraArgs\":{}},\"status\":\"RUNNING\",\"updater\":\"boweiguan\",\"networkType\":\"overlay\",\"autoGenerateMasterNodes\":false,\"template\":[],\"extraInfo\":{},\"moduleID\":\"\",\"extraClusterID\":\"\",\"isCommonCluster\":false,\"description\":\"\",\"clusterCategory\":\"builder\",\"is_shared\":false},{\"clusterID\":\"BCS-K8S-15091\",\"clusterName\":\"先不要使用此集群\",\"federationClusterID\":\"\",\"provider\":\"bluekingCloud\",\"region\":\"sz\",\"vpcID\":\"\",\"projectID\":\"b37778ec757544868a01e1f01f07037f\",\"businessID\":\"100248\",\"environment\":\"stag\",\"engineType\":\"k8s\",\"isExclusive\":true,\"clusterType\":\"single\",\"labels\":{},\"creator\":\"bellkeyang\",\"createTime\":\"2019-10-15T15:48:19+08:00\",\"updateTime\":\"2022-03-02T12:05:57+08:00\",\"bcsAddons\":{},\"extraAddons\":{},\"systemID\":\"\",\"manageType\":\"INDEPENDENT_CLUSTER\",\"master\":{\"\":{\"nodeID\":\"\",\"innerIP\":\"\",\"instanceType\":\"\",\"CPU\":0,\"mem\":0,\"GPU\":0,\"status\":\"RUNNING\",\"zoneID\":\"\",\"nodeGroupID\":\"\",\"clusterID\":\"\",\"VPC\":\"\",\"region\":\"\",\"passwd\":\"\",\"zone\":0,\"deviceID\":\"\"}},\"networkSettings\":{\"clusterIPv4CIDR\":\"\",\"serviceIPv4CIDR\":\"\",\"maxNodePodNum\":0,\"maxServiceNum\":0,\"enableVPCCni\":false,\"eniSubnetIDs\":[],\"subnetSource\":null,\"isStaticIpMode\":false,\"claimExpiredSeconds\":0,\"multiClusterCIDR\":[],\"cidrStep\":0},\"clusterBasicSettings\":{\"OS\":\"Tencent tlinux release 2.2 (Final)\",\"version\":\"1.16\",\"clusterTags\":{},\"versionName\":\"BCS-K8S-15091\"},\"clusterAdvanceSettings\":{\"IPVS\":false,\"containerRuntime\":\"\",\"runtimeVersion\":\"\",\"extraArgs\":{}},\"nodeSettings\":{\"dockerGraphPath\":\"/data/bcs/service/docker\",\"mountTarget\":\"/data\",\"unSchedulable\":1,\"labels\":{},\"extraArgs\":{}},\"status\":\"RUNNING\",\"updater\":\"bellkeyang\",\"networkType\":\"overlay\",\"autoGenerateMasterNodes\":false,\"template\":[],\"extraInfo\":{},\"moduleID\":\"\",\"extraClusterID\":\"\",\"isCommonCluster\":false,\"description\":\"自动化测试信息\",\"clusterCategory\":\"builder\",\"is_shared\":false}],\"clusterPerm\":{\"BCS-K8S-15171\":{\"policy\":{\"cluster_create\":false,\"cluster_delete\":false,\"cluster_manage\":false,\"cluster_use\":true,\"cluster_view\":true,\"create\":false,\"delete\":false,\"deploy\":false,\"download\":false,\"edit\":false,\"use\":true,\"view\":true}}},\"clusterExtraInfo\":{\"BCS-K8S-15091\":{\"canDeleted\":false,\"providerType\":\"k8s\"},\"BCS-MESOS-10039\":{\"canDeleted\":true,\"providerType\":\"k8s\"}},\"permissions\":{},\"web_annotations\":null}")
 	clusterListRsp := &cm.ListClusterResp{}
@@ -191,108 +187,6 @@ func (m *MockCm) InitFederationCluster(ctx context.Context, in *cm.InitFederatio
 // AddFederatedCluster mock cm
 func (m *MockCm) AddFederatedCluster(ctx context.Context, in *cm.AddFederatedClusterReq,
 	opts ...grpc.CallOption) (*cm.AddFederatedClusterResp, error) {
-	return nil, nil
-}
-
-// * namespace management *
-
-// CreateNamespace mock cm
-func (m *MockCm) CreateNamespace(ctx context.Context, in *cm.CreateNamespaceReq,
-	opts ...grpc.CallOption) (*cm.CreateNamespaceResp, error) {
-	return nil, nil
-}
-
-// UpdateNamespace mock cm
-func (m *MockCm) UpdateNamespace(ctx context.Context, in *cm.UpdateNamespaceReq,
-	opts ...grpc.CallOption) (*cm.UpdateNamespaceResp, error) {
-	return nil, nil
-}
-
-// DeleteNamespace mock cm
-func (m *MockCm) DeleteNamespace(ctx context.Context, in *cm.DeleteNamespaceReq,
-	opts ...grpc.CallOption) (*cm.DeleteNamespaceResp, error) {
-	return nil, nil
-}
-
-// GetNamespace mock cm
-func (m *MockCm) GetNamespace(ctx context.Context, in *cm.GetNamespaceReq,
-	opts ...grpc.CallOption) (*cm.GetNamespaceResp, error) {
-	return nil, nil
-}
-
-// ListNamespace mock cm
-func (m *MockCm) ListNamespace(ctx context.Context, in *cm.ListNamespaceReq,
-	opts ...grpc.CallOption) (*cm.ListNamespaceResp, error) {
-	return nil, nil
-}
-
-// * NamespaceQuota management *
-
-// CreateNamespaceQuota mock cm
-func (m *MockCm) CreateNamespaceQuota(ctx context.Context, in *cm.CreateNamespaceQuotaReq,
-	opts ...grpc.CallOption) (*cm.CreateNamespaceQuotaResp, error) {
-	return nil, nil
-}
-
-// UpdateNamespaceQuota mock cm
-func (m *MockCm) UpdateNamespaceQuota(ctx context.Context, in *cm.UpdateNamespaceQuotaReq,
-	opts ...grpc.CallOption) (*cm.UpdateNamespaceQuotaResp, error) {
-	return nil, nil
-}
-
-// DeleteNamespaceQuota mock cm
-func (m *MockCm) DeleteNamespaceQuota(ctx context.Context, in *cm.DeleteNamespaceQuotaReq,
-	opts ...grpc.CallOption) (*cm.DeleteNamespaceQuotaResp, error) {
-	return nil, nil
-}
-
-// GetNamespaceQuota mock cm
-func (m *MockCm) GetNamespaceQuota(ctx context.Context, in *cm.GetNamespaceQuotaReq,
-	opts ...grpc.CallOption) (*cm.GetNamespaceQuotaResp, error) {
-	return nil, nil
-}
-
-// ListNamespaceQuota mock cm
-func (m *MockCm) ListNamespaceQuota(ctx context.Context, in *cm.ListNamespaceQuotaReq,
-	opts ...grpc.CallOption) (*cm.ListNamespaceQuotaResp, error) {
-	return nil, nil
-}
-
-// CreateNamespaceWithQuota mock cm
-func (m *MockCm) CreateNamespaceWithQuota(ctx context.Context, in *cm.CreateNamespaceWithQuotaReq,
-	opts ...grpc.CallOption) (*cm.CreateNamespaceWithQuotaResp, error) {
-	return nil, nil
-}
-
-// * project information management *
-
-// CreateProject mock cm
-func (m *MockCm) CreateProject(ctx context.Context, in *cm.CreateProjectRequest,
-	opts ...grpc.CallOption) (*cm.CreateProjectResponse, error) {
-	return nil, nil
-}
-
-// UpdateProject mock cm
-func (m *MockCm) UpdateProject(ctx context.Context, in *cm.UpdateProjectRequest,
-	opts ...grpc.CallOption) (*cm.UpdateProjectResponse, error) {
-	return nil, nil
-}
-
-// DeleteProject mock cm
-func (m *MockCm) DeleteProject(ctx context.Context, in *cm.DeleteProjectRequest,
-	opts ...grpc.CallOption) (*cm.DeleteProjectResponse, error) {
-	return nil, nil
-}
-
-// GetProject mock cm
-func (m *MockCm) GetProject(ctx context.Context, in *cm.GetProjectRequest,
-	opts ...grpc.CallOption) (*cm.GetProjectResponse, error) {
-	return nil, nil
-}
-
-// ListProject mock cm
-func (m *MockCm) ListProject(ctx context.Context, in *cm.ListProjectRequest,
-	opts ...grpc.CallOption) (*cm.ListProjectResponse, error) {
 	return nil, nil
 }
 
