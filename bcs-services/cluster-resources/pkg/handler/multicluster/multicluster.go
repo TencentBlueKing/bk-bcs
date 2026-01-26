@@ -86,6 +86,11 @@ func (h *Handler) FetchMultiClusterResource(ctx context.Context, req *clusterRes
 		query = NewStorageQuery(clusterNS, filter, viewQueryToQueryFilter(view.Filter))
 	}
 
+	// 单集群pod列表默认从bcs-storage中获取
+	if !config.G.MultiCluster.SingleClusterPodsFromK8s && req.GetKind() == constants.Po && len(clusterNS) == 1 {
+		query = NewStorageQuery(clusterNS, filter, viewQueryToQueryFilter(view.Filter))
+	}
+
 	var data map[string]interface{}
 	data, err = query.Fetch(ctx, "", req.GetKind())
 	if err != nil {
