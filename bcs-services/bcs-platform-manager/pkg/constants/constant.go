@@ -17,7 +17,7 @@ const (
 	// ClusterManagerServiceName cluster manager service name
 	ClusterManagerServiceName = "clustermanager.bkbcs.tencent.com"
 	// ProjectManagerServiceName project manager service name
-	ProjectManagerServiceName = "projectmanager.bkbcs.tencent.com"
+	ProjectManagerServiceName = "project.bkbcs.tencent.com"
 	// ServiceDomain domain name for service
 	ServiceDomain = "platformmanager.bkbcs.tencent.com"
 )
