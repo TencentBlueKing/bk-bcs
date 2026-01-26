@@ -259,23 +259,13 @@ func (s *SyncNamespaceQuotaController) buildSubClusterTask(nsName, subClusterID 
 	// 判断managedCluster对象的labels的标识
 	switch managedClusterLabels[cluster.ManagedClusterTypeLabel] {
 	case cluster.SubClusterForTaiji:
-		t, err = fedtasks.NewSyncTjNamespaceQuotaTask(&fedtasks.SyncTjNamespaceQuotaOptions{
-			HostClusterID: s.hostClusterID,
-			Namespace:     nsName,
-		}).BuildTask("admin")
-		if err != nil {
-			blog.Errorf("build task failed, task: %v, err: %s", t, err.Error())
-			return "", err
-		}
+		// 目前taiji方接口有变动，暂时忽略
+		blog.Infof("buildSubClusterTask for taiji, hostClusterID [%s], subClusterID [%s], namespace [%s]",
+			s.hostClusterID, subClusterID, nsName)
 	case cluster.SubClusterForSuanli:
-		t, err = fedtasks.NewSyncSlNamespaceQuotaTask(&fedtasks.SyncSlNamespaceQuotaOptions{
-			HostClusterID: s.hostClusterID,
-			Namespace:     nsName,
-		}).BuildTask("admin")
-		if err != nil {
-			blog.Errorf("build task failed, task: %v, err: %s", t, err.Error())
-			return "", err
-		}
+		// 目前suanli方接口有变动，暂时忽略
+		blog.Infof("buildSubClusterTask for suanli, hostClusterID [%s], subClusterID [%s], namespace [%s]",
+			s.hostClusterID, subClusterID, nsName)
 	case cluster.SubClusterForHunbu:
 		bytes, berr := json.Marshal(managedClusterLabels)
 		if berr != nil {
