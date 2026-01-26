@@ -25,14 +25,17 @@ type StorageClient interface {
 	// **** Alarm(告警) ****
 	PostAlarm(ctx context.Context, in *PostAlarmRequest, opts ...grpc.CallOption) (*PostAlarmResponse, error)
 	ListAlarm(ctx context.Context, in *ListAlarmRequest, opts ...grpc.CallOption) (*ListAlarmResponse, error)
+	// ****  项目集群数据 ****
+	PutProjectInfo(ctx context.Context, in *PutProjectInfoRequest, opts ...grpc.CallOption) (*PutProjectInfoResponse, error)
+	PutClusterInfo(ctx context.Context, in *PutClusterInfoRequest, opts ...grpc.CallOption) (*PutClusterInfoResponse, error)
+	DeleteClusterInfo(ctx context.Context, in *DeleteClusterInfoRequest, opts ...grpc.CallOption) (*PutClusterInfoResponse, error)
 	// ****  Cluster Config(集群配置) ****
 	GetClusterConfig(ctx context.Context, in *GetClusterConfigRequest, opts ...grpc.CallOption) (*GetClusterConfigResponse, error)
 	PutClusterConfig(ctx context.Context, in *PutClusterConfigRequest, opts ...grpc.CallOption) (*PutClusterConfigResponse, error)
 	GetServiceConfig(ctx context.Context, in *GetServiceConfigRequest, opts ...grpc.CallOption) (*GetServiceConfigResponse, error)
 	GetStableVersion(ctx context.Context, in *GetStableVersionRequest, opts ...grpc.CallOption) (*GetStableVersionResponse, error)
 	PutStableVersion(ctx context.Context, in *PutStableVersionRequest, opts ...grpc.CallOption) (*PutStableVersionResponse, error)
-	//
-	//k8s namespace resources
+	// k8s namespace resources
 	GetK8SNamespaceResources(ctx context.Context, in *GetNamespaceResourcesRequest, opts ...grpc.CallOption) (*GetNamespaceResourcesResponse, error)
 	PutK8SNamespaceResources(ctx context.Context, in *PutNamespaceResourcesRequest, opts ...grpc.CallOption) (*PutNamespaceResourcesResponse, error)
 	DeleteK8SNamespaceResources(ctx context.Context, in *DeleteNamespaceResourcesRequest, opts ...grpc.CallOption) (*DeleteNamespaceResourcesResponse, error)
@@ -106,7 +109,7 @@ type StorageClient interface {
 	ListMetricTables(ctx context.Context, in *ListMetricTablesRequest, opts ...grpc.CallOption) (*ListMetricTablesResponse, error)
 	// **** metric watch ****
 	WatchMetric(ctx context.Context, in *WatchMetricRequest, opts ...grpc.CallOption) (Storage_WatchMetricClient, error)
-	//**** watch k8s ****
+	// **** watch k8s ****
 	// k8s
 	K8SGetWatchResource(ctx context.Context, in *K8SGetWatchResourceRequest, opts ...grpc.CallOption) (*K8SGetWatchResourceResponse, error)
 	K8SPutWatchResource(ctx context.Context, in *K8SPutWatchResourceRequest, opts ...grpc.CallOption) (*K8SPutWatchResourceResponse, error)
@@ -134,6 +137,33 @@ func (c *storageClient) PostAlarm(ctx context.Context, in *PostAlarmRequest, opt
 func (c *storageClient) ListAlarm(ctx context.Context, in *ListAlarmRequest, opts ...grpc.CallOption) (*ListAlarmResponse, error) {
 	out := new(ListAlarmResponse)
 	err := c.cc.Invoke(ctx, "/storage.Storage/ListAlarm", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *storageClient) PutProjectInfo(ctx context.Context, in *PutProjectInfoRequest, opts ...grpc.CallOption) (*PutProjectInfoResponse, error) {
+	out := new(PutProjectInfoResponse)
+	err := c.cc.Invoke(ctx, "/storage.Storage/PutProjectInfo", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *storageClient) PutClusterInfo(ctx context.Context, in *PutClusterInfoRequest, opts ...grpc.CallOption) (*PutClusterInfoResponse, error) {
+	out := new(PutClusterInfoResponse)
+	err := c.cc.Invoke(ctx, "/storage.Storage/PutClusterInfo", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *storageClient) DeleteClusterInfo(ctx context.Context, in *DeleteClusterInfoRequest, opts ...grpc.CallOption) (*PutClusterInfoResponse, error) {
+	out := new(PutClusterInfoResponse)
+	err := c.cc.Invoke(ctx, "/storage.Storage/DeleteClusterInfo", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -896,14 +926,17 @@ type StorageServer interface {
 	// **** Alarm(告警) ****
 	PostAlarm(context.Context, *PostAlarmRequest) (*PostAlarmResponse, error)
 	ListAlarm(context.Context, *ListAlarmRequest) (*ListAlarmResponse, error)
+	// ****  项目集群数据 ****
+	PutProjectInfo(context.Context, *PutProjectInfoRequest) (*PutProjectInfoResponse, error)
+	PutClusterInfo(context.Context, *PutClusterInfoRequest) (*PutClusterInfoResponse, error)
+	DeleteClusterInfo(context.Context, *DeleteClusterInfoRequest) (*PutClusterInfoResponse, error)
 	// ****  Cluster Config(集群配置) ****
 	GetClusterConfig(context.Context, *GetClusterConfigRequest) (*GetClusterConfigResponse, error)
 	PutClusterConfig(context.Context, *PutClusterConfigRequest) (*PutClusterConfigResponse, error)
 	GetServiceConfig(context.Context, *GetServiceConfigRequest) (*GetServiceConfigResponse, error)
 	GetStableVersion(context.Context, *GetStableVersionRequest) (*GetStableVersionResponse, error)
 	PutStableVersion(context.Context, *PutStableVersionRequest) (*PutStableVersionResponse, error)
-	//
-	//k8s namespace resources
+	// k8s namespace resources
 	GetK8SNamespaceResources(context.Context, *GetNamespaceResourcesRequest) (*GetNamespaceResourcesResponse, error)
 	PutK8SNamespaceResources(context.Context, *PutNamespaceResourcesRequest) (*PutNamespaceResourcesResponse, error)
 	DeleteK8SNamespaceResources(context.Context, *DeleteNamespaceResourcesRequest) (*DeleteNamespaceResourcesResponse, error)
@@ -977,7 +1010,7 @@ type StorageServer interface {
 	ListMetricTables(context.Context, *ListMetricTablesRequest) (*ListMetricTablesResponse, error)
 	// **** metric watch ****
 	WatchMetric(*WatchMetricRequest, Storage_WatchMetricServer) error
-	//**** watch k8s ****
+	// **** watch k8s ****
 	// k8s
 	K8SGetWatchResource(context.Context, *K8SGetWatchResourceRequest) (*K8SGetWatchResourceResponse, error)
 	K8SPutWatchResource(context.Context, *K8SPutWatchResourceRequest) (*K8SPutWatchResourceResponse, error)
@@ -995,6 +1028,15 @@ func (UnimplementedStorageServer) PostAlarm(context.Context, *PostAlarmRequest) 
 }
 func (UnimplementedStorageServer) ListAlarm(context.Context, *ListAlarmRequest) (*ListAlarmResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListAlarm not implemented")
+}
+func (UnimplementedStorageServer) PutProjectInfo(context.Context, *PutProjectInfoRequest) (*PutProjectInfoResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PutProjectInfo not implemented")
+}
+func (UnimplementedStorageServer) PutClusterInfo(context.Context, *PutClusterInfoRequest) (*PutClusterInfoResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PutClusterInfo not implemented")
+}
+func (UnimplementedStorageServer) DeleteClusterInfo(context.Context, *DeleteClusterInfoRequest) (*PutClusterInfoResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteClusterInfo not implemented")
 }
 func (UnimplementedStorageServer) GetClusterConfig(context.Context, *GetClusterConfigRequest) (*GetClusterConfigResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetClusterConfig not implemented")
@@ -1260,6 +1302,60 @@ func _Storage_ListAlarm_Handler(srv interface{}, ctx context.Context, dec func(i
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(StorageServer).ListAlarm(ctx, req.(*ListAlarmRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Storage_PutProjectInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PutProjectInfoRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(StorageServer).PutProjectInfo(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/storage.Storage/PutProjectInfo",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(StorageServer).PutProjectInfo(ctx, req.(*PutProjectInfoRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Storage_PutClusterInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PutClusterInfoRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(StorageServer).PutClusterInfo(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/storage.Storage/PutClusterInfo",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(StorageServer).PutClusterInfo(ctx, req.(*PutClusterInfoRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Storage_DeleteClusterInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteClusterInfoRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(StorageServer).DeleteClusterInfo(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/storage.Storage/DeleteClusterInfo",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(StorageServer).DeleteClusterInfo(ctx, req.(*DeleteClusterInfoRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -2604,6 +2700,18 @@ var Storage_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListAlarm",
 			Handler:    _Storage_ListAlarm_Handler,
+		},
+		{
+			MethodName: "PutProjectInfo",
+			Handler:    _Storage_PutProjectInfo_Handler,
+		},
+		{
+			MethodName: "PutClusterInfo",
+			Handler:    _Storage_PutClusterInfo_Handler,
+		},
+		{
+			MethodName: "DeleteClusterInfo",
+			Handler:    _Storage_DeleteClusterInfo_Handler,
 		},
 		{
 			MethodName: "GetClusterConfig",

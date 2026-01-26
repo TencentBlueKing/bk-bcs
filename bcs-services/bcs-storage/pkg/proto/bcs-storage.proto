@@ -54,6 +54,38 @@ service Storage{
       summary : "查询告警数据"
     };
   }
+  // ****  项目集群数据 ****
+  rpc PutProjectInfo(PutProjectInfoRequest) returns(PutProjectInfoResponse){
+    option (google.api.http) = {
+      put: "/bcsstorage/v2/projects/{projectID}"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "订阅项目信息"
+      summary : "订阅项目信息"
+    };
+  }
+
+  rpc PutClusterInfo(PutClusterInfoRequest) returns(PutClusterInfoResponse){
+    option (google.api.http) = {
+      put: "/bcsstorage/v2/clusters/{clusterID}"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "订阅集群信息"
+      summary : "订阅集群信息"
+    };
+  }
+
+  rpc DeleteClusterInfo(DeleteClusterInfoRequest) returns(PutClusterInfoResponse){
+    option (google.api.http) = {
+      delete: "/bcsstorage/v2/clusters/{clusterID}"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "删除集群信息"
+      summary : "删除集群信息"
+    };
+  }
 
   // ****  Cluster Config(集群配置) ****
   rpc GetClusterConfig(GetClusterConfigRequest) returns(GetClusterConfigResponse){
@@ -1053,6 +1085,129 @@ message ClusterConfig {
     title : "service",
     description : "服务"
   }];
+}
+
+message PutProjectInfoRequest{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "PutProjectInfoRequest"
+      description : "创建项目信息请求"
+      required: [
+        "projectID"
+      ]
+    }
+  };
+
+  string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "projectID",
+    description : "项目ID"
+  },
+    (validate.rules).string = {pattern: "^[0-9a-f]{32}$"}
+  ];
+  google.protobuf.Struct data = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description: "数据"
+  }];
+}
+
+message PutProjectInfoResponse {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "PutProjectInfoResponse"
+      description : "创建项目响应"
+      required: [
+        "code",
+        "message",
+        "data"
+      ]
+    }
+  };
+
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message",
+    description : "返回错误信息"
+  }];
+
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+}
+
+message PutClusterInfoRequest{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "PutClusterInfoRequest"
+      description : "创建项目信息请求"
+      required: [
+        "clusterID"
+      ]
+    }
+  };
+
+  string clusterID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "clusterID",
+    description: "集群ID"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+  google.protobuf.Struct data = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description: "数据"
+  }];
+}
+
+message PutClusterInfoResponse {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "PutClusterInfoResponse"
+      description : "创建项目响应"
+      required: [
+        "code",
+        "message",
+        "data"
+      ]
+    }
+  };
+
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message",
+    description : "返回错误信息"
+  }];
+
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+}
+
+message DeleteClusterInfoRequest{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "DeleteClusterInfoRequest"
+      description : "删除集群信息"
+      required: [
+        "clusterID"
+      ]
+    }
+  };
+
+  string clusterID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "clusterID",
+    description: "集群ID"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
 }
 
 message GetClusterConfigRequest{

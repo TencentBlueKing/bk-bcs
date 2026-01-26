@@ -34,6 +34,10 @@ const (
 	TypeTag = "type"
 	// ClusterIDTag clusterId
 	ClusterIDTag = "clusterId"
+	// ClusterIDUpperTag clusterID
+	ClusterIDUpperTag = "clusterID"
+	// ProjectIDTag projectID
+	ProjectIDTag = "projectID"
 	// NamespaceTag namespace
 	NamespaceTag = "namespace"
 	// MessageTag message
