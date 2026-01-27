@@ -6275,8 +6275,8 @@
     },
     "/clustermanager/v1/projects/{projectID}/providers/{providerID}/autoscaler/resource_usage": {
       "get": {
-        "summary": "获取项目维度用户CA资源使用情况",
-        "description": "获取项目维度集群节点池的CA资源使用情况",
+        "summary": "获取项目维度用户资源使用情况",
+        "description": "获取项目维度集群节点池的资源使用情况",
         "operationId": "ClusterManager_GetProjectResourceQuotaUsage",
         "responses": {
           "200": {
@@ -6305,6 +6305,13 @@
             "description": "资源供应provider，目前支持 selfProvisionCloud/tencentCloud",
             "in": "path",
             "required": true,
+            "type": "string"
+          },
+          {
+            "name": "resourcePoolType",
+            "description": "resourcePoolType. 资源供应provider，目前支持 yunti/self， 默认为 yunti",
+            "in": "query",
+            "required": false,
             "type": "string"
           }
         ],

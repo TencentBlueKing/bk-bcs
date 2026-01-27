@@ -1196,3 +1196,48 @@ func buildCVMConsumeDeviceDesireReq(desiredNodes uint32, req *resource.ApplyInst
 		Operator:         &req.Operator,
 	}, nil
 }
+
+// ListSelfRegionZonePools 获取Self类型的资源池信息
+func (rm *ResManClient) ListSelfRegionZonePools(ctx context.Context, provider string, region, insType string) (
+	map[string]*resource.DevicePoolInfo, error) {
+	if rm == nil {
+		return nil, ErrNotInited
+	}
+
+	pools, err := rm.listDevicePools(ctx, provider, region, insType)
+	if err != nil {
+		return nil, err
+	}
+	blog.Infof("GetProjectSelfResourceQuota ListSelfRegionZonePools[%s:%s:%s] pools: %v", provider, region, insType, pools)
+	var (
+		zonePool = make(map[string]*resource.DevicePoolInfo, 0)
+	)
+
+	for _, pool := range pools {
+		poolUsage := getDevicePoolUsage(pool)
+
+		// 尝试获取资源池可用区
+		zone := pool.GetBaseConfig().GetZone().GetZone()
+		// Zone 为空，自建节点池未设置可用区
+		if zone == "" {
+			zone = ""
+		}
+
+		zonePool[pool.GetBaseConfig().Zone.GetZone()] = &resource.DevicePoolInfo{
+			PoolId:       *pool.Id,
+			PoolName:     *pool.Name,
+			Region:       pool.GetBaseConfig().GetZone().GetRegion(),
+			Zone:         pool.GetBaseConfig().GetZone().GetZone(),
+			InstanceType: pool.GetBaseConfig().GetInstanceType(),
+			Total:        poolUsage.Total,
+			Used:         poolUsage.Used,
+			Available:    poolUsage.Available,
+			Status:       pool.GetStatus(),
+
+			OversoldTotal:     poolUsage.OversoldTotal,
+			OversoldAvailable: poolUsage.OversoldAvailable,
+		}
+	}
+
+	return zonePool, nil
+}

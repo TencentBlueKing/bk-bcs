@@ -876,8 +876,8 @@ service ClusterManager {
       get : "/clustermanager/v1/projects/{projectID}/providers/{providerID}/autoscaler/resource_usage"
     };
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-      description : "获取项目维度集群节点池的CA资源使用情况"
-      summary : "获取项目维度用户CA资源使用情况"
+      description : "获取项目维度集群节点池的资源使用情况"
+      summary : "获取项目维度用户资源使用情况"
     };
   }
 
@@ -15545,7 +15545,7 @@ message GetProjectResourceQuotaUsageRequest {
   option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
     json_schema : {
       title : "GetProjectResourceQuotaUsageRequest"
-      description : "获取项目维度不同云用户CA资源的使用情况",
+      description : "获取项目维度不同云用户资源的使用情况",
       required: ["projectID", "providerID"]
     }
   };
@@ -15557,6 +15557,10 @@ message GetProjectResourceQuotaUsageRequest {
   string providerID = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "providerID",
     description: "资源供应provider，目前支持 selfProvisionCloud/tencentCloud"
+  }];
+  string resourcePoolType = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "resourcePoolType",
+    description: "资源供应provider，目前支持 yunti/self， 默认为 yunti"
   }];
 }
 
@@ -15619,6 +15623,10 @@ message ProjectAutoscalerQuota {
   repeated string totalGroupIds = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "totalGroupIds",
     description : "机型在某个可用区的总额度的节点池"
+  }];
+  string quotaID = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "quotaID",
+    description : "额度ID"
   }];
 }
 

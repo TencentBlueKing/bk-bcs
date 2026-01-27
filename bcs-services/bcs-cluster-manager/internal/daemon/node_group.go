@@ -226,3 +226,25 @@ func AllocateZoneResource(group, region, insType string, groupZones []string, re
 
 	return zoneResource
 }
+
+// GetGroupCurNodes 获取当前节点池节点分布情况
+func GetGroupCurNodes(model store.ClusterManagerModel, groupId string) (map[string]int, error) {
+	// 获取节点池已分配的节点数
+	curZoneNodes := make(map[string]int, 0)
+
+	// 已分配的节点数目
+	_, nodes, errLocal := GetNodeGroupAndNodes(model, groupId)
+	if errLocal != nil {
+		return nil, errLocal
+	}
+	for _, n := range nodes {
+		_, ok := curZoneNodes[n.GetZoneID()]
+		if ok {
+			curZoneNodes[n.GetZoneID()]++
+		} else {
+			curZoneNodes[n.GetZoneID()] = 1
+		}
+	}
+
+	return curZoneNodes, nil
+}

@@ -374,11 +374,13 @@ func (ng *NodeGroup) SwitchAutoScalingOptionStatus(scalingOption *proto.ClusterA
 	return task, nil
 }
 
-// GetProjectCaResourceQuota get project ca resource quota
-func (ng *NodeGroup) GetProjectCaResourceQuota(groups []*proto.NodeGroup, // nolint
+// GetProjectResourceQuota get project resource quota
+func (ng *NodeGroup) GetProjectResourceQuota(groups []*proto.NodeGroup, resourcePoolType string, // nolint
 	opt *cloudprovider.CommonOption) ([]*proto.ProjectAutoscalerQuota, error) {
 
-	// 仅统计CA云梯资源 & 获取项目下所有节点池的资源使用情况 & 资源quota情况
+	if resourcePoolType == "" {
+		resourcePoolType = resource.YunTiPool
+	}
 
 	filterGroups := make([]*proto.NodeGroup, 0)
 	// filter yunti ca nodeGroup
@@ -387,10 +389,10 @@ func (ng *NodeGroup) GetProjectCaResourceQuota(groups []*proto.NodeGroup, // nol
 			continue
 		}
 
+		// 跳过资源不正确的节点池
 		if groups[i].GetExtraInfo() != nil {
 			rt, ok := groups[i].ExtraInfo[resource.ResourcePoolType]
-			if ok &&
-				utils.StringContainInSlice(rt, []string{resource.SelfPool, resource.CrPool}) {
+			if ok && rt != resourcePoolType {
 				continue
 			}
 		}
@@ -402,6 +404,20 @@ func (ng *NodeGroup) GetProjectCaResourceQuota(groups []*proto.NodeGroup, // nol
 		filterGroups = append(filterGroups, groups[i])
 	}
 
+	switch resourcePoolType {
+	case resource.YunTiPool:
+		return getProjectCaResourceQuota(filterGroups)
+	case resource.SelfPool:
+		return getProjectSelfResourceQuota(filterGroups)
+	case resource.CrPool:
+		return make([]*proto.ProjectAutoscalerQuota, 0), nil
+	default:
+		return nil, fmt.Errorf("GetProjectResourceQuota resourcePoolType %s not supported", resourcePoolType)
+	}
+}
+
+func getProjectCaResourceQuota(filterGroups []*proto.NodeGroup) ([]*proto.ProjectAutoscalerQuota, error) {
+	// 仅统计CA云梯资源 & 获取项目下所有节点池的资源使用情况 & 资源quota情况
 	var (
 		lock         = sync.Mutex{}
 		insZoneQuota = make(map[string]map[string]*proto.ProjectAutoscalerQuota, 0)
@@ -915,4 +931,93 @@ func (ng *NodeGroup) getProjectRegionDevicePoolDetail(projectId, region string, 
 	}
 
 	return pools, nil
+}
+
+// getProjectSelfResourceQuota get project self resource quota
+func getProjectSelfResourceQuota(groups []*proto.NodeGroup) ([]*proto.ProjectAutoscalerQuota, error) {
+	var filterGroups []*proto.NodeGroup
+	for i := range groups {
+		// 跳过非额度的自建类型节点池
+		rpID, ok := getNodeGroupDevicePoolID(groups[i])
+		if ok && !strings.Contains(rpID, resource.BcsProjectQuotaIDPrefix) {
+			continue
+		}
+		filterGroups = append(filterGroups, groups[i])
+	}
+
+	blog.Infof("getProjectSelfResourceQuota filterGroups %s", filterGroups)
+
+	var (
+		// key:quotaID value:map[zoneID]ProjectAutoscalerQuota
+		idZoneQuota = make(map[string]map[string]*proto.ProjectAutoscalerQuota, 0)
+		lock        = sync.Mutex{}
+	)
+
+	barrier := utils.NewRoutinePool(20)
+	defer barrier.Close()
+
+	for i := range filterGroups {
+		barrier.Add(1)
+
+		go func(group *proto.NodeGroup) {
+			defer barrier.Done()
+
+			zoneCur, err := daemon.GetGroupCurNodes(cloudprovider.GetStorageModel(),
+				group.GetNodeGroupID())
+			if err != nil {
+				blog.Errorf("GetProjectSelfResourceQuota[%s:%s] failed: %v", group.GetProjectID(), group.GetNodeGroupID(), err)
+				return
+			}
+
+			blog.Infof("getProjectSelfResourceQuota GetGroupCurNodes zoneCur %s", zoneCur)
+			quotaID, ok := getNodeGroupDevicePoolID(group)
+			if !ok {
+				blog.Errorf("GetProjectSelfResourceQuota group[%s:%s] not find devicePoolIds: %v", group.GetProjectID(), group.GetNodeGroupID())
+				return
+			}
+
+			lock.Lock()
+
+			if idZoneQuota[quotaID] == nil {
+				idZoneQuota[quotaID] = make(map[string]*proto.ProjectAutoscalerQuota)
+			}
+
+			for zone, usedNum := range zoneCur {
+				quota, ok := idZoneQuota[quotaID][zone]
+				if !ok {
+					quota = &proto.ProjectAutoscalerQuota{
+						Region:       group.GetRegion(),
+						InstanceType: group.GetLaunchTemplate().GetInstanceType(),
+						Used:         uint32(usedNum),
+						GroupIds:     []string{group.GetNodeGroupID()},
+						Zone:         zone,
+						QuotaID:      quotaID,
+					}
+					idZoneQuota[quotaID][zone] = quota
+				} else {
+					quota.Used += uint32(usedNum)
+				}
+			}
+			lock.Unlock()
+		}(filterGroups[i])
+	}
+	barrier.Wait()
+
+	projectQuotas := make([]*proto.ProjectAutoscalerQuota, 0)
+	for _, zoneQuota := range idZoneQuota {
+		for _, quota := range zoneQuota {
+			projectQuotas = append(projectQuotas, quota)
+		}
+	}
+
+	for _, projectQuota := range projectQuotas {
+		matchProjectAutoscalerQuotaByGroup(filterGroups, projectQuota)
+	}
+
+	return projectQuotas, nil
+}
+
+func getNodeGroupDevicePoolID(group *proto.NodeGroup) (string, bool) {
+	rpID, ok := group.GetExtraInfo()[resource.DevicePoolIds]
+	return rpID, ok
 }

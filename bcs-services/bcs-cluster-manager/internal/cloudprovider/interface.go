@@ -422,8 +422,9 @@ type NodeGroupManager interface {
 	// GetExternalNodeScript get external node script from cluster nodeGroup
 	GetExternalNodeScript(group *proto.NodeGroup, internal bool) (string, error)
 
-	// GetProjectCaResourceQuota get project autoscaler quota
-	GetProjectCaResourceQuota(groups []*proto.NodeGroup, opt *CommonOption) ([]*proto.ProjectAutoscalerQuota, error)
+	// GetProjectResourceQuota get project autoscaler quota
+	GetProjectResourceQuota(groups []*proto.NodeGroup, resourcePoolType string,
+		opt *CommonOption) ([]*proto.ProjectAutoscalerQuota, error)
 }
 
 // VPCManager cloud interface for vpc management

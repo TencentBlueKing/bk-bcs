@@ -69256,6 +69256,8 @@ func (m *GetProjectResourceQuotaUsageRequest) validate(all bool) error {
 
 	// no validation rules for ProviderID
 
+	// no validation rules for ResourcePoolType
+
 	if len(errors) > 0 {
 		return GetProjectResourceQuotaUsageRequestMultiError(errors)
 	}
@@ -69538,6 +69540,8 @@ func (m *ProjectAutoscalerQuota) validate(all bool) error {
 	// no validation rules for Total
 
 	// no validation rules for Used
+
+	// no validation rules for QuotaID
 
 	if len(errors) > 0 {
 		return ProjectAutoscalerQuotaMultiError(errors)
