@@ -1,0 +1,24 @@
+global:
+    trafficPolicy:
+        connectionPool: {}
+        loadBalancer:
+            simple: RANDOM
+            localityLbSetting:
+                enabled: true
+                failover:
+                    - from: sh
+                      to: nj
+    setting:
+        mergeMode: merge
+        deletePolicyOnServiceDelete: true
+        updateUnmanagedResources: true
+services:
+    - name: my-svc
+      namespace: bcs-system
+      trafficPolicy:
+          loadBalancer:
+              simple: RANDOM
+      setting:
+          mergeMode: override
+          deletePolicyOnServiceDelete: true
+          updateUnmanagedResources: true
