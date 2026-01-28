@@ -87,7 +87,5 @@ func (o *ControllerOption) InitCfg() error {
 		return err
 	}
 
-	ctrl.Log.WithName("config").Info(fmt.Sprintf("%#v", o.Cfg))
-
 	return nil
 }

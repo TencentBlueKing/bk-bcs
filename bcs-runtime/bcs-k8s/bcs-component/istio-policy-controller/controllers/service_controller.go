@@ -16,7 +16,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/istio-policy-controller/internal/option"
 	"github.com/go-logr/logr"
@@ -50,9 +49,6 @@ func (sr *ServiceReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	if err != nil {
 		return err
 	}
-
-	// 开启一个线程,遍历所有svc更新关联的策略
-	go sr.updateExistPolicies()
 
 	return nil
 }
@@ -261,6 +257,7 @@ func (sr *ServiceReconciler) updateDr(ctx context.Context, dr *networkingv1.Dest
 	label[LabelKey] = LabelValue
 	label[dr.GetName()] = dr.GetName()
 	label[dr.GetNamespace()] = dr.GetNamespace()
+	label["test"] = "test"
 	dr.SetLabels(label)
 
 	for _, svc := range sr.Option.Cfg.Services {
@@ -357,38 +354,4 @@ func (sr *ServiceReconciler) deleteDrAndVs(ctx context.Context, dr *networkingv1
 	}
 
 	return errors.Join(drErr, vsErr)
-}
-
-// updateExistPolicies 更新已存在的策略
-func (sr *ServiceReconciler) updateExistPolicies() {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
-	defer cancel()
-
-	for {
-		select {
-		case <-ctx.Done():
-			sr.Log.Error(fmt.Errorf("updateExistSvcs timeout"), "error")
-			return
-		default:
-			time.Sleep(time.Second * 10)
-			svcList := &corev1.ServiceList{}
-			if err := sr.Client.List(context.Background(), svcList); err != nil {
-				sr.Log.Error(err, "failed to list services")
-
-				continue
-			}
-
-			for _, svc := range svcList.Items {
-				// 处理每个 Service
-				sr.Log.Info("Found service", "namespace", svc.Namespace, "name", svc.Name)
-				err := sr.createOrUpdatePolicy(context.Background(), svc.Namespace, svc.Name)
-				if err != nil {
-					sr.Log.Error(err, "failed to create or update policy",
-						"namespace", svc.Namespace, "name", svc.Name)
-				}
-			}
-
-			return
-		}
-	}
 }
