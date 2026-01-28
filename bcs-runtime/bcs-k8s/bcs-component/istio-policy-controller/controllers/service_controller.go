@@ -24,6 +24,7 @@ import (
 	networkingv1 "istio.io/client-go/pkg/apis/networking/v1"
 	"istio.io/client-go/pkg/clientset/versioned"
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	k8scorev1 "k8s.io/api/core/v1"
@@ -69,7 +70,6 @@ func (sr *ServiceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		}
 
 		sr.Log.Info(fmt.Sprintf("Service deleted, name: %s, namespace: %s", req.Name, req.Namespace))
-		// 在这里处理删除逻辑
 		err = sr.deletePolicy(ctx, req.Namespace, req.Name)
 		if err != nil {
 			return ctrl.Result{}, err
@@ -78,10 +78,8 @@ func (sr *ServiceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		return ctrl.Result{}, nil
 	}
 
-	// 如果走到这里，说明是创建或更新
 	sr.Log.Info(fmt.Sprintf("Service created or updated, name: %s, namespace: %s", req.Name, req.Namespace))
-	// 在这里添加你的业务逻辑
-	err := sr.createOrUpdatePolicy(req.Namespace, req.Name)
+	err := sr.createOrUpdatePolicy(ctx, req.Namespace, req.Name)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
@@ -90,8 +88,8 @@ func (sr *ServiceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 }
 
 // createOrUpdatePolicy 创建或更新策略
-func (sr *ServiceReconciler) createOrUpdatePolicy(namespace, name string) error {
-	dr, err := sr.IstioClient.NetworkingV1().DestinationRules(namespace).Get(context.Background(),
+func (sr *ServiceReconciler) createOrUpdatePolicy(ctx context.Context, namespace, name string) error {
+	dr, err := sr.IstioClient.NetworkingV1().DestinationRules(namespace).Get(ctx,
 		name, metav1.GetOptions{})
 	if err != nil {
 		if client.IgnoreNotFound(err) != nil {
@@ -99,15 +97,41 @@ func (sr *ServiceReconciler) createOrUpdatePolicy(namespace, name string) error 
 			return err
 		}
 
-		// 创建 DestinationRule 的逻辑
-		sr.Log.Info("Creating DestinationRule", "name", name, "namespace", namespace)
-		err = sr.createDr(context.Background(), namespace, name)
-		if err != nil {
-			return err
+		if apierrors.IsNotFound(err) {
+			sr.Log.Info("Creating DestinationRule", "name", name, "namespace", namespace)
+			err = sr.createDr(ctx, namespace, name)
+			if err != nil {
+				return err
+			}
+		} else {
+			sr.Log.Info("Updating DestinationRule", "name", name, "namespace", namespace)
+			for _, svc := range sr.Option.Cfg.Services {
+				if svc.Name == name && svc.Namespace == namespace {
+					if svc.Setting.MergeMode == MergeModeMerge {
+						if svc.TrafficPolicy != nil {
+							mergeDrPolicy(dr, svc.TrafficPolicy)
+						}
+					} else {
+						dr.Spec.TrafficPolicy = svc.TrafficPolicy
+					}
+				}
+			}
+
+			if sr.Option.Cfg.Global.Setting.MergeMode == MergeModeMerge {
+				mergeDrPolicy(dr, sr.Option.Cfg.Global.TrafficPolicy)
+			} else {
+				dr.Spec.TrafficPolicy = sr.Option.Cfg.Global.TrafficPolicy
+			}
+
+			_, err = sr.IstioClient.NetworkingV1().DestinationRules(dr.Namespace).
+				Update(context.Background(), dr, metav1.UpdateOptions{})
+			if err != nil {
+				return err
+			}
 		}
 	}
 
-	_, err = sr.IstioClient.NetworkingV1().VirtualServices(namespace).Get(context.Background(),
+	_, err = sr.IstioClient.NetworkingV1().VirtualServices(namespace).Get(ctx,
 		name, metav1.GetOptions{})
 	if err != nil {
 		if client.IgnoreNotFound(err) != nil {
@@ -115,38 +139,15 @@ func (sr *ServiceReconciler) createOrUpdatePolicy(namespace, name string) error 
 			return err
 		}
 
-		// 创建 VirtualServices 的逻辑
+		// 创建 VirtualServices
 		sr.Log.Info("Creating VirtualServices", "name", name, "namespace", namespace)
-		err = sr.createVs(context.Background(), namespace, name)
+		err = sr.createVs(ctx, namespace, name)
 		if err != nil {
 			return err
 		}
 	}
 
-	// 更新 DestinationRule 的逻辑
-	sr.Log.Info("Updating DestinationRule", "name", name, "namespace", namespace)
-	for _, svc := range sr.Option.Cfg.Services {
-		if svc.Name == name && svc.Namespace == namespace {
-			if svc.Setting.MergeMode == MergeModeMerge {
-				if svc.TrafficPolicy != nil {
-					mergeDrPolicy(dr, svc.TrafficPolicy)
-				}
-			} else {
-				dr.Spec.TrafficPolicy = svc.TrafficPolicy
-			}
-		}
-	}
-
-	if sr.Option.Cfg.Global.Setting.MergeMode == MergeModeMerge {
-		mergeDrPolicy(dr, sr.Option.Cfg.Global.TrafficPolicy)
-	} else {
-		dr.Spec.TrafficPolicy = sr.Option.Cfg.Global.TrafficPolicy
-	}
-
-	_, err = sr.IstioClient.NetworkingV1().DestinationRules(dr.Namespace).
-		Update(context.Background(), dr, metav1.UpdateOptions{})
-
-	return err
+	return nil
 }
 
 // createDr 创建 DestinationRule
@@ -349,13 +350,11 @@ func (sr *ServiceReconciler) updateExistPolicies() {
 
 				continue
 			}
-			// 处理逻辑
 
 			for _, svc := range svcList.Items {
 				// 处理每个 Service
 				sr.Log.Info("Found service", "namespace", svc.Namespace, "name", svc.Name)
-				// 你的业务逻辑...
-				err := sr.createOrUpdatePolicy(svc.Namespace, svc.Name)
+				err := sr.createOrUpdatePolicy(context.Background(), svc.Namespace, svc.Name)
 				if err != nil {
 					sr.Log.Error(err, "failed to create or update policy",
 						"namespace", svc.Namespace, "name", svc.Name)
