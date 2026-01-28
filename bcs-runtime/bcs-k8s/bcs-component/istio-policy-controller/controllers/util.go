@@ -13,10 +13,15 @@
 package controllers
 
 import (
+	"fmt"
 	"reflect"
 
 	"istio.io/api/networking/v1alpha3"
 	v1 "istio.io/client-go/pkg/apis/networking/v1"
+	k8scorev1 "k8s.io/api/core/v1"
+	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/event"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 )
 
 const (
@@ -30,9 +35,54 @@ const (
 	MergeModeOverride = "override"
 )
 
-func mergePolicy(dr *v1.DestinationRule, tp *v1alpha3.TrafficPolicy) {
+// getServicePredicate 获取 Service 事件的 Predicate
+func getServicePredicate() predicate.Predicate {
+	return predicate.Funcs{
+		CreateFunc: func(e event.CreateEvent) bool {
+			svc, ok := e.Object.(*k8scorev1.Service)
+			if !ok {
+				return false
+			}
+			ctrl.Log.WithName("event").Info(fmt.Sprintf("Create service, name: %s, namespace: %s",
+				svc.GetName(), svc.GetNamespace()))
+			return true
+		},
+		UpdateFunc: func(e event.UpdateEvent) bool {
+			newSvc, newOk := e.ObjectNew.(*k8scorev1.Service)
+			oldSvc, oldOk := e.ObjectOld.(*k8scorev1.Service)
+			if !newOk || !oldOk {
+				return false
+			}
+			if newSvc.DeletionTimestamp != nil {
+				return true
+			}
+
+			ctrl.Log.WithName("event").Info(fmt.Sprintf(
+				"Update new service, new service name: %s, old service name: %s, namespace: %s",
+				newSvc.GetName(), oldSvc.GetName(), newSvc.GetNamespace()))
+			return true
+		},
+		DeleteFunc: func(e event.DeleteEvent) bool {
+			svc, ok := e.Object.(*k8scorev1.Service)
+			if !ok {
+				return false
+			}
+
+			ctrl.Log.WithName("event").Info(fmt.Sprintf("Delete service, name: %s, namespace: %s",
+				svc.GetName(), svc.GetNamespace()))
+			return true
+		},
+	}
+}
+
+// mergeDrPolicy merge destination policy
+func mergeDrPolicy(dr *v1.DestinationRule, tp *v1alpha3.TrafficPolicy) {
 	if tp == nil {
 		return
+	}
+
+	if dr.Spec.TrafficPolicy == nil {
+		dr.Spec.TrafficPolicy = &v1alpha3.TrafficPolicy{}
 	}
 
 	if tp.LoadBalancer != nil {

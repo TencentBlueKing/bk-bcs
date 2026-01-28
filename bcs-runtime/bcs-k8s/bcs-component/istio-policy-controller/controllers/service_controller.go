@@ -19,7 +19,6 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/istio-policy-controller/internal/option"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/istio-policy-controller/pkg/config"
 	"github.com/go-logr/logr"
 	"istio.io/api/networking/v1alpha3"
 	networkingv1 "istio.io/client-go/pkg/apis/networking/v1"
@@ -30,8 +29,6 @@ import (
 	k8scorev1 "k8s.io/api/core/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/event"
-	"sigs.k8s.io/controller-runtime/pkg/predicate"
 )
 
 // ServiceReconciler reconciler for k8s svc
@@ -42,45 +39,6 @@ type ServiceReconciler struct {
 	Log         logr.Logger
 	// Option option for controller
 	Option *option.ControllerOption
-}
-
-// getServicePredicate 获取 Service 事件的 Predicate
-func getServicePredicate() predicate.Predicate {
-	return predicate.Funcs{
-		CreateFunc: func(e event.CreateEvent) bool {
-			svc, ok := e.Object.(*k8scorev1.Service)
-			if !ok {
-				return false
-			}
-			ctrl.Log.WithName("event").Info(fmt.Sprintf("Create event svc name: %s, namespace: %s",
-				svc.GetName(), svc.GetNamespace()))
-			return true
-		},
-		UpdateFunc: func(e event.UpdateEvent) bool {
-			newSvc, newOk := e.ObjectNew.(*k8scorev1.Service)
-			oldSvc, oldOk := e.ObjectOld.(*k8scorev1.Service)
-			if !newOk || !oldOk {
-				return false
-			}
-			if newSvc.DeletionTimestamp != nil {
-				return true
-			}
-
-			ctrl.Log.WithName("event").Info(fmt.Sprintf("Update event new svc name: %s, old svc name: %s, namespace: %s",
-				newSvc.GetName(), oldSvc.GetName(), newSvc.GetNamespace()))
-			return true
-		},
-		DeleteFunc: func(e event.DeleteEvent) bool {
-			svc, ok := e.Object.(*k8scorev1.Service)
-			if !ok {
-				return false
-			}
-
-			ctrl.Log.WithName("event").Info(fmt.Sprintf("Delete event svc name: %s, namespace: %s",
-				svc.GetName(), svc.GetNamespace()))
-			return true
-		},
-	}
 }
 
 // SetupWithManager set node reconciler
@@ -167,11 +125,11 @@ func (sr *ServiceReconciler) createOrUpdatePolicy(namespace, name string) error 
 
 	// 更新 DestinationRule 的逻辑
 	sr.Log.Info("Updating DestinationRule", "name", name, "namespace", namespace)
-	for _, svc := range config.G.Services {
+	for _, svc := range sr.Option.Cfg.Services {
 		if svc.Name == name && svc.Namespace == namespace {
 			if svc.Setting.MergeMode == MergeModeMerge {
 				if svc.TrafficPolicy != nil {
-					mergePolicy(dr, svc.TrafficPolicy)
+					mergeDrPolicy(dr, svc.TrafficPolicy)
 				}
 			} else {
 				dr.Spec.TrafficPolicy = svc.TrafficPolicy
@@ -179,10 +137,10 @@ func (sr *ServiceReconciler) createOrUpdatePolicy(namespace, name string) error 
 		}
 	}
 
-	if config.G.Global.Setting.MergeMode == MergeModeMerge {
-		mergePolicy(dr, config.G.Global.TrafficPolicy)
+	if sr.Option.Cfg.Global.Setting.MergeMode == MergeModeMerge {
+		mergeDrPolicy(dr, sr.Option.Cfg.Global.TrafficPolicy)
 	} else {
-		dr.Spec.TrafficPolicy = config.G.Global.TrafficPolicy
+		dr.Spec.TrafficPolicy = sr.Option.Cfg.Global.TrafficPolicy
 	}
 
 	_, err = sr.IstioClient.NetworkingV1().DestinationRules(dr.Namespace).
@@ -214,14 +172,14 @@ func (sr *ServiceReconciler) createDr(ctx context.Context, namespace, name strin
 	}
 
 	var tp *v1alpha3.TrafficPolicy
-	for _, svc := range config.G.Services {
+	for _, svc := range sr.Option.Cfg.Services {
 		if svc.Name == name && svc.Namespace == namespace {
 			tp = svc.TrafficPolicy
 		}
 	}
 
 	if tp == nil {
-		tp = config.G.Global.TrafficPolicy
+		tp = sr.Option.Cfg.Global.TrafficPolicy
 	}
 
 	dr.Spec.TrafficPolicy = tp
@@ -292,7 +250,7 @@ func (sr *ServiceReconciler) createVs(ctx context.Context, namespace, name strin
 		},
 	}
 
-	for _, svc := range config.G.Services {
+	for _, svc := range sr.Option.Cfg.Services {
 		if svc.Name == name && svc.Namespace == namespace {
 			if svc.Setting.AutoGenerateVS {
 				_, err := sr.IstioClient.NetworkingV1().VirtualServices(namespace).
@@ -304,7 +262,7 @@ func (sr *ServiceReconciler) createVs(ctx context.Context, namespace, name strin
 		}
 	}
 
-	if config.G.Global.Setting.AutoGenerateVS {
+	if sr.Option.Cfg.Global.Setting.AutoGenerateVS {
 		_, err := sr.IstioClient.NetworkingV1().VirtualServices(namespace).
 			Create(ctx, vs, metav1.CreateOptions{})
 		if err != nil {
@@ -331,13 +289,13 @@ func (sr *ServiceReconciler) deletePolicy(ctx context.Context, namespace, name s
 		}
 	}
 
-	for _, svc := range config.G.Services {
+	for _, svc := range sr.Option.Cfg.Services {
 		if svc.Name == name && svc.Namespace == namespace && svc.Setting.DeletePolicyOnServiceDelete {
 			return sr.deleteDrAndVs(ctx, dr, vs)
 		}
 	}
 
-	if config.G.Global.Setting.DeletePolicyOnServiceDelete {
+	if sr.Option.Cfg.Global.Setting.DeletePolicyOnServiceDelete {
 		return sr.deleteDrAndVs(ctx, dr, vs)
 	}
 

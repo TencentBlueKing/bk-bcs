@@ -19,7 +19,6 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/istio-policy-controller/controllers"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/istio-policy-controller/internal/option"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/istio-policy-controller/pkg/config"
 	cloudv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/cloud/v1"
 	networkingv1 "istio.io/client-go/pkg/apis/networking/v1"
 	"istio.io/client-go/pkg/clientset/versioned"
@@ -34,7 +33,8 @@ import (
 var (
 	scheme   = runtime.NewScheme()
 	setupLog = ctrl.Log.WithName("setup")
-	Config   string
+
+	verbosity int
 )
 
 func init() {
@@ -47,19 +47,29 @@ func main() {
 
 	flag.StringVar(&opts.Address, "address", "127.0.0.1", "address for controller")
 	flag.IntVar(&opts.MetricPort, "metric_port", 8081, "metric port for controller")
+
 	flag.StringVar(&opts.LogDir, "log_dir", "./logs", "If non-empty, write log files in this directory")
 	flag.Uint64Var(&opts.LogMaxSize, "log_max_size", 500, "Max size (MB) per log file.")
 	flag.IntVar(&opts.LogMaxNum, "log_max_num", 10, "Max num of log file.")
 	flag.BoolVar(&opts.ToStdErr, "logtostderr", false, "log to standard error instead of files")
-	flag.StringVar(&Config, "config", "./etc/config.yaml", "config file path")
+	flag.BoolVar(&opts.AlsoToStdErr, "alsologtostderr", false, "log to standard error as well as files")
+
+	flag.IntVar(&verbosity, "v", 0, "log level for V logs")
+	flag.StringVar(&opts.StdErrThreshold, "stderrthreshold", "2", "logs at or above this threshold go to stderr")
+	flag.StringVar(&opts.VModule, "vmodule", "", "comma-separated list of pattern=N settings for file-filtered logging")
+	flag.StringVar(&opts.TraceLocation, "log_backtrace_at", "", "when logging hits line file:N, emit a stack trace")
+
+	flag.StringVar(&opts.ConfigPath, "config", "./etc/config.yaml", "config file path")
 
 	flag.Parse()
+
+	opts.Verbosity = int32(verbosity)
 
 	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
 
 	setupLog.Info("starting init config")
 	// 初始化配置
-	err := config.Init(Config)
+	err := opts.InitCfg()
 	if err != nil {
 		setupLog.Error(err, "unable to init config")
 		os.Exit(1)
