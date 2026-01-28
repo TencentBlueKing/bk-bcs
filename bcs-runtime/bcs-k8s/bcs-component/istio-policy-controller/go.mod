@@ -55,6 +55,7 @@ require (
 )
 
 require (
+	github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes v0.0.0-20260123071131-ef141ea25696
 	github.com/go-logr/logr v1.4.2
 	istio.io/api v1.28.2-0.20251205082437-fde1452f70bc
 	istio.io/client-go v1.28.3

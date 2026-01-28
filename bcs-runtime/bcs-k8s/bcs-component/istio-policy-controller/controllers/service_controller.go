@@ -14,12 +14,15 @@ package controllers
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/istio-policy-controller/internal/option"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/istio-policy-controller/pkg/config"
 	"github.com/go-logr/logr"
+	"istio.io/api/networking/v1alpha3"
+	networkingv1 "istio.io/client-go/pkg/apis/networking/v1"
 	"istio.io/client-go/pkg/clientset/versioned"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -41,6 +44,7 @@ type ServiceReconciler struct {
 	Option *option.ControllerOption
 }
 
+// getServicePredicate 获取 Service 事件的 Predicate
 func getServicePredicate() predicate.Predicate {
 	return predicate.Funcs{
 		CreateFunc: func(e event.CreateEvent) bool {
@@ -89,13 +93,13 @@ func (sr *ServiceReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		return err
 	}
 
-	// 开启一个线程,遍历所有svc
-	go sr.updateExistSvcs()
+	// 开启一个线程,遍历所有svc更新关联的策略
+	go sr.updateExistPolicies()
 
 	return nil
 }
 
-// Reconcile reconcile k8s node info
+// Reconcile reconcile for k8s svc
 func (sr *ServiceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	// 尝试获取 Service 对象
 	var svc corev1.Service
@@ -127,6 +131,7 @@ func (sr *ServiceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 	return ctrl.Result{}, nil
 }
 
+// createOrUpdatePolicy 创建或更新策略
 func (sr *ServiceReconciler) createOrUpdatePolicy(namespace, name string) error {
 	dr, err := sr.IstioClient.NetworkingV1().DestinationRules(namespace).Get(context.Background(),
 		name, metav1.GetOptions{})
@@ -166,35 +171,18 @@ func (sr *ServiceReconciler) createOrUpdatePolicy(namespace, name string) error 
 		if svc.Name == name && svc.Namespace == namespace {
 			if svc.Setting.MergeMode == MergeModeMerge {
 				if svc.TrafficPolicy != nil {
-					if svc.TrafficPolicy.LoadBalancer != nil {
-						dr.Spec.TrafficPolicy.LoadBalancer = svc.TrafficPolicy.LoadBalancer
-					}
-					if svc.TrafficPolicy.ConnectionPool != nil {
-						dr.Spec.TrafficPolicy.ConnectionPool = svc.TrafficPolicy.ConnectionPool
-					}
-					if svc.TrafficPolicy.OutlierDetection != nil {
-						dr.Spec.TrafficPolicy.OutlierDetection = svc.TrafficPolicy.OutlierDetection
-					}
-					if svc.TrafficPolicy.Tls != nil {
-						dr.Spec.TrafficPolicy.Tls = svc.TrafficPolicy.Tls
-					}
-					if svc.TrafficPolicy.PortLevelSettings != nil {
-						dr.Spec.TrafficPolicy.PortLevelSettings = svc.TrafficPolicy.PortLevelSettings
-					}
-					if svc.TrafficPolicy.Tunnel != nil {
-						dr.Spec.TrafficPolicy.Tunnel = svc.TrafficPolicy.Tunnel
-					}
-					if svc.TrafficPolicy.ProxyProtocol != nil {
-						dr.Spec.TrafficPolicy.ProxyProtocol = svc.TrafficPolicy.ProxyProtocol
-					}
-					// if svc.TrafficPolicy.RetryBudget != nil {
-					// 	dr.Spec.TrafficPolicy.RetryBudget = svc.TrafficPolicy.RetryBudget
-					// }
+					mergePolicy(dr, svc.TrafficPolicy)
 				}
 			} else {
 				dr.Spec.TrafficPolicy = svc.TrafficPolicy
 			}
 		}
+	}
+
+	if config.G.Global.Setting.MergeMode == MergeModeMerge {
+		mergePolicy(dr, config.G.Global.TrafficPolicy)
+	} else {
+		dr.Spec.TrafficPolicy = config.G.Global.TrafficPolicy
 	}
 
 	_, err = sr.IstioClient.NetworkingV1().DestinationRules(dr.Namespace).
@@ -203,6 +191,131 @@ func (sr *ServiceReconciler) createOrUpdatePolicy(namespace, name string) error 
 	return err
 }
 
+// createDr 创建 DestinationRule
+func (sr *ServiceReconciler) createDr(ctx context.Context, namespace, name string) error {
+	dr := &networkingv1.DestinationRule{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "DestinationRule",
+			APIVersion: "networking.istio.io/v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+			Labels: map[string]string{
+				LabelKey:  LabelValue,
+				namespace: namespace,
+				name:      name,
+			},
+		},
+		Spec: v1alpha3.DestinationRule{
+			Host:          fmt.Sprintf("%s.%s.svc.cluster.local", name, namespace),
+			TrafficPolicy: &v1alpha3.TrafficPolicy{},
+		},
+	}
+
+	var tp *v1alpha3.TrafficPolicy
+	for _, svc := range config.G.Services {
+		if svc.Name == name && svc.Namespace == namespace {
+			tp = svc.TrafficPolicy
+		}
+	}
+
+	if tp == nil {
+		tp = config.G.Global.TrafficPolicy
+	}
+
+	dr.Spec.TrafficPolicy = tp
+
+	if isEmptyStruct(dr.Spec.TrafficPolicy.LoadBalancer) {
+		dr.Spec.TrafficPolicy.LoadBalancer = nil
+	}
+	if isEmptyStruct(dr.Spec.TrafficPolicy.ConnectionPool) {
+		dr.Spec.TrafficPolicy.ConnectionPool = nil
+	}
+	if isEmptyStruct(dr.Spec.TrafficPolicy.OutlierDetection) {
+		dr.Spec.TrafficPolicy.OutlierDetection = nil
+	}
+	if isEmptyStruct(dr.Spec.TrafficPolicy.Tls) {
+		dr.Spec.TrafficPolicy.Tls = nil
+	}
+	if len(dr.Spec.TrafficPolicy.PortLevelSettings) == 0 {
+		dr.Spec.TrafficPolicy.PortLevelSettings = nil
+	}
+	if isEmptyStruct(dr.Spec.TrafficPolicy.Tunnel) {
+		dr.Spec.TrafficPolicy.Tunnel = nil
+	}
+	if isEmptyStruct(dr.Spec.TrafficPolicy.ProxyProtocol) {
+		dr.Spec.TrafficPolicy.ProxyProtocol = nil
+	}
+	if isEmptyStruct(dr.Spec.TrafficPolicy.RetryBudget) {
+		dr.Spec.TrafficPolicy.RetryBudget = nil
+	}
+
+	_, err := sr.IstioClient.NetworkingV1().DestinationRules(namespace).
+		Create(ctx, dr, metav1.CreateOptions{})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// createVs 创建 VirtualService
+func (sr *ServiceReconciler) createVs(ctx context.Context, namespace, name string) error {
+	vs := &networkingv1.VirtualService{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "VirtualService",
+			APIVersion: "networking.istio.io/v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+			Labels: map[string]string{
+				LabelKey:  LabelValue,
+				namespace: namespace,
+				name:      name,
+			},
+		},
+		Spec: v1alpha3.VirtualService{
+			Hosts: []string{fmt.Sprintf("%s.%s.svc.cluster.local", name, namespace)},
+			Http: []*v1alpha3.HTTPRoute{
+				{
+					Route: []*v1alpha3.HTTPRouteDestination{
+						{
+							Destination: &v1alpha3.Destination{
+								Host: fmt.Sprintf("%s.%s.svc.cluster.local", name, namespace),
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	for _, svc := range config.G.Services {
+		if svc.Name == name && svc.Namespace == namespace {
+			if svc.Setting.AutoGenerateVS {
+				_, err := sr.IstioClient.NetworkingV1().VirtualServices(namespace).
+					Create(ctx, vs, metav1.CreateOptions{})
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	if config.G.Global.Setting.AutoGenerateVS {
+		_, err := sr.IstioClient.NetworkingV1().VirtualServices(namespace).
+			Create(ctx, vs, metav1.CreateOptions{})
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// deletePolicy 删除策略
 func (sr *ServiceReconciler) deletePolicy(ctx context.Context, namespace, name string) error {
 	dr, err := sr.IstioClient.NetworkingV1().DestinationRules(namespace).Get(ctx, name, metav1.GetOptions{})
 	if err != nil {
@@ -231,22 +344,51 @@ func (sr *ServiceReconciler) deletePolicy(ctx context.Context, namespace, name s
 	return nil
 }
 
-// updateExistSvcs update exist services
-func (sr *ServiceReconciler) updateExistSvcs() {
+// deleteDrAndVs 删除 DestinationRule 和 VirtualService
+func (sr *ServiceReconciler) deleteDrAndVs(ctx context.Context, dr *networkingv1.DestinationRule,
+	vs *networkingv1.VirtualService) error {
+
+	var drErr, vsErr error
+	if dr != nil {
+		if v, ok := dr.GetLabels()[LabelKey]; ok && v == LabelValue {
+			drErr = sr.IstioClient.NetworkingV1().DestinationRules(dr.Namespace).Delete(ctx,
+				dr.Name, metav1.DeleteOptions{})
+			if drErr != nil {
+				sr.Log.Error(drErr, "failed to delete DestinationRule")
+			}
+		}
+	}
+
+	if vs != nil {
+		if v, ok := vs.GetLabels()[LabelKey]; ok && v == LabelValue {
+			vsErr = sr.IstioClient.NetworkingV1().VirtualServices(vs.Namespace).Delete(ctx,
+				vs.Name, metav1.DeleteOptions{})
+			if vsErr != nil {
+				sr.Log.Error(vsErr, "failed to delete VirtualService")
+				return vsErr
+			}
+		}
+	}
+
+	return errors.Join(drErr, vsErr)
+}
+
+// updateExistPolicies 更新已存在的策略
+func (sr *ServiceReconciler) updateExistPolicies() {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
-
-	ticker := time.NewTicker(10 * time.Second)
-	defer ticker.Stop()
 
 	for {
 		select {
 		case <-ctx.Done():
+			sr.Log.Error(fmt.Errorf("updateExistSvcs timeout"), "error")
 			return
-		case <-ticker.C:
+		default:
+			time.Sleep(time.Second * 10)
 			svcList := &corev1.ServiceList{}
 			if err := sr.Client.List(context.Background(), svcList); err != nil {
 				sr.Log.Error(err, "failed to list services")
+
 				continue
 			}
 			// 处理逻辑
@@ -259,7 +401,6 @@ func (sr *ServiceReconciler) updateExistSvcs() {
 				if err != nil {
 					sr.Log.Error(err, "failed to create or update policy",
 						"namespace", svc.Namespace, "name", svc.Name)
-					continue
 				}
 			}
 

@@ -40,5 +40,7 @@ func Init(name string) error {
 		return err
 	}
 
+	ctrl.Log.WithName("config").Info(fmt.Sprintf("%#v", G))
+
 	return nil
 }

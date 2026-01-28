@@ -20,10 +20,12 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/istio-policy-controller/controllers"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/istio-policy-controller/internal/option"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/istio-policy-controller/pkg/config"
+	cloudv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/cloud/v1"
 	networkingv1 "istio.io/client-go/pkg/apis/networking/v1"
 	"istio.io/client-go/pkg/clientset/versioned"
 
 	"k8s.io/apimachinery/pkg/runtime"
+	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
@@ -34,6 +36,11 @@ var (
 	setupLog = ctrl.Log.WithName("setup")
 	Config   string
 )
+
+func init() {
+	_ = clientgoscheme.AddToScheme(scheme)
+	_ = cloudv1.AddToScheme(scheme)
+}
 
 func main() {
 	opts := &option.ControllerOption{}

@@ -13,145 +13,168 @@
 package controllers
 
 import (
-	"context"
-	"fmt"
-	"strings"
+	"reflect"
 
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/istio-policy-controller/pkg/config"
 	"istio.io/api/networking/v1alpha3"
-	networkingv1 "istio.io/client-go/pkg/apis/networking/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	v1 "istio.io/client-go/pkg/apis/networking/v1"
 )
 
 const (
-	LabelKey   = "managed-by"
+	// LabelKey label key
+	LabelKey = "managed-by"
+	// LabelValue label value
 	LabelValue = "istio-policy-controller"
-
-	MergeModeMerge    = "merge"
+	// MergeModeMerge merge mode merge
+	MergeModeMerge = "merge"
+	// MergeModeOverride merge mode override
 	MergeModeOverride = "override"
 )
 
-func (sr *ServiceReconciler) createDr(ctx context.Context, namespace, name string) error {
-	dr := &networkingv1.DestinationRule{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "DestinationRule",
-			APIVersion: "networking.istio.io/v1",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: namespace,
-		},
-		Spec: v1alpha3.DestinationRule{
-			Host:          fmt.Sprintf("%s.%s.svc.cluster.local", name, namespace),
-			TrafficPolicy: &v1alpha3.TrafficPolicy{},
-		},
-	}
-
-	var tp *v1alpha3.TrafficPolicy
-	for _, svc := range config.G.Services {
-		if svc.Name == name && svc.Namespace == namespace {
-			tp = svc.TrafficPolicy
-		}
-	}
-
+func mergePolicy(dr *v1.DestinationRule, tp *v1alpha3.TrafficPolicy) {
 	if tp == nil {
-		tp = config.G.Global.TrafficPolicy
+		return
 	}
 
-	_, err := sr.IstioClient.NetworkingV1().DestinationRules(namespace).
-		Create(context.Background(), dr, metav1.CreateOptions{})
-	if err != nil {
-		return err
+	if tp.LoadBalancer != nil {
+		if isEmptyStruct(tp.LoadBalancer) {
+			dr.Spec.TrafficPolicy.LoadBalancer = nil
+		} else {
+			dr.Spec.TrafficPolicy.LoadBalancer = tp.LoadBalancer
+		}
 	}
-
-	return nil
+	if tp.ConnectionPool != nil {
+		if isEmptyStruct(tp.ConnectionPool) {
+			dr.Spec.TrafficPolicy.ConnectionPool = nil
+		} else {
+			dr.Spec.TrafficPolicy.ConnectionPool = tp.ConnectionPool
+		}
+	}
+	if tp.OutlierDetection != nil {
+		if isEmptyStruct(tp.OutlierDetection) {
+			dr.Spec.TrafficPolicy.OutlierDetection = nil
+		} else {
+			dr.Spec.TrafficPolicy.OutlierDetection = tp.OutlierDetection
+		}
+	}
+	if tp.Tls != nil {
+		if isEmptyStruct(tp.Tls) {
+			dr.Spec.TrafficPolicy.Tls = nil
+		} else {
+			dr.Spec.TrafficPolicy.Tls = tp.Tls
+		}
+	}
+	if tp.PortLevelSettings != nil {
+		if len(tp.PortLevelSettings) == 0 {
+			dr.Spec.TrafficPolicy.PortLevelSettings = nil
+		} else {
+			dr.Spec.TrafficPolicy.PortLevelSettings = tp.PortLevelSettings
+		}
+	}
+	if tp.Tunnel != nil {
+		if isEmptyStruct(tp.Tunnel) {
+			dr.Spec.TrafficPolicy.Tunnel = nil
+		} else {
+			dr.Spec.TrafficPolicy.Tunnel = tp.Tunnel
+		}
+	}
+	if tp.ProxyProtocol != nil {
+		if isEmptyStruct(tp.ProxyProtocol) {
+			dr.Spec.TrafficPolicy.ProxyProtocol = nil
+		} else {
+			dr.Spec.TrafficPolicy.ProxyProtocol = tp.ProxyProtocol
+		}
+	}
+	if tp.RetryBudget != nil {
+		if isEmptyStruct(tp.RetryBudget) {
+			dr.Spec.TrafficPolicy.RetryBudget = nil
+		} else {
+			dr.Spec.TrafficPolicy.RetryBudget = tp.RetryBudget
+		}
+	}
 }
 
-func (sr *ServiceReconciler) createVs(ctx context.Context, namespace, name string) error {
-	vs := &networkingv1.VirtualService{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "VirtualService",
-			APIVersion: "networking.istio.io/v1",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: namespace,
-		},
-		Spec: v1alpha3.VirtualService{
-			Hosts: []string{fmt.Sprintf("%s.%s.svc.cluster.local", name, namespace)},
-			Http: []*v1alpha3.HTTPRoute{
-				{
-					Route: []*v1alpha3.HTTPRouteDestination{
-						{
-							Destination: &v1alpha3.Destination{
-								Host: fmt.Sprintf("%s.%s.svc.cluster.local", name, namespace),
-							},
-						},
-					},
-				},
-			},
-		},
+// isEmptyStruct 判断任意结构体是否逻辑上为零(注意: 不能用于非结构体类型,如 chan、func、interface、array、map等)
+func isEmptyStruct(v interface{}) bool {
+	if v == nil {
+		return true
 	}
 
-	for _, svc := range config.G.Services {
-		if svc.Name == name && svc.Namespace == namespace {
-			if svc.Setting.AutoGenerateVS {
-				_, err := sr.IstioClient.NetworkingV1().VirtualServices(namespace).
-					Create(context.Background(), vs, metav1.CreateOptions{})
-				if err != nil {
-					return err
-				}
-			}
+	rv := reflect.ValueOf(v)
+	rt := reflect.TypeOf(v)
+
+	// 解引用指针（支持多层）
+	for rv.Kind() == reflect.Ptr {
+		if rv.IsNil() {
+			return true
 		}
+		rv = rv.Elem()
+		rt = rt.Elem()
 	}
 
-	if config.G.Global.Setting.AutoGenerateVS {
-		_, err := sr.IstioClient.NetworkingV1().VirtualServices(namespace).
-			Create(context.Background(), vs, metav1.CreateOptions{})
-		if err != nil {
-			return err
-		}
+	if rv.Kind() != reflect.Struct {
+		panic("IsStructLogicallyZero only accepts struct or pointer to struct")
 	}
 
-	return nil
+	return isLogicallyZero(rv, rt)
 }
 
-func (sr *ServiceReconciler) deleteDrAndVs(ctx context.Context, dr *networkingv1.DestinationRule,
-	vs *networkingv1.VirtualService) error {
-
-	var drErr, vsErr error
-	if dr != nil {
-		if v, ok := dr.GetLabels()[LabelKey]; ok && v == LabelValue {
-			drErr = sr.IstioClient.NetworkingV1().DestinationRules(dr.Namespace).Delete(ctx,
-				dr.Name, metav1.DeleteOptions{})
-			if drErr != nil {
-				sr.Log.Error(drErr, "failed to delete DestinationRule")
+// isLogicallyZero 递归判断任意 reflect.Value 是否逻辑上为零
+func isLogicallyZero(val reflect.Value, typ reflect.Type) bool {
+	switch val.Kind() {
+	case reflect.Bool:
+		return !val.Bool()
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return val.Int() == 0
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+		return val.Uint() == 0
+	case reflect.Float32, reflect.Float64:
+		return val.Float() == 0
+	case reflect.Complex64, reflect.Complex128:
+		return val.Complex() == 0
+	case reflect.String:
+		return val.String() == ""
+	case reflect.Ptr:
+		if val.IsNil() {
+			return true
+		}
+		return isLogicallyZero(val.Elem(), typ.Elem())
+	case reflect.Slice, reflect.Map:
+		return val.IsNil() // 若想认为空 slice/map 为零，改为 val.Len() == 0
+	case reflect.Array:
+		elemType := typ.Elem()
+		for i := 0; i < val.Len(); i++ {
+			if !isLogicallyZero(val.Index(i), elemType) {
+				return false
 			}
 		}
-	}
+		return true
+	case reflect.Struct:
+		// 遍历所有字段，跳过未导出的
+		for i := 0; i < val.NumField(); i++ {
+			fieldVal := val.Field(i)
+			fieldType := typ.Field(i)
 
-	if vs != nil {
-		if v, ok := vs.GetLabels()[LabelKey]; ok && v == LabelValue {
-			vsErr = sr.IstioClient.NetworkingV1().VirtualServices(vs.Namespace).Delete(ctx,
-				vs.Name, metav1.DeleteOptions{})
-			if vsErr != nil {
-				sr.Log.Error(vsErr, "failed to delete VirtualService")
-				return vsErr
+			// 跳过未导出字段：PkgPath 非空表示未导出
+			if fieldType.PkgPath != "" {
+				continue
+			}
+
+			if !isLogicallyZero(fieldVal, fieldType.Type) {
+				return false
 			}
 		}
-	}
-
-	if drErr != nil || vsErr != nil {
-		errs := make([]string, 0)
-		if drErr != nil {
-			errs = append(errs, drErr.Error())
+		return true
+	case reflect.Interface:
+		if val.IsNil() {
+			return true
 		}
-		if vsErr != nil {
-			errs = append(errs, vsErr.Error())
-		}
-
-		return fmt.Errorf(strings.Join(errs, ";"))
+		// 获取接口中实际存储的值
+		actualVal := val.Elem()
+		// 递归判断实际值是否为零，使用其自身的 Type
+		return isLogicallyZero(actualVal, actualVal.Type())
+	case reflect.Chan, reflect.Func, reflect.UnsafePointer:
+		return val.IsNil()
+	default:
+		return false // 未知类型视为非零
 	}
-
-	return nil
 }
