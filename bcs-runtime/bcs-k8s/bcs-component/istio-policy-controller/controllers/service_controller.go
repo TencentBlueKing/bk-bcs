@@ -24,7 +24,6 @@ import (
 	networkingv1 "istio.io/client-go/pkg/apis/networking/v1"
 	"istio.io/client-go/pkg/clientset/versioned"
 	corev1 "k8s.io/api/core/v1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	k8scorev1 "k8s.io/api/core/v1"
@@ -97,37 +96,16 @@ func (sr *ServiceReconciler) createOrUpdatePolicy(ctx context.Context, namespace
 			return err
 		}
 
-		if apierrors.IsNotFound(err) {
-			sr.Log.Info("Creating DestinationRule", "name", name, "namespace", namespace)
-			err = sr.createDr(ctx, namespace, name)
-			if err != nil {
-				return err
-			}
-		} else {
-			sr.Log.Info("Updating DestinationRule", "name", name, "namespace", namespace)
-			for _, svc := range sr.Option.Cfg.Services {
-				if svc.Name == name && svc.Namespace == namespace {
-					if svc.Setting.MergeMode == MergeModeMerge {
-						if svc.TrafficPolicy != nil {
-							mergeDrPolicy(dr, svc.TrafficPolicy)
-						}
-					} else {
-						dr.Spec.TrafficPolicy = svc.TrafficPolicy
-					}
-				}
-			}
-
-			if sr.Option.Cfg.Global.Setting.MergeMode == MergeModeMerge {
-				mergeDrPolicy(dr, sr.Option.Cfg.Global.TrafficPolicy)
-			} else {
-				dr.Spec.TrafficPolicy = sr.Option.Cfg.Global.TrafficPolicy
-			}
-
-			_, err = sr.IstioClient.NetworkingV1().DestinationRules(dr.Namespace).
-				Update(context.Background(), dr, metav1.UpdateOptions{})
-			if err != nil {
-				return err
-			}
+		sr.Log.Info("Creating DestinationRule", "name", name, "namespace", namespace)
+		err = sr.createDr(ctx, namespace, name)
+		if err != nil {
+			return err
+		}
+	} else if dr != nil && dr.GetName() != "" {
+		sr.Log.Info("Updating DestinationRule", "name", name, "namespace", namespace)
+		err = sr.updateDr(ctx, dr)
+		if err != nil {
+			return err
 		}
 	}
 
@@ -269,6 +247,55 @@ func (sr *ServiceReconciler) createVs(ctx context.Context, namespace, name strin
 		if err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+
+// updateDr 更新 DestinationRule
+func (sr *ServiceReconciler) updateDr(ctx context.Context, dr *networkingv1.DestinationRule) error {
+	label := dr.GetLabels()
+	if len(label) == 0 {
+		label = map[string]string{}
+	}
+	label[LabelKey] = LabelValue
+	label[dr.GetName()] = dr.GetName()
+	label[dr.GetNamespace()] = dr.GetNamespace()
+	dr.SetLabels(label)
+
+	for _, svc := range sr.Option.Cfg.Services {
+		if svc.Name == dr.GetName() && svc.Namespace == dr.GetNamespace() {
+			if v, ok := dr.GetLabels()[LabelKey]; (ok && v == LabelValue) || svc.Setting.UpdateUnmanagedResources {
+				if svc.Setting.MergeMode == MergeModeMerge {
+					if svc.TrafficPolicy != nil {
+						mergeDrPolicy(dr, svc.TrafficPolicy)
+					}
+				} else {
+					dr.Spec.TrafficPolicy = svc.TrafficPolicy
+				}
+
+				_, err := sr.IstioClient.NetworkingV1().DestinationRules(dr.GetNamespace()).
+					Update(ctx, dr, metav1.UpdateOptions{})
+
+				return err
+			}
+
+			return nil
+		}
+	}
+
+	if v, ok := dr.GetLabels()[LabelKey]; (ok && v == LabelValue) ||
+		sr.Option.Cfg.Global.Setting.UpdateUnmanagedResources {
+		if sr.Option.Cfg.Global.Setting.MergeMode == MergeModeMerge {
+			mergeDrPolicy(dr, sr.Option.Cfg.Global.TrafficPolicy)
+		} else {
+			dr.Spec.TrafficPolicy = sr.Option.Cfg.Global.TrafficPolicy
+		}
+
+		_, err := sr.IstioClient.NetworkingV1().DestinationRules(dr.GetNamespace()).
+			Update(ctx, dr, metav1.UpdateOptions{})
+
+		return err
 	}
 
 	return nil
