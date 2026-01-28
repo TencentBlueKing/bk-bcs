@@ -20,10 +20,8 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"os/signal"
 	"strconv"
 	"strings"
-	"syscall"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -41,9 +39,9 @@ import (
 	cli "github.com/urfave/cli/v2"
 	micro "go-micro.dev/v4"
 	"go-micro.dev/v4/registry"
-	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-push-manager/internal/action"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-push-manager/internal/constant"
@@ -92,7 +90,8 @@ func (s *Server) Init() error {
 		s.initMQ,
 		s.initMicro,
 		s.initThirdpartyDiscovery,
-		s.initHTTPGateway,
+		s.initHTTPService,
+		s.initMQConsumer,
 	}
 	for _, init := range initializer {
 		if err := init(); err != nil {
@@ -102,73 +101,11 @@ func (s *Server) Init() error {
 	return nil
 }
 
-// Run microservice// Run starts all services and manages their lifecycle.
-func (s *Server) Run() error {
-	eg, ctx := errgroup.WithContext(s.ctx)
-
-	eg.Go(func() error {
-		sigChan := make(chan os.Signal, 1)
-		signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
-		select {
-		case sig := <-sigChan:
-			blog.Infof("received signal %s, shutting down...", sig)
-			s.ctxCancelFunc()
-		case <-ctx.Done():
-			blog.Infof("context canceled, exiting signal goroutine.")
-		}
-		return nil
-	})
-
-	eg.Go(func() error {
-		blog.Infof("starting gRPC service on %s", s.microService.Server().Options().Address)
-		return s.microService.Run()
-	})
-
-	eg.Go(func() error {
-		blog.Infof("starting HTTP gateway on %s", s.httpServer.Addr)
-		go func() {
-			<-ctx.Done()
-			blog.Infof("shutting down HTTP gateway...")
-			shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-			defer cancel()
-			if err := s.httpServer.Shutdown(shutdownCtx); err != nil {
-				blog.Errorf("HTTP server graceful shutdown failed: %v", err)
-			}
-		}()
-		if s.httpServer.TLSConfig != nil {
-			if err := s.httpServer.ListenAndServeTLS("", ""); err != nil && err != http.ErrServerClosed {
-				return err
-			}
-		} else {
-			if err := s.httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-				return err
-			}
-		}
-		return nil
-	})
-
-	eg.Go(func() error {
-		blog.Infof("starting RabbitMQ consumer...")
-		err := s.startRabbitMQConsumer(ctx)
-		blog.Infof("RabbitMQ consumer stopped.")
-		return err
-	})
-
-	if err := eg.Wait(); err != nil {
-		blog.Errorf("Service exiting with error: %v", err)
-		s.ctxCancelFunc()
-		return err
+// Run starts the gRPC microservice (blocking).
+func (s *Server) Run() {
+	if err := s.microService.Run(); err != nil {
+		blog.Fatalf("run push manager failed, err %s", err.Error())
 	}
-
-	blog.Infof("all services are running. Waiting for exit signal (Ctrl+C or kill). Note: Ctrl+D is not a signal and will not stop the service.")
-	if err := eg.Wait(); err != nil && err != context.Canceled {
-		blog.Errorf("service group encountered an error: %v", err)
-		return err
-	}
-
-	blog.Infof("all services stopped gracefully.")
-
-	return nil
 }
 
 // initTLSConfig initializes the service's TLS configuration.
@@ -366,8 +303,8 @@ func (s *Server) initMicro() error {
 	return nil
 }
 
-// initHTTPGateway initializes the HTTP Gateway.
-func (s *Server) initHTTPGateway() error {
+// initHTTPGateway initializes the HTTP gateway.
+func (s *Server) initHTTPGateway(router *mux.Router) error {
 	gwmux := runtime.NewServeMux(
 		runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{}),
 	)
@@ -375,39 +312,92 @@ func (s *Server) initHTTPGateway() error {
 	if s.tlsConfig != nil && s.clientTLSConfig != nil {
 		grpcDialOpts = append(grpcDialOpts, grpc.WithTransportCredentials(credentials.NewTLS(s.clientTLSConfig)))
 	} else {
-		grpcDialOpts = append(grpcDialOpts, grpc.WithInsecure()) // nolint
+		grpcDialOpts = append(grpcDialOpts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	}
-	if err := pb.RegisterPushManagerGwFromEndpoint(
+	err := pb.RegisterPushManagerGwFromEndpoint(
 		context.TODO(),
 		gwmux,
 		net.JoinHostPort(s.opt.ServerConfig.Address, strconv.Itoa(int(s.opt.ServerConfig.Port))),
-		grpcDialOpts,
-	); err != nil {
+		grpcDialOpts)
+	if err != nil {
 		blog.Errorf("register http gateway failed, err %s", err.Error())
 		return fmt.Errorf("register http gateway failed, err %s", err.Error())
 	}
-
-	router := mux.NewRouter()
 	router.Handle("/{uri:.*}", gwmux)
 	blog.Info("register grpc gateway handler to path /")
+	return nil
+}
+
+// initHTTPService initializes and starts the HTTP service.
+func (s *Server) initHTTPService() error {
+	router := mux.NewRouter()
+	// init micro http gateway
+	if err := s.initHTTPGateway(router); err != nil {
+		return err
+	}
 
 	// init http server
 	smux := http.NewServeMux()
 	smux.Handle("/", router)
 
 	httpAddress := net.JoinHostPort(s.opt.ServerConfig.Address, strconv.Itoa(int(s.opt.ServerConfig.HTTPPort)))
-
 	s.httpServer = &http.Server{
 		Addr:    httpAddress,
 		Handler: smux,
 	}
-	if s.tlsConfig != nil {
-		s.httpServer.TLSConfig = s.tlsConfig
-	}
+
+	go func() {
+		var err error
+		blog.Infof("start http gateway server on address %s", httpAddress)
+		if s.tlsConfig != nil {
+			s.httpServer.TLSConfig = s.tlsConfig
+			err = s.httpServer.ListenAndServeTLS("", "")
+		} else {
+			err = s.httpServer.ListenAndServe()
+		}
+		if err != nil {
+			blog.Errorf("start http gateway server failed, %s", err.Error())
+			s.ctxCancelFunc()
+		}
+	}()
 	return nil
 }
 
-// startConsumer initializes and starts the RabbitMQ consumer, supporting ctx-based shutdown.
+// initMQConsumer initializes and starts the RabbitMQ consumer daemon.
+func (s *Server) initMQConsumer() error {
+	go s.runMQConsumerDaemon()
+	return nil
+}
+
+func (s *Server) runMQConsumerDaemon() {
+	blog.Infof("starting RabbitMQ consumer daemon...")
+
+	retryInterval := 10 * time.Second
+	consecutiveFailures := 0
+
+	for {
+		select {
+		case <-s.ctx.Done():
+			blog.Infof("context canceled, stopping RabbitMQ consumer daemon...")
+			return
+		default:
+			err := s.startRabbitMQConsumer(s.ctx)
+			if err != nil {
+				consecutiveFailures++
+				blog.Errorf("RabbitMQ consumer failed: %v (consecutive failures: %d)", err, consecutiveFailures)
+				blog.Infof("will retry RabbitMQ consumer in %v...", retryInterval)
+				select {
+				case <-s.ctx.Done():
+					return
+				case <-time.After(retryInterval):
+					continue
+				}
+			}
+		}
+	}
+}
+
+// startRabbitMQConsumer initializes and starts the RabbitMQ consumer, supporting ctx-based shutdown.
 func (s *Server) startRabbitMQConsumer(ctx context.Context) error {
 	blog.Infof("starting RabbitMQ consumer...")
 	defer blog.Infof("RabbitMQ consumer stopped.")
@@ -421,12 +411,20 @@ func (s *Server) startRabbitMQConsumer(ctx context.Context) error {
 		RetryInterval:    5 * time.Second,
 	}
 
+	if err := s.mqClient.Connect(); err != nil {
+		return fmt.Errorf("failed to connect to RabbitMQ: %v", err)
+	}
+
 	// Open RabbitMQ channel
 	channel, err := s.mqClient.GetChannel()
 	if err != nil {
 		return fmt.Errorf("failed to get channel: %v", err)
 	}
-	defer channel.Close()
+	defer func() {
+		if channel != nil && !channel.IsClosed() {
+			channel.Close()
+		}
+	}()
 
 	// Ensure exchange exists
 	if err := s.mqClient.EnsureExchange(channel); err != nil {
@@ -452,25 +450,15 @@ func (s *Server) startRabbitMQConsumer(ctx context.Context) error {
 		return fmt.Errorf("failed to bind queue: %v", err)
 	}
 
-	// Start consumer with retry logic
-	errChan := make(chan error, 1)
+	blog.Infof("RabbitMQ consumer started successfully, consumer: %s, queue: %s", consumerName, queueName)
+
+	// Start consumer
 	done := make(chan bool, 1)
+	errChan := make(chan error, 1)
+
 	go func() {
-		for {
-			select {
-			case <-ctx.Done():
-				blog.Infof("context canceled, stopping consumer...")
-				return
-			default:
-				if err := s.mqClient.StartConsumer(channel, consumerName, queueName, notificationAction, done); err != nil {
-					blog.Errorf("consumer error: %v, retrying in 5 seconds...", err)
-					errChan <- err
-					time.Sleep(5 * time.Second)
-				} else {
-					blog.Infof("consumer started successfully")
-					return
-				}
-			}
+		if err := s.mqClient.StartConsumer(channel, consumerName, queueName, notificationAction, done); err != nil {
+			errChan <- err
 		}
 	}()
 
@@ -478,8 +466,9 @@ func (s *Server) startRabbitMQConsumer(ctx context.Context) error {
 	select {
 	case <-ctx.Done():
 		blog.Info("context canceled, stopping consumer...")
+		close(done)
 		return nil
 	case err := <-errChan:
-		return fmt.Errorf("RabbitMQ consumer failed: %v", err)
+		return fmt.Errorf("RabbitMQ consumer error: %v", err)
 	}
 }
