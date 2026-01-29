@@ -98,14 +98,15 @@ func ProjectAuthorization(next http.Handler) http.Handler {
 			_ = render.Render(w, r, rest.AbortWithWithForbiddenError(restContext, err))
 			return
 		}
-		allow, url, _, err := client.CanViewProject(user.BkUserName, projectID)
+		allow, url, resources, err := client.CanViewProject(user.BkUserName, projectID)
 		if err != nil {
 			_ = render.Render(w, r, rest.AbortWithWithForbiddenError(restContext, err))
 			return
 		}
 		if !allow {
-			errMsg := fmt.Errorf("permission denied, please apply permission with %s", url)
-			_ = render.Render(w, r, rest.AbortWithWithForbiddenError(restContext, errMsg))
+			// 构建权限信息
+			perms := setResourceActions(resources, url)
+			_ = render.Render(w, r, rest.AbortWithForbiddenWithPerms(restContext, perms))
 			return
 		}
 
@@ -146,19 +147,36 @@ func ClusterAuthorization(next http.Handler) http.Handler {
 			_ = render.Render(w, r, rest.AbortWithWithForbiddenError(restContext, err))
 			return
 		}
-		allow, url, _, err := client.CanViewCluster(user.BkUserName, projectID, clusterID)
+		allow, url, resources, err := client.CanViewCluster(user.BkUserName, projectID, clusterID)
 		if err != nil {
 			_ = render.Render(w, r, rest.AbortWithWithForbiddenError(restContext, err))
 			return
 		}
 		if !allow {
-			errMsg := fmt.Errorf("permission denied, please apply permission with %s", url)
-			_ = render.Render(w, r, rest.AbortWithWithForbiddenError(restContext, errMsg))
+			perms := setResourceActions(resources, url)
+			_ = render.Render(w, r, rest.AbortWithForbiddenWithPerms(restContext, perms))
 			return
 		}
 
 		next.ServeHTTP(w, r)
 	})
+}
+
+// setResourceActions 设置需要申请的权限
+func setResourceActions(resources []authutils.ResourceAction, url string) *rest.Perms {
+	actionList := make([]rest.ResourceAction, len(resources))
+	for i, r := range resources {
+		actionList[i] = rest.ResourceAction{
+			Resource: r.Resource,
+			Type:     r.Type,
+			Action:   r.Action,
+		}
+	}
+	perms := &rest.Perms{
+		ActionList: actionList,
+		ApplyURL:   url,
+	}
+	return perms
 }
 
 // initContextWithDevEnv Dev环境, 可以设置环境变量

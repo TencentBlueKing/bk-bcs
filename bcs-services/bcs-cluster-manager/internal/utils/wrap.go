@@ -112,9 +112,8 @@ func renderResponse(rsp interface{}, requestID string, err error) error {
 			permsMap["action_list"] = actionList
 			perms.Perms = Map2pbStruct(permsMap)
 			v.Elem().FieldByName("WebAnnotations").Set(reflect.ValueOf(perms))
-			return nil
 		}
-		return err
+		return nil
 	default:
 		return err
 	}

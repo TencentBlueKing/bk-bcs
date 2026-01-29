@@ -42,11 +42,31 @@ var (
 
 // Result 返回的标准结构
 type Result struct {
-	Code      int    `json:"code"`
-	Message   string `json:"message"`
-	RequestId string `json:"request_id"`
-	Data      any    `json:"data"`
-	HTTPCode  int    `json:"-"` // http response status code
+	Code           int             `json:"code"`
+	Message        string          `json:"message"`
+	RequestId      string          `json:"requestId"`
+	Data           any             `json:"data"`
+	Result         bool            `json:"result"`
+	WebAnnotations *WebAnnotations `json:"web_annotations,omitempty"`
+	HTTPCode       int             `json:"-"` // http response status code
+}
+
+// WebAnnotations 权限信息
+type WebAnnotations struct {
+	Perms *Perms `json:"perms"`
+}
+
+// Perms 无权限返回的需要申请的权限信息
+type Perms struct {
+	ActionList []ResourceAction `json:"action_list"`
+	ApplyURL   string           `json:"apply_url"`
+}
+
+// ResourceAction 资源操作
+type ResourceAction struct {
+	Resource string `json:"-"`
+	Type     string `json:"resource_type"`
+	Action   string `json:"action_id"`
 }
 
 // Render chi render interface implementation
@@ -74,6 +94,16 @@ func AbortWithUnauthorizedError(c *Context, err error) render.Renderer {
 // AbortWithWithForbiddenError 没有权限
 func AbortWithWithForbiddenError(c *Context, err error) render.Renderer {
 	return &Result{Code: 1403, Message: err.Error(), RequestId: c.RequestId, HTTPCode: http.StatusForbidden}
+}
+
+// AbortWithForbiddenWithPerms 返回无权限错误，包含权限信息
+func AbortWithForbiddenWithPerms(c *Context, perms *Perms) render.Renderer {
+	var permissions []string
+	for _, action := range perms.ActionList {
+		permissions = append(permissions, action.Action)
+	}
+	msg := fmt.Sprintf("permission denied, need %s permission", strings.Join(permissions, ", "))
+	return &Result{Code: 40403, Message: msg, RequestId: c.RequestId, WebAnnotations: &WebAnnotations{Perms: perms}, HTTPCode: http.StatusOK}
 }
 
 // AbortWithJSONError 目前的UI规范, 返回200状态码, 通过里面的code判断请求成功与否

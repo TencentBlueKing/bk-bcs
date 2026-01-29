@@ -215,10 +215,18 @@ func callIAM(
 	case cloudaccount.CanManageCloudAccountOperation:
 		allow, url, err := cloudAccountIam.CanManageCloudAccount(user.GetUsername(),
 			resourceID.ProjectID, resourceID.AccountID)
-		return allow, url, nil, err
+		resources := []authutils.ResourceAction{
+			{Action: cloudaccount.AccountManage.String(), Resource: resourceID.AccountID},
+			{Action: project.ProjectView.String(), Resource: resourceID.ProjectID},
+		}
+		return allow, url, resources, err
 	case cloudaccount.CanCreateCloudAccountOperation:
 		allow, url, err := cloudAccountIam.CanCreateCloudAccount(user.GetUsername(), resourceID.ProjectID)
-		return allow, url, nil, err
+		resources := []authutils.ResourceAction{
+			{Action: cloudaccount.AccountCreate.String(), Resource: resourceID.ProjectID},
+			{Action: project.ProjectView.String(), Resource: resourceID.ProjectID},
+		}
+		return allow, url, resources, err
 	case cloudaccount.CanUseCloudAccountOperation:
 		// 存在account id 非必输的情况，跳过权限校验
 		if resourceID.AccountID == "" {
@@ -226,7 +234,11 @@ func callIAM(
 		}
 		allow, url, err := cloudAccountIam.CanUseCloudAccount(user.GetUsername(),
 			resourceID.ProjectID, resourceID.AccountID)
-		return allow, url, nil, err
+		resources := []authutils.ResourceAction{
+			{Action: cloudaccount.AccountUse.String(), Resource: resourceID.AccountID},
+			{Action: project.ProjectView.String(), Resource: resourceID.ProjectID},
+		}
+		return allow, url, resources, err
 	case CanOperatorBiz:
 		// 业务下操作人权限校验
 		bizID := resourceID.BusinessID
