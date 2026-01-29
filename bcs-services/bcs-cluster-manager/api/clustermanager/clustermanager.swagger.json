@@ -2815,6 +2815,27 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "vpcName",
+            "description": "vpcName. 业务名, 过滤业务私有的vpc",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "sort",
+            "description": "sort. 根据某个字段排序",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "order",
+            "description": "order. 升序或者降序",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -7502,6 +7523,104 @@
             "schema": {
               "$ref": "#/definitions/clustermanagerGetTopologyNodesRequest"
             }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
+    "/clustermanager/v2/cloudvpc": {
+      "get": {
+        "summary": "查询Cloud VPC列表",
+        "description": "根据查询条件过滤Cloud VPC列表，如果某项条件值为空，则忽略此条件。如果所有条件都为空，则默认查询所有集群，V2版本返回增加分页",
+        "operationId": "ClusterManager_ListCloudVPCV2",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerListCloudVPCV2Response"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "cloudID",
+            "description": "cloudID. 云类型，英文字符串",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "region",
+            "description": "region. vpc所属区域信息",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "vpcID",
+            "description": "vpcID. vpcID信息",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "networkType",
+            "description": "networkType. networkType网络类型(overlay/underlay)",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "businessID",
+            "description": "businessID. 业务ID, 过滤业务私有的vpc",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "vpcName",
+            "description": "vpcName. 业务名, 过滤业务私有的vpc",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "sort",
+            "description": "sort. 根据某个字段排序",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "order",
+            "description": "order. 升序或者降序",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "limit",
+            "description": "limit. 每页数量",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "page",
+            "description": "page. 页码",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
           }
         ],
         "tags": [
@@ -16707,6 +16826,58 @@
       },
       "description": "查询云VPC返回",
       "title": "ListCloudVPCResponse",
+      "required": [
+        "code",
+        "message"
+      ]
+    },
+    "clustermanagerListCloudVPCResponseData": {
+      "type": "object",
+      "properties": {
+        "count": {
+          "type": "integer",
+          "format": "int64",
+          "description": "CloudVPC数量",
+          "title": "count"
+        },
+        "results": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerCloudVPCResp"
+          },
+          "description": "返回数据",
+          "title": "results"
+        }
+      }
+    },
+    "clustermanagerListCloudVPCV2Response": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/clustermanagerListCloudVPCResponseData",
+          "description": "获取到的信息",
+          "title": "data"
+        }
+      },
+      "description": "查询云VPC返回",
+      "title": "ListCloudVPCV2Response",
       "required": [
         "code",
         "message"

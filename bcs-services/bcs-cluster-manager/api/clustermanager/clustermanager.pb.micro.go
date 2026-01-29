@@ -373,6 +373,12 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		{
+			Name:    "ClusterManager.ListCloudVPCV2",
+			Path:    []string{"/clustermanager/v2/cloudvpc"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
 			Name:    "ClusterManager.ListCloudRegions",
 			Path:    []string{"/clustermanager/v1/cloudregion/{cloudID}"},
 			Method:  []string{"GET"},
@@ -1076,6 +1082,7 @@ type ClusterManagerService interface {
 	UpdateCloudVPC(ctx context.Context, in *UpdateCloudVPCRequest, opts ...client.CallOption) (*UpdateCloudVPCResponse, error)
 	DeleteCloudVPC(ctx context.Context, in *DeleteCloudVPCRequest, opts ...client.CallOption) (*DeleteCloudVPCResponse, error)
 	ListCloudVPC(ctx context.Context, in *ListCloudVPCRequest, opts ...client.CallOption) (*ListCloudVPCResponse, error)
+	ListCloudVPCV2(ctx context.Context, in *ListCloudVPCV2Request, opts ...client.CallOption) (*ListCloudVPCV2Response, error)
 	ListCloudRegions(ctx context.Context, in *ListCloudRegionsRequest, opts ...client.CallOption) (*ListCloudRegionsResponse, error)
 	GetVPCCidr(ctx context.Context, in *GetVPCCidrRequest, opts ...client.CallOption) (*GetVPCCidrResponse, error)
 	// * NodeGroup information management *
@@ -1775,6 +1782,16 @@ func (c *clusterManagerService) DeleteCloudVPC(ctx context.Context, in *DeleteCl
 func (c *clusterManagerService) ListCloudVPC(ctx context.Context, in *ListCloudVPCRequest, opts ...client.CallOption) (*ListCloudVPCResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.ListCloudVPC", in)
 	out := new(ListCloudVPCResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) ListCloudVPCV2(ctx context.Context, in *ListCloudVPCV2Request, opts ...client.CallOption) (*ListCloudVPCV2Response, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.ListCloudVPCV2", in)
+	out := new(ListCloudVPCV2Response)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -2907,6 +2924,7 @@ type ClusterManagerHandler interface {
 	UpdateCloudVPC(context.Context, *UpdateCloudVPCRequest, *UpdateCloudVPCResponse) error
 	DeleteCloudVPC(context.Context, *DeleteCloudVPCRequest, *DeleteCloudVPCResponse) error
 	ListCloudVPC(context.Context, *ListCloudVPCRequest, *ListCloudVPCResponse) error
+	ListCloudVPCV2(context.Context, *ListCloudVPCV2Request, *ListCloudVPCV2Response) error
 	ListCloudRegions(context.Context, *ListCloudRegionsRequest, *ListCloudRegionsResponse) error
 	GetVPCCidr(context.Context, *GetVPCCidrRequest, *GetVPCCidrResponse) error
 	// * NodeGroup information management *
@@ -3099,6 +3117,7 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		UpdateCloudVPC(ctx context.Context, in *UpdateCloudVPCRequest, out *UpdateCloudVPCResponse) error
 		DeleteCloudVPC(ctx context.Context, in *DeleteCloudVPCRequest, out *DeleteCloudVPCResponse) error
 		ListCloudVPC(ctx context.Context, in *ListCloudVPCRequest, out *ListCloudVPCResponse) error
+		ListCloudVPCV2(ctx context.Context, in *ListCloudVPCV2Request, out *ListCloudVPCV2Response) error
 		ListCloudRegions(ctx context.Context, in *ListCloudRegionsRequest, out *ListCloudRegionsResponse) error
 		GetVPCCidr(ctx context.Context, in *GetVPCCidrRequest, out *GetVPCCidrResponse) error
 		CreateNodeGroup(ctx context.Context, in *CreateNodeGroupRequest, out *CreateNodeGroupResponse) error
@@ -3543,6 +3562,12 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.ListCloudVPC",
 		Path:    []string{"/clustermanager/v1/cloudvpc"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.ListCloudVPCV2",
+		Path:    []string{"/clustermanager/v2/cloudvpc"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
@@ -4411,6 +4436,10 @@ func (h *clusterManagerHandler) DeleteCloudVPC(ctx context.Context, in *DeleteCl
 
 func (h *clusterManagerHandler) ListCloudVPC(ctx context.Context, in *ListCloudVPCRequest, out *ListCloudVPCResponse) error {
 	return h.ClusterManagerHandler.ListCloudVPC(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) ListCloudVPCV2(ctx context.Context, in *ListCloudVPCV2Request, out *ListCloudVPCV2Response) error {
+	return h.ClusterManagerHandler.ListCloudVPCV2(ctx, in, out)
 }
 
 func (h *clusterManagerHandler) ListCloudRegions(ctx context.Context, in *ListCloudRegionsRequest, out *ListCloudRegionsResponse) error {

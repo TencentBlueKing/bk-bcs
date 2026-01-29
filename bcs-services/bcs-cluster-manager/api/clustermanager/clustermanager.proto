@@ -624,6 +624,16 @@ service ClusterManager {
       summary : "查询Cloud VPC列表"
     };
   }
+  rpc ListCloudVPCV2(ListCloudVPCV2Request) returns (ListCloudVPCV2Response) {
+    option (google.api.http) = {
+      get : "/clustermanager/v2/cloudvpc"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据查询条件过滤Cloud VPC列表，如果某项条件值为空，则忽略此"
+          "条件。如果所有条件都为空，则默认查询所有集群，V2版本返回增加分页"
+      summary : "查询Cloud VPC列表"
+    };
+  }
   rpc ListCloudRegions(ListCloudRegionsRequest) returns (ListCloudRegionsResponse) {
     option (google.api.http) = {
       get : "/clustermanager/v1/cloudregion/{cloudID}"
@@ -3275,6 +3285,20 @@ message ListCloudVPCRequest {
     title: "businessID",
     description: "业务ID, 过滤业务私有的vpc"
   }];
+  string vpcName = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "vpcName",
+    description: "业务名, 过滤业务私有的vpc"
+  }];
+  string sort = 7 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "sort",
+      description : "根据某个字段排序"
+    }];
+  string order = 8 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "order",
+      description : "升序或者降序"
+    }, (validate.rules).string = {in: ["", "asc", "desc"]}];
 }
 
 message ListCloudVPCResponse {
@@ -3357,6 +3381,97 @@ message CloudVPCResp {
   string businessID = 13[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "businessID",
     description: "业务ID, 作用预留私有的业务vpc"
+  }];
+}
+
+message ListCloudVPCV2Request {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListCloudVPCV2Request"
+      description : "查询云VPC请求，如果填写了目标字段，则组合目标信息查询，如果全为空则为查询全量信息"
+    }
+  };
+
+  string cloudID = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "cloudID",
+    description: "云类型，英文字符串"
+  },(validate.rules).string = {max_len : 20}
+  ];
+  string region = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "region",
+    description: "vpc所属区域信息"
+  }];
+  string vpcID = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "vpcID",
+    description: "vpcID信息"
+  }];
+  string networkType = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "networkType",
+    description: "networkType网络类型(overlay/underlay)"
+  }, (validate.rules).string = {in: ["overlay", "underlay"]}];
+  string businessID = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "businessID",
+    description: "业务ID, 过滤业务私有的vpc"
+  }];
+  string vpcName = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "vpcName",
+    description: "业务名, 过滤业务私有的vpc"
+  }];
+  string sort = 7 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "sort",
+      description : "根据某个字段排序"
+    }];
+  string order = 8 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "order",
+      description : "升序或者降序"
+    }, (validate.rules).string = {in: ["", "asc", "desc"]}];
+  uint32 limit = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "limit",
+    description: "每页数量"
+  }, (validate.rules).uint32.gte = 0];
+  uint32 page = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "page",
+    description: "页码"
+  }, (validate.rules).uint32.gte = 0];
+}
+
+message ListCloudVPCV2Response {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListCloudVPCV2Response"
+      description : "查询云VPC返回"
+      required : [ "code", "message" ]
+    }
+  };
+
+  uint32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+  bool result = 3 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+  ListCloudVPCResponseData data = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "获取到的信息"
+  }];
+}
+
+message ListCloudVPCResponseData {
+  uint32 count = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "count",
+    description : "CloudVPC数量"
+  }];
+  repeated CloudVPCResp results = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "results",
+    description : "返回数据"
   }];
 }
 

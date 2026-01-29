@@ -78,11 +78,43 @@ func (cm *ClusterManager) ListCloudVPC(ctx context.Context,
 	}
 	start := time.Now()
 	ca := cloudvpc.NewListAction(cm.model)
-	ca.Handle(ctx, req, resp)
+	newReq := &cmproto.ListCloudVPCV2Request{
+		CloudID:     req.CloudID,
+		Region:      req.Region,
+		VpcID:       req.VpcID,
+		NetworkType: req.NetworkType,
+		BusinessID:  req.BusinessID,
+		VpcName:     req.VpcName,
+		Sort:        req.Sort,
+		Order:       req.Order,
+	}
+	newResp := &cmproto.ListCloudVPCV2Response{}
+	ca.Handle(ctx, newReq, newResp)
+	resp.Code = newResp.Code
+	resp.Message = newResp.Message
+	resp.Result = newResp.Result
+	resp.Data = newResp.Data.GetResults()
 	metrics.ReportAPIRequestMetric("ListCloudVPC", "grpc", strconv.Itoa(int(resp.Code)), start)
 	blog.Infof("reqID: %s, action: ListCloudVPC, req %v, resp.Code %d, resp.Message %s, resp.Data.Length %v",
 		reqID, req, resp.Code, resp.Message, len(resp.Data))
 	blog.V(5).Infof("reqID: %s, action: ListCloudVPC, req %v, resp %v", reqID, req, resp)
+	return nil
+}
+
+// ListCloudVPCV2 implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) ListCloudVPCV2(ctx context.Context,
+	req *cmproto.ListCloudVPCV2Request, resp *cmproto.ListCloudVPCV2Response) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	ca := cloudvpc.NewListAction(cm.model)
+	ca.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("ListCloudVPCV2", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: ListCloudVPCV2, req %v, resp.Code %d, resp.Message %s",
+		reqID, req, resp.Code, resp.Message)
+	blog.V(5).Infof("reqID: %s, action: ListCloudVPCV2, req %v, resp %v", reqID, req, resp)
 	return nil
 }
 

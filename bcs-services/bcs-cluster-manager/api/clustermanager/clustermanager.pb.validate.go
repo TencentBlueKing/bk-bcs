@@ -8117,6 +8117,21 @@ func (m *ListCloudVPCRequest) validate(all bool) error {
 
 	// no validation rules for BusinessID
 
+	// no validation rules for VpcName
+
+	// no validation rules for Sort
+
+	if _, ok := _ListCloudVPCRequest_Order_InLookup[m.GetOrder()]; !ok {
+		err := ListCloudVPCRequestValidationError{
+			field:  "Order",
+			reason: "value must be in list [ asc desc]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
 	if len(errors) > 0 {
 		return ListCloudVPCRequestMultiError(errors)
 	}
@@ -8200,6 +8215,12 @@ var _ interface {
 var _ListCloudVPCRequest_NetworkType_InLookup = map[string]struct{}{
 	"overlay":  {},
 	"underlay": {},
+}
+
+var _ListCloudVPCRequest_Order_InLookup = map[string]struct{}{
+	"":     {},
+	"asc":  {},
+	"desc": {},
 }
 
 // Validate checks the field values on ListCloudVPCResponse with the rules
@@ -8522,6 +8543,459 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = CloudVPCRespValidationError{}
+
+// Validate checks the field values on ListCloudVPCV2Request with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ListCloudVPCV2Request) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListCloudVPCV2Request with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListCloudVPCV2RequestMultiError, or nil if none found.
+func (m *ListCloudVPCV2Request) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListCloudVPCV2Request) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if utf8.RuneCountInString(m.GetCloudID()) > 20 {
+		err := ListCloudVPCV2RequestValidationError{
+			field:  "CloudID",
+			reason: "value length must be at most 20 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for Region
+
+	// no validation rules for VpcID
+
+	if _, ok := _ListCloudVPCV2Request_NetworkType_InLookup[m.GetNetworkType()]; !ok {
+		err := ListCloudVPCV2RequestValidationError{
+			field:  "NetworkType",
+			reason: "value must be in list [overlay underlay]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for BusinessID
+
+	// no validation rules for VpcName
+
+	// no validation rules for Sort
+
+	if _, ok := _ListCloudVPCV2Request_Order_InLookup[m.GetOrder()]; !ok {
+		err := ListCloudVPCV2RequestValidationError{
+			field:  "Order",
+			reason: "value must be in list [ asc desc]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if m.GetLimit() < 0 {
+		err := ListCloudVPCV2RequestValidationError{
+			field:  "Limit",
+			reason: "value must be greater than or equal to 0",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if m.GetPage() < 0 {
+		err := ListCloudVPCV2RequestValidationError{
+			field:  "Page",
+			reason: "value must be greater than or equal to 0",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return ListCloudVPCV2RequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListCloudVPCV2RequestMultiError is an error wrapping multiple validation
+// errors returned by ListCloudVPCV2Request.ValidateAll() if the designated
+// constraints aren't met.
+type ListCloudVPCV2RequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListCloudVPCV2RequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListCloudVPCV2RequestMultiError) AllErrors() []error { return m }
+
+// ListCloudVPCV2RequestValidationError is the validation error returned by
+// ListCloudVPCV2Request.Validate if the designated constraints aren't met.
+type ListCloudVPCV2RequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListCloudVPCV2RequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListCloudVPCV2RequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListCloudVPCV2RequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListCloudVPCV2RequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListCloudVPCV2RequestValidationError) ErrorName() string {
+	return "ListCloudVPCV2RequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListCloudVPCV2RequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListCloudVPCV2Request.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListCloudVPCV2RequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListCloudVPCV2RequestValidationError{}
+
+var _ListCloudVPCV2Request_NetworkType_InLookup = map[string]struct{}{
+	"overlay":  {},
+	"underlay": {},
+}
+
+var _ListCloudVPCV2Request_Order_InLookup = map[string]struct{}{
+	"":     {},
+	"asc":  {},
+	"desc": {},
+}
+
+// Validate checks the field values on ListCloudVPCV2Response with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ListCloudVPCV2Response) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListCloudVPCV2Response with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListCloudVPCV2ResponseMultiError, or nil if none found.
+func (m *ListCloudVPCV2Response) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListCloudVPCV2Response) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	if all {
+		switch v := interface{}(m.GetData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ListCloudVPCV2ResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ListCloudVPCV2ResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ListCloudVPCV2ResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return ListCloudVPCV2ResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListCloudVPCV2ResponseMultiError is an error wrapping multiple validation
+// errors returned by ListCloudVPCV2Response.ValidateAll() if the designated
+// constraints aren't met.
+type ListCloudVPCV2ResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListCloudVPCV2ResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListCloudVPCV2ResponseMultiError) AllErrors() []error { return m }
+
+// ListCloudVPCV2ResponseValidationError is the validation error returned by
+// ListCloudVPCV2Response.Validate if the designated constraints aren't met.
+type ListCloudVPCV2ResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListCloudVPCV2ResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListCloudVPCV2ResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListCloudVPCV2ResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListCloudVPCV2ResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListCloudVPCV2ResponseValidationError) ErrorName() string {
+	return "ListCloudVPCV2ResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListCloudVPCV2ResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListCloudVPCV2Response.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListCloudVPCV2ResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListCloudVPCV2ResponseValidationError{}
+
+// Validate checks the field values on ListCloudVPCResponseData with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ListCloudVPCResponseData) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListCloudVPCResponseData with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListCloudVPCResponseDataMultiError, or nil if none found.
+func (m *ListCloudVPCResponseData) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListCloudVPCResponseData) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Count
+
+	for idx, item := range m.GetResults() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, ListCloudVPCResponseDataValidationError{
+						field:  fmt.Sprintf("Results[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, ListCloudVPCResponseDataValidationError{
+						field:  fmt.Sprintf("Results[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ListCloudVPCResponseDataValidationError{
+					field:  fmt.Sprintf("Results[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return ListCloudVPCResponseDataMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListCloudVPCResponseDataMultiError is an error wrapping multiple validation
+// errors returned by ListCloudVPCResponseData.ValidateAll() if the designated
+// constraints aren't met.
+type ListCloudVPCResponseDataMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListCloudVPCResponseDataMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListCloudVPCResponseDataMultiError) AllErrors() []error { return m }
+
+// ListCloudVPCResponseDataValidationError is the validation error returned by
+// ListCloudVPCResponseData.Validate if the designated constraints aren't met.
+type ListCloudVPCResponseDataValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListCloudVPCResponseDataValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListCloudVPCResponseDataValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListCloudVPCResponseDataValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListCloudVPCResponseDataValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListCloudVPCResponseDataValidationError) ErrorName() string {
+	return "ListCloudVPCResponseDataValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListCloudVPCResponseDataValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListCloudVPCResponseData.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListCloudVPCResponseDataValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListCloudVPCResponseDataValidationError{}
 
 // Validate checks the field values on CidrDetailInfo with the rules defined in
 // the proto definition for this message. If any rules are violated, the first

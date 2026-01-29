@@ -169,6 +169,7 @@ var ActionPermissions = map[string]string{
 	"ClusterManager.UpdateCloudVPC":             "",
 	"ClusterManager.DeleteCloudVPC":             "",
 	"ClusterManager.ListCloudVPC":               "",
+	"ClusterManager.ListCloudVPCV2":             "",
 	"ClusterManager.GetVPCCidr":                 "",
 	"ClusterManager.CheckCidrConflictFromVpc":   cloudaccount.CanUseCloudAccountOperation,
 	"ClusterManager.GetCloudBandwidthPackages":  cloudaccount.CanUseCloudAccountOperation,

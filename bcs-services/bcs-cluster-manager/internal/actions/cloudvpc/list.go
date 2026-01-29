@@ -34,9 +34,10 @@ import (
 type ListAction struct {
 	ctx          context.Context
 	model        store.ClusterManagerModel
-	req          *cmproto.ListCloudVPCRequest
-	resp         *cmproto.ListCloudVPCResponse
+	req          *cmproto.ListCloudVPCV2Request
+	resp         *cmproto.ListCloudVPCV2Response
 	cloudVPCList []*cmproto.CloudVPCResp
+	totalCount   uint32
 }
 
 // NewListAction create list action for cluster vpc list
@@ -58,6 +59,9 @@ func (la *ListAction) listCloudVPC() error { // nolint
 	}
 	if len(la.req.VpcID) != 0 {
 		condM["vpcid"] = la.req.VpcID
+	}
+	if len(la.req.VpcName) != 0 {
+		condM["vpcname"] = la.req.VpcName
 	}
 	if len(la.req.NetworkType) != 0 {
 		condM["networktype"] = la.req.NetworkType
@@ -144,10 +148,61 @@ func (la *ListAction) listCloudVPC() error { // nolint
 	}
 	barrier.Wait()
 
+	la.totalCount = uint32(len(la.cloudVPCList))
+
 	// sort cloudVpcResp by available IP num
-	sort.Sort(utils.CloudVpcSlice(la.cloudVPCList))
+	la.sortCloudVPCList()
+
+	la.paginateCloudVPCList()
 
 	return nil
+}
+
+func (la *ListAction) paginateCloudVPCList() {
+	if la.req.Page == 0 || la.req.Limit == 0 {
+		return
+	}
+
+	offset := int((la.req.Page - 1) * la.req.Limit)
+	end := offset + int(la.req.Limit)
+	if end > len(la.cloudVPCList) {
+		end = len(la.cloudVPCList)
+	}
+
+	if offset < len(la.cloudVPCList) {
+		la.cloudVPCList = la.cloudVPCList[offset:end]
+	} else {
+		la.cloudVPCList = []*cmproto.CloudVPCResp{}
+	}
+}
+
+func (la *ListAction) sortCloudVPCList() {
+	switch la.req.Sort {
+	case "overlayAvailableIPNum":
+		la.sortByOverlayIPNum()
+	case "underlayAvailableIPNum":
+		la.sortByUnderlayIPNum()
+	default:
+		sort.Sort(utils.CloudVpcSlice(la.cloudVPCList))
+	}
+}
+
+func (la *ListAction) sortByOverlayIPNum() {
+	sort.Slice(la.cloudVPCList, func(i, j int) bool {
+		if la.req.Order == "asc" {
+			return la.cloudVPCList[i].Overlay.AvailableIPNum < la.cloudVPCList[j].Overlay.AvailableIPNum
+		}
+		return la.cloudVPCList[i].Overlay.AvailableIPNum > la.cloudVPCList[j].Overlay.AvailableIPNum
+	})
+}
+
+func (la *ListAction) sortByUnderlayIPNum() {
+	sort.Slice(la.cloudVPCList, func(i, j int) bool {
+		if la.req.Order == "asc" {
+			return la.cloudVPCList[i].Underlay.AvailableIPNum < la.cloudVPCList[j].Underlay.AvailableIPNum
+		}
+		return la.cloudVPCList[i].Underlay.AvailableIPNum > la.cloudVPCList[j].Underlay.AvailableIPNum
+	})
 }
 
 func getAvailableIPNumByVpc(model store.ClusterManagerModel, ipType string, vpc *cmproto.CloudVPC) (uint32, error) {
@@ -188,12 +243,15 @@ func (la *ListAction) setResp(code uint32, msg string) {
 	la.resp.Code = code
 	la.resp.Message = msg
 	la.resp.Result = (code == common.BcsErrClusterManagerSuccess)
-	la.resp.Data = la.cloudVPCList
+	la.resp.Data = &cmproto.ListCloudVPCResponseData{
+		Count:   la.totalCount,
+		Results: la.cloudVPCList,
+	}
 }
 
 // Handle list cluster vpc list
 func (la *ListAction) Handle(
-	ctx context.Context, req *cmproto.ListCloudVPCRequest, resp *cmproto.ListCloudVPCResponse) {
+	ctx context.Context, req *cmproto.ListCloudVPCV2Request, resp *cmproto.ListCloudVPCV2Response) {
 	if req == nil || resp == nil {
 		blog.Errorf("list clusterVPC failed, req or resp is empty")
 		return
