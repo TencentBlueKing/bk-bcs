@@ -164,6 +164,9 @@ func ClusterAuthorization(next http.Handler) http.Handler {
 
 // setResourceActions 设置需要申请的权限
 func setResourceActions(resources []authutils.ResourceAction, url string) *rest.Perms {
+	if len(resources) == 0 {
+		return nil
+	}
 	actionList := make([]rest.ResourceAction, len(resources))
 	for i, r := range resources {
 		actionList[i] = rest.ResourceAction{
