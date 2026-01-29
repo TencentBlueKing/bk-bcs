@@ -181,6 +181,11 @@ webhook-server:pre
 	cp -R ${BCS_CONF_COMPONENT_PATH}/bcs-webhook-server ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
 	cd ${BCS_COMPONENT_PATH}/bcs-webhook-server && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-webhook-server/bcs-webhook-server ./cmd/server.go
 
+istio-policy:pre
+	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
+	cp -R ${BCS_CONF_COMPONENT_PATH}/istio-policy-controller ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
+	cd ${BCS_COMPONENT_PATH}/istio-policy-controller && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/istio-policy-controller/istio-policy-controller main.go
+
 tools:pre tongsuo
 	mkdir -p ${PACKAGEPATH}/bcs-services
 	cd ${BCS_INSTALL_PATH}/cryptool && go mod tidy && $(CGO_BUILD_FLAGS) go build ${LDFLAG} -o  ${WORKSPACE}/${PACKAGEPATH}/bcs-services/cryptools main.go
