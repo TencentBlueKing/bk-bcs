@@ -9,7 +9,7 @@
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
-// package xxx
+// package controllers contains the reconcile logic for the istio-policy-controller.
 package controllers
 
 import (
@@ -17,6 +17,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/istio-policy-controller/internal/metric"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/istio-policy-controller/internal/option"
 	"github.com/go-logr/logr"
 	"istio.io/api/networking/v1alpha3"
@@ -92,6 +93,7 @@ func (sr *ServiceReconciler) createOrUpdatePolicy(ctx context.Context, namespace
 			return err
 		}
 
+		metric.PolicyGeneratedTotal.Inc()
 		sr.Log.Info("Creating DestinationRule", "name", name, "namespace", namespace)
 		err = sr.createDr(ctx, namespace, name)
 		if err != nil {
@@ -99,8 +101,10 @@ func (sr *ServiceReconciler) createOrUpdatePolicy(ctx context.Context, namespace
 			return err
 		}
 
+		metric.PolicySuccessTotal.Inc()
 		sr.Log.Info("DestinationRule created successfully")
 	} else if dr != nil && dr.GetName() != "" {
+		metric.PolicyConflictTotal.Inc()
 		sr.Log.Info("Updating DestinationRule", "name", name, "namespace", namespace)
 		err = sr.updateDr(ctx, dr)
 		if err != nil {
@@ -144,62 +148,41 @@ func (sr *ServiceReconciler) createDr(ctx context.Context, namespace, name strin
 			Name:      name,
 			Namespace: namespace,
 			Labels: map[string]string{
-				LabelKey:  LabelValue,
-				namespace: namespace,
-				name:      name,
+				LabelKeyManagedBy:        ControllerName,
+				LabelKeyServiceNamespace: namespace,
+				LabelKeyServiceName:      name,
 			},
 		},
 		Spec: v1alpha3.DestinationRule{
-			Host:          fmt.Sprintf("%s.%s.svc.cluster.local", name, namespace),
-			TrafficPolicy: &v1alpha3.TrafficPolicy{},
+			Host: sprintfHost(name, namespace),
 		},
 	}
 
-	var tp *v1alpha3.TrafficPolicy
 	for _, svc := range sr.Option.Cfg.Services {
 		if svc.Name == name && svc.Namespace == namespace {
-			tp = svc.TrafficPolicy
+			if svc.TrafficPolicy == nil {
+				return errors.New("no traffic policy found in service config")
+			}
+
+			dr.Spec.TrafficPolicy = svc.TrafficPolicy
+			overrideDrPolicy(dr)
+			_, err := sr.IstioClient.NetworkingV1().DestinationRules(namespace).
+				Create(ctx, dr, metav1.CreateOptions{})
+
+			return err
 		}
 	}
 
-	if tp == nil {
-		tp = sr.Option.Cfg.Global.TrafficPolicy
+	if sr.Option.Cfg.Global.TrafficPolicy == nil {
+		return errors.New("no traffic policy found in global config")
 	}
 
-	dr.Spec.TrafficPolicy = tp
-
-	if isEmptyStruct(dr.Spec.TrafficPolicy.LoadBalancer) {
-		dr.Spec.TrafficPolicy.LoadBalancer = nil
-	}
-	if isEmptyStruct(dr.Spec.TrafficPolicy.ConnectionPool) {
-		dr.Spec.TrafficPolicy.ConnectionPool = nil
-	}
-	if isEmptyStruct(dr.Spec.TrafficPolicy.OutlierDetection) {
-		dr.Spec.TrafficPolicy.OutlierDetection = nil
-	}
-	if isEmptyStruct(dr.Spec.TrafficPolicy.Tls) {
-		dr.Spec.TrafficPolicy.Tls = nil
-	}
-	if len(dr.Spec.TrafficPolicy.PortLevelSettings) == 0 {
-		dr.Spec.TrafficPolicy.PortLevelSettings = nil
-	}
-	if isEmptyStruct(dr.Spec.TrafficPolicy.Tunnel) {
-		dr.Spec.TrafficPolicy.Tunnel = nil
-	}
-	if isEmptyStruct(dr.Spec.TrafficPolicy.ProxyProtocol) {
-		dr.Spec.TrafficPolicy.ProxyProtocol = nil
-	}
-	if isEmptyStruct(dr.Spec.TrafficPolicy.RetryBudget) {
-		dr.Spec.TrafficPolicy.RetryBudget = nil
-	}
-
+	dr.Spec.TrafficPolicy = sr.Option.Cfg.Global.TrafficPolicy
+	overrideDrPolicy(dr)
 	_, err := sr.IstioClient.NetworkingV1().DestinationRules(namespace).
 		Create(ctx, dr, metav1.CreateOptions{})
-	if err != nil {
-		return err
-	}
 
-	return nil
+	return err
 }
 
 // createVs 创建 VirtualService
@@ -213,19 +196,19 @@ func (sr *ServiceReconciler) createVs(ctx context.Context, namespace, name strin
 			Name:      name,
 			Namespace: namespace,
 			Labels: map[string]string{
-				LabelKey:  LabelValue,
-				namespace: namespace,
-				name:      name,
+				LabelKeyManagedBy:        ControllerName,
+				LabelKeyServiceNamespace: namespace,
+				LabelKeyServiceName:      name,
 			},
 		},
 		Spec: v1alpha3.VirtualService{
-			Hosts: []string{fmt.Sprintf("%s.%s.svc.cluster.local", name, namespace)},
+			Hosts: []string{sprintfHost(name, namespace)},
 			Http: []*v1alpha3.HTTPRoute{
 				{
 					Route: []*v1alpha3.HTTPRouteDestination{
 						{
 							Destination: &v1alpha3.Destination{
-								Host: fmt.Sprintf("%s.%s.svc.cluster.local", name, namespace),
+								Host: sprintfHost(name, namespace),
 							},
 						},
 					},
@@ -235,13 +218,11 @@ func (sr *ServiceReconciler) createVs(ctx context.Context, namespace, name strin
 	}
 
 	for _, svc := range sr.Option.Cfg.Services {
-		if svc.Name == name && svc.Namespace == namespace {
-			if svc.Setting.AutoGenerateVS {
-				_, err := sr.IstioClient.NetworkingV1().VirtualServices(namespace).
-					Create(ctx, vs, metav1.CreateOptions{})
-				if err != nil {
-					return err
-				}
+		if svc.Setting.AutoGenerateVS && svc.Name == name && svc.Namespace == namespace {
+			_, err := sr.IstioClient.NetworkingV1().VirtualServices(namespace).
+				Create(ctx, vs, metav1.CreateOptions{})
+			if err != nil {
+				return err
 			}
 		}
 	}
@@ -263,21 +244,25 @@ func (sr *ServiceReconciler) updateDr(ctx context.Context, dr *networkingv1.Dest
 	if len(label) == 0 {
 		label = map[string]string{}
 	}
-	label[LabelKey] = LabelValue
+	label[LabelKeyManagedBy] = ControllerName
 	label[dr.GetName()] = dr.GetName()
 	label[dr.GetNamespace()] = dr.GetNamespace()
-	dr.SetLabels(label)
 
 	for _, svc := range sr.Option.Cfg.Services {
 		if svc.Name == dr.GetName() && svc.Namespace == dr.GetNamespace() {
-			if v, ok := dr.GetLabels()[LabelKey]; (ok && v == LabelValue) || svc.Setting.UpdateUnmanagedResources {
+			if v, ok := dr.GetLabels()[LabelKeyManagedBy]; (ok && v == ControllerName) ||
+				svc.Setting.UpdateUnmanagedResources {
+				if svc.TrafficPolicy == nil {
+					return errors.New("no traffic policy found in service config")
+				}
+
 				if svc.Setting.MergeMode == MergeModeMerge {
-					if svc.TrafficPolicy != nil {
-						mergeDrPolicy(dr, svc.TrafficPolicy)
-					}
+					mergeDrPolicy(dr, svc.TrafficPolicy)
 				} else {
 					dr.Spec.TrafficPolicy = svc.TrafficPolicy
+					overrideDrPolicy(dr)
 				}
+				dr.SetLabels(label)
 
 				_, err := sr.IstioClient.NetworkingV1().DestinationRules(dr.GetNamespace()).
 					Update(ctx, dr, metav1.UpdateOptions{})
@@ -289,13 +274,19 @@ func (sr *ServiceReconciler) updateDr(ctx context.Context, dr *networkingv1.Dest
 		}
 	}
 
-	if v, ok := dr.GetLabels()[LabelKey]; (ok && v == LabelValue) ||
+	if v, ok := dr.GetLabels()[LabelKeyManagedBy]; (ok && v == ControllerName) ||
 		sr.Option.Cfg.Global.Setting.UpdateUnmanagedResources {
+		if sr.Option.Cfg.Global.TrafficPolicy == nil {
+			return errors.New("no traffic policy found in global config")
+		}
+
 		if sr.Option.Cfg.Global.Setting.MergeMode == MergeModeMerge {
 			mergeDrPolicy(dr, sr.Option.Cfg.Global.TrafficPolicy)
 		} else {
 			dr.Spec.TrafficPolicy = sr.Option.Cfg.Global.TrafficPolicy
+			overrideDrPolicy(dr)
 		}
+		dr.SetLabels(label)
 
 		_, err := sr.IstioClient.NetworkingV1().DestinationRules(dr.GetNamespace()).
 			Update(ctx, dr, metav1.UpdateOptions{})
@@ -341,7 +332,7 @@ func (sr *ServiceReconciler) deleteDrAndVs(ctx context.Context, dr *networkingv1
 
 	var drErr, vsErr error
 	if dr != nil {
-		if v, ok := dr.GetLabels()[LabelKey]; ok && v == LabelValue {
+		if v, ok := dr.GetLabels()[LabelKeyManagedBy]; ok && v == ControllerName {
 			drErr = sr.IstioClient.NetworkingV1().DestinationRules(dr.Namespace).Delete(ctx,
 				dr.Name, metav1.DeleteOptions{})
 			if drErr != nil {
@@ -353,7 +344,7 @@ func (sr *ServiceReconciler) deleteDrAndVs(ctx context.Context, dr *networkingv1
 	}
 
 	if vs != nil {
-		if v, ok := vs.GetLabels()[LabelKey]; ok && v == LabelValue {
+		if v, ok := vs.GetLabels()[LabelKeyManagedBy]; ok && v == ControllerName {
 			vsErr = sr.IstioClient.NetworkingV1().VirtualServices(vs.Namespace).Delete(ctx,
 				vs.Name, metav1.DeleteOptions{})
 			if vsErr != nil {

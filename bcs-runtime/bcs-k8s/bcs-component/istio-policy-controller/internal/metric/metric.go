@@ -9,67 +9,49 @@
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+// package metric is used to collect metrics for controller
 package metric
 
 import (
-	"strconv"
-	"time"
-
 	"github.com/prometheus/client_golang/prometheus"
 	"sigs.k8s.io/controller-runtime/pkg/metrics"
 )
 
-var (
-	// RequestResultSuccess request successfully
-	RequestResultSuccess = "ok"
-	// RequestResultFailed request return error
-	RequestResultFailed = "failed"
-	// RequestResultPartialFailed partial failed result
-	RequestResultPartialFailed = "partialfailed"
+const (
+	// ControllerName controller name
+	ControllerName = "istio_policy_controller"
 )
 
 // declare metrics
 var (
-	cliReqCounter = prometheus.NewCounterVec(
+	// PolicyGeneratedTotal 策略生成数量
+	PolicyGeneratedTotal = prometheus.NewCounter(
 		prometheus.CounterOpts{
-			Namespace: "bcs_network",
-			Subsystem: "cloudnetcontroller",
-			Name:      "cli_request_total",
-			Help:      "total request counter as client",
+			Subsystem: ControllerName,
+			Name:      "policy_generated_total",
+			Help:      "Total number of policies generated.",
 		},
-		[]string{"module", "rpc", "errcode", "result"},
 	)
-	cliRespSummary = prometheus.NewSummaryVec(
-		prometheus.SummaryOpts{
-			Namespace: "bcs_network",
-			Subsystem: "cloudnetcontroller",
-			Name:      "cli_response_time",
-			Help:      "response time(ms) of other module summary.",
+	// PolicySuccessTotal 策略下发成功数量
+	PolicySuccessTotal = prometheus.NewCounter(
+		prometheus.CounterOpts{
+			Subsystem: ControllerName,
+			Name:      "policy_applied_success_total",
+			Help:      "Total number of policies successfully applied.",
 		},
-		[]string{"module", "rpc"},
+	)
+	// PolicyConflictTotal 策略冲突数量
+	PolicyConflictTotal = prometheus.NewCounter(
+		prometheus.CounterOpts{
+			Subsystem: ControllerName,
+			Name:      "policy_conflict_total",
+			Help:      "Total number of policy conflicts detected.",
+		},
 	)
 )
 
 func init() {
-	metrics.Registry.MustRegister(cliReqCounter)
-	metrics.Registry.MustRegister(cliRespSummary)
-}
-
-// StatClientRequest report client request metrics
-func StatClientRequest(module, rpc string, respCode int, result string, inTime, outTime time.Time) {
-	cliReqCounter.With(prometheus.Labels{
-		"module":  module,
-		"rpc":     rpc,
-		"errcode": strconv.Itoa(respCode),
-		"result":  result,
-	}).Inc()
-
-	cost := toMSTimestamp(outTime) - toMSTimestamp(inTime)
-	cliRespSummary.With(prometheus.Labels{"module": module, "rpc": rpc}).Observe(float64(cost))
-}
-
-// toMSTimestamp converts time.Time to millisecond timestamp.
-func toMSTimestamp(t time.Time) int64 {
-	return t.UnixNano() / 1e6
+	metrics.Registry.MustRegister(PolicyGeneratedTotal)
+	metrics.Registry.MustRegister(PolicySuccessTotal)
+	metrics.Registry.MustRegister(PolicyConflictTotal)
 }

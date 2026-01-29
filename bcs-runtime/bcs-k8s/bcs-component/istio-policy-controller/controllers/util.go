@@ -9,7 +9,7 @@
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+// package controllers contains the reconcile logic for the istio-policy-controller.
 package controllers
 
 import (
@@ -25,15 +25,26 @@ import (
 )
 
 const (
-	// LabelKey label key
-	LabelKey = "managed-by"
-	// LabelValue label value
-	LabelValue = "istio-policy-controller"
+	// ControllerName controller name
+	ControllerName = "istio-policy-controller"
+
+	// LabelKeyManagedBy label key for istio-policy-controller
+	LabelKeyManagedBy = "managed-by"
+	// LabelKeyServiceNamespace label key for service namespace
+	LabelKeyServiceNamespace = "service-namespace"
+	// LabelKeyServiceName label key for service name
+	LabelKeyServiceName = "service-name"
+
 	// MergeModeMerge merge mode merge
 	MergeModeMerge = "merge"
 	// MergeModeOverride merge mode override
 	MergeModeOverride = "override"
 )
+
+// sprintfHost 格式化 host 字符串
+func sprintfHost(name, namespace string) string {
+	return fmt.Sprintf("%s.%s.svc.cluster.local", name, namespace)
+}
 
 // getServicePredicate 获取 Service 事件的 Predicate
 func getServicePredicate() predicate.Predicate {
@@ -72,6 +83,34 @@ func getServicePredicate() predicate.Predicate {
 				svc.GetName(), svc.GetNamespace()))
 			return true
 		},
+	}
+}
+
+// overrideDrPolicy override destination policy
+func overrideDrPolicy(dr *v1.DestinationRule) {
+	if isEmptyStruct(dr.Spec.TrafficPolicy.LoadBalancer) {
+		dr.Spec.TrafficPolicy.LoadBalancer = nil
+	}
+	if isEmptyStruct(dr.Spec.TrafficPolicy.ConnectionPool) {
+		dr.Spec.TrafficPolicy.ConnectionPool = nil
+	}
+	if isEmptyStruct(dr.Spec.TrafficPolicy.OutlierDetection) {
+		dr.Spec.TrafficPolicy.OutlierDetection = nil
+	}
+	if isEmptyStruct(dr.Spec.TrafficPolicy.Tls) {
+		dr.Spec.TrafficPolicy.Tls = nil
+	}
+	if len(dr.Spec.TrafficPolicy.PortLevelSettings) == 0 {
+		dr.Spec.TrafficPolicy.PortLevelSettings = nil
+	}
+	if isEmptyStruct(dr.Spec.TrafficPolicy.Tunnel) {
+		dr.Spec.TrafficPolicy.Tunnel = nil
+	}
+	if isEmptyStruct(dr.Spec.TrafficPolicy.ProxyProtocol) {
+		dr.Spec.TrafficPolicy.ProxyProtocol = nil
+	}
+	if isEmptyStruct(dr.Spec.TrafficPolicy.RetryBudget) {
+		dr.Spec.TrafficPolicy.RetryBudget = nil
 	}
 }
 

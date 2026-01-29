@@ -9,7 +9,7 @@
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
-// package xxx
+// package main is the entry point of the program.
 package main
 
 import (

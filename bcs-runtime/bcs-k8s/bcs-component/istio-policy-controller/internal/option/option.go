@@ -9,7 +9,7 @@
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
-// package xxx
+// package option app 配置
 package option
 
 import (
@@ -80,7 +80,7 @@ func (o *ControllerOption) InitCfg() error {
 		return err
 	}
 
-	ctrl.Log.WithName("config").Info(fmt.Sprintf("config content: %s", string(content)))
+	ctrl.Log.WithName("config").Info(fmt.Sprintf("loaded config from %s", o.ConfigPath))
 
 	o.Cfg = &Configuration{}
 	if err := yaml.Unmarshal(content, o.Cfg); err != nil {
