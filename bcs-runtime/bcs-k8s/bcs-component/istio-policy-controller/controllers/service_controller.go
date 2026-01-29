@@ -95,14 +95,20 @@ func (sr *ServiceReconciler) createOrUpdatePolicy(ctx context.Context, namespace
 		sr.Log.Info("Creating DestinationRule", "name", name, "namespace", namespace)
 		err = sr.createDr(ctx, namespace, name)
 		if err != nil {
+			sr.Log.Error(err, "failed to create DestinationRule")
 			return err
 		}
+
+		sr.Log.Info("DestinationRule created successfully")
 	} else if dr != nil && dr.GetName() != "" {
 		sr.Log.Info("Updating DestinationRule", "name", name, "namespace", namespace)
 		err = sr.updateDr(ctx, dr)
 		if err != nil {
+			sr.Log.Error(err, "failed to update DestinationRule")
 			return err
 		}
+
+		sr.Log.Info("DestinationRule updated successfully")
 	}
 
 	_, err = sr.IstioClient.NetworkingV1().VirtualServices(namespace).Get(ctx,
@@ -117,8 +123,11 @@ func (sr *ServiceReconciler) createOrUpdatePolicy(ctx context.Context, namespace
 		sr.Log.Info("Creating VirtualServices", "name", name, "namespace", namespace)
 		err = sr.createVs(ctx, namespace, name)
 		if err != nil {
+			sr.Log.Error(err, "failed to create VirtualServices")
 			return err
 		}
+
+		sr.Log.Info("VirtualServices created successfully")
 	}
 
 	return nil
@@ -257,7 +266,6 @@ func (sr *ServiceReconciler) updateDr(ctx context.Context, dr *networkingv1.Dest
 	label[LabelKey] = LabelValue
 	label[dr.GetName()] = dr.GetName()
 	label[dr.GetNamespace()] = dr.GetNamespace()
-	label["test"] = "test"
 	dr.SetLabels(label)
 
 	for _, svc := range sr.Option.Cfg.Services {
@@ -339,6 +347,8 @@ func (sr *ServiceReconciler) deleteDrAndVs(ctx context.Context, dr *networkingv1
 			if drErr != nil {
 				sr.Log.Error(drErr, "failed to delete DestinationRule")
 			}
+
+			sr.Log.Info("DestinationRule deleted successfully")
 		}
 	}
 
@@ -350,6 +360,8 @@ func (sr *ServiceReconciler) deleteDrAndVs(ctx context.Context, dr *networkingv1
 				sr.Log.Error(vsErr, "failed to delete VirtualService")
 				return vsErr
 			}
+
+			sr.Log.Info("VirtualService deleted successfully")
 		}
 	}
 
