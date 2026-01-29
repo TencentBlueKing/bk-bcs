@@ -314,8 +314,12 @@ func (sr *ServiceReconciler) deletePolicy(ctx context.Context, namespace, name s
 	}
 
 	for _, svc := range sr.Option.Cfg.Services {
-		if svc.Name == name && svc.Namespace == namespace && svc.Setting.DeletePolicyOnServiceDelete {
-			return sr.deleteDrAndVs(ctx, dr, vs)
+		if svc.Name == name && svc.Namespace == namespace {
+			if svc.Setting.DeletePolicyOnServiceDelete {
+				return sr.deleteDrAndVs(ctx, dr, vs)
+			}
+
+			return nil
 		}
 	}
 
