@@ -24,6 +24,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/pkg/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/pkg/handler/internal/alarm"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/pkg/handler/internal/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/pkg/handler/internal/clusterconfig"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/pkg/handler/internal/dynamic"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/pkg/handler/internal/dynamicquery"
@@ -32,11 +33,14 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/pkg/handler/internal/hostconfig"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/pkg/handler/internal/metric"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/pkg/handler/internal/metricwatch"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/pkg/handler/internal/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/pkg/handler/internal/watchk8smesos"
 	storage "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/pkg/proto"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/pkg/util"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/lib"
+	v1httpclu "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/cluster"
 	dynamic2 "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/dynamic"
+	v1httppro "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/project"
 )
 
 // Storage storage struct, which include operations of alarm,
@@ -123,6 +127,110 @@ func (s *Storage) ListAlarm(ctx context.Context, req *storage.ListAlarmRequest, 
 
 	// 打印响应体
 	blog.Infof("ListAlarm rsp: %v", util.PrettyStruct(rsp))
+	return nil
+}
+
+// PutProjectInfo 订阅项目数据
+func (s *Storage) PutProjectInfo(ctx context.Context, req *storage.PutProjectInfoRequest,
+	rsp *storage.PutProjectInfoResponse) error {
+	// 如果请求合法,则执行函数请求
+	if err := req.Validate(); err != nil {
+		rsp.Result = false
+		rsp.Message = err.Error()
+		rsp.Code = common.AdditionErrorCode + 500
+		return nil
+	}
+	// 打印请求体
+	blog.Infof("PutProjectInfo req: %v", util.PrettyStruct(req))
+	data, err := project.HandlerCreateProjectInfoReq(ctx, req)
+	if err != nil {
+		// 如果处理过程中出错，将错误信息直接返回
+		rsp.Result = false
+		rsp.Code = common.BcsErrStoragePutResourceFail
+		rsp.Message = common.BcsErrStoragePutResourceFailStr
+		blog.Errorf("PutProjectInfo | put project info failed.err: %v", err)
+		return nil
+	}
+
+	v1httppro.PushCreateProjectInfoToQueue(data)
+
+	// 将查询结果添加至响应体
+	rsp.Result = true
+	rsp.Code = common.BcsSuccess
+	rsp.Message = common.BcsSuccessStr
+
+	// 打印响应体
+	blog.Infof("PutProject rsp: %v", util.PrettyStruct(rsp))
+	return nil
+}
+
+// PutClusterInfo 订阅集群数据
+func (s *Storage) PutClusterInfo(ctx context.Context, req *storage.PutClusterInfoRequest,
+	rsp *storage.PutClusterInfoResponse) error {
+	// 如果请求合法,则执行函数请求
+	if err := req.Validate(); err != nil {
+		rsp.Result = false
+		rsp.Message = err.Error()
+		rsp.Code = common.AdditionErrorCode + 500
+		return nil
+	}
+	// 打印请求体
+	blog.Infof("PutClusterInfo req: %v", util.PrettyStruct(req))
+	data, err := cluster.HandlerCreateClusterInfoReq(ctx, req)
+	if err != nil {
+		// 如果处理过程中出错，将错误信息直接返回
+		rsp.Result = false
+		rsp.Code = common.BcsErrStoragePutResourceFail
+		rsp.Message = common.BcsErrStoragePutResourceFailStr
+		blog.Errorf("PutClusterInfo | put cluster info failed.err: %v", err)
+		return nil
+	}
+
+	v1httpclu.PushCreateClusterInfoToQueue(data)
+
+	// 将查询结果添加至响应体
+	rsp.Result = true
+	rsp.Code = common.BcsSuccess
+	rsp.Message = common.BcsSuccessStr
+
+	// 打印响应体
+	blog.Infof("PutProject rsp: %v", util.PrettyStruct(rsp))
+	return nil
+}
+
+// DeleteClusterInfo 删除集群数据
+func (s *Storage) DeleteClusterInfo(ctx context.Context, req *storage.DeleteClusterInfoRequest,
+	rsp *storage.PutClusterInfoResponse) error {
+	// 如果请求合法,则执行函数请求
+	if err := req.Validate(); err != nil {
+		rsp.Result = false
+		rsp.Message = err.Error()
+		rsp.Code = common.AdditionErrorCode + 500
+		return nil
+	}
+	// 打印请求体
+	blog.Infof("DeleteClusterInfo req: %v", util.PrettyStruct(req))
+	data, err := cluster.HandlerDeleteClusterInfoReq(ctx, req)
+	if err != nil {
+		// 如果处理过程中出错，将错误信息直接返回
+		rsp.Result = false
+		rsp.Code = common.BcsErrStorageDeleteResourceFail
+		rsp.Message = common.BcsErrStorageDeleteResourceFailStr
+		blog.Errorf("DeleteClusterInfo | delete cluster info failed.err: %v", err)
+		return nil
+	}
+
+	if len(data) == 1 {
+		v1httpclu.PushDeleteClusterInfoToQueue(data[0])
+	}
+
+	// 将查询结果添加至响应体
+	rsp.Result = true
+	rsp.Code = common.BcsSuccess
+	rsp.Message = common.BcsSuccessStr
+
+	// 打印响应体
+	blog.Infof("DeleteClusterInfo rsp: %v", util.PrettyStruct(rsp))
 	return nil
 }
 
