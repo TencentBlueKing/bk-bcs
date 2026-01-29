@@ -92,7 +92,7 @@ func main() {
 		Scheme:                  scheme,
 		MetricsBindAddress:      opts.Address + ":" + strconv.Itoa(opts.MetricPort),
 		LeaderElection:          true,
-		LeaderElectionID:        "333fb49e.istioconroller.bkbcs.tencent.com",
+		LeaderElectionID:        "i8a4x2f5.istio-conroller.bkbcs.tencent.com",
 		LeaderElectionNamespace: "default",
 	})
 	if err != nil {

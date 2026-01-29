@@ -201,7 +201,7 @@ func isEmptyStruct(v interface{}) bool {
 	}
 
 	if rv.Kind() != reflect.Struct {
-		panic("IsStructLogicallyZero only accepts struct or pointer to struct")
+		panic("isEmptyStruct only accepts struct or pointer to struct")
 	}
 
 	return isLogicallyZero(rv, rt)

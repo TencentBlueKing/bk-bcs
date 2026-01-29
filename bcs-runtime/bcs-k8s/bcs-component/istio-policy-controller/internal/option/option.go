@@ -22,9 +22,6 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-// ConnectionPoolSettings_HTTPSettings_H2UpgradePolicy Policy for upgrading http1.1 connections to http2.
-type ConnectionPoolSettings_HTTPSettings_H2UpgradePolicy int32
-
 // Configuration 是整个 YAML 配置的根结构
 type Configuration struct {
 	Global   Global
