@@ -28,7 +28,7 @@ $(SWAGGEROBJ):$(PROTO)
 		--proto_path=/proto \
 		--go_out=plugins=grpc:/proto \
 		--validate_out=lang=go:/proto $<
-	sed -i '' 's/json:"-"/json:"-" bson:"-"/g' clustermanager.pb.go
+	sed -i 's/json:"-"/json:"-" bson:"-"/g' clustermanager.pb.go
 
 %.pb.gw.go: %.proto
 	docker run --rm \
