@@ -1,5 +1,5 @@
 <template>
-  <BcsContent :title="$t('projects.project.quota')" hide-back v-bkloading="{ isLoading: isLoading }">
+  <BcsContent :title="$t('projects.project.quota')" hide-back>
     <LayoutGroup collapsible class="mb10">
       <template #title>
         <div class="flex-1 flex item-center justify-between">
@@ -21,7 +21,9 @@
         </div>
       </template>
       <div class="flex justify-between">
-        <div class="bg-[#fff] flex-1 flex p-[10px] justify-between items-center shadow-sm mr-[20px]">
+        <div
+          v-bkloading="{ isLoading: statisticLoading }"
+          class="bg-[#fff] flex-1 flex p-[10px] justify-between items-center shadow-sm mr-[20px]">
           <div>
             <div>{{ $t('projects.quota.cpuResource') }}</div>
             <div class="my-[10px]">
@@ -30,20 +32,20 @@
             </div>
             <div class="text-[12px] text-[#b7bac0]">
               {{ $t('projects.quota.cpuMsg', {
-                used: truncateToTwoDecimals(cpu.hostUsed + cpu.federationUsed),
-                available: truncateToTwoDecimals((cpu.hostSum + cpu.federationSum)
-                  - (cpu.hostUsed + cpu.federationUsed)) })
+                used: statisticsObj?.cpu?.usedNum || 0,
+                available: statisticsObj?.cpu?.availableNum || 0 })
               }}
             </div>
           </div>
           <ECharts
             :class="['!size-[100px]', cpuSum === 0 ? 'grayscale' : '']"
             :options="cpuOptions"
-            v-bkloading="{ isLoading: echartsLoading }"
             ref="chartRef">
           </ECharts>
         </div>
-        <div class="bg-[#fff] flex-1 flex p-[10px] justify-between items-center shadow-sm mr-[20px]">
+        <div
+          v-bkloading="{ isLoading: statisticLoading }"
+          class="bg-[#fff] flex-1 flex p-[10px] justify-between items-center shadow-sm mr-[20px]">
           <div>
             <div>{{ $t('projects.quota.memResource') }}</div>
             <div class="my-[10px]">
@@ -52,20 +54,20 @@
             </div>
             <div class="text-[12px] text-[#b7bac0]">
               {{ $t('projects.quota.memMsg', {
-                used: truncateToTwoDecimals(mem.hostUsed + mem.federationUsed),
-                available: truncateToTwoDecimals((mem.hostSum + mem.federationSum)
-                  - (mem.hostUsed + mem.federationUsed)) })
+                used: statisticsObj?.mem?.usedNum || 0,
+                available: statisticsObj?.mem?.availableNum || 0 })
               }}
             </div>
           </div>
           <ECharts
             :class="['!size-[100px]', memSum === 0 ? 'grayscale' : '']"
             :options="memOptions"
-            v-bkloading="{ isLoading: echartsLoading }"
             ref="chartRef">
           </ECharts>
         </div>
-        <div class="bg-[#fff] flex-1 flex p-[10px] justify-between items-center shadow-sm">
+        <div
+          v-bkloading="{ isLoading: statisticLoading }"
+          class="bg-[#fff] flex-1 flex p-[10px] justify-between items-center shadow-sm">
           <div>
             <div>{{ $t('projects.quota.gpuResource') }}</div>
             <div class="my-[10px]">
@@ -74,16 +76,14 @@
             </div>
             <div class="text-[12px] text-[#b7bac0]">
               {{ $t('projects.quota.gpuMsg', {
-                used: truncateToTwoDecimals(gpu.hostUsed + gpu.federationUsed),
-                available: truncateToTwoDecimals((gpu.hostSum + gpu.federationSum)
-                  - (gpu.hostUsed + gpu.federationUsed)) })
+                used: statisticsObj?.gpu?.usedNum || 0,
+                available: statisticsObj?.gpu?.availableNum || 0 })
               }}
             </div>
           </div>
           <ECharts
             :class="['!size-[100px]', gpuSum === 0 ? 'grayscale' : '']"
             :options="gpuOptions"
-            v-bkloading="{ isLoading: echartsLoading }"
             ref="chartRef">
           </ECharts>
         </div>
@@ -95,6 +95,7 @@
         <bk-radio-group v-model="statisticsType">
           <bk-radio-button value="host">{{ $t('projects.quota.CA') }}</bk-radio-button>
           <bk-radio-button value="federation">{{ $t('projects.quota.federation') }}</bk-radio-button>
+          <bk-radio-button value="self_host" class="!ml-[-2px]">{{ $t('tkeCa.label.provider.self') }}</bk-radio-button>
         </bk-radio-group>
         <bcs-search-select
           :key="searchSelectKey"
@@ -104,72 +105,77 @@
           :show-condition="false"
           :show-popover-tag-change="false"
           :placeholder="$t('projects.quota.placeholder')"
-          default-focus
           v-model="searchSelectValue"
           @change="searchSelectChange"
           @clear="handleClearSearchSelect">
         </bcs-search-select>
       </div>
       <div class="flex text-[14px]">
-        <div class="bg-[#fff] ml-[10px] flex-1 p-[10px] shadow-sm min-w-[200px] max-w-[300px]">
+        <div
+          v-bkloading="{ isLoading: statisticLoading }"
+          class="bg-[#fff] ml-[10px] flex-1 p-[10px] shadow-sm min-w-[200px] max-w-[300px]">
           <div>{{ $t('projects.quota.cpuResource') }}</div>
           <div class="bcs-ellipsis" v-bk-overflow-tips>
-            <span>{{ (cpuRateData.cupRate * 10000 / 100).toFixed(2) }}%</span>
+            <span>{{ statisticsObj?.cpu?.useRate || '0.00' }}%</span>
             <span class="font-[400]">
               {{ $t('projects.quota.cpuMsgA', {
-                sum: truncateToTwoDecimals(cpuRateData.cupSum),
-                used: truncateToTwoDecimals(cpuRateData.cupUsed) }) }}
+                sum: statisticsObj?.cpu?.totalNum || 0,
+                used: statisticsObj?.cpu?.usedNum || 0 }) }}
             </span>
           </div>
           <bcs-progress
             class="mt-[10px]"
             :show-text="false"
-            :percent="cpuRateData.cupRate || 0"
+            :percent="(statisticsObj?.cpu?.useRate || 0) / 100"
             :stroke-width="6"
-            :color="getColor(cpuRateData.cupRate * 100)">
-          </bcs-progress>
-        </div>
-        <div class="bg-[#fff] ml-[10px] flex-1 p-[10px] shadow-sm min-w-[200px] max-w-[300px]">
-          <div>{{ $t('projects.quota.memResource') }}</div>
-          <div class="bcs-ellipsis" v-bk-overflow-tips>
-            <span>{{ (memRateData.memRate * 10000 / 100).toFixed(2) }}%</span>
-            <span class="font-[400]">
-              {{ $t('projects.quota.memMsgA', {
-                sum: truncateToTwoDecimals(memRateData.memSum),
-                used: truncateToTwoDecimals(memRateData.memUsed) }) }}
-            </span>
-          </div>
-          <bcs-progress
-            class="mt-[10px]"
-            :show-text="false"
-            :percent="memRateData.memRate || 0"
-            :stroke-width="6"
-            :color="getColor(memRateData.memRate * 100)">
+            :color="getColor(statisticsObj?.cpu?.useRate || 0)">
           </bcs-progress>
         </div>
         <div
-          class="bg-[#fff] ml-[10px] flex-1 p-[10px] shadow-sm min-w-[200px] max-w-[300px]"
-          v-if="statisticsType === 'federation'">
-          <div>{{ $t('projects.quota.gpuResource') }}</div>
+          v-bkloading="{ isLoading: statisticLoading }"
+          class="bg-[#fff] ml-[10px] flex-1 p-[10px] shadow-sm min-w-[200px] max-w-[300px]">
+          <div>{{ $t('projects.quota.memResource') }}</div>
           <div class="bcs-ellipsis" v-bk-overflow-tips>
-            <span>{{ (gpuRateData.gpuRate * 10000 / 100).toFixed(2) }}%</span>
+            <span>{{ statisticsObj?.mem?.useRate || '0.00' }}%</span>
             <span class="font-[400]">
-              {{ $t('projects.quota.gpuMsgA', {
-                sum: truncateToTwoDecimals(gpuRateData.gpuSum),
-                used: truncateToTwoDecimals(gpuRateData.gpuUsed) }) }}
+              {{ $t('projects.quota.memMsgA', {
+                sum: statisticsObj?.mem?.totalNum || 0,
+                used: statisticsObj?.mem?.usedNum || 0 }) }}
             </span>
           </div>
           <bcs-progress
             class="mt-[10px]"
             :show-text="false"
-            :percent="gpuRateData.gpuRate || 0"
+            :percent="(statisticsObj?.mem?.useRate || 0) / 100"
             :stroke-width="6"
-            :color="getColor(gpuRateData.gpuRate * 100)">
+            :color="getColor(statisticsObj?.mem?.useRate || 0)">
+          </bcs-progress>
+        </div>
+        <div
+          v-if="statisticsType === 'federation'"
+          v-bkloading="{ isLoading: statisticLoading }"
+          class="bg-[#fff] ml-[10px] flex-1 p-[10px] shadow-sm min-w-[200px] max-w-[300px]">
+          <div>{{ $t('projects.quota.gpuResource') }}</div>
+          <div class="bcs-ellipsis" v-bk-overflow-tips>
+            <span>{{ statisticsObj?.gpu?.useRate || '0.00' }}%</span>
+            <span class="font-[400]">
+              {{ $t('projects.quota.gpuMsgA', {
+                sum: statisticsObj?.gpu?.totalNum || 0,
+                used: statisticsObj?.gpu?.usedNum || 0 }) }}
+            </span>
+          </div>
+          <bcs-progress
+            class="mt-[10px]"
+            :show-text="false"
+            :percent="(statisticsObj?.gpu?.useRate || 0) / 100"
+            :stroke-width="6"
+            :color="getColor(statisticsObj?.gpu?.useRate || 0)">
           </bcs-progress>
         </div>
       </div>
     </div>
     <bk-table
+      v-bkloading="{ isLoading }"
       :size="tableSetting.size"
       :data="curPageData"
       :key="tableKey"
@@ -178,7 +184,7 @@
       @filter-change="handleFilter"
       @page-change="pageChange"
       @page-limit-change="pageSizeChange">
-      <template v-if="statisticsType === 'host'">
+      <template v-if="hostTypes.includes(statisticsType)">
         <bk-table-column
           :label="$t('projects.quota.label.instance')"
           :filters="filtersDataSource.instanceTypes"
@@ -207,6 +213,21 @@
           width="120px"
           prop="zoneName"
           v-if="isColumnRender('zoneName')" />
+        <bk-table-column
+          :label="$t('generic.label.timeLeft')"
+          column-key="purchaseDurationSettings"
+          fixed
+          min-width="200px"
+          show-overflow-tooltip
+          v-if="isColumnRender('purchaseDurationSettings') && statisticsType === 'self_host'">
+          <template #default="{ row }">
+            <span
+              class="bcs-border-tips"
+              v-bk-tooltips="row.current?.quotaAttr?.endTime">
+              {{ formatHours(row.current?.quotaAttr?.purchaseDurationSettings) }}
+            </span>
+          </template>
+        </bk-table-column>
         <bk-table-column
           sortable
           :label="$t('projects.quota.label.num')"
@@ -332,6 +353,20 @@
         </bk-table-column>
       </template>
       <bk-table-column
+        width="130px"
+        :label="$t('generic.label.status')"
+        prop="status"
+        v-if="isColumnRender('status')">
+        <template #default="{ row }">
+          <StatusIcon
+            :status-color-map="statusColorMap"
+            :status-text-map="statusTextMap"
+            :status="row.current?.status"
+            :pending="loadingStatusList.includes(row.current?.status)"
+          />
+        </template>
+      </bk-table-column>
+      <bk-table-column
         sortable
         width="130px"
         :label="$t('projects.quota.label.cpuNum')"
@@ -410,14 +445,16 @@
   </BcsContent>
 </template>
 <script lang="ts">
+import dayjs from 'dayjs';
 import { cloneDeep } from 'lodash';
-import { computed, defineComponent, onBeforeMount, ref, watch } from 'vue';
+import { computed, defineComponent, nextTick, onBeforeMount, ref, watch } from 'vue';
 
 import QuotaUsage from './quota-usage.vue';
 
-import { fetchProjectQuotas } from '@/api/modules/project';
+import { fetchProjectQuotas, fetchProjectQuotasStatistics, fetchProjectQuotasV2 } from '@/api/modules/project';
 import ECharts from '@/components/echarts.vue';
 import BcsContent from '@/components/layout/Content.vue';
+import StatusIcon from '@/components/status-icon';
 import { useProject } from '@/composables/use-app';
 import usePage from '@/composables/use-page';
 import useTableSearchSelect, { ISearchSelectData }  from '@/composables/use-table-search-select';
@@ -454,36 +491,68 @@ interface Iquota {
 
 export default defineComponent({
   name: 'ProjectQuotas',
-  components: { BcsContent, LayoutGroup, ECharts, QuotaUsage },
+  components: { BcsContent, LayoutGroup, ECharts, QuotaUsage, StatusIcon },
   setup() {
     const { curProject } = useProject();
 
     const IS_EXCLUSIVE = 'bkbcs.tencent.com/is-exclusive';
 
     const sourceData = ref<any[]>([]);
-    const tableData = computed(() => sourceData.value.filter(item => item.current.quotaType === statisticsType.value));
+    const tableData = computed(() => (statisticsType.value === 'self_host'
+      ? selfQuotaData.value
+      : sourceData.value.filter(item => item.current.quotaType === statisticsType.value)
+    ));
+    const statisticsObj = ref<Partial<{
+      cpu: Record<string, number>;
+      gpu: Record<string, number>;
+      mem: Record<string, number>;
+    }>>({});
     const isLoading = ref(false);
-    const statisticsType = ref<'host' | 'federation'>('host');
+    // 状态文案
+    const statusTextMap = {
+      'CREATE-FAILURE': $i18n.t('generic.status.createFailed'),
+      'DELETE-FAILURE': $i18n.t('generic.status.deleteFailed'),
+      CREATING: $i18n.t('generic.status.creating'),
+      RUNNING: $i18n.t('generic.status.ready'),
+      DELETING: $i18n.t('generic.status.deleting'),
+      DELETED: $i18n.t('generic.status.deleted'),
+    };
+    // 状态icon颜色
+    const statusColorMap = {
+      'CREATE-FAILURE': 'red',
+      'DELETE-FAILURE': 'red',
+      RUNNING: 'green',
+      DELETED: 'gray',
+    };
+    const loadingStatusList = ['CREATING', 'DELETING'];
+
+    // 从路由查询参数初始化 statisticsType
+    const validTypes = ['host', 'federation', 'self_host'] as const;
+    const initType = validTypes.includes($router.currentRoute.query.type as any)
+      ? $router.currentRoute.query.type as 'host' | 'federation' | 'self_host'
+      : 'host';
+    const statisticsType = ref<'host' | 'federation' | 'self_host'>(initType);
+    const hostTypes = ['host', 'self_host'];
     const fields = computed(() => [
       {
         id: 'quotaName',
         label: $i18n.t('projects.quota.label.resource'),
-        disabled: statisticsType.value === 'host',
+        disabled: hostTypes.includes(statisticsType.value),
       },
       {
         id: 'clusterId',
         label: $i18n.t('projects.quota.label.clusterID'),
-        disabled: statisticsType.value === 'host',
+        disabled: hostTypes.includes(statisticsType.value),
       },
       {
         id: 'nameSpace',
         label: $i18n.t('projects.quota.label.namespace'),
-        disabled: statisticsType.value === 'host',
+        disabled: hostTypes.includes(statisticsType.value),
       },
       {
         id: 'annotations',
         label: $i18n.t('projects.quota.label.annotations'),
-        disabled: statisticsType.value === 'host',
+        disabled: hostTypes.includes(statisticsType.value),
       },
       {
         id: 'instanceType',
@@ -493,27 +562,32 @@ export default defineComponent({
       {
         id: 'region',
         label: $i18n.t('projects.quota.label.region'),
-        disabled: statisticsType.value !== 'host',
+        disabled: !hostTypes.includes(statisticsType.value),
       },
       {
         id: 'zoneName',
         label: $i18n.t('projects.quota.label.zone'),
-        disabled: statisticsType.value !== 'host',
+        disabled: !hostTypes.includes(statisticsType.value),
+      },
+      {
+        id: 'purchaseDurationSettings',
+        label: $i18n.t('generic.label.timeLeft'),
+        disabled: statisticsType.value !== 'self_host',
       },
       {
         id: 'quotaNum',
         label: $i18n.t('projects.quota.label.num'),
-        disabled: statisticsType.value !== 'host',
+        disabled: !hostTypes.includes(statisticsType.value),
       },
       {
         id: 'quotaUsed',
         label: $i18n.t('projects.quota.label.used'),
-        disabled: statisticsType.value !== 'host',
+        disabled: !hostTypes.includes(statisticsType.value),
       },
       {
         id: 'quotaAvailable',
         label: $i18n.t('projects.quota.label.available'),
-        disabled: statisticsType.value !== 'host',
+        disabled: !hostTypes.includes(statisticsType.value),
       },
       {
         id: 'gpuNum',
@@ -529,6 +603,10 @@ export default defineComponent({
         id: 'gpuAvailable',
         label: $i18n.t('projects.quota.label.gpuAvailable'),
         disabled: statisticsType.value !== 'federation',
+      },
+      {
+        id: 'status',
+        label: $i18n.t('generic.label.status'),
       },
       {
         id: 'cpuNum',
@@ -565,16 +643,58 @@ export default defineComponent({
       handleSettingChange,
       isColumnRender,
     } = useTableSetting(fields.value);
+    // 获取自建资源池 项目配额
+    const selfQuotaData = ref<any[]>([]);
+    async function handleGetSelfQuotas() {
+      if (!curProject.value.projectID) return;
+      // if (selfQuotaData.value.length === 0) {
+      isLoading.value = true;
+      const res = await fetchProjectQuotasV2({
+        $projectId: curProject.value.projectID,
+        quotaType: 'self_host',
+        provider: 'internal',
+      })
+        .catch(() => ({ results: [] }))
+        .finally(() => {
+          isLoading.value = false;
+        });
+      selfQuotaData.value = handleProcessQuotas(res.results);
+      // };
+    };
     // 获取项目配额
     async function handleGetProjectQuotas() {
       if (!curProject.value.projectID) return;
-
+      // if (sourceData.value.length === 0) {
+      isLoading.value = true;
       const res = await fetchProjectQuotas({
         projectID: curProject.value.projectID,
         provider: 'selfProvisionCloud',
       }).catch(() => ({ results: [] }));
-      const list = res?.results?.filter(item => item?.status === 'RUNNING') || [];
-      sourceData.value = list.reduce((acc, cur) => {
+      isLoading.value = false;
+      sourceData.value = handleProcessQuotas(res.results);
+      // }
+    }
+    // 获取项目统计(ECharts) 部分数据
+    const statisticLoading = ref(false);
+    async function handelGetStatistics() {
+      if (!curProject.value.projectID) return;
+      statisticLoading.value = true;
+      statisticsObj.value = await fetchProjectQuotasStatistics({
+        $projectID: curProject.value.projectID,
+        quotaType: statisticsType.value,
+      })
+        .catch(() => ({}))
+        .finally(() => {
+          statisticLoading.value = false;
+        });
+
+      // 整理饼图数据
+      getChartData();
+    }
+    // 整理接口数据
+    function handleProcessQuotas(data) {
+      // const list = data?.filter(item => item?.status === 'RUNNING') || [];
+      const result = data.reduce((acc, cur) => {
         const isHost = cur.quotaType === 'host';
         const zoneResources = cur.quota?.zoneResources || {};
         const obj: Iquota = {};
@@ -596,9 +716,9 @@ export default defineComponent({
         obj.quotaUsed = zoneResources.quotaUsed || 0;
         obj.quotaAvailable = (zoneResources.quotaNum || 0) - (obj.quotaUsed || 0);
         obj.cpuNum = isHost ? (zoneResources.cpu || 0) * (obj.quotaNum || 0) // cpu 总量
-          : Number(cur.quota.cpu?.deviceQuota || 0);
+          : (Number(cur.quota.cpu?.deviceQuota ?? 0) || 0);
         obj.cpuUsed = isHost ? (zoneResources.cpu || 0) * (obj.quotaUsed || 0) // cpu 已用
-          : Number(cur.quota.cpu?.deviceQuotaUsed || 0);
+          : (Number(cur.quota.cpu?.deviceQuotaUsed ?? 0) || 0);
         obj.cpuAvailable = isHost ? (zoneResources.cpu || 0) * (obj.quotaAvailable || 0) // cpu 剩余
           : Number(isNaN(cur.quota.cpu?.deviceQuota - cur.quota.cpu?.deviceQuotaUsed) ? 0
             : smartFormat(cur.quota.cpu?.deviceQuota - cur.quota.cpu?.deviceQuotaUsed));
@@ -610,8 +730,8 @@ export default defineComponent({
         obj.memAvailable = isHost ? (zoneResources.mem || 0) * (obj.quotaAvailable || 0) // mem 剩余
           : Math.max(extractNumber(cur.quota.mem?.deviceQuota) - extractNumber(cur.quota.mem?.deviceQuotaUsed), 0);
 
-        obj.gpuNum = Number(cur.quota.gpu?.deviceQuota || 0); // gpu 总量
-        obj.gpuUsed = Number(cur.quota.gpu?.deviceQuotaUsed || 0); // gpu 已用
+        obj.gpuNum = Number(cur.quota.gpu?.deviceQuota ?? 0) || 0; // gpu 总量
+        obj.gpuUsed = Number(cur.quota.gpu?.deviceQuotaUsed ?? 0) || 0; // gpu 已用
         obj.gpuAvailable = Number(isNaN(cur.quota.gpu?.deviceQuota - cur.quota.gpu?.deviceQuotaUsed) ? 0 // gpu 剩余
           : smartFormat(cur.quota.gpu?.deviceQuota - cur.quota.gpu?.deviceQuotaUsed));
 
@@ -626,8 +746,7 @@ export default defineComponent({
         acc.push(obj);
         return acc;
       }, []);
-      // 整理饼图数据
-      getChartData();
+      return result;
     }
     // 处理可能带单位的数据，取数字部分
     function extractNumber(str) { // str = '40GiB'
@@ -745,6 +864,7 @@ export default defineComponent({
         },
       ],
     };
+
     // 只有一项数据时，饼图不需要缺口
     const cpuData = ref([
       { value: 0, name: $i18n.t('projects.quota.caUsed') },
@@ -827,108 +947,34 @@ export default defineComponent({
       return temp;
     });
 
-    const echartsLoading = ref(false);
     const chartRef = ref(null);
-    const cpuSum = ref(0);
-    const memSum = ref(0);
-    const gpuSum = ref(0);
-    const cpu = ref({
-      hostSum: 0,
-      hostUsed: 0,
-      federationSum: 0,
-      federationUsed: 0,
-    });
-    const mem = ref({
-      hostSum: 0,
-      hostUsed: 0,
-      federationSum: 0,
-      federationUsed: 0,
-    });
-    const gpu = ref({
-      hostSum: 0,
-      hostUsed: 0,
-      federationSum: 0,
-      federationUsed: 0,
-    });
-    const cpuRateData = computed(() => (statisticsType.value === 'host' ? {
-      cupSum: cpu.value.hostSum,
-      cupUsed: cpu.value.hostUsed,
-      cupRate: cpu.value.hostUsed / cpu.value.hostSum || 0, // 已用/总和
-    }
-      : {
-        cupSum: cpu.value.federationSum,
-        cupUsed: cpu.value.federationUsed,
-        cupRate: cpu.value.federationUsed / cpu.value.federationSum || 0, // 已用/总和
-      }));
-    const memRateData = computed(() => (statisticsType.value === 'host' ? {
-      memSum: mem.value.hostSum,
-      memUsed: mem.value.hostUsed,
-      memRate: mem.value.hostUsed / mem.value.hostSum || 0, // 已用/总和
-    }
-      : {
-        memSum: mem.value.federationSum,
-        memUsed: mem.value.federationUsed,
-        memRate: mem.value.federationUsed / mem.value.federationSum || 0, // 已用/总和
-      }));
-    const gpuRateData = computed(() => ({
-      gpuSum: gpu.value.federationSum,
-      gpuUsed: gpu.value.federationUsed,
-      gpuRate: gpu.value.federationUsed / gpu.value.federationSum || 0, // 已用/总和
-    }));
+    const cpuSum = computed(() => statisticsObj.value?.cpu?.totalNum || 0);
+    const memSum = computed(() => statisticsObj.value?.mem?.totalNum || 0);
+    const gpuSum = computed(() => statisticsObj.value?.gpu?.totalNum || 0);
+
+    // 整理饼图数据
     function getChartData() {
-      sourceData.value.forEach((item) => {
-        if (item.current.quotaType === 'host') { // CA主机
-          cpu.value.hostSum += item.cpuNum; // 总和
-          cpu.value.hostUsed += item.cpuUsed; // 已用
+      const usedIndex = hostTypes.includes(statisticsType.value) ? 0 : 1;
+      const availableIndex = hostTypes.includes(statisticsType.value) ? 2 : 3;
 
-          mem.value.hostSum += item.memNum; // 总和
-          mem.value.hostUsed += item.memUsed; // 已用
+      for (let i = 0; i < cpuOptions.value.series[0].data.length; i++) {
+        cpuOptions.value.series[0].data[i].value = 0;
+        memOptions.value.series[0].data[i].value = 0;
+        gpuOptions.value.series[0].data[i].value = 0;
+      }
 
-          gpu.value.hostSum += item.gpuNum; // 总和
-          gpu.value.hostUsed += item.gpuUsed; // 已用
-        } else if (item.current.quotaType === 'federation') { // 弹性算力
-          cpu.value.federationSum += item.cpuNum; // 总和
-          cpu.value.federationUsed += item.cpuUsed; // 已用
+      cpuOptions.value.series[0].data[usedIndex].value = statisticsObj.value?.cpu?.usedNum || 0;
+      cpuOptions.value.series[0].data[availableIndex].value = statisticsObj.value?.cpu?.availableNum || 0;
+      cpuOptions.value.series[0].label.formatter = `${statisticsObj.value?.cpu?.useRate || '0.00'}%`;
 
-          mem.value.federationSum += item.memNum; // 总和
-          mem.value.federationUsed += item.memUsed; // 已用
+      memOptions.value.series[0].data[usedIndex].value = statisticsObj.value?.mem?.usedNum || 0;
+      memOptions.value.series[0].data[availableIndex].value = statisticsObj.value?.mem?.availableNum || 0;
+      memOptions.value.series[0].label.formatter = `${statisticsObj.value?.mem?.useRate || '0.00'}%`;
 
-          gpu.value.federationSum += item.gpuNum; // 总和
-          gpu.value.federationUsed += item.gpuUsed; // 已用
-        }
-      });
-      cpuSum.value = cpu.value.hostSum + cpu.value.federationSum; // 总和
-      memSum.value = mem.value.hostSum + mem.value.federationSum; // 总和
-      gpuSum.value = gpu.value.hostSum + gpu.value.federationSum; // 总和
-
-      cpuOptions.value.series[0].data[0].value = truncateToTwoDecimals(cpu.value.hostUsed);
-      cpuOptions.value.series[0].data[1].value = truncateToTwoDecimals(cpu.value.federationUsed);
-      cpuOptions.value.series[0].data[2].value = truncateToTwoDecimals(cpu.value.hostSum - cpu.value.hostUsed);
-      cpuOptions.value.series[0].data[3].value = truncateToTwoDecimals(cpu.value.federationSum
-        - cpu.value.federationUsed);
-      const cupUsed = cpu.value.hostUsed + cpu.value.federationUsed;
-      cpuOptions.value.series[0].label.formatter = calculatePercentage(cupUsed, cpuSum.value);
-
-      memOptions.value.series[0].data[0].value = truncateToTwoDecimals(mem.value.hostUsed);
-      memOptions.value.series[0].data[1].value = truncateToTwoDecimals(mem.value.federationUsed);
-      memOptions.value.series[0].data[2].value = truncateToTwoDecimals(mem.value.hostSum - mem.value.hostUsed);
-      memOptions.value.series[0].data[3].value = truncateToTwoDecimals(mem.value.federationSum
-        - mem.value.federationUsed);
-      const memUsed = mem.value.hostUsed + mem.value.federationUsed;
-      memOptions.value.series[0].label.formatter = calculatePercentage(memUsed, memSum.value);
-
-      gpuOptions.value.series[0].data[0].value = truncateToTwoDecimals(gpu.value.hostUsed);
-      gpuOptions.value.series[0].data[1].value = truncateToTwoDecimals(gpu.value.federationUsed);
-      gpuOptions.value.series[0].data[2].value = truncateToTwoDecimals(gpu.value.hostSum - gpu.value.hostUsed);
-      gpuOptions.value.series[0].data[3].value = truncateToTwoDecimals(gpu.value.federationSum
-        - gpu.value.federationUsed);
-      const gupUsed = gpu.value.hostUsed + gpu.value.federationUsed;
-      gpuOptions.value.series[0].label.formatter = calculatePercentage(gupUsed, gpuSum.value);
+      gpuOptions.value.series[0].data[usedIndex].value = statisticsObj.value?.gpu?.usedNum || 0;
+      gpuOptions.value.series[0].data[availableIndex].value = statisticsObj.value?.gpu?.availableNum || 0;
+      gpuOptions.value.series[0].label.formatter = `${statisticsObj.value?.gpu?.useRate || '0.00'}%`;
     }
-    const calculatePercentage = (num, den) => {
-      if (den === 0) return '0.00%';
-      return `${((num / den) * 100).toFixed(2)}%`;
-    };
 
     // 统计类型
     function getColor(percent) {
@@ -1065,7 +1111,63 @@ export default defineComponent({
       return pre;
     }, {}));
 
-    watch(statisticsType, () => {
+    /**
+     * @description: 时间格式转换 传入小时，返回 余X小时/天/月/年
+     * @param {string} hours - 小时数字符串
+     * @return {string} 格式化后的时间字符串
+     */
+    function formatHours(hours) {
+      // 参数校验并转换为数字
+      const hoursNum = Number(hours);
+      if (isNaN(hoursNum) || hoursNum <= 0) {
+        return $i18n.t('units.time.leftHours', { num: 0 });
+      }
+
+      // 小于24小时，显示小时数
+      if (hoursNum < 24) {
+        return $i18n.t('units.time.leftHours', { num: Math.floor(hoursNum) });
+      }
+
+      const now = dayjs();
+      const future = now.add(hoursNum, 'hour');
+
+      // 计算年份差
+      const years = future.diff(now, 'year');
+      if (years > 0) {
+        return $i18n.t('units.time.leftYears', { num: years });
+      }
+
+      // 计算月份差
+      const months = future.diff(now, 'month');
+      if (months > 0) {
+        return $i18n.t('units.time.leftMonths', { num: months });
+      }
+
+      // 计算天数差
+      const days = future.diff(now, 'day');
+      // 至少显示0天，避免负数
+      return $i18n.t('units.time.leftDays', { num: Math.max(0, days) });
+    }
+
+    watch(statisticsType, async () => {
+      // 同步路由查询参数
+      const currentType = String($router.currentRoute.query.type || '');
+      if (currentType !== statisticsType.value) {
+        $router.replace({
+          query: {
+            ...$router.currentRoute.query,
+            type: statisticsType.value,
+          },
+        });
+      }
+
+      await nextTick(); // 放在下一个tick，避免 loading 状态不更新
+      if (statisticsType.value === 'self_host') {
+        handleGetSelfQuotas();
+      } else {
+        handleGetProjectQuotas();
+      }
+      handelGetStatistics();
       // 重置页码
       pageConf.current = 1;
       // 刷新table setting columns数据
@@ -1075,23 +1177,29 @@ export default defineComponent({
     });
 
     onBeforeMount(async () => {
+      statisticLoading.value = true;
       isLoading.value = true;
       // 获取集群列表
       await getClusterList();
       // 获取项目配额
-      await handleGetProjectQuotas();
-      isLoading.value = false;
+      if (statisticsType.value === 'self_host') {
+        handleGetSelfQuotas();
+      } else {
+        handleGetProjectQuotas();
+      }
+      handelGetStatistics();
     });
 
     return {
       isLoading,
+      statisticLoading,
+      statisticsObj,
       cpuSum,
       memSum,
       gpuSum,
       cpuOptions,
       memOptions,
       gpuOptions,
-      echartsLoading,
       chartRef,
       statisticsType,
       searchSelectValue,
@@ -1107,14 +1215,12 @@ export default defineComponent({
       curCA,
       tableSetting,
       searchSelectKey,
-      cpuRateData,
-      memRateData,
-      gpuRateData,
-      cpu,
-      mem,
-      gpu,
       clusterMap,
       IS_EXCLUSIVE,
+      hostTypes,
+      statusColorMap,
+      statusTextMap,
+      loadingStatusList,
       handleGotoDetail,
       getColor,
       searchSelectChange,
@@ -1129,6 +1235,7 @@ export default defineComponent({
       truncateToTwoDecimals,
       getProperties,
       smartFormat,
+      formatHours,
     };
   },
 });

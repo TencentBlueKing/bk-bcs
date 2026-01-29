@@ -189,6 +189,10 @@ units:
     nDays: '{num}天'
     nMonths: '{0} 月'
     nYears: '{0} 年'
+    leftDays: '余{num}天'
+    leftMonths: '余{num}月'
+    leftYears: '余{num}年'
+    leftHours: '余{num}小时'
   suffix:
     seconds: 秒
     days: 天
@@ -411,6 +415,7 @@ generic:
     codeMode: 源码模式
     enabled: 已启用
     disabled: 已停用
+    timeLeft: 剩余时间
   status:
     part_failure: 部分失败
     support: 支持

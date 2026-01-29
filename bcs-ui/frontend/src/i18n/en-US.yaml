@@ -208,6 +208,10 @@ units:
     nDays: '{num} Day'
     nMonths: '{0} Months'
     nYears: '{0} Years'
+    leftDays: '{num} day remaining'
+    leftMonths: '{num} month remaining'
+    leftYears: '{num} year remaining'
+    leftHours: '{num} hour remaining'
   suffix:
     seconds: s
     days: Day
@@ -436,6 +440,7 @@ generic:
     codeMode: Code Mode
     enabled: Enabled
     disabled: Disabled
+    timeLeft: Time left
   status:
     part_failure: Part failure
     support: Support

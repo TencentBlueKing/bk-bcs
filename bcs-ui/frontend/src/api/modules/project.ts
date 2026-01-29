@@ -45,6 +45,13 @@ export const fetchAllProjectList = projectRequest('get', '/projects');
 export const businessList = projectRequest('get', '/business');
 export const projectBusiness = projectRequest('get', '/projects/$projectCode/business');
 export const fetchProjectQuotas = projectRequest('get', '/projectQuotas');
+export const fetchProjectQuotasStatistics = projectRequest('get', '/projectQuotas/projects/$projectID/quotas/statistics');
+
+const projectRequestV2 = createRequest({
+  domain: window.BCS_API_HOST,
+  prefix: '/bcsapi/v4/bcsproject/v2',
+});
+export const fetchProjectQuotasV2 = projectRequestV2('get', '/projectQuotas/projects/$projectId/quotas');
 
 const uiRequest = createRequest({
   domain: window.BCS_API_HOST,
