@@ -89,11 +89,10 @@ func main() {
 	}
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
-		Scheme:                  scheme,
-		MetricsBindAddress:      opts.Address + ":" + strconv.Itoa(opts.MetricPort),
-		LeaderElection:          true,
-		LeaderElectionID:        "i8a4x2f5.istio-conroller.bkbcs.tencent.com",
-		LeaderElectionNamespace: "default",
+		Scheme:             scheme,
+		MetricsBindAddress: opts.Address + ":" + strconv.Itoa(opts.MetricPort),
+		LeaderElection:     true,
+		LeaderElectionID:   "i8a4x2f5.istio-conroller.bkbcs.tencent.com",
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
