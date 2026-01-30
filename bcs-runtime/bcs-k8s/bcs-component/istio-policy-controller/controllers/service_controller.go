@@ -218,12 +218,16 @@ func (sr *ServiceReconciler) createVs(ctx context.Context, namespace, name strin
 	}
 
 	for _, svc := range sr.Option.Cfg.Services {
-		if svc.Setting.AutoGenerateVS && svc.Name == name && svc.Namespace == namespace {
-			_, err := sr.IstioClient.NetworkingV1().VirtualServices(namespace).
-				Create(ctx, vs, metav1.CreateOptions{})
-			if err != nil {
-				return err
+		if svc.Name == name && svc.Namespace == namespace {
+			if svc.Setting.AutoGenerateVS {
+				_, err := sr.IstioClient.NetworkingV1().VirtualServices(namespace).
+					Create(ctx, vs, metav1.CreateOptions{})
+				if err != nil {
+					return err
+				}
 			}
+
+			return nil
 		}
 	}
 
