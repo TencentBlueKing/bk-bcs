@@ -147,11 +147,7 @@ func (sr *ServiceReconciler) createDr(ctx context.Context, namespace, name strin
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
-			Labels: map[string]string{
-				LabelKeyManagedBy:        ControllerName,
-				LabelKeyServiceNamespace: namespace,
-				LabelKeyServiceName:      name,
-			},
+			Labels:    setLabel(namespace, name, nil),
 		},
 		Spec: v1alpha3.DestinationRule{
 			Host: sprintfHost(name, namespace),
@@ -195,11 +191,7 @@ func (sr *ServiceReconciler) createVs(ctx context.Context, namespace, name strin
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
-			Labels: map[string]string{
-				LabelKeyManagedBy:        ControllerName,
-				LabelKeyServiceNamespace: namespace,
-				LabelKeyServiceName:      name,
-			},
+			Labels:    setLabel(namespace, name, nil),
 		},
 		Spec: v1alpha3.VirtualService{
 			Hosts: []string{sprintfHost(name, namespace)},
@@ -244,13 +236,7 @@ func (sr *ServiceReconciler) createVs(ctx context.Context, namespace, name strin
 
 // updateDr 更新 DestinationRule
 func (sr *ServiceReconciler) updateDr(ctx context.Context, dr *networkingv1.DestinationRule) error {
-	label := dr.GetLabels()
-	if len(label) == 0 {
-		label = map[string]string{}
-	}
-	label[LabelKeyManagedBy] = ControllerName
-	label[dr.GetName()] = dr.GetName()
-	label[dr.GetNamespace()] = dr.GetNamespace()
+	label := setLabel(dr.GetNamespace(), dr.GetName(), dr.GetLabels())
 
 	for _, svc := range sr.Option.Cfg.Services {
 		if svc.Name == dr.GetName() && svc.Namespace == dr.GetNamespace() {

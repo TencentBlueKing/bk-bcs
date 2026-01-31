@@ -182,6 +182,20 @@ func mergeDrPolicy(dr *v1.DestinationRule, tp *v1alpha3.TrafficPolicy) {
 	}
 }
 
+// setLabel 设置 label
+func setLabel(namespace, name string, labels map[string]string) map[string]string {
+	newLabels := make(map[string]string)
+	for k, v := range labels {
+		newLabels[k] = v
+	}
+
+	newLabels[LabelKeyManagedBy] = ControllerName
+	newLabels[LabelKeyServiceNamespace] = namespace
+	newLabels[LabelKeyServiceName] = name
+
+	return newLabels
+}
+
 // isEmptyStruct 判断任意结构体是否逻辑上为零(注意: 不能用于非结构体类型,如 chan、func、interface、array、map等)
 func isEmptyStruct(v interface{}) bool {
 	if v == nil {
