@@ -30,6 +30,7 @@ import (
 	pm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/quota"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/convert"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/entity"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/stringx"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
@@ -187,6 +188,14 @@ func (ca *CreateQuotaAction) dispatchTask() error {
 	return nil
 }
 
+// updateQuotaStatusToRunning update quota status to running directly (skip ITSM approval)
+func (ca *CreateQuotaAction) updateQuotaStatusToRunning() error {
+	return ca.model.UpdateProjectQuotaByField(ca.ctx, entity.M{
+		quota.FieldKeyQuotaId: ca.sQuota.QuotaId,
+		quota.FieldKeyStatus:  quota.Running.String(),
+	})
+}
+
 // Do create project request
 func (ca *CreateQuotaAction) Do(ctx context.Context,
 	req *proto.CreateProjectQuotaRequest, resp *proto.ProjectQuotaResponse) error {
@@ -202,6 +211,17 @@ func (ca *CreateQuotaAction) Do(ctx context.Context,
 	if err := ca.createProjectQuota(); err != nil {
 		return errorx.NewDBErr(err.Error())
 	}
+
+	// 如果跳过ITSM审批，直接更新状态为Running
+	if ca.req.GetSkipItsmApproval().GetValue() {
+		if err := ca.updateQuotaStatusToRunning(); err != nil {
+			return errorx.NewDBErr(err.Error())
+		}
+		resp.Data = ca.pQuota
+		return nil
+	}
+
+	// 走正常的任务审批流程
 	if err := ca.dispatchTask(); err != nil {
 		return errorx.NewBuildTaskErr(err.Error())
 	}

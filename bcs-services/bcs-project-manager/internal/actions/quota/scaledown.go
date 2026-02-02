@@ -25,6 +25,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/quota"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/convert"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
+	uquota "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/quota"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
 )
 
@@ -119,6 +120,47 @@ func (sa *ScaleDownQuotaAction) dispatchTask() error {
 	return nil
 }
 
+// directScaleDown directly scale down quota without ITSM approval
+func (sa *ScaleDownQuotaAction) directScaleDown() error {
+	resource := sa.req.GetQuota()
+
+	switch sa.sQuota.QuotaType {
+	case quota.Host, quota.SelfHost:
+		if resource.GetZoneResources().GetQuotaNum() >= sa.sQuota.Quota.HostResources.QuotaNum {
+			sa.sQuota.Quota.HostResources.QuotaNum = 0
+		} else {
+			sa.sQuota.Quota.HostResources.QuotaNum -= resource.GetZoneResources().GetQuotaNum()
+		}
+	case quota.Shared, quota.Federation:
+		if resource.GetCpu() != nil && len(resource.GetCpu().GetDeviceQuota()) > 0 {
+			cpu, err := uquota.ResourceCpuCompute(false, sa.sQuota.Quota.Cpu.DeviceQuota,
+				resource.GetCpu().GetDeviceQuota())
+			if err != nil {
+				return err
+			}
+			sa.sQuota.Quota.Cpu.DeviceQuota = cpu
+		}
+		if resource.GetMem() != nil && len(resource.GetMem().GetDeviceQuota()) > 0 {
+			mem, err := uquota.ResourceMemoryCompute(false, sa.sQuota.Quota.Mem.DeviceQuota,
+				resource.GetMem().GetDeviceQuota())
+			if err != nil {
+				return err
+			}
+			sa.sQuota.Quota.Mem.DeviceQuota = mem
+		}
+		if resource.GetGpu() != nil && len(resource.GetGpu().GetDeviceQuota()) > 0 {
+			gpu, err := uquota.ResourceCpuCompute(false, sa.sQuota.Quota.Gpu.DeviceQuota,
+				resource.GetGpu().GetDeviceQuota())
+			if err != nil {
+				return err
+			}
+			sa.sQuota.Quota.Gpu.DeviceQuota = gpu
+		}
+	}
+
+	return sa.model.UpdateProjectQuota(sa.ctx, sa.sQuota)
+}
+
 // Do scale up project request
 func (sa *ScaleDownQuotaAction) Do(ctx context.Context,
 	req *proto.ScaleDownProjectQuotaRequest, resp *proto.ScaleDownProjectQuotaResponse) error {
@@ -128,6 +170,14 @@ func (sa *ScaleDownQuotaAction) Do(ctx context.Context,
 
 	if err := sa.validate(); err != nil {
 		return errorx.NewReadableErr(errorx.ParamErr, err.Error())
+	}
+
+	// 如果跳过ITSM审批，直接更新quota资源
+	if sa.req.GetSkipItsmApproval().GetValue() {
+		if err := sa.directScaleDown(); err != nil {
+			return errorx.NewDBErr(err.Error())
+		}
+		return nil
 	}
 
 	if err := sa.dispatchTask(); err != nil {

@@ -3159,6 +3159,10 @@ message CreateProjectQuotaRequest {
     title: "quotaSharedProjectList",
     description: "额度共享配置"
   }];
+  google.protobuf.BoolValue skipItsmApproval = 18[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "skipItsmApproval",
+    description: "是否跳过ITSM审批流程，仅限内部服务调用时使用"
+  }];
 }
 
 message QuotaAttr {
@@ -3417,6 +3421,10 @@ message DeleteProjectQuotaRequest {
     title : "onlyDeleteInfo",
     description : "默认为false。设置为true时，仅删除所记录的信息，不会触发任何自动化流程。"
   }];
+  google.protobuf.BoolValue skipItsmApproval = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "skipItsmApproval",
+    description: "是否跳过ITSM审批流程，仅限内部服务调用时使用"
+  }];
 }
 
 message ProjectQuotaResponse{
@@ -3666,6 +3674,10 @@ message ScaleUpProjectQuotaRequest{
     title: "updater",
     description: "操作人"
   }];
+  google.protobuf.BoolValue skipItsmApproval = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "skipItsmApproval",
+    description: "是否跳过ITSM审批流程，仅限内部服务调用时使用"
+  }];
 }
 
 message ScaleUpProjectQuotaResponse{
@@ -3710,6 +3722,10 @@ message ScaleDownProjectQuotaRequest{
   string updater = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "updater",
     description: "操作人"
+  }];
+  google.protobuf.BoolValue skipItsmApproval = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "skipItsmApproval",
+    description: "是否跳过ITSM审批流程，仅限内部服务调用时使用"
   }];
 }
 

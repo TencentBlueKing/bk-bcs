@@ -167,6 +167,16 @@ func (da *DeleteQuotaAction) Do(ctx context.Context,
 		return nil
 	}
 
+	// 如果跳过ITSM审批，直接更新状态为Deleted
+	if da.req.GetSkipItsmApproval().GetValue() {
+		da.sQuota.Status = quota.Deleted
+		if err := da.updateProjectQuota(da.sQuota.Status); err != nil {
+			return err
+		}
+		resp.Data = da.pQuota
+		return nil
+	}
+
 	da.sQuota.Status = quota.Deleting
 	if err := da.updateProjectQuota(da.sQuota.Status); err != nil {
 		return err
