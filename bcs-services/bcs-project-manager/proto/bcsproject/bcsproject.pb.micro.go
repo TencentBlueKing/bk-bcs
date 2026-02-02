@@ -1465,6 +1465,12 @@ func NewBCSProjectQuotaEndpoints() []*api.Endpoint {
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
+		{
+			Name:    "BCSProjectQuota.GetProjectQuotasStatistics",
+			Path:    []string{"/bcsproject/v1/projectQuotas/projects/{projectIDOrCode}/quotas/statistics"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
 	}
 }
 
@@ -1482,6 +1488,7 @@ type BCSProjectQuotaService interface {
 	ListProjectQuotas(ctx context.Context, in *ListProjectQuotasRequest, opts ...client.CallOption) (*ListProjectQuotasResponse, error)
 	ListProjectQuotasV2(ctx context.Context, in *ListProjectQuotasV2Request, opts ...client.CallOption) (*ListProjectQuotasV2Response, error)
 	GetProjectQuotasUsage(ctx context.Context, in *GetProjectQuotasUsageReq, opts ...client.CallOption) (*GetProjectQuotasUsageResp, error)
+	GetProjectQuotasStatistics(ctx context.Context, in *GetProjectQuotasStatisticsRequest, opts ...client.CallOption) (*GetProjectQuotasStatisticsResponse, error)
 }
 
 type bCSProjectQuotaService struct {
@@ -1586,6 +1593,16 @@ func (c *bCSProjectQuotaService) GetProjectQuotasUsage(ctx context.Context, in *
 	return out, nil
 }
 
+func (c *bCSProjectQuotaService) GetProjectQuotasStatistics(ctx context.Context, in *GetProjectQuotasStatisticsRequest, opts ...client.CallOption) (*GetProjectQuotasStatisticsResponse, error) {
+	req := c.c.NewRequest(c.name, "BCSProjectQuota.GetProjectQuotasStatistics", in)
+	out := new(GetProjectQuotasStatisticsResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for BCSProjectQuota service
 
 type BCSProjectQuotaHandler interface {
@@ -1600,6 +1617,7 @@ type BCSProjectQuotaHandler interface {
 	ListProjectQuotas(context.Context, *ListProjectQuotasRequest, *ListProjectQuotasResponse) error
 	ListProjectQuotasV2(context.Context, *ListProjectQuotasV2Request, *ListProjectQuotasV2Response) error
 	GetProjectQuotasUsage(context.Context, *GetProjectQuotasUsageReq, *GetProjectQuotasUsageResp) error
+	GetProjectQuotasStatistics(context.Context, *GetProjectQuotasStatisticsRequest, *GetProjectQuotasStatisticsResponse) error
 }
 
 func RegisterBCSProjectQuotaHandler(s server.Server, hdlr BCSProjectQuotaHandler, opts ...server.HandlerOption) error {
@@ -1613,6 +1631,7 @@ func RegisterBCSProjectQuotaHandler(s server.Server, hdlr BCSProjectQuotaHandler
 		ListProjectQuotas(ctx context.Context, in *ListProjectQuotasRequest, out *ListProjectQuotasResponse) error
 		ListProjectQuotasV2(ctx context.Context, in *ListProjectQuotasV2Request, out *ListProjectQuotasV2Response) error
 		GetProjectQuotasUsage(ctx context.Context, in *GetProjectQuotasUsageReq, out *GetProjectQuotasUsageResp) error
+		GetProjectQuotasStatistics(ctx context.Context, in *GetProjectQuotasStatisticsRequest, out *GetProjectQuotasStatisticsResponse) error
 	}
 	type BCSProjectQuota struct {
 		bCSProjectQuota
@@ -1672,6 +1691,12 @@ func RegisterBCSProjectQuotaHandler(s server.Server, hdlr BCSProjectQuotaHandler
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "BCSProjectQuota.GetProjectQuotasStatistics",
+		Path:    []string{"/bcsproject/v1/projectQuotas/projects/{projectIDOrCode}/quotas/statistics"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
 	return s.Handle(s.NewHandler(&BCSProjectQuota{h}, opts...))
 }
 
@@ -1713,4 +1738,8 @@ func (h *bCSProjectQuotaHandler) ListProjectQuotasV2(ctx context.Context, in *Li
 
 func (h *bCSProjectQuotaHandler) GetProjectQuotasUsage(ctx context.Context, in *GetProjectQuotasUsageReq, out *GetProjectQuotasUsageResp) error {
 	return h.BCSProjectQuotaHandler.GetProjectQuotasUsage(ctx, in, out)
+}
+
+func (h *bCSProjectQuotaHandler) GetProjectQuotasStatistics(ctx context.Context, in *GetProjectQuotasStatisticsRequest, out *GetProjectQuotasStatisticsResponse) error {
+	return h.BCSProjectQuotaHandler.GetProjectQuotasStatistics(ctx, in, out)
 }

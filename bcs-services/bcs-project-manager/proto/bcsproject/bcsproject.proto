@@ -2837,6 +2837,16 @@ service BCSProjectQuota {
       summary : "查询项目配额使用情况"
     };
   }
+
+  rpc GetProjectQuotasStatistics(GetProjectQuotasStatisticsRequest) returns (GetProjectQuotasStatisticsResponse){
+    option (google.api.http) = {
+      get : "/bcsproject/v1/projectQuotas/projects/{projectIDOrCode}/quotas/statistics"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "查询用户项目quota的使用情况, 包括配额和已使用资源"
+      summary : "查询项目配额使用情况"
+    };
+  }
 }
 
 message ProjectQuota {
@@ -3724,4 +3734,83 @@ message ScaleDownProjectQuotaResponse{
     title : "web_annotations",
     description : "项目更多信息，主要是权限相关"
   }, json_name = "web_annotations"];
+}
+
+message GetProjectQuotasStatisticsRequest{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetProjectQuotasStatisticsRequest"
+      description : "获取项目额度资源quota的统计信息"
+      required : [
+        "projectIDOrCode"
+      ]
+    }
+  };
+
+
+  string projectIDOrCode = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "projectIDOrCode",
+    description: "项目ID或项目Code"
+  }];
+  string quotaType = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "quotaType",
+    description: "额度类型，支持 host/self_host/federation, 不填则为获取所有额度类型"
+  }];
+  bool isContainShared = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "isContainShared",
+    description: "是否包含共享额度"
+  }];
+}
+
+message GetProjectQuotasStatisticsResponse{
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description: "返回错误码"
+  }];
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description: "返回错误信息"
+  }];
+  ProjectQuotasStatisticsData data = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "data",
+    description: "返回项目quota资源使用情况统计"
+  }];
+  string requestID = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "request id",
+    description: "请求 ID"
+  }];
+}
+
+message QuotaResourceData {
+  uint32 usedNum = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "usedNum",
+    description: "已使用量"
+  }];
+  uint32 availableNum = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "availableNum",
+    description: "可使用量"
+  }];
+  uint32 totalNum = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "totalNum",
+    description: "总量"
+  }];
+  float useRate = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "useRate",
+    description: "利用率"
+  }];
+}
+
+message ProjectQuotasStatisticsData {
+  QuotaResourceData cpu = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "cpu",
+    description: "CPU资源"
+  }];
+  QuotaResourceData mem = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "mem",
+    description: "Mem资源"
+  }];
+  QuotaResourceData gpu = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "gpu",
+    description: "GPU资源"
+  }];
 }

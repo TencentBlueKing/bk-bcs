@@ -16813,6 +16813,557 @@ var _ interface {
 	ErrorName() string
 } = ScaleDownProjectQuotaResponseValidationError{}
 
+// Validate checks the field values on GetProjectQuotasStatisticsRequest with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the first error encountered is returned, or nil if there are
+// no violations.
+func (m *GetProjectQuotasStatisticsRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetProjectQuotasStatisticsRequest
+// with the rules defined in the proto definition for this message. If any
+// rules are violated, the result is a list of violation errors wrapped in
+// GetProjectQuotasStatisticsRequestMultiError, or nil if none found.
+func (m *GetProjectQuotasStatisticsRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetProjectQuotasStatisticsRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for ProjectIDOrCode
+
+	// no validation rules for QuotaType
+
+	// no validation rules for IsContainShared
+
+	if len(errors) > 0 {
+		return GetProjectQuotasStatisticsRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetProjectQuotasStatisticsRequestMultiError is an error wrapping multiple
+// validation errors returned by
+// GetProjectQuotasStatisticsRequest.ValidateAll() if the designated
+// constraints aren't met.
+type GetProjectQuotasStatisticsRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetProjectQuotasStatisticsRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetProjectQuotasStatisticsRequestMultiError) AllErrors() []error { return m }
+
+// GetProjectQuotasStatisticsRequestValidationError is the validation error
+// returned by GetProjectQuotasStatisticsRequest.Validate if the designated
+// constraints aren't met.
+type GetProjectQuotasStatisticsRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetProjectQuotasStatisticsRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetProjectQuotasStatisticsRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetProjectQuotasStatisticsRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetProjectQuotasStatisticsRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetProjectQuotasStatisticsRequestValidationError) ErrorName() string {
+	return "GetProjectQuotasStatisticsRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetProjectQuotasStatisticsRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetProjectQuotasStatisticsRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetProjectQuotasStatisticsRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetProjectQuotasStatisticsRequestValidationError{}
+
+// Validate checks the field values on GetProjectQuotasStatisticsResponse with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the first error encountered is returned, or nil if there are
+// no violations.
+func (m *GetProjectQuotasStatisticsResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetProjectQuotasStatisticsResponse
+// with the rules defined in the proto definition for this message. If any
+// rules are violated, the result is a list of violation errors wrapped in
+// GetProjectQuotasStatisticsResponseMultiError, or nil if none found.
+func (m *GetProjectQuotasStatisticsResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetProjectQuotasStatisticsResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	if all {
+		switch v := interface{}(m.GetData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, GetProjectQuotasStatisticsResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, GetProjectQuotasStatisticsResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return GetProjectQuotasStatisticsResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for RequestID
+
+	if len(errors) > 0 {
+		return GetProjectQuotasStatisticsResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetProjectQuotasStatisticsResponseMultiError is an error wrapping multiple
+// validation errors returned by
+// GetProjectQuotasStatisticsResponse.ValidateAll() if the designated
+// constraints aren't met.
+type GetProjectQuotasStatisticsResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetProjectQuotasStatisticsResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetProjectQuotasStatisticsResponseMultiError) AllErrors() []error { return m }
+
+// GetProjectQuotasStatisticsResponseValidationError is the validation error
+// returned by GetProjectQuotasStatisticsResponse.Validate if the designated
+// constraints aren't met.
+type GetProjectQuotasStatisticsResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetProjectQuotasStatisticsResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetProjectQuotasStatisticsResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetProjectQuotasStatisticsResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetProjectQuotasStatisticsResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetProjectQuotasStatisticsResponseValidationError) ErrorName() string {
+	return "GetProjectQuotasStatisticsResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetProjectQuotasStatisticsResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetProjectQuotasStatisticsResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetProjectQuotasStatisticsResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetProjectQuotasStatisticsResponseValidationError{}
+
+// Validate checks the field values on QuotaResourceData with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *QuotaResourceData) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on QuotaResourceData with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// QuotaResourceDataMultiError, or nil if none found.
+func (m *QuotaResourceData) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *QuotaResourceData) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for UsedNum
+
+	// no validation rules for AvailableNum
+
+	// no validation rules for TotalNum
+
+	// no validation rules for UseRate
+
+	if len(errors) > 0 {
+		return QuotaResourceDataMultiError(errors)
+	}
+
+	return nil
+}
+
+// QuotaResourceDataMultiError is an error wrapping multiple validation errors
+// returned by QuotaResourceData.ValidateAll() if the designated constraints
+// aren't met.
+type QuotaResourceDataMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m QuotaResourceDataMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m QuotaResourceDataMultiError) AllErrors() []error { return m }
+
+// QuotaResourceDataValidationError is the validation error returned by
+// QuotaResourceData.Validate if the designated constraints aren't met.
+type QuotaResourceDataValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e QuotaResourceDataValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e QuotaResourceDataValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e QuotaResourceDataValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e QuotaResourceDataValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e QuotaResourceDataValidationError) ErrorName() string {
+	return "QuotaResourceDataValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e QuotaResourceDataValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sQuotaResourceData.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = QuotaResourceDataValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = QuotaResourceDataValidationError{}
+
+// Validate checks the field values on ProjectQuotasStatisticsData with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ProjectQuotasStatisticsData) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ProjectQuotasStatisticsData with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ProjectQuotasStatisticsDataMultiError, or nil if none found.
+func (m *ProjectQuotasStatisticsData) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ProjectQuotasStatisticsData) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if all {
+		switch v := interface{}(m.GetCpu()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ProjectQuotasStatisticsDataValidationError{
+					field:  "Cpu",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ProjectQuotasStatisticsDataValidationError{
+					field:  "Cpu",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetCpu()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ProjectQuotasStatisticsDataValidationError{
+				field:  "Cpu",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetMem()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ProjectQuotasStatisticsDataValidationError{
+					field:  "Mem",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ProjectQuotasStatisticsDataValidationError{
+					field:  "Mem",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetMem()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ProjectQuotasStatisticsDataValidationError{
+				field:  "Mem",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetGpu()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ProjectQuotasStatisticsDataValidationError{
+					field:  "Gpu",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ProjectQuotasStatisticsDataValidationError{
+					field:  "Gpu",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetGpu()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ProjectQuotasStatisticsDataValidationError{
+				field:  "Gpu",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return ProjectQuotasStatisticsDataMultiError(errors)
+	}
+
+	return nil
+}
+
+// ProjectQuotasStatisticsDataMultiError is an error wrapping multiple
+// validation errors returned by ProjectQuotasStatisticsData.ValidateAll() if
+// the designated constraints aren't met.
+type ProjectQuotasStatisticsDataMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ProjectQuotasStatisticsDataMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ProjectQuotasStatisticsDataMultiError) AllErrors() []error { return m }
+
+// ProjectQuotasStatisticsDataValidationError is the validation error returned
+// by ProjectQuotasStatisticsData.Validate if the designated constraints
+// aren't met.
+type ProjectQuotasStatisticsDataValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ProjectQuotasStatisticsDataValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ProjectQuotasStatisticsDataValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ProjectQuotasStatisticsDataValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ProjectQuotasStatisticsDataValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ProjectQuotasStatisticsDataValidationError) ErrorName() string {
+	return "ProjectQuotasStatisticsDataValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ProjectQuotasStatisticsDataValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sProjectQuotasStatisticsData.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ProjectQuotasStatisticsDataValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ProjectQuotasStatisticsDataValidationError{}
+
 // Validate checks the field values on ListProjectsForIAMResp_Project with the
 // rules defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.

@@ -131,3 +131,14 @@ func (p *ProjectQuotaHandler) GetProjectQuotasUsage(ctx context.Context,
 
 	return nil
 }
+
+// GetProjectQuotasStatistics get project quotas statistics
+func (p *ProjectQuotaHandler) GetProjectQuotasStatistics(ctx context.Context,
+	req *proto.GetProjectQuotasStatisticsRequest, resp *proto.GetProjectQuotasStatisticsResponse) error {
+	la := aquota.NewGetQuotaStatisticsAction(p.model)
+	e := la.Do(ctx, req, resp)
+	if e != nil {
+		return e
+	}
+	return nil
+}

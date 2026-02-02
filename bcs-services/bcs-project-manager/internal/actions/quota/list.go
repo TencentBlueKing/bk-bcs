@@ -19,13 +19,16 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 
+	common "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/constant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/page"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/quota"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/convert"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/stringx"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
 )
 
@@ -98,7 +101,7 @@ func (la *ListQuotaAction) doHost(ctx context.Context, req *proto.ListProjectQuo
 func (la *ListQuotaAction) doHostUsage(ctx context.Context, req *proto.ListProjectQuotasRequest,
 	pquota []*proto.ProjectQuota, p *project.Project) ([]*proto.ProjectQuota, error) {
 	// 获取指定项目和提供商的资源使用情况
-	pqs, errC := clustermanager.GetResourceUsage(ctx, req.ProjectID, req.Provider)
+	pqs, errC := clustermanager.GetResourceUsage(ctx, req.ProjectID, req.Provider, quota.Host.String())
 
 	if errC != nil {
 		return pquota, errC
@@ -234,6 +237,7 @@ type ListQuotaV2Action struct {
 	resp  *proto.ListProjectQuotasV2Response // 列出项目配额的响应结果
 
 	project *project.Project
+	count   uint32
 }
 
 // NewListQuotaV2Action new list projectquotas action
@@ -252,17 +256,17 @@ func (la *ListQuotaV2Action) Do(ctx context.Context,
 	la.req = req
 	la.resp = resp
 
-	var pqs []*proto.ProjectQuota
-
 	err := la.validate()
 	if err != nil {
 		return err
 	}
 
-	pQuotas, count, err := la.getProjectQuotas(ctx, req, pqs)
+	var PQ []*proto.ProjectQuota
+	pQuotas, count, err := la.getProjectQuotas(ctx, req, PQ)
 	if err != nil {
 		return err
 	}
+	la.count = uint32(count)
 
 	pQuotas, err = la.getQuotasUsage(ctx, req, pQuotas)
 	if err != nil {
@@ -271,13 +275,14 @@ func (la *ListQuotaV2Action) Do(ctx context.Context,
 
 	// 设置响应数据
 	resp.Data = &proto.ListProjectQuotasData{
-		Total:   uint32(count),
+		Total:   la.count,
 		Results: pQuotas,
 	}
 
 	return nil
 }
 
+// validate validate
 func (la *ListQuotaV2Action) validate() error {
 	if la.req.GetProjectIDOrCode() == "" {
 		return errorx.NewParamErr("project id or code is required")
@@ -306,6 +311,7 @@ func (la *ListQuotaV2Action) validate() error {
 	return nil
 }
 
+// getProjectQuotas 从数据库获取项目配额信息
 func (la *ListQuotaV2Action) getProjectQuotas(ctx context.Context, req *proto.ListProjectQuotasV2Request,
 	pQuotas []*proto.ProjectQuota) ([]*proto.ProjectQuota, int64, error) {
 	var conds []*operator.Condition
@@ -319,7 +325,7 @@ func (la *ListQuotaV2Action) getProjectQuotas(ctx context.Context, req *proto.Li
 			"quotaName": req.GetQuotaName(),
 		}))
 	}
-	if req.GetProjectIDOrCode() != "-" {
+	if req.GetProjectIDOrCode() != "" {
 		if req.GetProjectIDOrCode() == la.project.ProjectID {
 			conds = append(conds, operator.NewLeafCondition(operator.Eq, operator.M{
 				"projectId": la.project.ProjectID,
@@ -366,6 +372,7 @@ func (la *ListQuotaV2Action) getProjectQuotas(ctx context.Context, req *proto.Li
 	return pQuotas, total, nil
 }
 
+// getPaginationOpt 获取分页参数
 func (la *ListQuotaV2Action) getPaginationOpt() *page.Pagination {
 	pagination := &page.Pagination{All: false}
 	pagination.Sort = map[string]int{"createtime": -1}
@@ -377,6 +384,7 @@ func (la *ListQuotaV2Action) getPaginationOpt() *page.Pagination {
 	return pagination
 }
 
+// getQuotasUsage 获取配额使用情况
 func (la *ListQuotaV2Action) getQuotasUsage(ctx context.Context, req *proto.ListProjectQuotasV2Request,
 	pQuotas []*proto.ProjectQuota) ([]*proto.ProjectQuota, error) {
 	if len(pQuotas) == 0 {
@@ -410,20 +418,32 @@ func (la *ListQuotaV2Action) getQuotasUsage(ctx context.Context, req *proto.List
 		}
 	}
 
-	// 处理 Host 类型的 Usage
-	if len(quotaHostList) > 0 {
-		var hostQuotas []*proto.ProjectQuota
-		for _, item := range quotaHostList {
-			hostQuotas = append(hostQuotas, item.quota)
+	// 处理 Host 类型的 Usage，quota-gray 与 V1 保持一致
+	if _, ok := la.project.Labels["quota-gray"]; ok {
+		if len(quotaHostList) > 0 {
+			var hostQuotas []*proto.ProjectQuota
+			for _, item := range quotaHostList {
+				hostQuotas = append(hostQuotas, item.quota)
+			}
+			usagesHostQuota, err := doHostUsage(ctx, hostQuotas,
+				la.project, req.GetProvider())
+			if err != nil {
+				return nil, err
+			}
+			for i, item := range quotaHostList {
+				pQuotas[item.index] = usagesHostQuota[i]
+			}
 		}
-		usagesHostQuota, err := la.doHostUsage(ctx, hostQuotas,
+	} else if req.GetQuotaType() == quota.Host.String() {
+		usagesHostQuota, err := doHostUsage(ctx, make([]*proto.ProjectQuota, 0),
 			la.project, req.GetProvider())
 		if err != nil {
 			return nil, err
 		}
-		for i, item := range quotaHostList {
-			pQuotas[item.index] = usagesHostQuota[i]
-		}
+		newPQuotas := make([]*proto.ProjectQuota, 0)
+		newPQuotas = append(newPQuotas, usagesHostQuota...)
+		pQuotas = newPQuotas
+		la.count = uint32(len(pQuotas))
 	}
 
 	// 处理 SelfHost 类型的 Usage
@@ -432,13 +452,12 @@ func (la *ListQuotaV2Action) getQuotasUsage(ctx context.Context, req *proto.List
 		for _, item := range quotaSelfHostList {
 			selfHostQuotas = append(selfHostQuotas, item.quota)
 		}
-		// 目前 SelfHost 类型不支持 Usage
-		// usagesSelfHostQuota, err := la.doHostUsage(ctx, selfHostQuotas, la.project, req.GetProvider())
-		// if err != nil {
-		//	 return nil, err
-		// }
+		usagesSelfHostQuota, err := doSelfHostUsage(ctx, selfHostQuotas, la.project, req.GetProvider())
+		if err != nil {
+			return nil, err
+		}
 		for i, item := range quotaSelfHostList {
-			pQuotas[item.index] = selfHostQuotas[i]
+			pQuotas[item.index] = usagesSelfHostQuota[i]
 		}
 	}
 
@@ -454,13 +473,14 @@ func (la *ListQuotaV2Action) getQuotasUsage(ctx context.Context, req *proto.List
 	return pQuotas, nil
 }
 
-func (la *ListQuotaV2Action) doHostUsage(ctx context.Context, pquota []*proto.ProjectQuota,
+// doHostUsage 获取 host 类型使用量
+func doHostUsage(ctx context.Context, pquota []*proto.ProjectQuota,
 	p *project.Project, provider string) ([]*proto.ProjectQuota, error) {
 	if p == nil || provider == "" {
 		return pquota, nil
 	}
 	// 获取指定项目和提供商的资源使用情况
-	pqs, errC := clustermanager.GetResourceUsage(ctx, p.ProjectID, provider)
+	pqs, errC := clustermanager.GetResourceUsage(ctx, p.ProjectID, provider, quota.Host.String())
 
 	if errC != nil {
 		return pquota, errC
@@ -496,7 +516,403 @@ func (la *ListQuotaV2Action) doHostUsage(ctx context.Context, pquota []*proto.Pr
 					pqpq.NodeGroups = NG
 				}
 			}
+		} else {
+			// 构建项目配额信息
+			pquota = append(pquota, &proto.ProjectQuota{
+				Quota: &proto.QuotaResource{
+					ZoneResources: &proto.InstanceTypeConfig{
+						Region:       pq.Region,
+						InstanceType: pq.InstanceType,
+						Cpu:          cpu,
+						Mem:          mem,
+						ZoneName:     pq.Zone,
+						QuotaNum:     pq.Total,
+						QuotaUsed:    pq.Used,
+					},
+				},
+				NodeGroups: NG,
+				QuotaType:  string(quota.Host),
+				ProjectID:  p.ProjectID,
+				Status:     string(quota.Running),
+			})
 		}
 	}
 	return pquota, nil
+}
+
+// doSelfHostUsage 获取 self_host 类型使用量
+func doSelfHostUsage(ctx context.Context, pquota []*proto.ProjectQuota,
+	p *project.Project, provider string) ([]*proto.ProjectQuota, error) {
+	if p == nil || provider == "" {
+		return pquota, nil
+	}
+	// 获取指定项目和提供商的资源使用情况
+	pqs, errC := clustermanager.GetResourceUsage(ctx, p.ProjectID, provider, quota.SelfHost.String())
+
+	if errC != nil {
+		return pquota, errC
+	}
+
+	// 遍历每个项目配额，构建响应数据
+	for _, pqpq := range pquota {
+		for _, pq := range pqs {
+			if pqpq.QuotaId == pq.GetQuotaID() && pqpq.Status == string(quota.Running) {
+				var NG []*proto.NodeGroup
+				// 获取每个节点组的信息
+				for _, gpid := range pq.TotalGroupIds {
+					ng, errG := clustermanager.GetNodeGroup(ctx, gpid)
+					if errG != nil {
+						return pquota, errG
+					}
+					NG = append(NG, &proto.NodeGroup{
+						NodeGroupId: ng.NodeGroupID,
+						ClusterId:   ng.ClusterID,
+					})
+				}
+				pqpq.Quota.ZoneResources.QuotaUsed = pq.Used
+				pqpq.NodeGroups = NG
+			}
+		}
+
+	}
+	return pquota, nil
+}
+
+// GetQuotaStatisticsAction action for get statistics
+type GetQuotaStatisticsAction struct {
+	ctx   context.Context
+	model store.ProjectModel
+	req   *proto.GetProjectQuotasStatisticsRequest
+	resp  *proto.GetProjectQuotasStatisticsResponse
+
+	project *project.Project
+}
+
+// NewGetQuotaStatisticsAction new get statistics action
+func NewGetQuotaStatisticsAction(model store.ProjectModel) *GetQuotaStatisticsAction {
+	return &GetQuotaStatisticsAction{
+		model: model,
+	}
+}
+
+// Do get project statistics info
+func (ga *GetQuotaStatisticsAction) Do(ctx context.Context, req *proto.GetProjectQuotasStatisticsRequest,
+	resp *proto.GetProjectQuotasStatisticsResponse) error {
+	ga.ctx = ctx
+	ga.req = req
+	ga.resp = resp
+
+	err := ga.validate()
+	if err != nil {
+		return err
+	}
+
+	pQuotas, _, err := ga.getProjectQuotas(ctx, req)
+	if err != nil {
+		return err
+	}
+
+	usageProjectQuotas, err := ga.getQuotasUsage(ctx, req, pQuotas)
+	if err != nil {
+		return err
+	}
+
+	statisticsData := ga.getQuotasStatistics(usageProjectQuotas)
+
+	ga.resp.Data = statisticsData
+
+	return nil
+}
+
+// validate validate
+func (ga *GetQuotaStatisticsAction) validate() error {
+	if ga.req.GetProjectIDOrCode() == "" {
+		return errorx.NewParamErr("project id or code is required")
+	}
+
+	proj, err := ga.model.GetProject(context.TODO(), ga.req.GetProjectIDOrCode())
+	if err != nil {
+		logging.Error("get project from db failed, err: %s", err.Error())
+		return errorx.NewDBErr(fmt.Sprintf("get project from db failed,"+
+			" req:[%s], err:[%s]", ga.req.String(), err.Error()))
+	}
+	ga.project = proj
+
+	return nil
+}
+
+// getProjectQuotas 从数据库获取项目配额
+func (ga *GetQuotaStatisticsAction) getProjectQuotas(ctx context.Context,
+	req *proto.GetProjectQuotasStatisticsRequest) ([]*proto.ProjectQuota, int64, error) {
+	var conds, sharedConds []*operator.Condition
+
+	// 构建基础查询条件
+	conds = ga.buildBaseConditions(req, conds)
+
+	finalCond := operator.NewBranchCondition(operator.And, conds...)
+
+	// 如果包含共享配额，增加查询共享配额条件
+	if ga.req.GetIsContainShared() {
+		sharedConds = ga.buildSharedConditions(req, sharedConds)
+
+		if len(sharedConds) > 0 {
+			sharedQuotaCond := operator.NewBranchCondition(operator.And, sharedConds...)
+			finalCond = operator.NewBranchCondition(operator.Or, finalCond, sharedQuotaCond)
+		}
+	}
+
+	quotas, total, err := ga.model.ListProjectQuotas(ctx, finalCond, &page.Pagination{All: true})
+	if err != nil {
+		return nil, 0, errorx.NewDBErr(fmt.Sprintf("GetQuotaStatistics ListProjectQuotas failed,"+
+			" req:[%s], err:[%s]", req.String(), err.Error()))
+	}
+
+	var pQuotas []*proto.ProjectQuota
+
+	for _, q := range quotas {
+		tmp := q
+		pQuotas = append(pQuotas, quota.TransStore2ProtoQuota(&tmp))
+	}
+
+	return pQuotas, total, nil
+}
+
+// buildBaseConditions 构建基础查询条件
+func (ga *GetQuotaStatisticsAction) buildBaseConditions(req *proto.GetProjectQuotasStatisticsRequest,
+	conds []*operator.Condition) []*operator.Condition {
+
+	if req.GetProjectIDOrCode() != "" {
+		projectCond := operator.NewBranchCondition(operator.Or,
+			operator.NewLeafCondition(operator.Eq, operator.M{"projectId": req.GetProjectIDOrCode()}),
+			operator.NewLeafCondition(operator.Eq, operator.M{"projectCode": req.GetProjectIDOrCode()}),
+		)
+		conds = append(conds, projectCond)
+	}
+
+	conds = ga.buildCommonConditions(req, conds)
+
+	return conds
+}
+
+// buildCommonConditions 构建共同查询条件
+func (ga *GetQuotaStatisticsAction) buildCommonConditions(req *proto.GetProjectQuotasStatisticsRequest,
+	conds []*operator.Condition) []*operator.Condition {
+	if req.GetQuotaType() != "" {
+		conds = append(conds, operator.NewLeafCondition(operator.Eq, operator.M{
+			"quotaType": req.GetQuotaType(),
+		}))
+	} else {
+		quotaTypes := []string{
+			quota.Host.String(),
+			quota.SelfHost.String(),
+			quota.Federation.String(),
+		}
+		conds = append(conds, operator.NewLeafCondition(operator.In, operator.M{
+			"quotaType": quotaTypes,
+		}))
+	}
+
+	conds = append(conds, operator.NewLeafCondition(operator.Eq, operator.M{
+		"provider": common.ProviderInternal,
+	}))
+	conds = append(conds, operator.NewLeafCondition(operator.Ne, operator.M{
+		"status": quota.Deleted,
+	}))
+
+	return conds
+}
+
+// buildSharedConditions 构建共享配额查询条件
+func (ga *GetQuotaStatisticsAction) buildSharedConditions(req *proto.GetProjectQuotasStatisticsRequest,
+	conds []*operator.Condition) []*operator.Condition {
+
+	if req.GetProjectIDOrCode() != "" {
+		projectCond := operator.NewBranchCondition(operator.Or,
+			operator.NewLeafCondition(operator.Eq, operator.M{"quotaSharedProjectList.projectId": req.GetProjectIDOrCode()}),
+			operator.NewLeafCondition(operator.Eq, operator.M{"quotaSharedProjectList.projectCode": req.GetProjectIDOrCode()}),
+		)
+		conds = append(conds, projectCond)
+	}
+
+	conds = append(conds, operator.NewLeafCondition(operator.Eq, operator.M{
+		"quotaSharedEnabled": true,
+	}))
+
+	conds = ga.buildCommonConditions(req, conds)
+
+	return conds
+}
+
+// getQuotasUsage 获取配额使用情况
+func (ga *GetQuotaStatisticsAction) getQuotasUsage(ctx context.Context, req *proto.GetProjectQuotasStatisticsRequest,
+	pQuotas []*proto.ProjectQuota) ([]*proto.ProjectQuota, error) {
+	if len(pQuotas) == 0 {
+		return pQuotas, nil
+	}
+
+	var (
+		quotaUsageList []*proto.ProjectQuota
+
+		quotaHostList       []*proto.ProjectQuota
+		quotaSelfHostList   []*proto.ProjectQuota
+		quotaFederationList []*proto.ProjectQuota
+	)
+
+	// 按 QuotaType 分类，同时记录原始索引
+	for _, pQuota := range pQuotas {
+		switch pQuota.QuotaType {
+		case quota.Host.String():
+			quotaHostList = append(quotaHostList, pQuota)
+		case quota.SelfHost.String():
+			quotaSelfHostList = append(quotaSelfHostList, pQuota)
+		case quota.Federation.String():
+			quotaFederationList = append(quotaFederationList, pQuota)
+		}
+	}
+
+	// 处理 Host 类型的 Usage, quota-gray 保持原数据查询信息结果
+	if req.GetQuotaType() == quota.Host.String() {
+		if _, ok := ga.project.Labels["quota-gray"]; ok {
+			if len(quotaHostList) > 0 {
+				usagesHostQuota, err := doHostUsage(ctx, quotaHostList,
+					ga.project, common.ProviderInternal)
+				if err != nil {
+					return nil, err
+				}
+				quotaUsageList = append(quotaUsageList, usagesHostQuota...)
+			}
+		} else {
+			usagesHostQuota, err := doHostUsage(ctx, make([]*proto.ProjectQuota, 0),
+				ga.project, common.ProviderInternal)
+			if err != nil {
+				return nil, err
+			}
+			quotaUsageList = append(quotaUsageList, usagesHostQuota...)
+		}
+	}
+
+	// 处理 SelfHost 类型的 Usage
+	if len(quotaSelfHostList) > 0 {
+		usagesSelfHostQuota, err := doSelfHostUsage(ctx, quotaSelfHostList,
+			ga.project, common.ProviderInternal)
+		if err != nil {
+			return nil, err
+		}
+		quotaUsageList = append(quotaUsageList, usagesSelfHostQuota...)
+	}
+
+	// 处理 Federation 类型的 Usage
+	if len(quotaFederationList) > 0 {
+		for _, item := range quotaFederationList {
+			// Federation 类型需要转换为 store 类型处理
+			getQuotaUsageForProto(item)
+			quotaUsageList = append(quotaUsageList, item)
+		}
+	}
+
+	return quotaUsageList, nil
+}
+
+func (ga *GetQuotaStatisticsAction) getQuotasStatistics(
+	pQuotas []*proto.ProjectQuota) *proto.ProjectQuotasStatisticsData {
+	if len(pQuotas) == 0 {
+		return &proto.ProjectQuotasStatisticsData{}
+	}
+
+	var (
+		statisticsData = &proto.ProjectQuotasStatisticsData{
+			Cpu: &proto.QuotaResourceData{},
+			Mem: &proto.QuotaResourceData{},
+			Gpu: &proto.QuotaResourceData{},
+		}
+	)
+
+	for _, pQuota := range pQuotas {
+		switch pQuota.QuotaType {
+		case quota.Host.String(), quota.SelfHost.String():
+			// Host和SelfHost类型处理相同的逻辑
+			zoneResource := pQuota.GetQuota().GetZoneResources()
+			if zoneResource != nil {
+				ga.handleHostStatisticsData(statisticsData, zoneResource)
+			}
+		case quota.Federation.String():
+			// Federation类型处理，只计算 Running 状态
+			if pQuota.Status == quota.Running.String() {
+				ga.handleFederationStatisticsData(statisticsData,
+					pQuota.GetQuota().GetCpu(),
+					pQuota.GetQuota().GetMem(),
+					pQuota.GetQuota().GetGpu())
+			}
+		}
+	}
+
+	return statisticsData
+}
+
+// handleHostStatisticsData 处理 host/self_host 类型的统计数据
+func (ga *GetQuotaStatisticsAction) handleHostStatisticsData(
+	statisticsData *proto.ProjectQuotasStatisticsData,
+	zoneResource *proto.InstanceTypeConfig) *proto.ProjectQuotasStatisticsData {
+	if zoneResource != nil {
+		statisticsData.Cpu.TotalNum += zoneResource.Cpu * zoneResource.QuotaNum
+		statisticsData.Mem.TotalNum += zoneResource.Mem * zoneResource.QuotaNum
+		statisticsData.Gpu.TotalNum += zoneResource.Gpu * zoneResource.QuotaNum
+
+		statisticsData.Cpu.UsedNum += zoneResource.Cpu * zoneResource.QuotaUsed
+		statisticsData.Mem.UsedNum += zoneResource.Mem * zoneResource.QuotaUsed
+		statisticsData.Gpu.UsedNum += zoneResource.Gpu * zoneResource.QuotaUsed
+
+		statisticsData.Cpu.AvailableNum = statisticsData.Cpu.TotalNum - statisticsData.Cpu.UsedNum
+		statisticsData.Mem.AvailableNum = statisticsData.Mem.TotalNum - statisticsData.Mem.UsedNum
+		statisticsData.Gpu.AvailableNum = statisticsData.Gpu.TotalNum - statisticsData.Gpu.UsedNum
+
+		if statisticsData.Cpu.TotalNum != 0 {
+			statisticsData.Cpu.UseRate = convert.RoundToTwoDecimals(
+				convert.RoundDivisionToTwoDecimals(statisticsData.Cpu.UsedNum, statisticsData.Cpu.TotalNum) * 100)
+		}
+		if statisticsData.Mem.TotalNum != 0 {
+			statisticsData.Mem.UseRate = convert.RoundToTwoDecimals(
+				convert.RoundDivisionToTwoDecimals(statisticsData.Mem.UsedNum, statisticsData.Mem.TotalNum) * 100)
+		}
+		if statisticsData.Gpu.TotalNum != 0 {
+			statisticsData.Gpu.UseRate = convert.RoundToTwoDecimals(
+				convert.RoundDivisionToTwoDecimals(statisticsData.Gpu.UsedNum, statisticsData.Gpu.TotalNum) * 100)
+		}
+	}
+
+	return statisticsData
+}
+
+// handleFederationStatisticsData 处理 federation 类型的统计数据
+func (ga *GetQuotaStatisticsAction) handleFederationStatisticsData(
+	statisticsData *proto.ProjectQuotasStatisticsData,
+	cpu, mem, gpu *proto.DeviceInfo) *proto.ProjectQuotasStatisticsData {
+	if cpu != nil {
+		statisticsData.Cpu.TotalNum += stringx.StringToUint32(cpu.GetDeviceQuota())
+		statisticsData.Cpu.UsedNum += stringx.StringToUint32(cpu.GetDeviceQuotaUsed())
+		statisticsData.Cpu.AvailableNum = statisticsData.Cpu.TotalNum - statisticsData.Cpu.UsedNum
+		if statisticsData.Cpu.TotalNum != 0 {
+			statisticsData.Cpu.UseRate = convert.RoundToTwoDecimals(
+				convert.RoundDivisionToTwoDecimals(statisticsData.Cpu.UsedNum, statisticsData.Cpu.TotalNum) * 100)
+		}
+	}
+	if mem != nil {
+		statisticsData.Mem.TotalNum += stringx.StringToUint32(mem.GetDeviceQuota())
+		statisticsData.Mem.UsedNum += stringx.StringToUint32(mem.GetDeviceQuotaUsed())
+		statisticsData.Mem.AvailableNum = statisticsData.Mem.TotalNum - statisticsData.Mem.UsedNum
+		if statisticsData.Mem.TotalNum != 0 {
+			statisticsData.Mem.UseRate = convert.RoundToTwoDecimals(
+				convert.RoundDivisionToTwoDecimals(statisticsData.Mem.UsedNum, statisticsData.Mem.TotalNum) * 100)
+		}
+	}
+	if gpu != nil {
+		statisticsData.Gpu.TotalNum += stringx.StringToUint32(gpu.GetDeviceQuota())
+		statisticsData.Gpu.UsedNum += stringx.StringToUint32(gpu.GetDeviceQuotaUsed())
+		statisticsData.Gpu.AvailableNum = statisticsData.Gpu.TotalNum - statisticsData.Gpu.UsedNum
+		if statisticsData.Gpu.TotalNum != 0 {
+			statisticsData.Gpu.UseRate = convert.RoundToTwoDecimals(
+				convert.RoundDivisionToTwoDecimals(statisticsData.Gpu.UsedNum, statisticsData.Gpu.TotalNum) * 100)
+		}
+	}
+	return statisticsData
 }

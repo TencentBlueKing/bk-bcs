@@ -266,6 +266,54 @@
         ]
       }
     },
+    "/bcsproject/v1/projectQuotas/projects/{projectIDOrCode}/quotas/statistics": {
+      "get": {
+        "summary": "查询项目配额使用情况",
+        "description": "查询用户项目quota的使用情况, 包括配额和已使用资源",
+        "operationId": "BCSProjectQuota_GetProjectQuotasStatistics",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bcsprojectGetProjectQuotasStatisticsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectIDOrCode",
+            "description": "项目ID或项目Code",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "quotaType",
+            "description": "quotaType. 额度类型，支持 host/self_host/federation, 不填则为获取所有额度类型",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "isContainShared",
+            "description": "isContainShared. 是否包含共享额度",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          }
+        ],
+        "tags": [
+          "BCSProjectQuota"
+        ]
+      }
+    },
     "/bcsproject/v1/projectQuotas/{quotaId}": {
       "get": {
         "summary": "查询项目quota资源信息",
@@ -2890,6 +2938,32 @@
         }
       }
     },
+    "bcsprojectGetProjectQuotasStatisticsResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "data": {
+          "$ref": "#/definitions/bcsprojectProjectQuotasStatisticsData",
+          "description": "返回项目quota资源使用情况统计",
+          "title": "data"
+        },
+        "requestID": {
+          "type": "string",
+          "description": "请求 ID",
+          "title": "request id"
+        }
+      }
+    },
     "bcsprojectGetProjectQuotasUsageData": {
       "type": "object",
       "properties": {
@@ -4268,6 +4342,26 @@
         }
       }
     },
+    "bcsprojectProjectQuotasStatisticsData": {
+      "type": "object",
+      "properties": {
+        "cpu": {
+          "$ref": "#/definitions/bcsprojectQuotaResourceData",
+          "description": "CPU资源",
+          "title": "cpu"
+        },
+        "mem": {
+          "$ref": "#/definitions/bcsprojectQuotaResourceData",
+          "description": "Mem资源",
+          "title": "mem"
+        },
+        "gpu": {
+          "$ref": "#/definitions/bcsprojectQuotaResourceData",
+          "description": "GPU资源",
+          "title": "gpu"
+        }
+      }
+    },
     "bcsprojectProjectResponse": {
       "type": "object",
       "properties": {
@@ -4376,6 +4470,35 @@
           "$ref": "#/definitions/bcsprojectDeviceInfo",
           "description": "共享集群资源下该项目的gpu额度",
           "title": "gpu"
+        }
+      }
+    },
+    "bcsprojectQuotaResourceData": {
+      "type": "object",
+      "properties": {
+        "usedNum": {
+          "type": "integer",
+          "format": "int64",
+          "description": "已使用量",
+          "title": "usedNum"
+        },
+        "availableNum": {
+          "type": "integer",
+          "format": "int64",
+          "description": "可使用量",
+          "title": "availableNum"
+        },
+        "totalNum": {
+          "type": "integer",
+          "format": "int64",
+          "description": "总量",
+          "title": "totalNum"
+        },
+        "useRate": {
+          "type": "number",
+          "format": "float",
+          "description": "利用率",
+          "title": "useRate"
         }
       }
     },

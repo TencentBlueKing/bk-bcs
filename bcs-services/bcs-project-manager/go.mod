@@ -11,7 +11,7 @@ require (
 )
 
 require (
-	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20250512085114-a9a56c48b6c5
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20260129073335-3600fdcdb90f
 	github.com/Tencent/bk-bcs/bcs-common/common/task v0.0.0-20240619071101-df2f4bc5060b
 	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20240418123107-72b120390195
 	github.com/TencentBlueKing/iam-go-sdk v0.1.6

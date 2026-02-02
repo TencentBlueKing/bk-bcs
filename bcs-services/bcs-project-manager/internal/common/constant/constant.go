@@ -67,3 +67,10 @@ const (
 var ProviderMap = map[string]string{
 	ProviderInternal: ProviderSelfProvision,
 }
+
+const (
+	// ResourceTypeYunti xxx
+	ResourceTypeYunti = "yunti"
+	// ResourceTypeSelf xxx
+	ResourceTypeSelf = "self"
+)

@@ -13,6 +13,7 @@
 package stringx
 
 import (
+	"strconv"
 	"strings"
 )
 
@@ -56,4 +57,16 @@ func Errs2String(errs []error) string {
 		strList = append(strList, err.Error())
 	}
 	return strings.Join(strList, ",")
+}
+
+// StringToUint32 字符串转换成 uint32，如果为空或者转换失败，返回 0
+func StringToUint32(str string) uint32 {
+	if str == "" {
+		return 0
+	}
+	result, err := strconv.Atoi(str)
+	if err != nil {
+		return 0
+	}
+	return uint32(result)
 }

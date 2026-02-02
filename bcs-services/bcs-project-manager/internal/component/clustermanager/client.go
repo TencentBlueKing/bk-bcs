@@ -25,6 +25,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/cache"
 	common "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/constant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/quota"
 )
 
 var (
@@ -93,8 +94,14 @@ func ListClusters(ctx context.Context, projectID string) ([]*clustermanager.Clus
 	return resp.GetData(), nil
 }
 
+// ResourceTypeMap resource type map
+var ResourceTypeMap = map[string]string{
+	quota.Host.String():     common.ResourceTypeYunti,
+	quota.SelfHost.String(): common.ResourceTypeSelf,
+}
+
 // GetResourceUsage get project resource usage
-func GetResourceUsage(ctx context.Context, projectID, provider string) (
+func GetResourceUsage(ctx context.Context, projectID, provider, quotaType string) (
 	[]*clustermanager.ProjectAutoscalerQuota, error) {
 	cli, closeCon, err := clustermanager.GetClient(common.ServiceDomain)
 	if err != nil {
@@ -110,6 +117,12 @@ func GetResourceUsage(ctx context.Context, projectID, provider string) (
 			}
 			return provider
 		}(provider),
+		ResourcePoolType: func(quotaType string) string {
+			if findResourceType, ok := ResourceTypeMap[quotaType]; ok {
+				return findResourceType
+			}
+			return quotaType
+		}(quotaType),
 	}
 	resp, err := cli.GetProjectResourceQuotaUsage(ctx, req)
 	if err != nil {

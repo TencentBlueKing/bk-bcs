@@ -9297,6 +9297,274 @@ func (x *ScaleDownProjectQuotaResponse) GetWebAnnotations() *Perms {
 	return nil
 }
 
+type GetProjectQuotasStatisticsRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	ProjectIDOrCode string `protobuf:"bytes,1,opt,name=projectIDOrCode,proto3" json:"projectIDOrCode,omitempty"`
+	QuotaType       string `protobuf:"bytes,2,opt,name=quotaType,proto3" json:"quotaType,omitempty"`
+	IsContainShared bool   `protobuf:"varint,3,opt,name=isContainShared,proto3" json:"isContainShared,omitempty"`
+}
+
+func (x *GetProjectQuotasStatisticsRequest) Reset() {
+	*x = GetProjectQuotasStatisticsRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_bcsproject_proto_msgTypes[120]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *GetProjectQuotasStatisticsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetProjectQuotasStatisticsRequest) ProtoMessage() {}
+
+func (x *GetProjectQuotasStatisticsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_bcsproject_proto_msgTypes[120]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetProjectQuotasStatisticsRequest.ProtoReflect.Descriptor instead.
+func (*GetProjectQuotasStatisticsRequest) Descriptor() ([]byte, []int) {
+	return file_bcsproject_proto_rawDescGZIP(), []int{120}
+}
+
+func (x *GetProjectQuotasStatisticsRequest) GetProjectIDOrCode() string {
+	if x != nil {
+		return x.ProjectIDOrCode
+	}
+	return ""
+}
+
+func (x *GetProjectQuotasStatisticsRequest) GetQuotaType() string {
+	if x != nil {
+		return x.QuotaType
+	}
+	return ""
+}
+
+func (x *GetProjectQuotasStatisticsRequest) GetIsContainShared() bool {
+	if x != nil {
+		return x.IsContainShared
+	}
+	return false
+}
+
+type GetProjectQuotasStatisticsResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Code      uint32                       `protobuf:"varint,1,opt,name=code,proto3" json:"code,omitempty"`
+	Message   string                       `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
+	Data      *ProjectQuotasStatisticsData `protobuf:"bytes,3,opt,name=data,proto3" json:"data,omitempty"`
+	RequestID string                       `protobuf:"bytes,4,opt,name=requestID,proto3" json:"requestID,omitempty"`
+}
+
+func (x *GetProjectQuotasStatisticsResponse) Reset() {
+	*x = GetProjectQuotasStatisticsResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_bcsproject_proto_msgTypes[121]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *GetProjectQuotasStatisticsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetProjectQuotasStatisticsResponse) ProtoMessage() {}
+
+func (x *GetProjectQuotasStatisticsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_bcsproject_proto_msgTypes[121]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetProjectQuotasStatisticsResponse.ProtoReflect.Descriptor instead.
+func (*GetProjectQuotasStatisticsResponse) Descriptor() ([]byte, []int) {
+	return file_bcsproject_proto_rawDescGZIP(), []int{121}
+}
+
+func (x *GetProjectQuotasStatisticsResponse) GetCode() uint32 {
+	if x != nil {
+		return x.Code
+	}
+	return 0
+}
+
+func (x *GetProjectQuotasStatisticsResponse) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
+func (x *GetProjectQuotasStatisticsResponse) GetData() *ProjectQuotasStatisticsData {
+	if x != nil {
+		return x.Data
+	}
+	return nil
+}
+
+func (x *GetProjectQuotasStatisticsResponse) GetRequestID() string {
+	if x != nil {
+		return x.RequestID
+	}
+	return ""
+}
+
+type QuotaResourceData struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	UsedNum      uint32  `protobuf:"varint,1,opt,name=usedNum,proto3" json:"usedNum,omitempty"`
+	AvailableNum uint32  `protobuf:"varint,2,opt,name=availableNum,proto3" json:"availableNum,omitempty"`
+	TotalNum     uint32  `protobuf:"varint,3,opt,name=totalNum,proto3" json:"totalNum,omitempty"`
+	UseRate      float32 `protobuf:"fixed32,4,opt,name=useRate,proto3" json:"useRate,omitempty"`
+}
+
+func (x *QuotaResourceData) Reset() {
+	*x = QuotaResourceData{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_bcsproject_proto_msgTypes[122]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *QuotaResourceData) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QuotaResourceData) ProtoMessage() {}
+
+func (x *QuotaResourceData) ProtoReflect() protoreflect.Message {
+	mi := &file_bcsproject_proto_msgTypes[122]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use QuotaResourceData.ProtoReflect.Descriptor instead.
+func (*QuotaResourceData) Descriptor() ([]byte, []int) {
+	return file_bcsproject_proto_rawDescGZIP(), []int{122}
+}
+
+func (x *QuotaResourceData) GetUsedNum() uint32 {
+	if x != nil {
+		return x.UsedNum
+	}
+	return 0
+}
+
+func (x *QuotaResourceData) GetAvailableNum() uint32 {
+	if x != nil {
+		return x.AvailableNum
+	}
+	return 0
+}
+
+func (x *QuotaResourceData) GetTotalNum() uint32 {
+	if x != nil {
+		return x.TotalNum
+	}
+	return 0
+}
+
+func (x *QuotaResourceData) GetUseRate() float32 {
+	if x != nil {
+		return x.UseRate
+	}
+	return 0
+}
+
+type ProjectQuotasStatisticsData struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Cpu *QuotaResourceData `protobuf:"bytes,1,opt,name=cpu,proto3" json:"cpu,omitempty"`
+	Mem *QuotaResourceData `protobuf:"bytes,2,opt,name=mem,proto3" json:"mem,omitempty"`
+	Gpu *QuotaResourceData `protobuf:"bytes,3,opt,name=gpu,proto3" json:"gpu,omitempty"`
+}
+
+func (x *ProjectQuotasStatisticsData) Reset() {
+	*x = ProjectQuotasStatisticsData{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_bcsproject_proto_msgTypes[123]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *ProjectQuotasStatisticsData) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ProjectQuotasStatisticsData) ProtoMessage() {}
+
+func (x *ProjectQuotasStatisticsData) ProtoReflect() protoreflect.Message {
+	mi := &file_bcsproject_proto_msgTypes[123]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ProjectQuotasStatisticsData.ProtoReflect.Descriptor instead.
+func (*ProjectQuotasStatisticsData) Descriptor() ([]byte, []int) {
+	return file_bcsproject_proto_rawDescGZIP(), []int{123}
+}
+
+func (x *ProjectQuotasStatisticsData) GetCpu() *QuotaResourceData {
+	if x != nil {
+		return x.Cpu
+	}
+	return nil
+}
+
+func (x *ProjectQuotasStatisticsData) GetMem() *QuotaResourceData {
+	if x != nil {
+		return x.Mem
+	}
+	return nil
+}
+
+func (x *ProjectQuotasStatisticsData) GetGpu() *QuotaResourceData {
+	if x != nil {
+		return x.Gpu
+	}
+	return nil
+}
+
 type ListProjectsForIAMResp_Project struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -9314,7 +9582,7 @@ type ListProjectsForIAMResp_Project struct {
 func (x *ListProjectsForIAMResp_Project) Reset() {
 	*x = ListProjectsForIAMResp_Project{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_bcsproject_proto_msgTypes[126]
+		mi := &file_bcsproject_proto_msgTypes[130]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -9327,7 +9595,7 @@ func (x *ListProjectsForIAMResp_Project) String() string {
 func (*ListProjectsForIAMResp_Project) ProtoMessage() {}
 
 func (x *ListProjectsForIAMResp_Project) ProtoReflect() protoreflect.Message {
-	mi := &file_bcsproject_proto_msgTypes[126]
+	mi := &file_bcsproject_proto_msgTypes[130]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -12865,7 +13133,86 @@ var file_bcsproject_proto_rawDesc = []byte{
 	0xa1, 0xb9, 0xe7, 0x9b, 0xae, 0xe6, 0x9b, 0xb4, 0xe5, 0xa4, 0x9a, 0xe4, 0xbf, 0xa1, 0xe6, 0x81,
 	0xaf, 0xef, 0xbc, 0x8c, 0xe4, 0xb8, 0xbb, 0xe8, 0xa6, 0x81, 0xe6, 0x98, 0xaf, 0xe6, 0x9d, 0x83,
 	0xe9, 0x99, 0x90, 0xe7, 0x9b, 0xb8, 0xe5, 0x85, 0xb3, 0x52, 0x0f, 0x77, 0x65, 0x62, 0x5f, 0x61,
-	0x6e, 0x6e, 0x6f, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x32, 0xb6, 0x0d, 0x0a, 0x0a, 0x42,
+	0x6e, 0x6e, 0x6f, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x22, 0xc4, 0x03, 0x0a, 0x21, 0x47,
+	0x65, 0x74, 0x50, 0x72, 0x6f, 0x6a, 0x65, 0x63, 0x74, 0x51, 0x75, 0x6f, 0x74, 0x61, 0x73, 0x53,
+	0x74, 0x61, 0x74, 0x69, 0x73, 0x74, 0x69, 0x63, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x12, 0x55, 0x0a, 0x0f, 0x70, 0x72, 0x6f, 0x6a, 0x65, 0x63, 0x74, 0x49, 0x44, 0x4f, 0x72, 0x43,
+	0x6f, 0x64, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x2b, 0x92, 0x41, 0x28, 0x2a, 0x0f,
+	0x70, 0x72, 0x6f, 0x6a, 0x65, 0x63, 0x74, 0x49, 0x44, 0x4f, 0x72, 0x43, 0x6f, 0x64, 0x65, 0x32,
+	0x15, 0xe9, 0xa1, 0xb9, 0xe7, 0x9b, 0xae, 0x49, 0x44, 0xe6, 0x88, 0x96, 0xe9, 0xa1, 0xb9, 0xe7,
+	0x9b, 0xae, 0x43, 0x6f, 0x64, 0x65, 0x52, 0x0f, 0x70, 0x72, 0x6f, 0x6a, 0x65, 0x63, 0x74, 0x49,
+	0x44, 0x4f, 0x72, 0x43, 0x6f, 0x64, 0x65, 0x12, 0x83, 0x01, 0x0a, 0x09, 0x71, 0x75, 0x6f, 0x74,
+	0x61, 0x54, 0x79, 0x70, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x65, 0x92, 0x41, 0x62,
+	0x2a, 0x09, 0x71, 0x75, 0x6f, 0x74, 0x61, 0x54, 0x79, 0x70, 0x65, 0x32, 0x55, 0xe9, 0xa2, 0x9d,
+	0xe5, 0xba, 0xa6, 0xe7, 0xb1, 0xbb, 0xe5, 0x9e, 0x8b, 0xef, 0xbc, 0x8c, 0xe6, 0x94, 0xaf, 0xe6,
+	0x8c, 0x81, 0x20, 0x68, 0x6f, 0x73, 0x74, 0x2f, 0x73, 0x65, 0x6c, 0x66, 0x5f, 0x68, 0x6f, 0x73,
+	0x74, 0x2f, 0x66, 0x65, 0x64, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x2c, 0x20, 0xe4, 0xb8,
+	0x8d, 0xe5, 0xa1, 0xab, 0xe5, 0x88, 0x99, 0xe4, 0xb8, 0xba, 0xe8, 0x8e, 0xb7, 0xe5, 0x8f, 0x96,
+	0xe6, 0x89, 0x80, 0xe6, 0x9c, 0x89, 0xe9, 0xa2, 0x9d, 0xe5, 0xba, 0xa6, 0xe7, 0xb1, 0xbb, 0xe5,
+	0x9e, 0x8b, 0x52, 0x09, 0x71, 0x75, 0x6f, 0x74, 0x61, 0x54, 0x79, 0x70, 0x65, 0x12, 0x58, 0x0a,
+	0x0f, 0x69, 0x73, 0x43, 0x6f, 0x6e, 0x74, 0x61, 0x69, 0x6e, 0x53, 0x68, 0x61, 0x72, 0x65, 0x64,
+	0x18, 0x03, 0x20, 0x01, 0x28, 0x08, 0x42, 0x2e, 0x92, 0x41, 0x2b, 0x2a, 0x0f, 0x69, 0x73, 0x43,
+	0x6f, 0x6e, 0x74, 0x61, 0x69, 0x6e, 0x53, 0x68, 0x61, 0x72, 0x65, 0x64, 0x32, 0x18, 0xe6, 0x98,
+	0xaf, 0xe5, 0x90, 0xa6, 0xe5, 0x8c, 0x85, 0xe5, 0x90, 0xab, 0xe5, 0x85, 0xb1, 0xe4, 0xba, 0xab,
+	0xe9, 0xa2, 0x9d, 0xe5, 0xba, 0xa6, 0x52, 0x0f, 0x69, 0x73, 0x43, 0x6f, 0x6e, 0x74, 0x61, 0x69,
+	0x6e, 0x53, 0x68, 0x61, 0x72, 0x65, 0x64, 0x3a, 0x68, 0x92, 0x41, 0x65, 0x0a, 0x63, 0x2a, 0x21,
+	0x47, 0x65, 0x74, 0x50, 0x72, 0x6f, 0x6a, 0x65, 0x63, 0x74, 0x51, 0x75, 0x6f, 0x74, 0x61, 0x73,
+	0x53, 0x74, 0x61, 0x74, 0x69, 0x73, 0x74, 0x69, 0x63, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
+	0x74, 0x32, 0x2c, 0xe8, 0x8e, 0xb7, 0xe5, 0x8f, 0x96, 0xe9, 0xa1, 0xb9, 0xe7, 0x9b, 0xae, 0xe9,
+	0xa2, 0x9d, 0xe5, 0xba, 0xa6, 0xe8, 0xb5, 0x84, 0xe6, 0xba, 0x90, 0x71, 0x75, 0x6f, 0x74, 0x61,
+	0xe7, 0x9a, 0x84, 0xe7, 0xbb, 0x9f, 0xe8, 0xae, 0xa1, 0xe4, 0xbf, 0xa1, 0xe6, 0x81, 0xaf, 0xd2,
+	0x01, 0x0f, 0x70, 0x72, 0x6f, 0x6a, 0x65, 0x63, 0x74, 0x49, 0x44, 0x4f, 0x72, 0x43, 0x6f, 0x64,
+	0x65, 0x22, 0xbd, 0x02, 0x0a, 0x22, 0x47, 0x65, 0x74, 0x50, 0x72, 0x6f, 0x6a, 0x65, 0x63, 0x74,
+	0x51, 0x75, 0x6f, 0x74, 0x61, 0x73, 0x53, 0x74, 0x61, 0x74, 0x69, 0x73, 0x74, 0x69, 0x63, 0x73,
+	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x2e, 0x0a, 0x04, 0x63, 0x6f, 0x64, 0x65,
+	0x18, 0x01, 0x20, 0x01, 0x28, 0x0d, 0x42, 0x1a, 0x92, 0x41, 0x17, 0x2a, 0x04, 0x63, 0x6f, 0x64,
+	0x65, 0x32, 0x0f, 0xe8, 0xbf, 0x94, 0xe5, 0x9b, 0x9e, 0xe9, 0x94, 0x99, 0xe8, 0xaf, 0xaf, 0xe7,
+	0xa0, 0x81, 0x52, 0x04, 0x63, 0x6f, 0x64, 0x65, 0x12, 0x3a, 0x0a, 0x07, 0x6d, 0x65, 0x73, 0x73,
+	0x61, 0x67, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x20, 0x92, 0x41, 0x1d, 0x2a, 0x07,
+	0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x32, 0x12, 0xe8, 0xbf, 0x94, 0xe5, 0x9b, 0x9e, 0xe9,
+	0x94, 0x99, 0xe8, 0xaf, 0xaf, 0xe4, 0xbf, 0xa1, 0xe6, 0x81, 0xaf, 0x52, 0x07, 0x6d, 0x65, 0x73,
+	0x73, 0x61, 0x67, 0x65, 0x12, 0x71, 0x0a, 0x04, 0x64, 0x61, 0x74, 0x61, 0x18, 0x03, 0x20, 0x01,
+	0x28, 0x0b, 0x32, 0x27, 0x2e, 0x62, 0x63, 0x73, 0x70, 0x72, 0x6f, 0x6a, 0x65, 0x63, 0x74, 0x2e,
+	0x50, 0x72, 0x6f, 0x6a, 0x65, 0x63, 0x74, 0x51, 0x75, 0x6f, 0x74, 0x61, 0x73, 0x53, 0x74, 0x61,
+	0x74, 0x69, 0x73, 0x74, 0x69, 0x63, 0x73, 0x44, 0x61, 0x74, 0x61, 0x42, 0x34, 0x92, 0x41, 0x31,
+	0x2a, 0x04, 0x64, 0x61, 0x74, 0x61, 0x32, 0x29, 0xe8, 0xbf, 0x94, 0xe5, 0x9b, 0x9e, 0xe9, 0xa1,
+	0xb9, 0xe7, 0x9b, 0xae, 0x71, 0x75, 0x6f, 0x74, 0x61, 0xe8, 0xb5, 0x84, 0xe6, 0xba, 0x90, 0xe4,
+	0xbd, 0xbf, 0xe7, 0x94, 0xa8, 0xe6, 0x83, 0x85, 0xe5, 0x86, 0xb5, 0xe7, 0xbb, 0x9f, 0xe8, 0xae,
+	0xa1, 0x52, 0x04, 0x64, 0x61, 0x74, 0x61, 0x12, 0x38, 0x0a, 0x09, 0x72, 0x65, 0x71, 0x75, 0x65,
+	0x73, 0x74, 0x49, 0x44, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x42, 0x1a, 0x92, 0x41, 0x17, 0x2a,
+	0x0a, 0x72, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x20, 0x69, 0x64, 0x32, 0x09, 0xe8, 0xaf, 0xb7,
+	0xe6, 0xb1, 0x82, 0x20, 0x49, 0x44, 0x52, 0x09, 0x72, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x49,
+	0x44, 0x22, 0xf4, 0x01, 0x0a, 0x11, 0x51, 0x75, 0x6f, 0x74, 0x61, 0x52, 0x65, 0x73, 0x6f, 0x75,
+	0x72, 0x63, 0x65, 0x44, 0x61, 0x74, 0x61, 0x12, 0x34, 0x0a, 0x07, 0x75, 0x73, 0x65, 0x64, 0x4e,
+	0x75, 0x6d, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0d, 0x42, 0x1a, 0x92, 0x41, 0x17, 0x2a, 0x07, 0x75,
+	0x73, 0x65, 0x64, 0x4e, 0x75, 0x6d, 0x32, 0x0c, 0xe5, 0xb7, 0xb2, 0xe4, 0xbd, 0xbf, 0xe7, 0x94,
+	0xa8, 0xe9, 0x87, 0x8f, 0x52, 0x07, 0x75, 0x73, 0x65, 0x64, 0x4e, 0x75, 0x6d, 0x12, 0x43, 0x0a,
+	0x0c, 0x61, 0x76, 0x61, 0x69, 0x6c, 0x61, 0x62, 0x6c, 0x65, 0x4e, 0x75, 0x6d, 0x18, 0x02, 0x20,
+	0x01, 0x28, 0x0d, 0x42, 0x1f, 0x92, 0x41, 0x1c, 0x2a, 0x0c, 0x61, 0x76, 0x61, 0x69, 0x6c, 0x61,
+	0x62, 0x6c, 0x65, 0x4e, 0x75, 0x6d, 0x32, 0x0c, 0xe5, 0x8f, 0xaf, 0xe4, 0xbd, 0xbf, 0xe7, 0x94,
+	0xa8, 0xe9, 0x87, 0x8f, 0x52, 0x0c, 0x61, 0x76, 0x61, 0x69, 0x6c, 0x61, 0x62, 0x6c, 0x65, 0x4e,
+	0x75, 0x6d, 0x12, 0x31, 0x0a, 0x08, 0x74, 0x6f, 0x74, 0x61, 0x6c, 0x4e, 0x75, 0x6d, 0x18, 0x03,
+	0x20, 0x01, 0x28, 0x0d, 0x42, 0x15, 0x92, 0x41, 0x12, 0x2a, 0x08, 0x74, 0x6f, 0x74, 0x61, 0x6c,
+	0x4e, 0x75, 0x6d, 0x32, 0x06, 0xe6, 0x80, 0xbb, 0xe9, 0x87, 0x8f, 0x52, 0x08, 0x74, 0x6f, 0x74,
+	0x61, 0x6c, 0x4e, 0x75, 0x6d, 0x12, 0x31, 0x0a, 0x07, 0x75, 0x73, 0x65, 0x52, 0x61, 0x74, 0x65,
+	0x18, 0x04, 0x20, 0x01, 0x28, 0x02, 0x42, 0x17, 0x92, 0x41, 0x14, 0x2a, 0x07, 0x75, 0x73, 0x65,
+	0x52, 0x61, 0x74, 0x65, 0x32, 0x09, 0xe5, 0x88, 0xa9, 0xe7, 0x94, 0xa8, 0xe7, 0x8e, 0x87, 0x52,
+	0x07, 0x75, 0x73, 0x65, 0x52, 0x61, 0x74, 0x65, 0x22, 0xef, 0x01, 0x0a, 0x1b, 0x50, 0x72, 0x6f,
+	0x6a, 0x65, 0x63, 0x74, 0x51, 0x75, 0x6f, 0x74, 0x61, 0x73, 0x53, 0x74, 0x61, 0x74, 0x69, 0x73,
+	0x74, 0x69, 0x63, 0x73, 0x44, 0x61, 0x74, 0x61, 0x12, 0x44, 0x0a, 0x03, 0x63, 0x70, 0x75, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1d, 0x2e, 0x62, 0x63, 0x73, 0x70, 0x72, 0x6f, 0x6a, 0x65,
+	0x63, 0x74, 0x2e, 0x51, 0x75, 0x6f, 0x74, 0x61, 0x52, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65,
+	0x44, 0x61, 0x74, 0x61, 0x42, 0x13, 0x92, 0x41, 0x10, 0x2a, 0x03, 0x63, 0x70, 0x75, 0x32, 0x09,
+	0x43, 0x50, 0x55, 0xe8, 0xb5, 0x84, 0xe6, 0xba, 0x90, 0x52, 0x03, 0x63, 0x70, 0x75, 0x12, 0x44,
+	0x0a, 0x03, 0x6d, 0x65, 0x6d, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1d, 0x2e, 0x62, 0x63,
+	0x73, 0x70, 0x72, 0x6f, 0x6a, 0x65, 0x63, 0x74, 0x2e, 0x51, 0x75, 0x6f, 0x74, 0x61, 0x52, 0x65,
+	0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x44, 0x61, 0x74, 0x61, 0x42, 0x13, 0x92, 0x41, 0x10, 0x2a,
+	0x03, 0x6d, 0x65, 0x6d, 0x32, 0x09, 0x4d, 0x65, 0x6d, 0xe8, 0xb5, 0x84, 0xe6, 0xba, 0x90, 0x52,
+	0x03, 0x6d, 0x65, 0x6d, 0x12, 0x44, 0x0a, 0x03, 0x67, 0x70, 0x75, 0x18, 0x03, 0x20, 0x01, 0x28,
+	0x0b, 0x32, 0x1d, 0x2e, 0x62, 0x63, 0x73, 0x70, 0x72, 0x6f, 0x6a, 0x65, 0x63, 0x74, 0x2e, 0x51,
+	0x75, 0x6f, 0x74, 0x61, 0x52, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x44, 0x61, 0x74, 0x61,
+	0x42, 0x13, 0x92, 0x41, 0x10, 0x2a, 0x03, 0x67, 0x70, 0x75, 0x32, 0x09, 0x47, 0x50, 0x55, 0xe8,
+	0xb5, 0x84, 0xe6, 0xba, 0x90, 0x52, 0x03, 0x67, 0x70, 0x75, 0x32, 0xb6, 0x0d, 0x0a, 0x0a, 0x42,
 	0x43, 0x53, 0x50, 0x72, 0x6f, 0x6a, 0x65, 0x63, 0x74, 0x12, 0x97, 0x01, 0x0a, 0x0d, 0x43, 0x72,
 	0x65, 0x61, 0x74, 0x65, 0x50, 0x72, 0x6f, 0x6a, 0x65, 0x63, 0x74, 0x12, 0x20, 0x2e, 0x62, 0x63,
 	0x73, 0x70, 0x72, 0x6f, 0x6a, 0x65, 0x63, 0x74, 0x2e, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x50,
@@ -13442,7 +13789,7 @@ var file_bcsproject_proto_rawDesc = []byte{
 	0xe7, 0x94, 0xa8, 0xe4, 0xba, 0x8e, 0x6c, 0x69, 0x76, 0x65, 0x6e, 0x65, 0x73, 0x73, 0xe6, 0x8e,
 	0xa2, 0xe6, 0xb5, 0x8b, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x15, 0x12, 0x13, 0x2f, 0x62, 0x63, 0x73,
 	0x70, 0x72, 0x6f, 0x6a, 0x65, 0x63, 0x74, 0x2f, 0x76, 0x31, 0x2f, 0x70, 0x69, 0x6e, 0x67, 0x32,
-	0xde, 0x0f, 0x0a, 0x0f, 0x42, 0x43, 0x53, 0x50, 0x72, 0x6f, 0x6a, 0x65, 0x63, 0x74, 0x51, 0x75,
+	0x9b, 0x12, 0x0a, 0x0f, 0x42, 0x43, 0x53, 0x50, 0x72, 0x6f, 0x6a, 0x65, 0x63, 0x74, 0x51, 0x75,
 	0x6f, 0x74, 0x61, 0x12, 0xbd, 0x01, 0x0a, 0x12, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x50, 0x72,
 	0x6f, 0x6a, 0x65, 0x63, 0x74, 0x51, 0x75, 0x6f, 0x74, 0x61, 0x12, 0x25, 0x2e, 0x62, 0x63, 0x73,
 	0x70, 0x72, 0x6f, 0x6a, 0x65, 0x63, 0x74, 0x2e, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x50, 0x72,
@@ -13568,17 +13915,37 @@ var file_bcsproject_proto_rawDesc = []byte{
 	0x02, 0x2e, 0x12, 0x2c, 0x2f, 0x62, 0x63, 0x73, 0x70, 0x72, 0x6f, 0x6a, 0x65, 0x63, 0x74, 0x2f,
 	0x76, 0x31, 0x2f, 0x70, 0x72, 0x6f, 0x6a, 0x65, 0x63, 0x74, 0x51, 0x75, 0x6f, 0x74, 0x61, 0x73,
 	0x2f, 0x7b, 0x71, 0x75, 0x6f, 0x74, 0x61, 0x49, 0x64, 0x7d, 0x2f, 0x75, 0x73, 0x61, 0x67, 0x65,
-	0x42, 0xa3, 0x01, 0x92, 0x41, 0x90, 0x01, 0x12, 0x24, 0x0a, 0x1b, 0x42, 0x63, 0x73, 0x20, 0x50,
-	0x72, 0x6f, 0x6a, 0x65, 0x63, 0x74, 0x20, 0x4d, 0x61, 0x6e, 0x61, 0x67, 0x65, 0x72, 0x20, 0x41,
-	0x50, 0x49, 0x20, 0x44, 0x6f, 0x63, 0x32, 0x05, 0x30, 0x2e, 0x30, 0x2e, 0x31, 0x22, 0x0a, 0x2f,
-	0x62, 0x63, 0x73, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x34, 0x2a, 0x01, 0x01, 0x32, 0x10, 0x61, 0x70,
-	0x70, 0x6c, 0x69, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x2f, 0x6a, 0x73, 0x6f, 0x6e, 0x3a, 0x10,
-	0x61, 0x70, 0x70, 0x6c, 0x69, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x2f, 0x6a, 0x73, 0x6f, 0x6e,
-	0x5a, 0x23, 0x0a, 0x21, 0x0a, 0x0a, 0x41, 0x70, 0x69, 0x4b, 0x65, 0x79, 0x41, 0x75, 0x74, 0x68,
-	0x12, 0x13, 0x08, 0x02, 0x1a, 0x0d, 0x41, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x7a, 0x61, 0x74,
-	0x69, 0x6f, 0x6e, 0x20, 0x02, 0x62, 0x10, 0x0a, 0x0e, 0x0a, 0x0a, 0x41, 0x70, 0x69, 0x4b, 0x65,
-	0x79, 0x41, 0x75, 0x74, 0x68, 0x12, 0x00, 0x5a, 0x0d, 0x2e, 0x2f, 0x3b, 0x62, 0x63, 0x73, 0x70,
-	0x72, 0x6f, 0x6a, 0x65, 0x63, 0x74, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x12, 0xba, 0x02, 0x0a, 0x1a, 0x47, 0x65, 0x74, 0x50, 0x72, 0x6f, 0x6a, 0x65, 0x63, 0x74, 0x51,
+	0x75, 0x6f, 0x74, 0x61, 0x73, 0x53, 0x74, 0x61, 0x74, 0x69, 0x73, 0x74, 0x69, 0x63, 0x73, 0x12,
+	0x2d, 0x2e, 0x62, 0x63, 0x73, 0x70, 0x72, 0x6f, 0x6a, 0x65, 0x63, 0x74, 0x2e, 0x47, 0x65, 0x74,
+	0x50, 0x72, 0x6f, 0x6a, 0x65, 0x63, 0x74, 0x51, 0x75, 0x6f, 0x74, 0x61, 0x73, 0x53, 0x74, 0x61,
+	0x74, 0x69, 0x73, 0x74, 0x69, 0x63, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2e,
+	0x2e, 0x62, 0x63, 0x73, 0x70, 0x72, 0x6f, 0x6a, 0x65, 0x63, 0x74, 0x2e, 0x47, 0x65, 0x74, 0x50,
+	0x72, 0x6f, 0x6a, 0x65, 0x63, 0x74, 0x51, 0x75, 0x6f, 0x74, 0x61, 0x73, 0x53, 0x74, 0x61, 0x74,
+	0x69, 0x73, 0x74, 0x69, 0x63, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0xbc,
+	0x01, 0x92, 0x41, 0x68, 0x12, 0x1e, 0xe6, 0x9f, 0xa5, 0xe8, 0xaf, 0xa2, 0xe9, 0xa1, 0xb9, 0xe7,
+	0x9b, 0xae, 0xe9, 0x85, 0x8d, 0xe9, 0xa2, 0x9d, 0xe4, 0xbd, 0xbf, 0xe7, 0x94, 0xa8, 0xe6, 0x83,
+	0x85, 0xe5, 0x86, 0xb5, 0x1a, 0x46, 0xe6, 0x9f, 0xa5, 0xe8, 0xaf, 0xa2, 0xe7, 0x94, 0xa8, 0xe6,
+	0x88, 0xb7, 0xe9, 0xa1, 0xb9, 0xe7, 0x9b, 0xae, 0x71, 0x75, 0x6f, 0x74, 0x61, 0xe7, 0x9a, 0x84,
+	0xe4, 0xbd, 0xbf, 0xe7, 0x94, 0xa8, 0xe6, 0x83, 0x85, 0xe5, 0x86, 0xb5, 0x2c, 0x20, 0xe5, 0x8c,
+	0x85, 0xe6, 0x8b, 0xac, 0xe9, 0x85, 0x8d, 0xe9, 0xa2, 0x9d, 0xe5, 0x92, 0x8c, 0xe5, 0xb7, 0xb2,
+	0xe4, 0xbd, 0xbf, 0xe7, 0x94, 0xa8, 0xe8, 0xb5, 0x84, 0xe6, 0xba, 0x90, 0x82, 0xd3, 0xe4, 0x93,
+	0x02, 0x4b, 0x12, 0x49, 0x2f, 0x62, 0x63, 0x73, 0x70, 0x72, 0x6f, 0x6a, 0x65, 0x63, 0x74, 0x2f,
+	0x76, 0x31, 0x2f, 0x70, 0x72, 0x6f, 0x6a, 0x65, 0x63, 0x74, 0x51, 0x75, 0x6f, 0x74, 0x61, 0x73,
+	0x2f, 0x70, 0x72, 0x6f, 0x6a, 0x65, 0x63, 0x74, 0x73, 0x2f, 0x7b, 0x70, 0x72, 0x6f, 0x6a, 0x65,
+	0x63, 0x74, 0x49, 0x44, 0x4f, 0x72, 0x43, 0x6f, 0x64, 0x65, 0x7d, 0x2f, 0x71, 0x75, 0x6f, 0x74,
+	0x61, 0x73, 0x2f, 0x73, 0x74, 0x61, 0x74, 0x69, 0x73, 0x74, 0x69, 0x63, 0x73, 0x42, 0xa3, 0x01,
+	0x92, 0x41, 0x90, 0x01, 0x12, 0x24, 0x0a, 0x1b, 0x42, 0x63, 0x73, 0x20, 0x50, 0x72, 0x6f, 0x6a,
+	0x65, 0x63, 0x74, 0x20, 0x4d, 0x61, 0x6e, 0x61, 0x67, 0x65, 0x72, 0x20, 0x41, 0x50, 0x49, 0x20,
+	0x44, 0x6f, 0x63, 0x32, 0x05, 0x30, 0x2e, 0x30, 0x2e, 0x31, 0x22, 0x0a, 0x2f, 0x62, 0x63, 0x73,
+	0x61, 0x70, 0x69, 0x2f, 0x76, 0x34, 0x2a, 0x01, 0x01, 0x32, 0x10, 0x61, 0x70, 0x70, 0x6c, 0x69,
+	0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x2f, 0x6a, 0x73, 0x6f, 0x6e, 0x3a, 0x10, 0x61, 0x70, 0x70,
+	0x6c, 0x69, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x2f, 0x6a, 0x73, 0x6f, 0x6e, 0x5a, 0x23, 0x0a,
+	0x21, 0x0a, 0x0a, 0x41, 0x70, 0x69, 0x4b, 0x65, 0x79, 0x41, 0x75, 0x74, 0x68, 0x12, 0x13, 0x08,
+	0x02, 0x1a, 0x0d, 0x41, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x7a, 0x61, 0x74, 0x69, 0x6f, 0x6e,
+	0x20, 0x02, 0x62, 0x10, 0x0a, 0x0e, 0x0a, 0x0a, 0x41, 0x70, 0x69, 0x4b, 0x65, 0x79, 0x41, 0x75,
+	0x74, 0x68, 0x12, 0x00, 0x5a, 0x0d, 0x2e, 0x2f, 0x3b, 0x62, 0x63, 0x73, 0x70, 0x72, 0x6f, 0x6a,
+	0x65, 0x63, 0x74, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -13593,7 +13960,7 @@ func file_bcsproject_proto_rawDescGZIP() []byte {
 	return file_bcsproject_proto_rawDescData
 }
 
-var file_bcsproject_proto_msgTypes = make([]protoimpl.MessageInfo, 136)
+var file_bcsproject_proto_msgTypes = make([]protoimpl.MessageInfo, 140)
 var file_bcsproject_proto_goTypes = []interface{}{
 	(*Project)(nil),                            // 0: bcsproject.Project
 	(*CreateProjectRequest)(nil),               // 1: bcsproject.CreateProjectRequest
@@ -13715,44 +14082,48 @@ var file_bcsproject_proto_goTypes = []interface{}{
 	(*ScaleUpProjectQuotaResponse)(nil),        // 117: bcsproject.ScaleUpProjectQuotaResponse
 	(*ScaleDownProjectQuotaRequest)(nil),       // 118: bcsproject.ScaleDownProjectQuotaRequest
 	(*ScaleDownProjectQuotaResponse)(nil),      // 119: bcsproject.ScaleDownProjectQuotaResponse
-	nil,                                        // 120: bcsproject.Project.LabelsEntry
-	nil,                                        // 121: bcsproject.Project.AnnotationsEntry
-	nil,                                        // 122: bcsproject.CreateProjectRequest.LabelsEntry
-	nil,                                        // 123: bcsproject.CreateProjectRequest.AnnotationsEntry
-	nil,                                        // 124: bcsproject.UpdateProjectRequest.LabelsEntry
-	nil,                                        // 125: bcsproject.UpdateProjectRequest.AnnotationsEntry
-	(*ListProjectsForIAMResp_Project)(nil),     // 126: bcsproject.ListProjectsForIAMResp.Project
-	nil,                                        // 127: bcsproject.ProjectQuota.LabelsEntry
-	nil,                                        // 128: bcsproject.ProjectQuota.AnnotationsEntry
-	nil,                                        // 129: bcsproject.DeviceInfo.AttributesEntry
-	nil,                                        // 130: bcsproject.CreateProjectQuotaRequest.LabelsEntry
-	nil,                                        // 131: bcsproject.CreateProjectQuotaRequest.AnnotationsEntry
-	nil,                                        // 132: bcsproject.UpdateProjectQuotaRequest.LabelsEntry
-	nil,                                        // 133: bcsproject.UpdateProjectQuotaRequest.AnnotationsEntry
-	nil,                                        // 134: bcsproject.UpdateProjectV2Request.LabelsEntry
-	nil,                                        // 135: bcsproject.UpdateProjectV2Request.AnnotationsEntry
-	(*wrappers.BoolValue)(nil),                 // 136: google.protobuf.BoolValue
-	(*_struct.Struct)(nil),                     // 137: google.protobuf.Struct
-	(*wrappers.Int64Value)(nil),                // 138: google.protobuf.Int64Value
+	(*GetProjectQuotasStatisticsRequest)(nil),  // 120: bcsproject.GetProjectQuotasStatisticsRequest
+	(*GetProjectQuotasStatisticsResponse)(nil), // 121: bcsproject.GetProjectQuotasStatisticsResponse
+	(*QuotaResourceData)(nil),                  // 122: bcsproject.QuotaResourceData
+	(*ProjectQuotasStatisticsData)(nil),        // 123: bcsproject.ProjectQuotasStatisticsData
+	nil,                                        // 124: bcsproject.Project.LabelsEntry
+	nil,                                        // 125: bcsproject.Project.AnnotationsEntry
+	nil,                                        // 126: bcsproject.CreateProjectRequest.LabelsEntry
+	nil,                                        // 127: bcsproject.CreateProjectRequest.AnnotationsEntry
+	nil,                                        // 128: bcsproject.UpdateProjectRequest.LabelsEntry
+	nil,                                        // 129: bcsproject.UpdateProjectRequest.AnnotationsEntry
+	(*ListProjectsForIAMResp_Project)(nil),     // 130: bcsproject.ListProjectsForIAMResp.Project
+	nil,                                        // 131: bcsproject.ProjectQuota.LabelsEntry
+	nil,                                        // 132: bcsproject.ProjectQuota.AnnotationsEntry
+	nil,                                        // 133: bcsproject.DeviceInfo.AttributesEntry
+	nil,                                        // 134: bcsproject.CreateProjectQuotaRequest.LabelsEntry
+	nil,                                        // 135: bcsproject.CreateProjectQuotaRequest.AnnotationsEntry
+	nil,                                        // 136: bcsproject.UpdateProjectQuotaRequest.LabelsEntry
+	nil,                                        // 137: bcsproject.UpdateProjectQuotaRequest.AnnotationsEntry
+	nil,                                        // 138: bcsproject.UpdateProjectV2Request.LabelsEntry
+	nil,                                        // 139: bcsproject.UpdateProjectV2Request.AnnotationsEntry
+	(*wrappers.BoolValue)(nil),                 // 140: google.protobuf.BoolValue
+	(*_struct.Struct)(nil),                     // 141: google.protobuf.Struct
+	(*wrappers.Int64Value)(nil),                // 142: google.protobuf.Int64Value
 }
 var file_bcsproject_proto_depIdxs = []int32{
-	120, // 0: bcsproject.Project.labels:type_name -> bcsproject.Project.LabelsEntry
-	121, // 1: bcsproject.Project.annotations:type_name -> bcsproject.Project.AnnotationsEntry
-	122, // 2: bcsproject.CreateProjectRequest.labels:type_name -> bcsproject.CreateProjectRequest.LabelsEntry
-	123, // 3: bcsproject.CreateProjectRequest.annotations:type_name -> bcsproject.CreateProjectRequest.AnnotationsEntry
-	136, // 4: bcsproject.UpdateProjectRequest.useBKRes:type_name -> google.protobuf.BoolValue
-	136, // 5: bcsproject.UpdateProjectRequest.isOffline:type_name -> google.protobuf.BoolValue
-	124, // 6: bcsproject.UpdateProjectRequest.labels:type_name -> bcsproject.UpdateProjectRequest.LabelsEntry
-	125, // 7: bcsproject.UpdateProjectRequest.annotations:type_name -> bcsproject.UpdateProjectRequest.AnnotationsEntry
+	124, // 0: bcsproject.Project.labels:type_name -> bcsproject.Project.LabelsEntry
+	125, // 1: bcsproject.Project.annotations:type_name -> bcsproject.Project.AnnotationsEntry
+	126, // 2: bcsproject.CreateProjectRequest.labels:type_name -> bcsproject.CreateProjectRequest.LabelsEntry
+	127, // 3: bcsproject.CreateProjectRequest.annotations:type_name -> bcsproject.CreateProjectRequest.AnnotationsEntry
+	140, // 4: bcsproject.UpdateProjectRequest.useBKRes:type_name -> google.protobuf.BoolValue
+	140, // 5: bcsproject.UpdateProjectRequest.isOffline:type_name -> google.protobuf.BoolValue
+	128, // 6: bcsproject.UpdateProjectRequest.labels:type_name -> bcsproject.UpdateProjectRequest.LabelsEntry
+	129, // 7: bcsproject.UpdateProjectRequest.annotations:type_name -> bcsproject.UpdateProjectRequest.AnnotationsEntry
 	0,   // 8: bcsproject.ProjectResponse.data:type_name -> bcsproject.Project
 	9,   // 9: bcsproject.ProjectResponse.web_annotations:type_name -> bcsproject.Perms
 	0,   // 10: bcsproject.ListProjectData.results:type_name -> bcsproject.Project
 	7,   // 11: bcsproject.ListProjectsResponse.data:type_name -> bcsproject.ListProjectData
 	9,   // 12: bcsproject.ListProjectsResponse.web_annotations:type_name -> bcsproject.Perms
-	137, // 13: bcsproject.Perms.perms:type_name -> google.protobuf.Struct
+	141, // 13: bcsproject.Perms.perms:type_name -> google.protobuf.Struct
 	7,   // 14: bcsproject.ListAuthorizedProjResp.data:type_name -> bcsproject.ListProjectData
 	9,   // 15: bcsproject.ListAuthorizedProjResp.web_annotations:type_name -> bcsproject.Perms
-	126, // 16: bcsproject.ListProjectsForIAMResp.data:type_name -> bcsproject.ListProjectsForIAMResp.Project
+	130, // 16: bcsproject.ListProjectsForIAMResp.data:type_name -> bcsproject.ListProjectsForIAMResp.Project
 	16,  // 17: bcsproject.GetProjectActiveResponse.data:type_name -> bcsproject.ProjectActiveData
 	23,  // 18: bcsproject.GetBusinessResponse.data:type_name -> bcsproject.BusinessData
 	9,   // 19: bcsproject.GetBusinessResponse.web_annotations:type_name -> bcsproject.Perms
@@ -13803,40 +14174,40 @@ var file_bcsproject_proto_depIdxs = []int32{
 	88,  // 64: bcsproject.HealthzResponse.data:type_name -> bcsproject.HealthzData
 	93,  // 65: bcsproject.ProjectQuota.quota:type_name -> bcsproject.QuotaResource
 	92,  // 66: bcsproject.ProjectQuota.nodeGroups:type_name -> bcsproject.NodeGroup
-	127, // 67: bcsproject.ProjectQuota.labels:type_name -> bcsproject.ProjectQuota.LabelsEntry
-	128, // 68: bcsproject.ProjectQuota.annotations:type_name -> bcsproject.ProjectQuota.AnnotationsEntry
+	131, // 67: bcsproject.ProjectQuota.labels:type_name -> bcsproject.ProjectQuota.LabelsEntry
+	132, // 68: bcsproject.ProjectQuota.annotations:type_name -> bcsproject.ProjectQuota.AnnotationsEntry
 	99,  // 69: bcsproject.ProjectQuota.quotaAttr:type_name -> bcsproject.QuotaAttr
 	101, // 70: bcsproject.ProjectQuota.quotaSharedProjectList:type_name -> bcsproject.QuotaSharedProject
 	95,  // 71: bcsproject.QuotaResource.zoneResources:type_name -> bcsproject.InstanceTypeConfig
 	97,  // 72: bcsproject.QuotaResource.cpu:type_name -> bcsproject.DeviceInfo
 	97,  // 73: bcsproject.QuotaResource.mem:type_name -> bcsproject.DeviceInfo
 	97,  // 74: bcsproject.QuotaResource.gpu:type_name -> bcsproject.DeviceInfo
-	138, // 75: bcsproject.QuotaStrategy.expectTime:type_name -> google.protobuf.Int64Value
+	142, // 75: bcsproject.QuotaStrategy.expectTime:type_name -> google.protobuf.Int64Value
 	96,  // 76: bcsproject.InstanceTypeConfig.systemDisk:type_name -> bcsproject.DataDisk
 	96,  // 77: bcsproject.InstanceTypeConfig.dataDisks:type_name -> bcsproject.DataDisk
-	129, // 78: bcsproject.DeviceInfo.attributes:type_name -> bcsproject.DeviceInfo.AttributesEntry
+	133, // 78: bcsproject.DeviceInfo.attributes:type_name -> bcsproject.DeviceInfo.AttributesEntry
 	93,  // 79: bcsproject.CreateProjectQuotaRequest.quota:type_name -> bcsproject.QuotaResource
-	130, // 80: bcsproject.CreateProjectQuotaRequest.labels:type_name -> bcsproject.CreateProjectQuotaRequest.LabelsEntry
-	131, // 81: bcsproject.CreateProjectQuotaRequest.annotations:type_name -> bcsproject.CreateProjectQuotaRequest.AnnotationsEntry
+	134, // 80: bcsproject.CreateProjectQuotaRequest.labels:type_name -> bcsproject.CreateProjectQuotaRequest.LabelsEntry
+	135, // 81: bcsproject.CreateProjectQuotaRequest.annotations:type_name -> bcsproject.CreateProjectQuotaRequest.AnnotationsEntry
 	99,  // 82: bcsproject.CreateProjectQuotaRequest.quotaAttr:type_name -> bcsproject.QuotaAttr
-	136, // 83: bcsproject.CreateProjectQuotaRequest.quotaSharedEnabled:type_name -> google.protobuf.BoolValue
+	140, // 83: bcsproject.CreateProjectQuotaRequest.quotaSharedEnabled:type_name -> google.protobuf.BoolValue
 	101, // 84: bcsproject.CreateProjectQuotaRequest.quotaSharedProjectList:type_name -> bcsproject.QuotaSharedProject
 	100, // 85: bcsproject.QuotaSharedProject.usageLimit:type_name -> bcsproject.QuotaLimit
 	100, // 86: bcsproject.QuotaSharedProject.usedAmount:type_name -> bcsproject.QuotaLimit
 	93,  // 87: bcsproject.UpdateProjectQuotaRequest.quota:type_name -> bcsproject.QuotaResource
-	132, // 88: bcsproject.UpdateProjectQuotaRequest.labels:type_name -> bcsproject.UpdateProjectQuotaRequest.LabelsEntry
-	133, // 89: bcsproject.UpdateProjectQuotaRequest.annotations:type_name -> bcsproject.UpdateProjectQuotaRequest.AnnotationsEntry
+	136, // 88: bcsproject.UpdateProjectQuotaRequest.labels:type_name -> bcsproject.UpdateProjectQuotaRequest.LabelsEntry
+	137, // 89: bcsproject.UpdateProjectQuotaRequest.annotations:type_name -> bcsproject.UpdateProjectQuotaRequest.AnnotationsEntry
 	99,  // 90: bcsproject.UpdateProjectQuotaRequest.quotaAttr:type_name -> bcsproject.QuotaAttr
-	136, // 91: bcsproject.UpdateProjectQuotaRequest.quotaSharedEnabled:type_name -> google.protobuf.BoolValue
+	140, // 91: bcsproject.UpdateProjectQuotaRequest.quotaSharedEnabled:type_name -> google.protobuf.BoolValue
 	101, // 92: bcsproject.UpdateProjectQuotaRequest.quotaSharedProjectList:type_name -> bcsproject.QuotaSharedProject
-	136, // 93: bcsproject.UpdateProjectV2Request.useBKRes:type_name -> google.protobuf.BoolValue
-	136, // 94: bcsproject.UpdateProjectV2Request.isOffline:type_name -> google.protobuf.BoolValue
-	134, // 95: bcsproject.UpdateProjectV2Request.labels:type_name -> bcsproject.UpdateProjectV2Request.LabelsEntry
-	135, // 96: bcsproject.UpdateProjectV2Request.annotations:type_name -> bcsproject.UpdateProjectV2Request.AnnotationsEntry
+	140, // 93: bcsproject.UpdateProjectV2Request.useBKRes:type_name -> google.protobuf.BoolValue
+	140, // 94: bcsproject.UpdateProjectV2Request.isOffline:type_name -> google.protobuf.BoolValue
+	138, // 95: bcsproject.UpdateProjectV2Request.labels:type_name -> bcsproject.UpdateProjectV2Request.LabelsEntry
+	139, // 96: bcsproject.UpdateProjectV2Request.annotations:type_name -> bcsproject.UpdateProjectV2Request.AnnotationsEntry
 	99,  // 97: bcsproject.UpdateProjectV2Request.quotaAttr:type_name -> bcsproject.QuotaAttr
 	101, // 98: bcsproject.UpdateProjectV2Request.quotaSharedProjectList:type_name -> bcsproject.QuotaSharedProject
 	91,  // 99: bcsproject.ProjectQuotaResponse.data:type_name -> bcsproject.ProjectQuota
-	137, // 100: bcsproject.ProjectQuotaResponse.task:type_name -> google.protobuf.Struct
+	141, // 100: bcsproject.ProjectQuotaResponse.task:type_name -> google.protobuf.Struct
 	9,   // 101: bcsproject.ProjectQuotaResponse.web_annotations:type_name -> bcsproject.Perms
 	91,  // 102: bcsproject.ListProjectQuotasData.results:type_name -> bcsproject.ProjectQuota
 	108, // 103: bcsproject.ListProjectQuotasResponse.data:type_name -> bcsproject.ListProjectQuotasData
@@ -13848,114 +14219,120 @@ var file_bcsproject_proto_depIdxs = []int32{
 	91,  // 109: bcsproject.GetProjectQuotasUsageData.quota:type_name -> bcsproject.ProjectQuota
 	114, // 110: bcsproject.GetProjectQuotasUsageData.quotaUsage:type_name -> bcsproject.ZoneResourceUsage
 	93,  // 111: bcsproject.ScaleUpProjectQuotaRequest.quota:type_name -> bcsproject.QuotaResource
-	137, // 112: bcsproject.ScaleUpProjectQuotaResponse.task:type_name -> google.protobuf.Struct
+	141, // 112: bcsproject.ScaleUpProjectQuotaResponse.task:type_name -> google.protobuf.Struct
 	9,   // 113: bcsproject.ScaleUpProjectQuotaResponse.web_annotations:type_name -> bcsproject.Perms
 	93,  // 114: bcsproject.ScaleDownProjectQuotaRequest.quota:type_name -> bcsproject.QuotaResource
-	137, // 115: bcsproject.ScaleDownProjectQuotaResponse.task:type_name -> google.protobuf.Struct
+	141, // 115: bcsproject.ScaleDownProjectQuotaResponse.task:type_name -> google.protobuf.Struct
 	9,   // 116: bcsproject.ScaleDownProjectQuotaResponse.web_annotations:type_name -> bcsproject.Perms
-	1,   // 117: bcsproject.BCSProject.CreateProject:input_type -> bcsproject.CreateProjectRequest
-	2,   // 118: bcsproject.BCSProject.GetProject:input_type -> bcsproject.GetProjectRequest
-	3,   // 119: bcsproject.BCSProject.UpdateProject:input_type -> bcsproject.UpdateProjectRequest
-	104, // 120: bcsproject.BCSProject.UpdateProjectV2:input_type -> bcsproject.UpdateProjectV2Request
-	4,   // 121: bcsproject.BCSProject.DeleteProject:input_type -> bcsproject.DeleteProjectRequest
-	6,   // 122: bcsproject.BCSProject.ListProjects:input_type -> bcsproject.ListProjectsRequest
-	10,  // 123: bcsproject.BCSProject.ListAuthorizedProjects:input_type -> bcsproject.ListAuthorizedProjReq
-	12,  // 124: bcsproject.BCSProject.ListProjectsForIAM:input_type -> bcsproject.ListProjectsForIAMReq
-	14,  // 125: bcsproject.BCSProject.GetProjectActive:input_type -> bcsproject.GetProjectActiveRequest
-	17,  // 126: bcsproject.Business.GetBusiness:input_type -> bcsproject.GetBusinessRequest
-	19,  // 127: bcsproject.Business.ListBusiness:input_type -> bcsproject.ListBusinessRequest
-	21,  // 128: bcsproject.Business.GetBusinessTopology:input_type -> bcsproject.GetBusinessTopologyRequest
-	29,  // 129: bcsproject.Namespace.CreateNamespace:input_type -> bcsproject.CreateNamespaceRequest
-	31,  // 130: bcsproject.Namespace.CreateNamespaceCallback:input_type -> bcsproject.NamespaceCallbackRequest
-	33,  // 131: bcsproject.Namespace.UpdateNamespace:input_type -> bcsproject.UpdateNamespaceRequest
-	31,  // 132: bcsproject.Namespace.UpdateNamespaceCallback:input_type -> bcsproject.NamespaceCallbackRequest
-	35,  // 133: bcsproject.Namespace.GetNamespace:input_type -> bcsproject.GetNamespaceRequest
-	37,  // 134: bcsproject.Namespace.ListNamespaces:input_type -> bcsproject.ListNamespacesRequest
-	42,  // 135: bcsproject.Namespace.DeleteNamespace:input_type -> bcsproject.DeleteNamespaceRequest
-	31,  // 136: bcsproject.Namespace.DeleteNamespaceCallback:input_type -> bcsproject.NamespaceCallbackRequest
-	25,  // 137: bcsproject.Namespace.SyncNamespace:input_type -> bcsproject.SyncNamespaceRequest
-	27,  // 138: bcsproject.Namespace.WithdrawNamespace:input_type -> bcsproject.WithdrawNamespaceRequest
-	39,  // 139: bcsproject.Namespace.ListNativeNamespaces:input_type -> bcsproject.ListNativeNamespacesRequest
-	41,  // 140: bcsproject.Namespace.ListNativeNamespacesContent:input_type -> bcsproject.ListNativeNamespacesContentRequest
-	49,  // 141: bcsproject.Variable.CreateVariable:input_type -> bcsproject.CreateVariableRequest
-	51,  // 142: bcsproject.Variable.UpdateVariable:input_type -> bcsproject.UpdateVariableRequest
-	53,  // 143: bcsproject.Variable.ListVariableDefinitions:input_type -> bcsproject.ListVariableDefinitionsRequest
-	55,  // 144: bcsproject.Variable.DeleteVariableDefinitions:input_type -> bcsproject.DeleteVariableDefinitionsRequest
-	57,  // 145: bcsproject.Variable.ListClustersVariables:input_type -> bcsproject.ListClustersVariablesRequest
-	59,  // 146: bcsproject.Variable.ListNamespacesVariables:input_type -> bcsproject.ListNamespacesVariablesRequest
-	61,  // 147: bcsproject.Variable.UpdateClustersVariables:input_type -> bcsproject.UpdateClustersVariablesRequest
-	63,  // 148: bcsproject.Variable.UpdateNamespacesVariables:input_type -> bcsproject.UpdateNamespacesVariablesRequest
-	65,  // 149: bcsproject.Variable.ListClusterVariables:input_type -> bcsproject.ListClusterVariablesRequest
-	67,  // 150: bcsproject.Variable.ListNamespaceVariables:input_type -> bcsproject.ListNamespaceVariablesRequest
-	69,  // 151: bcsproject.Variable.UpdateClusterVariables:input_type -> bcsproject.UpdateClusterVariablesRequest
-	71,  // 152: bcsproject.Variable.UpdateNamespaceVariables:input_type -> bcsproject.UpdateNamespaceVariablesRequest
-	73,  // 153: bcsproject.Variable.ImportVariables:input_type -> bcsproject.ImportVariablesRequest
-	75,  // 154: bcsproject.Variable.RenderVariables:input_type -> bcsproject.RenderVariablesRequest
-	86,  // 155: bcsproject.Healthz.Healthz:input_type -> bcsproject.HealthzRequest
-	89,  // 156: bcsproject.Healthz.Ping:input_type -> bcsproject.PingRequest
-	98,  // 157: bcsproject.BCSProjectQuota.CreateProjectQuota:input_type -> bcsproject.CreateProjectQuotaRequest
-	102, // 158: bcsproject.BCSProjectQuota.GetProjectQuota:input_type -> bcsproject.GetProjectQuotaRequest
-	103, // 159: bcsproject.BCSProjectQuota.UpdateProjectQuota:input_type -> bcsproject.UpdateProjectQuotaRequest
-	116, // 160: bcsproject.BCSProjectQuota.ScaleUpProjectQuota:input_type -> bcsproject.ScaleUpProjectQuotaRequest
-	118, // 161: bcsproject.BCSProjectQuota.ScaleDownProjectQuota:input_type -> bcsproject.ScaleDownProjectQuotaRequest
-	105, // 162: bcsproject.BCSProjectQuota.DeleteProjectQuota:input_type -> bcsproject.DeleteProjectQuotaRequest
-	107, // 163: bcsproject.BCSProjectQuota.ListProjectQuotas:input_type -> bcsproject.ListProjectQuotasRequest
-	110, // 164: bcsproject.BCSProjectQuota.ListProjectQuotasV2:input_type -> bcsproject.ListProjectQuotasV2Request
-	112, // 165: bcsproject.BCSProjectQuota.GetProjectQuotasUsage:input_type -> bcsproject.GetProjectQuotasUsageReq
-	5,   // 166: bcsproject.BCSProject.CreateProject:output_type -> bcsproject.ProjectResponse
-	5,   // 167: bcsproject.BCSProject.GetProject:output_type -> bcsproject.ProjectResponse
-	5,   // 168: bcsproject.BCSProject.UpdateProject:output_type -> bcsproject.ProjectResponse
-	5,   // 169: bcsproject.BCSProject.UpdateProjectV2:output_type -> bcsproject.ProjectResponse
-	5,   // 170: bcsproject.BCSProject.DeleteProject:output_type -> bcsproject.ProjectResponse
-	8,   // 171: bcsproject.BCSProject.ListProjects:output_type -> bcsproject.ListProjectsResponse
-	11,  // 172: bcsproject.BCSProject.ListAuthorizedProjects:output_type -> bcsproject.ListAuthorizedProjResp
-	13,  // 173: bcsproject.BCSProject.ListProjectsForIAM:output_type -> bcsproject.ListProjectsForIAMResp
-	15,  // 174: bcsproject.BCSProject.GetProjectActive:output_type -> bcsproject.GetProjectActiveResponse
-	18,  // 175: bcsproject.Business.GetBusiness:output_type -> bcsproject.GetBusinessResponse
-	20,  // 176: bcsproject.Business.ListBusiness:output_type -> bcsproject.ListBusinessResponse
-	22,  // 177: bcsproject.Business.GetBusinessTopology:output_type -> bcsproject.GetBusinessTopologyResponse
-	30,  // 178: bcsproject.Namespace.CreateNamespace:output_type -> bcsproject.CreateNamespaceResponse
-	32,  // 179: bcsproject.Namespace.CreateNamespaceCallback:output_type -> bcsproject.NamespaceCallbackResponse
-	34,  // 180: bcsproject.Namespace.UpdateNamespace:output_type -> bcsproject.UpdateNamespaceResponse
-	32,  // 181: bcsproject.Namespace.UpdateNamespaceCallback:output_type -> bcsproject.NamespaceCallbackResponse
-	36,  // 182: bcsproject.Namespace.GetNamespace:output_type -> bcsproject.GetNamespaceResponse
-	38,  // 183: bcsproject.Namespace.ListNamespaces:output_type -> bcsproject.ListNamespacesResponse
-	43,  // 184: bcsproject.Namespace.DeleteNamespace:output_type -> bcsproject.DeleteNamespaceResponse
-	32,  // 185: bcsproject.Namespace.DeleteNamespaceCallback:output_type -> bcsproject.NamespaceCallbackResponse
-	26,  // 186: bcsproject.Namespace.SyncNamespace:output_type -> bcsproject.SyncNamespaceResponse
-	28,  // 187: bcsproject.Namespace.WithdrawNamespace:output_type -> bcsproject.WithdrawNamespaceResponse
-	40,  // 188: bcsproject.Namespace.ListNativeNamespaces:output_type -> bcsproject.ListNativeNamespacesResponse
-	137, // 189: bcsproject.Namespace.ListNativeNamespacesContent:output_type -> google.protobuf.Struct
-	50,  // 190: bcsproject.Variable.CreateVariable:output_type -> bcsproject.CreateVariableResponse
-	52,  // 191: bcsproject.Variable.UpdateVariable:output_type -> bcsproject.UpdateVariableResponse
-	54,  // 192: bcsproject.Variable.ListVariableDefinitions:output_type -> bcsproject.ListVariableDefinitionsResponse
-	56,  // 193: bcsproject.Variable.DeleteVariableDefinitions:output_type -> bcsproject.DeleteVariableDefinitionsResponse
-	58,  // 194: bcsproject.Variable.ListClustersVariables:output_type -> bcsproject.ListClustersVariablesResponse
-	60,  // 195: bcsproject.Variable.ListNamespacesVariables:output_type -> bcsproject.ListNamespacesVariablesResponse
-	62,  // 196: bcsproject.Variable.UpdateClustersVariables:output_type -> bcsproject.UpdateClustersVariablesResponse
-	64,  // 197: bcsproject.Variable.UpdateNamespacesVariables:output_type -> bcsproject.UpdateNamespacesVariablesResponse
-	66,  // 198: bcsproject.Variable.ListClusterVariables:output_type -> bcsproject.ListClusterVariablesResponse
-	68,  // 199: bcsproject.Variable.ListNamespaceVariables:output_type -> bcsproject.ListNamespaceVariablesResponse
-	70,  // 200: bcsproject.Variable.UpdateClusterVariables:output_type -> bcsproject.UpdateClusterVariablesResponse
-	72,  // 201: bcsproject.Variable.UpdateNamespaceVariables:output_type -> bcsproject.UpdateNamespaceVariablesResponse
-	74,  // 202: bcsproject.Variable.ImportVariables:output_type -> bcsproject.ImportVariablesResponse
-	76,  // 203: bcsproject.Variable.RenderVariables:output_type -> bcsproject.RenderVariablesResponse
-	87,  // 204: bcsproject.Healthz.Healthz:output_type -> bcsproject.HealthzResponse
-	90,  // 205: bcsproject.Healthz.Ping:output_type -> bcsproject.PingResponse
-	106, // 206: bcsproject.BCSProjectQuota.CreateProjectQuota:output_type -> bcsproject.ProjectQuotaResponse
-	106, // 207: bcsproject.BCSProjectQuota.GetProjectQuota:output_type -> bcsproject.ProjectQuotaResponse
-	106, // 208: bcsproject.BCSProjectQuota.UpdateProjectQuota:output_type -> bcsproject.ProjectQuotaResponse
-	117, // 209: bcsproject.BCSProjectQuota.ScaleUpProjectQuota:output_type -> bcsproject.ScaleUpProjectQuotaResponse
-	119, // 210: bcsproject.BCSProjectQuota.ScaleDownProjectQuota:output_type -> bcsproject.ScaleDownProjectQuotaResponse
-	106, // 211: bcsproject.BCSProjectQuota.DeleteProjectQuota:output_type -> bcsproject.ProjectQuotaResponse
-	109, // 212: bcsproject.BCSProjectQuota.ListProjectQuotas:output_type -> bcsproject.ListProjectQuotasResponse
-	111, // 213: bcsproject.BCSProjectQuota.ListProjectQuotasV2:output_type -> bcsproject.ListProjectQuotasV2Response
-	113, // 214: bcsproject.BCSProjectQuota.GetProjectQuotasUsage:output_type -> bcsproject.GetProjectQuotasUsageResp
-	166, // [166:215] is the sub-list for method output_type
-	117, // [117:166] is the sub-list for method input_type
-	117, // [117:117] is the sub-list for extension type_name
-	117, // [117:117] is the sub-list for extension extendee
-	0,   // [0:117] is the sub-list for field type_name
+	123, // 117: bcsproject.GetProjectQuotasStatisticsResponse.data:type_name -> bcsproject.ProjectQuotasStatisticsData
+	122, // 118: bcsproject.ProjectQuotasStatisticsData.cpu:type_name -> bcsproject.QuotaResourceData
+	122, // 119: bcsproject.ProjectQuotasStatisticsData.mem:type_name -> bcsproject.QuotaResourceData
+	122, // 120: bcsproject.ProjectQuotasStatisticsData.gpu:type_name -> bcsproject.QuotaResourceData
+	1,   // 121: bcsproject.BCSProject.CreateProject:input_type -> bcsproject.CreateProjectRequest
+	2,   // 122: bcsproject.BCSProject.GetProject:input_type -> bcsproject.GetProjectRequest
+	3,   // 123: bcsproject.BCSProject.UpdateProject:input_type -> bcsproject.UpdateProjectRequest
+	104, // 124: bcsproject.BCSProject.UpdateProjectV2:input_type -> bcsproject.UpdateProjectV2Request
+	4,   // 125: bcsproject.BCSProject.DeleteProject:input_type -> bcsproject.DeleteProjectRequest
+	6,   // 126: bcsproject.BCSProject.ListProjects:input_type -> bcsproject.ListProjectsRequest
+	10,  // 127: bcsproject.BCSProject.ListAuthorizedProjects:input_type -> bcsproject.ListAuthorizedProjReq
+	12,  // 128: bcsproject.BCSProject.ListProjectsForIAM:input_type -> bcsproject.ListProjectsForIAMReq
+	14,  // 129: bcsproject.BCSProject.GetProjectActive:input_type -> bcsproject.GetProjectActiveRequest
+	17,  // 130: bcsproject.Business.GetBusiness:input_type -> bcsproject.GetBusinessRequest
+	19,  // 131: bcsproject.Business.ListBusiness:input_type -> bcsproject.ListBusinessRequest
+	21,  // 132: bcsproject.Business.GetBusinessTopology:input_type -> bcsproject.GetBusinessTopologyRequest
+	29,  // 133: bcsproject.Namespace.CreateNamespace:input_type -> bcsproject.CreateNamespaceRequest
+	31,  // 134: bcsproject.Namespace.CreateNamespaceCallback:input_type -> bcsproject.NamespaceCallbackRequest
+	33,  // 135: bcsproject.Namespace.UpdateNamespace:input_type -> bcsproject.UpdateNamespaceRequest
+	31,  // 136: bcsproject.Namespace.UpdateNamespaceCallback:input_type -> bcsproject.NamespaceCallbackRequest
+	35,  // 137: bcsproject.Namespace.GetNamespace:input_type -> bcsproject.GetNamespaceRequest
+	37,  // 138: bcsproject.Namespace.ListNamespaces:input_type -> bcsproject.ListNamespacesRequest
+	42,  // 139: bcsproject.Namespace.DeleteNamespace:input_type -> bcsproject.DeleteNamespaceRequest
+	31,  // 140: bcsproject.Namespace.DeleteNamespaceCallback:input_type -> bcsproject.NamespaceCallbackRequest
+	25,  // 141: bcsproject.Namespace.SyncNamespace:input_type -> bcsproject.SyncNamespaceRequest
+	27,  // 142: bcsproject.Namespace.WithdrawNamespace:input_type -> bcsproject.WithdrawNamespaceRequest
+	39,  // 143: bcsproject.Namespace.ListNativeNamespaces:input_type -> bcsproject.ListNativeNamespacesRequest
+	41,  // 144: bcsproject.Namespace.ListNativeNamespacesContent:input_type -> bcsproject.ListNativeNamespacesContentRequest
+	49,  // 145: bcsproject.Variable.CreateVariable:input_type -> bcsproject.CreateVariableRequest
+	51,  // 146: bcsproject.Variable.UpdateVariable:input_type -> bcsproject.UpdateVariableRequest
+	53,  // 147: bcsproject.Variable.ListVariableDefinitions:input_type -> bcsproject.ListVariableDefinitionsRequest
+	55,  // 148: bcsproject.Variable.DeleteVariableDefinitions:input_type -> bcsproject.DeleteVariableDefinitionsRequest
+	57,  // 149: bcsproject.Variable.ListClustersVariables:input_type -> bcsproject.ListClustersVariablesRequest
+	59,  // 150: bcsproject.Variable.ListNamespacesVariables:input_type -> bcsproject.ListNamespacesVariablesRequest
+	61,  // 151: bcsproject.Variable.UpdateClustersVariables:input_type -> bcsproject.UpdateClustersVariablesRequest
+	63,  // 152: bcsproject.Variable.UpdateNamespacesVariables:input_type -> bcsproject.UpdateNamespacesVariablesRequest
+	65,  // 153: bcsproject.Variable.ListClusterVariables:input_type -> bcsproject.ListClusterVariablesRequest
+	67,  // 154: bcsproject.Variable.ListNamespaceVariables:input_type -> bcsproject.ListNamespaceVariablesRequest
+	69,  // 155: bcsproject.Variable.UpdateClusterVariables:input_type -> bcsproject.UpdateClusterVariablesRequest
+	71,  // 156: bcsproject.Variable.UpdateNamespaceVariables:input_type -> bcsproject.UpdateNamespaceVariablesRequest
+	73,  // 157: bcsproject.Variable.ImportVariables:input_type -> bcsproject.ImportVariablesRequest
+	75,  // 158: bcsproject.Variable.RenderVariables:input_type -> bcsproject.RenderVariablesRequest
+	86,  // 159: bcsproject.Healthz.Healthz:input_type -> bcsproject.HealthzRequest
+	89,  // 160: bcsproject.Healthz.Ping:input_type -> bcsproject.PingRequest
+	98,  // 161: bcsproject.BCSProjectQuota.CreateProjectQuota:input_type -> bcsproject.CreateProjectQuotaRequest
+	102, // 162: bcsproject.BCSProjectQuota.GetProjectQuota:input_type -> bcsproject.GetProjectQuotaRequest
+	103, // 163: bcsproject.BCSProjectQuota.UpdateProjectQuota:input_type -> bcsproject.UpdateProjectQuotaRequest
+	116, // 164: bcsproject.BCSProjectQuota.ScaleUpProjectQuota:input_type -> bcsproject.ScaleUpProjectQuotaRequest
+	118, // 165: bcsproject.BCSProjectQuota.ScaleDownProjectQuota:input_type -> bcsproject.ScaleDownProjectQuotaRequest
+	105, // 166: bcsproject.BCSProjectQuota.DeleteProjectQuota:input_type -> bcsproject.DeleteProjectQuotaRequest
+	107, // 167: bcsproject.BCSProjectQuota.ListProjectQuotas:input_type -> bcsproject.ListProjectQuotasRequest
+	110, // 168: bcsproject.BCSProjectQuota.ListProjectQuotasV2:input_type -> bcsproject.ListProjectQuotasV2Request
+	112, // 169: bcsproject.BCSProjectQuota.GetProjectQuotasUsage:input_type -> bcsproject.GetProjectQuotasUsageReq
+	120, // 170: bcsproject.BCSProjectQuota.GetProjectQuotasStatistics:input_type -> bcsproject.GetProjectQuotasStatisticsRequest
+	5,   // 171: bcsproject.BCSProject.CreateProject:output_type -> bcsproject.ProjectResponse
+	5,   // 172: bcsproject.BCSProject.GetProject:output_type -> bcsproject.ProjectResponse
+	5,   // 173: bcsproject.BCSProject.UpdateProject:output_type -> bcsproject.ProjectResponse
+	5,   // 174: bcsproject.BCSProject.UpdateProjectV2:output_type -> bcsproject.ProjectResponse
+	5,   // 175: bcsproject.BCSProject.DeleteProject:output_type -> bcsproject.ProjectResponse
+	8,   // 176: bcsproject.BCSProject.ListProjects:output_type -> bcsproject.ListProjectsResponse
+	11,  // 177: bcsproject.BCSProject.ListAuthorizedProjects:output_type -> bcsproject.ListAuthorizedProjResp
+	13,  // 178: bcsproject.BCSProject.ListProjectsForIAM:output_type -> bcsproject.ListProjectsForIAMResp
+	15,  // 179: bcsproject.BCSProject.GetProjectActive:output_type -> bcsproject.GetProjectActiveResponse
+	18,  // 180: bcsproject.Business.GetBusiness:output_type -> bcsproject.GetBusinessResponse
+	20,  // 181: bcsproject.Business.ListBusiness:output_type -> bcsproject.ListBusinessResponse
+	22,  // 182: bcsproject.Business.GetBusinessTopology:output_type -> bcsproject.GetBusinessTopologyResponse
+	30,  // 183: bcsproject.Namespace.CreateNamespace:output_type -> bcsproject.CreateNamespaceResponse
+	32,  // 184: bcsproject.Namespace.CreateNamespaceCallback:output_type -> bcsproject.NamespaceCallbackResponse
+	34,  // 185: bcsproject.Namespace.UpdateNamespace:output_type -> bcsproject.UpdateNamespaceResponse
+	32,  // 186: bcsproject.Namespace.UpdateNamespaceCallback:output_type -> bcsproject.NamespaceCallbackResponse
+	36,  // 187: bcsproject.Namespace.GetNamespace:output_type -> bcsproject.GetNamespaceResponse
+	38,  // 188: bcsproject.Namespace.ListNamespaces:output_type -> bcsproject.ListNamespacesResponse
+	43,  // 189: bcsproject.Namespace.DeleteNamespace:output_type -> bcsproject.DeleteNamespaceResponse
+	32,  // 190: bcsproject.Namespace.DeleteNamespaceCallback:output_type -> bcsproject.NamespaceCallbackResponse
+	26,  // 191: bcsproject.Namespace.SyncNamespace:output_type -> bcsproject.SyncNamespaceResponse
+	28,  // 192: bcsproject.Namespace.WithdrawNamespace:output_type -> bcsproject.WithdrawNamespaceResponse
+	40,  // 193: bcsproject.Namespace.ListNativeNamespaces:output_type -> bcsproject.ListNativeNamespacesResponse
+	141, // 194: bcsproject.Namespace.ListNativeNamespacesContent:output_type -> google.protobuf.Struct
+	50,  // 195: bcsproject.Variable.CreateVariable:output_type -> bcsproject.CreateVariableResponse
+	52,  // 196: bcsproject.Variable.UpdateVariable:output_type -> bcsproject.UpdateVariableResponse
+	54,  // 197: bcsproject.Variable.ListVariableDefinitions:output_type -> bcsproject.ListVariableDefinitionsResponse
+	56,  // 198: bcsproject.Variable.DeleteVariableDefinitions:output_type -> bcsproject.DeleteVariableDefinitionsResponse
+	58,  // 199: bcsproject.Variable.ListClustersVariables:output_type -> bcsproject.ListClustersVariablesResponse
+	60,  // 200: bcsproject.Variable.ListNamespacesVariables:output_type -> bcsproject.ListNamespacesVariablesResponse
+	62,  // 201: bcsproject.Variable.UpdateClustersVariables:output_type -> bcsproject.UpdateClustersVariablesResponse
+	64,  // 202: bcsproject.Variable.UpdateNamespacesVariables:output_type -> bcsproject.UpdateNamespacesVariablesResponse
+	66,  // 203: bcsproject.Variable.ListClusterVariables:output_type -> bcsproject.ListClusterVariablesResponse
+	68,  // 204: bcsproject.Variable.ListNamespaceVariables:output_type -> bcsproject.ListNamespaceVariablesResponse
+	70,  // 205: bcsproject.Variable.UpdateClusterVariables:output_type -> bcsproject.UpdateClusterVariablesResponse
+	72,  // 206: bcsproject.Variable.UpdateNamespaceVariables:output_type -> bcsproject.UpdateNamespaceVariablesResponse
+	74,  // 207: bcsproject.Variable.ImportVariables:output_type -> bcsproject.ImportVariablesResponse
+	76,  // 208: bcsproject.Variable.RenderVariables:output_type -> bcsproject.RenderVariablesResponse
+	87,  // 209: bcsproject.Healthz.Healthz:output_type -> bcsproject.HealthzResponse
+	90,  // 210: bcsproject.Healthz.Ping:output_type -> bcsproject.PingResponse
+	106, // 211: bcsproject.BCSProjectQuota.CreateProjectQuota:output_type -> bcsproject.ProjectQuotaResponse
+	106, // 212: bcsproject.BCSProjectQuota.GetProjectQuota:output_type -> bcsproject.ProjectQuotaResponse
+	106, // 213: bcsproject.BCSProjectQuota.UpdateProjectQuota:output_type -> bcsproject.ProjectQuotaResponse
+	117, // 214: bcsproject.BCSProjectQuota.ScaleUpProjectQuota:output_type -> bcsproject.ScaleUpProjectQuotaResponse
+	119, // 215: bcsproject.BCSProjectQuota.ScaleDownProjectQuota:output_type -> bcsproject.ScaleDownProjectQuotaResponse
+	106, // 216: bcsproject.BCSProjectQuota.DeleteProjectQuota:output_type -> bcsproject.ProjectQuotaResponse
+	109, // 217: bcsproject.BCSProjectQuota.ListProjectQuotas:output_type -> bcsproject.ListProjectQuotasResponse
+	111, // 218: bcsproject.BCSProjectQuota.ListProjectQuotasV2:output_type -> bcsproject.ListProjectQuotasV2Response
+	113, // 219: bcsproject.BCSProjectQuota.GetProjectQuotasUsage:output_type -> bcsproject.GetProjectQuotasUsageResp
+	121, // 220: bcsproject.BCSProjectQuota.GetProjectQuotasStatistics:output_type -> bcsproject.GetProjectQuotasStatisticsResponse
+	171, // [171:221] is the sub-list for method output_type
+	121, // [121:171] is the sub-list for method input_type
+	121, // [121:121] is the sub-list for extension type_name
+	121, // [121:121] is the sub-list for extension extendee
+	0,   // [0:121] is the sub-list for field type_name
 }
 
 func init() { file_bcsproject_proto_init() }
@@ -15404,7 +15781,55 @@ func file_bcsproject_proto_init() {
 				return nil
 			}
 		}
-		file_bcsproject_proto_msgTypes[126].Exporter = func(v interface{}, i int) interface{} {
+		file_bcsproject_proto_msgTypes[120].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*GetProjectQuotasStatisticsRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_bcsproject_proto_msgTypes[121].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*GetProjectQuotasStatisticsResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_bcsproject_proto_msgTypes[122].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*QuotaResourceData); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_bcsproject_proto_msgTypes[123].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ProjectQuotasStatisticsData); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_bcsproject_proto_msgTypes[130].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*ListProjectsForIAMResp_Project); i {
 			case 0:
 				return &v.state
@@ -15423,7 +15848,7 @@ func file_bcsproject_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_bcsproject_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   136,
+			NumMessages:   140,
 			NumExtensions: 0,
 			NumServices:   6,
 		},
@@ -17080,6 +17505,7 @@ type BCSProjectQuotaClient interface {
 	ListProjectQuotas(ctx context.Context, in *ListProjectQuotasRequest, opts ...grpc.CallOption) (*ListProjectQuotasResponse, error)
 	ListProjectQuotasV2(ctx context.Context, in *ListProjectQuotasV2Request, opts ...grpc.CallOption) (*ListProjectQuotasV2Response, error)
 	GetProjectQuotasUsage(ctx context.Context, in *GetProjectQuotasUsageReq, opts ...grpc.CallOption) (*GetProjectQuotasUsageResp, error)
+	GetProjectQuotasStatistics(ctx context.Context, in *GetProjectQuotasStatisticsRequest, opts ...grpc.CallOption) (*GetProjectQuotasStatisticsResponse, error)
 }
 
 type bCSProjectQuotaClient struct {
@@ -17171,6 +17597,15 @@ func (c *bCSProjectQuotaClient) GetProjectQuotasUsage(ctx context.Context, in *G
 	return out, nil
 }
 
+func (c *bCSProjectQuotaClient) GetProjectQuotasStatistics(ctx context.Context, in *GetProjectQuotasStatisticsRequest, opts ...grpc.CallOption) (*GetProjectQuotasStatisticsResponse, error) {
+	out := new(GetProjectQuotasStatisticsResponse)
+	err := c.cc.Invoke(ctx, "/bcsproject.BCSProjectQuota/GetProjectQuotasStatistics", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // BCSProjectQuotaServer is the server API for BCSProjectQuota service.
 type BCSProjectQuotaServer interface {
 	// CreateProjectQuota 申请项目资源额度
@@ -17184,6 +17619,7 @@ type BCSProjectQuotaServer interface {
 	ListProjectQuotas(context.Context, *ListProjectQuotasRequest) (*ListProjectQuotasResponse, error)
 	ListProjectQuotasV2(context.Context, *ListProjectQuotasV2Request) (*ListProjectQuotasV2Response, error)
 	GetProjectQuotasUsage(context.Context, *GetProjectQuotasUsageReq) (*GetProjectQuotasUsageResp, error)
+	GetProjectQuotasStatistics(context.Context, *GetProjectQuotasStatisticsRequest) (*GetProjectQuotasStatisticsResponse, error)
 }
 
 // UnimplementedBCSProjectQuotaServer can be embedded to have forward compatible implementations.
@@ -17216,6 +17652,9 @@ func (*UnimplementedBCSProjectQuotaServer) ListProjectQuotasV2(context.Context, 
 }
 func (*UnimplementedBCSProjectQuotaServer) GetProjectQuotasUsage(context.Context, *GetProjectQuotasUsageReq) (*GetProjectQuotasUsageResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetProjectQuotasUsage not implemented")
+}
+func (*UnimplementedBCSProjectQuotaServer) GetProjectQuotasStatistics(context.Context, *GetProjectQuotasStatisticsRequest) (*GetProjectQuotasStatisticsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetProjectQuotasStatistics not implemented")
 }
 
 func RegisterBCSProjectQuotaServer(s *grpc.Server, srv BCSProjectQuotaServer) {
@@ -17384,6 +17823,24 @@ func _BCSProjectQuota_GetProjectQuotasUsage_Handler(srv interface{}, ctx context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _BCSProjectQuota_GetProjectQuotasStatistics_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetProjectQuotasStatisticsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BCSProjectQuotaServer).GetProjectQuotasStatistics(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/bcsproject.BCSProjectQuota/GetProjectQuotasStatistics",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BCSProjectQuotaServer).GetProjectQuotasStatistics(ctx, req.(*GetProjectQuotasStatisticsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _BCSProjectQuota_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "bcsproject.BCSProjectQuota",
 	HandlerType: (*BCSProjectQuotaServer)(nil),
@@ -17423,6 +17880,10 @@ var _BCSProjectQuota_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetProjectQuotasUsage",
 			Handler:    _BCSProjectQuota_GetProjectQuotasUsage_Handler,
+		},
+		{
+			MethodName: "GetProjectQuotasStatistics",
+			Handler:    _BCSProjectQuota_GetProjectQuotasStatistics_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
