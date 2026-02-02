@@ -152,6 +152,8 @@ func GetClusterCurrentVpcCniSubnets(cls *proto.Cluster, extraIP bool) (map[strin
 		return nil, 0, nil, err
 	}
 
+	blog.Infof("GetClusterCurrentVpcCniSubnets[%s] totalRatio[%v] zoneSubnetNum[%+v] %v", cls.GetClusterID(),
+		totalRatio, zoneSubnetNum, subnetIds)
 	return zoneSubnetNum, totalRatio, subnetIds, nil
 }
 
