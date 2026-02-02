@@ -10,30 +10,5 @@ metadata:
     meta.helm.sh/release-namespace: {{ .Release.Namespace }}
 data:
   config.yaml: |
-        global:
-          trafficPolicy:
-            connectionPool: {}
-            tunnel: {}
-            loadBalancer:
-              simple: RANDOM
-              localityLbSetting:
-                enabled: true
-                failover:
-                  - from: gz
-                    to: nj
-          setting:
-            mergeMode: override
-            deletePolicyOnServiceDelete: true
-            updateUnmanagedResources: true
-            autoGenerateVS: true
-        services:
-          - name: my-svc
-            namespace: bcs-system
-            trafficPolicy:
-              loadBalancer:
-                simple: RANDOM
-            setting:
-              mergeMode: override
-              deletePolicyOnServiceDelete: true
-              updateUnmanagedResources: true
+        {{- .Values.istioPolicyConfig | nindent 4 }}
 

@@ -19,3 +19,32 @@ autoscaling:
   maxReplicas: 100
   targetCPUUtilizationPercentage: 80
   # targetMemoryUtilizationPercentage: 80
+
+
+istioPolicyConfig: |
+  global:
+    trafficPolicy:
+      connectionPool: {}
+      tunnel: {}
+      loadBalancer:
+        simple: RANDOM
+        localityLbSetting:
+          enabled: true
+          failover:
+            - from: gz
+              to: nj
+    setting:
+      mergeMode: override
+      deletePolicyOnServiceDelete: true
+      updateUnmanagedResources: true
+      autoGenerateVS: true
+  services:
+    - name: my-svc
+      namespace: bcs-system
+      trafficPolicy:
+        loadBalancer:
+          simple: RANDOM
+      setting:
+        mergeMode: override
+        deletePolicyOnServiceDelete: true
+        updateUnmanagedResources: true
