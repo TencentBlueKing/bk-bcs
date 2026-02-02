@@ -490,6 +490,12 @@ func NewStorageEndpoints() []*api.Endpoint {
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
+		{
+			Name:    "Storage.CleanClusterData",
+			Path:    []string{"/bcsstorage/v2/clusters/{clusterId}/data"},
+			Method:  []string{"DELETE"},
+			Handler: "rpc",
+		},
 	}
 }
 
@@ -505,8 +511,7 @@ type StorageService interface {
 	GetServiceConfig(ctx context.Context, in *GetServiceConfigRequest, opts ...client.CallOption) (*GetServiceConfigResponse, error)
 	GetStableVersion(ctx context.Context, in *GetStableVersionRequest, opts ...client.CallOption) (*GetStableVersionResponse, error)
 	PutStableVersion(ctx context.Context, in *PutStableVersionRequest, opts ...client.CallOption) (*PutStableVersionResponse, error)
-	//
-	//k8s namespace resources
+	// k8s namespace resources
 	GetK8SNamespaceResources(ctx context.Context, in *GetNamespaceResourcesRequest, opts ...client.CallOption) (*GetNamespaceResourcesResponse, error)
 	PutK8SNamespaceResources(ctx context.Context, in *PutNamespaceResourcesRequest, opts ...client.CallOption) (*PutNamespaceResourcesResponse, error)
 	DeleteK8SNamespaceResources(ctx context.Context, in *DeleteNamespaceResourcesRequest, opts ...client.CallOption) (*DeleteNamespaceResourcesResponse, error)
@@ -580,12 +585,14 @@ type StorageService interface {
 	ListMetricTables(ctx context.Context, in *ListMetricTablesRequest, opts ...client.CallOption) (*ListMetricTablesResponse, error)
 	// **** metric watch ****
 	WatchMetric(ctx context.Context, in *WatchMetricRequest, opts ...client.CallOption) (Storage_WatchMetricService, error)
-	//**** watch k8s ****
+	// **** watch k8s ****
 	// k8s
 	K8SGetWatchResource(ctx context.Context, in *K8SGetWatchResourceRequest, opts ...client.CallOption) (*K8SGetWatchResourceResponse, error)
 	K8SPutWatchResource(ctx context.Context, in *K8SPutWatchResourceRequest, opts ...client.CallOption) (*K8SPutWatchResourceResponse, error)
 	K8SDeleteWatchResource(ctx context.Context, in *K8SDeleteWatchResourceRequest, opts ...client.CallOption) (*K8SDeleteWatchResourceResponse, error)
 	K8SListWatchResource(ctx context.Context, in *K8SListWatchResourceRequest, opts ...client.CallOption) (*K8SListWatchResourceResponse, error)
+	// **** Cluster Clean(集群数据清理) ****
+	CleanClusterData(ctx context.Context, in *CleanClusterDataRequest, opts ...client.CallOption) (*CleanClusterDataResponse, error)
 }
 
 type storageService struct {
@@ -1526,6 +1533,16 @@ func (c *storageService) K8SListWatchResource(ctx context.Context, in *K8SListWa
 	return out, nil
 }
 
+func (c *storageService) CleanClusterData(ctx context.Context, in *CleanClusterDataRequest, opts ...client.CallOption) (*CleanClusterDataResponse, error) {
+	req := c.c.NewRequest(c.name, "Storage.CleanClusterData", in)
+	out := new(CleanClusterDataResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for Storage service
 
 type StorageHandler interface {
@@ -1538,8 +1555,7 @@ type StorageHandler interface {
 	GetServiceConfig(context.Context, *GetServiceConfigRequest, *GetServiceConfigResponse) error
 	GetStableVersion(context.Context, *GetStableVersionRequest, *GetStableVersionResponse) error
 	PutStableVersion(context.Context, *PutStableVersionRequest, *PutStableVersionResponse) error
-	//
-	//k8s namespace resources
+	// k8s namespace resources
 	GetK8SNamespaceResources(context.Context, *GetNamespaceResourcesRequest, *GetNamespaceResourcesResponse) error
 	PutK8SNamespaceResources(context.Context, *PutNamespaceResourcesRequest, *PutNamespaceResourcesResponse) error
 	DeleteK8SNamespaceResources(context.Context, *DeleteNamespaceResourcesRequest, *DeleteNamespaceResourcesResponse) error
@@ -1613,12 +1629,14 @@ type StorageHandler interface {
 	ListMetricTables(context.Context, *ListMetricTablesRequest, *ListMetricTablesResponse) error
 	// **** metric watch ****
 	WatchMetric(context.Context, *WatchMetricRequest, Storage_WatchMetricStream) error
-	//**** watch k8s ****
+	// **** watch k8s ****
 	// k8s
 	K8SGetWatchResource(context.Context, *K8SGetWatchResourceRequest, *K8SGetWatchResourceResponse) error
 	K8SPutWatchResource(context.Context, *K8SPutWatchResourceRequest, *K8SPutWatchResourceResponse) error
 	K8SDeleteWatchResource(context.Context, *K8SDeleteWatchResourceRequest, *K8SDeleteWatchResourceResponse) error
 	K8SListWatchResource(context.Context, *K8SListWatchResourceRequest, *K8SListWatchResourceResponse) error
+	// **** Cluster Clean(集群数据清理) ****
+	CleanClusterData(context.Context, *CleanClusterDataRequest, *CleanClusterDataResponse) error
 }
 
 func RegisterStorageHandler(s server.Server, hdlr StorageHandler, opts ...server.HandlerOption) error {
@@ -1698,6 +1716,7 @@ func RegisterStorageHandler(s server.Server, hdlr StorageHandler, opts ...server
 		K8SPutWatchResource(ctx context.Context, in *K8SPutWatchResourceRequest, out *K8SPutWatchResourceResponse) error
 		K8SDeleteWatchResource(ctx context.Context, in *K8SDeleteWatchResourceRequest, out *K8SDeleteWatchResourceResponse) error
 		K8SListWatchResource(ctx context.Context, in *K8SListWatchResourceRequest, out *K8SListWatchResourceResponse) error
+		CleanClusterData(ctx context.Context, in *CleanClusterDataRequest, out *CleanClusterDataResponse) error
 	}
 	type Storage struct {
 		storage
@@ -2157,6 +2176,12 @@ func RegisterStorageHandler(s server.Server, hdlr StorageHandler, opts ...server
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Storage.CleanClusterData",
+		Path:    []string{"/bcsstorage/v2/clusters/{clusterId}/data"},
+		Method:  []string{"DELETE"},
+		Handler: "rpc",
+	}))
 	return s.Handle(s.NewHandler(&Storage{h}, opts...))
 }
 
@@ -2606,4 +2631,8 @@ func (h *storageHandler) K8SDeleteWatchResource(ctx context.Context, in *K8SDele
 
 func (h *storageHandler) K8SListWatchResource(ctx context.Context, in *K8SListWatchResourceRequest, out *K8SListWatchResourceResponse) error {
 	return h.StorageHandler.K8SListWatchResource(ctx, in, out)
+}
+
+func (h *storageHandler) CleanClusterData(ctx context.Context, in *CleanClusterDataRequest, out *CleanClusterDataResponse) error {
+	return h.StorageHandler.CleanClusterData(ctx, in, out)
 }

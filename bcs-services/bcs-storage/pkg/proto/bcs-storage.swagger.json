@@ -348,6 +348,39 @@
         ]
       }
     },
+    "/bcsstorage/v2/clusters/{clusterId}/data": {
+      "delete": {
+        "summary": "清理集群数据",
+        "description": "根据clusterId清理集群的所有数据",
+        "operationId": "Storage_CleanClusterData",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/storageCleanClusterDataResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "clusterId",
+            "description": "BCS内部使用集群ID，格式为BCS-K8S-XXXXX",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Storage"
+        ]
+      }
+    },
     "/bcsstorage/v2/dynamic/customresources/{resourceType}": {
       "get": {
         "summary": "查询自定义资源",
@@ -4853,6 +4886,37 @@
       "required": [
         "ip",
         "clusterId"
+      ]
+    },
+    "storageCleanClusterDataResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "deletedCounts": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "format": "int64"
+          },
+          "description": "各数据类型删除的记录数",
+          "title": "deletedCounts"
+        }
+      },
+      "description": "返回集群数据清理结果",
+      "title": "CleanClusterDataResponse",
+      "required": [
+        "code",
+        "message"
       ]
     },
     "storageClusterSet": {
