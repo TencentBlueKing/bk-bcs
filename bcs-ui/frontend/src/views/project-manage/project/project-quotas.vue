@@ -682,6 +682,7 @@ export default defineComponent({
       statisticsObj.value = await fetchProjectQuotasStatistics({
         $projectID: curProject.value.projectID,
         quotaType: statisticsType.value,
+        isContainShared: true, // 默认支持共享集群
       })
         .catch(() => ({}))
         .finally(() => {

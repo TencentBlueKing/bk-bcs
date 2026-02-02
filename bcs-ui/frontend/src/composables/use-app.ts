@@ -30,6 +30,7 @@ export interface IProject {
 // todo 完善类型
 export interface ICluster {
   region: string
+  businessID: string
   clusterID: string
   clusterName: string
   status: 'INITIALIZATION' | 'DELETING' | 'RUNNING'

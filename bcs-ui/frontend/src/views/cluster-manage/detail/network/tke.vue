@@ -7,7 +7,16 @@
       </bk-form-item>
       <bk-form-item :label="$t('cluster.create.label.privateNet.text')">
         <LoadingIcon v-if="vpcLoading">{{ $t('generic.status.loading') }}...</LoadingIcon>
-        <span v-else>{{ vpc || '--' }}</span>
+        <div v-else>
+          <span>{{ vpc?.vpcID }}</span>
+          <span class="mx-[8px] w-[1px] border-r border-r-[#DCDEE5]"></span>
+          <span class="mr-[16px] text-[#979BA5]">
+            {{ $t('tke.label.availableOverlay') }} : {{ vpc?.overlay?.availableIPNum }}
+          </span>
+          <span class="text-[#979BA5]">
+            {{ $t('tke.label.availableUnderlay') }} : {{ vpc?.underlay?.availableIPNum }}
+          </span>
+        </div>
       </bk-form-item>
       <bk-form-item :label="$t('cluster.labels.networkType')">
         {{ networkType }}
@@ -29,7 +38,11 @@
           {{ clusterData.networkSettings &&clusterData.networkSettings.serviceIPv4CIDR
             ? clusterData.networkSettings.serviceIPv4CIDR : '--' }}
         </bk-form-item>
-        <VpcCniDetail :data="clusterData" />
+        <VpcCniDetail
+          :data="clusterData"
+          :validate-msg="validateMsg"
+          :validate-fn="handleValidateSubnet"
+        />
       </template>
       <!-- 其他网络插件: Global Route -->
       <template v-else>
@@ -53,10 +66,19 @@
         </bk-form-item>
         <!-- GR模式下 是否启用vpc-cni -->
         <bk-form-item label="VPC-CNI">
-          <LoadingIcon v-if="clusterData.networkSettings?.status === 'INITIALIZATION'">
-            {{ clusterData.networkSettings?.enableVPCCni
-              ? $t('generic.status.enable') : $t('generic.status.disable') }}...
-          </LoadingIcon>
+          <div class="flex items-center" v-if="clusterData.networkSettings?.status === 'INITIALIZATION'">
+            <LoadingIcon>
+              {{ clusterData.networkSettings?.enableVPCCni
+                ? $t('generic.status.enable') : $t('generic.status.disable') }}...
+            </LoadingIcon>
+            <bcs-button
+              class="ml-[16px]"
+              theme="primary"
+              text
+              @click="handleRecord">
+              {{ $t('cluster.detail.label.goRecord') }}
+            </bcs-button>
+          </div>
           <StatusIcon
             :status="clusterData.networkSettings?.status"
             v-else-if="clusterData.networkSettings?.status === 'FAILURE'">
@@ -71,6 +93,8 @@
         </bk-form-item>
         <VpcCniDetail
           :data="clusterData"
+          :validate-msg="validateMsg"
+          :validate-fn="handleValidateSubnet"
           v-if="clusterData.networkSettings?.enableVPCCni
             && (['RUNNING', ''].includes(clusterData.networkSettings?.status))" />
       </template>
@@ -80,6 +104,8 @@
       :cluster-data="clusterData"
       :width="600"
       :confirm-fn="handleConfirmEnableVpcCNI"
+      :validate-fn="handleValidateSubnet"
+      :validate-msg="validateMsg"
       @cancel="showSubnets = false" />
   </bk-form>
 </template>
@@ -89,7 +115,7 @@ import { computed, onMounted, ref, watch } from 'vue';
 import AddSubnetDialog from '../components/add-subnet-dialog.vue';
 import VpcCniDetail from '../components/vpc-cni-detail.vue';
 
-import { underlayNetwork  } from '@/api/modules/cluster-manager';
+import { cloudVpc, clusterOperationLogs, underlayNetwork  } from '@/api/modules/cluster-manager';
 import { countIPsInCIDR } from '@/common/util';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import DescList from '@/components/desc-list.vue';
@@ -97,7 +123,9 @@ import LoadingIcon from '@/components/loading-icon.vue';
 import StatusIcon from '@/components/status-icon';
 import useInterval from '@/composables/use-interval';
 import $i18n from '@/i18n/i18n-setup';
+import $router from '@/router';
 import $store from '@/store';
+import { IVPCItem } from '@/views/cluster-manage/add/components/vpc-dialog.vue';
 import { useClusterInfo } from '@/views/cluster-manage/cluster/use-cluster';
 import { ISubnetItem } from '@/views/cluster-manage/types/types';
 import useCloud from '@/views/cluster-manage/use-cloud';
@@ -110,6 +138,7 @@ const props = defineProps({
 });
 
 const { clusterData, isLoading, getClusterDetail } = useClusterInfo();
+const user = computed(() => $store.state.user);
 
 // 容器网段
 const clusterContainerCIDR = computed(() => {
@@ -147,19 +176,65 @@ const {
   regionLoading,
   regionList,
   handleGetRegionList,
-  vpcList,
-  vpcLoading,
-  handleGetVPCList,
 } = useCloud();
 
 const region = computed(() => {
   const data = regionList.value.find(item => item.region === clusterData.value.region);
   return data ? `${data.regionName}(${data.region})` : clusterData.value.region;
 });
-const vpc = computed(() => {
-  const data = vpcList.value.find(item => item.vpcId === clusterData.value.vpcID);
-  return data ? `${data.name}(${data.vpcId})` : (clusterData.value.vpcID || '--');
-});
+
+const vpc = computed(() => vpcList.value.find(item => item.vpcID === clusterData.value.vpcID));
+
+// 获取vpc列表
+const vpcList = ref<IVPCItem[]>([]);
+const vpcLoading = ref(false);
+async function handleGetVPCList() {
+  vpcLoading.value = true;
+  vpcList.value = await cloudVpc({
+    region: clusterData.value.region,
+    cloudID: clusterData.value.provider,
+    businessID: clusterData.value.businessID,
+    vpcID: clusterData.value.vpcID,
+    networkType: 'overlay', // 自研云默认为 overlay
+  }).catch(() => []);
+  vpcLoading.value = false;
+};
+
+// 校验 subnet
+const validateMsg = ref($i18n.t('tke.validate.podIPsNeedLessThanUnderlayIPNum'));
+function handleValidateSubnet(sunbnets: Array<ISubnetItem>) {
+  const counts = sunbnets.reduce((counts, item) => {
+    counts += Number(item.ipCnt);
+    return counts;
+  }, 0);
+
+  return counts <= (vpc.value?.underlay?.availableIPNum || 0);
+}
+// 查看执行记录
+async function handleRecord() {
+  const list = await clusterOperationLogs({
+    limit: 10,
+    page: 1,
+    clusterID: clusterData.value.clusterID,
+    taskType: 'qcloud-SwitchClusterUnderlayNetwork',
+    v2: true,
+    taskIDNull: true,
+  }).catch(() => []);
+  const record = list.results?.[0];
+
+  if (!record) {
+    return;
+  }
+  $router.push({
+    name: 'clusterMain',
+    query: {
+      clusterID: clusterData.value.clusterID,
+      active: 'taskRecord',
+      opUser: user.value.username,
+      resourceName: record?.resourceName,
+    },
+  });
+}
 
 // 启用vpc-cni确认
 const showSubnets = ref(false);
@@ -236,12 +311,7 @@ onMounted(async () => {
       cloudAccountID: clusterData.value.cloudAccountID,
       cloudID: clusterData.value.provider,
     }),
-    handleGetVPCList({
-      region: clusterData.value.region,
-      cloudAccountID: clusterData.value.cloudAccountID,
-      cloudID: clusterData.value.provider,
-      resourceGroupName: clusterData.value.extraInfo?.nodeResourceGroup,
-    }),
+    handleGetVPCList(),
   ]);
 });
 </script>

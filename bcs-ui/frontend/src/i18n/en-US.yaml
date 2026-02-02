@@ -321,6 +321,7 @@ generic:
       Multiple commands are separated by spaces, eg: / bin / bash &amp; quote; -
       C &amp; quote; &amp; quote
     searchIp: 'Enter IP to search, separate multiple IPs with commas or spaces'
+    searchWith: 'Search {0}'
   button:
     resetSearch: Reset search
     validate: Validate
@@ -816,7 +817,6 @@ cluster:
       vpc:
         text: VPC
         deficiencyIpNumTips: The number of available container network IP is insufficient
-        availableIpNum: 'Number of ip available: {0}'
         businessSpecificVPC: Business-specific VPC
         publicVPC: Public VPC
       networkSetting1:
@@ -1054,6 +1054,7 @@ cluster:
           cluster.
     label:
       tkeID: TKE Cluster ID
+      goRecord: View execution records
   ca:
     name: Cluster autoscaler
     title:
@@ -3720,6 +3721,11 @@ tke:
       maxBandWidth: Max bandwidth
     clusterAvailableNodes: Node capacity
     retain: Destruction node
+    selectVPC: Select VPC
+    vpcName: VPC Name
+    vpcID: VPCID
+    availableUnderlay: Available underlayIP number
+    availableOverlay: Available overlayIP number
   title:
     connectFailure:
       text: >-
@@ -3767,6 +3773,13 @@ tke:
     cidrMaskLen: 'Subnet mask length range: {0}'
     minPodIP: The Pod IP count must be greater than 0
     podIPsNeedLessThanVpcIPs: Pod IPs need less than VPC IPs
+    podIPsNeedLessThanUnderlayNum: >-
+      The number of available underlying IPs is insufficient. Please reduce the
+      number of IP applications; Or create a cluster before attempting to enable
+      VPC-CNI.
+    podIPsNeedLessThanUnderlayIPNum: >-
+      The number of available underlying IPs is insufficient. Please reduce the
+      number of IP applications;
     passwordNotSame: The passwords entered do not match
     minIpNum: >-
       To ensure that the cluster has enough IPs, the container network segment

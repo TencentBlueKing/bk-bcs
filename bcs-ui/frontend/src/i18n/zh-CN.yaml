@@ -296,6 +296,7 @@ generic:
     searchDate: 选择日期
     command: 多个命令用空格分隔，例如/bin/bash &quot;-c&quot
     searchIp: '输入IP搜索, 多个IP用逗号或空格隔开'
+    searchWith: '搜索 {0}'
   button:
     clone: 克隆
     resetSearch: 调整筛选条件
@@ -732,7 +733,6 @@ cluster:
       vpc:
         text: 所属VPC
         deficiencyIpNumTips: 可用容器网络IP数量不足
-        availableIpNum: '可用IP数量: {0}'
         businessSpecificVPC: 业务专属VPC
         publicVPC: 公共VPC
       networkSetting1:
@@ -887,6 +887,7 @@ cluster:
         p2: 请确保集群内已删除所有 VPC-CNI 模式的Pod
     label:
       tkeID: TKE集群ID
+      goRecord: 查看执行记录
   ca:
     name: Cluster Autoscaler
     title:
@@ -3024,6 +3025,11 @@ tke:
         traffic_postpaid_by_hour: 按使用流量计费
         bandwidth_prepaid: 按带宽计费
       maxBandWidth: 购买宽带
+    selectVPC: 选择 VPC
+    vpcName: VPC 名称
+    vpcID: VPCID
+    availableUnderlay: 可用 underlayIP 数量
+    availableOverlay: 可用 overlayIP 数量
   title:
     installGseAgentFailed:
       text: 安装 GSE Agent 失败
@@ -3063,6 +3069,8 @@ tke:
     cidrMaskLen: '子网掩码长度范围 {0}'
     minPodIP: Pod IP需要大于 0
     podIPsNeedLessThanVpcIPs: Pod IP总数要小于私有网络IP数量
+    podIPsNeedLessThanUnderlayNum: 可用 underlayIP 数量不足，请减少 IP 申请数量；或创建集群后再尝试开启 VPC-CNI
+    podIPsNeedLessThanUnderlayIPNum: 可用 underlayIP 数量不足，请减少 IP 申请数量
     passwordNotSame: 两次输入的密码不一致
     minIpNum: '为保证集群有足够IP, 容器网段不能低于 {0} 个IP'
     supportCidrList: '仅支持 {0} 之间网段'

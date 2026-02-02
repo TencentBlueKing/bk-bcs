@@ -95,6 +95,8 @@
 <script lang="ts">
 import { defineComponent, PropType, ref } from 'vue';
 
+import { IVPCItem } from './vpc-dialog.vue';
+
 import IpSelector from '@/components/ip-selector/ip-selector.vue';
 import StatusIcon from '@/components/status-icon';
 
@@ -133,7 +135,7 @@ export default defineComponent({
     },
     // 集群VPC
     vpc: {
-      type: Object,
+      type: Object as PropType<typeof IVPCItem>,
       default: () => ({}),
     },
   },

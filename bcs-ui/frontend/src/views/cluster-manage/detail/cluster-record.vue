@@ -19,7 +19,6 @@
           :show-condition="false"
           :show-popover-tag-change="false"
           :placeholder="$t('cluster.operateRecord.placeholder.searchRecord')"
-          default-focus
           ref="searchSelect"
           v-model="searchSelectValue"
           @change="searchSelectChange"
@@ -130,7 +129,9 @@ import Row from '@/components/layout/Row.vue';
 import StatusIcon from '@/components/status-icon';
 import useInterval from '@/composables/use-interval';
 import { handleHeaderDragend, setTableColWByMemory } from '@/composables/use-table-col-w-memory';
+import useTableSearchSelect, { ISearchSelectData } from '@/composables/use-table-search-select';
 import $i18n from '@/i18n/i18n-setup';
+import $router from '@/router';
 import $store from '@/store/index';
 
 interface Props {
@@ -139,6 +140,7 @@ interface Props {
 const props = defineProps<Props>();
 
 const hideRetryStatus = ref(['SUCCESS', 'RUNNING']);
+const curRoute = computed(() => $router.currentRoute);
 
 const timeRange = ref<Date[]>([]);
 // 快捷时间配置
@@ -212,7 +214,7 @@ const status = Object.keys(statusTextMap).map(item => ({
   value: item,
 }));
 // searchSelect数据源配置
-const searchSelectDataSource = [
+const searchSelectDataSource = ref<ISearchSelectData[]>([
   {
     name: $i18n.t('generic.label.resourceName'),
     id: 'resourceName',
@@ -233,7 +235,16 @@ const searchSelectDataSource = [
     id: 'opUser',
     placeholder: $i18n.t('generic.placeholder.input'),
   },
-];
+]);
+
+const {
+  searchSelectData,
+  searchSelectValue,
+  handleFilterChange,
+} = useTableSearchSelect({
+  searchSelectDataSource,
+});
+
 // 检索参数
 const searchParams = ref({});
 function searchSelectChange(inputList) {
@@ -247,9 +258,7 @@ function handleClear() {
   searchSelectValue.value = [];
   searchParams.value = {};
 }
-const searchSelectValue = ref<any[]>([]);
-// 搜索项有值后就不展示了
-const searchSelectData = ref<any[]>([]);
+
 const searchSelect = ref();
 
 // 获取集群操作日志
@@ -422,10 +431,16 @@ watch(
   },
 );
 
-watch(searchSelectValue, () => {
-  const ids = searchSelectValue.value.map(item => item.id);
-  searchSelectData.value = searchSelectDataSource.filter(item => !ids.includes(item.id));
-}, { immediate: true, deep: true });
+watch(curRoute, () => {
+  const keys = Object.keys(searchParams.value);
+  searchParams.value = searchSelectDataSource.value.reduce((acc, cur) => {
+    if (keys.includes(cur.id)) {
+      acc[cur.id] = curRoute.value.query[cur.id];
+    }
+    return acc;
+  }, {});
+  handleFilterChange(searchParams.value);
+});
 
 onBeforeMount(() => {
   // 初始化默认时间
@@ -436,6 +451,15 @@ onBeforeMount(() => {
     start,
     end,
   ];
+  // 获取 query 参数
+  const keys = Object.keys(curRoute.value.query);
+  searchParams.value = searchSelectDataSource.value.reduce((acc, cur) => {
+    if (keys.includes(cur.id)) {
+      acc[cur.id] = curRoute.value.query[cur.id];
+    }
+    return acc;
+  }, {});
+  handleFilterChange(searchParams.value);
   getOperationLogs();
 });
 
