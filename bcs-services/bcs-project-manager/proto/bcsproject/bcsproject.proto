@@ -3291,6 +3291,11 @@ message GetProjectQuotaRequest {
   }];
 }
 
+// QuotaSharedProjectList 额度共享配置列表包装类型（用于区分未传值和空值）
+message QuotaSharedProjectList {
+  repeated QuotaSharedProject values = 1;       // 共享项目配置列表
+}
+
 message UpdateProjectQuotaRequest {
   option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
     json_schema : {
@@ -3331,7 +3336,7 @@ message UpdateProjectQuotaRequest {
     title: "quotaSharedEnabled",
     description: "是否启用额度共享"
   }];
-  repeated QuotaSharedProject quotaSharedProjectList = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  QuotaSharedProjectList quotaSharedProjectList = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "quotaSharedProjectList",
     description: "额度共享配置"
   }];
@@ -3396,7 +3401,7 @@ message UpdateProjectV2Request {
     title: "quotaSharedEnabled",
     description: "是否启用额度共享"
   }];
-  repeated QuotaSharedProject quotaSharedProjectList = 14[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  QuotaSharedProjectList quotaSharedProjectList = 14[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "quotaSharedProjectList",
     description: "额度共享配置"
   }];

@@ -101,7 +101,7 @@ func (ua *UpdateQuotaAction) updateProjectQuota() error {
 	}
 
 	if ua.req.QuotaSharedProjectList != nil {
-		ua.sQuota.QuotaSharedProjectList = quota.TransProto2QuotaSharedProjects(ua.req.QuotaSharedProjectList)
+		ua.sQuota.QuotaSharedProjectList = quota.TransProto2QuotaSharedProjects(ua.req.QuotaSharedProjectList.GetValues())
 	}
 
 	err := ua.model.UpdateProjectQuota(ua.ctx, ua.sQuota)

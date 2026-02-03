@@ -4563,6 +4563,18 @@
       "description": "被共享的项目配置",
       "title": "QuotaSharedProject"
     },
+    "bcsprojectQuotaSharedProjectList": {
+      "type": "object",
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bcsprojectQuotaSharedProject"
+          }
+        }
+      },
+      "title": "QuotaSharedProjectList 额度共享配置列表包装类型（用于区分未传值和空值）"
+    },
     "bcsprojectRenderVariablesResponse": {
       "type": "object",
       "properties": {
@@ -5149,10 +5161,7 @@
           "title": "quotaSharedEnabled"
         },
         "quotaSharedProjectList": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/bcsprojectQuotaSharedProject"
-          },
+          "$ref": "#/definitions/bcsprojectQuotaSharedProjectList",
           "description": "额度共享配置",
           "title": "quotaSharedProjectList"
         }
@@ -5308,10 +5317,7 @@
           "title": "quotaSharedEnabled"
         },
         "quotaSharedProjectList": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/bcsprojectQuotaSharedProject"
-          },
+          "$ref": "#/definitions/bcsprojectQuotaSharedProjectList",
           "description": "额度共享配置",
           "title": "quotaSharedProjectList"
         }
