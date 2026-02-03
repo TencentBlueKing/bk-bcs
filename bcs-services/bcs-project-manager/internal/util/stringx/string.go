@@ -64,9 +64,9 @@ func StringToUint32(str string) uint32 {
 	if str == "" {
 		return 0
 	}
-	result, err := strconv.Atoi(str)
+	floatResult, err := strconv.ParseFloat(str, 64)
 	if err != nil {
 		return 0
 	}
-	return uint32(result)
+	return uint32(floatResult)
 }
