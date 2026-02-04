@@ -370,8 +370,10 @@ func (p *ProjectService) initMicro() error {
 	if err := dualStackListener.AddListener(ipv4, port); err != nil {
 		return err
 	}
-	if err := dualStackListener.AddListener(ipv6, port); err != nil {
-		return err
+	if ipv6 == "" && ipv4 != ipv6 {
+		if err := dualStackListener.AddListener(ipv6, port); err != nil {
+			return err
+		}
 	}
 	// get grpc server
 	grpcServer := svc.Server()
