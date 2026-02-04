@@ -23,28 +23,31 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
 	pm "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
 	cm "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/storage"
 	"github.com/patrickmn/go-cache"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/bcsmonitor"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/bcsproject"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/prom"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
+)
+
+const (
+	// ServiceDomain service domain
+	ServiceDomain = "bcs-data-manager"
 )
 
 // GetterInterface interface of getter
 type GetterInterface interface {
 	// GetProjectIDList get project id list
-	GetProjectIDList(ctx context.Context, client cm.ClusterManagerClient) ([]*types.ProjectMeta, error)
+	GetProjectIDList(ctx context.Context) ([]*types.ProjectMeta, error)
 	// GetProjectInfo get project info from bcs project or cache
-	GetProjectInfo(ctx context.Context, projectId, projectCode string,
-		pmCli *bcsproject.BcsProjectClientWithHeader) (*pm.Project, error)
+	GetProjectInfo(ctx context.Context, projectId, projectCode string) (*pm.Project, error)
 	// GetClusterIDList get cluster id list
-	GetClusterIDList(ctx context.Context, client cm.ClusterManagerClient) ([]*types.ClusterMeta, error)
+	GetClusterIDList(ctx context.Context) ([]*types.ClusterMeta, error)
 	// GetNamespaceList get namespace list
-	GetNamespaceList(ctx context.Context, cmCli cm.ClusterManagerClient,
-		k8sStorageCli, mesosStorageCli bcsapi.Storage) ([]*types.NamespaceMeta, error)
+	GetNamespaceList(ctx context.Context, k8sStorageCli, mesosStorageCli bcsapi.Storage) ([]*types.NamespaceMeta, error)
 	// GetNamespaceListByCluster get namespace list by cluster
 	GetNamespaceListByCluster(ctx context.Context, clusterMeta *types.ClusterMeta,
 		k8sStorageCli, mesosStorageCli bcsapi.Storage) ([]*types.NamespaceMeta, error)
@@ -60,51 +63,42 @@ type GetterInterface interface {
 
 // ResourceGetter common resource getter
 type ResourceGetter struct {
-	needFilter     bool
-	clusterIDs     map[string]bool
-	env            string
-	cache          *cache.Cache
-	projectManager bcsproject.BcsProjectManagerClient
-	bcsMonitorCli  bcsmonitor.ClientInterface
+	needFilter    bool
+	clusterIDs    map[string]bool
+	env           string
+	cache         *cache.Cache
+	bcsMonitorCli bcsmonitor.ClientInterface
 }
 
 // NewGetter new common resource getter
 func NewGetter(needFilter bool, clusterIds []string, env string,
-	pmClient bcsproject.BcsProjectManagerClient, bcsMonitorCli bcsmonitor.ClientInterface) GetterInterface {
+	bcsMonitorCli bcsmonitor.ClientInterface) GetterInterface {
 	clusterMap := make(map[string]bool, len(clusterIds))
 	for index := range clusterIds {
 		clusterMap[clusterIds[index]] = true
 	}
 	return &ResourceGetter{
-		needFilter:     needFilter,
-		clusterIDs:     clusterMap,
-		env:            env,
-		cache:          cache.New(time.Minute*10, time.Minute*60),
-		projectManager: pmClient,
-		bcsMonitorCli:  bcsMonitorCli,
+		needFilter:    needFilter,
+		clusterIDs:    clusterMap,
+		env:           env,
+		cache:         cache.New(time.Minute*10, time.Minute*60),
+		bcsMonitorCli: bcsMonitorCli,
 	}
 }
 
 // GetProjectIDList get project id list
-func (g *ResourceGetter) GetProjectIDList(ctx context.Context,
-	cmCli cm.ClusterManagerClient) ([]*types.ProjectMeta, error) {
+func (g *ResourceGetter) GetProjectIDList(ctx context.Context) ([]*types.ProjectMeta, error) {
 	projectList := make([]*types.ProjectMeta, 0)
 	projectMap := make(map[string]*types.ProjectMeta)
-	clusterList, err := g.GetClusterIDList(ctx, cmCli)
+	clusterList, err := g.GetClusterIDList(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("get cluster list err: %v", err)
 	}
-	pmConn, err := g.projectManager.GetBcsProjectManagerConn()
-	if err != nil {
-		blog.Errorf("get pm conn error:%v", err)
-		return nil, err
-	}
-	defer pmConn.Close() // nolint
-	pmCli := g.projectManager.NewGrpcClientWithHeader(ctx, pmConn)
+
 	for _, cluster := range clusterList {
 		// if needFilter, just handle particular cluster list
 		if !g.needFilter || g.clusterIDs[cluster.ClusterID] {
-			project, err := g.GetProjectInfo(ctx, cluster.ProjectID, "", pmCli)
+			project, err := g.GetProjectInfo(ctx, cluster.ProjectID, "")
 			if err != nil {
 				blog.Errorf("get project info err:%v", err)
 				return nil, err
@@ -117,14 +111,7 @@ func (g *ResourceGetter) GetProjectIDList(ctx context.Context,
 				ProjectID:   project.ProjectID,
 				ProjectCode: project.ProjectCode,
 				BusinessID:  project.BusinessID,
-				Label: map[string]string{
-					"BGName":     project.BGName,
-					"BGID":       project.BGID,
-					"deptName":   project.DeptName,
-					"deptID":     project.DeptID,
-					"centerName": project.CenterName,
-					"centerID":   project.CenterID,
-				},
+				Label:       project.Labels,
 			}
 		}
 	}
@@ -135,25 +122,25 @@ func (g *ResourceGetter) GetProjectIDList(ctx context.Context,
 }
 
 // GetProjectInfo get project info by projectId or projectCode
-func (g *ResourceGetter) GetProjectInfo(ctx context.Context, projectId, projectCode string,
-	pmCli *bcsproject.BcsProjectClientWithHeader) (*pm.Project, error) {
-	if pmCli == nil {
-		pmConn, err := g.projectManager.GetBcsProjectManagerConn()
-		if err != nil {
-			blog.Errorf("get pm conn error:%v", err)
-			return nil, err
-		}
-		defer pmConn.Close() // nolint
-		pmCli = g.projectManager.NewGrpcClientWithHeader(ctx, pmConn)
-	}
+func (g *ResourceGetter) GetProjectInfo(ctx context.Context, projectId, projectCode string) (*pm.Project, error) {
+
 	if projectId == "" && projectCode == "" {
 		return nil, fmt.Errorf("projectId and projectCode is empty")
 	}
 
 	var project *pm.Project
+	pmClient, close, err := pm.GetClient(ServiceDomain)
+	defer func() {
+		if close != nil {
+			close()
+		}
+	}()
+	if err != nil {
+		return nil, fmt.Errorf("dial pm failed:%v", err)
+	}
 	if projectId != "" {
 		if projectInfo, ok := g.cache.Get(projectId); !ok {
-			projectResponse, err := pmCli.Cli.GetProject(pmCli.Ctx, &pm.GetProjectRequest{ProjectIDOrCode: projectId})
+			projectResponse, err := pmClient.Project.GetProject(ctx, &pm.GetProjectRequest{ProjectIDOrCode: projectId})
 			if err != nil || projectResponse.Code != 0 {
 				blog.Errorf("get project from bcs project err. err:%v, message:%s, projectId:%s, projectCode:%s",
 					err, projectResponse.Message, projectId, projectCode)
@@ -167,7 +154,7 @@ func (g *ResourceGetter) GetProjectInfo(ctx context.Context, projectId, projectC
 		return project, nil
 	}
 	if projectInfo, ok := g.cache.Get(projectCode); !ok {
-		projectResponse, err := pmCli.Cli.GetProject(pmCli.Ctx, &pm.GetProjectRequest{ProjectIDOrCode: projectCode})
+		projectResponse, err := pmClient.Project.GetProject(ctx, &pm.GetProjectRequest{ProjectIDOrCode: projectCode})
 		if err != nil || projectResponse.Code != 0 {
 			blog.Errorf("get project from bcs project err. err:%v, message:%s, projectId:%s, projectCode:%s",
 				err, projectResponse.Message, projectId, projectCode)
@@ -182,8 +169,7 @@ func (g *ResourceGetter) GetProjectInfo(ctx context.Context, projectId, projectC
 }
 
 // GetClusterIDList get cluster id list
-func (g *ResourceGetter) GetClusterIDList(ctx context.Context,
-	cmCli cm.ClusterManagerClient) ([]*types.ClusterMeta, error) {
+func (g *ResourceGetter) GetClusterIDList(ctx context.Context) ([]*types.ClusterMeta, error) {
 	// get cluster list from cache first.
 	// If found, return. Otherwise, call cluster manager api to get and set in cache.
 	cacheClusterMetaList, found := g.cache.Get("clusterList")
@@ -192,6 +178,15 @@ func (g *ResourceGetter) GetClusterIDList(ctx context.Context,
 	}
 	blog.Infof("get cluster list from cache failed.")
 	start := time.Now()
+	cmCli, close, err := clustermanager.GetClient(ServiceDomain)
+	defer func() {
+		if close != nil {
+			close()
+		}
+	}()
+	if err != nil {
+		return nil, fmt.Errorf("dial cm failed:%v", err)
+	}
 	clusterList, err := cmCli.ListCluster(ctx, &cm.ListClusterReq{Environment: g.env})
 	if err != nil {
 		prom.ReportLibRequestMetric(prom.BkBcsClusterManager, "ListCluster", "GET", err, start)
@@ -201,16 +196,10 @@ func (g *ResourceGetter) GetClusterIDList(ctx context.Context,
 	// public cluster is duplicate in cluster list
 	uniqueClusterList := removeDuplicateCluster(clusterList.Data)
 	clusterMetaList := make([]*types.ClusterMeta, 0)
-	pmConn, err := g.projectManager.GetBcsProjectManagerConn()
-	if err != nil {
-		blog.Errorf("get pm conn error:%v", err)
-		return nil, err
-	}
-	defer pmConn.Close() // nolint
-	pmCli := g.projectManager.NewGrpcClientWithHeader(ctx, pmConn)
+
 	for _, cluster := range uniqueClusterList {
 		if (!g.needFilter || g.clusterIDs[cluster.ClusterID]) && cluster.Status != "DELETED" {
-			project, err := g.GetProjectInfo(ctx, cluster.ProjectID, "", pmCli)
+			project, err := g.GetProjectInfo(ctx, cluster.ProjectID, "")
 			if err != nil {
 				blog.Errorf("get project info err:%v", err)
 				continue
@@ -242,7 +231,7 @@ func (g *ResourceGetter) GetClusterIDList(ctx context.Context,
 }
 
 // GetNamespaceList get namespace list
-func (g *ResourceGetter) GetNamespaceList(ctx context.Context, cmCli cm.ClusterManagerClient,
+func (g *ResourceGetter) GetNamespaceList(ctx context.Context,
 	k8sStorageCli, mesosStorageCli bcsapi.Storage) ([]*types.NamespaceMeta, error) {
 	// get namespace list from cache first
 	// if found, return. Otherwise, call bcs storage api to get and set in cache.
@@ -252,7 +241,7 @@ func (g *ResourceGetter) GetNamespaceList(ctx context.Context, cmCli cm.ClusterM
 	}
 	blog.Infof("get namespace list from cache failed.")
 	namespaceMetaList := make([]*types.NamespaceMeta, 0)
-	clusterList, err := g.GetClusterIDList(ctx, cmCli)
+	clusterList, err := g.GetClusterIDList(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("get cluster list err: %v", err)
 	}
@@ -439,19 +428,12 @@ func (g *ResourceGetter) GetK8sNamespaceList(ctx context.Context, clusterMeta *t
 	namespaceProjectID := clusterMeta.ProjectID
 	namespaceBusinessID := clusterMeta.BusinessID
 	namespaceProjectCode := clusterMeta.ProjectCode
-	pmConn, err := g.projectManager.GetBcsProjectManagerConn()
-	if err != nil {
-		blog.Errorf("get pm conn error:%v", err)
-		return namespaceList
-	}
-	defer pmConn.Close() // nolint
-	pmCli := g.projectManager.NewGrpcClientWithHeader(ctx, pmConn)
 	for _, namespace := range namespaces {
 		if clusterLabel != nil && clusterLabel["isShared"] == "true" {
 			nsAnnotation := namespace.Data.Annotations
 			if projectCode, ok := nsAnnotation["io.tencent.bcs.projectcode"]; ok {
 				namespaceProjectCode = projectCode
-				project, err := g.GetProjectInfo(ctx, "", namespaceProjectCode, pmCli)
+				project, err := g.GetProjectInfo(ctx, "", namespaceProjectCode)
 				if err != nil {
 					blog.Errorf("get project info err:%v", err)
 				} else if project != nil {
