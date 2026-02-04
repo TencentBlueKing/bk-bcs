@@ -1,0 +1,23 @@
+{{- if and .Values.metrics.enabled .Values.metrics.serviceMonitor.enabled -}}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "bcs-drplan-controller.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "bcs-drplan-controller.labels" . | nindent 4 }}
+    {{- with .Values.metrics.serviceMonitor.additionalLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  endpoints:
+  - interval: {{ .Values.metrics.serviceMonitor.interval }}
+    path: /metrics
+    port: metrics
+    scheme: http
+    scrapeTimeout: {{ .Values.metrics.serviceMonitor.scrapeTimeout }}
+  selector:
+    matchLabels:
+      {{- include "bcs-drplan-controller.selectorLabels" . | nindent 6 }}
+      control-plane: controller-manager
+{{- end }}

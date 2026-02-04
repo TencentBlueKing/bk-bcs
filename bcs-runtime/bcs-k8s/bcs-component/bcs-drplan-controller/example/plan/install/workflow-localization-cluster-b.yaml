@@ -1,0 +1,55 @@
+# DRWorkflow: 集群 B 的差异化 Localization — 副本数 5，nginx 日志格式为 cluster-b 格式。
+# Localization 的 namespace 通过参数 managedClusterNamespace 传入。
+apiVersion: dr.bkbcs.tencent.com/v1alpha1
+kind: DRWorkflow
+metadata:
+  name: nginx-localization-cluster-b
+  namespace: default
+spec:
+  failurePolicy: FailFast
+  parameters:
+    - name: managedClusterNamespace
+      type: string
+      description: "Clusternet 中集群 B 的 ManagedCluster 命名空间"
+      default: "clusternet-cluster-b"
+  actions:
+    - name: create-localization-cluster-b
+      type: Localization
+      timeout: 1m
+      localization:
+        operation: Create
+        name: nginx-overrides-cluster-b
+        namespace: "{{ .params.managedClusterNamespace }}"
+        spec:
+          priority: 500
+          overridePolicy: ApplyNow
+          feed:
+            apiVersion: apps/v1
+            kind: Deployment
+            name: nginx
+            namespace: "{{ .params.feedNamespace }}"
+          overrides:
+            - name: replicas-cluster-b
+              type: MergePatch
+              value: |
+                {"spec":{"replicas":2}}
+    - name: create-localization-cluster-b-config
+      type: Localization
+      timeout: 1m
+      localization:
+        operation: Create
+        name: nginx-config-overrides-cluster-b
+        namespace: "{{ .params.managedClusterNamespace }}"
+        spec:
+          priority: 500
+          overridePolicy: ApplyNow
+          feed:
+            apiVersion: v1
+            kind: ConfigMap
+            name: nginx-config
+            namespace: "{{ .params.feedNamespace }}"
+          overrides:
+            - name: config-cluster-b
+              type: MergePatch
+              value: |
+                {"data":{"default.conf":"server {\n  listen 80;\n  server_name _;\n  add_header X-Cluster cluster-b;\n  location / {\n    root /usr/share/nginx/html;\n    index index.html;\n  }\n  access_log /var/log/nginx/access.log combined;\n}\n"}}

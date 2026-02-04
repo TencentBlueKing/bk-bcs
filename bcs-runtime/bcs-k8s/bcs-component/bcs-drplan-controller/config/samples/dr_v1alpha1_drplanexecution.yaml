@@ -1,0 +1,9 @@
+apiVersion: dr.bkbcs.tencent.com/v1alpha1
+kind: DRPlanExecution
+metadata:
+  labels:
+    app.kubernetes.io/name: bcs-drplan-controller
+    app.kubernetes.io/managed-by: kustomize
+  name: drplanexecution-sample
+spec:
+  # TODO(user): Add fields here

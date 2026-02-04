@@ -1,0 +1,25 @@
+# DRPlan: nginx 切换预案 — 通过更高优先级的 Localization 将 A 集群副本调 0、B 集群副本调 3。
+# 不修改原有 Localization，新建 priority=800 的 Localization，Clusternet 会优先应用。
+apiVersion: dr.bkbcs.tencent.com/v1alpha1
+kind: DRPlan
+metadata:
+  name: nginx-switchover-plan
+  namespace: default
+spec:
+  description: "切换预案：A 集群副本数调为 0，B 集群副本数调为 3（高优先级 Localization 覆盖）"
+  failurePolicy: Stop
+  globalParams:
+    - name: feedNamespace
+      value: "default"
+  stages:
+    - name: switchover
+      description: "先创建 A 的 scale-to-zero Localization，再创建 B 的 scale-to-three"
+      workflows:
+        - workflowRef:
+            name: nginx-switchover
+            namespace: default
+          params:
+            - name: managedClusterNamespaceA
+              value: "clusternet-cluster-a"
+            - name: managedClusterNamespaceB
+              value: "clusternet-cluster-b"

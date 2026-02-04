@@ -1,0 +1,100 @@
+{{- if .Values.rbac.create -}}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "bcs-drplan-controller.fullname" . }}-manager-role
+  labels:
+    {{- include "bcs-drplan-controller.labels" . | nindent 4 }}
+rules:
+- apiGroups:
+  - dr.bkbcs.tencent.com
+  resources:
+  - drworkflows
+  - drplans
+  - drplanexecutions
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - dr.bkbcs.tencent.com
+  resources:
+  - drworkflows/status
+  - drplans/status
+  - drplanexecutions/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - dr.bkbcs.tencent.com
+  resources:
+  - drworkflows/finalizers
+  - drplans/finalizers
+  - drplanexecutions/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - batch
+  resources:
+  - jobs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - watch
+- apiGroups:
+  - apps.clusternet.io
+  resources:
+  - localizations
+  - subscriptions
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  - secrets
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+# Leader election permissions
+- apiGroups:
+  - coordination.k8s.io
+  resources:
+  - leases
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+{{- with .Values.rbac.additionalRules }}
+{{- toYaml . | nindent 0 }}
+{{- end }}
+{{- end }}

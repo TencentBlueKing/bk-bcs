@@ -1,0 +1,11 @@
+apiVersion: dr.bkbcs.tencent.com/v1alpha1
+kind: DRPlanExecution
+metadata:
+  name: simple-dr-plan-exec-001
+  namespace: default
+  labels:
+    dr.bkbcs.tencent.com/plan: simple-dr-plan
+    dr.bkbcs.tencent.com/operation: execute
+spec:
+  planRef: simple-dr-plan
+  operationType: Execute

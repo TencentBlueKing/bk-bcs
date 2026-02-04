@@ -1,0 +1,44 @@
+# DRWorkflow: 创建 Subscription，将已渲染的 nginx YAML 资源（Deployment、ConfigMap、Service）下发到子集群。
+# Subscription 与 Feeds 的 namespace 通过参数 feedNamespace 传入（可在 DRPlan 的 stage params 或 globalParams 中指定）。
+apiVersion: dr.bkbcs.tencent.com/v1alpha1
+kind: DRWorkflow
+metadata:
+  name: nginx-install-subscription
+  namespace: default
+spec:
+  failurePolicy: FailFast
+  parameters:
+    - name: feedNamespace
+      type: string
+      description: "Subscription 及 Feeds 所在命名空间（父集群中 nginx 资源所在 namespace）"
+      default: "default"
+  actions:
+    - name: create-nginx-subscription
+      type: Subscription
+      timeout: 2m
+      subscription:
+        operation: Create
+        name: nginx-subscription
+        namespace: "{{ .params.feedNamespace }}"
+        spec:
+          schedulingStrategy: Replication
+          feeds:
+            - apiVersion: apps/v1
+              kind: Deployment
+              name: nginx
+              namespace: "{{ .params.feedNamespace }}"
+            - apiVersion: v1
+              kind: ConfigMap
+              name: nginx-config
+              namespace: "{{ .params.feedNamespace }}"
+            - apiVersion: v1
+              kind: Service
+              name: nginx
+              namespace: "{{ .params.feedNamespace }}"
+          subscribers:
+            - clusterAffinity:
+                matchExpressions:
+                  - key: clusternet.io/created-by
+                    operator: In
+                    values:
+                      - clusternet-agent

@@ -1,0 +1,10 @@
+apiVersion: dr.bkbcs.tencent.com/v1alpha1
+kind: DRPlanExecution
+metadata:
+  name: nginx-install-plan-revert-001
+  namespace: default
+spec:
+  planRef: nginx-install-plan
+  operationType: Revert
+  # revertExecutionRef is REQUIRED - specifies which execution to revert
+  revertExecutionRef: nginx-install-plan-exec-001

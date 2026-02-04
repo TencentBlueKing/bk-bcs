@@ -1,0 +1,28 @@
+apiVersion: dr.bkbcs.tencent.com/v1alpha1
+kind: DRWorkflow
+metadata:
+  name: http-healthcheck
+  namespace: default
+spec:
+  parameters:
+  - name: endpoint
+    type: string
+    required: true
+    description: "Health check endpoint URL"
+  - name: expectedStatus
+    type: number
+    default: "200"
+    description: "Expected HTTP status code"
+  
+  actions:
+  - name: check-primary
+    type: HTTP
+    http:
+      url: "{{ .params.endpoint }}/health"
+      method: GET
+      successCodes: [200, 204]
+    timeout: 10s
+    retryPolicy:
+      limit: 3
+      interval: 5s
+      backoffMultiplier: "2.0"

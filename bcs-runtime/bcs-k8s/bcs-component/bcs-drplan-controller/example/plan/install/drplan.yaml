@@ -1,0 +1,40 @@
+# DRPlan: nginx 安装预案 — 先执行两个差异化 Localization，再执行 Subscription 下发。
+# 使用方式：先将 nginx chart 渲染为 YAML 并 apply 到父集群，再执行本 DRPlan（或通过 DRPlanExecution 触发）。
+apiVersion: dr.bkbcs.tencent.com/v1alpha1
+kind: DRPlan
+metadata:
+  name: nginx-install-plan
+  namespace: default
+spec:
+  description: "Nginx 部署预案：先为两集群创建 Localization 差异化，再创建 Subscription 下发 YAML 资源"
+  failurePolicy: Stop
+  globalParams:
+    - name: feedNamespace
+      value: "default"
+  stages:
+    # 第一阶段：两个差异化集群的 Localization 先执行（可并行），namespace 由 params 传入
+    - name: localize
+      description: "为集群 A/B 创建 Localization，做副本数与日志格式差异化"
+      parallel: true
+      workflows:
+        - workflowRef:
+            name: nginx-localization-cluster-a
+            namespace: default
+          params:
+            - name: managedClusterNamespace
+              value: "clusternet-cluster-a"
+        - workflowRef:
+            name: nginx-localization-cluster-b
+            namespace: default
+          params:
+            - name: managedClusterNamespace
+              value: "clusternet-cluster-b"
+    # 第二阶段：创建 Subscription，将已渲染的 nginx YAML 资源下发到子集群
+    - name: deploy-subscription
+      description: "创建 Subscription，关联父集群中已存在的 nginx Deployment/ConfigMap/Service（YAML 资源）"
+      dependsOn:
+        - localize
+      workflows:
+        - workflowRef:
+            name: nginx-install-subscription
+            namespace: default

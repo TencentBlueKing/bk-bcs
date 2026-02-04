@@ -1,0 +1,66 @@
+# DRWorkflow: 切换预案 — 通过更高优先级的 Localization 覆盖副本数（无需 Patch）。
+# 先创建集群 A 的 Localization（priority 800，replicas 0），再创建集群 B 的（priority 800，replicas 3）。
+# Clusternet 按优先级应用 override，高优先级覆盖安装时创建的 priority=500 的 Localization。
+apiVersion: dr.bkbcs.tencent.com/v1alpha1
+kind: DRWorkflow
+metadata:
+  name: nginx-switchover
+  namespace: default
+spec:
+  failurePolicy: FailFast
+  parameters:
+    - name: managedClusterNamespaceA
+      type: string
+      description: "集群 A 的 ManagedCluster 命名空间"
+      default: "clusternet-cluster-a"
+    - name: managedClusterNamespaceB
+      type: string
+      description: "集群 B 的 ManagedCluster 命名空间"
+      default: "clusternet-cluster-b"
+    - name: feedNamespace
+      type: string
+      description: "Feed 资源所在命名空间"
+      default: "default"
+  actions:
+    # 第一步：A 集群副本数调为 0（高优先级 Localization 覆盖原有 500 的配置）
+    - name: scale-a-to-zero
+      type: Localization
+      timeout: 1m
+      localization:
+        operation: Create
+        name: nginx-replicas-switchover-a
+        namespace: "{{ .params.managedClusterNamespaceA }}"
+        spec:
+          priority: 800
+          overridePolicy: ApplyNow
+          feed:
+            apiVersion: apps/v1
+            kind: Deployment
+            name: nginx
+            namespace: "{{ .params.feedNamespace }}"
+          overrides:
+            - name: replicas-scale-zero
+              type: MergePatch
+              value: |
+                {"spec":{"replicas":0}}
+    # 第二步：B 集群副本数调为 3
+    - name: scale-b-to-three
+      type: Localization
+      timeout: 1m
+      localization:
+        operation: Create
+        name: nginx-replicas-switchover-b
+        namespace: "{{ .params.managedClusterNamespaceB }}"
+        spec:
+          priority: 800
+          overridePolicy: ApplyNow
+          feed:
+            apiVersion: apps/v1
+            kind: Deployment
+            name: nginx
+            namespace: "{{ .params.feedNamespace }}"
+          overrides:
+            - name: replicas-scale-three
+              type: MergePatch
+              value: |
+                {"spec":{"replicas":3}}

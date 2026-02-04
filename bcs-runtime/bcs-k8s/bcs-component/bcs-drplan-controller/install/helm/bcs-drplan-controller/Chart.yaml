@@ -1,0 +1,18 @@
+apiVersion: v2
+name: bcs-drplan-controller
+description: A Kubernetes Operator for Disaster Recovery Plan orchestration and execution
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - disaster-recovery
+  - kubernetes
+  - operator
+  - bcs
+  - clusternet
+home: https://github.com/Tencent/bk-bcs
+sources:
+  - https://github.com/Tencent/bk-bcs/tree/master/bcs-runtime/bcs-k8s/bcs-component/bcs-drplan-controller
+maintainers:
+  - name: BCS Team
+    email: bcs@tencent.com

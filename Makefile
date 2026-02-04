@@ -81,7 +81,7 @@ bcs-component:kube-sche apiserver-proxy \
 	webhook-server \
 	general-pod-autoscaler cluster-autoscaler \
 	netservice-controller external-privilege \
-	image-loader mesh-proxy
+	image-loader mesh-proxy drplan-controller
 
 bcs-network:ingress-controller
 
@@ -254,6 +254,11 @@ mesh-proxy:pre
 	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/
 	cp -R ${BCS_CONF_COMPONENT_PATH}/bcs-mesh-proxy ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
 	cd ${BCS_COMPONENT_PATH}/bcs-mesh-proxy && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-mesh-proxy/bcs-mesh-proxy ./cmd/mesh-proxy/main.go
+
+drplan-controller:pre
+	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/
+	cp -R ${BCS_CONF_COMPONENT_PATH}/bcs-drplan-controller ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
+	cd ${BCS_COMPONENT_PATH}/bcs-drplan-controller && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-drplan-controller/bcs-drplan-controller ./cmd/main.go
 
 bkcmdb-synchronizer:
 	mkdir -p ${PACKAGEPATH}/bcs-services

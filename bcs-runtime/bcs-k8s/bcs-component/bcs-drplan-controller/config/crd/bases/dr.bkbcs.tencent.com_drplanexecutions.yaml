@@ -1,0 +1,524 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.20.0
+  name: drplanexecutions.dr.bkbcs.tencent.com
+spec:
+  group: dr.bkbcs.tencent.com
+  names:
+    kind: DRPlanExecution
+    listKind: DRPlanExecutionList
+    plural: drplanexecutions
+    singular: drplanexecution
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: DRPlanExecution is the Schema for the drplanexecutions API
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: spec defines the desired state of DRPlanExecution
+            properties:
+              operationType:
+                description: 'OperationType is the operation type: Execute, Revert'
+                enum:
+                - Execute
+                - Revert
+                type: string
+              planRef:
+                description: PlanRef is the associated DRPlan name
+                type: string
+              revertExecutionRef:
+                description: |-
+                  RevertExecutionRef specifies which execution to revert (required for Revert operation).
+                  Must reference an existing DRPlanExecution with operationType=Execute and phase=Succeeded.
+                  This ensures precise control over which execution to rollback.
+                type: string
+            required:
+            - operationType
+            - planRef
+            type: object
+          status:
+            description: status defines the observed state of DRPlanExecution
+            properties:
+              completionTime:
+                description: CompletionTime is the completion time
+                format: date-time
+                type: string
+              conditions:
+                description: Conditions represent the current state of the DRPlanExecution
+                  resource
+                items:
+                  description: Condition contains details for one aspect of the current
+                    state of this API Resource.
+                  properties:
+                    lastTransitionTime:
+                      description: |-
+                        lastTransitionTime is the last time the condition transitioned from one status to another.
+                        This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.
+                      format: date-time
+                      type: string
+                    message:
+                      description: |-
+                        message is a human readable message indicating details about the transition.
+                        This may be an empty string.
+                      maxLength: 32768
+                      type: string
+                    observedGeneration:
+                      description: |-
+                        observedGeneration represents the .metadata.generation that the condition was set based upon.
+                        For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
+                        with respect to the current state of the instance.
+                      format: int64
+                      minimum: 0
+                      type: integer
+                    reason:
+                      description: |-
+                        reason contains a programmatic identifier indicating the reason for the condition's last transition.
+                        Producers of specific condition types may define expected values and meanings for this field,
+                        and whether the values are considered a guaranteed API.
+                        The value should be a CamelCase string.
+                        This field may not be empty.
+                      maxLength: 1024
+                      minLength: 1
+                      pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
+                      type: string
+                    status:
+                      description: status of the condition, one of True, False, Unknown.
+                      enum:
+                      - "True"
+                      - "False"
+                      - Unknown
+                      type: string
+                    type:
+                      description: type of condition in CamelCase or in foo.example.com/CamelCase.
+                      maxLength: 316
+                      pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
+                      type: string
+                  required:
+                  - lastTransitionTime
+                  - message
+                  - reason
+                  - status
+                  - type
+                  type: object
+                type: array
+                x-kubernetes-list-map-keys:
+                - type
+                x-kubernetes-list-type: map
+              message:
+                description: Message is the status message
+                type: string
+              phase:
+                description: 'Phase is the execution phase: Pending, Running, Succeeded,
+                  Failed, Cancelled'
+                enum:
+                - Pending
+                - Running
+                - Succeeded
+                - Failed
+                - Cancelled
+                - Unknown
+                type: string
+              stageStatuses:
+                description: StageStatuses are the status of each stage
+                items:
+                  description: StageStatus defines the status of a stage execution
+                  properties:
+                    completionTime:
+                      description: CompletionTime is the completion time
+                      format: date-time
+                      type: string
+                    dependsOn:
+                      description: DependsOn lists the stage dependencies
+                      items:
+                        type: string
+                      type: array
+                    duration:
+                      description: Duration is the execution duration
+                      type: string
+                    message:
+                      description: Message is the status message
+                      type: string
+                    name:
+                      description: Name is the stage name
+                      type: string
+                    parallel:
+                      description: Parallel indicates whether this stage executes
+                        workflows in parallel
+                      type: boolean
+                    phase:
+                      description: 'Phase is the stage phase: Pending, Running, Succeeded,
+                        Failed, Skipped'
+                      enum:
+                      - Pending
+                      - Running
+                      - Succeeded
+                      - Failed
+                      - Skipped
+                      type: string
+                    startTime:
+                      description: StartTime is the start time
+                      format: date-time
+                      type: string
+                    workflowExecutions:
+                      description: WorkflowExecutions are the status of each workflow
+                      items:
+                        description: WorkflowExecutionStatus defines the status of
+                          a workflow execution
+                        properties:
+                          actionStatuses:
+                            description: ActionStatuses are the detailed action execution
+                              statuses
+                            items:
+                              description: ActionStatus defines the status of an action
+                                execution
+                              properties:
+                                completionTime:
+                                  description: CompletionTime is the completion time
+                                  format: date-time
+                                  type: string
+                                message:
+                                  description: Message is the status message or error
+                                    information
+                                  type: string
+                                name:
+                                  description: Name is the action name
+                                  type: string
+                                outputs:
+                                  description: Outputs are the action outputs (used
+                                    for rollback)
+                                  properties:
+                                    httpResponse:
+                                      description: HTTPResponse is the HTTP response
+                                        summary
+                                      properties:
+                                        body:
+                                          description: Body is the response body (truncated)
+                                          type: string
+                                        statusCode:
+                                          description: StatusCode is the response
+                                            status code
+                                          type: integer
+                                      required:
+                                      - statusCode
+                                      type: object
+                                    jobRef:
+                                      description: JobRef is the created Job reference
+                                      properties:
+                                        apiVersion:
+                                          description: API version of the referent.
+                                          type: string
+                                        fieldPath:
+                                          description: |-
+                                            If referring to a piece of an object instead of an entire object, this string
+                                            should contain a valid JSON/Go field access statement, such as desiredState.manifest.containers[2].
+                                            For example, if the object reference is to a container within a pod, this would take on a value like:
+                                            "spec.containers{name}" (where "name" refers to the name of the container that triggered
+                                            the event) or if no container name is specified "spec.containers[2]" (container with
+                                            index 2 in this pod). This syntax is chosen only to have some well-defined way of
+                                            referencing a part of an object.
+                                          type: string
+                                        kind:
+                                          description: |-
+                                            Kind of the referent.
+                                            More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+                                          type: string
+                                        name:
+                                          description: |-
+                                            Name of the referent.
+                                            More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                          type: string
+                                        namespace:
+                                          description: |-
+                                            Namespace of the referent.
+                                            More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+                                          type: string
+                                        resourceVersion:
+                                          description: |-
+                                            Specific resourceVersion to which this reference is made, if any.
+                                            More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency
+                                          type: string
+                                        uid:
+                                          description: |-
+                                            UID of the referent.
+                                            More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids
+                                          type: string
+                                      type: object
+                                      x-kubernetes-map-type: atomic
+                                    localizationRef:
+                                      description: LocalizationRef is the created
+                                        Localization reference
+                                      properties:
+                                        apiVersion:
+                                          description: API version of the referent.
+                                          type: string
+                                        fieldPath:
+                                          description: |-
+                                            If referring to a piece of an object instead of an entire object, this string
+                                            should contain a valid JSON/Go field access statement, such as desiredState.manifest.containers[2].
+                                            For example, if the object reference is to a container within a pod, this would take on a value like:
+                                            "spec.containers{name}" (where "name" refers to the name of the container that triggered
+                                            the event) or if no container name is specified "spec.containers[2]" (container with
+                                            index 2 in this pod). This syntax is chosen only to have some well-defined way of
+                                            referencing a part of an object.
+                                          type: string
+                                        kind:
+                                          description: |-
+                                            Kind of the referent.
+                                            More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+                                          type: string
+                                        name:
+                                          description: |-
+                                            Name of the referent.
+                                            More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                          type: string
+                                        namespace:
+                                          description: |-
+                                            Namespace of the referent.
+                                            More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+                                          type: string
+                                        resourceVersion:
+                                          description: |-
+                                            Specific resourceVersion to which this reference is made, if any.
+                                            More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency
+                                          type: string
+                                        uid:
+                                          description: |-
+                                            UID of the referent.
+                                            More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids
+                                          type: string
+                                      type: object
+                                      x-kubernetes-map-type: atomic
+                                    resourceRef:
+                                      description: ResourceRef is the created generic
+                                        K8s resource reference (KubernetesResource)
+                                      properties:
+                                        apiVersion:
+                                          description: API version of the referent.
+                                          type: string
+                                        fieldPath:
+                                          description: |-
+                                            If referring to a piece of an object instead of an entire object, this string
+                                            should contain a valid JSON/Go field access statement, such as desiredState.manifest.containers[2].
+                                            For example, if the object reference is to a container within a pod, this would take on a value like:
+                                            "spec.containers{name}" (where "name" refers to the name of the container that triggered
+                                            the event) or if no container name is specified "spec.containers[2]" (container with
+                                            index 2 in this pod). This syntax is chosen only to have some well-defined way of
+                                            referencing a part of an object.
+                                          type: string
+                                        kind:
+                                          description: |-
+                                            Kind of the referent.
+                                            More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+                                          type: string
+                                        name:
+                                          description: |-
+                                            Name of the referent.
+                                            More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                          type: string
+                                        namespace:
+                                          description: |-
+                                            Namespace of the referent.
+                                            More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+                                          type: string
+                                        resourceVersion:
+                                          description: |-
+                                            Specific resourceVersion to which this reference is made, if any.
+                                            More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency
+                                          type: string
+                                        uid:
+                                          description: |-
+                                            UID of the referent.
+                                            More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids
+                                          type: string
+                                      type: object
+                                      x-kubernetes-map-type: atomic
+                                    subscriptionRef:
+                                      description: SubscriptionRef is the created
+                                        Subscription reference
+                                      properties:
+                                        apiVersion:
+                                          description: API version of the referent.
+                                          type: string
+                                        fieldPath:
+                                          description: |-
+                                            If referring to a piece of an object instead of an entire object, this string
+                                            should contain a valid JSON/Go field access statement, such as desiredState.manifest.containers[2].
+                                            For example, if the object reference is to a container within a pod, this would take on a value like:
+                                            "spec.containers{name}" (where "name" refers to the name of the container that triggered
+                                            the event) or if no container name is specified "spec.containers[2]" (container with
+                                            index 2 in this pod). This syntax is chosen only to have some well-defined way of
+                                            referencing a part of an object.
+                                          type: string
+                                        kind:
+                                          description: |-
+                                            Kind of the referent.
+                                            More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+                                          type: string
+                                        name:
+                                          description: |-
+                                            Name of the referent.
+                                            More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                          type: string
+                                        namespace:
+                                          description: |-
+                                            Namespace of the referent.
+                                            More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+                                          type: string
+                                        resourceVersion:
+                                          description: |-
+                                            Specific resourceVersion to which this reference is made, if any.
+                                            More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency
+                                          type: string
+                                        uid:
+                                          description: |-
+                                            UID of the referent.
+                                            More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids
+                                          type: string
+                                      type: object
+                                      x-kubernetes-map-type: atomic
+                                  type: object
+                                phase:
+                                  description: 'Phase is the action phase: Pending,
+                                    Running, Succeeded, Failed, Skipped'
+                                  enum:
+                                  - Pending
+                                  - Running
+                                  - Succeeded
+                                  - Failed
+                                  - Skipped
+                                  type: string
+                                retryCount:
+                                  description: RetryCount is the number of retries
+                                  format: int32
+                                  type: integer
+                                startTime:
+                                  description: StartTime is the start time
+                                  format: date-time
+                                  type: string
+                              required:
+                              - name
+                              - phase
+                              type: object
+                            type: array
+                          completionTime:
+                            description: CompletionTime is the completion time
+                            format: date-time
+                            type: string
+                          currentAction:
+                            description: CurrentAction is the currently executing
+                              action name
+                            type: string
+                          duration:
+                            description: Duration is the execution duration
+                            type: string
+                          message:
+                            description: Message is the status message
+                            type: string
+                          phase:
+                            description: 'Phase is the workflow phase: Pending, Running,
+                              Succeeded, Failed, Skipped'
+                            enum:
+                            - Pending
+                            - Running
+                            - Succeeded
+                            - Failed
+                            - Skipped
+                            type: string
+                          progress:
+                            description: Progress is the progress information (e.g.,
+                              "2/5 actions completed")
+                            type: string
+                          startTime:
+                            description: StartTime is the start time
+                            format: date-time
+                            type: string
+                          workflowRef:
+                            description: WorkflowRef is the workflow reference
+                            properties:
+                              name:
+                                description: Name is the object name
+                                type: string
+                              namespace:
+                                description: Namespace is the object namespace
+                                type: string
+                            required:
+                            - name
+                            type: object
+                        required:
+                        - phase
+                        - workflowRef
+                        type: object
+                      type: array
+                  required:
+                  - name
+                  - phase
+                  type: object
+                type: array
+              startTime:
+                description: StartTime is the start time
+                format: date-time
+                type: string
+              summary:
+                description: Summary is the execution statistics summary
+                properties:
+                  completedStages:
+                    description: CompletedStages is the number of completed stages
+                    type: integer
+                  completedWorkflows:
+                    description: CompletedWorkflows is the number of completed workflows
+                    type: integer
+                  failedStages:
+                    description: FailedStages is the number of failed stages
+                    type: integer
+                  failedWorkflows:
+                    description: FailedWorkflows is the number of failed workflows
+                    type: integer
+                  pendingStages:
+                    description: PendingStages is the number of pending stages
+                    type: integer
+                  pendingWorkflows:
+                    description: PendingWorkflows is the number of pending workflows
+                    type: integer
+                  runningStages:
+                    description: RunningStages is the number of running stages
+                    type: integer
+                  runningWorkflows:
+                    description: RunningWorkflows is the number of running workflows
+                    type: integer
+                  totalStages:
+                    description: TotalStages is the total number of stages
+                    type: integer
+                  totalWorkflows:
+                    description: TotalWorkflows is the total number of workflows
+                    type: integer
+                type: object
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
