@@ -206,11 +206,14 @@ units:
   cores: '{0} 核'
 metrics:
   usage: '使用率 {0}'
-  cpuUsage: CPU使用率
+  cpuUsage: CPU 使用率
+  cpuLimitUsage: CPU limit 使用率
   diskUsage: 磁盘使用率
   memUsage: 内存使用率
   memUsage1: 内存使用量
   podUsage: Pod使用率
+  cpuUsageDesc: CPU单核使用百分比，1个核用满则是 100%，2个核用满则是 200%
+  cpuLimitUsageDesc: CPU实际消耗核数占用Limit核数百分比，有可能会被超额使用，一般在100%之内
   cpuRequestUsage:
     text: CPU装箱率
     clusterDesc: >-

@@ -114,12 +114,39 @@
     <div class="workload-detail-body">
       <div class="workload-metric" v-bkloading="{ isLoading: podLoading }">
         <Metric
-          :title="$t('metrics.cpuUsage')"
-          metric="cpu_usage"
+          :metric="activeCpuMetric"
           :params="params"
           category="pods"
           colors="#30d878"
           unit="percent-number">
+          <template #title>
+            <bk-dropdown-menu trigger="click" @show="isDropdownShow = true" @hide="isDropdownShow = false">
+              <div class="dropdown-trigger-text" slot="dropdown-trigger">
+                <span class="name">{{ cpuMetricObj[activeCpuMetric] }}</span>
+                <i :class="['bk-icon icon-angle-down',{ 'icon-flip': isDropdownShow }]"></i>
+              </div>
+              <ul class="bk-dropdown-list" slot="dropdown-content">
+                <li
+                  v-for="(value, key) in cpuMetricObj"
+                  :key="key"
+                  @click="handleChangeCpuMetric(key)">
+                  {{ value }}
+                </li>
+              </ul>
+            </bk-dropdown-menu>
+          </template>
+          <template #desc>
+            <div class="mb-[4px]">
+              {{ $t('metrics.cpuUsage') }}: {{ $t('metrics.cpuUsageDesc') }}
+              <span class="block">metrics: rate(container_cpu_usage_seconds_total[2m])</span>
+            </div>
+            <div>
+              {{ $t('metrics.cpuLimitUsage') }}: {{ $t('metrics.cpuLimitUsageDesc') }}
+              <span class="block">
+                metric: rate(container_cpu_usage_seconds_total[2m])/kube_pod_container_resource_limits_cpu_cores
+              </span>
+            </div>
+          </template>
         </Metric>
         <Metric
           :title="$t('metrics.memUsage1')"
@@ -132,7 +159,7 @@
         </Metric>
         <Metric
           :title="$t('k8s.networking')"
-          :metric="['network_receive', 'network_transmit']"
+          :metric="networkMetric"
           :params="params"
           category="pods"
           unit="byte"
@@ -631,6 +658,20 @@ export default defineComponent({
       podLoading.value = false;
     };
 
+    // cpu指标
+    const isDropdownShow = ref(false);
+    const activeCpuMetric = ref('cpu_usage');
+    const cpuMetricObj = computed(() => ({
+      cpu_usage: $i18n.t('metrics.cpuUsage'),
+      cpu_limit_usage: $i18n.t('metrics.cpuLimitUsage'),
+    }));
+    function handleChangeCpuMetric(value) {
+      activeCpuMetric.value = value;
+    }
+
+    // 网络指标
+    const networkMetric = ref(['network_receive', 'network_transmit']);
+
     // 显示日志
     const showLog = ref(false);
     const currentRow = ref<Record<string, any>>({ metadata: {} });
@@ -848,6 +889,10 @@ export default defineComponent({
       yaml,
       showYamlPanel,
       kindsNames,
+      isDropdownShow,
+      activeCpuMetric,
+      cpuMetricObj,
+      networkMetric,
       timeFormat,
       handleShowYamlPanel,
       gotoPodDetail,
@@ -884,6 +929,7 @@ export default defineComponent({
       replicas,
       handleConfirmScaleShow,
       handleShowScale,
+      handleChangeCpuMetric,
     };
   },
 });

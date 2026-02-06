@@ -3,10 +3,15 @@
   <div class="metric-item" v-bkloading="{ isLoading, zIndex: 10 }">
     <div class="metric-item-title">
       <span class="title">
-        {{ title }}
-        <span class="icon ml5" v-if="desc" v-bk-tooltips="desc">
+        <slot name="title">
+          {{ title }}
+        </slot>
+        <bcs-popover v-if="desc || $slots.desc" class="icon ml5" placement="top">
           <i class="bcs-icon bcs-icon-info-circle-shape"></i>
-        </span>
+          <template #content>
+            <slot name="desc">{{ desc }}</slot>
+          </template>
+        </bcs-popover>
       </span>
       <bk-dropdown-menu trigger="click" @show="isDropdownShow = true" @hide="isDropdownShow = false">
         <div class="dropdown-trigger-text" slot="dropdown-trigger">
@@ -259,12 +264,15 @@ export default defineComponent({
       eChartsRef.value?.resize();
     }, 300);
 
-    const { params } = toRefs(props);
+    const { params, metric } = toRefs(props);
     watch(params, (newValue, oldValue) => {
       if ((newValue && !oldValue)
         || (newValue && oldValue && JSON.stringify(newValue) !== JSON.stringify(oldValue))) {
         handleGetMetricData();
       }
+    });
+    watch(metric, () => {
+      handleGetMetricData();
     });
 
     onMounted(() => {
@@ -291,6 +299,10 @@ export default defineComponent({
 });
 </script>
 <style lang="postcss" scoped>
+/deep/ .bk-tooltip-ref {
+  display: flex;
+  align-items: center;
+}
 .metric-item {
     width: 100%;
     padding: 20px 18px;

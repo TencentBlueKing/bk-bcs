@@ -225,10 +225,17 @@ units:
   cores: '{0} Cores'
 metrics:
   cpuUsage: CPU usage
+  cpuLimitUsage: CPU usage limit
   diskUsage: Disk usage
   memUsage: Memory usage
   memUsage1: Memory usage
   podUsage: Pod usage
+  cpuUsageDesc: >-
+    CPU usage percentage per core. 100% means one core is fully utilized, 200%
+    means two cores are fully utilized
+  cpuLimitUsageDesc: >-
+    Percentage of actual CPU cores consumed relative to the Limit. May exceed
+    the limit, but typically stays within 100%
   cpuRequestUsage:
     text: CPU packing rate
     clusterDesc: >-
