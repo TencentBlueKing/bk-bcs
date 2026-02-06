@@ -14,7 +14,7 @@
       resource: resource,
       namespaced: `${namespaced}` === 'true',
     }"
-    customized>
+    is-common-crd>
     <template
       #default="{
         curPageData, pageConf, webAnnotations,
@@ -25,7 +25,7 @@
         getJsonPathValue, additionalColumns,
         handleShowViewConfig, clusterNameMap,
         goNamespace, isViewEditable,
-        isClusterMode, sourceTypeMap
+        isClusterMode, sourceTypeMap, gotoDetail, resolveLink,
       }">
       <bk-table
         :data="curPageData"
@@ -39,7 +39,9 @@
               class="bcs-button-ellipsis"
               text
               :disabled="isViewEditable"
-              @click="handleShowDetail(row)">{{ row.metadata.name }}</bk-button>
+              @click.prevent="handleDetail({ row, event: $event, handleShowDetail, gotoDetail, resolveLink })">
+              {{ row.metadata.name }}
+            </bk-button>
           </template>
         </bk-table-column>
         <bk-table-column :label="$t('cluster.labels.nameAndId')" v-if="!isClusterMode">
@@ -111,7 +113,7 @@
         <bk-table-column
           :label="$t('generic.label.action')"
           :resizable="false"
-          width="150"
+          width="180"
           fixed="right"
           v-if="!isViewEditable">
           <template #default="{ row }">
@@ -175,6 +177,21 @@ export default defineComponent({
       type: [String, Boolean], // 刷新页面时namespaced为字符串
       required: true,
     },
+  },
+  setup(props) {
+    const APPSET_CRD_IDENTIFIER = 'apps.sngame.dev/v1';
+    // 定制化crd详情
+    function handleDetail(options) {
+      const { row, event, handleShowDetail, gotoDetail, resolveLink } = options;
+      if (`${props.group}/${props.version}` === APPSET_CRD_IDENTIFIER && props.kind === 'AppSet') {
+        gotoDetail(event, resolveLink(row), row);
+      } else {
+        handleShowDetail(row);
+      }
+    }
+    return {
+      handleDetail,
+    };
   },
 });
 </script>

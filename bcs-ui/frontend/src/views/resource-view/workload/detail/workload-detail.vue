@@ -24,10 +24,13 @@
         <div class="btns">
           <bk-button theme="primary" @click="handleShowYamlPanel">{{ $t('dashboard.workload.button.yaml') }}</bk-button>
           <template v-if="!hiddenOperate">
-            <bk-button @click="handleShowScale">{{ $t('deploy.templateset.scale') }}</bk-button>
+            <bk-button v-if="!isCommonCrd" @click="handleShowScale">
+              {{ $t('deploy.templateset.scale') }}
+            </bk-button>
             <bk-button
               @click="handleUpdateResource">{{$t('generic.button.update')}}</bk-button>
             <bk-button
+              :theme="!pagePerms.deleteBtn.disabled ? 'danger' : 'default'"
               :disabled="!pagePerms.deleteBtn.disabled"
               v-authority="{
                 clickable: pagePerms.deleteBtn.clickable,
@@ -50,7 +53,7 @@
         <div class="info-item">
           <span class="label">{{ $t('k8s.image') }}</span>
           <span class="value select-all" v-bk-overflow-tips="getImagesTips(manifestExt.images)">
-            {{ manifestExt.images && manifestExt.images.join(', ') }}</span>
+            {{ (manifestExt.images && manifestExt.images.join(', ')) || podImages || '--' }}</span>
         </div>
         <div class="info-item">
           <span class="label">UID</span>
@@ -485,6 +488,15 @@ export default defineComponent({
       type: Boolean,
       default: false,
     },
+    // CRD信息
+    version: {
+      type: String,
+      default: '',
+    },
+    isCommonCrd: {
+      type: [Boolean, String],
+      default: false,
+    },
   },
   setup(props, ctx) {
     const { clusterId } = toRefs(props);
@@ -532,6 +544,7 @@ export default defineComponent({
     const podRescheduleShow = ref(false);
     const isBatchReschedule = ref(false);
     const curPodRowData = ref<any>([]);
+    const podImages = computed(() => handleGetExtData((workloadPods.value?.manifest?.items || [])[0]?.metadata?.uid, 'images')?.join(', '));
     // 表格选中的pods数据
     const selectPods = ref<any[]>([]);
     // pods数据
@@ -640,13 +653,16 @@ export default defineComponent({
         return pre;
       }, '');
 
+      const params = String(props.isCommonCrd) === 'true' ? {} : {
+        ownerKind: props.kind,
+        ownerName: props.name,
+      };
       const data = await $store.dispatch('dashboard/listWorkloadPods', {
         $namespaceId: props.namespace,
         $clusterId: clusterId.value,
         labelSelector,
-        ownerKind: props.kind,
-        ownerName: props.name,
         format: 'manifest',
+        ...params,
       });
 
       return data;
@@ -893,6 +909,7 @@ export default defineComponent({
       activeCpuMetric,
       cpuMetricObj,
       networkMetric,
+      podImages,
       timeFormat,
       handleShowYamlPanel,
       gotoPodDetail,

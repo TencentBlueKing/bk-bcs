@@ -91,8 +91,8 @@ export default defineComponent({
       }>,
       default: () => ({}),
     },
-    // CRD资源分两种，普通和定制，customized 用来区分普通和定制
-    customized: {
+    // CRD资源分两种，普通和定制，isCommonCrd 用来区分普通和定制，[更多资源] 下面分类为 true
+    isCommonCrd: {
       type: [Boolean, String],
       default: false,
     },
@@ -106,7 +106,7 @@ export default defineComponent({
       crd,
       scope,
       crdOptions,
-      customized,
+      isCommonCrd,
     } = toRefs(props);
     const { clusterNameMap } = useCluster();
     const isViewConfigShow = computed(() => $store.state.isViewConfigShow);
@@ -315,6 +315,11 @@ export default defineComponent({
       if ($event.ctrlKey || $event.metaKey) {
         window.open(url, '_blank', 'noopener,noreferrer');
       } else {
+        // 普通crd资源需要传以下参数
+        const params = String(isCommonCrd.value) === 'true' ? {
+          version: crdOptions.value.version,
+          isCommonCrd: isCommonCrd.value,
+        } : {};
         $router.push({
           name: 'dashboardWorkloadDetail',
           params: {
@@ -327,6 +332,7 @@ export default defineComponent({
             kind: kind.value,
             crd: crd.value,
             viewID: dashboardViewID.value,
+            ...params,
           },
         });
       }
@@ -533,7 +539,7 @@ export default defineComponent({
             category: category.value,
             kind: kind.value,
             crd: crd.value,
-            customized: customized.value,
+            isCommonCrd: isCommonCrd.value,
             ...crdQuery,
           },
         });
@@ -586,7 +592,7 @@ export default defineComponent({
     const confirmDelete = async () => {
       const { name, namespace, uid } = curDetailRow.value.data?.metadata || {};
       let result = false;
-      if (customized.value && customized.value !== 'false') {
+      if (String(isCommonCrd.value) === 'true') {
         result = await deleteCRDResource({
           namespace,
           kind: kind.value,
@@ -1109,7 +1115,7 @@ export default defineComponent({
           crd={this.crd}
           scope={this.scope}
           formUpdate={this.formUpdate}
-          customized={this.customized}
+          isCommonCrd={this.isCommonCrd}
           crdOptions={this.crdOptions}
           cancel={() => this.showCreateDialog = false} />
       </div>
