@@ -416,6 +416,7 @@ func (ng *NodeGroup) GetProjectResourceQuota(groups []*proto.NodeGroup, resource
 	}
 }
 
+// nolint:funlen
 func getProjectCaResourceQuota(filterGroups []*proto.NodeGroup) ([]*proto.ProjectAutoscalerQuota, error) {
 	// 仅统计CA云梯资源 & 获取项目下所有节点池的资源使用情况 & 资源quota情况
 	var (
@@ -972,7 +973,8 @@ func getProjectSelfResourceQuota(groups []*proto.NodeGroup) ([]*proto.ProjectAut
 			blog.Infof("getProjectSelfResourceQuota GetGroupCurNodes zoneCur %s", zoneCur)
 			quotaID, ok := getNodeGroupDevicePoolID(group)
 			if !ok {
-				blog.Errorf("GetProjectSelfResourceQuota group[%s:%s] not find devicePoolIds: %v", group.GetProjectID(), group.GetNodeGroupID())
+				blog.Errorf("GetProjectSelfResourceQuota group[%s:%s] not find devicePoolIds: %v",
+					group.GetProjectID(), group.GetNodeGroupID())
 				return
 			}
 
