@@ -537,6 +537,7 @@ func (ua *AddNodesAction) addExternalNodesToCluster() error {
 }
 
 // addNodesToCluster handle normal nodes
+// nolint:funlen
 func (ua *AddNodesAction) addNodesToCluster() error {
 	// get cloudprovider cluster implementation
 	clusterMgr, err := cloudprovider.GetClusterMgr(ua.cloud.CloudProvider)

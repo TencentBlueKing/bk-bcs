@@ -868,7 +868,8 @@ func (c *Cluster) AddSubnetsToCluster(ctx context.Context, subnet *proto.SubnetS
 			opt.Cluster.GetVpcID(), subnet.GetNew(), &opt.CommonOption)
 		if err != nil {
 			blog.Infof("AddSubnetsToCluster allocateSubnetsToCluster[%s:%s:%s] "+
-				"AllocateClusterVpcCniSubnets failed: %v", opt.Cluster.GetRegion(), opt.Cluster.GetVpcID(), opt.Cluster.GetClusterID(), err)
+				"AllocateClusterVpcCniSubnets failed: %v", opt.Cluster.GetRegion(), opt.Cluster.GetVpcID(),
+				opt.Cluster.GetClusterID(), err)
 			return err
 		}
 
@@ -878,15 +879,15 @@ func (c *Cluster) AddSubnetsToCluster(ctx context.Context, subnet *proto.SubnetS
 			opt.Cluster.GetRegion(), opt.Cluster.GetVpcID(), opt.Cluster.GetClusterID(), subnetIds)
 
 		return business.AddSubnetsToCluster(opt.Cluster, subnetIds, &opt.CommonOption)
-	} else {
-		newClusterSubnets := mergeSubnetSource(opt.Cluster.GetNetworkSettings().GetSubnetSource().GetNew(), subnet.GetNew())
-		if opt.Cluster.NetworkSettings.SubnetSource == nil {
-			opt.Cluster.NetworkSettings.SubnetSource = &proto.SubnetSource{}
-		}
-
-		opt.Cluster.NetworkSettings.SubnetSource.New = newClusterSubnets
-		return cloudprovider.UpdateCluster(opt.Cluster)
 	}
+
+	newClusterSubnets := mergeSubnetSource(opt.Cluster.GetNetworkSettings().GetSubnetSource().GetNew(), subnet.GetNew())
+	if opt.Cluster.NetworkSettings.SubnetSource == nil {
+		opt.Cluster.NetworkSettings.SubnetSource = &proto.SubnetSource{}
+	}
+
+	opt.Cluster.NetworkSettings.SubnetSource.New = newClusterSubnets
+	return cloudprovider.UpdateCluster(opt.Cluster)
 }
 
 // GetMasterSuggestedMachines get master suggested machines
