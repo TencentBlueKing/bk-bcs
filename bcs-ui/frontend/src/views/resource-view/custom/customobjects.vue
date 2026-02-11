@@ -39,7 +39,14 @@
               class="bcs-button-ellipsis"
               text
               :disabled="isViewEditable"
-              @click.prevent="handleDetail({ row, event: $event, handleShowDetail, gotoDetail, resolveLink })">
+              @click.prevent="handleDetail({
+                row,
+                event: $event,
+                handleShowDetail,
+                gotoDetail,
+                resolveLink,
+                handleGetExtData,
+              })">
               {{ row.metadata.name }}
             </bk-button>
           </template>
@@ -178,12 +185,11 @@ export default defineComponent({
       required: true,
     },
   },
-  setup(props) {
-    const APPSET_CRD_IDENTIFIER = 'apps.sngame.dev/v1';
+  setup() {
     // 定制化crd详情
     function handleDetail(options) {
-      const { row, event, handleShowDetail, gotoDetail, resolveLink } = options;
-      if (`${props.group}/${props.version}` === APPSET_CRD_IDENTIFIER && props.kind === 'AppSet') {
+      const { row, event, handleShowDetail, gotoDetail, resolveLink, handleGetExtData } = options;
+      if (handleGetExtData(row.metadata?.uid, 'podLabelSelector')) {
         gotoDetail(event, resolveLink(row), row);
       } else {
         handleShowDetail(row);

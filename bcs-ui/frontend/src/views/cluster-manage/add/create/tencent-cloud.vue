@@ -447,7 +447,7 @@
             class="tips-offset"
             error-display-type="normal"
             :label-width="0.1"
-            :property="manageType === 'INDEPENDENT_CLUSTER' ? 'nodes' : ''">
+            property="nodes">
             <ApplyHost
               :region="networkConfig.region"
               :cloud-id="basicInfo.provider"
@@ -512,6 +512,8 @@
 </template>
 <script lang="ts">
 import { computed, defineComponent, getCurrentInstance, onMounted, ref, watch } from 'vue';
+
+import { IImageItem } from '../../types/types';
 
 import { cloudList } from '@/api/modules/cluster-manager';
 import $bkMessage from '@/common/bkmagic';
@@ -841,8 +843,14 @@ export default defineComponent({
     };
     // 操作系统
     const imageID = ref('');
-    const handleSetOS = (image: string) => {
-      basicInfo.value.clusterBasicSettings.OS = image;
+    const handleSetOS = (imageItem: IImageItem) => {
+      let OS;
+      if (imageItem.provider === 'PRIVATE_IMAGE') {
+        OS = imageItem.imageID;
+      } else {
+        OS = imageItem.osName;
+      }
+      basicInfo.value.clusterBasicSettings.OS = OS;
     };
     // 运行时组件变更
     const handleRuntimeChange = (flagName: string) => {

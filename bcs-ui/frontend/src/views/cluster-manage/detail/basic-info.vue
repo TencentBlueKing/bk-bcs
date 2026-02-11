@@ -113,6 +113,11 @@
             @cancel="rangeEdit = false"
             @save="handleVisibleRangeChange" />
         </bk-form-item>
+        <bk-form-item
+          :label="$t('cluster.create.label.system')"
+          v-if="['tencentCloud', 'tencentPublicCloud'].includes(clusterProvider)">
+          {{ clusterData?.clusterBasicSettings?.OS || '--' }}
+        </bk-form-item>
       </DescList>
       <DescList :title="$t('cluster.title.clusterConfig')">
         <template v-if="clusterData.clusterType !== 'virtual'">
