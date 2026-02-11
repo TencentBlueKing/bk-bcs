@@ -85,11 +85,6 @@ const props = defineProps({
     type: String,
     default: '',
   },
-  // 镜像/OS，兼容自研云 创建节点池选择操作系统
-  mode: {
-    type: String as () => 'OS' | 'IMAGE', // 'OS' os-change 返回 osName，否则返回 alias
-    default: 'OS',
-  },
   placeholder: {
     type: String,
   },
@@ -147,6 +142,21 @@ const imageListByGroup = computed<Record<string, IImageGroup>>(() => {
     }, {});
     group.PRIVATE_IMAGE.children = group.PRIVATE_IMAGE.children.filter(item => !bcsImage[item.imageID]);
   }
+  // 过滤掉其他镜像里 CLUSTER_IMAGE 的镜像
+  if (group.CLUSTER_IMAGE) {
+    const clusterImageMap = group.CLUSTER_IMAGE.children.reduce((pre, item) => {
+      // eslint-disable-next-line no-param-reassign
+      pre[item.imageID] = item;
+      return pre;
+    }, {});
+    // 从其他所有镜像类型中过滤掉集群镜像
+    Object.keys(group).forEach((provider) => {
+      if (provider !== 'CLUSTER_IMAGE') {
+        group[provider].children = group[provider].children.filter(item => !clusterImageMap[item.imageID]);
+      }
+    });
+  }
+
   // 按照 providerOrder 排序
   const data = {};
   props.providerOrder.forEach((provider: string) => {
@@ -184,11 +194,13 @@ const handleGetOsList = async () => {
   }
   osLoading.value = false;
 };
+
+const ignoreProviders = ['CLUSTER_IMAGE', 'BCS_IMAGE']; // 从其他类型 provider 提取出来的
 const handleImageChange = (imageID: string) => {
-  const imageItem = imageList.value.find(item => item.imageID === imageID);
+  const imageItem = imageList.value.find(item => item.imageID === imageID && !ignoreProviders.includes(item.provider));
   if (!imageItem) return;
 
-  emits('os-change', props.mode === 'OS' ? imageItem.osName : imageItem.alias);
+  emits('os-change', imageItem);
   emits('change', imageID, imageItem.osName);
   emits('input', imageID, imageItem.osName);
 };

@@ -26,7 +26,6 @@
               :cluster-id="cluster.clusterID"
               :disabled="isEdit || isGPUNode"
               :placeholder="isGPUNode ? $t('cluster.ca.nodePool.label.type.tips') : ''"
-              mode="IMAGE"
               init-data
               @init="handleImageListInit"
               @os-change="handleSetOS"
@@ -809,8 +808,8 @@ export default defineComponent({
     };
 
     // 操作系统
-    function handleSetOS(image) {
-      nodePoolConfig.value.nodeTemplate.image.imageName = image;
+    function handleSetOS(image: IImageItem) {
+      nodePoolConfig.value.nodeTemplate.image.imageName = image.alias;
     };
     // 切换镜像操作
     function handleImageChange(id, osName) {
