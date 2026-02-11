@@ -1128,7 +1128,8 @@ func AddNodesToCluster(ctx context.Context, info *cloudprovider.CloudDependBasic
 		blog.Infof("AddNodesToCluster[%s] AddExistedInstancesToCluster request[%+v]", taskID, addReq)
 
 		cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
-			fmt.Sprintf("generate addReq image[%v] to instances[%v]", addReq.ImageId, nodeIDs))
+			fmt.Sprintf("AddNodesToCluster generate addReq imageId[%v] to instances list[%v]",
+				addReq.ImageId, nodeIDs))
 
 		err = retry.Do(func() error {
 			resp, err = tkeCli.AddExistedInstancesToCluster(addReq)
@@ -1180,11 +1181,11 @@ func AddNodesToCluster(ctx context.Context, info *cloudprovider.CloudDependBasic
 		"failed [%v], reasons[%v]", taskID, result.SuccessNodeInfos, result.FailedNodeInfos, result.FailedReasons)
 
 	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
-		fmt.Sprintf("success nodes: [%v]", result.SuccessNodeInfos))
+		fmt.Sprintf("AddNodesToCluster AddExistedInstancesToCluster success nodes: [%v]", result.SuccessNodeInfos))
 
 	if len(result.FailedNodeInfos) > 0 {
 		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
-			fmt.Sprintf("failed nodes: [%v], reason [%v]", result.FailedNodeInfos, result.FailedReasons))
+			fmt.Sprintf("AddNodesToCluster AddExistedInstancesToCluster failed nodes: [%v], reason [%v]", result.FailedNodeInfos, result.FailedReasons))
 	}
 
 	return result, nil
@@ -1413,11 +1414,11 @@ func CheckClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDe
 		taskID, addSuccessNodes, addFailureNodes)
 
 	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
-		fmt.Sprintf("success instance [%v]", addSuccessNodes))
+		fmt.Sprintf("CheckClusterInstanceStatus success nodes info [%v]", addSuccessNodes))
 
 	if len(addFailureNodes) > 0 {
 		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
-			fmt.Sprintf("failure instance [%v]", addFailureNodes))
+			fmt.Sprintf("CheckClusterInstanceStatus failure nodes info [%v]", addFailureNodes))
 
 		// set cluster node status
 		for _, n := range addFailureNodes {

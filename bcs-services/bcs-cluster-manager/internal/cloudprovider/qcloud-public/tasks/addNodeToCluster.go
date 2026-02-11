@@ -55,6 +55,7 @@ func AddNodesToClusterTask(taskID string, stepName string) error { // nolint
 	scheduleStr := step.Params[cloudprovider.NodeSchedule.String()]
 	loginStr := step.Params[cloudprovider.NodeLoginKey.String()]
 
+	// parse node login information from JSON string
 	var login = &proto.NodeLoginInfo{}
 	err = json.Unmarshal([]byte(loginStr), login)
 	if err != nil {
@@ -68,6 +69,7 @@ func AddNodesToClusterTask(taskID string, stepName string) error { // nolint
 	// get nodes IDs and IPs
 	ipList := cloudprovider.ParseNodeIpOrIdFromCommonMap(step.Params, cloudprovider.NodeIPsKey.String(), ",")
 	idList := cloudprovider.ParseNodeIpOrIdFromCommonMap(step.Params, cloudprovider.NodeIDsKey.String(), ",")
+	// validate that number of node IDs matches number of IPs
 	if len(idList) != len(ipList) {
 		blog.Errorf("AddNodesToClusterTask[%s] [inner fatal] task %s step %s NodeID %d is not equal to "+
 			"InnerIP %d, fatal", taskID, taskID, stepName, // nolint
@@ -77,7 +79,7 @@ func AddNodesToClusterTask(taskID string, stepName string) error { // nolint
 	}
 	idToIPMap := cloudprovider.GetIDToIPMap(idList, ipList)
 
-	// cluster/cloud/nodeGroup/cloudCredential Info
+	// get cluster dependency information including cloud credentials
 	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
 		ClusterID:      clusterID,
 		CloudID:        cloudID,
@@ -94,6 +96,7 @@ func AddNodesToClusterTask(taskID string, stepName string) error { // nolint
 	// inject taskID
 	ctx := cloudprovider.WithTaskIDAndStepNameForContext(context.Background(), taskID, stepName)
 
+	// filter instances that already exist in cluster vs new instances to add
 	existedInstance, notExistedInstance, err := business.FilterClusterInstanceFromNodesIDs(ctx, dependInfo, idList)
 	if err != nil {
 		blog.Errorf("AddNodesToClusterTask[%s]: FilterClusterInstanceFromNodesIDs for cluster[%s] failed, %s",
@@ -110,6 +113,7 @@ func AddNodesToClusterTask(taskID string, stepName string) error { // nolint
 	)
 	successNodes = append(successNodes, existedInstance...)
 
+	// add new instances that don't exist in cluster yet
 	if len(notExistedInstance) > 0 {
 		result, err := business.AddNodesToCluster(ctx, dependInfo, &business.NodeAdvancedOptions{NodeScheduler: schedule}, // nolint
 			notExistedInstance, login, false, idToIPMap, operator)
@@ -126,6 +130,8 @@ func AddNodesToClusterTask(taskID string, stepName string) error { // nolint
 	}
 	blog.Infof("AddNodesToClusterTask[%s] cluster[%s] success[%v] failed[%v]",
 		taskID, clusterID, successNodes, failedNodes)
+
+	// validate that at least some nodes were added successfully
 	if len(successNodes) == 0 {
 		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
 			"success nodes empty")
@@ -135,10 +141,7 @@ func AddNodesToClusterTask(taskID string, stepName string) error { // nolint
 		return retErr
 	}
 
-	if len(idList) == len(successNodes) {
-		blog.Infof("AddNodesToClusterTask[%s] cluster[%s] successful", taskID, clusterID)
-	}
-
+	// update task common parameters with success and failed node lists
 	if state.Task.CommonParams == nil {
 		state.Task.CommonParams = make(map[string]string)
 	}
@@ -186,7 +189,7 @@ func CheckAddNodesStatusTask(taskID string, stepName string) error {
 	successNodes := cloudprovider.ParseNodeIpOrIdFromCommonMap(state.Task.CommonParams,
 		cloudprovider.SuccessNodeIDsKey.String(), ",")
 
-	// handler logic
+	// get cluster dependency information for status checking
 	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
 		ClusterID: clusterID,
 		CloudID:   cloudID,
@@ -202,6 +205,7 @@ func CheckAddNodesStatusTask(taskID string, stepName string) error {
 	// inject taskID
 	ctx := cloudprovider.WithTaskIDAndStepNameForContext(context.Background(), taskID, stepName)
 
+	// check status of added cluster instances
 	addSuccessNodes, addFailureNodes, err := business.CheckClusterInstanceStatus(ctx, dependInfo, successNodes)
 	if err != nil {
 		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
@@ -222,6 +226,7 @@ func CheckAddNodesStatusTask(taskID string, stepName string) error {
 	if len(addFailureNodes) > 0 {
 		state.Task.CommonParams[cloudprovider.FailedClusterNodeIDsKey.String()] = strings.Join(addFailureNodes, ",")
 	}
+	// validate that at least some nodes were successfully added
 	if len(addSuccessNodes) == 0 {
 		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
 			"add success nodes empty")
@@ -275,6 +280,7 @@ func UpdateNodeDBInfoTask(taskID string, stepName string) error { // nolint
 	// get nodes IDs and IPs
 	ipList := cloudprovider.ParseNodeIpOrIdFromCommonMap(step.Params, cloudprovider.NodeIPsKey.String(), ",")
 	idList := cloudprovider.ParseNodeIpOrIdFromCommonMap(step.Params, cloudprovider.NodeIDsKey.String(), ",")
+	// validate node ID and IP count consistency
 	if len(idList) != len(ipList) {
 		blog.Errorf("UpdateNodeDBInfoTask[%s] [inner fatal] task %s step %s NodeID %d is not equal to "+
 			"InnerIP %d, fatal", taskID, taskID, stepName,
@@ -296,14 +302,7 @@ func UpdateNodeDBInfoTask(taskID string, stepName string) error { // nolint
 		failedInstances = append(failedInstances, failedNodes...)
 	}
 
-	// instanceIPs := make([]string, 0)
-	// for _, instanceID := range successInstances {
-	//	if ip, ok := nodeIDToIPMap[instanceID]; ok {
-	//		instanceIPs = append(instanceIPs, ip)
-	//	}
-	// }
-
-	// update nodes status in DB
+	// update successful nodes status in database
 	for i := range successInstances {
 		node, errGet := cloudprovider.GetStorageModel().GetNode(context.Background(), successInstances[i])
 		if errGet != nil {
@@ -318,7 +317,7 @@ func UpdateNodeDBInfoTask(taskID string, stepName string) error { // nolint
 	}
 	blog.Infof("UpdateNodeDBInfoTask[%s] step %s successful", taskID, stepName)
 
-	// update failed nodes status in DB
+	// update failed nodes status in database
 	for i := range failedInstances {
 		node, errGet := cloudprovider.GetStorageModel().GetNode(context.Background(), failedInstances[i])
 		if errGet != nil {
