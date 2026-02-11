@@ -35,6 +35,7 @@ func FormatWorkloadRes(manifest map[string]interface{}) map[string]interface{} {
 	ret := CommonFormatRes(manifest)
 	ret["images"] = parseContainerImages(manifest, "spec.template.spec.containers")
 	ret["resources"] = parseContainersResources(manifest, "spec.template.spec.containers")
+	ret["podLabelSelector"] = parsePodLabelSelector(manifest)
 	return ret
 }
 

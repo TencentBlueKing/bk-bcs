@@ -152,7 +152,7 @@ func parseCRDAdditionalColumns(manifest map[string]interface{}) (addColumns []in
 
 // parsePodLabelSelector 获取 Pod Label Selector
 func parsePodLabelSelector(manifest map[string]interface{}) string {
-	labels := mapx.GetMap(manifest, "spec.template.metadata.labels")
+	labels := mapx.GetMap(manifest, "metadata.labels")
 	for k, v := range labels {
 		if k == constants.PodLabelSelector {
 			if value, ok := v.(string); ok {
