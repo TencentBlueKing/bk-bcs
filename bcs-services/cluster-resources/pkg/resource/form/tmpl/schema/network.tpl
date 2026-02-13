@@ -184,7 +184,7 @@ defaultBackend:
     targetSVC:
       title: {{ i18n "目标 Service" .lang }}
       type: string
-      description: {{ i18n "控制器类型 qcloud 暂时不支持配置默认后端" .lang }}
+      description: {{ i18n "控制器类型 qcloud、alb 暂时不支持配置默认后端" .lang }}
       default: ""
       ui:component:
         name: select
@@ -212,7 +212,7 @@ defaultBackend:
     port:
       title: {{ i18n "端口" .lang }}
       type: integer
-      description: {{ i18n "控制器类型 qcloud 暂时不支持配置默认后端" .lang }}
+      description: {{ i18n "控制器类型 qcloud、alb 暂时不支持配置默认后端" .lang }}
       ui:component:
         props:
           min: 1

@@ -19,18 +19,30 @@ properties:
                 value: qcloud
                 disabled: false
                 tips: ""
+              - label: alb
+                value: alb
+                disabled: false
+                tips: "" 
+              - label: gce
+                value: gce
+                disabled: false
+                tips: "" 
+              - label: azure/application-gateway
+                value: azure/application-gateway
+                disabled: false
+                tips: ""
               - label: nginx
                 value: nginx
-                disabled: true
-                tips: {{ i18n "暂时不支持该控制器" .lang }}
+                disabled: false
+                tips: ""
               - label: bcs
                 value: bcs
                 disabled: true
                 tips: {{ i18n "暂时不支持该控制器" .lang }}
         ui:reactions:
-          # qcloud 暂时不支持 defaultBackend
+          # qcloud、alb 暂时不支持 defaultBackend
           - target: spec.defaultBackend.targetSVC
-            if: "{{`{{`}} $self.value === 'qcloud' {{`}}`}}"
+            if: "{{`{{`}} $self.value === 'qcloud' || $self.value === 'alb' {{`}}`}}"
             then:
               state:
                 value: ""
@@ -39,7 +51,7 @@ properties:
               state:
                 disabled: false
           - target: spec.defaultBackend.port
-            if: "{{`{{`}} $self.value === 'qcloud' {{`}}`}}"
+            if: "{{`{{`}} $self.value === 'qcloud' || $self.value === 'alb' {{`}}`}}"
             then:
               state:
                 value: 0
@@ -47,6 +59,24 @@ properties:
             else:
               state:
                 disabled: false
+          - target: spec.network.clbUseType
+            if: "{{`{{`}} $self.value === 'alb' {{`}}`}}"
+            then:
+              state:
+                value: "autoCreate"
+                visible: false
+            else:
+              state:
+                visible: true
+          - target: spec.network
+            if: "{{`{{`}} $self.value === 'gce' || $self.value === 'azure/application-gateway' || $self.value === 'nginx' {{`}}`}}"
+            then:
+              state:
+                value: ""
+                visible: false    
+            else:
+              state:
+                visible: true          
           # 目前只支持 qcloud 的重定向，nginx 后续支持了再开放
           - target: spec.cert.autoRewriteHttp
             if: "{{`{{`}} $self.value === 'qcloud' {{`}}`}}"

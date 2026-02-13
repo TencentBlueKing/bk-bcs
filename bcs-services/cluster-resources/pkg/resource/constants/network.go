@@ -27,6 +27,9 @@ const (
 
 	// IngSubNetIDAnnoKey ...
 	IngSubNetIDAnnoKey = "kubernetes.io/ingress.subnetId"
+
+	// AwsIngSubNetIDAnnoKey ...
+	AwsIngSubNetIDAnnoKey = "alb.ingress.kubernetes.io/subnets"
 )
 
 const (
