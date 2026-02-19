@@ -146,6 +146,10 @@ func initCert(op *options.StorageOptions) {
 		op.ClientCert.IsSSL = true
 	}
 
-	// 初始化IPv6Address字段
-	op.ServiceConfig.InitIPv6AddressFiled()
+	if op.IPv6Address == "" {
+		blog.Infof("op.IPv6Address is empty")
+	} else {
+		// 初始化IPv6Address字段
+		op.ServiceConfig.InitIPv6AddressFiled()
+	}
 }
