@@ -104,7 +104,7 @@ func ListClusters() {
 	}
 
 	var result []*Cluster
-	if err = component.UnmarshalBKResult(resp, &result); err != nil {
+	if err = component.UnmarshalBKData(resp, &result); err != nil {
 		blog.Errorf("unmarshal clusters error, %s", err.Error())
 		return
 	}
