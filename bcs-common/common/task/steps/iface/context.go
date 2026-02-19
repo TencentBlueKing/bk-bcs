@@ -79,6 +79,11 @@ func (c *Context) GetTaskStatus() string {
 	return c.task.GetStatus()
 }
 
+// GetCommonParams get task common params
+func (c *Context) GetCommonParams() map[string]string {
+	return c.task.GetCommonParams()
+}
+
 // GetCommonParam get current task param
 func (c *Context) GetCommonParam(key string) (string, bool) {
 	return c.task.GetCommonParam(key)
