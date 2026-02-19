@@ -263,3 +263,21 @@ func (c *EC2Client) DescribeKeyPairs(input *ec2.DescribeKeyPairsInput) (
 
 	return output.KeyPairs, nil
 }
+
+// DeleteSubnet delete subnet
+func (c *EC2Client) DeleteSubnet(subnetId *string) error {
+	input := &ec2.DeleteSubnetInput{
+		SubnetId: subnetId,
+	}
+
+	blog.Infof("DeleteSubnet input: %s", utils.ToJSONString(input))
+	_, err := c.ec2Client.DeleteSubnet(input)
+	if err != nil {
+		blog.Errorf("DeleteSubnet failed: %v", err)
+		return err
+	}
+
+	blog.Infof("ec2 client DeleteSubnet successful")
+
+	return nil
+}
