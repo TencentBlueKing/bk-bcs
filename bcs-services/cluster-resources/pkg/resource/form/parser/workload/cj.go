@@ -39,13 +39,14 @@ func ParseCJSpec(manifest map[string]interface{}, spec *model.CJSpec) {
 	common.ParseLabels(templateLables, &spec.Labels.TemplateLabels)
 	ParseCJJobManage(manifest, &spec.JobManage)
 	tmplSpec, _ := mapx.GetItems(manifest, "spec.jobTemplate.spec.template.spec")
-	podSpec, _ := tmplSpec.(map[string]interface{})
-	ParseNodeSelect(podSpec, &spec.NodeSelect)
-	ParseAffinity(podSpec, &spec.Affinity)
-	ParseToleration(podSpec, &spec.Toleration)
-	ParseNetworking(podSpec, &spec.Networking)
-	ParsePodSecurityCtx(podSpec, &spec.Security)
-	ParseSpecOther(podSpec, &spec.Other)
+	if podSpec, ok := tmplSpec.(map[string]interface{}); ok {
+		ParseNodeSelect(podSpec, &spec.NodeSelect)
+		ParseAffinity(podSpec, &spec.Affinity)
+		ParseToleration(podSpec, &spec.Toleration)
+		ParseNetworking(podSpec, &spec.Networking)
+		ParsePodSecurityCtx(podSpec, &spec.Security)
+		ParseSpecOther(podSpec, &spec.Other)
+	}
 }
 
 // ParseCJJobManage xxx

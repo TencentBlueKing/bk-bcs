@@ -41,31 +41,38 @@ func ParseSTSSpec(manifest map[string]interface{}, spec *model.STSSpec) {
 	ParseSTSReplicas(manifest, &spec.Replicas)
 	ParseSTSVolumeClaimTmpl(manifest, &spec.VolumeClaimTmpl)
 	tmplSpec, _ := mapx.GetItems(manifest, "spec.template.spec")
-	podSpec, _ := tmplSpec.(map[string]interface{})
-	ParseNodeSelect(podSpec, &spec.NodeSelect)
-	ParseAffinity(podSpec, &spec.Affinity)
-	ParseToleration(podSpec, &spec.Toleration)
-	ParseNetworking(podSpec, &spec.Networking)
-	ParsePodSecurityCtx(podSpec, &spec.Security)
-	ParseSpecReadinessGates(podSpec, &spec.ReadinessGates)
-	ParseSpecOther(podSpec, &spec.Other)
+	if podSpec, ok := tmplSpec.(map[string]interface{}); ok {
+		ParseNodeSelect(podSpec, &spec.NodeSelect)
+		ParseAffinity(podSpec, &spec.Affinity)
+		ParseToleration(podSpec, &spec.Toleration)
+		ParseNetworking(podSpec, &spec.Networking)
+		ParsePodSecurityCtx(podSpec, &spec.Security)
+		ParseSpecReadinessGates(podSpec, &spec.ReadinessGates)
+		ParseSpecOther(podSpec, &spec.Other)
+	}
 }
 
 // ParseSTSReplicas ...
 func ParseSTSReplicas(manifest map[string]interface{}, replicas *model.STSReplicas) {
 	replicas.SVCName = mapx.GetStr(manifest, "spec.serviceName")
 	replicas.Cnt = mapx.GetIntStr(manifest, "spec.replicas")
-	replicas.UpdateStrategy = mapx.Get(
-		manifest, "spec.updateStrategy.type", resCsts.DefaultUpdateStrategy,
-	).(string)
-	replicas.PodManPolicy = mapx.Get(manifest, "spec.podManagementPolicy", "OrderedReady").(string)
+	if updateStrategy, ok := mapx.Get(
+		manifest, "spec.updateStrategy.type", resCsts.DefaultUpdateStrategy).(string); ok {
+		replicas.UpdateStrategy = updateStrategy
+	}
+	if podManPolicy, ok := mapx.Get(
+		manifest, "spec.podManagementPolicy", "OrderedReady").(string); ok {
+		replicas.PodManPolicy = podManPolicy
+	}
 	replicas.Partition = mapx.GetInt64(manifest, "spec.updateStrategy.rollingUpdate.partition")
 }
 
 // ParseSTSVolumeClaimTmpl ...
 func ParseSTSVolumeClaimTmpl(manifest map[string]interface{}, claimTmpl *model.STSVolumeClaimTmpl) {
 	for _, c := range mapx.GetList(manifest, "spec.volumeClaimTemplates") {
-		claimTmpl.Claims = append(claimTmpl.Claims, parseVolumeClaim(c.(map[string]interface{})))
+		if c, ok := c.(map[string]interface{}); ok {
+			claimTmpl.Claims = append(claimTmpl.Claims, parseVolumeClaim(c))
+		}
 	}
 }
 
@@ -85,7 +92,9 @@ func parseVolumeClaim(raw map[string]interface{}) model.VolumeClaim {
 	}
 	if accessModes := mapx.GetList(raw, "spec.accessModes"); len(accessModes) != 0 {
 		for _, am := range accessModes {
-			vc.AccessModes = append(vc.AccessModes, am.(string))
+			if am, ok := am.(string); ok {
+				vc.AccessModes = append(vc.AccessModes, am)
+			}
 		}
 	}
 	return vc
