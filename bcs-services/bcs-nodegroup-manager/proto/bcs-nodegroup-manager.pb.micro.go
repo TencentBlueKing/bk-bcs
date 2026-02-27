@@ -38,21 +38,18 @@ func NewNodegroupManagerEndpoints() []*api.Endpoint {
 			Name:    "NodegroupManager.GetClusterAutoscalerReview",
 			Path:    []string{"/nodegroupmanager/v1/autoscaler/review"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
 			Name:    "NodegroupManager.CreateNodePoolMgrStrategy",
 			Path:    []string{"/nodegroupmanager/v1/nodegroupstrategy"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
 			Name:    "NodegroupManager.UpdateNodePoolMgrStrategy",
 			Path:    []string{"/nodegroupmanager/v1/nodegroupstrategy"},
 			Method:  []string{"PUT"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
@@ -71,7 +68,6 @@ func NewNodegroupManagerEndpoints() []*api.Endpoint {
 			Name:    "NodegroupManager.DeleteNodePoolMgrStrategy",
 			Path:    []string{"/nodegroupmanager/v1/nodegroupstrategy"},
 			Method:  []string{"DELETE"},
-			Body:    "",
 			Handler: "rpc",
 		},
 	}
@@ -188,21 +184,18 @@ func RegisterNodegroupManagerHandler(s server.Server, hdlr NodegroupManagerHandl
 		Name:    "NodegroupManager.GetClusterAutoscalerReview",
 		Path:    []string{"/nodegroupmanager/v1/autoscaler/review"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "NodegroupManager.CreateNodePoolMgrStrategy",
 		Path:    []string{"/nodegroupmanager/v1/nodegroupstrategy"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "NodegroupManager.UpdateNodePoolMgrStrategy",
 		Path:    []string{"/nodegroupmanager/v1/nodegroupstrategy"},
 		Method:  []string{"PUT"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -221,7 +214,6 @@ func RegisterNodegroupManagerHandler(s server.Server, hdlr NodegroupManagerHandl
 		Name:    "NodegroupManager.DeleteNodePoolMgrStrategy",
 		Path:    []string{"/nodegroupmanager/v1/nodegroupstrategy"},
 		Method:  []string{"DELETE"},
-		Body:    "",
 		Handler: "rpc",
 	}))
 	return s.Handle(s.NewHandler(&NodegroupManager{h}, opts...))
