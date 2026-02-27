@@ -142,10 +142,17 @@ func (vm *VPCManager) ListSubnets(vpcID string, zone string, opt *cloudprovider.
 
 	result := make([]*proto.Subnet, 0)
 	for _, v := range cloudSubnets {
+		subnetName := ""
+		for _, tag := range v.Tags {
+			if aws.StringValue(tag.Key) == "Name" {
+				subnetName = aws.StringValue(tag.Value)
+				break
+			}
+		}
 		subnet := &proto.Subnet{
 			VpcID:                   aws.StringValue(v.VpcId),
 			SubnetID:                aws.StringValue(v.SubnetId),
-			SubnetName:              aws.StringValue(v.SubnetId),
+			SubnetName:              subnetName,
 			CidrRange:               aws.StringValue(v.CidrBlock),
 			AvailableIPAddressCount: uint64(aws.Int64Value(v.AvailableIpAddressCount)),
 			Zone:                    aws.StringValue(v.AvailabilityZone),
