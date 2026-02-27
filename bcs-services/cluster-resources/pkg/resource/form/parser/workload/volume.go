@@ -31,7 +31,7 @@ func ParseWorkloadVolume(manifest map[string]interface{}, volume *model.Workload
 	}
 
 	for _, vol := range mapx.GetList(manifest, prefix+"volumes") {
-		v := make(map[string]interface{})
+		var v map[string]interface{}
 		var ok bool
 		if v, ok = vol.(map[string]interface{}); !ok {
 			continue
