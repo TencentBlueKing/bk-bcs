@@ -558,7 +558,6 @@ func (ua *AddNodesAction) addNodesToCluster() error {
 		blog.Infof("AddNodesAction addNodesToCluster failed: %v", err)
 		return err
 	}
-
 	// add externalNodes to cluster
 	if ua.req.IsExternalNode {
 		return ua.addExternalNodesToCluster()
@@ -609,7 +608,6 @@ func (ua *AddNodesAction) addNodesToCluster() error {
 			)
 			return err
 		}
-
 		// dispatch task
 		if err = taskserver.GetTaskServer().Dispatch(task); err != nil {
 			blog.Errorf("dispatch addNodesToCLuster cluster task for cluster %s failed, %s",
@@ -628,7 +626,6 @@ func (ua *AddNodesAction) addNodesToCluster() error {
 			return err
 		}
 	}
-
 	return nil
 }
 

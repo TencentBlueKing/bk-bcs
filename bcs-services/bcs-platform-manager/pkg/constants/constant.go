@@ -10,22 +10,14 @@
  * limitations under the License.
  */
 
-package bcs
+// Package constants xxx
+package constants
 
-import (
-	"context"
-	"testing"
-
-	"github.com/stretchr/testify/assert"
-
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/config"
-	bcstesting "github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/testing"
+const (
+	// ClusterManagerServiceName cluster manager service name
+	ClusterManagerServiceName = "clustermanager.bkbcs.tencent.com"
+	// ProjectManagerServiceName project manager service name
+	ProjectManagerServiceName = "project.bkbcs.tencent.com"
+	// ServiceDomain domain name for service
+	ServiceDomain = "platformmanager.bkbcs.tencent.com"
 )
-
-func TestGetProject(t *testing.T) {
-	ctx := context.Background()
-
-	project, err := GetProject(ctx, config.G.BCS, bcstesting.GetTestProjectId())
-	assert.NoError(t, err)
-	assert.Equal(t, project.ProjectId, bcstesting.GetTestProjectId())
-}

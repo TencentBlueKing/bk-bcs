@@ -45,13 +45,9 @@ spec:
           env:
             {{- include "bcs-platform-manager.envs" . | trim | nindent 12 }}
           livenessProbe:
-            httpGet:
-              path: /-/healthy
-              port: http
+            {{- toYaml .Values.probe.liveness | nindent 12 }}
           readinessProbe:
-            httpGet:
-              path: /-/ready
-              port: http
+            {{- toYaml .Values.probe.readiness | nindent 12 }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           volumeMounts:
