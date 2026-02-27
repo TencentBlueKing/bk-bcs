@@ -507,3 +507,31 @@ func (f *QueryFilter) Page(resources []*storage.Resource) []*storage.Resource {
 	}
 	return resources[f.Offset:end]
 }
+
+// PageWithoutSort 分页
+func (f *QueryFilter) PageWithoutSort(resources []*storage.Resource) []*storage.Resource {
+	if f.Offset >= len(resources) {
+		return []*storage.Resource{}
+	}
+	end := f.Offset + f.Limit
+	if end > len(resources) {
+		end = len(resources)
+	}
+	return resources[f.Offset:end]
+}
+
+// SortByStorage 通过storage排序
+func (f *QueryFilter) SortByStorage() map[string]int {
+	order := 1
+	if f.Order == OrderDesc {
+		order = -1
+	}
+	switch f.SortBy {
+	case SortByNamespace:
+		return map[string]int{ConNamespace: order}
+	case SortByAge:
+		return map[string]int{ConAge: order}
+	default:
+		return map[string]int{ConName: order}
+	}
+}
