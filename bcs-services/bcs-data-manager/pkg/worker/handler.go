@@ -25,7 +25,6 @@ import (
 	"github.com/smallnest/chanx"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/bcsmonitor"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/cmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/datajob"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/prom"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/store"
@@ -58,7 +57,6 @@ type HandleClients struct {
 	BcsMonitorClient bcsmonitor.ClientInterface
 	K8sStorageCli    bcsapi.Storage
 	MesosStorageCli  bcsapi.Storage
-	CmCli            cmanager.ClusterManagerClient
 }
 
 // NewDataJobHandler create dataJob handler object
@@ -247,15 +245,8 @@ func (h *DataJobHandler) handleOneJob(job datajob.DataJob) {
 	}()
 	policy := h.policyFactory.GetPolicy(job.Opts.ObjectType, job.Opts.Dimension)
 	job.SetPolicy(policy)
-	cmConn, err := h.clients.CmCli.GetClusterManagerConn()
-	if err != nil {
-		blog.Errorf("get cm conn error:%v", err)
-		return
-	}
-	defer cmConn.Close() // nolint
-	cliWithHeader := h.clients.CmCli.NewGrpcClientWithHeader(context.Background(), cmConn)
 	client := types.NewClients(h.clients.BcsMonitorClient, h.clients.K8sStorageCli,
-		h.clients.MesosStorageCli, cliWithHeader)
+		h.clients.MesosStorageCli)
 	job.SetClient(client)
 	job.DoPolicy(h.stopCtx)
 }

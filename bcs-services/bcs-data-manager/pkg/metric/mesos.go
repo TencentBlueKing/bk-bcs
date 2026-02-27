@@ -13,11 +13,14 @@
 package metric
 
 import (
+	"context"
 	"fmt"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
 	cm "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/prom"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
 )
@@ -131,11 +134,19 @@ func (g *MetricGetter) getMesosNamespaceCPUMetrics(opts *types.JobCommonOpts,
 }
 
 // getMesosNodeCount get mesos node count
-func (g *MetricGetter) getMesosNodeCount(opts *types.JobCommonOpts,
-	clients *types.Clients) (int64, int64, error) {
+func (g *MetricGetter) getMesosNodeCount(ctx context.Context, opts *types.JobCommonOpts) (int64, int64, error) {
 	var nodeCount, availableNode int64
 	start := time.Now()
-	nodes, err := clients.CmCli.Cli.ListNodesInCluster(clients.CmCli.Ctx, &cm.ListNodesInClusterRequest{
+	cmCli, close, err := clustermanager.GetClient(common.ServiceDomain)
+	defer func() {
+		if close != nil {
+			close()
+		}
+	}()
+	if err != nil {
+		return nodeCount, availableNode, err
+	}
+	nodes, err := cmCli.ListNodesInCluster(ctx, &cm.ListNodesInClusterRequest{
 		ClusterID: opts.ClusterID,
 	})
 	if err != nil {
