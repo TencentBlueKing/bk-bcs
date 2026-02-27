@@ -1185,7 +1185,8 @@ func AddNodesToCluster(ctx context.Context, info *cloudprovider.CloudDependBasic
 
 	if len(result.FailedNodeInfos) > 0 {
 		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
-			fmt.Sprintf("AddNodesToCluster AddExistedInstancesToCluster failed nodes: [%v], reason [%v]", result.FailedNodeInfos, result.FailedReasons))
+			fmt.Sprintf("AddNodesToCluster AddExistedInstancesToCluster failed nodes: [%v], reason [%v]",
+				result.FailedNodeInfos, result.FailedReasons))
 	}
 
 	return result, nil
