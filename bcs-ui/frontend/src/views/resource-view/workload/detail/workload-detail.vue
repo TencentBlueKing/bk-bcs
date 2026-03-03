@@ -647,11 +647,18 @@ export default defineComponent({
     const handleGetPodsData = async () => {
       if (!clusterId.value) return;
       // 获取工作负载下对应的pod数据
-      const matchLabels = detail.value?.manifest?.spec?.selector?.matchLabels || {};
-      const labelSelector = Object.keys(matchLabels).reduce((pre, key, index) => {
-        pre += `${index > 0 ? ',' : ''}${key}=${matchLabels[key]}`;
-        return pre;
-      }, '');
+      let labelSelector = '';
+      if (String(props.isCommonCrd) === 'true') {
+        // 对于 CommonCrd，使用 manifestExt 中的 podLabelSelector
+        labelSelector = detail.value?.manifestExt?.podLabelSelector || '';
+      } else {
+        // 对于普通工作负载，使用 manifest 中的 selector
+        const matchLabels = detail.value?.manifest?.spec?.selector?.matchLabels || {};
+        labelSelector = Object.keys(matchLabels).reduce((pre, key, index) => {
+          pre += `${index > 0 ? ',' : ''}${key}=${matchLabels[key]}`;
+          return pre;
+        }, '');
+      }
 
       const params = String(props.isCommonCrd) === 'true' ? {} : {
         ownerKind: props.kind,
