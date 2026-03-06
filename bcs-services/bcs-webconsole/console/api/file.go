@@ -31,6 +31,18 @@ import (
 )
 
 // UploadHandler 上传文件
+//
+// @Summary      上传文件到容器
+// @Description  通过 session 将文件上传到容器内指定路径（multipart/form-data）
+// @Tags         FileTransfer
+// @Accept       multipart/form-data
+// @Produce      json
+// @Param        sessionId    path       string              true  "WebSocket Session ID"
+// @Param        upload_path  formData   string              true  "容器内目标目录路径"
+// @Param        file         formData   file                true  "要上传的文件"
+// @Success      200          {object}   types.APIResponse   "上传成功"
+// @Failure      400          {object}   types.APIResponse   "参数错误或上传失败"
+// @Router       /api/sessions/{sessionId}/upload/ [post]
 // NOCC:golint/fnsize(设计如此:)
 // nolint
 func (s *service) UploadHandler(c *gin.Context) {
@@ -132,6 +144,17 @@ func (s *service) UploadHandler(c *gin.Context) {
 }
 
 // DownloadHandler 下载文件
+//
+// @Summary      从容器下载文件
+// @Description  通过 session 从容器内指定路径下载文件，返回文件流
+// @Tags         FileTransfer
+// @Accept       json
+// @Produce      application/octet-stream
+// @Param        sessionId      path      string  true  "WebSocket Session ID"
+// @Param        download_path  query     string  true  "容器内文件路径"
+// @Success      200            {file}    binary  "文件内容"
+// @Failure      400            {object}  types.APIResponse  "参数错误或下载失败"
+// @Router       /api/sessions/{sessionId}/download/ [get]
 func (s *service) DownloadHandler(c *gin.Context) {
 	downloadPath := c.Query("download_path")
 	sessionId := c.Param("sessionId")
@@ -183,6 +206,17 @@ func (s *service) DownloadHandler(c *gin.Context) {
 }
 
 // CheckDownloadHandler 下载文件预检查
+//
+// @Summary      下载文件预检查
+// @Description  在正式下载前检查容器内文件是否存在、是否为目录、是否超过大小限制（30MB）
+// @Tags         FileTransfer
+// @Accept       json
+// @Produce      json
+// @Param        sessionId      path      string              true  "WebSocket Session ID"
+// @Param        download_path  query     string              true  "容器内文件路径"
+// @Success      200            {object}  types.APIResponse   "检查结果（passed=true 表示可下载）"
+// @Failure      400            {object}  types.APIResponse   "请求失败"
+// @Router       /api/sessions/{sessionId}/download/check/ [get]
 func (s *service) CheckDownloadHandler(c *gin.Context) {
 	downloadPath := c.Query("download_path")
 	sessionId := c.Param("sessionId")

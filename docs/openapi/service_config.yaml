@@ -1,0 +1,101 @@
+# BCS OpenAPI 服务配置
+# 统一维护各服务的 OpenAPI 生成参数
+#
+# 服务类型:
+#   proto     - 从 protobuf 文件生成
+#               流程: proto -> protoc-gen-swagger -> swagger.json -> swagger2openapi -> openapi.yaml
+#   swag      - 从 Go 代码 swag 注解生成
+#               流程: swag init -> swagger.json + docs.go -> swagger2openapi -> openapi.yaml
+#   gorestful - 从 go-restful 路由文件解析生成
+#
+# 字段说明:
+#   type            服务类型 (proto/swag/gorestful)
+#   module          所在模块目录 (bcs-services/bcs-scenarios)
+#   source_dir      服务相对于仓库根目录的路径
+#   proto_file      proto 文件相对于 source_dir 的路径 (type=proto)
+#   proto_includes  protoc 的 -I 包含目录列表，相对于 source_dir (type=proto)
+#   output_dir      输出根目录，相对于仓库根目录 base_dir (type=proto/swag)
+#                   - output_dir/tmp/   存放生成过程中的临时文件（swagger.json/docs.go 等），完成后自动清理
+#                   - output_dir/       存放最终生成的 openapi.yaml
+#   entry           swag init 的入口文件，相对于 source_dir (type=swag)
+#   router_files    go-restful 路由文件列表，相对于 source_dir (type=gorestful)
+#   base_path       服务 base path (type=gorestful)
+#   title           OpenAPI info.title，仅 gorestful 类型使用
+#   version         OpenAPI info.version，仅 gorestful 类型使用，默认 0.0.1
+
+base_dir: ../../bk-bcs
+
+services:
+
+  # ============================================================
+  # Proto 类服务 - proto -> protoc-gen-swagger -> openapi.yaml
+  # ============================================================
+
+  bcs-cluster-manager:
+    type: proto
+    module: bcs-services
+    source_dir: bcs-services/bcs-cluster-manager
+    proto_file: api/clustermanager/clustermanager.proto
+    proto_includes:
+      - third_party
+    output_dir: docs/openapi/bcs-services/bcs-cluster-manager
+
+  bcs-helm-manager:
+    type: proto
+    module: bcs-services
+    source_dir: bcs-services/bcs-helm-manager
+    proto_file: proto/bcs-helm-manager/bcs-helm-manager.proto
+    proto_includes:
+      - third_party
+    output_dir: docs/openapi/bcs-services/bcs-helm-manager
+
+  bcs-project-manager:
+    type: proto
+    module: bcs-services
+    source_dir: bcs-services/bcs-project-manager
+    proto_file: proto/bcsproject/bcsproject.proto
+    proto_includes:
+      - third_party
+    output_dir: docs/openapi/bcs-services/bcs-project-manager
+
+  cluster-resources:
+    type: proto
+    module: bcs-services
+    source_dir: bcs-services/cluster-resources
+    proto_file: proto/cluster-resources/cluster-resources.proto
+    proto_includes:
+      - third_party
+    output_dir: docs/openapi/bcs-services/cluster-resources
+
+  # ============================================================
+  # Swag 类服务 - swag init -> swagger.json -> openapi.yaml
+  # ============================================================
+
+  bcs-monitor:
+    type: swag
+    module: bcs-services
+    source_dir: bcs-services/bcs-monitor
+    entry: pkg/api/routes.go
+    output_dir: docs/openapi/bcs-services/bcs-monitor
+
+  bcs-webconsole:
+    type: swag
+    module: bcs-services
+    source_dir: bcs-services/bcs-webconsole
+    entry: app/app.go
+    output_dir: docs/openapi/bcs-services/bcs-webconsole
+
+  # ============================================================
+  # Gorestful 类服务 - 解析 go-restful 路由生成 openapi.yaml
+  # ============================================================
+
+  bcs-user-manager:
+    type: gorestful
+    module: bcs-services
+    source_dir: bcs-services/bcs-user-manager
+    router_files:
+      - app/user-manager/v1http/router.go
+      - app/user-manager/v3http/router.go
+    base_path: /usermanager
+    title: "BCS User Manager API"
+    version: "0.0.1"

@@ -1,0 +1,1321 @@
+openapi: 3.0.1
+info:
+  title: BCS User Manager API
+  description: BCS User Manager API，提供用户、集群、Token、权限等管理能力。
+  version: 0.0.1
+paths:
+  /usermanager/healthz:
+    get:
+      tags:
+      - V1
+      summary: Health
+      operationId: Health
+      responses:
+        '200':
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonResponse'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /usermanager/v1/users/admin/{user_name}:
+    post:
+      tags:
+      - V1
+      summary: Create a admin user
+      operationId: CreateAdminUser
+      parameters:
+      - name: user_name
+        in: path
+        required: true
+        description: '[Path参数] user_name'
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonResponse'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    get:
+      tags:
+      - V1
+      summary: Get an admin user and usertoken information
+      operationId: GetAdminUser
+      parameters:
+      - name: user_name
+        in: path
+        required: true
+        description: '[Path参数] user_name'
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonResponse'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /usermanager/v1/users/saas/{user_name}:
+    post:
+      tags:
+      - V1
+      summary: Create a saas user
+      operationId: CreateSaasUser
+      parameters:
+      - name: user_name
+        in: path
+        required: true
+        description: '[Path参数] user_name'
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonResponse'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    get:
+      tags:
+      - V1
+      summary: Get an saas user and usertoken information
+      operationId: GetSaasUser
+      parameters:
+      - name: user_name
+        in: path
+        required: true
+        description: '[Path参数] user_name'
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonResponse'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /usermanager/v1/users/saas/{user_name}/refresh:
+    put:
+      tags:
+      - V1
+      summary: Refresh usertoken for a saas user
+      operationId: RefreshSaasToken
+      parameters:
+      - name: user_name
+        in: path
+        required: true
+        description: '[Path参数] user_name'
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonResponse'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /usermanager/v1/users/plain/{user_name}:
+    post:
+      tags:
+      - V1
+      summary: Create a plain user
+      operationId: CreatePlainUser
+      parameters:
+      - name: user_name
+        in: path
+        required: true
+        description: '[Path参数] user_name'
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonResponse'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    get:
+      tags:
+      - V1
+      summary: Get a plain user and usertoken information
+      operationId: GetPlainUser
+      parameters:
+      - name: user_name
+        in: path
+        required: true
+        description: '[Path参数] user_name'
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonResponse'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /usermanager/v1/users/plain/{user_name}/refresh/{expire_time}:
+    put:
+      tags:
+      - V1
+      summary: Refresh usertoken for a plain user
+      operationId: RefreshPlainToken
+      parameters:
+      - name: user_name
+        in: path
+        required: true
+        description: '[Path参数] user_name'
+        schema:
+          type: string
+      - name: expire_time
+        in: path
+        required: true
+        description: '[Path参数] expire_time'
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonResponse'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /usermanager/v1/clusters:
+    post:
+      tags:
+      - V1
+      summary: Create new cluster
+      operationId: CreateCluster
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateClusterForm'
+      responses:
+        '200':
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonResponse'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /usermanager/v1/clusters/{cluster_id}/register_tokens:
+    post:
+      tags:
+      - V1
+      summary: Http handler for register specified cluster token
+      operationId: CreateRegisterToken
+      parameters:
+      - name: cluster_id
+        in: path
+        required: true
+        description: '[Path参数] cluster_id'
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonResponse'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    get:
+      tags:
+      - V1
+      summary: Http handler for search specified cluster token
+      description: it's served for bcs-gateway-discovery for cluster service discovery
+      operationId: GetRegisterToken
+      parameters:
+      - name: cluster_id
+        in: path
+        required: true
+        description: '[Path参数] cluster_id'
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonResponse'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /usermanager/v1/clusters/{cluster_id}/credentials:
+    put:
+      tags:
+      - V1
+      summary: Updates the current cluster credentials, a valid registertoken is required to performe
+      description: a credentials updating.
+      operationId: UpdateCredentials
+      parameters:
+      - name: cluster_id
+        in: path
+        required: true
+        description: '[Path参数] cluster_id'
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCredentialsForm'
+      responses:
+        '200':
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonResponse'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    get:
+      tags:
+      - V1
+      summary: Get credential according cluster id
+      operationId: GetCredentials
+      parameters:
+      - name: cluster_id
+        in: path
+        required: true
+        description: '[Path参数] cluster_id'
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonResponse'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /usermanager/v1/clusters/credentials:
+    get:
+      tags:
+      - V1
+      summary: List all cluster credentials
+      operationId: ListCredentials
+      responses:
+        '200':
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonResponse'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /usermanager/v1/permissions:
+    post:
+      tags:
+      - V1
+      summary: Grant permissions
+      operationId: GrantPermission
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PermRequest'
+      responses:
+        '200':
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonResponse'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    get:
+      tags:
+      - V1
+      summary: Get permissions of a user for a resourcetype
+      operationId: GetPermission
+      responses:
+        '200':
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonResponse'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      tags:
+      - V1
+      summary: Revoke permissions
+      operationId: RevokePermission
+      responses:
+        '200':
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonResponse'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /usermanager/v1/permissions/verify:
+    get:
+      tags:
+      - V1
+      summary: '[get] path /usermanager/v1/permissions/verify'
+      operationId: VerifyPermission
+      responses:
+        '200':
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonResponse'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /usermanager/v2/permissions/verify:
+    get:
+      tags:
+      - V1
+      summary: '[get] path /usermanager/v2/permissions/verify'
+      operationId: VerifyPermissionV2
+      responses:
+        '200':
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonResponse'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /usermanager/v1/tokens:
+    post:
+      tags:
+      - V1
+      summary: Create a token for user.
+      operationId: CreateToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTokenForm'
+      responses:
+        '200':
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonResponse'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /usermanager/v1/users/{username}/tokens:
+    get:
+      tags:
+      - V1
+      summary: Get token
+      operationId: GetToken
+      parameters:
+      - name: username
+        in: path
+        required: true
+        description: '[Path参数] username'
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonResponse'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /usermanager/v1/tokens/{token}:
+    delete:
+      tags:
+      - V1
+      summary: Delete token
+      operationId: DeleteToken
+      parameters:
+      - name: token
+        in: path
+        required: true
+        description: '[Path参数] token'
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonResponse'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      tags:
+      - V1
+      summary: Update token
+      operationId: UpdateToken
+      parameters:
+      - name: token
+        in: path
+        required: true
+        description: '[Path参数] token'
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTokenForm'
+      responses:
+        '200':
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonResponse'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /usermanager/v1/tokens/temp:
+    post:
+      tags:
+      - V1
+      summary: Create temp token
+      operationId: CreateTempToken
+      responses:
+        '200':
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonResponse'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /usermanager/v1/tokens/client:
+    post:
+      tags:
+      - V1
+      summary: Create client token
+      operationId: CreateClientToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateClientTokenForm'
+      responses:
+        '200':
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonResponse'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /usermanager/v1/users/info:
+    get:
+      tags:
+      - V1
+      summary: Get the current login user information
+      operationId: GetCurrentUserInfo
+      responses:
+        '200':
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonResponse'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /usermanager/v1/tokens/extra/getClusterUserToken:
+    get:
+      tags:
+      - V1
+      summary: Get token by user and cluster id
+      operationId: GetTokenByUserAndClusterID
+      responses:
+        '200':
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonResponse'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /usermanager/v1/tke/cidr/add_cidr:
+    post:
+      tags:
+      - V1
+      summary: Init tke cidrs
+      operationId: AddTkeCidr
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddTkeCidrForm'
+      responses:
+        '200':
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonResponse'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /usermanager/v1/tke/cidr/apply_cidr:
+    post:
+      tags:
+      - V1
+      summary: Assign an cidr to client
+      operationId: ApplyTkeCidr
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApplyTkeCidrForm'
+      responses:
+        '200':
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonResponse'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /usermanager/v1/tke/cidr/release_cidr:
+    post:
+      tags:
+      - V1
+      summary: Release a cidr to be available
+      operationId: ReleaseTkeCidr
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReleaseTkeCidrForm'
+      responses:
+        '200':
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonResponse'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /usermanager/v1/tke/cidr/list_count:
+    post:
+      tags:
+      - V1
+      summary: List cidr count group by vpc
+      operationId: ListTkeCidr
+      responses:
+        '200':
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonResponse'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /usermanager/v1/tke/{cluster_id}/sync_credentials:
+    post:
+      tags:
+      - V1
+      summary: Sync the tke cluster credentials from tke
+      operationId: SyncTkeClusterCredentials
+      parameters:
+      - name: cluster_id
+        in: path
+        required: true
+        description: '[Path参数] cluster_id'
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonResponse'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /usermanager/v1/iam-provider/resources:
+    post:
+      tags:
+      - V1
+      summary: Dispatches the request to the corresponding resource provider
+      operationId: ResourceDispatch
+      responses:
+        '200':
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonResponse'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /usermanager/v1/iam/user_perms:
+    post:
+      tags:
+      - V1
+      summary: Get perm
+      operationId: GetPerms
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PermRequest'
+      responses:
+        '200':
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonResponse'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /usermanager/v1/iam/user_perms/actions/{action_id}:
+    post:
+      tags:
+      - V1
+      summary: Get perm by action id
+      operationId: GetPermByActionID
+      parameters:
+      - name: action_id
+        in: path
+        required: true
+        description: '[Path参数] action_id'
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PermRequest'
+      responses:
+        '200':
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonResponse'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /usermanager/activity_logs:
+    post:
+      tags:
+      - V3
+      summary: Push activities
+      operationId: PushActivities
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PushActivitiesForm'
+      responses:
+        '200':
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonResponse'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /usermanager/activity_logs/resource_types:
+    get:
+      tags:
+      - V3
+      summary: Resource types
+      operationId: ResourceTypes
+      responses:
+        '200':
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonResponse'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /usermanager/tokens/{project_code}/clients:
+    post:
+      tags:
+      - V3
+      summary: 创建项目下平台账号
+      operationId: CreateProjectClient
+      parameters:
+      - name: project_code
+        in: path
+        required: true
+        description: '[Path参数] project_code'
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProjectClientForm'
+      responses:
+        '200':
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonResponse'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    get:
+      tags:
+      - V3
+      summary: 获取项目下平台账号
+      operationId: GetProjectClients
+      parameters:
+      - name: project_code
+        in: path
+        required: true
+        description: '[Path参数] project_code'
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonResponse'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /usermanager/tokens/{project_code}/clients/{name}:
+    put:
+      tags:
+      - V3
+      summary: 更新项目下平台账号
+      operationId: UpdateProjectClient
+      parameters:
+      - name: project_code
+        in: path
+        required: true
+        description: '[Path参数] project_code'
+        schema:
+          type: string
+      - name: name
+        in: path
+        required: true
+        description: '[Path参数] name'
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProjectClientForm'
+      responses:
+        '200':
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonResponse'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      tags:
+      - V3
+      summary: 删除项目下平台账号
+      operationId: DeleteProjectClient
+      parameters:
+      - name: project_code
+        in: path
+        required: true
+        description: '[Path参数] project_code'
+        schema:
+          type: string
+      - name: name
+        in: path
+        required: true
+        description: '[Path参数] name'
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonResponse'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /usermanager/tokens/{project_code}/clients/{name}/authority:
+    put:
+      tags:
+      - V3
+      summary: 给平台账号授权
+      operationId: AuthorizeClient
+      parameters:
+      - name: project_code
+        in: path
+        required: true
+        description: '[Path参数] project_code'
+        schema:
+          type: string
+      - name: name
+        in: path
+        required: true
+        description: '[Path参数] name'
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthorizeClientForm'
+      responses:
+        '200':
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonResponse'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /usermanager/tokens/{project_code}/clients/{name}/deauthority:
+    put:
+      tags:
+      - V3
+      summary: 取消平台账号授权
+      operationId: DeAuthorizeClient
+      parameters:
+      - name: project_code
+        in: path
+        required: true
+        description: '[Path参数] project_code'
+        schema:
+          type: string
+      - name: name
+        in: path
+        required: true
+        description: '[Path参数] name'
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthorizeClientForm'
+      responses:
+        '200':
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommonResponse'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+servers:
+- url: /usermanager
+components:
+  schemas:
+    CommonResponse:
+      type: object
+      properties:
+        result:
+          type: boolean
+          description: 请求是否成功
+        code:
+          type: integer
+          description: 状态码，0 表示成功
+        message:
+          type: string
+          description: 返回信息
+        data:
+          type: object
+          description: 返回数据
+    ErrorResponse:
+      type: object
+      properties:
+        result:
+          type: boolean
+        code:
+          type: integer
+          description: 错误码
+        message:
+          type: string
+          description: 错误信息
+        data:
+          type: object
+    AddTkeCidrForm:
+      type: object
+      description: xxx
+      properties:
+        vpc:
+          type: string
+        tke_cidrs:
+          type: array
+          items:
+            $ref: '#/components/schemas/TkeCidr'
+    TkeCidr:
+      type: object
+      description: table
+      properties:
+        i_d:
+          type: integer
+        vpc:
+          type: string
+        cidr:
+          type: string
+        ip_number:
+          type: integer
+        status:
+          type: string
+        cluster:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    PushActivitiesForm:
+      type: object
+      description: push activities form
+      properties:
+        activities:
+          type: array
+          items:
+            $ref: '#/components/schemas/PushActivitiesData'
+    PushActivitiesData:
+      type: object
+      description: push activities data
+      properties:
+        project_code:
+          type: string
+        resource_type:
+          type: string
+        resource_name:
+          type: string
+        resource_id:
+          type: string
+        activity_type:
+          type: string
+        status:
+          type: string
+        username:
+          type: string
+        description:
+          type: string
+        source_ip:
+          type: string
+        user_agent:
+          type: string
+        extra:
+          type: string
+    AuthorizeClientForm:
+      type: object
+      description: is the form of authorizing client
+      properties:
+        username:
+          type: string
+    PermRequest:
+      type: object
+      description: perm request
+      properties:
+        action_ids:
+          type: array
+          items:
+            type: string
+        perm_ctx:
+          type: object
+    ReleaseTkeCidrForm:
+      type: object
+      description: xxx
+      properties:
+        vpc:
+          type: string
+        cidr:
+          type: string
+        cluster:
+          type: string
+    CreateProjectClientForm:
+      type: object
+      description: is the form of creating project client
+      properties:
+        clientName:
+          type: string
+        expiration:
+          type: integer
+    CreateTokenForm:
+      type: object
+      description: is a form for create token.
+      properties:
+        usertype:
+          type: integer
+        username:
+          type: string
+        expiration:
+          type: integer
+    CreateClusterForm:
+      type: object
+      description: request form for create cluster
+      properties:
+        cluster_id:
+          type: string
+        cluster_type:
+          type: string
+        tke_cluster_id:
+          type: string
+        tke_cluster_region:
+          type: string
+    UpdateCredentialsForm:
+      type: object
+      description: update form for credential
+      properties:
+        register_token:
+          type: string
+        server_addresses:
+          type: string
+        cacert_data:
+          type: string
+        user_token:
+          type: string
+    UpdateTokenForm:
+      type: object
+      description: is a form for update token.
+      properties:
+        expiration:
+          type: integer
+    ApplyTkeCidrForm:
+      type: object
+      description: xxx
+      properties:
+        vpc:
+          type: string
+        cluster:
+          type: string
+        ip_number:
+          type: integer
+    CreateClientTokenForm:
+      type: object
+      description: is the form of creating client token
+      properties:
+        clientName:
+          type: string
+        clientSecret:
+          type: string
+        expiration:
+          type: integer
+    UpdateProjectClientForm:
+      type: object
+      description: is the form of updating project client
+      properties:
+        manager:
+          type: array
+          items:
+            type: string

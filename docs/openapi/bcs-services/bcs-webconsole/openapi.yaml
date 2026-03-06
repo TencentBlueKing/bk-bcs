@@ -1,0 +1,567 @@
+openapi: 3.0.0
+info:
+  description: BCS WebConsole 提供基于 Web 的 Kubernetes 容器终端管理能力
+  title: BCS WebConsole API
+  contact: {}
+  version: 0.0.1
+paths:
+  /-/healthy:
+    get:
+      description: 服务存活探针，返回 OK 表示服务正常运行
+      tags:
+        - System
+      summary: 健康检查
+      responses:
+        "200":
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+  /-/ready:
+    get:
+      description: 服务就绪探针，返回 OK 表示服务已就绪可接收流量
+      tags:
+        - System
+      summary: 就绪检查
+      responses:
+        "200":
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+  /api/command/delay:
+    get:
+      description: 获取所有已配置命令延时统计的用户及其配置信息（需要管理员权限）
+      tags:
+        - CommandDelay
+      summary: 查询已开启命令延时统计的用户列表
+      responses:
+        "200":
+          description: 返回用户延时配置 map
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/github_com_Tencent_bk-bcs_bcs-services_bcs-webconso\
+                  le_console_types.APIResponse"
+        "400":
+          description: 请求失败
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/github_com_Tencent_bk-bcs_bcs-services_bcs-webconso\
+                  le_console_types.APIResponse"
+  "/api/command/delay/{username}":
+    get:
+      description: 获取指定用户的命令延时统计开关配置（需要管理员权限）
+      tags:
+        - CommandDelay
+      summary: 查询用户命令延时统计开关状态
+      parameters:
+        - description: 用户名
+          name: username
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 返回延时统计配置
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/github_com_Tencent_bk-bcs_bcs-services_bcs-webconso\
+                  le_console_types.APIResponse"
+        "400":
+          description: 用户未设置或请求失败
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/github_com_Tencent_bk-bcs_bcs-services_bcs-webconso\
+                  le_console_types.APIResponse"
+    put:
+      description: 开启或关闭指定用户的命令延时统计功能（需要管理员权限）
+      tags:
+        - CommandDelay
+      summary: 设置用户命令延时统计开关
+      parameters:
+        - description: 用户名
+          name: username
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/types.CommandDelay"
+        description: 延时统计配置
+        required: true
+      responses:
+        "200":
+          description: 操作成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/github_com_Tencent_bk-bcs_bcs-services_bcs-webconso\
+                  le_console_types.APIResponse"
+        "400":
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/github_com_Tencent_bk-bcs_bcs-services_bcs-webconso\
+                  le_console_types.APIResponse"
+  "/api/command/delay/{username}/meter":
+    get:
+      description: 获取指定用户在各集群的命令延时统计数据，可按集群过滤（需要管理员权限）
+      tags:
+        - CommandDelay
+      summary: 查询用户命令延时数据
+      parameters:
+        - description: 用户名
+          name: username
+          in: path
+          required: true
+          schema:
+            type: string
+        - description: 集群ID（可选，不填返回所有集群）
+          name: clusterId
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 返回延时统计数据列表
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/github_com_Tencent_bk-bcs_bcs-services_bcs-webconso\
+                  le_console_types.APIResponse"
+        "400":
+          description: 请求失败
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/github_com_Tencent_bk-bcs_bcs-services_bcs-webconso\
+                  le_console_types.APIResponse"
+  "/api/portal/projects/{projectId}/clusters/{clusterId}/cluster/":
+    post:
+      description: 通过 OpenAPI 为指定集群创建 WebConsole 会话（蓝鲸API网关 & App鉴权），暂未实现
+      tags:
+        - Portal
+      summary: 创建集群级别 Portal Session
+      parameters:
+        - description: 项目ID
+          name: projectId
+          in: path
+          required: true
+          schema:
+            type: string
+        - description: 集群ID
+          name: clusterId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 返回 session 信息
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/github_com_Tencent_bk-bcs_bcs-services_bcs-webconso\
+                  le_console_types.APIResponse"
+        "400":
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/github_com_Tencent_bk-bcs_bcs-services_bcs-webconso\
+                  le_console_types.APIResponse"
+  "/api/portal/projects/{projectId}/clusters/{clusterId}/container/":
+    post:
+      description: 通过 OpenAPI 为指定容器创建 WebConsole 会话，返回 session_id 和
+        web_console_url（蓝鲸API网关 & App鉴权）
+      tags:
+        - Portal
+      summary: 创建容器级别 Portal Session
+      parameters:
+        - description: 项目ID
+          name: projectId
+          in: path
+          required: true
+          schema:
+            type: string
+        - description: 集群ID
+          name: clusterId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/podmanager.OpenQuery"
+        description: 请求体
+        required: true
+      responses:
+        "200":
+          description: 返回 session_id 和 web_console_url
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/github_com_Tencent_bk-bcs_bcs-services_bcs-webconso\
+                  le_console_types.APIResponse"
+        "400":
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/github_com_Tencent_bk-bcs_bcs-services_bcs-webconso\
+                  le_console_types.APIResponse"
+  "/api/portal/sessions/{sessionId}/":
+    get:
+      description: 通过 Portal session_id 换取 WebConsole 可用的 session_id 和 ws_url（蓝鲸API网关鉴权）
+      tags:
+        - Portal
+      summary: Portal 换取 WebConsole Session
+      parameters:
+        - description: Portal Session ID
+          name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+        - description: 语言
+          name: lang
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 返回 session_id 和 ws_url
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/github_com_Tencent_bk-bcs_bcs-services_bcs-webconso\
+                  le_console_types.APIResponse"
+        "400":
+          description: session 不合法或已过期
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/github_com_Tencent_bk-bcs_bcs-services_bcs-webconso\
+                  le_console_types.APIResponse"
+  "/api/projects/{projectId}/clusters/":
+    get:
+      description: 根据项目ID获取该项目下所有集群列表
+      tags:
+        - Console
+      summary: 获取项目下集群列表
+      parameters:
+        - description: 项目ID
+          name: projectId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 集群列表
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/github_com_Tencent_bk-bcs_bcs-services_bcs-webconso\
+                  le_console_types.APIResponse"
+        "400":
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/github_com_Tencent_bk-bcs_bcs-services_bcs-webconso\
+                  le_console_types.APIResponse"
+  "/api/projects/{projectId}/clusters/{clusterId}/session/":
+    get:
+      description: 为指定集群创建 WebConsole 会话，返回 session_id 和 ws_url
+      tags:
+        - Console
+      summary: 创建 WebConsole Session
+      parameters:
+        - description: 项目ID
+          name: projectId
+          in: path
+          required: true
+          schema:
+            type: string
+        - description: 集群ID
+          name: clusterId
+          in: path
+          required: true
+          schema:
+            type: string
+        - description: 容器ID（直连容器模式）
+          name: container_id
+          in: query
+          schema:
+            type: string
+        - description: 命名空间（直连容器模式）
+          name: namespace
+          in: query
+          schema:
+            type: string
+        - description: Pod名称（直连容器模式）
+          name: pod_name
+          in: query
+          schema:
+            type: string
+        - description: 容器名称（直连容器模式）
+          name: container_name
+          in: query
+          schema:
+            type: string
+        - description: 来源标识
+          name: source
+          in: query
+          schema:
+            type: string
+        - description: 语言
+          name: lang
+          in: query
+          schema:
+            type: string
+        - description: Shell 类型（sh/bash）
+          name: shell
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 返回 session_id 和 ws_url
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/github_com_Tencent_bk-bcs_bcs-services_bcs-webconso\
+                  le_console_types.APIResponse"
+        "400":
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/github_com_Tencent_bk-bcs_bcs-services_bcs-webconso\
+                  le_console_types.APIResponse"
+  "/api/sessions/{sessionId}/download/":
+    get:
+      description: 通过 session 从容器内指定路径下载文件，返回文件流
+      tags:
+        - FileTransfer
+      summary: 从容器下载文件
+      parameters:
+        - description: WebSocket Session ID
+          name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+        - description: 容器内文件路径
+          name: download_path
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 文件内容
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        "400":
+          description: 参数错误或下载失败
+          content:
+            application/octet-stream:
+              schema:
+                $ref: "#/components/schemas/github_com_Tencent_bk-bcs_bcs-services_bcs-webconso\
+                  le_console_types.APIResponse"
+  "/api/sessions/{sessionId}/download/check/":
+    get:
+      description: 在正式下载前检查容器内文件是否存在、是否为目录、是否超过大小限制（30MB）
+      tags:
+        - FileTransfer
+      summary: 下载文件预检查
+      parameters:
+        - description: WebSocket Session ID
+          name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+        - description: 容器内文件路径
+          name: download_path
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 检查结果（passed=true 表示可下载）
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/github_com_Tencent_bk-bcs_bcs-services_bcs-webconso\
+                  le_console_types.APIResponse"
+        "400":
+          description: 请求失败
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/github_com_Tencent_bk-bcs_bcs-services_bcs-webconso\
+                  le_console_types.APIResponse"
+  "/api/sessions/{sessionId}/upload/":
+    post:
+      description: 通过 session 将文件上传到容器内指定路径（multipart/form-data）
+      tags:
+        - FileTransfer
+      summary: 上传文件到容器
+      parameters:
+        - description: WebSocket Session ID
+          name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                upload_path:
+                  description: 容器内目标目录路径
+                  type: string
+                file:
+                  description: 要上传的文件
+                  type: string
+                  format: binary
+              required:
+                - upload_path
+                - file
+        required: true
+      responses:
+        "200":
+          description: 上传成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/github_com_Tencent_bk-bcs_bcs-services_bcs-webconso\
+                  le_console_types.APIResponse"
+        "400":
+          description: 参数错误或上传失败
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/github_com_Tencent_bk-bcs_bcs-services_bcs-webconso\
+                  le_console_types.APIResponse"
+  "/ws/sessions/{sessionId}/":
+    get:
+      description: 通过 WebSocket 协议建立终端连接，需先通过 CreateWebConsoleSession 获取 session_id
+      tags:
+        - Console
+      summary: 建立 WebConsole WebSocket 连接
+      parameters:
+        - description: WebSocket Session ID
+          name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+        - description: 终端行数
+          name: rows
+          in: query
+          schema:
+            type: integer
+        - description: 终端列数
+          name: cols
+          in: query
+          schema:
+            type: integer
+        - description: 是否隐藏欢迎横幅
+          name: hide_banner
+          in: query
+          schema:
+            type: boolean
+        - description: 语言
+          name: lang
+          in: query
+          schema:
+            type: string
+      responses:
+        "101":
+          description: WebSocket 协议升级成功
+          content:
+            application/json:
+              schema:
+                type: string
+        "400":
+          description: 连接参数错误
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/github_com_Tencent_bk-bcs_bcs-services_bcs-webconso\
+                  le_console_types.APIResponse"
+servers:
+  - url: /webconsole
+components:
+  schemas:
+    github_com_Tencent_bk-bcs_bcs-services_bcs-webconsole_console_types.APIResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+        data: {}
+        message:
+          type: string
+        request_id:
+          type: string
+    podmanager.OpenQuery:
+      type: object
+      required:
+        - operator
+      properties:
+        command:
+          type: string
+        conn_idle_timeout:
+          description: 空闲时间, 单位分钟
+          type: integer
+        container_id:
+          type: string
+        container_name:
+          type: string
+        namespace:
+          type: string
+        operator:
+          type: string
+        pod_name:
+          type: string
+        session_timeout:
+          description: session 过期时间, 单位分钟
+          type: integer
+        viewers:
+          description: 可共享查看
+          type: array
+          items:
+            type: string
+        ws_acquire:
+          description: 是否返回 websocket_url
+          type: boolean
+    types.CommandDelay:
+      type: object
+      properties:
+        console_key:
+          type: string
+        enabled:
+          type: boolean
