@@ -103,6 +103,11 @@ var NoCheckTenantMethod = []string{
 	"/api/command/delay",
 	"/api/command/delay/:username",
 	"/api/command/delay/:username/meter",
+	"/api/portal/sessions/:sessionId/",
+	"/ws/sessions/:sessionId/",
+	"/api/sessions/:sessionId/upload/",
+	"/api/sessions/:sessionId/download/",
+	"/api/sessions/:sessionId/download/check/",
 }
 
 // SkipMethod skip method tenant validation
