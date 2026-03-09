@@ -76,6 +76,10 @@ func ParseIngNetwork(manifest map[string]interface{}, network *model.IngNetwork)
 
 	subNetIDPath := []string{"metadata", "annotations", resCsts.IngSubNetIDAnnoKey}
 	network.SubNetID = mapx.GetStr(manifest, subNetIDPath)
+	// 新增aws ingress 子网id解析
+	if network.SubNetID == "" {
+		network.SubNetID = mapx.GetStr(manifest, []string{"metadata", "annotations", resCsts.AwsIngSubNetIDAnnoKey})
+	}
 
 	// 如果已指定子网 ID，则使用模式为为自动创建新 clb，否则使用已存在的 clb
 	if network.SubNetID != "" {
