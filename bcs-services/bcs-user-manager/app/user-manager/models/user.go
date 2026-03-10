@@ -59,11 +59,12 @@ func (t *BcsUser) IsAdmin() bool {
 
 // Userinfo response user info
 type Userinfo struct {
-	UserName  string `json:"username"`
-	AvatarUrl string `json:"avatar_url"`
-	TenantID  string `json:"tenant_id"`
-	Language  string `json:"language"`
-	TimeZone  string `json:"time_zone"`
+	UserName    string `json:"username"`
+	AvatarUrl   string `json:"avatar_url"`
+	TenantID    string `json:"tenant_id"`
+	Language    string `json:"language"`
+	TimeZone    string `json:"time_zone"`
+	DisplayName string `json:"display_name"`
 }
 
 // BcsClientUser client user table 平台账号

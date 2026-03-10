@@ -312,19 +312,27 @@ func GetCurrentUserInfo(request *restful.Request, response *restful.Response) {
 	userInfo := &models.Userinfo{
 		UserName:  "",
 		AvatarUrl: "",
+		Language:  "zh-CN",
+		TimeZone:  "Asia/Shanghai",
 	}
 	if user, ok := request.Attribute(constant.CurrentUserAttr).(*models.BcsUser); ok {
 		userInfo.UserName = user.Name
-		userInfo.TenantID = user.TenantID
+		userInfo.TenantID = utils.GetTenantIDFromAttribute(request)
 	}
 
-	bkUserInfo, err := component.GetBKUserInfo(request.Request.Context(), userInfo.TenantID, userInfo.UserName)
-	if err != nil {
-		blog.Warnf("failed to get bk user info: %s", err.Error())
-	}
-	if bkUserInfo != nil {
-		userInfo.Language = bkUserInfo.Language
-		userInfo.TimeZone = bkUserInfo.TimeZone
+	bkTokenCookie, err := request.Request.Cookie("bk_token")
+	if err != nil || bkTokenCookie == nil || bkTokenCookie.Value == "" {
+		blog.Infof("GetCurrentUserInfo request has no bk_token cookie")
+	} else {
+		bkUserInfo, getUserErr := component.GetBKUserInfo(request.Request.Context(), userInfo.TenantID, bkTokenCookie.Value)
+		if getUserErr != nil {
+			blog.Warnf("failed to get bk user info by bk_token: %s", getUserErr.Error())
+		}
+		if bkUserInfo != nil {
+			userInfo.Language = bkUserInfo.Language
+			userInfo.TimeZone = bkUserInfo.TimeZone
+			userInfo.DisplayName = bkUserInfo.DisplayName
+		}
 	}
 
 	data := utils.CreateResponseData(nil, "success", *userInfo)
