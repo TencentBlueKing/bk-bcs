@@ -70,13 +70,13 @@ local function concat_login_uri(conf, ctx)
     return tab_concat({conf.bk_login_host, "/plain/?size=big&c_url=", c_url})
 end
 
-local function is_ajax_request()
+local function is_ajax_request(ctx)
     local x_requested_with = core.request.header(ctx, "X-Requested-With") or ""
     return x_requested_with:lower() == "xmlhttprequest"
 end
 
 local function redirect_login(conf, ctx)
-    if is_ajax_request() then
+    if is_ajax_request(ctx) then
         return 401, {message = "bcs-auth plugin error: token is expired or is invalid"}
     end
     core.response.set_header("Location", concat_login_uri(conf, ctx))
