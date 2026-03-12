@@ -180,28 +180,24 @@ function _M:get_jwt_from_redis(credential, conf, ctx, key_prefix, create_if_null
         local userinfo
         if conf.bk_login_host_esb then
             local data = get_userinfo_handler(credential, conf)
-            if data then
-                if data["result"] then
-                    userinfo = data["data"]["bk_username"]
-                end
-                if ctx ~= nil then
-                    ctx.var["bk_login_code"] = data["code"]
-                    ctx.var["bk_login_message"] = data["message"]
-                end
+            if data and data["result"] then
+                userinfo = data["data"]["bk_username"]
+            end
+            if ctx ~= nil then
+                ctx.var["bk_login_code"] = data["code"]
+                ctx.var["bk_login_message"] = data["message"]
             end
         elseif conf.bk_login_host_tenant then
             --core.log.warn("conf.bk_login_host_tenant: ", conf.bk_login_host_tenant)
             local data = get_userinfo_handler(credential, conf)
             --core.log.warn("data: ", core.json.encode(data))
-            if data then
-                if data["data"] then
-                    userinfo = {
-                        username = data["data"]["bk_username"],
-                        tenant_id = data["data"]["tenant_id"]
-                    }
-                elseif data["username"] ~= nil or data["tenant_id"] ~= nil then
-                    userinfo = data
-                end
+            if data and data["data"] then
+                userinfo = {
+                    username = data["data"]["bk_username"],
+                    tenant_id = data["data"]["tenant_id"]
+                }
+            else
+                userinfo = data
             end
         else
             --core.log.warn("conf.bk_login_host: ", conf.bk_login_host)
