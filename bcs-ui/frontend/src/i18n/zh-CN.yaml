@@ -737,7 +737,12 @@ cluster:
         text: 所属VPC
         deficiencyIpNumTips: 可用容器网络IP数量不足
         businessSpecificVPC: 业务专属VPC
-        publicVPC: 公共VPC
+        publicVPC: 公共 VPC
+        exclusiveVPC: 独占 VPC
+        stressTestVPC: 压测 VPC
+        publicVPCTips: vpc下所有业务集群共享网络资源与出口网关，禁止压测，适合小规格集群(200节点及以下)
+        exclusiveVPCTips: 业务独占vpc网络资源
+        stressTestVPCTips: vpc专用于业务部署压测客户端，使用需明确进出口带宽与连接数，请联系jonathantan确认资源
       networkSetting1:
         text: IP资源
         maxNodePodNum: Pod IP 数量

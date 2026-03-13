@@ -9,18 +9,23 @@
     :title="$t('tke.label.selectVPC')"
     :z-index="99"
     @value-change="handleValueBefore">
-    <bcs-search-select
-      clearable
-      class="bg-[#fff]"
-      :data="searchSelectData"
-      :show-condition="false"
-      :show-popover-tag-change="false"
-      :placeholder="$t('generic.placeholder.searchWith', [`${$t('generic.label.name')} / ID`])"
-      ref="searchSelect"
-      v-model="searchSelectValue"
-      @change="searchSelectChange"
-      @clear="handleClear">
-    </bcs-search-select>
+    <div class="flex items-center justify-between">
+      <TabButtonGroup
+        v-model="vpcTypeValue"
+        :items="vpcTypeOptions" />
+      <bcs-search-select
+        clearable
+        class="bg-[#fff] w-[400px]"
+        :data="searchSelectData"
+        :show-condition="false"
+        :show-popover-tag-change="false"
+        :placeholder="$t('generic.placeholder.searchWith', [`${$t('generic.label.name')} / ID`])"
+        ref="searchSelect"
+        v-model="searchSelectValue"
+        @change="searchSelectChange"
+        @clear="handleClear">
+      </bcs-search-select>
+    </div>
     <bcs-table
       class="mt-[16px]"
       v-bkloading="{ isLoading: vpcLoading }"
@@ -117,6 +122,7 @@ import { Table } from 'bk-magic-vue';
 import { computed, defineComponent, ref, watch } from 'vue';
 
 import { cloudVpc } from '@/api/modules/cluster-manager';
+import TabButtonGroup from '@/components/tab-button-group.vue';
 import usePage from '@/composables/use-page';
 import useTableSearchSelect, { ISearchSelectData }  from '@/composables/use-table-search-select';
 import $i18n from '@/i18n/i18n-setup';
@@ -147,6 +153,9 @@ export interface IVPCItem {
 
 export default defineComponent({
   name: 'VpcCniTable',
+  components: {
+    TabButtonGroup,
+  },
   model: {
     prop: 'value',
     event: 'change',
@@ -186,6 +195,32 @@ export default defineComponent({
     const localValue = ref('');
     const curRow = ref<IVPCItem | null>(null);
 
+    // VPC 类型选项
+    const vpcTypeValue = ref('public');
+    const vpcTypeOptions = [
+      {
+        label: $i18n.t('cluster.create.label.vpc.publicVPC'),
+        value: 'public',
+        tips: $i18n.t('cluster.create.label.vpc.publicVPCTips'),
+      },
+      {
+        label: $i18n.t('cluster.create.label.vpc.exclusiveVPC'),
+        value: 'exclusive',
+        tips: $i18n.t('cluster.create.label.vpc.exclusiveVPCTips'),
+      },
+      {
+        label: $i18n.t('cluster.create.label.vpc.stressTestVPC'),
+        value: 'stress',
+        tips: $i18n.t('cluster.create.label.vpc.stressTestVPCTips'),
+      },
+    ];
+    // VPC 类型参数映射
+    const vpcTypeParamsMap = {
+      public: { businessID: '', scenario: '' },
+      exclusive: { businessID: props.businessId },
+      stress: { businessID: '', scenario: 'stress-test' },
+    };
+
     // vpc列表
 
     const vpcList = ref<IVPCItem[]>([]);
@@ -194,15 +229,16 @@ export default defineComponent({
       if (!props.cloudId || !props.region || !props.networkType || !props.businessId) {
         return;
       }
+      const vpcTypeParams = vpcTypeParamsMap[vpcTypeValue.value] || vpcTypeParamsMap.exclusive;
       handleResetPage();
       vpcLoading.value = true;
       const data = await cloudVpc({
         cloudID: props.cloudId,
         region: props.region,
         networkType: props.networkType,
-        businessID: props.businessId,
+        ...vpcTypeParams,
         ...searchParams.value,
-      }).catch(() => []);
+      }, { cancelPrevious: true }).catch(() => []);
       vpcList.value = data.filter(item => item.available === 'true');
       vpcLoading.value = false;
     };
@@ -295,7 +331,7 @@ export default defineComponent({
       getVpcList();
     }
 
-    watch(() => [props.region, props.networkType], () => {
+    watch(() => [props.region, props.networkType, vpcTypeValue.value], () => {
       getVpcList();
     });
 
@@ -307,6 +343,8 @@ export default defineComponent({
     return {
       tableRef,
       localValue,
+      vpcTypeValue,
+      vpcTypeOptions,
       vpcList,
       vpcLoading,
       pagination,

@@ -826,6 +826,17 @@ cluster:
         deficiencyIpNumTips: The number of available container network IP is insufficient
         businessSpecificVPC: Business-specific VPC
         publicVPC: Public VPC
+        exclusiveVPC: Exclusive VPC
+        stressTestVPC: Stress Test VPC
+        publicVPCTips: >-
+          All business clusters under VPC share network resources and egress
+          gateways, stress testing is prohibited, suitable for small-scale
+          clusters (200 nodes and below)
+        exclusiveVPCTips: Business exclusive VPC network resources
+        stressTestVPCTips: >-
+          VPC is dedicated to deploying stress test clients for business, egress
+          and ingress bandwidth and connections need to be clearly defined,
+          please contact jonathantan to confirm resources
       networkSetting1:
         text: IP resource
         maxNodePodNum: Number of pod ip
