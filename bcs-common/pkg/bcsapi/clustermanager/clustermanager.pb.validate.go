@@ -6612,6 +6612,8 @@ func (m *CloudVPC) validate(all bool) error {
 		}
 	}
 
+	// no validation rules for Scenario
+
 	if len(errors) > 0 {
 		return CloudVPCMultiError(errors)
 	}
@@ -7135,6 +7137,8 @@ func (m *CreateCloudVPCRequest) validate(all bool) error {
 		}
 	}
 
+	// no validation rules for Scenario
+
 	if len(errors) > 0 {
 		return CreateCloudVPCRequestMultiError(errors)
 	}
@@ -7552,6 +7556,8 @@ func (m *UpdateCloudVPCRequest) validate(all bool) error {
 			}
 		}
 	}
+
+	// no validation rules for Scenario
 
 	if len(errors) > 0 {
 		return UpdateCloudVPCRequestMultiError(errors)
@@ -8132,6 +8138,8 @@ func (m *ListCloudVPCRequest) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
+	// no validation rules for Scenario
+
 	if len(errors) > 0 {
 		return ListCloudVPCRequestMultiError(errors)
 	}
@@ -8467,6 +8475,8 @@ func (m *CloudVPCResp) validate(all bool) error {
 
 	// no validation rules for BusinessID
 
+	// no validation rules for Scenario
+
 	if len(errors) > 0 {
 		return CloudVPCRespMultiError(errors)
 	}
@@ -8630,6 +8640,8 @@ func (m *ListCloudVPCV2Request) validate(all bool) error {
 		}
 		errors = append(errors, err)
 	}
+
+	// no validation rules for Scenario
 
 	if len(errors) > 0 {
 		return ListCloudVPCV2RequestMultiError(errors)

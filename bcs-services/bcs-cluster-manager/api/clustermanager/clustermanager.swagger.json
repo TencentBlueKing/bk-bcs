@@ -2836,6 +2836,13 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "scenario",
+            "description": "scenario. vpc 使用场景",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -7621,6 +7628,13 @@
             "required": false,
             "type": "integer",
             "format": "int64"
+          },
+          {
+            "name": "scenario",
+            "description": "scenario. vpc 使用场景",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -9853,6 +9867,11 @@
           "$ref": "#/definitions/clustermanagerCidr",
           "description": "underlayIP CIDR配置",
           "title": "underlay"
+        },
+        "scenario": {
+          "type": "string",
+          "description": "vpc 使用场景",
+          "title": "scenario"
         }
       },
       "description": "用于记录cloud对应不同区域的vpc信息",
@@ -9927,6 +9946,11 @@
           "type": "string",
           "description": "业务ID, 作用预留私有的业务vpc",
           "title": "businessID"
+        },
+        "scenario": {
+          "type": "string",
+          "description": "vpc 使用场景",
+          "title": "scenario"
         }
       },
       "title": "CloudVPCResp for web model"
@@ -11708,6 +11732,11 @@
           "$ref": "#/definitions/clustermanagerCidr",
           "description": "underlayIP CIDR配置",
           "title": "underlay"
+        },
+        "scenario": {
+          "type": "string",
+          "description": "vpc 使用场景",
+          "title": "scenario"
         }
       },
       "description": "创建cloud vpc请求",
@@ -21692,6 +21721,11 @@
           "$ref": "#/definitions/clustermanagerCidr",
           "description": "underlayIP CIDR配置",
           "title": "underlay"
+        },
+        "scenario": {
+          "type": "string",
+          "description": "vpc 使用场景",
+          "title": "scenario"
         }
       },
       "description": "更新云VPC请求",

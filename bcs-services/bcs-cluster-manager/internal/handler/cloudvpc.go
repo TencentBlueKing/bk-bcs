@@ -87,6 +87,7 @@ func (cm *ClusterManager) ListCloudVPC(ctx context.Context,
 		VpcName:     req.VpcName,
 		Sort:        req.Sort,
 		Order:       req.Order,
+		Scenario:    req.Scenario,
 	}
 	newResp := &cmproto.ListCloudVPCV2Response{}
 	ca.Handle(ctx, newReq, newResp)

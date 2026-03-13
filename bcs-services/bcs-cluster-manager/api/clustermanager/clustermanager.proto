@@ -3046,6 +3046,10 @@ message CloudVPC {
     title: "underlay",
     description: "underlayIP CIDR配置"
   }];
+  string scenario = 17[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "scenario",
+    description: "vpc 使用场景"
+  }];
 }
 
 message Cidr {
@@ -3122,6 +3126,10 @@ message CreateCloudVPCRequest {
     title: "underlay",
     description: "underlayIP CIDR配置"
   }];
+  string scenario = 14[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "scenario",
+    description: "vpc 使用场景"
+  }];
 }
 
 message CreateCloudVPCResponse {
@@ -3195,6 +3203,10 @@ message UpdateCloudVPCRequest {
   Cidr underlay = 13[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "underlay",
     description: "underlayIP CIDR配置"
+  }];
+  string scenario = 14[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "scenario",
+    description: "vpc 使用场景"
   }];
 }
 
@@ -3289,16 +3301,18 @@ message ListCloudVPCRequest {
     title: "vpcName",
     description: "业务名, 过滤业务私有的vpc"
   }];
-  string sort = 7 [
-    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  string sort = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "sort",
       description : "根据某个字段排序"
     }];
-  string order = 8 [
-    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  string order = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "order",
       description : "升序或者降序"
     }, (validate.rules).string = {in: ["", "asc", "desc"]}];
+  string scenario = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "scenario",
+      description : "vpc 使用场景"
+    }];
 }
 
 message ListCloudVPCResponse {
@@ -3382,6 +3396,10 @@ message CloudVPCResp {
     title: "businessID",
     description: "业务ID, 作用预留私有的业务vpc"
   }];
+  string scenario = 14[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "scenario",
+    description: "vpc 使用场景"
+  }];
 }
 
 message ListCloudVPCV2Request {
@@ -3435,6 +3453,10 @@ message ListCloudVPCV2Request {
     title: "page",
     description: "页码"
   }, (validate.rules).uint32.gte = 0];
+  string scenario = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "scenario",
+    description: "vpc 使用场景"
+  }];
 }
 
 message ListCloudVPCV2Response {

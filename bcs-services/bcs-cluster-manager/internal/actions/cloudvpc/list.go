@@ -84,8 +84,7 @@ func (la *ListAction) listCloudVPC() error { // nolint
 			continue
 		}
 
-		if la.req.BusinessID != "" && cloudVPCs[i].BusinessID != "" &&
-			!utils.StringInSlice(la.req.BusinessID, strings.Split(cloudVPCs[i].BusinessID, ",")) {
+		if !matchCloudVPC(cloudVPCs[i], la.req.BusinessID, la.req.Scenario) {
 			continue
 		}
 
@@ -140,6 +139,7 @@ func (la *ListAction) listCloudVPC() error { // nolint
 				Underlay: &cmproto.CidrDetailInfo{
 					AvailableIPNum: unerlaySurPlusIPNum,
 				},
+				Scenario: vpc.Scenario,
 			}
 			lock.Lock()
 			la.cloudVPCList = append(la.cloudVPCList, cloud)
@@ -156,6 +156,23 @@ func (la *ListAction) listCloudVPC() error { // nolint
 	la.paginateCloudVPCList()
 
 	return nil
+}
+
+func matchCloudVPC(vpc *cmproto.CloudVPC, reqBusinessID, reqScenario string) bool {
+	// 请求指定了业务 → 只匹配该业务的独占 VPC
+	if reqBusinessID != "" {
+		return utils.StringInSlice(reqBusinessID, strings.Split(vpc.BusinessID, ",")) && reqScenario == ""
+	}
+	// 请求未指定业务 → 只看公共 VPC（BusinessID 必须为空）
+	if vpc.BusinessID != "" {
+		return false
+	}
+	// 请求指定了场景 → 只匹配该场景的公共 VPC
+	if reqScenario != "" {
+		return utils.StringInSlice(reqScenario, strings.Split(vpc.Scenario, ","))
+	}
+	// 请求未指定场景 → 只匹配纯公共 VPC（Scenario 也必须为空）
+	return vpc.Scenario == ""
 }
 
 func (la *ListAction) paginateCloudVPCList() {
