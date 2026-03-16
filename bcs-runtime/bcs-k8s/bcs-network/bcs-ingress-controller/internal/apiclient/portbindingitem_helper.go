@@ -32,15 +32,17 @@ type PortBindingItemMonitorHelper struct {
 	bcsClusterID string
 
 	IndependentDataID bool
+	Disabled          bool
 }
 
 // NewPortBindingItemMonitorHelper return new monitor helper
-func NewPortBindingItemMonitorHelper() *PortBindingItemMonitorHelper {
+func NewPortBindingItemMonitorHelper(disabled bool) *PortBindingItemMonitorHelper {
 	return &PortBindingItemMonitorHelper{
 		apiCli:       NewBkmApiClient(),
 		bcsClusterID: os.Getenv(constant.EnvNameBkBCSClusterID),
 
 		IndependentDataID: true,
+		Disabled:          disabled,
 	}
 }
 
@@ -48,6 +50,11 @@ func NewPortBindingItemMonitorHelper() *PortBindingItemMonitorHelper {
 func (m *PortBindingItemMonitorHelper) EnsureUptimeCheck(ctx context.Context,
 	portBinding *networkextensionv1.PortBinding) bool {
 	if portBinding == nil {
+		return false
+	}
+	if m.Disabled {
+		blog.V(4).Infof("uptime check disabled, skip EnsureUptimeCheck for portBinding '%s/%s'",
+			portBinding.GetNamespace(), portBinding.GetName())
 		return false
 	}
 	needRetry := false
@@ -156,6 +163,11 @@ func (m *PortBindingItemMonitorHelper) ensureItemUptimeCheck(ctx context.Context
 func (m *PortBindingItemMonitorHelper) DeleteUptimeCheckTask(ctx context.Context,
 	portBinding *networkextensionv1.PortBinding) error {
 	if portBinding == nil {
+		return nil
+	}
+	if m.Disabled {
+		blog.V(4).Infof("uptime check disabled, skip DeleteUptimeCheckTask for portBinding '%s/%s'",
+			portBinding.GetNamespace(), portBinding.GetName())
 		return nil
 	}
 	var e error

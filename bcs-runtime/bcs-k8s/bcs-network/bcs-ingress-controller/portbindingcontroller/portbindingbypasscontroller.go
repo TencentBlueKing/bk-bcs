@@ -52,11 +52,13 @@ type PortBindingByPassReconciler struct {
 func NewPortBindingByPassReconciler(ctx context.Context, k8sClient client.Client,
 	eventer record.EventRecorder, opts *option.ControllerOption) *PortBindingByPassReconciler {
 	return &PortBindingByPassReconciler{
-		ctx:           ctx,
-		k8sClient:     k8sClient,
-		monitorHelper: apiclient.NewPortBindingItemMonitorHelper(),
-		opts:          opts,
-		eventer:       eventer,
+		ctx:       ctx,
+		k8sClient: k8sClient,
+		monitorHelper: apiclient.NewPortBindingItemMonitorHelper(
+			opts.UptimeCheckDisabled,
+		),
+		opts:    opts,
+		eventer: eventer,
 	}
 }
 
