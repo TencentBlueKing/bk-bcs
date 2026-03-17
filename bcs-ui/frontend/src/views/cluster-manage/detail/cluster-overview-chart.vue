@@ -175,6 +175,7 @@ export default defineComponent({
         },
         data: item.result?.[0]?.values || [[new Date(), 0]],
       }));
+      chartRef.value?.setOption(options.value);
       loading.value = false;
     };
     const chartRef = ref<any>(null);
