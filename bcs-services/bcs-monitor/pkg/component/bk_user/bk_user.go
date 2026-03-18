@@ -30,9 +30,6 @@ func GetTenantAPIAuthorization(ctx context.Context, username string) (string, er
 	if username == "" {
 		username = config.G.Base.BKUsername
 	}
-	if !config.G.Base.EnableMultiTenant {
-		return component.GetBKAPIAuthorization(username)
-	}
 
 	// get bk_username from bk user api
 	username = "bk_admin"

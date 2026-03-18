@@ -88,10 +88,6 @@ func buildCacheName(keyPrefix string, tenant, name string) string {
 
 // GetBkUserNameByTenantLoginName get bkUserName by tenant login name
 func GetBkUserNameByTenantLoginName(ctx context.Context, tenantId, loginName string, useCache bool) (string, error) {
-	if !tenant.IsMultiTenantEnabled() {
-		return loginName, nil
-	}
-
 	cacheName := buildCacheName(cacheBkUserTenantInfo, tenantId, loginName)
 	if useCache {
 		val, ok := cache.GetCache().Get(cacheName)
@@ -131,8 +127,8 @@ func GetAuthHeader(ctx context.Context) (map[string]string, error) {
 		bkUserName = config.GlobalConf.App.BkUsername
 	)
 
-	// 多租户模式下 通过loginName获取租户下的bkUserName
-	if tenant.IsMultiTenantEnabled() && bkUserName != "" {
+	// 多租户和单租户模式下 通过loginName获取租户下的bkUserName
+	if bkUserName != "" {
 		userName, err := GetBkUserNameByTenantLoginName(ctx, tenantId, bkUserName, true)
 		if err != nil {
 			return nil, fmt.Errorf("get bkUserName by tenant failed: %v", err)

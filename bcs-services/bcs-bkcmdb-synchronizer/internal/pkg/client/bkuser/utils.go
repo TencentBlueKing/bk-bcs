@@ -22,7 +22,6 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/client"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/client/cache"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/option"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/tenant"
 )
 
@@ -30,22 +29,15 @@ import (
 func GetGatewayAuthAndTenantInfo(ctx context.Context, auth *client.AuthInfo, user string) (string, string, error) {
 	tenantId := tenant.GetTenantIdFromContext(ctx)
 
-	if option.GetGlobalConfig().Synchronizer.EnableMultiTenantMode {
-		// 多租户模式下，优先使用传入的user，否则根据租户获取用户名
-		if user != "" {
-			auth.BkUserName = user
-		} else if auth.BkUserName != "" {
-			bkUserName, err := GetBkUserNameByTenantLoginName(ctx, tenantId, auth.BkUserName, true)
-			if err != nil {
-				return "", "", fmt.Errorf("get bkUserName by tenant failed: %v", err)
-			}
-			auth.BkUserName = bkUserName
+	// 优先使用传入的user，否则根据租户获取用户名
+	if user != "" {
+		auth.BkUserName = user
+	} else if auth.BkUserName != "" {
+		bkUserName, err := GetBkUserNameByTenantLoginName(ctx, tenantId, auth.BkUserName, true)
+		if err != nil {
+			return "", "", fmt.Errorf("get bkUserName by tenant failed: %v", err)
 		}
-	} else {
-		// 非多租户模式，直接使用传入的user.否则直接使用auth bkUserName
-		if user != "" {
-			auth.BkUserName = user
-		}
+		auth.BkUserName = bkUserName
 	}
 
 	userAuth, err := json.Marshal(auth)
@@ -65,10 +57,6 @@ func buildCacheName(keyPrefix string, tenant, name string) string {
 
 // GetBkUserNameByTenantLoginName get bkUserName by tenant login name
 func GetBkUserNameByTenantLoginName(ctx context.Context, tenantId, loginName string, useCache bool) (string, error) {
-	if !option.GetGlobalConfig().Synchronizer.EnableMultiTenantMode {
-		return loginName, nil
-	}
-
 	cacheName := buildCacheName(cacheBkUserTenantInfo, tenantId, loginName)
 	if useCache {
 		val, ok := cache.GetCache().Get(cacheName)
