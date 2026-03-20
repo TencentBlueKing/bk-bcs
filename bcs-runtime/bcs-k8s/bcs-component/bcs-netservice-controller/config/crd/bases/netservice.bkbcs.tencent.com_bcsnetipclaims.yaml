@@ -1,0 +1,67 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.14.0
+  name: bcsnetipclaims.netservice.bkbcs.tencent.com
+spec:
+  group: netservice.bkbcs.tencent.com
+  names:
+    kind: BCSNetIPClaim
+    listKind: BCSNetIPClaimList
+    plural: bcsnetipclaims
+    singular: bcsnetipclaim
+  scope: Namespaced
+  versions:
+  - name: v1
+    schema:
+      openAPIV3Schema:
+        description: BCSNetIPClaim is the Schema for the bcsnetipclaims API
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: BCSNetIPClaimSpec defines the desired state of BCSNetIPClaim
+            properties:
+              bcsNetIPName:
+                description: BCSNetIPName sets the name for BCSNetIP will be bounded
+                  with this claim
+                type: string
+              expiredDuration:
+                description: ExpiredDuration defines expired duration for this claim
+                  after claimed IP is released
+                type: string
+            type: object
+          status:
+            description: BCSNetIPClaimStatus defines the observed state of BCSNetIPClaim
+            properties:
+              boundedIP:
+                description: BCSNetIPName is name for BCSNetIP bounded with this claim
+                type: string
+              phase:
+                description: Phase represents the state of this claim
+                type: string
+            required:
+            - boundedIP
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

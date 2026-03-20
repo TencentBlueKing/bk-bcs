@@ -101,7 +101,7 @@ type ProjectMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m ProjectMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -279,7 +279,7 @@ type CreateProjectRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m CreateProjectRequestMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -395,7 +395,7 @@ type GetProjectRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m GetProjectRequestMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -605,7 +605,7 @@ type UpdateProjectRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m UpdateProjectRequestMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -732,7 +732,7 @@ type DeleteProjectRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m DeleteProjectRequestMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -900,7 +900,7 @@ type ProjectResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m ProjectResponseMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -1018,7 +1018,7 @@ type ListProjectsRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m ListProjectsRequestMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -1156,7 +1156,7 @@ type ListProjectDataMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m ListProjectDataMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -1320,7 +1320,7 @@ type ListProjectsResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m ListProjectsResponseMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -1449,7 +1449,7 @@ type PermsMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m PermsMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -1559,7 +1559,7 @@ type ListAuthorizedProjReqMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m ListAuthorizedProjReqMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -1725,7 +1725,7 @@ type ListAuthorizedProjRespMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m ListAuthorizedProjRespMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -1827,7 +1827,7 @@ type ListProjectsForIAMReqMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m ListProjectsForIAMReqMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -1969,7 +1969,7 @@ type ListProjectsForIAMRespMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m ListProjectsForIAMRespMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -2073,7 +2073,7 @@ type GetProjectActiveRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m GetProjectActiveRequestMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -2210,7 +2210,7 @@ type GetProjectActiveResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m GetProjectActiveResponseMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -2314,7 +2314,7 @@ type ProjectActiveDataMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m ProjectActiveDataMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -2418,7 +2418,7 @@ type GetBusinessRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m GetBusinessRequestMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -2584,7 +2584,7 @@ type GetBusinessResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m GetBusinessResponseMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -2688,7 +2688,7 @@ type ListBusinessRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m ListBusinessRequestMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -2859,7 +2859,7 @@ type ListBusinessResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m ListBusinessResponseMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -2963,7 +2963,7 @@ type GetBusinessTopologyRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m GetBusinessTopologyRequestMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -3134,7 +3134,7 @@ type GetBusinessTopologyResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m GetBusinessTopologyResponseMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -3240,7 +3240,7 @@ type BusinessDataMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m BusinessDataMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -3383,7 +3383,7 @@ type TopologyDataMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m TopologyDataMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -3487,7 +3487,7 @@ type SyncNamespaceRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m SyncNamespaceRequestMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -3597,7 +3597,7 @@ type SyncNamespaceResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m SyncNamespaceResponseMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -3705,7 +3705,7 @@ type WithdrawNamespaceRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m WithdrawNamespaceRequestMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -3815,7 +3815,7 @@ type WithdrawNamespaceResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m WithdrawNamespaceResponseMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -4074,7 +4074,7 @@ type CreateNamespaceRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m CreateNamespaceRequestMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -4242,7 +4242,7 @@ type CreateNamespaceResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m CreateNamespaceResponseMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -4382,7 +4382,7 @@ type NamespaceCallbackRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m NamespaceCallbackRequestMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -4496,7 +4496,7 @@ type NamespaceCallbackResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m NamespaceCallbackResponseMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -4721,7 +4721,7 @@ type UpdateNamespaceRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m UpdateNamespaceRequestMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -4860,7 +4860,7 @@ type UpdateNamespaceResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m UpdateNamespaceResponseMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -4968,7 +4968,7 @@ type GetNamespaceRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m GetNamespaceRequestMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -5134,7 +5134,7 @@ type GetNamespaceResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m GetNamespaceResponseMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -5240,7 +5240,7 @@ type ListNamespacesRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m ListNamespacesRequestMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -5411,7 +5411,7 @@ type ListNamespacesResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m ListNamespacesResponseMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -5517,7 +5517,7 @@ type ListNativeNamespacesRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m ListNativeNamespacesRequestMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -5689,7 +5689,7 @@ type ListNativeNamespacesResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m ListNativeNamespacesResponseMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -5798,7 +5798,7 @@ type ListNativeNamespacesContentRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m ListNativeNamespacesContentRequestMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -5927,7 +5927,7 @@ type DeleteNamespaceRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m DeleteNamespaceRequestMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -6068,7 +6068,7 @@ type DeleteNamespaceResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m DeleteNamespaceResponseMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -6352,7 +6352,7 @@ type NamespaceDataMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m NamespaceDataMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -6464,7 +6464,7 @@ type NativeNamespaceDataMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m NativeNamespaceDataMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -6568,7 +6568,7 @@ type LabelMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m LabelMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -6671,7 +6671,7 @@ type AnnotationMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m AnnotationMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -6779,7 +6779,7 @@ type ResourceQuotaMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m ResourceQuotaMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -6929,7 +6929,7 @@ type CreateVariableRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m CreateVariableRequestMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -7074,7 +7074,7 @@ type CreateVariableResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m CreateVariableResponseMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -7228,7 +7228,7 @@ type UpdateVariableRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m UpdateVariableRequestMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -7373,7 +7373,7 @@ type UpdateVariableResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m UpdateVariableResponseMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -7487,7 +7487,7 @@ type ListVariableDefinitionsRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m ListVariableDefinitionsRequestMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -7625,7 +7625,7 @@ type ListVariableDefinitionsResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m ListVariableDefinitionsResponseMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -7734,7 +7734,7 @@ type DeleteVariableDefinitionsRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m DeleteVariableDefinitionsRequestMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -7874,7 +7874,7 @@ type DeleteVariableDefinitionsResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m DeleteVariableDefinitionsResponseMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -8010,7 +8010,7 @@ type ListClustersVariablesRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m ListClustersVariablesRequestMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -8150,7 +8150,7 @@ type ListClustersVariablesResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m ListClustersVariablesResponseMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -8277,7 +8277,7 @@ type ListNamespacesVariablesRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m ListNamespacesVariablesRequestMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -8417,7 +8417,7 @@ type ListNamespacesVariablesResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m ListNamespacesVariablesResponseMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -8578,7 +8578,7 @@ type UpdateClustersVariablesRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m UpdateClustersVariablesRequestMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -8689,7 +8689,7 @@ type UpdateClustersVariablesResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m UpdateClustersVariablesResponseMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -8852,7 +8852,7 @@ type UpdateNamespacesVariablesRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m UpdateNamespacesVariablesRequestMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -8965,7 +8965,7 @@ type UpdateNamespacesVariablesResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m UpdateNamespacesVariablesResponseMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -9081,7 +9081,7 @@ type ListClusterVariablesRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m ListClusterVariablesRequestMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -9219,7 +9219,7 @@ type ListClusterVariablesResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m ListClusterVariablesResponseMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -9328,7 +9328,7 @@ type ListNamespaceVariablesRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m ListNamespaceVariablesRequestMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -9466,7 +9466,7 @@ type ListNamespaceVariablesResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m ListNamespaceVariablesResponseMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -9627,7 +9627,7 @@ type UpdateClusterVariablesRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m UpdateClusterVariablesRequestMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -9738,7 +9738,7 @@ type UpdateClusterVariablesResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m UpdateClusterVariablesResponseMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -9881,7 +9881,7 @@ type UpdateNamespaceVariablesRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m UpdateNamespaceVariablesRequestMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -9992,7 +9992,7 @@ type UpdateNamespaceVariablesResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m UpdateNamespaceVariablesResponseMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -10131,7 +10131,7 @@ type ImportVariablesRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m ImportVariablesRequestMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -10239,7 +10239,7 @@ type ImportVariablesResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m ImportVariablesResponseMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -10349,7 +10349,7 @@ type RenderVariablesRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m RenderVariablesRequestMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -10491,7 +10491,7 @@ type RenderVariablesResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m RenderVariablesResponseMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -10621,7 +10621,7 @@ type VariableDefinitionMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m VariableDefinitionMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -10739,7 +10739,7 @@ type VariableValueMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m VariableValueMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -10855,7 +10855,7 @@ type CreateVariableDataMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m CreateVariableDataMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -10973,7 +10973,7 @@ type UpdateVariableDataMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m UpdateVariableDataMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -11111,7 +11111,7 @@ type ListVariableDefinitionDataMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m ListVariableDefinitionDataMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -11215,7 +11215,7 @@ type DeleteVariableDefinitionsDataMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m DeleteVariableDefinitionsDataMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -11354,7 +11354,7 @@ type ListVariableValuesDataMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m ListVariableValuesDataMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -11529,7 +11529,7 @@ type ImportVariableDataMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m ImportVariableDataMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -11639,7 +11639,7 @@ type ImportVariableVarDataMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m ImportVariableVarDataMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -11741,7 +11741,7 @@ type HealthzRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m HealthzRequestMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -11876,7 +11876,7 @@ type HealthzResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m HealthzResponseMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -11979,7 +11979,7 @@ type HealthzDataMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m HealthzDataMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -12078,7 +12078,7 @@ type PingRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m PingRequestMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -12185,7 +12185,7 @@ type PingResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m PingResponseMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -12376,6 +12376,71 @@ func (m *ProjectQuota) validate(all bool) error {
 
 	// no validation rules for Annotations
 
+	if all {
+		switch v := interface{}(m.GetQuotaAttr()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ProjectQuotaValidationError{
+					field:  "QuotaAttr",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ProjectQuotaValidationError{
+					field:  "QuotaAttr",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetQuotaAttr()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ProjectQuotaValidationError{
+				field:  "QuotaAttr",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for QuotaSharedEnabled
+
+	for idx, item := range m.GetQuotaSharedProjectList() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, ProjectQuotaValidationError{
+						field:  fmt.Sprintf("QuotaSharedProjectList[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, ProjectQuotaValidationError{
+						field:  fmt.Sprintf("QuotaSharedProjectList[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ProjectQuotaValidationError{
+					field:  fmt.Sprintf("QuotaSharedProjectList[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
 	if len(errors) > 0 {
 		return ProjectQuotaMultiError(errors)
 	}
@@ -12389,7 +12454,7 @@ type ProjectQuotaMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m ProjectQuotaMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -12496,7 +12561,7 @@ type NodeGroupMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m NodeGroupMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -12712,7 +12777,7 @@ type QuotaResourceMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m QuotaResourceMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -12843,7 +12908,7 @@ type QuotaStrategyMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m QuotaStrategyMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -13024,7 +13089,7 @@ type InstanceTypeConfigMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m InstanceTypeConfigMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -13129,7 +13194,7 @@ type DataDiskMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m DataDiskMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -13236,7 +13301,7 @@ type DeviceInfoMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m DeviceInfoMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -13386,6 +13451,127 @@ func (m *CreateProjectQuotaRequest) validate(all bool) error {
 
 	// no validation rules for Annotations
 
+	if all {
+		switch v := interface{}(m.GetQuotaAttr()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, CreateProjectQuotaRequestValidationError{
+					field:  "QuotaAttr",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, CreateProjectQuotaRequestValidationError{
+					field:  "QuotaAttr",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetQuotaAttr()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateProjectQuotaRequestValidationError{
+				field:  "QuotaAttr",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetQuotaSharedEnabled()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, CreateProjectQuotaRequestValidationError{
+					field:  "QuotaSharedEnabled",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, CreateProjectQuotaRequestValidationError{
+					field:  "QuotaSharedEnabled",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetQuotaSharedEnabled()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateProjectQuotaRequestValidationError{
+				field:  "QuotaSharedEnabled",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	for idx, item := range m.GetQuotaSharedProjectList() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, CreateProjectQuotaRequestValidationError{
+						field:  fmt.Sprintf("QuotaSharedProjectList[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, CreateProjectQuotaRequestValidationError{
+						field:  fmt.Sprintf("QuotaSharedProjectList[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return CreateProjectQuotaRequestValidationError{
+					field:  fmt.Sprintf("QuotaSharedProjectList[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if all {
+		switch v := interface{}(m.GetSkipItsmApproval()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, CreateProjectQuotaRequestValidationError{
+					field:  "SkipItsmApproval",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, CreateProjectQuotaRequestValidationError{
+					field:  "SkipItsmApproval",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetSkipItsmApproval()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateProjectQuotaRequestValidationError{
+				field:  "SkipItsmApproval",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
 	if len(errors) > 0 {
 		return CreateProjectQuotaRequestMultiError(errors)
 	}
@@ -13400,7 +13586,7 @@ type CreateProjectQuotaRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m CreateProjectQuotaRequestMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -13466,6 +13652,394 @@ var _ interface {
 	ErrorName() string
 } = CreateProjectQuotaRequestValidationError{}
 
+// Validate checks the field values on QuotaAttr with the rules defined in the
+// proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *QuotaAttr) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on QuotaAttr with the rules defined in
+// the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in QuotaAttrMultiError, or nil
+// if none found.
+func (m *QuotaAttr) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *QuotaAttr) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for SourceBkBizIDs
+
+	// no validation rules for SourceBkBizNames
+
+	// no validation rules for ComputeType
+
+	// no validation rules for PurchaseDurationType
+
+	// no validation rules for PurchaseDurationSettings
+
+	// no validation rules for StartTime
+
+	// no validation rules for EndTime
+
+	if len(errors) > 0 {
+		return QuotaAttrMultiError(errors)
+	}
+
+	return nil
+}
+
+// QuotaAttrMultiError is an error wrapping multiple validation errors returned
+// by QuotaAttr.ValidateAll() if the designated constraints aren't met.
+type QuotaAttrMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m QuotaAttrMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m QuotaAttrMultiError) AllErrors() []error { return m }
+
+// QuotaAttrValidationError is the validation error returned by
+// QuotaAttr.Validate if the designated constraints aren't met.
+type QuotaAttrValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e QuotaAttrValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e QuotaAttrValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e QuotaAttrValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e QuotaAttrValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e QuotaAttrValidationError) ErrorName() string { return "QuotaAttrValidationError" }
+
+// Error satisfies the builtin error interface
+func (e QuotaAttrValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sQuotaAttr.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = QuotaAttrValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = QuotaAttrValidationError{}
+
+// Validate checks the field values on QuotaLimit with the rules defined in the
+// proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *QuotaLimit) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on QuotaLimit with the rules defined in
+// the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in QuotaLimitMultiError, or
+// nil if none found.
+func (m *QuotaLimit) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *QuotaLimit) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for QuotaNum
+
+	if len(errors) > 0 {
+		return QuotaLimitMultiError(errors)
+	}
+
+	return nil
+}
+
+// QuotaLimitMultiError is an error wrapping multiple validation errors
+// returned by QuotaLimit.ValidateAll() if the designated constraints aren't met.
+type QuotaLimitMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m QuotaLimitMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m QuotaLimitMultiError) AllErrors() []error { return m }
+
+// QuotaLimitValidationError is the validation error returned by
+// QuotaLimit.Validate if the designated constraints aren't met.
+type QuotaLimitValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e QuotaLimitValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e QuotaLimitValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e QuotaLimitValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e QuotaLimitValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e QuotaLimitValidationError) ErrorName() string { return "QuotaLimitValidationError" }
+
+// Error satisfies the builtin error interface
+func (e QuotaLimitValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sQuotaLimit.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = QuotaLimitValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = QuotaLimitValidationError{}
+
+// Validate checks the field values on QuotaSharedProject with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *QuotaSharedProject) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on QuotaSharedProject with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// QuotaSharedProjectMultiError, or nil if none found.
+func (m *QuotaSharedProject) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *QuotaSharedProject) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for ProjectID
+
+	// no validation rules for ProjectCode
+
+	// no validation rules for ProjectName
+
+	// no validation rules for ShareStrategy
+
+	if all {
+		switch v := interface{}(m.GetUsageLimit()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, QuotaSharedProjectValidationError{
+					field:  "UsageLimit",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, QuotaSharedProjectValidationError{
+					field:  "UsageLimit",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetUsageLimit()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return QuotaSharedProjectValidationError{
+				field:  "UsageLimit",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetUsedAmount()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, QuotaSharedProjectValidationError{
+					field:  "UsedAmount",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, QuotaSharedProjectValidationError{
+					field:  "UsedAmount",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetUsedAmount()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return QuotaSharedProjectValidationError{
+				field:  "UsedAmount",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for ShareStartTime
+
+	// no validation rules for ShareEndTime
+
+	// no validation rules for Status
+
+	if len(errors) > 0 {
+		return QuotaSharedProjectMultiError(errors)
+	}
+
+	return nil
+}
+
+// QuotaSharedProjectMultiError is an error wrapping multiple validation errors
+// returned by QuotaSharedProject.ValidateAll() if the designated constraints
+// aren't met.
+type QuotaSharedProjectMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m QuotaSharedProjectMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m QuotaSharedProjectMultiError) AllErrors() []error { return m }
+
+// QuotaSharedProjectValidationError is the validation error returned by
+// QuotaSharedProject.Validate if the designated constraints aren't met.
+type QuotaSharedProjectValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e QuotaSharedProjectValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e QuotaSharedProjectValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e QuotaSharedProjectValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e QuotaSharedProjectValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e QuotaSharedProjectValidationError) ErrorName() string {
+	return "QuotaSharedProjectValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e QuotaSharedProjectValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sQuotaSharedProject.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = QuotaSharedProjectValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = QuotaSharedProjectValidationError{}
+
 // Validate checks the field values on GetProjectQuotaRequest with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
@@ -13504,7 +14078,7 @@ type GetProjectQuotaRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m GetProjectQuotaRequestMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -13569,6 +14143,142 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = GetProjectQuotaRequestValidationError{}
+
+// Validate checks the field values on QuotaSharedProjectList with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *QuotaSharedProjectList) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on QuotaSharedProjectList with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// QuotaSharedProjectListMultiError, or nil if none found.
+func (m *QuotaSharedProjectList) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *QuotaSharedProjectList) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	for idx, item := range m.GetValues() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, QuotaSharedProjectListValidationError{
+						field:  fmt.Sprintf("Values[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, QuotaSharedProjectListValidationError{
+						field:  fmt.Sprintf("Values[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return QuotaSharedProjectListValidationError{
+					field:  fmt.Sprintf("Values[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return QuotaSharedProjectListMultiError(errors)
+	}
+
+	return nil
+}
+
+// QuotaSharedProjectListMultiError is an error wrapping multiple validation
+// errors returned by QuotaSharedProjectList.ValidateAll() if the designated
+// constraints aren't met.
+type QuotaSharedProjectListMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m QuotaSharedProjectListMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m QuotaSharedProjectListMultiError) AllErrors() []error { return m }
+
+// QuotaSharedProjectListValidationError is the validation error returned by
+// QuotaSharedProjectList.Validate if the designated constraints aren't met.
+type QuotaSharedProjectListValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e QuotaSharedProjectListValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e QuotaSharedProjectListValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e QuotaSharedProjectListValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e QuotaSharedProjectListValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e QuotaSharedProjectListValidationError) ErrorName() string {
+	return "QuotaSharedProjectListValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e QuotaSharedProjectListValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sQuotaSharedProjectList.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = QuotaSharedProjectListValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = QuotaSharedProjectListValidationError{}
 
 // Validate checks the field values on UpdateProjectQuotaRequest with the rules
 // defined in the proto definition for this message. If any rules are
@@ -13640,6 +14350,93 @@ func (m *UpdateProjectQuotaRequest) validate(all bool) error {
 
 	// no validation rules for Annotations
 
+	if all {
+		switch v := interface{}(m.GetQuotaAttr()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, UpdateProjectQuotaRequestValidationError{
+					field:  "QuotaAttr",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, UpdateProjectQuotaRequestValidationError{
+					field:  "QuotaAttr",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetQuotaAttr()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateProjectQuotaRequestValidationError{
+				field:  "QuotaAttr",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetQuotaSharedEnabled()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, UpdateProjectQuotaRequestValidationError{
+					field:  "QuotaSharedEnabled",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, UpdateProjectQuotaRequestValidationError{
+					field:  "QuotaSharedEnabled",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetQuotaSharedEnabled()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateProjectQuotaRequestValidationError{
+				field:  "QuotaSharedEnabled",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetQuotaSharedProjectList()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, UpdateProjectQuotaRequestValidationError{
+					field:  "QuotaSharedProjectList",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, UpdateProjectQuotaRequestValidationError{
+					field:  "QuotaSharedProjectList",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetQuotaSharedProjectList()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateProjectQuotaRequestValidationError{
+				field:  "QuotaSharedProjectList",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
 	if len(errors) > 0 {
 		return UpdateProjectQuotaRequestMultiError(errors)
 	}
@@ -13654,7 +14451,7 @@ type UpdateProjectQuotaRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m UpdateProjectQuotaRequestMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -13848,6 +14645,66 @@ func (m *UpdateProjectV2Request) validate(all bool) error {
 
 	// no validation rules for Annotations
 
+	if all {
+		switch v := interface{}(m.GetQuotaAttr()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, UpdateProjectV2RequestValidationError{
+					field:  "QuotaAttr",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, UpdateProjectV2RequestValidationError{
+					field:  "QuotaAttr",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetQuotaAttr()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateProjectV2RequestValidationError{
+				field:  "QuotaAttr",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for QuotaSharedEnabled
+
+	if all {
+		switch v := interface{}(m.GetQuotaSharedProjectList()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, UpdateProjectV2RequestValidationError{
+					field:  "QuotaSharedProjectList",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, UpdateProjectV2RequestValidationError{
+					field:  "QuotaSharedProjectList",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetQuotaSharedProjectList()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateProjectV2RequestValidationError{
+				field:  "QuotaSharedProjectList",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
 	if len(errors) > 0 {
 		return UpdateProjectV2RequestMultiError(errors)
 	}
@@ -13862,7 +14719,7 @@ type UpdateProjectV2RequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m UpdateProjectV2RequestMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -13974,6 +14831,37 @@ func (m *DeleteProjectQuotaRequest) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
+	// no validation rules for OnlyDeleteInfo
+
+	if all {
+		switch v := interface{}(m.GetSkipItsmApproval()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, DeleteProjectQuotaRequestValidationError{
+					field:  "SkipItsmApproval",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, DeleteProjectQuotaRequestValidationError{
+					field:  "SkipItsmApproval",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetSkipItsmApproval()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return DeleteProjectQuotaRequestValidationError{
+				field:  "SkipItsmApproval",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
 	if len(errors) > 0 {
 		return DeleteProjectQuotaRequestMultiError(errors)
 	}
@@ -13988,7 +14876,7 @@ type DeleteProjectQuotaRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m DeleteProjectQuotaRequestMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -14185,7 +15073,7 @@ type ProjectQuotaResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m ProjectQuotaResponseMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -14301,7 +15189,7 @@ type ListProjectQuotasRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m ListProjectQuotasRequestMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -14439,7 +15327,7 @@ type ListProjectQuotasDataMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m ListProjectQuotasDataMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -14605,7 +15493,7 @@ type ListProjectQuotasResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m ListProjectQuotasResponseMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -14671,6 +15559,291 @@ var _ interface {
 	ErrorName() string
 } = ListProjectQuotasResponseValidationError{}
 
+// Validate checks the field values on ListProjectQuotasV2Request with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ListProjectQuotasV2Request) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListProjectQuotasV2Request with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListProjectQuotasV2RequestMultiError, or nil if none found.
+func (m *ListProjectQuotasV2Request) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListProjectQuotasV2Request) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for QuotaId
+
+	// no validation rules for QuotaName
+
+	// no validation rules for ProjectIDOrCode
+
+	// no validation rules for BusinessID
+
+	// no validation rules for QuotaType
+
+	// no validation rules for Provider
+
+	// no validation rules for Page
+
+	// no validation rules for Limit
+
+	if len(errors) > 0 {
+		return ListProjectQuotasV2RequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListProjectQuotasV2RequestMultiError is an error wrapping multiple
+// validation errors returned by ListProjectQuotasV2Request.ValidateAll() if
+// the designated constraints aren't met.
+type ListProjectQuotasV2RequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListProjectQuotasV2RequestMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListProjectQuotasV2RequestMultiError) AllErrors() []error { return m }
+
+// ListProjectQuotasV2RequestValidationError is the validation error returned
+// by ListProjectQuotasV2Request.Validate if the designated constraints aren't met.
+type ListProjectQuotasV2RequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListProjectQuotasV2RequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListProjectQuotasV2RequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListProjectQuotasV2RequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListProjectQuotasV2RequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListProjectQuotasV2RequestValidationError) ErrorName() string {
+	return "ListProjectQuotasV2RequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListProjectQuotasV2RequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListProjectQuotasV2Request.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListProjectQuotasV2RequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListProjectQuotasV2RequestValidationError{}
+
+// Validate checks the field values on ListProjectQuotasV2Response with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ListProjectQuotasV2Response) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListProjectQuotasV2Response with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListProjectQuotasV2ResponseMultiError, or nil if none found.
+func (m *ListProjectQuotasV2Response) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListProjectQuotasV2Response) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	if all {
+		switch v := interface{}(m.GetData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ListProjectQuotasV2ResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ListProjectQuotasV2ResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ListProjectQuotasV2ResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for RequestID
+
+	if all {
+		switch v := interface{}(m.GetWebAnnotations()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ListProjectQuotasV2ResponseValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ListProjectQuotasV2ResponseValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetWebAnnotations()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ListProjectQuotasV2ResponseValidationError{
+				field:  "WebAnnotations",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return ListProjectQuotasV2ResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListProjectQuotasV2ResponseMultiError is an error wrapping multiple
+// validation errors returned by ListProjectQuotasV2Response.ValidateAll() if
+// the designated constraints aren't met.
+type ListProjectQuotasV2ResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListProjectQuotasV2ResponseMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListProjectQuotasV2ResponseMultiError) AllErrors() []error { return m }
+
+// ListProjectQuotasV2ResponseValidationError is the validation error returned
+// by ListProjectQuotasV2Response.Validate if the designated constraints
+// aren't met.
+type ListProjectQuotasV2ResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListProjectQuotasV2ResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListProjectQuotasV2ResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListProjectQuotasV2ResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListProjectQuotasV2ResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListProjectQuotasV2ResponseValidationError) ErrorName() string {
+	return "ListProjectQuotasV2ResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListProjectQuotasV2ResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListProjectQuotasV2Response.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListProjectQuotasV2ResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListProjectQuotasV2ResponseValidationError{}
+
 // Validate checks the field values on GetProjectQuotasUsageReq with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
@@ -14709,7 +15882,7 @@ type GetProjectQuotasUsageReqMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m GetProjectQuotasUsageReqMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -14875,7 +16048,7 @@ type GetProjectQuotasUsageRespMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m GetProjectQuotasUsageRespMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -14983,7 +16156,7 @@ type ZoneResourceUsageMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m ZoneResourceUsageMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -15153,7 +16326,7 @@ type GetProjectQuotasUsageDataMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m GetProjectQuotasUsageDataMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -15274,6 +16447,35 @@ func (m *ScaleUpProjectQuotaRequest) validate(all bool) error {
 
 	// no validation rules for Updater
 
+	if all {
+		switch v := interface{}(m.GetSkipItsmApproval()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ScaleUpProjectQuotaRequestValidationError{
+					field:  "SkipItsmApproval",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ScaleUpProjectQuotaRequestValidationError{
+					field:  "SkipItsmApproval",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetSkipItsmApproval()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ScaleUpProjectQuotaRequestValidationError{
+				field:  "SkipItsmApproval",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
 	if len(errors) > 0 {
 		return ScaleUpProjectQuotaRequestMultiError(errors)
 	}
@@ -15288,7 +16490,7 @@ type ScaleUpProjectQuotaRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m ScaleUpProjectQuotaRequestMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -15454,7 +16656,7 @@ type ScaleUpProjectQuotaResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m ScaleUpProjectQuotaResponseMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -15576,6 +16778,35 @@ func (m *ScaleDownProjectQuotaRequest) validate(all bool) error {
 
 	// no validation rules for Updater
 
+	if all {
+		switch v := interface{}(m.GetSkipItsmApproval()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ScaleDownProjectQuotaRequestValidationError{
+					field:  "SkipItsmApproval",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ScaleDownProjectQuotaRequestValidationError{
+					field:  "SkipItsmApproval",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetSkipItsmApproval()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ScaleDownProjectQuotaRequestValidationError{
+				field:  "SkipItsmApproval",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
 	if len(errors) > 0 {
 		return ScaleDownProjectQuotaRequestMultiError(errors)
 	}
@@ -15590,7 +16821,7 @@ type ScaleDownProjectQuotaRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m ScaleDownProjectQuotaRequestMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -15757,7 +16988,7 @@ type ScaleDownProjectQuotaResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m ScaleDownProjectQuotaResponseMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}
@@ -15824,6 +17055,557 @@ var _ interface {
 	ErrorName() string
 } = ScaleDownProjectQuotaResponseValidationError{}
 
+// Validate checks the field values on GetProjectQuotasStatisticsRequest with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the first error encountered is returned, or nil if there are
+// no violations.
+func (m *GetProjectQuotasStatisticsRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetProjectQuotasStatisticsRequest
+// with the rules defined in the proto definition for this message. If any
+// rules are violated, the result is a list of violation errors wrapped in
+// GetProjectQuotasStatisticsRequestMultiError, or nil if none found.
+func (m *GetProjectQuotasStatisticsRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetProjectQuotasStatisticsRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for ProjectIDOrCode
+
+	// no validation rules for QuotaType
+
+	// no validation rules for IsContainShared
+
+	if len(errors) > 0 {
+		return GetProjectQuotasStatisticsRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetProjectQuotasStatisticsRequestMultiError is an error wrapping multiple
+// validation errors returned by
+// GetProjectQuotasStatisticsRequest.ValidateAll() if the designated
+// constraints aren't met.
+type GetProjectQuotasStatisticsRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetProjectQuotasStatisticsRequestMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetProjectQuotasStatisticsRequestMultiError) AllErrors() []error { return m }
+
+// GetProjectQuotasStatisticsRequestValidationError is the validation error
+// returned by GetProjectQuotasStatisticsRequest.Validate if the designated
+// constraints aren't met.
+type GetProjectQuotasStatisticsRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetProjectQuotasStatisticsRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetProjectQuotasStatisticsRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetProjectQuotasStatisticsRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetProjectQuotasStatisticsRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetProjectQuotasStatisticsRequestValidationError) ErrorName() string {
+	return "GetProjectQuotasStatisticsRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetProjectQuotasStatisticsRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetProjectQuotasStatisticsRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetProjectQuotasStatisticsRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetProjectQuotasStatisticsRequestValidationError{}
+
+// Validate checks the field values on GetProjectQuotasStatisticsResponse with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the first error encountered is returned, or nil if there are
+// no violations.
+func (m *GetProjectQuotasStatisticsResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetProjectQuotasStatisticsResponse
+// with the rules defined in the proto definition for this message. If any
+// rules are violated, the result is a list of violation errors wrapped in
+// GetProjectQuotasStatisticsResponseMultiError, or nil if none found.
+func (m *GetProjectQuotasStatisticsResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetProjectQuotasStatisticsResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	if all {
+		switch v := interface{}(m.GetData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, GetProjectQuotasStatisticsResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, GetProjectQuotasStatisticsResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return GetProjectQuotasStatisticsResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for RequestID
+
+	if len(errors) > 0 {
+		return GetProjectQuotasStatisticsResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetProjectQuotasStatisticsResponseMultiError is an error wrapping multiple
+// validation errors returned by
+// GetProjectQuotasStatisticsResponse.ValidateAll() if the designated
+// constraints aren't met.
+type GetProjectQuotasStatisticsResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetProjectQuotasStatisticsResponseMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetProjectQuotasStatisticsResponseMultiError) AllErrors() []error { return m }
+
+// GetProjectQuotasStatisticsResponseValidationError is the validation error
+// returned by GetProjectQuotasStatisticsResponse.Validate if the designated
+// constraints aren't met.
+type GetProjectQuotasStatisticsResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetProjectQuotasStatisticsResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetProjectQuotasStatisticsResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetProjectQuotasStatisticsResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetProjectQuotasStatisticsResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetProjectQuotasStatisticsResponseValidationError) ErrorName() string {
+	return "GetProjectQuotasStatisticsResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetProjectQuotasStatisticsResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetProjectQuotasStatisticsResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetProjectQuotasStatisticsResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetProjectQuotasStatisticsResponseValidationError{}
+
+// Validate checks the field values on QuotaResourceData with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *QuotaResourceData) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on QuotaResourceData with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// QuotaResourceDataMultiError, or nil if none found.
+func (m *QuotaResourceData) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *QuotaResourceData) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for UsedNum
+
+	// no validation rules for AvailableNum
+
+	// no validation rules for TotalNum
+
+	// no validation rules for UseRate
+
+	if len(errors) > 0 {
+		return QuotaResourceDataMultiError(errors)
+	}
+
+	return nil
+}
+
+// QuotaResourceDataMultiError is an error wrapping multiple validation errors
+// returned by QuotaResourceData.ValidateAll() if the designated constraints
+// aren't met.
+type QuotaResourceDataMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m QuotaResourceDataMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m QuotaResourceDataMultiError) AllErrors() []error { return m }
+
+// QuotaResourceDataValidationError is the validation error returned by
+// QuotaResourceData.Validate if the designated constraints aren't met.
+type QuotaResourceDataValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e QuotaResourceDataValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e QuotaResourceDataValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e QuotaResourceDataValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e QuotaResourceDataValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e QuotaResourceDataValidationError) ErrorName() string {
+	return "QuotaResourceDataValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e QuotaResourceDataValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sQuotaResourceData.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = QuotaResourceDataValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = QuotaResourceDataValidationError{}
+
+// Validate checks the field values on ProjectQuotasStatisticsData with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ProjectQuotasStatisticsData) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ProjectQuotasStatisticsData with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ProjectQuotasStatisticsDataMultiError, or nil if none found.
+func (m *ProjectQuotasStatisticsData) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ProjectQuotasStatisticsData) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if all {
+		switch v := interface{}(m.GetCpu()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ProjectQuotasStatisticsDataValidationError{
+					field:  "Cpu",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ProjectQuotasStatisticsDataValidationError{
+					field:  "Cpu",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetCpu()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ProjectQuotasStatisticsDataValidationError{
+				field:  "Cpu",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetMem()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ProjectQuotasStatisticsDataValidationError{
+					field:  "Mem",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ProjectQuotasStatisticsDataValidationError{
+					field:  "Mem",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetMem()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ProjectQuotasStatisticsDataValidationError{
+				field:  "Mem",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetGpu()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ProjectQuotasStatisticsDataValidationError{
+					field:  "Gpu",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ProjectQuotasStatisticsDataValidationError{
+					field:  "Gpu",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetGpu()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ProjectQuotasStatisticsDataValidationError{
+				field:  "Gpu",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return ProjectQuotasStatisticsDataMultiError(errors)
+	}
+
+	return nil
+}
+
+// ProjectQuotasStatisticsDataMultiError is an error wrapping multiple
+// validation errors returned by ProjectQuotasStatisticsData.ValidateAll() if
+// the designated constraints aren't met.
+type ProjectQuotasStatisticsDataMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ProjectQuotasStatisticsDataMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ProjectQuotasStatisticsDataMultiError) AllErrors() []error { return m }
+
+// ProjectQuotasStatisticsDataValidationError is the validation error returned
+// by ProjectQuotasStatisticsData.Validate if the designated constraints
+// aren't met.
+type ProjectQuotasStatisticsDataValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ProjectQuotasStatisticsDataValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ProjectQuotasStatisticsDataValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ProjectQuotasStatisticsDataValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ProjectQuotasStatisticsDataValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ProjectQuotasStatisticsDataValidationError) ErrorName() string {
+	return "ProjectQuotasStatisticsDataValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ProjectQuotasStatisticsDataValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sProjectQuotasStatisticsData.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ProjectQuotasStatisticsDataValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ProjectQuotasStatisticsDataValidationError{}
+
 // Validate checks the field values on ListProjectsForIAMResp_Project with the
 // rules defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
@@ -15874,7 +17656,7 @@ type ListProjectsForIAMResp_ProjectMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
 func (m ListProjectsForIAMResp_ProjectMultiError) Error() string {
-	var msgs []string
+	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
 	}

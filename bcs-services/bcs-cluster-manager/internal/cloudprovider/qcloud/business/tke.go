@@ -152,6 +152,8 @@ func GetClusterCurrentVpcCniSubnets(cls *proto.Cluster, extraIP bool) (map[strin
 		return nil, 0, nil, err
 	}
 
+	blog.Infof("GetClusterCurrentVpcCniSubnets[%s] totalRatio[%v] zoneSubnetNum[%+v] %v", cls.GetClusterID(),
+		totalRatio, zoneSubnetNum, subnetIds)
 	return zoneSubnetNum, totalRatio, subnetIds, nil
 }
 
@@ -516,7 +518,7 @@ func GenerateNTAddExistedInstanceReq(ctx context.Context, info *cloudprovider.Cl
 
 					// only handle cvm first /dev/vdb disk
 					if disk.DiskCount >= 1 {
-						overrideInstanceAdvanced.DataDisks = []api.DataDetailDisk{api.GetDefaultDataDisk("")}
+						overrideInstanceAdvanced.DataDisks = []api.DataDetailDisk{api.GetDefaultDataDisk(api.Ext4)}
 					}
 
 					req.InstanceAdvancedSettingsOverrides = append(req.InstanceAdvancedSettingsOverrides,
@@ -555,7 +557,7 @@ func genGpuAdvSettingOverride(req *api.AddExistedInstanceReq, info *cloudprovide
 
 					// only handle cvm first /dev/vdb disk
 					if disk.DiskCount >= 1 {
-						overrideInstanceAdvanced.DataDisks = []api.DataDetailDisk{api.GetDefaultDataDisk("")}
+						overrideInstanceAdvanced.DataDisks = []api.DataDetailDisk{api.GetDefaultDataDisk(api.Ext4)}
 					}
 					overrideInstanceAdvanced.GPUArgs = generateGPUArgs(gpuNodeTemplate.GpuArgs)
 
@@ -568,9 +570,11 @@ func genGpuAdvSettingOverride(req *api.AddExistedInstanceReq, info *cloudprovide
 }
 
 // gpuNodeTemplatesMapByNodeIDs get gpuNodeTemplatesMap by nodeIDs, map key: nodeId, value: gpuNodeTemplate
-func getGPUNodeTemplatesMapByNodeIDs(
+func getGPUNodeTemplatesMapByNodeIDs(ctx context.Context,
 	nodeIDs []string, cmOption *cloudprovider.CommonOption) (map[string]*proto.NodeTemplate, error) {
-	gpuNodeTemplates := make(map[string]*proto.NodeTemplate)
+	taskID, stepName := cloudprovider.GetTaskIDAndStepNameFromContext(ctx)
+
+	gpuNodeTemplateMaps := make(map[string]*proto.NodeTemplate)
 	nodes, err := TransInstanceIDsToNodes(nodeIDs, &cloudprovider.ListNodesOption{
 		Common: cmOption,
 	})
@@ -581,14 +585,25 @@ func getGPUNodeTemplatesMapByNodeIDs(
 
 	for i := range nodes {
 		gpuNodeTemplate, err := cloudprovider.GetGpuNodeTemplate(nodes[i].InstanceType)
-		if err != nil {
-			blog.Errorf("getGPUNodeTemplatesMapByNodeIDs GetGPUNodeTemplate failed: %v", err)
-			return nil, err
+		if err != nil || gpuNodeTemplate == nil {
+			blog.Errorf("getGPUNodeTemplatesMapByNodeIDs instances[%v] GetGpuNodeTemplate failed, err:[%s]",
+				nodes[i].InstanceType, err)
+			cloudprovider.GetStorageModel().CreateTaskStepLogWarn(context.Background(), taskID, stepName,
+				fmt.Sprintf("getGPUNodeTemplatesMapByNodeIDs instances[%v] not found GPUNodeTemplate, err:[%s], "+
+					"falling back to default settings", nodes[i].InstanceType, err))
+			// if not find gpu node template, use default gpu node template
+			defaultGpuNodeTemplate, localErr := cloudprovider.GetGpuNodeTemplate(common.DefaultGpuNodeTemplateName)
+			if localErr != nil {
+				blog.Errorf("getGPUNodeTemplatesMapByNodeIDs instances[%v] GetGpuNodeTemplate failed, err:[%s]",
+					nodes[i].InstanceType, localErr)
+			}
+			gpuNodeTemplate = defaultGpuNodeTemplate
 		}
-		gpuNodeTemplates[nodes[i].NodeID] = gpuNodeTemplate
+
+		gpuNodeTemplateMaps[nodes[i].NodeID] = gpuNodeTemplate
 	}
 
-	return gpuNodeTemplates, nil
+	return gpuNodeTemplateMaps, nil
 }
 
 // GenerateClsAdvancedInsSettingFromNT xxx
@@ -679,10 +694,13 @@ func GenerateGPUAddExistedInstanceReqs(ctx context.Context, info *cloudprovider.
 
 	reqs := make([]*api.AddExistedInstanceReq, 0)
 
-	imagesToGpuNodesInfoMap, err := getImagesToGpuNodesInfoMap(nodeIDs, info)
+	// GPU节点分类, 将相同模版的节点进行聚合
+	imagesToGpuNodesInfoMap, err := getImagesToGpuNodesInfoMap(ctx, nodeIDs, info)
 	if err != nil {
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
+			fmt.Sprintf("AddNodesToCluster[%s] getNodesImagesToIdsMap failed: %v", taskID, err))
 		blog.Errorf("AddNodesToCluster[%s] getNodesImagesToIdsMap failed: %v", taskID, err)
-		return nil
+		return reqs
 	}
 
 	for imageId, gpuNodeInfo := range imagesToGpuNodesInfoMap {
@@ -766,41 +784,39 @@ func generateGpuInfoInNGReq(ctx context.Context, req *api.AddExistedInstanceReq,
 			nodeIDs, err.Error())
 		return
 	}
-	isGpuNode := true
 	for _, node := range nodes {
 		if !node.GetIsGpuNode() {
 			return
 		}
 	}
 
-	if isGpuNode {
-		instanceType := info.NodeGroup.GetLaunchTemplate().GetInstanceType()
-		gpuNodeTemplate, err := cloudprovider.GetGpuNodeTemplate(instanceType)
-		if err != nil || gpuNodeTemplate == nil {
+	instanceType := info.NodeGroup.GetLaunchTemplate().GetInstanceType()
+	gpuNodeTemplate, err := cloudprovider.GetGpuNodeTemplate(instanceType)
+	if err != nil || gpuNodeTemplate == nil {
+		blog.Errorf("GenerateNGAddExistedInstanceReq instances[%v] GetGpuNodeTemplate failed, err:[%s]",
+			instanceType, err)
+		cloudprovider.GetStorageModel().CreateTaskStepLogWarn(context.Background(), taskID, stepName,
+			fmt.Sprintf("GenerateNGAddExistedInstanceReq instances[%v] not found GPUNodeTemplate, err:[%s], "+
+				"falling back to default settings", instanceType, err))
+
+		// if not find gpu node template, use default gpu node template
+		defaultGpuNodeTemplate, localErr := cloudprovider.GetGpuNodeTemplate(common.DefaultGpuNodeTemplateName)
+		if localErr != nil {
 			blog.Errorf("GenerateNGAddExistedInstanceReq instances[%v] GetGpuNodeTemplate failed, err:[%s]",
-				instanceType, err)
-			cloudprovider.GetStorageModel().CreateTaskStepLogWarn(context.Background(), taskID, stepName,
-				fmt.Sprintf("GenerateNGAddExistedInstanceReq instances[%v] not found GPUNodeTemplate, err:[%s], "+
-					"falling back to default settings", instanceType, err))
-
-			// if not find gpu node template, use default gpu node template
-			defaultGpuNodeTemplate, localErr := cloudprovider.GetGpuNodeTemplate(common.DefaultGpuNodeTemplateName)
-			if localErr != nil {
-				blog.Errorf("GenerateNGAddExistedInstanceReq instances[%v] GetGpuNodeTemplate failed, err:[%s]",
-					instanceType, localErr)
-				return
-			}
-			gpuNodeTemplate = defaultGpuNodeTemplate
+				instanceType, localErr)
+			return
 		}
-
-		req.ImageId = setImageIdFromNodeTemplate(gpuNodeTemplate, info.CmOption)
-		req.AdvancedSetting.GPUArgs = generateGPUArgs(gpuNodeTemplate.GetGpuArgs())
-
-		gpuArgsJSON, _ := json.Marshal(req.AdvancedSetting.GPUArgs)
-		cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
-			fmt.Sprintf("GenerateNGAddExistedInstanceReq instances[%v] found GPUNodeTemplate, "+
-				"gpuArgs:[%s], imageId:[%s]", instanceType, gpuArgsJSON, req.ImageId))
+		gpuNodeTemplate = defaultGpuNodeTemplate
 	}
+
+	req.ImageId = setImageIdFromNodeTemplate(gpuNodeTemplate, info.CmOption)
+	req.AdvancedSetting.GPUArgs = generateGPUArgs(gpuNodeTemplate.GetGpuArgs())
+
+	gpuArgsJSON, _ := json.Marshal(req.AdvancedSetting.GPUArgs)
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		fmt.Sprintf("GenerateNGAddExistedInstanceReq instances[%v] found GPUNodeTemplate, "+
+			"gpuArgs:[%s], imageId:[%s]", instanceType, gpuArgsJSON, req.ImageId))
+
 }
 
 func setImageIdFromNodeTemplate(nodeTemplate *proto.NodeTemplate, cmOption *cloudprovider.CommonOption) string {
@@ -957,7 +973,7 @@ func generateInstanceAdvanceInfoFromNp(cls *proto.Cluster, nodeTemplate *proto.N
 		}
 	}
 
-	if len(nodeTemplate.Taints) > 0 && (options == nil || !options.CreateCluster) {
+	if len(nodeTemplate.Taints) > 0 {
 		for _, t := range nodeTemplate.Taints {
 			advanceInfo.TaintList = append(advanceInfo.TaintList, &api.Taint{
 				Key:    qcommon.StringPtr(t.Key),
@@ -966,6 +982,7 @@ func generateInstanceAdvanceInfoFromNp(cls *proto.Cluster, nodeTemplate *proto.N
 			})
 		}
 	}
+
 	if len(nodeTemplate.DataDisks) > 0 {
 		for i, disk := range nodeTemplate.DataDisks {
 			diskSize, _ := strconv.Atoi(disk.DiskSize)
@@ -1111,7 +1128,8 @@ func AddNodesToCluster(ctx context.Context, info *cloudprovider.CloudDependBasic
 		blog.Infof("AddNodesToCluster[%s] AddExistedInstancesToCluster request[%+v]", taskID, addReq)
 
 		cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
-			fmt.Sprintf("generate addReq image[%v] to instances[%v]", addReq.ImageId, nodeIDs))
+			fmt.Sprintf("AddNodesToCluster generate addReq imageId[%v] to instances list[%v]",
+				addReq.ImageId, nodeIDs))
 
 		err = retry.Do(func() error {
 			resp, err = tkeCli.AddExistedInstancesToCluster(addReq)
@@ -1163,11 +1181,12 @@ func AddNodesToCluster(ctx context.Context, info *cloudprovider.CloudDependBasic
 		"failed [%v], reasons[%v]", taskID, result.SuccessNodeInfos, result.FailedNodeInfos, result.FailedReasons)
 
 	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
-		fmt.Sprintf("success nodes: [%v]", result.SuccessNodeInfos))
+		fmt.Sprintf("AddNodesToCluster AddExistedInstancesToCluster success nodes: [%v]", result.SuccessNodeInfos))
 
 	if len(result.FailedNodeInfos) > 0 {
 		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
-			fmt.Sprintf("failed nodes: [%v], reason [%v]", result.FailedNodeInfos, result.FailedReasons))
+			fmt.Sprintf("AddNodesToCluster AddExistedInstancesToCluster failed nodes: [%v], reason [%v]",
+				result.FailedNodeInfos, result.FailedReasons))
 	}
 
 	return result, nil
@@ -1180,10 +1199,11 @@ type gpuNodesInfo struct {
 }
 
 // getImagesToGpuNodesInfoMap get gpu nodes info map
-func getImagesToGpuNodesInfoMap(
+func getImagesToGpuNodesInfoMap(ctx context.Context,
 	nodeIds []string, info *cloudprovider.CloudDependBasicInfo) (map[string]*gpuNodesInfo, error) {
 	imageToGpuNodesInfo := make(map[string]*gpuNodesInfo)
-	gpuNodeTemplatesMap, err := getGPUNodeTemplatesMapByNodeIDs(nodeIds, info.CmOption)
+	// 获取每个GPU节点使用的模版
+	gpuNodeTemplatesMap, err := getGPUNodeTemplatesMapByNodeIDs(ctx, nodeIds, info.CmOption)
 	if err != nil {
 		blog.Errorf("gpuNodeTemplatesMap[%s] failed: %v", nodeIds, err)
 		return nil, err
@@ -1204,6 +1224,7 @@ func getImagesToGpuNodesInfoMap(
 				}
 			}
 
+			// 使用相同镜像的节点聚合
 			if _, exists := imageToGpuNodesInfo[imageID]; !exists {
 				imageToGpuNodesInfo[imageID] = &gpuNodesInfo{
 					nodeIds:         []string{nodeId},
@@ -1279,6 +1300,11 @@ func CheckClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDe
 
 	taskID, stepName := cloudprovider.GetTaskIDAndStepNameFromContext(ctx)
 
+	// get task timeout from template config, if no configure, use default timeout
+	defaultTime := 30 * time.Minute
+	taskTimeout := cloudprovider.GetTaskTimeout(ctx, info.Cluster.ProjectID,
+		info.Cluster.ClusterID, stepName, defaultTime)
+
 	// get qcloud client
 	cli, err := api.NewTkeClient(info.CmOption)
 	if err != nil {
@@ -1287,12 +1313,11 @@ func CheckClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDe
 	}
 
 	// wait node group state to normal
-	timeCtx, cancel := context.WithTimeout(context.TODO(), 30*time.Minute)
+	timeCtx, cancel := context.WithTimeout(context.TODO(), taskTimeout)
 	defer cancel()
 
 	// wait all nodes to be ready
 	err = loop.LoopDoFunc(timeCtx, func() error {
-
 		instances, errQuery := cli.QueryTkeClusterInstances(&api.DescribeClusterInstances{
 			ClusterID:   info.Cluster.SystemID,
 			InstanceIDs: instanceIDs,
@@ -1308,9 +1333,12 @@ func CheckClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDe
 			failure = make([]InstanceInfo, 0)
 		)
 		for _, ins := range instances {
-			blog.Infof("checkClusterInstanceStatus[%s] instance id[%s] status[%s]",
-				taskID, *ins.InstanceId, *ins.InstanceState)
-
+			// instances info
+			blog.Infof("provider[%s] checkClusterInstanceStatus[%s] businessID[%s] projectID[%s] cluster[%s] "+
+				"instanceInfo[%s:%s] status[%s]", info.Cluster.GetProvider(), taskID, info.Cluster.GetBusinessID(),
+				info.Cluster.GetProjectID(), utils.StringPtrToString(ins.InstanceId),
+				utils.StringPtrToString(ins.LanIP), info.Cluster.GetSystemID(),
+				utils.StringPtrToString(ins.InstanceState))
 			switch *ins.InstanceState {
 			case api.RunningInstanceTke.String():
 				running = append(running, InstanceInfo{
@@ -1367,9 +1395,6 @@ func CheckClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDe
 			return nil, nil, errQuery
 		}
 		for _, ins := range instances {
-			blog.Infof("checkClusterInstanceStatus[%s] instance id[%s] status[%s]",
-				taskID, *ins.InstanceId, *ins.InstanceState)
-
 			switch *ins.InstanceState {
 			case api.RunningInstanceTke.String():
 				running = append(running, InstanceInfo{
@@ -1390,11 +1415,11 @@ func CheckClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDe
 		taskID, addSuccessNodes, addFailureNodes)
 
 	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
-		fmt.Sprintf("success instance [%v]", addSuccessNodes))
+		fmt.Sprintf("CheckClusterInstanceStatus success nodes info [%v]", addSuccessNodes))
 
 	if len(addFailureNodes) > 0 {
 		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
-			fmt.Sprintf("failure instance [%v]", addFailureNodes))
+			fmt.Sprintf("CheckClusterInstanceStatus failure nodes info [%v]", addFailureNodes))
 
 		// set cluster node status
 		for _, n := range addFailureNodes {

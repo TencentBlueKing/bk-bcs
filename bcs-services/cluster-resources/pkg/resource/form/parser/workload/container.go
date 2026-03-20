@@ -32,11 +32,15 @@ func ParseContainerGroup(manifest map[string]interface{}, cGroup *model.Containe
 	}
 	// 初始容器
 	for _, c := range mapx.GetList(manifest, prefix+"initContainers") {
-		cGroup.InitContainers = append(cGroup.InitContainers, parseContainer(c.(map[string]interface{})))
+		if cMap, ok := c.(map[string]interface{}); ok {
+			cGroup.InitContainers = append(cGroup.InitContainers, parseContainer(cMap))
+		}
 	}
 	// 标准容器
 	for _, c := range mapx.GetList(manifest, prefix+"containers") {
-		cGroup.Containers = append(cGroup.Containers, parseContainer(c.(map[string]interface{})))
+		if cMap, ok := c.(map[string]interface{}); ok {
+			cGroup.Containers = append(cGroup.Containers, parseContainer(cMap))
+		}
 	}
 }
 
@@ -54,8 +58,8 @@ func parseContainer(raw map[string]interface{}) model.Container {
 }
 
 func parseContainerBasic(raw map[string]interface{}, basic *model.ContainerBasic) {
-	basic.Name = raw["name"].(string)
-	basic.Image = raw["image"].(string)
+	basic.Name = mapx.GetStr(raw, "name")
+	basic.Image = mapx.GetStr(raw, "image")
 	basic.PullPolicy = mapx.GetStr(raw, "imagePullPolicy")
 }
 
@@ -70,20 +74,23 @@ func parseContainerService(raw map[string]interface{}, service *model.ContainerS
 func parseContainerEnvs(raw map[string]interface{}, cEnvs *model.ContainerEnvs) {
 	// container.env
 	for _, env := range mapx.GetList(raw, "env") {
-		e, _ := env.(map[string]interface{})
-		if value, ok := e["value"]; ok {
-			envVar := model.EnvVar{Name: e["name"].(string), Type: resCsts.EnvVarTypeKeyVal, Value: value.(string)}
-			cEnvs.Vars = append(cEnvs.Vars, envVar)
-		} else if valFrom, ok := e["valueFrom"]; ok {
-			envVar := genValueFormEnvVar(valFrom.(map[string]interface{}), e["name"].(string))
-			cEnvs.Vars = append(cEnvs.Vars, envVar)
+		if e, ok := env.(map[string]interface{}); ok {
+			if _, ok := e["value"]; ok {
+				envVar := model.EnvVar{Name: mapx.GetStr(e, "name"), Type: resCsts.EnvVarTypeKeyVal, Value: mapx.GetStr(e, "value")}
+				cEnvs.Vars = append(cEnvs.Vars, envVar)
+			} else if valFrom, ok := e["valueFrom"].(map[string]interface{}); ok {
+				envVar := genValueFormEnvVar(valFrom, mapx.GetStr(e, "name"))
+				cEnvs.Vars = append(cEnvs.Vars, envVar)
+			}
 		}
 	}
 
 	// container.envFrom
 	for _, envFrom := range mapx.GetList(raw, "envFrom") {
-		envVar := genEnvFromEnvVar(envFrom.(map[string]interface{}))
-		cEnvs.Vars = append(cEnvs.Vars, envVar)
+		if envFromMap, ok := envFrom.(map[string]interface{}); ok {
+			envVar := genEnvFromEnvVar(envFromMap)
+			cEnvs.Vars = append(cEnvs.Vars, envVar)
+		}
 	}
 }
 
@@ -92,36 +99,44 @@ func genValueFormEnvVar(valFrom map[string]interface{}, name string) model.EnvVa
 	if fieldRef, ok := valFrom["fieldRef"]; ok {
 		// 来源于 Pod 本身字段信息
 		varType = resCsts.EnvVarTypePodField
-		value = fieldRef.(map[string]interface{})["fieldPath"].(string)
+		if fieldPath, ok := fieldRef.(map[string]interface{}); ok {
+			value = mapx.GetStr(fieldPath, "fieldPath")
+		}
 	} else if resFieldRef, ok := valFrom["resourceFieldRef"]; ok {
 		// 来源于资源配额信息
 		varType = resCsts.EnvVarTypeResource
-		source = resFieldRef.(map[string]interface{})["containerName"].(string)
-		value = resFieldRef.(map[string]interface{})["resource"].(string)
+		if resFieldRefMap, ok := resFieldRef.(map[string]interface{}); ok {
+			source = mapx.GetStr(resFieldRefMap, "containerName")
+			value = mapx.GetStr(resFieldRefMap, "resource")
+		}
 	} else if cmKeyRef, ok := valFrom["configMapKeyRef"]; ok {
 		// 来源于 ConfigMap 键
 		varType = resCsts.EnvVarTypeCMKey
-		source = cmKeyRef.(map[string]interface{})["name"].(string)
-		value = cmKeyRef.(map[string]interface{})["key"].(string)
+		if cmKeyRefMap, ok := cmKeyRef.(map[string]interface{}); ok {
+			source = mapx.GetStr(cmKeyRefMap, "name")
+			value = mapx.GetStr(cmKeyRefMap, "key")
+		}
 	} else if secRef, ok := valFrom["secretKeyRef"]; ok {
 		// 来源于 Secret 键
 		varType = resCsts.EnvVarTypeSecretKey
-		source = secRef.(map[string]interface{})["name"].(string)
-		value = secRef.(map[string]interface{})["key"].(string)
+		if secRefMap, ok := secRef.(map[string]interface{}); ok {
+			source = mapx.GetStr(secRefMap, "name")
+			value = mapx.GetStr(secRefMap, "key")
+		}
 	}
 	return model.EnvVar{Name: name, Type: varType, Source: source, Value: value}
 }
 
 func genEnvFromEnvVar(envFrom map[string]interface{}) model.EnvVar {
-	envVar := model.EnvVar{Name: envFrom["prefix"].(string)}
-	if cmRef, ok := envFrom["configMapRef"]; ok {
+	envVar := model.EnvVar{Name: mapx.GetStr(envFrom, "prefix")}
+	if cmRef, ok := envFrom["configMapRef"].(map[string]interface{}); ok {
 		// 来源于 ConfigMap
 		envVar.Type = resCsts.EnvVarTypeCM
-		envVar.Source = cmRef.(map[string]interface{})["name"].(string)
-	} else if secRef, ok := envFrom["secretRef"]; ok {
+		envVar.Source = mapx.GetStr(cmRef, "name")
+	} else if secRef, ok := envFrom["secretRef"].(map[string]interface{}); ok {
 		// 来源于 Secret
 		envVar.Type = resCsts.EnvVarTypeSecret
-		envVar.Source = secRef.(map[string]interface{})["name"].(string)
+		envVar.Source = mapx.GetStr(secRef, "name")
 	}
 	return envVar
 }
@@ -133,8 +148,8 @@ func parseContainerHealthz(raw map[string]interface{}, healthz *model.ContainerH
 		// 默认不启用探针，会预设初始的延时，成功失败阈值等
 		setDefaultProbe(&healthz.ReadinessProbe)
 	}
-	if livenessProbe, ok := raw["livenessProbe"]; ok {
-		parseProbe(livenessProbe.(map[string]interface{}), &healthz.LivenessProbe)
+	if livenessProbe, ok := raw["livenessProbe"].(map[string]interface{}); ok {
+		parseProbe(livenessProbe, &healthz.LivenessProbe)
 	} else {
 		setDefaultProbe(&healthz.LivenessProbe)
 	}
@@ -146,20 +161,22 @@ func parseProbe(raw map[string]interface{}, probe *model.Probe) {
 	probe.TimeoutSecs = mapx.GetInt64(raw, "timeoutSeconds")
 	probe.SuccessThreshold = mapx.GetInt64(raw, "successThreshold")
 	probe.FailureThreshold = mapx.GetInt64(raw, "failureThreshold")
-	if httpGet, ok := raw["httpGet"]; ok {
+	if httpGet, ok := raw["httpGet"].(map[string]interface{}); ok {
 		probe.Enabled = true
 		probe.Type = resCsts.ProbeTypeHTTPGet
-		probe.Path = httpGet.(map[string]interface{})["path"].(string)
-		probe.Port = mapx.GetInt64(httpGet.(map[string]interface{}), "port")
-	} else if tcpSocket, ok := raw["tcpSocket"]; ok {
+		probe.Path = mapx.GetStr(httpGet, "path")
+		probe.Port = mapx.GetInt64(httpGet, "port")
+	} else if tcpSocket, ok := raw["tcpSocket"].(map[string]interface{}); ok {
 		probe.Enabled = true
 		probe.Type = resCsts.ProbeTypeTCPSocket
-		probe.Port = mapx.GetInt64(tcpSocket.(map[string]interface{}), "port")
-	} else if exec, ok := raw["exec"]; ok {
+		probe.Port = mapx.GetInt64(tcpSocket, "port")
+	} else if exec, ok := raw["exec"].(map[string]interface{}); ok {
 		probe.Enabled = true
 		probe.Type = resCsts.ProbeTypeExec
-		for _, command := range mapx.GetList(exec.(map[string]interface{}), "command") {
-			probe.Command = append(probe.Command, command.(string))
+		for _, command := range mapx.GetList(exec, "command") {
+			if commandStr, ok := command.(string); ok {
+				probe.Command = append(probe.Command, commandStr)
+			}
 		}
 	}
 }
@@ -188,13 +205,13 @@ func parseContainerRes(raw map[string]interface{}, res *model.ContainerRes) {
 
 func genResExtra(requirement map[string]interface{}) []model.ResExtra {
 	extra := []model.ResExtra{}
-	for key, value := range requirement {
+	for key := range requirement {
 		// cpu, memory 作为固定的指标，不会加入到 extra
 		if key == resCsts.MetricResCPU || key == resCsts.MetricResMem || key == resCsts.MetricResEphemeralStorage {
 			continue
 		}
 		extra = append(extra, model.ResExtra{
-			Key: key, Value: value.(string),
+			Key: key, Value: mapx.GetStr(requirement, key),
 		})
 	}
 	return extra

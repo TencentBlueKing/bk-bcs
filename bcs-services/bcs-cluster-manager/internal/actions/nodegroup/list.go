@@ -83,7 +83,7 @@ func (la *ListClusterGroupAction) Handle(
 		enableCA = true
 	}
 
-	groupList, err = listNodeGroupByConds(la.model, filterNodeGroupOption{
+	groupList, _, err = listNodeGroupByConds(la.model, filterNodeGroupOption{
 		ClusterID: la.req.GetClusterID(),
 	})
 	if err != nil {
@@ -119,11 +119,12 @@ func (la *ListClusterGroupAction) Handle(
 
 // ListAction action for list online cluster credential
 type ListAction struct {
-	ctx       context.Context
-	model     store.ClusterManagerModel
-	req       *cmproto.ListNodeGroupRequest
-	resp      *cmproto.ListNodeGroupResponse
-	groupList []*cmproto.NodeGroup
+	ctx        context.Context
+	model      store.ClusterManagerModel
+	req        *cmproto.ListNodeGroupV2Request
+	resp       *cmproto.ListNodeGroupV2Response
+	groupList  []*cmproto.NodeGroup
+	totalCount uint32
 }
 
 // NewListAction create list action for cluster credential
@@ -137,12 +138,15 @@ func (la *ListAction) setResp(code uint32, msg string) {
 	la.resp.Code = code
 	la.resp.Message = msg
 	la.resp.Result = (code == common.BcsErrClusterManagerSuccess)
-	la.resp.Data = la.groupList
+	la.resp.Data = &cmproto.ListNodeGroupResponseData{
+		Count:   la.totalCount,
+		Results: la.groupList,
+	}
 }
 
 // Handle handle list cluster credential
 func (la *ListAction) Handle(
-	ctx context.Context, req *cmproto.ListNodeGroupRequest, resp *cmproto.ListNodeGroupResponse) {
+	ctx context.Context, req *cmproto.ListNodeGroupV2Request, resp *cmproto.ListNodeGroupV2Response) {
 	if req == nil || resp == nil {
 		blog.Errorf("list NodeGroup failed, req or resp is empty")
 		return
@@ -157,18 +161,48 @@ func (la *ListAction) Handle(
 		return
 	}
 
-	la.groupList, err = listNodeGroupByConds(la.model, filterNodeGroupOption{
+	groupList, totalCount, err := listNodeGroupByConds(la.model, filterNodeGroupOption{
 		Name:      la.req.GetName(),
 		ClusterID: la.req.GetClusterID(),
 		ProjectID: la.req.GetProjectID(),
 		Region:    la.req.GetRegion(),
+		ListOpt:   la.listOpt(),
 	})
 	if err != nil {
 		la.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
+
+	la.groupList = groupList
+	la.totalCount = uint32(totalCount)
 	la.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 }
+
+func (la *ListAction) listOpt() *storeopt.ListOption {
+	pagination := &storeopt.ListOption{All: true}
+	if la.req.Page == 0 && la.req.Limit == 0 {
+		return pagination
+	}
+
+	pagination.All = false
+	pagination.Sort = map[string]int{"createtime": -1}
+
+	if la.req.Limit > 0 {
+		pagination.Limit = int64(la.req.Limit)
+	}
+
+	if la.req.Page > 0 {
+		offset := int64(la.req.Page) - 1
+		pagination.Offset = offset * pagination.Limit
+	}
+
+	return pagination
+}
+
+const (
+	// nolint:unused
+	nodegroupListDefaultLimit = 100
+)
 
 // ListNodesAction action for list online cluster credential
 type ListNodesAction struct {

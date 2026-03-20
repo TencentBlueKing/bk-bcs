@@ -96,6 +96,7 @@ func (ga *AddSubnetToClusterAction) addSubnetToCluster() error {
 	err = clsMgr.AddSubnetsToCluster(ga.ctx, ga.req.GetSubnet(), &cloudprovider.AddSubnetsToClusterOption{
 		CommonOption: *cmOption,
 		Cluster:      ga.cluster,
+		IsSync:       true,
 	})
 	if err != nil {
 		blog.Errorf("addSubnetToClusterAction call clsMgr addSubnetsToCluster failed: %v", err)

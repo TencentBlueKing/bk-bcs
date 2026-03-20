@@ -15,12 +15,16 @@ package quota
 
 import (
 	"context"
+	"fmt"
 
+	tstore "github.com/Tencent/bk-bcs/bcs-common/common/task/store"
 	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/provider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/provider/manager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/provider/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/quota"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/convert"
@@ -31,14 +35,15 @@ import (
 
 // DeleteQuotaAction action for delete project quota
 type DeleteQuotaAction struct {
-	ctx    context.Context
-	model  store.ProjectModel
-	req    *proto.DeleteProjectQuotaRequest
-	resp   *proto.ProjectQuotaResponse
-	user   string
-	sQuota *quota.ProjectQuota
-	task   *types.Task
-	pQuota *proto.ProjectQuota
+	ctx         context.Context
+	model       store.ProjectModel
+	req         *proto.DeleteProjectQuotaRequest
+	resp        *proto.ProjectQuotaResponse
+	user        string
+	sQuota      *quota.ProjectQuota
+	currentTask *types.Task
+	task        *types.Task
+	pQuota      *proto.ProjectQuota
 }
 
 // NewDeleteQuotaAction new delete project quota action
@@ -68,34 +73,47 @@ func (da *DeleteQuotaAction) validate() error {
 	}
 	da.sQuota = sQuota
 
-	// check quota status
-	err = da.checkProjectQuotaStatus()
-	if err != nil {
-		return err
+	if !da.req.GetOnlyDeleteInfo() {
+		t, err := da.getTask()
+		if err != nil {
+			return err
+		}
+		da.currentTask = t
+
+		// check quota status
+		err = da.checkProjectQuotaStatus()
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
 }
 
 func (da *DeleteQuotaAction) checkProjectQuotaStatus() error {
+	var itsmSn string
+	t := da.currentTask
+	if t != nil {
+		itsmSn = da.currentTask.CommonParams[utils.ItsmSnKey.String()]
+	}
 	if da.sQuota.Status == quota.Deleting {
-		return errorx.NewCheckQuotaStatusErr("project quota status is DELETING")
+		return errorx.NewCheckQuotaStatusErr(fmt.Sprintf("itsmSn[%s] project quota status is DELETING", itsmSn))
 	}
 
-	if da.sQuota.Status != quota.Running {
-		return errorx.NewCheckQuotaStatusErr("project quota status is not RUNNING")
+	if da.sQuota.Status != quota.Running &&
+		da.sQuota.Status != quota.CreateFailure && da.sQuota.Status != quota.DeleteFailure {
+		return errorx.NewCheckQuotaStatusErr(fmt.Sprintf("itsmSn[%s] project quota status is not "+
+			"RUNNING or CREATE_FAILURE or DELETE_FAILURE, currentStatus:[%s]", itsmSn, da.sQuota.Status))
 	}
 
 	return nil
 }
 
 // createProjectQuota create project quota && associate with provider
-func (da *DeleteQuotaAction) updateProjectQuota() error {
-	da.sQuota.Status = quota.Deleting
-
+func (da *DeleteQuotaAction) updateProjectQuota(status quota.ProjectQuotaStatusType) error {
 	err := da.model.UpdateProjectQuotaByField(da.ctx, entity.M{
 		quota.FieldKeyQuotaId: da.sQuota.QuotaId,
-		quota.FieldKeyStatus:  quota.Deleting.String(),
+		quota.FieldKeyStatus:  status.String(),
 	})
 	if err != nil {
 		return errorx.NewDBErr(err.Error())
@@ -140,7 +158,27 @@ func (da *DeleteQuotaAction) Do(ctx context.Context,
 		return errorx.NewReadableErr(errorx.ParamErr, err.Error())
 	}
 
-	if err := da.updateProjectQuota(); err != nil {
+	if da.req.GetOnlyDeleteInfo() {
+		da.sQuota.Status = quota.Deleted
+		if err := da.updateProjectQuota(da.sQuota.Status); err != nil {
+			return err
+		}
+		resp.Data = da.pQuota
+		return nil
+	}
+
+	// 如果跳过ITSM审批，直接更新状态为Deleted
+	if da.req.GetSkipItsmApproval().GetValue() {
+		da.sQuota.Status = quota.Deleted
+		if err := da.updateProjectQuota(da.sQuota.Status); err != nil {
+			return err
+		}
+		resp.Data = da.pQuota
+		return nil
+	}
+
+	da.sQuota.Status = quota.Deleting
+	if err := da.updateProjectQuota(da.sQuota.Status); err != nil {
 		return err
 	}
 	if err := da.dispatchTask(); err != nil {
@@ -161,4 +199,30 @@ func (da *DeleteQuotaAction) Do(ctx context.Context,
 	resp.Data = da.pQuota
 
 	return nil
+}
+
+func (da *DeleteQuotaAction) getTask() (*types.Task, error) {
+	condM := make(operator.M)
+	condM["taskIndex"] = da.req.GetQuotaId()
+	cond := operator.NewLeafCondition(operator.Eq, condM)
+
+	t, err := manager.GetTaskServer().ListTask(da.ctx, cond, &tstore.ListOption{
+		Sort: map[string]int{
+			"start": -1,
+		},
+		Limit: 1,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	switch len(t) {
+	case 0:
+		return nil, fmt.Errorf("current task not found")
+	case 1:
+		task := t[0]
+		return &task, nil
+	default:
+		return nil, fmt.Errorf("multiple tasks found for quotaId %s, expected exactly one", da.req.GetQuotaId())
+	}
 }

@@ -49,9 +49,11 @@ interface IViewFilter {
   }
 }
 
+type IGroup = 'all' | 'all-user' | 'all-system' | '';
 interface IClusterNamespace {
   clusterID: string
   namespaces: string[]
+  nsgroup: IGroup
 }
 
 interface IViewData {

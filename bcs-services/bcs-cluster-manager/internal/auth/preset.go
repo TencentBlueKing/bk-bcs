@@ -117,6 +117,7 @@ var ActionPermissions = map[string]string{
 	"ClusterManager.UpdateNodeAnnotations":       cluster.CanManageClusterOperation,
 	"ClusterManager.CheckDrainNode":              cluster.CanViewClusterOperation,
 	"ClusterManager.ListCloudNodePublicPrefix":   cloudaccount.CanUseCloudAccountOperation,
+	"ClusterManager.ListCloudNodes":              "",
 
 	// federation cluster
 	"ClusterManager.InitFederationCluster": "",
@@ -135,6 +136,7 @@ var ActionPermissions = map[string]string{
 	"ClusterManager.DeleteNodeGroup":        cluster.CanManageClusterOperation,
 	"ClusterManager.GetNodeGroup":           cluster.CanViewClusterOperation,
 	"ClusterManager.ListNodeGroup":          cluster.CanViewClusterOperation,
+	"ClusterManager.ListNodeGroupV2":        "",
 	"ClusterManager.ListClusterNodeGroup":   cluster.CanViewClusterOperation,
 	"ClusterManager.MoveNodesToGroup":       cluster.CanManageClusterOperation,
 	"ClusterManager.RemoveNodesFromGroup":   cluster.CanManageClusterOperation,
@@ -167,6 +169,7 @@ var ActionPermissions = map[string]string{
 	"ClusterManager.UpdateCloudVPC":             "",
 	"ClusterManager.DeleteCloudVPC":             "",
 	"ClusterManager.ListCloudVPC":               "",
+	"ClusterManager.ListCloudVPCV2":             "",
 	"ClusterManager.GetVPCCidr":                 "",
 	"ClusterManager.CheckCidrConflictFromVpc":   cloudaccount.CanUseCloudAccountOperation,
 	"ClusterManager.GetCloudBandwidthPackages":  cloudaccount.CanUseCloudAccountOperation,

@@ -101,6 +101,9 @@ const childRoutes = [
     props: route => ({ ...route.params, ...route.query }),
     name: 'chartList',
     component: ChartList,
+    meta: {
+      resource: 'Charts',
+    },
   },
   {
     path: 'repos/:repoName/charts/:chartName/releases',
@@ -116,6 +119,9 @@ const childRoutes = [
     props: route => ({ ...route.params, ...route.query }),
     name: 'releaseList',
     component: ReleaseList,
+    meta: {
+      resource: 'Releases',
+    },
   },
   {
     path: 'clusters/:cluster/repos/:repoName/charts/:chartName/releases/:namespace/:releaseName',
@@ -131,6 +137,9 @@ const childRoutes = [
     path: 'variable',
     name: 'variable',
     component: Variable,
+    meta: {
+      resource: window.i18n.t('nav.variable'),
+    },
   },
   // 模板集v2
   {
@@ -163,6 +172,7 @@ const childRoutes = [
         meta: {
           menuId: 'TEMPLATE_FILE',
           keepAlive: 'templatefile',
+          resource: window.i18n.t('nav.templateFile'),
         },
       },
       // 模板文件详情
@@ -174,6 +184,7 @@ const childRoutes = [
         meta: {
           menuId: 'TEMPLATE_FILE',
           keepAlive: 'templatefile',
+          resource: window.i18n.t('nav.templateFile'),
         },
       },
     ],

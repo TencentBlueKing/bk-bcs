@@ -29,6 +29,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
@@ -41,20 +42,22 @@ type MappingConverter struct {
 	ingressNamespace string
 	mapping          *networkextensionv1.IngressPortMapping
 	// if true, ingress can only select service, endpoint and workload in the same namespace
-	isNamespaced bool
+	isNamespaced      bool
+	isTCPUDPPortReuse bool
 }
 
 // NewMappingConverter create mapping generator
 func NewMappingConverter(
 	cli client.Client, lbs []*cloud.LoadBalanceObject, ingressName, ingressNamespace string,
-	mapping *networkextensionv1.IngressPortMapping) *MappingConverter {
+	mapping *networkextensionv1.IngressPortMapping, isTCPUDPPortReuse bool) *MappingConverter {
 
 	return &MappingConverter{
-		cli:              cli,
-		lbs:              lbs,
-		ingressName:      ingressName,
-		ingressNamespace: ingressNamespace,
-		mapping:          mapping,
+		cli:               cli,
+		lbs:               lbs,
+		ingressName:       ingressName,
+		ingressNamespace:  ingressNamespace,
+		mapping:           mapping,
+		isTCPUDPPortReuse: isTCPUDPPortReuse,
 	}
 }
 
@@ -211,21 +214,22 @@ func (mg *MappingConverter) DoConvert() ([]networkextensionv1.Listener, error) {
 
 			// contruct converter for every single segment listener
 			newSegConverter := &segmentListenerConverter{
-				ingressName:      mg.ingressName,
-				ingressNamespace: mg.ingressNamespace,
-				protocol:         mg.mapping.Protocol,
-				region:           lb.Region,
-				lbID:             lb.LbID,
-				startPort:        startPort,
-				endPort:          endPort,
-				rsStartPort:      rsStartPort,
-				hostPort:         mg.mapping.HostPort,
-				ignoreSegment:    mg.mapping.IgnoreSegment,
-				segmentLength:    mg.mapping.SegmentLength,
-				pod:              pod,
-				listenerAttr:     mg.mapping.ListenerAttribute,
-				routes:           mg.mapping.Routes,
-				certs:            mg.mapping.Certificate,
+				ingressName:       mg.ingressName,
+				ingressNamespace:  mg.ingressNamespace,
+				protocol:          mg.mapping.Protocol,
+				region:            lb.Region,
+				lbID:              lb.LbID,
+				startPort:         startPort,
+				endPort:           endPort,
+				rsStartPort:       rsStartPort,
+				hostPort:          mg.mapping.HostPort,
+				ignoreSegment:     mg.mapping.IgnoreSegment,
+				segmentLength:     mg.mapping.SegmentLength,
+				pod:               pod,
+				listenerAttr:      mg.mapping.ListenerAttribute,
+				routes:            mg.mapping.Routes,
+				certs:             mg.mapping.Certificate,
+				isTCPUDPPortReuse: mg.isTCPUDPPortReuse,
 			}
 			listeners, err := newSegConverter.generateSegmentListener()
 			if err != nil {
@@ -239,21 +243,22 @@ func (mg *MappingConverter) DoConvert() ([]networkextensionv1.Listener, error) {
 
 // segmentListenerConverter converter for segment listener
 type segmentListenerConverter struct {
-	ingressName      string
-	ingressNamespace string
-	protocol         string
-	region           string
-	lbID             string
-	startPort        int
-	endPort          int
-	rsStartPort      int
-	hostPort         bool
-	ignoreSegment    bool
-	segmentLength    int
-	pod              *k8scorev1.Pod
-	listenerAttr     *networkextensionv1.IngressListenerAttribute
-	routes           []networkextensionv1.IngressPortMappingLayer7Route
-	certs            *networkextensionv1.IngressListenerCertificate
+	ingressName       string
+	ingressNamespace  string
+	protocol          string
+	region            string
+	lbID              string
+	startPort         int
+	endPort           int
+	rsStartPort       int
+	hostPort          bool
+	ignoreSegment     bool
+	segmentLength     int
+	pod               *k8scorev1.Pod
+	listenerAttr      *networkextensionv1.IngressListenerAttribute
+	routes            []networkextensionv1.IngressPortMappingLayer7Route
+	certs             *networkextensionv1.IngressListenerCertificate
+	isTCPUDPPortReuse bool
 }
 
 func (slc *segmentListenerConverter) generateSegmentListener() ([]networkextensionv1.Listener, error) {
@@ -290,7 +295,11 @@ func (slc *segmentListenerConverter) generateListener(start, end, rsStart int) (
 
 	li := networkextensionv1.Listener{}
 	var listenerName string
-	listenerName = GetSegmentListenerName(slc.lbID, start, end)
+	if slc.isTCPUDPPortReuse {
+		listenerName = common.GetListenerNameWithProtocol(slc.lbID, slc.protocol, start, end)
+	} else {
+		listenerName = GetSegmentListenerName(slc.lbID, start, end)
+	}
 	li.SetName(listenerName)
 	li.SetNamespace(slc.ingressNamespace)
 	li.SetLabels(map[string]string{
@@ -324,6 +333,7 @@ func (slc *segmentListenerConverter) generateListener(start, end, rsStart int) (
 	return li, nil
 }
 
+// generateListenerRules generate listener rules
 func (slc *segmentListenerConverter) generateListenerRules(rsPort int) []networkextensionv1.ListenerRule {
 	var retRules []networkextensionv1.ListenerRule
 	for _, r := range slc.routes {
@@ -337,6 +347,7 @@ func (slc *segmentListenerConverter) generateListenerRules(rsPort int) []network
 	return retRules
 }
 
+// generateListenerTargetGroup generate listener target group
 func (slc *segmentListenerConverter) generateListenerTargetGroup(rsPort int) *networkextensionv1.ListenerTargetGroup {
 	targetGroup := &networkextensionv1.ListenerTargetGroup{
 		TargetGroupProtocol: slc.protocol,

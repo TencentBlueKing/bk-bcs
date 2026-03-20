@@ -1,0 +1,48 @@
+Thank you for installing {{ .Chart.Name }}!
+
+Your release is named {{ .Release.Name }}.
+
+The BCS DR Plan Controller has been deployed to namespace: {{ .Release.Namespace }}
+
+To learn more about the release, try:
+
+  $ helm status {{ .Release.Name }} -n {{ .Release.Namespace }}
+  $ helm get all {{ .Release.Name }} -n {{ .Release.Namespace }}
+
+Controller Status:
+  $ kubectl get deployment {{ include "bcs-drplan-controller.fullname" . }} -n {{ .Release.Namespace }}
+  $ kubectl get pods -l control-plane=controller-manager -n {{ .Release.Namespace }}
+
+CRDs Installed:
+  - DRWorkflow (dr.bkbcs.tencent.com/v1alpha1)
+  - DRPlan (dr.bkbcs.tencent.com/v1alpha1)
+  - DRPlanExecution (dr.bkbcs.tencent.com/v1alpha1)
+
+Quick Start:
+  1. Create a DRWorkflow:
+     $ kubectl apply -f https://raw.githubusercontent.com/Tencent/bk-bcs/master/bcs-runtime/bcs-k8s/bcs-component/bcs-drplan-controller/docs/examples/drworkflow.yaml
+
+  2. Create a DRPlan:
+     $ kubectl apply -f https://raw.githubusercontent.com/Tencent/bk-bcs/master/bcs-runtime/bcs-k8s/bcs-component/bcs-drplan-controller/docs/examples/drplan.yaml
+
+  3. Trigger execution:
+     $ kubectl apply -f https://raw.githubusercontent.com/Tencent/bk-bcs/master/bcs-runtime/bcs-k8s/bcs-component/bcs-drplan-controller/docs/examples/drplanexecution.yaml
+
+For more information, visit:
+  https://github.com/Tencent/bk-bcs/tree/master/bcs-runtime/bcs-k8s/bcs-component/bcs-drplan-controller
+
+{{- if .Values.webhook.enabled }}
+{{- if .Values.webhook.certificate.autoGenerate }}
+
+Webhook Configuration:
+  ✓ Auto-generated self-signed certificates (valid for 10 years)
+  ✓ Secret: {{ include "bcs-drplan-controller.webhookCertSecretName" . }}
+  ✓ Service: {{ include "bcs-drplan-controller.webhookServiceName" . }}
+{{- else }}
+
+Webhook Configuration:
+  ℹ Using custom certificates
+  ℹ Secret: {{ include "bcs-drplan-controller.webhookCertSecretName" . }}
+  ℹ Make sure your certificates are properly configured
+{{- end }}
+{{- end }}

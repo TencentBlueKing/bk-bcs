@@ -1,7 +1,7 @@
 <template>
-   <div class="flex items-start justify-center py-[24px] overflow-auto">
+  <div class="flex items-start justify-center py-[24px] overflow-auto">
     <div class="shadow bg-[#fff] px-[24px] py-[16px] pb-[32px] min-w-[800px]">
-      <div class="text-[14px] font-bold mb-[24px]">{{ $t('cluster.create.label.title') }}</div>
+      <div class="text-[14px] font-bold mb-[24px]">{{ title }}</div>
       <section class="create-import-cluster">
         <BkForm
           :label-width="150"
@@ -206,7 +206,6 @@
       </section>
     </div>
   </div>
-  
 </template>
 <script lang="ts">
 import BkForm from 'bk-magic-vue/lib/form';
@@ -301,6 +300,13 @@ export default defineComponent({
           trigger: 'blur',
         },
       ],
+    });
+
+    const title = computed(() => {
+      if (props.importType === 'kubeconfig') {
+        return $i18n.t('cluster.create.label.title');
+      }
+      return $i18n.t('importTencentCloud.title');
     });
 
     // 导入文件
@@ -523,6 +529,7 @@ export default defineComponent({
       handleGotoCloudToken,
       handleGetCloudAccounts,
       webAnnotations,
+      title,
     };
   },
 });

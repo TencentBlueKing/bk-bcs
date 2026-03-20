@@ -15,14 +15,16 @@ package formatter
 import (
 	"fmt"
 
+	"github.com/samber/lo"
+
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 )
 
-// PVAccessMode2ShortMap PersistentVolume AccessMode 缩写映射表
-var PVAccessMode2ShortMap = map[string]string{
-	"ReadWriteOnce": "RWO",
-	"ReadOnlyMany":  "ROX",
-	"ReadWriteMany": "RWX",
+// PVAccessModeList AccessMode 列表
+var PVAccessModeList = []string{
+	"ReadWriteOnce",
+	"ReadOnlyMany",
+	"ReadWriteMany",
 }
 
 const defaultSCAnnoKey = "storageclass.kubernetes.io/is-default-class"
@@ -37,7 +39,7 @@ func FormatPV(manifest map[string]interface{}) map[string]interface{} {
 	ret := FormatStorageRes(manifest)
 
 	// accessModes
-	ret["accessModes"] = parseShortAccessModes(manifest)
+	ret["accessModes"] = parseAccessModes(manifest)
 
 	// claim
 	claimInfo, _ := mapx.GetItems(manifest, "spec.claimRef")
@@ -53,7 +55,7 @@ func FormatPV(manifest map[string]interface{}) map[string]interface{} {
 // FormatPVC xxx
 func FormatPVC(manifest map[string]interface{}) map[string]interface{} {
 	ret := FormatStorageRes(manifest)
-	ret["accessModes"] = parseShortAccessModes(manifest)
+	ret["accessModes"] = parseAccessModes(manifest)
 	return ret
 }
 
@@ -66,10 +68,14 @@ func FormatSC(manifest map[string]interface{}) map[string]interface{} {
 
 // 工具方法
 
-// parseShortAccessModes 解析 AccessModes (缩写)
-func parseShortAccessModes(manifest map[string]interface{}) (shortAccessModes []string) {
+// parseAccessModes 从Kubernetes资源清单中解析访问模式，返回符合PV标准的模式列表
+// 参数manifest为Kubernetes资源清单的map表示
+// 返回值shortAccessModes为符合PVAccessModeList定义的访问模式字符串切片
+func parseAccessModes(manifest map[string]interface{}) (shortAccessModes []string) {
 	for _, am := range mapx.GetList(manifest, "spec.accessModes") {
-		shortAccessModes = append(shortAccessModes, PVAccessMode2ShortMap[am.(string)])
+		if accessMode, ok := am.(string); ok && lo.Contains(PVAccessModeList, accessMode) {
+			shortAccessModes = append(shortAccessModes, accessMode)
+		}
 	}
 	return shortAccessModes
 }

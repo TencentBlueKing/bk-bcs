@@ -17,6 +17,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/provider/common/steps"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/quota"
 )
 
 const (
@@ -51,4 +52,23 @@ func buildItsmQuotaSteps(itsmId string, info itsmData) []*types.Step { // nolint
 	stepList = append(stepList, itsmApproveStep)
 
 	return stepList
+}
+
+func getProjectQuotasSafely(projectQuota *quota.ProjectQuota) (string, string, string) {
+	if projectQuota == nil || projectQuota.Quota == nil {
+		return "", "", ""
+	}
+	var (
+		cpuQuota, memQuota, gpuQuota string
+	)
+	if projectQuota.Quota.Cpu != nil {
+		cpuQuota = projectQuota.Quota.Cpu.DeviceQuota
+	}
+	if projectQuota.Quota.Mem != nil {
+		memQuota = projectQuota.Quota.Mem.DeviceQuota
+	}
+	if projectQuota.Quota.Gpu != nil {
+		gpuQuota = projectQuota.Quota.Gpu.DeviceQuota
+	}
+	return cpuQuota, memQuota, gpuQuota
 }

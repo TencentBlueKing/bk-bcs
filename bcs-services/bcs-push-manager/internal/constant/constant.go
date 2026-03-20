@@ -118,6 +118,8 @@ const (
 
 // Notification constants.
 const (
+	// ErrChannelClosed indicates that the MQ channel has been closed
+	ErrChannelClosed = "mq_channel_closed"
 	// NotificationActionQueueName is the name of the notification action queue.
 	NotificationActionQueueName = "textqueuename"
 	// PushTypeRtx represents the RTX push type.

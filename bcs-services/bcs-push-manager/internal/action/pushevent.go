@@ -110,6 +110,7 @@ func (a *PushEventAction) CreatePushEvent(ctx context.Context, req *pb.CreatePus
 		return nil
 	}
 
+	// convert MetricData (optional)
 	if req.Event.MetricData != nil {
 		event.MetricData = types.MetricData{
 			MetricValue: req.Event.MetricData.MetricValue,
@@ -117,10 +118,6 @@ func (a *PushEventAction) CreatePushEvent(ctx context.Context, req *pb.CreatePus
 		if req.Event.MetricData.Timestamp != nil {
 			event.MetricData.Timestamp = req.Event.MetricData.Timestamp.AsTime()
 		}
-	} else {
-		rsp.Code = uint32(constant.ResponseCodeBadRequest)
-		rsp.Message = constant.ResponseMsgMetricDataRequired
-		return nil
 	}
 
 	// call store layer

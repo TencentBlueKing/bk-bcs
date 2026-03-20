@@ -130,6 +130,8 @@ nav:
   cloudToken: 云凭证
   templateFile: 模板文件
   projectQuotas: 项目配额
+  platformProject: 项目管理
+  platformManage: 平台管理
 iam:
   title:
     perms: 该操作需要以下权限
@@ -187,6 +189,10 @@ units:
     nDays: '{num}天'
     nMonths: '{0} 月'
     nYears: '{0} 年'
+    leftDays: '余{num}天'
+    leftMonths: '余{num}月'
+    leftYears: '余{num}年'
+    leftHours: '余{num}小时'
   suffix:
     seconds: 秒
     days: 天
@@ -200,11 +206,14 @@ units:
   cores: '{0} 核'
 metrics:
   usage: '使用率 {0}'
-  cpuUsage: CPU使用率
+  cpuUsage: CPU 使用率
+  cpuLimitUsage: CPU limit 使用率
   diskUsage: 磁盘使用率
   memUsage: 内存使用率
   memUsage1: 内存使用量
   podUsage: Pod使用率
+  cpuUsageDesc: CPU单核使用百分比，1个核用满则是 100%，2个核用满则是 200%
+  cpuLimitUsageDesc: CPU实际消耗核数占用Limit核数百分比，有可能会被超额使用，一般在100%之内
   cpuRequestUsage:
     text: CPU装箱率
     clusterDesc: >-
@@ -290,6 +299,7 @@ generic:
     searchDate: 选择日期
     command: 多个命令用空格分隔，例如/bin/bash &quot;-c&quot
     searchIp: '输入IP搜索, 多个IP用逗号或空格隔开'
+    searchWith: '搜索 {0}'
   button:
     clone: 克隆
     resetSearch: 调整筛选条件
@@ -404,6 +414,12 @@ generic:
     resourceID: 资源ID
     none: 无
     tag: 标签
+    description: 描述
+    managers: 管理者
+    codeMode: 源码模式
+    enabled: 已启用
+    disabled: 已停用
+    timeLeft: 剩余时间
   status:
     part_failure: 部分失败
     support: 支持
@@ -720,9 +736,13 @@ cluster:
       vpc:
         text: 所属VPC
         deficiencyIpNumTips: 可用容器网络IP数量不足
-        availableIpNum: '可用IP数量: {0}'
         businessSpecificVPC: 业务专属VPC
-        publicVPC: 公共VPC
+        publicVPC: 公共 VPC
+        exclusiveVPC: 独占 VPC
+        stressTestVPC: 压测 VPC
+        publicVPCTips: vpc下所有业务集群共享网络资源与出口网关，禁止压测，适合小规格集群(200节点及以下)
+        exclusiveVPCTips: 业务独占vpc网络资源
+        stressTestVPCTips: vpc专用于业务部署压测客户端，使用需明确进出口带宽与连接数，请联系jonathantan确认资源
       networkSetting1:
         text: IP资源
         maxNodePodNum: Pod IP 数量
@@ -875,6 +895,7 @@ cluster:
         p2: 请确保集群内已删除所有 VPC-CNI 模式的Pod
     label:
       tkeID: TKE集群ID
+      goRecord: 查看执行记录
   ca:
     name: Cluster Autoscaler
     title:
@@ -1001,6 +1022,9 @@ cluster:
           tips: 默认使用平台提供 GPU 镜像
         CVM: 普通 CVM 节点池
         GPU: GPU 节点池
+        bizIDs: 来源业务
+        availableQuota: 剩余额度
+        providerTime: 提供时间
       title:
         nodeConfig: 节点配置
         initConfig: 初始化配置
@@ -1329,6 +1353,7 @@ cluster:
       setTaint: 设置污点
       addLabel: 添加标签
       addTaint: 添加污点
+      addAnnotation: 添加注解
       copy:
         text: 复制
         checkedIP: 复制勾选IP
@@ -1368,6 +1393,7 @@ cluster:
       inputValue: 请输入value
       locationTag: 定位标签
       locationTaint: 定位污点
+      locationAnnotation: 定位注解
     title:
       confirmAddNode: 确定添加节点
       confirmReAddNode: 确认重新添加节点
@@ -1378,6 +1404,8 @@ cluster:
         desc: 批量设置只展示相同Key的标签
       batchSetTaint:
         text: 批量设置污点
+      batchSetAnnotation:
+        text: 批量设置注解
       tableSetting: 表格设置
       fieldDisplaySettings: 表格显示设置
       nodeSaveError: 部分节点保存失败
@@ -2249,7 +2277,10 @@ projects:
     desc: 请输入项目描述
     search: 输入项目名称搜索
     bkMonitor: 申请监控中心
-    businessID: 业务ID
+    businessID: 业务 ID
+    ID: 项目 ID
+    business: 所属业务
+    goto: 前往项目
   validate:
     projectName: '请输入2-64字符，不能包含`~!@#$%^&*()+<>?:"{},./;\''''[]字符和空格'
     projectName1: 请输入2-32字符的小写字母、数字、中划线，以小写字母开头
@@ -2322,6 +2353,9 @@ dashboard:
     label:
       createMoreNamespaceVars: '可通过 {action} 创建更多作用在命名空间的变量'
       noNamespaceVariables: 暂无命名空间变量
+      allNamespaces: 全部命名空间
+      projectNS: '项目命名空间{0}'
+      systemNS: '系统命名空间{0}'
     msg:
       undoSuccess: 撤回成功
     quota:
@@ -2701,6 +2735,8 @@ googleCloud:
       desc: >-
         当前集群规格最多管理15000个节点, 超过5000个节点需联系GKE服务团队提升集群配额, 20万个Pod, 40万个容器,
         每个节点池最多支持1000个节点, 每个节点最多支持256个Pod
+importTencentCloud:
+  title: 导入公有云集群 - 腾讯云
 importGoogleCloud:
   title: 导入公有云集群 - 谷歌云
   tips:
@@ -2997,6 +3033,11 @@ tke:
         traffic_postpaid_by_hour: 按使用流量计费
         bandwidth_prepaid: 按带宽计费
       maxBandWidth: 购买宽带
+    selectVPC: 选择 VPC
+    vpcName: VPC 名称
+    vpcID: VPCID
+    availableUnderlay: 可用 underlayIP 数量
+    availableOverlay: 可用 overlayIP 数量
   title:
     installGseAgentFailed:
       text: 安装 GSE Agent 失败
@@ -3036,6 +3077,8 @@ tke:
     cidrMaskLen: '子网掩码长度范围 {0}'
     minPodIP: Pod IP需要大于 0
     podIPsNeedLessThanVpcIPs: Pod IP总数要小于私有网络IP数量
+    podIPsNeedLessThanUnderlayNum: 可用 underlayIP 数量不足，请减少 IP 申请数量；或创建集群后再尝试开启 VPC-CNI
+    podIPsNeedLessThanUnderlayIPNum: 可用 underlayIP 数量不足，请减少 IP 申请数量
     passwordNotSame: 两次输入的密码不一致
     minIpNum: '为保证集群有足够IP, 容器网段不能低于 {0} 个IP'
     supportCidrList: '仅支持 {0} 之间网段'

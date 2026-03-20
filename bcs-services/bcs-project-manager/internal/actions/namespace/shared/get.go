@@ -97,7 +97,7 @@ func (a *SharedNamespaceAction) GetNamespace(ctx context.Context,
 	if creator, exists := namespace.Annotations[constant.AnnotationKeyCreator]; exists {
 		managers = append(managers, creator)
 	} else {
-		cluster, err := clustermanager.GetCluster(ctx, req.ClusterID)
+		cluster, err := clustermanager.GetCluster(ctx, req.ClusterID, true)
 		if err != nil {
 			return err
 		}

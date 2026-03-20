@@ -63,7 +63,11 @@ type InjectInfo struct {
 // InjectorConfig defines config of gpuinjector plugin
 type InjectorConfig struct {
 	// map[GPUType]map[ResourceName]GPUInjectInfo
-	GPUResourceMap map[string]map[corev1.ResourceName]InjectInfo `json:"resourceMap,omitempty"`
+	ResourceMap map[string]map[corev1.ResourceName]InjectInfo `json:"resourceMap,omitempty"`
+	// map[Namespace]map[GPUType]map[ResourceName]GPUInjectInfo
+	NamespaceResourceMap map[string]map[string]map[corev1.ResourceName]InjectInfo `json:"namespaceResourceMap,omitempty"`
+	// NamespaceWhiteList defines namespaces that should skip GPU injection
+	NamespaceWhiteList []string `json:"namespaceWhiteList,omitempty"`
 }
 
 // Injector defines gpuinjector plugin
@@ -108,6 +112,11 @@ func (gi *Injector) Handle(ar v1beta1.AdmissionReview) *v1beta1.AdmissionRespons
 		return pluginutil.ToAdmissionResponse(err)
 	}
 
+	// Deal with potential empty fields, e.g., when the pod is created by a deployment
+	if pod.ObjectMeta.Namespace == "" {
+		pod.ObjectMeta.Namespace = req.Namespace
+	}
+
 	patches, err := gi.doInject(pod)
 	if err != nil {
 		blog.Errorf("inject gpu failed, err %s", err.Error())
@@ -133,6 +142,19 @@ func (gi *Injector) Handle(ar v1beta1.AdmissionReview) *v1beta1.AdmissionRespons
 }
 
 func (gi *Injector) doInject(pod *corev1.Pod) ([]types.PatchOperation, error) {
+
+	blog.Infof("doInject pod %s/%s", pod.Namespace, pod.Name)
+
+	// 检查 namespace 是否在白名单中，如果在白名单中则跳过注入
+	namespace := pod.Namespace
+	if gi.conf.NamespaceWhiteList != nil {
+		for _, whiteListNS := range gi.conf.NamespaceWhiteList {
+			if namespace == whiteListNS {
+				return nil, nil
+			}
+		}
+	}
+
 	gpuType, resourceName, err := gi.getGPUTypeAndResourceName(pod)
 	if err != nil {
 		return nil, err
@@ -141,7 +163,32 @@ func (gi *Injector) doInject(pod *corev1.Pod) ([]types.PatchOperation, error) {
 		return nil, nil
 	}
 
-	gpuInfo, ok := gi.conf.GPUResourceMap[gpuType][resourceName]
+	// 优先检查 namespace 特定规则
+	var gpuInfo InjectInfo
+	var ok bool
+	if gi.conf.NamespaceResourceMap != nil {
+		if nsResourceMap, nsExists := gi.conf.NamespaceResourceMap[namespace]; nsExists {
+			if gpuTypeMap, gpuTypeExists := nsResourceMap[gpuType]; gpuTypeExists {
+				if info, resourceExists := gpuTypeMap[resourceName]; resourceExists {
+					gpuInfo = info
+					ok = true
+				}
+			}
+		}
+	}
+	blog.Infof("doInject gpuInfo %v", gpuInfo)
+	// 如果没有匹配到 namespace 特定规则，则使用原有逻辑
+	if !ok {
+		if gi.conf.ResourceMap != nil {
+			if gpuTypeMap, gpuTypeExists := gi.conf.ResourceMap[gpuType]; gpuTypeExists {
+				if info, resourceExists := gpuTypeMap[resourceName]; resourceExists {
+					gpuInfo = info
+					ok = true
+				}
+			}
+		}
+	}
+
 	if !ok {
 		return nil, nil
 	}

@@ -14,6 +14,7 @@
 package steps
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -83,7 +84,7 @@ func (s InstallEstimatorAgentStep) DoWork(t *types.Task) error {
 		return fedsteps.ParamsNotFoundError(t.TaskID, fedsteps.UserTokenKey)
 	}
 
-	err := helm.GetHelmClient().InstallEstimatorAgent(&helm.BcsEstimatorAgentOptions{
+	err := helm.GetHelmClient().InstallEstimatorAgent(context.Background(), &helm.BcsEstimatorAgentOptions{
 		ReleaseBaseOptions: helm.ReleaseBaseOptions{
 			ProjectID:       hostProjectId,
 			ClusterID:       hostClusterId,

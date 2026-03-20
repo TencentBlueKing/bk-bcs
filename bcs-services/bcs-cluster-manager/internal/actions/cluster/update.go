@@ -537,6 +537,7 @@ func (ua *AddNodesAction) addExternalNodesToCluster() error {
 }
 
 // addNodesToCluster handle normal nodes
+// nolint:funlen
 func (ua *AddNodesAction) addNodesToCluster() error {
 	// get cloudprovider cluster implementation
 	clusterMgr, err := cloudprovider.GetClusterMgr(ua.cloud.CloudProvider)
@@ -580,6 +581,9 @@ func (ua *AddNodesAction) addNodesToCluster() error {
 			}
 			if len(ua.req.Login.GetKeyPair().GetKeyPublic()) > 0 {
 				loginInfo.KeyPair.KeyPublic, _ = encrypt.Encrypt(nil, ua.req.Login.GetKeyPair().GetKeyPublic())
+			}
+			if len(ua.req.Login.GetKeyPair().GetKeyID()) > 0 {
+				loginInfo.KeyPair.KeyID = ua.req.Login.GetKeyPair().GetKeyID()
 			}
 			return loginInfo
 		}(),
@@ -839,11 +843,11 @@ func (ua *AddNodesAction) getClusterNodesByIPs(nodeMgr cloudprovider.NodeManager
 }
 
 // cloudCheckValidate cloud check
-func (ua *AddNodesAction) cloudCheckValidate() error {
+func (ua *AddNodesAction) cloudCheckValidate() (bool, error) {
 	validate, err := cloudprovider.GetCloudValidateMgr(ua.cloud.CloudProvider)
 	if err != nil {
 		blog.Errorf("AddNodesAction cloudCheckValidate failed: %v", err)
-		return err
+		return false, err
 	}
 	err = validate.AddNodesToClusterValidate(ua.req,
 		&cloudprovider.CommonOption{
@@ -852,10 +856,12 @@ func (ua *AddNodesAction) cloudCheckValidate() error {
 			}})
 	if err != nil {
 		blog.Errorf("AddNodesAction cloudCheckValidate failed: %v", err)
-		return err
+		return false, err
 	}
 
-	return nil
+	allowCrossBiz := validate.AllowCrossBizNodes(ua.cluster)
+
+	return allowCrossBiz, nil
 }
 
 // validate check
@@ -871,18 +877,20 @@ func (ua *AddNodesAction) validate() error {
 	}
 
 	// cloud validate
-	err = ua.cloudCheckValidate()
+	allowCrossBiz, err := ua.cloudCheckValidate()
 	if err != nil {
 		return err
 	}
 
 	// check operator host permission
-	canUse := CheckUseNodesPermForUser(ua.cluster.BusinessID, ua.req.Operator, ua.req.Nodes)
-	if !canUse {
-		errMsg := fmt.Errorf("add nodes failed: user[%s] no perm to use nodes[%v] in bizID[%s]",
-			ua.req.Operator, ua.req.Nodes, ua.cluster.BusinessID)
-		blog.Errorf(errMsg.Error())
-		return errMsg
+	if !allowCrossBiz {
+		canUse := CheckUseNodesPermForUser(ua.cluster.BusinessID, ua.req.Operator, ua.req.Nodes)
+		if !canUse {
+			errMsg := fmt.Errorf("add nodes failed: user[%s] no perm to use nodes[%v] in bizID[%s]",
+				ua.req.Operator, ua.req.Nodes, ua.cluster.BusinessID)
+			blog.Errorf(errMsg.Error())
+			return errMsg
+		}
 	}
 
 	// check managed_type nodes

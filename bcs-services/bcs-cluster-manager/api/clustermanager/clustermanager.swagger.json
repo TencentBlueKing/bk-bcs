@@ -2815,6 +2815,34 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "vpcName",
+            "description": "vpcName. 业务名, 过滤业务私有的vpc",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "sort",
+            "description": "sort. 根据某个字段排序",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "order",
+            "description": "order. 升序或者降序",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "scenario",
+            "description": "scenario. vpc 使用场景",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -4073,6 +4101,105 @@
             "required": false,
             "type": "boolean",
             "format": "boolean"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
+    "/clustermanager/v1/clusters/{clusterID}/nodes": {
+      "get": {
+        "summary": "查询Node列表信息",
+        "description": "查询指定ClusterID的节点列表信息，clusterID为-查询所有节点",
+        "operationId": "ClusterManager_ListClusterNodes",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerListClusterNodesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "clusterID",
+            "description": "集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "region",
+            "description": "region. 集群所在地域",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "vpcID",
+            "description": "vpcID. 集群私有网络id，云上集群填写",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "nodeGroupID",
+            "description": "nodeGroupID. 所属NodeGroupID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "instanceType",
+            "description": "instanceType. 机型字符串",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "description": "status. 节点状态，可能状态CREATING，RUNNING，DELETING，FAILURE，INITIALIZATION，DELETED",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "offset",
+            "description": "offset. 查询偏移量",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "limit",
+            "description": "limit. 查询限制数量",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "showPwd",
+            "description": "showPwd. 节点密码是否展示(默认不展示)",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          },
+          {
+            "name": "innerIP",
+            "description": "innerIP. 节点内网IP",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -6176,8 +6303,8 @@
     },
     "/clustermanager/v1/projects/{projectID}/providers/{providerID}/autoscaler/resource_usage": {
       "get": {
-        "summary": "获取项目维度用户CA资源使用情况",
-        "description": "获取项目维度集群节点池的CA资源使用情况",
+        "summary": "获取项目维度用户资源使用情况",
+        "description": "获取项目维度集群节点池的资源使用情况",
         "operationId": "ClusterManager_GetProjectResourceQuotaUsage",
         "responses": {
           "200": {
@@ -6206,6 +6333,13 @@
             "description": "资源供应provider，目前支持 selfProvisionCloud/tencentCloud",
             "in": "path",
             "required": true,
+            "type": "string"
+          },
+          {
+            "name": "resourcePoolType",
+            "description": "resourcePoolType. 资源供应provider，目前支持 yunti/self， 默认为 yunti",
+            "in": "query",
+            "required": false,
             "type": "string"
           }
         ],
@@ -7403,6 +7537,111 @@
         ]
       }
     },
+    "/clustermanager/v2/cloudvpc": {
+      "get": {
+        "summary": "查询Cloud VPC列表",
+        "description": "根据查询条件过滤Cloud VPC列表，如果某项条件值为空，则忽略此条件。如果所有条件都为空，则默认查询所有集群，V2版本返回增加分页",
+        "operationId": "ClusterManager_ListCloudVPCV2",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerListCloudVPCV2Response"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "cloudID",
+            "description": "cloudID. 云类型，英文字符串",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "region",
+            "description": "region. vpc所属区域信息",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "vpcID",
+            "description": "vpcID. vpcID信息",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "networkType",
+            "description": "networkType. networkType网络类型(overlay/underlay)",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "businessID",
+            "description": "businessID. 业务ID, 过滤业务私有的vpc",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "vpcName",
+            "description": "vpcName. 业务名, 过滤业务私有的vpc",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "sort",
+            "description": "sort. 根据某个字段排序",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "order",
+            "description": "order. 升序或者降序",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "limit",
+            "description": "limit. 每页数量",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "page",
+            "description": "page. 页码",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "scenario",
+            "description": "scenario. vpc 使用场景",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
     "/clustermanager/v2/cluster": {
       "get": {
         "summary": "查询简化Cluster列表",
@@ -7593,6 +7832,76 @@
             "schema": {
               "$ref": "#/definitions/clustermanagerAddNodesV2Request"
             }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
+    "/clustermanager/v2/nodegroup": {
+      "get": {
+        "summary": "查询NodeGroup列表",
+        "description": "根据查询条件过滤NodeGroup列表，如果某项条件值为空，则忽略此条件。如果所有条件都为空，则默认查询所有集群，V2版本增加分页",
+        "operationId": "ClusterManager_ListNodeGroupV2",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerListNodeGroupV2Response"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "name",
+            "description": "name. 节点组名称",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "description": "clusterID. 节点组所关联的集群，该ID为BCS集群ID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "region",
+            "description": "region. 节点组所关联区域信息",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "projectID",
+            "description": "projectID. 节点组所关联项目信息",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "limit",
+            "description": "limit. 每页数量",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "page",
+            "description": "page. 页码",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
           }
         ],
         "tags": [
@@ -9465,6 +9774,11 @@
           "$ref": "#/definitions/clustermanagerCloudNetworkTemplateConfig",
           "description": "云模板网络配置信息",
           "title": "cloudNetworkTemplateConfig"
+        },
+        "taskTimeTemplateConfig": {
+          "$ref": "#/definitions/clustermanagerTaskTimeTemplateConfig",
+          "description": "任务时间配置信息",
+          "title": "taskTimeTemplateConfig"
         }
       },
       "description": "云模板配置信息",
@@ -9553,6 +9867,11 @@
           "$ref": "#/definitions/clustermanagerCidr",
           "description": "underlayIP CIDR配置",
           "title": "underlay"
+        },
+        "scenario": {
+          "type": "string",
+          "description": "vpc 使用场景",
+          "title": "scenario"
         }
       },
       "description": "用于记录cloud对应不同区域的vpc信息",
@@ -9627,6 +9946,11 @@
           "type": "string",
           "description": "业务ID, 作用预留私有的业务vpc",
           "title": "businessID"
+        },
+        "scenario": {
+          "type": "string",
+          "description": "vpc 使用场景",
+          "title": "scenario"
         }
       },
       "title": "CloudVPCResp for web model"
@@ -11408,6 +11732,11 @@
           "$ref": "#/definitions/clustermanagerCidr",
           "description": "underlayIP CIDR配置",
           "title": "underlay"
+        },
+        "scenario": {
+          "type": "string",
+          "description": "vpc 使用场景",
+          "title": "scenario"
         }
       },
       "description": "创建cloud vpc请求",
@@ -12024,6 +12353,12 @@
           "type": "string",
           "description": "缩容节点后置脚本, base64编码的用户脚本.",
           "title": "scaleInPostScript"
+        },
+        "skipSystemInit": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "是否跳过执行系统初始化, 默认执行",
+          "title": "skipSystemInit"
         },
         "annotations": {
           "$ref": "#/definitions/clustermanagerMapStruct",
@@ -16525,6 +16860,58 @@
         "message"
       ]
     },
+    "clustermanagerListCloudVPCResponseData": {
+      "type": "object",
+      "properties": {
+        "count": {
+          "type": "integer",
+          "format": "int64",
+          "description": "CloudVPC数量",
+          "title": "count"
+        },
+        "results": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerCloudVPCResp"
+          },
+          "description": "返回数据",
+          "title": "results"
+        }
+      }
+    },
+    "clustermanagerListCloudVPCV2Response": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/clustermanagerListCloudVPCResponseData",
+          "description": "获取到的信息",
+          "title": "data"
+        }
+      },
+      "description": "查询云VPC返回",
+      "title": "ListCloudVPCV2Response",
+      "required": [
+        "code",
+        "message"
+      ]
+    },
     "clustermanagerListCloudVpcsResponse": {
       "type": "object",
       "properties": {
@@ -16637,6 +17024,43 @@
       "required": [
         "code",
         "message"
+      ]
+    },
+    "clustermanagerListClusterNodesResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerClusterNode"
+          },
+          "description": "集群节点列表",
+          "title": "data"
+        }
+      },
+      "description": "查询指定ClusterID的节点列表信息返回，如果存在",
+      "title": "ListClusterNodesResponse",
+      "required": [
+        "code",
+        "message",
+        "data"
       ]
     },
     "clustermanagerListClusterResp": {
@@ -16875,6 +17299,58 @@
       },
       "description": "查询NodeGroup返回",
       "title": "ListNodeGroupResponse",
+      "required": [
+        "code",
+        "message"
+      ]
+    },
+    "clustermanagerListNodeGroupResponseData": {
+      "type": "object",
+      "properties": {
+        "count": {
+          "type": "integer",
+          "format": "int64",
+          "description": "NodeGroup数量",
+          "title": "count"
+        },
+        "results": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerNodeGroup"
+          },
+          "description": "返回数据",
+          "title": "results"
+        }
+      }
+    },
+    "clustermanagerListNodeGroupV2Response": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/clustermanagerListNodeGroupResponseData",
+          "description": "获取到的信息",
+          "title": "data"
+        }
+      },
+      "description": "查询NodeGroup返回",
+      "title": "ListNodeGroupV2Response",
       "required": [
         "code",
         "message"
@@ -20302,6 +20778,21 @@
         }
       }
     },
+    "clustermanagerTaskTimeTemplateConfig": {
+      "type": "object",
+      "properties": {
+        "timeoutConfig": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerTimeoutConfig"
+          },
+          "description": "任务步骤超时时间配置",
+          "title": "timeoutConfig"
+        }
+      },
+      "description": "任务时间配置信息",
+      "title": "taskTimeTemplateConfig"
+    },
     "clustermanagerTemplateConfigInfo": {
       "type": "object",
       "properties": {
@@ -20452,6 +20943,24 @@
       },
       "description": "autoScale定时扩缩配置",
       "title": "TimeRange"
+    },
+    "clustermanagerTimeoutConfig": {
+      "type": "object",
+      "properties": {
+        "stepName": {
+          "type": "string",
+          "description": "步骤名",
+          "title": "stepName"
+        },
+        "timeout": {
+          "type": "integer",
+          "format": "int64",
+          "description": "超时时间，单位为分钟",
+          "title": "timeout"
+        }
+      },
+      "description": "任务步骤超时时间配置",
+      "title": "timeoutConfig"
     },
     "clustermanagerTransNodeGroupToNodeTemplateResponse": {
       "type": "object",
@@ -21212,6 +21721,11 @@
           "$ref": "#/definitions/clustermanagerCidr",
           "description": "underlayIP CIDR配置",
           "title": "underlay"
+        },
+        "scenario": {
+          "type": "string",
+          "description": "vpc 使用场景",
+          "title": "scenario"
         }
       },
       "description": "更新云VPC请求",

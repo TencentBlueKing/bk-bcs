@@ -194,10 +194,6 @@ func setDefaultHTTPServer(config *watchoptions.WatchConfig) {
 	if config.Address == "" {
 		config.Address = "127.0.0.1"
 	}
-
-	if config.Port <= 0 {
-		config.Port = 8080
-	}
 }
 
 var apiActions = make([]*httpserver.Action, 0, 100)

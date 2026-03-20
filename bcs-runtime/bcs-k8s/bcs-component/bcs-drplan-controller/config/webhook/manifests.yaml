@@ -1,0 +1,114 @@
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: mutating-webhook-configuration
+webhooks:
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-dr-bkbcs-tencent-com-v1alpha1-drplan
+  failurePolicy: Fail
+  name: mdrplan.kb.io
+  rules:
+  - apiGroups:
+    - dr.bkbcs.tencent.com
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - drplans
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-dr-bkbcs-tencent-com-v1alpha1-drworkflow
+  failurePolicy: Fail
+  name: mdrworkflow.kb.io
+  rules:
+  - apiGroups:
+    - dr.bkbcs.tencent.com
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - drworkflows
+  sideEffects: None
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: validating-webhook-configuration
+webhooks:
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-dr-bkbcs-tencent-com-v1alpha1-drplan
+  failurePolicy: Fail
+  name: vdrplan.kb.io
+  rules:
+  - apiGroups:
+    - dr.bkbcs.tencent.com
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    - DELETE
+    resources:
+    - drplans
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-dr-bkbcs-tencent-com-v1alpha1-drplanexecution
+  failurePolicy: Fail
+  name: vdrplanexecution.kb.io
+  rules:
+  - apiGroups:
+    - dr.bkbcs.tencent.com
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - drplanexecutions
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-dr-bkbcs-tencent-com-v1alpha1-drworkflow
+  failurePolicy: Fail
+  name: vdrworkflow.kb.io
+  rules:
+  - apiGroups:
+    - dr.bkbcs.tencent.com
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    - DELETE
+    resources:
+    - drworkflows
+  sideEffects: None

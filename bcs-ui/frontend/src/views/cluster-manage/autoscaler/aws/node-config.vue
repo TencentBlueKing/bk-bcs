@@ -37,7 +37,19 @@
             :label="$t('cluster.ca.nodePool.label.system')"
             error-display-type="normal"
             required>
-            <bcs-input disabled v-model="nodePoolConfig.launchTemplate.imageInfo.imageName"></bcs-input>
+            <bcs-select
+              class="flex-1"
+              v-model="nodePoolConfig.launchTemplate.imageInfo.imageName"
+              searchable
+              :loading="osImageLoading"
+              :disabled="isEdit"
+              :clearable="false">
+              <bcs-option
+                v-for="image in osImageList"
+                :key="image.imageID"
+                :id="image.imageID"
+                :name="image.alias" />
+            </bcs-select>
           </bk-form-item>
           <!-- 计费模式 -->
           <bk-form-item

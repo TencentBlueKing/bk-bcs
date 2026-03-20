@@ -23,6 +23,8 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/pkg/errors"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/clients/project"
 )
 
 // execute path
@@ -54,7 +56,6 @@ type PipelineConfig struct {
 	DevopsUID       string
 	BkUsername      string
 	DevOpsToken     string
-	BizID           int64
 	Collection      string
 	EnableGroup     bool
 	PipelineID      string
@@ -158,7 +159,7 @@ func Send(ctx context.Context, hr *HTTPRequest) ([]byte, error) {
 }
 
 // ExecutePipeline 执行pipeline
-func ExecutePipeline(ctx context.Context) error {
+func ExecutePipeline(ctx context.Context, projectCode string) error {
 	config := GetPipelineConfig()
 	if config == nil || !config.Enable {
 		return nil
@@ -174,10 +175,19 @@ func ExecutePipeline(ctx context.Context) error {
 			config.AppCode, config.AppSecret, config.BkUsername),
 	}
 
+	// 获取业务id
+	projectInfo, err := project.GetProjectByCode(ctx, projectCode)
+	if err != nil {
+		return fmt.Errorf("failed to get project info for projectCode %s, err: %s", projectCode, err.Error())
+	}
+
+	if projectInfo.BusinessID == "" {
+		return fmt.Errorf("businessID is empty for projectCode %s", projectCode)
+	}
 	// 构建请求参数
 	requestParams := map[string]interface{}{
 		tokenKey:       config.DevOpsToken,
-		bizIdKey:       config.BizID,
+		bizIdKey:       projectInfo.BusinessID,
 		enableGroupKey: config.EnableGroup,
 		collectionKey:  config.Collection,
 	}

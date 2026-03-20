@@ -96,9 +96,6 @@ func (c *CloudValidate) CreateClusterValidate(req *proto.CreateClusterReq, opt *
 	if !req.AutoGenerateMasterNodes {
 		switch req.ManageType {
 		case common.ClusterManageTypeManaged:
-			if len(req.Nodes) == 0 {
-				return fmt.Errorf("invalid node config when AutoGenerateMasterNodes false in MANAGED_CLUSTER")
-			}
 		default:
 			if len(req.Master) == 0 {
 				return fmt.Errorf("invalid master config when AutoGenerateMasterNodes false in INDEPENDENT_CLUSTER")
@@ -144,23 +141,6 @@ func (c *CloudValidate) ImportClusterValidate(req *proto.ImportClusterReq, opt *
 	}
 
 	if req.CloudMode.CloudID != "" {
-		cli, err := api.NewTkeClient(opt)
-		if err != nil {
-			return fmt.Errorf("%s ImportClusterValidate getTKEClient failed: %v", cloudName, err)
-		}
-
-		tkeCluster, err := cli.GetTKECluster(req.CloudMode.CloudID)
-		if err != nil {
-			return fmt.Errorf("%s ImportClusterValidate GetTKECluster[%s] failed: %v", cloudName,
-				req.CloudMode.CloudID, err)
-		}
-
-		// 托管集群导入必须存在节点, 存在节点时才能打通集群链路
-		if *tkeCluster.ClusterType == common.ClusterManageTypeManaged && *tkeCluster.ClusterNodeNum == 0 {
-			return fmt.Errorf("%s ImportClusterValidate ManageTypeCluster[%s] must exist worker nodes",
-				req.CloudMode.CloudID, cloudName)
-		}
-
 		blog.Infof("%s ImportClusterValidate CloudMode CloudID[%s] success", cloudName, req.CloudMode.CloudID)
 		return nil
 	}
@@ -455,4 +435,9 @@ func (c *CloudValidate) CreateNodeGroupValidate(req *proto.CreateNodeGroupReques
 	}
 
 	return nil
+}
+
+// AllowCrossBizNodes xxx
+func (c *CloudValidate) AllowCrossBizNodes(cluster *proto.Cluster) bool {
+	return cloudprovider.AllowCrossBizNodes(cluster)
 }

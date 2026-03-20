@@ -244,4 +244,14 @@ var EKSImageOsList = []*proto.OsImage{
 		Status:          "NORMAL",
 		Provider:        common.PublicImageProvider,
 	},
+	{
+		Alias:           "Amazon Linux 2023",
+		Arch:            "x86_64",
+		ImageID:         "AL2023_x86_64_STANDARD",
+		OsCustomizeType: "GENERAL",
+		OsName:          "AL2023_x86_64_STANDARD",
+		SeriesName:      "",
+		Status:          "NORMAL",
+		Provider:        common.PublicImageProvider,
+	},
 }

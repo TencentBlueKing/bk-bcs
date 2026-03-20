@@ -676,7 +676,8 @@ const (
 
 // TemplateConfigType
 const (
-	CloudConfigType = "cloud"
+	CloudConfigType    = "cloud"
+	TaskTimeConfigType = "task_time"
 )
 
 // InstanceType

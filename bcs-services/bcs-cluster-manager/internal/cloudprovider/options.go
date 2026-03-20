@@ -558,6 +558,7 @@ type AddSubnetsToClusterOption struct {
 	CommonOption
 	Cluster *proto.Cluster
 	Cloud   *proto.Cloud
+	IsSync  bool
 }
 
 // SwitchClusterNetworkOption switch cluster network option

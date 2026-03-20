@@ -31,11 +31,12 @@ type filterNodeGroupOption struct {
 	ClusterID string
 	ProjectID string
 	Region    string
+	ListOpt   *storeopt.ListOption
 }
 
 // listNodeGroupByConds list node groups
 func listNodeGroupByConds(model store.ClusterManagerModel, options filterNodeGroupOption) (
-	[]*cmproto.NodeGroup, error) {
+	[]*cmproto.NodeGroup, int64, error) {
 	var (
 		groupList = make([]*cmproto.NodeGroup, 0)
 		err       error
@@ -59,14 +60,22 @@ func listNodeGroupByConds(model store.ClusterManagerModel, options filterNodeGro
 	condStatus := operator.NewLeafCondition(operator.Ne, operator.M{"status": common.StatusDeleted})
 	branchCond := operator.NewBranchCondition(operator.And, cond, condStatus)
 
-	groups, err := model.ListNodeGroup(context.Background(), branchCond, &storeopt.ListOption{})
+	count, err := model.CountNodeGroup(context.Background(), branchCond)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
+	}
+
+	if options.ListOpt == nil {
+		options.ListOpt = &storeopt.ListOption{}
+	}
+	groups, err := model.ListNodeGroup(context.Background(), branchCond, options.ListOpt)
+	if err != nil {
+		return nil, 0, err
 	}
 	for i := range groups {
 		groupList = append(groupList, removeSensitiveInfo(groups[i]))
 	}
-	return groupList, nil
+	return groupList, count, nil
 }
 
 func virtualNodeID() string {

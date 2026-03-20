@@ -105,7 +105,7 @@ func (ga *GetProjectResourceQuotaUsageAction) getProjectGroupsQuota() error {
 		return err
 	}
 
-	groupQuotas, err := mgr.GetProjectCaResourceQuota(ga.groups, nil)
+	groupQuotas, err := mgr.GetProjectResourceQuota(ga.groups, ga.req.GetResourcePoolType(), nil)
 	if err != nil {
 		return err
 	}

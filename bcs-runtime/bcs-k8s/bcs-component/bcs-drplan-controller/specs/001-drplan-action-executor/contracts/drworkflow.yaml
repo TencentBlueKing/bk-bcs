@@ -1,0 +1,321 @@
+# DRWorkflow CRD Contract
+# API Version: dr.bkbcs.tencent.com/v1alpha1
+
+apiVersion: dr.bkbcs.tencent.com/v1alpha1
+kind: DRWorkflow
+metadata:
+  name: example-workflow
+spec:
+  # 参数定义
+  parameters:
+    - name: targetCluster
+      type: string
+      required: true
+      description: "目标集群命名空间"
+    - name: notifyURL
+      type: string
+      default: "https://default.notify.com"
+      description: "通知 URL"
+    - name: drMode
+      type: string
+      default: "active"
+      description: "容灾模式：active/standby"
+    - name: dbEndpoint
+      type: string
+      required: true
+      description: "数据库连接地址"
+
+  # 失败策略
+  failurePolicy: FailFast  # FailFast | Continue
+
+  # 动作列表
+  actions:
+    # ============================================================
+    # 示例 1: HTTP 通知
+    # ============================================================
+    - name: notify-oncall
+      type: HTTP
+      http:
+        url: "{{ .params.notifyURL }}"
+        method: POST
+        headers:
+          Content-Type: "application/json"
+        body: |
+          {
+            "cluster": "{{ .params.targetCluster }}",
+            "action": "dr-started"
+          }
+        successCodes: [200, 201, 202]
+      timeout: "30s"
+      retryPolicy:
+        limit: 3
+        interval: "5s"
+      # HTTP 无默认逆操作，回滚时跳过
+
+    # ============================================================
+    # 示例 2: Localization Create - 创建新的下发配置（自动回滚：删除）
+    # 场景：在 DR 集群部署应用
+    # ============================================================
+    - name: create-app-localization
+      type: Localization
+      localization:
+        operation: Create       # Create | Patch | Delete
+        name: "dr-app-{{ .planName }}"
+        namespace: "{{ .params.targetCluster }}"  # ManagedCluster 命名空间
+        priority: 500
+        feed:  # 源资源引用
+          apiVersion: apps/v1
+          kind: Deployment
+          name: my-app
+          namespace: production
+        overrides:
+          - name: replicas-override
+            type: JSONPatch
+            value: |
+              - op: replace
+                path: /spec/replicas
+                value: 3
+          - name: add-dr-label
+            type: MergePatch
+            value: |
+              metadata:
+                labels:
+                  dr-mode: "active"
+      timeout: "5m"
+      # 未定义 rollback，自动逆操作：删除此 Localization
+
+    # ============================================================
+    # 示例 3: Localization Patch - 更新已有 Localization 的 overrides（必须显式定义 rollback）
+    # 场景：修改已部署应用的副本数
+    # ============================================================
+    - name: update-replicas
+      type: Localization
+      localization:
+        operation: Patch
+        name: "existing-app-localization"
+        namespace: "{{ .params.targetCluster }}"
+        overrides:
+          - name: scale-replicas
+            type: JSONPatch
+            value: |
+              - op: replace
+                path: /spec/replicas
+                value: {{ .params.replicas }}
+      timeout: "3m"
+      rollback:
+        type: Localization
+        localization:
+          operation: Patch
+          name: "existing-app-localization"
+          namespace: "{{ .params.targetCluster }}"
+          overrides:
+            - name: scale-replicas
+              type: JSONPatch
+              value: |
+                - op: replace
+                  path: /spec/replicas
+                  value: 1  # 恢复原始副本数
+
+    # ============================================================
+    # 示例 4: Localization Patch - 更新 Localization 的 priority
+    # 场景：调整 Localization 优先级以覆盖其他配置
+    # ============================================================
+    - name: adjust-priority
+      type: Localization
+      localization:
+        operation: Patch
+        name: "existing-app-localization"
+        namespace: "{{ .params.targetCluster }}"
+        priority: 800  # 提升优先级
+        overrides:
+          - name: enable-dr-mode
+            type: MergePatch
+            value: |
+              metadata:
+                labels:
+                  dr-mode: "{{ .params.drMode }}"
+      timeout: "3m"
+      rollback:
+        type: Localization
+        localization:
+          operation: Patch
+          name: "existing-app-localization"
+          namespace: "{{ .params.targetCluster }}"
+          priority: 500  # 恢复原始优先级
+          overrides:
+            - name: enable-dr-mode
+              type: MergePatch
+              value: |
+                metadata:
+                  labels:
+                    dr-mode: "standby"
+
+    # ============================================================
+    # 示例 5: Subscription Create - 创建多集群订阅（自动回滚：删除）
+    # 场景：将应用分发到多个容灾集群
+    # ============================================================
+    - name: create-dr-subscription
+      type: Subscription
+      subscription:
+        operation: Create       # Create | Patch | Delete
+        name: "dr-app-subscription-{{ .planName }}"
+        namespace: "clusternet-system"
+        feeds:
+          - apiVersion: apps/v1
+            kind: Deployment
+            name: "my-app"
+            namespace: "production"
+          - apiVersion: v1
+            kind: ConfigMap
+            name: "my-app-config"
+            namespace: "production"
+          - apiVersion: v1
+            kind: Service
+            name: "my-app-svc"
+            namespace: "production"
+        subscribers:
+          - clusterAffinity:
+              matchLabels:
+                dr-zone: "zone-b"
+        schedulingStrategy: Replication
+      timeout: "5m"
+      # 未定义 rollback，自动逆操作：删除此 Subscription
+
+    # ============================================================
+    # 示例 6: Subscription Patch - 更新订阅的目标集群（必须显式定义 rollback）
+    # 场景：调整分发目标
+    # ============================================================
+    - name: update-subscription-targets
+      type: Subscription
+      subscription:
+        operation: Patch
+        name: "existing-app-subscription"
+        namespace: "clusternet-system"
+        subscribers:
+          - clusterAffinity:
+              matchLabels:
+                dr-zone: "zone-c"     # 切换到 zone-c
+                priority: "high"
+      timeout: "3m"
+      rollback:
+        type: Subscription
+        subscription:
+          operation: Patch
+          name: "existing-app-subscription"
+          namespace: "clusternet-system"
+          subscribers:
+            - clusterAffinity:
+                matchLabels:
+                  dr-zone: "zone-a"   # 恢复到 zone-a
+                  priority: "normal"
+
+    # ============================================================
+    # 示例 7: Job 动作 - 执行数据同步脚本
+    # ============================================================
+    - name: run-data-sync
+      type: Job
+      job:
+        namespace: "default"
+        template:
+          spec:
+            restartPolicy: Never
+            containers:
+              - name: sync
+                image: "my-sync-tool:latest"
+                command: ["sh", "-c"]
+                args:
+                  - |
+                    echo "Syncing data to {{ .params.targetCluster }}..."
+                    # 执行数据同步逻辑
+                env:
+                  - name: TARGET_CLUSTER
+                    value: "{{ .params.targetCluster }}"
+        ttlSecondsAfterFinished: 3600
+      timeout: "30m"
+      # 未定义 rollback，自动逆操作：删除 Job
+
+    # ============================================================
+    # 示例 8: HTTP 带自定义回滚 - DNS 切换
+    # ============================================================
+    - name: switch-dns
+      type: HTTP
+      http:
+        url: "https://dns-api.example.com/switch"
+        method: POST
+        headers:
+          Content-Type: "application/json"
+        body: |
+          {
+            "domain": "app.example.com",
+            "target": "{{ .params.targetCluster }}-ingress.example.com"
+          }
+      rollback:
+        type: HTTP
+        http:
+          url: "https://dns-api.example.com/switch"
+          method: POST
+          headers:
+            Content-Type: "application/json"
+          body: |
+            {
+              "domain": "app.example.com",
+              "target": "primary-ingress.example.com"
+            }
+    
+    # ============================================================
+    # 示例 9: KubernetesResource - 创建 ConfigMap
+    # ============================================================
+    - name: create-dr-config
+      type: KubernetesResource
+      resource:
+        operation: Create
+        manifest: |
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: "dr-config"
+            namespace: "{{ .params.targetCluster }}"
+          data:
+            dr-mode: "{{ .params.drMode }}"
+            db-endpoint: "{{ .params.dbEndpoint }}"
+      # Create 自动回滚：删除创建的 ConfigMap
+      timeout: "30s"
+    
+    # ============================================================
+    # 示例 10: KubernetesResource - Patch 操作（必须定义 rollback）
+    # ============================================================
+    - name: update-app-config
+      type: KubernetesResource
+      resource:
+        operation: Patch
+        manifest: |
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: "app-config"
+            namespace: "{{ .params.targetCluster }}"
+          data:
+            mode: "dr"
+      # Patch 必须显式定义回滚
+      rollback:
+        type: KubernetesResource
+        resource:
+          operation: Patch
+          manifest: |
+            apiVersion: v1
+            kind: ConfigMap
+            metadata:
+              name: "app-config"
+              namespace: "{{ .params.targetCluster }}"
+            data:
+              mode: "normal"
+
+status:
+  phase: Ready  # Ready | Invalid
+  conditions:
+    - type: Valid
+      status: "True"
+      reason: ValidationPassed
+      message: "All actions validated successfully"
+      lastTransitionTime: "2026-01-30T10:00:00Z"
+  observedGeneration: 1

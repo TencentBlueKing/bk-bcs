@@ -15,8 +15,6 @@ package utils
 import (
 	"testing"
 
-	v1 "k8s.io/api/core/v1"
-
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/store/entity"
 	meshmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/proto/bcs-mesh-manager"
@@ -140,14 +138,6 @@ func TestConvertValuesToListItem(t *testing.T) {
 					NodeSelector: map[string]string{
 						"node-type": "istio",
 					},
-					Tolerations: []v1.Toleration{
-						{
-							Key:      "istio",
-							Operator: v1.TolerationOpEqual,
-							Value:    "true",
-							Effect:   v1.TaintEffectNoSchedule,
-						},
-					},
 				},
 			},
 			wantErr: false,
@@ -219,7 +209,7 @@ func TestConvertValuesToListItem(t *testing.T) {
 					AccessLogEncoding: strPtr("TEXT"),
 				},
 				Pilot: &common.IstiodPilotConfig{
-					TraceSampling: float64Ptr(0.1),
+					TraceSampling: float32Ptr(10),
 				},
 			},
 			wantErr: false,
@@ -243,7 +233,7 @@ func TestConvertValuesToListItem(t *testing.T) {
 						result.ObservabilityConfig.TracingConfig.BkToken.GetValue())
 				}
 				if result.ObservabilityConfig.TracingConfig.TraceSamplingPercent.GetValue() != 10 {
-					t.Errorf("expected TraceSamplingPercent 10, got %d",
+					t.Errorf("expected TraceSamplingPercent 10, got %.2f",
 						result.ObservabilityConfig.TracingConfig.TraceSamplingPercent.GetValue())
 				}
 				if result.ObservabilityConfig.LogCollectorConfig == nil {
@@ -279,7 +269,7 @@ func TestConvertValuesToListItem(t *testing.T) {
 					},
 				},
 				Pilot: &common.IstiodPilotConfig{
-					TraceSampling: float64Ptr(0.05),
+					TraceSampling: float32Ptr(5),
 				},
 			},
 			wantErr: false,
@@ -299,7 +289,7 @@ func TestConvertValuesToListItem(t *testing.T) {
 						result.ObservabilityConfig.TracingConfig.Endpoint.GetValue())
 				}
 				if result.ObservabilityConfig.TracingConfig.TraceSamplingPercent.GetValue() != 5 {
-					t.Errorf("expected TraceSamplingPercent 5, got %d",
+					t.Errorf("expected TraceSamplingPercent 5, got %.2f",
 						result.ObservabilityConfig.TracingConfig.TraceSamplingPercent.GetValue())
 				}
 			},
@@ -450,7 +440,7 @@ func TestConvertValuesToListItem(t *testing.T) {
 					AutoscaleEnabled: boolPtr(true),
 					AutoscaleMin:     int32Ptr(2),
 					AutoscaleMax:     int32Ptr(10),
-					TraceSampling:    float64Ptr(0.01),
+					TraceSampling:    float32Ptr(1.0),
 					ConfigMap:        boolPtr(false),
 					CPU: &common.HPACPUConfig{
 						TargetAverageUtilization: int32Ptr(70),
@@ -560,7 +550,7 @@ func TestConvertValuesToListItem(t *testing.T) {
 						result.ObservabilityConfig.TracingConfig.Endpoint.GetValue())
 				}
 				if result.ObservabilityConfig.TracingConfig.TraceSamplingPercent.GetValue() != 1 {
-					t.Errorf("expected TraceSamplingPercent 1, got %d",
+					t.Errorf("expected TraceSamplingPercent 1, got %.2f",
 						result.ObservabilityConfig.TracingConfig.TraceSamplingPercent.GetValue())
 				}
 
@@ -618,6 +608,6 @@ func int32Ptr(i int32) *int32 {
 	return &i
 }
 
-func float64Ptr(f float64) *float64 {
+func float32Ptr(f float32) *float32 {
 	return &f
 }

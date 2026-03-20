@@ -13,8 +13,7 @@ ADD container-start.sh /data/bcs/bcs-data-manager/
 
 RUN chmod +x /data/bcs/bcs-data-manager/container-start.sh
 
-RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
-    && echo 'LANG="en_US.UTF-8"' > /etc/locale.conf
+RUN echo 'LANG="en_US.UTF-8"' > /etc/locale.conf
 
 ENV LANG=en_US.UTF-8 \
     LANGUAGE=en_US.UTF-8

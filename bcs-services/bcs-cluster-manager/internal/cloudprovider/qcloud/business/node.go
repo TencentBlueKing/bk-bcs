@@ -543,7 +543,7 @@ func CheckCvmInstanceState(ctx context.Context, ids []string,
 		taskId, instances.SuccessNodes, instances.FailedNodes)
 
 	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskId, stepName,
-		fmt.Sprintf("success [%v] failure [%v]", instances.SuccessNodes, instances.FailedNodes))
+		fmt.Sprintf("CheckCvmInstanceState success nodes:[%v], failure node:[%v]", instances.SuccessNodes, instances.FailedNodes))
 
 	return instances, nil
 }
@@ -614,7 +614,8 @@ func ModifyInstancesVpcAttribute(ctx context.Context, vpcId string, ids []string
 			taskId, vpcId, zone, instanceIds)
 
 		cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskId, stepName,
-			fmt.Sprintf("[%s] instances successful", instanceIds))
+			fmt.Sprintf("ModifyInstancesVpcAttribute successful, vpcId:[%s], zone:[%s], instanceIds:[%v]",
+				vpcId, zone, instanceIds))
 	}
 
 	return nil

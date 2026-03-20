@@ -9,7 +9,7 @@
       :prompts="prompts"
       :start-position="startPosition"
       :size-limit="sizeLimit"
-      enable-popup
+      :enable-popup="flagsMap.ENABLEPOPUP"
       @clear="handleClear"
       @close="handleClose"
       @send="handleSend"

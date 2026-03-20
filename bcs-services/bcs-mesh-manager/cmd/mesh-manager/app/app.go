@@ -480,7 +480,6 @@ func (s *Server) initPipelineConfig() error {
 		DevopsUID:       s.opt.Pipeline.DevopsUID,
 		BkUsername:      s.opt.Pipeline.BkUsername,
 		DevOpsToken:     s.opt.Pipeline.DevOpsToken,
-		BizID:           s.opt.Pipeline.BizID,
 		Collection:      s.opt.Pipeline.Collection,
 		PipelineID:      s.opt.Pipeline.PipelineID,
 		EnableGroup:     s.opt.Pipeline.EnableGroup,

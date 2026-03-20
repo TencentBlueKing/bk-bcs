@@ -205,6 +205,12 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		{
+			Name:    "ClusterManager.ListClusterNodes",
+			Path:    []string{"/clustermanager/v1/clusters/{clusterID}/nodes"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
 			Name:    "ClusterManager.RecordNodeInfo",
 			Path:    []string{"/clustermanager/v1/node"},
 			Method:  []string{"POST"},
@@ -367,6 +373,12 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		{
+			Name:    "ClusterManager.ListCloudVPCV2",
+			Path:    []string{"/clustermanager/v2/cloudvpc"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
 			Name:    "ClusterManager.ListCloudRegions",
 			Path:    []string{"/clustermanager/v1/cloudregion/{cloudID}"},
 			Method:  []string{"GET"},
@@ -411,6 +423,12 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 		{
 			Name:    "ClusterManager.ListNodeGroup",
 			Path:    []string{"/clustermanager/v1/nodegroup"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "ClusterManager.ListNodeGroupV2",
+			Path:    []string{"/clustermanager/v2/nodegroup"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
@@ -1032,6 +1050,7 @@ type ClusterManagerService interface {
 	// * node management
 	GetNode(ctx context.Context, in *GetNodeRequest, opts ...client.CallOption) (*GetNodeResponse, error)
 	GetNodeInfo(ctx context.Context, in *GetNodeInfoRequest, opts ...client.CallOption) (*GetNodeInfoResponse, error)
+	ListClusterNodes(ctx context.Context, in *ListClusterNodesRequest, opts ...client.CallOption) (*ListClusterNodesResponse, error)
 	RecordNodeInfo(ctx context.Context, in *RecordNodeInfoRequest, opts ...client.CallOption) (*CommonResp, error)
 	UpdateNode(ctx context.Context, in *UpdateNodeRequest, opts ...client.CallOption) (*UpdateNodeResponse, error)
 	UpdateClusterModule(ctx context.Context, in *UpdateClusterModuleRequest, opts ...client.CallOption) (*UpdateClusterModuleResponse, error)
@@ -1063,6 +1082,7 @@ type ClusterManagerService interface {
 	UpdateCloudVPC(ctx context.Context, in *UpdateCloudVPCRequest, opts ...client.CallOption) (*UpdateCloudVPCResponse, error)
 	DeleteCloudVPC(ctx context.Context, in *DeleteCloudVPCRequest, opts ...client.CallOption) (*DeleteCloudVPCResponse, error)
 	ListCloudVPC(ctx context.Context, in *ListCloudVPCRequest, opts ...client.CallOption) (*ListCloudVPCResponse, error)
+	ListCloudVPCV2(ctx context.Context, in *ListCloudVPCV2Request, opts ...client.CallOption) (*ListCloudVPCV2Response, error)
 	ListCloudRegions(ctx context.Context, in *ListCloudRegionsRequest, opts ...client.CallOption) (*ListCloudRegionsResponse, error)
 	GetVPCCidr(ctx context.Context, in *GetVPCCidrRequest, opts ...client.CallOption) (*GetVPCCidrResponse, error)
 	// * NodeGroup information management *
@@ -1072,6 +1092,7 @@ type ClusterManagerService interface {
 	GetNodeGroup(ctx context.Context, in *GetNodeGroupRequest, opts ...client.CallOption) (*GetNodeGroupResponse, error)
 	ListClusterNodeGroup(ctx context.Context, in *ListClusterNodeGroupRequest, opts ...client.CallOption) (*ListClusterNodeGroupResponse, error)
 	ListNodeGroup(ctx context.Context, in *ListNodeGroupRequest, opts ...client.CallOption) (*ListNodeGroupResponse, error)
+	ListNodeGroupV2(ctx context.Context, in *ListNodeGroupV2Request, opts ...client.CallOption) (*ListNodeGroupV2Response, error)
 	RecommendNodeGroupConf(ctx context.Context, in *RecommendNodeGroupConfReq, opts ...client.CallOption) (*RecommendNodeGroupConfResp, error)
 	MoveNodesToGroup(ctx context.Context, in *MoveNodesToGroupRequest, opts ...client.CallOption) (*MoveNodesToGroupResponse, error)
 	RemoveNodesFromGroup(ctx context.Context, in *RemoveNodesFromGroupRequest, opts ...client.CallOption) (*RemoveNodesFromGroupResponse, error)
@@ -1488,6 +1509,16 @@ func (c *clusterManagerService) GetNodeInfo(ctx context.Context, in *GetNodeInfo
 	return out, nil
 }
 
+func (c *clusterManagerService) ListClusterNodes(ctx context.Context, in *ListClusterNodesRequest, opts ...client.CallOption) (*ListClusterNodesResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.ListClusterNodes", in)
+	out := new(ListClusterNodesResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *clusterManagerService) RecordNodeInfo(ctx context.Context, in *RecordNodeInfoRequest, opts ...client.CallOption) (*CommonResp, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.RecordNodeInfo", in)
 	out := new(CommonResp)
@@ -1758,6 +1789,16 @@ func (c *clusterManagerService) ListCloudVPC(ctx context.Context, in *ListCloudV
 	return out, nil
 }
 
+func (c *clusterManagerService) ListCloudVPCV2(ctx context.Context, in *ListCloudVPCV2Request, opts ...client.CallOption) (*ListCloudVPCV2Response, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.ListCloudVPCV2", in)
+	out := new(ListCloudVPCV2Response)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *clusterManagerService) ListCloudRegions(ctx context.Context, in *ListCloudRegionsRequest, opts ...client.CallOption) (*ListCloudRegionsResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.ListCloudRegions", in)
 	out := new(ListCloudRegionsResponse)
@@ -1831,6 +1872,16 @@ func (c *clusterManagerService) ListClusterNodeGroup(ctx context.Context, in *Li
 func (c *clusterManagerService) ListNodeGroup(ctx context.Context, in *ListNodeGroupRequest, opts ...client.CallOption) (*ListNodeGroupResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.ListNodeGroup", in)
 	out := new(ListNodeGroupResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) ListNodeGroupV2(ctx context.Context, in *ListNodeGroupV2Request, opts ...client.CallOption) (*ListNodeGroupV2Response, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.ListNodeGroupV2", in)
+	out := new(ListNodeGroupV2Response)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -2841,6 +2892,7 @@ type ClusterManagerHandler interface {
 	// * node management
 	GetNode(context.Context, *GetNodeRequest, *GetNodeResponse) error
 	GetNodeInfo(context.Context, *GetNodeInfoRequest, *GetNodeInfoResponse) error
+	ListClusterNodes(context.Context, *ListClusterNodesRequest, *ListClusterNodesResponse) error
 	RecordNodeInfo(context.Context, *RecordNodeInfoRequest, *CommonResp) error
 	UpdateNode(context.Context, *UpdateNodeRequest, *UpdateNodeResponse) error
 	UpdateClusterModule(context.Context, *UpdateClusterModuleRequest, *UpdateClusterModuleResponse) error
@@ -2872,6 +2924,7 @@ type ClusterManagerHandler interface {
 	UpdateCloudVPC(context.Context, *UpdateCloudVPCRequest, *UpdateCloudVPCResponse) error
 	DeleteCloudVPC(context.Context, *DeleteCloudVPCRequest, *DeleteCloudVPCResponse) error
 	ListCloudVPC(context.Context, *ListCloudVPCRequest, *ListCloudVPCResponse) error
+	ListCloudVPCV2(context.Context, *ListCloudVPCV2Request, *ListCloudVPCV2Response) error
 	ListCloudRegions(context.Context, *ListCloudRegionsRequest, *ListCloudRegionsResponse) error
 	GetVPCCidr(context.Context, *GetVPCCidrRequest, *GetVPCCidrResponse) error
 	// * NodeGroup information management *
@@ -2881,6 +2934,7 @@ type ClusterManagerHandler interface {
 	GetNodeGroup(context.Context, *GetNodeGroupRequest, *GetNodeGroupResponse) error
 	ListClusterNodeGroup(context.Context, *ListClusterNodeGroupRequest, *ListClusterNodeGroupResponse) error
 	ListNodeGroup(context.Context, *ListNodeGroupRequest, *ListNodeGroupResponse) error
+	ListNodeGroupV2(context.Context, *ListNodeGroupV2Request, *ListNodeGroupV2Response) error
 	RecommendNodeGroupConf(context.Context, *RecommendNodeGroupConfReq, *RecommendNodeGroupConfResp) error
 	MoveNodesToGroup(context.Context, *MoveNodesToGroupRequest, *MoveNodesToGroupResponse) error
 	RemoveNodesFromGroup(context.Context, *RemoveNodesFromGroupRequest, *RemoveNodesFromGroupResponse) error
@@ -3035,6 +3089,7 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		UpdateVirtualClusterQuota(ctx context.Context, in *UpdateVirtualClusterQuotaReq, out *UpdateVirtualClusterQuotaResp) error
 		GetNode(ctx context.Context, in *GetNodeRequest, out *GetNodeResponse) error
 		GetNodeInfo(ctx context.Context, in *GetNodeInfoRequest, out *GetNodeInfoResponse) error
+		ListClusterNodes(ctx context.Context, in *ListClusterNodesRequest, out *ListClusterNodesResponse) error
 		RecordNodeInfo(ctx context.Context, in *RecordNodeInfoRequest, out *CommonResp) error
 		UpdateNode(ctx context.Context, in *UpdateNodeRequest, out *UpdateNodeResponse) error
 		UpdateClusterModule(ctx context.Context, in *UpdateClusterModuleRequest, out *UpdateClusterModuleResponse) error
@@ -3062,6 +3117,7 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		UpdateCloudVPC(ctx context.Context, in *UpdateCloudVPCRequest, out *UpdateCloudVPCResponse) error
 		DeleteCloudVPC(ctx context.Context, in *DeleteCloudVPCRequest, out *DeleteCloudVPCResponse) error
 		ListCloudVPC(ctx context.Context, in *ListCloudVPCRequest, out *ListCloudVPCResponse) error
+		ListCloudVPCV2(ctx context.Context, in *ListCloudVPCV2Request, out *ListCloudVPCV2Response) error
 		ListCloudRegions(ctx context.Context, in *ListCloudRegionsRequest, out *ListCloudRegionsResponse) error
 		GetVPCCidr(ctx context.Context, in *GetVPCCidrRequest, out *GetVPCCidrResponse) error
 		CreateNodeGroup(ctx context.Context, in *CreateNodeGroupRequest, out *CreateNodeGroupResponse) error
@@ -3070,6 +3126,7 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		GetNodeGroup(ctx context.Context, in *GetNodeGroupRequest, out *GetNodeGroupResponse) error
 		ListClusterNodeGroup(ctx context.Context, in *ListClusterNodeGroupRequest, out *ListClusterNodeGroupResponse) error
 		ListNodeGroup(ctx context.Context, in *ListNodeGroupRequest, out *ListNodeGroupResponse) error
+		ListNodeGroupV2(ctx context.Context, in *ListNodeGroupV2Request, out *ListNodeGroupV2Response) error
 		RecommendNodeGroupConf(ctx context.Context, in *RecommendNodeGroupConfReq, out *RecommendNodeGroupConfResp) error
 		MoveNodesToGroup(ctx context.Context, in *MoveNodesToGroupRequest, out *MoveNodesToGroupResponse) error
 		RemoveNodesFromGroup(ctx context.Context, in *RemoveNodesFromGroupRequest, out *RemoveNodesFromGroupResponse) error
@@ -3341,6 +3398,12 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.ListClusterNodes",
+		Path:    []string{"/clustermanager/v1/clusters/{clusterID}/nodes"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.RecordNodeInfo",
 		Path:    []string{"/clustermanager/v1/node"},
 		Method:  []string{"POST"},
@@ -3503,6 +3566,12 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.ListCloudVPCV2",
+		Path:    []string{"/clustermanager/v2/cloudvpc"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.ListCloudRegions",
 		Path:    []string{"/clustermanager/v1/cloudregion/{cloudID}"},
 		Method:  []string{"GET"},
@@ -3547,6 +3616,12 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.ListNodeGroup",
 		Path:    []string{"/clustermanager/v1/nodegroup"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.ListNodeGroupV2",
+		Path:    []string{"/clustermanager/v2/nodegroup"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
@@ -4251,6 +4326,10 @@ func (h *clusterManagerHandler) GetNodeInfo(ctx context.Context, in *GetNodeInfo
 	return h.ClusterManagerHandler.GetNodeInfo(ctx, in, out)
 }
 
+func (h *clusterManagerHandler) ListClusterNodes(ctx context.Context, in *ListClusterNodesRequest, out *ListClusterNodesResponse) error {
+	return h.ClusterManagerHandler.ListClusterNodes(ctx, in, out)
+}
+
 func (h *clusterManagerHandler) RecordNodeInfo(ctx context.Context, in *RecordNodeInfoRequest, out *CommonResp) error {
 	return h.ClusterManagerHandler.RecordNodeInfo(ctx, in, out)
 }
@@ -4359,6 +4438,10 @@ func (h *clusterManagerHandler) ListCloudVPC(ctx context.Context, in *ListCloudV
 	return h.ClusterManagerHandler.ListCloudVPC(ctx, in, out)
 }
 
+func (h *clusterManagerHandler) ListCloudVPCV2(ctx context.Context, in *ListCloudVPCV2Request, out *ListCloudVPCV2Response) error {
+	return h.ClusterManagerHandler.ListCloudVPCV2(ctx, in, out)
+}
+
 func (h *clusterManagerHandler) ListCloudRegions(ctx context.Context, in *ListCloudRegionsRequest, out *ListCloudRegionsResponse) error {
 	return h.ClusterManagerHandler.ListCloudRegions(ctx, in, out)
 }
@@ -4389,6 +4472,10 @@ func (h *clusterManagerHandler) ListClusterNodeGroup(ctx context.Context, in *Li
 
 func (h *clusterManagerHandler) ListNodeGroup(ctx context.Context, in *ListNodeGroupRequest, out *ListNodeGroupResponse) error {
 	return h.ClusterManagerHandler.ListNodeGroup(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) ListNodeGroupV2(ctx context.Context, in *ListNodeGroupV2Request, out *ListNodeGroupV2Response) error {
+	return h.ClusterManagerHandler.ListNodeGroupV2(ctx, in, out)
 }
 
 func (h *clusterManagerHandler) RecommendNodeGroupConf(ctx context.Context, in *RecommendNodeGroupConfReq, out *RecommendNodeGroupConfResp) error {

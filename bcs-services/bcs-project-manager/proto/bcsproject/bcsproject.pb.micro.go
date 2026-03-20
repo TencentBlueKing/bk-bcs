@@ -1454,8 +1454,20 @@ func NewBCSProjectQuotaEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		{
+			Name:    "BCSProjectQuota.ListProjectQuotasV2",
+			Path:    []string{"/bcsproject/v2/projectQuotas/projects/{projectIDOrCode}/quotas"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
 			Name:    "BCSProjectQuota.GetProjectQuotasUsage",
 			Path:    []string{"/bcsproject/v1/projectQuotas/{quotaId}/usage"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "BCSProjectQuota.GetProjectQuotasStatistics",
+			Path:    []string{"/bcsproject/v1/projectQuotas/projects/{projectIDOrCode}/quotas/statistics"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
@@ -1474,7 +1486,9 @@ type BCSProjectQuotaService interface {
 	// DeleteProjectQuota 退回资源额度
 	DeleteProjectQuota(ctx context.Context, in *DeleteProjectQuotaRequest, opts ...client.CallOption) (*ProjectQuotaResponse, error)
 	ListProjectQuotas(ctx context.Context, in *ListProjectQuotasRequest, opts ...client.CallOption) (*ListProjectQuotasResponse, error)
+	ListProjectQuotasV2(ctx context.Context, in *ListProjectQuotasV2Request, opts ...client.CallOption) (*ListProjectQuotasV2Response, error)
 	GetProjectQuotasUsage(ctx context.Context, in *GetProjectQuotasUsageReq, opts ...client.CallOption) (*GetProjectQuotasUsageResp, error)
+	GetProjectQuotasStatistics(ctx context.Context, in *GetProjectQuotasStatisticsRequest, opts ...client.CallOption) (*GetProjectQuotasStatisticsResponse, error)
 }
 
 type bCSProjectQuotaService struct {
@@ -1559,9 +1573,29 @@ func (c *bCSProjectQuotaService) ListProjectQuotas(ctx context.Context, in *List
 	return out, nil
 }
 
+func (c *bCSProjectQuotaService) ListProjectQuotasV2(ctx context.Context, in *ListProjectQuotasV2Request, opts ...client.CallOption) (*ListProjectQuotasV2Response, error) {
+	req := c.c.NewRequest(c.name, "BCSProjectQuota.ListProjectQuotasV2", in)
+	out := new(ListProjectQuotasV2Response)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *bCSProjectQuotaService) GetProjectQuotasUsage(ctx context.Context, in *GetProjectQuotasUsageReq, opts ...client.CallOption) (*GetProjectQuotasUsageResp, error) {
 	req := c.c.NewRequest(c.name, "BCSProjectQuota.GetProjectQuotasUsage", in)
 	out := new(GetProjectQuotasUsageResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *bCSProjectQuotaService) GetProjectQuotasStatistics(ctx context.Context, in *GetProjectQuotasStatisticsRequest, opts ...client.CallOption) (*GetProjectQuotasStatisticsResponse, error) {
+	req := c.c.NewRequest(c.name, "BCSProjectQuota.GetProjectQuotasStatistics", in)
+	out := new(GetProjectQuotasStatisticsResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -1581,7 +1615,9 @@ type BCSProjectQuotaHandler interface {
 	// DeleteProjectQuota 退回资源额度
 	DeleteProjectQuota(context.Context, *DeleteProjectQuotaRequest, *ProjectQuotaResponse) error
 	ListProjectQuotas(context.Context, *ListProjectQuotasRequest, *ListProjectQuotasResponse) error
+	ListProjectQuotasV2(context.Context, *ListProjectQuotasV2Request, *ListProjectQuotasV2Response) error
 	GetProjectQuotasUsage(context.Context, *GetProjectQuotasUsageReq, *GetProjectQuotasUsageResp) error
+	GetProjectQuotasStatistics(context.Context, *GetProjectQuotasStatisticsRequest, *GetProjectQuotasStatisticsResponse) error
 }
 
 func RegisterBCSProjectQuotaHandler(s server.Server, hdlr BCSProjectQuotaHandler, opts ...server.HandlerOption) error {
@@ -1593,7 +1629,9 @@ func RegisterBCSProjectQuotaHandler(s server.Server, hdlr BCSProjectQuotaHandler
 		ScaleDownProjectQuota(ctx context.Context, in *ScaleDownProjectQuotaRequest, out *ScaleDownProjectQuotaResponse) error
 		DeleteProjectQuota(ctx context.Context, in *DeleteProjectQuotaRequest, out *ProjectQuotaResponse) error
 		ListProjectQuotas(ctx context.Context, in *ListProjectQuotasRequest, out *ListProjectQuotasResponse) error
+		ListProjectQuotasV2(ctx context.Context, in *ListProjectQuotasV2Request, out *ListProjectQuotasV2Response) error
 		GetProjectQuotasUsage(ctx context.Context, in *GetProjectQuotasUsageReq, out *GetProjectQuotasUsageResp) error
+		GetProjectQuotasStatistics(ctx context.Context, in *GetProjectQuotasStatisticsRequest, out *GetProjectQuotasStatisticsResponse) error
 	}
 	type BCSProjectQuota struct {
 		bCSProjectQuota
@@ -1642,8 +1680,20 @@ func RegisterBCSProjectQuotaHandler(s server.Server, hdlr BCSProjectQuotaHandler
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "BCSProjectQuota.ListProjectQuotasV2",
+		Path:    []string{"/bcsproject/v2/projectQuotas/projects/{projectIDOrCode}/quotas"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "BCSProjectQuota.GetProjectQuotasUsage",
 		Path:    []string{"/bcsproject/v1/projectQuotas/{quotaId}/usage"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "BCSProjectQuota.GetProjectQuotasStatistics",
+		Path:    []string{"/bcsproject/v1/projectQuotas/projects/{projectIDOrCode}/quotas/statistics"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
@@ -1682,6 +1732,14 @@ func (h *bCSProjectQuotaHandler) ListProjectQuotas(ctx context.Context, in *List
 	return h.BCSProjectQuotaHandler.ListProjectQuotas(ctx, in, out)
 }
 
+func (h *bCSProjectQuotaHandler) ListProjectQuotasV2(ctx context.Context, in *ListProjectQuotasV2Request, out *ListProjectQuotasV2Response) error {
+	return h.BCSProjectQuotaHandler.ListProjectQuotasV2(ctx, in, out)
+}
+
 func (h *bCSProjectQuotaHandler) GetProjectQuotasUsage(ctx context.Context, in *GetProjectQuotasUsageReq, out *GetProjectQuotasUsageResp) error {
 	return h.BCSProjectQuotaHandler.GetProjectQuotasUsage(ctx, in, out)
+}
+
+func (h *bCSProjectQuotaHandler) GetProjectQuotasStatistics(ctx context.Context, in *GetProjectQuotasStatisticsRequest, out *GetProjectQuotasStatisticsResponse) error {
+	return h.BCSProjectQuotaHandler.GetProjectQuotasStatistics(ctx, in, out)
 }

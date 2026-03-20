@@ -17,17 +17,17 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"net/url"
 
 	v1beta1 "github.com/clusternet/clusternet/pkg/apis/clusters/v1beta1"
-	"github.com/go-micro/plugins/v4/client/grpc"
-	"github.com/go-micro/plugins/v4/registry/etcd"
-	"go-micro.dev/v4/client"
-	"go-micro.dev/v4/registry"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/metadata"
 	corev1 "k8s.io/api/core/v1"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-federation-manager/internal/clients/requester"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-federation-manager/internal/common"
 	federationv1 "github.com/Tencent/bk-bcs/bcs-services/bcs-federation-manager/pkg/kubeapi/federationquota/api/v1"
 	federationmgr "github.com/Tencent/bk-bcs/bcs-services/bcs-federation-manager/proto/bcs-federation-manager"
 )
@@ -140,9 +140,13 @@ const (
 var clusterCli Client
 
 // SetClusterClient set cluster client
-func SetClusterClient(opts *ClientOptions) {
-	cli := NewClient(opts)
+func SetClusterClient(opts *ClientOptions) error {
+	cli, err := NewClient(opts)
+	if err != nil {
+		return fmt.Errorf("failed to create cluster client: %v", err)
+	}
 	clusterCli = cli
+	return nil
 }
 
 // GetClusterClient get cluster client
@@ -236,39 +240,54 @@ type Client interface {
 
 // ClientOptions options for create client
 type ClientOptions struct {
-	ClientTLS     *tls.Config
-	EtcdEndpoints []string
-	EtcdTLS       *tls.Config
+	ClientTLS *tls.Config
 	requester.BaseOptions
 }
 
 // NewClient create client with options
-func NewClient(opts *ClientOptions) Client {
-	header := make(map[string]string)
-	header[common.HeaderAuthorizationKey] = fmt.Sprintf("Bearer %s", opts.Token)
-	header[common.BcsHeaderClientKey] = common.InnerModuleName
-	if opts.Sender == nil {
-		opts.Sender = requester.NewRequester()
+func NewClient(opts *ClientOptions) (Client, error) {
+	var grpcOpts []grpc.DialOption
+	if opts.ClientTLS != nil {
+		grpcOpts = append(grpcOpts, grpc.WithTransportCredentials(credentials.NewTLS(opts.ClientTLS)))
+	} else {
+		grpcOpts = append(grpcOpts, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	}
+	var conn *grpc.ClientConn
+	// 解析 URL
+	parsedURL, err := url.Parse(opts.Endpoint)
+	if err != nil {
+		return nil, fmt.Errorf("error parsing URL: %s", err.Error())
+	}
+	conn, err = grpc.NewClient(parsedURL.Host, grpcOpts...)
+	if err != nil {
+		return nil, fmt.Errorf("dial bcs service failed:%s", err.Error())
 	}
 
-	c := grpc.NewClient(
-		client.Registry(etcd.NewRegistry(
-			registry.Addrs(opts.EtcdEndpoints...),
-			registry.TLSConfig(opts.ClientTLS)),
-		),
-		grpc.AuthTLS(opts.ClientTLS),
-	)
-	cli := clustermanager.NewClusterManagerService(common.ModuleClusterManager, c)
+	if conn == nil {
+		return nil, fmt.Errorf("conn is nil")
+	}
 
 	return &clusterClient{
-		opt:           opts,
-		defaultHeader: header,
-		clusterSvc:    cli,
-	}
+		opt:        opts,
+		clusterSvc: clustermanager.NewClusterManagerClient(conn),
+		conn:       conn,
+	}, nil
 }
 
 type clusterClient struct {
 	opt           *ClientOptions
 	defaultHeader map[string]string
-	clusterSvc    clustermanager.ClusterManagerService
+	clusterSvc    clustermanager.ClusterManagerClient
+	conn          *grpc.ClientConn
+}
+
+// get metadata context for request cluster manager by go-micro grpc service discovery
+func (c *clusterClient) getMetadataCtx(ctx context.Context) context.Context {
+	header := map[string]string{
+		"x-content-type": "application/grpc+proto",
+		"Content-Type":   "application/grpc",
+	}
+	header["Authorization"] = fmt.Sprintf("Bearer %s", c.opt.Token)
+	md := metadata.New(header)
+	return metadata.NewOutgoingContext(ctx, md)
 }

@@ -60,6 +60,11 @@ const (
 	NodeGroupLabelKey = "bkbcs.tencent.com/nodegroupid"
 	// RegionLabelKey for node region label
 	RegionLabelKey = "topology.bkbcs.tencent.com/region"
+	// IDCAreaIDLabelKey for node idc area id label
+	IDCAreaIDLabelKey = "topology.bkbcs.tencent.com/bk_idc_area_id"
+	// IDCCityIDLabelKey for node idc city id label
+	IDCCityIDLabelKey = "topology.bkbcs.tencent.com/bk_idc_city_id"
+
 	// BusinessIDLabelKey for businessID label
 	BusinessIDLabelKey = "bkcmdb.tencent.com/bk-biz-id"
 	// AssetIDLabelKey for asset id

@@ -24,6 +24,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/pkg/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/pkg/handler/internal/alarm"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/pkg/handler/internal/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/pkg/handler/internal/clusterconfig"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/pkg/handler/internal/dynamic"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/pkg/handler/internal/dynamicquery"
@@ -2835,5 +2836,38 @@ func (s *Storage) K8SListWatchResource(ctx context.Context, req *storage.K8SList
 
 	// 打印响应体
 	blog.Infof("K8SListWatchResource rsp: %v", util.PrettyStruct(rsp))
+	return nil
+}
+
+// CleanClusterData 清理集群数据 clean cluster data
+func (s *Storage) CleanClusterData(ctx context.Context, req *storage.CleanClusterDataRequest,
+	rsp *storage.CleanClusterDataResponse) error {
+	// 参数验证
+	if err := req.Validate(); err != nil {
+		rsp.Code = common.AdditionErrorCode + 500
+		rsp.Message = err.Error()
+		return nil
+	}
+
+	// 打印请求体
+	blog.Infof("CleanClusterData req: %v", util.PrettyStruct(req))
+
+	// 创建 cluster handler 并处理
+	handler := cluster.NewCleanHandler()
+	result, err := handler.CleanClusterData(ctx, req)
+	if err != nil {
+		rsp.Code = common.BcsErrStorageDeleteResourceFail
+		rsp.Message = common.BcsErrStorageDeleteResourceFailStr
+		blog.Errorf("CleanClusterData failed: %v", err)
+		return nil
+	}
+
+	// 构造响应
+	rsp.Code = result.Code
+	rsp.Message = result.Message
+	rsp.DeletedCounts = result.DeletedCounts
+
+	// 打印响应体
+	blog.Infof("CleanClusterData rsp: %v", util.PrettyStruct(rsp))
 	return nil
 }

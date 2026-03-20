@@ -20,28 +20,31 @@ import (
 // TransStore2ProtoQuota trans store quota to proto quota
 func TransStore2ProtoQuota(pQuota *ProjectQuota) *proto.ProjectQuota {
 	return &proto.ProjectQuota{
-		QuotaId:      pQuota.QuotaId,
-		QuotaName:    pQuota.QuotaName,
-		ProjectID:    pQuota.ProjectId,
-		ProjectCode:  pQuota.ProjectCode,
-		ClusterId:    pQuota.ClusterId,
-		ClusterName:  "",
-		NameSpace:    pQuota.Namespace,
-		BusinessID:   pQuota.BusinessId,
-		BusinessName: "",
-		Description:  pQuota.Description,
-		IsDeleted:    pQuota.IsDeleted,
-		QuotaType:    pQuota.QuotaType.String(),
-		Quota:        TransStore2ProtoQuotaResource(pQuota.Quota),
-		Status:       pQuota.Status.String(),
-		Message:      "",
-		CreateTime:   time.TransTsToStr(pQuota.CreateTime),
-		UpdateTime:   time.TransTsToStr(pQuota.UpdateTime),
-		Creator:      pQuota.Creator,
-		Updater:      pQuota.Updater,
-		Provider:     pQuota.Provider,
-		Labels:       pQuota.Labels,
-		Annotations:  pQuota.Annotations,
+		QuotaId:                pQuota.QuotaId,
+		QuotaName:              pQuota.QuotaName,
+		ProjectID:              pQuota.ProjectId,
+		ProjectCode:            pQuota.ProjectCode,
+		ClusterId:              pQuota.ClusterId,
+		ClusterName:            "",
+		NameSpace:              pQuota.Namespace,
+		BusinessID:             pQuota.BusinessId,
+		BusinessName:           "",
+		Description:            pQuota.Description,
+		IsDeleted:              pQuota.IsDeleted,
+		QuotaType:              pQuota.QuotaType.String(),
+		Quota:                  TransStore2ProtoQuotaResource(pQuota.Quota),
+		Status:                 pQuota.Status.String(),
+		Message:                "",
+		CreateTime:             time.TransTsToStr(pQuota.CreateTime),
+		UpdateTime:             time.TransTsToStr(pQuota.UpdateTime),
+		Creator:                pQuota.Creator,
+		Updater:                pQuota.Updater,
+		Provider:               pQuota.Provider,
+		Labels:                 pQuota.Labels,
+		Annotations:            pQuota.Annotations,
+		QuotaAttr:              TransQuotaAttr2ProtoQuotaAttr(pQuota.QuotaAttr),
+		QuotaSharedEnabled:     pQuota.QuotaSharedEnabled,
+		QuotaSharedProjectList: TransQuotaSharedProjects2Proto(pQuota.QuotaSharedProjectList),
 	}
 }
 
@@ -64,7 +67,7 @@ func dataDisksToDeviceDisks(disks []*proto.DataDisk) []DeviceDisk {
 func deviceDiskToDataDisk(disk DeviceDisk) *proto.DataDisk {
 	return &proto.DataDisk{
 		DiskType: disk.Type,
-		DiskSize: disk.Type,
+		DiskSize: disk.Size,
 	}
 }
 
@@ -174,4 +177,105 @@ func TransStore2ProtoQuotaResource(quota *QuotaResource) *proto.QuotaResource {
 	}
 
 	return protoQuotaResource
+}
+
+// TransProto2QuotaAttr trans quota attr to store quota attr
+func TransProto2QuotaAttr(protoQuotaAttr *proto.QuotaAttr) *ProjectQuotaAttr {
+	if protoQuotaAttr == nil {
+		return &ProjectQuotaAttr{}
+	}
+	return &ProjectQuotaAttr{
+		SourceBkBizIDs:           protoQuotaAttr.GetSourceBkBizIDs(),
+		SourceBkBizNames:         protoQuotaAttr.GetSourceBkBizNames(),
+		ComputeType:              protoQuotaAttr.GetComputeType(),
+		PurchaseDurationType:     protoQuotaAttr.GetPurchaseDurationType(),
+		PurchaseDurationSettings: protoQuotaAttr.GetPurchaseDurationSettings(),
+		StartTime:                time.TransStrToTs(protoQuotaAttr.GetStartTime()),
+		EndTime:                  time.TransStrToTs(protoQuotaAttr.GetEndTime()),
+	}
+}
+
+// TransQuotaAttr2ProtoQuotaAttr trans quota attr to proto quota attr
+func TransQuotaAttr2ProtoQuotaAttr(quotaAttr *ProjectQuotaAttr) *proto.QuotaAttr {
+	if quotaAttr == nil {
+		return &proto.QuotaAttr{}
+	}
+	return &proto.QuotaAttr{
+		SourceBkBizIDs:           quotaAttr.SourceBkBizIDs,
+		SourceBkBizNames:         quotaAttr.SourceBkBizNames,
+		ComputeType:              quotaAttr.ComputeType,
+		PurchaseDurationType:     quotaAttr.PurchaseDurationType,
+		PurchaseDurationSettings: quotaAttr.PurchaseDurationSettings,
+		StartTime:                time.TransTsToStr(quotaAttr.StartTime),
+		EndTime:                  time.TransTsToStr(quotaAttr.EndTime),
+	}
+}
+
+// TransProto2QuotaLimit trans quota limit to store quota limit
+func TransProto2QuotaLimit(protoQuotaLimit *proto.QuotaLimit) *ProjectQuotaLimit {
+	if protoQuotaLimit == nil {
+		return &ProjectQuotaLimit{}
+	}
+	return &ProjectQuotaLimit{
+		QuotaNum: protoQuotaLimit.GetQuotaNum(),
+	}
+}
+
+// TransQuotaLimit2ProtoQuotaLimit trans quota limit to proto quota limit
+func TransQuotaLimit2ProtoQuotaLimit(quotaLimit *ProjectQuotaLimit) *proto.QuotaLimit {
+	if quotaLimit == nil {
+		return &proto.QuotaLimit{}
+	}
+	return &proto.QuotaLimit{
+		QuotaNum: quotaLimit.QuotaNum,
+	}
+}
+
+// TransProto2QuotaSharedProjects trans quota shared project to store quota shared project
+func TransProto2QuotaSharedProjects(protoQuotaSharedProjects []*proto.QuotaSharedProject) []*ProjectQuotaSharedProject {
+	quotaSharedProjects := make([]*ProjectQuotaSharedProject, 0, len(protoQuotaSharedProjects))
+	if protoQuotaSharedProjects == nil {
+		return quotaSharedProjects
+	}
+
+	for _, protoQuotaSharedProject := range protoQuotaSharedProjects {
+		quotaSharedProjects = append(quotaSharedProjects, &ProjectQuotaSharedProject{
+			ProjectID:      protoQuotaSharedProject.GetProjectID(),
+			ProjectCode:    protoQuotaSharedProject.GetProjectCode(),
+			ProjectName:    protoQuotaSharedProject.GetProjectName(),
+			ShareStrategy:  protoQuotaSharedProject.GetShareStrategy(),
+			UsageLimit:     TransProto2QuotaLimit(protoQuotaSharedProject.GetUsageLimit()),
+			UsedAmount:     TransProto2QuotaLimit(protoQuotaSharedProject.GetUsedAmount()),
+			ShareStartTime: time.TransStrToTs(protoQuotaSharedProject.GetShareStartTime()),
+			ShareEndTime:   time.TransStrToTs(protoQuotaSharedProject.GetShareEndTime()),
+			Status:         protoQuotaSharedProject.GetStatus(),
+		})
+	}
+
+	return quotaSharedProjects
+
+}
+
+// TransQuotaSharedProjects2Proto trans quota shared project to proto quota shared project
+func TransQuotaSharedProjects2Proto(quotaSharedProjects []*ProjectQuotaSharedProject) []*proto.QuotaSharedProject {
+	protoQuotaSharedProjects := make([]*proto.QuotaSharedProject, 0, len(quotaSharedProjects))
+	if quotaSharedProjects == nil {
+		return protoQuotaSharedProjects
+	}
+
+	for _, quotaSharedProject := range quotaSharedProjects {
+		protoQuotaSharedProjects = append(protoQuotaSharedProjects, &proto.QuotaSharedProject{
+			ProjectID:      quotaSharedProject.ProjectID,
+			ProjectCode:    quotaSharedProject.ProjectCode,
+			ProjectName:    quotaSharedProject.ProjectName,
+			ShareStrategy:  quotaSharedProject.ShareStrategy,
+			UsageLimit:     TransQuotaLimit2ProtoQuotaLimit(quotaSharedProject.UsageLimit),
+			UsedAmount:     TransQuotaLimit2ProtoQuotaLimit(quotaSharedProject.UsedAmount),
+			ShareStartTime: time.TransTsToStr(quotaSharedProject.ShareStartTime),
+			ShareEndTime:   time.TransTsToStr(quotaSharedProject.ShareEndTime),
+			Status:         quotaSharedProject.Status,
+		})
+	}
+
+	return protoQuotaSharedProjects
 }

@@ -32,6 +32,8 @@ import (
 const (
 	// UserBeforeInit before init
 	UserBeforeInit = "userBeforeInit"
+	// UserCustomBeforeInit custom before init
+	UserCustomBeforeInit = "userCustomBeforeInit"
 	// UserPostInit post init
 	UserPostInit = "userAfterInit"
 	// SystemBeforeInit bksops system pre init
@@ -39,11 +41,13 @@ const (
 	// SystemPostInit bksops system init
 	SystemPostInit = "systemPostInit"
 	// SystemPreInit bksops system pre init
-	SystemPreInit = "系统前置初始化"
+	SystemPreInit = "空闲检查"
 	// SystemInit bksops system init
 	SystemInit = "系统后置初始化"
 	// UserAfterInit bksops user after init
 	UserAfterInit = "用户后置初始化"
+	// UserCustomPreInit bksops user custom pre init
+	UserCustomPreInit = "用户前置初始化"
 	// UserPreInit bksops user pre init
 	UserPreInit = "缩容节点清理"
 	// NodeMixedInit mixed init
@@ -61,6 +65,7 @@ var (
 		externalNodeScript: "ExternalNodeScript",
 		clusterKubeConfig:  "KubeConfig",
 		clusterImageId:     "ImageId",
+		nodeInstanceID:     "NodeInstanceIDList",
 	}
 )
 
@@ -81,6 +86,9 @@ type ExtraInfo struct {
 	GroupCreator       string
 	GroupColocation    bool
 	ImageId            string
+	AllowSkip          bool
+	InstanceIDList     string
+	NodeRegion         string
 }
 
 // BuildSopsFactory xxx
@@ -180,6 +188,7 @@ func GenerateBKopsStep(taskMethod, taskName, stepName string, cls *proto.Cluster
 		TaskName:     taskName,
 		SkipOnFailed: plugin.AllowSkipWhenFailed,
 		Translate:    info.TranslateMethod,
+		AllowSkip:    info.AllowSkip,
 	}
 	step.Params[cloudprovider.BkSopsURLKey.String()] = plugin.Link
 	step.Params[cloudprovider.ShowSopsURLKey.String()] = fmt.Sprintf("%v", info.ShowSopsUrl)
@@ -330,6 +339,16 @@ func getTemplateParameterByName(name string, cluster *proto.Cluster, extra Extra
 			return clusterImageId, nil
 		}
 		return extra.ImageId, nil
+	case nodeInstanceID:
+		if len(extra.InstanceIDList) == 0 {
+			return nodeInstanceID, nil
+		}
+		return extra.InstanceIDList, nil
+	case nodeNodeRegion:
+		if extra.NodeRegion != "" {
+			return extra.NodeRegion, nil
+		}
+		return cluster.GetRegion(), nil
 	default:
 	}
 

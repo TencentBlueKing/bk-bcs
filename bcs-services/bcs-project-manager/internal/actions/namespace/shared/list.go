@@ -255,7 +255,7 @@ func loadRetDatasFromCluster(ctx context.Context, clusterID string, namespaces [
 		if creator, exists := namespace.Annotations[constant.AnnotationKeyCreator]; exists {
 			managers = append(managers, creator)
 		} else {
-			cluster, err := clustermanager.GetCluster(ctx, clusterID)
+			cluster, err := clustermanager.GetCluster(ctx, clusterID, true)
 			if err != nil {
 				return nil, err
 			}

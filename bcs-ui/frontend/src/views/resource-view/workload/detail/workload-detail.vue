@@ -24,10 +24,13 @@
         <div class="btns">
           <bk-button theme="primary" @click="handleShowYamlPanel">{{ $t('dashboard.workload.button.yaml') }}</bk-button>
           <template v-if="!hiddenOperate">
-            <bk-button @click="handleShowScale">{{ $t('deploy.templateset.scale') }}</bk-button>
+            <bk-button v-if="!isCommonCrd" @click="handleShowScale">
+              {{ $t('deploy.templateset.scale') }}
+            </bk-button>
             <bk-button
               @click="handleUpdateResource">{{$t('generic.button.update')}}</bk-button>
             <bk-button
+              :theme="!pagePerms.deleteBtn.disabled ? 'danger' : 'default'"
               :disabled="!pagePerms.deleteBtn.disabled"
               v-authority="{
                 clickable: pagePerms.deleteBtn.clickable,
@@ -50,7 +53,7 @@
         <div class="info-item">
           <span class="label">{{ $t('k8s.image') }}</span>
           <span class="value select-all" v-bk-overflow-tips="getImagesTips(manifestExt.images)">
-            {{ manifestExt.images && manifestExt.images.join(', ') }}</span>
+            {{ (manifestExt.images && manifestExt.images.join(', ')) || podImages || '--' }}</span>
         </div>
         <div class="info-item">
           <span class="label">UID</span>
@@ -114,12 +117,39 @@
     <div class="workload-detail-body">
       <div class="workload-metric" v-bkloading="{ isLoading: podLoading }">
         <Metric
-          :title="$t('metrics.cpuUsage')"
-          metric="cpu_usage"
+          :metric="activeCpuMetric"
           :params="params"
           category="pods"
           colors="#30d878"
           unit="percent-number">
+          <template #title>
+            <bk-dropdown-menu trigger="click" @show="isDropdownShow = true" @hide="isDropdownShow = false">
+              <div class="dropdown-trigger-text" slot="dropdown-trigger">
+                <span class="name">{{ cpuMetricObj[activeCpuMetric] }}</span>
+                <i :class="['bk-icon icon-angle-down',{ 'icon-flip': isDropdownShow }]"></i>
+              </div>
+              <ul class="bk-dropdown-list" slot="dropdown-content">
+                <li
+                  v-for="(value, key) in cpuMetricObj"
+                  :key="key"
+                  @click="handleChangeCpuMetric(key)">
+                  {{ value }}
+                </li>
+              </ul>
+            </bk-dropdown-menu>
+          </template>
+          <template #desc>
+            <div class="mb-[4px]">
+              {{ $t('metrics.cpuUsage') }}: {{ $t('metrics.cpuUsageDesc') }}
+              <span class="block">metrics: rate(container_cpu_usage_seconds_total[2m])</span>
+            </div>
+            <div>
+              {{ $t('metrics.cpuLimitUsage') }}: {{ $t('metrics.cpuLimitUsageDesc') }}
+              <span class="block">
+                metric: rate(container_cpu_usage_seconds_total[2m])/kube_pod_container_resource_limits_cpu_cores
+              </span>
+            </div>
+          </template>
         </Metric>
         <Metric
           :title="$t('metrics.memUsage1')"
@@ -132,7 +162,7 @@
         </Metric>
         <Metric
           :title="$t('k8s.networking')"
-          :metric="['network_receive', 'network_transmit']"
+          :metric="networkMetric"
           :params="params"
           category="pods"
           unit="byte"
@@ -211,7 +241,14 @@
             </bcs-table-column>
             <bcs-table-column label="Ready" width="100">
               <template #default="{ row }">
-                {{handleGetExtData(row.metadata.uid, 'readyCnt')}}/{{handleGetExtData(row.metadata.uid, 'totalCnt')}}
+                <span
+                  :class="{
+                    'text-[#E38B02]': (handleGetExtData(row.metadata.uid, 'readyCnt') || 0)
+                      < (handleGetExtData(row.metadata.uid, 'totalCnt') || 0)
+                  }"
+                >
+                  {{handleGetExtData(row.metadata.uid, 'readyCnt')}}/{{handleGetExtData(row.metadata.uid, 'totalCnt')}}
+                </span>
               </template>
             </bcs-table-column>
             <bcs-table-column label="Readiness Gates">
@@ -451,6 +488,15 @@ export default defineComponent({
       type: Boolean,
       default: false,
     },
+    // CRD信息
+    version: {
+      type: String,
+      default: '',
+    },
+    isCommonCrd: {
+      type: [Boolean, String],
+      default: false,
+    },
   },
   setup(props, ctx) {
     const { clusterId } = toRefs(props);
@@ -498,6 +544,7 @@ export default defineComponent({
     const podRescheduleShow = ref(false);
     const isBatchReschedule = ref(false);
     const curPodRowData = ref<any>([]);
+    const podImages = computed(() => handleGetExtData((workloadPods.value?.manifest?.items || [])[0]?.metadata?.uid, 'images')?.join(', '));
     // 表格选中的pods数据
     const selectPods = ref<any[]>([]);
     // pods数据
@@ -600,19 +647,29 @@ export default defineComponent({
     const handleGetPodsData = async () => {
       if (!clusterId.value) return;
       // 获取工作负载下对应的pod数据
-      const matchLabels = detail.value?.manifest?.spec?.selector?.matchLabels || {};
-      const labelSelector = Object.keys(matchLabels).reduce((pre, key, index) => {
-        pre += `${index > 0 ? ',' : ''}${key}=${matchLabels[key]}`;
-        return pre;
-      }, '');
+      let labelSelector = '';
+      if (String(props.isCommonCrd) === 'true') {
+        // 对于 CommonCrd，使用 manifestExt 中的 podLabelSelector
+        labelSelector = detail.value?.manifestExt?.podLabelSelector || '';
+      } else {
+        // 对于普通工作负载，使用 manifest 中的 selector
+        const matchLabels = detail.value?.manifest?.spec?.selector?.matchLabels || {};
+        labelSelector = Object.keys(matchLabels).reduce((pre, key, index) => {
+          pre += `${index > 0 ? ',' : ''}${key}=${matchLabels[key]}`;
+          return pre;
+        }, '');
+      }
 
+      const params = String(props.isCommonCrd) === 'true' ? {} : {
+        ownerKind: props.kind,
+        ownerName: props.name,
+      };
       const data = await $store.dispatch('dashboard/listWorkloadPods', {
         $namespaceId: props.namespace,
         $clusterId: clusterId.value,
         labelSelector,
-        ownerKind: props.kind,
-        ownerName: props.name,
         format: 'manifest',
+        ...params,
       });
 
       return data;
@@ -623,6 +680,20 @@ export default defineComponent({
       workloadPods.value = await handleGetPodsData();
       podLoading.value = false;
     };
+
+    // cpu指标
+    const isDropdownShow = ref(false);
+    const activeCpuMetric = ref('cpu_usage');
+    const cpuMetricObj = computed(() => ({
+      cpu_usage: $i18n.t('metrics.cpuUsage'),
+      cpu_limit_usage: $i18n.t('metrics.cpuLimitUsage'),
+    }));
+    function handleChangeCpuMetric(value) {
+      activeCpuMetric.value = value;
+    }
+
+    // 网络指标
+    const networkMetric = ref(['network_receive', 'network_transmit']);
 
     // 显示日志
     const showLog = ref(false);
@@ -841,6 +912,11 @@ export default defineComponent({
       yaml,
       showYamlPanel,
       kindsNames,
+      isDropdownShow,
+      activeCpuMetric,
+      cpuMetricObj,
+      networkMetric,
+      podImages,
       timeFormat,
       handleShowYamlPanel,
       gotoPodDetail,
@@ -877,6 +953,7 @@ export default defineComponent({
       replicas,
       handleConfirmScaleShow,
       handleShowScale,
+      handleChangeCpuMetric,
     };
   },
 });

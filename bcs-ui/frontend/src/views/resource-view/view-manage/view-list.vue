@@ -24,11 +24,9 @@
           { active: item.id === dashboardViewID }
         ]"
         v-bk-trace.click="{
-          module: 'view',
-          operation: 'change',
-          desc: '视图切换操作',
-          username: $store.state.user.username,
-          projectCode: $store.getters.curProjectCode,
+          ct: 'view',
+          act: 'change',
+          d: '视图切换操作',
         }"
         @click="changeView(item.id)">
         <span class="flex items-center flex-1">

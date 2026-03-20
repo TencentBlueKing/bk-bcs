@@ -641,15 +641,21 @@ func UpdateClusterNodesLabels(ctx context.Context, data NodeLabelsData) error { 
 	cls, err := cloudprovider.GetStorageModel().GetCluster(ctx, data.ClusterID)
 	if err != nil {
 		blog.Errorf("updateClusterNodesLabels[%s] GetCluster[%s] failed: %v", taskID, data.ClusterID, err)
+		cloudprovider.GetStorageModel().CreateTaskStepLogWarn(context.Background(), taskID, stepName,
+			fmt.Sprintf("updateClusterNodesLabels[%s] GetCluster[%s] failed: %v", taskID, data.ClusterID, err))
 	}
 
 	hostsMap, hostIDs, err := GetCmdbNodeDetailInfo(data.NodeIPs)
 	if err != nil {
 		blog.Errorf("updateClusterNodesLabels[%s] GetCmdbNodeDetailInfo failed: %v", taskID, err)
+		cloudprovider.GetStorageModel().CreateTaskStepLogWarn(context.Background(), taskID, stepName,
+			fmt.Sprintf("updateClusterNodesLabels[%s] GetCmdbNodeDetailInfo failed: %v", taskID, err))
 	}
 	hostsTopo, err := GetNodeBizRelation(hostIDs)
 	if err != nil {
 		blog.Errorf("updateClusterNodesLabels[%s] GetNodeBizRelation failed: %v", taskID, err)
+		cloudprovider.GetStorageModel().CreateTaskStepLogWarn(context.Background(), taskID, stepName,
+			fmt.Sprintf("updateClusterNodesLabels[%s] GetNodeBizRelation failed: %v", taskID, err))
 	}
 
 	for _, node := range nodeNames {
@@ -674,6 +680,26 @@ func UpdateClusterNodesLabels(ctx context.Context, data NodeLabelsData) error { 
 			topo, ok1 := hostsTopo[int(h.BKHostID)]
 			if ok1 {
 				labels[utils.BusinessIDLabelKey] = fmt.Sprintf("%d", topo.BkBizID)
+			}
+
+			labels[utils.IDCCityIDLabelKey] = h.IDCCityID
+			labels[utils.IDCAreaIDLabelKey] = fmt.Sprintf("%v", h.IDCAreaID)
+			switch h.SvrTypeName {
+			case cmdb.QcCvm:
+				{
+					if _, find := labels[utils.RegionLabelKey]; !find {
+						regions := strings.Split(h.BkCloudRegion, "-")
+						if len(regions) > 1 {
+							labels[utils.RegionLabelKey] = regions[1]
+						}
+					}
+				}
+			case cmdb.IdcPm:
+				{
+					// 物理机保持为空
+					labels[utils.RegionLabelKey] = ""
+				}
+			default:
 			}
 		}
 

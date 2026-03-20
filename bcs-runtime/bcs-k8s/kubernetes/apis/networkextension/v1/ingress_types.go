@@ -47,9 +47,6 @@ const (
 	// AnnotationKeyForLoadbalanceWeightReady xxx
 	AnnotationKeyForLoadbalanceWeightReady = "networkextension.bkbcs.tencent.com/clb-weight-ready"
 
-	// AnnotationKeyForWarnings annotation key for ingress warnings
-	AnnotationKeyForWarnings = "warnings"
-
 	// ServiceKindNativeService native service
 	ServiceKindNativeService = "service"
 	// ServiceKindMultiClusterService MultiClusterService

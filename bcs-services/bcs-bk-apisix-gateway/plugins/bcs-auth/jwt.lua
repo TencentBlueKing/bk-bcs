@@ -31,7 +31,7 @@ local function get_redis_client(conf)
 
     local ok, err = red:connect(conf.redis_host, conf.redis_port)
     if not ok then
-        core.log.error("failed to connect redis ",conf.redis_host, " password: ", conf.redis_password,", err:", err)
+        core.log.error("failed to connect redis, err:", err)
         error("failed to connect redis")
     end
 
@@ -123,6 +123,7 @@ local function get_real_payload(userinfo, auth_conf)
         exp = ngx_time() + auth_conf.exp,
         iss = "bcs-auth-plugin",
     }
+    --core.log.warn("userinfo`s type: ", type(userinfo))
     if type(userinfo) == "string" then
         retTable["username"] = userinfo
     elseif type(userinfo) == "number" then
@@ -186,12 +187,28 @@ function _M:get_jwt_from_redis(credential, conf, ctx, key_prefix, create_if_null
                 ctx.var["bk_login_code"] = data["code"]
                 ctx.var["bk_login_message"] = data["message"]
             end
+        elseif conf.bk_login_host_tenant then
+            --core.log.warn("conf.bk_login_host_tenant: ", conf.bk_login_host_tenant)
+            local data = get_userinfo_handler(credential, conf)
+            --core.log.warn("data: ", core.json.encode(data))
+            if data["data"] then
+                userinfo = {
+                    username = data["data"]["bk_username"],
+                    tenant_id = data["data"]["tenant_id"]
+                }
+            else
+                userinfo = data
+            end
         else
+            --core.log.warn("conf.bk_login_host: ", conf.bk_login_host)
             userinfo = get_userinfo_handler(credential, conf.bk_login_host)
         end
 
+        --core.log.warn("userinfo: ", core.json.encode(userinfo))
+
         if userinfo then
             jwt_token = sign_jwt_with_RS256(userinfo, conf)
+            --core.log.warn("jwt_token: ", tostring(jwt_token))
 
             local ok = retry(3, conn_and_set, key, jwt_token, conf)
             if not ok then

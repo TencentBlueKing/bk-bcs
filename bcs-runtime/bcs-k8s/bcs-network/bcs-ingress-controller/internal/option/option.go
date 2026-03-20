@@ -130,6 +130,9 @@ type ControllerOption struct {
 	PortLeakThresholdSecs int
 
 	PortBindingReconcileConcurrent int
+
+	// UptimeCheckDisabled 为true时跳过拨测任务的创建和删除，避免影响主流程
+	UptimeCheckDisabled bool
 }
 
 // Conf 服务配置
@@ -274,6 +277,9 @@ func (op *ControllerOption) BindFromCommandLine() {
 	flag.IntVar(&op.ListenerBypassMaxConcurrent, "listener_bypass_max_concurrent", 10, "max concurrent for bypass listener")
 
 	flag.IntVar(&op.PortBindingReconcileConcurrent, "portbinding_reconcile_concurrent", 10, "max concurrent for portbinding reconcile")
+
+	flag.BoolVar(&op.UptimeCheckDisabled, "uptime_check_disabled", false,
+		"if true, skip uptime check task creation and deletion to avoid affecting main binding flow")
 
 	flag.Parse()
 

@@ -175,68 +175,71 @@ func (b *BcsBkcmdbSynchronizerHandler) HandleMsg(
 		make([]amqp.Delivery, 0),
 	}
 
-	for msg := range messages {
+	for {
 		select {
 		case <-done:
 			blog.Infof("goroutine stop, stop handleMsg.")
 			return
-		default:
+		case msg, ok := <-messages:
+			if !ok {
+				blog.Infof("messages channel closed, stop handleMsg.")
+				return
+			}
+			// blog.Infof("Received a message")
+			// blog.Infof("Message: %v", msg)
 
-		}
-		// blog.Infof("Received a message")
-		// blog.Infof("Message: %v", msg)
+			header := msg.Headers
 
-		header := msg.Headers
+			if v, ok := header["resourceType"]; ok {
+				var errH error
+				blog.Infof("resourceType: %v", v)
+				switch v.(string) {
+				case "Pod":
+					m := podMsg.M
+					m = append(m, msg)
+					podMsg.M = m
+					// errH = b.handlePod(msg, bkCluster)
+					errH = b.handlePods(&podMsg, bkCluster, db)
+				case Deployment:
+					errH = b.handleDeployment(msg, bkCluster, db)
+				case "StatefulSet":
+					errH = b.handleStatefulSet(msg, bkCluster, db)
+				case "DaemonSet":
+					errH = b.handleDaemonSet(msg, bkCluster, db)
+				case "GameDeployment":
+					errH = b.handleGameDeployment(msg, bkCluster, db)
+				case "GameStatefulSet":
+					errH = b.handleGameStatefulSet(msg, bkCluster, db)
+				case "Namespace":
+					errH = b.handleNamespace(msg, bkCluster, db)
+				case "Node":
+					// errH = b.handleNode(msg, bkCluster)
+					m := nodeMsg.M
+					m = append(m, msg)
+					nodeMsg.M = m
+					errH = b.handleNodes(&nodeMsg, bkCluster, db)
+				case "Event":
+					errH = b.handlePods(&podMsg, bkCluster, db)
+					if errH != nil {
+						blog.Errorf("errH: %s", errH.Error())
+					}
+					errH = b.handleNodes(&nodeMsg, bkCluster, db)
+					// errH = b.handleEvent(msg, bkCluster)
+				}
 
-		if v, ok := header["resourceType"]; ok {
-			var errH error
-			blog.Infof("resourceType: %v", v)
-			switch v.(string) {
-			case "Pod":
-				m := podMsg.M
-				m = append(m, msg)
-				podMsg.M = m
-				// errH = b.handlePod(msg, bkCluster)
-				errH = b.handlePods(&podMsg, bkCluster, db)
-			case Deployment:
-				errH = b.handleDeployment(msg, bkCluster, db)
-			case "StatefulSet":
-				errH = b.handleStatefulSet(msg, bkCluster, db)
-			case "DaemonSet":
-				errH = b.handleDaemonSet(msg, bkCluster, db)
-			case "GameDeployment":
-				errH = b.handleGameDeployment(msg, bkCluster, db)
-			case "GameStatefulSet":
-				errH = b.handleGameStatefulSet(msg, bkCluster, db)
-			case "Namespace":
-				errH = b.handleNamespace(msg, bkCluster, db)
-			case "Node":
-				// errH = b.handleNode(msg, bkCluster)
-				m := nodeMsg.M
-				m = append(m, msg)
-				nodeMsg.M = m
-				errH = b.handleNodes(&nodeMsg, bkCluster, db)
-			case "Event":
-				errH = b.handlePods(&podMsg, bkCluster, db)
 				if errH != nil {
 					blog.Errorf("errH: %s", errH.Error())
+					// if err := b.PublishMsg(msg, 3); err != nil {
+					//	blog.Errorf("republish err: %s", err.Error())
+					// }
 				}
-				errH = b.handleNodes(&nodeMsg, bkCluster, db)
-				// errH = b.handleEvent(msg, bkCluster)
 			}
 
-			if errH != nil {
-				blog.Errorf("errH: %s", errH.Error())
-				// if err := b.PublishMsg(msg, 3); err != nil {
-				//	blog.Errorf("republish err: %s", err.Error())
-				// }
-			}
+			// ack
+			// if err := msg.Ack(true); err != nil {
+			//	blog.Infof("Unable to acknowledge the message, err: %s", err.Error())
+			// }
 		}
-
-		// ack
-		// if err := msg.Ack(true); err != nil {
-		//	blog.Infof("Unable to acknowledge the message, err: %s", err.Error())
-		// }
 	}
 }
 

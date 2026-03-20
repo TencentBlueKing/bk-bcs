@@ -388,7 +388,7 @@ func CheckNodeIpsInCMDBTask(taskID string, stepName string) error {
 	nodeIpList := cloudprovider.ParseNodeIpOrIdFromCommonMap(state.Task.GetCommonParams(),
 		cloudprovider.NodeIPsKey.String(), ",")
 	transVPCIpList := cloudprovider.ParseNodeIpOrIdFromCommonMap(state.Task.GetCommonParams(),
-		cloudprovider.TransVPCIPs.String(), ",")
+		cloudprovider.TransVPCIPsKey.String(), ",")
 
 	// when nodeIpList && transVPCIpList exist, use transVPCIpList. nodeIpList pass to backward
 	if len(transVPCIpList) > 0 {

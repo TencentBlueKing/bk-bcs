@@ -40,20 +40,22 @@ func ParseDSSpec(manifest map[string]interface{}, spec *model.DSSpec) {
 	common.ParseLabels(templateLables, &spec.Labels.TemplateLabels)
 	ParseDSReplicas(manifest, &spec.Replicas)
 	tmplSpec, _ := mapx.GetItems(manifest, "spec.template.spec")
-	podSpec, _ := tmplSpec.(map[string]interface{})
-	ParseNodeSelect(podSpec, &spec.NodeSelect)
-	ParseAffinity(podSpec, &spec.Affinity)
-	ParseToleration(podSpec, &spec.Toleration)
-	ParseNetworking(podSpec, &spec.Networking)
-	ParsePodSecurityCtx(podSpec, &spec.Security)
-	ParseSpecOther(podSpec, &spec.Other)
+	if podSpec, ok := tmplSpec.(map[string]interface{}); ok {
+		ParseNodeSelect(podSpec, &spec.NodeSelect)
+		ParseAffinity(podSpec, &spec.Affinity)
+		ParseToleration(podSpec, &spec.Toleration)
+		ParseNetworking(podSpec, &spec.Networking)
+		ParsePodSecurityCtx(podSpec, &spec.Security)
+		ParseSpecOther(podSpec, &spec.Other)
+	}
 }
 
 // ParseDSReplicas xxx
 func ParseDSReplicas(manifest map[string]interface{}, replicas *model.DSReplicas) {
-	replicas.UpdateStrategy = mapx.Get(
-		manifest, "spec.updateStrategy.type", resCsts.DefaultUpdateStrategy,
-	).(string)
+	if updateStrategy, ok := mapx.Get(manifest, "spec.updateStrategy.type",
+		resCsts.DefaultUpdateStrategy).(string); ok {
+		replicas.UpdateStrategy = updateStrategy
+	}
 	replicas.MaxUnavailable, replicas.MUAUnit = resCsts.DefaultMaxUnavailable, util.UnitPercent
 	if maxUnavailable, err := mapx.GetItems(
 		manifest, "spec.updateStrategy.rollingUpdate.maxUnavailable",

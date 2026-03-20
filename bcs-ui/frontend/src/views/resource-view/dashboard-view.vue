@@ -218,6 +218,7 @@ const propertis = ['name', 'creator', 'source', 'templateName', 'templateVersion
 function handleGetQuery(query) {
   // 从query中获取命名空间
   query?.namespace && $store.commit('updateViewNsList', query.namespace.split(','));
+  query?.nsgroup && $store.commit('updateViewNsGroup', query.nsgroup);
   // query中不存在propertis中的参数，不显示showViewConfig
   if (!propertis.some(key => key in query)) return;
 

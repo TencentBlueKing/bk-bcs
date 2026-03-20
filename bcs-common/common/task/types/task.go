@@ -134,6 +134,8 @@ func (t *Task) AddStep(step *Step) *Task {
 
 // GetCommonParam get common params
 func (t *Task) GetCommonParam(key string) (string, bool) {
+	t.commonParamsLock.Lock()
+	defer t.commonParamsLock.Unlock()
 	if t.CommonParams == nil {
 		t.CommonParams = make(map[string]string, 0)
 		return "", false
@@ -146,6 +148,8 @@ func (t *Task) GetCommonParam(key string) (string, bool) {
 
 // AddCommonParam add common params
 func (t *Task) AddCommonParam(k, v string) *Task {
+	t.commonParamsLock.Lock()
+	defer t.commonParamsLock.Unlock()
 	if t.CommonParams == nil {
 		t.CommonParams = make(map[string]string, 0)
 	}

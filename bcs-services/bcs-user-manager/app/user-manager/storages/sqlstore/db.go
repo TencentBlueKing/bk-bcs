@@ -40,9 +40,9 @@ func InitCoreDatabase(conf *config.UserMgrConfig) error {
 	if err != nil {
 		return err
 	}
-	db.DB().SetConnMaxLifetime(60 * time.Second)
-	db.DB().SetMaxIdleConns(20)
-	db.DB().SetMaxOpenConns(20)
+	db.DB().SetConnMaxLifetime(time.Hour)
+	db.DB().SetMaxIdleConns(50)
+	db.DB().SetMaxOpenConns(100)
 
 	GCoreDB = db
 	return nil

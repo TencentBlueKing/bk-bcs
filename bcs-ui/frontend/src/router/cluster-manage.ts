@@ -121,6 +121,7 @@ export default [
     meta: {
       hideMenu: true,
       keepAlive: true,
+      resource: window.i18n.t('nav.cluster'),
     },
   },
   {

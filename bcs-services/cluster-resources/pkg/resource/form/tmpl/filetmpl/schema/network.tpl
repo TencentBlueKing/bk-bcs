@@ -505,16 +505,6 @@ selector:
         else:
           state:
             visible: true
-      - target: spec.portConf.ports
-        if: "{{`{{`}} $self.value {{`}}`}}"
-        then:
-          state:
-            value: [{"name":"http","port":80,"protocol":"TCP","targetSelectPort":"", nodePort:0}] 
-      - target: spec.portConf.ports
-        if: "{{`{{`}} !$self.value {{`}}`}}"
-        then:
-          state:    
-            value: [{"name":"http","port":80,"protocol":"TCP","targetPort":"", nodePort:0}]    
     workloadType:
       title: {{ i18n "资源类型" .lang }}
       type: string

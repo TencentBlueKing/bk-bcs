@@ -51,11 +51,9 @@
           isViewConfigShow ? '!border-[#3A84FF] !text-[#3A84FF]' : 'text-[#979BA5] hover:!border-[#979BA5]'
         ]"
         v-bk-trace.click="{
-          module: 'view',
-          operation: 'filter',
-          desc: '视图筛选按钮',
-          username: $store.state.user.username,
-          projectCode: $store.getters.curProjectCode,
+          ct: 'view',
+          act: 'filter',
+          d: '视图筛选按钮',
         }"
         @click.stop="toggleViewConfig">
         <i class="bk-icon icon-funnel text-[14px]"></i>

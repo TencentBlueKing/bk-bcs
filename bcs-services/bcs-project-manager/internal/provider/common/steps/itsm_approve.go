@@ -16,6 +16,7 @@ package steps
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	common_task "github.com/Tencent/bk-bcs/bcs-common/common/task"
@@ -71,10 +72,10 @@ func (s itsmApproveStep) DoWork(task *types.Task) error {
 		case itsm.RUNNING:
 			return nil
 		case itsm.FINISHED:
+			task.AddCommonParams(utils.ApprovalResultKey.String(), strconv.FormatBool(ticket[0].ApprovalResult))
 			if ticket[0].ApprovalResult {
 				return common_task.ErrEndLoop
 			}
-
 			return fmt.Errorf("ticket sn[%s] approval result is false", sn)
 		case itsm.SUSPENDED, itsm.TERMINATED, itsm.REVOKED:
 			return fmt.Errorf("ticket sn[%s] status[%s] is not expected", sn, ticket[0].CurrentStatus)

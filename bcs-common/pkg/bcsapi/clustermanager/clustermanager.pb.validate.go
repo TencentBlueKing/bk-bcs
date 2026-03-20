@@ -6612,6 +6612,8 @@ func (m *CloudVPC) validate(all bool) error {
 		}
 	}
 
+	// no validation rules for Scenario
+
 	if len(errors) > 0 {
 		return CloudVPCMultiError(errors)
 	}
@@ -7135,6 +7137,8 @@ func (m *CreateCloudVPCRequest) validate(all bool) error {
 		}
 	}
 
+	// no validation rules for Scenario
+
 	if len(errors) > 0 {
 		return CreateCloudVPCRequestMultiError(errors)
 	}
@@ -7552,6 +7556,8 @@ func (m *UpdateCloudVPCRequest) validate(all bool) error {
 			}
 		}
 	}
+
+	// no validation rules for Scenario
 
 	if len(errors) > 0 {
 		return UpdateCloudVPCRequestMultiError(errors)
@@ -8117,6 +8123,23 @@ func (m *ListCloudVPCRequest) validate(all bool) error {
 
 	// no validation rules for BusinessID
 
+	// no validation rules for VpcName
+
+	// no validation rules for Sort
+
+	if _, ok := _ListCloudVPCRequest_Order_InLookup[m.GetOrder()]; !ok {
+		err := ListCloudVPCRequestValidationError{
+			field:  "Order",
+			reason: "value must be in list [ asc desc]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for Scenario
+
 	if len(errors) > 0 {
 		return ListCloudVPCRequestMultiError(errors)
 	}
@@ -8200,6 +8223,12 @@ var _ interface {
 var _ListCloudVPCRequest_NetworkType_InLookup = map[string]struct{}{
 	"overlay":  {},
 	"underlay": {},
+}
+
+var _ListCloudVPCRequest_Order_InLookup = map[string]struct{}{
+	"":     {},
+	"asc":  {},
+	"desc": {},
 }
 
 // Validate checks the field values on ListCloudVPCResponse with the rules
@@ -8446,6 +8475,8 @@ func (m *CloudVPCResp) validate(all bool) error {
 
 	// no validation rules for BusinessID
 
+	// no validation rules for Scenario
+
 	if len(errors) > 0 {
 		return CloudVPCRespMultiError(errors)
 	}
@@ -8522,6 +8553,461 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = CloudVPCRespValidationError{}
+
+// Validate checks the field values on ListCloudVPCV2Request with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ListCloudVPCV2Request) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListCloudVPCV2Request with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListCloudVPCV2RequestMultiError, or nil if none found.
+func (m *ListCloudVPCV2Request) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListCloudVPCV2Request) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if utf8.RuneCountInString(m.GetCloudID()) > 20 {
+		err := ListCloudVPCV2RequestValidationError{
+			field:  "CloudID",
+			reason: "value length must be at most 20 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for Region
+
+	// no validation rules for VpcID
+
+	if _, ok := _ListCloudVPCV2Request_NetworkType_InLookup[m.GetNetworkType()]; !ok {
+		err := ListCloudVPCV2RequestValidationError{
+			field:  "NetworkType",
+			reason: "value must be in list [overlay underlay]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for BusinessID
+
+	// no validation rules for VpcName
+
+	// no validation rules for Sort
+
+	if _, ok := _ListCloudVPCV2Request_Order_InLookup[m.GetOrder()]; !ok {
+		err := ListCloudVPCV2RequestValidationError{
+			field:  "Order",
+			reason: "value must be in list [ asc desc]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if m.GetLimit() < 0 {
+		err := ListCloudVPCV2RequestValidationError{
+			field:  "Limit",
+			reason: "value must be greater than or equal to 0",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if m.GetPage() < 0 {
+		err := ListCloudVPCV2RequestValidationError{
+			field:  "Page",
+			reason: "value must be greater than or equal to 0",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for Scenario
+
+	if len(errors) > 0 {
+		return ListCloudVPCV2RequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListCloudVPCV2RequestMultiError is an error wrapping multiple validation
+// errors returned by ListCloudVPCV2Request.ValidateAll() if the designated
+// constraints aren't met.
+type ListCloudVPCV2RequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListCloudVPCV2RequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListCloudVPCV2RequestMultiError) AllErrors() []error { return m }
+
+// ListCloudVPCV2RequestValidationError is the validation error returned by
+// ListCloudVPCV2Request.Validate if the designated constraints aren't met.
+type ListCloudVPCV2RequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListCloudVPCV2RequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListCloudVPCV2RequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListCloudVPCV2RequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListCloudVPCV2RequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListCloudVPCV2RequestValidationError) ErrorName() string {
+	return "ListCloudVPCV2RequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListCloudVPCV2RequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListCloudVPCV2Request.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListCloudVPCV2RequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListCloudVPCV2RequestValidationError{}
+
+var _ListCloudVPCV2Request_NetworkType_InLookup = map[string]struct{}{
+	"overlay":  {},
+	"underlay": {},
+}
+
+var _ListCloudVPCV2Request_Order_InLookup = map[string]struct{}{
+	"":     {},
+	"asc":  {},
+	"desc": {},
+}
+
+// Validate checks the field values on ListCloudVPCV2Response with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ListCloudVPCV2Response) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListCloudVPCV2Response with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListCloudVPCV2ResponseMultiError, or nil if none found.
+func (m *ListCloudVPCV2Response) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListCloudVPCV2Response) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	if all {
+		switch v := interface{}(m.GetData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ListCloudVPCV2ResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ListCloudVPCV2ResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ListCloudVPCV2ResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return ListCloudVPCV2ResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListCloudVPCV2ResponseMultiError is an error wrapping multiple validation
+// errors returned by ListCloudVPCV2Response.ValidateAll() if the designated
+// constraints aren't met.
+type ListCloudVPCV2ResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListCloudVPCV2ResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListCloudVPCV2ResponseMultiError) AllErrors() []error { return m }
+
+// ListCloudVPCV2ResponseValidationError is the validation error returned by
+// ListCloudVPCV2Response.Validate if the designated constraints aren't met.
+type ListCloudVPCV2ResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListCloudVPCV2ResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListCloudVPCV2ResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListCloudVPCV2ResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListCloudVPCV2ResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListCloudVPCV2ResponseValidationError) ErrorName() string {
+	return "ListCloudVPCV2ResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListCloudVPCV2ResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListCloudVPCV2Response.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListCloudVPCV2ResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListCloudVPCV2ResponseValidationError{}
+
+// Validate checks the field values on ListCloudVPCResponseData with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ListCloudVPCResponseData) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListCloudVPCResponseData with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListCloudVPCResponseDataMultiError, or nil if none found.
+func (m *ListCloudVPCResponseData) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListCloudVPCResponseData) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Count
+
+	for idx, item := range m.GetResults() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, ListCloudVPCResponseDataValidationError{
+						field:  fmt.Sprintf("Results[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, ListCloudVPCResponseDataValidationError{
+						field:  fmt.Sprintf("Results[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ListCloudVPCResponseDataValidationError{
+					field:  fmt.Sprintf("Results[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return ListCloudVPCResponseDataMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListCloudVPCResponseDataMultiError is an error wrapping multiple validation
+// errors returned by ListCloudVPCResponseData.ValidateAll() if the designated
+// constraints aren't met.
+type ListCloudVPCResponseDataMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListCloudVPCResponseDataMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListCloudVPCResponseDataMultiError) AllErrors() []error { return m }
+
+// ListCloudVPCResponseDataValidationError is the validation error returned by
+// ListCloudVPCResponseData.Validate if the designated constraints aren't met.
+type ListCloudVPCResponseDataValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListCloudVPCResponseDataValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListCloudVPCResponseDataValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListCloudVPCResponseDataValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListCloudVPCResponseDataValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListCloudVPCResponseDataValidationError) ErrorName() string {
+	return "ListCloudVPCResponseDataValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListCloudVPCResponseDataValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListCloudVPCResponseData.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListCloudVPCResponseDataValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListCloudVPCResponseDataValidationError{}
 
 // Validate checks the field values on CidrDetailInfo with the rules defined in
 // the proto definition for this message. If any rules are violated, the first
@@ -13814,6 +14300,8 @@ func (m *CreateNodeTemplateRequest) validate(all bool) error {
 			}
 		}
 	}
+
+	// no validation rules for SkipSystemInit
 
 	if all {
 		switch v := interface{}(m.GetAnnotations()).(type) {
@@ -25496,6 +25984,324 @@ var _ interface {
 	ErrorName() string
 } = GetNodeInfoResponseValidationError{}
 
+// Validate checks the field values on ListClusterNodesRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ListClusterNodesRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListClusterNodesRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListClusterNodesRequestMultiError, or nil if none found.
+func (m *ListClusterNodesRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListClusterNodesRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 1 || l > 100 {
+		err := ListClusterNodesRequestValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 1 and 100 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetRegion()) > 100 {
+		err := ListClusterNodesRequestValidationError{
+			field:  "Region",
+			reason: "value length must be at most 100 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetVpcID()) > 32 {
+		err := ListClusterNodesRequestValidationError{
+			field:  "VpcID",
+			reason: "value length must be at most 32 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetNodeGroupID()) > 100 {
+		err := ListClusterNodesRequestValidationError{
+			field:  "NodeGroupID",
+			reason: "value length must be at most 100 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for InstanceType
+
+	// no validation rules for Status
+
+	if m.GetOffset() < 0 {
+		err := ListClusterNodesRequestValidationError{
+			field:  "Offset",
+			reason: "value must be greater than or equal to 0",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if m.GetLimit() > 5000 {
+		err := ListClusterNodesRequestValidationError{
+			field:  "Limit",
+			reason: "value must be less than or equal to 5000",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for ShowPwd
+
+	// no validation rules for InnerIP
+
+	if len(errors) > 0 {
+		return ListClusterNodesRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListClusterNodesRequestMultiError is an error wrapping multiple validation
+// errors returned by ListClusterNodesRequest.ValidateAll() if the designated
+// constraints aren't met.
+type ListClusterNodesRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListClusterNodesRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListClusterNodesRequestMultiError) AllErrors() []error { return m }
+
+// ListClusterNodesRequestValidationError is the validation error returned by
+// ListClusterNodesRequest.Validate if the designated constraints aren't met.
+type ListClusterNodesRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListClusterNodesRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListClusterNodesRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListClusterNodesRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListClusterNodesRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListClusterNodesRequestValidationError) ErrorName() string {
+	return "ListClusterNodesRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListClusterNodesRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListClusterNodesRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListClusterNodesRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListClusterNodesRequestValidationError{}
+
+// Validate checks the field values on ListClusterNodesResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ListClusterNodesResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListClusterNodesResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListClusterNodesResponseMultiError, or nil if none found.
+func (m *ListClusterNodesResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListClusterNodesResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, ListClusterNodesResponseValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, ListClusterNodesResponseValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ListClusterNodesResponseValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return ListClusterNodesResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListClusterNodesResponseMultiError is an error wrapping multiple validation
+// errors returned by ListClusterNodesResponse.ValidateAll() if the designated
+// constraints aren't met.
+type ListClusterNodesResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListClusterNodesResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListClusterNodesResponseMultiError) AllErrors() []error { return m }
+
+// ListClusterNodesResponseValidationError is the validation error returned by
+// ListClusterNodesResponse.Validate if the designated constraints aren't met.
+type ListClusterNodesResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListClusterNodesResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListClusterNodesResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListClusterNodesResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListClusterNodesResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListClusterNodesResponseValidationError) ErrorName() string {
+	return "ListClusterNodesResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListClusterNodesResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListClusterNodesResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListClusterNodesResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListClusterNodesResponseValidationError{}
+
 // Validate checks the field values on NodeConfig with the rules defined in the
 // proto definition for this message. If any rules are violated, the first
 // error encountered is returned, or nil if there are no violations.
@@ -35381,6 +36187,413 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ListNodeGroupResponseValidationError{}
+
+// Validate checks the field values on ListNodeGroupV2Request with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ListNodeGroupV2Request) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListNodeGroupV2Request with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListNodeGroupV2RequestMultiError, or nil if none found.
+func (m *ListNodeGroupV2Request) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListNodeGroupV2Request) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Name
+
+	// no validation rules for ClusterID
+
+	// no validation rules for Region
+
+	// no validation rules for ProjectID
+
+	if m.GetLimit() < 0 {
+		err := ListNodeGroupV2RequestValidationError{
+			field:  "Limit",
+			reason: "value must be greater than or equal to 0",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if m.GetPage() < 0 {
+		err := ListNodeGroupV2RequestValidationError{
+			field:  "Page",
+			reason: "value must be greater than or equal to 0",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return ListNodeGroupV2RequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListNodeGroupV2RequestMultiError is an error wrapping multiple validation
+// errors returned by ListNodeGroupV2Request.ValidateAll() if the designated
+// constraints aren't met.
+type ListNodeGroupV2RequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListNodeGroupV2RequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListNodeGroupV2RequestMultiError) AllErrors() []error { return m }
+
+// ListNodeGroupV2RequestValidationError is the validation error returned by
+// ListNodeGroupV2Request.Validate if the designated constraints aren't met.
+type ListNodeGroupV2RequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListNodeGroupV2RequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListNodeGroupV2RequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListNodeGroupV2RequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListNodeGroupV2RequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListNodeGroupV2RequestValidationError) ErrorName() string {
+	return "ListNodeGroupV2RequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListNodeGroupV2RequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListNodeGroupV2Request.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListNodeGroupV2RequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListNodeGroupV2RequestValidationError{}
+
+// Validate checks the field values on ListNodeGroupV2Response with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ListNodeGroupV2Response) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListNodeGroupV2Response with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListNodeGroupV2ResponseMultiError, or nil if none found.
+func (m *ListNodeGroupV2Response) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListNodeGroupV2Response) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	if all {
+		switch v := interface{}(m.GetData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ListNodeGroupV2ResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ListNodeGroupV2ResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ListNodeGroupV2ResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return ListNodeGroupV2ResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListNodeGroupV2ResponseMultiError is an error wrapping multiple validation
+// errors returned by ListNodeGroupV2Response.ValidateAll() if the designated
+// constraints aren't met.
+type ListNodeGroupV2ResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListNodeGroupV2ResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListNodeGroupV2ResponseMultiError) AllErrors() []error { return m }
+
+// ListNodeGroupV2ResponseValidationError is the validation error returned by
+// ListNodeGroupV2Response.Validate if the designated constraints aren't met.
+type ListNodeGroupV2ResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListNodeGroupV2ResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListNodeGroupV2ResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListNodeGroupV2ResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListNodeGroupV2ResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListNodeGroupV2ResponseValidationError) ErrorName() string {
+	return "ListNodeGroupV2ResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListNodeGroupV2ResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListNodeGroupV2Response.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListNodeGroupV2ResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListNodeGroupV2ResponseValidationError{}
+
+// Validate checks the field values on ListNodeGroupResponseData with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ListNodeGroupResponseData) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListNodeGroupResponseData with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListNodeGroupResponseDataMultiError, or nil if none found.
+func (m *ListNodeGroupResponseData) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListNodeGroupResponseData) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Count
+
+	for idx, item := range m.GetResults() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, ListNodeGroupResponseDataValidationError{
+						field:  fmt.Sprintf("Results[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, ListNodeGroupResponseDataValidationError{
+						field:  fmt.Sprintf("Results[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ListNodeGroupResponseDataValidationError{
+					field:  fmt.Sprintf("Results[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return ListNodeGroupResponseDataMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListNodeGroupResponseDataMultiError is an error wrapping multiple validation
+// errors returned by ListNodeGroupResponseData.ValidateAll() if the
+// designated constraints aren't met.
+type ListNodeGroupResponseDataMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListNodeGroupResponseDataMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListNodeGroupResponseDataMultiError) AllErrors() []error { return m }
+
+// ListNodeGroupResponseDataValidationError is the validation error returned by
+// ListNodeGroupResponseData.Validate if the designated constraints aren't met.
+type ListNodeGroupResponseDataValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListNodeGroupResponseDataValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListNodeGroupResponseDataValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListNodeGroupResponseDataValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListNodeGroupResponseDataValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListNodeGroupResponseDataValidationError) ErrorName() string {
+	return "ListNodeGroupResponseDataValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListNodeGroupResponseDataValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListNodeGroupResponseData.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListNodeGroupResponseDataValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListNodeGroupResponseDataValidationError{}
 
 // Validate checks the field values on AddNodesRequest with the rules defined
 // in the proto definition for this message. If any rules are violated, the
@@ -68529,6 +69742,8 @@ func (m *GetProjectResourceQuotaUsageRequest) validate(all bool) error {
 
 	// no validation rules for ProviderID
 
+	// no validation rules for ResourcePoolType
+
 	if len(errors) > 0 {
 		return GetProjectResourceQuotaUsageRequestMultiError(errors)
 	}
@@ -68811,6 +70026,8 @@ func (m *ProjectAutoscalerQuota) validate(all bool) error {
 	// no validation rules for Total
 
 	// no validation rules for Used
+
+	// no validation rules for QuotaID
 
 	if len(errors) > 0 {
 		return ProjectAutoscalerQuotaMultiError(errors)
@@ -70530,6 +71747,35 @@ func (m *CloudTemplateConfig) validate(all bool) error {
 		}
 	}
 
+	if all {
+		switch v := interface{}(m.GetTaskTimeTemplateConfig()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, CloudTemplateConfigValidationError{
+					field:  "TaskTimeTemplateConfig",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, CloudTemplateConfigValidationError{
+					field:  "TaskTimeTemplateConfig",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetTaskTimeTemplateConfig()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CloudTemplateConfigValidationError{
+				field:  "TaskTimeTemplateConfig",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
 	if len(errors) > 0 {
 		return CloudTemplateConfigMultiError(errors)
 	}
@@ -70745,6 +71991,246 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = CloudNetworkTemplateConfigValidationError{}
+
+// Validate checks the field values on TaskTimeTemplateConfig with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *TaskTimeTemplateConfig) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on TaskTimeTemplateConfig with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// TaskTimeTemplateConfigMultiError, or nil if none found.
+func (m *TaskTimeTemplateConfig) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *TaskTimeTemplateConfig) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	for idx, item := range m.GetTimeoutConfig() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, TaskTimeTemplateConfigValidationError{
+						field:  fmt.Sprintf("TimeoutConfig[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, TaskTimeTemplateConfigValidationError{
+						field:  fmt.Sprintf("TimeoutConfig[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return TaskTimeTemplateConfigValidationError{
+					field:  fmt.Sprintf("TimeoutConfig[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return TaskTimeTemplateConfigMultiError(errors)
+	}
+
+	return nil
+}
+
+// TaskTimeTemplateConfigMultiError is an error wrapping multiple validation
+// errors returned by TaskTimeTemplateConfig.ValidateAll() if the designated
+// constraints aren't met.
+type TaskTimeTemplateConfigMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m TaskTimeTemplateConfigMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m TaskTimeTemplateConfigMultiError) AllErrors() []error { return m }
+
+// TaskTimeTemplateConfigValidationError is the validation error returned by
+// TaskTimeTemplateConfig.Validate if the designated constraints aren't met.
+type TaskTimeTemplateConfigValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e TaskTimeTemplateConfigValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e TaskTimeTemplateConfigValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e TaskTimeTemplateConfigValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e TaskTimeTemplateConfigValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e TaskTimeTemplateConfigValidationError) ErrorName() string {
+	return "TaskTimeTemplateConfigValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e TaskTimeTemplateConfigValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sTaskTimeTemplateConfig.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = TaskTimeTemplateConfigValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = TaskTimeTemplateConfigValidationError{}
+
+// Validate checks the field values on TimeoutConfig with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *TimeoutConfig) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on TimeoutConfig with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in TimeoutConfigMultiError, or
+// nil if none found.
+func (m *TimeoutConfig) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *TimeoutConfig) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for StepName
+
+	// no validation rules for Timeout
+
+	if len(errors) > 0 {
+		return TimeoutConfigMultiError(errors)
+	}
+
+	return nil
+}
+
+// TimeoutConfigMultiError is an error wrapping multiple validation errors
+// returned by TimeoutConfig.ValidateAll() if the designated constraints
+// aren't met.
+type TimeoutConfigMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m TimeoutConfigMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m TimeoutConfigMultiError) AllErrors() []error { return m }
+
+// TimeoutConfigValidationError is the validation error returned by
+// TimeoutConfig.Validate if the designated constraints aren't met.
+type TimeoutConfigValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e TimeoutConfigValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e TimeoutConfigValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e TimeoutConfigValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e TimeoutConfigValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e TimeoutConfigValidationError) ErrorName() string { return "TimeoutConfigValidationError" }
+
+// Error satisfies the builtin error interface
+func (e TimeoutConfigValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sTimeoutConfig.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = TimeoutConfigValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = TimeoutConfigValidationError{}
 
 // Validate checks the field values on CreateTemplateConfigRequest with the
 // rules defined in the proto definition for this message. If any rules are

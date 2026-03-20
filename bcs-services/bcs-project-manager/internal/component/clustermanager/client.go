@@ -25,6 +25,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/cache"
 	common "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/constant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/quota"
 )
 
 var (
@@ -38,12 +39,15 @@ var (
 )
 
 // GetCluster get cluster by clusterID
-func GetCluster(ctx context.Context, clusterID string) (*clustermanager.Cluster, error) {
+func GetCluster(ctx context.Context, clusterID string, isCache bool) (*clustermanager.Cluster, error) {
 	// 1. if hit, get from cache
 	c := cache.GetCache()
-	if cluster, exists := c.Get(fmt.Sprintf(CacheKeyClusterPrefix, clusterID)); exists {
-		return cluster.(*clustermanager.Cluster), nil
+	if isCache {
+		if cluster, exists := c.Get(fmt.Sprintf(CacheKeyClusterPrefix, clusterID)); exists {
+			return cluster.(*clustermanager.Cluster), nil
+		}
 	}
+
 	cli, closeCon, err := clustermanager.GetClient(common.ServiceDomain)
 	if err != nil {
 		logging.Error("get cluster manager client failed, err: %s", err.Error())
@@ -90,8 +94,14 @@ func ListClusters(ctx context.Context, projectID string) ([]*clustermanager.Clus
 	return resp.GetData(), nil
 }
 
+// ResourceTypeMap resource type map
+var ResourceTypeMap = map[string]string{
+	quota.Host.String():     common.ResourceTypeYunti,
+	quota.SelfHost.String(): common.ResourceTypeSelf,
+}
+
 // GetResourceUsage get project resource usage
-func GetResourceUsage(ctx context.Context, projectID, provider string) (
+func GetResourceUsage(ctx context.Context, projectID, provider, quotaType string) (
 	[]*clustermanager.ProjectAutoscalerQuota, error) {
 	cli, closeCon, err := clustermanager.GetClient(common.ServiceDomain)
 	if err != nil {
@@ -100,8 +110,19 @@ func GetResourceUsage(ctx context.Context, projectID, provider string) (
 	}
 	defer closeCon()
 	req := &clustermanager.GetProjectResourceQuotaUsageRequest{
-		ProjectID:  projectID,
-		ProviderID: provider,
+		ProjectID: projectID,
+		ProviderID: func(provider string) string {
+			if findProvider, ok := common.ProviderMap[provider]; ok {
+				return findProvider
+			}
+			return provider
+		}(provider),
+		ResourcePoolType: func(quotaType string) string {
+			if findResourceType, ok := ResourceTypeMap[quotaType]; ok {
+				return findResourceType
+			}
+			return quotaType
+		}(quotaType),
 	}
 	resp, err := cli.GetProjectResourceQuotaUsage(ctx, req)
 	if err != nil {

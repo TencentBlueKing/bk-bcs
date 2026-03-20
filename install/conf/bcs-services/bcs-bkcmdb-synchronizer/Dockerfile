@@ -1,9 +1,7 @@
-FROM ubuntu:22.04
+FROM tencentos/tencentos4-minimal
 
 # Update package lists and install gettext
-RUN apt-get update && apt-get install -y gettext sqlite3 \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+RUN yum install -y gettext sqlite
 
 RUN mkdir -p /data/bcs/logs/bcs /data/bcs/cert
 RUN mkdir -p /data/bcs/bcs-bkcmdb-synchronizer/db

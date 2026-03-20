@@ -81,14 +81,14 @@ bcs-component:kube-sche apiserver-proxy \
 	webhook-server \
 	general-pod-autoscaler cluster-autoscaler \
 	netservice-controller external-privilege \
-	image-loader mesh-proxy
+	image-loader mesh-proxy drplan-controller
 
 bcs-network:ingress-controller
 
 bcs-services:bkcmdb-synchronizer gateway \
 	storage user-manager cluster-manager cluster-reporter nodeagent tools k8s-watch kube-agent data-manager \
 	helm-manager project-manager nodegroup-manager federation-manager powertrading mesh-manager push-manager \
-	platform-manager
+	platform-manager api-gateway-syncing bk-apisix-gateway-syncing bk-apisix-gateway
 
 bcs-scenarios: kourse gitops
 
@@ -255,6 +255,11 @@ mesh-proxy:pre
 	cp -R ${BCS_CONF_COMPONENT_PATH}/bcs-mesh-proxy ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
 	cd ${BCS_COMPONENT_PATH}/bcs-mesh-proxy && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-mesh-proxy/bcs-mesh-proxy ./cmd/mesh-proxy/main.go
 
+drplan-controller:pre
+	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/
+	cp -R ${BCS_CONF_COMPONENT_PATH}/bcs-drplan-controller ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
+	cd ${BCS_COMPONENT_PATH}/bcs-drplan-controller && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-drplan-controller/bcs-drplan-controller ./cmd/main.go
+
 bkcmdb-synchronizer:
 	mkdir -p ${PACKAGEPATH}/bcs-services
 	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-bkcmdb-synchronizer ${PACKAGEPATH}/bcs-services
@@ -322,6 +327,11 @@ cluster-resources:pre
 	cp ${BCS_SERVICES_PATH}/cluster-resources/pkg/i18n/locale/lc_msgs.yaml ${PACKAGEPATH}/bcs-services/cluster-resources/lc_msgs.yaml
 	# go build
 	cd ${BCS_SERVICES_PATH}/cluster-resources && go mod tidy && CGO_ENABLED=0 go build ${LDFLAG}${CR_LDFLAG_EXT} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/cluster-resources/bcs-cluster-resources *.go
+
+bk-apisix-gateway-syncing:pre
+	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-bk-apisix-gateway-syncing
+	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-bk-apisix-gateway-syncing/* ${PACKAGEPATH}/bcs-services/bcs-bk-apisix-gateway-syncing
+	cd ${BCS_SERVICES_PATH}/bcs-bk-apisix-gateway/syncing && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-bk-apisix-gateway-syncing/bcs-bk-apisix-gateway-syncing ./cmd/sync/main.go
 
 # end of bcs-service section
 

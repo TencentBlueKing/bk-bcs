@@ -96,7 +96,7 @@ spec:
   tracing:
   - providers:
     - name: otel-tracing
-    randomSamplingPercentage: %d`
+    randomSamplingPercentage: %.2f`
 
 // GetPodMonitorYAML 获取PodMonitor YAML模板
 func GetPodMonitorYAML(name string) string {
@@ -109,7 +109,7 @@ func GetServiceMonitorYAML(name string) string {
 }
 
 // GetTelemetryYAML 获取Telemetry YAML模板
-func GetTelemetryYAML(samplePercentage int) string {
+func GetTelemetryYAML(samplePercentage float32) string {
 	return fmt.Sprintf(TelemetryTemplate, samplePercentage)
 }
 

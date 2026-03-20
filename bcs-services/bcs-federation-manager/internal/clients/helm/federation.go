@@ -14,6 +14,7 @@
 package helm
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -29,7 +30,7 @@ func (h *helmClient) GetFederationCharts() *types.FederationCharts {
 }
 
 // IsInstalledForFederation check if federation modules is installed
-func (h *helmClient) IsInstalledForFederation(opt *ReleaseBaseOptions) (bool, error) {
+func (h *helmClient) IsInstalledForFederation(ctx context.Context, opt *ReleaseBaseOptions) (bool, error) {
 
 	var (
 		err         error
@@ -51,7 +52,7 @@ func (h *helmClient) IsInstalledForFederation(opt *ReleaseBaseOptions) (bool, er
 	for _, chart := range charts {
 		helmOpts.Namespace = chart.ReleaseNamespace
 		helmOpts.ReleaseName = chart.ReleaseName
-		isInstalled, err = h.IsInstalled(helmOpts)
+		isInstalled, err = h.IsInstalled(h.getMetadataCtx(ctx), helmOpts)
 		if err != nil {
 			return false, fmt.Errorf("check federation modules is installed failed, err: %v", err)
 		}
@@ -64,7 +65,7 @@ func (h *helmClient) IsInstalledForFederation(opt *ReleaseBaseOptions) (bool, er
 }
 
 // InstallClusternetHub install bcs-clusternet-hub
-func (h *helmClient) InstallClusternetHub(opt *ReleaseBaseOptions) error {
+func (h *helmClient) InstallClusternetHub(ctx context.Context, opt *ReleaseBaseOptions) error {
 	if h.opts.Charts.ClusternetHub == nil {
 		return fmt.Errorf("no clusternet hub chart found")
 	}
@@ -75,11 +76,11 @@ func (h *helmClient) InstallClusternetHub(opt *ReleaseBaseOptions) error {
 		valuesAll = append(valuesAll, chart.DefaultValues)
 	}
 
-	return h.installFederationChart(opt, chart, valuesAll...)
+	return h.installFederationChart(h.getMetadataCtx(ctx), opt, chart, valuesAll...)
 }
 
 // UninstallClusternetHub( uninstall bcs-clusternet-hub
-func (h *helmClient) UninstallClusternetHub(opt *ReleaseBaseOptions) error {
+func (h *helmClient) UninstallClusternetHub(ctx context.Context, opt *ReleaseBaseOptions) error {
 	helmOpt := &HelmOptions{
 		ProjectID:   opt.ProjectID,
 		ClusterID:   opt.ClusterID,
@@ -87,18 +88,18 @@ func (h *helmClient) UninstallClusternetHub(opt *ReleaseBaseOptions) error {
 		ReleaseName: h.opts.Charts.ClusternetHub.ReleaseName,
 	}
 
-	isInstalled, err := h.IsInstalled(helmOpt)
+	isInstalled, err := h.IsInstalled(h.getMetadataCtx(ctx), helmOpt)
 	if err != nil {
 		return err
 	}
 	if !isInstalled {
 		return nil
 	}
-	return h.UninstallRelease(helmOpt)
+	return h.UninstallRelease(ctx, helmOpt)
 }
 
 // InstallClusternetScheduler install bcs-clusternet-scheduler
-func (h *helmClient) InstallClusternetScheduler(opt *ReleaseBaseOptions) error {
+func (h *helmClient) InstallClusternetScheduler(ctx context.Context, opt *ReleaseBaseOptions) error {
 	if h.opts.Charts.Scheduler == nil {
 		return fmt.Errorf("no clusternet scheduler chart found")
 	}
@@ -109,11 +110,11 @@ func (h *helmClient) InstallClusternetScheduler(opt *ReleaseBaseOptions) error {
 		valuesAll = append(valuesAll, chart.DefaultValues)
 	}
 
-	return h.installFederationChart(opt, chart, valuesAll...)
+	return h.installFederationChart(h.getMetadataCtx(ctx), opt, chart, valuesAll...)
 }
 
 // UninstallClusternetScheduler uninstall bcs-clusternet-scheduler
-func (h *helmClient) UninstallClusternetScheduler(opt *ReleaseBaseOptions) error {
+func (h *helmClient) UninstallClusternetScheduler(ctx context.Context, opt *ReleaseBaseOptions) error {
 	helmOpt := &HelmOptions{
 		ProjectID:   opt.ProjectID,
 		ClusterID:   opt.ClusterID,
@@ -121,18 +122,18 @@ func (h *helmClient) UninstallClusternetScheduler(opt *ReleaseBaseOptions) error
 		ReleaseName: h.opts.Charts.Scheduler.ReleaseName,
 	}
 
-	isInstalled, err := h.IsInstalled(helmOpt)
+	isInstalled, err := h.IsInstalled(h.getMetadataCtx(ctx), helmOpt)
 	if err != nil {
 		return err
 	}
 	if !isInstalled {
 		return nil
 	}
-	return h.UninstallRelease(helmOpt)
+	return h.UninstallRelease(h.getMetadataCtx(ctx), helmOpt)
 }
 
 // InstallClusternetController install bcs-clusternet-controller
-func (h *helmClient) InstallClusternetController(opt *ReleaseBaseOptions) error {
+func (h *helmClient) InstallClusternetController(ctx context.Context, opt *ReleaseBaseOptions) error {
 	if h.opts.Charts.Controller == nil {
 		return fmt.Errorf("no clusternet controller chart found")
 	}
@@ -143,11 +144,11 @@ func (h *helmClient) InstallClusternetController(opt *ReleaseBaseOptions) error 
 		valuesAll = append(valuesAll, chart.DefaultValues)
 	}
 
-	return h.installFederationChart(opt, chart, valuesAll...)
+	return h.installFederationChart(h.getMetadataCtx(ctx), opt, chart, valuesAll...)
 }
 
 // UninstallClusternetController uninstall bcs-clusternet-controller
-func (h *helmClient) UninstallClusternetController(opt *ReleaseBaseOptions) error {
+func (h *helmClient) UninstallClusternetController(ctx context.Context, opt *ReleaseBaseOptions) error {
 	helmOpt := &HelmOptions{
 		ProjectID:   opt.ProjectID,
 		ClusterID:   opt.ClusterID,
@@ -155,18 +156,18 @@ func (h *helmClient) UninstallClusternetController(opt *ReleaseBaseOptions) erro
 		ReleaseName: h.opts.Charts.Controller.ReleaseName,
 	}
 
-	isInstalled, err := h.IsInstalled(helmOpt)
+	isInstalled, err := h.IsInstalled(h.getMetadataCtx(ctx), helmOpt)
 	if err != nil {
 		return err
 	}
 	if !isInstalled {
 		return nil
 	}
-	return h.UninstallRelease(helmOpt)
+	return h.UninstallRelease(h.getMetadataCtx(ctx), helmOpt)
 }
 
 // InstallUnifiedApiserver install bcs-unified-apiserver
-func (h *helmClient) InstallUnifiedApiserver(opt *BcsUnifiedApiserverOptions) error {
+func (h *helmClient) InstallUnifiedApiserver(ctx context.Context, opt *BcsUnifiedApiserverOptions) error {
 	if h.opts.Charts.Apiserver == nil {
 		return fmt.Errorf("no unified apiserver chart found")
 	}
@@ -199,11 +200,11 @@ func (h *helmClient) InstallUnifiedApiserver(opt *BcsUnifiedApiserverOptions) er
 
 	valuesAll = append(valuesAll, moduleValues.Yaml())
 
-	return h.installFederationChart(&opt.ReleaseBaseOptions, chart, valuesAll...)
+	return h.installFederationChart(h.getMetadataCtx(ctx), &opt.ReleaseBaseOptions, chart, valuesAll...)
 }
 
 // UninstallUnifiedApiserver uninstall bcs-unified-apiserver
-func (h *helmClient) UninstallUnifiedApiserver(opt *BcsUnifiedApiserverOptions) error {
+func (h *helmClient) UninstallUnifiedApiserver(ctx context.Context, opt *BcsUnifiedApiserverOptions) error {
 	helmOpt := &HelmOptions{
 		ProjectID:   opt.ProjectID,
 		ClusterID:   opt.ClusterID,
@@ -211,18 +212,18 @@ func (h *helmClient) UninstallUnifiedApiserver(opt *BcsUnifiedApiserverOptions) 
 		ReleaseName: h.opts.Charts.Apiserver.ReleaseName,
 	}
 
-	isInstalled, err := h.IsInstalled(helmOpt)
+	isInstalled, err := h.IsInstalled(h.getMetadataCtx(ctx), helmOpt)
 	if err != nil {
 		return err
 	}
 	if !isInstalled {
 		return nil
 	}
-	return h.UninstallRelease(helmOpt)
+	return h.UninstallRelease(ctx, helmOpt)
 }
 
 // InstallClusternetAgent install bcs-clusternet-agent
-func (h *helmClient) InstallClusternetAgent(opt *BcsClusternetAgentOptions) error {
+func (h *helmClient) InstallClusternetAgent(ctx context.Context, opt *BcsClusternetAgentOptions) error {
 	if h.opts.Charts.ClusternetAgent == nil {
 		return fmt.Errorf("no clusternet agent chart found")
 	}
@@ -250,11 +251,11 @@ func (h *helmClient) InstallClusternetAgent(opt *BcsClusternetAgentOptions) erro
 
 	valuesAll = append(valuesAll, moduleValues.Yaml())
 
-	return h.installFederationChart(&opt.ReleaseBaseOptions, chart, valuesAll...)
+	return h.installFederationChart(h.getMetadataCtx(ctx), &opt.ReleaseBaseOptions, chart, valuesAll...)
 }
 
 // UnInstallClusternetAgent uninstall bcs-clusternet-agent
-func (h *helmClient) UninstallClusternetAgent(opt *BcsClusternetAgentOptions) error {
+func (h *helmClient) UninstallClusternetAgent(ctx context.Context, opt *BcsClusternetAgentOptions) error {
 	helmOpt := &HelmOptions{
 		ProjectID:   opt.ProjectID,
 		ClusterID:   opt.ClusterID,
@@ -262,18 +263,18 @@ func (h *helmClient) UninstallClusternetAgent(opt *BcsClusternetAgentOptions) er
 		ReleaseName: formatFederationReleaseName(h.opts.Charts.ClusternetAgent.ReleaseName, opt.SubClusterId),
 	}
 
-	isInstalled, err := h.IsInstalled(helmOpt)
+	isInstalled, err := h.IsInstalled(h.getMetadataCtx(ctx), helmOpt)
 	if err != nil {
 		return err
 	}
 	if !isInstalled {
 		return nil
 	}
-	return h.UninstallRelease(helmOpt)
+	return h.UninstallRelease(h.getMetadataCtx(ctx), helmOpt)
 }
 
 // InstallEstimatorAgent install bcs-estimator-agent
-func (h *helmClient) InstallEstimatorAgent(opt *BcsEstimatorAgentOptions) error {
+func (h *helmClient) InstallEstimatorAgent(ctx context.Context, opt *BcsEstimatorAgentOptions) error {
 	if h.opts.Charts.EstimatorAgent == nil {
 		return fmt.Errorf("no estimator agent chart found")
 	}
@@ -303,28 +304,28 @@ func (h *helmClient) InstallEstimatorAgent(opt *BcsEstimatorAgentOptions) error 
 	// skip when existed
 	opt.ReleaseBaseOptions.SkipWhenExisted = true
 
-	return h.installFederationChart(&opt.ReleaseBaseOptions, chart, valuesAll...)
+	return h.installFederationChart(h.getMetadataCtx(ctx), &opt.ReleaseBaseOptions, chart, valuesAll...)
 }
 
 // UnInstallEstimatorAgent uninstall bcs-estimator-agent
-func (h *helmClient) UninstallEstimatorAgent(opt *BcsEstimatorAgentOptions) error {
+func (h *helmClient) UninstallEstimatorAgent(ctx context.Context, opt *BcsEstimatorAgentOptions) error {
 	helmOpt := &HelmOptions{
 		ProjectID:   opt.ProjectID,
 		ClusterID:   opt.ClusterID,
 		Namespace:   h.opts.Charts.EstimatorAgent.ReleaseNamespace,
 		ReleaseName: formatFederationReleaseName(h.opts.Charts.EstimatorAgent.ReleaseName, opt.SubClusterId),
 	}
-	isInstalled, err := h.IsInstalled(helmOpt)
+	isInstalled, err := h.IsInstalled(h.getMetadataCtx(ctx), helmOpt)
 	if err != nil {
 		return err
 	}
 	if !isInstalled {
 		return nil
 	}
-	return h.UninstallRelease(helmOpt)
+	return h.UninstallRelease(h.getMetadataCtx(ctx), helmOpt)
 }
 
-func (h *helmClient) installFederationChart(opt *ReleaseBaseOptions, chart *types.Chart, values ...string) error {
+func (h *helmClient) installFederationChart(ctx context.Context, opt *ReleaseBaseOptions, chart *types.Chart, values ...string) error {
 	helmOpts := &HelmOptions{
 		ProjectID:    opt.ProjectID,
 		ClusterID:    opt.ClusterID,
@@ -336,7 +337,7 @@ func (h *helmClient) installFederationChart(opt *ReleaseBaseOptions, chart *type
 	}
 
 	if opt.SkipWhenExisted {
-		isInstalled, err := h.IsInstalled(helmOpts)
+		isInstalled, err := h.IsInstalled(h.getMetadataCtx(ctx), helmOpts)
 		if err != nil {
 			return err
 		}
@@ -346,7 +347,7 @@ func (h *helmClient) installFederationChart(opt *ReleaseBaseOptions, chart *type
 		}
 	}
 
-	return h.InstallRelease(helmOpts, values...)
+	return h.InstallRelease(h.getMetadataCtx(ctx), helmOpts, values...)
 }
 
 func formatFederationReleaseName(prefix, clusterId string) string {

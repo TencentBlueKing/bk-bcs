@@ -102,7 +102,11 @@
           </template>
         </bk-table-column>
         <bk-table-column label="Ready" width="100" :render-header="renderReadyHeader" :resizable="false">
-          <template slot-scope="{ row }">{{row.status.readyReplicas || 0}} / {{row.spec.replicas}}</template>
+          <template slot-scope="{ row }">
+            <span :class="{ 'text-[#E38B02]': (row.status.readyReplicas || 0) < (row.spec.replicas || 0) }">
+              {{row.status.readyReplicas || 0}} / {{row.spec.replicas}}
+            </span>
+          </template>
         </bk-table-column>
         <bk-table-column label="Up-to-date" width="110" :resizable="false">
           <template slot-scope="{ row }">{{row.status.updatedReplicas || 0}}</template>

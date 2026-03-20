@@ -31,10 +31,14 @@ func ParseWorkloadVolume(manifest map[string]interface{}, volume *model.Workload
 	}
 
 	for _, vol := range mapx.GetList(manifest, prefix+"volumes") {
-		v, _ := vol.(map[string]interface{})
+		var v map[string]interface{}
+		var ok bool
+		if v, ok = vol.(map[string]interface{}); !ok {
+			continue
+		}
 		if _, ok := v["configMap"]; ok {
 			volume.ConfigMap = append(volume.ConfigMap, model.CMVolume{
-				Name: v["name"].(string),
+				Name: mapx.GetStr(v, "name"),
 				// 支持前端表单填写八进制（0000-0777）/十进制（0-511），因此转为字符串
 				DefaultMode: strconv.FormatInt(mapx.GetInt64(v, "configMap.defaultMode"), 10),
 				CMName:      mapx.GetStr(v, "configMap.name"),
@@ -42,30 +46,30 @@ func ParseWorkloadVolume(manifest map[string]interface{}, volume *model.Workload
 			})
 		} else if _, ok := v["secret"]; ok {
 			volume.Secret = append(volume.Secret, model.SecretVolume{
-				Name:        v["name"].(string),
+				Name:        mapx.GetStr(v, "name"),
 				DefaultMode: strconv.FormatInt(mapx.GetInt64(v, "secret.defaultMode"), 10),
 				SecretName:  mapx.GetStr(v, "secret.secretName"),
 				Items:       parseVolumeItems(v, "secret.items"),
 			})
 		} else if _, ok := v["hostPath"]; ok {
 			volume.HostPath = append(volume.HostPath, model.HostPathVolume{
-				Name: v["name"].(string),
+				Name: mapx.GetStr(v, "name"),
 				Path: mapx.GetStr(v, "hostPath.path"),
 				Type: mapx.GetStr(v, "hostPath.type"),
 			})
 		} else if _, ok := v["persistentVolumeClaim"]; ok {
 			volume.PVC = append(volume.PVC, model.PVCVolume{
-				Name:     v["name"].(string),
+				Name:     mapx.GetStr(v, "name"),
 				PVCName:  mapx.GetStr(v, "persistentVolumeClaim.claimName"),
 				ReadOnly: mapx.GetBool(v, "persistentVolumeClaim.readOnly"),
 			})
 		} else if _, ok := v["emptyDir"]; ok {
 			volume.EmptyDir = append(volume.EmptyDir, model.EmptyDirVolume{
-				Name: v["name"].(string),
+				Name: mapx.GetStr(v, "name"),
 			})
 		} else if _, ok := v["nfs"]; ok {
 			volume.NFS = append(volume.NFS, model.NFSVolume{
-				Name:     v["name"].(string),
+				Name:     mapx.GetStr(v, "name"),
 				Path:     mapx.GetStr(v, "nfs.path"),
 				Server:   mapx.GetStr(v, "nfs.server"),
 				ReadOnly: mapx.GetBool(v, "nfs.readOnly"),
@@ -78,8 +82,9 @@ func ParseWorkloadVolume(manifest map[string]interface{}, volume *model.Workload
 func parseVolumeItems(vol map[string]interface{}, paths string) []model.KeyToPath {
 	items := []model.KeyToPath{}
 	for _, item := range mapx.GetList(vol, paths) {
-		it, _ := item.(map[string]interface{})
-		items = append(items, model.KeyToPath{Key: it["key"].(string), Path: it["path"].(string)})
+		if it, ok := item.(map[string]interface{}); ok {
+			items = append(items, model.KeyToPath{Key: mapx.GetStr(it, "key"), Path: mapx.GetStr(it, "path")})
+		}
 	}
 	return items
 }

@@ -119,27 +119,21 @@ func (s *Server) checkPortPool(newPool *networkextensionv1.PortPool) error {
 }
 
 func (s *Server) checkPortPoolChanges(newPool, oldPool *networkextensionv1.PortPool) error {
+	oldItemByName := make(map[string]*networkextensionv1.PortPoolItem)
+	for _, oldItem := range oldPool.Spec.PoolItems {
+		oldItemByName[oldItem.ItemName] = oldItem
+	}
+
 	for _, newItem := range newPool.Spec.PoolItems {
-		lbIDMap := make(map[string]string)
-		for _, oldItem := range oldPool.Spec.PoolItems {
-			if newItem.ItemName == oldItem.ItemName {
-				if newItem.SegmentLength != oldItem.SegmentLength ||
-					newItem.StartPort != oldItem.StartPort {
-					return fmt.Errorf(
-						"loadBalancerIDs, startPort, endPort or segmentLength of item %s cannot be changeed",
-						newItem.ItemName)
-				}
-				if newItem.EndPort < oldItem.EndPort {
-					return fmt.Errorf("endPort of item %s can only be increased", newItem.ItemName)
-				}
-				continue
+		if oldItem, found := oldItemByName[newItem.ItemName]; found {
+			if newItem.SegmentLength != oldItem.SegmentLength {
+				return fmt.Errorf("segmentLength of item %s cannot be changed", newItem.ItemName)
 			}
-			for _, lbIDStr := range oldItem.LoadBalancerIDs {
-				lbID, err := getLbIDFromRegionID(lbIDStr)
-				if err != nil {
-					return fmt.Errorf("lbIDStr %s of item %s is invalid", oldItem.ItemName, lbIDStr)
-				}
-				lbIDMap[lbID] = oldItem.ItemName
+			if newItem.StartPort != oldItem.StartPort {
+				return fmt.Errorf("startPort of item %s cannot be changed", newItem.ItemName)
+			}
+			if newItem.EndPort < oldItem.EndPort {
+				return fmt.Errorf("endPort of item %s can only be increased", newItem.ItemName)
 			}
 		}
 	}

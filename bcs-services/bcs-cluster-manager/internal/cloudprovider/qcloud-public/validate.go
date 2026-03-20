@@ -468,3 +468,8 @@ func (c *CloudValidate) CreateNodeGroupValidate(req *proto.CreateNodeGroupReques
 
 	return nil
 }
+
+// AllowCrossBizNodes xxx
+func (c *CloudValidate) AllowCrossBizNodes(cluster *proto.Cluster) bool {
+	return false
+}

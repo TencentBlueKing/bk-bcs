@@ -140,13 +140,21 @@ env:
 envFrom:
   {{- range .vars }}
   {{- if eq .type "configMap" }}
-  - prefix: {{ .name }}
-    configMapRef:
-      name: {{ .source }}
+  - configMapRef:
+      name: {{ .source | quote }}
+    {{- if .name }}
+    prefix: {{ .name | quote }}
+    {{- else }}
+    prefix: ""
+    {{- end}}
   {{- else if eq .type "secret" }}
-  - prefix: {{ .name }}
-    secretRef:
-      name: {{ .source }}
+  - secretRef:
+      name: {{ .source | quote }}
+    {{- if .name }}
+    prefix: {{ .name | quote }}
+    {{- else }}
+    prefix: ""
+    {{- end}}
   {{- end }}
   {{- end }}
 {{- end }}

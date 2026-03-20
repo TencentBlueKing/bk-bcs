@@ -1,0 +1,28 @@
+apiVersion: dr.bkbcs.tencent.com/v1alpha1
+kind: DRPlan
+metadata:
+  name: simple-dr-plan
+  namespace: default
+spec:
+  description: "Simple DR plan with single workflow"
+  
+  globalParams:
+  - name: drCluster
+    type: string
+    default: "dr-cluster-01"
+  - name: appName
+    type: string
+    default: "my-app"
+  
+  stages:
+  - name: healthcheck
+    description: "Check application health"
+    workflows:
+    - workflowRef:
+        name: http-healthcheck
+        namespace: default
+      params:
+      - name: endpoint
+        default: "http://my-app.example.com"
+  
+  failurePolicy: Stop

@@ -12,7 +12,7 @@
           'flex items-center justify-between pl-[24px] pr-[16px] h-[40px]',
           'border-b-[1px] border-solid border-[#000]'
         ]">
-        <span class="text-[#C4C6CC] text-[14px]"></span>
+        <span class="text-[#C4C6CC] text-[14px]">{{ title }}</span>
         <span class="flex items-center text-[12px] gap-[20px] text-[#979BA5]">
           <AiAssistantBtn ref="assistantBtnRef" />
           <i
@@ -75,6 +75,10 @@ const props = defineProps({
     default: true,
   },
   height: {
+    type: String,
+    default: '',
+  },
+  title: {
     type: String,
     default: '',
   },

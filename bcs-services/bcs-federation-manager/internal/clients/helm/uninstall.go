@@ -23,18 +23,18 @@ import (
 )
 
 // UninstallRelease uninstall release
-func (h *helmClient) UninstallRelease(opt *HelmOptions) error {
+func (h *helmClient) UninstallRelease(ctx context.Context, opt *HelmOptions) error {
 
 	req := &helmmanager.UninstallReleaseV1Req{
-		ProjectCode: opt.ProjectID,
-		ClusterID:   opt.ClusterID,
-		Namespace:   opt.Namespace,
-		Name:        opt.ReleaseName,
+		ProjectCode: &opt.ProjectID,
+		ClusterID:   &opt.ClusterID,
+		Namespace:   &opt.Namespace,
+		Name:        &opt.ReleaseName,
 	}
 
 	resp := &helmmanager.UninstallReleaseV1Req{}
 	err := retry.Do(func() error {
-		resp, err := h.helmSvc.UninstallReleaseV1(h.getMetadataCtx(context.Background()), req)
+		resp, err := h.helmSvc.UninstallReleaseV1(h.getMetadataCtx(ctx), req)
 		if err != nil {
 			blog.Errorf("[HelmManager] UninstallRelease failed, err: %s", err.Error())
 			return err
@@ -44,9 +44,9 @@ func (h *helmClient) UninstallRelease(opt *HelmOptions) error {
 			return fmt.Errorf("UninstallRelease failed, resp is empty")
 		}
 
-		if resp.Code != 0 || !resp.Result {
-			blog.Errorf("[HelmManager] UninstallRelease failed, code: %d, message: %s", resp.Code, resp.Message)
-			return fmt.Errorf("UninstallRelease failed, code: %d, message: %s", resp.Code, resp.Message)
+		if (resp.Code != nil && *resp.Code != 0) || (resp.Result != nil && !*resp.Result) {
+			blog.Errorf("[HelmManager] UninstallRelease failed, code: %v, message: %v", resp.Code, resp.Message)
+			return fmt.Errorf("UninstallRelease failed, code: %v, message: %v", resp.Code, resp.Message)
 		}
 		return nil
 	}, retry.Attempts(DefaultRetryCount), retry.Delay(DefaultTimeout), retry.DelayType(retry.FixedDelay))

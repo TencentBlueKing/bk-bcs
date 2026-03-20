@@ -38,13 +38,13 @@ type NotificationAction struct {
 }
 
 // HandleMsg handles the consumption of notification messages from RabbitMQ.
-func (n *NotificationAction) HandleMsg(messages <-chan amqp.Delivery, done <-chan bool) {
+func (n *NotificationAction) HandleMsg(messages <-chan amqp.Delivery, done <-chan bool) error {
 	for {
 		select {
 		case msg, ok := <-messages:
 			if !ok {
-				blog.Infof("message channel closed")
-				return
+				blog.Error("rabbitmq: consumer channel closed")
+				return fmt.Errorf(constant.ErrChannelClosed)
 			}
 			pushMsg, err := mq.UnmarshalPushEventMessage(msg.Body)
 			if err != nil {
@@ -120,7 +120,7 @@ func (n *NotificationAction) HandleMsg(messages <-chan amqp.Delivery, done <-cha
 			}
 		case <-done:
 			blog.Infof("received done signal, exiting consumption")
-			return
+			return nil
 		}
 	}
 }

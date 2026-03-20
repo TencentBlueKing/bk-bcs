@@ -14,6 +14,7 @@
 package steps
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -106,7 +107,7 @@ func (s InstallClusternetAgentStep) DoWork(t *types.Task) error {
 		return fedsteps.ParamsNotFoundError(t.TaskID, fedsteps.BcsGatewayAddressKey)
 	}
 
-	err = helm.GetHelmClient().InstallClusternetAgent(&helm.BcsClusternetAgentOptions{
+	err = helm.GetHelmClient().InstallClusternetAgent(context.Background(), &helm.BcsClusternetAgentOptions{
 		ReleaseBaseOptions: helm.ReleaseBaseOptions{
 			ProjectID:       hostProjectId,
 			ClusterID:       hostClusterId,

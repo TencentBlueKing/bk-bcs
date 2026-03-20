@@ -116,10 +116,16 @@ func (s *mysqlStore) ListTask(ctx context.Context, opt *iface.ListOption) (*ifac
 		TaskName:      opt.TaskName,
 		TaskIndex:     opt.TaskIndex,
 		TaskIndexType: opt.TaskIndexType,
-		Status:        opt.Status,
 		CurrentStep:   opt.CurrentStep,
 		Creator:       opt.Creator,
 	})
+
+	// 状态查询：优先使用StatusList，如果为空则使用Status
+	if len(opt.StatusList) > 0 {
+		tx = tx.Where("status IN ?", opt.StatusList)
+	} else if opt.Status != "" {
+		tx = tx.Where("status = ?", opt.Status)
+	}
 
 	// mysql store 使用创建时间过滤
 	if opt.CreatedGte != nil {

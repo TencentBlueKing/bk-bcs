@@ -112,7 +112,7 @@ func (c *IngressListenerConverter) GenerateListeners(ingress *networkextensionv1
 		generatedListeners = append(generatedListeners, listeners...)
 	}
 	for i, mapping := range ingress.Spec.PortMappings {
-		mappingConverter := NewMappingConverter(c.Cli, lbObjs, ingress.GetName(), ingress.GetNamespace(), &mapping)
+		mappingConverter := NewMappingConverter(c.Cli, lbObjs, ingress.GetName(), ingress.GetNamespace(), &mapping, c.IsTCPUDPPortReuse)
 		mappingConverter.SetNamespaced(c.IsNamespaced)
 		listeners, inErr := mappingConverter.DoConvert()
 		if inErr != nil {

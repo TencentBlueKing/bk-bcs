@@ -9,7 +9,13 @@ metadata:
   {{- end }}
   annotations:
     {{- range .metadata.annotations }}
-    {{- if and (ne .key "kubernetes.io/ingress.class") (ne .key "kubernetes.io/ingress.existLbId") (ne .key "ingress.cloud.tencent.com/pass-to-target") (ne .key "kubernetes.io/ingress.subnetId") (ne .key "ingress.cloud.tencent.com/auto-rewrite") }}
+    {{- if and 
+        (ne .key "kubernetes.io/ingress.class") 
+        (ne .key "kubernetes.io/ingress.existLbId") 
+        (ne .key "ingress.cloud.tencent.com/pass-to-target") 
+        (ne .key "kubernetes.io/ingress.subnetId") 
+        (ne .key "alb.ingress.kubernetes.io/subnets") 
+        (ne .key "ingress.cloud.tencent.com/auto-rewrite") }}
     {{ .key | quote }}: {{ .value | default "" | quote }}
     {{- end }}
     {{- end }}
@@ -27,6 +33,12 @@ metadata:
     ingress.cloud.tencent.com/auto-rewrite: "true"
     {{- end }}
     ingress.cloud.tencent.com/pass-to-target: "true"
+    {{- end }}
+    # 处理 aws 特有的一些 annotations
+    {{- if eq .controller.type "alb" }}
+    {{- if ne .spec.network.subNetID "" }}
+    alb.ingress.kubernetes.io/subnets: {{ .spec.network.subNetID | quote }}
+    {{- end }}
     {{- end }}
   {{- if .metadata.resVersion }}
   resourceVersion: {{ .metadata.resVersion | quote }}

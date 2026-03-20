@@ -197,3 +197,8 @@ func (c *CloudValidate) CreateNodeGroupValidate(req *proto.CreateNodeGroupReques
 	opt *cloudprovider.CommonOption) error {
 	return cloudprovider.ErrCloudNotImplemented
 }
+
+// AllowCrossBizNodes xxx
+func (c *CloudValidate) AllowCrossBizNodes(cluster *proto.Cluster) bool {
+	return false
+}

@@ -139,6 +139,7 @@ export function useClusterOverview(clusterList: Ref<any[]>) {
       $projectCode: projectCode.value,
       $clusterId: cluster.clusterID,
     }).catch(() => ({ data: {} }));
+    if (!data) return;
     // 计算百分比
     Object.keys(data).forEach((metric) => {
       data[metric] = {

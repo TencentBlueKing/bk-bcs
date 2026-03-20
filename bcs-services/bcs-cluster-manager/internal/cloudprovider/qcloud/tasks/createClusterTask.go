@@ -917,7 +917,7 @@ func CreateCheckInstanceStateTask(taskID string, stepName string) error {
 	}
 
 	// update task common data
-	state.Task.CommonParams[cloudprovider.TransVPCIPs.String()] =
+	state.Task.CommonParams[cloudprovider.TransVPCIPsKey.String()] =
 		strings.Join(instanceList.GetNodeIps(true), ",")
 	state.Task.CommonParams[cloudprovider.NodeIPsKey.String()] = strings.Join(dbNodeIps, ",")
 	state.Task.CommonParams[cloudprovider.NodeIDsKey.String()] = strings.Join(dbNodeIds, ",")

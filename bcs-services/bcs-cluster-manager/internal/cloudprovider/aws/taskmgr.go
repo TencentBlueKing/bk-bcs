@@ -702,10 +702,12 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 
 	// step6: set node labels
 	common.BuildNodeLabelsTaskStep(task, opt.Cluster.ClusterID, nil, cloudprovider.GetLabelsByNg(opt.NodeGroup))
-	// step7: set node annotations
+	// step7 set node taint
+	common.BuildNodeTaintsTaskStep(task, opt.Cluster.ClusterID, nil, cloudprovider.GetTaintsByNg(opt.NodeGroup))
+	// step8: set node annotations
 	common.BuildNodeAnnotationsTaskStep(task, opt.Cluster.ClusterID, nil,
 		cloudprovider.GetAnnotationsByNg(opt.NodeGroup))
-	// step8: remove inner nodes taints
+	// step9: remove inner nodes taints
 	common.BuildRemoveInnerTaintTaskStep(task, group.ClusterID, group.Provider)
 
 	// set current step

@@ -16,6 +16,7 @@ package convert
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"reflect"
 
 	"google.golang.org/protobuf/encoding/protojson"
@@ -263,4 +264,18 @@ func mapValue(v reflect.Value) *spb.Value {
 	}
 
 	return &spb.Value{Kind: &spb.Value_StructValue{StructValue: &spb.Struct{Fields: fields}}}
+}
+
+// RoundToTwoDecimals 保留两位小数
+func RoundToTwoDecimals(value float32) float32 {
+	return float32(math.Round(float64(value)*100) / 100)
+}
+
+// RoundDivisionToTwoDecimals 对两个整数进行除法运算并保留两位小数
+func RoundDivisionToTwoDecimals(numerator, denominator uint32) float32 {
+	if denominator == 0 {
+		return 0
+	}
+	result := float32(numerator) / float32(denominator)
+	return result
 }

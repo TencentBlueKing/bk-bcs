@@ -220,12 +220,13 @@ func taintTransEffect(ori string) string {
 // MapToTaints converts a map of string-string to a slice of Taint
 func MapToTaints(taints []*proto.Taint) []*Taint {
 	result := make([]*Taint, 0)
-	for _, v := range taints {
-		result = append(result, &Taint{
-			Key:    aws.String(v.Key),
-			Value:  aws.String(v.Value),
-			Effect: aws.String(taintTransEffect(v.Effect))})
-	}
+	// 不同步污点到aws中，自行管理污点
+	// for _, v := range taints {
+	// 	result = append(result, &Taint{
+	// 		Key:    aws.String(v.Key),
+	// 		Value:  aws.String(v.Value),
+	// 		Effect: aws.String(taintTransEffect(v.Effect))})
+	// }
 	// attention: eks not support addNodes to set unScheduled nodes, thus realize this feature by taint
 	result = append(result, &Taint{
 		Key:    aws.String(utils.BCSNodeGroupTaintKey),

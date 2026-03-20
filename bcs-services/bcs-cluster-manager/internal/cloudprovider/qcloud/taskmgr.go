@@ -27,6 +27,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/tasks"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/template"
+	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
@@ -226,7 +227,8 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 	createClusterTask.BuildRegisterClsKubeConfigStep(task)
 
 	// step5: 系统初始化 postAction bkops, platform run default steps
-	if opt.Cloud != nil && opt.Cloud.ClusterManagement != nil && opt.Cloud.ClusterManagement.CreateCluster != nil {
+	if opt.Cloud != nil && opt.Cloud.ClusterManagement != nil && opt.Cloud.ClusterManagement.CreateCluster != nil &&
+		(len(opt.WorkerNodes) > 0 || cls.ManageType == icommon.ClusterManageTypeIndependent) {
 		err := template.BuildSopsFactory{
 			StepName: template.SystemInit,
 			Cluster:  cls,
@@ -296,7 +298,9 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 	createClusterTask.BuildAllocateSubnetTask(task)
 	// step9: enable vpc-cni network mode when cluster enable vpc-cni
 	createClusterTask.BuildEnableVpcCniStep(task)
-	// step10: update DB info by cluster data
+	// step10: 若需要则设置节点注解
+	createClusterTask.BuildNodeAnnotationsStep(task)
+	// step11: update DB info by cluster data
 	createClusterTask.BuildUpdateTaskStatusStep(task)
 
 	// set current step
@@ -681,10 +685,15 @@ func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Nod
 	taskName := fmt.Sprintf(tkeAddNodeTaskTemplate, cls.ClusterID)
 	task.CommonParams[cloudprovider.TaskNameKey.String()] = taskName
 
-	// init instance passwd
-	passwd := utils.BuildInstancePwd()
-	if opt.Login != nil && opt.Login.GetInitLoginPassword() != "" {
-		passwd, _ = encrypt.Decrypt(nil, opt.Login.GetInitLoginPassword())
+	var passwd string
+	if opt.IsRetryTask {
+		passwd = opt.InitPassword
+	} else {
+		// init instance passwd
+		passwd = utils.BuildInstancePwd()
+		if opt.Login != nil && opt.Login.GetInitLoginPassword() != "" {
+			passwd, _ = encrypt.Decrypt(nil, opt.Login.GetInitLoginPassword())
+		}
 	}
 	task.CommonParams[cloudprovider.PasswordKey.String()] = passwd
 
@@ -709,7 +718,8 @@ func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Nod
 	common.BuildShieldAlertTaskStep(task, cls.GetClusterID(), imageId)
 
 	// step3:  postAction bk-sops task
-	if opt.Cloud != nil && opt.Cloud.ClusterManagement != nil && opt.Cloud.ClusterManagement.AddNodesToCluster != nil {
+	if !opt.IsRetryTask && opt.Cloud != nil && opt.Cloud.ClusterManagement != nil &&
+		opt.Cloud.ClusterManagement.AddNodesToCluster != nil {
 		err := template.BuildSopsFactory{
 			StepName: template.SystemPreInit,
 			Cluster:  cls,
@@ -721,7 +731,9 @@ func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Nod
 					return strings.Join(addNodesTask.NodeIPs, ",")
 				}(),
 				ImageId:         "",
-				TranslateMethod: template.SystemPreInit,
+				TranslateMethod: template.SystemBeforeInit,
+				AllowSkip:       true,
+				InstancePasswd:  passwd,
 			}}.BuildSopsStep(task, opt.Cloud.ClusterManagement.AddNodesToCluster, true)
 		if err != nil {
 			return nil, fmt.Errorf("BuildAddNodesToClusterTask BuildBkSopsStepAction failed: %v", err)

@@ -25,6 +25,8 @@ const (
 	CrPool = "cr"
 	// BcsResourcePool bcs pool
 	BcsResourcePool = "bcs_resource_pool"
+	// BcsProjectQuotaIDPrefix bcs project quota id prefix
+	BcsProjectQuotaIDPrefix = "BCS-quota"
 )
 
 // NodeType instance type

@@ -14,13 +14,11 @@ package check
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"strings"
 
 	mapset "github.com/deckarep/golang-set"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -57,7 +55,7 @@ func (l *ListenerChecker) Run() {
 		return
 	}
 
-	// go l.setMetric(listenerList)
+	go l.setMetric(listenerList)
 	go l.deletePortPoolUnusedListener(listenerList)
 }
 
@@ -85,33 +83,33 @@ func (l *ListenerChecker) setMetric(listenerList *networkextensionv1.ListenerLis
 		cntMap[buildKey(lbID, protocol, status, targetGroupType)] = cntMap[buildKey(lbID, protocol, status,
 			targetGroupType)] + 1
 
-		label := listener.GetLabels()
-		value, ok := label[networkextensionv1.LabelKetForTargetGroupType]
-		if !ok || value != targetGroupType {
-			patchStruct := map[string]interface{}{
-				"metadata": map[string]interface{}{
-					"labels": map[string]string{
-						networkextensionv1.LabelKetForTargetGroupType: targetGroupType,
-					},
-				},
-			}
-			patchData, err := json.Marshal(patchStruct)
-			if err != nil {
-				blog.Errorf("marshal listener failed, err: %s", err.Error())
-				continue
-			}
-			updatePod := &networkextensionv1.Listener{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      listener.Name,
-					Namespace: listener.Namespace,
-				},
-			}
-			err = l.cli.Patch(context.TODO(), updatePod, client.RawPatch(types.MergePatchType, patchData))
-			if err != nil {
-				blog.Errorf("patch listener failed, err: %s", err.Error())
-				continue
-			}
-		}
+		// label := listener.GetLabels()
+		// value, ok := label[networkextensionv1.LabelKetForTargetGroupType]
+		// if !ok || value != targetGroupType {
+		// 	patchStruct := map[string]interface{}{
+		// 		"metadata": map[string]interface{}{
+		// 			"labels": map[string]string{
+		// 				networkextensionv1.LabelKetForTargetGroupType: targetGroupType,
+		// 			},
+		// 		},
+		// 	}
+		// 	patchData, err := json.Marshal(patchStruct)
+		// 	if err != nil {
+		// 		blog.Errorf("marshal listener failed, err: %s", err.Error())
+		// 		continue
+		// 	}
+		// 	updatePod := &networkextensionv1.Listener{
+		// 		ObjectMeta: metav1.ObjectMeta{
+		// 			Name:      listener.Name,
+		// 			Namespace: listener.Namespace,
+		// 		},
+		// 	}
+		// 	err = l.cli.Patch(context.TODO(), updatePod, client.RawPatch(types.MergePatchType, patchData))
+		// 	if err != nil {
+		// 		blog.Errorf("patch listener failed, err: %s", err.Error())
+		// 		continue
+		// 	}
+		// }
 	}
 
 	for key, cnt := range cntMap {

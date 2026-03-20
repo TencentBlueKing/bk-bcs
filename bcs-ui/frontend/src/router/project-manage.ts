@@ -21,21 +21,33 @@ export default [
     path: 'operate-audit',
     component: OperateAudit,
     name: 'operateAudit',
+    meta: {
+      resource: window.i18n.t('nav.record'),
+    },
   },
   {
     path: 'event-query',
     name: 'eventQuery',
     component: EventQuery,
+    meta: {
+      resource: window.i18n.t('nav.event'),
+    },
   },
   {
     path: 'project-info',
     name: 'projectInfo',
     component: ProjectInfo,
+    meta: {
+      resource: window.i18n.t('nav.projectInfo'),
+    },
   },
   {
     path: 'project-quotas',
     name: 'projectQuotas',
     component: ProjectQuotas,
+    meta: {
+      resource: window.i18n.t('nav.projectQuotas'),
+    },
   },
   {
     path: 'tencent-cloud',

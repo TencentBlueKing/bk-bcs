@@ -68,6 +68,7 @@ const (
 // ClusterNamespaces 集群命名空间
 type ClusterNamespaces struct {
 	ClusterID  string   `json:"clusterID" bson:"clusterID"`
+	Nsgroup    string   `json:"nsgroup" bson:"nsgroup"`
 	Namespaces []string `json:"namespaces" bson:"namespaces"`
 }
 
@@ -107,6 +108,7 @@ func (v *View) ToMap() map[string]interface{} {
 		cns = append(cns, map[string]interface{}{
 			"clusterID":  v.ClusterID,
 			"namespaces": v.Namespaces,
+			"nsgroup":    v.Nsgroup,
 		})
 	}
 

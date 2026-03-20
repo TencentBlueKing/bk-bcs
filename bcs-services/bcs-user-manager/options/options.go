@@ -46,14 +46,15 @@ type UserManagerOptions struct {
 	// token notify feature
 	TokenNotify TokenNotifyOptions `json:"token_notify"`
 
-	IAMConfig        IAMConfig   `json:"iam_config"`
-	PermissionSwitch bool        `json:"permission_switch"`
-	Cmdb             CmdbConfig  `json:"cmdb"`
-	CommunityEdition bool        `json:"community_edition"`
-	TracingConf      TracingConf `json:"tracing_conf"`
-	BcsAPI           BcsAPI      `json:"bcs_api"`
-	Encrypt          Encrypt     `json:"encrypt" yaml:"encrypt"`
-	Activity         Activity    `json:"activity" yaml:"activity"`
+	IAMConfig        IAMConfig     `json:"iam_config"`
+	PermissionSwitch bool          `json:"permission_switch"`
+	Cmdb             CmdbConfig    `json:"cmdb"`
+	CommunityEdition bool          `json:"community_edition"`
+	TracingConf      TracingConf   `json:"tracing_conf"`
+	BcsAPI           BcsAPI        `json:"bcs_api"`
+	Encrypt          Encrypt       `json:"encrypt" yaml:"encrypt"`
+	Activity         Activity      `json:"activity" yaml:"activity"`
+	SharedCluster    SharedCluster `json:"shared_cluster" yaml:"shared_cluster"`
 }
 
 // TracingConf tracing config
@@ -175,4 +176,9 @@ type RedisConfig struct {
 	PoolSize     int    `json:"pool_size" usage:"Redis pool size" mapstructure:"pool_size" yaml:"pool_size"`
 	MinIdleConns int    `json:"min_idle_conns" usage:"Redis min connect" mapstructure:"min_idle_conns" yaml:"min_idle_conns"`
 	IdleTimeout  int    `json:"idle_timeout" usage:"Redis idle timeout" mapstructure:"idle_timeout" yaml:"idle_timeout"`
+}
+
+// SharedCluster 共享集群配置
+type SharedCluster struct {
+	SkipResources []string `json:"skip_resources" yaml:"skip_resources"`
 }

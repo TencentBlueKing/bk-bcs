@@ -18,6 +18,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"regexp"
 	"strconv"
 	"strings"
@@ -386,12 +387,41 @@ func (c *client) History(_ context.Context, namespace, name string, max int) ([]
 	return releases, nil
 }
 
+// tokenTransport 用于在请求头中添加 Authorization 头
+type tokenTransport struct {
+	token string
+	base  http.RoundTripper
+}
+
+// RoundTrip 实现 http.RoundTripper 接口
+func (t *tokenTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	req.Header.Set("Authorization", "Bearer "+t.token)
+	return t.base.RoundTrip(req)
+}
+
+// injectTokenTransport 注入 tokenTransport 到 config 中
+func injectTokenTransport(config *rest.Config, token string) *rest.Config {
+	base := http.DefaultTransport
+	if config.Transport != nil {
+		base = config.Transport
+	}
+	config.Transport = &tokenTransport{
+		token: token,
+		base:  base,
+	}
+	return config
+}
+
 // getConfigFlag 获取helm-client配置
 func (c *client) getConfigFlag(namespace string) *genericclioptions.ConfigFlags {
 	flags := genericclioptions.NewConfigFlags(false)
 	flags.WithWrapConfigFn(func(config *rest.Config) *rest.Config {
 		config.ContentType = "application/json"
 		config.AcceptContentTypes = "application/json"
+		// http apiserver 请求会不携带认证信息，需要手动注入
+		if strings.HasPrefix(config.Host, "http://") {
+			config = injectTokenTransport(config, *c.cf.BearerToken)
+		}
 		return config
 	})
 

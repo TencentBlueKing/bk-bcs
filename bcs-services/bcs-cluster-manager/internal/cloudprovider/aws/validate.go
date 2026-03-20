@@ -368,3 +368,8 @@ func (c *CloudValidate) ListKeyPairsValidate(req *proto.ListKeyPairsRequest, acc
 func (c *CloudValidate) ListInstancesValidate(req *proto.ListCloudInstancesRequest, account *proto.Account) error {
 	return cloudprovider.ErrCloudNotImplemented
 }
+
+// AllowCrossBizNodes xxx
+func (c *CloudValidate) AllowCrossBizNodes(cluster *proto.Cluster) bool {
+	return false
+}

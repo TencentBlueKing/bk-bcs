@@ -42,8 +42,9 @@ type StorageOptions struct {
 	conf.LogConfig
 	conf.ProcessConfig
 
-	HttpPort uint64 `json:"http_port" value:"8080" usage:"v2 server port"`
-	GRPCPort uint64 `json:"grpc_port" value:"8081" usage:"grpc server port"`
+	HttpPort       uint64 `json:"http_port" value:"8080" usage:"v2 server port"`
+	GRPCPort       uint64 `json:"grpc_port" value:"8081" usage:"grpc server port"`
+	HttpPortSwitch bool   `json:"http_port_switch" value:"true" usage:"switch http server port"`
 
 	ServerCert *CertConfig
 	ClientCert *CertConfig

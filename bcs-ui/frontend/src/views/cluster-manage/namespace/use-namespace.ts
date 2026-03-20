@@ -112,6 +112,7 @@ export interface INamespace {
   labels: any[]
   name: string
   status: string
+  isSystem: boolean
 }
 export function useSelectItemsNamespace() {
   const namespaceValue = ref('');

@@ -1,0 +1,8 @@
+apiVersion: v2
+name: nginx
+description: A minimal nginx Helm chart for DR plan example
+type: application
+version: 0.1.0
+appVersion: "1.25"
+maintainers:
+  - name: bcs-drplan-controller

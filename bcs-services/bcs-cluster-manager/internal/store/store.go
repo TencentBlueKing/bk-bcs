@@ -163,6 +163,7 @@ type ClusterManagerModel interface {
 	UpdateNodeGroup(ctx context.Context, group *types.NodeGroup) error
 	DeleteNodeGroup(ctx context.Context, groupID string) error
 	GetNodeGroup(ctx context.Context, groupID string) (*types.NodeGroup, error)
+	CountNodeGroup(ctx context.Context, cond *operator.Condition) (int64, error)
 	ListNodeGroup(ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]*types.NodeGroup, error)
 	DeleteNodeGroupByClusterID(ctx context.Context, clusterID string) error
 

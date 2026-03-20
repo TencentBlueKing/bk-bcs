@@ -1,0 +1,6 @@
+## Append samples of your project ##
+resources:
+- dr_v1alpha1_drworkflow.yaml
+- dr_v1alpha1_drplan.yaml
+- dr_v1alpha1_drplanexecution.yaml
+# +kubebuilder:scaffold:manifestskustomizesamples

@@ -16,6 +16,7 @@ package callback
 import (
 	"context"
 	"encoding/json"
+	"strconv"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/task"
@@ -64,6 +65,12 @@ func (q *quotaCallBack) Callback(isSuccess bool, task *types.Task) {
 		return
 	}
 
+	originQuota, gErr := store.GetModel().GetProjectQuotaById(context.Background(), quotaId)
+	if gErr != nil {
+		logging.Error("task[%s] get origin quota failed, err: %s", task.GetTaskID(), gErr.Error())
+		return
+	}
+
 	logging.Info("task[%s] takType[%s] execute %+v", task.GetTaskID(), taskType, isSuccess)
 
 	switch taskType {
@@ -75,7 +82,19 @@ func (q *quotaCallBack) Callback(isSuccess bool, task *types.Task) {
 			logging.Error("task[%s] create project quota failed, err: %s", task.GetTaskID(), err.Error())
 		}
 	case utils.DeleteProjectQuota.GetJobType():
-		result := buildQuotaJobResult(quota.Deleted.String(), quota.DeleteFailure.String())
+		var result *syncQuotaJobResult
+		// ok 确定 key 是否存在， approvalResultStr 确定具体的审批结果
+		approvalResultStr, ok := task.GetCommonParams(utils.ApprovalResultKey.String())
+		var approvalResult bool
+		if ok {
+			approvalResult, _ = strconv.ParseBool(approvalResultStr)
+		}
+		if originQuota.QuotaType == quota.SelfHost && ok && !approvalResult {
+			// self host 且审批不通过的情况
+			result = buildQuotaJobResult(quota.Deleted.String(), quota.Running.String())
+		} else {
+			result = buildQuotaJobResult(quota.Deleted.String(), quota.DeleteFailure.String())
+		}
 		result.setQuotaId(quotaId)
 		err := result.deleteProjectQuota(isSuccess)
 		if err != nil {
@@ -192,7 +211,7 @@ func (job *syncQuotaJobResult) scaleUpOrDownProjectQuota(isSuccess, scaleUp bool
 
 	// 根据类型 进行对应额度增减
 	switch originQuota.QuotaType {
-	case quota.Host:
+	case quota.Host, quota.SelfHost:
 		if scaleUp {
 			originQuota.Quota.HostResources.QuotaNum += resource.ZoneResources.GetQuotaNum()
 		} else {

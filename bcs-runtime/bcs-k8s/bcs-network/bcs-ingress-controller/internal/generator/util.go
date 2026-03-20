@@ -180,7 +180,8 @@ func isPodOwner(kind, name string, pod *k8scorev1.Pod) bool {
 		return false
 	}
 	for _, ownerRef := range pod.OwnerReferences {
-		if ownerRef.Kind == kind && ownerRef.Name == name {
+		// 兼容不同大小写格式写法的kind
+		if strings.EqualFold(ownerRef.Kind, kind) && ownerRef.Name == name {
 			return true
 		}
 	}

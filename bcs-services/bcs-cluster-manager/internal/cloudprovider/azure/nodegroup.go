@@ -561,8 +561,8 @@ func (ng *NodeGroup) CheckResourcePoolQuota(
 	return nil
 }
 
-// GetProjectCaResourceQuota get project ca resource quota
-func (ng *NodeGroup) GetProjectCaResourceQuota(groups []*proto.NodeGroup,
+// GetProjectResourceQuota get project resource quota
+func (ng *NodeGroup) GetProjectResourceQuota(groups []*proto.NodeGroup, resourcePoolType string,
 	opt *cloudprovider.CommonOption) ([]*proto.ProjectAutoscalerQuota, error) {
 	return nil, nil
 }

@@ -271,8 +271,8 @@ export default defineComponent({
       default: '',
       required: true,
     },
-    // CRD资源分两种，普通和定制，customized 用来区分普通和定制
-    customized: {
+    // CRD资源分两种，普通和定制，isCommonCrd 用来区分普通和定制
+    isCommonCrd: {
       type: [Boolean, String],
       default: false,
     },
@@ -309,7 +309,7 @@ export default defineComponent({
       formUpdate,
       clusterId,
       defaultOriginal,
-      customized,
+      isCommonCrd,
       scope,
       version,
       group,
@@ -387,7 +387,7 @@ export default defineComponent({
       if (!isEdit.value) return null;
       isLoading.value = true;
       let res: any = null;
-      if (customized.value && customized.value !== 'false') {
+      if (String(isCommonCrd.value) === 'true') {
         res = await customResourceDetail({
           format: 'manifest',
           $clusterId: clusterId.value,
@@ -600,7 +600,7 @@ export default defineComponent({
     };
     const handleCreateResource = async () => {
       let result = false;
-      if (customized.value && customized.value !== 'false') { // 创建普通crd资源
+      if (String(isCommonCrd.value) === 'true') { // 创建普通crd资源
         result = await createCustomResource({
           $clusterId: clusterId.value,
           format: 'manifest',
@@ -664,7 +664,7 @@ export default defineComponent({
         defaultInfo: true,
         confirmFn: async () => {
           let result = false;
-          if (customized.value && customized.value !== 'false') {
+          if (String(isCommonCrd.value) === 'true') {
             result = await updateCustomResource({
               $clusterId: clusterId.value,
               group: group.value,

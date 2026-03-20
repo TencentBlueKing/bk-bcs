@@ -36,6 +36,7 @@ func (e *EnvManage) ToMap() map[string]interface{} {
 	for _, v := range e.ClusterNamespaces {
 		clusterNamespaces = append(clusterNamespaces, map[string]interface{}{
 			"clusterID":  v.ClusterID,
+			"nsgroup":    v.Nsgroup,
 			"namespaces": v.Namespaces,
 		})
 	}

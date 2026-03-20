@@ -1,0 +1,16 @@
+# Default values for nginx chart.
+# After rendering, apply the generated YAML to parent cluster; Subscription in DR plan will reference these resources by Feed (not HelmChart).
+
+replicaCount: 1
+
+image:
+  repository: nginx
+  tag: alpine
+  pullPolicy: IfNotPresent
+
+nameOverride: ""
+fullnameOverride: ""
+
+service:
+  type: ClusterIP
+  port: 80

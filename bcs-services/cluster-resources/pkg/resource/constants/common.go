@@ -135,6 +135,9 @@ const (
 
 	// HelmSourceType helm 创建来源key
 	HelmSourceType = "app.kubernetes.io/managed-by"
+
+	// PodLabelSelector pod label selector key
+	PodLabelSelector = "workload.bcs.tencent.io/workloadSelector"
 )
 
 const (

@@ -1266,8 +1266,8 @@
           "title": "enabled"
         },
         "traceSamplingPercent": {
-          "type": "integer",
-          "format": "int32",
+          "type": "number",
+          "format": "float",
           "description": "采样率,百分比",
           "title": "traceSamplingPercent"
         },

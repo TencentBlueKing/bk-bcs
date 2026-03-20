@@ -145,7 +145,7 @@ func GetDefaultObservabilityConfig() *meshmanager.ObservabilityConfig {
 			Enabled:              wrapperspb.Bool(false),
 			Endpoint:             wrapperspb.String(""),
 			BkToken:              wrapperspb.String(""),
-			TraceSamplingPercent: wrapperspb.Int32(10),
+			TraceSamplingPercent: wrapperspb.Float(10),
 		},
 	}
 }

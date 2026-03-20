@@ -265,8 +265,9 @@ envs:
             title: {{ i18n "内容（Name/Prefix）" .lang }}
             type: string
             ui:rules:
-              - required
               - maxLength128
+              - validator: "{{`{{`}} ($widgetNode?.getSibling('type')?.instance?.value === 'configMap' || $widgetNode?.getSibling('type')?.instance?.value === 'secret') || $self.value !== '' {{`}}`}}"
+                message: {{ i18n "值不能为空" .lang }}
           source:
             title: {{ i18n "来源" .lang }}
             type: string
@@ -460,7 +461,7 @@ properties:
     ui:component:
       name: bfArray
     ui:rules:
-      - validator: "{{`{{`}} $widgetNode?.getSibling('type')?.instance?.value !== 'exec' || $self.value.length > 0 {{`}}`}}"
+      - validator: "{{`{{`}} !$widgetNode?.getSibling('enabled')?.instance?.value || $widgetNode?.getSibling('type')?.instance?.value !== 'exec' || $self.value.length > 0 {{`}}`}}"
         message: {{ i18n "至少包含一条命令" .lang }}
   initialDelaySecs:
     title: {{ i18n "初始延时" .lang }}

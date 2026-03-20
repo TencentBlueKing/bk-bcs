@@ -1,0 +1,310 @@
+# DRPlanExecution CRD Contract
+# API Version: dr.bkbcs.tencent.com/v1alpha1
+
+# ============================================
+# 示例 1: 单 Stage 执行（简单场景）
+# ============================================
+apiVersion: dr.bkbcs.tencent.com/v1alpha1
+kind: DRPlanExecution
+metadata:
+  name: simple-dr-exec-001
+  labels:
+    dr.bkbcs.tencent.com/plan: simple-dr-plan
+  finalizers:
+    - dr.bkbcs.tencent.com/execution-cleanup
+spec:
+  # 关联的预案
+  planRef:
+    name: simple-dr-plan
+    namespace: production
+  
+  # 操作类型
+  operation: Execute  # Execute | Revert
+
+status:
+  # 执行状态
+  phase: Running  # Pending | Running | Succeeded | Failed | Cancelled
+  
+  # 时间信息
+  startTime: "2026-02-02T10:30:00Z"
+  # completionTime: "2026-02-02T10:35:00Z"  # 完成后填充
+  
+  # Stage 执行状态
+  stageStatuses:
+    - name: execute-failover
+      phase: Running
+      parallel: false
+      startTime: "2026-02-02T10:30:01Z"
+      workflowExecutions:
+        - workflowRef:
+            name: example-workflow
+            namespace: production
+          phase: Running
+          startTime: "2026-02-02T10:30:01Z"
+          progress: "2/4 actions completed"
+          currentAction: "run-sync-job"
+          actionStatuses:
+            - name: notify-oncall
+              phase: Succeeded
+              startTime: "2026-02-02T10:30:01Z"
+              completionTime: "2026-02-02T10:30:02Z"
+              retryCount: 0
+              message: "HTTP request succeeded with status 200"
+              outputs:
+                httpResponse:
+                  statusCode: 200
+                  body: '{"status":"ok"}'
+            
+            - name: scale-up-target
+              phase: Succeeded
+              startTime: "2026-02-02T10:30:03Z"
+              completionTime: "2026-02-02T10:32:00Z"
+              retryCount: 0
+              message: "Localization created and synced"
+              outputs:
+                localizationRef:
+                  name: "dr-scale-simple-dr-plan"
+                  namespace: "clusternet-system"
+            
+            - name: run-sync-job
+              phase: Running
+              startTime: "2026-02-02T10:32:01Z"
+              retryCount: 0
+              message: "Job is running"
+              outputs:
+                jobRef:
+                  name: "simple-dr-exec-001-sync"
+                  namespace: "default"
+            
+            - name: switch-dns
+              phase: Pending
+              message: "Waiting for previous action"
+  
+  # 状态消息
+  message: "Execution in progress: 2/4 actions completed"
+  
+  # 状态条件
+  conditions:
+    - type: Initialized
+      status: "True"
+      reason: ExecutionStarted
+      message: "Execution initialized"
+      lastTransitionTime: "2026-01-30T10:30:00Z"
+    - type: ActionsRunning
+      status: "True"
+      reason: ActionInProgress
+      message: "Action 'run-sync-job' is running"
+      lastTransitionTime: "2026-01-30T10:32:01Z"
+
+---
+
+# ============================================
+# 示例 2: 多 Stage 并行执行（复杂场景）
+# ============================================
+apiVersion: dr.bkbcs.tencent.com/v1alpha1
+kind: DRPlanExecution
+metadata:
+  name: multi-service-dr-exec-001
+  labels:
+    dr.bkbcs.tencent.com/plan: multi-service-dr-plan
+spec:
+  planRef:
+    name: multi-service-dr-plan
+    namespace: production
+  operation: Execute
+
+status:
+  phase: Running
+  startTime: "2026-02-02T10:00:00Z"
+  
+  # Stage 执行状态
+  stageStatuses:
+    # Stage 1: 已完成
+    - name: notify-start
+      phase: Succeeded
+      parallel: false
+      startTime: "2026-02-02T10:00:00Z"
+      completionTime: "2026-02-02T10:00:05Z"
+      duration: "5s"
+      workflowExecutions:
+        - workflowRef:
+            name: notification-workflow
+            namespace: production
+          phase: Succeeded
+          startTime: "2026-02-02T10:00:00Z"
+          completionTime: "2026-02-02T10:00:05Z"
+          duration: "5s"
+    
+    # Stage 2: 进行中（并行）
+    - name: infrastructure
+      phase: Running
+      parallel: true
+      dependsOn: [notify-start]
+      startTime: "2026-02-02T10:00:05Z"
+      workflowExecutions:
+        - workflowRef:
+            name: mysql-failover
+            namespace: production
+          phase: Running
+          startTime: "2026-02-02T10:00:05Z"
+          progress: "2/3 actions completed"
+          currentAction: "health-check"
+        
+        - workflowRef:
+            name: redis-failover
+            namespace: production
+          phase: Succeeded
+          startTime: "2026-02-02T10:00:05Z"
+          completionTime: "2026-02-02T10:00:35Z"
+          duration: "30s"
+    
+    # Stage 3: 等待中
+    - name: applications
+      phase: Pending
+      parallel: true
+      dependsOn: [infrastructure]
+      message: "Waiting for infrastructure stage to complete"
+  
+  # 执行统计摘要
+  summary:
+    totalStages: 3
+    completedStages: 1
+    runningStages: 1
+    pendingStages: 1
+    totalWorkflows: 4
+    completedWorkflows: 2
+    runningWorkflows: 1
+    pendingWorkflows: 1
+  
+  message: "Execution in progress: Stage 2 running"
+  
+  conditions:
+    - type: Initialized
+      status: "True"
+      reason: ExecutionStarted
+      message: "Execution initialized"
+      lastTransitionTime: "2026-02-02T10:00:00Z"
+
+---
+
+# ============================================
+# 示例 3: Revert 执行（回滚）
+# ============================================
+apiVersion: dr.bkbcs.tencent.com/v1alpha1
+kind: DRPlanExecution
+metadata:
+  name: simple-dr-revert-001
+  labels:
+    dr.bkbcs.tencent.com/plan: simple-dr-plan
+spec:
+  planRef:
+    name: simple-dr-plan
+    namespace: production
+  operation: Revert
+
+status:
+  phase: Running
+  startTime: "2026-02-02T11:00:00Z"
+  
+  # Revert 按 Stage 逆序执行
+  stageStatuses:
+    - name: execute-failover
+      phase: Running
+      startTime: "2026-02-02T11:00:00Z"
+      workflowExecutions:
+        - workflowRef:
+            name: example-workflow
+            namespace: production
+          phase: Running
+          startTime: "2026-02-02T11:00:00Z"
+          progress: "2/4 actions reverted"
+          currentAction: "scale-up-target"
+          actionStatuses:
+            # 逆序执行：switch-dns → run-sync-job → scale-up-target → notify-oncall
+            - name: switch-dns
+              phase: Succeeded
+              startTime: "2026-02-02T11:00:01Z"
+              completionTime: "2026-02-02T11:00:02Z"
+              message: "Custom rollback executed"
+            
+            - name: run-sync-job
+              phase: Succeeded
+              startTime: "2026-02-02T11:00:03Z"
+              completionTime: "2026-02-02T11:00:04Z"
+              message: "Job deleted"
+            
+            - name: scale-up-target
+              phase: Running
+              startTime: "2026-02-02T11:00:05Z"
+              message: "Deleting Localization"
+            
+            - name: notify-oncall
+              phase: Pending
+              message: "Waiting for previous rollback"
+  
+  message: "Revert in progress: 2/4 actions reverted"
+
+---
+
+# ============================================
+# 示例 4: 取消执行
+# ============================================
+# kubectl annotate drplanexecution my-exec dr.bkbcs.tencent.com/cancel=true
+# 或
+# kubectl annotate drplan my-plan dr.bkbcs.tencent.com/trigger=cancel
+
+apiVersion: dr.bkbcs.tencent.com/v1alpha1
+kind: DRPlanExecution
+metadata:
+  name: simple-dr-cancelled-001
+  labels:
+    dr.bkbcs.tencent.com/plan: simple-dr-plan
+  annotations:
+    dr.bkbcs.tencent.com/cancel: "true"
+spec:
+  planRef:
+    name: simple-dr-plan
+    namespace: production
+  operation: Execute
+
+status:
+  phase: Cancelled
+  startTime: "2026-02-02T12:00:00Z"
+  completionTime: "2026-02-02T12:02:00Z"
+  
+  stageStatuses:
+    - name: execute-failover
+      phase: Cancelled
+      startTime: "2026-02-02T12:00:00Z"
+      completionTime: "2026-02-02T12:02:00Z"
+      workflowExecutions:
+        - workflowRef:
+            name: example-workflow
+            namespace: production
+          phase: Cancelled
+          startTime: "2026-02-02T12:00:00Z"
+          completionTime: "2026-02-02T12:02:00Z"
+          actionStatuses:
+            - name: notify-oncall
+              phase: Succeeded
+              startTime: "2026-02-02T12:00:01Z"
+              completionTime: "2026-02-02T12:00:02Z"
+              message: "HTTP request succeeded"
+            
+            - name: scale-up-target
+              phase: Succeeded
+              startTime: "2026-02-02T12:00:03Z"
+              completionTime: "2026-02-02T12:01:00Z"
+              message: "Localization created"
+            
+            - name: run-sync-job
+              phase: Running
+              startTime: "2026-02-02T12:01:01Z"
+              completionTime: "2026-02-02T12:02:00Z"
+              message: "Job completed (cancelled during execution)"
+            
+            - name: switch-dns
+              phase: Skipped
+              message: "Skipped due to cancellation"
+  
+  message: "Execution cancelled by user"

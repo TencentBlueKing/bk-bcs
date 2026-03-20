@@ -1,0 +1,496 @@
+---
+description: 单元测试规范 - Ginkgo/Gomega 和测试最佳实践
+alwaysApply: true
+---
+
+# 单元测试规范
+
+本项目使用 **Ginkgo v2 + Gomega** 测试框架，遵循 BDD（行为驱动开发）风格。
+
+---
+
+## 📁 测试文件组织
+
+### 文件命名
+
+```
+功能代码:         drplan_controller.go
+单元测试:         drplan_controller_test.go
+测试套件（可选）: suite_test.go
+```
+
+### 包结构
+
+```go
+package controller // 与被测试代码同包
+
+import (
+    . "github.com/onsi/ginkgo/v2"      // BDD 测试框架
+    . "github.com/onsi/gomega"          // 断言库
+    "sigs.k8s.io/controller-runtime/pkg/envtest"  // K8s 测试环境
+)
+```
+
+---
+
+## 🎯 测试结构
+
+### BDD 风格层次
+
+```go
+var _ = Describe("DRPlan Controller", func() {          // 📦 测试套件
+    Context("When reconciling a resource", func() {      // 📂 测试上下文
+        It("should successfully reconcile", func() {     // ✅ 测试用例
+            // 测试实现
+        })
+    })
+})
+```
+
+**层次说明**:
+- `Describe`: 描述被测试的组件/功能（1 个文件 1 个 Describe）
+- `Context`: 描述特定场景/条件（可嵌套）
+- `It`: 具体的测试用例（应该简洁、独立）
+
+---
+
+## ✅ 测试用例编写
+
+### Good Practices（推荐）
+
+#### 1. 使用清晰的测试描述
+
+```go
+// ✅ GOOD - 描述期望行为
+It("should update plan phase to Executed after successful execution", func() {
+    // ...
+})
+
+It("should reject concurrent executions for the same plan", func() {
+    // ...
+})
+
+// ❌ BAD - 模糊、不清楚期望
+It("should work correctly", func() {
+    // ...
+})
+
+It("test plan", func() {
+    // ...
+})
+```
+
+#### 2. 使用 By() 步骤描述
+
+```go
+It("should execute a plan successfully", func() {
+    By("creating the DRPlan resource")
+    plan := &drv1alpha1.DRPlan{...}
+    Expect(k8sClient.Create(ctx, plan)).To(Succeed())
+    
+    By("waiting for plan to become Ready")
+    Eventually(func() string {
+        _ = k8sClient.Get(ctx, client.ObjectKeyFromObject(plan), plan)
+        return plan.Status.Phase
+    }).Should(Equal(drv1alpha1.PlanPhaseReady))  // ✅ 使用常量
+    
+    By("creating an execution")
+    execution := &drv1alpha1.DRPlanExecution{...}
+    Expect(k8sClient.Create(ctx, execution)).To(Succeed())
+})
+```
+
+#### 3. 使用常量而非字符串字面量
+
+```go
+// ✅ GOOD - 使用 api/v1alpha1/constants.go 中的常量
+Expect(plan.Status.Phase).To(Equal(drv1alpha1.PlanPhaseReady))
+Expect(execution.Status.Phase).To(Equal(drv1alpha1.PhaseSucceeded))
+
+// ❌ BAD - 字符串字面量
+Expect(plan.Status.Phase).To(Equal("Ready"))
+Expect(execution.Status.Phase).To(Equal("Succeeded"))
+```
+
+#### 4. 使用 Eventually 处理异步操作
+
+```go
+// ✅ GOOD - 使用 Eventually 等待异步结果
+Eventually(func() string {
+    _ = k8sClient.Get(ctx, key, &resource)
+    return resource.Status.Phase
+}, 1*time.Minute, 1*time.Second).Should(Equal(drv1alpha1.PhaseSucceeded))
+
+// ❌ BAD - 直接检查（可能失败）
+Expect(resource.Status.Phase).To(Equal(drv1alpha1.PhaseSucceeded))
+```
+
+**Eventually 参数**:
+```go
+Eventually(
+    func() Type { /* 检查函数 */ },
+    timeout,     // 最长等待时间（如 1*time.Minute）
+    interval,    // 检查间隔（如 100*time.Millisecond）
+).Should(matcher)
+```
+
+#### 5. 正确使用 Gomega 断言
+
+```go
+// ✅ GOOD - 语义清晰的断言
+Expect(err).NotTo(HaveOccurred())           // 无错误
+Expect(list.Items).To(HaveLen(3))           // 长度检查
+Expect(output).To(ContainSubstring("foo"))  // 包含检查
+Expect(resource).NotTo(BeNil())             // 非空检查
+
+// ❌ BAD - 使用 == 或布尔比较
+Expect(err == nil).To(BeTrue())
+Expect(len(list.Items) == 3).To(BeTrue())
+```
+
+**常用 Matchers**:
+- `Equal(x)` - 相等
+- `BeNil()` - 为 nil
+- `HaveLen(n)` - 长度为 n
+- `ContainSubstring(s)` - 包含子串
+- `BeEmpty()` - 为空
+- `HaveOccurred()` - 有错误发生
+
+---
+
+## 🔧 测试设置和清理
+
+### BeforeEach / AfterEach
+
+```go
+var _ = Describe("DRPlan Controller", func() {
+    var (
+        ctx        context.Context
+        testPlan   *drv1alpha1.DRPlan
+        planName   string
+    )
+    
+    BeforeEach(func() {
+        ctx = context.Background()
+        planName = "test-plan-" + time.Now().Format("20060102150405")
+        
+        By("creating dependencies (e.g., DRWorkflow)")
+        workflow := &drv1alpha1.DRWorkflow{...}
+        Expect(k8sClient.Create(ctx, workflow)).To(Succeed())
+        
+        By("creating the test resource")
+        testPlan = &drv1alpha1.DRPlan{
+            ObjectMeta: metav1.ObjectMeta{
+                Name:      planName,
+                Namespace: "default",
+            },
+            Spec: drv1alpha1.DRPlanSpec{...},
+        }
+        Expect(k8sClient.Create(ctx, testPlan)).To(Succeed())
+    })
+    
+    AfterEach(func() {
+        By("cleaning up test resources")
+        if testPlan != nil {
+            _ = k8sClient.Delete(ctx, testPlan)
+        }
+        
+        By("cleaning up dependencies")
+        workflow := &drv1alpha1.DRWorkflow{}
+        _ = k8sClient.Get(ctx, client.ObjectKey{Name: "test-workflow", Namespace: "default"}, workflow)
+        if workflow.Name != "" {
+            _ = k8sClient.Delete(ctx, workflow)
+        }
+    })
+    
+    It("should reconcile successfully", func() {
+        // 测试逻辑使用 testPlan
+    })
+})
+```
+
+**注意事项**:
+- ✅ 在 `BeforeEach` 中创建测试所需资源
+- ✅ 在 `AfterEach` 中清理资源（即使测试失败）
+- ✅ 使用唯一的资源名称（添加时间戳或随机后缀）
+- ❌ 不要在 `AfterEach` 中使用 `Expect` 检查删除结果（使用 `_` 忽略错误）
+
+---
+
+## 🎭 测试隔离
+
+### 独立的测试用例
+
+```go
+// ✅ GOOD - 每个测试独立创建资源
+Context("When creating a plan", func() {
+    It("should validate required fields", func() {
+        invalidPlan := &drv1alpha1.DRPlan{
+            Spec: drv1alpha1.DRPlanSpec{
+                Stages: []drv1alpha1.Stage{},  // 空 stages
+            },
+        }
+        err := k8sClient.Create(ctx, invalidPlan)
+        Expect(err).To(HaveOccurred())
+    })
+    
+    It("should accept valid plan", func() {
+        validPlan := &drv1alpha1.DRPlan{
+            Spec: drv1alpha1.DRPlanSpec{
+                Stages: []drv1alpha1.Stage{
+                    {Name: "stage-1", Workflows: [...]},
+                },
+            },
+        }
+        Expect(k8sClient.Create(ctx, validPlan)).To(Succeed())
+    })
+})
+
+// ❌ BAD - 测试之间有依赖
+It("should create plan", func() {
+    plan := &drv1alpha1.DRPlan{...}
+    Expect(k8sClient.Create(ctx, plan)).To(Succeed())
+    sharedPlan = plan  // ❌ 共享状态
+})
+
+It("should update the plan", func() {
+    sharedPlan.Spec.Description = "Updated"  // ❌ 依赖上一个测试
+    Expect(k8sClient.Update(ctx, sharedPlan)).To(Succeed())
+})
+```
+
+---
+
+## 🧪 Controller 测试（使用 envtest）
+
+### 测试套件设置（suite_test.go）
+
+```go
+var (
+    ctx       context.Context
+    cancel    context.CancelFunc
+    testEnv   *envtest.Environment
+    cfg       *rest.Config
+    k8sClient client.Client
+)
+
+func TestControllers(t *testing.T) {
+    RegisterFailHandler(Fail)
+    RunSpecs(t, "Controller Suite")
+}
+
+var _ = BeforeSuite(func() {
+    logf.SetLogger(zap.New(zap.WriteTo(GinkgoWriter), zap.UseDevMode(true)))
+    
+    ctx, cancel = context.WithCancel(context.TODO())
+    
+    By("bootstrapping test environment")
+    testEnv = &envtest.Environment{
+        CRDDirectoryPaths:     []string{filepath.Join("..", "..", "config", "crd", "bases")},
+        ErrorIfCRDPathMissing: true,
+    }
+    
+    var err error
+    cfg, err = testEnv.Start()
+    Expect(err).NotTo(HaveOccurred())
+    Expect(cfg).NotTo(BeNil())
+    
+    // 注册 CRD schemes
+    err = drv1alpha1.AddToScheme(scheme.Scheme)
+    Expect(err).NotTo(HaveOccurred())
+    
+    k8sClient, err = client.New(cfg, client.Options{Scheme: scheme.Scheme})
+    Expect(err).NotTo(HaveOccurred())
+    Expect(k8sClient).NotTo(BeNil())
+})
+
+var _ = AfterSuite(func() {
+    cancel()
+    By("tearing down the test environment")
+    err := testEnv.Stop()
+    Expect(err).NotTo(HaveOccurred())
+})
+```
+
+---
+
+## 📊 测试覆盖率目标
+
+| 层级 | 目标覆盖率 | 说明 |
+|------|-----------|------|
+| **Controller** | 60%+ | Reconcile 核心逻辑 |
+| **Executor** | 70%+ | Execute/Rollback 方法 |
+| **Webhook** | 80%+ | 验证逻辑 |
+| **Util/Helper** | 50%+ | 工具函数 |
+
+**运行覆盖率检查**:
+```bash
+make test  # 自动生成 cover.out
+go tool cover -html=cover.out -o coverage.html
+```
+
+---
+
+## 🚫 避免的反模式
+
+### 1. 测试实现细节而非行为
+
+```go
+// ❌ BAD - 测试内部实现
+It("should call reconcileStages 3 times", func() {
+    // 不应该测试内部函数调用次数
+})
+
+// ✅ GOOD - 测试外部可观察行为
+It("should update status after reconciling all stages", func() {
+    // 验证最终状态
+    Expect(plan.Status.Phase).To(Equal(drv1alpha1.PlanPhaseReady))
+})
+```
+
+### 2. 过度依赖 mock
+
+```go
+// ❌ BAD - 过度 mock（envtest 已提供真实 K8s API）
+mockClient := &MockClient{}
+mockClient.On("Get", ...).Return(nil)
+mockClient.On("Update", ...).Return(nil)
+
+// ✅ GOOD - 使用 envtest 提供的真实客户端
+plan := &drv1alpha1.DRPlan{...}
+Expect(k8sClient.Create(ctx, plan)).To(Succeed())
+```
+
+### 3. 测试过长、职责不清
+
+```go
+// ❌ BAD - 一个测试做太多事情
+It("should handle entire lifecycle", func() {
+    // 创建 plan
+    // 执行 execute
+    // 验证结果
+    // 执行 revert
+    // 验证清理
+    // ... 100+ 行代码
+})
+
+// ✅ GOOD - 拆分成多个独立测试
+It("should execute plan successfully", func() { ... })
+It("should revert plan successfully", func() { ... })
+It("should clean up resources after revert", func() { ... })
+```
+
+---
+
+## 📝 测试命名约定
+
+### 测试文件
+
+```
+功能模块: internal/controller/drplan_controller.go
+测试文件: internal/controller/drplan_controller_test.go
+```
+
+### 测试变量
+
+```go
+var _ = Describe("DRPlan Controller", func() {
+    var (
+        // 使用清晰的变量名
+        ctx          context.Context
+        testPlan     *drv1alpha1.DRPlan
+        testWorkflow *drv1alpha1.DRWorkflow
+        reconciler   *DRPlanReconciler
+        
+        // 避免单字母变量（除了循环）
+        // ❌ p, w, r
+    )
+})
+```
+
+---
+
+## 🎯 测试编写检查清单
+
+编写测试时，确保：
+
+- [ ] 测试描述清晰（描述期望行为，not 实现）
+- [ ] 使用 `By()` 分步骤描述测试流程
+- [ ] 使用常量而非字符串字面量
+- [ ] 异步操作使用 `Eventually`
+- [ ] 在 `BeforeEach` 中设置测试环境
+- [ ] 在 `AfterEach` 中清理资源
+- [ ] 测试之间完全独立（无共享状态）
+- [ ] 测试外部行为而非内部实现
+- [ ] 每个测试专注一个场景
+- [ ] 使用语义化的 Gomega 断言
+
+---
+
+## 📚 相关资源
+
+- [Ginkgo 文档](https://onsi.github.io/ginkgo/)
+- [Gomega 断言指南](https://onsi.github.io/gomega/)
+- [Controller-Runtime Testing](https://book.kubebuilder.io/reference/testing)
+- [Envtest 使用指南](https://pkg.go.dev/sigs.k8s.io/controller-runtime/pkg/envtest)
+
+---
+
+## 🔍 示例：完整的测试文件
+
+```go
+package controller
+
+import (
+    . "github.com/onsi/ginkgo/v2"
+    . "github.com/onsi/gomega"
+    
+    drv1alpha1 "github.com/Tencent/bk-bcs/.../api/v1alpha1"
+)
+
+var _ = Describe("DRPlan Controller", func() {
+    Context("When reconciling a valid plan", func() {
+        var (
+            ctx      context.Context
+            testPlan *drv1alpha1.DRPlan
+        )
+        
+        BeforeEach(func() {
+            ctx = context.Background()
+            
+            By("creating prerequisites")
+            // ... 创建依赖资源
+            
+            By("creating test plan")
+            testPlan = &drv1alpha1.DRPlan{...}
+            Expect(k8sClient.Create(ctx, testPlan)).To(Succeed())
+        })
+        
+        AfterEach(func() {
+            By("cleaning up")
+            _ = k8sClient.Delete(ctx, testPlan)
+        })
+        
+        It("should set phase to Ready", func() {
+            Eventually(func() string {
+                _ = k8sClient.Get(ctx, client.ObjectKeyFromObject(testPlan), testPlan)
+                return testPlan.Status.Phase
+            }, "1m", "1s").Should(Equal(drv1alpha1.PlanPhaseReady))
+        })
+        
+        It("should validate all stages", func() {
+            Eventually(func() []metav1.Condition {
+                _ = k8sClient.Get(ctx, client.ObjectKeyFromObject(testPlan), testPlan)
+                return testPlan.Status.Conditions
+            }).Should(ContainElement(
+                MatchFields(IgnoreExtras, Fields{
+                    "Type":   Equal("Ready"),
+                    "Status": Equal(metav1.ConditionTrue),
+                }),
+            ))
+        })
+    })
+})
+```
+
+**记住**: 好的测试是项目质量的保证，值得投入时间编写！

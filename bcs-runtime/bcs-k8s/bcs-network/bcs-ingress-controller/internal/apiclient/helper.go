@@ -36,22 +36,29 @@ type MonitorHelper struct {
 	bcsClusterID string
 
 	IndependentDataID bool
+	Disabled          bool
 }
 
 // NewMonitorHelper return new monitor helper
-func NewMonitorHelper(lbIDCache *gocache.Cache) *MonitorHelper {
+func NewMonitorHelper(lbIDCache *gocache.Cache, disabled bool) *MonitorHelper {
 	return &MonitorHelper{
 		apiCli:       NewBkmApiClient(),
 		lbIDCache:    lbIDCache,
 		bcsClusterID: os.Getenv(constant.EnvNameBkBCSClusterID),
 
 		IndependentDataID: true,
+		Disabled:          disabled,
 	}
 }
 
 // EnsureUptimeCheck ensure uptime check
 func (m *MonitorHelper) EnsureUptimeCheck(ctx context.Context, listener *networkextensionv1.Listener) (int64, error) {
 	if listener == nil {
+		return 0, nil
+	}
+	if m.Disabled {
+		blog.V(4).Infof("uptime check disabled, skip EnsureUptimeCheck for listener '%s/%s'",
+			listener.GetNamespace(), listener.GetName())
 		return 0, nil
 	}
 
@@ -121,6 +128,11 @@ func (m *MonitorHelper) EnsureUptimeCheck(ctx context.Context, listener *network
 
 // DeleteUptimeCheckTask delete uptime check task
 func (m *MonitorHelper) DeleteUptimeCheckTask(ctx context.Context, listener *networkextensionv1.Listener) error {
+	if m.Disabled {
+		blog.V(4).Infof("uptime check disabled, skip DeleteUptimeCheckTask for listener '%s/%s'",
+			listener.GetNamespace(), listener.GetName())
+		return nil
+	}
 	if listener.GetUptimeCheckTaskStatus().ID == 0 {
 		return nil
 	}

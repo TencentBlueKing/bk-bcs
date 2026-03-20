@@ -197,9 +197,11 @@ func (m *MicroServer) Run() error {
 		stopChan <- m.runGrpcSever()
 	}()
 
-	go func() {
-		stopChan <- m.runHttpServer()
-	}()
+	if m.op.HttpPortSwitch {
+		go func() {
+			stopChan <- m.runHttpServer()
+		}()
+	}
 
 	select {
 	case err := <-stopChan:

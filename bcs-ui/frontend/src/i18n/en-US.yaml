@@ -149,6 +149,8 @@ nav:
   tkexCRD: Kourse
   templateFile: TemplateFile
   projectQuotas: Project Quotas
+  platformProject: Platform Project
+  platformManage: Platform
 iam:
   title:
     perms: This operation requires the following permissions
@@ -206,6 +208,10 @@ units:
     nDays: '{num} Day'
     nMonths: '{0} Months'
     nYears: '{0} Years'
+    leftDays: '{num} day remaining'
+    leftMonths: '{num} month remaining'
+    leftYears: '{num} year remaining'
+    leftHours: '{num} hour remaining'
   suffix:
     seconds: s
     days: Day
@@ -219,10 +225,17 @@ units:
   cores: '{0} Cores'
 metrics:
   cpuUsage: CPU usage
+  cpuLimitUsage: CPU usage limit
   diskUsage: Disk usage
   memUsage: Memory usage
   memUsage1: Memory usage
   podUsage: Pod usage
+  cpuUsageDesc: >-
+    CPU usage percentage per core. 100% means one core is fully utilized, 200%
+    means two cores are fully utilized
+  cpuLimitUsageDesc: >-
+    Percentage of actual CPU cores consumed relative to the Limit. May exceed
+    the limit, but typically stays within 100%
   cpuRequestUsage:
     text: CPU packing rate
     clusterDesc: >-
@@ -315,6 +328,7 @@ generic:
       Multiple commands are separated by spaces, eg: / bin / bash &amp; quote; -
       C &amp; quote; &amp; quote
     searchIp: 'Enter IP to search, separate multiple IPs with commas or spaces'
+    searchWith: 'Search {0}'
   button:
     resetSearch: Reset search
     validate: Validate
@@ -429,6 +443,12 @@ generic:
     resourceID: Resource ID
     none: None
     tag: Tags
+    description: Description
+    managers: Managers
+    codeMode: Code Mode
+    enabled: Enabled
+    disabled: Disabled
+    timeLeft: Time left
   status:
     part_failure: Part failure
     support: Support
@@ -804,9 +824,19 @@ cluster:
       vpc:
         text: VPC
         deficiencyIpNumTips: The number of available container network IP is insufficient
-        availableIpNum: 'Number of ip available: {0}'
         businessSpecificVPC: Business-specific VPC
         publicVPC: Public VPC
+        exclusiveVPC: Exclusive VPC
+        stressTestVPC: Stress Test VPC
+        publicVPCTips: >-
+          All business clusters under VPC share network resources and egress
+          gateways, stress testing is prohibited, suitable for small-scale
+          clusters (200 nodes and below)
+        exclusiveVPCTips: Business exclusive VPC network resources
+        stressTestVPCTips: >-
+          VPC is dedicated to deploying stress test clients for business, egress
+          and ingress bandwidth and connections need to be clearly defined,
+          please contact jonathantan to confirm resources
       networkSetting1:
         text: IP resource
         maxNodePodNum: Number of pod ip
@@ -1042,6 +1072,7 @@ cluster:
           cluster.
     label:
       tkeID: TKE Cluster ID
+      goRecord: View execution records
   ca:
     name: Cluster autoscaler
     title:
@@ -1233,6 +1264,9 @@ cluster:
           tips: Default use of GPU image provided by the platform
         CVM: CVM
         GPU: GPU
+        bizIDs: Business
+        availableQuota: Available Quota
+        providerTime: Provide duration
       title:
         nodeConfig: Node configuration
         initConfig: Initialization configuration
@@ -1666,6 +1700,7 @@ cluster:
       setTaint: Set taint
       addLabel: Add tag
       addTaint: Add taint
+      addAnnotation: Add annotation
       copy:
         text: Copy
         checkedIP: Copy check ip
@@ -1707,6 +1742,7 @@ cluster:
       inputValue: Please enter the value
       locationTag: Location tag
       locationTaint: Location taint
+      locationAnnotation: Location annotation
     title:
       confirmAddNode: Determine the additional node
       confirmReAddNode: Confirm the re-added node
@@ -1717,6 +1753,8 @@ cluster:
         desc: Batch settings only show the same key label
       batchSetTaint:
         text: Set taint batch
+      batchSetAnnotation:
+        text: Set annotation batch
       tableSetting: Table setting
       fieldDisplaySettings: Field display settings
       nodeSaveError: Some nodes failed to save
@@ -2816,6 +2854,9 @@ projects:
     search: Enter the project name search
     bkMonitor: Application monitor
     businessID: Business ID
+    ID: Project ID
+    business: Business
+    goto: Go to Project
   validate:
     projectName: >-
       Please enter 2-64 characters, and do not include
@@ -2890,6 +2931,9 @@ dashboard:
     label:
       createMoreNamespaceVars: 'You can create more variables in the namespace through {action}'
       noNamespaceVariables: No naming space variables
+      allNamespaces: All namespaces
+      projectNS: 'Project namespace {0}'
+      systemNS: 'System namespace {0}'
     msg:
       undoSuccess: Undo success
     quota:
@@ -3343,6 +3387,8 @@ googleCloud:
     onlySupportJsonFile: >-
       Only the json file generated when a service account is created is
       supported
+importTencentCloud:
+  title: Import a public cloud cluster - Tencent Cloud
 importGoogleCloud:
   title: Import a public cloud cluster - Google Cloud
   label:
@@ -3693,6 +3739,11 @@ tke:
       maxBandWidth: Max bandwidth
     clusterAvailableNodes: Node capacity
     retain: Destruction node
+    selectVPC: Select VPC
+    vpcName: VPC Name
+    vpcID: VPCID
+    availableUnderlay: Available underlayIP number
+    availableOverlay: Available overlayIP number
   title:
     connectFailure:
       text: >-
@@ -3740,6 +3791,13 @@ tke:
     cidrMaskLen: 'Subnet mask length range: {0}'
     minPodIP: The Pod IP count must be greater than 0
     podIPsNeedLessThanVpcIPs: Pod IPs need less than VPC IPs
+    podIPsNeedLessThanUnderlayNum: >-
+      The number of available underlying IPs is insufficient. Please reduce the
+      number of IP applications; Or create a cluster before attempting to enable
+      VPC-CNI.
+    podIPsNeedLessThanUnderlayIPNum: >-
+      The number of available underlying IPs is insufficient. Please reduce the
+      number of IP applications;
     passwordNotSame: The passwords entered do not match
     minIpNum: >-
       To ensure that the cluster has enough IPs, the container network segment

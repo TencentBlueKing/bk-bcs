@@ -7,16 +7,17 @@ export interface ISearchSelectData {
   multiable?: boolean;
   children?: ISearchSelectData[];
   conditions?: any[];
+  placeholder?: string;
 }
 export interface ITableSearchConfig {
   searchSelectDataSource: Ref<ISearchSelectData[]>;
-  filteredValue: Ref<Record<string, string[]>>; // 表格列需要配置 prop 和 column-key属性（表格组件BUG）
+  filteredValue?: Ref<Record<string, string[]>>; // 表格列需要配置 prop 和 column-key属性（表格组件BUG）
 }
 
 // searchSelect组件 和 table filter搜索联动
 export default function useTableSearchSelect({
   searchSelectDataSource,
-  filteredValue,
+  filteredValue = ref({}),
 }: ITableSearchConfig) {
   // 搜索项有值后就不展示了
   const searchSelectData = computed(() => {
@@ -32,7 +33,10 @@ export default function useTableSearchSelect({
     Object.keys(filtersData).forEach((prop) => {
       const data = searchSelectDataSource.value.find(data => data.id === prop);
       const index = searchSelectValue.value.findIndex(item => item.id === prop);
-      const values = data?.children?.filter(v => filtersData[prop].includes(v.id));
+      const values = data?.children?.filter(v => filtersData[prop].includes(v.id))
+        || (Array.isArray(filtersData[prop])
+          ? filtersData[prop].map(v => ({ id: v, name: v }))
+          : [{ id: filtersData[prop], name: filtersData[prop] }]); // 兼容 input
       index > -1 && searchSelectValue.value.splice(index, 1);
       if (values?.length) {
         searchSelectValue.value.push({
