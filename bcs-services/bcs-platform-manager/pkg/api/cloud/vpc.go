@@ -161,9 +161,9 @@ func ListCloudSubnets(
 		return nil, err
 	}
 
-	CloudSubnets := make([]types.ListCloudSubnets, 0)
+	cloudSubnetsData := make([]types.ListCloudSubnets, 0)
 	for _, vpc := range cloudSubnets.Data {
-		CloudSubnets = append(CloudSubnets, types.ListCloudSubnets{
+		cloudSubnetsData = append(cloudSubnetsData, types.ListCloudSubnets{
 			SubnetName:              vpc.SubnetName,
 			SubnetID:                vpc.SubnetID,
 			VpcID:                   vpc.VpcID,
@@ -179,8 +179,8 @@ func ListCloudSubnets(
 	}
 
 	return &types.ListCloudSubnetsResponse{
-		Total:   uint32(len(CloudSubnets)),
-		Subnets: CloudSubnets,
+		Total:   uint32(len(cloudSubnetsData)),
+		Subnets: cloudSubnetsData,
 	}, nil
 }
 

@@ -45,7 +45,6 @@ func NewScheduler() (*asynq.Scheduler, error) {
 
 // NewCronTasks create cron tasks
 func NewCronTasks() ([]*task.CronTask, error) {
-	blog.Info("create schedule task: cron job")
 	cronTasks := []*task.CronTask{}
 	var err error
 	var cronTask *task.CronTask
