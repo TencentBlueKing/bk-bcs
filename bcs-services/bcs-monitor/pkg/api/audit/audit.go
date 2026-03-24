@@ -53,6 +53,27 @@ func GenBKLogConfigName(clusterID string) string {
 	return fmt.Sprintf("bkbcs-audit-%s", strings.ToLower(clusterID))
 }
 
+// getAuditFields returns the field definitions for k8s audit log
+func getAuditFields() []bklog.CustomField {
+	return []bklog.CustomField{
+		{FieldIndex: 1, FieldName: "annotations", FieldType: "object", IsDelete: false},
+		{FieldIndex: 2, FieldName: "apiVersion", FieldType: "string", IsDelete: false},
+		{FieldIndex: 3, FieldName: "auditID", FieldType: "string", IsDelete: false},
+		{FieldIndex: 4, FieldName: "kind", FieldType: "string", IsDelete: false},
+		{FieldIndex: 5, FieldName: "level", FieldType: "string", IsDelete: false},
+		{FieldIndex: 6, FieldName: "objectRef", FieldType: "object", IsDelete: false},
+		{FieldIndex: 7, FieldName: "requestReceivedTimestamp", FieldType: "string", IsDelete: false},
+		{FieldIndex: 8, FieldName: "requestURI", FieldType: "string", IsDelete: false},
+		{FieldIndex: 9, FieldName: "responseStatus", FieldType: "object", IsDelete: false},
+		{FieldIndex: 10, FieldName: "sourceIPs", FieldType: "string", IsDelete: false},
+		{FieldIndex: 11, FieldName: "stage", FieldType: "string", IsDelete: false},
+		{FieldIndex: 12, FieldName: "stageTimestamp", FieldType: "string", IsDelete: false},
+		{FieldIndex: 13, FieldName: "user", FieldType: "object", IsDelete: false},
+		{FieldIndex: 14, FieldName: "userAgent", FieldType: "string", IsDelete: false},
+		{FieldIndex: 15, FieldName: "verb", FieldType: "string", IsDelete: false},
+	}
+}
+
 // EnableAudit enable audit
 // 1. ensure bklog data id is created
 // 2. ensure BKLogConfig is created
@@ -92,6 +113,9 @@ func EnableAudit(c context.Context, req *EnableAuditReq) (*any, error) {
 			Description:           "create by bcs",
 			CustomType:            "log",
 			CategoryID:            "host_process",
+			EtlConfig:             "bk_log_json",
+			EtlParams:             &bklog.EtlParams{RetainOriginalText: true},
+			Fields:                getAuditFields(),
 			StorageClusterID:      req.StorageClusterID,
 			Retention:             14,
 			EsShards:              1,

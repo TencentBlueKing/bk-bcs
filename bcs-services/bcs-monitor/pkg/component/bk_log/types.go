@@ -442,20 +442,42 @@ type GetBcsCollectorStorageResp struct {
 	Data json.Number `json:"data"`
 }
 
+// EtlParams etl params
+type EtlParams struct {
+	RetainOriginalText bool   `json:"retain_original_text"`
+	Separator          string `json:"separator,omitempty"`
+}
+
+// CustomField custom field
+type CustomField struct {
+	FieldIndex  int    `json:"field_index"`
+	FieldName   string `json:"field_name"`
+	FieldType   string `json:"field_type"`
+	AliasName   string `json:"alias_name,omitempty"`
+	Description string `json:"description,omitempty"`
+	IsDelete    bool   `json:"is_delete"`
+	IsAnalyzed  bool   `json:"is_analyzed,omitempty"`
+	IsBuiltIn   bool   `json:"is_built_in,omitempty"`
+	IsDimension bool   `json:"is_dimension,omitempty"`
+}
+
 // DatabusCustomCreateReq xxx
 type DatabusCustomCreateReq struct {
-	BkBizID               int    `json:"bk_biz_id"`
-	CollectorConfigName   string `json:"collector_config_name"`
-	CollectorConfigNameEN string `json:"collector_config_name_en"`
-	Description           string `json:"description"`
-	CustomType            string `json:"custom_type"`
-	CategoryID            string `json:"category_id"`
-	StorageClusterID      int    `json:"storage_cluster_id"`
-	Retention             int    `json:"retention"`
-	EsShards              int    `json:"es_shards"`
-	StorageReplies        int    `json:"storage_replies"`
-	AllocationMinDays     int    `json:"allocation_min_days"`
-	DataLinkID            int    `json:"data_link_id"`
+	BkBizID               int           `json:"bk_biz_id"`
+	CollectorConfigName   string        `json:"collector_config_name"`
+	CollectorConfigNameEN string        `json:"collector_config_name_en"`
+	Description           string        `json:"description"`
+	CustomType            string        `json:"custom_type"`
+	CategoryID            string        `json:"category_id"`
+	EtlConfig             string        `json:"etl_config"`
+	EtlParams             *EtlParams    `json:"etl_params,omitempty"`
+	Fields                []CustomField `json:"fields,omitempty"`
+	StorageClusterID      int           `json:"storage_cluster_id"`
+	Retention             int           `json:"retention"`
+	EsShards              int           `json:"es_shards"`
+	StorageReplies        int           `json:"storage_replies"`
+	AllocationMinDays     int           `json:"allocation_min_days"`
+	DataLinkID            int           `json:"data_link_id"`
 }
 
 // DatabusCustomCreateResp xxx
