@@ -428,6 +428,7 @@ type GetStorageClustersResp struct {
 type GetStorageClustersRespData struct {
 	StorageClusterID   int     `json:"storage_cluster_id"`
 	StorageClusterName string  `json:"storage_cluster_name"`
+	StorageDisplayName string  `json:"storage_display_name"`
 	StorageVersion     string  `json:"storage_version"`
 	StorageUsage       int     `json:"storage_usage"`
 	StorageTotal       float64 `json:"storage_total"`
