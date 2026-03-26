@@ -72,6 +72,19 @@
       </div>
     </div>
     <div class="workload-detail-body">
+      <bcs-alert
+        v-if="!isMonitorInstalled"
+        class="mt-[16px]"
+        type="warning"
+        closable>
+        <template #title>
+          <i18n path="dashboard.workload.tips.noMonitor" tag="span">
+            <template #plugins>
+              <a class="text-[#3a84ff]" :href="handleGetPluginManageUrl()" target="_blank">{{ $t('nav.plugin') }}</a>
+            </template>
+          </i18n>
+        </template>
+      </bcs-alert>
       <div class="workload-metric">
         <Metric
           :metric="activeCpuMetric"
@@ -394,7 +407,7 @@ import { computed, defineComponent, onMounted, ref, toRefs } from 'vue';
 import { filterXss } from '@blueking/xss-filter';
 
 import EventTable from './bk-monitor-event.vue';
-import useDetail from './use-detail';
+import useDetail, { useMonitorCollector } from './use-detail';
 
 import { logCollectorEntrypoints } from '@/api/modules/monitor';
 import { ClusterAddonsService } from '@/api/modules/new-helm-manager';
@@ -478,6 +491,11 @@ export default defineComponent({
       defaultActivePanel: 'container',
       type: 'workloads',
     });
+    const {
+      isMonitorInstalled,
+      handleGetPluginManageUrl,
+      handleCheckMonitor,
+    } = useMonitorCollector();
     const { name, namespace, clusterId } = toRefs(props);
     const params = computed(() => ({
       $namespaceId: namespace.value,
@@ -616,6 +634,7 @@ export default defineComponent({
       handleGetStorage();
       handleGetContainer();
       handleFileLogDisabled();
+      handleCheckMonitor(clusterId.value);
     });
 
     return {
@@ -657,6 +676,8 @@ export default defineComponent({
       IS_INTERNAL: _INTERNAL_.value,
       isFileLogDisabled,
       handleChangeCpuMetric,
+      isMonitorInstalled,
+      handleGetPluginManageUrl,
     };
   },
 });
