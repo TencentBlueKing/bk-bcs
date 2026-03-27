@@ -145,14 +145,14 @@ func (e *DefaultStageExecutor) executeParallel(ctx context.Context, stage *drv1a
 		go func(idx int, ref drv1alpha1.WorkflowReference) {
 			defer wg.Done()
 
-			// Check if already cancelled
+			// Check if already canceled
 			select {
 			case <-cancelCtx.Done():
 				klog.V(4).Infof("Workflow %s/%s skipped due to cancellation", ref.WorkflowRef.Namespace, ref.WorkflowRef.Name)
 				workflowStatuses[idx] = &drv1alpha1.WorkflowExecutionStatus{
 					WorkflowRef: ref.WorkflowRef,
 					Phase:       "Skipped",
-					Message:     "Cancelled due to parallel failure",
+					Message:     "Canceled due to parallel failure",
 				}
 				return
 			default:

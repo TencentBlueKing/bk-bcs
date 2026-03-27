@@ -173,7 +173,7 @@ kubectl apply -f drplanexecution-revert.yaml
 
 **Acceptance Scenarios**:
 
-1. **Given** 运维人员创建 DRWorkflow 时，**When** 在动作配置中使用 `{{ .params.targetCluster }}` 等占位符，并在 `parameters` 字段定义参数名和默认值，**Then** 系统接受配置并将工作流状态设置为 Ready
+1. **Given** 运维人员创建 DRWorkflow 时，**When** 在动作配置中使用 `$(params.targetCluster)` 等占位符，并在 `parameters` 字段定义参数名和默认值，**Then** 系统接受配置并将工作流状态设置为 Ready
 2. **Given** DRWorkflow 定义了必填参数（无默认值），**When** 提交该 CR，**Then** 系统标记该参数为必填，在 Plan 引用时必须提供
 3. **Given** DRWorkflow 使用了未定义的参数占位符，**When** 提交该 CR，**Then** Webhook 拒绝并提示未定义的参数
 
@@ -426,7 +426,7 @@ kubectl apply -f drplanexecution-revert.yaml
 - **FR-006**: DRWorkflow MUST 支持动作级别的重试策略和超时配置
 - **FR-007**: DRWorkflow MUST 支持工作流级别的失败策略（FailFast 或 Continue）
 - **FR-008**: DRWorkflow MUST 支持定义参数列表（参数名、类型、默认值、是否必填）
-- **FR-009**: DRWorkflow MUST 支持在动作配置中使用参数占位符 `{{ .params.<name> }}`
+- **FR-009**: DRWorkflow MUST 支持在动作配置中使用参数占位符 `$(params.<name>)`
 - **FR-010**: 系统 MUST 在执行时将参数占位符替换为实际值
 
 **步骤回滚**：
@@ -533,7 +533,7 @@ kubectl apply -f drplanexecution-revert.yaml
 │  │     - name: notify-oncall                                │   │
 │  │       type: HTTP                                         │   │
 │  │       http:                                              │   │
-│  │         url: "{{ .params.notifyURL }}"                  │   │
+│  │         url: "$(params.notifyURL)"                  │   │
 │  │         method: POST                                     │   │
 │  │       # 未定义 rollback，HTTP 类型回滚时跳过               │   │
 │  │                                                          │   │
@@ -542,8 +542,8 @@ kubectl apply -f drplanexecution-revert.yaml
 │  │       type: Localization                                 │   │
 │  │       localization:                                      │   │
 │  │         operation: Create       # Create | Patch | Delete│   │
-│  │         name: "dr-scale-{{ .planName }}"                │   │
-│  │         namespace: "{{ .params.targetCluster }}"        │   │
+│  │         name: "dr-scale-$(planName)"                │   │
+│  │         namespace: "$(params.targetCluster)"        │   │
 │  │         feed: {...}             # 源资源引用              │   │
 │  │         overrides: [...]        # 配置覆盖               │   │
 │  │       # 未定义 rollback，自动逆操作：删除此 Localization    │   │
@@ -576,7 +576,7 @@ kubectl apply -f drplanexecution-revert.yaml
 │  │       http:                                              │   │
 │  │         url: "https://dns-api/switch"                   │   │
 │  │         method: POST                                     │   │
-│  │         body: '{"target": "{{ .params.targetCluster }}"}'│   │
+│  │         body: '{"target": "$(params.targetCluster)"}'│   │
 │  │       rollback:                     # 自定义回滚动作       │   │
 │  │         type: HTTP                                       │   │
 │  │         http:                                            │   │
@@ -664,7 +664,7 @@ kubectl apply -f drplanexecution-revert.yaml
 - **DRPlanExecution** 记录执行时的 Stage 状态、Workflow 执行状态、动作状态和 outputs
 
 **参数替换流程**：
-1. DRWorkflow 定义参数（parameters）和占位符（`{{ .params.xxx }}`）
+1. DRWorkflow 定义参数（parameters）和占位符（`$(params.xxx)`）
 2. DRPlan 提供 globalParams（全局参数）和 Stage 级 params（优先级更高）
 3. 执行时系统将占位符替换为实际值
 4. 参数合并优先级：Workflow 默认值 < globalParams < Stage params

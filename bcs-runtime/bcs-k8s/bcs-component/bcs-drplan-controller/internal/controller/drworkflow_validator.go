@@ -77,7 +77,7 @@ func (v *LocalizationActionValidator) Validate(action *drv1alpha1.Action, index 
 			errors = append(errors, fmt.Sprintf("action[%d] %s: Localization.Spec.Feed (apiVersion, kind, name) is required when operation=Create", index, action.Name))
 		}
 	}
-	if loc.Operation == "Patch" && action.Rollback == nil {
+	if loc.Operation == drv1alpha1.OperationPatch && action.Rollback == nil {
 		errors = append(errors, fmt.Sprintf("action[%d] %s: rollback is required for Localization Patch operation", index, action.Name))
 	}
 

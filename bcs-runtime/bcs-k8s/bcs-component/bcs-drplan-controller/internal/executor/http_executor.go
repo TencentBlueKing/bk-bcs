@@ -40,110 +40,113 @@ func NewHTTPActionExecutor() *HTTPActionExecutor {
 func (e *HTTPActionExecutor) Execute(ctx context.Context, action *drv1alpha1.Action, params map[string]interface{}) (*drv1alpha1.ActionStatus, error) {
 	klog.Infof("Executing HTTP action: %s", action.Name)
 	startTime := time.Now()
-
-	status := &drv1alpha1.ActionStatus{
-		Name:      action.Name,
-		Phase:     "Running",
-		StartTime: &metav1.Time{Time: startTime},
-	}
+	status := e.newHTTPActionStatus(action.Name, startTime)
 
 	if action.HTTP == nil {
-		status.Phase = drv1alpha1.PhaseFailed
-		status.CompletionTime = &metav1.Time{Time: time.Now()}
-		status.Message = "HTTP configuration is nil"
+		e.setHTTPActionStatusFailed(status, "HTTP configuration is nil")
 		return status, fmt.Errorf("HTTP configuration is required")
 	}
 
-	// Render URL with parameters
-	templateData := &utils.TemplateData{Params: params}
-	url, err := utils.RenderTemplate(action.HTTP.URL, templateData)
+	url, body, method, headers, retryConfig, err := e.prepareHTTPRequestParams(action, params)
 	if err != nil {
-		status.Phase = drv1alpha1.PhaseFailed
-		status.CompletionTime = &metav1.Time{Time: time.Now()}
-		status.Message = fmt.Sprintf("Failed to render URL: %v", err)
+		e.setHTTPActionStatusFailed(status, err.Error())
 		return status, err
 	}
 
-	// Render body if present
-	var body string
+	httpResp, err := e.executeHTTPWithRetry(ctx, action, status, url, body, method, headers, retryConfig)
+	if err != nil {
+		e.setHTTPActionStatusFailed(status, err.Error())
+		return status, err
+	}
+
+	e.setHTTPActionStatusSuccess(status, method, httpResp)
+	klog.Infof("HTTP action %s completed successfully", action.Name)
+	return status, nil
+}
+
+func (e *HTTPActionExecutor) newHTTPActionStatus(name string, startTime time.Time) *drv1alpha1.ActionStatus {
+	return &drv1alpha1.ActionStatus{
+		Name:      name,
+		Phase:     drv1alpha1.PhaseRunning,
+		StartTime: &metav1.Time{Time: startTime},
+	}
+}
+
+func (e *HTTPActionExecutor) setHTTPActionStatusFailed(status *drv1alpha1.ActionStatus, message string) {
+	status.Phase = drv1alpha1.PhaseFailed
+	status.CompletionTime = &metav1.Time{Time: time.Now()}
+	status.Message = message
+}
+
+// prepareHTTPRequestParams renders URL, body, method, headers and parses retry policy
+func (e *HTTPActionExecutor) prepareHTTPRequestParams(action *drv1alpha1.Action, params map[string]interface{}) (
+	url, body, method string, headers map[string]string, retryConfig *utils.RetryConfig, err error) {
+	templateData := &utils.TemplateData{Params: params}
+
+	url, err = utils.RenderTemplate(action.HTTP.URL, templateData)
+	if err != nil {
+		return "", "", "", nil, nil, fmt.Errorf("failed to render URL: %w", err)
+	}
 	if action.HTTP.Body != "" {
 		body, err = utils.RenderTemplate(action.HTTP.Body, templateData)
 		if err != nil {
-			status.Phase = drv1alpha1.PhaseFailed
-			status.CompletionTime = &metav1.Time{Time: time.Now()}
-			status.Message = fmt.Sprintf("Failed to render body: %v", err)
-			return status, err
+			return "", "", "", nil, nil, fmt.Errorf("failed to render body: %w", err)
 		}
 	}
-
-	// Render method and headers with parameters
-	method := action.HTTP.Method
+	method = action.HTTP.Method
 	if method != "" {
 		method, err = utils.RenderTemplate(method, templateData)
 		if err != nil {
-			status.Phase = drv1alpha1.PhaseFailed
-			status.CompletionTime = &metav1.Time{Time: time.Now()}
-			status.Message = fmt.Sprintf("Failed to render method: %v", err)
-			return status, err
+			return "", "", "", nil, nil, fmt.Errorf("failed to render method: %w", err)
 		}
 	}
-	headers := make(map[string]string)
+	headers = make(map[string]string)
 	for k, v := range action.HTTP.Headers {
-		rendered, err := utils.RenderTemplate(v, templateData)
-		if err != nil {
-			status.Phase = drv1alpha1.PhaseFailed
-			status.CompletionTime = &metav1.Time{Time: time.Now()}
-			status.Message = fmt.Sprintf("Failed to render header %q: %v", k, err)
-			return status, err
+		rendered, rerr := utils.RenderTemplate(v, templateData)
+		if rerr != nil {
+			return "", "", "", nil, nil, fmt.Errorf("failed to render header %q: %w", k, rerr)
 		}
 		headers[k] = rendered
 	}
-
-	// Parse retry policy
-	retryConfig, err := utils.ParseRetryPolicy(action.RetryPolicy)
+	retryConfig, err = utils.ParseRetryPolicy(action.RetryPolicy)
 	if err != nil {
-		status.Phase = drv1alpha1.PhaseFailed
-		status.CompletionTime = &metav1.Time{Time: time.Now()}
-		status.Message = fmt.Sprintf("Invalid retry policy: %v", err)
-		return status, err
+		return "", "", "", nil, nil, fmt.Errorf("invalid retry policy: %w", err)
 	}
+	return url, body, method, headers, retryConfig, nil
+}
 
-	// Execute with retry
+func (e *HTTPActionExecutor) executeHTTPWithRetry(ctx context.Context, action *drv1alpha1.Action, status *drv1alpha1.ActionStatus,
+	url, body, method string, headers map[string]string, retryConfig *utils.RetryConfig) (*http.Response, error) {
 	var httpResp *http.Response
-	err = utils.RetryWithBackoff(ctx, retryConfig, func(ctx context.Context, attempt int32) error {
-		httpResp, err = e.executeHTTPRequest(ctx, action, url, body, method, headers)
-		if err != nil {
-			klog.V(4).Infof("HTTP request attempt %d failed: %v", attempt, err)
-			return err
+	err := utils.RetryWithBackoff(ctx, retryConfig, func(ctx context.Context, attempt int32) error {
+		var reqErr error
+		httpResp, reqErr = e.executeHTTPRequest(ctx, action, url, body, method, headers)
+		if reqErr != nil {
+			klog.V(4).Infof("HTTP request attempt %d failed: %v", attempt, reqErr)
+			return reqErr
 		}
 		status.RetryCount = attempt
 		return nil
 	})
-
 	if err != nil {
-		status.Phase = drv1alpha1.PhaseFailed
-		status.CompletionTime = &metav1.Time{Time: time.Now()}
-		status.Message = err.Error()
-		return status, err
+		return nil, err
 	}
+	return httpResp, nil
+}
 
-	// Store response
+func (e *HTTPActionExecutor) setHTTPActionStatusSuccess(status *drv1alpha1.ActionStatus, method string, httpResp *http.Response) {
 	respBody, _ := io.ReadAll(httpResp.Body)
 	_ = httpResp.Body.Close()
-
-	status.Outputs = &drv1alpha1.ActionOutputs{
-		HTTPResponse: &drv1alpha1.HTTPResponse{
-			StatusCode: httpResp.StatusCode,
-			Body:       string(respBody)[:min(len(respBody), 1000)], // Truncate to 1000 chars
-		},
+	bodyStr := string(respBody)
+	if len(bodyStr) > 1000 {
+		bodyStr = bodyStr[:1000]
 	}
-
+	status.Outputs = &drv1alpha1.ActionOutputs{
+		HTTPResponse: &drv1alpha1.HTTPResponse{StatusCode: httpResp.StatusCode, Body: bodyStr},
+	}
 	status.Phase = drv1alpha1.PhaseSucceeded
 	status.CompletionTime = &metav1.Time{Time: time.Now()}
 	status.Message = fmt.Sprintf("HTTP %s succeeded with status %d", method, httpResp.StatusCode)
-
-	klog.Infof("HTTP action %s completed successfully", action.Name)
-	return status, nil
 }
 
 // executeHTTPRequest executes a single HTTP request (method and headers are already rendered)
@@ -178,6 +181,7 @@ func (e *HTTPActionExecutor) executeHTTPRequest(ctx context.Context, action *drv
 
 	if action.HTTP.InsecureSkipVerify {
 		client.Transport = &http.Transport{
+			// #nosec G402 - InsecureSkipVerify is acceptable for internal test environments
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 		}
 	}
@@ -250,11 +254,4 @@ func (e *HTTPActionExecutor) Rollback(ctx context.Context, action *drv1alpha1.Ac
 // Type returns the action type
 func (e *HTTPActionExecutor) Type() string {
 	return "HTTP"
-}
-
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
 }

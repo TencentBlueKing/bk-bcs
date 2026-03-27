@@ -1,0 +1,9 @@
+apiVersion: v2
+name: nginx-drplan
+description: >-
+  Example Helm chart that manages DRWorkflow and DRPlan resources for nginx
+  disaster recovery. Demonstrates that $(params.xxx) Tekton-style variable
+  syntax coexists with Helm {{ }} templates without conflict.
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

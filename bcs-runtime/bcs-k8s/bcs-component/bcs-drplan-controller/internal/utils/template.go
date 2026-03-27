@@ -14,11 +14,20 @@
 package utils
 
 import (
-	"bytes"
 	"fmt"
-	"text/template"
+	"regexp"
+	"strings"
 
 	"k8s.io/klog/v2"
+)
+
+var (
+	// $(params.xxx) — parameter substitution (Tekton-style)
+	paramRegex = regexp.MustCompile(`\$\(params\.([a-zA-Z_][a-zA-Z0-9_]*)\)`)
+	// $(planName) — plan name substitution
+	planNameRegex = regexp.MustCompile(`\$\(planName\)`)
+	// $(outputs.xxx) — output reference substitution
+	outputRegex = regexp.MustCompile(`\$\(outputs\.([a-zA-Z_][a-zA-Z0-9_]*)\)`)
 )
 
 // TemplateData holds data for template rendering
@@ -28,8 +37,14 @@ type TemplateData struct {
 	Outputs  map[string]interface{}
 }
 
-// RenderTemplate renders a template string with the provided data
-// Supports syntax: {{ .params.xxx }}, {{ .planName }}, {{ .outputs.xxx }}
+// RenderTemplate renders a template string with the provided data.
+// Supports Tekton-style variable substitution syntax:
+//   - $(params.xxx)   — replaced by the value of parameter "xxx"
+//   - $(planName)      — replaced by the DR plan name
+//   - $(outputs.xxx)   — replaced by the output value "xxx"
+//
+// This syntax is chosen to avoid conflicts with Helm ({{ }}) and Shell (${ }, $( )).
+// See: https://tekton.dev/docs/pipelines/variables/
 func RenderTemplate(tmpl string, data *TemplateData) (string, error) {
 	if data == nil {
 		data = &TemplateData{
@@ -38,32 +53,40 @@ func RenderTemplate(tmpl string, data *TemplateData) (string, error) {
 		}
 	}
 
-	// Create template with custom functions
-	t, err := template.New("template").Funcs(template.FuncMap{
-		"default": func(defaultVal, val interface{}) interface{} {
-			if val == nil || val == "" {
-				return defaultVal
-			}
-			return val
-		},
-	}).Parse(tmpl)
-	if err != nil {
-		klog.V(4).Infof("Failed to parse template: %v, template: %s", err, tmpl)
-		return "", fmt.Errorf("failed to parse template: %w", err)
+	var errs []string
+	result := tmpl
+
+	// Replace $(params.xxx)
+	result = paramRegex.ReplaceAllStringFunc(result, func(match string) string {
+		groups := paramRegex.FindStringSubmatch(match)
+		key := groups[1]
+		if val, ok := data.Params[key]; ok {
+			return fmt.Sprintf("%v", val)
+		}
+		errs = append(errs, fmt.Sprintf("parameter %q not found", key))
+		return match
+	})
+
+	// Replace $(planName)
+	result = planNameRegex.ReplaceAllStringFunc(result, func(_ string) string {
+		return data.PlanName
+	})
+
+	// Replace $(outputs.xxx)
+	result = outputRegex.ReplaceAllStringFunc(result, func(match string) string {
+		groups := outputRegex.FindStringSubmatch(match)
+		key := groups[1]
+		if val, ok := data.Outputs[key]; ok {
+			return fmt.Sprintf("%v", val)
+		}
+		errs = append(errs, fmt.Sprintf("output %q not found", key))
+		return match
+	})
+
+	if len(errs) > 0 {
+		klog.V(4).Infof("Template substitution warnings: %s, template: %s", strings.Join(errs, "; "), tmpl)
 	}
 
-	// Render template
-	var buf bytes.Buffer
-	if err := t.Execute(&buf, map[string]interface{}{
-		"params":   data.Params,
-		"planName": data.PlanName,
-		"outputs":  data.Outputs,
-	}); err != nil {
-		klog.V(4).Infof("Failed to execute template: %v, template: %s, data: %+v", err, tmpl, data)
-		return "", fmt.Errorf("failed to execute template: %w", err)
-	}
-
-	result := buf.String()
 	klog.V(4).Infof("Template rendered: %s -> %s", tmpl, result)
 	return result, nil
 }

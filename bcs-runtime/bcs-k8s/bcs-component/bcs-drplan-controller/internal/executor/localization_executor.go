@@ -43,41 +43,58 @@ func (e *LocalizationActionExecutor) Execute(ctx context.Context, action *drv1al
 	klog.Infof("Executing Localization action: %s", action.Name)
 	startTime := time.Now()
 
-	status := &drv1alpha1.ActionStatus{
-		Name:      action.Name,
-		Phase:     "Running",
-		StartTime: &metav1.Time{Time: startTime},
-	}
+	status := e.newLocalizationActionStatus(action.Name, startTime)
 
 	if action.Localization == nil {
-		status.Phase = drv1alpha1.PhaseFailed
-		status.CompletionTime = &metav1.Time{Time: time.Now()}
-		status.Message = "Localization configuration is nil"
+		e.setLocalizationActionStatusFailed(status, "Localization configuration is nil")
 		return status, fmt.Errorf("localization configuration is required")
 	}
 	if action.Localization.Spec == nil {
-		status.Phase = drv1alpha1.PhaseFailed
-		status.CompletionTime = &metav1.Time{Time: time.Now()}
-		status.Message = "Localization.Spec is required"
+		e.setLocalizationActionStatusFailed(status, "Localization.Spec is required")
 		return status, fmt.Errorf("Localization.Spec is required")
 	}
 
 	templateData := &utils.TemplateData{Params: params}
 	render := func(s string) (string, error) { return utils.RenderTemplate(s, templateData) }
 
+	locName, locNamespace, specMap, err := e.prepareLocalizationSpec(action, render)
+	if err != nil {
+		e.setLocalizationActionStatusFailed(status, err.Error())
+		return status, err
+	}
+
+	loc, err := e.createLocalizationResource(ctx, locName, locNamespace, specMap)
+	if err != nil {
+		e.setLocalizationActionStatusFailed(status, err.Error())
+		return status, err
+	}
+
+	e.setLocalizationActionStatusSuccess(status, loc, action.Name)
+	return status, nil
+}
+
+func (e *LocalizationActionExecutor) newLocalizationActionStatus(name string, startTime time.Time) *drv1alpha1.ActionStatus {
+	return &drv1alpha1.ActionStatus{
+		Name:      name,
+		Phase:     drv1alpha1.PhaseRunning,
+		StartTime: &metav1.Time{Time: startTime},
+	}
+}
+
+func (e *LocalizationActionExecutor) setLocalizationActionStatusFailed(status *drv1alpha1.ActionStatus, message string) {
+	status.Phase = drv1alpha1.PhaseFailed
+	status.CompletionTime = &metav1.Time{Time: time.Now()}
+	status.Message = message
+}
+
+func (e *LocalizationActionExecutor) prepareLocalizationSpec(action *drv1alpha1.Action, render func(string) (string, error)) (string, string, map[string]interface{}, error) {
 	locName, err := render(action.Localization.Name)
 	if err != nil {
-		status.Phase = drv1alpha1.PhaseFailed
-		status.CompletionTime = &metav1.Time{Time: time.Now()}
-		status.Message = fmt.Sprintf("Failed to render Localization name: %v", err)
-		return status, err
+		return "", "", nil, fmt.Errorf("failed to render Localization name: %w", err)
 	}
 	locNamespace, err := render(action.Localization.Namespace)
 	if err != nil {
-		status.Phase = drv1alpha1.PhaseFailed
-		status.CompletionTime = &metav1.Time{Time: time.Now()}
-		status.Message = fmt.Sprintf("Failed to render Localization namespace: %v", err)
-		return status, err
+		return "", "", nil, fmt.Errorf("failed to render Localization namespace: %w", err)
 	}
 
 	spec := action.Localization.Spec
@@ -87,35 +104,23 @@ func (e *LocalizationActionExecutor) Execute(ctx context.Context, action *drv1al
 	if spec.OverridePolicy != "" {
 		specMap["overridePolicy"] = string(spec.OverridePolicy)
 	}
-	// Feed is embedded in clusternet LocalizationSpec
+
 	if spec.APIVersion != "" || spec.Kind != "" || spec.Name != "" {
 		feedAPI, err := render(spec.APIVersion)
 		if err != nil {
-			status.Phase = drv1alpha1.PhaseFailed
-			status.CompletionTime = &metav1.Time{Time: time.Now()}
-			status.Message = fmt.Sprintf("Failed to render Feed apiVersion: %v", err)
-			return status, err
+			return "", "", nil, fmt.Errorf("failed to render Feed apiVersion: %w", err)
 		}
 		feedKind, err := render(spec.Kind)
 		if err != nil {
-			status.Phase = drv1alpha1.PhaseFailed
-			status.CompletionTime = &metav1.Time{Time: time.Now()}
-			status.Message = fmt.Sprintf("Failed to render Feed kind: %v", err)
-			return status, err
+			return "", "", nil, fmt.Errorf("failed to render Feed kind: %w", err)
 		}
 		feedName, err := render(spec.Name)
 		if err != nil {
-			status.Phase = drv1alpha1.PhaseFailed
-			status.CompletionTime = &metav1.Time{Time: time.Now()}
-			status.Message = fmt.Sprintf("Failed to render Feed name: %v", err)
-			return status, err
+			return "", "", nil, fmt.Errorf("failed to render Feed name: %w", err)
 		}
 		feedNS, err := render(spec.Namespace)
 		if err != nil {
-			status.Phase = drv1alpha1.PhaseFailed
-			status.CompletionTime = &metav1.Time{Time: time.Now()}
-			status.Message = fmt.Sprintf("Failed to render Feed namespace: %v", err)
-			return status, err
+			return "", "", nil, fmt.Errorf("failed to render Feed namespace: %w", err)
 		}
 		specMap["feed"] = map[string]interface{}{
 			"apiVersion": feedAPI,
@@ -124,30 +129,22 @@ func (e *LocalizationActionExecutor) Execute(ctx context.Context, action *drv1al
 			"namespace":  feedNS,
 		}
 	}
+
 	if len(spec.Overrides) > 0 {
 		overrideList := make([]interface{}, 0, len(spec.Overrides))
 		for i := range spec.Overrides {
 			o := &spec.Overrides[i]
 			on, err := render(o.Name)
 			if err != nil {
-				status.Phase = drv1alpha1.PhaseFailed
-				status.CompletionTime = &metav1.Time{Time: time.Now()}
-				status.Message = fmt.Sprintf("Failed to render override[%d] name: %v", i, err)
-				return status, err
+				return "", "", nil, fmt.Errorf("failed to render override[%d] name: %w", i, err)
 			}
 			ot, err := render(string(o.Type))
 			if err != nil {
-				status.Phase = drv1alpha1.PhaseFailed
-				status.CompletionTime = &metav1.Time{Time: time.Now()}
-				status.Message = fmt.Sprintf("Failed to render override[%d] type: %v", i, err)
-				return status, err
+				return "", "", nil, fmt.Errorf("failed to render override[%d] type: %w", i, err)
 			}
 			ov, err := render(o.Value)
 			if err != nil {
-				status.Phase = drv1alpha1.PhaseFailed
-				status.CompletionTime = &metav1.Time{Time: time.Now()}
-				status.Message = fmt.Sprintf("Failed to render override[%d] value: %v", i, err)
-				return status, err
+				return "", "", nil, fmt.Errorf("failed to render override[%d] value: %w", i, err)
 			}
 			entry := map[string]interface{}{"name": on, "type": ot, "value": ov}
 			if o.OverrideChart {
@@ -158,25 +155,29 @@ func (e *LocalizationActionExecutor) Execute(ctx context.Context, action *drv1al
 		specMap["overrides"] = overrideList
 	}
 
+	return locName, locNamespace, specMap, nil
+}
+
+func (e *LocalizationActionExecutor) createLocalizationResource(ctx context.Context, name, namespace string, specMap map[string]interface{}) (*unstructured.Unstructured, error) {
 	loc := &unstructured.Unstructured{}
 	loc.SetGroupVersionKind(schema.GroupVersionKind{
 		Group:   "apps.clusternet.io",
 		Version: "v1alpha1",
 		Kind:    "Localization",
 	})
-	loc.SetName(locName)
-	loc.SetNamespace(locNamespace)
+	loc.SetName(name)
+	loc.SetNamespace(namespace)
 	loc.Object["spec"] = specMap
 
 	klog.V(4).Infof("Creating Localization %s/%s", loc.GetNamespace(), loc.GetName())
 	if err := e.client.Create(ctx, loc); err != nil {
-		status.Phase = drv1alpha1.PhaseFailed
-		status.CompletionTime = &metav1.Time{Time: time.Now()}
-		status.Message = fmt.Sprintf("Failed to create Localization: %v", err)
-		return status, err
+		return nil, fmt.Errorf("failed to create Localization: %w", err)
 	}
 
-	// Store localization reference
+	return loc, nil
+}
+
+func (e *LocalizationActionExecutor) setLocalizationActionStatusSuccess(status *drv1alpha1.ActionStatus, loc *unstructured.Unstructured, actionName string) {
 	status.Outputs = &drv1alpha1.ActionOutputs{
 		LocalizationRef: &corev1.ObjectReference{
 			Kind:       "Localization",
@@ -186,13 +187,10 @@ func (e *LocalizationActionExecutor) Execute(ctx context.Context, action *drv1al
 			UID:        loc.GetUID(),
 		},
 	}
-
 	status.Phase = drv1alpha1.PhaseSucceeded
 	status.CompletionTime = &metav1.Time{Time: time.Now()}
 	status.Message = fmt.Sprintf("Localization %s/%s created successfully", loc.GetNamespace(), loc.GetName())
-
-	klog.Infof("Localization action %s completed", action.Name)
-	return status, nil
+	klog.Infof("Localization action %s completed", actionName)
 }
 
 // Rollback rolls back a Localization action by deleting the CR

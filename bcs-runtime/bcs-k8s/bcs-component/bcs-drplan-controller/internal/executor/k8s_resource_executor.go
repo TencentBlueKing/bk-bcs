@@ -43,79 +43,24 @@ func (e *KubernetesResourceActionExecutor) Execute(ctx context.Context, action *
 	klog.Infof("Executing KubernetesResource action: %s", action.Name)
 	startTime := time.Now()
 
-	status := &drv1alpha1.ActionStatus{
-		Name:      action.Name,
-		Phase:     "Running",
-		StartTime: &metav1.Time{Time: startTime},
-	}
+	status := e.newK8sResourceActionStatus(action.Name, startTime)
 
 	if action.Resource == nil {
-		status.Phase = drv1alpha1.PhaseFailed
-		status.CompletionTime = &metav1.Time{Time: time.Now()}
-		status.Message = "KubernetesResource configuration is nil"
+		e.setK8sResourceActionStatusFailed(status, "KubernetesResource configuration is nil")
 		return status, fmt.Errorf("KubernetesResource configuration is required")
 	}
 
-	// Render manifest with parameters
-	templateData := &utils.TemplateData{Params: params}
-	manifest, err := utils.RenderTemplate(action.Resource.Manifest, templateData)
+	obj, operation, err := e.prepareK8sResourceObject(action, params)
 	if err != nil {
-		status.Phase = drv1alpha1.PhaseFailed
-		status.CompletionTime = &metav1.Time{Time: time.Now()}
-		status.Message = fmt.Sprintf("Failed to render manifest: %v", err)
+		e.setK8sResourceActionStatusFailed(status, err.Error())
 		return status, err
-	}
-
-	// Parse YAML to unstructured object
-	obj := &unstructured.Unstructured{}
-	if err := yaml.Unmarshal([]byte(manifest), &obj.Object); err != nil {
-		status.Phase = drv1alpha1.PhaseFailed
-		status.CompletionTime = &metav1.Time{Time: time.Now()}
-		status.Message = fmt.Sprintf("Failed to parse manifest: %v", err)
-		return status, err
-	}
-
-	operation, err := utils.RenderTemplate(action.Resource.Operation, templateData)
-	if err != nil {
-		status.Phase = drv1alpha1.PhaseFailed
-		status.CompletionTime = &metav1.Time{Time: time.Now()}
-		status.Message = fmt.Sprintf("Failed to render operation: %v", err)
-		return status, err
-	}
-	if operation == "" {
-		operation = "Create"
 	}
 
 	klog.V(4).Infof("Performing %s operation on %s %s/%s", operation, obj.GetKind(), obj.GetNamespace(), obj.GetName())
 
-	// Perform operation
-	switch operation {
-	case "Create":
-		if err := e.client.Create(ctx, obj); err != nil {
-			status.Phase = drv1alpha1.PhaseFailed
-			status.CompletionTime = &metav1.Time{Time: time.Now()}
-			status.Message = fmt.Sprintf("Failed to create resource: %v", err)
-			return status, err
-		}
-	case "Apply":
-		if err := e.client.Patch(ctx, obj, client.Apply, client.ForceOwnership, client.FieldOwner("drplan-controller")); err != nil {
-			status.Phase = drv1alpha1.PhaseFailed
-			status.CompletionTime = &metav1.Time{Time: time.Now()}
-			status.Message = fmt.Sprintf("Failed to apply resource: %v", err)
-			return status, err
-		}
-	case "Delete":
-		if err := e.client.Delete(ctx, obj); err != nil {
-			status.Phase = drv1alpha1.PhaseFailed
-			status.CompletionTime = &metav1.Time{Time: time.Now()}
-			status.Message = fmt.Sprintf("Failed to delete resource: %v", err)
-			return status, err
-		}
-	default:
-		status.Phase = drv1alpha1.PhaseFailed
-		status.CompletionTime = &metav1.Time{Time: time.Now()}
-		status.Message = fmt.Sprintf("Unsupported operation: %s", operation)
-		return status, fmt.Errorf("unsupported operation: %s", operation)
+	if err := e.performK8sResourceOperation(ctx, operation, obj); err != nil {
+		e.setK8sResourceActionStatusFailed(status, err.Error())
+		return status, err
 	}
 
 	// Store resource reference
@@ -135,6 +80,54 @@ func (e *KubernetesResourceActionExecutor) Execute(ctx context.Context, action *
 
 	klog.Infof("KubernetesResource action %s completed", action.Name)
 	return status, nil
+}
+
+func (e *KubernetesResourceActionExecutor) prepareK8sResourceObject(action *drv1alpha1.Action, params map[string]interface{}) (*unstructured.Unstructured, string, error) {
+	templateData := &utils.TemplateData{Params: params}
+	manifest, err := utils.RenderTemplate(action.Resource.Manifest, templateData)
+	if err != nil {
+		return nil, "", fmt.Errorf("failed to render manifest: %w", err)
+	}
+	obj := &unstructured.Unstructured{}
+	err = yaml.Unmarshal([]byte(manifest), &obj.Object)
+	if err != nil {
+		return nil, "", fmt.Errorf("failed to parse manifest: %w", err)
+	}
+	operation, err := utils.RenderTemplate(action.Resource.Operation, templateData)
+	if err != nil {
+		return nil, "", fmt.Errorf("failed to render operation: %w", err)
+	}
+	if operation == "" {
+		operation = drv1alpha1.OperationCreate
+	}
+	return obj, operation, nil
+}
+
+func (e *KubernetesResourceActionExecutor) performK8sResourceOperation(ctx context.Context, operation string, obj *unstructured.Unstructured) error {
+	switch operation {
+	case drv1alpha1.OperationCreate:
+		return e.client.Create(ctx, obj)
+	case drv1alpha1.OperationApply:
+		return e.client.Patch(ctx, obj, client.Apply, client.ForceOwnership, client.FieldOwner("drplan-controller"))
+	case drv1alpha1.OperationDelete:
+		return e.client.Delete(ctx, obj)
+	default:
+		return fmt.Errorf("unsupported operation: %s", operation)
+	}
+}
+
+func (e *KubernetesResourceActionExecutor) newK8sResourceActionStatus(name string, startTime time.Time) *drv1alpha1.ActionStatus {
+	return &drv1alpha1.ActionStatus{
+		Name:      name,
+		Phase:     drv1alpha1.PhaseRunning,
+		StartTime: &metav1.Time{Time: startTime},
+	}
+}
+
+func (e *KubernetesResourceActionExecutor) setK8sResourceActionStatusFailed(status *drv1alpha1.ActionStatus, message string) {
+	status.Phase = drv1alpha1.PhaseFailed
+	status.CompletionTime = &metav1.Time{Time: time.Now()}
+	status.Message = message
 }
 
 // Rollback rolls back a KubernetesResource action
@@ -166,7 +159,7 @@ func (e *KubernetesResourceActionExecutor) Rollback(ctx context.Context, action 
 	}
 
 	// Automatic rollback for Create operation: delete the resource
-	if action.Resource.Operation == "Create" && actionStatus.Outputs != nil && actionStatus.Outputs.ResourceRef != nil {
+	if action.Resource.Operation == drv1alpha1.OperationCreate && actionStatus.Outputs != nil && actionStatus.Outputs.ResourceRef != nil {
 		obj := &unstructured.Unstructured{}
 		obj.SetGroupVersionKind(obj.GroupVersionKind())
 		obj.SetName(actionStatus.Outputs.ResourceRef.Name)

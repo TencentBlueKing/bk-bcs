@@ -131,7 +131,7 @@ func (e *SubscriptionActionExecutor) Rollback(ctx context.Context, action *drv1a
 			return rollbackStatus, err
 		}
 		rollbackStatus.Phase = drv1alpha1.PhaseSucceeded
-		rollbackStatus.Message = "Rolled back: executed custom rollback action"
+		rollbackStatus.Message = drv1alpha1.MessageRollbackSuccess
 		rollbackStatus.CompletionTime = &metav1.Time{Time: time.Now()}
 		rollbackStatus.Outputs = customStatus.Outputs
 		return rollbackStatus, nil
@@ -195,7 +195,7 @@ func (e *SubscriptionActionExecutor) renderSubscriptionNameAndNamespace(action *
 		return "", "", fmt.Errorf("failed to render Subscription name: %w", err)
 	}
 
-	subNamespace := "default"
+	subNamespace := drv1alpha1.DefaultNamespace
 	if action.Subscription.Namespace != "" {
 		subNamespace, err = render(action.Subscription.Namespace)
 		if err != nil {

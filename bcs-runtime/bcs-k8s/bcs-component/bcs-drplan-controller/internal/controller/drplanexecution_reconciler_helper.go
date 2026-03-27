@@ -110,7 +110,7 @@ func (r *DRPlanExecutionReconciler) shouldRequeue(execution *drv1alpha1.DRPlanEx
 
 // addToExecutionHistory adds an execution record to the plan's execution history (max 10, newest first)
 // This is idempotent - if the execution already exists in history AND is not in terminal state, it won't be added again
-// If the same name exists but in terminal state (Succeeded/Failed/Cancelled), a new record will be added (for re-execution)
+// If the same name exists but in terminal state (Succeeded/Failed/Canceled), a new record will be added (for re-execution)
 func (r *DRPlanExecutionReconciler) addToExecutionHistory(plan *drv1alpha1.DRPlan, execName, execNamespace, operationType string, startTime *metav1.Time) {
 	// Check if already in history (idempotent check with terminal state consideration)
 	for _, record := range plan.Status.ExecutionHistory {
@@ -161,56 +161,77 @@ func (r *DRPlanExecutionReconciler) updatePlanAfterCompletion(ctx context.Contex
 		return nil
 	}
 
-	// Refresh plan to get latest status
-	planKey := client.ObjectKey{Name: plan.Name, Namespace: plan.Namespace}
-	if err := r.Get(ctx, planKey, plan); err != nil {
-		klog.Warningf("Failed to refresh plan %s/%s: %v", plan.Namespace, plan.Name, err)
+	if err := r.refreshPlan(ctx, plan); err != nil {
 		return err
 	}
 
-	// Idempotency check: if this execution was already processed, skip
-	switch execution.Spec.OperationType {
-	case drv1alpha1.OperationTypeExecute:
-		if plan.Status.LastExecutionRef == execution.Name && plan.Status.Phase == drv1alpha1.PlanPhaseExecuted {
-			klog.V(4).Infof("Plan %s/%s already updated for execution %s, skipping",
-				plan.Namespace, plan.Name, execution.Name)
-			return nil
-		}
-	case drv1alpha1.OperationTypeRevert:
-		// For revert, if currentExecution is nil and phase is Ready, likely already processed
-		if plan.Status.CurrentExecution == nil && plan.Status.Phase == drv1alpha1.PlanPhaseReady {
-			klog.V(4).Infof("Plan %s/%s likely already updated for revert execution %s, skipping",
-				plan.Namespace, plan.Name, execution.Name)
-			return nil
-		}
+	if r.shouldSkipPlanUpdate(execution, plan) {
+		return nil
 	}
 
 	klog.Infof("Updating plan %s/%s after execution %s completion (execution phase=%s, operation=%s)",
 		plan.Namespace, plan.Name, execution.Name, execution.Status.Phase, execution.Spec.OperationType)
 
-	// Clear currentExecution
 	plan.Status.CurrentExecution = nil
+	r.applyPlanStatusFromExecution(execution, plan)
+	r.updateExecutionHistoryRecord(execution, plan)
 
-	// Update plan phase and lastExecutionRef based on execution result
-	if execution.Status.Phase == drv1alpha1.PhaseSucceeded {
-		// Always update lastExecutionRef regardless of operation type (Execute or Revert)
-		// This ensures lastExecutionRef always points to the most recent successful operation
-		plan.Status.LastExecutionRef = execution.Name
-		plan.Status.LastExecutionTime = execution.Status.CompletionTime
-
-		switch execution.Spec.OperationType {
-		case drv1alpha1.OperationTypeExecute:
-			plan.Status.Phase = drv1alpha1.PlanPhaseExecuted
-			klog.Infof("Setting plan %s/%s: phase=Executed, lastExecutionRef=%s",
-				plan.Namespace, plan.Name, execution.Name)
-		case drv1alpha1.OperationTypeRevert:
-			plan.Status.Phase = drv1alpha1.PlanPhaseReady
-			klog.Infof("Setting plan %s/%s: phase=Ready (after revert), lastExecutionRef=%s",
-				plan.Namespace, plan.Name, execution.Name)
-		}
+	if err := r.Status().Update(ctx, plan); err != nil {
+		klog.Errorf("Failed to update plan status %s/%s: %v", plan.Namespace, plan.Name, err)
+		return err
 	}
 
-	// Also update the execution record in history with final phase and completion time
+	klog.Infof("Successfully updated plan %s/%s status: phase=%s, lastExecutionRef=%s, currentExecution=%v",
+		plan.Namespace, plan.Name, plan.Status.Phase, plan.Status.LastExecutionRef, plan.Status.CurrentExecution)
+	return nil
+}
+
+// refreshPlan fetches the latest plan from the API server
+func (r *DRPlanExecutionReconciler) refreshPlan(ctx context.Context, plan *drv1alpha1.DRPlan) error {
+	planKey := client.ObjectKey{Name: plan.Name, Namespace: plan.Namespace}
+	if err := r.Get(ctx, planKey, plan); err != nil {
+		klog.Warningf("Failed to refresh plan %s/%s: %v", plan.Namespace, plan.Name, err)
+		return err
+	}
+	return nil
+}
+
+// shouldSkipPlanUpdate returns true if this execution was already processed (idempotency)
+func (r *DRPlanExecutionReconciler) shouldSkipPlanUpdate(execution *drv1alpha1.DRPlanExecution, plan *drv1alpha1.DRPlan) bool {
+	switch execution.Spec.OperationType {
+	case drv1alpha1.OperationTypeExecute:
+		if plan.Status.LastExecutionRef == execution.Name && plan.Status.Phase == drv1alpha1.PlanPhaseExecuted {
+			klog.V(4).Infof("Plan %s/%s already updated for execution %s, skipping", plan.Namespace, plan.Name, execution.Name)
+			return true
+		}
+	case drv1alpha1.OperationTypeRevert:
+		if plan.Status.CurrentExecution == nil && plan.Status.Phase == drv1alpha1.PlanPhaseReady {
+			klog.V(4).Infof("Plan %s/%s likely already updated for revert execution %s, skipping", plan.Namespace, plan.Name, execution.Name)
+			return true
+		}
+	}
+	return false
+}
+
+// applyPlanStatusFromExecution updates plan phase and lastExecutionRef from execution result
+func (r *DRPlanExecutionReconciler) applyPlanStatusFromExecution(execution *drv1alpha1.DRPlanExecution, plan *drv1alpha1.DRPlan) {
+	if execution.Status.Phase != drv1alpha1.PhaseSucceeded {
+		return
+	}
+	plan.Status.LastExecutionRef = execution.Name
+	plan.Status.LastExecutionTime = execution.Status.CompletionTime
+	switch execution.Spec.OperationType {
+	case drv1alpha1.OperationTypeExecute:
+		plan.Status.Phase = drv1alpha1.PlanPhaseExecuted
+		klog.Infof("Setting plan %s/%s: phase=Executed, lastExecutionRef=%s", plan.Namespace, plan.Name, execution.Name)
+	case drv1alpha1.OperationTypeRevert:
+		plan.Status.Phase = drv1alpha1.PlanPhaseReady
+		klog.Infof("Setting plan %s/%s: phase=Ready (after revert), lastExecutionRef=%s", plan.Namespace, plan.Name, execution.Name)
+	}
+}
+
+// updateExecutionHistoryRecord updates the execution record in plan history with final phase and completion time
+func (r *DRPlanExecutionReconciler) updateExecutionHistoryRecord(execution *drv1alpha1.DRPlanExecution, plan *drv1alpha1.DRPlan) {
 	for i := range plan.Status.ExecutionHistory {
 		record := &plan.Status.ExecutionHistory[i]
 		if record.Name == execution.Name && record.Namespace == execution.Namespace {
@@ -223,13 +244,4 @@ func (r *DRPlanExecutionReconciler) updatePlanAfterCompletion(ctx context.Contex
 			break
 		}
 	}
-
-	if err := r.Status().Update(ctx, plan); err != nil {
-		klog.Errorf("Failed to update plan status %s/%s: %v", plan.Namespace, plan.Name, err)
-		return err
-	}
-
-	klog.Infof("Successfully updated plan %s/%s status: phase=%s, lastExecutionRef=%s, currentExecution=%v",
-		plan.Namespace, plan.Name, plan.Status.Phase, plan.Status.LastExecutionRef, plan.Status.CurrentExecution)
-	return nil
 }

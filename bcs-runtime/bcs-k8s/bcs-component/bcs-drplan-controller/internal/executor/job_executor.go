@@ -40,34 +40,57 @@ func NewJobActionExecutor(client client.Client) *JobActionExecutor {
 // Execute executes a Job action
 func (e *JobActionExecutor) Execute(ctx context.Context, action *drv1alpha1.Action, params map[string]interface{}) (*drv1alpha1.ActionStatus, error) {
 	klog.Infof("Executing Job action: %s", action.Name)
-	startTime := time.Now()
-
-	status := &drv1alpha1.ActionStatus{
-		Name:      action.Name,
-		Phase:     "Running",
-		StartTime: &metav1.Time{Time: startTime},
-	}
+	status := e.newJobActionStatus(action.Name)
 
 	if action.Job == nil {
-		status.Phase = drv1alpha1.PhaseFailed
-		status.CompletionTime = &metav1.Time{Time: time.Now()}
-		status.Message = "Job configuration is nil"
+		e.setJobActionStatusFailed(status, "Job configuration is nil")
 		return status, fmt.Errorf("job configuration is required")
 	}
 
-	templateData := &utils.TemplateData{Params: params}
-	jobNamespace, err := utils.RenderTemplate(action.Job.Namespace, templateData)
+	jobNamespace, err := e.renderJobNamespace(action, params)
 	if err != nil {
-		status.Phase = drv1alpha1.PhaseFailed
-		status.CompletionTime = &metav1.Time{Time: time.Now()}
-		status.Message = fmt.Sprintf("Failed to render Job namespace: %v", err)
+		e.setJobActionStatusFailed(status, fmt.Sprintf("Failed to render Job namespace: %v", err))
 		return status, err
 	}
-	if jobNamespace == "" {
-		jobNamespace = "default"
+
+	job, err := e.createAndRunJob(ctx, action, jobNamespace)
+	if err != nil {
+		e.setJobActionStatusFailed(status, fmt.Sprintf("Failed to create Job: %v", err))
+		return status, err
 	}
 
-	// Create Job
+	e.setJobActionStatusSuccess(status, job)
+	klog.Infof("Job action %s completed, created Job %s/%s", action.Name, job.Namespace, job.Name)
+	return status, nil
+}
+
+func (e *JobActionExecutor) newJobActionStatus(name string) *drv1alpha1.ActionStatus {
+	return &drv1alpha1.ActionStatus{
+		Name:      name,
+		Phase:     drv1alpha1.PhaseRunning,
+		StartTime: &metav1.Time{Time: time.Now()},
+	}
+}
+
+func (e *JobActionExecutor) setJobActionStatusFailed(status *drv1alpha1.ActionStatus, message string) {
+	status.Phase = drv1alpha1.PhaseFailed
+	status.CompletionTime = &metav1.Time{Time: time.Now()}
+	status.Message = message
+}
+
+func (e *JobActionExecutor) renderJobNamespace(action *drv1alpha1.Action, params map[string]interface{}) (string, error) {
+	templateData := &utils.TemplateData{Params: params}
+	ns, err := utils.RenderTemplate(action.Job.Namespace, templateData)
+	if err != nil {
+		return "", err
+	}
+	if ns == "" {
+		ns = drv1alpha1.DefaultNamespace
+	}
+	return ns, nil
+}
+
+func (e *JobActionExecutor) createAndRunJob(ctx context.Context, action *drv1alpha1.Action, jobNamespace string) (*batchv1.Job, error) {
 	job := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: fmt.Sprintf("%s-", action.Name),
@@ -75,36 +98,23 @@ func (e *JobActionExecutor) Execute(ctx context.Context, action *drv1alpha1.Acti
 		},
 		Spec: action.Job.Template.Spec,
 	}
-
-	// Set TTL if specified
 	if action.Job.TTLSecondsAfterFinished != nil {
 		job.Spec.TTLSecondsAfterFinished = action.Job.TTLSecondsAfterFinished
 	}
-
 	klog.V(4).Infof("Creating Job in namespace %s", job.Namespace)
 	if err := e.client.Create(ctx, job); err != nil {
-		status.Phase = drv1alpha1.PhaseFailed
-		status.CompletionTime = &metav1.Time{Time: time.Now()}
-		status.Message = fmt.Sprintf("Failed to create Job: %v", err)
-		return status, err
+		return nil, err
 	}
+	return job, nil
+}
 
-	// Store job reference
+func (e *JobActionExecutor) setJobActionStatusSuccess(status *drv1alpha1.ActionStatus, job *batchv1.Job) {
 	status.Outputs = &drv1alpha1.ActionOutputs{
-		JobRef: &corev1.ObjectReference{
-			Kind:      "Job",
-			Namespace: job.Namespace,
-			Name:      job.Name,
-			UID:       job.UID,
-		},
+		JobRef: &corev1.ObjectReference{Kind: "Job", Namespace: job.Namespace, Name: job.Name, UID: job.UID},
 	}
-
 	status.Phase = drv1alpha1.PhaseSucceeded
 	status.CompletionTime = &metav1.Time{Time: time.Now()}
 	status.Message = fmt.Sprintf("Job %s/%s created successfully", job.Namespace, job.Name)
-
-	klog.Infof("Job action %s completed, created Job %s/%s", action.Name, job.Namespace, job.Name)
-	return status, nil
 }
 
 // Rollback rolls back a Job action by deleting the job
@@ -129,7 +139,7 @@ func (e *JobActionExecutor) Rollback(ctx context.Context, action *drv1alpha1.Act
 			return rollbackStatus, err
 		}
 		rollbackStatus.Phase = drv1alpha1.PhaseSucceeded
-		rollbackStatus.Message = "Rolled back: executed custom rollback action"
+		rollbackStatus.Message = drv1alpha1.MessageRollbackSuccess
 		rollbackStatus.CompletionTime = &metav1.Time{Time: time.Now()}
 		rollbackStatus.Outputs = customStatus.Outputs
 		return rollbackStatus, nil

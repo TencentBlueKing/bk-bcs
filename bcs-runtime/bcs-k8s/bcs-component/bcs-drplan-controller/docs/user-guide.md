@@ -154,7 +154,7 @@ spec:
         body: |
           {
             "message": "容灾预案已触发",
-            "timestamp": "{{ .timestamp }}"
+            "timestamp": "$(timestamp)"
           }
         timeout: 30s
 ```
@@ -269,16 +269,16 @@ actions:
   - name: notify-oncall
     type: HTTP
     http:
-      url: "{{ .params.notifyURL }}"
+      url: "$(params.notifyURL)"
       method: POST
       headers:
         Content-Type: "application/json"
-        Authorization: "Bearer {{ .params.token }}"
+        Authorization: "Bearer $(params.token)"
       body: |
         {
           "event": "failover",
-          "plan": "{{ .planName }}",
-          "cluster": "{{ .params.targetCluster }}"
+          "plan": "$(planName)",
+          "cluster": "$(params.targetCluster)"
         }
       timeout: 30s
       expectedStatusCodes: [200, 201, 202]
@@ -292,7 +292,7 @@ actions:
   - name: backup-database
     type: Job
     job:
-      namespace: "{{ .params.targetNamespace }}"
+      namespace: "$(params.targetNamespace)"
       generateName: "db-backup-"
       template:
         spec:
@@ -302,8 +302,8 @@ actions:
               image: backup-tool:v1.0
               command: ["backup.sh"]
               args:
-                - "--host={{ .params.dbHost }}"
-                - "--database={{ .params.dbName }}"
+                - "--host=$(params.dbHost)"
+                - "--database=$(params.dbName)"
       backoffLimit: 3
       timeout: 600s
     # Job 自动回滚：删除创建的 Job 资源
@@ -317,8 +317,8 @@ actions:
     type: Localization
     localization:
       operation: Create
-      name: "app-{{ .planName }}"
-      namespace: "{{ .params.drClusterNamespace }}"  # ManagedCluster 命名空间
+      name: "app-$(planName)"
+      namespace: "$(params.drClusterNamespace)"  # ManagedCluster 命名空间
       priority: 500  # 可选，优先级
       feed:  # 源资源引用
         apiVersion: apps/v1
@@ -350,21 +350,21 @@ actions:
     localization:
       operation: Patch
       name: existing-app-localization
-      namespace: "{{ .params.drClusterNamespace }}"  # ManagedCluster 命名空间
+      namespace: "$(params.drClusterNamespace)"  # ManagedCluster 命名空间
       overrides:
         - name: scale-up
           type: JSONPatch
           value: |
             - op: replace
               path: /spec/replicas
-              value: {{ .params.replicas }}
+              value: $(params.replicas)
     # Patch 必须显式定义回滚
     rollback:
       type: Localization
       localization:
         operation: Patch
         name: existing-app-localization
-        namespace: "{{ .params.drClusterNamespace }}"
+        namespace: "$(params.drClusterNamespace)"
         overrides:
           - name: scale-down
             type: JSONPatch
@@ -382,7 +382,7 @@ actions:
     type: Subscription
     subscription:
       operation: Create
-      name: "app-dr-subscription-{{ .planName }}"
+      name: "app-dr-subscription-$(planName)"
       namespace: default  # Subscription CR 的命名空间
       schedulingStrategy: Replication  # Replication | Dividing
       feeds:  # 要分发的资源列表
@@ -401,7 +401,7 @@ actions:
       subscribers:  # 目标集群选择
         - clusterAffinity:
             matchLabels:
-              region: "{{ .params.targetRegion }}"
+              region: "$(params.targetRegion)"
               purpose: disaster-recovery
     # Subscription Create 自动回滚：删除创建的 Subscription 资源
 ```
@@ -424,12 +424,12 @@ actions:
         apiVersion: v1
         kind: ConfigMap
         metadata:
-          name: "dr-config-{{ .planName }}"
-          namespace: "{{ .params.namespace }}"
+          name: "dr-config-$(planName)"
+          namespace: "$(params.namespace)"
         data:
           dr-mode: "active"
-          dr-region: "{{ .params.targetRegion }}"
-          db-host: "{{ .params.drDbHost }}"
+          dr-region: "$(params.targetRegion)"
+          db-host: "$(params.drDbHost)"
     # Create 自动回滚：删除创建的 ConfigMap
   
   # 场景 2: 创建 Secret
@@ -442,11 +442,11 @@ actions:
         kind: Secret
         metadata:
           name: "dr-credentials"
-          namespace: "{{ .params.namespace }}"
+          namespace: "$(params.namespace)"
         type: Opaque
         stringData:
-          username: "{{ .params.drUsername }}"
-          password: "{{ .params.drPassword }}"
+          username: "$(params.drUsername)"
+          password: "$(params.drPassword)"
     # Create 自动回滚：删除创建的 Secret
   
   # 场景 3: 操作自定义 CRD
@@ -459,11 +459,11 @@ actions:
         kind: BackupPolicy
         metadata:
           name: "dr-backup-policy"
-          namespace: "{{ .params.namespace }}"
+          namespace: "$(params.namespace)"
         spec:
           schedule: "0 */6 * * *"
           retention: 7
-          destination: "{{ .params.drBackupLocation }}"
+          destination: "$(params.drBackupLocation)"
     # Apply 通常用于幂等操作，回滚时需要显式定义
     rollback:
       type: KubernetesResource
@@ -474,7 +474,7 @@ actions:
           kind: BackupPolicy
           metadata:
             name: "dr-backup-policy"
-            namespace: "{{ .params.namespace }}"
+            namespace: "$(params.namespace)"
   
   # 场景 4: Patch 操作（必须定义 rollback）
   - name: update-existing-config
@@ -486,7 +486,7 @@ actions:
         kind: ConfigMap
         metadata:
           name: "app-config"
-          namespace: "{{ .params.namespace }}"
+          namespace: "$(params.namespace)"
         data:
           mode: "dr"  # 更新为 DR 模式
     # Patch 必须显式定义回滚
@@ -499,7 +499,7 @@ actions:
           kind: ConfigMap
           metadata:
             name: "app-config"
-            namespace: "{{ .params.namespace }}"
+            namespace: "$(params.namespace)"
           data:
             mode: "normal"  # 恢复为 normal 模式
 ```
@@ -552,10 +552,10 @@ spec:
       localization:
         operation: Create
         name: "scaled-app"
-        clusterNamespace: "{{ .params.targetCluster }}"
+        clusterNamespace: "$(params.targetCluster)"
         overrides:
           - path: /spec/replicas
-            value: {{ .params.replicas }}
+            value: $(params.replicas)
 ```
 
 ---
@@ -1132,16 +1132,16 @@ spec:
     - name: notify-start
       type: HTTP
       http:
-        url: "{{ .params.webhookURL }}"
+        url: "$(params.webhookURL)"
         method: POST
         headers:
           Content-Type: "application/json"
         body: |
           {
             "event": "failover_started",
-            "plan": "{{ .planName }}",
-            "target_cluster": "{{ .params.drClusterNamespace }}",
-            "timestamp": "{{ .timestamp }}"
+            "plan": "$(planName)",
+            "target_cluster": "$(params.drClusterNamespace)",
+            "timestamp": "$(timestamp)"
           }
         timeout: 30s
     
@@ -1150,8 +1150,8 @@ spec:
       type: Localization
       localization:
         operation: Create
-        name: "app-dr-localization-{{ .planName }}"
-        namespace: "{{ .params.drClusterNamespace }}"  # ManagedCluster 命名空间
+        name: "app-dr-localization-$(planName)"
+        namespace: "$(params.drClusterNamespace)"  # ManagedCluster 命名空间
         priority: 600  # 高优先级确保覆盖生效
         feed:  # 关联到 Deployment 资源
           apiVersion: apps/v1
@@ -1164,7 +1164,7 @@ spec:
             value: |
               - op: replace
                 path: /spec/replicas
-                value: {{ .params.replicas }}
+                value: $(params.replicas)
           - name: update-db-config
             type: JSONPatch
             value: |
@@ -1172,7 +1172,7 @@ spec:
                 path: /spec/template/spec/containers/0/env
                 value:
                   - name: DB_HOST
-                    value: "{{ .params.drDbHost }}"
+                    value: "$(params.drDbHost)"
                   - name: DR_MODE
                     value: "active"
                   - name: REGION
@@ -1183,7 +1183,7 @@ spec:
               metadata:
                 labels:
                   dr-mode: "active"
-                  failover-plan: "{{ .planName }}"
+                  failover-plan: "$(planName)"
       # Localization Create 自动回滚：删除创建的 Localization
     
     # 步骤 3: 创建 Subscription 将应用分发到 DR 集群
@@ -1191,7 +1191,7 @@ spec:
       type: Subscription
       subscription:
         operation: Create
-        name: "app-dr-subscription-{{ .planName }}"
+        name: "app-dr-subscription-$(planName)"
         namespace: default  # Subscription CR 的命名空间
         schedulingStrategy: Replication
         feeds:  # 要分发的资源列表
@@ -1237,16 +1237,16 @@ spec:
     - name: notify-complete
       type: HTTP
       http:
-        url: "{{ .params.webhookURL }}"
+        url: "$(params.webhookURL)"
         method: POST
         headers:
           Content-Type: "application/json"
         body: |
           {
             "event": "failover_completed",
-            "plan": "{{ .planName }}",
+            "plan": "$(planName)",
             "status": "success",
-            "timestamp": "{{ .timestamp }}"
+            "timestamp": "$(timestamp)"
           }
         timeout: 30s
 ```
@@ -1455,15 +1455,15 @@ spec:
     - name: send-notification
       type: HTTP
       http:
-        url: "{{ .params.webhookURL }}"
+        url: "$(params.webhookURL)"
         method: POST
         headers:
           Content-Type: "application/json"
         body: |
           {
-            "event": "{{ .params.event }}",
-            "message": "{{ .params.message }}",
-            "timestamp": "{{ .timestamp }}"
+            "event": "$(params.event)",
+            "message": "$(params.message)",
+            "timestamp": "$(timestamp)"
           }
         timeout: 30s
 ```
@@ -1497,8 +1497,8 @@ spec:
         body: |
           {
             "service": "mysql",
-            "target_host": "{{ .params.drDbHost }}",
-            "target_port": "{{ .params.drDbPort }}"
+            "target_host": "$(params.drDbHost)",
+            "target_port": "$(params.drDbPort)"
           }
         timeout: 60s
       rollback:
@@ -1537,12 +1537,12 @@ spec:
       type: Localization
       localization:
         operation: Create
-        name: "{{ .params.serviceName }}-localization"
-        namespace: "{{ .params.drClusterNamespace }}"
+        name: "$(params.serviceName)-localization"
+        namespace: "$(params.drClusterNamespace)"
         feed:
           apiVersion: apps/v1
           kind: Deployment
-          name: "{{ .params.serviceName }}"
+          name: "$(params.serviceName)"
           namespace: production
         overrides:
           - name: scale-replicas
@@ -1550,7 +1550,7 @@ spec:
             value: |
               - op: replace
                 path: /spec/replicas
-                value: {{ .params.replicas }}
+                value: $(params.replicas)
           - name: add-dr-label
             type: MergePatch
             value: |
@@ -1562,17 +1562,17 @@ spec:
       type: Subscription
       subscription:
         operation: Create
-        name: "{{ .params.serviceName }}-subscription"
+        name: "$(params.serviceName)-subscription"
         namespace: default
         schedulingStrategy: Replication
         feeds:
           - apiVersion: apps/v1
             kind: Deployment
-            name: "{{ .params.serviceName }}"
+            name: "$(params.serviceName)"
             namespace: production
           - apiVersion: v1
             kind: Service
-            name: "{{ .params.serviceName }}"
+            name: "$(params.serviceName)"
             namespace: production
         subscribers:
           - clusterAffinity:
@@ -1583,7 +1583,7 @@ spec:
       type: Job
       job:
         namespace: production
-        generateName: "health-{{ .params.serviceName }}-"
+        generateName: "health-$(params.serviceName)-"
         template:
           spec:
             restartPolicy: Never
@@ -1593,7 +1593,7 @@ spec:
                 command: ["/bin/sh", "-c"]
                 args:
                   - |
-                    curl -f http://{{ .params.serviceName }}.production.svc/health && exit 0 || exit 1
+                    curl -f http://$(params.serviceName).production.svc/health && exit 0 || exit 1
         timeout: 300s
 ```
 

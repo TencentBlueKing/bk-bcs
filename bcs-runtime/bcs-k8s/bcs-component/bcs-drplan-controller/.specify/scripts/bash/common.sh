@@ -2,14 +2,28 @@
 # Common functions and variables for all scripts
 
 # Get repository root, with fallback for non-git repositories
+# For monorepo support, prefer .specify directory location over git root
 get_repo_root() {
+    local script_dir="$(CDPATH="" cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    
+    # First, try to find .specify directory (project root marker)
+    local current_dir="$script_dir"
+    while [ "$current_dir" != "/" ]; do
+        if [ -d "$current_dir/.specify" ]; then
+            echo "$current_dir"
+            return 0
+        fi
+        current_dir="$(dirname "$current_dir")"
+    done
+    
+    # If .specify not found but we're in a git repo, use git root as fallback
     if git rev-parse --show-toplevel >/dev/null 2>&1; then
         git rev-parse --show-toplevel
-    else
-        # Fall back to script location for non-git repos
-        local script_dir="$(CDPATH="" cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-        (cd "$script_dir/../../.." && pwd)
+        return 0
     fi
+    
+    # Final fallback: script location
+    (cd "$script_dir/../../.." && pwd)
 }
 
 # Get current branch, with fallback for non-git repositories

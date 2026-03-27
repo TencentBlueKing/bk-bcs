@@ -1,0 +1,45 @@
+# DRWorkflow: Create Subscription to distribute nginx resources to child clusters.
+apiVersion: dr.bkbcs.tencent.com/v1alpha1
+kind: DRWorkflow
+metadata:
+  name: {{ .Release.Name }}-subscription
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "nginx-drplan.labels" . | nindent 4 }}
+spec:
+  failurePolicy: FailFast
+  parameters:
+    - name: feedNamespace
+      type: string
+      description: "Namespace for Subscription feeds"
+      default: {{ .Values.feedNamespace | quote }}
+  actions:
+    - name: create-nginx-subscription
+      type: Subscription
+      timeout: 2m
+      subscription:
+        operation: Create
+        name: {{ .Release.Name }}-nginx-subscription
+        namespace: "$(params.feedNamespace)"
+        spec:
+          schedulingStrategy: Replication
+          feeds:
+            - apiVersion: apps/v1
+              kind: Deployment
+              name: nginx
+              namespace: "$(params.feedNamespace)"
+            - apiVersion: v1
+              kind: ConfigMap
+              name: nginx-config
+              namespace: "$(params.feedNamespace)"
+            - apiVersion: v1
+              kind: Service
+              name: nginx
+              namespace: "$(params.feedNamespace)"
+          subscribers:
+            - clusterAffinity:
+                matchExpressions:
+                  - key: clusternet.io/created-by
+                    operator: In
+                    values:
+                      - clusternet-agent
