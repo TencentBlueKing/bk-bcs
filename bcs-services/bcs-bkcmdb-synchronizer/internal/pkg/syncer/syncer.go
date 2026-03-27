@@ -2089,6 +2089,7 @@ func (s *Syncer) SyncStoreMigrate(db *gorm.DB) {
 	_ = model.GameDeploymentMigrate(db)
 	_ = model.GameStatefulSetMigrate(db)
 	_ = model.PodsWorkloadMigrate(db)
+	_ = model.CustomResourceMigrate(db)
 	_ = model.PodMigrate(db)
 	_ = model.ContainerMigrate(db)
 }
