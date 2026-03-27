@@ -17,6 +17,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"hash/fnv"
+	"os"
 	"reflect"
 	"strings"
 	"time"
@@ -117,4 +118,19 @@ func FirstLower(s string) string {
 		return ""
 	}
 	return strings.ToLower(s[:1]) + s[1:]
+}
+
+// SetCustomResourceTypesFromEnv parses synchronizer_customResourceTypes environment variable
+// and sets it to the option. The env value should be a JSON string, e.g., '{"cluster-id-1":["BkApp"]}'
+func SetCustomResourceTypesFromEnv(opt *option.BkcmdbSynchronizerOption) error {
+	envValue := os.Getenv("synchronizer_customResourceTypes")
+	if envValue == "" {
+		return nil
+	}
+	var result map[string][]string
+	if err := json.Unmarshal([]byte(envValue), &result); err != nil {
+		return fmt.Errorf("unmarshal custom resource types failed: %w", err)
+	}
+	opt.Synchronizer.CustomResourceTypes = result
+	return nil
 }

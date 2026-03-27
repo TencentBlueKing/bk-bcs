@@ -23,6 +23,7 @@ import (
 	"time"
 
 	bkcmdbkube "configcenter/src/kube/types" // nolint
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	pmp "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
 	cmp "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
@@ -225,6 +226,10 @@ func (b *BcsBkcmdbSynchronizerHandler) HandleMsg(
 					}
 					errH = b.handleNodes(&nodeMsg, bkCluster, db)
 					// errH = b.handleEvent(msg, bkCluster)
+				default:
+					// 未匹配的 resourceType 当作 CustomResource 处理
+					// handleCustomResource 内部会校验该 crKind 是否在白名单中
+					errH = b.handleCustomResource(msg, bkCluster, db)
 				}
 
 				if errH != nil {
@@ -3285,4 +3290,347 @@ func (b *BcsBkcmdbSynchronizerHandler) PublishMsg(msg amqp.Delivery, rep int32) 
 
 	// Return the error if there is one, or nil if the message was published successfully.
 	return err
+}
+
+// CustomResourceData represents the message body for custom resource events.
+// The body is the raw K8s object JSON from bcs-storage.
+type CustomResourceData map[string]interface{}
+
+// handleCustomResource handles custom resource messages from RabbitMQ.
+func (b *BcsBkcmdbSynchronizerHandler) handleCustomResource(
+	msg amqp.Delivery, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
+	// Get message header
+	msgHeader, err := getMsgHeader(&msg.Headers)
+	if err != nil {
+		blog.Errorf("handleCustomResource unable to get headers, err: %s", err.Error())
+		return fmt.Errorf("handleCustomResource unable to get headers, err: %s", err.Error())
+	}
+
+	// Kind from Header.resourceType (not from body)
+	crKind := msgHeader.ResourceType
+	if crKind == "" {
+		blog.Errorf("handleCustomResource: crKind is empty")
+		return fmt.Errorf("handleCustomResource: crKind is empty")
+	}
+
+	// Whitelist check - get cluster ID from message header
+	clusterID := msgHeader.ClusterId
+	crKinds, ok := b.Syncer.BkcmdbSynchronizerOption.Synchronizer.CustomResourceTypes[clusterID]
+	if !ok || len(crKinds) == 0 {
+		blog.Infof("cluster %s not configured for custom resource sync, skip", clusterID)
+		return nil
+	}
+
+	// Check if this crKind is in the whitelist
+	isWhitelisted := false
+	for _, k := range crKinds {
+		if k == crKind {
+			isWhitelisted = true
+			break
+		}
+	}
+	if !isWhitelisted {
+		blog.Infof("cluster %s crKind %s not in whitelist, skip", clusterID, crKind)
+		return nil
+	}
+
+	// Parse body as raw K8s object map
+	var crData CustomResourceData
+	err = json.Unmarshal(msg.Body, &crData)
+	if err != nil {
+		blog.Errorf("handleCustomResource: unable to unmarshal, err: %s", err.Error())
+		return fmt.Errorf("handleCustomResource: unable to unmarshal, err: %s", err.Error())
+	}
+
+	blog.Infof("handleCustomResource: cluster=%s, crKind=%s, event=%s, namespace=%s, resourceName=%s",
+		clusterID, crKind, msgHeader.Event, msgHeader.Namespace, msgHeader.ResourceName)
+
+	// Handle based on event type
+	switch msgHeader.Event {
+	case "update":
+		return b.handleCustomResourceUpdate(crData, crKind, msgHeader, bkCluster, db)
+	case "delete":
+		return b.handleCustomResourceDelete(crData, crKind, msgHeader, bkCluster, db)
+	case "create":
+		return b.handleCustomResourceCreate(crData, crKind, msgHeader, bkCluster, db)
+	default:
+		blog.Errorf("handleCustomResource: Unknown event: %s", msgHeader.Event)
+		return fmt.Errorf("handleCustomResource: Unknown event: %s", msgHeader.Event)
+	}
+}
+
+// handleCustomResourceCreate handles custom resource creation.
+func (b *BcsBkcmdbSynchronizerHandler) handleCustomResourceCreate(
+	crData CustomResourceData, crKind string, msgHeader *MsgHeader, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
+	// Get bk namespace
+	bkNamespaces, err := b.Syncer.GetBkNamespaces(bkCluster.BizID, &client.PropertyFilter{
+		Condition: "AND",
+		Rules: []client.Rule{
+			{
+				Field:    "name",
+				Operator: "in",
+				Value:    []string{msgHeader.Namespace},
+			},
+			{
+				Field:    "cluster_uid",
+				Operator: "in",
+				Value:    []string{bkCluster.Uid},
+			},
+		},
+	}, true, db)
+	if err != nil {
+		return err
+	}
+	if len(*bkNamespaces) != 1 {
+		return fmt.Errorf("len(bkNamespaces) = %d", len(*bkNamespaces))
+	}
+	bkNamespace := (*bkNamespaces)[0]
+
+	// Check if already exists - try update first
+	bkCRs, err := b.Syncer.GetBkWorkloads(bkCluster.BizID, "customResource", &client.PropertyFilter{
+		Condition: "AND",
+		Rules: []client.Rule{
+			{
+				Field:    "name",
+				Operator: "in",
+				Value:    []string{msgHeader.ResourceName},
+			},
+			{
+				Field:    "cluster_uid",
+				Operator: "in",
+				Value:    []string{bkCluster.Uid},
+			},
+			{
+				Field:    "namespace",
+				Operator: "in",
+				Value:    []string{msgHeader.Namespace},
+			},
+			{
+				Field:    "cr_kind",
+				Operator: "in",
+				Value:    []string{crKind},
+			},
+		},
+	}, true, db)
+	if err != nil {
+		return err
+	}
+
+	// If exists, update instead
+	if len(*bkCRs) > 0 {
+		return b.handleCustomResourceUpdate(crData, crKind, msgHeader, bkCluster, db)
+	}
+
+	// Extract fields from crData
+	labels := extractLabels(crData)
+	replicas := extractReplicas(crData)
+	apiVersion := extractApiVersion(crData)
+
+	// Create new
+	kind := "customResource"
+	crToAdd := make(map[int64][]client.CreateBcsWorkloadRequestData, 0)
+	toAddData := &client.CreateBcsWorkloadRequestData{
+		NamespaceID:  &bkNamespace.ID,
+		Name:         &msgHeader.ResourceName,
+		Labels:       &labels,
+		Replicas:     &replicas,
+		CRKind:       &crKind,
+		CRApiVersion: &apiVersion,
+	}
+	crToAdd[bkNamespace.BizID] = []client.CreateBcsWorkloadRequestData{*toAddData}
+	blog.Infof("customResourceToAdd: %s/%s, crKind=%s", msgHeader.Namespace, msgHeader.ResourceName, crKind)
+
+	b.Syncer.CreateBkWorkloads(bkCluster, kind, crToAdd, db)
+	return nil
+}
+
+// handleCustomResourceUpdate handles custom resource update.
+func (b *BcsBkcmdbSynchronizerHandler) handleCustomResourceUpdate(
+	crData CustomResourceData, crKind string, msgHeader *MsgHeader, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
+	// Get existing bk workload
+	bkCRs, err := b.Syncer.GetBkWorkloads(bkCluster.BizID, "customResource", &client.PropertyFilter{
+		Condition: "AND",
+		Rules: []client.Rule{
+			{
+				Field:    "name",
+				Operator: "in",
+				Value:    []string{msgHeader.ResourceName},
+			},
+			{
+				Field:    "cluster_uid",
+				Operator: "in",
+				Value:    []string{bkCluster.Uid},
+			},
+			{
+				Field:    "namespace",
+				Operator: "in",
+				Value:    []string{msgHeader.Namespace},
+			},
+			{
+				Field:    "cr_kind",
+				Operator: "in",
+				Value:    []string{crKind},
+			},
+		},
+	}, true, db)
+	if err != nil {
+		return err
+	}
+
+	// If not exists, create instead
+	if len(*bkCRs) == 0 {
+		return b.handleCustomResourceCreate(crData, crKind, msgHeader, bkCluster, db)
+	}
+	if len(*bkCRs) > 1 {
+		return fmt.Errorf("len(bkCRs) = %d", len(*bkCRs))
+	}
+
+	// Get the existing CR
+	bkCR := (*bkCRs)[0]
+	bkCRMap, ok := bkCR.(map[string]interface{})
+	if !ok {
+		return fmt.Errorf("bkCR is not map[string]interface{}")
+	}
+
+	// Extract fields from crData
+	labels := extractLabels(crData)
+	replicas := extractReplicas(crData)
+
+	// Check if update is needed
+	needUpdate := false
+	updateData := &client.UpdateBcsWorkloadRequestData{}
+
+	// Compare labels
+	if labels != nil {
+		if bkLabels, ok := bkCRMap["labels"].(map[string]interface{}); ok {
+			for k, v := range labels {
+				if bkV, ok := bkLabels[k].(string); !ok || bkV != v {
+					needUpdate = true
+					break
+				}
+			}
+		} else {
+			needUpdate = true
+		}
+	}
+
+	// Compare replicas
+	if !needUpdate && replicas > 0 {
+		if bkReplicas, ok := bkCRMap["replicas"].(float64); ok {
+			if int64(bkReplicas) != replicas {
+				needUpdate = true
+				updateData.Replicas = &replicas
+			}
+		} else {
+			needUpdate = true
+			updateData.Replicas = &replicas
+		}
+	}
+
+	if !needUpdate {
+		blog.Infof("customResource %s/%s no update needed", msgHeader.Namespace, msgHeader.ResourceName)
+		return nil
+	}
+
+	// Get ID for update
+	if id, ok := bkCRMap["id"].(float64); ok {
+		blog.Infof("customResourceToUpdate: %s/%s, crKind=%s, id=%d", msgHeader.Namespace,
+			msgHeader.ResourceName, crKind, int64(id))
+		b.Syncer.UpdateBkWorkloads(bkCluster, "customResource",
+			&map[int64]*client.UpdateBcsWorkloadRequestData{int64(id): updateData}, db)
+		return nil
+	}
+
+	return fmt.Errorf("customResource %s/%s id not found", msgHeader.Namespace, msgHeader.ResourceName)
+}
+
+// handleCustomResourceDelete handles custom resource deletion.
+func (b *BcsBkcmdbSynchronizerHandler) handleCustomResourceDelete(
+	crData CustomResourceData, crKind string, msgHeader *MsgHeader, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
+	// Get existing bk workload
+	bkCRs, err := b.Syncer.GetBkWorkloads(bkCluster.BizID, "customResource", &client.PropertyFilter{
+		Condition: "AND",
+		Rules: []client.Rule{
+			{
+				Field:    "name",
+				Operator: "in",
+				Value:    []string{msgHeader.ResourceName},
+			},
+			{
+				Field:    "cluster_uid",
+				Operator: "in",
+				Value:    []string{bkCluster.Uid},
+			},
+			{
+				Field:    "namespace",
+				Operator: "in",
+				Value:    []string{msgHeader.Namespace},
+			},
+			{
+				Field:    "cr_kind",
+				Operator: "in",
+				Value:    []string{crKind},
+			},
+		},
+	}, true, db)
+	if err != nil {
+		return err
+	}
+
+	if len(*bkCRs) == 0 {
+		blog.Infof("customResource %s/%s not found in CMDB, skip delete", msgHeader.Namespace, msgHeader.ResourceName)
+		return nil
+	}
+	if len(*bkCRs) > 1 {
+		return fmt.Errorf("len(bkCRs) = %d", len(*bkCRs))
+	}
+
+	// Get the existing CR
+	bkCR := (*bkCRs)[0]
+	bkCRMap, ok := bkCR.(map[string]interface{})
+	if !ok {
+		return fmt.Errorf("bkCR is not map[string]interface{}")
+	}
+
+	// Get ID for delete
+	if id, ok := bkCRMap["id"].(float64); ok {
+		blog.Infof("customResourceToDelete: %s/%s, crKind=%s, id=%d", msgHeader.Namespace,
+			msgHeader.ResourceName, crKind, int64(id))
+		return b.Syncer.DeleteBkWorkloads(bkCluster, "customResource", &[]int64{int64(id)}, db)
+	}
+
+	return fmt.Errorf("customResource %s/%s id not found", msgHeader.Namespace, msgHeader.ResourceName)
+}
+
+// extractLabels extracts labels from the custom resource data.
+func extractLabels(crData CustomResourceData) map[string]string {
+	labels := make(map[string]string)
+	if metadata, ok := crData["metadata"].(map[string]interface{}); ok {
+		if l, ok := metadata["labels"].(map[string]interface{}); ok {
+			for k, v := range l {
+				if vs, ok := v.(string); ok {
+					labels[k] = vs
+				}
+			}
+		}
+	}
+	return labels
+}
+
+// extractReplicas extracts replicas from the custom resource data.
+func extractReplicas(crData CustomResourceData) int64 {
+	if spec, ok := crData["spec"].(map[string]interface{}); ok {
+		if r, ok := spec["replicas"].(float64); ok {
+			return int64(r)
+		}
+	}
+	return 0
+}
+
+// extractApiVersion extracts apiVersion from the custom resource data.
+func extractApiVersion(crData CustomResourceData) string {
+	if apiVersion, ok := crData["apiVersion"].(string); ok {
+		return apiVersion
+	}
+	return ""
 }
