@@ -25,6 +25,7 @@ import (
 	bkcmdbkube "configcenter/src/kube/types" // nolint
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
 	pmp "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
 	cmp "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/storage"
@@ -36,6 +37,7 @@ import (
 	"gorm.io/gorm"
 	appv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/client"
 	cm "github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/client/clustermanager"
@@ -49,6 +51,8 @@ import (
 const (
 	// Deployment 表示Kubernetes中的部署资源类型
 	Deployment = "Deployment"
+	// StatefulSet 表示Kubernetes中的有状态副本集资源类型
+	StatefulSet = "StatefulSet"
 )
 
 var workloadKindList = []string{"GameDeployment", "GameStatefulSet", "StatefulSet", "DaemonSet", "Deployment"}
@@ -859,6 +863,171 @@ func (b *BcsBkcmdbSynchronizerHandler) handlePodsDelete(
 	return err
 }
 
+// resolveWorkloadOwner 尝试从 Workload 向上追溯获取最终的 workload 信息
+// 如果 Workload 的 Owner 是 CR 白名单中的类型，则返回 CR 的信息
+// 否则返回 Workload 本身的信息
+// workloadKind 取值: Deployment, StatefulSet
+func (b *BcsBkcmdbSynchronizerHandler) resolveWorkloadOwner(
+	clusterUID string,
+	namespaceName string,
+	workloadKind string,
+	workloadName string,
+	storageCli bcsapi.Storage,
+	crKinds []string,
+) (resolvedKind string, resolvedName string) {
+	// 初始值：关联到原始 Workload
+	resolvedKind = workloadKind
+	resolvedName = workloadName
+
+	// 如果没有配置 CR 白名单，直接返回
+	if len(crKinds) == 0 {
+		return
+	}
+
+	// 查询 Workload 的详细信息
+	var workloadList interface{}
+	var err error
+
+	switch workloadKind {
+	case "deployment":
+		workloadList, err = storageCli.QueryK8SDeployment(clusterUID, namespaceName)
+	case "statefulset":
+		workloadList, err = storageCli.QueryK8SStatefulSet(clusterUID, namespaceName)
+	default:
+		blog.Warnf("resolveWorkloadOwner: unsupported workload kind %s", workloadKind)
+		return
+	}
+
+	if err != nil {
+		blog.Warnf("query %s %s from storage failed: %s, use %s as fallback",
+			workloadKind, workloadName, err.Error(), workloadKind)
+		return
+	}
+
+	if workloadList == nil {
+		blog.Warnf("%s %s not found in storage, use %s as fallback",
+			workloadKind, workloadName, workloadKind)
+		return
+	}
+
+	// 查找匹配的 Workload 并获取其 Owner
+	var ownerRef metav1.OwnerReference
+	found := false
+
+	switch w := workloadList.(type) {
+	case []*storage.Deployment:
+		for _, deploy := range w {
+			if deploy.Data.Name == workloadName {
+				if len(deploy.Data.OwnerReferences) > 0 {
+					ownerRef = deploy.Data.OwnerReferences[0]
+					found = true
+				}
+				break
+			}
+		}
+	case []*storage.StatefulSet:
+		for _, ss := range w {
+			if ss.Data.Name == workloadName {
+				if len(ss.Data.OwnerReferences) > 0 {
+					ownerRef = ss.Data.OwnerReferences[0]
+					found = true
+				}
+				break
+			}
+		}
+	}
+
+	if !found {
+		blog.Infof("%s %s has no owner, use %s", workloadKind, workloadName, workloadKind)
+		return
+	}
+
+	// 检查 Owner 是否在 CR 白名单中
+	if common.IsKindInSlice(ownerRef.Kind, crKinds) {
+		resolvedKind = "customResource"
+		resolvedName = ownerRef.Name
+		blog.Infof("found CR owner: %s/%s for Pod via %s %s",
+			ownerRef.Kind, ownerRef.Name, workloadKind, workloadName)
+	} else {
+		blog.Infof("%s %s owner %s not in CR whitelist, use %s",
+			workloadKind, workloadName, ownerRef.Kind, workloadKind)
+	}
+
+	return
+}
+
+// isWorkloadOwnedByCR 检查 workload 的 owner 是否在 CR 白名单中
+// 如果是，返回 (true, crKind)；否则返回 (false, "")
+func (b *BcsBkcmdbSynchronizerHandler) isWorkloadOwnedByCR(
+	clusterUID, namespaceName, workloadKind, workloadName string,
+	storageCli bcsapi.Storage, crKinds []string) (bool, string) {
+
+	if len(crKinds) == 0 {
+		return false, ""
+	}
+
+	// 查询 Workload 详细信息
+	var workloadList interface{}
+	var err error
+
+	switch workloadKind {
+	case "deployment":
+		workloadList, err = storageCli.QueryK8SDeployment(clusterUID, namespaceName)
+	case "statefulset":
+		workloadList, err = storageCli.QueryK8SStatefulSet(clusterUID, namespaceName)
+	default:
+		return false, ""
+	}
+
+	if err != nil {
+		blog.Warnf("query %s %s from storage failed: %s, skip CR owner check",
+			workloadKind, workloadName, err.Error())
+		return false, ""
+	}
+
+	if workloadList == nil {
+		blog.Warnf("%s %s not found in storage, skip CR owner check",
+			workloadKind, workloadName)
+		return false, ""
+	}
+
+	// 查找匹配的 Workload 并获取其 Owner
+	var ownerRef metav1.OwnerReference
+	found := false
+
+	switch w := workloadList.(type) {
+	case []*storage.Deployment:
+		for _, deploy := range w {
+			if deploy.Data.Name == workloadName && len(deploy.Data.OwnerReferences) > 0 {
+				ownerRef = deploy.Data.OwnerReferences[0]
+				found = true
+				break
+			}
+		}
+	case []*storage.StatefulSet:
+		for _, ss := range w {
+			if ss.Data.Name == workloadName && len(ss.Data.OwnerReferences) > 0 {
+				ownerRef = ss.Data.OwnerReferences[0]
+				found = true
+				break
+			}
+		}
+	}
+
+	if !found {
+		return false, ""
+	}
+
+	// 检查 owner 是否在 CR 白名单中
+	if common.IsKindInSlice(ownerRef.Kind, crKinds) {
+		blog.Infof("workload %s %s/%s is owned by CR %s, skip sync",
+			workloadKind, namespaceName, workloadName, ownerRef.Kind)
+		return true, ownerRef.Kind
+	}
+
+	return false, ""
+}
+
 // handle pod create
 // nolint funlen
 func (b *BcsBkcmdbSynchronizerHandler) handlePodCreate(pod *corev1.Pod, bkCluster *bkcmdbkube.Cluster) error {
@@ -961,9 +1130,16 @@ func (b *BcsBkcmdbSynchronizerHandler) handlePodCreate(pod *corev1.Pod, bkCluste
 			}
 			rsOwnerRef := rs.Data.OwnerReferences[0]
 			switch rsOwnerRef.Kind {
-			case Deployment:
-				workloadKind = "deployment"
-				workloadName = rsOwnerRef.Name
+			case Deployment, StatefulSet:
+				// 获取该集群的 CR 白名单
+				clusterID := bkCluster.Uid
+				crKinds := b.Syncer.BkcmdbSynchronizerOption.Synchronizer.CustomResourceTypes[clusterID]
+
+				// 尝试从 Workload 向上追溯获取最终的 workload 信息
+				workloadKind, workloadName = b.resolveWorkloadOwner(
+					bkCluster.Uid, bkNamespace.Name, rsOwnerRef.Kind, rsOwnerRef.Name, storageCli, crKinds)
+
+				// 通过 workloadKind/workloadName 查询 CMDB
 				bkWorkloads, err := b.Syncer.GetBkWorkloads(bkCluster.BizID, workloadKind, &client.PropertyFilter{
 					Condition: "AND",
 					Rules: []client.Rule{
@@ -1352,9 +1528,16 @@ func (b *BcsBkcmdbSynchronizerHandler) handlePodsCreate(podsCreate map[string]*c
 				}
 				rsOwnerRef := rs.Data.OwnerReferences[0]
 				switch rsOwnerRef.Kind {
-				case Deployment:
-					workloadKind = "deployment"
-					workloadName = rsOwnerRef.Name
+				case Deployment, StatefulSet:
+					// 获取该集群的 CR 白名单
+					clusterID := bkCluster.Uid
+					crKinds := b.Syncer.BkcmdbSynchronizerOption.Synchronizer.CustomResourceTypes[clusterID]
+
+					// 尝试从 Workload 向上追溯获取最终的 workload 信息
+					workloadKind, workloadName = b.resolveWorkloadOwner(
+						bkCluster.Uid, bkNamespace.Name, rsOwnerRef.Kind, rsOwnerRef.Name, storageCli, crKinds)
+
+					// 通过 workloadKind/workloadName 查询 CMDB
 					bkWorkloads, errW := b.Syncer.GetBkWorkloads(bkCluster.BizID, workloadKind, &client.PropertyFilter{
 						Condition: "AND",
 						Rules: []client.Rule{
@@ -1691,6 +1874,24 @@ func (b *BcsBkcmdbSynchronizerHandler) handleDeployment(
 // handleDeploymentUpdate 处理部署更新的函数
 func (b *BcsBkcmdbSynchronizerHandler) handleDeploymentUpdate(
 	deployment *appv1.Deployment, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
+	// 检查该 Deployment 是否被 CR 拥有，如果是则跳过
+	clusterID := bkCluster.Uid
+	crKinds := b.Syncer.BkcmdbSynchronizerOption.Synchronizer.CustomResourceTypes[clusterID]
+	if len(crKinds) > 0 {
+		storageCli, err := b.Syncer.GetBcsStorageClient()
+		if err != nil {
+			blog.Errorf("get bcs storage client failed, err: %s", err.Error())
+		} else {
+			ownedByCR, crKind := b.isWorkloadOwnedByCR(
+				bkCluster.Uid, deployment.Namespace, "deployment", deployment.Name, storageCli, crKinds)
+			if ownedByCR {
+				blog.Infof("deployment %s/%s is owned by CR %s, skip update",
+					deployment.Namespace, deployment.Name, crKind)
+				return nil
+			}
+		}
+	}
+
 	// 获取与当前部署相关的bk工作负载
 	bkDeployments, err := b.Syncer.GetBkWorkloads(bkCluster.BizID, "deployment", &client.PropertyFilter{
 		Condition: "AND",
@@ -1836,6 +2037,24 @@ func (b *BcsBkcmdbSynchronizerHandler) handleDeploymentDelete(
 
 func (b *BcsBkcmdbSynchronizerHandler) handleDeploymentCreate(
 	deployment *appv1.Deployment, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
+	// 检查该 Deployment 是否被 CR 拥有，如果是则跳过
+	clusterID := bkCluster.Uid
+	crKinds := b.Syncer.BkcmdbSynchronizerOption.Synchronizer.CustomResourceTypes[clusterID]
+	if len(crKinds) > 0 {
+		storageCli, err := b.Syncer.GetBcsStorageClient()
+		if err != nil {
+			blog.Errorf("get bcs storage client failed, err: %s", err.Error())
+		} else {
+			ownedByCR, crKind := b.isWorkloadOwnedByCR(
+				bkCluster.Uid, deployment.Namespace, "deployment", deployment.Name, storageCli, crKinds)
+			if ownedByCR {
+				blog.Infof("deployment %s/%s is owned by CR %s, skip create",
+					deployment.Namespace, deployment.Name, crKind)
+				return nil
+			}
+		}
+	}
+
 	bkNamespaces, err := b.Syncer.GetBkNamespaces(bkCluster.BizID, &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
@@ -1908,6 +2127,24 @@ func (b *BcsBkcmdbSynchronizerHandler) handleStatefulSet(
 
 func (b *BcsBkcmdbSynchronizerHandler) handleStatefulSetUpdate(
 	statefulSet *appv1.StatefulSet, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
+	// 检查该 StatefulSet 是否被 CR 拥有，如果是则跳过
+	clusterID := bkCluster.Uid
+	crKinds := b.Syncer.BkcmdbSynchronizerOption.Synchronizer.CustomResourceTypes[clusterID]
+	if len(crKinds) > 0 {
+		storageCli, err := b.Syncer.GetBcsStorageClient()
+		if err != nil {
+			blog.Errorf("get bcs storage client failed, err: %s", err.Error())
+		} else {
+			ownedByCR, crKind := b.isWorkloadOwnedByCR(
+				bkCluster.Uid, statefulSet.Namespace, "statefulset", statefulSet.Name, storageCli, crKinds)
+			if ownedByCR {
+				blog.Infof("statefulset %s/%s is owned by CR %s, skip update",
+					statefulSet.Namespace, statefulSet.Name, crKind)
+				return nil
+			}
+		}
+	}
+
 	bkStatefulSets, err := b.Syncer.GetBkWorkloads(bkCluster.BizID, "statefulSet", &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
@@ -2028,6 +2265,24 @@ func (b *BcsBkcmdbSynchronizerHandler) handleStatefulSetDelete(
 
 func (b *BcsBkcmdbSynchronizerHandler) handleStatefulSetCreate(
 	statefulSet *appv1.StatefulSet, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
+	// 检查该 StatefulSet 是否被 CR 拥有，如果是则跳过
+	clusterID := bkCluster.Uid
+	crKinds := b.Syncer.BkcmdbSynchronizerOption.Synchronizer.CustomResourceTypes[clusterID]
+	if len(crKinds) > 0 {
+		storageCli, err := b.Syncer.GetBcsStorageClient()
+		if err != nil {
+			blog.Errorf("get bcs storage client failed, err: %s", err.Error())
+		} else {
+			ownedByCR, crKind := b.isWorkloadOwnedByCR(
+				bkCluster.Uid, statefulSet.Namespace, "statefulset", statefulSet.Name, storageCli, crKinds)
+			if ownedByCR {
+				blog.Infof("statefulset %s/%s is owned by CR %s, skip create",
+					statefulSet.Namespace, statefulSet.Name, crKind)
+				return nil
+			}
+		}
+	}
+
 	bkNamespaces, err := b.Syncer.GetBkNamespaces(bkCluster.BizID, &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{

@@ -134,3 +134,13 @@ func SetCustomResourceTypesFromEnv(opt *option.BkcmdbSynchronizerOption) error {
 	opt.Synchronizer.CustomResourceTypes = result
 	return nil
 }
+
+// IsKindInSlice checks if a kind exists in the whitelist
+func IsKindInSlice(kind string, whitelist []string) bool {
+	for _, s := range whitelist {
+		if s == kind {
+			return true
+		}
+	}
+	return false
+}

@@ -38,6 +38,7 @@ import (
 	"gorm.io/gorm"
 	appv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/client"
@@ -488,6 +489,10 @@ func (s *Syncer) syncDeployments(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Clu
 		blog.Errorf("get bcs storage client failed, err: %s", err.Error())
 	}
 
+	// 获取该集群的 CR 白名单
+	clusterID := cluster.ClusterID
+	crKinds := s.BkcmdbSynchronizerOption.Synchronizer.CustomResourceTypes[clusterID]
+
 	// GetBkNamespaces get bknamespaces
 	bkNamespaceList, err := s.GetBkNamespaces(bkCluster.BizID, &client.PropertyFilter{
 		Condition: "AND",
@@ -571,6 +576,16 @@ func (s *Syncer) syncDeployments(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Clu
 	}
 
 	for k, v := range deploymentMap {
+		// 检查该 Deployment 是否被 CR 拥有
+		if len(crKinds) > 0 {
+			ownedByCR, crKind := s.isWorkloadOwnedByCR(cluster.ClusterID, v.Data.Namespace, "deployment", v.Data.Name, storageCli, crKinds)
+			if ownedByCR {
+				blog.Infof("deployment %s/%s is owned by CR %s, skip full sync",
+					v.Data.Namespace, v.Data.Name, crKind)
+				continue
+			}
+		}
+
 		if _, ok := bkDeploymentMap[k]; !ok {
 			// GenerateBkDeployment generate bkdeployment from k8sdeployment
 			toAddData := s.GenerateBkDeployment(bkNamespaceMap[v.Data.Namespace], v)
@@ -602,6 +617,78 @@ func (s *Syncer) syncDeployments(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Clu
 	return nil
 }
 
+// isWorkloadOwnedByCR 检查 workload 的 owner 是否在 CR 白名单中
+// 如果是，返回 (true, crKind)；否则返回 (false, "")
+func (s *Syncer) isWorkloadOwnedByCR(
+	clusterID, namespaceName, workloadKind, workloadName string,
+	storageCli bcsapi.Storage, crKinds []string) (bool, string) {
+
+	if len(crKinds) == 0 {
+		return false, ""
+	}
+
+	// 查询 Workload 详细信息
+	var workloadList interface{}
+	var err error
+
+	switch workloadKind {
+	case "deployment":
+		workloadList, err = storageCli.QueryK8SDeployment(clusterID, namespaceName)
+	case "statefulset":
+		workloadList, err = storageCli.QueryK8SStatefulSet(clusterID, namespaceName)
+	default:
+		return false, ""
+	}
+
+	if err != nil {
+		blog.Warnf("query %s %s from storage failed: %s, skip CR owner check",
+			workloadKind, workloadName, err.Error())
+		return false, ""
+	}
+
+	if workloadList == nil {
+		blog.Warnf("%s %s not found in storage, skip CR owner check",
+			workloadKind, workloadName)
+		return false, ""
+	}
+
+	// 查找匹配的 Workload 并获取其 Owner
+	var ownerRef metav1.OwnerReference
+	found := false
+
+	switch w := workloadList.(type) {
+	case []*storage.Deployment:
+		for _, deploy := range w {
+			if deploy.Data.Name == workloadName && len(deploy.Data.OwnerReferences) > 0 {
+				ownerRef = deploy.Data.OwnerReferences[0]
+				found = true
+				break
+			}
+		}
+	case []*storage.StatefulSet:
+		for _, ss := range w {
+			if ss.Data.Name == workloadName && len(ss.Data.OwnerReferences) > 0 {
+				ownerRef = ss.Data.OwnerReferences[0]
+				found = true
+				break
+			}
+		}
+	}
+
+	if !found {
+		return false, ""
+	}
+
+	// 检查 owner 是否在 CR 白名单中
+	if common.IsKindInSlice(ownerRef.Kind, crKinds) {
+		blog.Infof("workload %s %s/%s is owned by CR %s, skip sync",
+			workloadKind, namespaceName, workloadName, ownerRef.Kind)
+		return true, ownerRef.Kind
+	}
+
+	return false, ""
+}
+
 // syncStatefulSets sync statefulsets
 // nolint funlen
 func (s *Syncer) syncStatefulSets(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
@@ -611,6 +698,10 @@ func (s *Syncer) syncStatefulSets(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cl
 	if err != nil {
 		blog.Errorf("get bcs storage client failed, err: %s", err.Error())
 	}
+
+	// 获取该集群的 CR 白名单
+	clusterID := cluster.ClusterID
+	crKinds := s.BkcmdbSynchronizerOption.Synchronizer.CustomResourceTypes[clusterID]
 
 	// GetBkNamespaces get bknamespaces
 	bkNamespaceList, err := s.GetBkNamespaces(bkCluster.BizID, &client.PropertyFilter{
@@ -694,6 +785,16 @@ func (s *Syncer) syncStatefulSets(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cl
 	}
 
 	for k, v := range statefulSetMap {
+		// 检查该 StatefulSet 是否被 CR 拥有
+		if len(crKinds) > 0 {
+			ownedByCR, crKind := s.isWorkloadOwnedByCR(cluster.ClusterID, v.Data.Namespace, "statefulset", v.Data.Name, storageCli, crKinds)
+			if ownedByCR {
+				blog.Infof("statefulset %s/%s is owned by CR %s, skip full sync",
+					v.Data.Namespace, v.Data.Name, crKind)
+				continue
+			}
+		}
+
 		if _, ok := bkStatefulSetMap[k]; !ok {
 			toAddData := s.GenerateBkStatefulSet(bkNamespaceMap[v.Data.Namespace], v)
 
