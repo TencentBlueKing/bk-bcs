@@ -305,3 +305,16 @@ type OperateTaskResponse struct {
 	Result  bool   `json:"result"`
 	Message string `json:"message"`
 }
+
+// SyncClusterDataRequest sync cluster data to storage request
+type SyncClusterDataRequest struct {
+	Data map[string]interface{} `json:"data"`
+}
+
+// StorageResponse sync cluster data to storage response
+type StorageResponse struct {
+	Result  bool        `json:"result"`
+	Code    int         `json:"code"`
+	Message string      `json:"message"`
+	Data    interface{} `json:"data"`
+}

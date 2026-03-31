@@ -25,6 +25,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	autils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	com "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/lock"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
@@ -514,6 +515,35 @@ func (ca *CreateAction) Handle(ctx context.Context, req *cmproto.CreateClusterRe
 	})
 	if err != nil {
 		blog.Errorf("create cluster[%s] CreateOperationLog failed: %v", cls.ClusterID, err)
+	}
+
+	// sync cluster data to storage
+	err = com.StorageCli.SyncClusterData(cls.ClusterID, map[string]interface{}{
+		"clusterID":       cls.ClusterID,
+		"clusterName":     cls.ClusterName,
+		"provider":        cls.Provider,
+		"region":          cls.Region,
+		"vpcID":           cls.VpcID,
+		"projectID":       cls.ProjectID,
+		"businessID":      cls.BusinessID,
+		"environment":     cls.Environment,
+		"engineType":      cls.EngineType,
+		"clusterType":     cls.ClusterType,
+		"labels":          cls.Labels,
+		"creator":         cls.Creator,
+		"createTime":      cls.CreateTime,
+		"systemID":        cls.SystemID,
+		"manageType":      cls.ManageType,
+		"status":          cls.Status,
+		"networkType":     cls.NetworkType,
+		"moduleID":        cls.ModuleID,
+		"isCommonCluster": cls.IsCommonCluster,
+		"description":     cls.Description,
+		"clusterCategory": cls.ClusterCategory,
+		"isShared":        cls.IsShared,
+	})
+	if err != nil {
+		blog.Errorf("create cluster[%s] sync cluster data to storage failed: %v", cls.ClusterID, err)
 	}
 
 	ca.resp.Data = cls
