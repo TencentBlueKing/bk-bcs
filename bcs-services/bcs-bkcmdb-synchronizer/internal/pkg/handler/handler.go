@@ -884,56 +884,45 @@ func (b *BcsBkcmdbSynchronizerHandler) resolveWorkloadOwner(
 	}
 
 	// 查询 Workload 的详细信息
-	var workloadList interface{}
-	var err error
+	var ownerRef metav1.OwnerReference
+	var found bool
 
 	switch workloadKind {
 	case "Deployment":
-		workloadList, err = storageCli.QueryK8SDeployment(clusterUID, namespaceName)
+		workload, err := storageCli.GetK8SDeployment(clusterUID, namespaceName, workloadName)
+		if err != nil {
+			blog.Warnf("query deployment %s/%s from storage failed: %s, use %s as fallback",
+				namespaceName, workloadName, err.Error(), workloadKind)
+			return
+		}
+		if workload == nil {
+			blog.Warnf("deployment %s/%s not found in storage, use %s as fallback",
+				namespaceName, workloadName, workloadKind)
+			return
+		}
+		if len(workload.Data.OwnerReferences) > 0 {
+			ownerRef = workload.Data.OwnerReferences[0]
+			found = true
+		}
 	case "StatefulSet":
-		workloadList, err = storageCli.QueryK8SStatefulSet(clusterUID, namespaceName)
+		workload, err := storageCli.GetK8SStatefulSet(clusterUID, namespaceName, workloadName)
+		if err != nil {
+			blog.Warnf("query statefulset %s/%s from storage failed: %s, use %s as fallback",
+				namespaceName, workloadName, err.Error(), workloadKind)
+			return
+		}
+		if workload == nil {
+			blog.Warnf("statefulset %s/%s not found in storage, use %s as fallback",
+				namespaceName, workloadName, workloadKind)
+			return
+		}
+		if len(workload.Data.OwnerReferences) > 0 {
+			ownerRef = workload.Data.OwnerReferences[0]
+			found = true
+		}
 	default:
 		blog.Warnf("resolveWorkloadOwner: unsupported workload kind %s", workloadKind)
 		return
-	}
-
-	if err != nil {
-		blog.Warnf("query %s %s from storage failed: %s, use %s as fallback",
-			workloadKind, workloadName, err.Error(), workloadKind)
-		return
-	}
-
-	if workloadList == nil {
-		blog.Warnf("%s %s not found in storage, use %s as fallback",
-			workloadKind, workloadName, workloadKind)
-		return
-	}
-
-	// 查找匹配的 Workload 并获取其 Owner
-	var ownerRef metav1.OwnerReference
-	found := false
-
-	switch w := workloadList.(type) {
-	case []*storage.Deployment:
-		for _, deploy := range w {
-			if deploy.Data.Name == workloadName {
-				if len(deploy.Data.OwnerReferences) > 0 {
-					ownerRef = deploy.Data.OwnerReferences[0]
-					found = true
-				}
-				break
-			}
-		}
-	case []*storage.StatefulSet:
-		for _, ss := range w {
-			if ss.Data.Name == workloadName {
-				if len(ss.Data.OwnerReferences) > 0 {
-					ownerRef = ss.Data.OwnerReferences[0]
-					found = true
-				}
-				break
-			}
-		}
 	}
 
 	if !found {
@@ -966,51 +955,44 @@ func (b *BcsBkcmdbSynchronizerHandler) isWorkloadOwnedByCR(
 	}
 
 	// 查询 Workload 详细信息
-	var workloadList interface{}
-	var err error
+	var ownerRef metav1.OwnerReference
+	var found bool
 
 	switch workloadKind {
 	case "deployment":
-		workloadList, err = storageCli.QueryK8SDeployment(clusterUID, namespaceName)
+		workload, err := storageCli.GetK8SDeployment(clusterUID, namespaceName, workloadName)
+		if err != nil {
+			blog.Warnf("query deployment %s/%s from storage failed: %s, skip CR owner check",
+				namespaceName, workloadName, err.Error())
+			return false, ""
+		}
+		if workload == nil {
+			blog.Warnf("deployment %s/%s not found in storage, skip CR owner check",
+				namespaceName, workloadName)
+			return false, ""
+		}
+		if len(workload.Data.OwnerReferences) > 0 {
+			ownerRef = workload.Data.OwnerReferences[0]
+			found = true
+		}
 	case "statefulset":
-		workloadList, err = storageCli.QueryK8SStatefulSet(clusterUID, namespaceName)
+		workload, err := storageCli.GetK8SStatefulSet(clusterUID, namespaceName, workloadName)
+		if err != nil {
+			blog.Warnf("query statefulset %s/%s from storage failed: %s, skip CR owner check",
+				namespaceName, workloadName, err.Error())
+			return false, ""
+		}
+		if workload == nil {
+			blog.Warnf("statefulset %s/%s not found in storage, skip CR owner check",
+				namespaceName, workloadName)
+			return false, ""
+		}
+		if len(workload.Data.OwnerReferences) > 0 {
+			ownerRef = workload.Data.OwnerReferences[0]
+			found = true
+		}
 	default:
 		return false, ""
-	}
-
-	if err != nil {
-		blog.Warnf("query %s %s from storage failed: %s, skip CR owner check",
-			workloadKind, workloadName, err.Error())
-		return false, ""
-	}
-
-	if workloadList == nil {
-		blog.Warnf("%s %s not found in storage, skip CR owner check",
-			workloadKind, workloadName)
-		return false, ""
-	}
-
-	// 查找匹配的 Workload 并获取其 Owner
-	var ownerRef metav1.OwnerReference
-	found := false
-
-	switch w := workloadList.(type) {
-	case []*storage.Deployment:
-		for _, deploy := range w {
-			if deploy.Data.Name == workloadName && len(deploy.Data.OwnerReferences) > 0 {
-				ownerRef = deploy.Data.OwnerReferences[0]
-				found = true
-				break
-			}
-		}
-	case []*storage.StatefulSet:
-		for _, ss := range w {
-			if ss.Data.Name == workloadName && len(ss.Data.OwnerReferences) > 0 {
-				ownerRef = ss.Data.OwnerReferences[0]
-				found = true
-				break
-			}
-		}
 	}
 
 	if !found {
