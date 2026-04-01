@@ -795,17 +795,30 @@ func (c *StorageCli) GetIPPoolDetailInfo(clusterID string) ([]*storage.IPPool, e
 
 // ListCustomResource list custom resources, dest should be corresponding resource type or map[string]interface{}
 func (c *StorageCli) ListCustomResource(resourceType string, filter map[string]string, dest interface{}) error {
+	cluster := filter["clusterId"]
+	namespace := filter["namespace"]
+	subPath := fmt.Sprintf("/dynamic/customresources/%s?clusterId=%s", resourceType, cluster)
+	if namespace != "" {
+		subPath = fmt.Sprintf("/dynamic/customresources/%s?clusterId=%s&namespace=%s", resourceType, cluster, namespace)
+	}
+	return c.customResourceQuery(subPath, dest)
+}
+
+func (c *StorageCli) customResourceQuery(subPath string, dest interface{}) error {
+	var response BasicResponse
 	err := bkbcsSetting(c.Client.Get(), c.Config).
 		WithEndpoints(c.Config.Hosts).
-		WithBasePath("/").
-		SubPathf(customResourcePath, resourceType).
-		WithParams(filter).
+		WithBasePath(c.getRequestPath()).
+		SubPathf(subPath).
 		Do().
-		Into(dest)
+		Into(&response)
 	if err != nil {
 		return err
 	}
-	return nil
+	if !response.Result {
+		return fmt.Errorf(response.Message)
+	}
+	return json.Unmarshal(response.Data, dest)
 }
 
 // PutCustomResource put cluster resource
