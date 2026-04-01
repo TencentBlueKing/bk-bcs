@@ -875,8 +875,7 @@ func (b *BcsBkcmdbSynchronizerHandler) resolveWorkloadOwner(
 	storageCli bcsapi.Storage,
 	crKinds []string,
 ) (resolvedKind string, resolvedName string) {
-	// 初始值：关联到原始 Workload
-	resolvedKind = workloadKind
+	resolvedKind = common.FirstLower(workloadKind)
 	resolvedName = workloadName
 
 	// 如果没有配置 CR 白名单，直接返回
@@ -889,9 +888,9 @@ func (b *BcsBkcmdbSynchronizerHandler) resolveWorkloadOwner(
 	var err error
 
 	switch workloadKind {
-	case "deployment":
+	case "Deployment":
 		workloadList, err = storageCli.QueryK8SDeployment(clusterUID, namespaceName)
-	case "statefulset":
+	case "StatefulSet":
 		workloadList, err = storageCli.QueryK8SStatefulSet(clusterUID, namespaceName)
 	default:
 		blog.Warnf("resolveWorkloadOwner: unsupported workload kind %s", workloadKind)
