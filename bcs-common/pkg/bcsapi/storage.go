@@ -60,10 +60,14 @@ type Storage interface {
 	QueryK8SNamespace(cluster string, namespaces ...string) ([]*storage.Namespace, error)
 	// QueryK8SDeployment query all deployment in specified cluster
 	QueryK8SDeployment(cluster, namespace string) ([]*storage.Deployment, error)
+	// GetK8SDeployment query single deployment by name
+	GetK8SDeployment(cluster, namespace, name string) (*storage.Deployment, error)
 	// QueryK8SDaemonSet query all daemonset in specified cluster
 	QueryK8SDaemonSet(cluster, namespace string) ([]*storage.DaemonSet, error)
 	// QueryK8SStatefulSet query all statefulset in specified cluster
 	QueryK8SStatefulSet(cluster, namespace string) ([]*storage.StatefulSet, error)
+	// GetK8SStatefulSet query single statefulset by name
+	GetK8SStatefulSet(cluster, namespace, name string) (*storage.StatefulSet, error)
 	// QueryK8SGameDeployment query all gamedeployment in specified cluster
 	QueryK8SGameDeployment(cluster, namespace string) ([]*storage.GameDeployment, error)
 	// QueryK8SGameStatefulSet query all gamestatefulset in specified cluster
@@ -532,6 +536,27 @@ func (c *StorageCli) QueryK8SStatefulSet(cluster, namespace string) ([]*storage.
 	return statefulsets, nil
 }
 
+// GetK8SStatefulSet query single statefulset by name
+func (c *StorageCli) GetK8SStatefulSet(cluster, namespace, name string) (*storage.StatefulSet, error) {
+	if namespace == "" {
+		return nil, fmt.Errorf("namespace is empty")
+	}
+	if name == "" {
+		return nil, fmt.Errorf("name is empty")
+	}
+	subPath := "/k8s/dynamic/namespace_resources/clusters/%s/namespaces/" + namespace + "/StatefulSet/" + name
+
+	var statefulset storage.StatefulSet
+	response, err := c.query(cluster, subPath)
+	if err != nil {
+		return nil, err
+	}
+	if err := json.Unmarshal(response.Data, &statefulset); err != nil {
+		return nil, fmt.Errorf("statefulset decode err: %s", err.Error())
+	}
+	return &statefulset, nil
+}
+
 // QueryK8SDaemonSet query all daemonset in specified cluster
 func (c *StorageCli) QueryK8SDaemonSet(cluster, namespace string) ([]*storage.DaemonSet, error) {
 	if namespace == "" {
@@ -600,6 +625,27 @@ func (c *StorageCli) QueryK8SDeployment(cluster, namespace string) ([]*storage.D
 		return nil, nil
 	}
 	return deployments, nil
+}
+
+// GetK8SDeployment query single deployment by name
+func (c *StorageCli) GetK8SDeployment(cluster, namespace, name string) (*storage.Deployment, error) {
+	if namespace == "" {
+		return nil, fmt.Errorf("namespace is empty")
+	}
+	if name == "" {
+		return nil, fmt.Errorf("name is empty")
+	}
+	subPath := "/k8s/dynamic/namespace_resources/clusters/%s/namespaces/" + namespace + "/Deployment/" + name
+
+	var deployment storage.Deployment
+	response, err := c.query(cluster, subPath)
+	if err != nil {
+		return nil, err
+	}
+	if err := json.Unmarshal(response.Data, &deployment); err != nil {
+		return nil, fmt.Errorf("deployment decode err: %s", err.Error())
+	}
+	return &deployment, nil
 }
 
 // QueryK8SNamespace query all namespace in specified cluster
