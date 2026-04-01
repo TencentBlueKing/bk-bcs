@@ -1111,7 +1111,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handlePodCreate(pod *corev1.Pod, bkCluste
 			}
 			rsOwnerRef := rs.Data.OwnerReferences[0]
 			switch rsOwnerRef.Kind {
-			case Deployment, StatefulSet:
+			case Deployment:
 				// 获取该集群的 CR 白名单
 				clusterID := bkCluster.Uid
 				crKinds := b.Syncer.BkcmdbSynchronizerOption.Synchronizer.CustomResourceTypes[clusterID]
@@ -1177,6 +1177,21 @@ func (b *BcsBkcmdbSynchronizerHandler) handlePodCreate(pod *corev1.Pod, bkCluste
 		} else if exist, _ := common.InArray(ownerRef.Kind, workloadKindList); exist {
 			workloadKind = common.FirstLower(ownerRef.Kind)
 			workloadName = ownerRef.Name
+
+			// 获取该集群的 CR 白名单
+			clusterID := bkCluster.Uid
+			crKinds := b.Syncer.BkcmdbSynchronizerOption.Synchronizer.CustomResourceTypes[clusterID]
+
+			// 如果是 StatefulSet/DaemonSet/GameDeployment/GameStatefulSet，尝试向上追溯获取最终的 CR 信息
+			if common.IsKindInSlice(ownerRef.Kind, []string{"StatefulSet", "DaemonSet", "GameDeployment", "GameStatefulSet"}) {
+				storageCli, errSts := b.Syncer.GetBcsStorageClient()
+				if errSts != nil {
+					return errSts
+				}
+				workloadKind, workloadName = b.resolveWorkloadOwner(
+					bkCluster.Uid, bkNamespace.Name, ownerRef.Kind, ownerRef.Name, storageCli, crKinds)
+			}
+
 			bkWorkloads, err := b.Syncer.GetBkWorkloads(bkCluster.BizID, workloadKind, &client.PropertyFilter{
 				Condition: "AND",
 				Rules: []client.Rule{
@@ -1509,7 +1524,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handlePodsCreate(podsCreate map[string]*c
 				}
 				rsOwnerRef := rs.Data.OwnerReferences[0]
 				switch rsOwnerRef.Kind {
-				case Deployment, StatefulSet:
+				case Deployment:
 					// 获取该集群的 CR 白名单
 					clusterID := bkCluster.Uid
 					crKinds := b.Syncer.BkcmdbSynchronizerOption.Synchronizer.CustomResourceTypes[clusterID]
@@ -1578,6 +1593,21 @@ func (b *BcsBkcmdbSynchronizerHandler) handlePodsCreate(podsCreate map[string]*c
 			} else if exist, _ := common.InArray(ownerRef.Kind, workloadKindList); exist {
 				workloadKind = common.FirstLower(ownerRef.Kind)
 				workloadName = ownerRef.Name
+
+				// 获取该集群的 CR 白名单
+				clusterID := bkCluster.Uid
+				crKinds := b.Syncer.BkcmdbSynchronizerOption.Synchronizer.CustomResourceTypes[clusterID]
+
+				// 如果是 StatefulSet/DaemonSet/GameDeployment/GameStatefulSet，尝试向上追溯获取最终的 CR 信息
+				if common.IsKindInSlice(ownerRef.Kind, []string{"StatefulSet", "DaemonSet", "GameDeployment", "GameStatefulSet"}) {
+					storageCli, errSts := b.Syncer.GetBcsStorageClient()
+					if errSts != nil {
+						continue
+					}
+					workloadKind, workloadName = b.resolveWorkloadOwner(
+						bkCluster.Uid, bkNamespace.Name, ownerRef.Kind, ownerRef.Name, storageCli, crKinds)
+				}
+
 				bkWorkloads, errW := b.Syncer.GetBkWorkloads(bkCluster.BizID, workloadKind, &client.PropertyFilter{
 					Condition: "AND",
 					Rules: []client.Rule{
