@@ -24,8 +24,9 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/component"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/component/bcs"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/config"
+	cronClient "github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/cron/client"
+	cronServer "github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/cron/server"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/discovery"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/storage"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/utils"
@@ -63,25 +64,37 @@ func runCmd(cmd *cobra.Command, cmdFunc CommandFunc) {
 // runAPIServer 启动api服务
 func runAPIServer(ctx context.Context, g *run.Group, opt *option) error {
 	addrIPv6 := utils.GetIPv6AddrFromEnv()
-	server, err := api.NewAPIServer(ctx, config.G.Base.BindAddress, config.G.Base.HttpPort, addrIPv6)
-	if err != nil {
-		return errors.Wrap(err, "apiserver")
-	}
-
 	sd, err := discovery.NewServiceDiscovery(ctx, platformManager, version.BcsVersion,
 		config.G.Base.BindAddress, config.G.Base.HttpPort, addrIPv6)
 	if err != nil {
 		return err
 	}
 
+	server, err := api.NewAPIServer(ctx, config.G.Base.BindAddress, config.G.Base.HttpPort, addrIPv6, sd.TLSConfig)
+	if err != nil {
+		return errors.Wrap(err, "apiserver")
+	}
+
 	// init storage
 	storage.InitStorage()
 
+	// init cron task
+	scheduler, err := cronClient.NewScheduler()
+	if err != nil {
+		return err
+	}
+
+	// start scheduler
+	g.Add(func() error { return scheduler.Run() }, func(error) { scheduler.Shutdown() })
 	// 启动 apiserver
 	g.Add(server.Run, func(err error) { _ = server.Close(); component.GetAuditClient().Close() })
 	g.Add(sd.Run, func(error) {})
 
-	bcs.CacheListClusters()
+	// start asynq server
+	err = cronServer.NewAsynqServer()
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
