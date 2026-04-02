@@ -5889,11 +5889,11 @@ func (s *Syncer) syncCustomResources(cluster *cmp.Cluster, bkCluster *bkcmdbkube
 				// Add new workload
 				if bkNs, ok := bkNamespaceMap[nsName]; ok {
 					toAddData := &client.CreateBcsWorkloadRequestData{
-						NamespaceID: &bkNs.ID,
-						Name:        &crName,
-						Labels:      &labels,
-						Replicas:    &replicas,
-						CRKind:      &crKind,
+						NamespaceID:  &bkNs.ID,
+						Name:         &crName,
+						Labels:       &labels,
+						Replicas:     &replicas,
+						CRKind:       &crKind,
 						CRApiVersion: &crApiVersion,
 					}
 					if _, ok = crToAdd[bkNs.BizID]; ok {
