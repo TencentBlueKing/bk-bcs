@@ -2555,6 +2555,82 @@ func (s *Syncer) SyncStoreWorkload(bkCluster *bkcmdbkube.Cluster, db *gorm.DB) e
 	if err != nil {
 		blog.Errorf("syncStore PodsWordload err: %v", err)
 	}
+	err = s.SyncStoreCustomResource(bkCluster, db)
+	if err != nil {
+		blog.Errorf("syncStore CustomResource err: %v", err)
+	}
+	return nil
+}
+
+// SyncStoreCustomResource 同步 CustomResource 信息到数据库
+func (s *Syncer) SyncStoreCustomResource(bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
+	// Check if this cluster is configured for custom resource sync
+	clusterID := bkCluster.Uid
+	crKinds, ok := s.BkcmdbSynchronizerOption.Synchronizer.CustomResourceTypes[clusterID]
+	if !ok || len(crKinds) == 0 {
+		blog.Infof("cluster %s not configured for custom resource sync, skip", clusterID)
+		return nil
+	}
+
+	err := model.CustomResourceMigrate(db)
+	if err != nil {
+		blog.Errorf("migrate custom resource failed, err: %s", err.Error())
+		return fmt.Errorf("migrate custom resource failed, err: %s", err.Error())
+	}
+
+	// GetBkWorkloads get bkworkloads
+	bkCustomResources, err := s.GetBkWorkloads(bkCluster.BizID, "customResource", &client.PropertyFilter{
+		Condition: "AND",
+		Rules: []client.Rule{
+			{
+				Field:    "cluster_uid",
+				Operator: "in",
+				Value:    []string{bkCluster.Uid},
+			},
+		},
+	}, false, nil)
+	if err != nil {
+		blog.Errorf("get bk custom resource failed, err: %s", err.Error())
+		return fmt.Errorf("get bk custom resource failed, err: %s", err.Error())
+	}
+
+	customResourceMarshal, err := json.Marshal(bkCustomResources)
+	if err != nil {
+		blog.Errorf("marshal bk custom resource failed, err: %s", err.Error())
+	}
+	var customResources []model.CustomResource
+	err = json.Unmarshal(customResourceMarshal, &customResources)
+	if err != nil {
+		blog.Errorf("unmarshal bk custom resource failed, err: %s", err.Error())
+		return fmt.Errorf("unmarshal bk custom resource failed, err: %s", err.Error())
+	}
+
+	// Filter custom resources by configured crKinds
+	filteredCRs := make([]model.CustomResource, 0)
+	for _, cr := range customResources {
+		if exists, _ := common.InArray(cr.CRKind, crKinds); exists {
+			filteredCRs = append(filteredCRs, cr)
+		}
+	}
+
+	for _, customResource := range filteredCRs {
+		var existCustomResource model.CustomResource
+		if errCR := db.Where("id = ?", customResource.ID).First(&existCustomResource).Error; errCR != nil {
+			if errors.Is(errCR, gorm.ErrRecordNotFound) {
+				if errCC := db.Create(&customResource).Error; errCC != nil {
+					blog.Errorf("syncStore create custom resource err: %v", errCC)
+				}
+			} else {
+				blog.Errorf("syncStore get custom resource err: %v", errCR)
+			}
+		} else {
+			if errCS := db.Save(&customResource).Error; errCS != nil {
+				blog.Errorf("syncStore update custom resource err: %v", errCS)
+			} else {
+				blog.Infof("syncStore update custom resource success, customResource: %d", customResource.ID)
+			}
+		}
+	}
 	return nil
 }
 
