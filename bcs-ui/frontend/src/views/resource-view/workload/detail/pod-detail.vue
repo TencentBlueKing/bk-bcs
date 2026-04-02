@@ -369,6 +369,7 @@ import { filterXss } from '@blueking/xss-filter';
 import EventTable from './bk-monitor-event.vue';
 import useDetail from './use-detail';
 
+import { addonsList } from '@/api/modules/helm';
 import { logCollectorEntrypoints } from '@/api/modules/monitor';
 import { ClusterAddonsService } from '@/api/modules/new-helm-manager';
 import { LOG_COLLECTOR } from '@/common/constant';
@@ -565,6 +566,13 @@ export default defineComponent({
     // 文件日志检索禁用逻辑
     const isFileLogDisabled = ref(false);
     async function handleFileLogDisabled() {
+      const list = await addonsList({
+        $clusterId: clusterId.value,
+      }).catch(() => []);
+      const hasLogCollector = list.find(item => item.name === LOG_COLLECTOR);
+      // 组件列表没有该组件则不发起请求
+      if (!hasLogCollector) return;
+
       const result = await ClusterAddonsService.GetAddonsDetail({ $clusterId: clusterId.value, $name: LOG_COLLECTOR })
         .catch(() => {});
       isFileLogDisabled.value = !result?.status;
