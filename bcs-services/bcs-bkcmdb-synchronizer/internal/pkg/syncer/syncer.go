@@ -5939,6 +5939,36 @@ func (s *Syncer) syncCustomResources(cluster *cmp.Cluster, bkCluster *bkcmdbkube
 			}
 		}
 
+		// Delete pods associated with CRs before deleting CRs
+		// This is necessary because if a CR still has associated Pods in CMDB, the delete-workload-api will fail
+		for _, crID := range crToDelete {
+			bkPods, errGetPods := s.GetBkPods(bkCluster.BizID, &client.PropertyFilter{
+				Condition: "AND",
+				Rules: []client.Rule{
+					{
+						Field:    "ref.kind",
+						Operator: "in",
+						Value:    []string{"customResource"},
+					},
+					{
+						Field:    "ref.id",
+						Operator: "in",
+						Value:    []int64{crID},
+					},
+				},
+			}, true, db)
+			if errGetPods == nil && len(*bkPods) > 0 {
+				podIDs := make([]int64, 0)
+				for _, pod := range *bkPods {
+					podIDs = append(podIDs, pod.ID)
+				}
+				blog.Infof("customResource id=%d has %d pods, delete them first", crID, len(podIDs))
+				if errDelPods := s.DeleteBkPods(bkCluster, &podIDs, db); errDelPods != nil {
+					blog.Errorf("delete pods for customResource id=%d failed: %v", crID, errDelPods)
+				}
+			}
+		}
+
 		s.DeleteBkWorkloads(bkCluster, kind, &crToDelete, db) // nolint not checked
 		s.CreateBkWorkloads(bkCluster, kind, crToAdd, db)
 		s.UpdateBkWorkloads(bkCluster, kind, &crToUpdate, db)
