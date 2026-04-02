@@ -3866,7 +3866,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleCustomResourceDelete(
 			func() error {
 				return b.Syncer.DeleteBkWorkloads(bkCluster, "customResource", &[]int64{int64(id)}, db)
 			},
-			retry.Delay(time.Second*1),
+			retry.Delay(time.Second*2),
 			retry.Attempts(2),
 			retry.DelayType(retry.FixedDelay),
 		)
