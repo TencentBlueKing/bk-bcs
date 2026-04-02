@@ -3862,6 +3862,39 @@ func (b *BcsBkcmdbSynchronizerHandler) handleCustomResourceDelete(
 	if id, ok := bkCRMap["id"].(float64); ok {
 		blog.Infof("customResourceToDelete: %s/%s, crKind=%s, id=%d", msgHeader.Namespace,
 			msgHeader.ResourceName, crKind, int64(id))
+
+		// 1. Get pods associated with this custom resource, delete them first
+		// This is necessary because if a CR still has associated Pods in CMDB, the delete-workload-api will fail.
+		// Since MQ events are processed serially per cluster, we might handle the CR-Delete before the Pod-Delete.
+		bkPods, errGetPods := b.Syncer.GetBkPods(bkCluster.BizID, &client.PropertyFilter{
+			Condition: "AND",
+			Rules: []client.Rule{
+				{
+					Field:    "ref.kind",
+					Operator: "in",
+					Value:    []string{"customResource"},
+				},
+				{
+					Field:    "ref.id",
+					Operator: "in",
+					Value:    []int64{int64(id)},
+				},
+			},
+		}, true, db)
+		if errGetPods == nil && len(*bkPods) > 0 {
+			podIDs := make([]int64, 0)
+			for _, pod := range *bkPods {
+				podIDs = append(podIDs, pod.ID)
+			}
+			blog.Infof("customResource %s/%s has %d pods, delete them first",
+				msgHeader.Namespace, msgHeader.ResourceName, len(podIDs))
+			if errDelPods := b.Syncer.DeleteBkPods(bkCluster, &podIDs, db); errDelPods != nil {
+				// We log the error but continue to try deleting the workload anyway in the retry block
+				blog.Errorf("delete pods for customResource %s/%s failed: %v",
+					msgHeader.Namespace, msgHeader.ResourceName, errDelPods)
+			}
+		}
+
 		err = retry.Do(
 			func() error {
 				return b.Syncer.DeleteBkWorkloads(bkCluster, "customResource", &[]int64{int64(id)}, db)
