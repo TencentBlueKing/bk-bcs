@@ -3862,7 +3862,15 @@ func (b *BcsBkcmdbSynchronizerHandler) handleCustomResourceDelete(
 	if id, ok := bkCRMap["id"].(float64); ok {
 		blog.Infof("customResourceToDelete: %s/%s, crKind=%s, id=%d", msgHeader.Namespace,
 			msgHeader.ResourceName, crKind, int64(id))
-		return b.Syncer.DeleteBkWorkloads(bkCluster, "customResource", &[]int64{int64(id)}, db)
+		err = retry.Do(
+			func() error {
+				return b.Syncer.DeleteBkWorkloads(bkCluster, "customResource", &[]int64{int64(id)}, db)
+			},
+			retry.Delay(time.Second*1),
+			retry.Attempts(2),
+			retry.DelayType(retry.FixedDelay),
+		)
+		return err
 	}
 
 	return fmt.Errorf("customResource %s/%s id not found", msgHeader.Namespace, msgHeader.ResourceName)
