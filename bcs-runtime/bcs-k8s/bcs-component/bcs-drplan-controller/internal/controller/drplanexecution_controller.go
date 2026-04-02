@@ -46,11 +46,10 @@ type DRPlanExecutionReconciler struct {
 // +kubebuilder:rbac:groups=dr.bkbcs.tencent.com,resources=drplanexecutions/finalizers,verbs=update
 
 // Reconcile manages DRPlanExecution lifecycle
-// Refactored to reduce cyclomatic complexity by extracting helper methods
 func (r *DRPlanExecutionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	klog.Infof("Reconciling DRPlanExecution: %s/%s", req.Namespace, req.Name)
 
-	// Fetch the DRPlanExecution instance
+	// Fetch execution
 	execution := &drv1alpha1.DRPlanExecution{}
 	if err := r.Get(ctx, req.NamespacedName, execution); err != nil {
 		if apierrors.IsNotFound(err) {
@@ -61,90 +60,111 @@ func (r *DRPlanExecutionReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 		return ctrl.Result{}, err
 	}
 
-	// Handle deletion (finalizer logic)
+	// Handle deletion
 	if !execution.DeletionTimestamp.IsZero() {
 		return r.handleDeletion(ctx, execution)
 	}
 
-	// Add finalizer if not present
-	if !controllerutil.ContainsFinalizer(execution, executionFinalizerName) {
-		klog.V(4).Infof("Adding finalizer to DRPlanExecution %s/%s", execution.Namespace, execution.Name)
-		controllerutil.AddFinalizer(execution, executionFinalizerName)
-		if err := r.Update(ctx, execution); err != nil {
-			klog.Errorf("Failed to add finalizer to DRPlanExecution %s/%s: %v", execution.Namespace, execution.Name, err)
-			return ctrl.Result{}, err
-		}
-		// Requeue to continue processing
-		return ctrl.Result{Requeue: true}, nil
+	// Ensure finalizer
+	if result, done := r.ensureFinalizerAdded(ctx, execution); done {
+		return result, nil
 	}
 
-	// Early return: Check if execution is in terminal state
-	if r.isExecutionInTerminalState(execution) {
-		klog.V(4).Infof("DRPlanExecution %s/%s is in terminal state: %s", req.Namespace, req.Name, execution.Status.Phase)
-
-		// Before returning, ensure plan status is updated (in case it wasn't updated before)
-		plan, err := r.fetchDRPlan(ctx, execution)
-		if err != nil {
-			klog.Warningf("Failed to fetch plan for completed execution %s/%s: %v", req.Namespace, req.Name, err)
-		} else {
-			if err := r.updatePlanAfterCompletion(ctx, execution, plan); err != nil {
-				klog.Warningf("Failed to update plan after completion (terminal state check): %v", err)
-			}
-		}
-
+	// Handle terminal states or cancellation
+	if done := r.handleTerminalOrCancellation(ctx, execution, req); done {
 		return ctrl.Result{}, nil
 	}
 
-	// Early return: Check for cancellation annotation
+	// Execute plan workflow
+	return r.executePlanWorkflow(ctx, execution, req)
+}
+
+// ensureFinalizerAdded adds finalizer if not present
+func (r *DRPlanExecutionReconciler) ensureFinalizerAdded(ctx context.Context, execution *drv1alpha1.DRPlanExecution) (ctrl.Result, bool) {
+	if controllerutil.ContainsFinalizer(execution, executionFinalizerName) {
+		return ctrl.Result{}, false
+	}
+
+	klog.V(4).Infof("Adding finalizer to DRPlanExecution %s/%s", execution.Namespace, execution.Name)
+	controllerutil.AddFinalizer(execution, executionFinalizerName)
+	if err := r.Update(ctx, execution); err != nil {
+		klog.Errorf("Failed to add finalizer to DRPlanExecution %s/%s: %v", execution.Namespace, execution.Name, err)
+		return ctrl.Result{}, false
+	}
+	return ctrl.Result{Requeue: true}, true
+}
+
+// handleTerminalOrCancellation handles terminal states and cancellation requests
+// Returns true if the execution is in a terminal state or being canceled
+func (r *DRPlanExecutionReconciler) handleTerminalOrCancellation(ctx context.Context, execution *drv1alpha1.DRPlanExecution, req ctrl.Request) bool {
+	// Check terminal state
+	if r.isExecutionInTerminalState(execution) {
+		klog.V(4).Infof("DRPlanExecution %s/%s is in terminal state: %s", req.Namespace, req.Name, execution.Status.Phase)
+		// Ensure plan status is updated
+		if plan, err := r.fetchDRPlan(ctx, execution); err == nil {
+			if updateErr := r.updatePlanAfterCompletion(ctx, execution, plan); updateErr != nil {
+				klog.Warningf("Failed to update plan after completion (terminal state check): %v", updateErr)
+			}
+		} else {
+			klog.Warningf("Failed to fetch plan for completed execution %s/%s: %v", req.Namespace, req.Name, err)
+		}
+		return true
+	}
+
+	// Check cancellation
 	if r.checkCancellationRequested(execution) {
 		klog.Infof("DRPlanExecution %s/%s cancellation requested", req.Namespace, req.Name)
 		if err := r.handleCancellation(ctx, execution); err != nil {
 			klog.Errorf("Failed to cancel execution %s/%s: %v", req.Namespace, req.Name, err)
-			return ctrl.Result{}, err
+			return false
 		}
-		return ctrl.Result{}, nil
+		return true
 	}
 
-	// Fetch the DRPlan
+	return false
+}
+
+// executePlanWorkflow executes the plan operation workflow
+func (r *DRPlanExecutionReconciler) executePlanWorkflow(ctx context.Context, execution *drv1alpha1.DRPlanExecution, req ctrl.Request) (ctrl.Result, error) {
+	// Fetch plan
 	plan, err := r.fetchDRPlan(ctx, execution)
 	if err != nil {
 		return r.updateExecutionStatus(ctx, execution, "Failed", err.Error())
 	}
 
-	// Validate plan allows this execution (Ready for any op; Executed only for Revert)
+	// Validate plan
 	if err := r.validatePlanReady(plan, execution); err != nil {
 		klog.Warningf("DRPlanExecution %s/%s: %v", req.Namespace, req.Name, err)
 		return r.updateExecutionStatus(ctx, execution, "Failed", err.Error())
 	}
 
-	// Initialize execution if it's pending
+	// Initialize if pending
 	if execution.Status.Phase == "" || execution.Status.Phase == drv1alpha1.PhasePending {
 		if err := r.initializeExecution(ctx, execution, plan); err != nil {
 			return ctrl.Result{}, err
 		}
 	}
 
-	// Execute the operation
+	// Execute operation
 	if err := r.executeOperation(ctx, execution, plan); err != nil {
 		klog.Errorf("DRPlanExecution %s/%s failed: %v", req.Namespace, req.Name, err)
 		return r.updateExecutionStatus(ctx, execution, "Failed", err.Error())
 	}
 
-	// Refresh execution status
+	// Refresh status
 	if err := r.Get(ctx, req.NamespacedName, execution); err != nil {
 		return ctrl.Result{}, err
 	}
 
-	// Requeue if still running
+	// Requeue if running
 	if r.shouldRequeue(execution) {
 		klog.V(4).Infof("DRPlanExecution %s/%s still running, requeuing", req.Namespace, req.Name)
 		return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
 	}
 
-	// Update plan status after execution completes
+	// Update plan after completion
 	if err := r.updatePlanAfterCompletion(ctx, execution, plan); err != nil {
 		klog.Warningf("Failed to update plan after completion: %v", err)
-		// Don't return error, execution itself succeeded
 	}
 
 	klog.Infof("DRPlanExecution %s/%s completed with phase: %s", req.Namespace, req.Name, execution.Status.Phase)
@@ -154,7 +174,7 @@ func (r *DRPlanExecutionReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 // handleCancellation handles execution cancellation
 func (r *DRPlanExecutionReconciler) handleCancellation(ctx context.Context, execution *drv1alpha1.DRPlanExecution) error {
 	if execution.Status.Phase == drv1alpha1.PhaseRunning {
-		klog.Infof("Cancelling execution %s/%s", execution.Namespace, execution.Name)
+		klog.Infof("Canceling execution %s/%s", execution.Namespace, execution.Name)
 
 		// Call executor to cancel
 		if err := r.PlanExecutor.CancelExecution(ctx, execution); err != nil {
@@ -164,13 +184,13 @@ func (r *DRPlanExecutionReconciler) handleCancellation(ctx context.Context, exec
 		// Update status
 		execution.Status.Phase = drv1alpha1.PhaseCancelled
 		execution.Status.CompletionTime = &metav1.Time{Time: time.Now()}
-		execution.Status.Message = "Execution cancelled by user"
+		execution.Status.Message = "Execution canceled by user"
 
 		if err := r.Status().Update(ctx, execution); err != nil {
 			return fmt.Errorf("failed to update status: %w", err)
 		}
 
-		klog.Infof("Execution %s/%s cancelled successfully", execution.Namespace, execution.Name)
+		klog.Infof("Execution %s/%s canceled successfully", execution.Namespace, execution.Name)
 	}
 
 	return nil
@@ -296,7 +316,7 @@ func (r *DRPlanExecutionReconciler) ensureExecutionHistoryUpdated(ctx context.Co
 			if execution.Status.Phase != "" {
 				record.Phase = execution.Status.Phase
 			} else {
-				// If execution was deleted before completion, mark as Cancelled
+				// If execution was deleted before completion, mark as Canceled
 				record.Phase = drv1alpha1.PhaseCancelled
 			}
 

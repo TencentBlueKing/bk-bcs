@@ -47,12 +47,12 @@ func (w *DRPlanExecutionWebhook) ValidateCreate(ctx context.Context, obj runtime
 	execution := obj.(*drv1alpha1.DRPlanExecution)
 	klog.Infof("Validating create for DRPlanExecution: %s/%s", execution.Namespace, execution.Name)
 
-	warnings, errors := w.validateExecution(ctx, execution)
+	errors := w.validateExecution(ctx, execution)
 	if len(errors) > 0 {
-		return warnings, fmt.Errorf("validation failed: %v", errors)
+		return nil, fmt.Errorf("validation failed: %v", errors)
 	}
 
-	return warnings, nil
+	return nil, nil
 }
 
 // ValidateUpdate implements webhook.Validator
@@ -80,14 +80,14 @@ func (w *DRPlanExecutionWebhook) ValidateDelete(_ context.Context, obj runtime.O
 }
 
 // validateExecution performs comprehensive validation
-func (w *DRPlanExecutionWebhook) validateExecution(ctx context.Context, execution *drv1alpha1.DRPlanExecution) ([]string, []string) {
-	var warnings []string
+// Returns a list of validation errors (empty if valid)
+func (w *DRPlanExecutionWebhook) validateExecution(ctx context.Context, execution *drv1alpha1.DRPlanExecution) []string {
 	var errors []string
 
 	// Validate planRef
 	if execution.Spec.PlanRef == "" {
 		errors = append(errors, "planRef is required")
-		return warnings, errors
+		return errors
 	}
 
 	// Get the DRPlan
@@ -98,7 +98,7 @@ func (w *DRPlanExecutionWebhook) validateExecution(ctx context.Context, executio
 	}
 	if err := w.Client.Get(ctx, planKey, plan); err != nil {
 		errors = append(errors, fmt.Sprintf("plan %s not found: %v", execution.Spec.PlanRef, err))
-		return warnings, errors
+		return errors
 	}
 
 	// Check plan allows new execution: Ready allows any operation; Executed only allows Revert
@@ -148,5 +148,5 @@ func (w *DRPlanExecutionWebhook) validateExecution(ctx context.Context, executio
 			plan.Status.CurrentExecution.Name))
 	}
 
-	return warnings, errors
+	return errors
 }

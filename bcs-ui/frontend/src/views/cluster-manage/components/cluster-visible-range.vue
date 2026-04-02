@@ -244,6 +244,7 @@ export default defineComponent({
     });
     const perms = ref<Record<string, IProjectPerm>>({});
     async function handleInitProjectList() {
+      if (!props.clusterId) return;
       params.value.offset = 0;
       const res = await getProjectList({
         ...params.value,
@@ -272,6 +273,7 @@ export default defineComponent({
       ]));
     });
     async function getSharedprojectList() {
+      if (!props.clusterId) return;
       // 当前项目列表不存在当前项目id对应的project信息，获取相应项目列表
       sharedProjectList.value = await getSharedprojects({
         $clusterId: props.clusterId,
@@ -364,7 +366,7 @@ export default defineComponent({
       await getSharedprojectList();
       await handleInitProjectList();
       initLoading.value = false;
-    });
+    }, { immediate: true });
 
     return {
       innerValue,

@@ -3,6 +3,7 @@ import yamljs from 'js-yaml';
 import { computed, ref } from 'vue';
 
 import { customResourceDetail, deleteCRDResource } from '@/api/modules/cluster-resource';
+import { ClusterAddonsService } from '@/api/modules/new-helm-manager';
 import $bkMessage from '@/common/bkmagic';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import $i18n from '@/i18n/i18n-setup';
@@ -278,5 +279,30 @@ export default function useDetail(options: IDetailOptions) {
     handleUpdateResource,
     handleDeleteResource,
     getJsonPathValue,
+  };
+}
+
+export function useMonitorCollector() {
+  function handleGetPluginManageUrl() {
+    const { href } = $router.resolve({
+      name: 'dbCrdcontroller',
+    });
+    return href;
+  }
+
+  // 检查是否安装监控采集器
+  const isMonitorInstalled = ref(true);
+  async function handleCheckMonitor(clusterId: string) {
+    const result = await ClusterAddonsService.GetAddonsDetail({
+      $clusterId: clusterId,
+      $name: 'bkmonitor-operator-stack',
+    })
+      .catch(() => {});
+    isMonitorInstalled.value = !!result?.status;
+  };
+  return {
+    handleGetPluginManageUrl,
+    isMonitorInstalled,
+    handleCheckMonitor,
   };
 }

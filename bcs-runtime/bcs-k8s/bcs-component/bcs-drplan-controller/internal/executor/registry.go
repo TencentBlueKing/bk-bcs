@@ -19,7 +19,7 @@ import (
 	"k8s.io/klog/v2"
 )
 
-// DefaultExecutorRegistry implements ExecutorRegistry
+// DefaultExecutorRegistry implements Registry
 type DefaultExecutorRegistry struct {
 	executors map[string]ActionExecutor
 	mu        sync.RWMutex

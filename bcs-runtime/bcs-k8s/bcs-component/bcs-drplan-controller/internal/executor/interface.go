@@ -63,8 +63,8 @@ type PlanExecutor interface {
 	CancelExecution(ctx context.Context, execution *drv1alpha1.DRPlanExecution) error
 }
 
-// ExecutorRegistry manages action executors
-type ExecutorRegistry interface {
+// Registry manages action executors
+type Registry interface {
 	// RegisterExecutor registers an action executor
 	RegisterExecutor(executor ActionExecutor) error
 

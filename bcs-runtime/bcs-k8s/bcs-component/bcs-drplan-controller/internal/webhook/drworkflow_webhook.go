@@ -81,7 +81,7 @@ func (w *DRWorkflowWebhook) Default(_ context.Context, obj runtime.Object) error
 		case "Localization":
 			if action.Localization != nil {
 				if action.Localization.Operation == "" {
-					action.Localization.Operation = "Create"
+					action.Localization.Operation = drv1alpha1.OperationCreate
 				}
 				if action.Localization.Spec != nil && action.Localization.Spec.Priority == 0 {
 					action.Localization.Spec.Priority = 500
@@ -89,11 +89,11 @@ func (w *DRWorkflowWebhook) Default(_ context.Context, obj runtime.Object) error
 			}
 		case "Subscription":
 			if action.Subscription != nil && action.Subscription.Operation == "" {
-				action.Subscription.Operation = "Create"
+				action.Subscription.Operation = drv1alpha1.OperationCreate
 			}
 		case "KubernetesResource":
 			if action.Resource != nil && action.Resource.Operation == "" {
-				action.Resource.Operation = "Create"
+				action.Resource.Operation = drv1alpha1.OperationCreate
 			}
 		}
 	}
@@ -277,7 +277,7 @@ func (w *DRWorkflowWebhook) validateLocalization(action *drv1alpha1.Action, inde
 	}
 
 	// Validate operation-specific requirements
-	if loc.Operation == "Create" {
+	if loc.Operation == drv1alpha1.OperationCreate {
 		if loc.Spec == nil {
 			errors = append(errors, fmt.Sprintf("action[%d] '%s': Localization.Spec is required when operation=Create", index, action.Name))
 		} else if loc.Spec.APIVersion == "" || loc.Spec.Kind == "" || loc.Spec.Name == "" {
@@ -302,7 +302,7 @@ func (w *DRWorkflowWebhook) validateSubscription(action *drv1alpha1.Action, inde
 	}
 
 	// Validate Spec when operation is Create
-	if sub.Operation == "Create" {
+	if sub.Operation == drv1alpha1.OperationCreate {
 		if sub.Spec == nil {
 			errors = append(errors, fmt.Sprintf("action[%d] '%s': Subscription.Spec is required when operation=Create", index, action.Name))
 		} else {
@@ -344,13 +344,13 @@ func getRollbackRules() map[string]rollbackRule {
 	return map[string]rollbackRule{
 		"Localization": {
 			checkRequired: func(action *drv1alpha1.Action) (bool, string) {
-				if action.Localization != nil && action.Localization.Operation == "Patch" {
+				if action.Localization != nil && action.Localization.Operation == drv1alpha1.OperationPatch {
 					return true, "Localization Patch"
 				}
 				return false, ""
 			},
 			checkAutomatic: func(action *drv1alpha1.Action) bool {
-				return action.Localization != nil && action.Localization.Operation == "Create"
+				return action.Localization != nil && action.Localization.Operation == drv1alpha1.OperationCreate
 			},
 		},
 		"Subscription": {

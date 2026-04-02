@@ -1,0 +1,29 @@
+{{- if .Values.healthCheck.enabled }}
+# DRWorkflow: HTTP health check — called before switchover.
+# Demonstrates Helm values and DR params in the same file.
+apiVersion: dr.bkbcs.tencent.com/v1alpha1
+kind: DRWorkflow
+metadata:
+  name: {{ .Release.Name }}-healthcheck
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "nginx-drplan.labels" . | nindent 4 }}
+spec:
+  parameters:
+    - name: endpoint
+      type: string
+      required: true
+      description: "Health check endpoint URL"
+  actions:
+    - name: check-health
+      type: HTTP
+      http:
+        url: "$(params.endpoint)/health"
+        method: GET
+        successCodes: [200, 204]
+      timeout: 10s
+      retryPolicy:
+        limit: 3
+        interval: 5s
+        backoffMultiplier: "2.0"
+{{- end }}

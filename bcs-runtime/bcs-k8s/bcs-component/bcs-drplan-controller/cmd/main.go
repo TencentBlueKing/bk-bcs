@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package main is the entry point for bcs-drplan-controller.
 package main
 
 import (
@@ -56,7 +57,7 @@ func init() {
 	// +kubebuilder:scaffold:scheme
 }
 
-// nolint:gocyclo
+// nolint:funlen
 func main() {
 	var metricsAddr string
 	var metricsCertPath, metricsCertName, metricsCertKey string

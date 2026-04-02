@@ -2,7 +2,7 @@
 
 本目录提供一套完整示例：使用 **nginx Helm Chart** 渲染出 YAML，再通过 **DRPlan** 的 Subscription + Localization 下发到两个差异化子集群。
 
-**参数化**：Workflow 中所有 action 的字符串字段均支持模板参数化，使用 `{{ .params.参数名 }}` 语法（如 `{{ .params.managedClusterNamespace }}`）。参数可来自 DRWorkflow 的 `spec.parameters` 默认值、DRPlan 的 `globalParams` 或各 stage 的 `workflows[].params`，执行时合并后参与渲染。支持的 action 类型及可参数化字段包括：Localization（name、namespace、feed 各字段、overrides 的 name/type/value）、Subscription（name、namespace、schedulingStrategy、feeds 各字段）、HTTP（url、method、body、headers）、Job（namespace）、KubernetesResource（manifest、operation）。
+**参数化**：Workflow 中所有 action 的字符串字段均支持模板参数化，使用 `$(params.参数名)` 语法（如 `$(params.managedClusterNamespace)`）。参数可来自 DRWorkflow 的 `spec.parameters` 默认值、DRPlan 的 `globalParams` 或各 stage 的 `workflows[].params`，执行时合并后参与渲染。支持的 action 类型及可参数化字段包括：Localization（name、namespace、feed 各字段、overrides 的 name/type/value）、Subscription（name、namespace、schedulingStrategy、feeds 各字段）、HTTP（url、method、body、headers）、Job（namespace）、KubernetesResource（manifest、operation）。
 
 ## 目录结构
 

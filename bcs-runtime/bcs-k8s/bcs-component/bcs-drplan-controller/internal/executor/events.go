@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package executor implements action executors for DR workflows.
 package executor
 
 import (
@@ -90,9 +91,9 @@ func (r *EventRecorder) ExecutionFailed(execution *drv1alpha1.DRPlanExecution, r
 	klog.Warningf("Event: %s - %s", EventReasonExecutionFailed, msg)
 }
 
-// ExecutionCancelled records an execution cancelled event
+// ExecutionCancelled records an execution canceled event
 func (r *EventRecorder) ExecutionCancelled(execution *drv1alpha1.DRPlanExecution) {
-	msg := "Execution cancelled by user"
+	msg := "Execution canceled by user"
 	r.recorder.Event(execution, EventTypeWarning, EventReasonExecutionCancelled, msg)
 	klog.Infof("Event: %s - %s", EventReasonExecutionCancelled, msg)
 }

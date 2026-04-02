@@ -39,8 +39,8 @@ type DRPlanExecutionSpec struct {
 
 // DRPlanExecutionStatus defines the observed state of DRPlanExecution.
 type DRPlanExecutionStatus struct {
-	// Phase is the execution phase: Pending, Running, Succeeded, Failed, Cancelled
-	// +kubebuilder:validation:Enum=Pending;Running;Succeeded;Failed;Cancelled;Unknown
+	// Phase is the execution phase: Pending, Running, Succeeded, Failed, Canceled
+	// +kubebuilder:validation:Enum=Pending;Running;Succeeded;Failed;Canceled;Unknown
 	// +optional
 	Phase string `json:"phase,omitempty"`
 

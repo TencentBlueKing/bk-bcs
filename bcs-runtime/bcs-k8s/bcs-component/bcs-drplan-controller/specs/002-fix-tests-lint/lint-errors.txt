@@ -1,0 +1,141 @@
+"/data/go/src/github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-drplan-controller/bin/golangci-lint" run
+cmd/main.go:60:6: Function 'main' has too many statements (103 > 40) (funlen)
+func main() {
+     ^
+internal/controller/drplan_controller.go:107:28: Function 'validatePlan' is too long (75 > 60) (funlen)
+func (r *DRPlanReconciler) validatePlan(ctx context.Context, plan *drv1alpha1.DRPlan) []string {
+                           ^
+internal/controller/drplanexecution_controller.go:50:37: Function 'Reconcile' has too many statements (50 > 40) (funlen)
+func (r *DRPlanExecutionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+                                    ^
+internal/controller/drplanexecution_reconciler_helper.go:155:37: Function 'updatePlanAfterCompletion' has too many statements (42 > 40) (funlen)
+func (r *DRPlanExecutionReconciler) updatePlanAfterCompletion(ctx context.Context, execution *drv1alpha1.DRPlanExecution, plan *drv1alpha1.DRPlan) error {
+                                    ^
+internal/executor/http_executor.go:40:30: Function 'Execute' has too many statements (61 > 40) (funlen)
+func (e *HTTPActionExecutor) Execute(ctx context.Context, action *drv1alpha1.Action, params map[string]interface{}) (*drv1alpha1.ActionStatus, error) {
+                             ^
+internal/executor/job_executor.go:41:29: Function 'Execute' is too long (63 > 60) (funlen)
+func (e *JobActionExecutor) Execute(ctx context.Context, action *drv1alpha1.Action, params map[string]interface{}) (*drv1alpha1.ActionStatus, error) {
+                            ^
+internal/executor/k8s_resource_executor.go:42:44: Function 'Execute' has too many statements (60 > 40) (funlen)
+func (e *KubernetesResourceActionExecutor) Execute(ctx context.Context, action *drv1alpha1.Action, params map[string]interface{}) (*drv1alpha1.ActionStatus, error) {
+                                           ^
+internal/executor/localization_executor.go:42:38: Function 'Execute' has too many statements (102 > 40) (funlen)
+func (e *LocalizationActionExecutor) Execute(ctx context.Context, action *drv1alpha1.Action, params map[string]interface{}) (*drv1alpha1.ActionStatus, error) {
+                                     ^
+internal/executor/native_executor.go:42:34: Function 'ExecuteWorkflow' is too long (78 > 60) (funlen)
+func (e *NativeWorkflowExecutor) ExecuteWorkflow(ctx context.Context, workflow *drv1alpha1.DRWorkflow, params map[string]interface{}) (*drv1alpha1.WorkflowExecutionStatus, error) {
+                                 ^
+internal/executor/native_executor.go:134:34: Function 'RevertWorkflow' has too many statements (47 > 40) (funlen)
+func (e *NativeWorkflowExecutor) RevertWorkflow(ctx context.Context, workflow *drv1alpha1.DRWorkflow, workflowStatus *drv1alpha1.WorkflowExecutionStatus) (*drv1alpha1.WorkflowExecutionStatus, error) {
+                                 ^
+internal/executor/native_executor.go:269:30: Function 'ExecutePlan' is too long (67 > 60) (funlen)
+func (e *NativePlanExecutor) ExecutePlan(ctx context.Context, plan *drv1alpha1.DRPlan, execution *drv1alpha1.DRPlanExecution) error {
+                             ^
+internal/executor/native_executor.go:349:30: Function 'RevertPlan' has too many statements (79 > 40) (funlen)
+func (e *NativePlanExecutor) RevertPlan(ctx context.Context, plan *drv1alpha1.DRPlan, execution *drv1alpha1.DRPlanExecution) error {
+                             ^
+internal/executor/stage_executor.go:130:32: Function 'executeParallel' is too long (72 > 60) (funlen)
+func (e *DefaultStageExecutor) executeParallel(ctx context.Context, stage *drv1alpha1.Stage, params map[string]interface{}, stageStatus *drv1alpha1.StageStatus) error {
+                               ^
+internal/executor/stage_executor.go:214:32: Function 'RevertStage' is too long (62 > 60) (funlen)
+func (e *DefaultStageExecutor) RevertStage(ctx context.Context, _ *drv1alpha1.DRPlan, stage *drv1alpha1.Stage, stageStatus *drv1alpha1.StageStatus) (*drv1alpha1.StageStatus, error) {
+                               ^
+internal/controller/drworkflow_validator.go:80:22: string `Patch` has 3 occurrences, make it a constant (goconst)
+	if loc.Operation == "Patch" && action.Rollback == nil {
+	                    ^
+internal/executor/k8s_resource_executor.go:86:15: string `Create` has 3 occurrences, make it a constant (goconst)
+		operation = "Create"
+		            ^
+internal/executor/subscription_executor.go:134:28: string `Rolled back: executed custom rollback action` has 4 occurrences, make it a constant (goconst)
+		rollbackStatus.Message = "Rolled back: executed custom rollback action"
+		                         ^
+internal/executor/subscription_executor.go:198:18: string `default` has 3 occurrences, make it a constant (goconst)
+	subNamespace := "default"
+	                ^
+internal/webhook/drworkflow_webhook.go:84:38: string `Create` has 8 occurrences, make it a constant (goconst)
+					action.Localization.Operation = "Create"
+					                                ^
+internal/webhook/drworkflow_webhook.go:347:71: string `Patch` has 3 occurrences, make it a constant (goconst)
+				if action.Localization != nil && action.Localization.Operation == "Patch" {
+				                                                                  ^
+internal/executor/http_executor.go:181:53: G402: TLS InsecureSkipVerify set true. (gosec)
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+			                                                 ^
+test/utils/utils.go:62:9: G204: Subprocess launched with variable (gosec)
+	cmd := exec.Command("kubectl", "delete", "-f", url)
+	       ^
+test/utils/utils.go:73:9: G204: Subprocess launched with variable (gosec)
+		cmd = exec.Command("kubectl", "delete", "lease", lease,
+			"-n", "kube-system", "--ignore-not-found", "--force", "--grace-period=0")
+test/utils/utils.go:84:9: G204: Subprocess launched with variable (gosec)
+	cmd := exec.Command("kubectl", "apply", "-f", url)
+	       ^
+test/utils/utils.go:144:9: G204: Subprocess launched with variable (gosec)
+	cmd := exec.Command(kindBinary, kindOptions...)
+	       ^
+cmd/main.go:13:1: package-comments: should have a package comment (revive)
+package main
+^
+internal/controller/drplan_controller.go:13:1: package-comments: should have a package comment (revive)
+package controller
+^
+internal/controller/drplan_controller_test.go:18:2: dot-imports: should not use dot imports (revive)
+	. "github.com/onsi/ginkgo/v2"
+	^
+internal/controller/drplan_controller_test.go:19:2: dot-imports: should not use dot imports (revive)
+	. "github.com/onsi/gomega"
+	^
+internal/controller/drplanexecution_controller_test.go:18:2: dot-imports: should not use dot imports (revive)
+	. "github.com/onsi/ginkgo/v2"
+	^
+internal/controller/drplanexecution_controller_test.go:19:2: dot-imports: should not use dot imports (revive)
+	. "github.com/onsi/gomega"
+	^
+internal/controller/drworkflow_controller_test.go:18:2: dot-imports: should not use dot imports (revive)
+	. "github.com/onsi/ginkgo/v2"
+	^
+internal/controller/drworkflow_controller_test.go:19:2: dot-imports: should not use dot imports (revive)
+	. "github.com/onsi/gomega"
+	^
+internal/controller/suite_test.go:22:2: dot-imports: should not use dot imports (revive)
+	. "github.com/onsi/ginkgo/v2"
+	^
+internal/controller/suite_test.go:23:2: dot-imports: should not use dot imports (revive)
+	. "github.com/onsi/gomega"
+	^
+internal/executor/events.go:13:1: package-comments: should have a package comment (revive)
+package executor
+^
+internal/executor/http_executor.go:255:1: redefines-builtin-id: redefinition of the built-in function min (revive)
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+internal/executor/interface.go:67:6: exported: type name will be used as executor.ExecutorRegistry by other packages, and that stutters; consider calling this Registry (revive)
+type ExecutorRegistry interface {
+     ^
+internal/utils/retry.go:27:2: exported: exported const DefaultRetryLimit should have comment (or a comment on this block) or be unexported (revive)
+	DefaultRetryLimit        = 3
+	^
+internal/utils/template.go:14:9: var-naming: avoid meaningless package names (revive)
+package utils
+        ^
+internal/webhook/drplan_validator.go:13:1: package-comments: should have a package comment (revive)
+package webhook
+^
+test/utils/utils.go:14:9: var-naming: avoid meaningless package names (revive)
+package utils
+        ^
+internal/webhook/drplanexecution_webhook.go:83:113: (*DRPlanExecutionWebhook).validateExecution - result 0 ([]string) is always nil (unparam)
+func (w *DRPlanExecutionWebhook) validateExecution(ctx context.Context, execution *drv1alpha1.DRPlanExecution) ([]string, []string) {
+                                                                                                                ^
+43 issues:
+* funlen: 14
+* goconst: 6
+* gosec: 5
+* revive: 17
+* unparam: 1
+make: *** [Makefile:102: lint] Error 1

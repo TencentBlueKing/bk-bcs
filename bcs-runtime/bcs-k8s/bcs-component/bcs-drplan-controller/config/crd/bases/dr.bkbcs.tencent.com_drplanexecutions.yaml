@@ -131,13 +131,13 @@ spec:
                 type: string
               phase:
                 description: 'Phase is the execution phase: Pending, Running, Succeeded,
-                  Failed, Cancelled'
+                  Failed, Canceled'
                 enum:
                 - Pending
                 - Running
                 - Succeeded
                 - Failed
-                - Cancelled
+                - Canceled
                 - Unknown
                 type: string
               stageStatuses:

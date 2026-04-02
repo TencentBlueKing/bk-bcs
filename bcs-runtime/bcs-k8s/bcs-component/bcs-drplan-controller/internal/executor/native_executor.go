@@ -27,11 +27,11 @@ import (
 // NativeWorkflowExecutor implements WorkflowExecutor for native execution
 type NativeWorkflowExecutor struct {
 	client   client.Client
-	registry ExecutorRegistry
+	registry Registry
 }
 
 // NewNativeWorkflowExecutor creates a new NativeWorkflowExecutor
-func NewNativeWorkflowExecutor(client client.Client, registry ExecutorRegistry) *NativeWorkflowExecutor {
+func NewNativeWorkflowExecutor(client client.Client, registry Registry) *NativeWorkflowExecutor {
 	return &NativeWorkflowExecutor{
 		client:   client,
 		registry: registry,
@@ -349,65 +349,15 @@ func (e *NativePlanExecutor) ExecutePlan(ctx context.Context, plan *drv1alpha1.D
 func (e *NativePlanExecutor) RevertPlan(ctx context.Context, plan *drv1alpha1.DRPlan, execution *drv1alpha1.DRPlanExecution) error {
 	klog.Infof("Reverting plan: %s/%s", plan.Namespace, plan.Name)
 
-	// Get the target execution to revert (must be explicitly specified)
-	if execution.Spec.RevertExecutionRef == "" {
-		execution.Status.Phase = drv1alpha1.PhaseFailed
-		execution.Status.Message = "revertExecutionRef must be specified for Revert operation"
-		klog.Errorf("RevertExecutionRef not specified for execution %s/%s", execution.Namespace, execution.Name)
-		return e.updateExecutionStatus(ctx, execution, nil)
-	}
-
-	targetExecutionName := execution.Spec.RevertExecutionRef
-	klog.Infof("Reverting explicitly specified execution: %s", targetExecutionName)
-
-	// Fetch the target execution to get its stage statuses
-	targetExecution := &drv1alpha1.DRPlanExecution{}
-	targetExecKey := client.ObjectKey{
-		Name:      targetExecutionName,
-		Namespace: plan.Namespace,
-	}
-	if err := e.client.Get(ctx, targetExecKey, targetExecution); err != nil {
-		execution.Status.Phase = drv1alpha1.PhaseFailed
-		execution.Status.Message = fmt.Sprintf("Failed to get target execution %s: %v", targetExecutionName, err)
-		klog.Errorf("Failed to get target execution %s/%s: %v", plan.Namespace, targetExecutionName, err)
-		return e.updateExecutionStatus(ctx, execution, nil)
-	}
-
-	// Validate that target execution was an Execute operation
-	if targetExecution.Spec.OperationType != drv1alpha1.OperationTypeExecute {
-		execution.Status.Phase = drv1alpha1.PhaseFailed
-		execution.Status.Message = fmt.Sprintf("Cannot revert non-Execute operation (target is %s)", targetExecution.Spec.OperationType)
-		klog.Errorf("Target execution %s/%s is not an Execute operation: %s", targetExecution.Namespace, targetExecution.Name, targetExecution.Spec.OperationType)
-		return e.updateExecutionStatus(ctx, execution, nil)
-	}
-
-	// Validate that target execution succeeded
-	if targetExecution.Status.Phase != drv1alpha1.PhaseSucceeded {
-		execution.Status.Phase = drv1alpha1.PhaseFailed
-		execution.Status.Message = fmt.Sprintf("Cannot revert execution in phase %s (must be Succeeded)", targetExecution.Status.Phase)
-		klog.Errorf("Target execution %s/%s is not in Succeeded phase: %s", targetExecution.Namespace, targetExecution.Name, targetExecution.Status.Phase)
-		return e.updateExecutionStatus(ctx, execution, nil)
-	}
-
-	if len(targetExecution.Status.StageStatuses) == 0 {
-		execution.Status.Phase = drv1alpha1.PhaseFailed
-		execution.Status.Message = "Target execution has no stage statuses to revert"
-		klog.Warningf("Target execution %s/%s has no stage statuses", targetExecution.Namespace, targetExecution.Name)
+	targetExecution, err := e.validateAndFetchRevertTarget(ctx, plan, execution)
+	if err != nil {
 		return e.updateExecutionStatus(ctx, execution, nil)
 	}
 
 	klog.Infof("Reverting based on target execution %s/%s with %d stages",
 		targetExecution.Namespace, targetExecution.Name, len(targetExecution.Status.StageStatuses))
 
-	// Initialize Revert execution status
-	if execution.Status.StageStatuses == nil {
-		execution.Status.StageStatuses = make([]drv1alpha1.StageStatus, 0, len(targetExecution.Status.StageStatuses))
-	}
-	if execution.Status.Summary == nil {
-		execution.Status.Summary = &drv1alpha1.ExecutionSummary{
-			TotalStages: len(targetExecution.Status.StageStatuses),
-		}
-	}
+	e.initializeRevertExecutionStatus(execution, len(targetExecution.Status.StageStatuses))
 
 	// Revert stages in reverse order from the target execution
 	succeededStages := 0
@@ -486,27 +436,19 @@ func (e *NativePlanExecutor) RevertPlan(ctx context.Context, plan *drv1alpha1.DR
 		}
 	}
 
-	// Generate detailed success message
-	execution.Status.Phase = drv1alpha1.PhaseSucceeded
-	execution.Status.Message = fmt.Sprintf(
-		"Plan reverted successfully: %d stage(s) rolled back, %d action(s) rolled back, %d stage(s) skipped",
-		succeededStages, totalActions, skippedStages)
-
-	klog.Infof("Plan %s/%s reverted successfully: %d stages, %d actions, %d skipped",
-		plan.Namespace, plan.Name, succeededStages, totalActions, skippedStages)
-
+	e.finalizeRevertSuccess(plan, execution, succeededStages, totalActions, skippedStages)
 	return e.updateExecutionStatus(ctx, execution, nil)
 }
 
 // CancelExecution cancels an ongoing execution
 func (e *NativePlanExecutor) CancelExecution(_ context.Context, execution *drv1alpha1.DRPlanExecution) error {
-	klog.Infof("Cancelling execution: %s/%s", execution.Namespace, execution.Name)
+	klog.Infof("Canceling execution: %s/%s", execution.Namespace, execution.Name)
 
-	// Mark all running/pending stages as cancelled
+	// Mark all running/pending stages as canceled
 	for i := range execution.Status.StageStatuses {
 		if execution.Status.StageStatuses[i].Phase == drv1alpha1.PhaseRunning || execution.Status.StageStatuses[i].Phase == drv1alpha1.PhasePending {
 			execution.Status.StageStatuses[i].Phase = drv1alpha1.PhaseSkipped
-			execution.Status.StageStatuses[i].Message = "Cancelled by user"
+			execution.Status.StageStatuses[i].Message = "Canceled by user"
 		}
 	}
 
@@ -556,6 +498,73 @@ func (e *NativePlanExecutor) updateStageStatusInExecution(execution *drv1alpha1.
 
 	// Update summary
 	e.updateExecutionSummary(execution)
+}
+
+func (e *NativePlanExecutor) validateAndFetchRevertTarget(ctx context.Context, plan *drv1alpha1.DRPlan, execution *drv1alpha1.DRPlanExecution) (*drv1alpha1.DRPlanExecution, error) {
+	if execution.Spec.RevertExecutionRef == "" {
+		execution.Status.Phase = drv1alpha1.PhaseFailed
+		execution.Status.Message = "revertExecutionRef must be specified for Revert operation"
+		klog.Errorf("RevertExecutionRef not specified for execution %s/%s", execution.Namespace, execution.Name)
+		return nil, fmt.Errorf("revertExecutionRef is required")
+	}
+
+	targetExecutionName := execution.Spec.RevertExecutionRef
+	klog.Infof("Reverting explicitly specified execution: %s", targetExecutionName)
+
+	targetExecution := &drv1alpha1.DRPlanExecution{}
+	targetExecKey := client.ObjectKey{
+		Name:      targetExecutionName,
+		Namespace: plan.Namespace,
+	}
+	if err := e.client.Get(ctx, targetExecKey, targetExecution); err != nil {
+		execution.Status.Phase = drv1alpha1.PhaseFailed
+		execution.Status.Message = fmt.Sprintf("Failed to get target execution %s: %v", targetExecutionName, err)
+		klog.Errorf("Failed to get target execution %s/%s: %v", plan.Namespace, targetExecutionName, err)
+		return nil, err
+	}
+
+	if targetExecution.Spec.OperationType != drv1alpha1.OperationTypeExecute {
+		execution.Status.Phase = drv1alpha1.PhaseFailed
+		execution.Status.Message = fmt.Sprintf("Cannot revert non-Execute operation (target is %s)", targetExecution.Spec.OperationType)
+		klog.Errorf("Target execution %s/%s is not an Execute operation: %s", targetExecution.Namespace, targetExecution.Name, targetExecution.Spec.OperationType)
+		return nil, fmt.Errorf("target must be an Execute operation")
+	}
+
+	if targetExecution.Status.Phase != drv1alpha1.PhaseSucceeded {
+		execution.Status.Phase = drv1alpha1.PhaseFailed
+		execution.Status.Message = fmt.Sprintf("Cannot revert execution in phase %s (must be Succeeded)", targetExecution.Status.Phase)
+		klog.Errorf("Target execution %s/%s is not in Succeeded phase: %s", targetExecution.Namespace, targetExecution.Name, targetExecution.Status.Phase)
+		return nil, fmt.Errorf("target must be in Succeeded phase")
+	}
+
+	if len(targetExecution.Status.StageStatuses) == 0 {
+		execution.Status.Phase = drv1alpha1.PhaseFailed
+		execution.Status.Message = "Target execution has no stage statuses to revert"
+		klog.Warningf("Target execution %s/%s has no stage statuses", targetExecution.Namespace, targetExecution.Name)
+		return nil, fmt.Errorf("target has no stage statuses")
+	}
+
+	return targetExecution, nil
+}
+
+func (e *NativePlanExecutor) initializeRevertExecutionStatus(execution *drv1alpha1.DRPlanExecution, totalStages int) {
+	if execution.Status.StageStatuses == nil {
+		execution.Status.StageStatuses = make([]drv1alpha1.StageStatus, 0, totalStages)
+	}
+	if execution.Status.Summary == nil {
+		execution.Status.Summary = &drv1alpha1.ExecutionSummary{
+			TotalStages: totalStages,
+		}
+	}
+}
+
+func (e *NativePlanExecutor) finalizeRevertSuccess(plan *drv1alpha1.DRPlan, execution *drv1alpha1.DRPlanExecution, succeededStages, totalActions, skippedStages int) {
+	execution.Status.Phase = drv1alpha1.PhaseSucceeded
+	execution.Status.Message = fmt.Sprintf(
+		"Plan reverted successfully: %d stage(s) rolled back, %d action(s) rolled back, %d stage(s) skipped",
+		succeededStages, totalActions, skippedStages)
+	klog.Infof("Plan %s/%s reverted successfully: %d stages, %d actions, %d skipped",
+		plan.Namespace, plan.Name, succeededStages, totalActions, skippedStages)
 }
 
 // updateExecutionSummary updates the execution summary

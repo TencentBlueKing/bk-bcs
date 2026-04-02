@@ -155,21 +155,30 @@ clean_branch_name() {
     echo "$name" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g' | sed 's/-\+/-/g' | sed 's/^-//' | sed 's/-$//'
 }
 
-# Resolve repository root. Prefer git information when available, but fall back
-# to searching for repository markers so the workflow still functions in repositories that
-# were initialised with --no-git.
+# Resolve repository root. For monorepo support, prefer .specify directory location
+# over git root. This allows each project in a monorepo to have its own specs.
 SCRIPT_DIR="$(CDPATH="" cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-if git rev-parse --show-toplevel >/dev/null 2>&1; then
-    REPO_ROOT=$(git rev-parse --show-toplevel)
-    HAS_GIT=true
-else
-    REPO_ROOT="$(find_repo_root "$SCRIPT_DIR")"
-    if [ -z "$REPO_ROOT" ]; then
+# First, try to find .specify directory (project root marker)
+REPO_ROOT="$(find_repo_root "$SCRIPT_DIR")"
+
+# If .specify not found but we're in a git repo, use git root as fallback
+if [ -z "$REPO_ROOT" ]; then
+    if git rev-parse --show-toplevel >/dev/null 2>&1; then
+        REPO_ROOT=$(git rev-parse --show-toplevel)
+        HAS_GIT=true
+    else
         echo "Error: Could not determine repository root. Please run this script from within the repository." >&2
+        echo "Hint: Make sure .specify/ directory exists in your project root." >&2
         exit 1
     fi
-    HAS_GIT=false
+else
+    # Check if we're also in a git repo (for branch operations)
+    if git rev-parse --show-toplevel >/dev/null 2>&1; then
+        HAS_GIT=true
+    else
+        HAS_GIT=false
+    fi
 fi
 
 cd "$REPO_ROOT"

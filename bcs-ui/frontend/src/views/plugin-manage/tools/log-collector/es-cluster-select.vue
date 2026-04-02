@@ -31,7 +31,7 @@
           v-bk-overflow-tips
           class="flex items-center justify-between bcs-ellipsis"
           @click.stop="handleClusterChange(cluster.storage_cluster_id)">
-          <span class="bcs-ellipsis">{{ cluster.storage_cluster_name }}</span>
+          <span class="bcs-ellipsis">{{ cluster.storage_display_name || cluster.storage_cluster_name }}</span>
           <span class="text-[#979BA5] bcs-ellipsis">
             {{
               $t(

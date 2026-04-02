@@ -19,22 +19,22 @@ spec:
       subscription:
         operation: Create
         name: nginx-subscription
-        namespace: "{{ .params.feedNamespace }}"
+        namespace: "$(params.feedNamespace)"
         spec:
           schedulingStrategy: Replication
           feeds:
             - apiVersion: apps/v1
               kind: Deployment
               name: nginx
-              namespace: "{{ .params.feedNamespace }}"
+              namespace: "$(params.feedNamespace)"
             - apiVersion: v1
               kind: ConfigMap
               name: nginx-config
-              namespace: "{{ .params.feedNamespace }}"
+              namespace: "$(params.feedNamespace)"
             - apiVersion: v1
               kind: Service
               name: nginx
-              namespace: "{{ .params.feedNamespace }}"
+              namespace: "$(params.feedNamespace)"
           subscribers:
             - clusterAffinity:
                 matchExpressions:

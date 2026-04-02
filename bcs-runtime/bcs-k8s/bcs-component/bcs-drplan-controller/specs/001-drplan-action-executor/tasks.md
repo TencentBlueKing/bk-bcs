@@ -70,7 +70,7 @@ bcs-drplan-controller/
 
 ### 工具函数
 
-- [X] T015 [P] 实现参数模板替换在 internal/utils/template.go（支持 `{{ .params.xxx }}` 和 `{{ .planName }}`）
+- [X] T015 [P] 实现参数模板替换在 internal/utils/template.go（支持 `$(params.xxx)` 和 `$(planName)`）
 - [X] T016 [P] 实现重试工具在 internal/utils/retry.go（支持指数退避）
 - [X] T017 [P] 实现 klog 初始化在 cmd/main.go（配置日志级别、格式）
 

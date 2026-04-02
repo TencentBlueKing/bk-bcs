@@ -72,6 +72,19 @@
       </div>
     </div>
     <div class="workload-detail-body">
+      <bcs-alert
+        v-if="!isMonitorInstalled"
+        class="mt-[16px]"
+        type="warning"
+        closable>
+        <template #title>
+          <i18n path="dashboard.workload.tips.noMonitor" tag="span">
+            <template #plugins>
+              <a class="text-[#3a84ff]" :href="handleGetPluginManageUrl()" target="_blank">{{ $t('nav.plugin') }}</a>
+            </template>
+          </i18n>
+        </template>
+      </bcs-alert>
       <div class="workload-metric">
         <Metric
           :metric="activeCpuMetric"
@@ -394,8 +407,9 @@ import { computed, defineComponent, onMounted, ref, toRefs } from 'vue';
 import { filterXss } from '@blueking/xss-filter';
 
 import EventTable from './bk-monitor-event.vue';
-import useDetail from './use-detail';
+import useDetail, { useMonitorCollector } from './use-detail';
 
+import { addonsList } from '@/api/modules/helm';
 import { logCollectorEntrypoints } from '@/api/modules/monitor';
 import { ClusterAddonsService } from '@/api/modules/new-helm-manager';
 import { LOG_COLLECTOR } from '@/common/constant';
@@ -478,6 +492,11 @@ export default defineComponent({
       defaultActivePanel: 'container',
       type: 'workloads',
     });
+    const {
+      isMonitorInstalled,
+      handleGetPluginManageUrl,
+      handleCheckMonitor,
+    } = useMonitorCollector();
     const { name, namespace, clusterId } = toRefs(props);
     const params = computed(() => ({
       $namespaceId: namespace.value,
@@ -606,6 +625,13 @@ export default defineComponent({
     // 文件日志检索禁用逻辑
     const isFileLogDisabled = ref(false);
     async function handleFileLogDisabled() {
+      const list = await addonsList({
+        $clusterId: clusterId.value,
+      }).catch(() => []);
+      const hasLogCollector = list.find(item => item.name === LOG_COLLECTOR);
+      // 组件列表没有该组件则不发起请求
+      if (!hasLogCollector) return;
+
       const result = await ClusterAddonsService.GetAddonsDetail({ $clusterId: clusterId.value, $name: LOG_COLLECTOR })
         .catch(() => {});
       isFileLogDisabled.value = !result?.status;
@@ -616,6 +642,7 @@ export default defineComponent({
       handleGetStorage();
       handleGetContainer();
       handleFileLogDisabled();
+      handleCheckMonitor(clusterId.value);
     });
 
     return {
@@ -657,6 +684,8 @@ export default defineComponent({
       IS_INTERNAL: _INTERNAL_.value,
       isFileLogDisabled,
       handleChangeCpuMetric,
+      isMonitorInstalled,
+      handleGetPluginManageUrl,
     };
   },
 });
