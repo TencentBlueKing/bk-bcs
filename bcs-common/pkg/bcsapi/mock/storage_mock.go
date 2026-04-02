@@ -150,6 +150,21 @@ func (mr *MockStorageMockRecorder) QueryK8SDeployment(cluster, namespace interfa
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryK8SDeployment", reflect.TypeOf((*MockStorage)(nil).QueryK8SDeployment), cluster, namespace)
 }
 
+// GetK8SDeployment mocks base method.
+func (m *MockStorage) GetK8SDeployment(cluster, namespace, name string) (*storage.Deployment, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetK8SDeployment", cluster, namespace, name)
+	ret0, _ := ret[0].(*storage.Deployment)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetK8SDeployment indicates an expected call of GetK8SDeployment.
+func (mr *MockStorageMockRecorder) GetK8SDeployment(cluster, namespace, name interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetK8SDeployment", reflect.TypeOf((*MockStorage)(nil).GetK8SDeployment), cluster, namespace, name)
+}
+
 // QueryK8SGameDeployment mocks base method.
 func (m *MockStorage) QueryK8SGameDeployment(cluster, namespace string) ([]*storage.GameDeployment, error) {
 	m.ctrl.T.Helper()
@@ -238,6 +253,21 @@ func (m *MockStorage) QueryK8SStatefulSet(cluster, namespace string) ([]*storage
 func (mr *MockStorageMockRecorder) QueryK8SStatefulSet(cluster, namespace interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryK8SStatefulSet", reflect.TypeOf((*MockStorage)(nil).QueryK8SStatefulSet), cluster, namespace)
+}
+
+// GetK8SStatefulSet mocks base method.
+func (m *MockStorage) GetK8SStatefulSet(cluster, namespace, name string) (*storage.StatefulSet, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetK8SStatefulSet", cluster, namespace, name)
+	ret0, _ := ret[0].(*storage.StatefulSet)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetK8SStatefulSet indicates an expected call of GetK8SStatefulSet.
+func (mr *MockStorageMockRecorder) GetK8SStatefulSet(cluster, namespace, name interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetK8SStatefulSet", reflect.TypeOf((*MockStorage)(nil).GetK8SStatefulSet), cluster, namespace, name)
 }
 
 // QueryK8sGPA mocks base method.
