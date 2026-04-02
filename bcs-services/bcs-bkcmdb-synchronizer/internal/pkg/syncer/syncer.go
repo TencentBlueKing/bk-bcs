@@ -5111,8 +5111,39 @@ func (s *Syncer) UpdateBkWorkloads(
 }
 
 // DeleteBkWorkloads delete bkworkloads
+// Before deleting the workload, it will delete associated pods first
+// because CMDB's delete-workload-api will fail if the workload still has associated pods
 func (s *Syncer) DeleteBkWorkloads(bkCluster *bkcmdbkube.Cluster, kind string, toDelete *[]int64, db *gorm.DB) error {
 	if len(*toDelete) > 0 {
+		// Delete associated pods before deleting workload
+		for _, id := range *toDelete {
+			bkPods, errGetPods := s.GetBkPods(bkCluster.BizID, &client.PropertyFilter{
+				Condition: "AND",
+				Rules: []client.Rule{
+					{
+						Field:    "ref.kind",
+						Operator: "in",
+						Value:    []string{kind},
+					},
+					{
+						Field:    "ref.id",
+						Operator: "in",
+						Value:    []int64{id},
+					},
+				},
+			}, true, db)
+			if errGetPods == nil && len(*bkPods) > 0 {
+				podIDs := make([]int64, 0)
+				for _, pod := range *bkPods {
+					podIDs = append(podIDs, pod.ID)
+				}
+				blog.Infof("workload %s id=%d has %d pods, delete them first", kind, id, len(podIDs))
+				if errDelPods := s.DeleteBkPods(bkCluster, &podIDs, db); errDelPods != nil {
+					blog.Errorf("delete pods for workload %s id=%d failed: %v", kind, id, errDelPods)
+				}
+			}
+		}
+
 		// DeleteBcsWorkload deletes the BCS workload with the given request.
 		err := s.CMDBClient.DeleteBcsWorkload(&client.DeleteBcsWorkloadRequest{
 			BKBizID: &bkCluster.BizID,
@@ -5935,36 +5966,6 @@ func (s *Syncer) syncCustomResources(cluster *cmp.Cluster, bkCluster *bkcmdbkube
 						crToUpdate[int64(id)] = updateData
 						blog.Infof("customResource %s ToUpdate: %s", crKind, key)
 					}
-				}
-			}
-		}
-
-		// Delete pods associated with CRs before deleting CRs
-		// This is necessary because if a CR still has associated Pods in CMDB, the delete-workload-api will fail
-		for _, crID := range crToDelete {
-			bkPods, errGetPods := s.GetBkPods(bkCluster.BizID, &client.PropertyFilter{
-				Condition: "AND",
-				Rules: []client.Rule{
-					{
-						Field:    "ref.kind",
-						Operator: "in",
-						Value:    []string{"customResource"},
-					},
-					{
-						Field:    "ref.id",
-						Operator: "in",
-						Value:    []int64{crID},
-					},
-				},
-			}, true, db)
-			if errGetPods == nil && len(*bkPods) > 0 {
-				podIDs := make([]int64, 0)
-				for _, pod := range *bkPods {
-					podIDs = append(podIDs, pod.ID)
-				}
-				blog.Infof("customResource id=%d has %d pods, delete them first", crID, len(podIDs))
-				if errDelPods := s.DeleteBkPods(bkCluster, &podIDs, db); errDelPods != nil {
-					blog.Errorf("delete pods for customResource id=%d failed: %v", crID, errDelPods)
 				}
 			}
 		}
