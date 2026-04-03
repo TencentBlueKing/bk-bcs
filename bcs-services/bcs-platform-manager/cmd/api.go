@@ -24,7 +24,8 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/component"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/component/bcs"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/component/cmdb"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/component/notice"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/discovery"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/storage"
@@ -74,14 +75,28 @@ func runAPIServer(ctx context.Context, g *run.Group, opt *option) error {
 		return err
 	}
 
-	// init storage
-	storage.InitStorage()
+	InitClient()
 
 	// 启动 apiserver
 	g.Add(server.Run, func(err error) { _ = server.Close(); component.GetAuditClient().Close() })
 	g.Add(sd.Run, func(error) {})
 
-	bcs.CacheListClusters()
-
 	return nil
+}
+
+// InitClient init client
+func InitClient() {
+	// init storage
+	storage.InitStorage()
+
+	// init cmdb client
+	cmdb.SetCmdbClient(cmdb.Options{
+		AppCode:    config.G.Base.AppCode,
+		AppSecret:  config.G.Base.AppSecret,
+		BKUserName: config.G.Base.BKUsername,
+		Server:     config.G.Cmdb.Host,
+		Debug:      config.G.Cmdb.Debug,
+	})
+
+	notice.InitNotice()
 }

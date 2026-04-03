@@ -32,6 +32,7 @@ const (
 
 // BCSConf :
 type BCSConf struct {
+	Server       string         `yaml:"server"`
 	Host         string         `yaml:"host"`
 	Token        string         `yaml:"token"`
 	JWTPubKey    string         `yaml:"jwt_public_key"`

@@ -10,28 +10,36 @@
  * limitations under the License.
  */
 
-// Package pod pod operate
-package pod
+// Package clustermanager cloudvpc操作
+package clustermanager
 
 import (
 	"context"
+	"fmt"
 
-	actions "github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/actions/pod"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/storage"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/types"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/config"
 )
 
-// GetPodContainers 获取 Pod 容器列表
-// @Summary 获取 Pod 容器列表
-// @Tags    Logs
-// @Produce json
-// @Success 200 {array} k8sclient.Container
-// @Router  /namespaces/:namespace/pods/:pod/containers [get]
-func GetPodContainers(c context.Context, req *types.SampleRequset) (*types.SampleResponse, error) {
-	pa := actions.NewPodAction(storage.GlobalStorage)
-	sr, err := pa.GetPodContainers(c, req.ProjectId, req.ClusterId)
+// ListOperationLogs 获取操作记录列表
+func ListOperationLogs(ctx context.Context, req *clustermanager.ListOperationLogsRequest) (
+	*clustermanager.ListOperationLogsResponseData, error) {
+	cli, close, err := clustermanager.GetClient(config.ServiceDomain)
 	if err != nil {
 		return nil, err
 	}
-	return sr, nil
+
+	defer Close(close)
+
+	p, err := cli.ListOperationLogs(ctx, req)
+	if err != nil {
+		return nil, fmt.Errorf("ListOperation error: %s", err)
+	}
+
+	if p.Code != 0 {
+		return nil, fmt.Errorf("ListOperation error, code: %d, message: %s", p.Code, p.GetMessage())
+	}
+
+	return p.Data, nil
 }
