@@ -420,6 +420,10 @@ type CreateBcsWorkloadRequestData struct {
 	MinReadySeconds       *int64                    `json:"min_ready_seconds,omitempty" bson:"min_ready_seconds"`
 	StrategyType          *string                   `json:"strategy_type,omitempty" bson:"strategy_type"`
 	RollingUpdateStrategy *map[string]interface{}   `json:"rolling_update_strategy,omitempty" bson:"rolling_update_strategy"` // nolint
+	// CRKind is the kind of custom resource, required when kind is customResource
+	CRKind *string `json:"cr_kind,omitempty" bson:"cr_kind"`
+	// CRApiVersion is the api version of custom resource, required when kind is customResource
+	CRApiVersion *string `json:"cr_api_version,omitempty" bson:"cr_api_version"`
 }
 
 // CreateBcsWorkloadResponse defines the structure of the response for creating a BCS workload.

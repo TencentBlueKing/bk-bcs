@@ -13,7 +13,7 @@ replace (
 
 require (
 	configcenter v0.0.0-00010101000000-000000000000
-	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20240830030550-c83253c3a207
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20260402013426-33f9185571c1
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/go-micro/plugins/v4/registry/etcd v1.1.0
 	github.com/kirito41dd/xslice v0.0.1

@@ -23,7 +23,9 @@ import (
 	"time"
 
 	bkcmdbkube "configcenter/src/kube/types" // nolint
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
 	pmp "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
 	cmp "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/storage"
@@ -35,6 +37,7 @@ import (
 	"gorm.io/gorm"
 	appv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/client"
 	cm "github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/client/clustermanager"
@@ -48,6 +51,8 @@ import (
 const (
 	// Deployment 表示Kubernetes中的部署资源类型
 	Deployment = "Deployment"
+	// StatefulSet 表示Kubernetes中的有状态副本集资源类型
+	StatefulSet = "StatefulSet"
 )
 
 var workloadKindList = []string{"GameDeployment", "GameStatefulSet", "StatefulSet", "DaemonSet", "Deployment"}
@@ -225,6 +230,10 @@ func (b *BcsBkcmdbSynchronizerHandler) HandleMsg(
 					}
 					errH = b.handleNodes(&nodeMsg, bkCluster, db)
 					// errH = b.handleEvent(msg, bkCluster)
+				default:
+					// 未匹配的 resourceType 当作 CustomResource 处理
+					// handleCustomResource 内部会校验该 crKind 是否在白名单中
+					errH = b.handleCustomResource(msg, bkCluster, db)
 				}
 
 				if errH != nil {
@@ -854,6 +863,152 @@ func (b *BcsBkcmdbSynchronizerHandler) handlePodsDelete(
 	return err
 }
 
+// resolveWorkloadOwner 尝试从 Workload 向上追溯获取最终的 workload 信息
+// 如果 Workload 的 Owner 是 CR 白名单中的类型，则返回 CR 的信息
+// 否则返回 Workload 本身的信息
+// workloadKind 取值: Deployment, StatefulSet
+func (b *BcsBkcmdbSynchronizerHandler) resolveWorkloadOwner(
+	clusterUID string,
+	namespaceName string,
+	workloadKind string,
+	workloadName string,
+	storageCli bcsapi.Storage,
+	crKinds []string,
+) (resolvedKind string, resolvedName string) {
+	resolvedKind = common.FirstLower(workloadKind)
+	resolvedName = workloadName
+
+	// 如果没有配置 CR 白名单，直接返回
+	if len(crKinds) == 0 {
+		return
+	}
+
+	// 查询 Workload 的详细信息
+	var ownerRef metav1.OwnerReference
+	var found bool
+
+	switch workloadKind {
+	case "Deployment":
+		workload, err := storageCli.GetK8SDeployment(clusterUID, namespaceName, workloadName)
+		if err != nil {
+			blog.Warnf("query deployment %s/%s from storage failed: %s, use %s as fallback",
+				namespaceName, workloadName, err.Error(), workloadKind)
+			return
+		}
+		if workload == nil {
+			blog.Warnf("deployment %s/%s not found in storage, use %s as fallback",
+				namespaceName, workloadName, workloadKind)
+			return
+		}
+		if len(workload.Data.OwnerReferences) > 0 {
+			ownerRef = workload.Data.OwnerReferences[0]
+			found = true
+		}
+	case "StatefulSet":
+		workload, err := storageCli.GetK8SStatefulSet(clusterUID, namespaceName, workloadName)
+		if err != nil {
+			blog.Warnf("query statefulset %s/%s from storage failed: %s, use %s as fallback",
+				namespaceName, workloadName, err.Error(), workloadKind)
+			return
+		}
+		if workload == nil {
+			blog.Warnf("statefulset %s/%s not found in storage, use %s as fallback",
+				namespaceName, workloadName, workloadKind)
+			return
+		}
+		if len(workload.Data.OwnerReferences) > 0 {
+			ownerRef = workload.Data.OwnerReferences[0]
+			found = true
+		}
+	default:
+		blog.Warnf("resolveWorkloadOwner: unsupported workload kind %s", workloadKind)
+		return
+	}
+
+	if !found {
+		blog.Infof("%s %s has no owner, use %s", workloadKind, workloadName, workloadKind)
+		return
+	}
+
+	// 检查 Owner 是否在 CR 白名单中
+	if common.IsKindInSlice(ownerRef.Kind, crKinds) {
+		resolvedKind = "customResource"
+		resolvedName = ownerRef.Name
+		blog.Infof("found CR owner: %s/%s for Pod via %s %s",
+			ownerRef.Kind, ownerRef.Name, workloadKind, workloadName)
+	} else {
+		blog.Infof("%s %s owner %s not in CR whitelist, use %s",
+			workloadKind, workloadName, ownerRef.Kind, workloadKind)
+	}
+
+	return
+}
+
+// isWorkloadOwnedByCR 检查 workload 的 owner 是否在 CR 白名单中
+// 如果是，返回 (true, crKind)；否则返回 (false, "")
+func (b *BcsBkcmdbSynchronizerHandler) isWorkloadOwnedByCR(
+	clusterUID, namespaceName, workloadKind, workloadName string,
+	storageCli bcsapi.Storage, crKinds []string) (bool, string) {
+
+	if len(crKinds) == 0 {
+		return false, ""
+	}
+
+	// 查询 Workload 详细信息
+	var ownerRef metav1.OwnerReference
+	var found bool
+
+	switch workloadKind {
+	case "deployment":
+		workload, err := storageCli.GetK8SDeployment(clusterUID, namespaceName, workloadName)
+		if err != nil {
+			blog.Warnf("query deployment %s/%s from storage failed: %s, skip CR owner check",
+				namespaceName, workloadName, err.Error())
+			return false, ""
+		}
+		if workload == nil {
+			blog.Warnf("deployment %s/%s not found in storage, skip CR owner check",
+				namespaceName, workloadName)
+			return false, ""
+		}
+		if len(workload.Data.OwnerReferences) > 0 {
+			ownerRef = workload.Data.OwnerReferences[0]
+			found = true
+		}
+	case "statefulset":
+		workload, err := storageCli.GetK8SStatefulSet(clusterUID, namespaceName, workloadName)
+		if err != nil {
+			blog.Warnf("query statefulset %s/%s from storage failed: %s, skip CR owner check",
+				namespaceName, workloadName, err.Error())
+			return false, ""
+		}
+		if workload == nil {
+			blog.Warnf("statefulset %s/%s not found in storage, skip CR owner check",
+				namespaceName, workloadName)
+			return false, ""
+		}
+		if len(workload.Data.OwnerReferences) > 0 {
+			ownerRef = workload.Data.OwnerReferences[0]
+			found = true
+		}
+	default:
+		return false, ""
+	}
+
+	if !found {
+		return false, ""
+	}
+
+	// 检查 owner 是否在 CR 白名单中
+	if common.IsKindInSlice(ownerRef.Kind, crKinds) {
+		blog.Infof("workload %s %s/%s is owned by CR %s, skip sync",
+			workloadKind, namespaceName, workloadName, ownerRef.Kind)
+		return true, ownerRef.Kind
+	}
+
+	return false, ""
+}
+
 // handle pod create
 // nolint funlen
 func (b *BcsBkcmdbSynchronizerHandler) handlePodCreate(pod *corev1.Pod, bkCluster *bkcmdbkube.Cluster) error {
@@ -957,8 +1112,15 @@ func (b *BcsBkcmdbSynchronizerHandler) handlePodCreate(pod *corev1.Pod, bkCluste
 			rsOwnerRef := rs.Data.OwnerReferences[0]
 			switch rsOwnerRef.Kind {
 			case Deployment:
-				workloadKind = "deployment"
-				workloadName = rsOwnerRef.Name
+				// 获取该集群的 CR 白名单
+				clusterID := bkCluster.Uid
+				crKinds := b.Syncer.BkcmdbSynchronizerOption.Synchronizer.CustomResourceTypes[clusterID]
+
+				// 尝试从 Workload 向上追溯获取最终的 workload 信息
+				workloadKind, workloadName = b.resolveWorkloadOwner(
+					bkCluster.Uid, bkNamespace.Name, rsOwnerRef.Kind, rsOwnerRef.Name, storageCli, crKinds)
+
+				// 通过 workloadKind/workloadName 查询 CMDB
 				bkWorkloads, err := b.Syncer.GetBkWorkloads(bkCluster.BizID, workloadKind, &client.PropertyFilter{
 					Condition: "AND",
 					Rules: []client.Rule{
@@ -1015,6 +1177,21 @@ func (b *BcsBkcmdbSynchronizerHandler) handlePodCreate(pod *corev1.Pod, bkCluste
 		} else if exist, _ := common.InArray(ownerRef.Kind, workloadKindList); exist {
 			workloadKind = common.FirstLower(ownerRef.Kind)
 			workloadName = ownerRef.Name
+
+			// 获取该集群的 CR 白名单
+			clusterID := bkCluster.Uid
+			crKinds := b.Syncer.BkcmdbSynchronizerOption.Synchronizer.CustomResourceTypes[clusterID]
+
+			// 如果是 StatefulSet/DaemonSet/GameDeployment/GameStatefulSet，尝试向上追溯获取最终的 CR 信息
+			if common.IsKindInSlice(ownerRef.Kind, []string{"StatefulSet", "DaemonSet", "GameDeployment", "GameStatefulSet"}) {
+				storageCli, errSts := b.Syncer.GetBcsStorageClient()
+				if errSts != nil {
+					return errSts
+				}
+				workloadKind, workloadName = b.resolveWorkloadOwner(
+					bkCluster.Uid, bkNamespace.Name, ownerRef.Kind, ownerRef.Name, storageCli, crKinds)
+			}
+
 			bkWorkloads, err := b.Syncer.GetBkWorkloads(bkCluster.BizID, workloadKind, &client.PropertyFilter{
 				Condition: "AND",
 				Rules: []client.Rule{
@@ -1348,8 +1525,15 @@ func (b *BcsBkcmdbSynchronizerHandler) handlePodsCreate(podsCreate map[string]*c
 				rsOwnerRef := rs.Data.OwnerReferences[0]
 				switch rsOwnerRef.Kind {
 				case Deployment:
-					workloadKind = "deployment"
-					workloadName = rsOwnerRef.Name
+					// 获取该集群的 CR 白名单
+					clusterID := bkCluster.Uid
+					crKinds := b.Syncer.BkcmdbSynchronizerOption.Synchronizer.CustomResourceTypes[clusterID]
+
+					// 尝试从 Workload 向上追溯获取最终的 workload 信息
+					workloadKind, workloadName = b.resolveWorkloadOwner(
+						bkCluster.Uid, bkNamespace.Name, rsOwnerRef.Kind, rsOwnerRef.Name, storageCli, crKinds)
+
+					// 通过 workloadKind/workloadName 查询 CMDB
 					bkWorkloads, errW := b.Syncer.GetBkWorkloads(bkCluster.BizID, workloadKind, &client.PropertyFilter{
 						Condition: "AND",
 						Rules: []client.Rule{
@@ -1409,6 +1593,21 @@ func (b *BcsBkcmdbSynchronizerHandler) handlePodsCreate(podsCreate map[string]*c
 			} else if exist, _ := common.InArray(ownerRef.Kind, workloadKindList); exist {
 				workloadKind = common.FirstLower(ownerRef.Kind)
 				workloadName = ownerRef.Name
+
+				// 获取该集群的 CR 白名单
+				clusterID := bkCluster.Uid
+				crKinds := b.Syncer.BkcmdbSynchronizerOption.Synchronizer.CustomResourceTypes[clusterID]
+
+				// 如果是 StatefulSet/DaemonSet/GameDeployment/GameStatefulSet，尝试向上追溯获取最终的 CR 信息
+				if common.IsKindInSlice(ownerRef.Kind, []string{"StatefulSet", "DaemonSet", "GameDeployment", "GameStatefulSet"}) {
+					storageCli, errSts := b.Syncer.GetBcsStorageClient()
+					if errSts != nil {
+						continue
+					}
+					workloadKind, workloadName = b.resolveWorkloadOwner(
+						bkCluster.Uid, bkNamespace.Name, ownerRef.Kind, ownerRef.Name, storageCli, crKinds)
+				}
+
 				bkWorkloads, errW := b.Syncer.GetBkWorkloads(bkCluster.BizID, workloadKind, &client.PropertyFilter{
 					Condition: "AND",
 					Rules: []client.Rule{
@@ -1686,6 +1885,24 @@ func (b *BcsBkcmdbSynchronizerHandler) handleDeployment(
 // handleDeploymentUpdate 处理部署更新的函数
 func (b *BcsBkcmdbSynchronizerHandler) handleDeploymentUpdate(
 	deployment *appv1.Deployment, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
+	// 检查该 Deployment 是否被 CR 拥有，如果是则跳过
+	clusterID := bkCluster.Uid
+	crKinds := b.Syncer.BkcmdbSynchronizerOption.Synchronizer.CustomResourceTypes[clusterID]
+	if len(crKinds) > 0 {
+		storageCli, err := b.Syncer.GetBcsStorageClient()
+		if err != nil {
+			blog.Errorf("get bcs storage client failed, err: %s", err.Error())
+		} else {
+			ownedByCR, crKind := b.isWorkloadOwnedByCR(
+				bkCluster.Uid, deployment.Namespace, "deployment", deployment.Name, storageCli, crKinds)
+			if ownedByCR {
+				blog.Infof("deployment %s/%s is owned by CR %s, skip update",
+					deployment.Namespace, deployment.Name, crKind)
+				return nil
+			}
+		}
+	}
+
 	// 获取与当前部署相关的bk工作负载
 	bkDeployments, err := b.Syncer.GetBkWorkloads(bkCluster.BizID, "deployment", &client.PropertyFilter{
 		Condition: "AND",
@@ -1831,6 +2048,24 @@ func (b *BcsBkcmdbSynchronizerHandler) handleDeploymentDelete(
 
 func (b *BcsBkcmdbSynchronizerHandler) handleDeploymentCreate(
 	deployment *appv1.Deployment, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
+	// 检查该 Deployment 是否被 CR 拥有，如果是则跳过
+	clusterID := bkCluster.Uid
+	crKinds := b.Syncer.BkcmdbSynchronizerOption.Synchronizer.CustomResourceTypes[clusterID]
+	if len(crKinds) > 0 {
+		storageCli, err := b.Syncer.GetBcsStorageClient()
+		if err != nil {
+			blog.Errorf("get bcs storage client failed, err: %s", err.Error())
+		} else {
+			ownedByCR, crKind := b.isWorkloadOwnedByCR(
+				bkCluster.Uid, deployment.Namespace, "deployment", deployment.Name, storageCli, crKinds)
+			if ownedByCR {
+				blog.Infof("deployment %s/%s is owned by CR %s, skip create",
+					deployment.Namespace, deployment.Name, crKind)
+				return nil
+			}
+		}
+	}
+
 	bkNamespaces, err := b.Syncer.GetBkNamespaces(bkCluster.BizID, &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
@@ -1903,6 +2138,24 @@ func (b *BcsBkcmdbSynchronizerHandler) handleStatefulSet(
 
 func (b *BcsBkcmdbSynchronizerHandler) handleStatefulSetUpdate(
 	statefulSet *appv1.StatefulSet, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
+	// 检查该 StatefulSet 是否被 CR 拥有，如果是则跳过
+	clusterID := bkCluster.Uid
+	crKinds := b.Syncer.BkcmdbSynchronizerOption.Synchronizer.CustomResourceTypes[clusterID]
+	if len(crKinds) > 0 {
+		storageCli, err := b.Syncer.GetBcsStorageClient()
+		if err != nil {
+			blog.Errorf("get bcs storage client failed, err: %s", err.Error())
+		} else {
+			ownedByCR, crKind := b.isWorkloadOwnedByCR(
+				bkCluster.Uid, statefulSet.Namespace, "statefulset", statefulSet.Name, storageCli, crKinds)
+			if ownedByCR {
+				blog.Infof("statefulset %s/%s is owned by CR %s, skip update",
+					statefulSet.Namespace, statefulSet.Name, crKind)
+				return nil
+			}
+		}
+	}
+
 	bkStatefulSets, err := b.Syncer.GetBkWorkloads(bkCluster.BizID, "statefulSet", &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
@@ -2023,6 +2276,24 @@ func (b *BcsBkcmdbSynchronizerHandler) handleStatefulSetDelete(
 
 func (b *BcsBkcmdbSynchronizerHandler) handleStatefulSetCreate(
 	statefulSet *appv1.StatefulSet, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
+	// 检查该 StatefulSet 是否被 CR 拥有，如果是则跳过
+	clusterID := bkCluster.Uid
+	crKinds := b.Syncer.BkcmdbSynchronizerOption.Synchronizer.CustomResourceTypes[clusterID]
+	if len(crKinds) > 0 {
+		storageCli, err := b.Syncer.GetBcsStorageClient()
+		if err != nil {
+			blog.Errorf("get bcs storage client failed, err: %s", err.Error())
+		} else {
+			ownedByCR, crKind := b.isWorkloadOwnedByCR(
+				bkCluster.Uid, statefulSet.Namespace, "statefulset", statefulSet.Name, storageCli, crKinds)
+			if ownedByCR {
+				blog.Infof("statefulset %s/%s is owned by CR %s, skip create",
+					statefulSet.Namespace, statefulSet.Name, crKind)
+				return nil
+			}
+		}
+	}
+
 	bkNamespaces, err := b.Syncer.GetBkNamespaces(bkCluster.BizID, &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
@@ -3285,4 +3556,357 @@ func (b *BcsBkcmdbSynchronizerHandler) PublishMsg(msg amqp.Delivery, rep int32) 
 
 	// Return the error if there is one, or nil if the message was published successfully.
 	return err
+}
+
+// CustomResourceData represents the message body for custom resource events.
+// The body is the raw K8s object JSON from bcs-storage.
+type CustomResourceData map[string]interface{}
+
+// handleCustomResource handles custom resource messages from RabbitMQ.
+func (b *BcsBkcmdbSynchronizerHandler) handleCustomResource(
+	msg amqp.Delivery, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
+	// Get message header
+	msgHeader, err := getMsgHeader(&msg.Headers)
+	if err != nil {
+		blog.Errorf("handleCustomResource unable to get headers, err: %s", err.Error())
+		return fmt.Errorf("handleCustomResource unable to get headers, err: %s", err.Error())
+	}
+
+	// Kind from Header.resourceType (not from body)
+	crKind := msgHeader.ResourceType
+	if crKind == "" {
+		blog.Errorf("handleCustomResource: crKind is empty")
+		return fmt.Errorf("handleCustomResource: crKind is empty")
+	}
+
+	// Whitelist check - get cluster ID from message header
+	clusterID := msgHeader.ClusterId
+	crKinds, ok := b.Syncer.BkcmdbSynchronizerOption.Synchronizer.CustomResourceTypes[clusterID]
+	if !ok || len(crKinds) == 0 {
+		blog.Infof("cluster %s not configured for custom resource sync, skip", clusterID)
+		return nil
+	}
+
+	// Check if this crKind is in the whitelist
+	isWhitelisted := false
+	for _, k := range crKinds {
+		if k == crKind {
+			isWhitelisted = true
+			break
+		}
+	}
+	if !isWhitelisted {
+		blog.Infof("cluster %s crKind %s not in whitelist, skip", clusterID, crKind)
+		return nil
+	}
+
+	// Parse body as raw K8s object map
+	var crData CustomResourceData
+	err = json.Unmarshal(msg.Body, &crData)
+	if err != nil {
+		blog.Errorf("handleCustomResource: unable to unmarshal, err: %s", err.Error())
+		return fmt.Errorf("handleCustomResource: unable to unmarshal, err: %s", err.Error())
+	}
+
+	blog.Infof("handleCustomResource: cluster=%s, crKind=%s, event=%s, namespace=%s, resourceName=%s",
+		clusterID, crKind, msgHeader.Event, msgHeader.Namespace, msgHeader.ResourceName)
+
+	// Handle based on event type
+	switch msgHeader.Event {
+	case "update":
+		return b.handleCustomResourceUpdate(crData, crKind, msgHeader, bkCluster, db)
+	case "delete":
+		return b.handleCustomResourceDelete(crData, crKind, msgHeader, bkCluster, db)
+	case "create":
+		return b.handleCustomResourceCreate(crData, crKind, msgHeader, bkCluster, db)
+	default:
+		blog.Errorf("handleCustomResource: Unknown event: %s", msgHeader.Event)
+		return fmt.Errorf("handleCustomResource: Unknown event: %s", msgHeader.Event)
+	}
+}
+
+// handleCustomResourceCreate handles custom resource creation.
+func (b *BcsBkcmdbSynchronizerHandler) handleCustomResourceCreate(
+	crData CustomResourceData, crKind string, msgHeader *MsgHeader, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
+	// Get bk namespace
+	bkNamespaces, err := b.Syncer.GetBkNamespaces(bkCluster.BizID, &client.PropertyFilter{
+		Condition: "AND",
+		Rules: []client.Rule{
+			{
+				Field:    "name",
+				Operator: "in",
+				Value:    []string{msgHeader.Namespace},
+			},
+			{
+				Field:    "cluster_uid",
+				Operator: "in",
+				Value:    []string{bkCluster.Uid},
+			},
+		},
+	}, true, db)
+	if err != nil {
+		return err
+	}
+	if len(*bkNamespaces) != 1 {
+		return fmt.Errorf("len(bkNamespaces) = %d", len(*bkNamespaces))
+	}
+	bkNamespace := (*bkNamespaces)[0]
+
+	// Check if already exists - try update first
+	bkCRs, err := b.Syncer.GetBkWorkloads(bkCluster.BizID, "customResource", &client.PropertyFilter{
+		Condition: "AND",
+		Rules: []client.Rule{
+			{
+				Field:    "name",
+				Operator: "in",
+				Value:    []string{msgHeader.ResourceName},
+			},
+			{
+				Field:    "cluster_uid",
+				Operator: "in",
+				Value:    []string{bkCluster.Uid},
+			},
+			{
+				Field:    "namespace",
+				Operator: "in",
+				Value:    []string{msgHeader.Namespace},
+			},
+			{
+				Field:    "cr_kind",
+				Operator: "in",
+				Value:    []string{crKind},
+			},
+		},
+	}, true, db)
+	if err != nil {
+		return err
+	}
+
+	// If exists, update instead
+	if len(*bkCRs) > 0 {
+		return b.handleCustomResourceUpdate(crData, crKind, msgHeader, bkCluster, db)
+	}
+
+	// Extract fields from crData
+	labels := extractLabels(crData)
+	replicas := extractReplicas(crData)
+	apiVersion := extractApiVersion(crData)
+
+	// Create new
+	kind := "customResource"
+	crToAdd := make(map[int64][]client.CreateBcsWorkloadRequestData, 0)
+	toAddData := &client.CreateBcsWorkloadRequestData{
+		NamespaceID:  &bkNamespace.ID,
+		Name:         &msgHeader.ResourceName,
+		Labels:       &labels,
+		Replicas:     &replicas,
+		CRKind:       &crKind,
+		CRApiVersion: &apiVersion,
+	}
+	crToAdd[bkNamespace.BizID] = []client.CreateBcsWorkloadRequestData{*toAddData}
+	blog.Infof("customResourceToAdd: %s/%s, crKind=%s", msgHeader.Namespace, msgHeader.ResourceName, crKind)
+
+	b.Syncer.CreateBkWorkloads(bkCluster, kind, crToAdd, db)
+	return nil
+}
+
+// handleCustomResourceUpdate handles custom resource update.
+func (b *BcsBkcmdbSynchronizerHandler) handleCustomResourceUpdate(
+	crData CustomResourceData, crKind string, msgHeader *MsgHeader, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
+	// Get existing bk workload
+	bkCRs, err := b.Syncer.GetBkWorkloads(bkCluster.BizID, "customResource", &client.PropertyFilter{
+		Condition: "AND",
+		Rules: []client.Rule{
+			{
+				Field:    "name",
+				Operator: "in",
+				Value:    []string{msgHeader.ResourceName},
+			},
+			{
+				Field:    "cluster_uid",
+				Operator: "in",
+				Value:    []string{bkCluster.Uid},
+			},
+			{
+				Field:    "namespace",
+				Operator: "in",
+				Value:    []string{msgHeader.Namespace},
+			},
+			{
+				Field:    "cr_kind",
+				Operator: "in",
+				Value:    []string{crKind},
+			},
+		},
+	}, true, db)
+	if err != nil {
+		return err
+	}
+
+	// If not exists, create instead
+	if len(*bkCRs) == 0 {
+		return b.handleCustomResourceCreate(crData, crKind, msgHeader, bkCluster, db)
+	}
+	if len(*bkCRs) > 1 {
+		return fmt.Errorf("len(bkCRs) = %d", len(*bkCRs))
+	}
+
+	// Get the existing CR
+	bkCR := (*bkCRs)[0]
+	bkCRMap, ok := bkCR.(map[string]interface{})
+	if !ok {
+		return fmt.Errorf("bkCR is not map[string]interface{}")
+	}
+
+	// Extract fields from crData
+	labels := extractLabels(crData)
+	replicas := extractReplicas(crData)
+
+	// Check if update is needed
+	needUpdate := false
+	updateData := &client.UpdateBcsWorkloadRequestData{}
+
+	// Compare labels
+	if labels != nil {
+		if bkLabels, ok := bkCRMap["labels"].(map[string]interface{}); ok {
+			for k, v := range labels {
+				if bkV, ok := bkLabels[k].(string); !ok || bkV != v {
+					needUpdate = true
+					break
+				}
+			}
+		} else {
+			needUpdate = true
+		}
+	}
+
+	// Compare replicas
+	if !needUpdate && replicas > 0 {
+		if bkReplicas, ok := bkCRMap["replicas"].(float64); ok {
+			if int64(bkReplicas) != replicas {
+				needUpdate = true
+				updateData.Replicas = &replicas
+			}
+		} else {
+			needUpdate = true
+			updateData.Replicas = &replicas
+		}
+	}
+
+	if !needUpdate {
+		blog.Infof("customResource %s/%s no update needed", msgHeader.Namespace, msgHeader.ResourceName)
+		return nil
+	}
+
+	// Get ID for update
+	if id, ok := bkCRMap["id"].(float64); ok {
+		blog.Infof("customResourceToUpdate: %s/%s, crKind=%s, id=%d", msgHeader.Namespace,
+			msgHeader.ResourceName, crKind, int64(id))
+		b.Syncer.UpdateBkWorkloads(bkCluster, "customResource",
+			&map[int64]*client.UpdateBcsWorkloadRequestData{int64(id): updateData}, db)
+		return nil
+	}
+
+	return fmt.Errorf("customResource %s/%s id not found", msgHeader.Namespace, msgHeader.ResourceName)
+}
+
+// handleCustomResourceDelete handles custom resource deletion.
+func (b *BcsBkcmdbSynchronizerHandler) handleCustomResourceDelete(
+	crData CustomResourceData, crKind string, msgHeader *MsgHeader, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
+	// Get existing bk workload
+	bkCRs, err := b.Syncer.GetBkWorkloads(bkCluster.BizID, "customResource", &client.PropertyFilter{
+		Condition: "AND",
+		Rules: []client.Rule{
+			{
+				Field:    "name",
+				Operator: "in",
+				Value:    []string{msgHeader.ResourceName},
+			},
+			{
+				Field:    "cluster_uid",
+				Operator: "in",
+				Value:    []string{bkCluster.Uid},
+			},
+			{
+				Field:    "namespace",
+				Operator: "in",
+				Value:    []string{msgHeader.Namespace},
+			},
+			{
+				Field:    "cr_kind",
+				Operator: "in",
+				Value:    []string{crKind},
+			},
+		},
+	}, true, db)
+	if err != nil {
+		return err
+	}
+
+	if len(*bkCRs) == 0 {
+		blog.Infof("customResource %s/%s not found in CMDB, skip delete", msgHeader.Namespace, msgHeader.ResourceName)
+		return nil
+	}
+	if len(*bkCRs) > 1 {
+		return fmt.Errorf("len(bkCRs) = %d", len(*bkCRs))
+	}
+
+	// Get the existing CR
+	bkCR := (*bkCRs)[0]
+	bkCRMap, ok := bkCR.(map[string]interface{})
+	if !ok {
+		return fmt.Errorf("bkCR is not map[string]interface{}")
+	}
+
+	// Get ID for delete
+	if id, ok := bkCRMap["id"].(float64); ok {
+		blog.Infof("customResourceToDelete: %s/%s, crKind=%s, id=%d", msgHeader.Namespace,
+			msgHeader.ResourceName, crKind, int64(id))
+
+		// DeleteBkWorkloads will delete associated pods first before deleting the workload
+		err = retry.Do(
+			func() error {
+				return b.Syncer.DeleteBkWorkloads(bkCluster, "customResource", &[]int64{int64(id)}, db)
+			},
+			retry.Delay(time.Second*2),
+			retry.Attempts(2),
+			retry.DelayType(retry.FixedDelay),
+		)
+		return err
+	}
+
+	return fmt.Errorf("customResource %s/%s id not found", msgHeader.Namespace, msgHeader.ResourceName)
+}
+
+// extractLabels extracts labels from the custom resource data.
+func extractLabels(crData CustomResourceData) map[string]string {
+	labels := make(map[string]string)
+	if metadata, ok := crData["metadata"].(map[string]interface{}); ok {
+		if l, ok := metadata["labels"].(map[string]interface{}); ok {
+			for k, v := range l {
+				if vs, ok := v.(string); ok {
+					labels[k] = vs
+				}
+			}
+		}
+	}
+	return labels
+}
+
+// extractReplicas extracts replicas from the custom resource data.
+func extractReplicas(crData CustomResourceData) int64 {
+	if spec, ok := crData["spec"].(map[string]interface{}); ok {
+		if r, ok := spec["replicas"].(float64); ok {
+			return int64(r)
+		}
+	}
+	return 0
+}
+
+// extractApiVersion extracts apiVersion from the custom resource data.
+func extractApiVersion(crData CustomResourceData) string {
+	if apiVersion, ok := crData["apiVersion"].(string); ok {
+		return apiVersion
+	}
+	return ""
 }
