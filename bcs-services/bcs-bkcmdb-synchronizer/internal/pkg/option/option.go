@@ -13,7 +13,9 @@
 // Package option define options for synchronizer
 package option
 
-import "github.com/Tencent/bk-bcs/bcs-common/common/conf"
+import (
+	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
+)
 
 // BkcmdbSynchronizerOption options for CostManager
 type BkcmdbSynchronizerOption struct {
@@ -29,12 +31,39 @@ type BkcmdbSynchronizerOption struct {
 
 // SynchronizerConfig synchronizer config
 type SynchronizerConfig struct {
-	Env       string `json:"env"`
-	Replicas  int    `json:"replicas"`
-	BkBizID   int64  `json:"bkBizID"`
-	HostID    int64  `json:"hostID"`
-	WhiteList string `json:"whiteList"`
-	BlackList string `json:"blackList"`
+	Env                    string   `json:"env"`
+	Replicas               int      `json:"replicas"`
+	BkBizID                int64    `json:"bkBizID"`
+	HostID                 int64    `json:"hostID"`
+	WhiteList              string   `json:"whiteList"`
+	BlackList              string   `json:"blackList"`
+	// CustomResourceTypes map from clusterID to custom resource kinds to sync
+	// Only clusters configured in this map will have custom resources synced
+	// Example: {"cluster-id-1": ["BkApp", "CronJob"], "cluster-id-2": ["BkApp"]}
+	CustomResourceTypes map[string][]string `json:"customResourceTypes"`
+}
+
+// CustomResourceType defines parsed custom resource type configuration.
+type CustomResourceType struct {
+	// ResourceType is the custom resource type name (e.g., "BkApp")
+	ResourceType string
+}
+
+// ParseCustomResourceTypes parses the custom resource types configuration.
+// Configuration format: map[clusterID][]string
+// Example: {"cluster-id-1": ["BkApp", "CronJob"], "cluster-id-2": ["BkApp"]}
+func ParseCustomResourceTypes(configs map[string][]string) map[string][]CustomResourceType {
+	result := make(map[string][]CustomResourceType, len(configs))
+	for clusterID, kinds := range configs {
+		crTypes := make([]CustomResourceType, 0, len(kinds))
+		for _, kind := range kinds {
+			crTypes = append(crTypes, CustomResourceType{
+				ResourceType: kind,
+			})
+		}
+		result[clusterID] = crTypes
+	}
+	return result
 }
 
 // ClientConfig client config
