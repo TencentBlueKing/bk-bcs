@@ -52,10 +52,11 @@ func (r *DRPlanExecutionReconciler) fetchDRPlan(ctx context.Context, execution *
 	return plan, nil
 }
 
-// validatePlanReady validates that the plan allows the execution: Ready allows any operation; Executed only allows Revert.
-func (r *DRPlanExecutionReconciler) validatePlanReady(plan *drv1alpha1.DRPlan, execution *drv1alpha1.DRPlanExecution) error {
+// validatePlanReady validates that the plan allows the execution.
+// Ready and Executed both allow new Execute/Revert operations.
+func (r *DRPlanExecutionReconciler) validatePlanReady(plan *drv1alpha1.DRPlan) error {
 	allow := plan.Status.Phase == drv1alpha1.PlanPhaseReady ||
-		(plan.Status.Phase == drv1alpha1.PlanPhaseExecuted && execution.Spec.OperationType == drv1alpha1.OperationTypeRevert)
+		plan.Status.Phase == drv1alpha1.PlanPhaseExecuted
 	if !allow {
 		return fmt.Errorf("plan %s is not ready (phase=%s)", plan.Name, plan.Status.Phase)
 	}

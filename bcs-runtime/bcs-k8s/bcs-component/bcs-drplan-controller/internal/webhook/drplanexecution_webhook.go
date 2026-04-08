@@ -15,6 +15,8 @@ package webhook
 import (
 	"context"
 	"fmt"
+	"reflect"
+	"regexp"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/klog/v2"
@@ -62,8 +64,8 @@ func (w *DRPlanExecutionWebhook) ValidateUpdate(_ context.Context, oldObj, newOb
 	klog.Infof("Validating update for DRPlanExecution: %s/%s", newExecution.Namespace, newExecution.Name)
 
 	// Prevent spec changes after creation
-	if oldExecution.Spec.PlanRef != newExecution.Spec.PlanRef || oldExecution.Spec.OperationType != newExecution.Spec.OperationType {
-		return nil, fmt.Errorf("cannot modify spec fields after creation")
+	if !reflect.DeepEqual(oldExecution.Spec, newExecution.Spec) {
+		return nil, fmt.Errorf("cannot modify spec after creation")
 	}
 
 	return nil, nil
@@ -101,9 +103,10 @@ func (w *DRPlanExecutionWebhook) validateExecution(ctx context.Context, executio
 		return errors
 	}
 
-	// Check plan allows new execution: Ready allows any operation; Executed only allows Revert
+	// Check plan allows new execution: Ready and Executed both allow Execute/Revert.
+	// Executed represents a plan that has run before, not a terminal lock state.
 	allowCreate := plan.Status.Phase == drv1alpha1.PlanPhaseReady ||
-		(plan.Status.Phase == drv1alpha1.PlanPhaseExecuted && execution.Spec.OperationType == drv1alpha1.OperationTypeRevert)
+		plan.Status.Phase == drv1alpha1.PlanPhaseExecuted
 	if !allowCreate {
 		errors = append(errors, fmt.Sprintf("plan %s is not ready (phase=%s)", execution.Spec.PlanRef, plan.Status.Phase))
 	}
@@ -127,9 +130,14 @@ func (w *DRPlanExecutionWebhook) validateExecution(ctx context.Context, executio
 				if targetExecution.Spec.OperationType != drv1alpha1.OperationTypeExecute {
 					errors = append(errors, fmt.Sprintf("referenced execution %s must be an Execute operation, got %s", execution.Spec.RevertExecutionRef, targetExecution.Spec.OperationType))
 				}
-				// Validate target execution succeeded
-				if targetExecution.Status.Phase != drv1alpha1.PhaseSucceeded {
-					errors = append(errors, fmt.Sprintf("referenced execution %s must be in Succeeded phase, got %s", execution.Spec.RevertExecutionRef, targetExecution.Status.Phase))
+				// Validate target execution is in a terminal phase (Succeeded or Failed).
+				// Failed executions may have partial side-effects that need cleanup via Revert.
+				isTerminal := targetExecution.Status.Phase == drv1alpha1.PhaseSucceeded ||
+					targetExecution.Status.Phase == drv1alpha1.PhaseFailed
+				if !isTerminal {
+					errors = append(errors, fmt.Sprintf(
+						"referenced execution %s must be in a terminal phase (Succeeded or Failed), got %s",
+						execution.Spec.RevertExecutionRef, targetExecution.Status.Phase))
 				}
 				// Validate target execution references the same plan
 				if targetExecution.Spec.PlanRef != execution.Spec.PlanRef {
@@ -138,6 +146,11 @@ func (w *DRPlanExecutionWebhook) validateExecution(ctx context.Context, executio
 				}
 			}
 		}
+	}
+
+	// Validate execution-level params
+	if paramErrs := validateExecutionParams(execution.Spec.Params); len(paramErrs) > 0 {
+		errors = append(errors, paramErrs...)
 	}
 
 	// Check for concurrent executions
@@ -149,4 +162,60 @@ func (w *DRPlanExecutionWebhook) validateExecution(ctx context.Context, executio
 	}
 
 	return errors
+}
+
+var paramNameRegex = regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9_-]*$`)
+
+// validateExecutionParams validates the params field of DRPlanExecutionSpec.
+// Returns a list of human-readable error strings (empty if valid).
+func validateExecutionParams(params []drv1alpha1.Parameter) []string {
+	var errs []string
+	seen := make(map[string]bool)
+
+	validSelectValues := map[string]bool{"Last": true, "First": true, "Single": true, "Any": true}
+
+	for i, p := range params {
+		prefix := fmt.Sprintf("params[%d]", i)
+
+		if p.Name == "" {
+			errs = append(errs, fmt.Sprintf("%s: name must not be empty", prefix))
+			continue
+		}
+		if !paramNameRegex.MatchString(p.Name) {
+			errs = append(errs, fmt.Sprintf("%s: parameter name %q must match [a-zA-Z][a-zA-Z0-9_-]*", prefix, p.Name))
+		}
+		if p.Name == "mode" {
+			errs = append(errs, fmt.Sprintf("%s: parameter name %q is reserved; use spec.mode field instead", prefix, p.Name))
+		}
+		if seen[p.Name] {
+			errs = append(errs, fmt.Sprintf("%s: duplicate parameter name %q", prefix, p.Name))
+		}
+		seen[p.Name] = true
+
+		if p.Value != "" && p.ValueFrom != nil {
+			errs = append(errs, fmt.Sprintf("%s(%s): value and valueFrom are mutually exclusive", prefix, p.Name))
+		}
+
+		if p.ValueFrom != nil && p.ValueFrom.ManifestRef != nil {
+			ref := p.ValueFrom.ManifestRef
+			refPrefix := fmt.Sprintf("%s(%s).valueFrom.manifestRef", prefix, p.Name)
+
+			if ref.APIVersion == "" {
+				errs = append(errs, fmt.Sprintf("%s: apiVersion is required", refPrefix))
+			}
+			if ref.Kind == "" {
+				errs = append(errs, fmt.Sprintf("%s: kind is required", refPrefix))
+			}
+			if ref.JSONPath == "" {
+				errs = append(errs, fmt.Sprintf("%s: jsonPath is required", refPrefix))
+			}
+			if ref.Name != "" && ref.LabelSelector != "" {
+				errs = append(errs, fmt.Sprintf("%s: name and labelSelector are mutually exclusive", refPrefix))
+			}
+			if ref.Select != "" && !validSelectValues[ref.Select] {
+				errs = append(errs, fmt.Sprintf("%s: select must be one of Last/First/Single/Any, got %q", refPrefix, ref.Select))
+			}
+		}
+	}
+	return errs
 }

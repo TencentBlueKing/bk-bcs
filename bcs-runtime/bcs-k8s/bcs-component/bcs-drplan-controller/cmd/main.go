@@ -16,6 +16,8 @@ package main
 import (
 	"crypto/tls"
 	"flag"
+	"fmt"
+	"net/http"
 	"os"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
@@ -24,7 +26,9 @@ import (
 
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+	"k8s.io/client-go/dynamic"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/client-go/rest"
 	"k8s.io/klog/v2"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
@@ -32,6 +36,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/metrics/filters"
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
+
+	clusternetclientgo "github.com/clusternet/clusternet/pkg/wrappers/clientgo"
 
 	drv1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-drplan-controller/api/v1alpha1"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-drplan-controller/internal/controller"
@@ -57,7 +63,61 @@ func init() {
 	// +kubebuilder:scaffold:scheme
 }
 
-// nolint:funlen
+func registerActionExecutors(registry executor.Registry, mgr ctrl.Manager) error {
+	if err := registry.RegisterExecutor(executor.NewHTTPActionExecutor()); err != nil {
+		return fmt.Errorf("register HTTP executor: %w", err)
+	}
+	if err := registry.RegisterExecutor(executor.NewJobActionExecutor(mgr.GetClient())); err != nil {
+		return fmt.Errorf("register Job executor: %w", err)
+	}
+	if err := registry.RegisterExecutor(executor.NewLocalizationActionExecutor(mgr.GetClient())); err != nil {
+		return fmt.Errorf("register Localization executor: %w", err)
+	}
+	if err := registry.RegisterExecutor(executor.NewSubscriptionActionExecutor(mgr.GetClient(), mgr.GetConfig())); err != nil {
+		return fmt.Errorf("register Subscription executor: %w", err)
+	}
+	if err := registry.RegisterExecutor(executor.NewKubernetesResourceActionExecutor(mgr.GetClient())); err != nil {
+		return fmt.Errorf("register KubernetesResource executor: %w", err)
+	}
+
+	return nil
+}
+
+func setupControllersAndWebhooks(mgr ctrl.Manager, planExecutor executor.PlanExecutor) error {
+	if err := (&controller.DRWorkflowReconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		return fmt.Errorf("create controller DRWorkflow: %w", err)
+	}
+	if err := (&controller.DRPlanReconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		return fmt.Errorf("create controller DRPlan: %w", err)
+	}
+	if err := (&controller.DRPlanExecutionReconciler{
+		Client:       mgr.GetClient(),
+		Scheme:       mgr.GetScheme(),
+		PlanExecutor: planExecutor,
+	}).SetupWithManager(mgr); err != nil {
+		return fmt.Errorf("create controller DRPlanExecution: %w", err)
+	}
+
+	if err := (&drwebhook.DRWorkflowWebhook{}).SetupWebhookWithManager(mgr); err != nil {
+		return fmt.Errorf("create webhook DRWorkflow: %w", err)
+	}
+	if err := (&drwebhook.DRPlanWebhook{}).SetupWebhookWithManager(mgr); err != nil {
+		return fmt.Errorf("create webhook DRPlan: %w", err)
+	}
+	if err := (&drwebhook.DRPlanExecutionWebhook{}).SetupWebhookWithManager(mgr); err != nil {
+		return fmt.Errorf("create webhook DRPlanExecution: %w", err)
+	}
+
+	return nil
+}
+
+//nolint:funlen,gocyclo
 func main() {
 	var metricsAddr string
 	var metricsCertPath, metricsCertName, metricsCertKey string
@@ -200,88 +260,61 @@ func main() {
 	registry := executor.NewExecutorRegistry()
 
 	// Register action executors
-	if err := registry.RegisterExecutor(executor.NewHTTPActionExecutor()); err != nil {
-		setupLog.Error(err, "unable to register HTTP executor")
-		os.Exit(1)
-	}
-	if err := registry.RegisterExecutor(executor.NewJobActionExecutor(mgr.GetClient())); err != nil {
-		setupLog.Error(err, "unable to register Job executor")
-		os.Exit(1)
-	}
-	if err := registry.RegisterExecutor(executor.NewLocalizationActionExecutor(mgr.GetClient())); err != nil {
-		setupLog.Error(err, "unable to register Localization executor")
-		os.Exit(1)
-	}
-	if err := registry.RegisterExecutor(executor.NewSubscriptionActionExecutor(mgr.GetClient())); err != nil {
-		setupLog.Error(err, "unable to register Subscription executor")
-		os.Exit(1)
-	}
-	if err := registry.RegisterExecutor(executor.NewKubernetesResourceActionExecutor(mgr.GetClient())); err != nil {
-		setupLog.Error(err, "unable to register KubernetesResource executor")
+	err = registerActionExecutors(registry, mgr)
+	if err != nil {
+		setupLog.Error(err, "unable to register action executors")
 		os.Exit(1)
 	}
 
 	klog.Info("All action executors registered successfully")
 
+	// Initialize dynamic client for valueFrom.manifestRef param resolution.
+	// Wrap the config with ClusternetTransport so that resource queries (e.g. batch/v1 Job)
+	// are transparently redirected to Clusternet's shadow API, which serves resources
+	// from Manifest CRs stored in clusternet-reserved rather than the raw hub objects.
+	clusternetCfg := rest.CopyConfig(mgr.GetConfig())
+	clusternetCfg.Wrap(func(rt http.RoundTripper) http.RoundTripper {
+		return clusternetclientgo.NewClusternetTransport(clusternetCfg.Host, rt)
+	})
+	dynamicClient, err := dynamic.NewForConfig(clusternetCfg)
+	if err != nil {
+		setupLog.Error(err, "unable to create dynamic client for clusternet manifest resolution")
+		os.Exit(1)
+	}
+	restMapper := mgr.GetRESTMapper()
+
 	// Initialize workflow and stage executors
 	workflowExecutor := executor.NewNativeWorkflowExecutor(mgr.GetClient(), registry)
 	stageExecutor := executor.NewStageExecutor(mgr.GetClient(), workflowExecutor)
-	planExecutor := executor.NewNativePlanExecutor(mgr.GetClient(), stageExecutor, workflowExecutor)
+	planExecutor := executor.NewNativePlanExecutor(mgr.GetClient(), stageExecutor, workflowExecutor,
+		dynamicClient, restMapper)
 
 	klog.Info("Executors initialized successfully")
 
 	// Setup controllers
-	if err := (&controller.DRWorkflowReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "DRWorkflow")
-		os.Exit(1)
-	}
-	if err := (&controller.DRPlanReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "DRPlan")
-		os.Exit(1)
-	}
-	if err := (&controller.DRPlanExecutionReconciler{
-		Client:       mgr.GetClient(),
-		Scheme:       mgr.GetScheme(),
-		PlanExecutor: planExecutor,
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "DRPlanExecution")
-		os.Exit(1)
-	}
-
-	// Setup webhooks
-	if err := (&drwebhook.DRWorkflowWebhook{}).SetupWebhookWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create webhook", "webhook", "DRWorkflow")
-		os.Exit(1)
-	}
-	if err := (&drwebhook.DRPlanWebhook{}).SetupWebhookWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create webhook", "webhook", "DRPlan")
-		os.Exit(1)
-	}
-	if err := (&drwebhook.DRPlanExecutionWebhook{}).SetupWebhookWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create webhook", "webhook", "DRPlanExecution")
+	err = setupControllersAndWebhooks(mgr, planExecutor)
+	if err != nil {
+		setupLog.Error(err, "unable to create controllers or webhooks")
 		os.Exit(1)
 	}
 
 	klog.Info("Controllers and webhooks registered successfully")
 	// +kubebuilder:scaffold:builder
 
-	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
+	err = mgr.AddHealthzCheck("healthz", healthz.Ping)
+	if err != nil {
 		setupLog.Error(err, "unable to set up health check")
 		os.Exit(1)
 	}
-	if err := mgr.AddReadyzCheck("readyz", healthz.Ping); err != nil {
+	err = mgr.AddReadyzCheck("readyz", healthz.Ping)
+	if err != nil {
 		setupLog.Error(err, "unable to set up ready check")
 		os.Exit(1)
 	}
 
 	setupLog.Info("starting manager")
-	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
+	err = mgr.Start(ctrl.SetupSignalHandler())
+	if err != nil {
 		setupLog.Error(err, "problem running manager")
 		os.Exit(1)
 	}

@@ -44,6 +44,11 @@ type DRPlanExecutionReconciler struct {
 // +kubebuilder:rbac:groups=dr.bkbcs.tencent.com,resources=drplanexecutions,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=dr.bkbcs.tencent.com,resources=drplanexecutions/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=dr.bkbcs.tencent.com,resources=drplanexecutions/finalizers,verbs=update
+// +kubebuilder:rbac:groups=apps.clusternet.io,resources=subscriptions,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=apps.clusternet.io,resources=descriptions,verbs=get;list;watch
+// +kubebuilder:rbac:groups=clusters.clusternet.io,resources=managedclusters,verbs=get;list;watch
+// +kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch
+// +kubebuilder:rbac:groups=shadow,resources=jobs,verbs=get;list;watch
 
 // Reconcile manages DRPlanExecution lifecycle
 func (r *DRPlanExecutionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
@@ -133,7 +138,7 @@ func (r *DRPlanExecutionReconciler) executePlanWorkflow(ctx context.Context, exe
 	}
 
 	// Validate plan
-	if err := r.validatePlanReady(plan, execution); err != nil {
+	if err := r.validatePlanReady(plan); err != nil {
 		klog.Warningf("DRPlanExecution %s/%s: %v", req.Namespace, req.Name, err)
 		return r.updateExecutionStatus(ctx, execution, "Failed", err.Error())
 	}

@@ -21,13 +21,15 @@ import (
 	"k8s.io/klog/v2"
 )
 
-var (
-	// $(params.xxx) — parameter substitution (Tekton-style)
-	paramRegex = regexp.MustCompile(`\$\(params\.([a-zA-Z_][a-zA-Z0-9_]*)\)`)
-	// $(planName) — plan name substitution
-	planNameRegex = regexp.MustCompile(`\$\(planName\)`)
-	// $(outputs.xxx) — output reference substitution
-	outputRegex = regexp.MustCompile(`\$\(outputs\.([a-zA-Z_][a-zA-Z0-9_]*)\)`)
+// paramPattern matches $(params.xxx), $(planName), $(outputs.xxx.yyy) etc.
+var paramPattern = regexp.MustCompile(`\$\(([a-zA-Z][a-zA-Z0-9]*(?:\.[a-zA-Z][a-zA-Z0-9]*)*)\)`)
+
+// legacyParamPattern matches legacy Go-template-like placeholders such as
+// {{ .params.xxx }}, {{ .planName }}, {{ .outputs.step.phase }}.
+// Only the documented DR placeholders are supported; unrelated Helm templates
+// like {{ .Release.Name }} are left untouched.
+var legacyParamPattern = regexp.MustCompile(
+	`\{\{\s*\.(planName|params(?:\.[a-zA-Z][a-zA-Z0-9]*)+|outputs(?:\.[a-zA-Z][a-zA-Z0-9]*)+)\s*\}\}`,
 )
 
 // TemplateData holds data for template rendering
@@ -38,13 +40,8 @@ type TemplateData struct {
 }
 
 // RenderTemplate renders a template string with the provided data.
-// Supports Tekton-style variable substitution syntax:
-//   - $(params.xxx)   — replaced by the value of parameter "xxx"
-//   - $(planName)      — replaced by the DR plan name
-//   - $(outputs.xxx)   — replaced by the output value "xxx"
-//
-// This syntax is chosen to avoid conflicts with Helm ({{ }}) and Shell (${ }, $( )).
-// See: https://tekton.dev/docs/pipelines/variables/
+// Recommended syntax: $(params.xxx), $(planName), $(outputs.xxx).
+// Legacy syntax {{ .params.xxx }} is still supported for backward compatibility.
 func RenderTemplate(tmpl string, data *TemplateData) (string, error) {
 	if data == nil {
 		data = &TemplateData{
@@ -53,42 +50,76 @@ func RenderTemplate(tmpl string, data *TemplateData) (string, error) {
 		}
 	}
 
-	var errs []string
-	result := tmpl
+	lookup := map[string]interface{}{
+		"params":   data.Params,
+		"planName": data.PlanName,
+		"outputs":  data.Outputs,
+	}
 
-	// Replace $(params.xxx)
-	result = paramRegex.ReplaceAllStringFunc(result, func(match string) string {
-		groups := paramRegex.FindStringSubmatch(match)
-		key := groups[1]
-		if val, ok := data.Params[key]; ok {
-			return fmt.Sprintf("%v", val)
+	result, err := renderWithPattern(tmpl, paramPattern, func(match string) string {
+		return match[2 : len(match)-1] // strip "$(" and ")"
+	}, lookup)
+	if err != nil {
+		klog.V(4).Infof("Failed to render template: %v, template: %s, data: %+v", err, tmpl, data)
+		return "", err
+	}
+
+	result, err = renderWithPattern(result, legacyParamPattern, func(match string) string {
+		submatches := legacyParamPattern.FindStringSubmatch(match)
+		if len(submatches) != 2 {
+			return ""
 		}
-		errs = append(errs, fmt.Sprintf("parameter %q not found", key))
-		return match
-	})
-
-	// Replace $(planName)
-	result = planNameRegex.ReplaceAllStringFunc(result, func(_ string) string {
-		return data.PlanName
-	})
-
-	// Replace $(outputs.xxx)
-	result = outputRegex.ReplaceAllStringFunc(result, func(match string) string {
-		groups := outputRegex.FindStringSubmatch(match)
-		key := groups[1]
-		if val, ok := data.Outputs[key]; ok {
-			return fmt.Sprintf("%v", val)
-		}
-		errs = append(errs, fmt.Sprintf("output %q not found", key))
-		return match
-	})
-
-	if len(errs) > 0 {
-		klog.V(4).Infof("Template substitution warnings: %s, template: %s", strings.Join(errs, "; "), tmpl)
+		return submatches[1]
+	}, lookup)
+	if err != nil {
+		klog.V(4).Infof("Failed to render legacy template: %v, template: %s, data: %+v", err, tmpl, data)
+		return "", err
 	}
 
 	klog.V(4).Infof("Template rendered: %s -> %s", tmpl, result)
 	return result, nil
+}
+
+func renderWithPattern(
+	tmpl string,
+	pattern *regexp.Regexp,
+	pathExtractor func(string) string,
+	lookup map[string]interface{},
+) (string, error) {
+	var renderErr error
+	result := pattern.ReplaceAllStringFunc(tmpl, func(match string) string {
+		path := pathExtractor(match)
+		if path == "" {
+			return match
+		}
+		val, err := resolveVarPath(path, lookup)
+		if err != nil {
+			renderErr = fmt.Errorf("failed to resolve %q: %w", match, err)
+			return match
+		}
+		return fmt.Sprintf("%v", val)
+	})
+	if renderErr != nil {
+		return "", renderErr
+	}
+	return result, nil
+}
+
+// resolveVarPath resolves a dot-separated path like "params.feedNamespace" against a nested map.
+func resolveVarPath(path string, root map[string]interface{}) (interface{}, error) {
+	parts := strings.SplitN(path, ".", 2) //nolint:mnd // split into key and remainder
+	val, ok := root[parts[0]]
+	if !ok {
+		return nil, fmt.Errorf("key %q not found", parts[0])
+	}
+	if len(parts) == 1 {
+		return val, nil
+	}
+	nested, ok := val.(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("key %q is not a map, cannot resolve %q", parts[0], parts[1])
+	}
+	return resolveVarPath(parts[1], nested)
 }
 
 // RenderTemplateMap renders all string values in a map

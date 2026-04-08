@@ -39,8 +39,11 @@ func NewStageExecutor(client client.Client, workflowExecutor WorkflowExecutor) *
 	}
 }
 
-// ExecuteStage executes a stage with support for parallel execution and dependencies
-func (e *DefaultStageExecutor) ExecuteStage(ctx context.Context, _ *drv1alpha1.DRPlan, stage *drv1alpha1.Stage, params map[string]interface{}) (*drv1alpha1.StageStatus, error) {
+// ExecuteStage executes a stage with support for parallel execution and dependencies.
+// executionOverrides are applied after stage-level params so that DRPlanExecution.spec.params
+// carries the highest priority in the full merge chain.
+func (e *DefaultStageExecutor) ExecuteStage(ctx context.Context, _ *drv1alpha1.DRPlan, stage *drv1alpha1.Stage,
+	params map[string]interface{}, executionOverrides map[string]interface{}) (*drv1alpha1.StageStatus, error) {
 	klog.Infof("Executing stage: %s (parallel=%v, workflows=%d)", stage.Name, stage.Parallel, len(stage.Workflows))
 
 	stageStatus := &drv1alpha1.StageStatus{
@@ -54,9 +57,9 @@ func (e *DefaultStageExecutor) ExecuteStage(ctx context.Context, _ *drv1alpha1.D
 
 	var err error
 	if stage.Parallel {
-		err = e.executeParallel(ctx, stage, params, stageStatus)
+		err = e.executeParallel(ctx, stage, params, executionOverrides, stageStatus)
 	} else {
-		err = e.executeSequential(ctx, stage, params, stageStatus)
+		err = e.executeSequential(ctx, stage, params, executionOverrides, stageStatus)
 	}
 
 	// Update completion time and duration
@@ -69,17 +72,32 @@ func (e *DefaultStageExecutor) ExecuteStage(ctx context.Context, _ *drv1alpha1.D
 		stageStatus.Message = err.Error()
 		klog.Errorf("Stage %s failed: %v", stage.Name, err)
 	} else {
-		// Check if all workflows succeeded
-		allSucceeded := true
+		// Terminal success path: workflows can be Succeeded or Skipped (mode-gated hooks).
+		allSucceededOrSkipped := true
+		allSkipped := len(stageStatus.WorkflowExecutions) > 0
 		for _, ws := range stageStatus.WorkflowExecutions {
-			if ws.Phase != drv1alpha1.PhaseSucceeded {
-				allSucceeded = false
-				break
+			switch ws.Phase {
+			case drv1alpha1.PhaseSucceeded:
+				allSkipped = false
+			case drv1alpha1.PhaseSkipped:
+				// keep allSkipped as-is
+			case drv1alpha1.PhaseFailed:
+				allSucceededOrSkipped = false
+				allSkipped = false
+			default:
+				// Running/Pending/unknown should not happen at stage-finalization; treat as failure.
+				allSucceededOrSkipped = false
+				allSkipped = false
 			}
 		}
-		if allSucceeded {
+		if allSucceededOrSkipped {
 			stageStatus.Phase = drv1alpha1.PhaseSucceeded
-			klog.Infof("Stage %s succeeded", stage.Name)
+			if allSkipped {
+				stageStatus.Message = "All workflows skipped"
+				klog.Infof("Stage %s skipped by workflow conditions", stage.Name)
+			} else {
+				klog.Infof("Stage %s succeeded", stage.Name)
+			}
 		} else {
 			stageStatus.Phase = drv1alpha1.PhaseFailed
 			stageStatus.Message = "One or more workflows failed"
@@ -91,7 +109,8 @@ func (e *DefaultStageExecutor) ExecuteStage(ctx context.Context, _ *drv1alpha1.D
 }
 
 // executeSequential executes workflows sequentially
-func (e *DefaultStageExecutor) executeSequential(ctx context.Context, stage *drv1alpha1.Stage, params map[string]interface{}, stageStatus *drv1alpha1.StageStatus) error {
+func (e *DefaultStageExecutor) executeSequential(ctx context.Context, stage *drv1alpha1.Stage,
+	params map[string]interface{}, executionOverrides map[string]interface{}, stageStatus *drv1alpha1.StageStatus) error {
 	klog.V(4).Infof("Executing stage %s sequentially", stage.Name)
 
 	for i, wfRef := range stage.Workflows {
@@ -103,8 +122,8 @@ func (e *DefaultStageExecutor) executeSequential(ctx context.Context, stage *drv
 			return fmt.Errorf("failed to get workflow %s/%s: %w", wfRef.WorkflowRef.Namespace, wfRef.WorkflowRef.Name, err)
 		}
 
-		// Merge parameters: workflow default -> plan globalParams (value) -> stage params (value)
-		workflowParams := e.mergeParams(workflow, params, wfRef.Params)
+		// Merge parameters: workflow defaults -> globalParams -> stage params -> executionOverrides
+		workflowParams := e.mergeParams(workflow, params, wfRef.Params, executionOverrides)
 
 		// Execute workflow
 		workflowStatus, err := e.workflowExecutor.ExecuteWorkflow(ctx, workflow, workflowParams)
@@ -127,7 +146,8 @@ func (e *DefaultStageExecutor) executeSequential(ctx context.Context, stage *drv
 }
 
 // executeParallel executes workflows in parallel with FailFast strategy
-func (e *DefaultStageExecutor) executeParallel(ctx context.Context, stage *drv1alpha1.Stage, params map[string]interface{}, stageStatus *drv1alpha1.StageStatus) error {
+func (e *DefaultStageExecutor) executeParallel(ctx context.Context, stage *drv1alpha1.Stage,
+	params map[string]interface{}, executionOverrides map[string]interface{}, stageStatus *drv1alpha1.StageStatus) error {
 	klog.V(4).Infof("Executing stage %s in parallel", stage.Name)
 
 	var (
@@ -177,8 +197,8 @@ func (e *DefaultStageExecutor) executeParallel(ctx context.Context, stage *drv1a
 				return
 			}
 
-			// Merge parameters: workflow default -> plan globalParams (value) -> stage params (value)
-			workflowParams := e.mergeParams(workflow, params, ref.Params)
+			// Merge parameters: workflow defaults -> globalParams -> stage params -> executionOverrides
+			workflowParams := e.mergeParams(workflow, params, ref.Params, executionOverrides)
 
 			// Execute workflow
 			workflowStatus, err := e.workflowExecutor.ExecuteWorkflow(cancelCtx, workflow, workflowParams)
@@ -211,7 +231,14 @@ func (e *DefaultStageExecutor) executeParallel(ctx context.Context, stage *drv1a
 }
 
 // RevertStage reverts a stage by reverting workflows in reverse order
-func (e *DefaultStageExecutor) RevertStage(ctx context.Context, _ *drv1alpha1.DRPlan, stage *drv1alpha1.Stage, stageStatus *drv1alpha1.StageStatus) (*drv1alpha1.StageStatus, error) {
+func (e *DefaultStageExecutor) RevertStage(
+	ctx context.Context,
+	_ *drv1alpha1.DRPlan,
+	stage *drv1alpha1.Stage,
+	stageStatus *drv1alpha1.StageStatus,
+	params map[string]interface{},
+	executionOverrides map[string]interface{},
+) (*drv1alpha1.StageStatus, error) {
 	klog.Infof("Reverting stage: %s", stage.Name)
 
 	// Create rollback stage status object
@@ -228,7 +255,11 @@ func (e *DefaultStageExecutor) RevertStage(ctx context.Context, _ *drv1alpha1.DR
 	succeededCount := 0
 	for i := len(stageStatus.WorkflowExecutions) - 1; i >= 0; i-- {
 		wfStatus := stageStatus.WorkflowExecutions[i]
-		if wfStatus.Phase != drv1alpha1.PhaseSucceeded {
+		isNonTerminalOrSkipped := wfStatus.Phase == drv1alpha1.PhasePending ||
+			wfStatus.Phase == drv1alpha1.PhaseRunning ||
+			wfStatus.Phase == drv1alpha1.PhaseSkipped ||
+			wfStatus.Phase == drv1alpha1.PhaseCancelled
+		if isNonTerminalOrSkipped {
 			klog.V(4).Infof("Skipping revert for workflow %s/%s (phase=%s)", wfStatus.WorkflowRef.Namespace, wfStatus.WorkflowRef.Name, wfStatus.Phase)
 			// Record skipped workflow in rollback status
 			skippedStatus := drv1alpha1.WorkflowExecutionStatus{
@@ -254,7 +285,24 @@ func (e *DefaultStageExecutor) RevertStage(ctx context.Context, _ *drv1alpha1.DR
 		}
 
 		// Revert workflow and get rollback status
-		rollbackWorkflowStatus, err := e.workflowExecutor.RevertWorkflow(ctx, workflow, &wfStatus)
+		var workflowRefParams []drv1alpha1.Parameter
+		for _, ref := range stage.Workflows {
+			namespace := ref.WorkflowRef.Namespace
+			if namespace == "" {
+				namespace = drv1alpha1.DefaultNamespace
+			}
+			wfNamespace := wfStatus.WorkflowRef.Namespace
+			if wfNamespace == "" {
+				wfNamespace = drv1alpha1.DefaultNamespace
+			}
+			if ref.WorkflowRef.Name == wfStatus.WorkflowRef.Name && namespace == wfNamespace {
+				workflowRefParams = ref.Params
+				break
+			}
+		}
+		workflowParams := e.mergeParams(workflow, params, workflowRefParams, executionOverrides)
+
+		rollbackWorkflowStatus, err := e.workflowExecutor.RevertWorkflow(ctx, workflow, &wfStatus, workflowParams)
 		if err != nil {
 			klog.Errorf("Failed to revert workflow %s/%s: %v", wfStatus.WorkflowRef.Namespace, wfStatus.WorkflowRef.Name, err)
 			// Add failed workflow status to rollback stage status
@@ -289,7 +337,7 @@ func (e *DefaultStageExecutor) getWorkflow(ctx context.Context, ref drv1alpha1.O
 	workflow := &drv1alpha1.DRWorkflow{}
 	namespace := ref.Namespace
 	if namespace == "" {
-		namespace = "default"
+		namespace = drv1alpha1.DefaultNamespace
 	}
 
 	key := client.ObjectKey{
@@ -304,9 +352,11 @@ func (e *DefaultStageExecutor) getWorkflow(ctx context.Context, ref drv1alpha1.O
 	return workflow, nil
 }
 
-// mergeParams merges workflow defaults, plan global params, and stage params.
-// Plan only uses value (not default). Priority: workflow default -> globalParams -> stage params (value).
-func (e *DefaultStageExecutor) mergeParams(workflow *drv1alpha1.DRWorkflow, globalParams map[string]interface{}, stageParams []drv1alpha1.Parameter) map[string]interface{} {
+// mergeParams merges parameters following the priority chain (low → high):
+// workflow defaults → globalParams → stage params → executionOverrides.
+// executionOverrides map DRPlanExecution.spec.params (highest priority).
+func (e *DefaultStageExecutor) mergeParams(workflow *drv1alpha1.DRWorkflow, globalParams map[string]interface{},
+	stageParams []drv1alpha1.Parameter, executionOverrides map[string]interface{}) map[string]interface{} {
 	result := make(map[string]interface{})
 
 	// 1. Base: workflow parameter defaults
@@ -316,16 +366,21 @@ func (e *DefaultStageExecutor) mergeParams(workflow *drv1alpha1.DRWorkflow, glob
 		}
 	}
 
-	// 2. Override with plan global params (value only)
+	// 2. Override with plan global params
 	for k, v := range globalParams {
 		result[k] = v
 	}
 
-	// 3. Override with stage params (plan uses value only)
+	// 3. Override with stage params
 	for _, param := range stageParams {
 		if param.Value != "" {
 			result[param.Name] = param.Value
 		}
+	}
+
+	// 4. Override with execution-level params (highest priority; "mode" already protected upstream)
+	for k, v := range executionOverrides {
+		result[k] = v
 	}
 
 	return result

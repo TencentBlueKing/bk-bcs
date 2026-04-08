@@ -39,12 +39,116 @@ spec:
           spec:
             description: spec defines the desired state of DRPlanExecution
             properties:
+              mode:
+                description: |-
+                  Mode is the execution mode for Execute operation.
+                  It is used by action-level `when` conditions (e.g. install/upgrade path selection).
+                  When not set, executors keep backward-compatible behavior and do not filter by mode.
+                enum:
+                - Install
+                - Upgrade
+                - Delete
+                - Rollback
+                type: string
               operationType:
                 description: 'OperationType is the operation type: Execute, Revert'
                 enum:
                 - Execute
                 - Revert
                 type: string
+              params:
+                description: |-
+                  Params are execution-level parameters with the highest priority.
+                  They override DRPlan.spec.globalParams and stage-level params with the same name.
+                  Each param supports either a static value or a dynamic valueFrom.manifestRef.
+                  Note: the reserved key "mode" is managed by the Mode field and cannot be overridden here.
+                items:
+                  description: Parameter defines a parameter with name, type, and
+                    value/default
+                  properties:
+                    default:
+                      description: Default is the default value (used when Value is
+                        not set, e.g. in workflow/plan parameter definitions)
+                      type: string
+                    description:
+                      description: Description is the parameter description
+                      type: string
+                    name:
+                      description: Name is the parameter name
+                      type: string
+                    required:
+                      description: Required indicates if the parameter is required
+                      type: boolean
+                    type:
+                      default: string
+                      description: 'Type is the parameter type: string (default),
+                        number, boolean'
+                      enum:
+                      - string
+                      - number
+                      - boolean
+                      type: string
+                    value:
+                      description: |-
+                        Value is the explicit value to use (e.g. when passing params in DRPlan stage). Takes precedence over Default when both set.
+                        Mutually exclusive with ValueFrom.
+                      type: string
+                    valueFrom:
+                      description: |-
+                        ValueFrom dynamically resolves a parameter value from a Kubernetes resource.
+                        Mutually exclusive with Value.
+                      properties:
+                        manifestRef:
+                          description: ManifestRef resolves a value from a Kubernetes
+                            resource field via JSONPath.
+                          properties:
+                            apiVersion:
+                              description: APIVersion is the resource API version
+                                (e.g. "batch/v1")
+                              type: string
+                            jsonPath:
+                              description: JSONPath is the JSONPath expression to
+                                extract the value (e.g. "{.metadata.name}")
+                              type: string
+                            kind:
+                              description: Kind is the resource kind (e.g. "Job")
+                              type: string
+                            labelSelector:
+                              description: |-
+                                LabelSelector is a label selector string (e.g. "app=foo,env=prod").
+                                Mutually exclusive with Name. Supports $(params.xxx) placeholders.
+                              type: string
+                            name:
+                              description: |-
+                                Name is the exact resource name. Mutually exclusive with LabelSelector.
+                                Supports $(params.xxx) placeholders.
+                              type: string
+                            namespace:
+                              description: Namespace is the resource namespace. Supports
+                                $(params.xxx) placeholders.
+                              type: string
+                            select:
+                              default: Last
+                              description: |-
+                                Select specifies which resource to pick when multiple matches are found.
+                                Last (default): pick by latest creationTimestamp; First: pick by earliest;
+                                Single: require exactly 1 match; Any: pick arbitrarily.
+                              enum:
+                              - Last
+                              - First
+                              - Single
+                              - Any
+                              type: string
+                          required:
+                          - apiVersion
+                          - jsonPath
+                          - kind
+                          type: object
+                      type: object
+                  required:
+                  - name
+                  type: object
+                type: array
               planRef:
                 description: PlanRef is the associated DRPlan name
                 type: string
@@ -194,6 +298,52 @@ spec:
                               description: ActionStatus defines the status of an action
                                 execution
                               properties:
+                                clusterStatuses:
+                                  description: |-
+                                    ClusterStatuses records per-cluster execution state when ClusterExecutionMode=PerCluster.
+                                    Empty for Global actions (backward compatible).
+                                  items:
+                                    description: ClusterActionStatus tracks execution
+                                      state of a single cluster within a PerCluster
+                                      action.
+                                    properties:
+                                      cluster:
+                                        description: 'Cluster is the binding cluster
+                                          identifier (format: "namespace/name")'
+                                        type: string
+                                      clusterID:
+                                        description: ClusterID is the ManagedCluster
+                                          spec.clusterId
+                                        type: string
+                                      completionTime:
+                                        description: CompletionTime is when this cluster's
+                                          execution completed
+                                        format: date-time
+                                        type: string
+                                      message:
+                                        description: Message provides additional information
+                                        type: string
+                                      phase:
+                                        description: 'Phase is the per-cluster action
+                                          phase: Pending, Running, Succeeded, Failed'
+                                        enum:
+                                        - Pending
+                                        - Running
+                                        - Succeeded
+                                        - Failed
+                                        - Skipped
+                                        type: string
+                                      startTime:
+                                        description: StartTime is when this cluster's
+                                          execution started
+                                        format: date-time
+                                        type: string
+                                    required:
+                                    - cluster
+                                    - clusterID
+                                    - phase
+                                    type: object
+                                  type: array
                                 completionTime:
                                   description: CompletionTime is the completion time
                                   format: date-time
@@ -398,6 +548,55 @@ spec:
                                           type: string
                                       type: object
                                       x-kubernetes-map-type: atomic
+                                    subscriptionRefs:
+                                      description: SubscriptionRefs are the created
+                                        Subscription references for PerCluster actions.
+                                      items:
+                                        description: ObjectReference contains enough
+                                          information to let you inspect or modify
+                                          the referred object.
+                                        properties:
+                                          apiVersion:
+                                            description: API version of the referent.
+                                            type: string
+                                          fieldPath:
+                                            description: |-
+                                              If referring to a piece of an object instead of an entire object, this string
+                                              should contain a valid JSON/Go field access statement, such as desiredState.manifest.containers[2].
+                                              For example, if the object reference is to a container within a pod, this would take on a value like:
+                                              "spec.containers{name}" (where "name" refers to the name of the container that triggered
+                                              the event) or if no container name is specified "spec.containers[2]" (container with
+                                              index 2 in this pod). This syntax is chosen only to have some well-defined way of
+                                              referencing a part of an object.
+                                            type: string
+                                          kind:
+                                            description: |-
+                                              Kind of the referent.
+                                              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+                                            type: string
+                                          name:
+                                            description: |-
+                                              Name of the referent.
+                                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                            type: string
+                                          namespace:
+                                            description: |-
+                                              Namespace of the referent.
+                                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+                                            type: string
+                                          resourceVersion:
+                                            description: |-
+                                              Specific resourceVersion to which this reference is made, if any.
+                                              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency
+                                            type: string
+                                          uid:
+                                            description: |-
+                                              UID of the referent.
+                                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids
+                                            type: string
+                                        type: object
+                                        x-kubernetes-map-type: atomic
+                                      type: array
                                   type: object
                                 phase:
                                   description: 'Phase is the action phase: Pending,

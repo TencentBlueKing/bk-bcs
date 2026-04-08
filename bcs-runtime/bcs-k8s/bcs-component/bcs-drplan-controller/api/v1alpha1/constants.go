@@ -109,6 +109,10 @@ const (
 
 	// OperationDelete deletes a resource
 	OperationDelete = "Delete"
+
+	// OperationReplace deletes the existing resource then creates a new one.
+	// Maps to Helm's hook-delete-policy: before-hook-creation.
+	OperationReplace = "Replace"
 )
 
 // HTTP Method constants
@@ -166,6 +170,16 @@ const (
 
 	// ParameterTypeBoolean represents a boolean parameter
 	ParameterTypeBoolean = "boolean"
+)
+
+// ClusterExecutionMode constants
+const (
+	// ClusterExecutionModeGlobal executes the action as a single aggregate across all binding clusters.
+	// This is the default when ClusterExecutionMode is empty.
+	ClusterExecutionModeGlobal = "Global"
+
+	// ClusterExecutionModePerCluster splits the action into per-cluster child Subscriptions at runtime.
+	ClusterExecutionModePerCluster = "PerCluster"
 )
 
 // Namespace constants

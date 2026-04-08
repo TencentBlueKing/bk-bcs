@@ -1,0 +1,9 @@
+apiVersion: dr.bkbcs.tencent.com/v1alpha1
+kind: DRPlanExecution
+metadata:
+  name: demo-app-install-001
+  namespace: default
+spec:
+  mode: Install
+  operationType: Execute
+  planRef: demo-app

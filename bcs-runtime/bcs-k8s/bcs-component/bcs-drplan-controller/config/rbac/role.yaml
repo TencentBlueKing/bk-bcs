@@ -24,6 +24,42 @@ rules:
   - create
   - patch
 - apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - apps.clusternet.io
+  resources:
+  - descriptions
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - apps.clusternet.io
+  resources:
+  - subscriptions
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - clusters.clusternet.io
+  resources:
+  - managedclusters
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
   - coordination.k8s.io
   resources:
   - leases
@@ -67,3 +103,11 @@ rules:
   - get
   - patch
   - update
+- apiGroups:
+  - shadow
+  resources:
+  - jobs
+  verbs:
+  - get
+  - list
+  - watch

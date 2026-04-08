@@ -38,17 +38,22 @@ type WorkflowExecutor interface {
 
 	// RevertWorkflow reverts a workflow using the provided workflow execution status
 	// Returns the rollback workflow status and error
-	RevertWorkflow(ctx context.Context, workflow *drv1alpha1.DRWorkflow, workflowStatus *drv1alpha1.WorkflowExecutionStatus) (*drv1alpha1.WorkflowExecutionStatus, error)
+	RevertWorkflow(ctx context.Context, workflow *drv1alpha1.DRWorkflow, workflowStatus *drv1alpha1.WorkflowExecutionStatus, params map[string]interface{}) (*drv1alpha1.WorkflowExecutionStatus, error)
 }
 
 // StageExecutor defines the interface for executing stages
 type StageExecutor interface {
-	// ExecuteStage executes a stage and returns the stage status
-	ExecuteStage(ctx context.Context, plan *drv1alpha1.DRPlan, stage *drv1alpha1.Stage, params map[string]interface{}) (*drv1alpha1.StageStatus, error)
+	// ExecuteStage executes a stage and returns the stage status.
+	// params contains plan-level globals (including mode).
+	// executionOverrides are applied last, after stage-level params, to guarantee
+	// DRPlanExecution.spec.params has the highest priority in the merge chain.
+	ExecuteStage(ctx context.Context, plan *drv1alpha1.DRPlan, stage *drv1alpha1.Stage,
+		params map[string]interface{}, executionOverrides map[string]interface{}) (*drv1alpha1.StageStatus, error)
 
 	// RevertStage reverts a stage using the provided stage status
 	// Returns the rollback stage status and error
-	RevertStage(ctx context.Context, plan *drv1alpha1.DRPlan, stage *drv1alpha1.Stage, stageStatus *drv1alpha1.StageStatus) (*drv1alpha1.StageStatus, error)
+	RevertStage(ctx context.Context, plan *drv1alpha1.DRPlan, stage *drv1alpha1.Stage, stageStatus *drv1alpha1.StageStatus,
+		params map[string]interface{}, executionOverrides map[string]interface{}) (*drv1alpha1.StageStatus, error)
 }
 
 // PlanExecutor defines the interface for executing plans

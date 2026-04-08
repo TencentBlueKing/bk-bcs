@@ -49,6 +49,22 @@ rules:
   - list
   - watch
 - apiGroups:
+  - shadow
+  resources:
+  - jobs
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - apps.clusternet.io
+  resources:
+  - descriptions
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
   - apps.clusternet.io
   resources:
   - localizations
@@ -94,6 +110,14 @@ rules:
   - update
   - patch
   - delete
+- apiGroups:
+  - clusters.clusternet.io
+  resources:
+  - managedclusters
+  verbs:
+  - get
+  - list
+  - watch
 {{- with .Values.rbac.additionalRules }}
 {{- toYaml . | nindent 0 }}
 {{- end }}

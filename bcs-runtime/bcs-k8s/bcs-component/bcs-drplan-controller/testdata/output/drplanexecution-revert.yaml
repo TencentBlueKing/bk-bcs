@@ -1,0 +1,10 @@
+apiVersion: dr.bkbcs.tencent.com/v1alpha1
+kind: DRPlanExecution
+metadata:
+  name: demo-app-revert-001
+  namespace: default
+spec:
+  mode: Rollback
+  operationType: Revert
+  planRef: demo-app
+  revertExecutionRef: demo-app-install-001

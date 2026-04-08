@@ -70,7 +70,7 @@ func (v *LocalizationActionValidator) Validate(action *drv1alpha1.Action, index 
 	if loc.Namespace == "" {
 		errors = append(errors, fmt.Sprintf("action[%d] %s: Localization.Namespace is required", index, action.Name))
 	}
-	if loc.Operation == "Create" {
+	if loc.Operation == drv1alpha1.OperationCreate {
 		if loc.Spec == nil {
 			errors = append(errors, fmt.Sprintf("action[%d] %s: Localization.Spec is required when operation=Create", index, action.Name))
 		} else if loc.Spec.APIVersion == "" || loc.Spec.Kind == "" || loc.Spec.Name == "" {
@@ -99,10 +99,10 @@ func (v *SubscriptionActionValidator) Validate(action *drv1alpha1.Action, index 
 	if action.Subscription.Name == "" {
 		errors = append(errors, fmt.Sprintf("action[%d] %s: Subscription.Name is required", index, action.Name))
 	}
-	if action.Subscription.Operation == "Patch" && action.Rollback == nil {
+	if action.Subscription.Operation == drv1alpha1.OperationPatch && action.Rollback == nil {
 		errors = append(errors, fmt.Sprintf("action[%d] %s: rollback is required for Subscription Patch operation", index, action.Name))
 	}
-	if action.Subscription.Operation == "Create" {
+	if action.Subscription.Operation == drv1alpha1.OperationCreate {
 		if action.Subscription.Spec == nil {
 			errors = append(errors, fmt.Sprintf("action[%d] %s: Subscription.Spec is required when operation=Create", index, action.Name))
 		} else {
@@ -134,7 +134,7 @@ func (v *KubernetesResourceActionValidator) Validate(action *drv1alpha1.Action, 
 		errors = append(errors, fmt.Sprintf("action[%d] %s: KubernetesResource.Manifest is required", index, action.Name))
 	}
 
-	needsRollback := action.Resource.Operation == "Patch" || action.Resource.Operation == "Apply"
+	needsRollback := action.Resource.Operation == drv1alpha1.OperationPatch || action.Resource.Operation == drv1alpha1.OperationApply
 	if needsRollback && action.Rollback == nil {
 		errors = append(errors, fmt.Sprintf("action[%d] %s: rollback is required for KubernetesResource %s operation",
 			index, action.Name, action.Resource.Operation))

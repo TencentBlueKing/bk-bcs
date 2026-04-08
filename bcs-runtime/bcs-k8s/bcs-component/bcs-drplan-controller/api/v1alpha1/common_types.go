@@ -37,6 +37,7 @@ type Parameter struct {
 	Required bool `json:"required,omitempty"`
 
 	// Value is the explicit value to use (e.g. when passing params in DRPlan stage). Takes precedence over Default when both set.
+	// Mutually exclusive with ValueFrom.
 	// +optional
 	Value string `json:"value,omitempty"`
 
@@ -47,6 +48,55 @@ type Parameter struct {
 	// Description is the parameter description
 	// +optional
 	Description string `json:"description,omitempty"`
+
+	// ValueFrom dynamically resolves a parameter value from a Kubernetes resource.
+	// Mutually exclusive with Value.
+	// +optional
+	ValueFrom *ParameterValueFrom `json:"valueFrom,omitempty"`
+}
+
+// ParameterValueFrom specifies the source of a dynamic parameter value.
+type ParameterValueFrom struct {
+	// ManifestRef resolves a value from a Kubernetes resource field via JSONPath.
+	// +optional
+	ManifestRef *ManifestRef `json:"manifestRef,omitempty"`
+}
+
+// ManifestRef describes a Kubernetes resource and a JSONPath expression used to extract a parameter value.
+type ManifestRef struct {
+	// APIVersion is the resource API version (e.g. "batch/v1")
+	// +kubebuilder:validation:Required
+	APIVersion string `json:"apiVersion"`
+
+	// Kind is the resource kind (e.g. "Job")
+	// +kubebuilder:validation:Required
+	Kind string `json:"kind"`
+
+	// Namespace is the resource namespace. Supports $(params.xxx) placeholders.
+	// +optional
+	Namespace string `json:"namespace,omitempty"`
+
+	// Name is the exact resource name. Mutually exclusive with LabelSelector.
+	// Supports $(params.xxx) placeholders.
+	// +optional
+	Name string `json:"name,omitempty"`
+
+	// LabelSelector is a label selector string (e.g. "app=foo,env=prod").
+	// Mutually exclusive with Name. Supports $(params.xxx) placeholders.
+	// +optional
+	LabelSelector string `json:"labelSelector,omitempty"`
+
+	// JSONPath is the JSONPath expression to extract the value (e.g. "{.metadata.name}")
+	// +kubebuilder:validation:Required
+	JSONPath string `json:"jsonPath"`
+
+	// Select specifies which resource to pick when multiple matches are found.
+	// Last (default): pick by latest creationTimestamp; First: pick by earliest;
+	// Single: require exactly 1 match; Any: pick arbitrarily.
+	// +kubebuilder:validation:Enum=Last;First;Single;Any
+	// +kubebuilder:default=Last
+	// +optional
+	Select string `json:"select,omitempty"`
 }
 
 // Action defines a single action in a workflow
@@ -86,6 +136,14 @@ type Action struct {
 	// +optional
 	Timeout string `json:"timeout,omitempty"`
 
+	// WaitReady indicates whether to wait until the target resource is ready.
+	// When false (default), action succeeds once create/apply request is accepted.
+	// When true, the executor polls the resource status until ready or timeout.
+	// Currently only effective for Subscription actions (child cluster direct query via SocketProxy).
+	// +kubebuilder:default=false
+	// +optional
+	WaitReady bool `json:"waitReady,omitempty"`
+
 	// RetryPolicy defines retry behavior
 	// +optional
 	RetryPolicy *RetryPolicy `json:"retryPolicy,omitempty"`
@@ -103,6 +161,44 @@ type Action struct {
 	// When is a condition expression (reserved for conditional execution, Phase 2)
 	// +optional
 	When string `json:"when,omitempty"`
+
+	// HookType identifies the originating Helm hook lifecycle when this action was generated from a hook.
+	// It allows executors to distinguish pre/post install/upgrade/delete/rollback hooks from normal actions.
+	// +optional
+	HookType string `json:"hookType,omitempty"`
+
+	// ClusterExecutionMode controls how this action is executed across binding clusters.
+	// Empty or "Global" (default): executes as a single aggregate action; waitReady waits for ALL clusters.
+	// "PerCluster": at runtime, splits into per-cluster child Subscriptions for independent progression.
+	// Only effective for Subscription type actions with waitReady=true.
+	// +kubebuilder:validation:Enum="";Global;PerCluster
+	// +kubebuilder:default=""
+	// +optional
+	ClusterExecutionMode string `json:"clusterExecutionMode,omitempty"`
+
+	// HookCleanup controls Helm-like hook cleanup timing for hook actions.
+	// It is primarily used by drplan-gen generated hook Subscription actions.
+	// When nil, executors keep the current default behavior and do not apply extra cleanup.
+	// +optional
+	HookCleanup *HookCleanupPolicy `json:"hookCleanup,omitempty"`
+}
+
+// HookCleanupPolicy defines when a hook resource should be automatically deleted.
+type HookCleanupPolicy struct {
+	// BeforeCreate deletes any existing hook resource before creating a new one.
+	// Mirrors Helm's before-hook-creation policy.
+	// +optional
+	BeforeCreate bool `json:"beforeCreate,omitempty"`
+
+	// OnSuccess deletes the hook resource after the action succeeds.
+	// Mirrors Helm's hook-succeeded policy.
+	// +optional
+	OnSuccess bool `json:"onSuccess,omitempty"`
+
+	// OnFailure deletes the hook resource after the action fails.
+	// Mirrors Helm's hook-failed policy.
+	// +optional
+	OnFailure bool `json:"onFailure,omitempty"`
 }
 
 // HTTPAction defines HTTP request configuration
@@ -220,8 +316,11 @@ type Feed struct {
 // SubscriptionAction defines Clusternet Subscription operation.
 // Name/Namespace 为 CR 的 metadata；Spec 直接引用 clusternet SubscriptionSpec，与上游保持一致、避免缺失字段。
 type SubscriptionAction struct {
-	// Operation is the operation type: Create (default), Patch, Delete
-	// +kubebuilder:validation:Enum=Create;Patch;Delete
+	// Operation is the operation type: Create (default), Apply, Patch, Delete, Replace.
+	// Apply uses Server-Side Apply (idempotent create-or-update).
+	// Replace deletes the existing resource (if any) and waits for deletion to complete
+	// before creating a new one.
+	// +kubebuilder:validation:Enum=Create;Apply;Patch;Delete;Replace
 	// +kubebuilder:default=Create
 	// +optional
 	Operation string `json:"operation,omitempty"`
@@ -359,6 +458,36 @@ type ActionStatus struct {
 	// Outputs are the action outputs (used for rollback)
 	// +optional
 	Outputs *ActionOutputs `json:"outputs,omitempty"`
+
+	// ClusterStatuses records per-cluster execution state when ClusterExecutionMode=PerCluster.
+	// Empty for Global actions (backward compatible).
+	// +optional
+	ClusterStatuses []ClusterActionStatus `json:"clusterStatuses,omitempty"`
+}
+
+// ClusterActionStatus tracks execution state of a single cluster within a PerCluster action.
+type ClusterActionStatus struct {
+	// Cluster is the binding cluster identifier (format: "namespace/name")
+	Cluster string `json:"cluster"`
+
+	// ClusterID is the ManagedCluster spec.clusterId
+	ClusterID string `json:"clusterID"`
+
+	// Phase is the per-cluster action phase: Pending, Running, Succeeded, Failed
+	// +kubebuilder:validation:Enum=Pending;Running;Succeeded;Failed;Skipped
+	Phase string `json:"phase"`
+
+	// StartTime is when this cluster's execution started
+	// +optional
+	StartTime *metav1.Time `json:"startTime,omitempty"`
+
+	// CompletionTime is when this cluster's execution completed
+	// +optional
+	CompletionTime *metav1.Time `json:"completionTime,omitempty"`
+
+	// Message provides additional information
+	// +optional
+	Message string `json:"message,omitempty"`
 }
 
 // ActionOutputs defines action execution outputs
@@ -374,6 +503,10 @@ type ActionOutputs struct {
 	// SubscriptionRef is the created Subscription reference
 	// +optional
 	SubscriptionRef *corev1.ObjectReference `json:"subscriptionRef,omitempty"`
+
+	// SubscriptionRefs are the created Subscription references for PerCluster actions.
+	// +optional
+	SubscriptionRefs []corev1.ObjectReference `json:"subscriptionRefs,omitempty"`
 
 	// ResourceRef is the created generic K8s resource reference (KubernetesResource)
 	// +optional

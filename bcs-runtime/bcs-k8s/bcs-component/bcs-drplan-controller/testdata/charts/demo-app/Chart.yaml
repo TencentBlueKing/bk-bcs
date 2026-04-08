@@ -1,0 +1,5 @@
+apiVersion: v2
+name: demo-app
+description: A demo Helm chart for testing drplan-gen
+version: 0.1.0
+type: application

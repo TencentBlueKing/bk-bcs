@@ -39,7 +39,8 @@ func NewLocalizationActionExecutor(client client.Client) *LocalizationActionExec
 }
 
 // Execute executes a Localization action
-func (e *LocalizationActionExecutor) Execute(ctx context.Context, action *drv1alpha1.Action, params map[string]interface{}) (*drv1alpha1.ActionStatus, error) {
+func (e *LocalizationActionExecutor) Execute(ctx context.Context, action *drv1alpha1.Action, params map[string]interface{}) (*drv1alpha1.ActionStatus, error) { //nolint:funlen
+
 	klog.Infof("Executing Localization action: %s", action.Name)
 	startTime := time.Now()
 
@@ -215,7 +216,7 @@ func (e *LocalizationActionExecutor) Rollback(ctx context.Context, action *drv1a
 			return rollbackStatus, err
 		}
 		rollbackStatus.Phase = drv1alpha1.PhaseSucceeded
-		rollbackStatus.Message = "Rolled back: executed custom rollback action"
+		rollbackStatus.Message = drv1alpha1.MessageRollbackSuccess
 		rollbackStatus.CompletionTime = &metav1.Time{Time: time.Now()}
 		rollbackStatus.Outputs = customStatus.Outputs
 		return rollbackStatus, nil

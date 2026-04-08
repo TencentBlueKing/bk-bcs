@@ -355,24 +355,24 @@ func getRollbackRules() map[string]rollbackRule {
 		},
 		"Subscription": {
 			checkRequired: func(action *drv1alpha1.Action) (bool, string) {
-				if action.Subscription != nil && action.Subscription.Operation == "Patch" {
+				if action.Subscription != nil && action.Subscription.Operation == drv1alpha1.OperationPatch {
 					return true, "Subscription Patch"
 				}
 				return false, ""
 			},
 			checkAutomatic: func(action *drv1alpha1.Action) bool {
-				return action.Subscription != nil && action.Subscription.Operation == "Create"
+				return action.Subscription != nil && action.Subscription.Operation == drv1alpha1.OperationCreate
 			},
 		},
 		"KubernetesResource": {
 			checkRequired: func(action *drv1alpha1.Action) (bool, string) {
-				if action.Resource != nil && (action.Resource.Operation == "Patch" || action.Resource.Operation == "Apply") {
+				if action.Resource != nil && (action.Resource.Operation == drv1alpha1.OperationPatch || action.Resource.Operation == drv1alpha1.OperationApply) {
 					return true, fmt.Sprintf("KubernetesResource %s", action.Resource.Operation)
 				}
 				return false, ""
 			},
 			checkAutomatic: func(action *drv1alpha1.Action) bool {
-				return action.Resource != nil && action.Resource.Operation == "Create"
+				return action.Resource != nil && action.Resource.Operation == drv1alpha1.OperationCreate
 			},
 		},
 		"Job": {

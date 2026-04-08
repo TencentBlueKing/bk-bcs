@@ -18,218 +18,247 @@ import (
 )
 
 var _ = Describe("RenderTemplate", func() {
-	Context("When substituting $(params.xxx) variables", func() {
-		It("should replace a single parameter", func() {
-			data := &TemplateData{
-				Params: map[string]interface{}{
-					"endpoint": "http://api.example.com",
+	var data *TemplateData
+
+	BeforeEach(func() {
+		data = &TemplateData{
+			Params: map[string]interface{}{
+				"namespace":   "production",
+				"clusterName": "cluster-a",
+				"replicas":    3,
+			},
+			PlanName: "my-dr-plan",
+			Outputs: map[string]interface{}{
+				"step1": map[string]interface{}{
+					"phase":   "Succeeded",
+					"message": "done",
 				},
-			}
-			result, err := RenderTemplate("$(params.endpoint)/health", data)
+			},
+		}
+	})
+
+	Context("basic parameter substitution", func() {
+		It("should replace $(params.xxx) with the value", func() {
+			result, err := RenderTemplate("ns: $(params.namespace)", data)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(result).To(Equal("http://api.example.com/health"))
+			Expect(result).To(Equal("ns: production"))
 		})
 
-		It("should replace multiple parameters in the same string", func() {
-			data := &TemplateData{
-				Params: map[string]interface{}{
-					"host": "db.example.com",
-					"port": "5432",
-				},
-			}
-			result, err := RenderTemplate("postgres://$(params.host):$(params.port)/mydb", data)
+		It("should replace legacy {{ .params.xxx }} syntax", func() {
+			result, err := RenderTemplate("ns: {{ .params.namespace }}", data)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(result).To(Equal("postgres://db.example.com:5432/mydb"))
+			Expect(result).To(Equal("ns: production"))
 		})
 
-		It("should handle numeric parameter values", func() {
-			data := &TemplateData{
-				Params: map[string]interface{}{
-					"replicas": 3,
-				},
-			}
+		It("should replace multiple params in one string", func() {
+			result, err := RenderTemplate("$(params.clusterName)/$(params.namespace)", data)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result).To(Equal("cluster-a/production"))
+		})
+
+		It("should support mixing recommended and legacy syntax", func() {
+			result, err := RenderTemplate("$(params.clusterName)/{{ .params.namespace }}", data)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result).To(Equal("cluster-a/production"))
+		})
+
+		It("should handle integer parameter values", func() {
 			result, err := RenderTemplate("replicas: $(params.replicas)", data)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(result).To(Equal("replicas: 3"))
 		})
+	})
 
-		It("should preserve unresolved parameters when not found", func() {
-			data := &TemplateData{
-				Params: map[string]interface{}{},
-			}
-			result, err := RenderTemplate("$(params.missing)", data)
+	Context("planName substitution", func() {
+		It("should replace $(planName)", func() {
+			result, err := RenderTemplate("plan: $(planName)", data)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(result).To(Equal("$(params.missing)"))
+			Expect(result).To(Equal("plan: my-dr-plan"))
+		})
+
+		It("should replace legacy {{ .planName }}", func() {
+			result, err := RenderTemplate("plan: {{ .planName }}", data)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result).To(Equal("plan: my-dr-plan"))
 		})
 	})
 
-	Context("When substituting $(planName)", func() {
-		It("should replace planName", func() {
-			data := &TemplateData{
-				PlanName: "dr-plan-production",
-				Params:   map[string]interface{}{},
-			}
-			result, err := RenderTemplate("dr-app-$(planName)", data)
+	Context("outputs substitution", func() {
+		It("should replace $(outputs.step1.phase) with nested value", func() {
+			result, err := RenderTemplate("status: $(outputs.step1.phase)", data)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(result).To(Equal("dr-app-dr-plan-production"))
+			Expect(result).To(Equal("status: Succeeded"))
 		})
 
-		It("should handle empty planName", func() {
-			data := &TemplateData{
-				PlanName: "",
-				Params:   map[string]interface{}{},
-			}
-			result, err := RenderTemplate("prefix-$(planName)-suffix", data)
+		It("should replace $(outputs.step1.message)", func() {
+			result, err := RenderTemplate("msg: $(outputs.step1.message)", data)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(result).To(Equal("prefix--suffix"))
+			Expect(result).To(Equal("msg: done"))
+		})
+
+		It("should replace legacy {{ .outputs.step1.phase }}", func() {
+			result, err := RenderTemplate("status: {{ .outputs.step1.phase }}", data)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result).To(Equal("status: Succeeded"))
 		})
 	})
 
-	Context("When substituting $(outputs.xxx) variables", func() {
-		It("should replace output references", func() {
-			data := &TemplateData{
-				Params: map[string]interface{}{},
-				Outputs: map[string]interface{}{
-					"checkResult": "healthy",
-				},
-			}
-			result, err := RenderTemplate("status: $(outputs.checkResult)", data)
+	Context("pass-through (no variables)", func() {
+		It("should return the string unchanged when no variables exist", func() {
+			result, err := RenderTemplate("plain text without variables", data)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(result).To(Equal("status: healthy"))
+			Expect(result).To(Equal("plain text without variables"))
 		})
 
-		It("should preserve unresolved output references", func() {
-			data := &TemplateData{
-				Params:  map[string]interface{}{},
-				Outputs: map[string]interface{}{},
-			}
-			result, err := RenderTemplate("$(outputs.missing)", data)
+		It("should not modify Helm template syntax {{ }}", func() {
+			result, err := RenderTemplate("{{ .Release.Name }}-config", data)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(result).To(Equal("$(outputs.missing)"))
+			Expect(result).To(Equal("{{ .Release.Name }}-config"))
 		})
 	})
 
-	Context("When mixing multiple variable types", func() {
-		It("should resolve params, planName, and outputs together", func() {
-			data := &TemplateData{
-				Params: map[string]interface{}{
-					"cluster": "zone-b",
-				},
-				PlanName: "failover-01",
-				Outputs: map[string]interface{}{
-					"endpoint": "10.0.0.1",
-				},
-			}
-			result, err := RenderTemplate(
-				"plan=$(planName) cluster=$(params.cluster) endpoint=$(outputs.endpoint)",
-				data,
-			)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(result).To(Equal("plan=failover-01 cluster=zone-b endpoint=10.0.0.1"))
+	Context("error handling", func() {
+		It("should return error for undefined parameter", func() {
+			_, err := RenderTemplate("$(params.unknown)", data)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("unknown"))
+		})
+
+		It("should return error for undefined legacy parameter", func() {
+			_, err := RenderTemplate("{{ .params.unknown }}", data)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("unknown"))
+		})
+
+		It("should return error for undefined top-level key", func() {
+			_, err := RenderTemplate("$(nonexistent)", data)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("nonexistent"))
+		})
+
+		It("should return error for nested path on non-map value", func() {
+			_, err := RenderTemplate("$(params.namespace.sub)", data)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("not a map"))
 		})
 	})
 
-	Context("When handling nil data", func() {
-		It("should handle nil TemplateData gracefully", func() {
-			result, err := RenderTemplate("$(params.xxx)", nil)
+	Context("nil data", func() {
+		It("should handle nil data gracefully and return error for any variable", func() {
+			_, err := RenderTemplate("$(params.x)", nil)
+			Expect(err).To(HaveOccurred())
+		})
+
+		It("should return plain string unchanged with nil data", func() {
+			result, err := RenderTemplate("no-vars-here", nil)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(result).To(Equal("$(params.xxx)"))
+			Expect(result).To(Equal("no-vars-here"))
 		})
 	})
 
-	Context("When string contains no variables", func() {
-		It("should return the original string unchanged", func() {
-			result, err := RenderTemplate("no-variables-here", &TemplateData{
-				Params: map[string]interface{}{"key": "value"},
-			})
+	Context("edge cases", func() {
+		It("should handle empty string", func() {
+			result, err := RenderTemplate("", data)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(result).To(Equal("no-variables-here"))
+			Expect(result).To(Equal(""))
 		})
 
-		It("should not touch Helm template syntax", func() {
-			result, err := RenderTemplate("{{ .Values.replicaCount }}", &TemplateData{
-				Params: map[string]interface{}{},
-			})
+		It("should handle adjacent variables without separator", func() {
+			result, err := RenderTemplate("$(params.namespace)$(params.clusterName)", data)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(result).To(Equal("{{ .Values.replicaCount }}"))
+			Expect(result).To(Equal("productioncluster-a"))
 		})
 
-		It("should not touch Shell variable syntax", func() {
-			result, err := RenderTemplate("${HOME} $(date +%Y)", &TemplateData{
-				Params: map[string]interface{}{},
-			})
+		It("should preserve surrounding text", func() {
+			result, err := RenderTemplate("http://$(params.clusterName).example.com/api/$(params.namespace)/health", data)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(result).To(Equal("${HOME} $(date +%Y)"))
+			Expect(result).To(Equal("http://cluster-a.example.com/api/production/health"))
 		})
-	})
 
-	Context("When rendering multi-line YAML templates", func() {
-		It("should substitute variables in a YAML manifest", func() {
-			data := &TemplateData{
-				Params: map[string]interface{}{
-					"targetCluster": "zone-b-ns",
-					"drMode":        "active",
-				},
-			}
-			tmpl := `apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: "dr-config"
-  namespace: "$(params.targetCluster)"
-data:
-  dr-mode: "$(params.drMode)"`
-
-			expected := `apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: "dr-config"
-  namespace: "zone-b-ns"
-data:
-  dr-mode: "active"`
-
-			result, err := RenderTemplate(tmpl, data)
+		It("should not match incomplete syntax like $(params.xxx without closing paren", func() {
+			result, err := RenderTemplate("$(params.namespace is broken", data)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(result).To(Equal(expected))
+			Expect(result).To(Equal("$(params.namespace is broken"))
 		})
 	})
 })
 
 var _ = Describe("RenderTemplateMap", func() {
 	It("should render all values in the map", func() {
-		m := map[string]string{
-			"url":    "$(params.endpoint)/api",
-			"header": "Bearer $(params.token)",
-		}
 		data := &TemplateData{
 			Params: map[string]interface{}{
-				"endpoint": "https://api.example.com",
-				"token":    "secret123",
+				"host": "db.example.com",
+				"port": "5432",
 			},
+		}
+		m := map[string]string{
+			"Content-Type":  "application/json",
+			"X-Target-Host": "$(params.host):$(params.port)",
 		}
 		result, err := RenderTemplateMap(m, data)
 		Expect(err).NotTo(HaveOccurred())
-		Expect(result).To(HaveKeyWithValue("url", "https://api.example.com/api"))
-		Expect(result).To(HaveKeyWithValue("header", "Bearer secret123"))
+		Expect(result).To(HaveKeyWithValue("Content-Type", "application/json"))
+		Expect(result).To(HaveKeyWithValue("X-Target-Host", "db.example.com:5432"))
+	})
+
+	It("should return error if any value fails to render", func() {
+		data := &TemplateData{
+			Params: map[string]interface{}{},
+		}
+		m := map[string]string{
+			"good": "static",
+			"bad":  "$(params.missing)",
+		}
+		_, err := RenderTemplateMap(m, data)
+		Expect(err).To(HaveOccurred())
 	})
 })
 
 var _ = Describe("BuildParamsMap", func() {
 	It("should merge with correct priority: stageParams > globalParams > workflowDefaults", func() {
-		workflowDefaults := map[string]interface{}{
-			"a": "default-a",
-			"b": "default-b",
-			"c": "default-c",
+		defaults := map[string]interface{}{
+			"namespace": "default",
+			"replicas":  1,
+			"onlyInDef": "from-default",
 		}
-		globalParams := map[string]interface{}{
-			"b": "global-b",
-			"c": "global-c",
+		global := map[string]interface{}{
+			"namespace":  "production",
+			"onlyInGlob": "from-global",
 		}
-		stageParams := map[string]interface{}{
-			"c": "stage-c",
+		stage := map[string]interface{}{
+			"namespace":   "staging",
+			"onlyInStage": "from-stage",
 		}
-		result := BuildParamsMap(workflowDefaults, globalParams, stageParams)
-		Expect(result["a"]).To(Equal("default-a"))
-		Expect(result["b"]).To(Equal("global-b"))
-		Expect(result["c"]).To(Equal("stage-c"))
+
+		result := BuildParamsMap(defaults, global, stage)
+
+		By("stage param should win for namespace")
+		Expect(result["namespace"]).To(Equal("staging"))
+
+		By("global param should provide onlyInGlob")
+		Expect(result["onlyInGlob"]).To(Equal("from-global"))
+
+		By("default param should provide onlyInDef")
+		Expect(result["onlyInDef"]).To(Equal("from-default"))
+
+		By("default replicas should survive since not overridden")
+		Expect(result["replicas"]).To(Equal(1))
+
+		By("stage param should provide onlyInStage")
+		Expect(result["onlyInStage"]).To(Equal("from-stage"))
+	})
+
+	It("should handle nil maps gracefully", func() {
+		result := BuildParamsMap(nil, nil, nil)
+		Expect(result).NotTo(BeNil())
+		Expect(result).To(BeEmpty())
+	})
+
+	It("should handle single source only", func() {
+		global := map[string]interface{}{
+			"cluster": "cluster-a",
+		}
+		result := BuildParamsMap(nil, global, nil)
+		Expect(result["cluster"]).To(Equal("cluster-a"))
 	})
 })

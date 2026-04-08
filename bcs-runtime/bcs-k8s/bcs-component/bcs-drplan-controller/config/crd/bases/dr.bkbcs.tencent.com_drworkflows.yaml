@@ -44,12 +44,51 @@ spec:
                 items:
                   description: Action defines a single action in a workflow
                   properties:
+                    clusterExecutionMode:
+                      default: ""
+                      description: |-
+                        ClusterExecutionMode controls how this action is executed across binding clusters.
+                        Empty or "Global" (default): executes as a single aggregate action; waitReady waits for ALL clusters.
+                        "PerCluster": at runtime, splits into per-cluster child Subscriptions for independent progression.
+                        Only effective for Subscription type actions with waitReady=true.
+                      enum:
+                      - ""
+                      - Global
+                      - PerCluster
+                      type: string
                     dependsOn:
                       description: DependsOn lists action names this action depends
                         on (reserved for DAG, Phase 2)
                       items:
                         type: string
                       type: array
+                    hookCleanup:
+                      description: |-
+                        HookCleanup controls Helm-like hook cleanup timing for hook actions.
+                        It is primarily used by drplan-gen generated hook Subscription actions.
+                        When nil, executors keep the current default behavior and do not apply extra cleanup.
+                      properties:
+                        beforeCreate:
+                          description: |-
+                            BeforeCreate deletes any existing hook resource before creating a new one.
+                            Mirrors Helm's before-hook-creation policy.
+                          type: boolean
+                        onFailure:
+                          description: |-
+                            OnFailure deletes the hook resource after the action fails.
+                            Mirrors Helm's hook-failed policy.
+                          type: boolean
+                        onSuccess:
+                          description: |-
+                            OnSuccess deletes the hook resource after the action succeeds.
+                            Mirrors Helm's hook-succeeded policy.
+                          type: boolean
+                      type: object
+                    hookType:
+                      description: |-
+                        HookType identifies the originating Helm hook lifecycle when this action was generated from a hook.
+                        It allows executors to distinguish pre/post install/upgrade/delete/rollback hooks from normal actions.
+                      type: string
                     http:
                       description: HTTP configuration (required when type=HTTP)
                       properties:
@@ -9104,12 +9143,17 @@ spec:
                           type: string
                         operation:
                           default: Create
-                          description: 'Operation is the operation type: Create (default),
-                            Patch, Delete'
+                          description: |-
+                            Operation is the operation type: Create (default), Apply, Patch, Delete, Replace.
+                            Apply uses Server-Side Apply (idempotent create-or-update).
+                            Replace deletes the existing resource (if any) and waits for deletion to complete
+                            before creating a new one.
                           enum:
                           - Create
+                          - Apply
                           - Patch
                           - Delete
+                          - Replace
                           type: string
                         spec:
                           description: Spec is the spec of the Subscription CR, same
@@ -9635,6 +9679,14 @@ spec:
                       - Subscription
                       - KubernetesResource
                       type: string
+                    waitReady:
+                      default: false
+                      description: |-
+                        WaitReady indicates whether to wait until the target resource is ready.
+                        When false (default), action succeeds once create/apply request is accepted.
+                        When true, the executor polls the resource status until ready or timeout.
+                        Currently only effective for Subscription actions (child cluster direct query via SocketProxy).
+                      type: boolean
                     when:
                       description: When is a condition expression (reserved for conditional
                         execution, Phase 2)
@@ -9725,10 +9777,62 @@ spec:
                       - boolean
                       type: string
                     value:
-                      description: Value is the explicit value to use (e.g. when passing
-                        params in DRPlan stage). Takes precedence over Default when
-                        both set.
+                      description: |-
+                        Value is the explicit value to use (e.g. when passing params in DRPlan stage). Takes precedence over Default when both set.
+                        Mutually exclusive with ValueFrom.
                       type: string
+                    valueFrom:
+                      description: |-
+                        ValueFrom dynamically resolves a parameter value from a Kubernetes resource.
+                        Mutually exclusive with Value.
+                      properties:
+                        manifestRef:
+                          description: ManifestRef resolves a value from a Kubernetes
+                            resource field via JSONPath.
+                          properties:
+                            apiVersion:
+                              description: APIVersion is the resource API version
+                                (e.g. "batch/v1")
+                              type: string
+                            jsonPath:
+                              description: JSONPath is the JSONPath expression to
+                                extract the value (e.g. "{.metadata.name}")
+                              type: string
+                            kind:
+                              description: Kind is the resource kind (e.g. "Job")
+                              type: string
+                            labelSelector:
+                              description: |-
+                                LabelSelector is a label selector string (e.g. "app=foo,env=prod").
+                                Mutually exclusive with Name. Supports $(params.xxx) placeholders.
+                              type: string
+                            name:
+                              description: |-
+                                Name is the exact resource name. Mutually exclusive with LabelSelector.
+                                Supports $(params.xxx) placeholders.
+                              type: string
+                            namespace:
+                              description: Namespace is the resource namespace. Supports
+                                $(params.xxx) placeholders.
+                              type: string
+                            select:
+                              default: Last
+                              description: |-
+                                Select specifies which resource to pick when multiple matches are found.
+                                Last (default): pick by latest creationTimestamp; First: pick by earliest;
+                                Single: require exactly 1 match; Any: pick arbitrarily.
+                              enum:
+                              - Last
+                              - First
+                              - Single
+                              - Any
+                              type: string
+                          required:
+                          - apiVersion
+                          - jsonPath
+                          - kind
+                          type: object
+                      type: object
                   required:
                   - name
                   type: object

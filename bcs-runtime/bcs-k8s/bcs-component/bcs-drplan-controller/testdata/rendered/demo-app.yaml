@@ -1,0 +1,184 @@
+---
+# Source: demo-app/templates/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: release-name-config
+  namespace: default
+data:
+  app.conf: |
+    server.port=8080
+---
+# Source: demo-app/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: release-name-svc
+  namespace: default
+spec:
+  selector:
+    app: release-name
+  ports:
+    - port: 80
+      targetPort: 8080
+---
+# Source: demo-app/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: release-name-server
+  namespace: default
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: release-name
+  template:
+    metadata:
+      labels:
+        app: release-name
+    spec:
+      containers:
+        - name: server
+          image: "nginx:1.25"
+          ports:
+            - containerPort: 8080
+---
+# Source: demo-app/templates/db-migrate-job.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: release-name-db-migrate
+  namespace: default
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": hook-succeeded
+spec:
+  backoffLimit: 2
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: migrate
+          image: "busybox:1.36"
+          command: ["sh", "-c", "echo start migrate; sleep 5; echo done"]
+---
+# Source: demo-app/templates/post-delete-job.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: release-name-post-delete-notify
+  namespace: default
+  annotations:
+    "helm.sh/hook": post-delete
+    "helm.sh/hook-weight": "0"
+    "helm.sh/hook-delete-policy": hook-succeeded
+spec:
+  backoffLimit: 1
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: notify
+          image: "busybox:1.36"
+          command: ["sh", "-c", "echo notify delete complete"]
+---
+# Source: demo-app/templates/post-install-job.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: release-name-install-smoke
+  namespace: default
+  annotations:
+    "helm.sh/hook": post-install
+    "helm.sh/hook-weight": "0"
+    "helm.sh/hook-delete-policy": hook-succeeded
+spec:
+  backoffLimit: 2
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: smoke
+          image: "busybox:1.36"
+          command: ["sh", "-c", "echo verify install; sleep 1; echo verify done"]
+---
+# Source: demo-app/templates/post-upgrade-job.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: release-name-upgrade-verify
+  namespace: default
+  annotations:
+    "helm.sh/hook": post-upgrade
+    "helm.sh/hook-weight": "1"
+    "helm.sh/hook-delete-policy": hook-succeeded
+spec:
+  backoffLimit: 2
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: verify
+          image: "busybox:1.36"
+          command: ["sh", "-c", "echo verify upgrade; sleep 1; echo verify done"]
+---
+# Source: demo-app/templates/pre-delete-job.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: release-name-pre-delete-backup
+  namespace: default
+  annotations:
+    "helm.sh/hook": pre-delete
+    "helm.sh/hook-weight": "-1"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 1
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: backup
+          image: "busybox:1.36"
+          command: ["sh", "-c", "echo backup before delete; sleep 1; echo backup done"]
+---
+# Source: demo-app/templates/pre-upgrade-job.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: release-name-upgrade-prepare
+  namespace: default
+  annotations:
+    "helm.sh/hook": pre-upgrade
+    "helm.sh/hook-weight": "-2"
+    "helm.sh/hook-delete-policy": before-hook-creation
+spec:
+  backoffLimit: 1
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: prepare
+          image: "busybox:1.36"
+          command: ["sh", "-c", "echo prepare upgrade; sleep 1; echo ready"]
+---
+# Source: demo-app/templates/validate-job.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: release-name-validate
+  namespace: default
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-weight": "0"
+spec:
+  backoffLimit: 1
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: validate
+          image: "busybox:1.36"
+          command: ["sh", "-c", "echo validate config; sleep 2; echo validation passed"]

@@ -1,0 +1,9 @@
+apiVersion: dr.bkbcs.tencent.com/v1alpha1
+kind: DRPlanExecution
+metadata:
+  name: demo-app-upgrade-001
+  namespace: default
+spec:
+  mode: Upgrade
+  operationType: Execute
+  planRef: demo-app
