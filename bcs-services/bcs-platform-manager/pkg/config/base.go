@@ -20,6 +20,8 @@ const (
 	StagEnv = "stag"
 	// ProdEnv xxx
 	ProdEnv = "prod"
+	// ServiceDomain domain name for service
+	ServiceDomain = "bcsplatformmanager.bkbcs.tencent.com"
 )
 
 // BaseConf :
@@ -29,6 +31,7 @@ type BaseConf struct {
 	AppCode           string   `yaml:"app_code"`
 	AppSecret         string   `yaml:"app_secret"`
 	SystemID          string   `yaml:"system_id"`
+	BKUsername        string   `yaml:"bk_username"`
 	VisitorsWhiteList []string `yaml:"visitors_white_list"`
 	RunEnv            string   `yaml:"run_env"`
 }
