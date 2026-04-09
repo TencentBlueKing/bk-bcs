@@ -15,15 +15,20 @@ package discovery
 
 import (
 	"context"
+	"crypto/tls"
 	"strings"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
+	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	etcd "github.com/go-micro/plugins/v4/registry/etcd"
 	"go-micro.dev/v4"
 	"go-micro.dev/v4/registry"
 	"go-micro.dev/v4/server"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/component/bcs/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/component/bcs/projectmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/utils"
 )
@@ -32,8 +37,11 @@ const serverNameSuffix = ".bkbcs.tencent.com"
 
 // ServiceDiscovery service discovery
 type ServiceDiscovery struct {
-	ctx context.Context
-	srv micro.Service
+	ctx             context.Context
+	srv             micro.Service
+	TLSConfig       *tls.Config
+	tlsClientConfig *tls.Config
+	rgt             registry.Registry
 }
 
 // NewServiceDiscovery :
@@ -67,20 +75,58 @@ func (s *ServiceDiscovery) Run() error {
 }
 
 func (s *ServiceDiscovery) init() error {
-	// etcd 服务发现注册
-	etcdRegistry, err := s.initEtcdRegistry()
-	if err != nil {
+	// initTLSConfig client TLS 配置
+	if err := s.initTLSConfig(); err != nil {
 		return err
 	}
 
-	if etcdRegistry != nil {
-		s.srv.Init(micro.Registry(etcdRegistry))
+	// etcd 服务发现注册
+	if err := s.initEtcdRegistry(); err != nil {
+		return err
+	}
+
+	// init component client
+	if err := s.initComponentClient(); err != nil {
+		return err
+	}
+
+	if s.rgt != nil {
+		s.srv.Init(micro.Registry(s.rgt))
+	}
+	return nil
+}
+
+// initTLSConfig xxx
+// init server and client tls config
+func (s *ServiceDiscovery) initTLSConfig() error {
+	if len(config.G.TLSConf.ServerCert) != 0 && len(config.G.TLSConf.ServerKey) != 0 &&
+		len(config.G.TLSConf.ServerCa) != 0 {
+		tlsConfig, err := ssl.ServerTslConfVerityClient(config.G.TLSConf.ServerCa, config.G.TLSConf.ServerCert,
+			config.G.TLSConf.ServerKey, static.ServerCertPwd)
+		if err != nil {
+			blog.Errorf("load platform manager server tls config failed, err %s", err.Error())
+			return err
+		}
+		s.TLSConfig = tlsConfig
+		blog.Info("load platform manager server tls config successfully")
+	}
+
+	if len(config.G.TLSConf.ClientCert) != 0 && len(config.G.TLSConf.ClientKey) != 0 &&
+		len(config.G.TLSConf.ClientCa) != 0 {
+		tlsConfig, err := ssl.ClientTslConfVerity(config.G.TLSConf.ClientCa, config.G.TLSConf.ClientCert,
+			config.G.TLSConf.ClientKey, static.ClientCertPwd)
+		if err != nil {
+			blog.Errorf("load platform manager client tls config failed, err %s", err.Error())
+			return err
+		}
+		s.tlsClientConfig = tlsConfig
+		blog.Info("load platform manager client tls config successfully")
 	}
 	return nil
 }
 
 // initEtcdRegistry etcd 服务注册
-func (s *ServiceDiscovery) initEtcdRegistry() (registry.Registry, error) {
+func (s *ServiceDiscovery) initEtcdRegistry() error {
 	endpoints := config.G.Viper.GetString("etcd.endpoints")
 
 	// 添加环境变量
@@ -89,7 +135,7 @@ func (s *ServiceDiscovery) initEtcdRegistry() (registry.Registry, error) {
 	}
 
 	if endpoints == "" {
-		return nil, nil
+		return nil
 	}
 
 	etcdRegistry := etcd.NewRegistry(registry.Addrs(strings.Split(endpoints, ",")...))
@@ -100,10 +146,27 @@ func (s *ServiceDiscovery) initEtcdRegistry() (registry.Registry, error) {
 	if ca != "" && cert != "" && key != "" {
 		tlsConfig, err := ssl.ClientTslConfVerity(ca, cert, key, "")
 		if err != nil {
-			return nil, err
+			return err
 		}
 		_ = etcdRegistry.Init(registry.TLSConfig(tlsConfig))
 	}
 
-	return etcdRegistry, nil
+	s.rgt = etcdRegistry
+	return nil
+}
+
+// InitComponentConfig init component config
+func (s *ServiceDiscovery) initComponentClient() error {
+	err := clustermanager.NewClient(s.tlsClientConfig, s.rgt)
+	if err != nil {
+		blog.Error("init clustermanager client error, %s", err.Error())
+		return err
+	}
+	err = projectmanager.NewClient(s.tlsClientConfig, s.rgt)
+	if err != nil {
+		blog.Error("init projectmanager client error, %s", err.Error())
+		return err
+	}
+	blog.Info("init all client successfully")
+	return nil
 }

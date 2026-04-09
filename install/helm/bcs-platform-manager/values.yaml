@@ -61,6 +61,11 @@ resources:
     cpu: 2
     memory: 1Gi
 
+## 健康检查
+probe:
+  liveness: 
+  readiness:
+
 ## 环境变量
 envs: {}
 
@@ -77,7 +82,7 @@ svcConf:
   
   ## 基础相关配置
   base_conf:
-    http_port: 8099
+    http_port: 8080
     bind_address: ""
     app_code: ""
     app_secret: ""
@@ -102,7 +107,8 @@ svcConf:
 
   ## Redis 配置信息
   redis:
-    address: "bcs-redis-master:6379"
+    host: "bcs-redis-master"
+    port: 6379
     db: 2
     password: ""
     ## 以下项非必须可不启用
@@ -128,6 +134,13 @@ svcConf:
     endpoint: ""
     token: ""
 
+  tls_conf:
+    server_cert: "/data/bcs/cert/bcs/bcs-server.crt"
+    server_key: "/data/bcs/cert/bcs/bcs-server.key"
+    server_ca: "/data/bcs/cert/bcs/bcs-ca.crt"
+    client_cert: "/data/bcs/cert/bcs/bcs-client.crt"
+    client_key: "/data/bcs/cert/bcs/bcs-client.key"
+    client_ca: "/data/bcs/cert/bcs/bcs-ca.crt"
 ## 挂载的 server. etcd cert 和 jwt key 对应的 secret 名称
 secret:
   bcsServerCerts: bcs-server-certs
@@ -179,8 +192,8 @@ service:
   type: ClusterIP
   ports:
     - name: http
-      port: 8099
-      targetPort: 8099
+      port: 8080
+      targetPort: 8080
       protocol: TCP
 
 ## 权限控制类
