@@ -213,52 +213,6 @@ paths:
           appVerifiedRequired: true
           resourcePermissionRequired: true
         descriptionEn: None
-  /clustermanager/v1/node/{nodeIP}:
-    get:
-      operationId: get_node_info
-      description: 获取节点详情接口
-      tags:
-      - bcs-cluster-manager
-      x-bk-apigateway-resource:
-        isPublic: true
-        allowApplyPermission: true
-        matchSubpath: false
-        enableWebsocket: false
-        backend:
-          name: default
-          method: get
-          path: /bcsapi/v4/clustermanager/v1/node/{nodeIP}
-          matchSubpath: false
-          timeout: 0
-        pluginConfigs: []
-        authConfig:
-          userVerifiedRequired: false
-          appVerifiedRequired: true
-          resourcePermissionRequired: true
-        descriptionEn: None
-  /clustermanager/v1/nodegroup:
-    get:
-      operationId: list_nodegroup
-      description: 节点池列表
-      tags:
-      - bcs-cluster-manager
-      x-bk-apigateway-resource:
-        isPublic: true
-        allowApplyPermission: true
-        matchSubpath: false
-        enableWebsocket: false
-        backend:
-          name: default
-          method: get
-          path: /bcsapi/v4/clustermanager/v1/nodegroup
-          matchSubpath: false
-          timeout: 0
-        pluginConfigs: []
-        authConfig:
-          userVerifiedRequired: false
-          appVerifiedRequired: true
-          resourcePermissionRequired: true
-        descriptionEn: None
   /clustermanager/v1/sharedclusters:
     get:
       operationId: list_shared_clusters
@@ -836,7 +790,7 @@ paths:
       tags:
       - bcs-monitor
       x-bk-apigateway-resource:
-        isPublic: true
+        isPublic: false
         allowApplyPermission: true
         matchSubpath: false
         enableWebsocket: false
@@ -868,7 +822,7 @@ paths:
       tags:
       - bcs-monitor
       x-bk-apigateway-resource:
-        isPublic: true
+        isPublic: false
         allowApplyPermission: true
         matchSubpath: false
         enableWebsocket: false
@@ -899,7 +853,7 @@ paths:
       tags:
       - bcs-monitor
       x-bk-apigateway-resource:
-        isPublic: true
+        isPublic: false
         allowApplyPermission: true
         matchSubpath: false
         enableWebsocket: false
@@ -931,7 +885,7 @@ paths:
       tags:
       - bcs-monitor
       x-bk-apigateway-resource:
-        isPublic: true
+        isPublic: false
         allowApplyPermission: true
         matchSubpath: false
         enableWebsocket: false
@@ -962,7 +916,7 @@ paths:
       tags:
       - bcs-monitor
       x-bk-apigateway-resource:
-        isPublic: true
+        isPublic: false
         allowApplyPermission: true
         matchSubpath: false
         enableWebsocket: false
@@ -994,7 +948,7 @@ paths:
       tags:
       - bcs-monitor
       x-bk-apigateway-resource:
-        isPublic: true
+        isPublic: false
         allowApplyPermission: true
         matchSubpath: false
         enableWebsocket: false
@@ -1025,7 +979,7 @@ paths:
       tags:
       - bcs-monitor
       x-bk-apigateway-resource:
-        isPublic: true
+        isPublic: false
         allowApplyPermission: true
         matchSubpath: false
         enableWebsocket: false
@@ -1057,7 +1011,7 @@ paths:
       tags:
       - bcs-monitor
       x-bk-apigateway-resource:
-        isPublic: true
+        isPublic: false
         allowApplyPermission: true
         matchSubpath: false
         enableWebsocket: false
@@ -1088,7 +1042,7 @@ paths:
       tags:
       - bcs-monitor
       x-bk-apigateway-resource:
-        isPublic: true
+        isPublic: false
         allowApplyPermission: true
         matchSubpath: false
         enableWebsocket: false
@@ -1120,7 +1074,7 @@ paths:
       tags:
       - bcs-user-manager
       x-bk-apigateway-resource:
-        isPublic: true
+        isPublic: false
         allowApplyPermission: true
         matchSubpath: false
         enableWebsocket: false
@@ -1165,30 +1119,6 @@ paths:
           appVerifiedRequired: true
           resourcePermissionRequired: true
         descriptionEn: None
-  /{version}/clustermanager/:
-    x-bk-apigateway-method-any:
-      operationId: clustermanager
-      description: bk-bcs后台bcs-cluster-manager模块http接口
-      tags:
-      - bcs-cluster-manager
-      - bcs-service
-      x-bk-apigateway-resource:
-        isPublic: false
-        allowApplyPermission: false
-        matchSubpath: true
-        enableWebsocket: false
-        backend:
-          name: default
-          method: any
-          path: /bcsapi/{version}/clustermanager/
-          matchSubpath: true
-          timeout: 0
-        pluginConfigs: []
-        authConfig:
-          userVerifiedRequired: false
-          appVerifiedRequired: false
-          resourcePermissionRequired: false
-        descriptionEn: None
   /{version}/clustermanager/v1/projects/{projectID}/clusters:
     get:
       operationId: list_project_clusters
@@ -1204,29 +1134,6 @@ paths:
           name: default
           method: get
           path: /bcsapi/{version}/clustermanager/v1/projects/{projectID}/clusters
-          matchSubpath: false
-          timeout: 0
-        pluginConfigs: []
-        authConfig:
-          userVerifiedRequired: false
-          appVerifiedRequired: true
-          resourcePermissionRequired: true
-        descriptionEn: None
-  /{version}/usermanager/v1/tokens/extra/getClusterUserToken:
-    get:
-      operationId: getClusterUserToken
-      description: ''
-      tags:
-      - bcs-user-manager
-      x-bk-apigateway-resource:
-        isPublic: false
-        allowApplyPermission: false
-        matchSubpath: false
-        enableWebsocket: false
-        backend:
-          name: default
-          method: get
-          path: /bcsapi/{version}/usermanager/v1/tokens/extra/getClusterUserToken
           matchSubpath: false
           timeout: 0
         pluginConfigs: []
