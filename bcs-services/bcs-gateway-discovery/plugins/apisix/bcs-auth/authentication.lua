@@ -267,6 +267,7 @@ function APIGWAuthentication:fetch_credential(conf, ctx)
     credential["user_token"]["bk_app_code"] = jwt_obj.payload.app.app_code
     if jwt_obj.payload.user and jwt_obj.payload.user.verified then
         credential["user_token"]["username"] = jwt_obj.payload.user.username
+        credential["user_token"]["tenant_id"] = jwt_obj.payload.user.tenant_id
         redis_key = redis_key .. "," .. jwt_obj.payload.user.username
     end
     if credential.bcs_token then
@@ -362,6 +363,7 @@ function _M:authenticate(conf, ctx)
         end
         ctx.var["bcs_usertype"] = userinfo.usertype
         ctx.var["bcs_username"] = userinfo.username
+        ctx.var["tenant_id"] = userinfo.tenant_id
         ctx.var["bk_app_code"] = userinfo.bk_app_code
         ctx.var["bcs_client_id"] = userinfo.client_id
         ctx.var["bk_login_code"] = userinfo.bk_login_code
