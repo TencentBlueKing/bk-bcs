@@ -296,7 +296,7 @@ paths:
         backend:
           name: default
           method: get
-          path: /bcsapi/v4/clusterresources/v1/projects/{project_code}/metadatas/{id}
+          path: /bcsapi/v4/clusterresources/v1/projects/{project_code}/template/metadatas/{id}
           matchSubpath: false
           timeout: 0
         pluginConfigs: []
