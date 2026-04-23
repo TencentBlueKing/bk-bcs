@@ -67,6 +67,8 @@ rules:
 - apiGroups:
   - apps.clusternet.io
   resources:
+  - globalizations
+  - helmcharts
   - localizations
   - subscriptions
   verbs:

@@ -60,6 +60,7 @@ func NewNativeWorkflowExecutor(client client.Client, registry Registry) *NativeW
 // while Global actions execute sequentially (preserving backward compatibility).
 // NOCC:tosa/fn_length(设计如此)
 func (e *NativeWorkflowExecutor) ExecuteWorkflow(ctx context.Context, workflow *drv1alpha1.DRWorkflow, params map[string]interface{}) (*drv1alpha1.WorkflowExecutionStatus, error) {
+	workflow = prepareWorkflowForExecution(workflow, params)
 	klog.Infof("Executing workflow: %s/%s", workflow.Namespace, workflow.Name)
 
 	status := &drv1alpha1.WorkflowExecutionStatus{
@@ -79,8 +80,130 @@ func (e *NativeWorkflowExecutor) ExecuteWorkflow(ctx context.Context, workflow *
 	return e.executeBatchWorkflow(ctx, workflow, params, status)
 }
 
+func prepareWorkflowForExecution(workflow *drv1alpha1.DRWorkflow, params map[string]interface{}) *drv1alpha1.DRWorkflow {
+	if !shouldInferDeleteActions(params, workflow.Spec.Actions) {
+		return workflow
+	}
+
+	derivedActions := inferDeleteActions(workflow.Spec.Actions)
+	if len(derivedActions) == 0 {
+		return workflow
+	}
+
+	derivedWorkflow := workflow.DeepCopy()
+	derivedWorkflow.Spec.Actions = derivedActions
+	return derivedWorkflow
+}
+
+func shouldInferDeleteActions(params map[string]interface{}, actions []drv1alpha1.Action) bool {
+	if runtimeModeFromParams(params) != "delete" {
+		return false
+	}
+	for i := range actions {
+		if actionDefinesDelete(&actions[i]) {
+			return false
+		}
+	}
+	return true
+}
+
+func runtimeModeFromParams(params map[string]interface{}) string {
+	if params == nil {
+		return ""
+	}
+	if val, ok := params["mode"]; ok && val != nil {
+		return strings.TrimSpace(strings.ToLower(fmt.Sprintf("%v", val)))
+	}
+	if val, ok := params["operation"]; ok && val != nil {
+		return strings.TrimSpace(strings.ToLower(fmt.Sprintf("%v", val)))
+	}
+	return ""
+}
+
+func actionDefinesDelete(action *drv1alpha1.Action) bool {
+	switch action.Type {
+	case drv1alpha1.ActionTypeLocalization:
+		return action.Localization != nil && effectiveLocalizationOperation(action.Localization.Operation) == drv1alpha1.OperationDelete
+	case drv1alpha1.ActionTypeGlobalization:
+		return action.Globalization != nil && effectiveGlobalizationOperation(action.Globalization.Operation) == drv1alpha1.OperationDelete
+	case drv1alpha1.ActionTypeHelmChart:
+		return action.HelmChart != nil && effectiveHelmChartOperation(action.HelmChart.Operation) == drv1alpha1.OperationDelete
+	case drv1alpha1.ActionTypeSubscription:
+		return action.Subscription != nil && action.Subscription.Operation == drv1alpha1.OperationDelete
+	default:
+		return false
+	}
+}
+
+func inferDeleteActions(actions []drv1alpha1.Action) []drv1alpha1.Action {
+	derived := make([]drv1alpha1.Action, 0, len(actions))
+	for i := len(actions) - 1; i >= 0; i-- {
+		deleteAction, ok := deriveDeleteAction(actions[i])
+		if ok {
+			derived = append(derived, deleteAction)
+		}
+	}
+	return derived
+}
+
+func deriveDeleteAction(action drv1alpha1.Action) (drv1alpha1.Action, bool) {
+	derived := action
+	derived.Name = "delete-" + action.Name
+	derived.When = ""
+	derived.DependsOn = nil
+	derived.Rollback = nil
+	derived.WaitReady = false
+
+	switch action.Type {
+	case drv1alpha1.ActionTypeLocalization:
+		if action.Localization == nil {
+			return drv1alpha1.Action{}, false
+		}
+		derived.Localization = &drv1alpha1.LocalizationAction{
+			Operation: drv1alpha1.OperationDelete,
+			Name:      action.Localization.Name,
+			Namespace: action.Localization.Namespace,
+		}
+	case drv1alpha1.ActionTypeGlobalization:
+		if action.Globalization == nil {
+			return drv1alpha1.Action{}, false
+		}
+		derived.Globalization = &drv1alpha1.GlobalizationAction{
+			Operation: drv1alpha1.OperationDelete,
+			Name:      action.Globalization.Name,
+		}
+	case drv1alpha1.ActionTypeHelmChart:
+		if action.HelmChart == nil {
+			return drv1alpha1.Action{}, false
+		}
+		derived.HelmChart = &drv1alpha1.HelmChartAction{
+			Operation: drv1alpha1.OperationDelete,
+			Name:      action.HelmChart.Name,
+			Namespace: action.HelmChart.Namespace,
+		}
+	case drv1alpha1.ActionTypeSubscription:
+		if action.Subscription == nil {
+			return drv1alpha1.Action{}, false
+		}
+		derived.Subscription = &drv1alpha1.SubscriptionAction{
+			Operation: drv1alpha1.OperationDelete,
+			Name:      action.Subscription.Name,
+			Namespace: action.Subscription.Namespace,
+		}
+	default:
+		return drv1alpha1.Action{}, false
+	}
+
+	return derived, true
+}
+
 // executeBatchWorkflow is the original batch-based execution path (no DependsOn).
-func (e *NativeWorkflowExecutor) executeBatchWorkflow(ctx context.Context, workflow *drv1alpha1.DRWorkflow, params map[string]interface{}, status *drv1alpha1.WorkflowExecutionStatus) (*drv1alpha1.WorkflowExecutionStatus, error) {
+func (e *NativeWorkflowExecutor) executeBatchWorkflow(
+	ctx context.Context,
+	workflow *drv1alpha1.DRWorkflow,
+	params map[string]interface{},
+	status *drv1alpha1.WorkflowExecutionStatus,
+) (*drv1alpha1.WorkflowExecutionStatus, error) {
 	batches := groupActionBatches(workflow.Spec.Actions)
 
 	for batchIdx, batch := range batches {
@@ -93,13 +216,15 @@ func (e *NativeWorkflowExecutor) executeBatchWorkflow(ctx context.Context, workf
 			if err != nil {
 				status.Phase = drv1alpha1.PhaseFailed
 				status.Message = fmt.Sprintf("PerCluster batch failed: %v", err)
+				appendCancelledActions(status, batches, batchIdx+1, -1)
 				return e.finalizeWorkflowStatus(status), err
 			}
 		} else {
-			for _, action := range batch.actions {
+			for actionIdx, action := range batch.actions {
 				actionStatus, shouldStop, err := e.executeSingleGlobalAction(ctx, action, params, workflow, status)
 				status.ActionStatuses = append(status.ActionStatuses, actionStatus)
 				if shouldStop {
+					appendCancelledActions(status, batches, batchIdx, actionIdx+1)
 					return e.finalizeWorkflowStatus(status), err
 				}
 			}
@@ -147,6 +272,7 @@ func (e *NativeWorkflowExecutor) executeDAGWorkflow(
 		if layerErr != nil {
 			status.Phase = drv1alpha1.PhaseFailed
 			status.Message = fmt.Sprintf("DAG layer %d failed: %v", layerIdx+1, layerErr)
+			appendCancelledDAGActions(status, layers, layerIdx+1)
 			return e.finalizeWorkflowStatus(status), layerErr
 		}
 	}
@@ -815,6 +941,45 @@ func isFailFast(policy string) bool {
 	return policy == drv1alpha1.FailurePolicyFailFast || policy == ""
 }
 
+// appendCancelledActions appends Canceled statuses for all unexecuted actions remaining
+// in the batch list after a FailFast abort. fromBatch is the first batch to scan;
+// fromAction is the first action index within that batch (-1 means the entire batch).
+func appendCancelledActions(status *drv1alpha1.WorkflowExecutionStatus, batches []actionBatch, fromBatch, fromAction int) {
+	now := metav1.Now()
+	for bIdx := fromBatch; bIdx < len(batches); bIdx++ {
+		startAction := 0
+		if bIdx == fromBatch && fromAction >= 0 {
+			startAction = fromAction
+		}
+		for aIdx := startAction; aIdx < len(batches[bIdx].actions); aIdx++ {
+			status.ActionStatuses = append(status.ActionStatuses, drv1alpha1.ActionStatus{
+				Name:           batches[bIdx].actions[aIdx].Name,
+				Phase:          drv1alpha1.PhaseCancelled,
+				Message:        "canceled due to FailFast",
+				StartTime:      &now,
+				CompletionTime: &now,
+			})
+		}
+	}
+}
+
+// appendCancelledDAGActions appends Canceled statuses for all actions in DAG layers
+// starting from fromLayer (inclusive).
+func appendCancelledDAGActions(status *drv1alpha1.WorkflowExecutionStatus, layers [][]drv1alpha1.Action, fromLayer int) {
+	now := metav1.Now()
+	for lIdx := fromLayer; lIdx < len(layers); lIdx++ {
+		for _, action := range layers[lIdx] {
+			status.ActionStatuses = append(status.ActionStatuses, drv1alpha1.ActionStatus{
+				Name:           action.Name,
+				Phase:          drv1alpha1.PhaseCancelled,
+				Message:        "canceled due to FailFast",
+				StartTime:      &now,
+				CompletionTime: &now,
+			})
+		}
+	}
+}
+
 // updateWorkflowFinalPhase derives workflow final phase from all action phases.
 // Priority: Failed > Running > Pending > Skipped(all) > Succeeded.
 func updateWorkflowFinalPhase(status *drv1alpha1.WorkflowExecutionStatus, namespace, name string) {
@@ -1143,7 +1308,8 @@ func (e *NativeWorkflowExecutor) finalizeWorkflowStatus(status *drv1alpha1.Workf
 	for _, as := range status.ActionStatuses {
 		if as.Phase == drv1alpha1.PhaseSucceeded ||
 			as.Phase == drv1alpha1.PhaseFailed ||
-			as.Phase == drv1alpha1.PhaseSkipped {
+			as.Phase == drv1alpha1.PhaseSkipped ||
+			as.Phase == drv1alpha1.PhaseCancelled {
 			completed++
 		}
 	}
@@ -1270,7 +1436,6 @@ func (e *NativePlanExecutor) ExecutePlan(ctx context.Context, plan *drv1alpha1.D
 	return e.updateExecutionStatus(ctx, execution, nil)
 }
 
-
 // shouldCleanupHistoricalSubscriptions returns true only for Execute(Delete mode).
 // It gates historical subscription cleanup to avoid side-effects in other modes.
 // NOCC:tosa/fn_length(设计如此)
@@ -1283,7 +1448,6 @@ func shouldCleanupHistoricalSubscriptions(execution *drv1alpha1.DRPlanExecution)
 	}
 	return strings.EqualFold(strings.TrimSpace(execution.Spec.Mode), "delete")
 }
-
 
 // cleanupHistoricalSubscriptionOutputs deletes subscriptions referenced by prior executions
 // of the same plan, and returns number of successfully deleted resources.
@@ -1652,7 +1816,11 @@ func (e *NativePlanExecutor) updateStageStatusInExecution(execution *drv1alpha1.
 
 // validateAndFetchRevertTarget validates RevertExecutionRef and returns target execution.
 // Only Execute operations in terminal phases (Succeeded/Failed) are accepted.
-func (e *NativePlanExecutor) validateAndFetchRevertTarget(ctx context.Context, plan *drv1alpha1.DRPlan, execution *drv1alpha1.DRPlanExecution) (*drv1alpha1.DRPlanExecution, error) {
+func (e *NativePlanExecutor) validateAndFetchRevertTarget(
+	ctx context.Context,
+	plan *drv1alpha1.DRPlan,
+	execution *drv1alpha1.DRPlanExecution,
+) (*drv1alpha1.DRPlanExecution, error) {
 	if execution.Spec.RevertExecutionRef == "" {
 		execution.Status.Phase = drv1alpha1.PhaseFailed
 		execution.Status.Message = "revertExecutionRef must be specified for Revert operation"

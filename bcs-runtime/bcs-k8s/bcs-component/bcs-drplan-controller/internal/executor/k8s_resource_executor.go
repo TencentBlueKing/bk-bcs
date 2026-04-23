@@ -131,7 +131,12 @@ func (e *KubernetesResourceActionExecutor) setK8sResourceActionStatusFailed(stat
 }
 
 // Rollback rolls back a KubernetesResource action
-func (e *KubernetesResourceActionExecutor) Rollback(ctx context.Context, action *drv1alpha1.Action, actionStatus *drv1alpha1.ActionStatus, params map[string]interface{}) (*drv1alpha1.ActionStatus, error) {
+func (e *KubernetesResourceActionExecutor) Rollback(
+	ctx context.Context,
+	action *drv1alpha1.Action,
+	actionStatus *drv1alpha1.ActionStatus,
+	params map[string]interface{},
+) (*drv1alpha1.ActionStatus, error) {
 	klog.Infof("Rolling back KubernetesResource action: %s", action.Name)
 
 	// Create rollback status object

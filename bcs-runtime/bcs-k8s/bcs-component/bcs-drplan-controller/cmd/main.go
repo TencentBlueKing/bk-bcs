@@ -73,6 +73,12 @@ func registerActionExecutors(registry executor.Registry, mgr ctrl.Manager) error
 	if err := registry.RegisterExecutor(executor.NewLocalizationActionExecutor(mgr.GetClient())); err != nil {
 		return fmt.Errorf("register Localization executor: %w", err)
 	}
+	if err := registry.RegisterExecutor(executor.NewGlobalizationActionExecutor(mgr.GetClient())); err != nil {
+		return fmt.Errorf("register Globalization executor: %w", err)
+	}
+	if err := registry.RegisterExecutor(executor.NewHelmChartActionExecutor(mgr.GetClient())); err != nil {
+		return fmt.Errorf("register HelmChart executor: %w", err)
+	}
 	if err := registry.RegisterExecutor(executor.NewSubscriptionActionExecutor(mgr.GetClient(), mgr.GetConfig())); err != nil {
 		return fmt.Errorf("register Subscription executor: %w", err)
 	}

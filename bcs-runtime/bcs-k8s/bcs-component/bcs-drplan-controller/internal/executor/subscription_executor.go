@@ -184,9 +184,9 @@ func (e *SubscriptionActionExecutor) Execute(
 
 	status.Phase = drv1alpha1.PhaseSucceeded
 	status.CompletionTime = &metav1.Time{Time: time.Now()}
-	verb := "created"
+	verb := actionVerbCreated
 	if action.Subscription.Operation == "Apply" {
-		verb = "applied"
+		verb = actionVerbApplied
 	}
 	status.Message = fmt.Sprintf("Subscription %s/%s %s successfully", sub.GetNamespace(), sub.GetName(), verb)
 

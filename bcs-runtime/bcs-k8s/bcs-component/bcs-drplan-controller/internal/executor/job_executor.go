@@ -118,7 +118,12 @@ func (e *JobActionExecutor) setJobActionStatusSuccess(status *drv1alpha1.ActionS
 }
 
 // Rollback rolls back a Job action by deleting the job
-func (e *JobActionExecutor) Rollback(ctx context.Context, action *drv1alpha1.Action, actionStatus *drv1alpha1.ActionStatus, params map[string]interface{}) (*drv1alpha1.ActionStatus, error) {
+func (e *JobActionExecutor) Rollback(
+	ctx context.Context,
+	action *drv1alpha1.Action,
+	actionStatus *drv1alpha1.ActionStatus,
+	params map[string]interface{},
+) (*drv1alpha1.ActionStatus, error) {
 	klog.Infof("Rolling back Job action: %s", action.Name)
 
 	// Create rollback status object

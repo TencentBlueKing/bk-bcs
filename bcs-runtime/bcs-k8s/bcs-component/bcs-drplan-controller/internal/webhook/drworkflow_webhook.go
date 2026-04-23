@@ -25,9 +25,11 @@ import (
 	drv1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-drplan-controller/api/v1alpha1"
 )
 
+//nolint:lll // kubebuilder webhook markers must stay on one line
 // NOCC:tosa/linelength(设计如此)
 // +kubebuilder:webhook:path=/mutate-dr-bkbcs-tencent-com-v1alpha1-drworkflow,mutating=true,failurePolicy=fail,sideEffects=None,groups=dr.bkbcs.tencent.com,resources=drworkflows,verbs=create;update,versions=v1alpha1,name=mdrworkflow.kb.io,admissionReviewVersions=v1
 
+//nolint:lll // kubebuilder webhook markers must stay on one line
 // NOCC:tosa/linelength(设计如此)
 // +kubebuilder:webhook:path=/validate-dr-bkbcs-tencent-com-v1alpha1-drworkflow,mutating=false,failurePolicy=fail,sideEffects=None,groups=dr.bkbcs.tencent.com,resources=drworkflows,verbs=create;update;delete,versions=v1alpha1,name=vdrworkflow.kb.io,admissionReviewVersions=v1
 
@@ -51,54 +53,108 @@ func (w *DRWorkflowWebhook) Default(_ context.Context, obj runtime.Object) error
 	workflow := obj.(*drv1alpha1.DRWorkflow)
 	klog.V(4).Infof("Defaulting DRWorkflow: %s/%s", workflow.Namespace, workflow.Name)
 
-	// Set default failure policy
-	if workflow.Spec.FailurePolicy == "" {
-		workflow.Spec.FailurePolicy = "FailFast"
-	}
-
-	// Set default timeout for actions
+	defaultWorkflowFailurePolicy(workflow)
 	for i := range workflow.Spec.Actions {
-		action := &workflow.Spec.Actions[i]
-		if action.Timeout == "" {
-			action.Timeout = "5m"
-		}
-
-		// Set default retry policy
-		if action.RetryPolicy == nil {
-			action.RetryPolicy = &drv1alpha1.RetryPolicy{
-				Limit:             3,
-				Interval:          "5s",
-				BackoffMultiplier: "2.0",
-			}
-		}
-
-		// Set default operation for action types
-		switch action.Type {
-		case "HTTP":
-			if action.HTTP != nil && action.HTTP.Method == "" {
-				action.HTTP.Method = "GET"
-			}
-		case "Localization":
-			if action.Localization != nil {
-				if action.Localization.Operation == "" {
-					action.Localization.Operation = drv1alpha1.OperationCreate
-				}
-				if action.Localization.Spec != nil && action.Localization.Spec.Priority == 0 {
-					action.Localization.Spec.Priority = 500
-				}
-			}
-		case "Subscription":
-			if action.Subscription != nil && action.Subscription.Operation == "" {
-				action.Subscription.Operation = drv1alpha1.OperationCreate
-			}
-		case "KubernetesResource":
-			if action.Resource != nil && action.Resource.Operation == "" {
-				action.Resource.Operation = drv1alpha1.OperationCreate
-			}
-		}
+		defaultWorkflowAction(&workflow.Spec.Actions[i])
 	}
 
 	return nil
+}
+
+func defaultWorkflowFailurePolicy(workflow *drv1alpha1.DRWorkflow) {
+	if workflow.Spec.FailurePolicy == "" {
+		workflow.Spec.FailurePolicy = "FailFast"
+	}
+}
+
+func defaultWorkflowAction(action *drv1alpha1.Action) {
+	defaultActionTimeout(action)
+	defaultActionRetryPolicy(action)
+	defaultActionTypeSpecificFields(action)
+}
+
+func defaultActionTimeout(action *drv1alpha1.Action) {
+	if action.Timeout == "" {
+		action.Timeout = "5m"
+	}
+}
+
+func defaultActionRetryPolicy(action *drv1alpha1.Action) {
+	if action.RetryPolicy != nil {
+		return
+	}
+	action.RetryPolicy = &drv1alpha1.RetryPolicy{
+		Limit:             3,
+		Interval:          "5s",
+		BackoffMultiplier: "2.0",
+	}
+}
+
+func defaultActionTypeSpecificFields(action *drv1alpha1.Action) {
+	switch action.Type {
+	case "HTTP":
+		defaultHTTPAction(action)
+	case "Localization":
+		defaultLocalizationAction(action)
+	case "Globalization":
+		defaultGlobalizationAction(action)
+	case "HelmChart":
+		defaultHelmChartAction(action)
+	case "Subscription":
+		defaultSubscriptionAction(action)
+	case "KubernetesResource":
+		defaultKubernetesResourceAction(action)
+	}
+}
+
+func defaultHTTPAction(action *drv1alpha1.Action) {
+	if action.HTTP != nil && action.HTTP.Method == "" {
+		action.HTTP.Method = "GET"
+	}
+}
+
+func defaultLocalizationAction(action *drv1alpha1.Action) {
+	if action.Localization == nil {
+		return
+	}
+	if action.Localization.Operation == "" {
+		action.Localization.Operation = drv1alpha1.OperationCreate
+	}
+	if action.Localization.Spec != nil && action.Localization.Spec.Priority == 0 {
+		action.Localization.Spec.Priority = 500
+	}
+}
+
+func defaultGlobalizationAction(action *drv1alpha1.Action) {
+	if action.Globalization == nil {
+		return
+	}
+	if action.Globalization.Operation == "" {
+		action.Globalization.Operation = drv1alpha1.OperationCreate
+	}
+	if action.Globalization.Spec != nil &&
+		action.Globalization.Spec.Priority == 0 &&
+		action.Globalization.Operation != drv1alpha1.OperationPatch {
+		action.Globalization.Spec.Priority = 500
+	}
+}
+
+func defaultHelmChartAction(action *drv1alpha1.Action) {
+	if action.HelmChart != nil && action.HelmChart.Operation == "" {
+		action.HelmChart.Operation = drv1alpha1.OperationCreate
+	}
+}
+
+func defaultSubscriptionAction(action *drv1alpha1.Action) {
+	if action.Subscription != nil && action.Subscription.Operation == "" {
+		action.Subscription.Operation = drv1alpha1.OperationCreate
+	}
+}
+
+func defaultKubernetesResourceAction(action *drv1alpha1.Action) {
+	if action.Resource != nil && action.Resource.Operation == "" {
+		action.Resource.Operation = drv1alpha1.OperationCreate
+	}
 }
 
 // ValidateCreate implements webhook.Validator
@@ -249,6 +305,10 @@ func (w *DRWorkflowWebhook) validateAction(action *drv1alpha1.Action, index int)
 		}
 	case "Localization":
 		errors = append(errors, w.validateLocalization(action, index)...)
+	case "Globalization":
+		errors = append(errors, w.validateGlobalization(action, index)...)
+	case "HelmChart":
+		errors = append(errors, w.validateHelmChart(action, index)...)
 	case "Subscription":
 		errors = append(errors, w.validateSubscription(action, index)...)
 	case "KubernetesResource":
@@ -276,12 +336,91 @@ func (w *DRWorkflowWebhook) validateLocalization(action *drv1alpha1.Action, inde
 		errors = append(errors, fmt.Sprintf("action[%d] '%s': Localization.Namespace is required", index, action.Name))
 	}
 
-	// Validate operation-specific requirements
-	if loc.Operation == drv1alpha1.OperationCreate {
-		if loc.Spec == nil {
-			errors = append(errors, fmt.Sprintf("action[%d] '%s': Localization.Spec is required when operation=Create", index, action.Name))
-		} else if loc.Spec.APIVersion == "" || loc.Spec.Kind == "" || loc.Spec.Name == "" {
-			errors = append(errors, fmt.Sprintf("action[%d] '%s': Localization.Spec.Feed (apiVersion, kind, name) is required when operation=Create", index, action.Name))
+	if loc.Operation == drv1alpha1.OperationDelete {
+		return errors
+	}
+	if loc.Spec == nil {
+		errors = append(errors, fmt.Sprintf("action[%d] '%s': Localization.Spec is required when operation=%s", index, action.Name, effectiveOperation(loc.Operation)))
+		return errors
+	}
+	if loc.Operation != drv1alpha1.OperationPatch &&
+		(loc.Spec.APIVersion == "" || loc.Spec.Kind == "" || loc.Spec.Name == "") {
+		errors = append(errors, fmt.Sprintf(
+			"action[%d] '%s': Localization.Spec.Feed (apiVersion, kind, name) is required when operation=%s",
+			index, action.Name, effectiveOperation(loc.Operation),
+		))
+	}
+
+	return errors
+}
+
+// validateGlobalization validates Globalization action
+func (w *DRWorkflowWebhook) validateGlobalization(action *drv1alpha1.Action, index int) []string {
+	var errors []string
+
+	if action.Globalization == nil {
+		return append(errors, fmt.Sprintf("action[%d] '%s': Globalization configuration is required", index, action.Name))
+	}
+
+	glob := action.Globalization
+	if glob.Name == "" {
+		errors = append(errors, fmt.Sprintf("action[%d] '%s': Globalization.Name is required", index, action.Name))
+	}
+
+	if glob.Operation == drv1alpha1.OperationDelete {
+		return errors
+	}
+
+	if glob.Spec == nil {
+		errors = append(errors, fmt.Sprintf("action[%d] '%s': Globalization.Spec is required when operation=%s", index, action.Name, effectiveOperation(glob.Operation)))
+		return errors
+	}
+
+	if glob.Operation != drv1alpha1.OperationPatch &&
+		(glob.Spec.APIVersion == "" || glob.Spec.Kind == "" || glob.Spec.Name == "") {
+		errors = append(errors, fmt.Sprintf(
+			"action[%d] '%s': Globalization.Spec.Feed (apiVersion, kind, name) is required when operation=%s",
+			index, action.Name, effectiveOperation(glob.Operation),
+		))
+	}
+
+	return errors
+}
+
+// validateHelmChart validates HelmChart action
+func (w *DRWorkflowWebhook) validateHelmChart(action *drv1alpha1.Action, index int) []string {
+	var errors []string
+
+	if action.HelmChart == nil {
+		return append(errors, fmt.Sprintf("action[%d] '%s': HelmChart configuration is required", index, action.Name))
+	}
+
+	chart := action.HelmChart
+	if chart.Name == "" {
+		errors = append(errors, fmt.Sprintf("action[%d] '%s': HelmChart.Name is required", index, action.Name))
+	}
+	if chart.Namespace == "" {
+		errors = append(errors, fmt.Sprintf("action[%d] '%s': HelmChart.Namespace is required", index, action.Name))
+	}
+
+	if chart.Operation == drv1alpha1.OperationDelete {
+		return errors
+	}
+
+	if chart.Spec == nil {
+		errors = append(errors, fmt.Sprintf("action[%d] '%s': HelmChart.Spec is required when operation=%s", index, action.Name, effectiveOperation(chart.Operation)))
+		return errors
+	}
+
+	if chart.Operation != drv1alpha1.OperationPatch {
+		if chart.Spec.Repository == "" {
+			errors = append(errors, fmt.Sprintf("action[%d] '%s': HelmChart.Spec.Repo is required when operation=%s", index, action.Name, effectiveOperation(chart.Operation)))
+		}
+		if chart.Spec.Chart == "" {
+			errors = append(errors, fmt.Sprintf("action[%d] '%s': HelmChart.Spec.Chart is required when operation=%s", index, action.Name, effectiveOperation(chart.Operation)))
+		}
+		if chart.Spec.TargetNamespace == "" {
+			errors = append(errors, fmt.Sprintf("action[%d] '%s': HelmChart.Spec.TargetNamespace is required when operation=%s", index, action.Name, effectiveOperation(chart.Operation)))
 		}
 	}
 
@@ -353,6 +492,28 @@ func getRollbackRules() map[string]rollbackRule {
 				return action.Localization != nil && action.Localization.Operation == drv1alpha1.OperationCreate
 			},
 		},
+		"Globalization": {
+			checkRequired: func(action *drv1alpha1.Action) (bool, string) {
+				if action.Globalization != nil && action.Globalization.Operation == drv1alpha1.OperationPatch {
+					return true, fmt.Sprintf("Globalization %s", action.Globalization.Operation)
+				}
+				return false, ""
+			},
+			checkAutomatic: func(action *drv1alpha1.Action) bool {
+				return action.Globalization != nil && action.Globalization.Operation == drv1alpha1.OperationCreate
+			},
+		},
+		"HelmChart": {
+			checkRequired: func(action *drv1alpha1.Action) (bool, string) {
+				if action.HelmChart != nil && action.HelmChart.Operation == drv1alpha1.OperationPatch {
+					return true, fmt.Sprintf("HelmChart %s", action.HelmChart.Operation)
+				}
+				return false, ""
+			},
+			checkAutomatic: func(action *drv1alpha1.Action) bool {
+				return action.HelmChart != nil && action.HelmChart.Operation == drv1alpha1.OperationCreate
+			},
+		},
 		"Subscription": {
 			checkRequired: func(action *drv1alpha1.Action) (bool, string) {
 				if action.Subscription != nil && action.Subscription.Operation == drv1alpha1.OperationPatch {
@@ -412,4 +573,11 @@ func (w *DRWorkflowWebhook) validateRollbackRequirement(action *drv1alpha1.Actio
 	}
 
 	return warnings, errors
+}
+
+func effectiveOperation(operation string) string {
+	if operation == "" {
+		return drv1alpha1.OperationCreate
+	}
+	return operation
 }

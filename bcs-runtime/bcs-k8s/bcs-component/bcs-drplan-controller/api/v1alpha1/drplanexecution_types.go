@@ -90,8 +90,8 @@ type StageStatus struct {
 	// Name is the stage name
 	Name string `json:"name"`
 
-	// Phase is the stage phase: Pending, Running, Succeeded, Failed, Skipped
-	// +kubebuilder:validation:Enum=Pending;Running;Succeeded;Failed;Skipped
+	// Phase is the stage phase: Pending, Running, Succeeded, Failed, Skipped, Canceled
+	// +kubebuilder:validation:Enum=Pending;Running;Succeeded;Failed;Skipped;Canceled
 	Phase string `json:"phase"`
 
 	// Parallel indicates whether this stage executes workflows in parallel
@@ -128,8 +128,8 @@ type WorkflowExecutionStatus struct {
 	// WorkflowRef is the workflow reference
 	WorkflowRef ObjectReference `json:"workflowRef"`
 
-	// Phase is the workflow phase: Pending, Running, Succeeded, Failed, Skipped
-	// +kubebuilder:validation:Enum=Pending;Running;Succeeded;Failed;Skipped
+	// Phase is the workflow phase: Pending, Running, Succeeded, Failed, Skipped, Canceled
+	// +kubebuilder:validation:Enum=Pending;Running;Succeeded;Failed;Skipped;Canceled
 	Phase string `json:"phase"`
 
 	// StartTime is the start time

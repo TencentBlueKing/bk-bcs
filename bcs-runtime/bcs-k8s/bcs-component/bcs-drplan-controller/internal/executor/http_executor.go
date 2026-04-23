@@ -216,7 +216,12 @@ func (e *HTTPActionExecutor) executeHTTPRequest(ctx context.Context, action *drv
 }
 
 // Rollback rolls back an HTTP action (no-op for HTTP unless custom rollback defined)
-func (e *HTTPActionExecutor) Rollback(ctx context.Context, action *drv1alpha1.Action, actionStatus *drv1alpha1.ActionStatus, params map[string]interface{}) (*drv1alpha1.ActionStatus, error) {
+func (e *HTTPActionExecutor) Rollback(
+	ctx context.Context,
+	action *drv1alpha1.Action,
+	actionStatus *drv1alpha1.ActionStatus,
+	params map[string]interface{},
+) (*drv1alpha1.ActionStatus, error) {
 	klog.Infof("HTTP action %s rollback", action.Name)
 
 	// Create rollback status object

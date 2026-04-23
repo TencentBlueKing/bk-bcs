@@ -18,6 +18,7 @@ import (
 	"reflect"
 	"regexp"
 
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/klog/v2"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -27,6 +28,7 @@ import (
 	drv1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-drplan-controller/api/v1alpha1"
 )
 
+//nolint:lll // kubebuilder webhook markers must stay on one line
 // NOCC:tosa/linelength(设计如此)
 // +kubebuilder:webhook:path=/validate-dr-bkbcs-tencent-com-v1alpha1-drplanexecution,mutating=false,failurePolicy=fail,sideEffects=None,groups=dr.bkbcs.tencent.com,resources=drplanexecutions,verbs=create;update,versions=v1alpha1,name=vdrplanexecution.kb.io,admissionReviewVersions=v1
 
@@ -141,8 +143,10 @@ func (w *DRPlanExecutionWebhook) validateExecution(ctx context.Context, executio
 				}
 				// Validate target execution references the same plan
 				if targetExecution.Spec.PlanRef != execution.Spec.PlanRef {
-					// NOCC:tosa/linelength (设计如此)
-					errors = append(errors, fmt.Sprintf("referenced execution %s must belong to the same plan (expected %s, got %s)", execution.Spec.RevertExecutionRef, execution.Spec.PlanRef, targetExecution.Spec.PlanRef))
+					errors = append(errors, fmt.Sprintf(
+						"referenced execution %s must belong to the same plan (expected %s, got %s)",
+						execution.Spec.RevertExecutionRef, execution.Spec.PlanRef, targetExecution.Spec.PlanRef,
+					))
 				}
 			}
 		}
@@ -153,15 +157,37 @@ func (w *DRPlanExecutionWebhook) validateExecution(ctx context.Context, executio
 		errors = append(errors, paramErrs...)
 	}
 
-	// Check for concurrent executions
+	// Check for concurrent executions.
+	// currentExecution may be transiently stale if the previous execution has already
+	// reached a terminal phase but plan status cleanup has not completed yet.
 	if plan.Status.CurrentExecution != nil {
-		errors = append(errors, fmt.Sprintf("plan %s already has a running execution: %s/%s",
-			execution.Spec.PlanRef,
-			plan.Status.CurrentExecution.Namespace,
-			plan.Status.CurrentExecution.Name))
+		currentExecNamespace := plan.Status.CurrentExecution.Namespace
+		if currentExecNamespace == "" {
+			currentExecNamespace = execution.Namespace
+		}
+		currentExec := &drv1alpha1.DRPlanExecution{}
+		currentExecKey := client.ObjectKey{
+			Name:      plan.Status.CurrentExecution.Name,
+			Namespace: currentExecNamespace,
+		}
+		if err := w.Client.Get(ctx, currentExecKey, currentExec); err != nil {
+			if !apierrors.IsNotFound(err) {
+				errors = append(errors, fmt.Sprintf("failed to get current execution %s/%s: %v",
+					currentExecNamespace, plan.Status.CurrentExecution.Name, err))
+			}
+		} else if !isExecutionTerminal(currentExec.Status.Phase) {
+			errors = append(errors, fmt.Sprintf("plan %s already has a running execution: %s/%s",
+				execution.Spec.PlanRef, currentExecNamespace, currentExec.Name))
+		}
 	}
 
 	return errors
+}
+
+func isExecutionTerminal(phase string) bool {
+	return phase == drv1alpha1.PhaseSucceeded ||
+		phase == drv1alpha1.PhaseFailed ||
+		phase == drv1alpha1.PhaseCancelled
 }
 
 var paramNameRegex = regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9_-]*$`)

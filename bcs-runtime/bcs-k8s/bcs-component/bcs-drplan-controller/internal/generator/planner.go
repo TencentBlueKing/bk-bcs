@@ -27,7 +27,26 @@ const (
 	mainActionName = "create-subscription"
 	// deleteActionName is the canonical action that removes chart main resources.
 	deleteActionName = "delete-subscription"
+	// executeStageName is used when rendered YAML contains only main resources.
+	executeStageName = "execute"
+	// installStageName keeps hook-aware workflows aligned with install semantics.
+	installStageName = "install"
 )
+
+var clusterScopedKinds = map[string]struct{}{
+	"APIService":                     {},
+	"ClusterRole":                    {},
+	"ClusterRoleBinding":             {},
+	"CustomResourceDefinition":       {},
+	"MutatingWebhookConfiguration":   {},
+	"Namespace":                      {},
+	"Node":                           {},
+	"PersistentVolume":               {},
+	"PriorityClass":                  {},
+	"RuntimeClass":                   {},
+	"StorageClass":                   {},
+	"ValidatingWebhookConfiguration": {},
+}
 
 // GeneratePlan creates DRPlan, DRWorkflow, and DRPlanExecution YAML from a ChartAnalysis.
 func GeneratePlan(analysis ChartAnalysis, config GenerateConfig) (*GenerateResult, error) {
@@ -56,17 +75,25 @@ func GeneratePlan(analysis ChartAnalysis, config GenerateConfig) (*GenerateResul
 }
 
 // buildStages emits a single logical stage when there is anything to execute.
-// Keeping one stage preserves ordering guarantees while still allowing per-action DAG.
+// Without hooks we simplify to a single execute stage; hook-aware mode keeps install naming.
 func buildStages(analysis ChartAnalysis, config GenerateConfig) []map[string]interface{} {
 	if !hasAnyActions(analysis) {
 		return nil
 	}
+	stageName := installStageName
+	description := "Unified workflow for install/upgrade hooks and main resources"
+	workflowName := fmt.Sprintf("%s-install", config.ReleaseName)
+	if shouldUseSimplifiedWorkflow(analysis) {
+		stageName = executeStageName
+		description = "Simplified workflow for main resources without hooks"
+		workflowName = fmt.Sprintf("%s-execute", config.ReleaseName)
+	}
 	return []map[string]interface{}{
 		{
-			"name":        "install",
-			"description": "Unified workflow for install/upgrade hooks and main resources",
+			"name":        stageName,
+			"description": description,
 			"workflows": []map[string]interface{}{
-				{"workflowRef": map[string]interface{}{"name": fmt.Sprintf("%s-install", config.ReleaseName)}},
+				{"workflowRef": map[string]interface{}{"name": workflowName}},
 			},
 		},
 	}
@@ -93,19 +120,24 @@ func buildPlanYAML(config GenerateConfig, stages []map[string]interface{}) map[s
 	}
 }
 
-// generateWorkflows generates the unified install workflow YAML.
-// The planner currently emits one workflow to cover install/upgrade/delete/rollback hooks.
+// generateWorkflows emits exactly one workflow.
+// Main-resource-only charts use a simplified execute workflow; hook-aware charts keep the unified install workflow.
 func generateWorkflows(analysis ChartAnalysis, config GenerateConfig, result *GenerateResult) error {
 	if !hasAnyActions(analysis) {
 		return nil
 	}
 
+	filename := "workflow-install.yaml"
 	wf := buildUnifiedWorkflow(analysis, config)
+	if shouldUseSimplifiedWorkflow(analysis) {
+		filename = "workflow-execute.yaml"
+		wf = buildSimplifiedWorkflow(analysis, config)
+	}
 	wfBytes, err := sigyaml.Marshal(wf)
 	if err != nil {
-		return fmt.Errorf("marshaling install workflow: %w", err)
+		return fmt.Errorf("marshaling workflow %s: %w", filename, err)
 	}
-	result.WorkflowYAMLs["workflow-install.yaml"] = wfBytes
+	result.WorkflowYAMLs[filename] = wfBytes
 
 	return nil
 }
@@ -122,7 +154,7 @@ func buildUnifiedWorkflow(analysis ChartAnalysis, config GenerateConfig) map[str
 	createDeps = appendUnique(createDeps, upgradePreDeps...)
 
 	if len(analysis.MainResources) > 0 {
-		mainAction := buildInstallAction(analysis.MainResources, config)
+		mainAction := buildMainAction(analysis.MainResources, config, `mode == "install" || mode == "upgrade"`)
 		if len(createDeps) > 0 {
 			mainAction["dependsOn"] = createDeps
 		}
@@ -157,7 +189,32 @@ func buildUnifiedWorkflow(analysis ChartAnalysis, config GenerateConfig) map[str
 		"apiVersion": "dr.bkbcs.tencent.com/v1alpha1",
 		"kind":       "DRWorkflow",
 		"metadata": map[string]interface{}{
-			"name":      fmt.Sprintf("%s-install", config.ReleaseName),
+			"name":      fmt.Sprintf("%s-%s", config.ReleaseName, installStageName),
+			"namespace": config.Namespace,
+		},
+		"spec": map[string]interface{}{
+			"failurePolicy": "FailFast",
+			"parameters": []map[string]interface{}{
+				{"name": "feedNamespace", "type": "string", "default": config.Namespace},
+			},
+			"actions": actions,
+		},
+	}
+}
+
+// buildSimplifiedWorkflow assembles a single Apply action for main resources.
+// Delete is handled later by workflow executor inference in mode=Delete.
+func buildSimplifiedWorkflow(analysis ChartAnalysis, config GenerateConfig) map[string]interface{} {
+	actions := make([]map[string]interface{}, 0, 1)
+	if len(analysis.MainResources) > 0 {
+		actions = append(actions, buildMainAction(analysis.MainResources, config, ""))
+	}
+
+	return map[string]interface{}{
+		"apiVersion": "dr.bkbcs.tencent.com/v1alpha1",
+		"kind":       "DRWorkflow",
+		"metadata": map[string]interface{}{
+			"name":      fmt.Sprintf("%s-%s", config.ReleaseName, executeStageName),
 			"namespace": config.Namespace,
 		},
 		"spec": map[string]interface{}{
@@ -215,9 +272,9 @@ func whenForHookType(hookType string) string {
 	}
 }
 
-// buildInstallAction creates the primary Subscription action for install/upgrade modes.
-// Main resources are converted to feeds and applied through Subscription operation=Apply.
-func buildInstallAction(resources []MainResource, config GenerateConfig) map[string]interface{} {
+// buildMainAction creates the primary Subscription action for main resources.
+// when is optional: hook-free simplified workflows omit it, unified workflows keep install/upgrade routing.
+func buildMainAction(resources []MainResource, config GenerateConfig, when string) map[string]interface{} {
 	var feeds []map[string]interface{}
 	for _, res := range resources {
 		feed := map[string]interface{}{
@@ -225,17 +282,16 @@ func buildInstallAction(resources []MainResource, config GenerateConfig) map[str
 			"kind":       res.Resource.GetKind(),
 			"name":       res.Resource.GetName(),
 		}
-		if res.Resource.GetNamespace() != "" {
+		if shouldIncludeFeedNamespace(res.Resource.GetKind()) {
 			feed["namespace"] = feedNamespaceRef
 		}
 		feeds = append(feeds, feed)
 	}
 
-	return map[string]interface{}{
+	action := map[string]interface{}{
 		"name":    mainActionName,
 		"type":    "Subscription",
 		"timeout": "5m",
-		"when":    `mode == "install" || mode == "upgrade"`,
 		"subscription": map[string]interface{}{
 			"operation": "Apply",
 			"name":      fmt.Sprintf("%s-subscription", config.ReleaseName),
@@ -249,6 +305,10 @@ func buildInstallAction(resources []MainResource, config GenerateConfig) map[str
 			},
 		},
 	}
+	if when != "" {
+		action["when"] = when
+	}
+	return action
 }
 
 // buildDeleteAction creates the main-resource cleanup action for delete mode.
@@ -300,7 +360,7 @@ func buildHookAction(ph plannedHook) map[string]interface{} {
 		"kind":       res.GetKind(),
 		"name":       res.GetName(),
 	}
-	if res.GetNamespace() != "" {
+	if shouldIncludeFeedNamespace(res.GetKind()) {
 		feed["namespace"] = feedNamespaceRef
 	}
 	action := map[string]interface{}{
@@ -423,12 +483,25 @@ func hasAnyActions(analysis ChartAnalysis) bool {
 	if len(analysis.MainResources) > 0 {
 		return true
 	}
+	return hasAnyHooks(analysis)
+}
+
+func hasAnyHooks(analysis ChartAnalysis) bool {
 	for _, hooks := range analysis.Hooks {
 		if len(hooks) > 0 {
 			return true
 		}
 	}
 	return false
+}
+
+func shouldUseSimplifiedWorkflow(analysis ChartAnalysis) bool {
+	return len(analysis.MainResources) > 0 && !hasAnyHooks(analysis)
+}
+
+func shouldIncludeFeedNamespace(kind string) bool {
+	_, isClusterScoped := clusterScopedKinds[kind]
+	return !isClusterScoped
 }
 
 // generateExecutionSamples emits example DRPlanExecution manifests for each mode.

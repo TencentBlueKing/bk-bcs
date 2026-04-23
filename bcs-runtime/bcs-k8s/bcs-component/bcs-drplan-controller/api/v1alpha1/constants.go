@@ -89,6 +89,12 @@ const (
 	// ActionTypeLocalization represents a Clusternet Localization action
 	ActionTypeLocalization = "Localization"
 
+	// ActionTypeGlobalization represents a Clusternet Globalization action
+	ActionTypeGlobalization = "Globalization"
+
+	// ActionTypeHelmChart represents a Clusternet HelmChart action
+	ActionTypeHelmChart = "HelmChart"
+
 	// ActionTypeSubscription represents a Clusternet Subscription action
 	ActionTypeSubscription = "Subscription"
 

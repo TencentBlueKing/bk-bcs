@@ -94,6 +94,46 @@ func (r *recordingActionExecutor) Type() string {
 	return r.actionType
 }
 
+type orderedActionExecutor struct {
+	actionType string
+	calls      *[]string
+}
+
+func (r *orderedActionExecutor) Execute(_ context.Context, action *drv1alpha1.Action, _ map[string]interface{}) (*drv1alpha1.ActionStatus, error) {
+	*r.calls = append(*r.calls, action.Type+":"+extractActionOperation(action))
+	return &drv1alpha1.ActionStatus{Name: action.Name, Phase: drv1alpha1.PhaseSucceeded}, nil
+}
+
+func (r *orderedActionExecutor) Rollback(_ context.Context, action *drv1alpha1.Action, _ *drv1alpha1.ActionStatus, _ map[string]interface{}) (*drv1alpha1.ActionStatus, error) {
+	return &drv1alpha1.ActionStatus{Name: action.Name, Phase: drv1alpha1.PhaseSucceeded}, nil
+}
+
+func (r *orderedActionExecutor) Type() string {
+	return r.actionType
+}
+
+func extractActionOperation(action *drv1alpha1.Action) string {
+	switch action.Type {
+	case drv1alpha1.ActionTypeHelmChart:
+		if action.HelmChart != nil {
+			return action.HelmChart.Operation
+		}
+	case drv1alpha1.ActionTypeGlobalization:
+		if action.Globalization != nil {
+			return action.Globalization.Operation
+		}
+	case drv1alpha1.ActionTypeLocalization:
+		if action.Localization != nil {
+			return action.Localization.Operation
+		}
+	case drv1alpha1.ActionTypeSubscription:
+		if action.Subscription != nil {
+			return action.Subscription.Operation
+		}
+	}
+	return ""
+}
+
 type recordingWorkflowExecutor struct {
 	revertedWorkflows []string
 }
@@ -360,6 +400,83 @@ func TestExecutePlan_DeleteModeCleansHistoricalSubscriptionOutputs(t *testing.T)
 		if !apierrors.IsNotFound(err) {
 			t.Fatalf("expected subscription %s to be deleted, got err=%v", name, err)
 		}
+	}
+}
+
+func TestExecuteWorkflow_DeleteModeInfersReverseDeleteActions(t *testing.T) {
+	registry := NewExecutorRegistry()
+	var calls []string
+	for _, actionType := range []string{
+		drv1alpha1.ActionTypeHelmChart,
+		drv1alpha1.ActionTypeGlobalization,
+		drv1alpha1.ActionTypeLocalization,
+		drv1alpha1.ActionTypeSubscription,
+	} {
+		if err := registry.RegisterExecutor(&orderedActionExecutor{actionType: actionType, calls: &calls}); err != nil {
+			t.Fatalf("register executor for %s: %v", actionType, err)
+		}
+	}
+
+	workflow := &drv1alpha1.DRWorkflow{
+		ObjectMeta: metav1.ObjectMeta{Name: "demo-execute", Namespace: "default"},
+		Spec: drv1alpha1.DRWorkflowSpec{
+			Actions: []drv1alpha1.Action{
+				{
+					Name: "apply-helmchart",
+					Type: drv1alpha1.ActionTypeHelmChart,
+					HelmChart: &drv1alpha1.HelmChartAction{
+						Operation: drv1alpha1.OperationApply,
+						Name:      "demo-chart",
+						Namespace: "default",
+					},
+				},
+				{
+					Name: "apply-globalization",
+					Type: drv1alpha1.ActionTypeGlobalization,
+					Globalization: &drv1alpha1.GlobalizationAction{
+						Operation: drv1alpha1.OperationApply,
+						Name:      "demo-globalization",
+					},
+				},
+				{
+					Name: "apply-localization",
+					Type: drv1alpha1.ActionTypeLocalization,
+					Localization: &drv1alpha1.LocalizationAction{
+						Operation: drv1alpha1.OperationApply,
+						Name:      "demo-localization",
+						Namespace: "cluster-a",
+					},
+				},
+				{
+					Name: "apply-subscription",
+					Type: drv1alpha1.ActionTypeSubscription,
+					Subscription: &drv1alpha1.SubscriptionAction{
+						Operation: drv1alpha1.OperationApply,
+						Name:      "demo-subscription",
+						Namespace: "default",
+					},
+				},
+			},
+		},
+	}
+
+	executor := NewNativeWorkflowExecutor(nil, registry)
+	status, err := executor.ExecuteWorkflow(context.Background(), workflow, map[string]interface{}{"mode": "delete"})
+	if err != nil {
+		t.Fatalf("ExecuteWorkflow failed: %v", err)
+	}
+	if status.Phase != drv1alpha1.PhaseSucceeded {
+		t.Fatalf("expected Succeeded, got %s: %s", status.Phase, status.Message)
+	}
+
+	expected := []string{
+		drv1alpha1.ActionTypeSubscription + ":" + drv1alpha1.OperationDelete,
+		drv1alpha1.ActionTypeLocalization + ":" + drv1alpha1.OperationDelete,
+		drv1alpha1.ActionTypeGlobalization + ":" + drv1alpha1.OperationDelete,
+		drv1alpha1.ActionTypeHelmChart + ":" + drv1alpha1.OperationDelete,
+	}
+	if strings.Join(calls, ",") != strings.Join(expected, ",") {
+		t.Fatalf("unexpected delete inference order: got %v want %v", calls, expected)
 	}
 }
 

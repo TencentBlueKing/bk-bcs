@@ -1,0 +1,182 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1360 920" width="1360" height="920">
+  <defs>
+    <marker id="arrowA" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#7c3aed"/>
+    </marker>
+    <marker id="arrowB" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#10b981"/>
+    </marker>
+    <marker id="arrowC" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#2563eb"/>
+    </marker>
+    <marker id="arrowE" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#f97316"/>
+    </marker>
+    <marker id="arrowF" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#7c3aed"/>
+    </marker>
+    <marker id="arrowG" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#ef4444"/>
+    </marker>
+    <marker id="arrowH" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#6b7280"/>
+    </marker>
+    <filter id="shadowSoft" x="-20%" y="-20%" width="140%" height="160%">
+      <feDropShadow dx="0" dy="3" stdDeviation="6" flood-color="#0f172a" flood-opacity="0.12"/>
+    </filter>
+    <filter id="shadowGlass" x="-20%" y="-20%" width="140%" height="160%">
+      <feDropShadow dx="0" dy="10" stdDeviation="16" flood-color="#020617" flood-opacity="0.28"/>
+    </filter>
+    <style>
+    text { font-family: 'Helvetica Neue', Helvetica, Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif; }
+    .title { font-size: 30px; font-weight: 700; fill: #111827; }
+    .subtitle { font-size: 14px; font-weight: 500; fill: #6b7280; }
+    .section { font-size: 13px; font-weight: 700; fill: #2563eb; letter-spacing: 1.4px; }
+    .section-sub { font-size: 12px; font-weight: 500; fill: #94a3b8; }
+    .node-title { font-size: 18px; font-weight: 700; fill: #111827; }
+    .node-sub { font-size: 12px; font-weight: 500; fill: #6b7280; }
+    .node-type { font-size: 12px; font-weight: 700; fill: #9ca3af; letter-spacing: 0.08em; }
+    .arrow-label { font-size: 12px; font-weight: 600; fill: #6b7280; }
+    .legend { font-size: 12px; font-weight: 500; fill: #6b7280; }
+    .footnote { font-size: 12px; font-weight: 500; fill: #94a3b8; }
+    </style>
+  </defs>
+  <rect width="1360.0" height="920.0" fill="#ffffff"/>
+  <text x="680.0" y="56" text-anchor="middle" class="title">DRPlan + Clusternet + Istio 三集群预案与流量切换架构</text>
+  <text x="680.0" y="82" text-anchor="middle" class="subtitle">两个双活集群承接业务流量，第三个集群作为冷备集群在故障时接管</text>
+  <rect x="40.0" y="104.0" width="1280.0" height="144.0" rx="16.0" fill="none" stroke="#cbd5e1" stroke-width="1.4" stroke-dasharray="6 5"/>
+  <text x="58.0" y="128.0" class="section">01 // 控制平面</text>
+  <text x="58.0" y="148.0" class="section-sub">预案定义、执行触发与编排控制</text>
+  <rect x="40.0" y="284.0" width="1280.0" height="116.0" rx="16.0" fill="none" stroke="#cbd5e1" stroke-width="1.4" stroke-dasharray="6 5"/>
+  <text x="58.0" y="308.0" class="section">02 // 联邦下发与流量入口</text>
+  <text x="58.0" y="328.0" class="section-sub">统一下发资源，并承接南北向流量入口</text>
+  <rect x="40.0" y="430.0" width="1280.0" height="304.0" rx="16.0" fill="none" stroke="#cbd5e1" stroke-width="1.4" stroke-dasharray="6 5"/>
+  <text x="58.0" y="454.0" class="section">03 // 受管集群</text>
+  <text x="58.0" y="474.0" class="section-sub">集群 A 与集群 B 双活，集群 C 为冷备</text>
+  <rect x="60.0" y="484.0" width="392.0" height="200.0" rx="16.0" fill="#f8fbff" stroke="#dbeafe" stroke-width="1.4" stroke-dasharray="6 5"/>
+  <text x="78.0" y="508.0" class="section">双活集群 A</text>
+  <text x="78.0" y="528.0" class="section-sub">默认承接部分业务流量</text>
+  <rect x="484.0" y="484.0" width="392.0" height="200.0" rx="16.0" fill="#f8fdf8" stroke="#dcfce7" stroke-width="1.4" stroke-dasharray="6 5"/>
+  <text x="502.0" y="508.0" class="section">双活集群 B</text>
+  <text x="502.0" y="528.0" class="section-sub">默认承接部分业务流量</text>
+  <rect x="908.0" y="484.0" width="392.0" height="200.0" rx="16.0" fill="#fafafa" stroke="#e5e7eb" stroke-width="1.4" stroke-dasharray="6 5"/>
+  <text x="926.0" y="508.0" class="section">冷备集群 C</text>
+  <text x="926.0" y="528.0" class="section-sub">默认不承接流量，故障时接管</text>
+  <path d="M 242.0,173.0 L 283.6,173.0 L 283.6,174.0 L 304.0,174.0" fill="none" stroke="#7c3aed" stroke-width="2.4" marker-end="url(#arrowA)"/>
+  <path d="M 502.0,174.0 L 572.0,174.0" fill="none" stroke="#7c3aed" stroke-width="2.4" marker-end="url(#arrowA)"/>
+  <path d="M 924.0,174.0 L 816.0,174.0" fill="none" stroke="#7c3aed" stroke-width="2.4" marker-end="url(#arrowA)"/>
+  <path d="M 694.0,214.0 L 694.0,234.4 L 490.0,234.4 L 490.0,306.0" fill="none" stroke="#7c3aed" stroke-width="2.4" marker-end="url(#arrowA)"/>
+  <path d="M 816.0,174.0 L 836.0,220.0 L 1180.0,220.0 L 1180.0,174.0 L 924.0,174.0" fill="none" stroke="#ef4444" stroke-width="2.4" marker-end="url(#arrowG)" stroke-dasharray="6,4"/>
+  <path d="M 242.0,342.0 L 782.0,342.0" fill="none" stroke="#2563eb" stroke-width="2.4" marker-end="url(#arrowC)"/>
+  <path d="M 490.0,378.0 L 490.0,398.4 L 174.0,398.4 L 174.0,546.0" fill="none" stroke="#10b981" stroke-width="2.4" marker-end="url(#arrowB)" stroke-dasharray="6,4"/>
+  <path d="M 490.0,378.0 L 490.0,398.4 L 347.0,398.4 L 347.0,554.0" fill="none" stroke="#10b981" stroke-width="2.4" marker-end="url(#arrowB)" stroke-dasharray="6,4"/>
+  <path d="M 490.0,378.0 L 490.0,398.4 L 598.0,398.4 L 598.0,546.0" fill="none" stroke="#10b981" stroke-width="2.4" marker-end="url(#arrowB)" stroke-dasharray="6,4"/>
+  <path d="M 490.0,378.0 L 490.0,398.4 L 771.0,398.4 L 771.0,554.0" fill="none" stroke="#10b981" stroke-width="2.4" marker-end="url(#arrowB)" stroke-dasharray="6,4"/>
+  <path d="M 490.0,378.0 L 490.0,398.4 L 1022.0,398.4 L 1022.0,546.0" fill="none" stroke="#10b981" stroke-width="2.4" marker-end="url(#arrowB)" stroke-dasharray="6,4"/>
+  <path d="M 490.0,378.0 L 490.0,398.4 L 1195.0,398.4 L 1195.0,554.0" fill="none" stroke="#10b981" stroke-width="2.4" marker-end="url(#arrowB)" stroke-dasharray="6,4"/>
+  <path d="M 919.0,380.0 L 919.0,400.4 L 174.0,400.4 L 174.0,546.0" fill="none" stroke="#f97316" stroke-width="2.4" marker-end="url(#arrowE)"/>
+  <path d="M 919.0,380.0 L 919.0,400.4 L 598.0,400.4 L 598.0,546.0" fill="none" stroke="#f97316" stroke-width="2.4" marker-end="url(#arrowE)"/>
+  <path d="M 919.0,380.0 L 919.0,400.4 L 1022.0,400.4 L 1022.0,546.0" fill="none" stroke="#f97316" stroke-width="2.4" marker-end="url(#arrowE)" stroke-dasharray="6,4"/>
+  <path d="M 252.0,584.0 L 257.6,584.0 L 257.6,585.0 L 278.0,585.0" fill="none" stroke="#2563eb" stroke-width="2.4" marker-end="url(#arrowC)"/>
+  <path d="M 676.0,584.0 L 681.6,584.0 L 681.6,585.0 L 702.0,585.0" fill="none" stroke="#2563eb" stroke-width="2.4" marker-end="url(#arrowC)"/>
+  <path d="M 1100.0,584.0 L 1105.6,584.0 L 1105.6,585.0 L 1126.0,585.0" fill="none" stroke="#2563eb" stroke-width="2.4" marker-end="url(#arrowC)" stroke-dasharray="6,4"/>
+  <rect x="86.0" y="136.0" width="156.0" height="74.0" rx="10.0" fill="#ffffff" stroke="#93c5fd" stroke-width="2.0"/>
+  <circle cx="112.0" cy="173.0" r="18" fill="#eff6ff" stroke="#2563eb" stroke-width="1.6"/>
+  <circle cx="112.0" cy="167.0" r="5" fill="#2563eb"/>
+  <path d="M 102.0 184.0 Q 112.0 175.0 122.0 184.0" fill="none" stroke="#2563eb" stroke-width="2"/>
+  <text x="140.0" y="154.0" text-anchor="middle" class="node-type">用户</text>
+  <text x="150.0" y="189.0" text-anchor="start" class="node-title">平台运维</text>
+  <rect x="304.0" y="142.0" width="198.0" height="64.0" rx="10.0" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.8"/>
+  <text x="403.0" y="160.0" text-anchor="middle" class="node-type">预案定义</text>
+  <text x="403.0" y="180.0" text-anchor="middle" class="node-title">DRPlan + 工作流</text>
+  <rect x="572.0" y="134.0" width="244.0" height="80.0" rx="10.0" fill="#eff6ff" stroke="#2563eb" stroke-width="2.0" filter="url(#shadowSoft)"/>
+  <rect x="578.0" y="140.0" width="232.0" height="68.0" rx="7.0" fill="none" stroke="#2563eb" stroke-width="1.2" opacity="0.65"/>
+  <text x="694.0" y="152.0" text-anchor="middle" class="node-type">编排执行</text>
+  <text x="694.0" y="180.0" text-anchor="middle" class="node-title">drplan-controller</text>
+  <rect x="924.0" y="142.0" width="206.0" height="64.0" rx="10.0" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.8"/>
+  <text x="1027.0" y="160.0" text-anchor="middle" class="node-type">执行 / 回退</text>
+  <text x="1027.0" y="180.0" text-anchor="middle" class="node-title">DRPlanExecution</text>
+  <rect x="86.0" y="316.0" width="156.0" height="52.0" rx="10.0" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.8"/>
+  <text x="164.0" y="334.0" text-anchor="middle" class="node-type">入口</text>
+  <text x="164.0" y="348.0" text-anchor="middle" class="node-title">客户端流量</text>
+  <rect x="360.0" y="306.0" width="260.0" height="72.0" rx="10.0" fill="#f8fafc" stroke="#64748b" stroke-width="2.0" filter="url(#shadowSoft)"/>
+  <rect x="366.0" y="312.0" width="248.0" height="60.0" rx="7.0" fill="none" stroke="#64748b" stroke-width="1.2" opacity="0.65"/>
+  <text x="490.0" y="324.0" text-anchor="middle" class="node-type">联邦分发</text>
+  <text x="490.0" y="348.0" text-anchor="middle" class="node-title">Clusternet 中枢</text>
+  <rect x="782.0" y="304.0" width="274.0" height="76.0" rx="10.0" fill="#fff7ed" stroke="#f97316" stroke-width="2.0" filter="url(#shadowSoft)"/>
+  <rect x="788.0" y="310.0" width="262.0" height="64.0" rx="7.0" fill="none" stroke="#f97316" stroke-width="1.2" opacity="0.65"/>
+  <text x="919.0" y="322.0" text-anchor="middle" class="node-type">流量入口</text>
+  <text x="919.0" y="348.0" text-anchor="middle" class="node-title">Istio 网关 / DNS</text>
+  <rect x="96.0" y="546.0" width="156.0" height="76.0" rx="10.0" fill="#eff6ff" stroke="#2563eb" stroke-width="2.0" filter="url(#shadowSoft)"/>
+  <rect x="102.0" y="552.0" width="144.0" height="64.0" rx="7.0" fill="none" stroke="#2563eb" stroke-width="1.2" opacity="0.65"/>
+  <text x="174.0" y="564.0" text-anchor="middle" class="node-type">集群 A 网格</text>
+  <text x="174.0" y="590.0" text-anchor="middle" class="node-title">Istio 流量规则</text>
+  <text x="174.0" y="612.0" text-anchor="middle" class="node-sub">虚拟服务 + 目标规则</text>
+  <rect x="278.0" y="554.0" width="138.0" height="62.0" rx="10.0" fill="#ffffff" stroke="#93c5fd" stroke-width="1.8"/>
+  <text x="347.0" y="572.0" text-anchor="middle" class="node-type">工作负载</text>
+  <text x="347.0" y="591.0" text-anchor="middle" class="node-title">服务 A</text>
+  <rect x="520.0" y="546.0" width="156.0" height="76.0" rx="10.0" fill="#f0fdf4" stroke="#16a34a" stroke-width="2.0" filter="url(#shadowSoft)"/>
+  <rect x="526.0" y="552.0" width="144.0" height="64.0" rx="7.0" fill="none" stroke="#16a34a" stroke-width="1.2" opacity="0.65"/>
+  <text x="598.0" y="564.0" text-anchor="middle" class="node-type">集群 B 网格</text>
+  <text x="598.0" y="590.0" text-anchor="middle" class="node-title">Istio 流量规则</text>
+  <text x="598.0" y="612.0" text-anchor="middle" class="node-sub">虚拟服务 + 目标规则</text>
+  <rect x="702.0" y="554.0" width="138.0" height="62.0" rx="10.0" fill="#ffffff" stroke="#86efac" stroke-width="1.8"/>
+  <text x="771.0" y="572.0" text-anchor="middle" class="node-type">工作负载</text>
+  <text x="771.0" y="591.0" text-anchor="middle" class="node-title">服务 B</text>
+  <rect x="944.0" y="546.0" width="156.0" height="76.0" rx="10.0" fill="#f3f4f6" stroke="#9ca3af" stroke-width="2.0" filter="url(#shadowSoft)"/>
+  <rect x="950.0" y="552.0" width="144.0" height="64.0" rx="7.0" fill="none" stroke="#9ca3af" stroke-width="1.2" opacity="0.65"/>
+  <text x="1022.0" y="564.0" text-anchor="middle" class="node-type">集群 C 网格</text>
+  <text x="1022.0" y="590.0" text-anchor="middle" class="node-title">Istio 流量规则</text>
+  <text x="1022.0" y="612.0" text-anchor="middle" class="node-sub">虚拟服务 + 目标规则</text>
+  <rect x="1126.0" y="554.0" width="138.0" height="62.0" rx="10.0" fill="#ffffff" stroke="#d1d5db" stroke-width="1.8"/>
+  <text x="1195.0" y="572.0" text-anchor="middle" class="node-type">工作负载</text>
+  <text x="1195.0" y="591.0" text-anchor="middle" class="node-title">冷备服务</text>
+  <rect x="241.8" y="159.0" width="42" height="20" rx="6" fill="#ffffff" opacity="0.94"/>
+  <text x="262.8" y="173.0" text-anchor="middle" class="arrow-label">编写预案</text>
+  <rect x="519.0" y="176.0" width="36" height="20" rx="6" fill="#ffffff" opacity="0.94"/>
+  <text x="537.0" y="190.0" text-anchor="middle" class="arrow-label">装载</text>
+  <rect x="852.0" y="176.0" width="36" height="20" rx="6" fill="#ffffff" opacity="0.94"/>
+  <text x="870.0" y="190.0" text-anchor="middle" class="arrow-label">触发</text>
+  <rect x="571.0" y="236.4" width="42" height="20" rx="6" fill="#ffffff" opacity="0.94"/>
+  <text x="592.0" y="250.4" text-anchor="middle" class="arrow-label">编排执行</text>
+  <rect x="976.5" y="222.0" width="63" height="20" rx="6" fill="#ffffff" opacity="0.94"/>
+  <text x="1008.0" y="236.0" text-anchor="middle" class="arrow-label">状态 / 回退</text>
+  <rect x="671.0" y="310.0" width="42" height="20" rx="6" fill="#ffffff" opacity="0.94"/>
+  <text x="692.0" y="324.0" text-anchor="middle" class="arrow-label">业务请求</text>
+  <rect x="268.0" y="422.4" width="56" height="20" rx="6" fill="#ffffff" opacity="0.94"/>
+  <text x="296.0" y="436.4" text-anchor="middle" class="arrow-label">下发流量规则</text>
+  <rect x="431.5" y="440.4" width="42" height="20" rx="6" fill="#ffffff" opacity="0.94"/>
+  <text x="452.5" y="454.4" text-anchor="middle" class="arrow-label">下发应用</text>
+  <rect x="486.0" y="422.4" width="56" height="20" rx="6" fill="#ffffff" opacity="0.94"/>
+  <text x="514.0" y="436.4" text-anchor="middle" class="arrow-label">下发流量规则</text>
+  <rect x="635.5" y="440.4" width="42" height="20" rx="6" fill="#ffffff" opacity="0.94"/>
+  <text x="656.5" y="454.4" text-anchor="middle" class="arrow-label">下发应用</text>
+  <rect x="704.0" y="422.4" width="56" height="20" rx="6" fill="#ffffff" opacity="0.94"/>
+  <text x="732.0" y="436.4" text-anchor="middle" class="arrow-label">下发流量规则</text>
+  <rect x="841.5" y="440.4" width="42" height="20" rx="6" fill="#ffffff" opacity="0.94"/>
+  <text x="862.5" y="454.4" text-anchor="middle" class="arrow-label">下发应用</text>
+  <rect x="518.5" y="386.4" width="56" height="20" rx="6" fill="#ffffff" opacity="0.94"/>
+  <text x="546.5" y="400.4" text-anchor="middle" class="arrow-label">双活流量 A</text>
+  <rect x="730.5" y="386.4" width="56" height="20" rx="6" fill="#ffffff" opacity="0.94"/>
+  <text x="758.5" y="400.4" text-anchor="middle" class="arrow-label">双活流量 B</text>
+  <rect x="949.5" y="402.4" width="42" height="20" rx="6" fill="#ffffff" opacity="0.94"/>
+  <text x="970.5" y="416.4" text-anchor="middle" class="arrow-label">冷备接管</text>
+  <rect x="249.8" y="571.0" width="36" height="20" rx="6" fill="#ffffff" opacity="0.94"/>
+  <text x="267.8" y="585.0" text-anchor="middle" class="arrow-label">路由</text>
+  <rect x="673.8" y="571.0" width="36" height="20" rx="6" fill="#ffffff" opacity="0.94"/>
+  <text x="691.8" y="585.0" text-anchor="middle" class="arrow-label">路由</text>
+  <rect x="1091.3" y="571.0" width="49" height="20" rx="6" fill="#ffffff" opacity="0.94"/>
+  <text x="1115.8" y="585.0" text-anchor="middle" class="arrow-label">激活后路由</text>
+  <rect x="970.0" y="754.0" width="135" height="134" rx="10" fill="#ffffff" opacity="0.88"/>
+  <line x1="980.0" y1="768.0" x2="1010.0" y2="768.0" stroke="#7c3aed" stroke-width="2.4" marker-end="url(#arrowA)"/>
+  <text x="1020.0" y="772.0" class="legend">预案执行控制流</text>
+  <line x1="980.0" y1="790.0" x2="1010.0" y2="790.0" stroke="#10b981" stroke-width="2.4" marker-end="url(#arrowB)"/>
+  <text x="1020.0" y="794.0" class="legend">联邦资源下发流</text>
+  <line x1="980.0" y1="812.0" x2="1010.0" y2="812.0" stroke="#2563eb" stroke-width="2.4" marker-end="url(#arrowC)"/>
+  <text x="1020.0" y="816.0" class="legend">集群内服务路由</text>
+  <line x1="980.0" y1="834.0" x2="1010.0" y2="834.0" stroke="#f97316" stroke-width="2.4" marker-end="url(#arrowE)"/>
+  <text x="1020.0" y="838.0" class="legend">业务流量与切换路径</text>
+  <line x1="980.0" y1="856.0" x2="1010.0" y2="856.0" stroke="#ef4444" stroke-width="2.4" marker-end="url(#arrowG)"/>
+  <text x="1020.0" y="860.0" class="legend">执行状态与回退</text>
+  <text x="42.0" y="904.0" class="footnote">DRPlan 负责预案生命周期与执行。Clusternet 负责应用和 Istio 资源联邦下发。Istio 通过 VirtualService 与 DestinationRule 实现双活分流与冷备接管。</text>
+</svg>

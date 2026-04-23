@@ -17,6 +17,7 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	sigyaml "sigs.k8s.io/yaml"
 )
 
 var _ = Describe("GeneratePlan", func() {
@@ -31,7 +32,7 @@ var _ = Describe("GeneratePlan", func() {
 	})
 
 	Context("with only main resources (no hooks)", func() {
-		It("should generate a single install stage", func() {
+		It("should generate a single execute stage", func() {
 			analysis := ChartAnalysis{
 				Hooks: make(map[string][]HookResource),
 				MainResources: []MainResource{
@@ -43,11 +44,11 @@ var _ = Describe("GeneratePlan", func() {
 			result, err := GeneratePlan(analysis, config)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(result.PlanYAML).NotTo(BeEmpty())
-			Expect(result.WorkflowYAMLs).To(HaveKey("workflow-install.yaml"))
+			Expect(result.WorkflowYAMLs).To(HaveKey("workflow-execute.yaml"))
 			Expect(result.WorkflowYAMLs).To(HaveLen(1))
 
 			planStr := string(result.PlanYAML)
-			Expect(planStr).To(ContainSubstring("name: install"))
+			Expect(planStr).To(ContainSubstring("name: execute"))
 			Expect(planStr).NotTo(ContainSubstring("dependsOn"))
 		})
 	})
@@ -114,11 +115,11 @@ var _ = Describe("GeneratePlan", func() {
 			result, err := GeneratePlan(analysis, config)
 			Expect(err).NotTo(HaveOccurred())
 
-			installWf := string(result.WorkflowYAMLs["workflow-install.yaml"])
-			Expect(installWf).To(ContainSubstring("waitReady: true"))
-			Expect(installWf).To(ContainSubstring("clusterExecutionMode: PerCluster"))
-			Expect(installWf).To(ContainSubstring(`when: mode == "install"`))
-			Expect(installWf).To(ContainSubstring("name: create-subscription"))
+			workflowYAML := string(result.WorkflowYAMLs["workflow-install.yaml"])
+			Expect(workflowYAML).To(ContainSubstring("waitReady: true"))
+			Expect(workflowYAML).To(ContainSubstring("clusterExecutionMode: PerCluster"))
+			Expect(workflowYAML).To(ContainSubstring(`when: mode == "install"`))
+			Expect(workflowYAML).To(ContainSubstring("name: create-subscription"))
 		})
 	})
 
@@ -208,10 +209,12 @@ var _ = Describe("GeneratePlan", func() {
 			result, err := GeneratePlan(analysis, config)
 			Expect(err).NotTo(HaveOccurred())
 
-			installWf := string(result.WorkflowYAMLs["workflow-install.yaml"])
-			Expect(installWf).To(ContainSubstring("cm-1"))
-			Expect(installWf).To(ContainSubstring("app"))
-			Expect(installWf).To(ContainSubstring("svc-1"))
+			workflowYAML := string(result.WorkflowYAMLs["workflow-execute.yaml"])
+			Expect(workflowYAML).To(ContainSubstring("cm-1"))
+			Expect(workflowYAML).To(ContainSubstring("app"))
+			Expect(workflowYAML).To(ContainSubstring("svc-1"))
+			Expect(workflowYAML).NotTo(ContainSubstring(`when: mode == "install" || mode == "upgrade"`))
+			Expect(workflowYAML).NotTo(ContainSubstring("operation: Delete"))
 		})
 	})
 
@@ -351,7 +354,7 @@ var _ = Describe("GeneratePlan", func() {
 	})
 
 	Context("resources without namespace", func() {
-		It("should not include namespace in feed when resource has no namespace", func() {
+		It("should include default namespace template in feed when resource has no namespace", func() {
 			cm := makeResource("ConfigMap", "cm-no-ns", nil)
 
 			analysis := ChartAnalysis{
@@ -362,8 +365,69 @@ var _ = Describe("GeneratePlan", func() {
 			result, err := GeneratePlan(analysis, config)
 			Expect(err).NotTo(HaveOccurred())
 
-			installWf := string(result.WorkflowYAMLs["workflow-install.yaml"])
-			Expect(installWf).To(ContainSubstring("name: cm-no-ns"))
+			workflowYAML := string(result.WorkflowYAMLs["workflow-execute.yaml"])
+			Expect(workflowYAML).To(ContainSubstring("name: cm-no-ns"))
+			Expect(workflowYAML).To(ContainSubstring("namespace: $(params.feedNamespace)"))
+		})
+	})
+
+	Context("resources with explicit namespace", func() {
+		It("should still use default namespace template in feed", func() {
+			deploy := makeResource("Deployment", "web", nil)
+			deploy.SetAPIVersion("apps/v1")
+			deploy.SetNamespace("prod")
+
+			analysis := ChartAnalysis{
+				Hooks:         make(map[string][]HookResource),
+				MainResources: []MainResource{{Resource: deploy}},
+			}
+
+			result, err := GeneratePlan(analysis, config)
+			Expect(err).NotTo(HaveOccurred())
+
+			workflowYAML := string(result.WorkflowYAMLs["workflow-execute.yaml"])
+			Expect(workflowYAML).To(ContainSubstring("name: web"))
+			Expect(workflowYAML).To(ContainSubstring("namespace: $(params.feedNamespace)"))
+		})
+	})
+
+	Context("cluster-scoped resources", func() {
+		It("should not include namespace in main resource feed", func() {
+			clusterRole := makeResource("ClusterRole", "read-all", nil)
+			clusterRole.SetAPIVersion("rbac.authorization.k8s.io/v1")
+
+			analysis := ChartAnalysis{
+				Hooks:         make(map[string][]HookResource),
+				MainResources: []MainResource{{Resource: clusterRole}},
+			}
+
+			result, err := GeneratePlan(analysis, config)
+			Expect(err).NotTo(HaveOccurred())
+
+			feed := extractFirstFeedForAction(result.WorkflowYAMLs["workflow-execute.yaml"], mainActionName)
+			Expect(feed).To(HaveKeyWithValue("kind", "ClusterRole"))
+			Expect(feed).NotTo(HaveKey("namespace"))
+		})
+
+		It("should not include namespace in hook resource feed", func() {
+			clusterRole := makeResource("ClusterRole", "bootstrap-role", map[string]string{
+				HookAnnotation: HookPreInstall,
+			})
+			clusterRole.SetAPIVersion("rbac.authorization.k8s.io/v1")
+
+			analysis := ChartAnalysis{
+				Hooks: map[string][]HookResource{
+					HookPreInstall: {{Resource: clusterRole, HookType: HookPreInstall}},
+				},
+				MainResources: []MainResource{{Resource: makeResource("Deployment", "app", nil)}},
+			}
+
+			result, err := GeneratePlan(analysis, config)
+			Expect(err).NotTo(HaveOccurred())
+
+			feed := extractFirstFeedForAction(result.WorkflowYAMLs["workflow-install.yaml"], "bootstrap-role-pre-install")
+			Expect(feed).To(HaveKeyWithValue("kind", "ClusterRole"))
+			Expect(feed).NotTo(HaveKey("namespace"))
 		})
 	})
 
@@ -441,13 +505,13 @@ var _ = Describe("GeneratePlan", func() {
 			result, err := GeneratePlan(analysis, config)
 			Expect(err).NotTo(HaveOccurred())
 
-			wf := string(result.WorkflowYAMLs["workflow-install.yaml"])
+			wf := string(result.WorkflowYAMLs["workflow-execute.yaml"])
 			Expect(wf).NotTo(ContainSubstring("dependsOn"))
 		})
 	})
 
 	Context("main resource operation", func() {
-		It("should use Apply operation for idempotent install/upgrade", func() {
+		It("should use Apply operation without explicit when/delete in simplified mode", func() {
 			analysis := ChartAnalysis{
 				Hooks:         make(map[string][]HookResource),
 				MainResources: []MainResource{{Resource: makeResource("Deployment", "app", nil)}},
@@ -456,8 +520,10 @@ var _ = Describe("GeneratePlan", func() {
 			result, err := GeneratePlan(analysis, config)
 			Expect(err).NotTo(HaveOccurred())
 
-			wf := string(result.WorkflowYAMLs["workflow-install.yaml"])
+			wf := string(result.WorkflowYAMLs["workflow-execute.yaml"])
 			Expect(wf).To(ContainSubstring("operation: Apply"))
+			Expect(wf).NotTo(ContainSubstring(`when: mode == "install" || mode == "upgrade"`))
+			Expect(wf).NotTo(ContainSubstring("operation: Delete"))
 		})
 	})
 
@@ -665,3 +731,35 @@ var _ = Describe("GeneratePlan", func() {
 		})
 	})
 })
+
+func extractFirstFeedForAction(workflowYAML []byte, actionName string) map[string]interface{} {
+	var wf map[string]interface{}
+	Expect(sigyaml.Unmarshal(workflowYAML, &wf)).To(Succeed())
+
+	spec, ok := wf["spec"].(map[string]interface{})
+	Expect(ok).To(BeTrue())
+	actions, ok := spec["actions"].([]interface{})
+	Expect(ok).To(BeTrue())
+
+	for _, item := range actions {
+		action, ok := item.(map[string]interface{})
+		Expect(ok).To(BeTrue())
+		name, _ := action["name"].(string)
+		if name != actionName {
+			continue
+		}
+		subscription, ok := action["subscription"].(map[string]interface{})
+		Expect(ok).To(BeTrue())
+		subSpec, ok := subscription["spec"].(map[string]interface{})
+		Expect(ok).To(BeTrue())
+		feeds, ok := subSpec["feeds"].([]interface{})
+		Expect(ok).To(BeTrue())
+		Expect(feeds).NotTo(BeEmpty())
+		feed, ok := feeds[0].(map[string]interface{})
+		Expect(ok).To(BeTrue())
+		return feed
+	}
+
+	Fail("action not found: " + actionName)
+	return nil
+}

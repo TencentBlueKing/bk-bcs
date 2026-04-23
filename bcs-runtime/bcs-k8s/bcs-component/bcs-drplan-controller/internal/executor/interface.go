@@ -38,7 +38,12 @@ type WorkflowExecutor interface {
 
 	// RevertWorkflow reverts a workflow using the provided workflow execution status
 	// Returns the rollback workflow status and error
-	RevertWorkflow(ctx context.Context, workflow *drv1alpha1.DRWorkflow, workflowStatus *drv1alpha1.WorkflowExecutionStatus, params map[string]interface{}) (*drv1alpha1.WorkflowExecutionStatus, error)
+	RevertWorkflow(
+		ctx context.Context,
+		workflow *drv1alpha1.DRWorkflow,
+		workflowStatus *drv1alpha1.WorkflowExecutionStatus,
+		params map[string]interface{},
+	) (*drv1alpha1.WorkflowExecutionStatus, error)
 }
 
 // StageExecutor defines the interface for executing stages

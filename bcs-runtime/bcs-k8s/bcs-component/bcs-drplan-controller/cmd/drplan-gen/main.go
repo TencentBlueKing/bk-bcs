@@ -32,6 +32,12 @@ var (
 )
 
 func main() {
+	if err := newRootCommand().Execute(); err != nil {
+		os.Exit(1)
+	}
+}
+
+func newRootCommand() *cobra.Command {
 	var (
 		name      string
 		namespace string
@@ -47,12 +53,15 @@ func main() {
 			"and generates DRPlan, DRWorkflow, and DRPlanExecution YAML files.\n\n" +
 			"Helm hook annotations (helm.sh/hook, helm.sh/hook-weight, helm.sh/hook-delete-policy)\n" +
 			"are automatically recognized and mapped into a single generated workflow.\n" +
-			"Hook Subscription actions are automatically generated with waitReady: true and when: mode == \"install|upgrade\".\n" +
-			"By default, drplan-gen generates one stage and one workflow: drplan.yaml + workflow-install.yaml.\n\n" +
+			"In rendered-YAML mode, drplan-gen uses two generation paths:\n" +
+			"  - no hooks: simplified execute stage + workflow-execute.yaml\n" +
+			"  - any hooks present: unified install stage + workflow-install.yaml\n" +
+			"Hook Subscription actions are automatically generated with waitReady: true and mode-specific when expressions.\n\n" +
 			"Examples:\n" +
 			"\thelm template my-app ./my-chart | drplan-gen --name my-app --namespace default\n" +
 			"\tdrplan-gen --name my-app --namespace default -f rendered.yaml\n" +
-			"\tdrplan-gen --name my-app -f rendered.yaml -o ./output/",
+			"\tdrplan-gen --name my-app -f rendered.yaml -o ./output/\n" +
+			"\tdrplan-gen helmfile -f helmfile.yaml.gotmpl -l name=my-app --chart-repo oci://registry.example.com/charts",
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			if showVer {
 				fmt.Fprintln(cmd.OutOrStdout(), formatVersion())
@@ -61,7 +70,7 @@ func main() {
 			if strings.TrimSpace(name) == "" {
 				return fmt.Errorf("required flag \"name\" not set")
 			}
-			return run(name, namespace, inputFile, outputDir)
+			return runRenderedMode(name, namespace, inputFile, outputDir)
 		},
 	}
 
@@ -77,17 +86,16 @@ func main() {
 			fmt.Fprintln(cmd.OutOrStdout(), formatVersion())
 		},
 	})
+	rootCmd.AddCommand(newHelmfileCommand())
 
-	if err := rootCmd.Execute(); err != nil {
-		os.Exit(1)
-	}
+	return rootCmd
 }
 
 func formatVersion() string {
 	return fmt.Sprintf("drplan-gen %s (commit=%s, buildDate=%s)", version, gitCommit, buildDate)
 }
 
-func run(name, namespace, inputFile, outputDir string) error {
+func runRenderedMode(name, namespace, inputFile, outputDir string) error {
 	var reader io.Reader
 
 	if inputFile != "" {
@@ -128,6 +136,68 @@ func run(name, namespace, inputFile, outputDir string) error {
 	}
 
 	fmt.Fprintf(os.Stderr, "Generated DRPlan files in %s/\n", outputDir)
+	fmt.Fprintf(os.Stderr, "  drplan.yaml\n")
+	for filename := range result.WorkflowYAMLs {
+		fmt.Fprintf(os.Stderr, "  %s\n", filename)
+	}
+	for filename := range result.ExecutionYAMLs {
+		fmt.Fprintf(os.Stderr, "  %s\n", filename)
+	}
+
+	return nil
+}
+
+func newHelmfileCommand() *cobra.Command {
+	var cfg generator.HelmfileGenerateConfig
+
+	cmd := &cobra.Command{
+		Use:   "helmfile",
+		Short: "Generate DRPlan from a resolved helmfile release",
+		RunE: func(_ *cobra.Command, _ []string) error {
+			if strings.TrimSpace(cfg.ChartRepo) == "" {
+				return fmt.Errorf("required flag \"chart-repo\" not set")
+			}
+			if strings.TrimSpace(cfg.File) == "" {
+				return fmt.Errorf("required flag \"file\" not set")
+			}
+			return runHelmfileMode(cfg)
+		},
+	}
+
+	cmd.Flags().StringVarP(&cfg.File, "file", "f", "", "Helmfile path")
+	cmd.Flags().StringArrayVarP(&cfg.Selectors, "selector", "l", nil, "Release selector, for example: name=my-app")
+	cmd.Flags().StringVarP(&cfg.Namespace, "namespace", "n", "", "Override release namespace")
+	cmd.Flags().StringVar(&cfg.ChartRepo, "chart-repo", "", "Chart repository URL written into HelmChart.spec.repo")
+	cmd.Flags().BoolVar(&cfg.PlainHTTP, "plain-http", false, "Use plain HTTP when pulling charts from the chart repository")
+	cmd.Flags().BoolVar(&cfg.KeepFullValues, "keep-full-values", false, "Keep full rendered values instead of diffing against chart default values")
+	cmd.Flags().StringVarP(&cfg.OutputDir, "output", "o", ".", "Output directory")
+
+	return cmd
+}
+
+func runHelmfileMode(cfg generator.HelmfileGenerateConfig) error {
+	release, err := generator.LoadHelmfileRelease(generator.HelmfileLoadInput{
+		File:           cfg.File,
+		Selectors:      cfg.Selectors,
+		Namespace:      cfg.Namespace,
+		ChartRepo:      cfg.ChartRepo,
+		PlainHTTP:      cfg.PlainHTTP,
+		KeepFullValues: cfg.KeepFullValues,
+	})
+	if err != nil {
+		return fmt.Errorf("loading helmfile release: %w", err)
+	}
+
+	result, err := generator.GenerateHelmfilePlan(*release)
+	if err != nil {
+		return fmt.Errorf("generating helmfile plan: %w", err)
+	}
+
+	if err := generator.WriteOutput(result, cfg.OutputDir); err != nil {
+		return fmt.Errorf("writing output: %w", err)
+	}
+
+	fmt.Fprintf(os.Stderr, "Generated helmfile DRPlan files in %s/\n", cfg.OutputDir)
 	fmt.Fprintf(os.Stderr, "  drplan.yaml\n")
 	for filename := range result.WorkflowYAMLs {
 		fmt.Fprintf(os.Stderr, "  %s\n", filename)

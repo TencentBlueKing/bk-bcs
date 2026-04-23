@@ -242,38 +242,40 @@ var _ = Describe("Integration: demo-app chart", func() {
 			Expect(analysis.Hooks).To(BeEmpty())
 		})
 
-		It("should generate DRPlan with only install stage", func() {
+		It("should generate DRPlan with only execute stage", func() {
 			result, err := GeneratePlan(analysis, config)
 			Expect(err).NotTo(HaveOccurred())
 
 			planStr := string(result.PlanYAML)
-			Expect(planStr).To(ContainSubstring("name: install"))
+			Expect(planStr).To(ContainSubstring("name: execute"))
 			Expect(planStr).NotTo(ContainSubstring("dependsOn"))
 		})
 
-		It("should generate only install workflow", func() {
+		It("should generate only execute workflow", func() {
 			result, err := GeneratePlan(analysis, config)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(result.WorkflowYAMLs).To(HaveLen(1))
-			Expect(result.WorkflowYAMLs).To(HaveKey("workflow-install.yaml"))
+			Expect(result.WorkflowYAMLs).To(HaveKey("workflow-execute.yaml"))
 		})
 
-		It("should include all 10 resources in install subscription feeds", func() {
+		It("should include all 10 resources in execute subscription feeds", func() {
 			result, err := GeneratePlan(analysis, config)
 			Expect(err).NotTo(HaveOccurred())
 
-			installWf := string(result.WorkflowYAMLs["workflow-install.yaml"])
-			Expect(installWf).To(ContainSubstring("release-name-config"))
-			Expect(installWf).To(ContainSubstring("release-name-server"))
-			Expect(installWf).To(ContainSubstring("release-name-svc"))
-			Expect(installWf).To(ContainSubstring("release-name-db-migrate"))
-			Expect(installWf).To(ContainSubstring("release-name-install-smoke"))
-			Expect(installWf).To(ContainSubstring("release-name-upgrade-verify"))
-			Expect(installWf).To(ContainSubstring("release-name-upgrade-prepare"))
-			Expect(installWf).To(ContainSubstring("release-name-pre-delete-backup"))
-			Expect(installWf).To(ContainSubstring("release-name-post-delete-notify"))
-			Expect(installWf).To(ContainSubstring("release-name-validate"))
+			workflowYAML := string(result.WorkflowYAMLs["workflow-execute.yaml"])
+			Expect(workflowYAML).To(ContainSubstring("release-name-config"))
+			Expect(workflowYAML).To(ContainSubstring("release-name-server"))
+			Expect(workflowYAML).To(ContainSubstring("release-name-svc"))
+			Expect(workflowYAML).To(ContainSubstring("release-name-db-migrate"))
+			Expect(workflowYAML).To(ContainSubstring("release-name-install-smoke"))
+			Expect(workflowYAML).To(ContainSubstring("release-name-upgrade-verify"))
+			Expect(workflowYAML).To(ContainSubstring("release-name-upgrade-prepare"))
+			Expect(workflowYAML).To(ContainSubstring("release-name-pre-delete-backup"))
+			Expect(workflowYAML).To(ContainSubstring("release-name-post-delete-notify"))
+			Expect(workflowYAML).To(ContainSubstring("release-name-validate"))
+			Expect(workflowYAML).NotTo(ContainSubstring("operation: Delete"))
+			Expect(workflowYAML).NotTo(ContainSubstring(`when: mode == "install" || mode == "upgrade"`))
 		})
 	})
 

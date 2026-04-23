@@ -14,10 +14,13 @@ package webhook
 
 import (
 	"context"
+	"errors"
 	"testing"
 
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
 	drv1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-drplan-controller/api/v1alpha1"
@@ -352,6 +355,172 @@ func TestValidateRevertExecutionPhase(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestValidateExecution_AllowsCreateWhenCurrentExecutionIsTerminal(t *testing.T) {
+	scheme := runtime.NewScheme()
+	if err := drv1alpha1.AddToScheme(scheme); err != nil {
+		t.Fatalf("add scheme: %v", err)
+	}
+
+	plan := &drv1alpha1.DRPlan{
+		ObjectMeta: metav1.ObjectMeta{Name: "demo", Namespace: "default"},
+		Status: drv1alpha1.DRPlanStatus{
+			Phase: drv1alpha1.PlanPhaseExecuted,
+			CurrentExecution: &drv1alpha1.ObjectReference{
+				Name:      "demo-upgrade-001",
+				Namespace: "default",
+			},
+		},
+	}
+	currentExec := &drv1alpha1.DRPlanExecution{
+		ObjectMeta: metav1.ObjectMeta{Name: "demo-upgrade-001", Namespace: "default"},
+		Status: drv1alpha1.DRPlanExecutionStatus{
+			Phase: drv1alpha1.PhaseSucceeded,
+		},
+	}
+	webhook := &DRPlanExecutionWebhook{
+		Client: fake.NewClientBuilder().WithScheme(scheme).WithObjects(plan, currentExec).Build(),
+	}
+
+	execution := &drv1alpha1.DRPlanExecution{
+		ObjectMeta: metav1.ObjectMeta{Name: "demo-delete-001", Namespace: "default"},
+		Spec: drv1alpha1.DRPlanExecutionSpec{
+			PlanRef:       "demo",
+			OperationType: drv1alpha1.OperationTypeExecute,
+			Mode:          "Delete",
+		},
+	}
+
+	errs := webhook.validateExecution(context.Background(), execution)
+	if len(errs) != 0 {
+		t.Fatalf("expected terminal currentExecution to be allowed, got errors: %v", errs)
+	}
+}
+
+func TestValidateExecution_RejectsCreateWhenCurrentExecutionIsRunning(t *testing.T) {
+	scheme := runtime.NewScheme()
+	if err := drv1alpha1.AddToScheme(scheme); err != nil {
+		t.Fatalf("add scheme: %v", err)
+	}
+
+	plan := &drv1alpha1.DRPlan{
+		ObjectMeta: metav1.ObjectMeta{Name: "demo", Namespace: "default"},
+		Status: drv1alpha1.DRPlanStatus{
+			Phase: drv1alpha1.PlanPhaseExecuted,
+			CurrentExecution: &drv1alpha1.ObjectReference{
+				Name:      "demo-upgrade-001",
+				Namespace: "default",
+			},
+		},
+	}
+	currentExec := &drv1alpha1.DRPlanExecution{
+		ObjectMeta: metav1.ObjectMeta{Name: "demo-upgrade-001", Namespace: "default"},
+		Status: drv1alpha1.DRPlanExecutionStatus{
+			Phase: drv1alpha1.PhaseRunning,
+		},
+	}
+	webhook := &DRPlanExecutionWebhook{
+		Client: fake.NewClientBuilder().WithScheme(scheme).WithObjects(plan, currentExec).Build(),
+	}
+
+	execution := &drv1alpha1.DRPlanExecution{
+		ObjectMeta: metav1.ObjectMeta{Name: "demo-delete-001", Namespace: "default"},
+		Spec: drv1alpha1.DRPlanExecutionSpec{
+			PlanRef:       "demo",
+			OperationType: drv1alpha1.OperationTypeExecute,
+			Mode:          "Delete",
+		},
+	}
+
+	errs := webhook.validateExecution(context.Background(), execution)
+	if len(errs) == 0 {
+		t.Fatal("expected running currentExecution to be rejected")
+	}
+}
+
+func TestValidateExecution_AllowsCreateWhenCurrentExecutionRefIsStale(t *testing.T) {
+	scheme := runtime.NewScheme()
+	if err := drv1alpha1.AddToScheme(scheme); err != nil {
+		t.Fatalf("add scheme: %v", err)
+	}
+
+	plan := &drv1alpha1.DRPlan{
+		ObjectMeta: metav1.ObjectMeta{Name: "demo", Namespace: "default"},
+		Status: drv1alpha1.DRPlanStatus{
+			Phase: drv1alpha1.PlanPhaseExecuted,
+			CurrentExecution: &drv1alpha1.ObjectReference{
+				Name:      "demo-upgrade-001",
+				Namespace: "default",
+			},
+		},
+	}
+	webhook := &DRPlanExecutionWebhook{
+		Client: fake.NewClientBuilder().WithScheme(scheme).WithObjects(plan).Build(),
+	}
+
+	execution := &drv1alpha1.DRPlanExecution{
+		ObjectMeta: metav1.ObjectMeta{Name: "demo-delete-001", Namespace: "default"},
+		Spec: drv1alpha1.DRPlanExecutionSpec{
+			PlanRef:       "demo",
+			OperationType: drv1alpha1.OperationTypeExecute,
+			Mode:          "Delete",
+		},
+	}
+
+	errs := webhook.validateExecution(context.Background(), execution)
+	if len(errs) != 0 {
+		t.Fatalf("expected stale currentExecution ref to be ignored, got errors: %v", errs)
+	}
+}
+
+func TestValidateExecution_ReportsCurrentExecutionLookupErrors(t *testing.T) {
+	scheme := runtime.NewScheme()
+	if err := drv1alpha1.AddToScheme(scheme); err != nil {
+		t.Fatalf("add scheme: %v", err)
+	}
+
+	plan := &drv1alpha1.DRPlan{
+		ObjectMeta: metav1.ObjectMeta{Name: "demo", Namespace: "default"},
+		Status: drv1alpha1.DRPlanStatus{
+			Phase: drv1alpha1.PlanPhaseExecuted,
+			CurrentExecution: &drv1alpha1.ObjectReference{
+				Name:      "demo-upgrade-001",
+				Namespace: "default",
+			},
+		},
+	}
+	baseClient := fake.NewClientBuilder().WithScheme(scheme).WithObjects(plan).Build()
+	webhook := &DRPlanExecutionWebhook{
+		Client: errorOnExecutionGetClient{Client: baseClient},
+	}
+
+	execution := &drv1alpha1.DRPlanExecution{
+		ObjectMeta: metav1.ObjectMeta{Name: "demo-delete-001", Namespace: "default"},
+		Spec: drv1alpha1.DRPlanExecutionSpec{
+			PlanRef:       "demo",
+			OperationType: drv1alpha1.OperationTypeExecute,
+			Mode:          "Delete",
+		},
+	}
+
+	errs := webhook.validateExecution(context.Background(), execution)
+	if len(errs) == 0 {
+		t.Fatal("expected currentExecution lookup error to be reported")
+	}
+}
+
+type errorOnExecutionGetClient struct {
+	client.Client
+}
+
+func (c errorOnExecutionGetClient) Get(ctx context.Context, key client.ObjectKey, obj client.Object, opts ...client.GetOption) error {
+	if _, ok := obj.(*drv1alpha1.DRPlanExecution); ok {
+		if key.Name == "demo-upgrade-001" && key.Namespace == "default" {
+			return apierrors.NewInternalError(errors.New("boom"))
+		}
+	}
+	return c.Client.Get(ctx, key, obj, opts...)
 }
 
 // NOCC:tosa/fn_length(设计如此)

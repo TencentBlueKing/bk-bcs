@@ -108,7 +108,7 @@ type Action struct {
 
 	// Type is the action type
 	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:Enum=HTTP;Job;Localization;Subscription;KubernetesResource
+	// +kubebuilder:validation:Enum=HTTP;Job;Localization;Globalization;HelmChart;Subscription;KubernetesResource
 	Type string `json:"type"`
 
 	// HTTP configuration (required when type=HTTP)
@@ -122,6 +122,14 @@ type Action struct {
 	// Localization configuration (required when type=Localization)
 	// +optional
 	Localization *LocalizationAction `json:"localization,omitempty"`
+
+	// Globalization configuration (required when type=Globalization)
+	// +optional
+	Globalization *GlobalizationAction `json:"globalization,omitempty"`
+
+	// HelmChart configuration (required when type=HelmChart)
+	// +optional
+	HelmChart *HelmChartAction `json:"helmChart,omitempty"`
 
 	// Subscription configuration (required when type=Subscription)
 	// +optional
@@ -255,8 +263,9 @@ type JobTemplateSpec struct {
 // LocalizationAction defines Clusternet Localization operation.
 // Name/Namespace 为 CR 的 metadata；Spec 直接引用 clusternet LocalizationSpec，与上游保持一致、避免缺失字段。
 type LocalizationAction struct {
-	// Operation is the operation type: Create (default), Patch, Delete
-	// +kubebuilder:validation:Enum=Create;Patch;Delete
+	// Operation is the operation type: Create (default), Apply, Patch, Delete.
+	// Apply uses Server-Side Apply (idempotent create-or-update).
+	// +kubebuilder:validation:Enum=Create;Apply;Patch;Delete
 	// +kubebuilder:default=Create
 	// +optional
 	Operation string `json:"operation,omitempty"`
@@ -272,6 +281,48 @@ type LocalizationAction struct {
 	// Spec is the spec of the Localization CR, same as apps.clusternet.io LocalizationSpec.
 	// +optional
 	Spec *clusternetapps.LocalizationSpec `json:"spec,omitempty"`
+}
+
+// GlobalizationAction defines Clusternet Globalization operation.
+// Name 为 CR 的 metadata.name；Spec 直接引用 clusternet GlobalizationSpec，与上游保持一致、避免缺失字段。
+type GlobalizationAction struct {
+	// Operation is the operation type: Create (default), Apply, Patch, Delete.
+	// Apply uses Server-Side Apply (idempotent create-or-update).
+	// +kubebuilder:validation:Enum=Create;Apply;Patch;Delete
+	// +kubebuilder:default=Create
+	// +optional
+	Operation string `json:"operation,omitempty"`
+
+	// Name is the Globalization CR name (supports placeholders)
+	// +kubebuilder:validation:Required
+	Name string `json:"name"`
+
+	// Spec is the spec of the Globalization CR, same as apps.clusternet.io GlobalizationSpec.
+	// +optional
+	Spec *clusternetapps.GlobalizationSpec `json:"spec,omitempty"`
+}
+
+// HelmChartAction defines Clusternet HelmChart operation.
+// Name/Namespace 为 CR 的 metadata；Spec 直接引用 clusternet HelmChartSpec，与上游保持一致、避免缺失字段。
+type HelmChartAction struct {
+	// Operation is the operation type: Create (default), Apply, Patch, Delete.
+	// Apply uses Server-Side Apply (idempotent create-or-update).
+	// +kubebuilder:validation:Enum=Create;Apply;Patch;Delete
+	// +kubebuilder:default=Create
+	// +optional
+	Operation string `json:"operation,omitempty"`
+
+	// Name is the HelmChart CR name (supports placeholders)
+	// +kubebuilder:validation:Required
+	Name string `json:"name"`
+
+	// Namespace is the HelmChart CR namespace (supports placeholders)
+	// +kubebuilder:validation:Required
+	Namespace string `json:"namespace"`
+
+	// Spec is the spec of the HelmChart CR, same as apps.clusternet.io HelmChartSpec.
+	// +optional
+	Spec *clusternetapps.HelmChartSpec `json:"spec,omitempty"`
 }
 
 // LocalizationOverride defines Clusternet Localization override
@@ -435,8 +486,8 @@ type ActionStatus struct {
 	// Name is the action name
 	Name string `json:"name"`
 
-	// Phase is the action phase: Pending, Running, Succeeded, Failed, Skipped
-	// +kubebuilder:validation:Enum=Pending;Running;Succeeded;Failed;Skipped
+	// Phase is the action phase: Pending, Running, Succeeded, Failed, Skipped, Canceled
+	// +kubebuilder:validation:Enum=Pending;Running;Succeeded;Failed;Skipped;Canceled
 	Phase string `json:"phase"`
 
 	// StartTime is the start time
@@ -499,6 +550,14 @@ type ActionOutputs struct {
 	// LocalizationRef is the created Localization reference
 	// +optional
 	LocalizationRef *corev1.ObjectReference `json:"localizationRef,omitempty"`
+
+	// GlobalizationRef is the created Globalization reference
+	// +optional
+	GlobalizationRef *corev1.ObjectReference `json:"globalizationRef,omitempty"`
+
+	// HelmChartRef is the created HelmChart reference
+	// +optional
+	HelmChartRef *corev1.ObjectReference `json:"helmChartRef,omitempty"`
 
 	// SubscriptionRef is the created Subscription reference
 	// +optional
