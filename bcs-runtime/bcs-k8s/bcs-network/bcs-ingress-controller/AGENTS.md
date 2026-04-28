@@ -6,7 +6,8 @@ BCS Ingress Controller -- Kubernetes Operator managing network extension CRDs
 (PortPool, PortBinding, Listener, Ingress, HostNetPortPool).
 Go 1.20+, controller-runtime v0.6.3, go-restful HTTP API, Prometheus metrics.
 go.mod lives at bcs-network/ parent; CRD types in ../../kubernetes/apis/networkextension/v1/.
-Completed feature: HostNetPortPool hostNetwork port allocation (branch 001-hostnet-port-allocation).
+Completed features: HostNetPortPool hostNetwork port allocation; Namespace scope exemption for
+federated cluster ingresses (see "Namespace Scope Exemption" section below).
 
 ## Build and Test
 
@@ -45,6 +46,7 @@ Run single package tests:
 - Metrics: init() registration in internal/metrics/*.go, namespace bkbcs_ingressctrl
 - Logging: bcs-common/common/blog -- not stdlib log or klog
 - HTTP: go-restful WebService, routes registered in internal/httpsvr/httpserver.go InitRouters()
+- **Naming**: Function names MUST NOT exceed 35 characters. Keep function names concise and descriptive.
 
 ## Patterns -- DO
 
@@ -70,6 +72,63 @@ Run single package tests:
 
 **New constants** -- append to internal/constant/constant.go with exported const + godoc comment
 
+## Namespace Scope Exemption
+
+Flag `--is_namespace_scope` (bool) restricts each Ingress to services in the same namespace.
+Flag `--namespace_scope_exempt_namespaces` (string, comma-separated) lists namespaces that bypass
+both restrictions: they may reference cross-namespace services AND use the controller's global
+cloud credentials (env `TENCENTCLOUD_ACCESS_KEY_ID` / `TENCENTCLOUD_ACESS_KEY`) instead of
+requiring a per-namespace Secret / ControllerConfig.
+
+**Data flow for exempt namespaces:**
+
+    ControllerOption.NamespaceScopeExemptNamespaces (string)
+      └─ parseExemptNamespaces() → map[string]struct{}
+           ├─ IngressConverterOpt.ExemptNamespaces              (generator/ingressconverter.go)
+           │    └─ IngressListenerConverter.ExemptNamespaces
+           │         ├─ RuleConverter.exemptNamespaces          (generator/ruleconverter.go)
+           │         │    └─ isIngressNamespaceExempt() skips cross-ns override
+           │         └─ MappingConverter.exemptNamespaces       (generator/mappingconverter.go)
+           │              └─ isIngressNamespaceExempt() skips cross-ns override
+           └─ newNamespacedLBWithExempt() → NamespacedLB
+                └─ NamespacedLB.defaultClient + exemptNamespaces (namespacedlb/namespacedclient.go)
+                     └─ getNsClient(): exempt ns → defaultClient, others → per-ns secret lookup
+
+**Adding a new cloud provider to the exemption pattern:**
+
+1. Add `initXxxClient(ctx, opts, cli, ew, exemptNsMap)` in main.go following `initTencentCloudClient`.
+2. Call `newNamespacedLBWithExempt(...)` in the `isNamespaceScope` branch.
+3. Add the new case to `initClient`'s switch.
+
+**Secret key names for per-ns Secret (note historical typo in key name):**
+
+    kubectl create secret generic ingress-secret.networkextension.bkbcs.tencent.com \
+      -n <namespace> \
+      --from-literal=TENCENTCLOUD_ACCESS_KEY_ID="<secretID>" \
+      --from-literal=TENCENTCLOUD_ACESS_KEY="<secretKey>"   # ACESS (not ACCESS) -- matches code constant
+
+**Unit tests:**
+- Generator layer: `internal/generator/namespace_scope_exempt_test.go` (14 cases)
+- NamespacedLB layer: `internal/cloud/namespacedlb/namespacedclient_test.go` (7 test funcs)
+- Flag parsing: `main_test.go::TestParseExemptNamespaces` (7 cases)
+
+## initClient Decomposition
+
+`initClient` (main.go) is a pure dispatcher -- keep function cyclomatic complexity low (≤ 5 for simple dispatch functions):
+
+    initClient()
+      parseExemptNamespaces()           # string → map[string]struct{}
+      switch cloud →
+        initTencentCloudClient()
+        initAWSClient()
+        initGCPClient()
+        initAzureClient()
+
+Each `initXxxClient` calls `newNamespacedLBWithExempt` when `IsNamespaceScope=true`.
+Do NOT add business logic back into `initClient` -- put it in the per-cloud function.
+
+**Note:** All functions should maintain reasonable cyclomatic complexity. Complicated functions (complexity > 10) should be decomposed into smaller, focused functions.
+
 ## Patterns -- DON'T
 
 - Import log / klog directly -- use blog
@@ -77,6 +136,8 @@ Run single package tests:
 - Skip error checking on k8s API calls (client.Get, client.Update, etc.)
 - Create controllers without registering in main.go
 - Assume go.mod is in this directory -- it is at ../go.mod, run go mod tidy from ../
+- Add cloud init logic directly into `initClient` -- add a new `initXxxClient` function instead
+- Use `TENCENTCLOUD_ACCESS_KEY` (correct spelling) in Secrets -- the code constant is `TENCENTCLOUD_ACESS_KEY` (typo, one C)
 
 ## Key Files
 
@@ -84,13 +145,17 @@ Run single package tests:
 |---------|------|
 | Entry point, wires all controllers / checkers / HTTP | main.go |
 | All constants and annotation keys | internal/constant/constant.go |
-| CLI flags and controller config | internal/option/ |
+| CLI flags and controller config | internal/option/option.go |
 | HTTP API route registration | internal/httpsvr/httpserver.go |
 | Webhook admission handlers | internal/webhookserver/ |
 | CRD Go type definitions | ../../kubernetes/apis/networkextension/v1/ |
 | CRD YAML manifests | ../../kubernetes/config/crd/bases/ |
 | Generated clientset / listers / informers | ../../kubernetes/generated/ |
 | Build Makefile | ../Makefile |
+| Ingress → Listener conversion entry | internal/generator/ingressconverter.go |
+| Rule-based listener conversion (L7) | internal/generator/ruleconverter.go |
+| Port-mapping listener conversion (L4) | internal/generator/mappingconverter.go |
+| Namespaced cloud client (per-ns credential) | internal/cloud/namespacedlb/namespacedclient.go |
 
 ## Controllers and CRDs
 
@@ -135,6 +200,8 @@ Run single package tests:
 Find all Reconcile implementations:
 
     rg -n "func.*Reconcile\(" --type go
+    # Or more specifically:
+    rg -n "\) Reconcile\(" --type go
 
 Find annotation / constant definitions:
 
@@ -164,19 +231,13 @@ Find all test files:
 
     rg -l "_test\.go" --type go
 
-## Pre-PR Checklist
+Find namespace-scope exemption touch-points:
 
-Run tests before submitting:
+    rg -n "ExemptNamespace\|exemptNamespace\|isExempt\|isIngressNamespaceExempt" --type go
 
-    cd .. && make test-ingress-controller && echo "All tests OK"
+Find per-cloud init functions:
 
-Verify:
-- New constants added to internal/constant/constant.go
-- New controllers registered in main.go via SetupWithManager
-- New metrics registered via init() in internal/metrics/
-- New HTTP routes added in internal/httpsvr/httpserver.go InitRouters()
-- CRD type changes: regenerate deepcopy and manifests in ../../kubernetes/
-- gofmt / goimports clean
+    rg -n "^func init.*Client\b" main.go
 
 ## Common Gotchas
 
@@ -186,7 +247,31 @@ Verify:
 - bcs-ingress-inspector/ is a **separate binary** with its own main.go, not part of this controller
 - The cloud/ adapters have vendor-specific SDKs -- only import the one you need
 
+## Pre-PR Checklist (updated)
+
+Run tests before submitting:
+
+    cd .. && make test-ingress-controller && echo "All tests OK"
+
+Quick exemption-feature regression (fast, no cluster needed):
+
+    go test -count=1 -run 'TestParseExemptNamespaces|TestRuleConverter|TestMappingConverter|TestIsExempt|TestGetNsClient|TestReloadNsClient|TestNewNamespacedLB' \
+      ./internal/cloud/namespacedlb/... ./internal/generator/... . 2>&1 | grep -E 'PASS|FAIL|ok'
+
+Verify:
+- New constants added to internal/constant/constant.go
+- New controllers registered in main.go via SetupWithManager
+- New metrics registered via init() in internal/metrics/
+- New HTTP routes added in internal/httpsvr/httpserver.go InitRouters()
+- CRD type changes: regenerate deepcopy and manifests in ../../kubernetes/
+- gofmt / goimports clean
+- All functions maintain reasonable cyclomatic complexity (decompose functions with complexity > 10)
+
 ## Completed Features
 
-- ~~001-hostnet-port-allocation~~: HostNetPortPool dynamic port allocation for hostNetwork Pods (done)
+- ~~hostnet-port-allocation~~: HostNetPortPool dynamic port allocation for hostNetwork Pods (done)
 - Design docs: specs/001-hostnet-port-allocation/
+- ~~namespace-scope-exemption~~: Federated cluster ingresses in whitelisted namespaces bypass
+  cross-namespace service binding restriction and per-namespace cloud credential requirement.
+  Key flag: `--namespace_scope_exempt_namespaces`; key files: internal/generator/{rule,mapping,listener,ingress}converter.go,
+  internal/cloud/namespacedlb/namespacedclient.go, main.go (parseExemptNamespaces/newNamespacedLBWithExempt/initXxxClient).

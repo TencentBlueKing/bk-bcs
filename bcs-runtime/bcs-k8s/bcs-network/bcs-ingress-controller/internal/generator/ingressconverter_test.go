@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
+	gocache "github.com/patrickmn/go-cache"
 	k8sappsv1 "k8s.io/api/apps/v1"
 	k8scorev1 "k8s.io/api/core/v1"
 	k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -34,6 +35,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud/mock"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud/tencentcloud"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
+	listenerctrl "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/listenercontroller"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
@@ -1172,7 +1174,7 @@ func TestIngressConvert(t *testing.T) {
 		AnyTimes()
 	mockCloud.
 		EXPECT().
-		DescribeLoadBalancer("testregion", "lb-1", "").
+		DescribeLoadBalancer("testregion", "lb-1", "", gomock.Any()).
 		Return(&cloud.LoadBalanceObject{
 			LbID:   "lb-1",
 			Name:   "lbname1",
@@ -1181,7 +1183,7 @@ func TestIngressConvert(t *testing.T) {
 		AnyTimes()
 	mockCloud.
 		EXPECT().
-		DescribeLoadBalancer("testregion", "lb-2", "").
+		DescribeLoadBalancer("testregion", "lb-2", "", gomock.Any()).
 		Return(&cloud.LoadBalanceObject{
 			LbID:   "lb-2",
 			Name:   "lbname2",
@@ -1218,10 +1220,15 @@ func TestIngressConvert(t *testing.T) {
 				&IngressConverterOpt{
 					DefaultRegion:     "testregion",
 					IsTCPUDPPortReuse: test.isTCPUDPReuse,
+					Cloud:             "tencentcloud",
 				},
 				cli,
 				tencentcloud.NewClbValidater(),
 				mockCloud,
+				listenerctrl.NewListenerHelper(cli),
+				gocache.New(60*time.Minute, 120*time.Minute),
+				gocache.New(60*time.Minute, 120*time.Minute),
+				nil,
 			)
 			if err != nil {
 				t.Errorf("create new ingress converter failed, err %s", err.Error())

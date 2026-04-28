@@ -20,6 +20,7 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
+	"strings"
 	"syscall"
 	"time"
 
@@ -165,6 +166,7 @@ func main() {
 		DefaultRegion:     opts.Region,
 		IsTCPUDPPortReuse: opts.IsTCPUDPPortReuse,
 		Cloud:             opts.Cloud,
+		ExemptNamespaces:  parseExemptNamespaces(opts.NamespaceScopeExemptNamespaces),
 	}, mgr.GetClient(), validater, lbClient, listenerHelper, lbIDCache, lbNameCache,
 		mgr.GetEventRecorderFor("bcs-ingress-controller"))
 	if err != nil {
@@ -304,6 +306,25 @@ func runPrometheusMetrics(op *option.ControllerOption) {
 	internalmetric.ControllerInfo.WithLabelValues(op.ImageTag, op.Cloud).Set(1)
 }
 
+// parseExemptNamespaces parses a comma-separated namespace list into a set.
+// Returns nil when the input is empty so that callers can distinguish "unset" from "empty set".
+func parseExemptNamespaces(raw string) map[string]struct{} {
+	if raw == "" {
+		return nil
+	}
+	result := make(map[string]struct{})
+	for _, ns := range strings.Split(raw, ",") {
+		ns = strings.TrimSpace(ns)
+		if ns != "" {
+			result[ns] = struct{}{}
+		}
+	}
+	if len(result) == 0 {
+		return nil
+	}
+	return result
+}
+
 // initHttpServer init ingress controller http server
 // httpServer提供
 // 1. 集群内Ingress/PortPool/PortBinding/Listener等信息的查询
@@ -329,6 +350,7 @@ func initHttpServer(op *option.ControllerOption, mgr manager.Manager, nodeCache 
 			IsNamespaced:      op.IsNamespaceScope,
 			IsTCPUDPPortReuse: op.IsTCPUDPPortReuse,
 			Eventer:           nil,
+			ExemptNamespaces:  parseExemptNamespaces(op.NamespaceScopeExemptNamespaces),
 		},
 	}
 	// aga supporter can only be init when use
@@ -349,71 +371,127 @@ func initHttpServer(op *option.ControllerOption, mgr manager.Manager, nodeCache 
 // initClient 根据使用云厂商的不同，返回对应云厂商的实现
 func initClient(ctx context.Context, opts *option.ControllerOption, cli client.Client,
 	eventWatcher eventer.WatchEventInterface) (cloud.Validater, cloud.LoadBalance, cloudnode.NodeClient) {
-	var validater cloud.Validater
-	var lbClient cloud.LoadBalance
-	var nodeClient cloudnode.NodeClient
-	var err error
+	exemptNsMap := parseExemptNamespaces(opts.NamespaceScopeExemptNamespaces)
 	switch opts.Cloud {
 	case constant.CloudTencent:
-		validater = tencentcloud.NewClbValidater()
-		if !opts.IsNamespaceScope {
-			lbClient, err = tencentcloud.NewClb()
-			if err != nil {
-				blog.Errorf("init cloud failed, err %s", err.Error())
-				os.Exit(1)
-			}
-		} else {
-			// NameSpacedLB在处理监听器时，会使用对应命名空间下的Secret作为云密钥
-			lbClient = namespacedlb.NewNamespacedLB(ctx, cli, eventWatcher,
-				tencentcloud.NewClbWithSecret)
-		}
-		nodeClient = native.NewNativeNodeClient()
-
+		return initTencentCloudClient(ctx, opts, cli, eventWatcher, exemptNsMap)
 	case constant.CloudAWS:
-		validater = aws.NewELbValidater()
-		if !opts.IsNamespaceScope {
-			lbClient, err = aws.NewElb()
-			if err != nil {
-				blog.Errorf("init cloud failed, err %s", err.Error())
-				os.Exit(1)
-			}
-		} else {
-			lbClient = namespacedlb.NewNamespacedLB(ctx, cli, eventWatcher, aws.NewElbWithSecret)
-		}
-		nodeClient = native.NewNativeNodeClient()
-
+		return initAWSClient(ctx, opts, cli, eventWatcher, exemptNsMap)
 	case constant.CloudGCP:
-		validater = gcp.NewGclbValidater()
-		if !opts.IsNamespaceScope {
-			lbClient, err = gcp.NewGclb(cli, eventWatcher)
-			if err != nil {
-				blog.Errorf("init cloud failed, err %s", err.Error())
-				os.Exit(1)
-			}
-		} else {
-			lbClient = namespacedlb.NewNamespacedLB(ctx, cli, eventWatcher,
-				gcp.NewGclbWithSecret)
-		}
-		nodeClient = native.NewNativeNodeClient()
-
+		return initGCPClient(ctx, opts, cli, eventWatcher, exemptNsMap)
 	case constant.CloudAzure:
-		validater = azure.NewAlbValidater()
-		if !opts.IsNamespaceScope {
-			lbClient, err = azure.NewAlb()
-			if err != nil {
-				blog.Errorf("init cloud failed, err %s", err.Error())
-				os.Exit(1)
-			}
-		} else {
-			lbClient = namespacedlb.NewNamespacedLB(ctx, cli, eventWatcher, azure.NewAlbWithSecret)
-		}
-		nodeClient = native.NewNativeNodeClient()
-
+		return initAzureClient(ctx, opts, cli, eventWatcher, exemptNsMap)
 	default:
 		blog.Errorf("unknown cloud type '%s'", opts.Cloud)
 		os.Exit(1)
 	}
-	return validater, lbClient, nodeClient
+	return nil, nil, nil
+}
+
+// newNamespacedLBWithExempt 构造 NamespacedLB。当 exemptNsMap 非空时，调用 makeDefaultClient
+// 构造一个基于 controller 全局密钥的 defaultClient，供豁免命名空间复用；否则 defaultClient 为 nil，
+// 所有命名空间均走各自的 per-ns Secret/ControllerConfig 路径。
+func newNamespacedLBWithExempt(
+	ctx context.Context,
+	cli client.Client,
+	eventWatcher eventer.WatchEventInterface,
+	newLBFunc func(map[string][]byte, client.Client, eventer.WatchEventInterface) (cloud.LoadBalance, error),
+	makeDefaultClient func() (cloud.LoadBalance, error),
+	exemptNsMap map[string]struct{},
+	cloudName string,
+) cloud.LoadBalance {
+	var defaultClient cloud.LoadBalance
+	if len(exemptNsMap) > 0 {
+		var err error
+		defaultClient, err = makeDefaultClient()
+		if err != nil {
+			blog.Errorf("init default %s client for exempt namespaces failed, err %s", cloudName, err.Error())
+			os.Exit(1)
+		}
+	}
+	// NameSpacedLB在处理监听器时，会使用对应命名空间下的Secret作为云密钥；
+	// 豁免命名空间直接复用 defaultClient（controller 全局密钥）。
+	return namespacedlb.NewNamespacedLB(ctx, cli, eventWatcher, newLBFunc, defaultClient, exemptNsMap)
+}
+
+func initTencentCloudClient(ctx context.Context, opts *option.ControllerOption, cli client.Client,
+	eventWatcher eventer.WatchEventInterface, exemptNsMap map[string]struct{}) (
+	cloud.Validater, cloud.LoadBalance, cloudnode.NodeClient) {
+	var lbClient cloud.LoadBalance
+	if !opts.IsNamespaceScope {
+		var err error
+		lbClient, err = tencentcloud.NewClb()
+		if err != nil {
+			blog.Errorf("init cloud failed, err %s", err.Error())
+			os.Exit(1)
+		}
+	} else {
+		lbClient = newNamespacedLBWithExempt(ctx, cli, eventWatcher,
+			tencentcloud.NewClbWithSecret,
+			func() (cloud.LoadBalance, error) { return tencentcloud.NewClb() },
+			exemptNsMap, "clb")
+	}
+	return tencentcloud.NewClbValidater(), lbClient, native.NewNativeNodeClient()
+}
+
+func initAWSClient(ctx context.Context, opts *option.ControllerOption, cli client.Client,
+	eventWatcher eventer.WatchEventInterface, exemptNsMap map[string]struct{}) (
+	cloud.Validater, cloud.LoadBalance, cloudnode.NodeClient) {
+	var lbClient cloud.LoadBalance
+	if !opts.IsNamespaceScope {
+		var err error
+		lbClient, err = aws.NewElb()
+		if err != nil {
+			blog.Errorf("init cloud failed, err %s", err.Error())
+			os.Exit(1)
+		}
+	} else {
+		lbClient = newNamespacedLBWithExempt(ctx, cli, eventWatcher,
+			aws.NewElbWithSecret,
+			func() (cloud.LoadBalance, error) { return aws.NewElb() },
+			exemptNsMap, "elb")
+	}
+	return aws.NewELbValidater(), lbClient, native.NewNativeNodeClient()
+}
+
+func initGCPClient(ctx context.Context, opts *option.ControllerOption, cli client.Client,
+	eventWatcher eventer.WatchEventInterface, exemptNsMap map[string]struct{}) (
+	cloud.Validater, cloud.LoadBalance, cloudnode.NodeClient) {
+	var lbClient cloud.LoadBalance
+	if !opts.IsNamespaceScope {
+		var err error
+		lbClient, err = gcp.NewGclb(cli, eventWatcher)
+		if err != nil {
+			blog.Errorf("init cloud failed, err %s", err.Error())
+			os.Exit(1)
+		}
+	} else {
+		lbClient = newNamespacedLBWithExempt(ctx, cli, eventWatcher,
+			gcp.NewGclbWithSecret,
+			func() (cloud.LoadBalance, error) { return gcp.NewGclb(cli, eventWatcher) },
+			exemptNsMap, "gclb")
+	}
+	return gcp.NewGclbValidater(), lbClient, native.NewNativeNodeClient()
+}
+
+func initAzureClient(ctx context.Context, opts *option.ControllerOption, cli client.Client,
+	eventWatcher eventer.WatchEventInterface, exemptNsMap map[string]struct{}) (
+	cloud.Validater, cloud.LoadBalance, cloudnode.NodeClient) {
+	var lbClient cloud.LoadBalance
+	if !opts.IsNamespaceScope {
+		var err error
+		lbClient, err = azure.NewAlb()
+		if err != nil {
+			blog.Errorf("init cloud failed, err %s", err.Error())
+			os.Exit(1)
+		}
+	} else {
+		lbClient = newNamespacedLBWithExempt(ctx, cli, eventWatcher,
+			azure.NewAlbWithSecret,
+			func() (cloud.LoadBalance, error) { return azure.NewAlb() },
+			exemptNsMap, "alb")
+	}
+	return azure.NewAlbValidater(), lbClient, native.NewNativeNodeClient()
 }
 
 // StartSignalHandler trap system signal for exit

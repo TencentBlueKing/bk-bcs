@@ -53,6 +53,10 @@ type IngressConverterOpt struct {
 	IsTCPUDPPortReuse bool
 	// Cloud cloud mod, e.g. tencentcloud aws gcp
 	Cloud string
+	// ExemptNamespaces namespaces exempt from namespace scope restriction.
+	// Ingresses in these namespaces can bind services and workloads across namespaces
+	// even when namespace scope is enabled.
+	ExemptNamespaces map[string]struct{}
 }
 
 // IngressConverter listener generator
@@ -107,6 +111,7 @@ func NewIngressConverter(opt *IngressConverterOpt,
 			IsNamespaced:      lbClient.IsNamespaced(),
 			IsTCPUDPPortReuse: opt.IsTCPUDPPortReuse,
 			Eventer:           eventer,
+			ExemptNamespaces:  opt.ExemptNamespaces,
 		},
 	}, nil
 }
