@@ -109,6 +109,10 @@ func (c *CloudValidate) CreateClusterValidate(req *proto.CreateClusterReq, opt *
 		if len(req.Master) == 0 || len(req.Nodes) == 0 {
 			return fmt.Errorf("lost kubernetes cluster masterIP when use exited master nodes")
 		}
+		// 双栈集群仅支持托管集群
+		if req.GetClusterAdvanceSettings().GetIsDualStack() {
+			return fmt.Errorf("dual stack is not supported in independent cluster")
+		}
 	default:
 		return fmt.Errorf("%s not supported cluster type[%s]", cloudName, req.ManageType)
 	}
@@ -130,6 +134,15 @@ func (c *CloudValidate) CreateClusterValidate(req *proto.CreateClusterReq, opt *
 		errMsg := fmt.Errorf("create cluster nodes count exceed maxNodeLimit: %d", maxNodeLimit)
 		blog.Errorf(errMsg.Error())
 		return errMsg
+	}
+
+	// 如果是双栈集群，需要检查其他字段
+	if req.GetClusterAdvanceSettings().GetIsDualStack() {
+		// Network Type
+		if req.GetClusterAdvanceSettings().GetNetworkType() != common.VpcCni {
+			return fmt.Errorf("dual stack is not supported in %s cluster, please use %s network",
+				req.GetClusterAdvanceSettings().GetNetworkType(), common.VpcCni)
+		}
 	}
 
 	return nil
