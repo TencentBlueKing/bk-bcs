@@ -565,12 +565,12 @@ func (t *TemplateAction) PreviewTemplateFile(ctx context.Context, req *clusterRe
 		if kind == "" {
 			continue
 		}
-		k8sRes, errr := res.GetGroupVersionResource(ctx, clusterConf, kind, groupVersion)
+		k8sRes, errr := res.GetNsGroupVersionResource(ctx, clusterConf, kind, groupVersion)
 		if errr != nil {
 			dryRunMsg = errr.Error()
 			break
 		}
-		_, errr = cli.NewResClient(clusterConf, k8sRes).ApplyWithoutPerm(ctx, v,
+		_, errr = cli.NewResClient(clusterConf, k8sRes.GVR).ApplyWithoutPerm(ctx, v, k8sRes.Namespaced,
 			metav1.CreateOptions{DryRun: []string{metav1.DryRunAll}})
 		if errr != nil {
 			dryRunMsg = errr.Error()
@@ -637,11 +637,12 @@ func (t *TemplateAction) DeployTemplateFile(ctx context.Context, req *clusterRes
 		if kind == "" {
 			continue
 		}
-		k8sRes, err := res.GetGroupVersionResource(ctx, clusterConf, kind, groupVersion)
+		k8sRes, err := res.GetNsGroupVersionResource(ctx, clusterConf, kind, groupVersion)
 		if err != nil {
 			return nil, err
 		}
-		_, err = cli.NewResClient(clusterConf, k8sRes).ApplyWithoutPerm(ctx, v, metav1.CreateOptions{})
+		_, err = cli.NewResClient(clusterConf, k8sRes.GVR).ApplyWithoutPerm(ctx, v, k8sRes.Namespaced,
+			metav1.CreateOptions{})
 		if err != nil {
 			return nil, err
 		}

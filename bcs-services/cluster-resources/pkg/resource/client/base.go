@@ -200,21 +200,27 @@ func (c *ResClient) Update(
 
 // ApplyWithoutPerm 创建或更新资源，不做权限校验
 func (c *ResClient) ApplyWithoutPerm(
-	ctx context.Context, manifest map[string]interface{}, opts metav1.CreateOptions,
+	ctx context.Context, manifest map[string]interface{}, isNSScoped bool, opts metav1.CreateOptions,
 ) (*unstructured.Unstructured, error) {
 	name := mapx.GetStr(manifest, "metadata.name")
-	namespace := mapx.GetStr(manifest, "metadata.namespace")
+	namespace := ""
+	if isNSScoped {
+		namespace = mapx.GetStr(manifest, "metadata.namespace")
+	}
 	if name == "" {
 		return nil, errorx.New(errcode.ValidateErr, i18n.GetMsg(ctx, "metadata.name 必须指定"))
 	}
 	old, err := c.cli.Resource(c.res).Namespace(namespace).Get(ctx, name, metav1.GetOptions{})
-	if err != nil && errors.IsNotFound(err) {
+	if err != nil {
 		if !errors.IsNotFound(err) {
 			return nil, c.handleErr(ctx, err)
 		}
 		ret, errr := c.cli.Resource(c.res).Namespace(namespace).Create(
 			ctx, &unstructured.Unstructured{Object: manifest}, opts)
-		return ret, c.handleErr(ctx, errr)
+		if errr != nil {
+			return nil, c.handleErr(ctx, errr)
+		}
+		return ret, nil
 	}
 	_ = mapx.SetItems(manifest, "metadata.resourceVersion", old.GetResourceVersion())
 	ret, err := c.cli.Resource(c.res).Namespace(namespace).Update(
