@@ -62,7 +62,8 @@ func generateClusterCIDRInfo(ctx context.Context,
 		if len(info.Cluster.GetNetworkSettings().GetSubnetSource().GetNew()) > 0 {
 			// 各个可用区自动分配指定数量的子网
 			ids, err := business.AllocateClusterVpcCniSubnets(ctx, info.Cluster.ClusterID, info.Cluster.VpcID,
-				info.Cluster.GetNetworkSettings().GetSubnetSource().GetNew(), info.CmOption)
+				info.Cluster.GetNetworkSettings().GetSubnetSource().GetNew(), info.CmOption,
+				info.Cluster.GetClusterAdvanceSettings().GetIsDualStack())
 			if err != nil {
 				return nil, err
 			}

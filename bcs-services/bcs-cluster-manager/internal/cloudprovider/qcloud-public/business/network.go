@@ -129,7 +129,7 @@ func GetFreeIPNets(opt *cloudprovider.CommonOption, vpcId string) ([]*net.IPNet,
 
 // AllocateSubnet allocate directrouter subnet
 func AllocateSubnet(opt *cloudprovider.CommonOption, vpcId, zone string,
-	mask int, clusterId, subnetName string) (*cidrtree.Subnet, error) {
+	mask int, clusterId, subnetName string, enableIPv6 bool) (*cidrtree.Subnet, error) {
 	frees, err := GetFreeIPNets(opt, vpcId)
 	if err != nil {
 		return nil, err
@@ -148,7 +148,7 @@ func AllocateSubnet(opt *cloudprovider.CommonOption, vpcId, zone string,
 	if err != nil {
 		return nil, err
 	}
-	ret, err := vpcCli.CreateSubnet(vpcId, subnetName, zone, sub)
+	ret, err := vpcCli.CreateSubnet(vpcId, subnetName, zone, sub, enableIPv6)
 	if err != nil {
 		return nil, err
 	}
@@ -176,7 +176,7 @@ func subnetFromVpcSubnet(info *vpc.Subnet) (n *cidrtree.Subnet) {
 
 // AllocateClusterVpcCniSubnets 集群分配所需的vpc-cni子网资源
 func AllocateClusterVpcCniSubnets(ctx context.Context, clusterId, vpcId string,
-	subnets []*proto.NewSubnet, opt *cloudprovider.CommonOption) ([]string, error) {
+	subnets []*proto.NewSubnet, opt *cloudprovider.CommonOption, isDualStack bool) ([]string, error) {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
 	subnetIDs := make([]string, 0)
@@ -197,7 +197,7 @@ func AllocateClusterVpcCniSubnets(ctx context.Context, clusterId, vpcId string,
 			mask = utils.DefaultMask
 		}
 
-		sub, err := AllocateSubnet(opt, vpcId, subnets[i].Zone, mask, clusterId, "")
+		sub, err := AllocateSubnet(opt, vpcId, subnets[i].Zone, mask, clusterId, "", isDualStack)
 		if err != nil {
 			blog.Errorf("AllocateClusterVpcCniSubnets[%s] failed: %v", taskID, err)
 			continue

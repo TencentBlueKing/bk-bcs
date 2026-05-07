@@ -302,7 +302,7 @@ func AllocateSubnet(opt *cloudprovider.CommonOption, vpcId, zone string,
 	if err != nil {
 		return nil, err
 	}
-	ret, err := vpcCli.CreateSubnet(vpcId, subnetName, zone, sub)
+	ret, err := vpcCli.CreateSubnet(vpcId, subnetName, zone, sub, false)
 	if err != nil {
 		return nil, err
 	}
