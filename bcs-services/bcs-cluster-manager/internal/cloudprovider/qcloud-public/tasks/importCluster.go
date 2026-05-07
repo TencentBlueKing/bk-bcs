@@ -106,6 +106,30 @@ func ImportClusterNodesTask(taskID string, stepName string) error {
 		state.Task.CommonParams[cloudprovider.MasterNodeIPsKey.String()] = strings.Join(masterIps, ",")
 		state.Task.CommonParams[cloudprovider.WorkerNodeIPsKey.String()] = strings.Join(nodeIps, ",")
 		state.Task.CommonParams[cloudprovider.NodeIPsKey.String()] = strings.Join(allNodeIps, ",")
+
+		// get node IDs from database by IPs to retrieve IPv6 addresses
+		ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
+		nodeIDs := make([]string, 0)
+		for _, ip := range allNodeIps {
+			node, err := cloudprovider.GetStorageModel().GetNodeByIP(ctx, ip)
+			if err != nil {
+				blog.Warnf("ImportClusterNodesTask[%s]: GetNodeByIP[%s] failed: %v", taskID, ip, err)
+				continue
+			}
+			if node != nil && node.NodeID != "" {
+				nodeIDs = append(nodeIDs, node.NodeID)
+			}
+		}
+
+		// get IPv6 addresses from database and add to task params
+		if len(nodeIDs) > 0 {
+			nodeIPv6s := cloudprovider.GetInstanceIPv6sByID(ctx, nodeIDs)
+			if len(nodeIPv6s) > 0 {
+				state.Task.CommonParams[cloudprovider.NodeIPv6sKey.String()] = strings.Join(nodeIPv6s, ",")
+				blog.Infof("ImportClusterNodesTask[%s]: collected %d IPv6 addresses: %v",
+					taskID, len(nodeIPv6s), nodeIPv6s)
+			}
+		}
 	}
 
 	// update step
