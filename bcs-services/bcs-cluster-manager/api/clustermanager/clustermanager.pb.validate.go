@@ -1696,6 +1696,8 @@ func (m *ClusterAdvanceSetting) validate(all bool) error {
 		}
 	}
 
+	// no validation rules for IsDualStack
+
 	if len(errors) > 0 {
 		return ClusterAdvanceSettingMultiError(errors)
 	}

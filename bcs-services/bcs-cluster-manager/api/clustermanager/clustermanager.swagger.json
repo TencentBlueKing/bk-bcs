@@ -10270,6 +10270,12 @@
           "$ref": "#/definitions/clustermanagerClusterConnectSetting",
           "description": "集群开启内外网设，公有云必须设置此参数",
           "title": "clusterConnectSetting"
+        },
+        "isDualStack": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "集群VPC-CNI模式下是否开启IPv6双栈，默认false",
+          "title": "isDualStack"
         }
       }
     },

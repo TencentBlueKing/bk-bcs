@@ -151,6 +151,7 @@ func generateClusterAdvancedInfo(cluster *proto.Cluster) *api.ClusterAdvancedSet
 		RuntimeVersion:     cluster.ClusterAdvanceSettings.RuntimeVersion,
 		DeletionProtection: cluster.ClusterAdvanceSettings.DeletionProtection,
 		AuditEnabled:       cluster.ClusterAdvanceSettings.AuditEnabled,
+		IsDualStack:        cluster.ClusterAdvanceSettings.IsDualStack,
 	}
 
 	// cluster control component extraArgs

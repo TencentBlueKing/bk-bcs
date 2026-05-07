@@ -610,6 +610,8 @@ type ClusterAdvancedSettings struct {
 	DeletionProtection bool `json:"deletionProtection"`
 	// AuditEnabled cluster audit
 	AuditEnabled bool `json:"auditEnabled"`
+	// IsDualStack 集群VPC-CNI模式下是否开启IPv6双栈，默认false
+	IsDualStack bool `json:"isDualStack"`
 }
 
 // ExistedInstancesForNode use existed nodes for create cluster or add node

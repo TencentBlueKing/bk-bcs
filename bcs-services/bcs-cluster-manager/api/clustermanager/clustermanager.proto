@@ -2179,6 +2179,10 @@ message ClusterAdvanceSetting {
     title: "clusterConnectSetting",
     description: "集群开启内外网设，公有云必须设置此参数"
   }];
+  bool isDualStack = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "isDualStack",
+    description: "集群VPC-CNI模式下是否开启IPv6双栈，默认false"
+  }];
 }
 
 // ClusterConnectSetting ApiServer内外网访问信息
