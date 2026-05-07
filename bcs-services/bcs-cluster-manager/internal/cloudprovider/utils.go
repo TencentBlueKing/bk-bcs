@@ -685,6 +685,27 @@ func GetInstanceIPsByID(ctx context.Context, nodeIDs []string) []string {
 	return nodeIPs
 }
 
+// GetInstanceIPv6sByID get InstanceIPv6 by NodeID
+func GetInstanceIPv6sByID(ctx context.Context, nodeIDs []string) []string {
+	var (
+		nodeIPv6s = make([]string, 0)
+		taskID    = GetTaskIDFromContext(ctx)
+	)
+
+	for _, id := range nodeIDs {
+		node, err := GetStorageModel().GetNode(context.Background(), id)
+		if err != nil {
+			blog.Errorf("GetInstanceIPv6sByID[%s] nodeID[%s] failed: %v", taskID, id, err)
+			continue
+		}
+		if node.InnerIPv6 != "" {
+			nodeIPv6s = append(nodeIPv6s, node.InnerIPv6)
+		}
+	}
+
+	return nodeIPv6s
+}
+
 // GetInstanceIPsByName get InstanceIP by NodeName
 func GetInstanceIPsByName(ctx context.Context, clusterID string, nodeNames []string) []string {
 	var (

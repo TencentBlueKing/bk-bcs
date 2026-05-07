@@ -1102,6 +1102,8 @@ func CheckCreateClusterNodeStatusTask(taskID string, stepName string) error { //
 		strings.Join(business.GetInstanceIPs(addSuccessNodes), ",")
 	state.Task.CommonParams[cloudprovider.DynamicNodeIPListKey.String()] =
 		strings.Join(business.GetInstanceIPs(addSuccessNodes), ",")
+	state.Task.CommonParams[cloudprovider.NodeIPv6sKey.String()] =
+		strings.Join(cloudprovider.GetInstanceIPv6sByID(ctx, business.GetInstanceIDs(addSuccessNodes)), ",")
 
 	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
 		"check cluster instance status successful")

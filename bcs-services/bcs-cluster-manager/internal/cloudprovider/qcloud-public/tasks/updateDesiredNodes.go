@@ -483,6 +483,13 @@ func CheckClusterNodesStatusTask(taskID string, stepName string) error { // noli
 		state.Task.CommonParams[cloudprovider.NodeIPsKey.String()] = strings.Join(ipList, ",")
 		state.Task.NodeIPList = ipList
 	}
+	// save node ipv6
+	if len(successInstances) > 0 {
+		nodeIPv6s := cloudprovider.GetInstanceIPv6sByID(ctx, successInstances)
+		if len(nodeIPv6s) > 0 {
+			state.Task.CommonParams[cloudprovider.NodeIPv6sKey.String()] = strings.Join(nodeIPv6s, ",")
+		}
+	}
 
 	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
 		"check cluster nodes status successful")
