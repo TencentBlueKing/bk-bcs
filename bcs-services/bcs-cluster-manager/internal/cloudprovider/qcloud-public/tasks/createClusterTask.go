@@ -451,6 +451,12 @@ func generateNewRunInstance(info *cloudprovider.CloudDependBasicInfo, role strin
 				return common.StringPtr(info.Cluster.GetVpcID())
 			}(),
 			SubnetId: common.StringPtr(templates[i].SubnetID),
+			Ipv6AddressCount: func() *uint64 {
+				if info.Cluster.GetClusterAdvanceSettings().GetIsDualStack() {
+					return common.Uint64Ptr(1)
+				}
+				return nil
+			}(),
 		}
 
 		// 公网带宽相关信息设置
