@@ -2520,8 +2520,12 @@ message OSInfo {
     description: "默认云上安全组，方便用户在cli、SaaS进行选择"
   }];
   map<string, string> regions = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "regions", 
+    title: "regions",
     description: "云上默认置入的区域信息，key是字符串，values是中文说明"
+  }];
+  repeated string ipv6ImageID = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "ipv6ImageID",
+    description: "支持IPv6双栈的镜像ID列表"
   }];
 }
 
@@ -12989,6 +12993,10 @@ message OsImage {
   repeated ClusterInfo clusters = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "clusters",
     description : "镜像关联的集群信息"
+  }];
+  bool supportIpv6 = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "supportIpv6",
+    description : "是否支持IPv6双栈"
   }];
 }
 
