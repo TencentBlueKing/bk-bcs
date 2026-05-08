@@ -107,28 +107,10 @@ func ImportClusterNodesTask(taskID string, stepName string) error {
 		state.Task.CommonParams[cloudprovider.WorkerNodeIPsKey.String()] = strings.Join(nodeIps, ",")
 		state.Task.CommonParams[cloudprovider.NodeIPsKey.String()] = strings.Join(allNodeIps, ",")
 
-		// get node IDs from database by IPs to retrieve IPv6 addresses
 		ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
-		nodeIDs := make([]string, 0)
-		for _, ip := range allNodeIps {
-			node, err := cloudprovider.GetStorageModel().GetNodeByIP(ctx, ip)
-			if err != nil {
-				blog.Warnf("ImportClusterNodesTask[%s]: GetNodeByIP[%s] failed: %v", taskID, ip, err)
-				continue
-			}
-			if node != nil && node.NodeID != "" {
-				nodeIDs = append(nodeIDs, node.NodeID)
-			}
-		}
-
-		// get IPv6 addresses from database and add to task params
-		if len(nodeIDs) > 0 {
-			nodeIPv6s := cloudprovider.GetInstanceIPv6sByID(ctx, nodeIDs)
-			if len(nodeIPv6s) > 0 {
-				state.Task.CommonParams[cloudprovider.NodeIPv6sKey.String()] = strings.Join(nodeIPv6s, ",")
-				blog.Infof("ImportClusterNodesTask[%s]: collected %d IPv6 addresses: %v",
-					taskID, len(nodeIPv6s), nodeIPv6s)
-			}
+		nodeIPv6s := collectNodeIPv6Addresses(ctx, taskID, allNodeIps)
+		if len(nodeIPv6s) > 0 {
+			state.Task.CommonParams[cloudprovider.NodeIPv6sKey.String()] = strings.Join(nodeIPv6s, ",")
 		}
 	}
 
@@ -461,6 +443,32 @@ func importClusterInstances(data *cloudprovider.CloudDependBasicInfo) ([]string,
 	}
 
 	return masterIPs, nodeIPs, nil
+}
+
+// collectNodeIPv6Addresses collects IPv6 addresses for given node IPs
+func collectNodeIPv6Addresses(ctx context.Context, taskID string, nodeIPs []string) []string {
+	nodeIDs := make([]string, 0)
+	for _, ip := range nodeIPs {
+		node, err := cloudprovider.GetStorageModel().GetNodeByIP(ctx, ip)
+		if err != nil {
+			blog.Warnf("collectNodeIPv6Addresses[%s]: GetNodeByIP[%s] failed: %v", taskID, ip, err)
+			continue
+		}
+		if node != nil && node.NodeID != "" {
+			nodeIDs = append(nodeIDs, node.NodeID)
+		}
+	}
+
+	if len(nodeIDs) == 0 {
+		return nil
+	}
+
+	nodeIPv6s := cloudprovider.GetInstanceIPv6sByID(ctx, nodeIDs)
+	if len(nodeIPv6s) > 0 {
+		blog.Infof("collectNodeIPv6Addresses[%s]: collected %d IPv6 addresses: %v",
+			taskID, len(nodeIPv6s), nodeIPv6s)
+	}
+	return nodeIPv6s
 }
 
 // InstanceInfo instance info

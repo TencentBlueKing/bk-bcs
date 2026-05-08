@@ -232,7 +232,7 @@ var (
 	NodeDatasKey ParamKey = "nodeDatas"
 	// NodeIPsKey xxx
 	NodeIPsKey ParamKey = "nodeIPs"
-	// NodeIPv6sKey
+	// NodeIPv6sKey node IPv6 addresses key
 	NodeIPv6sKey ParamKey = "nodeIPv6s"
 	// OriginNodeIPsKey xxx
 	OriginNodeIPsKey ParamKey = "originNodeIPs"
