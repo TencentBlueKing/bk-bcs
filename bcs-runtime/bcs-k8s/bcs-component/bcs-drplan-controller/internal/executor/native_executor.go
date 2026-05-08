@@ -53,6 +53,15 @@ func NewNativeWorkflowExecutor(client client.Client, registry Registry) *NativeW
 	}
 }
 
+func (e *NativeWorkflowExecutor) reportWorkflowProgress(
+	ctx context.Context,
+	status *drv1alpha1.WorkflowExecutionStatus,
+) {
+	if recorder := progressRecorderFrom(ctx); recorder != nil {
+		recorder.reportWorkflow(ctx, status)
+	}
+}
+
 // ExecuteWorkflow executes a workflow using batch-based scheduling.
 // When any action specifies DependsOn, the workflow switches to DAG-based scheduling
 // where actions with no inter-dependencies execute concurrently.
@@ -72,6 +81,7 @@ func (e *NativeWorkflowExecutor) ExecuteWorkflow(ctx context.Context, workflow *
 		StartTime:      &metav1.Time{Time: time.Now()},
 		ActionStatuses: make([]drv1alpha1.ActionStatus, 0, len(workflow.Spec.Actions)),
 	}
+	e.reportWorkflowProgress(ctx, workflowProgressSnapshot(status, workflow.Spec.Actions))
 
 	if hasDependsOn(workflow.Spec.Actions) {
 		return e.executeDAGWorkflow(ctx, workflow, params, status)
@@ -211,8 +221,12 @@ func (e *NativeWorkflowExecutor) executeBatchWorkflow(
 			batchIdx+1, len(batches), batch.perCluster, len(batch.actions))
 
 		if batch.perCluster {
+			e.reportWorkflowProgress(ctx, workflowProgressSnapshot(
+				status, workflow.Spec.Actions, runningActionStatuses(batch.actions)...,
+			))
 			batchStatuses, err := e.executePerClusterBatch(ctx, batch.actions, params, workflow.Spec.FailurePolicy)
 			status.ActionStatuses = append(status.ActionStatuses, batchStatuses...)
+			e.reportWorkflowProgress(ctx, workflowProgressSnapshot(status, workflow.Spec.Actions))
 			if err != nil {
 				status.Phase = drv1alpha1.PhaseFailed
 				status.Message = fmt.Sprintf("PerCluster batch failed: %v", err)
@@ -223,6 +237,7 @@ func (e *NativeWorkflowExecutor) executeBatchWorkflow(
 			for actionIdx, action := range batch.actions {
 				actionStatus, shouldStop, err := e.executeSingleGlobalAction(ctx, action, params, workflow, status)
 				status.ActionStatuses = append(status.ActionStatuses, actionStatus)
+				e.reportWorkflowProgress(ctx, workflowProgressSnapshot(status, workflow.Spec.Actions))
 				if shouldStop {
 					appendCancelledActions(status, batches, batchIdx, actionIdx+1)
 					return e.finalizeWorkflowStatus(status), err
@@ -266,9 +281,13 @@ func (e *NativeWorkflowExecutor) executeDAGWorkflow(
 
 	for layerIdx, layer := range layers {
 		klog.V(2).Infof("Executing DAG layer %d/%d (%d actions)", layerIdx+1, len(layers), len(layer))
+		e.reportWorkflowProgress(ctx, workflowProgressSnapshot(
+			status, workflow.Spec.Actions, runningActionStatuses(layer)...,
+		))
 
 		layerStatuses, layerErr := e.executeDAGLayer(ctx, layer, params, workflow)
 		status.ActionStatuses = append(status.ActionStatuses, layerStatuses...)
+		e.reportWorkflowProgress(ctx, workflowProgressSnapshot(status, workflow.Spec.Actions))
 		if layerErr != nil {
 			status.Phase = drv1alpha1.PhaseFailed
 			status.Message = fmt.Sprintf("DAG layer %d failed: %v", layerIdx+1, layerErr)
@@ -449,6 +468,7 @@ func (e *NativeWorkflowExecutor) executeSingleGlobalAction(
 	klog.Infof("Executing action %d/%d: %s (type=%s)", completedSoFar+1, totalActions, action.Name, action.Type)
 	wfStatus.CurrentAction = action.Name
 	wfStatus.Progress = fmt.Sprintf("%d/%d actions completed", completedSoFar, totalActions)
+	e.reportWorkflowProgress(ctx, workflowProgressSnapshot(wfStatus, workflow.Spec.Actions, runningActionStatus(action)))
 
 	shouldExecute, skipReason, whenErr := shouldExecuteActionByWhen(action.When, params)
 	if whenErr != nil {
@@ -742,6 +762,7 @@ func (e *NativeWorkflowExecutor) executeClusterActions(
 		}
 
 		shouldExec, skipReason, whenErr := shouldExecuteActionByWhen(action.When, params)
+		shouldFailFast := shouldFailFastPerClusterAction(action, failurePolicy)
 		if whenErr != nil {
 			cs := drv1alpha1.ClusterActionStatus{
 				Cluster: clusterBinding, ClusterID: clusterID,
@@ -752,6 +773,9 @@ func (e *NativeWorkflowExecutor) executeClusterActions(
 			mu.Lock()
 			statusMap[action.Name] = append(statusMap[action.Name], cs)
 			mu.Unlock()
+			if shouldFailFast {
+				cancelFn()
+			}
 			break
 		}
 		if !shouldExec {
@@ -784,7 +808,7 @@ func (e *NativeWorkflowExecutor) executeClusterActions(
 		mu.Unlock()
 
 		if cs.Phase == drv1alpha1.PhaseFailed {
-			if isFailFast(failurePolicy) {
+			if shouldFailFast {
 				cancelFn()
 			}
 			break
@@ -939,6 +963,14 @@ func (e *NativeWorkflowExecutor) executeGlobalBatchFallback(
 // isFailFast treats empty policy as FailFast for backward compatibility.
 func isFailFast(policy string) bool {
 	return policy == drv1alpha1.FailurePolicyFailFast || policy == ""
+}
+
+// shouldFailFastPerClusterAction keeps fail-fast for non-hook PerCluster actions only.
+func shouldFailFastPerClusterAction(action drv1alpha1.Action, failurePolicy string) bool {
+	if !isFailFast(failurePolicy) {
+		return false
+	}
+	return action.HookType == "" && action.HookCleanup == nil
 }
 
 // appendCancelledActions appends Canceled statuses for all unexecuted actions remaining
@@ -1349,6 +1381,8 @@ func NewNativePlanExecutor(
 // ExecutePlan executes a DR plan
 func (e *NativePlanExecutor) ExecutePlan(ctx context.Context, plan *drv1alpha1.DRPlan, execution *drv1alpha1.DRPlanExecution) error {
 	klog.Infof("Executing plan: %s/%s", plan.Namespace, plan.Name)
+	progressRecorder := newExecutionProgressRecorder(e, execution)
+	ctx = withExecutionProgressRecorder(ctx, progressRecorder)
 
 	// Initialize execution status
 	if execution.Status.StageStatuses == nil {
@@ -1359,12 +1393,16 @@ func (e *NativePlanExecutor) ExecutePlan(ctx context.Context, plan *drv1alpha1.D
 			TotalStages: len(plan.Spec.Stages),
 		}
 	}
+	e.initializePendingStageStatuses(execution, plan.Spec.Stages)
+	if err := e.updateExecutionStatus(ctx, execution); err != nil {
+		return err
+	}
 
 	globalParams, executionOverrides, err := e.resolveExecutionParams(ctx, plan, execution)
 	if err != nil {
 		execution.Status.Phase = drv1alpha1.PhaseFailed
 		execution.Status.Message = err.Error()
-		return e.updateExecutionStatus(ctx, execution, nil)
+		return e.updateExecutionStatus(ctx, execution)
 	}
 
 	// Execute stages based on dependencies
@@ -1380,13 +1418,20 @@ func (e *NativePlanExecutor) ExecutePlan(ctx context.Context, plan *drv1alpha1.D
 		// Execute ready stages
 		for _, stage := range readyStages {
 			klog.Infof("Executing stage: %s", stage.Name)
+			progressRecorder.reportStage(ctx, ptrToStageStatus(runningStageStatus(stage)))
 
 			stageStatus, err := e.stageExecutor.ExecuteStage(ctx, plan, &stage, globalParams, executionOverrides)
 			if err != nil {
 				klog.Errorf("Stage %s failed: %v", stage.Name, err)
-				execution.Status.Phase = drv1alpha1.PhaseFailed
-				execution.Status.Message = fmt.Sprintf("Stage %s failed: %v", stage.Name, err)
-				return e.updateExecutionStatus(ctx, execution, stageStatus)
+				stageStatus = normalizeFailedStageStatus(stage.Name, stageStatus, err)
+				e.updateStageStatusInExecution(execution, stageStatus)
+				if plan.Spec.FailurePolicy == "Stop" || plan.Spec.FailurePolicy == "" {
+					execution.Status.Phase = drv1alpha1.PhaseFailed
+					execution.Status.Message = fmt.Sprintf("Stage %s failed: %v", stage.Name, err)
+					return e.updateExecutionStatus(ctx, execution)
+				}
+				executedStages[stage.Name] = true
+				continue
 			}
 
 			// Update stage status in execution
@@ -1397,7 +1442,7 @@ func (e *NativePlanExecutor) ExecutePlan(ctx context.Context, plan *drv1alpha1.D
 				if plan.Spec.FailurePolicy == "Stop" || plan.Spec.FailurePolicy == "" {
 					execution.Status.Phase = drv1alpha1.PhaseFailed
 					execution.Status.Message = fmt.Sprintf("Stage %s failed", stage.Name)
-					return e.updateExecutionStatus(ctx, execution, nil)
+					return e.updateExecutionStatus(ctx, execution)
 				}
 			}
 
@@ -1422,7 +1467,7 @@ func (e *NativePlanExecutor) ExecutePlan(ctx context.Context, plan *drv1alpha1.D
 			if err != nil {
 				execution.Status.Phase = drv1alpha1.PhaseFailed
 				execution.Status.Message = fmt.Sprintf("delete cleanup failed: %v", err)
-				return e.updateExecutionStatus(ctx, execution, nil)
+				return e.updateExecutionStatus(ctx, execution)
 			}
 			if cleaned > 0 {
 				execution.Status.Message = fmt.Sprintf("All stages completed successfully (cleaned %d historical subscriptions)", cleaned)
@@ -1433,7 +1478,29 @@ func (e *NativePlanExecutor) ExecutePlan(ctx context.Context, plan *drv1alpha1.D
 		execution.Status.Message = "One or more stages failed"
 	}
 
-	return e.updateExecutionStatus(ctx, execution, nil)
+	return e.updateExecutionStatus(ctx, execution)
+}
+
+func normalizeFailedStageStatus(
+	stageName string,
+	stageStatus *drv1alpha1.StageStatus,
+	err error,
+) *drv1alpha1.StageStatus {
+	if stageStatus == nil {
+		return &drv1alpha1.StageStatus{
+			Name:    stageName,
+			Phase:   drv1alpha1.PhaseFailed,
+			Message: err.Error(),
+		}
+	}
+	if stageStatus.Name == "" {
+		stageStatus.Name = stageName
+	}
+	stageStatus.Phase = drv1alpha1.PhaseFailed
+	if stageStatus.Message == "" {
+		stageStatus.Message = err.Error()
+	}
+	return stageStatus
 }
 
 // shouldCleanupHistoricalSubscriptions returns true only for Execute(Delete mode).
@@ -1637,7 +1704,7 @@ func (e *NativePlanExecutor) RevertPlan(ctx context.Context, plan *drv1alpha1.DR
 
 	targetExecution, err := e.validateAndFetchRevertTarget(ctx, plan, execution)
 	if err != nil {
-		return e.updateExecutionStatus(ctx, execution, nil)
+		return e.updateExecutionStatus(ctx, execution)
 	}
 
 	klog.Infof("Reverting based on target execution %s/%s with %d stages",
@@ -1647,7 +1714,7 @@ func (e *NativePlanExecutor) RevertPlan(ctx context.Context, plan *drv1alpha1.DR
 	if err != nil {
 		execution.Status.Phase = drv1alpha1.PhaseFailed
 		execution.Status.Message = err.Error()
-		return e.updateExecutionStatus(ctx, execution, nil)
+		return e.updateExecutionStatus(ctx, execution)
 	}
 	globalParams["mode"] = modeRollback
 	if len(execution.Spec.Params) > 0 {
@@ -1655,7 +1722,7 @@ func (e *NativePlanExecutor) RevertPlan(ctx context.Context, plan *drv1alpha1.DR
 		if err != nil {
 			execution.Status.Phase = drv1alpha1.PhaseFailed
 			execution.Status.Message = fmt.Sprintf("resolving revert execution params: %v", err)
-			return e.updateExecutionStatus(ctx, execution, nil)
+			return e.updateExecutionStatus(ctx, execution)
 		}
 		for k, v := range revertOverrides {
 			if k == "mode" {
@@ -1727,14 +1794,14 @@ func (e *NativePlanExecutor) RevertPlan(ctx context.Context, plan *drv1alpha1.DR
 			klog.Errorf("Failed to revert stage %s: %v", stage.Name, err)
 			execution.Status.Phase = drv1alpha1.PhaseFailed
 			execution.Status.Message = fmt.Sprintf("Failed to revert stage %s: %v", stage.Name, err)
-			return e.updateExecutionStatus(ctx, execution, nil)
+			return e.updateExecutionStatus(ctx, execution)
 		}
 
 		// Check stage rollback result
 		if rollbackStageStatus.Phase == drv1alpha1.PhaseFailed {
 			execution.Status.Phase = drv1alpha1.PhaseFailed
 			execution.Status.Message = fmt.Sprintf("Stage %s rollback failed", stage.Name)
-			return e.updateExecutionStatus(ctx, execution, nil)
+			return e.updateExecutionStatus(ctx, execution)
 		}
 
 		if rollbackStageStatus.Phase == drv1alpha1.PhaseSucceeded {
@@ -1751,7 +1818,7 @@ func (e *NativePlanExecutor) RevertPlan(ctx context.Context, plan *drv1alpha1.DR
 	}
 
 	e.finalizeRevertSuccess(plan, execution, succeededStages, totalActions, skippedStages)
-	return e.updateExecutionStatus(ctx, execution, nil)
+	return e.updateExecutionStatus(ctx, execution)
 }
 
 // CancelExecution cancels an ongoing execution
@@ -1943,11 +2010,7 @@ func (e *NativePlanExecutor) updateExecutionSummary(execution *drv1alpha1.DRPlan
 }
 
 // updateExecutionStatus updates execution status in API server
-func (e *NativePlanExecutor) updateExecutionStatus(ctx context.Context, execution *drv1alpha1.DRPlanExecution, stageStatus *drv1alpha1.StageStatus) error {
-	if stageStatus != nil {
-		e.updateStageStatusInExecution(execution, stageStatus)
-	}
-
+func (e *NativePlanExecutor) updateExecutionStatus(ctx context.Context, execution *drv1alpha1.DRPlanExecution) error {
 	if err := e.client.Status().Update(ctx, execution); err != nil {
 		klog.Errorf("Failed to update execution status: %v", err)
 		return err

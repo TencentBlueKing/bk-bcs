@@ -221,6 +221,18 @@ func (e *SubscriptionActionExecutor) ExecuteForCluster( //nolint:funlen
 		cs.Message = fmt.Sprintf("build child Subscription: %v", err)
 		return cs, nil, err
 	}
+
+	// PerCluster hook actions never create the parent Subscription. Apply the
+	// same beforeCreate cleanup to the concrete child Subscription so a repeated
+	// hook run does not reuse a stale child Subscription and its old Job state.
+	if cleanupErr := e.applyHookPreCleanup(ctx, action, child.GetNamespace(), child.GetName()); cleanupErr != nil {
+		cs.Phase = drv1alpha1.PhaseFailed
+		cs.CompletionTime = timeNowPtr()
+		cs.Message = fmt.Sprintf("hook pre-cleanup failed for child Subscription %s/%s: %v",
+			child.GetNamespace(), child.GetName(), cleanupErr)
+		return cs, nil, cleanupErr
+	}
+
 	childRef := &corev1.ObjectReference{
 		APIVersion: "apps.clusternet.io/v1alpha1",
 		Kind:       "Subscription",

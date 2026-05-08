@@ -152,6 +152,52 @@ func TestDRWorkflowWebhook_ValidateWorkflow_HelmChartDeleteDoesNotRequireSpec(t 
 	}
 }
 
+func TestDRWorkflowWebhook_ValidateWorkflow_KubernetesResourceApplyAllowsMissingRollback(t *testing.T) {
+	webhook := &DRWorkflowWebhook{}
+	workflow := &drv1alpha1.DRWorkflow{
+		Spec: drv1alpha1.DRWorkflowSpec{
+			Actions: []drv1alpha1.Action{
+				{
+					Name: "manifest",
+					Type: drv1alpha1.ActionTypeKubernetesResource,
+					Resource: &drv1alpha1.KubernetesResourceAction{
+						Operation: drv1alpha1.OperationApply,
+						Manifest:  "apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: demo\n",
+					},
+				},
+			},
+		},
+	}
+
+	_, errs := webhook.validateWorkflow(workflow)
+	if len(errs) != 0 {
+		t.Fatalf("expected KubernetesResource Apply without rollback to be valid, got errors: %v", errs)
+	}
+}
+
+func TestDRWorkflowWebhook_ValidateWorkflow_KubernetesResourcePatchRequiresRollback(t *testing.T) {
+	webhook := &DRWorkflowWebhook{}
+	workflow := &drv1alpha1.DRWorkflow{
+		Spec: drv1alpha1.DRWorkflowSpec{
+			Actions: []drv1alpha1.Action{
+				{
+					Name: "manifest",
+					Type: drv1alpha1.ActionTypeKubernetesResource,
+					Resource: &drv1alpha1.KubernetesResourceAction{
+						Operation: drv1alpha1.OperationPatch,
+						Manifest:  "apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: demo\n",
+					},
+				},
+			},
+		},
+	}
+
+	_, errs := webhook.validateWorkflow(workflow)
+	if len(errs) == 0 {
+		t.Fatal("expected KubernetesResource Patch without rollback to be invalid")
+	}
+}
+
 func TestDRWorkflowWebhook_ValidateWorkflow_GlobalizationApplyAllowsMissingRollback(t *testing.T) {
 	webhook := &DRWorkflowWebhook{}
 	workflow := &drv1alpha1.DRWorkflow{

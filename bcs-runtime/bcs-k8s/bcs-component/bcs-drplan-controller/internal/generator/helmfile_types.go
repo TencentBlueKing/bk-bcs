@@ -18,6 +18,7 @@ type HelmfileGenerateConfig struct {
 	Selectors      []string
 	Namespace      string
 	ChartRepo      string
+	HookImage      string
 	PlainHTTP      bool
 	KeepFullValues bool
 	OutputDir      string
@@ -29,8 +30,17 @@ type HelmfileLoadInput struct {
 	Selectors      []string
 	Namespace      string
 	ChartRepo      string
+	HookImage      string
 	PlainHTTP      bool
 	KeepFullValues bool
+}
+
+// HelmfileResolvedHook is the normalized subset of release hook data used by the generator.
+type HelmfileResolvedHook struct {
+	Event   string
+	Command string
+	Args    []string
+	Order   int
 }
 
 // HelmfileResolvedRelease is the normalized release model extracted from helmfile.
@@ -40,8 +50,10 @@ type HelmfileResolvedRelease struct {
 	Chart           string
 	ChartVersion    string
 	ChartRepo       string
+	HookImage       string
 	TargetNamespace string
 	ValuesYAML      string
+	Hooks           []HelmfileResolvedHook
 	Wait            *bool
 	WaitForJob      *bool
 	Atomic          *bool

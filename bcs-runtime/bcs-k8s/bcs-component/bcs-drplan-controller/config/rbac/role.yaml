@@ -45,6 +45,7 @@ rules:
   - globalizations
   - helmcharts
   - localizations
+  - manifests
   - subscriptions
   verbs:
   - create

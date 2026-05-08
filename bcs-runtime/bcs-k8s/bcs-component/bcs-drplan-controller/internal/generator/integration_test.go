@@ -20,6 +20,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	sigyaml "sigs.k8s.io/yaml"
 )
 
 func projectRoot() string {
@@ -280,3 +281,97 @@ var _ = Describe("Integration: demo-app chart", func() {
 	})
 
 })
+
+var _ = Describe("Integration: helmfile release hooks", func() {
+	It("should generate hook-aware multi-stage workflows", func() {
+		release, err := LoadHelmfileRelease(HelmfileLoadInput{
+			File:      filepath.Join(projectRoot(), "testdata", "helmfile", "hooks", "helmfile.yaml.gotmpl"),
+			Selectors: []string{"name=demo-app"},
+			ChartRepo: "oci://registry.example.com/charts",
+			HookImage: "registry.example.com/hook-runner:v1",
+		})
+		Expect(err).NotTo(HaveOccurred())
+
+		result, err := GenerateHelmfilePlan(*release)
+		Expect(err).NotTo(HaveOccurred())
+
+		Expect(result.WorkflowYAMLs).To(HaveLen(4))
+		Expect(result.WorkflowYAMLs).To(HaveKey("workflow-preapply.yaml"))
+		Expect(result.WorkflowYAMLs).To(HaveKey("workflow-presync.yaml"))
+		Expect(result.WorkflowYAMLs).To(HaveKey("workflow-execute.yaml"))
+		Expect(result.WorkflowYAMLs).To(HaveKey("workflow-postsync.yaml"))
+
+		plan := decodeIntegrationYAMLMap(result.PlanYAML)
+		planSpec := mustIntegrationMap(plan["spec"])
+		Expect(planSpec["failurePolicy"]).To(Equal("Continue"))
+
+		preapplyWorkflow := decodeIntegrationYAMLMap(result.WorkflowYAMLs["workflow-preapply.yaml"])
+		preapplySpec := mustIntegrationMap(preapplyWorkflow["spec"])
+		preapplyActions := mustIntegrationSlice(preapplySpec["actions"])
+		Expect(preapplyActions).To(HaveLen(2))
+		Expect(mustIntegrationMap(preapplyActions[0])["type"]).To(Equal("KubernetesResource"))
+		Expect(mustIntegrationMap(preapplyActions[1])["type"]).To(Equal("Subscription"))
+
+		subscriptionAction := mustIntegrationMap(preapplyActions[1])
+		Expect(subscriptionAction["clusterExecutionMode"]).To(Equal("PerCluster"))
+		hookCleanup := mustIntegrationMap(subscriptionAction["hookCleanup"])
+		Expect(hookCleanup["beforeCreate"]).To(Equal(true))
+		subscription := mustIntegrationMap(subscriptionAction["subscription"])
+		subscriptionSpec := mustIntegrationMap(subscription["spec"])
+		feeds := mustIntegrationSlice(subscriptionSpec["feeds"])
+		feed := mustIntegrationMap(feeds[0])
+		Expect(feed["apiVersion"]).To(Equal("batch/v1"))
+		Expect(feed["kind"]).To(Equal("Job"))
+		Expect(feed["name"]).To(Equal("demo-app-preapply-hook-0"))
+		Expect(feed["namespace"]).To(Equal("$(params.targetNamespace)"))
+
+		manifestAction := mustIntegrationMap(preapplyActions[0])
+		resource := mustIntegrationMap(manifestAction["resource"])
+		manifest := decodeIntegrationYAMLString(resource["manifest"].(string))
+		Expect(manifest["kind"]).To(Equal("Manifest"))
+		Expect(manifest).NotTo(HaveKey("spec"))
+		manifestMetadata := mustIntegrationMap(manifest["metadata"])
+		Expect(manifestMetadata["name"]).To(Equal("jobs.$(params.targetNamespace).demo-app-preapply-hook-0"))
+		Expect(manifestMetadata["namespace"]).To(Equal("clusternet-reserved"))
+		manifestLabels := mustIntegrationMap(manifestMetadata["labels"])
+		Expect(manifestLabels["apps.clusternet.io/config.group"]).To(Equal("batch"))
+		Expect(manifestLabels["apps.clusternet.io/config.version"]).To(Equal("v1"))
+		Expect(manifestLabels["apps.clusternet.io/config.kind"]).To(Equal("Job"))
+		Expect(manifestLabels["apps.clusternet.io/config.name"]).To(Equal("demo-app-preapply-hook-0"))
+		Expect(manifestLabels["apps.clusternet.io/config.namespace"]).To(Equal("$(params.targetNamespace)"))
+		job := mustIntegrationMap(manifest["template"])
+		Expect(job["kind"]).To(Equal("Job"))
+		jobSpec := mustIntegrationMap(job["spec"])
+		Expect(jobSpec["ttlSecondsAfterFinished"]).To(Equal(float64(helmfileHookJobTTLSeconds)))
+		template := mustIntegrationMap(jobSpec["template"])
+		podSpec := mustIntegrationMap(template["spec"])
+		Expect(podSpec["restartPolicy"]).To(Equal("Never"))
+		containers := mustIntegrationSlice(podSpec["containers"])
+		container := mustIntegrationMap(containers[0])
+		Expect(container["image"]).To(Equal("$(params.hookImage)"))
+	})
+})
+
+func decodeIntegrationYAMLMap(data []byte) map[string]interface{} {
+	var result map[string]interface{}
+	Expect(sigyaml.Unmarshal(data, &result)).NotTo(HaveOccurred())
+	return result
+}
+
+func decodeIntegrationYAMLString(data string) map[string]interface{} {
+	var result map[string]interface{}
+	Expect(sigyaml.Unmarshal([]byte(data), &result)).NotTo(HaveOccurred())
+	return result
+}
+
+func mustIntegrationMap(value interface{}) map[string]interface{} {
+	result, ok := value.(map[string]interface{})
+	Expect(ok).To(BeTrue(), "expected map, got %T", value)
+	return result
+}
+
+func mustIntegrationSlice(value interface{}) []interface{} {
+	result, ok := value.([]interface{})
+	Expect(ok).To(BeTrue(), "expected slice, got %T", value)
+	return result
+}

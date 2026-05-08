@@ -379,6 +379,170 @@ func TestCheckSubscriptionReadyOnceReturnsDescriptionFailure(t *testing.T) {
 	}
 }
 
+func TestIsFeedReadyInChildCluster_ManifestTemplateJobComplete(t *testing.T) {
+	scheme := runtime.NewScheme()
+
+	manifest := &unstructured.Unstructured{}
+	manifest.SetGroupVersionKind(schema.GroupVersionKind{
+		Group:   "apps.clusternet.io",
+		Version: "v1alpha1",
+		Kind:    "Manifest",
+	})
+	manifest.SetNamespace("default")
+	manifest.SetName("demo-job")
+	manifest.Object["template"] = map[string]interface{}{
+		"apiVersion": "batch/v1",
+		"kind":       "Job",
+		"metadata": map[string]interface{}{
+			"name":      "demo-job",
+			"namespace": "default",
+		},
+	}
+
+	job := &unstructured.Unstructured{}
+	job.SetGroupVersionKind(schema.GroupVersionKind{
+		Group:   "batch",
+		Version: "v1",
+		Kind:    "Job",
+	})
+	job.SetNamespace("default")
+	job.SetName("demo-job")
+	job.Object["status"] = map[string]interface{}{
+		"conditions": []interface{}{
+			map[string]interface{}{"type": "Complete", "status": "True"},
+		},
+	}
+
+	executor := &SubscriptionActionExecutor{
+		client: fakeclient.NewClientBuilder().WithScheme(scheme).WithRuntimeObjects(manifest).Build(),
+		childClientFactory: &fakeChildClusterClientFactory{
+			clients: map[string]client.Client{
+				"cluster-1": fakeclient.NewClientBuilder().WithScheme(scheme).WithRuntimeObjects(job).Build(),
+			},
+		},
+	}
+
+	childClient, err := executor.childClientFactory.GetChildClient(context.Background(), "cluster-1", "clusternet-abc")
+	if err != nil {
+		t.Fatalf("expected child client, got: %v", err)
+	}
+
+	ready, _, err := executor.isFeedReadyInChildCluster(context.Background(), childClient, clusternetapps.Feed{
+		APIVersion: "apps.clusternet.io/v1alpha1",
+		Kind:       "Manifest",
+		Name:       "demo-job",
+		Namespace:  "default",
+	})
+	if err != nil {
+		t.Fatalf("expected no error, got: %v", err)
+	}
+	if !ready {
+		t.Fatal("expected manifest job feed to be ready")
+	}
+}
+
+func TestIsFeedReadyInChildCluster_ManifestTemplateJobFailed(t *testing.T) {
+	scheme := runtime.NewScheme()
+
+	manifest := &unstructured.Unstructured{}
+	manifest.SetGroupVersionKind(schema.GroupVersionKind{
+		Group:   "apps.clusternet.io",
+		Version: "v1alpha1",
+		Kind:    "Manifest",
+	})
+	manifest.SetNamespace("default")
+	manifest.SetName("demo-job")
+	manifest.Object["template"] = map[string]interface{}{
+		"apiVersion": "batch/v1",
+		"kind":       "Job",
+		"metadata": map[string]interface{}{
+			"name":      "demo-job",
+			"namespace": "default",
+		},
+	}
+
+	job := &unstructured.Unstructured{}
+	job.SetGroupVersionKind(schema.GroupVersionKind{
+		Group:   "batch",
+		Version: "v1",
+		Kind:    "Job",
+	})
+	job.SetNamespace("default")
+	job.SetName("demo-job")
+	job.Object["status"] = map[string]interface{}{
+		"conditions": []interface{}{
+			map[string]interface{}{"type": "Failed", "status": "True"},
+		},
+	}
+
+	executor := &SubscriptionActionExecutor{
+		client: fakeclient.NewClientBuilder().WithScheme(scheme).WithRuntimeObjects(manifest).Build(),
+		childClientFactory: &fakeChildClusterClientFactory{
+			clients: map[string]client.Client{
+				"cluster-1": fakeclient.NewClientBuilder().WithScheme(scheme).WithRuntimeObjects(job).Build(),
+			},
+		},
+	}
+
+	childClient, err := executor.childClientFactory.GetChildClient(context.Background(), "cluster-1", "clusternet-abc")
+	if err != nil {
+		t.Fatalf("expected child client, got: %v", err)
+	}
+
+	ready, _, err := executor.isFeedReadyInChildCluster(context.Background(), childClient, clusternetapps.Feed{
+		APIVersion: "apps.clusternet.io/v1alpha1",
+		Kind:       "Manifest",
+		Name:       "demo-job",
+		Namespace:  "default",
+	})
+	if err == nil {
+		t.Fatal("expected failed job to return an error")
+	}
+	if ready {
+		t.Fatal("expected failed job feed to be not ready")
+	}
+}
+
+func TestIsFeedReadyInChildCluster_NonClusternetManifestUsesOriginalFeed(t *testing.T) {
+	scheme := runtime.NewScheme()
+
+	childManifest := &unstructured.Unstructured{}
+	childManifest.SetGroupVersionKind(schema.GroupVersionKind{
+		Group:   "example.com",
+		Version: "v1",
+		Kind:    "Manifest",
+	})
+	childManifest.SetNamespace("default")
+	childManifest.SetName("custom-manifest")
+
+	executor := &SubscriptionActionExecutor{
+		client: fakeclient.NewClientBuilder().WithScheme(scheme).Build(),
+		childClientFactory: &fakeChildClusterClientFactory{
+			clients: map[string]client.Client{
+				"cluster-1": fakeclient.NewClientBuilder().WithScheme(scheme).WithRuntimeObjects(childManifest).Build(),
+			},
+		},
+	}
+
+	childClient, err := executor.childClientFactory.GetChildClient(context.Background(), "cluster-1", "clusternet-abc")
+	if err != nil {
+		t.Fatalf("expected child client, got: %v", err)
+	}
+
+	ready, _, err := executor.isFeedReadyInChildCluster(context.Background(), childClient, clusternetapps.Feed{
+		APIVersion: "example.com/v1",
+		Kind:       "Manifest",
+		Name:       "custom-manifest",
+		Namespace:  "default",
+	})
+	if err != nil {
+		t.Fatalf("expected no error, got: %v", err)
+	}
+	if !ready {
+		t.Fatal("expected non-clusternet manifest feed to use original child lookup path")
+	}
+}
+
 type fakeChildClusterClientFactory struct {
 	clients map[string]client.Client
 	err     error

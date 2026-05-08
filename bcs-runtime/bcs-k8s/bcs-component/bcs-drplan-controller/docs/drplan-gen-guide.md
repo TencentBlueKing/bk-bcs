@@ -365,6 +365,7 @@ drplan-gen helmfile \
   -l name=<release-name> \
   --chart-repo <oci://repo-or-http-repo> \
   [-n <namespace>] \
+  [--hook-image <hook-runner-image>] \
   [--plain-http] \
   [--keep-full-values] \
   [-o <output-dir>]
@@ -378,6 +379,7 @@ drplan-gen helmfile \
 | `--selector` | `-l` | 否 | | release 选择器，例如 `name=bk-cmdb` |
 | `--namespace` | `-n` | 否 | | 覆盖 helmfile release namespace |
 | `--chart-repo` | | 是 | | 写入 `HelmChart.spec.repo` 的 chart 仓库地址 |
+| `--hook-image` | | 条件必填 | | 仅当 release 含 hooks 时必填，用于生成 hook Job 镜像 |
 | `--plain-http` | | 否 | `false` | 指定后生成 `HelmChart.spec.plainHTTP: true` |
 | `--keep-full-values` | | 否 | `false` | 保留完整 values；默认会和 chart 默认 values 做 diff，只保留差异 |
 | `--output` | `-o` | 否 | `.` | 输出目录 |
@@ -390,6 +392,7 @@ drplan-gen helmfile \
   -l name=bk-cmdb \
   -n blueking \
   --chart-repo oci://registry.example.com/charts \
+  --hook-image registry.example.com/hook-runner:v1 \
   -o ./drplan-output
 ```
 
@@ -405,14 +408,153 @@ drplan-gen helmfile \
   -o ./drplan-output
 ```
 
+#### helmfile release 包含 hooks
+
+如果 helmfile release 中包含 `preapply`、`presync` 或 `postsync` hooks，需要显式指定 `--hook-image`。
+原因是 helmfile hook 只描述 `command` 和 `args`，没有容器镜像信息；`drplan-gen helmfile` 会把每个 hook 转换为下发到子集群执行的 `batch/v1 Job`，这个 Job 的容器镜像来自 `--hook-image`。
+
+hook 的 `command` 和 `args` 会按 helmfile hook 语义渲染后再写入 Job，支持引用 `.Values`、`.Release`、`.Event` 等上下文。模板语法需要保持 Go template 的合法格式，例如 `{{ .Values.bknodeman.bkrepo.repoName }}`，不要写成 `{{ . Values... }}` 或 `{{ .Values. xxx }}`。
+
+如果 helmfile 本身是 `.gotmpl`，并且希望 hook 模板留到 hook 归一化阶段再渲染，可以用 helmfile 常见的转义写法：
+
+```yaml
+args:
+  - '{{ "{{ .Values.bknodeman.bkrepo.repoName }}" }}'
+  - '{{ "{{ .Values.bknodeman.bkrepo.username }}" }}'
+  - '{{ "{{ .Values.bknodeman.bkrepo.password }}" }}'
+```
+
+示例 helmfile：
+
+```yaml
+releases:
+  - name: demo-app
+    namespace: default
+    chart: ./charts/demo-app
+    version: 0.1.0
+    hooks:
+      - events:
+          - preapply
+        command: sleep
+        args:
+          - "1"
+      - events:
+          - presync
+        command: sleep
+        args:
+          - "1"
+      - events:
+          - postsync
+        command: sleep
+        args:
+          - "1"
+```
+
+生成命令：
+
+```bash
+drplan-gen helmfile \
+  -f hooks/helmfile.yaml.gotmpl \
+  -l name=demo-app \
+  --chart-repo oci://registry.example.com/charts \
+  --hook-image registry.example.com/hook-runner:v1 \
+  -o ./drplan-output
+```
+
+生成结果会包含：
+
+| 文件名 | 说明 |
+|---|---|
+| `drplan.yaml` | 包含 `preapply`、`presync`、`execute`、`postsync` stage |
+| `workflow-preapply.yaml` | 执行 `preapply` hook Job |
+| `workflow-presync.yaml` | 执行 `presync` hook Job |
+| `workflow-execute.yaml` | 下发 HelmChart / Globalization / Subscription |
+| `workflow-postsync.yaml` | 执行 `postsync` hook Job |
+
+hook workflow 中会先创建 Clusternet `Manifest`，再创建 `Subscription` 订阅真实的 `batch/v1 Job`。关键结构如下：
+
+```yaml
+apiVersion: dr.bkbcs.tencent.com/v1alpha1
+kind: DRWorkflow
+metadata:
+  name: demo-app-presync
+  namespace: default
+spec:
+  failurePolicy: FailFast
+  parameters:
+    - name: feedNamespace
+      type: string
+      default: default
+    - name: targetNamespace
+      type: string
+      default: default
+    - name: hookImage
+      type: string
+      default: registry.example.com/hook-runner:v1
+  actions:
+    - name: create-demo-app-presync-hook-1-manifest
+      type: KubernetesResource
+      resource:
+        operation: Apply
+        manifest: |-
+          apiVersion: apps.clusternet.io/v1alpha1
+          kind: Manifest
+          metadata:
+            name: jobs.$(params.targetNamespace).demo-app-presync-hook-1
+            namespace: clusternet-reserved
+          template:
+            apiVersion: batch/v1
+            kind: Job
+            metadata:
+              name: demo-app-presync-hook-1
+              namespace: $(params.targetNamespace)
+            spec:
+              backoffLimit: 0
+              template:
+                spec:
+                  restartPolicy: Never
+                  containers:
+                    - name: hook
+                      image: $(params.hookImage)
+                      command:
+                        - sleep
+                      args:
+                        - "1"
+    - name: apply-demo-app-presync-hook-1-subscription
+      type: Subscription
+      timeout: 5m
+      waitReady: true
+      clusterExecutionMode: PerCluster
+      hookCleanup:
+        beforeCreate: true
+      subscription:
+        operation: Apply
+        name: demo-app-presync-hook-1-subscription
+        namespace: $(params.feedNamespace)
+        spec:
+          schedulingStrategy: Replication
+          feeds:
+            - apiVersion: batch/v1
+              kind: Job
+              name: demo-app-presync-hook-1
+              namespace: $(params.targetNamespace)
+          subscribers:
+            - clusterAffinity: {}
+```
+
+执行时，每个目标子集群都会创建并等待对应 Job 完成。Job 成功条件为 `status.conditions[type=Complete,status=True]`，失败条件为 `status.conditions[type=Failed,status=True]`。
+
 ### 生成结果
 
 helmfile 子命令当前会生成以下文件：
 
 | 文件名 | 说明 |
 |---|---|
-| `drplan.yaml` | DRPlan 资源，stage 名称为 `execute` |
-| `workflow-execute.yaml` | Helmfile 专用 workflow，包含 `HelmChart / Globalization / Subscription` action |
+| `drplan.yaml` | DRPlan 资源；无 hooks 时只保留 `execute` stage，有 hooks 时按实际 hook 事件生成 `preapply/presync/postsync` stage，并始终保留 `execute` stage |
+| `workflow-execute.yaml` | Helmfile 主部署 workflow，包含 `HelmChart / Globalization / Subscription` action |
+| `workflow-preapply.yaml` | 存在 `preapply` hook 时生成的前置 hook workflow |
+| `workflow-presync.yaml` | 存在 `presync` hook 时生成的同步前 hook workflow |
+| `workflow-postsync.yaml` | 存在 `postsync` hook 时生成的后置 hook workflow |
 | `drplanexecution-install.yaml` | Install 执行样例，带 `mode: Install` |
 | `drplanexecution-upgrade.yaml` | Upgrade 执行样例，带 `mode: Upgrade` |
 | `drplanexecution-delete.yaml` | Delete 执行样例，带 `mode: Delete` |
@@ -420,7 +562,11 @@ helmfile 子命令当前会生成以下文件：
 
 ### 生成模型
 
-helmfile 子命令生成的是单个 `execute` stage，对应一个 `workflow-execute.yaml`。默认 action 顺序如下：
+helmfile 子命令会根据 release 是否包含 hooks 分成两种模式。
+
+#### 无 hooks：简化 `execute` 模式
+
+当 release 不包含 `hooks` 时，生成器会维持单个 `execute` stage，对应一个 `workflow-execute.yaml`。默认 action 顺序如下：
 
 1. `HelmChart`：创建或更新 HelmChart 资源
 2. `Globalization`：如果存在 values 差异，则生成 values 覆盖
@@ -436,6 +582,29 @@ helmfile 子命令生成的是单个 `execute` stage，对应一个 `workflow-ex
   - `Subscription -> Globalization -> HelmChart`
   - 如果 workflow 中手工写了显式 delete action，则仍按显式定义执行
 - `Globalization` 只有在存在非空 values 时才会生成
+
+#### 有 hooks：hook-aware 模式
+
+当 release 包含 `preapply`、`presync` 或 `postsync` hooks 时，生成器会切换到 hook-aware 模式：
+
+- `drplan.yaml` 中始终生成 `execute` stage，并仅为实际存在的 hook 事件生成 `preapply`、`presync`、`postsync` stage
+- 对应输出 `workflow-execute.yaml`，以及实际存在 hook 事件对应的 `workflow-preapply.yaml`、`workflow-presync.yaml`、`workflow-postsync.yaml`
+- 每个 hook 都会先展开成一个 Clusternet `Manifest(template=Job)`，再展开成一个 `Subscription`
+- Clusternet `Manifest` 默认创建在 `clusternet-reserved` 命名空间，使用顶层 `template` 字段承载 Job 模板
+- hook `Subscription.spec.feeds` 引用真实的 `batch/v1 Job`，不是引用 `Manifest` 本身
+- 这个 `Subscription` 会自动带上：
+  - `waitReady: true`
+  - `clusterExecutionMode: PerCluster`
+  - `hookCleanup.beforeCreate: true`
+- hook 场景下，会同时设置：
+  - `drplan.spec.failurePolicy=Continue`
+  - `workflow-postsync.spec.failurePolicy=Continue`
+  这样 `execute` 失败后仍然可以继续进入 `postsync` stage 和对应 workflow
+- `showlogs` 首版忽略，不额外生成能力
+- hook Job 的成功判定基于子集群中 Job 的状态：
+  - `Job.status.conditions[type=Complete,status=True]` 视为成功
+  - `Job.status.conditions[type=Failed,status=True]` 视为失败
+- hook 场景下的 `PerCluster` 不会因为单个子集群失败提前取消其他子集群，而是等待所有目标子集群完成后再统一聚合结果
 
 ### Namespace 参数化
 
@@ -477,6 +646,7 @@ helmChart:
 
 - `wait`：优先取 `release.wait`，否则取 `helmDefaults.wait`
 - `waitForJob`：优先取 `release.waitForJobs`，否则取 `helmDefaults.waitForJobs`
+- `createNamespace`：优先取 `release.createNamespace`，否则取 `helmDefaults.createNamespace`；两者都未设置时按 helmfile 默认值生成 `HelmChart.spec.createNamespace: true`
 - `atomic`：优先取 `release.atomic`，否则取 `helmDefaults.atomic`
 - 当 `atomic=true` 时，生成器会同时写入：
   - `HelmChart.spec.atomic`
@@ -487,6 +657,7 @@ helmChart:
 
 1. 输入必须是已渲染 YAML，工具不会替你执行 `helm template`
 2. `waitReady` 依赖 controller 侧能力，生成器只负责写入字段
-3. 当前默认策略是“一个 stage + 一个 workflow”，不是多 stage DAG
+3. 普通渲染 YAML 模式默认是“一个 stage + 一个 workflow”；helmfile release hooks 会切换为多 stage / 多 workflow
 4. 新增配置推荐使用 `$(params.xxx)` 语法；历史 `{{ .params.xxx }}` 写法继续兼容
-5. 为保证 hook 顺序语义，`pre-*` 与 `post-*` 不会合并为同一个 action
+5. helmfile release hooks 只支持 `preapply` / `presync` / `postsync`
+6. 为保证 hook 顺序语义，`pre-*` 与 `post-*` 不会合并为同一个 action

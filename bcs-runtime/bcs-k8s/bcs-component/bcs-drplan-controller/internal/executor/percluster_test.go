@@ -98,6 +98,49 @@ func TestIsPerClusterMode(t *testing.T) {
 	}
 }
 
+func TestShouldFailFastPerClusterAction(t *testing.T) {
+	tests := []struct {
+		name     string
+		action   drv1alpha1.Action
+		policy   string
+		expected bool
+	}{
+		{
+			name:     "non-hook fail-fast stays enabled",
+			action:   drv1alpha1.Action{Type: drv1alpha1.ActionTypeSubscription, WaitReady: true, ClusterExecutionMode: drv1alpha1.ClusterExecutionModePerCluster},
+			policy:   drv1alpha1.FailurePolicyFailFast,
+			expected: true,
+		},
+		{
+			name:     "hook action disables fail-fast",
+			action:   drv1alpha1.Action{Type: drv1alpha1.ActionTypeSubscription, WaitReady: true, ClusterExecutionMode: drv1alpha1.ClusterExecutionModePerCluster, HookType: "pre-install"},
+			policy:   drv1alpha1.FailurePolicyFailFast,
+			expected: false,
+		},
+		{
+			name:     "hook cleanup disables fail-fast",
+			action:   drv1alpha1.Action{Type: drv1alpha1.ActionTypeSubscription, WaitReady: true, ClusterExecutionMode: drv1alpha1.ClusterExecutionModePerCluster, HookCleanup: &drv1alpha1.HookCleanupPolicy{OnFailure: true}},
+			policy:   drv1alpha1.FailurePolicyFailFast,
+			expected: false,
+		},
+		{
+			name:     "continue policy keeps fail-fast disabled",
+			action:   drv1alpha1.Action{Type: drv1alpha1.ActionTypeSubscription, WaitReady: true, ClusterExecutionMode: drv1alpha1.ClusterExecutionModePerCluster},
+			policy:   drv1alpha1.FailurePolicyContinue,
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := shouldFailFastPerClusterAction(tt.action, tt.policy)
+			if got != tt.expected {
+				t.Fatalf("shouldFailFastPerClusterAction() = %v, want %v", got, tt.expected)
+			}
+		})
+	}
+}
+
 func newSubscriptionGVK() schema.GroupVersionKind {
 	return schema.GroupVersionKind{Group: "apps.clusternet.io", Version: "v1alpha1", Kind: "Subscription"}
 }
@@ -391,6 +434,92 @@ func TestExecuteForCluster(t *testing.T) {
 		}
 		if err != nil {
 			t.Fatalf("ExecuteForCluster returned error: %v", err)
+		}
+	})
+
+	t.Run("beforeCreate cleanup replaces stale child subscription", func(t *testing.T) {
+		managedCluster := &unstructured.Unstructured{}
+		managedCluster.SetGroupVersionKind(schema.GroupVersionKind{
+			Group:   "clusters.clusternet.io",
+			Version: "v1beta1",
+			Kind:    "ManagedCluster",
+		})
+		managedCluster.SetNamespace("ns1")
+		managedCluster.SetName("cluster-a")
+		managedCluster.Object["spec"] = map[string]interface{}{
+			"clusterId": "cluster-a-id",
+		}
+
+		staleChild := &unstructured.Unstructured{}
+		staleChild.SetGroupVersionKind(newSubscriptionGVK())
+		staleChild.SetNamespace("default")
+		staleChild.SetName("hook-sub--cluster-a")
+		staleChild.SetLabels(map[string]string{"stale": "true"})
+
+		fakeClient := fakeclient.NewClientBuilder().
+			WithScheme(scheme).
+			WithObjects(managedCluster, staleChild).
+			Build()
+
+		childJob := &unstructured.Unstructured{}
+		childJob.SetGroupVersionKind(schema.GroupVersionKind{
+			Group:   "batch",
+			Version: "v1",
+			Kind:    "Job",
+		})
+		childJob.SetNamespace("app-ns")
+		childJob.SetName("hook-job")
+		childJob.Object["status"] = map[string]interface{}{
+			"conditions": []interface{}{
+				map[string]interface{}{"type": "Complete", "status": "True"},
+			},
+		}
+
+		executor := &SubscriptionActionExecutor{
+			client: fakeClient,
+			childClientFactory: &fakeChildClusterClientFactory{
+				clients: map[string]client.Client{
+					"cluster-a-id": fakeclient.NewClientBuilder().WithScheme(scheme).WithRuntimeObjects(childJob).Build(),
+				},
+			},
+		}
+
+		action := &drv1alpha1.Action{
+			Name:                 "hook-action",
+			Type:                 drv1alpha1.ActionTypeSubscription,
+			WaitReady:            true,
+			ClusterExecutionMode: drv1alpha1.ClusterExecutionModePerCluster,
+			HookCleanup:          &drv1alpha1.HookCleanupPolicy{BeforeCreate: true},
+			Subscription: &drv1alpha1.SubscriptionAction{
+				Name:      "hook-sub",
+				Namespace: "default",
+				Spec: &clusternetapps.SubscriptionSpec{
+					SchedulingStrategy: clusternetapps.ReplicaSchedulingStrategyType,
+					Feeds: []clusternetapps.Feed{
+						{APIVersion: "batch/v1", Kind: "Job", Name: "hook-job", Namespace: "app-ns"},
+					},
+				},
+			},
+			Timeout: "10s",
+		}
+
+		cs, _, err := executor.ExecuteForCluster(context.Background(), action, "ns1/cluster-a", nil)
+		if err != nil {
+			t.Fatalf("ExecuteForCluster returned error: %v", err)
+		}
+		if cs == nil || cs.Phase != drv1alpha1.PhaseSucceeded {
+			t.Fatalf("expected succeeded cluster status, got %#v", cs)
+		}
+
+		got := &unstructured.Unstructured{}
+		got.SetGroupVersionKind(newSubscriptionGVK())
+		if getErr := fakeClient.Get(context.Background(), client.ObjectKey{
+			Namespace: "default", Name: "hook-sub--cluster-a",
+		}, got); getErr != nil {
+			t.Fatalf("get child subscription: %v", getErr)
+		}
+		if got.GetLabels()["stale"] == "true" {
+			t.Fatal("expected beforeCreate cleanup to replace stale child subscription")
 		}
 	})
 

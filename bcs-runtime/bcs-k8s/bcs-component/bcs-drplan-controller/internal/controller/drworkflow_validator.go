@@ -222,8 +222,7 @@ func (v *KubernetesResourceActionValidator) Validate(action *drv1alpha1.Action, 
 		errors = append(errors, fmt.Sprintf("action[%d] %s: KubernetesResource.Manifest is required", index, action.Name))
 	}
 
-	needsRollback := action.Resource.Operation == drv1alpha1.OperationPatch || action.Resource.Operation == drv1alpha1.OperationApply
-	if needsRollback && action.Rollback == nil {
+	if action.Resource.Operation == drv1alpha1.OperationPatch && action.Rollback == nil {
 		errors = append(errors, fmt.Sprintf("action[%d] %s: rollback is required for KubernetesResource %s operation",
 			index, action.Name, action.Resource.Operation))
 	}

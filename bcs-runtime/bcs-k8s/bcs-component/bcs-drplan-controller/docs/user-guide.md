@@ -670,17 +670,7 @@ actions:
           schedule: "0 */6 * * *"
           retention: 7
           destination: "$(params.drBackupLocation)"
-    # Apply 通常用于幂等操作，回滚时需要显式定义
-    rollback:
-      type: KubernetesResource
-      resource:
-        operation: Delete
-        manifest: |
-          apiVersion: custom.example.com/v1
-          kind: BackupPolicy
-          metadata:
-            name: "dr-backup-policy"
-            namespace: "$(params.namespace)"
+    # Apply 未显式定义 rollback 时，默认回滚为删除执行时记录的资源
   
   # 场景 4: Patch 操作（必须定义 rollback）
   - name: update-existing-config
@@ -714,7 +704,7 @@ actions:
 - **适用场景**：操作专用类型未覆盖的 K8s 资源（ConfigMap、Secret、自定义 CRD 等）
 - **operation 类型**：
   - `Create`：创建资源，自动回滚为删除
-  - `Apply`：幂等操作（server-side apply），需要显式定义回滚
+  - `Apply`：幂等操作（server-side apply），未显式定义 rollback 时自动回滚为删除
   - `Patch`：更新资源，**必须**显式定义回滚
   - `Delete`：删除资源，无自动回滚
 - **优势**：无需修改 Controller 即可支持任意 K8s 资源
@@ -1169,6 +1159,7 @@ kubectl apply -f revert.yaml
 | ---------------------------------- | -------------------------------- |
 | HTTP 动作（无 rollback）           | 跳过（无法自动逆向）             |
 | Job 动作（无 rollback）            | 自动删除创建的 Job 资源          |
+| KubernetesResource Create/Apply（无 rollback） | 自动删除执行时记录的资源 |
 | Localization Create（无 rollback） | 自动删除创建的 Localization 资源 |
 | Localization Patch（有 rollback）  | 执行定义的回滚动作               |
 | Localization Delete（无 rollback） | 跳过（无法恢复）                 |

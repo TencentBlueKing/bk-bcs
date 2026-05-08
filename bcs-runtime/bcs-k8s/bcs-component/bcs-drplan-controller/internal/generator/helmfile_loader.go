@@ -128,12 +128,11 @@ func LoadHelmfileRelease(input HelmfileLoadInput) (*HelmfileResolvedRelease, err
 		return nil, fmt.Errorf("building release values: %w", err)
 	}
 
-	namespace := strings.TrimSpace(release.Namespace)
-	if namespace == "" {
-		namespace = strings.TrimSpace(input.Namespace)
-	}
-	if namespace == "" {
-		namespace = "default"
+	namespace := effectiveHelmfileNamespace(release.Namespace, input.Namespace)
+
+	hooks, err := loader.normalizeHelmfileHooks(st, release)
+	if err != nil {
+		return nil, fmt.Errorf("rendering release hooks: %w", err)
 	}
 
 	resolved := &HelmfileResolvedRelease{
@@ -142,8 +141,10 @@ func LoadHelmfileRelease(input HelmfileLoadInput) (*HelmfileResolvedRelease, err
 		Chart:           normalizeChartName(release.Chart, release.Version),
 		ChartVersion:    strings.TrimSpace(release.Version),
 		ChartRepo:       strings.TrimSpace(input.ChartRepo),
+		HookImage:       strings.TrimSpace(input.HookImage),
 		TargetNamespace: namespace,
 		ValuesYAML:      valuesYAML,
+		Hooks:           hooks,
 		Wait:            effectiveReleaseWait(st, release),
 		WaitForJob:      effectiveReleaseWaitForJob(st, release),
 		Atomic:          effectiveReleaseAtomic(st, release),
@@ -418,6 +419,79 @@ func selectSingleRelease(releases []HelmfileResolvedRelease) (*HelmfileResolvedR
 
 	selected := releases[0]
 	return &selected, nil
+}
+
+func effectiveHelmfileNamespace(releaseNamespace, inputNamespace string) string {
+	namespace := strings.TrimSpace(releaseNamespace)
+	if namespace == "" {
+		namespace = strings.TrimSpace(inputNamespace)
+	}
+	if namespace == "" {
+		namespace = "default"
+	}
+	return namespace
+}
+
+func (ld *helmfileStateLoader) normalizeHelmfileHooks(
+	st *state.HelmState,
+	release *state.ReleaseSpec,
+) ([]HelmfileResolvedHook, error) {
+	if release == nil || len(release.Hooks) == 0 {
+		return nil, nil
+	}
+
+	hooks := make([]HelmfileResolvedHook, 0, len(release.Hooks))
+	order := 0
+	for _, hook := range release.Hooks {
+		for _, rawEvent := range hook.Events {
+			event := strings.TrimSpace(rawEvent)
+			switch event {
+			case "preapply", "presync", "postsync":
+				command, err := ld.renderHelmfileHookText(st, release, event, hook.Command)
+				if err != nil {
+					return nil, fmt.Errorf("rendering hook[%d] command for event %s: %w", order, event, err)
+				}
+				args := make([]string, len(hook.Args))
+				for i := range hook.Args {
+					args[i], err = ld.renderHelmfileHookText(st, release, event, hook.Args[i])
+					if err != nil {
+						return nil, fmt.Errorf("rendering hook[%d] args[%d] for event %s: %w", order, i, event, err)
+					}
+				}
+				hooks = append(hooks, HelmfileResolvedHook{
+					Event:   event,
+					Command: command,
+					Args:    args,
+					Order:   order,
+				})
+				order++
+			}
+		}
+	}
+
+	return hooks, nil
+}
+
+func (ld *helmfileStateLoader) renderHelmfileHookText(
+	st *state.HelmState,
+	release *state.ReleaseSpec,
+	event string,
+	text string,
+) (string, error) {
+	values := map[string]any{}
+	if st != nil && st.RenderedValues != nil {
+		values = st.RenderedValues
+	}
+	data := map[string]any{
+		"Environment":     st.Env,
+		"Namespace":       st.OverrideNamespace,
+		"Event":           map[string]any{"Name": event, "Error": nil},
+		"Values":          values,
+		"Release":         release,
+		"HelmfileCommand": "drplan-gen helmfile",
+	}
+	renderer := tmpl.NewTextRenderer(ld.fs, ld.baseDir, data)
+	return renderer.RenderTemplateText(text)
 }
 
 // normalizeChartName converts local tgz paths, local directories, and repo/chart
@@ -727,8 +801,8 @@ func effectiveReleaseAtomic(st *state.HelmState, release *state.ReleaseSpec) *bo
 	return boolPtrForLoader(st.HelmDefaults.Atomic)
 }
 
-// effectiveReleaseCreateNamespace keeps nil when neither release nor defaults
-// specify a value so generators can omit the field entirely.
+// effectiveReleaseCreateNamespace mirrors helmfile's createNamespace
+// precedence. Helmfile defaults to true when neither release nor defaults set it.
 func effectiveReleaseCreateNamespace(st *state.HelmState, release *state.ReleaseSpec) *bool {
 	if release.CreateNamespace != nil {
 		return boolPtrForLoader(*release.CreateNamespace)
@@ -736,7 +810,7 @@ func effectiveReleaseCreateNamespace(st *state.HelmState, release *state.Release
 	if st.HelmDefaults.CreateNamespace != nil {
 		return boolPtrForLoader(*st.HelmDefaults.CreateNamespace)
 	}
-	return nil
+	return boolPtrForLoader(true)
 }
 
 // effectiveReleaseTimeoutSeconds uses release timeout first and falls back to helmDefaults.

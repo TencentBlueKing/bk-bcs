@@ -20,6 +20,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -163,12 +164,16 @@ func (e *KubernetesResourceActionExecutor) Rollback(
 		return rollbackStatus, nil
 	}
 
-	// Automatic rollback for Create operation: delete the resource
-	if action.Resource.Operation == drv1alpha1.OperationCreate && actionStatus.Outputs != nil && actionStatus.Outputs.ResourceRef != nil {
-		obj := &unstructured.Unstructured{}
-		obj.SetGroupVersionKind(obj.GroupVersionKind())
-		obj.SetName(actionStatus.Outputs.ResourceRef.Name)
-		obj.SetNamespace(actionStatus.Outputs.ResourceRef.Namespace)
+	operation := effectiveK8sResourceOperation(action)
+	ref := actionStatus.Outputs
+	if isK8sResourceDeleteRollbackOperation(operation) && ref != nil && ref.ResourceRef != nil {
+		obj, err := k8sResourceObjectFromRef(ref.ResourceRef)
+		if err != nil {
+			rollbackStatus.Phase = drv1alpha1.PhaseFailed
+			rollbackStatus.Message = err.Error()
+			rollbackStatus.CompletionTime = &metav1.Time{Time: time.Now()}
+			return rollbackStatus, err
+		}
 
 		klog.V(4).Infof("Deleting resource %s %s/%s", obj.GetKind(), obj.GetNamespace(), obj.GetName())
 		if err := e.client.Delete(ctx, obj); client.IgnoreNotFound(err) != nil {
@@ -183,9 +188,8 @@ func (e *KubernetesResourceActionExecutor) Rollback(
 		rollbackStatus.Message = fmt.Sprintf("Rolled back: deleted resource %s %s/%s",
 			obj.GetKind(), obj.GetNamespace(), obj.GetName())
 	} else {
-		// No automatic rollback for non-Create operations
 		rollbackStatus.Phase = drv1alpha1.PhaseSkipped
-		rollbackStatus.Message = "No automatic rollback for non-Create operation"
+		rollbackStatus.Message = fmt.Sprintf("No automatic rollback for %s operation", operation)
 	}
 
 	rollbackStatus.CompletionTime = &metav1.Time{Time: time.Now()}
@@ -195,4 +199,34 @@ func (e *KubernetesResourceActionExecutor) Rollback(
 // Type returns the action type
 func (e *KubernetesResourceActionExecutor) Type() string {
 	return "KubernetesResource"
+}
+
+func effectiveK8sResourceOperation(action *drv1alpha1.Action) string {
+	if action == nil || action.Resource == nil || action.Resource.Operation == "" {
+		return drv1alpha1.OperationCreate
+	}
+	return action.Resource.Operation
+}
+
+func isK8sResourceDeleteRollbackOperation(operation string) bool {
+	return operation == drv1alpha1.OperationCreate || operation == drv1alpha1.OperationApply
+}
+
+func k8sResourceObjectFromRef(ref *corev1.ObjectReference) (*unstructured.Unstructured, error) {
+	if ref == nil {
+		return nil, fmt.Errorf("resource reference is required")
+	}
+	if ref.APIVersion == "" || ref.Kind == "" || ref.Name == "" {
+		return nil, fmt.Errorf("resource reference apiVersion, kind, and name are required")
+	}
+	gv, err := schema.ParseGroupVersion(ref.APIVersion)
+	if err != nil {
+		return nil, fmt.Errorf("parse resource reference apiVersion %q: %w", ref.APIVersion, err)
+	}
+
+	obj := &unstructured.Unstructured{}
+	obj.SetGroupVersionKind(gv.WithKind(ref.Kind))
+	obj.SetName(ref.Name)
+	obj.SetNamespace(ref.Namespace)
+	return obj, nil
 }

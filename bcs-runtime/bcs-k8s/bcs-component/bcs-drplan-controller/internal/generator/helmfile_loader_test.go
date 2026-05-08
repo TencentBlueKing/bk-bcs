@@ -13,12 +13,160 @@
 package generator
 
 import (
+	"os"
 	"path/filepath"
 	"strings"
+	"testing"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
+
+func TestLoadHelmfileRelease_NormalizesSupportedHooks(t *testing.T) {
+	fixture := filepath.Join(projectRoot(), "testdata", "helmfile", "hooks", "helmfile.yaml.gotmpl")
+
+	release, err := LoadHelmfileRelease(HelmfileLoadInput{
+		File:      fixture,
+		Selectors: []string{"name=demo-app"},
+		ChartRepo: "oci://registry.example.com/charts",
+	})
+	if err != nil {
+		t.Fatalf("LoadHelmfileRelease() error = %v", err)
+	}
+
+	if len(release.Hooks) != 3 {
+		t.Fatalf("expected 3 supported hooks, got %d", len(release.Hooks))
+	}
+
+	expectedEvents := []string{"preapply", "presync", "postsync"}
+	expectedCommands := []string{"sleep", "sleep", "sleep"}
+	expectedArgs := [][]string{{"1"}, {"1"}, {"1"}}
+	for i := range expectedEvents {
+		if release.Hooks[i].Event != expectedEvents[i] {
+			t.Fatalf("hook[%d] event = %q, want %q", i, release.Hooks[i].Event, expectedEvents[i])
+		}
+		if release.Hooks[i].Command != expectedCommands[i] {
+			t.Fatalf("hook[%d] command = %q, want %q", i, release.Hooks[i].Command, expectedCommands[i])
+		}
+		if len(release.Hooks[i].Args) != len(expectedArgs[i]) {
+			t.Fatalf("hook[%d] args len = %d, want %d", i, len(release.Hooks[i].Args), len(expectedArgs[i]))
+		}
+		for j := range expectedArgs[i] {
+			if release.Hooks[i].Args[j] != expectedArgs[i][j] {
+				t.Fatalf("hook[%d] args[%d] = %q, want %q", i, j, release.Hooks[i].Args[j], expectedArgs[i][j])
+			}
+		}
+		if release.Hooks[i].Order != i {
+			t.Fatalf("hook[%d] order = %d, want %d", i, release.Hooks[i].Order, i)
+		}
+	}
+}
+
+func TestLoadHelmfileRelease_IgnoresUnsupportedEvents(t *testing.T) {
+	fixture := filepath.Join(projectRoot(), "testdata", "helmfile", "hooks", "helmfile.yaml.gotmpl")
+
+	release, err := LoadHelmfileRelease(HelmfileLoadInput{
+		File:      fixture,
+		Selectors: []string{"name=demo-app"},
+		ChartRepo: "oci://registry.example.com/charts",
+	})
+	if err != nil {
+		t.Fatalf("LoadHelmfileRelease() error = %v", err)
+	}
+
+	for _, hook := range release.Hooks {
+		if hook.Event == "cleanup" || hook.Event == "prepare" {
+			t.Fatalf("unsupported hook event should be filtered out, got %q", hook.Event)
+		}
+	}
+
+	presyncFound := false
+	for _, hook := range release.Hooks {
+		if hook.Event != "presync" {
+			continue
+		}
+		presyncFound = true
+		if hook.Command != "sleep" {
+			t.Fatalf("presync command = %q, want %q", hook.Command, "sleep")
+		}
+		expectedArgs := []string{"1"}
+		if len(hook.Args) != len(expectedArgs) {
+			t.Fatalf("presync args len = %d, want %d", len(hook.Args), len(expectedArgs))
+		}
+		for i := range expectedArgs {
+			if hook.Args[i] != expectedArgs[i] {
+				t.Fatalf("presync args[%d] = %q, want %q", i, hook.Args[i], expectedArgs[i])
+			}
+		}
+		if hook.Order != 1 {
+			t.Fatalf("presync order = %d, want 1", hook.Order)
+		}
+	}
+	if !presyncFound {
+		t.Fatal("expected normalized presync hook from hook entry with unsupported event")
+	}
+}
+
+func TestLoadHelmfileRelease_RendersHookTemplates(t *testing.T) {
+	tmpDir := t.TempDir()
+	chartPath := filepath.Join(projectRoot(), "testdata", "helmfile", "basic", "charts", "nginx-0.1.1.tgz")
+	helmfilePath := filepath.Join(tmpDir, "helmfile.yaml")
+	helmfileContent := []byte(`
+environments:
+  default:
+    values:
+      - bknodeman:
+          bkrepo:
+            repoName: node-repo
+            username: node-user
+            password: node-password
+---
+releases:
+  - name: demo-app
+    namespace: default
+    chart: ` + chartPath + `
+    version: 0.1.1
+    hooks:
+      - events:
+          - presync
+        command: echo
+        args:
+          - '{{ "{{ .Values.bknodeman.bkrepo.repoName }}" }}'
+          - '{{ "{{ .Values.bknodeman.bkrepo.username }}" }}'
+          - '{{ "{{ .Values.bknodeman.bkrepo.password }}" }}'
+          - '{{ "{{ .Release.Name }}" }}'
+          - '{{ "{{ .Event.Name }}" }}'
+`)
+	if err := os.WriteFile(helmfilePath, helmfileContent, 0o600); err != nil {
+		t.Fatalf("write helmfile fixture: %v", err)
+	}
+
+	release, err := LoadHelmfileRelease(HelmfileLoadInput{
+		File:      helmfilePath,
+		Selectors: []string{"name=demo-app"},
+		ChartRepo: "oci://registry.example.com/charts",
+	})
+	if err != nil {
+		t.Fatalf("LoadHelmfileRelease() error = %v", err)
+	}
+
+	if len(release.Hooks) != 1 {
+		t.Fatalf("expected 1 hook, got %d", len(release.Hooks))
+	}
+	hook := release.Hooks[0]
+	if hook.Command != "echo" {
+		t.Fatalf("hook command = %q, want echo", hook.Command)
+	}
+	expectedArgs := []string{"node-repo", "node-user", "node-password", "demo-app", "presync"}
+	if len(hook.Args) != len(expectedArgs) {
+		t.Fatalf("hook args len = %d, want %d: %#v", len(hook.Args), len(expectedArgs), hook.Args)
+	}
+	for i := range expectedArgs {
+		if hook.Args[i] != expectedArgs[i] {
+			t.Fatalf("hook args[%d] = %q, want %q", i, hook.Args[i], expectedArgs[i])
+		}
+	}
+}
 
 var _ = Describe("Helmfile loader helpers", func() {
 	It("should normalize local tgz chart name", func() {

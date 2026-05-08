@@ -14,6 +14,7 @@ package executor
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"sync"
 	"testing"
@@ -54,6 +55,31 @@ func (s *staticActionExecutor) Rollback(_ context.Context, _ *drv1alpha1.Action,
 
 func (s *staticActionExecutor) Type() string {
 	return s.actionType
+}
+
+type blockingActionExecutor struct {
+	actionType string
+	started    chan struct{}
+	release    chan struct{}
+	once       sync.Once
+}
+
+func (b *blockingActionExecutor) Execute(ctx context.Context, action *drv1alpha1.Action, _ map[string]interface{}) (*drv1alpha1.ActionStatus, error) {
+	b.once.Do(func() { close(b.started) })
+	select {
+	case <-b.release:
+		return &drv1alpha1.ActionStatus{Name: action.Name, Phase: drv1alpha1.PhaseSucceeded}, nil
+	case <-ctx.Done():
+		return &drv1alpha1.ActionStatus{Name: action.Name, Phase: drv1alpha1.PhaseFailed, Message: ctx.Err().Error()}, ctx.Err()
+	}
+}
+
+func (b *blockingActionExecutor) Rollback(_ context.Context, action *drv1alpha1.Action, _ *drv1alpha1.ActionStatus, _ map[string]interface{}) (*drv1alpha1.ActionStatus, error) {
+	return &drv1alpha1.ActionStatus{Name: action.Name, Phase: drv1alpha1.PhaseSucceeded}, nil
+}
+
+func (b *blockingActionExecutor) Type() string {
+	return b.actionType
 }
 
 type recordingRollbackExecutor struct {
@@ -213,6 +239,100 @@ func TestExecutePlan_ExecutionParamsPriority(t *testing.T) {
 
 	// ExecutePlan with empty stages should succeed quickly
 	if err := executor.ExecutePlan(context.Background(), plan, execution); err != nil {
+		t.Fatalf("ExecutePlan failed: %v", err)
+	}
+}
+
+func TestExecutePlan_PersistsRunningWorkflowAndActionStatus(t *testing.T) {
+	scheme := runtime.NewScheme()
+	_ = drv1alpha1.AddToScheme(scheme)
+
+	workflow := &drv1alpha1.DRWorkflow{
+		ObjectMeta: metav1.ObjectMeta{Name: "demo-app-execute", Namespace: testDefaultNamespace},
+		Spec: drv1alpha1.DRWorkflowSpec{
+			Actions: []drv1alpha1.Action{
+				{Name: "wait-hook", Type: drv1alpha1.ActionTypeHTTP},
+			},
+		},
+	}
+	plan := &drv1alpha1.DRPlan{
+		ObjectMeta: metav1.ObjectMeta{Name: "demo-app", Namespace: testDefaultNamespace},
+		Spec: drv1alpha1.DRPlanSpec{
+			Stages: []drv1alpha1.Stage{
+				{
+					Name: "execute",
+					Workflows: []drv1alpha1.WorkflowReference{
+						{WorkflowRef: drv1alpha1.ObjectReference{Name: workflow.Name, Namespace: workflow.Namespace}},
+					},
+				},
+			},
+		},
+	}
+	execution := &drv1alpha1.DRPlanExecution{
+		ObjectMeta: metav1.ObjectMeta{Name: "demo-app-install-001", Namespace: testDefaultNamespace},
+		Spec: drv1alpha1.DRPlanExecutionSpec{
+			PlanRef:       "demo-app",
+			OperationType: drv1alpha1.OperationTypeExecute,
+		},
+		Status: drv1alpha1.DRPlanExecutionStatus{Phase: drv1alpha1.PhaseRunning},
+	}
+
+	k8sClient := fakeclient.NewClientBuilder().
+		WithScheme(scheme).
+		WithStatusSubresource(&drv1alpha1.DRPlanExecution{}).
+		WithObjects(execution, workflow).
+		Build()
+	blocker := &blockingActionExecutor{
+		actionType: drv1alpha1.ActionTypeHTTP,
+		started:    make(chan struct{}),
+		release:    make(chan struct{}),
+	}
+	registry := NewExecutorRegistry()
+	if err := registry.RegisterExecutor(blocker); err != nil {
+		t.Fatalf("register executor: %v", err)
+	}
+	workflowExecutor := NewNativeWorkflowExecutor(k8sClient, registry)
+	stageExecutor := NewStageExecutor(k8sClient, workflowExecutor)
+	planExecutor := NewNativePlanExecutor(k8sClient, stageExecutor, workflowExecutor, nil, nil)
+
+	errCh := make(chan error, 1)
+	go func() {
+		errCh <- planExecutor.ExecutePlan(context.Background(), plan, execution)
+	}()
+
+	select {
+	case <-blocker.started:
+	case <-time.After(2 * time.Second):
+		t.Fatal("timed out waiting for blocking action to start")
+	}
+
+	current := &drv1alpha1.DRPlanExecution{}
+	if err := k8sClient.Get(context.Background(), client.ObjectKeyFromObject(execution), current); err != nil {
+		t.Fatalf("get execution: %v", err)
+	}
+	if len(current.Status.StageStatuses) != 1 {
+		t.Fatalf("expected one running stage status, got %#v", current.Status.StageStatuses)
+	}
+	stageStatus := current.Status.StageStatuses[0]
+	if stageStatus.Phase != drv1alpha1.PhaseRunning {
+		t.Fatalf("stage phase = %s, want Running", stageStatus.Phase)
+	}
+	if len(stageStatus.WorkflowExecutions) != 1 {
+		t.Fatalf("expected one workflow status, got %#v", stageStatus.WorkflowExecutions)
+	}
+	workflowStatus := stageStatus.WorkflowExecutions[0]
+	if workflowStatus.Phase != drv1alpha1.PhaseRunning {
+		t.Fatalf("workflow phase = %s, want Running", workflowStatus.Phase)
+	}
+	if len(workflowStatus.ActionStatuses) != 1 {
+		t.Fatalf("expected one action status, got %#v", workflowStatus.ActionStatuses)
+	}
+	if workflowStatus.ActionStatuses[0].Name != "wait-hook" || workflowStatus.ActionStatuses[0].Phase != drv1alpha1.PhaseRunning {
+		t.Fatalf("unexpected action status: %#v", workflowStatus.ActionStatuses[0])
+	}
+
+	close(blocker.release)
+	if err := <-errCh; err != nil {
 		t.Fatalf("ExecutePlan failed: %v", err)
 	}
 }
@@ -583,6 +703,67 @@ func (r *recordingStageExecutor) RevertStage(_ context.Context, _ *drv1alpha1.DR
 	r.revertedStages = append(r.revertedStages, stage.Name)
 	r.lastGlobalParams = globalParams
 	return &drv1alpha1.StageStatus{Name: stage.Name, Phase: drv1alpha1.PhaseSucceeded}, nil
+}
+
+type continuePolicyStageExecutor struct {
+	calls []string
+}
+
+func (r *continuePolicyStageExecutor) ExecuteStage(_ context.Context, _ *drv1alpha1.DRPlan,
+	stage *drv1alpha1.Stage, _ map[string]interface{}, _ map[string]interface{}) (*drv1alpha1.StageStatus, error) {
+	r.calls = append(r.calls, stage.Name)
+	if stage.Name == "execute" {
+		return &drv1alpha1.StageStatus{Name: stage.Name, Phase: drv1alpha1.PhaseFailed}, errors.New("execute failed")
+	}
+	return &drv1alpha1.StageStatus{Name: stage.Name, Phase: drv1alpha1.PhaseSucceeded}, nil
+}
+
+func (r *continuePolicyStageExecutor) RevertStage(_ context.Context, _ *drv1alpha1.DRPlan,
+	stage *drv1alpha1.Stage, _ *drv1alpha1.StageStatus, _ map[string]interface{}, _ map[string]interface{}) (*drv1alpha1.StageStatus, error) {
+	return &drv1alpha1.StageStatus{Name: stage.Name, Phase: drv1alpha1.PhaseSucceeded}, nil
+}
+
+func TestExecutePlan_FailurePolicyContinueRunsStagesAfterError(t *testing.T) {
+	scheme := runtime.NewScheme()
+	_ = drv1alpha1.AddToScheme(scheme)
+
+	plan := &drv1alpha1.DRPlan{
+		ObjectMeta: metav1.ObjectMeta{Name: "test-plan", Namespace: "default"},
+		Spec: drv1alpha1.DRPlanSpec{
+			FailurePolicy: "Continue",
+			Stages: []drv1alpha1.Stage{
+				{Name: "execute"},
+				{Name: "postsync"},
+			},
+		},
+	}
+	execution := &drv1alpha1.DRPlanExecution{
+		ObjectMeta: metav1.ObjectMeta{Name: "exec-continue", Namespace: "default"},
+		Spec: drv1alpha1.DRPlanExecutionSpec{
+			PlanRef:       "test-plan",
+			OperationType: drv1alpha1.OperationTypeExecute,
+		},
+	}
+
+	k8sClient := fakeclient.NewClientBuilder().WithScheme(scheme).
+		WithStatusSubresource(&drv1alpha1.DRPlanExecution{}).
+		WithObjects(execution).
+		Build()
+	stageExecutor := &continuePolicyStageExecutor{}
+	executor := NewNativePlanExecutor(k8sClient, stageExecutor, nil, nil, nil)
+
+	if err := executor.ExecutePlan(context.Background(), plan, execution); err != nil {
+		t.Fatalf("ExecutePlan failed: %v", err)
+	}
+	if strings.Join(stageExecutor.calls, ",") != "execute,postsync" {
+		t.Fatalf("expected execute and postsync stages to run, got %v", stageExecutor.calls)
+	}
+	if execution.Status.Phase != drv1alpha1.PhaseFailed {
+		t.Fatalf("expected execution phase Failed, got %s", execution.Status.Phase)
+	}
+	if len(execution.Status.StageStatuses) != 2 {
+		t.Fatalf("expected 2 stage statuses, got %d", len(execution.Status.StageStatuses))
+	}
 }
 
 // TestRevertPlan_FailedStageIsReverted verifies that a stage with Failed phase in the original
@@ -1329,6 +1510,465 @@ func TestExecuteClusterActions_SkipsUntargetedAction(t *testing.T) {
 	}
 	if len(childRefMap["hook-a"]) != 1 || childRefMap["hook-a"][0].Name != "hook-sub--cluster-a" {
 		t.Fatalf("unexpected child refs for hook-a: %#v", childRefMap["hook-a"])
+	}
+}
+
+func newTestManagedCluster(namespace, name, clusterID string) *unstructured.Unstructured {
+	cluster := &unstructured.Unstructured{}
+	cluster.SetGroupVersionKind(schema.GroupVersionKind{
+		Group:   "clusters.clusternet.io",
+		Version: "v1beta1",
+		Kind:    "ManagedCluster",
+	})
+	cluster.SetNamespace(namespace)
+	cluster.SetName(name)
+	cluster.Object["spec"] = map[string]interface{}{"clusterId": clusterID}
+	return cluster
+}
+
+func newTestChildJob(namespace, name, conditionType string) *unstructured.Unstructured {
+	job := &unstructured.Unstructured{}
+	job.SetGroupVersionKind(schema.GroupVersionKind{
+		Group:   "batch",
+		Version: "v1",
+		Kind:    "Job",
+	})
+	job.SetNamespace(namespace)
+	job.SetName(name)
+	if conditionType != "" {
+		job.Object["status"] = map[string]interface{}{
+			"conditions": []interface{}{
+				map[string]interface{}{"type": conditionType, "status": "True"},
+			},
+		}
+	}
+	return job
+}
+
+func newPerClusterTestAction(name, hookType string, timeout string) drv1alpha1.Action {
+	action := drv1alpha1.Action{
+		Name:                 name,
+		Type:                 drv1alpha1.ActionTypeSubscription,
+		WaitReady:            true,
+		ClusterExecutionMode: drv1alpha1.ClusterExecutionModePerCluster,
+		Timeout:              timeout,
+		Subscription: &drv1alpha1.SubscriptionAction{
+			Name:      "hook-sub",
+			Namespace: "default",
+			Spec: &clusternetapps.SubscriptionSpec{
+				SchedulingStrategy: clusternetapps.ReplicaSchedulingStrategyType,
+				Feeds: []clusternetapps.Feed{
+					{APIVersion: "batch/v1", Kind: "Job", Name: "hook-job", Namespace: "app-ns"},
+				},
+			},
+		},
+	}
+	if hookType != "" {
+		action.HookType = hookType
+	}
+	return action
+}
+
+func TestExecuteClusterActions_HookActionDoesNotCancelOtherClusters(t *testing.T) {
+	scheme := runtime.NewScheme()
+	_ = drv1alpha1.AddToScheme(scheme)
+
+	mainClient := fakeclient.NewClientBuilder().WithScheme(scheme).
+		WithObjects(
+			newTestManagedCluster("ns1", "cluster-a", "cluster-a-id"),
+			newTestManagedCluster("ns2", "cluster-b", "cluster-b-id"),
+		).
+		Build()
+	subExec := &SubscriptionActionExecutor{
+		client: mainClient,
+		childClientFactory: &fakeChildClusterClientFactory{
+			clients: map[string]client.Client{
+				"cluster-a-id": fakeclient.NewClientBuilder().WithScheme(scheme).
+					WithRuntimeObjects(newTestChildJob("app-ns", "hook-job", "Failed")).
+					Build(),
+				"cluster-b-id": fakeclient.NewClientBuilder().WithScheme(scheme).
+					WithRuntimeObjects(newTestChildJob("app-ns", "hook-job", "Complete")).
+					Build(),
+			},
+		},
+	}
+	executor := &NativeWorkflowExecutor{}
+	actions := []drv1alpha1.Action{newPerClusterTestAction("hook-action", "pre-install", "1s")}
+	statusMap := make(map[string][]drv1alpha1.ClusterActionStatus)
+	childRefMap := make(map[string][]corev1.ObjectReference)
+	var mu sync.Mutex
+	start := metav1.Now()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	var cancelMu sync.Mutex
+	cancelCalled := false
+	trackedCancel := func() {
+		cancelMu.Lock()
+		cancelCalled = true
+		cancelMu.Unlock()
+		cancel()
+	}
+
+	var wg sync.WaitGroup
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		executor.executeClusterActions(
+			ctx,
+			subExec,
+			actions,
+			nil,
+			"ns1/cluster-a",
+			nil,
+			drv1alpha1.FailurePolicyFailFast,
+			&start,
+			&mu,
+			statusMap,
+			childRefMap,
+			trackedCancel,
+		)
+	}()
+	go func() {
+		defer wg.Done()
+		executor.executeClusterActions(
+			ctx,
+			subExec,
+			actions,
+			nil,
+			"ns2/cluster-b",
+			nil,
+			drv1alpha1.FailurePolicyFailFast,
+			&start,
+			&mu,
+			statusMap,
+			childRefMap,
+			trackedCancel,
+		)
+	}()
+	wg.Wait()
+
+	cancelMu.Lock()
+	if cancelCalled {
+		cancelMu.Unlock()
+		t.Fatal("unexpected cancel in hook PerCluster execution")
+	}
+	cancelMu.Unlock()
+
+	clusterStatuses := statusMap["hook-action"]
+	if len(clusterStatuses) != 2 {
+		t.Fatalf("clusterStatuses = %#v, want 2 entries", clusterStatuses)
+	}
+
+	phaseByCluster := make(map[string]string, len(clusterStatuses))
+	for _, cs := range clusterStatuses {
+		phaseByCluster[cs.Cluster] = cs.Phase
+	}
+	if phaseByCluster["ns1/cluster-a"] != drv1alpha1.PhaseFailed {
+		t.Fatalf("cluster-a phase = %q, want %q", phaseByCluster["ns1/cluster-a"], drv1alpha1.PhaseFailed)
+	}
+	if phaseByCluster["ns2/cluster-b"] != drv1alpha1.PhaseSucceeded {
+		t.Fatalf("cluster-b phase = %q, want %q", phaseByCluster["ns2/cluster-b"], drv1alpha1.PhaseSucceeded)
+	}
+
+	result, err := executor.buildPerClusterResult(actions, statusMap, childRefMap, &start, drv1alpha1.FailurePolicyFailFast)
+	if err == nil {
+		t.Fatal("expected aggregated error for failed hook action")
+	}
+	if len(result) != 1 || result[0].Phase != drv1alpha1.PhaseFailed {
+		t.Fatalf("result = %#v, want one Failed action", result)
+	}
+}
+
+func TestExecuteClusterActions_NonHookPerClusterStillFailFast(t *testing.T) {
+	scheme := runtime.NewScheme()
+	_ = drv1alpha1.AddToScheme(scheme)
+
+	mainClient := fakeclient.NewClientBuilder().WithScheme(scheme).
+		WithObjects(
+			newTestManagedCluster("ns1", "cluster-a", "cluster-a-id"),
+			newTestManagedCluster("ns2", "cluster-b", "cluster-b-id"),
+		).
+		Build()
+	subExec := &SubscriptionActionExecutor{
+		client: mainClient,
+		childClientFactory: &fakeChildClusterClientFactory{
+			clients: map[string]client.Client{
+				"cluster-a-id": fakeclient.NewClientBuilder().WithScheme(scheme).
+					WithRuntimeObjects(newTestChildJob("app-ns", "hook-job", "Failed")).
+					Build(),
+				"cluster-b-id": fakeclient.NewClientBuilder().WithScheme(scheme).
+					WithRuntimeObjects(newTestChildJob("app-ns", "hook-job", "")).
+					Build(),
+			},
+		},
+	}
+	executor := &NativeWorkflowExecutor{}
+	actions := []drv1alpha1.Action{newPerClusterTestAction("hook-action", "", "1s")}
+	statusMap := make(map[string][]drv1alpha1.ClusterActionStatus)
+	childRefMap := make(map[string][]corev1.ObjectReference)
+	var mu sync.Mutex
+	start := metav1.Now()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	var cancelMu sync.Mutex
+	cancelCalled := false
+	trackedCancel := func() {
+		cancelMu.Lock()
+		cancelCalled = true
+		cancelMu.Unlock()
+		cancel()
+	}
+
+	var wg sync.WaitGroup
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		executor.executeClusterActions(
+			ctx,
+			subExec,
+			actions,
+			nil,
+			"ns1/cluster-a",
+			nil,
+			drv1alpha1.FailurePolicyFailFast,
+			&start,
+			&mu,
+			statusMap,
+			childRefMap,
+			trackedCancel,
+		)
+	}()
+	go func() {
+		defer wg.Done()
+		executor.executeClusterActions(
+			ctx,
+			subExec,
+			actions,
+			nil,
+			"ns2/cluster-b",
+			nil,
+			drv1alpha1.FailurePolicyFailFast,
+			&start,
+			&mu,
+			statusMap,
+			childRefMap,
+			trackedCancel,
+		)
+	}()
+	wg.Wait()
+
+	cancelMu.Lock()
+	if !cancelCalled {
+		cancelMu.Unlock()
+		t.Fatal("expected cancel in non-hook PerCluster execution")
+	}
+	cancelMu.Unlock()
+
+	clusterStatuses := statusMap["hook-action"]
+	if len(clusterStatuses) != 2 {
+		t.Fatalf("clusterStatuses = %#v, want 2 entries", clusterStatuses)
+	}
+	hasCanceled := false
+	for _, cs := range clusterStatuses {
+		if strings.Contains(strings.ToLower(cs.Message), "canceled") {
+			hasCanceled = true
+			break
+		}
+	}
+	if !hasCanceled {
+		t.Fatalf("expected one cluster status to be canceled, got %#v", clusterStatuses)
+	}
+
+	result, err := executor.buildPerClusterResult(actions, statusMap, childRefMap, &start, drv1alpha1.FailurePolicyFailFast)
+	if err == nil {
+		t.Fatal("expected aggregated error for failed PerCluster action")
+	}
+	if len(result) != 1 || result[0].Phase != drv1alpha1.PhaseFailed {
+		t.Fatalf("result = %#v, want one Failed action", result)
+	}
+}
+
+func TestExecuteClusterActions_MixedBatchOnlyNonHookActionFailFast(t *testing.T) {
+	scheme := runtime.NewScheme()
+	_ = drv1alpha1.AddToScheme(scheme)
+
+	makeAction := func(name, hookType, jobName string) drv1alpha1.Action {
+		action := drv1alpha1.Action{
+			Name:                 name,
+			Type:                 drv1alpha1.ActionTypeSubscription,
+			WaitReady:            true,
+			ClusterExecutionMode: drv1alpha1.ClusterExecutionModePerCluster,
+			Timeout:              "1s",
+			Subscription: &drv1alpha1.SubscriptionAction{
+				Name:      name + "-sub",
+				Namespace: "default",
+				Spec: &clusternetapps.SubscriptionSpec{
+					SchedulingStrategy: clusternetapps.ReplicaSchedulingStrategyType,
+					Feeds: []clusternetapps.Feed{
+						{APIVersion: "batch/v1", Kind: "Job", Name: jobName, Namespace: "app-ns"},
+					},
+				},
+			},
+		}
+		if hookType != "" {
+			action.HookType = hookType
+		}
+		return action
+	}
+
+	actions := []drv1alpha1.Action{
+		makeAction("hook-action", "pre-install", "hook-job"),
+		makeAction("main-action", "", "main-job"),
+	}
+
+	tests := []struct {
+		name          string
+		actionTargets perClusterActionTargets
+		childClients  map[string]client.Client
+		wantCancel    bool
+	}{
+		{
+			name: "hook failure does not cancel other clusters",
+			actionTargets: perClusterActionTargets{
+				"hook-action": {"ns1/cluster-a": {}},
+				"main-action": {"ns2/cluster-b": {}},
+			},
+			childClients: map[string]client.Client{
+				"cluster-a-id": fakeclient.NewClientBuilder().WithScheme(scheme).
+					WithRuntimeObjects(newTestChildJob("app-ns", "hook-job", "Failed")).
+					Build(),
+				"cluster-b-id": fakeclient.NewClientBuilder().WithScheme(scheme).
+					WithRuntimeObjects(newTestChildJob("app-ns", "main-job", "Complete")).
+					Build(),
+			},
+			wantCancel: false,
+		},
+		{
+			name: "non-hook failure still cancels other clusters",
+			actionTargets: perClusterActionTargets{
+				"hook-action": {"ns2/cluster-b": {}},
+				"main-action": {"ns1/cluster-a": {}},
+			},
+			childClients: map[string]client.Client{
+				"cluster-a-id": fakeclient.NewClientBuilder().WithScheme(scheme).
+					WithRuntimeObjects(newTestChildJob("app-ns", "main-job", "Failed")).
+					Build(),
+				"cluster-b-id": fakeclient.NewClientBuilder().WithScheme(scheme).
+					WithRuntimeObjects(newTestChildJob("app-ns", "hook-job", "")).
+					Build(),
+			},
+			wantCancel: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mainClient := fakeclient.NewClientBuilder().WithScheme(scheme).
+				WithObjects(
+					newTestManagedCluster("ns1", "cluster-a", "cluster-a-id"),
+					newTestManagedCluster("ns2", "cluster-b", "cluster-b-id"),
+				).
+				Build()
+			subExec := &SubscriptionActionExecutor{
+				client: mainClient,
+				childClientFactory: &fakeChildClusterClientFactory{
+					clients: tt.childClients,
+				},
+			}
+			executor := &NativeWorkflowExecutor{}
+			statusMap := make(map[string][]drv1alpha1.ClusterActionStatus)
+			childRefMap := make(map[string][]corev1.ObjectReference)
+			var mu sync.Mutex
+			start := metav1.Now()
+
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+
+			var cancelMu sync.Mutex
+			cancelCalled := false
+			trackedCancel := func() {
+				cancelMu.Lock()
+				cancelCalled = true
+				cancelMu.Unlock()
+				cancel()
+			}
+
+			var wg sync.WaitGroup
+			wg.Add(2)
+			go func() {
+				defer wg.Done()
+				executor.executeClusterActions(
+					ctx,
+					subExec,
+					actions,
+					tt.actionTargets,
+					"ns1/cluster-a",
+					nil,
+					drv1alpha1.FailurePolicyFailFast,
+					&start,
+					&mu,
+					statusMap,
+					childRefMap,
+					trackedCancel,
+				)
+			}()
+			go func() {
+				defer wg.Done()
+				executor.executeClusterActions(
+					ctx,
+					subExec,
+					actions,
+					tt.actionTargets,
+					"ns2/cluster-b",
+					nil,
+					drv1alpha1.FailurePolicyFailFast,
+					&start,
+					&mu,
+					statusMap,
+					childRefMap,
+					trackedCancel,
+				)
+			}()
+			wg.Wait()
+
+			cancelMu.Lock()
+			if cancelCalled != tt.wantCancel {
+				cancelMu.Unlock()
+				t.Fatalf("cancelCalled = %v, want %v", cancelCalled, tt.wantCancel)
+			}
+			cancelMu.Unlock()
+
+			hookStatuses := statusMap["hook-action"]
+			mainStatuses := statusMap["main-action"]
+			if len(hookStatuses) == 0 || len(mainStatuses) == 0 {
+				t.Fatalf("unexpected empty statuses: hook=%#v main=%#v", hookStatuses, mainStatuses)
+			}
+
+			if tt.wantCancel {
+				foundCanceled := false
+				for _, cs := range hookStatuses {
+					if cs.Cluster == "ns2/cluster-b" && strings.Contains(strings.ToLower(cs.Message), "canceled") {
+						foundCanceled = true
+						break
+					}
+				}
+				if !foundCanceled {
+					t.Fatalf("expected cluster-b hook status to be canceled, got %#v", hookStatuses)
+				}
+			} else {
+				phaseByCluster := map[string]string{}
+				for _, cs := range mainStatuses {
+					phaseByCluster[cs.Cluster] = cs.Phase
+				}
+				if phaseByCluster["ns2/cluster-b"] != drv1alpha1.PhaseSucceeded {
+					t.Fatalf("cluster-b main phase = %q, want %q", phaseByCluster["ns2/cluster-b"], drv1alpha1.PhaseSucceeded)
+				}
+			}
+		})
 	}
 }
 

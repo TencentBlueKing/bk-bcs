@@ -46,6 +46,13 @@ func newRootCommand() *cobra.Command {
 		showVer   bool
 	)
 
+	// The root command intentionally remains the rendered-YAML entry point.
+	// Keeping helmfile behind a subcommand avoids changing existing scripts that
+	// pipe `helm template` output directly into `drplan-gen`.
+	//
+	// The long help text documents both generation models because users often
+	// discover the CLI by running `drplan-gen --help` before choosing a mode.
+	// Keep the summary high-level here and put detailed examples in docs.
 	rootCmd := &cobra.Command{
 		Use:   "drplan-gen",
 		Short: "Generate DRPlan from Helm template output",
@@ -53,6 +60,9 @@ func newRootCommand() *cobra.Command {
 			"and generates DRPlan, DRWorkflow, and DRPlanExecution YAML files.\n\n" +
 			"Helm hook annotations (helm.sh/hook, helm.sh/hook-weight, helm.sh/hook-delete-policy)\n" +
 			"are automatically recognized and mapped into a single generated workflow.\n" +
+			"For helmfile release hooks, drplan-gen uses a dedicated hook-aware mode that expands\n" +
+			"preapply/presync/postsync into separate workflows, and each hook becomes\n" +
+			"Manifest(template=Job) in clusternet-reserved + PerCluster Subscription(feed=Job).\n" +
 			"In rendered-YAML mode, drplan-gen uses two generation paths:\n" +
 			"  - no hooks: simplified execute stage + workflow-execute.yaml\n" +
 			"  - any hooks present: unified install stage + workflow-install.yaml\n" +
@@ -98,6 +108,9 @@ func formatVersion() string {
 func runRenderedMode(name, namespace, inputFile, outputDir string) error {
 	var reader io.Reader
 
+	// Rendered mode consumes already-rendered manifests. It never shells out to
+	// Helm or helmfile, which keeps this path deterministic and suitable for
+	// CI pipelines that want to control rendering separately.
 	if inputFile != "" {
 		f, err := os.Open(filepath.Clean(inputFile)) // #nosec G304
 		if err != nil {
@@ -150,9 +163,25 @@ func runRenderedMode(name, namespace, inputFile, outputDir string) error {
 func newHelmfileCommand() *cobra.Command {
 	var cfg generator.HelmfileGenerateConfig
 
+	// Helmfile mode resolves one release through the helmfile Go API and then
+	// emits Clusternet-oriented resources. Chart repository information is a CLI
+	// input because a source helmfile can reference local charts or packaged tgz
+	// files that do not carry the target registry address.
 	cmd := &cobra.Command{
 		Use:   "helmfile",
 		Short: "Generate DRPlan from a resolved helmfile release",
+		Long: "drplan-gen helmfile reads one resolved helmfile release and generates DRPlan, DRWorkflow,\n" +
+			"and DRPlanExecution YAML files.\n\n" +
+			"When the release has no hooks, it keeps the simplified single workflow output:\n" +
+			"  - stage: execute\n" +
+			"  - workflow: workflow-execute.yaml\n\n" +
+			"When the release contains hooks, drplan-gen switches to hook-aware mode:\n" +
+			"  - supported hook events: preapply, presync, postsync\n" +
+			"  - generated workflows: workflow-preapply.yaml, workflow-presync.yaml,\n" +
+			"    workflow-execute.yaml, workflow-postsync.yaml\n" +
+			"  - each hook is expanded into Manifest(template=Job) + PerCluster Subscription(feed=Job)\n" +
+			"  - postsync requires plan.failurePolicy=Continue so the post stage can still run\n" +
+			"  - hook-image is required only when the release actually contains hooks\n",
 		RunE: func(_ *cobra.Command, _ []string) error {
 			if strings.TrimSpace(cfg.ChartRepo) == "" {
 				return fmt.Errorf("required flag \"chart-repo\" not set")
@@ -168,6 +197,7 @@ func newHelmfileCommand() *cobra.Command {
 	cmd.Flags().StringArrayVarP(&cfg.Selectors, "selector", "l", nil, "Release selector, for example: name=my-app")
 	cmd.Flags().StringVarP(&cfg.Namespace, "namespace", "n", "", "Override release namespace")
 	cmd.Flags().StringVar(&cfg.ChartRepo, "chart-repo", "", "Chart repository URL written into HelmChart.spec.repo")
+	cmd.Flags().StringVar(&cfg.HookImage, "hook-image", "", "Container image used by generated helmfile release hook Jobs; required when the release contains hooks")
 	cmd.Flags().BoolVar(&cfg.PlainHTTP, "plain-http", false, "Use plain HTTP when pulling charts from the chart repository")
 	cmd.Flags().BoolVar(&cfg.KeepFullValues, "keep-full-values", false, "Keep full rendered values instead of diffing against chart default values")
 	cmd.Flags().StringVarP(&cfg.OutputDir, "output", "o", ".", "Output directory")
@@ -181,6 +211,7 @@ func runHelmfileMode(cfg generator.HelmfileGenerateConfig) error {
 		Selectors:      cfg.Selectors,
 		Namespace:      cfg.Namespace,
 		ChartRepo:      cfg.ChartRepo,
+		HookImage:      cfg.HookImage,
 		PlainHTTP:      cfg.PlainHTTP,
 		KeepFullValues: cfg.KeepFullValues,
 	})

@@ -15,6 +15,7 @@ package executor
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
@@ -68,21 +69,25 @@ func (e *SubscriptionActionExecutor) Execute(
 		StartTime: &metav1.Time{Time: startTime},
 	}
 
-	// Validate configuration
+	// Validate before rendering templates so user-facing errors point at the
+	// missing Subscription fields instead of later unstructured object handling.
 	if err := e.validateSubscriptionConfig(action); err != nil {
 		return failSubscriptionStatus(status, err.Error()), err
 	}
 
-	// Prepare template renderer
+	// Subscription actions support DRPlan parameter placeholders in name,
+	// namespace, and feeds. Rendering once here keeps create/apply and waitReady
+	// checks using exactly the same resolved values.
 	templateData := &utils.TemplateData{Params: params}
 	render := func(s string) (string, error) { return utils.RenderTemplate(s, templateData) }
 
-	// Render name and namespace
 	subName, subNamespace, err := e.renderSubscriptionNameAndNamespace(action, render)
 	if err != nil {
 		return failSubscriptionStatus(status, err.Error()), err
 	}
 
+	// Delete mode deliberately skips spec rendering. Generated delete actions
+	// and inferred delete-mode rollbacks only need a namespaced Subscription key.
 	if action.Subscription.Operation == drv1alpha1.OperationDelete {
 		sub := &unstructured.Unstructured{}
 		sub.SetGroupVersionKind(schema.GroupVersionKind{
@@ -118,7 +123,9 @@ func (e *SubscriptionActionExecutor) Execute(
 		return failSubscriptionStatus(status, fmt.Sprintf("hook pre-cleanup failed: %v", cleanupErr)), cleanupErr
 	}
 
-	// Build rendered subscription payload used both for create and waitReady checks.
+	// Build rendered subscription payload used both for create and waitReady
+	// checks. This is important for feed readiness because child-cluster lookups
+	// must use the same rendered namespace/name that Clusternet receives.
 	renderedSub, err := e.renderSubscriptionAction(action.Subscription.Spec, render)
 	if err != nil {
 		return failSubscriptionStatus(status, err.Error()), err
@@ -153,6 +160,9 @@ func (e *SubscriptionActionExecutor) Execute(
 	}
 
 	if isPerClusterMode(action) {
+		// PerCluster execution is coordinated by NativeWorkflowExecutor. This
+		// executor only creates the parent Subscription and returns a Running
+		// status so the workflow layer can aggregate per-cluster results.
 		status.Phase = drv1alpha1.PhaseRunning
 		status.Message = fmt.Sprintf("PerCluster mode: parent Subscription %s/%s created, per-cluster execution deferred to workflow executor", sub.GetNamespace(), sub.GetName())
 		klog.Infof("PerCluster action %s: parent Subscription created, deferring per-cluster execution", action.Name)
@@ -160,6 +170,9 @@ func (e *SubscriptionActionExecutor) Execute(
 	}
 
 	if action.WaitReady {
+		// waitReady is synchronous only for regular Subscription actions. Hook
+		// PerCluster actions wait in the workflow layer after each cluster has its
+		// own subscription and child-cluster client context.
 		waitDur, parseErr := parseActionTimeout(action.Timeout)
 		if parseErr != nil {
 			return failSubscriptionStatus(status, fmt.Sprintf("invalid timeout: %v", parseErr)), parseErr
@@ -199,6 +212,9 @@ func (e *SubscriptionActionExecutor) applyHookPreCleanup(
 	action *drv1alpha1.Action,
 	subNamespace, subName string,
 ) error {
+	// Helm hooks are commonly re-run with stable names. BeforeCreate cleanup
+	// removes stale subscriptions and their distributed objects before the next
+	// hook run creates a fresh subscription with the same name.
 	if action == nil || action.HookCleanup == nil || !action.HookCleanup.BeforeCreate {
 		return nil
 	}
@@ -217,8 +233,12 @@ func (e *SubscriptionActionExecutor) applyHookPostCleanup(
 	shouldDelete := false
 	switch phase {
 	case drv1alpha1.PhaseSucceeded:
+		// Keep success cleanup opt-in. Operators often need the generated
+		// Description and child-cluster Job for auditing hook execution.
 		shouldDelete = action.HookCleanup.OnSuccess
 	case drv1alpha1.PhaseFailed:
+		// Failure cleanup is also opt-in so failed hook artifacts remain
+		// available for troubleshooting unless explicitly configured otherwise.
 		shouldDelete = action.HookCleanup.OnFailure
 	}
 	if !shouldDelete {
@@ -285,6 +305,9 @@ func (e *SubscriptionActionExecutor) deleteSubscriptionIfExists(ctx context.Cont
 	key := client.ObjectKey{Namespace: namespace, Name: name}
 	klog.V(4).Infof("Deleting existing Subscription %s/%s if present", namespace, name)
 
+	// Clusternet cleanup is asynchronous. Deleting the hub Subscription is not
+	// enough for immediate re-create flows, so callers wait for the object to be
+	// fully gone before applying the replacement.
 	existing := &unstructured.Unstructured{}
 	existing.SetGroupVersionKind(schema.GroupVersionKind{
 		Group:   "apps.clusternet.io",
@@ -360,7 +383,9 @@ func (e *SubscriptionActionExecutor) Rollback(
 		return rollbackStatus, nil
 	}
 
-	// Automatic rollback: delete the recorded subscriptions.
+	// Automatic rollback deletes all recorded subscriptions. PerCluster actions
+	// can produce multiple child-specific SubscriptionRefs, while older paths
+	// still populate the singular SubscriptionRef field.
 	if actionStatus.Outputs != nil {
 		refs := make([]corev1.ObjectReference, 0, len(actionStatus.Outputs.SubscriptionRefs)+1)
 		refs = append(refs, actionStatus.Outputs.SubscriptionRefs...)
@@ -422,6 +447,8 @@ func (e *SubscriptionActionExecutor) validateSubscriptionConfig(action *drv1alph
 	if action.Subscription == nil {
 		return fmt.Errorf("subscription configuration is required")
 	}
+	// Delete needs only identity. Requiring Spec here would make inferred delete
+	// mode verbose and would diverge from Kubernetes delete semantics.
 	if action.Subscription.Operation == drv1alpha1.OperationDelete {
 		if action.Subscription.Name == "" {
 			return fmt.Errorf("Subscription.Name is required")
@@ -443,6 +470,8 @@ func (e *SubscriptionActionExecutor) renderSubscriptionNameAndNamespace(action *
 
 	subNamespace := drv1alpha1.DefaultNamespace
 	if action.Subscription.Namespace != "" {
+		// Namespace defaults after rendering name so existing manifests that omit
+		// namespace keep the historical "default" behavior.
 		subNamespace, err = render(action.Subscription.Namespace)
 		if err != nil {
 			return "", "", fmt.Errorf("failed to render Subscription namespace: %w", err)
@@ -462,18 +491,24 @@ func (e *SubscriptionActionExecutor) renderSubscriptionAction(
 	spec *clusternetapps.SubscriptionSpec,
 	render func(string) (string, error),
 ) (*renderedSubscriptionAction, error) {
+	// renderedSubscriptionAction keeps both the unstructured spec map and typed
+	// feeds. The map is sent to Kubernetes; the typed feeds drive waitReady.
 	specMap := make(map[string]interface{})
 	rendered := &renderedSubscriptionAction{
 		specMap: specMap,
 		feeds:   make([]clusternetapps.Feed, 0, len(spec.Feeds)),
 	}
 
-	// Set simple fields
+	// Preserve Clusternet fields instead of reconstructing only the fields used
+	// by current generator output. This keeps the action executor useful for
+	// hand-written workflows that use advanced scheduling options.
 	if err := e.setSimpleSpecFields(spec, specMap, render); err != nil {
 		return nil, err
 	}
 
-	// Render feeds
+	// Feeds are the only nested fields that need template rendering today.
+	// Subscribers are copied as-is because their affinity structures are not
+	// string-templated by the public API.
 	if err := e.renderFeeds(spec.Feeds, specMap, &rendered.feeds, render); err != nil {
 		return nil, err
 	}
@@ -599,6 +634,9 @@ func (e *SubscriptionActionExecutor) waitForSubscriptionReady(
 	feeds []clusternetapps.Feed,
 	timeout time.Duration,
 ) error {
+	// Polling starts from the hub Subscription because Clusternet first records
+	// binding clusters there, then creates Description objects and child-cluster
+	// resources asynchronously.
 	waitCtx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
@@ -629,6 +667,8 @@ func (e *SubscriptionActionExecutor) checkSubscriptionReadyOnce(
 	namespace, name string,
 	feeds []clusternetapps.Feed,
 ) (bool, string, error) {
+	// NotFound is a pending state rather than an error because the caller may
+	// begin waiting immediately after apply while the apiserver cache catches up.
 	sub := &unstructured.Unstructured{}
 	sub.SetGroupVersionKind(schema.GroupVersionKind{
 		Group: "apps.clusternet.io", Version: "v1alpha1", Kind: "Subscription",
@@ -656,6 +696,9 @@ func (e *SubscriptionActionExecutor) checkDescriptionFailures(
 	sub *unstructured.Unstructured,
 	bindings []string,
 ) error {
+	// Description failures surface scheduling or distribution errors that may
+	// occur before the child resource exists. Checking them first gives a clear
+	// failure reason instead of waiting until the overall timeout expires.
 	subUID := string(sub.GetUID())
 	if subUID == "" {
 		return nil
@@ -717,6 +760,9 @@ func (e *SubscriptionActionExecutor) evaluateSubscriptionReadiness(
 	}
 
 	if len(feeds) == 0 {
+		// A Subscription with no feeds is still useful for scheduling checks in
+		// tests and hand-written workflows. Once bindings exist and there are no
+		// Description failures, there is no child resource left to wait for.
 		return true, "no feeds configured, scheduling confirmed", nil
 	}
 
@@ -728,6 +774,8 @@ func (e *SubscriptionActionExecutor) checkAllFeedsReady(
 	feeds []clusternetapps.Feed,
 	bindings []string,
 ) (bool, string, error) {
+	// Readiness is all-or-nothing across clusters and feeds. The first pending
+	// feed returns a reason so wait logs show which cluster/resource is blocking.
 	for _, binding := range bindings {
 		clusterNS, clusterName, err := parseBindingCluster(binding)
 		if err != nil {
@@ -780,16 +828,26 @@ func (e *SubscriptionActionExecutor) isFeedReadyInChildCluster(
 	childClient client.Client,
 	feed clusternetapps.Feed,
 ) (bool, string, error) {
-	gv, err := schema.ParseGroupVersion(feed.APIVersion)
+	// Manifest feeds are hub-side wrappers. Resolve them before child-cluster
+	// lookup so waitReady checks the real object distributed by Clusternet.
+	resolvedFeed, found, reason, err := e.resolveFeedTarget(ctx, feed)
 	if err != nil {
-		return false, "", fmt.Errorf("parse feed apiVersion %q: %w", feed.APIVersion, err)
+		return false, "", err
+	}
+	if !found {
+		return false, reason, nil
+	}
+
+	gv, err := schema.ParseGroupVersion(resolvedFeed.APIVersion)
+	if err != nil {
+		return false, "", fmt.Errorf("parse feed apiVersion %q: %w", resolvedFeed.APIVersion, err)
 	}
 	target := &unstructured.Unstructured{}
 	target.SetGroupVersionKind(schema.GroupVersionKind{
-		Group: gv.Group, Version: gv.Version, Kind: feed.Kind,
+		Group: gv.Group, Version: gv.Version, Kind: resolvedFeed.Kind,
 	})
 	if err := childClient.Get(ctx, client.ObjectKey{
-		Namespace: feed.Namespace, Name: feed.Name,
+		Namespace: resolvedFeed.Namespace, Name: resolvedFeed.Name,
 	}, target); err != nil {
 		if errors.IsNotFound(err) {
 			return false, "resource not found in child cluster", nil
@@ -797,4 +855,113 @@ func (e *SubscriptionActionExecutor) isFeedReadyInChildCluster(
 		return false, "", err
 	}
 	return evaluateResourceReadiness(target)
+}
+
+func (e *SubscriptionActionExecutor) resolveFeedTarget(
+	ctx context.Context,
+	feed clusternetapps.Feed,
+) (clusternetapps.Feed, bool, string, error) {
+	// Non-Manifest feeds can be checked directly in the child cluster. Manifest
+	// feeds need hub lookup because the child cluster receives only the embedded
+	// template object, not the Manifest wrapper.
+	if !isClusternetManifestFeed(feed) {
+		return feed, true, "", nil
+	}
+	return e.resolveFeedFromManifest(ctx, feed)
+}
+
+func isClusternetManifestFeed(feed clusternetapps.Feed) bool {
+	// Match the group rather than a single version so future v1beta1 Manifest
+	// feeds keep the same readiness path if the template shape remains stable.
+	if !strings.EqualFold(feed.Kind, "Manifest") {
+		return false
+	}
+	gv, err := schema.ParseGroupVersion(feed.APIVersion)
+	if err != nil {
+		return false
+	}
+	return gv.Group == "apps.clusternet.io"
+}
+
+func (e *SubscriptionActionExecutor) resolveFeedFromManifest(
+	ctx context.Context,
+	feed clusternetapps.Feed,
+) (clusternetapps.Feed, bool, string, error) {
+	gv, err := schema.ParseGroupVersion(feed.APIVersion)
+	if err != nil {
+		return clusternetapps.Feed{}, false, "", fmt.Errorf("parse manifest apiVersion %q: %w", feed.APIVersion, err)
+	}
+	manifest := &unstructured.Unstructured{}
+	manifest.SetGroupVersionKind(schema.GroupVersionKind{
+		Group: gv.Group, Version: gv.Version, Kind: feed.Kind,
+	})
+	getErr := e.client.Get(ctx, client.ObjectKey{Namespace: feed.Namespace, Name: feed.Name}, manifest)
+	if getErr != nil {
+		if errors.IsNotFound(getErr) {
+			// Missing hub Manifest is pending because the Subscription may have
+			// been observed before its feed action became visible.
+			return clusternetapps.Feed{}, false, "resource not found in hub cluster", nil
+		}
+		return clusternetapps.Feed{}, false, "", fmt.Errorf("get Manifest %s/%s: %w", feed.Namespace, feed.Name, getErr)
+	}
+
+	// Clusternet Manifest keeps the raw template at the top level. This is not
+	// Kubernetes-style spec.template; using spec.template breaks v0.18 CRDs.
+	template, found, err := unstructured.NestedMap(manifest.Object, "template")
+	if err != nil {
+		return clusternetapps.Feed{}, false, "", fmt.Errorf("parse Manifest %s/%s template: %w", feed.Namespace, feed.Name, err)
+	}
+	if !found {
+		return clusternetapps.Feed{}, false, "", fmt.Errorf("manifest %s/%s template is required", feed.Namespace, feed.Name)
+	}
+
+	target, err := feedFromManifestTemplate(template)
+	if err != nil {
+		return clusternetapps.Feed{}, false, "", fmt.Errorf("resolve Manifest %s/%s template: %w", feed.Namespace, feed.Name, err)
+	}
+	return target, true, "", nil
+}
+
+func feedFromManifestTemplate(template map[string]interface{}) (clusternetapps.Feed, error) {
+	// The embedded object must be resolvable to a namespaced feed. The generated
+	// hook Job always includes namespace, and requiring it here prevents waiting
+	// on an ambiguous child-cluster object.
+	apiVersion, found, err := unstructured.NestedString(template, "apiVersion")
+	if err != nil {
+		return clusternetapps.Feed{}, fmt.Errorf("parse template apiVersion: %w", err)
+	}
+	if !found || strings.TrimSpace(apiVersion) == "" {
+		return clusternetapps.Feed{}, fmt.Errorf("template apiVersion is required")
+	}
+
+	kind, found, err := unstructured.NestedString(template, "kind")
+	if err != nil {
+		return clusternetapps.Feed{}, fmt.Errorf("parse template kind: %w", err)
+	}
+	if !found || strings.TrimSpace(kind) == "" {
+		return clusternetapps.Feed{}, fmt.Errorf("template kind is required")
+	}
+
+	name, found, err := unstructured.NestedString(template, "metadata", "name")
+	if err != nil {
+		return clusternetapps.Feed{}, fmt.Errorf("parse template metadata.name: %w", err)
+	}
+	if !found || strings.TrimSpace(name) == "" {
+		return clusternetapps.Feed{}, fmt.Errorf("template metadata.name is required")
+	}
+
+	namespace, found, err := unstructured.NestedString(template, "metadata", "namespace")
+	if err != nil {
+		return clusternetapps.Feed{}, fmt.Errorf("parse template metadata.namespace: %w", err)
+	}
+	if !found || strings.TrimSpace(namespace) == "" {
+		return clusternetapps.Feed{}, fmt.Errorf("template metadata.namespace is required")
+	}
+
+	return clusternetapps.Feed{
+		APIVersion: apiVersion,
+		Kind:       kind,
+		Name:       name,
+		Namespace:  namespace,
+	}, nil
 }

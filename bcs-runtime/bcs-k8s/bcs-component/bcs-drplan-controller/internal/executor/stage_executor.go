@@ -54,6 +54,10 @@ func (e *DefaultStageExecutor) ExecuteStage(ctx context.Context, _ *drv1alpha1.D
 		StartTime:          &metav1.Time{Time: time.Now()},
 		WorkflowExecutions: make([]drv1alpha1.WorkflowExecutionStatus, 0, len(stage.Workflows)),
 	}
+	ctx = withStageProgressContext(ctx, stageStatus)
+	if recorder := progressRecorderFrom(ctx); recorder != nil {
+		recorder.reportStage(ctx, stageStatus)
+	}
 
 	var err error
 	if stage.Parallel {

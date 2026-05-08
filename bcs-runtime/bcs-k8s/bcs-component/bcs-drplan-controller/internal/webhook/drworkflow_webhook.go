@@ -527,13 +527,14 @@ func getRollbackRules() map[string]rollbackRule {
 		},
 		"KubernetesResource": {
 			checkRequired: func(action *drv1alpha1.Action) (bool, string) {
-				if action.Resource != nil && (action.Resource.Operation == drv1alpha1.OperationPatch || action.Resource.Operation == drv1alpha1.OperationApply) {
+				if action.Resource != nil && action.Resource.Operation == drv1alpha1.OperationPatch {
 					return true, fmt.Sprintf("KubernetesResource %s", action.Resource.Operation)
 				}
 				return false, ""
 			},
 			checkAutomatic: func(action *drv1alpha1.Action) bool {
-				return action.Resource != nil && action.Resource.Operation == drv1alpha1.OperationCreate
+				return action.Resource != nil &&
+					(action.Resource.Operation == drv1alpha1.OperationCreate || action.Resource.Operation == drv1alpha1.OperationApply)
 			},
 		},
 		"Job": {
