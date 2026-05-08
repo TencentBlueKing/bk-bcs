@@ -268,6 +268,8 @@ func InstallGSEAgentTask(taskID string, stepName string) error { // nolint
 			ForceUpdateAgentId: true,
 		})
 	}
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		fmt.Sprintf("install gse agent for biz %d, ipv4: %s, ipv6: %s", bkBizID, nodeIPs, nodeIPv6s))
 	job, err := nodeManClient.JobInstall(nodeman.InstallAgentJob, hosts)
 	if err != nil {
 		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
