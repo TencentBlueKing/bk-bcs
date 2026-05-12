@@ -4,6 +4,8 @@
 *exvim*
 *vendor*
 *go.sum
+!bcs-scenarios/bcs-terraform-bkprovider/go.sum
+
 
 __pycache__/
 *.py[cod]

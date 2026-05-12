@@ -24,16 +24,31 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-terraform-bkprovider/common"
 )
 
-func getUserInfo(ctx context.Context) (*middleware.AuthUser, uint32, string) {
+// BkUser extends middleware.AuthUser with TenantID for multi-tenant scenarios.
+type BkUser struct {
+	*middleware.AuthUser
+	TenantID string
+}
+
+func getUserInfo(ctx context.Context) (*BkUser, uint32, string) {
 	md, _ := metadata.FromContext(ctx)
+
 	data, ok := md.Get(string(middleware.AuthUserKey))
-	user := &middleware.AuthUser{}
-	_ = json.Unmarshal([]byte(data), user)
-	if !ok || user.Username == "" {
+	authUser := &middleware.AuthUser{}
+	if err := json.Unmarshal([]byte(data), authUser); err != nil {
+		return nil, bcscommon.BcsErrCommHttpParametersFailed, bcscommon.BcsErrCommHttpParametersFailedStr
+	}
+	if !ok || authUser.Username == "" {
 		return nil, bcscommon.BcsErrCommHttpParametersFailed, bcscommon.BcsErrCommHttpParametersFailedStr
 	}
 
-	return user, common.CodeSuccess, common.MsgSuccess
+	tenantID, _ := md.Get("X-Bk-Tenant-Id")
+	if tenantID == "" {
+		// "default" is the reserved value used when multi-tenant mode is not enabled.
+		tenantID = "default"
+	}
+
+	return &BkUser{AuthUser: authUser, TenantID: tenantID}, common.CodeSuccess, common.MsgSuccess
 }
 
 // stringInSlice returns true if given string in slice

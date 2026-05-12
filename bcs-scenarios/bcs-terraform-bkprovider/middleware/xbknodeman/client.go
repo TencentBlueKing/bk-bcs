@@ -30,9 +30,9 @@ type Client struct {
 }
 
 // NewClient  return new client
-func NewClient(env, bkAppCode, bkAppSecret, accessToken, username string) *Client {
+func NewClient(env, bkAppCode, bkAppSecret, accessToken, username, tenantID string) *Client {
 	return &Client{
-		BaseRequest: NewBaseRequest(bkAppCode, bkAppSecret, accessToken, username),
+		BaseRequest: NewBaseRequest(bkAppCode, bkAppSecret, accessToken, username, tenantID),
 		Env:         env,
 		Host:        os.Getenv(EnvBkNodeManHost),
 	}
@@ -54,6 +54,7 @@ func (t *Client) SendRequest(ctx context.Context, method string, uri string, par
 	return SendRequest(ctx, method, url, params, responseData, &xrequests.RequestOptions{
 		Headers: map[string]string{
 			"X-Bkapi-Authorization": common.JsonMarshal(authMap),
+			"X-Bk-Tenant-Id":        t.TenantID,
 		},
 	})
 }

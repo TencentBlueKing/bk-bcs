@@ -37,12 +37,14 @@ func NewBcsTerraformBkProviderEndpoints() []*api.Endpoint {
 			Name:    "BcsTerraformBkProvider.InstallJob",
 			Path:    []string{"/terraform-bkprovider/v1/install_job"},
 			Method:  []string{"POST"},
+			Body:    "*",
 			Handler: "rpc",
 		},
 		{
 			Name:    "BcsTerraformBkProvider.ListHost",
 			Path:    []string{"/terraform-bkprovider/v1/list_host"},
 			Method:  []string{"POST"},
+			Body:    "*",
 			Handler: "rpc",
 		},
 		{
@@ -55,12 +57,14 @@ func NewBcsTerraformBkProviderEndpoints() []*api.Endpoint {
 			Name:    "BcsTerraformBkProvider.CreateCloud",
 			Path:    []string{"/terraform-bkprovider/v1/cloud"},
 			Method:  []string{"POST"},
+			Body:    "*",
 			Handler: "rpc",
 		},
 		{
 			Name:    "BcsTerraformBkProvider.UpdateCloud",
 			Path:    []string{"/terraform-bkprovider/v1/cloud"},
 			Method:  []string{"PUT"},
+			Body:    "*",
 			Handler: "rpc",
 		},
 		{
@@ -73,18 +77,21 @@ func NewBcsTerraformBkProviderEndpoints() []*api.Endpoint {
 			Name:    "BcsTerraformBkProvider.DeleteCloud",
 			Path:    []string{"/terraform-bkprovider/v1/cloud"},
 			Method:  []string{"DELETE"},
+			Body:    "",
 			Handler: "rpc",
 		},
 		{
 			Name:    "BcsTerraformBkProvider.GetJobDetail",
 			Path:    []string{"/terraform-bkprovider/v1/get_job_detail"},
 			Method:  []string{"POST"},
+			Body:    "*",
 			Handler: "rpc",
 		},
 		{
 			Name:    "BcsTerraformBkProvider.RegisterBkWhitelist",
 			Path:    []string{"/terraform-bkprovider/v1/register_bk_whitelist"},
 			Method:  []string{"POST"},
+			Body:    "*",
 			Handler: "rpc",
 		},
 		{
@@ -278,12 +285,14 @@ func RegisterBcsTerraformBkProviderHandler(s server.Server, hdlr BcsTerraformBkP
 		Name:    "BcsTerraformBkProvider.InstallJob",
 		Path:    []string{"/terraform-bkprovider/v1/install_job"},
 		Method:  []string{"POST"},
+		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "BcsTerraformBkProvider.ListHost",
 		Path:    []string{"/terraform-bkprovider/v1/list_host"},
 		Method:  []string{"POST"},
+		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -296,12 +305,14 @@ func RegisterBcsTerraformBkProviderHandler(s server.Server, hdlr BcsTerraformBkP
 		Name:    "BcsTerraformBkProvider.CreateCloud",
 		Path:    []string{"/terraform-bkprovider/v1/cloud"},
 		Method:  []string{"POST"},
+		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "BcsTerraformBkProvider.UpdateCloud",
 		Path:    []string{"/terraform-bkprovider/v1/cloud"},
 		Method:  []string{"PUT"},
+		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -314,18 +325,21 @@ func RegisterBcsTerraformBkProviderHandler(s server.Server, hdlr BcsTerraformBkP
 		Name:    "BcsTerraformBkProvider.DeleteCloud",
 		Path:    []string{"/terraform-bkprovider/v1/cloud"},
 		Method:  []string{"DELETE"},
+		Body:    "",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "BcsTerraformBkProvider.GetJobDetail",
 		Path:    []string{"/terraform-bkprovider/v1/get_job_detail"},
 		Method:  []string{"POST"},
+		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "BcsTerraformBkProvider.RegisterBkWhitelist",
 		Path:    []string{"/terraform-bkprovider/v1/register_bk_whitelist"},
 		Method:  []string{"POST"},
+		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{

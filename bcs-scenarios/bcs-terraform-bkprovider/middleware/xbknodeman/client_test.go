@@ -16,19 +16,29 @@ package xbknodeman
 import (
 	"context"
 	"log"
+	"os"
 	"testing"
 
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-terraform-bkprovider/common"
 )
 
+// TODO: 引入 ginkgo 框架，优化测试实现
+func skipIfNoEnv(t *testing.T) {
+	t.Helper()
+	if os.Getenv(EnvBkNodeManHost) == "" {
+		t.Skipf("skipping: environment variable %s not set", EnvBkNodeManHost)
+	}
+}
+
 func NewTestClient() *Client {
 	bkAppCode := ""
 	bkAppSecret := ""
 	bkUserName := ""
-	return NewClient(0, "", bkAppCode, bkAppSecret, "", bkUserName)
+	return NewClient("", bkAppCode, bkAppSecret, "", bkUserName, "")
 }
 
 func TestListCloud(t *testing.T) {
+	skipIfNoEnv(t)
 	client := NewTestClient()
 	resp, err := client.ListCloud(context.Background(), &ListCloudRequest{})
 	if err != nil {
@@ -39,6 +49,7 @@ func TestListCloud(t *testing.T) {
 }
 
 func TestCreateCloud(t *testing.T) {
+	skipIfNoEnv(t)
 	client := NewTestClient()
 	resp, err := client.CreateCloud(context.TODO(), &CreateCloudRequest{
 		BkCloudName: "porterlin-test-2",
@@ -57,6 +68,7 @@ func TestCreateCloud(t *testing.T) {
 }
 
 func TestGetProxy(t *testing.T) {
+	skipIfNoEnv(t)
 	client := NewTestClient()
 	resp, err := client.GetProxyHost(context.TODO(), &GetProxyHostRequest{BkCloudId: 400})
 	if err != nil {
@@ -67,16 +79,11 @@ func TestGetProxy(t *testing.T) {
 }
 
 func TestListHost(t *testing.T) {
+	skipIfNoEnv(t)
 	client := NewTestClient()
 	resp, err := client.ListHosts(context.TODO(), &ListHostRequest{
 		Page:     1,
 		PageSize: 50,
-		// Conditions: []Condition{
-		// 	{
-		// 		Key:   "bk_cloud_id",
-		// 		Value: []int{30000322},
-		// 	},
-		// },
 	})
 	if err != nil {
 		log.Fatal(err.Error())
