@@ -19,7 +19,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
-	helmrelease "helm.sh/helm/v3/pkg/release"
+	releaseCom "helm.sh/helm/v4/pkg/release/common"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
@@ -132,7 +132,7 @@ func (u *UninstallAddonsAction) saveDB(ctx context.Context, ns, chartName, relea
 	username := auth.GetUserFromCtx(ctx)
 	rl := entity.M{
 		entity.FieldKeyUpdateBy: username,
-		entity.FieldKeyStatus:   helmrelease.StatusUninstalling.String(),
+		entity.FieldKeyStatus:   releaseCom.StatusUninstalling.String(),
 		entity.FieldKeyMessage:  "",
 	}
 	if err := u.model.UpdateRelease(ctx, u.req.GetClusterID(), ns, releaseName, rl); err != nil {

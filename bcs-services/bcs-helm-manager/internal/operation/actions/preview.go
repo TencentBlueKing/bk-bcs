@@ -16,7 +16,7 @@ import (
 	"context"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	pkgrelease "helm.sh/helm/v3/pkg/release"
+	pkgrelease "helm.sh/helm/v4/pkg/release/v1"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/release"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/repo"

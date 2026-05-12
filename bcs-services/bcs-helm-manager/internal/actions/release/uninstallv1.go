@@ -19,7 +19,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
-	helmrelease "helm.sh/helm/v3/pkg/release"
+	releaseCom "helm.sh/helm/v4/pkg/release/common"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
@@ -121,14 +121,14 @@ func (u *UninstallReleaseV1Action) saveDB() error {
 			Namespace:   u.req.GetNamespace(),
 			ClusterID:   u.req.GetClusterID(),
 			CreateBy:    username,
-			Status:      helmrelease.StatusUninstalling.String(),
+			Status:      releaseCom.StatusUninstalling.String(),
 		}); err != nil {
 			return err
 		}
 	} else {
 		rl := entity.M{
 			entity.FieldKeyUpdateBy: username,
-			entity.FieldKeyStatus:   helmrelease.StatusUninstalling.String(),
+			entity.FieldKeyStatus:   releaseCom.StatusUninstalling.String(),
 			entity.FieldKeyMessage:  "",
 		}
 		if err = u.model.UpdateRelease(u.ctx, u.req.GetClusterID(), u.req.GetNamespace(),

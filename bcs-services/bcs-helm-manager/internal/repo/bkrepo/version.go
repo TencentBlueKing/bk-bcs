@@ -20,7 +20,7 @@ import (
 	"strconv"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"helm.sh/helm/v3/pkg/registry"
+	"helm.sh/helm/v4/pkg/registry"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/repo"
 )

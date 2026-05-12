@@ -19,7 +19,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
-	helmrelease "helm.sh/helm/v3/pkg/release"
+	releaseCom "helm.sh/helm/v4/pkg/release/common"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
@@ -151,7 +151,7 @@ func (u *UpgradeReleaseV1Action) saveDB() error {
 			Values:       u.req.GetValues(),
 			Args:         u.req.GetArgs(),
 			CreateBy:     createBy,
-			Status:       helmrelease.StatusPendingUpgrade.String(),
+			Status:       releaseCom.StatusPendingUpgrade.String(),
 			Env:          u.req.GetEnv(),
 		}); err != nil {
 			return err
@@ -176,7 +176,7 @@ func (u *UpgradeReleaseV1Action) saveDB() error {
 			entity.FieldKeyValueFile:    u.req.GetValueFile(),
 			entity.FieldKeyArgs:         u.req.Args,
 			entity.FieldKeyUpdateBy:     createBy,
-			entity.FieldKeyStatus:       helmrelease.StatusPendingUpgrade.String(),
+			entity.FieldKeyStatus:       releaseCom.StatusPendingUpgrade.String(),
 			entity.FieldKeyMessage:      "",
 			entity.FieldKeyEnv:          u.req.GetEnv(),
 		}

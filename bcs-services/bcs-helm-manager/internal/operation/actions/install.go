@@ -19,7 +19,7 @@ import (
 	"strconv"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	helmrelease "helm.sh/helm/v3/pkg/release"
+	releaseCom "helm.sh/helm/v4/pkg/release/common"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component"
@@ -237,7 +237,7 @@ func (r *ReleaseInstallAction) Execute(ctx context.Context) error {
 
 // Done xxx
 func (r *ReleaseInstallAction) Done(err error) {
-	status := helmrelease.StatusDeployed
+	status := releaseCom.StatusDeployed
 	message := ""
 	if err != nil {
 		status = common.ReleaseStatusInstallFailed

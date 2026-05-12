@@ -19,7 +19,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
-	helmrelease "helm.sh/helm/v3/pkg/release"
+	releaseCom "helm.sh/helm/v4/pkg/release/common"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
@@ -130,14 +130,14 @@ func (r *RollbackReleaseV1Action) saveDB() error {
 			Namespace:   r.req.GetNamespace(),
 			ClusterID:   r.req.GetClusterID(),
 			CreateBy:    username,
-			Status:      helmrelease.StatusPendingRollback.String(),
+			Status:      releaseCom.StatusPendingRollback.String(),
 		}); err != nil {
 			return err
 		}
 	} else {
 		rl := entity.M{
 			entity.FieldKeyUpdateBy: username,
-			entity.FieldKeyStatus:   helmrelease.StatusPendingRollback.String(),
+			entity.FieldKeyStatus:   releaseCom.StatusPendingRollback.String(),
 			entity.FieldKeyMessage:  "",
 		}
 		if err = r.model.UpdateRelease(r.ctx, r.req.GetClusterID(), r.req.GetNamespace(),

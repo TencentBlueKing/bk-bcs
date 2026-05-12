@@ -16,7 +16,7 @@ import (
 	"context"
 	"fmt"
 
-	helmrelease "helm.sh/helm/v3/pkg/release"
+	releaseCom "helm.sh/helm/v4/pkg/release/common"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/operation"
@@ -102,7 +102,7 @@ func (r *ReleaseRollbackAction) Execute(ctx context.Context) error {
 
 // Done xxx
 func (r *ReleaseRollbackAction) Done(err error) {
-	status := helmrelease.StatusDeployed
+	status := releaseCom.StatusDeployed
 	message := ""
 	if err != nil {
 		status = common.ReleaseStatusRollbackFailed

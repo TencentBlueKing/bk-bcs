@@ -20,9 +20,9 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"gopkg.in/yaml.v2"
-	"helm.sh/helm/v3/pkg/chartutil"
-	helmrelease "helm.sh/helm/v3/pkg/release"
-	"helm.sh/helm/v3/pkg/storage/driver"
+	chartutil "helm.sh/helm/v4/pkg/chart/common/util"
+	helmrelease "helm.sh/helm/v4/pkg/release/v1"
+	"helm.sh/helm/v4/pkg/storage/driver"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"

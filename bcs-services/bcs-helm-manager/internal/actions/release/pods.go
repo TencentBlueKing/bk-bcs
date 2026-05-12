@@ -18,7 +18,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	_struct "github.com/golang/protobuf/ptypes/struct"
-	"helm.sh/helm/v3/pkg/storage/driver"
+	"helm.sh/helm/v4/pkg/storage/driver"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/cli-runtime/pkg/resource"
 

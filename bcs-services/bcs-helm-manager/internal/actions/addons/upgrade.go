@@ -19,7 +19,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
-	helmrelease "helm.sh/helm/v3/pkg/release"
+	releaseCom "helm.sh/helm/v4/pkg/release/common"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
@@ -130,10 +130,10 @@ func (u *UpgradeAddonsAction) saveDB(ctx context.Context, ns, chartName, release
 		create = true
 	}
 
-	status := helmrelease.StatusPendingUpgrade.String()
+	status := releaseCom.StatusPendingUpgrade.String()
 	// 对于非 chart 类型的 addons，直接返回成功
 	if isFakeChart(chartName) {
-		status = helmrelease.StatusDeployed.String()
+		status = releaseCom.StatusDeployed.String()
 	}
 	createBy := auth.GetUserFromCtx(ctx)
 	if create {

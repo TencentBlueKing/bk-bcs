@@ -43,7 +43,7 @@ import (
 	microRgt "go-micro.dev/v4/registry"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
-	helmrelease "helm.sh/helm/v3/pkg/release"
+	releaseCom "helm.sh/helm/v4/pkg/release/common"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component/project"
@@ -389,12 +389,12 @@ func (r *release) toEntity() (*entity.Release, error) {
 		}
 	}
 
-	status := helmrelease.StatusDeployed
+	status := releaseCom.StatusDeployed
 	if r.Status != 1 {
-		status = helmrelease.StatusFailed
+		status = releaseCom.StatusFailed
 	}
 	if r.StringStatus != "" {
-		status = helmrelease.Status(r.StringStatus)
+		status = releaseCom.Status(r.StringStatus)
 	}
 	// init release struct
 	return &entity.Release{

@@ -21,15 +21,15 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	rspb "helm.sh/helm/v3/pkg/release"
-	"helm.sh/helm/v3/pkg/releaseutil"
-	helmtime "helm.sh/helm/v3/pkg/time"
+	releaseCom "helm.sh/helm/v4/pkg/release/common"
+	rspb "helm.sh/helm/v4/pkg/release/v1"
 	v1 "k8s.io/api/core/v1"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/release"
+	releaseutil "helm.sh/helm/v4/pkg/release/v1/util"
 )
 
 func (c *cluster) list(ctx context.Context, option release.ListOption) (int, []*release.Release, error) {
@@ -164,8 +164,8 @@ func (c *cluster) getReleases(ctx context.Context, option release.ListOption) ([
 		releases = append(releases, &rspb.Release{
 			Name: data.Labels["name"],
 			Info: &rspb.Info{
-				LastDeployed: helmtime.Time{Time: parseStringUnixTime(data.Labels["modifiedAt"])},
-				Status:       rspb.Status(data.Labels["status"])},
+				LastDeployed: parseStringUnixTime(data.Labels["modifiedAt"]),
+				Status:       releaseCom.Status(data.Labels["status"])},
 			Namespace: data.ObjectMeta.Namespace,
 			Version:   parseVersion(data.Labels["version"]),
 		})

@@ -24,7 +24,7 @@ import (
 	authUtils "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/sync/errgroup"
-	helmrelease "helm.sh/helm/v3/pkg/release"
+	releaseCom "helm.sh/helm/v4/pkg/release/common"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
@@ -194,7 +194,7 @@ func (l *ListReleaseV1Action) mergeReleases(clusterReleases,
 			continue
 		}
 		// 数据库中状态正常的数据，但在集群中不存在，则不展示
-		if v.GetStatus() == helmrelease.StatusDeployed.String() {
+		if v.GetStatus() == releaseCom.StatusDeployed.String() {
 			continue
 		}
 		newReleaseMap[l.getReleaseKey(v.GetNamespace(), v.GetName())] = dbReleases[i]

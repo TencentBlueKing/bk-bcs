@@ -27,7 +27,7 @@ import (
 	"path/filepath"
 	"strconv"
 
-	"helm.sh/helm/v3/pkg/chartutil"
+	chartutil "helm.sh/helm/v4/pkg/chart/v2/util"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/client/pkg"
 	utilschart "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/chart"

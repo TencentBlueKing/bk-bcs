@@ -13,7 +13,7 @@
 // Package common xxx
 package common
 
-import "helm.sh/helm/v3/pkg/release"
+import "helm.sh/helm/v4/pkg/release/common"
 
 const (
 	// ServiceDomain domain name for service
@@ -38,13 +38,13 @@ const (
 // ReleaseStatus
 const (
 	// ReleaseStatusInstallFailed xxx
-	ReleaseStatusInstallFailed release.Status = "failed-install"
+	ReleaseStatusInstallFailed common.Status = "failed-install"
 	// ReleaseStatusUpgradeFailed xxx
-	ReleaseStatusUpgradeFailed release.Status = "failed-upgrade"
+	ReleaseStatusUpgradeFailed common.Status = "failed-upgrade"
 	// ReleaseStatusRollbackFailed xxx
-	ReleaseStatusRollbackFailed release.Status = "failed-rollback"
+	ReleaseStatusRollbackFailed common.Status = "failed-rollback"
 	// ReleaseStatusUninstallFailed xxx
-	ReleaseStatusUninstallFailed release.Status = "failed-uninstall"
+	ReleaseStatusUninstallFailed common.Status = "failed-uninstall"
 )
 
 const (

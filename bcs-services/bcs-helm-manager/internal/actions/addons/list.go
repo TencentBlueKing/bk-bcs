@@ -20,8 +20,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"golang.org/x/sync/errgroup"
-	helmrelease "helm.sh/helm/v3/pkg/release"
-	"helm.sh/helm/v3/pkg/storage/driver"
+	releaseCom "helm.sh/helm/v4/pkg/release/common"
+	"helm.sh/helm/v4/pkg/storage/driver"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/release"
@@ -112,9 +112,9 @@ func (l *ListAddonsAction) Handle(ctx context.Context,
 			mux.Lock()
 			if err != nil {
 				if errors.Is(err, driver.ErrReleaseNotFound) &&
-					*addons[i].Status == helmrelease.StatusDeployed.String() && *addons[i].ChartName != "" {
+					*addons[i].Status == releaseCom.StatusDeployed.String() && *addons[i].ChartName != "" {
 					// 如果集群中没有改 release，则置为未安装状态
-					if *addons[i].Status == helmrelease.StatusDeployed.String() && *addons[i].ChartName != "" {
+					if *addons[i].Status == releaseCom.StatusDeployed.String() && *addons[i].ChartName != "" {
 						addons[i].Status = common.GetStringP("")
 						addons[i].Message = common.GetStringP("")
 					}

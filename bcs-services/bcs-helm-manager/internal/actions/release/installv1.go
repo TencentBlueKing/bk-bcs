@@ -18,8 +18,8 @@ import (
 	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	helmrelease "helm.sh/helm/v3/pkg/release"
-	"helm.sh/helm/v3/pkg/storage/driver"
+	releaseCom "helm.sh/helm/v4/pkg/release/common"
+	"helm.sh/helm/v4/pkg/storage/driver"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
@@ -150,7 +150,7 @@ func (i *InstallReleaseV1Action) saveDB() error {
 		Values:       i.req.GetValues(),
 		Args:         i.req.GetArgs(),
 		CreateBy:     createBy,
-		Status:       helmrelease.StatusPendingInstall.String(),
+		Status:       releaseCom.StatusPendingInstall.String(),
 		Env:          i.req.GetEnv(),
 	}); err != nil {
 		return err

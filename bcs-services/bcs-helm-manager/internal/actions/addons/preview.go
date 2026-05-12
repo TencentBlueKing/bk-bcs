@@ -18,7 +18,7 @@ import (
 	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"helm.sh/helm/v3/pkg/storage/driver"
+	"helm.sh/helm/v4/pkg/storage/driver"
 
 	actionsrelease "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/actions/release"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/auth"

@@ -16,7 +16,7 @@ import (
 	"context"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"helm.sh/helm/v3/pkg/chartutil"
+	chartutil "helm.sh/helm/v4/pkg/chart/common"
 	"k8s.io/apimachinery/pkg/runtime"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"

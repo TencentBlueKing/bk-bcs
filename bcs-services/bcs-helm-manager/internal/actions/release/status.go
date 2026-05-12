@@ -19,7 +19,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	_struct "github.com/golang/protobuf/ptypes/struct"
 	"google.golang.org/protobuf/types/known/structpb"
-	"helm.sh/helm/v3/pkg/storage/driver"
+	"helm.sh/helm/v4/pkg/storage/driver"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/release"

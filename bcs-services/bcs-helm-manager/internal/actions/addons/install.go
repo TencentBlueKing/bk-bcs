@@ -17,7 +17,7 @@ import (
 	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	helmrelease "helm.sh/helm/v3/pkg/release"
+	releaseCom "helm.sh/helm/v4/pkg/release/common"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
@@ -116,10 +116,10 @@ func (i *InstallAddonsAction) saveDB(ctx context.Context, ns, chartName, release
 		return err
 	}
 	createBy := auth.GetUserFromCtx(ctx)
-	status := helmrelease.StatusPendingInstall.String()
+	status := releaseCom.StatusPendingInstall.String()
 	// 对于非 chart 类型的 addons，直接返回成功
 	if isFakeChart(chartName) {
-		status = helmrelease.StatusDeployed.String()
+		status = releaseCom.StatusDeployed.String()
 	}
 	if err := i.model.CreateRelease(ctx, &entity.Release{
 		Name:         releaseName,

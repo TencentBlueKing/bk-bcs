@@ -18,6 +18,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -29,13 +30,15 @@ import (
 	"github.com/samber/lo"
 	"github.com/spf13/pflag"
 	yaml3 "gopkg.in/yaml.v3"
-	"helm.sh/helm/v3/pkg/action"
-	"helm.sh/helm/v3/pkg/chart"
-	"helm.sh/helm/v3/pkg/chart/loader"
-	"helm.sh/helm/v3/pkg/cli/values"
-	rspb "helm.sh/helm/v3/pkg/release"
-	"helm.sh/helm/v3/pkg/storage/driver"
-	"helm.sh/helm/v3/pkg/strvals"
+	"helm.sh/helm/v4/pkg/action"
+	"helm.sh/helm/v4/pkg/chart/loader/archive"
+	chart "helm.sh/helm/v4/pkg/chart/v2"
+	"helm.sh/helm/v4/pkg/chart/v2/loader"
+	"helm.sh/helm/v4/pkg/cli/values"
+	"helm.sh/helm/v4/pkg/kube"
+	rspb "helm.sh/helm/v4/pkg/release/v1"
+	"helm.sh/helm/v4/pkg/storage/driver"
+	"helm.sh/helm/v4/pkg/strvals"
 	"k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/rest"
@@ -144,7 +147,7 @@ type client struct {
 // Get helm release
 func (c *client) Get(_ context.Context, namespace, name string, revision int) (*rspb.Release, error) {
 	conf := new(action.Configuration)
-	if err := conf.Init(c.getConfigFlag(namespace), namespace, "", blog.Infof); err != nil {
+	if err := conf.Init(c.getConfigFlag(namespace), namespace, ""); err != nil {
 		return nil, err
 	}
 
@@ -154,14 +157,23 @@ func (c *client) Get(_ context.Context, namespace, name string, revision int) (*
 	if err != nil {
 		return nil, err
 	}
-	re.Config = removeValuesTemplate(re.Config)
-	return re, nil
+
+	if re == nil {
+		return nil, errors.New("release not found")
+	}
+
+	if r, ok := re.(*rspb.Release); ok {
+		r.Config = removeValuesTemplate(r.Config)
+		return r, nil
+	}
+
+	return nil, errors.New("release not found")
 }
 
 // List helm release
 func (c *client) List(_ context.Context, option release.ListOption) ([]*rspb.Release, error) {
 	conf := new(action.Configuration)
-	if err := conf.Init(c.getConfigFlag(option.Namespace), option.Namespace, "", blog.Infof); err != nil {
+	if err := conf.Init(c.getConfigFlag(option.Namespace), option.Namespace, ""); err != nil {
 		return nil, err
 	}
 
@@ -179,10 +191,19 @@ func (c *client) List(_ context.Context, option release.ListOption) ([]*rspb.Rel
 	if err != nil {
 		return nil, err
 	}
+
+	res := make([]*rspb.Release, 0)
 	for i := range releases {
-		releases[i].Config = removeValuesTemplate(releases[i].Config)
+		if releases[i] == nil {
+			continue
+		}
+
+		if re, ok := releases[i].(*rspb.Release); ok {
+			re.Config = removeValuesTemplate(re.Config)
+			res = append(res, re)
+		}
 	}
-	return releases, nil
+	return res, nil
 }
 
 // Install helm release through helm client
@@ -191,15 +212,15 @@ func (c *client) Install(ctx context.Context, config release.HelmInstallConfig) 
 		config.DryRun)
 
 	conf := new(action.Configuration)
-	if err := conf.Init(c.getConfigFlag(config.Namespace), config.Namespace, "", blog.Infof); err != nil {
+	if err := conf.Init(c.getConfigFlag(config.Namespace), config.Namespace, ""); err != nil {
 		blog.Errorf("sdk client install and init configuration failed, %s, %v", err.Error(), config)
 		return nil, err
 	}
 
 	installer := action.NewInstall(conf)
-	installer.DryRun = config.DryRun
+	installer.DryRunStrategy = config.DryRunStrategy
 	installer.Replace = config.Replace
-	installer.ClientOnly = config.ClientOnly
+	//installer.ClientOnly = config.ClientOnly
 	installer.ReleaseName = config.Name
 	installer.Namespace = config.Namespace
 	installer.PostRenderer = newPatcher(c.group.config.PatchTemplates, config.PatchTemplateValues)
@@ -238,15 +259,34 @@ func (c *client) Install(ctx context.Context, config release.HelmInstallConfig) 
 	}
 
 	r, err := installer.Run(ctx, chartF, values)
+
+	if r == nil {
+		err = fmt.Errorf("release is nil")
+		blog.Errorf("sdk client install failed, %s, "+
+			"namespace %s, name %s", err.Error(), config.Namespace, config.Name)
+		return nil, err
+	}
+
+	var (
+		ok bool
+		re *rspb.Release
+	)
+	if re, ok = r.(*rspb.Release); !ok {
+		err = fmt.Errorf("release type error")
+		blog.Errorf("sdk client install failed, %s, "+
+			"namespace %s, name %s", err.Error(), config.Namespace, config.Name)
+		return nil, err
+	}
+
 	if err != nil {
 		blog.Errorf("sdk client install failed, %s, "+
 			"namespace %s, name %s", err.Error(), config.Namespace, config.Name)
-		return getHelmInstallResult(r), err
+		return getHelmInstallResult(re), err
 	}
 
 	blog.Infof("sdk client install release successfully name %s, namespace %s, revision: %d, dryrun: %t",
-		config.Name, config.Namespace, r.Version, config.DryRun)
-	return getHelmInstallResult(r), nil
+		config.Name, config.Namespace, re.Version, config.DryRun)
+	return getHelmInstallResult(re), nil
 }
 
 // Upgrade helm release through helm client
@@ -255,13 +295,13 @@ func (c *client) Upgrade(ctx context.Context, config release.HelmUpgradeConfig) 
 		config.DryRun)
 
 	conf := new(action.Configuration)
-	if err := conf.Init(c.getConfigFlag(config.Namespace), config.Namespace, "", blog.Infof); err != nil {
+	if err := conf.Init(c.getConfigFlag(config.Namespace), config.Namespace, ""); err != nil {
 		blog.Errorf("sdk client upgrade and init configuration failed, %s, %v", err.Error(), config)
 		return nil, err
 	}
 
 	upgrader := action.NewUpgrade(conf)
-	upgrader.DryRun = config.DryRun
+	upgrader.DryRunStrategy = config.DryRunStrategy
 	upgrader.Namespace = config.Namespace
 	upgrader.PostRenderer = newPatcher(c.group.config.PatchTemplates, config.PatchTemplateValues)
 	valueOpts := &values.Options{}
@@ -299,6 +339,25 @@ func (c *client) Upgrade(ctx context.Context, config release.HelmUpgradeConfig) 
 	}
 
 	r, err := upgrader.Run(ctx, config.Name, chartF, values)
+
+	if r == nil {
+		err = fmt.Errorf("release is nil")
+		blog.Errorf("sdk client upgrade failed, %s, "+
+			"namespace %s, name %s", err.Error(), config.Namespace, config.Name)
+		return nil, err
+	}
+
+	var (
+		ok bool
+		re *rspb.Release
+	)
+	if re, ok = r.(*rspb.Release); !ok {
+		err = fmt.Errorf("release type error")
+		blog.Errorf("sdk client install failed, %s, "+
+			"namespace %s, name %s", err.Error(), config.Namespace, config.Name)
+		return nil, err
+	}
+
 	if err != nil {
 		// install when upgrade has --install args and release is not exist
 		if e, ok := err.(*driver.StorageDriverError); ok && upgrader.Install &&
@@ -314,12 +373,12 @@ func (c *client) Upgrade(ctx context.Context, config release.HelmUpgradeConfig) 
 		}
 		blog.Errorf("sdk client upgrade failed, %s, "+
 			"namespace %s, name %s", err.Error(), config.Namespace, config.Name)
-		return getHelmUpgradeResult(r), err
+		return getHelmUpgradeResult(re), err
 	}
 
 	blog.Infof("sdk client upgrade release successfully name %s, namespace %s, revision: %d",
-		config.Name, config.Namespace, r.Version)
-	return getHelmUpgradeResult(r), nil
+		config.Name, config.Namespace, re.Version)
+	return getHelmUpgradeResult(re), nil
 }
 
 // Uninstall helm release through helm client
@@ -327,14 +386,14 @@ func (c *client) Uninstall(_ context.Context, config release.HelmUninstallConfig
 	*release.HelmUninstallResult, error) {
 
 	conf := new(action.Configuration)
-	if err := conf.Init(c.getConfigFlag(config.Namespace), config.Namespace, "", blog.Infof); err != nil {
+	if err := conf.Init(c.getConfigFlag(config.Namespace), config.Namespace, ""); err != nil {
 		blog.Errorf("sdk client uninstall and init configuration failed, %s, %v", err.Error(), config)
 		return nil, err
 	}
 
 	uninstaller := action.NewUninstall(conf)
 	uninstaller.DryRun = config.DryRun
-	uninstaller.Wait = true
+	uninstaller.WaitStrategy = kube.StatusWatcherStrategy
 	uninstaller.Timeout = 10 * time.Minute
 	uninstaller.DisableOpenAPIValidation = true
 
@@ -351,13 +410,13 @@ func (c *client) Uninstall(_ context.Context, config release.HelmUninstallConfig
 // Rollback helm release through helm client
 func (c *client) Rollback(_ context.Context, config release.HelmRollbackConfig) (*release.HelmRollbackResult, error) {
 	conf := new(action.Configuration)
-	if err := conf.Init(c.getConfigFlag(config.Namespace), config.Namespace, "", blog.Infof); err != nil {
+	if err := conf.Init(c.getConfigFlag(config.Namespace), config.Namespace, ""); err != nil {
 		blog.Errorf("sdk client rollback and init configuration failed, %s, %v", err.Error(), config)
 		return nil, err
 	}
 
 	rollbacker := action.NewRollback(conf)
-	rollbacker.DryRun = config.DryRun
+	rollbacker.DryRunStrategy = config.DryRunStrategy
 	rollbacker.Version = config.Revision
 
 	if err := rollbacker.Run(config.Name); err != nil {
@@ -372,7 +431,7 @@ func (c *client) Rollback(_ context.Context, config release.HelmRollbackConfig) 
 // History get helm release history
 func (c *client) History(_ context.Context, namespace, name string, max int) ([]*rspb.Release, error) {
 	conf := new(action.Configuration)
-	if err := conf.Init(c.getConfigFlag(namespace), namespace, "", blog.Infof); err != nil {
+	if err := conf.Init(c.getConfigFlag(namespace), namespace, ""); err != nil {
 		return nil, err
 	}
 	conf.Releases.MaxHistory = max
@@ -381,10 +440,19 @@ func (c *client) History(_ context.Context, namespace, name string, max int) ([]
 	if err != nil {
 		return nil, err
 	}
+
+	res := make([]*rspb.Release, 0)
 	for i := range releases {
-		releases[i].Config = removeValuesTemplate(releases[i].Config)
+		if releases[i] == nil {
+			continue
+		}
+
+		if re, ok := releases[i].(*rspb.Release); ok {
+			re.Config = removeValuesTemplate(re.Config)
+			res = append(res, re)
+		}
 	}
-	return releases, nil
+	return res, nil
 }
 
 // tokenTransport 用于在请求头中添加 Authorization 头
@@ -486,13 +554,13 @@ func (c *client) getVarValue(
 
 // getChartFile 从下载的tar包中获取chart数据
 func getChartFile(f *release.File) (*chart.Chart, error) {
-	bufferedFile, err := loader.LoadArchiveFiles(bytes.NewReader(f.Content))
+	bufferedFile, err := archive.LoadArchiveFiles(bytes.NewReader(f.Content))
 	if err != nil {
 		return nil, err
 	}
 
 	// 忽略 values.schema.json
-	bufferedFile = lo.Reject(bufferedFile, func(v *loader.BufferedFile, _ int) bool {
+	bufferedFile = lo.Reject(bufferedFile, func(v *archive.BufferedFile, _ int) bool {
 		return v.Name == "values.schema.json"
 	})
 
@@ -606,10 +674,10 @@ func parseArgs4Install(install *action.Install, args []string, valueOpts *values
 			"This is unsafe in production")
 	f.DurationVar(&install.Timeout, "timeout", 300*time.Second,
 		"time to wait for any individual Kubernetes operation (like Jobs for hooks)")
-	f.BoolVar(&install.Wait, "wait", false,
-		"if set, will wait until all Pods, PVCs, Services, and minimum number of Pods of a Deployment, "+
-			"StatefulSet, or ReplicaSet are in a ready state before marking the release as successful. "+
-			"It will wait for as long as --timeout")
+	// f.BoolVar(&install.Wait, "wait", false,
+	// 	"if set, will wait until all Pods, PVCs, Services, and minimum number of Pods of a Deployment, "+
+	// 		"StatefulSet, or ReplicaSet are in a ready state before marking the release as successful. "+
+	// 		"It will wait for as long as --timeout")
 	f.BoolVar(&install.WaitForJobs, "wait-for-jobs", false,
 		"if set and --wait enabled, will wait until all Jobs have been completed before marking the "+
 			"release as successful. It will wait for as long as --timeout")
@@ -624,19 +692,23 @@ func parseArgs4Install(install *action.Install, args []string, valueOpts *values
 	f.BoolVar(&install.DisableOpenAPIValidation, "disable-openapi-validation", true,
 		"if set, the installation process will not validate rendered templates against "+
 			"the Kubernetes OpenAPI Schema")
-	f.BoolVar(&install.Atomic, "atomic", false,
-		"if set, the installation process deletes the installation on failure. "+
-			"The --wait flag will be set automatically if --atomic is used")
+	// f.BoolVar(&install.Atomic, "atomic", false,
+	// 	"if set, the installation process deletes the installation on failure. "+
+	// 		"The --wait flag will be set automatically if --atomic is used")
+	f.BoolVar(&install.RollbackOnFailure, "rollback-on-failure", false, "if set, Helm will rollback (uninstall) the installation upon failure. The --wait flag will be default to \"watcher\" if --rollback-on-failure is set")
+	f.BoolVar(&install.RollbackOnFailure, "atomic", false, "deprecated")
+	f.MarkDeprecated("atomic", "use --rollback-on-failure instead")
 	f.IntVar(&_maxHistory, "history-max", defaultMaxHistory, "limit the maximum number of revisions saved "+
 		"per release. Use 0 for no limit")
 	f.BoolVar(&install.SkipCRDs, "skip-crds", false,
 		"if set, no CRDs will be installed. By default, CRDs are installed if not already present")
 	f.BoolVar(&install.SubNotes, "render-subchart-notes", false,
 		"if set, render subchart notes along with the parent")
-	f.BoolVar(&install.ChartPathOptions.InsecureSkipTLSverify, "insecure-skip-tls-verify", false,
+	f.BoolVar(&install.ChartPathOptions.InsecureSkipTLSVerify, "insecure-skip-tls-verify", false,
 		"skip tls certificate checks for the chart download")
 
 	addValueOptionsFlags(f, valueOpts)
+	AddWaitFlag(f, &install.WaitStrategy)
 	return f.Parse(args)
 }
 
@@ -656,10 +728,13 @@ func parseArgs4Upgrade(upgrade *action.Upgrade, args []string, valueOpts *values
 	f.BoolVar(&_createNamespace, "create-namespace", false, "create the release namespace if not present")
 	f.BoolVar(&upgrade.Devel, "devel", false,
 		"use development versions, too. Equivalent to version '>0.0.0-0'. If --version is set, this is ignored")
-	f.BoolVar(&upgrade.Recreate, "recreate-pods", false,
-		"performs pods restart for the resource if applicable")
-	f.BoolVar(&upgrade.Force, "force", false,
-		"force resource updates through a replacement strategy")
+	// f.BoolVar(&upgrade.Recreate, "recreate-pods", false,
+	// 	"performs pods restart for the resource if applicable")
+	// f.BoolVar(&upgrade.Force, "force", false,
+	// 	"force resource updates through a replacement strategy")
+	f.BoolVar(&upgrade.ForceReplace, "force-replace", false, "force resource updates by replacement")
+	f.BoolVar(&upgrade.ForceReplace, "force", false, "deprecated")
+	f.MarkDeprecated("force", "use --force-replace instead")
 	f.BoolVar(&upgrade.DisableHooks, "no-hooks", false,
 		"disable pre/post upgrade hooks")
 	f.BoolVar(&upgrade.DisableOpenAPIValidation, "disable-openapi-validation", true,
@@ -675,16 +750,19 @@ func parseArgs4Upgrade(upgrade *action.Upgrade, args []string, valueOpts *values
 	f.BoolVar(&upgrade.ReuseValues, "reuse-values", false,
 		"when upgrading, reuse the last release's values and merge in any overrides from the command line via "+
 			"--set and -f. If '--reset-values' is specified, this is ignored")
-	f.BoolVar(&upgrade.Wait, "wait", false, "if set, will wait until all Pods, PVCs, Services, "+
-		"and minimum number of Pods of a Deployment, StatefulSet, "+
-		"or ReplicaSet are in a ready state before marking the release as successful. "+
-		"It will wait for as long as --timeout")
+	// f.BoolVar(&upgrade.Wait, "wait", false, "if set, will wait until all Pods, PVCs, Services, "+
+	// 	"and minimum number of Pods of a Deployment, StatefulSet, "+
+	// 	"or ReplicaSet are in a ready state before marking the release as successful. "+
+	// 	"It will wait for as long as --timeout")
 	f.BoolVar(&upgrade.WaitForJobs, "wait-for-jobs", false,
 		"if set and --wait enabled, will wait until all Jobs have been completed before marking "+
 			"the release as successful. It will wait for as long as --timeout")
-	f.BoolVar(&upgrade.Atomic, "atomic", false,
-		"if set, upgrade process rolls back changes made in case of failed upgrade. "+
-			"The --wait flag will be set automatically if --atomic is used")
+	// f.BoolVar(&upgrade.Atomic, "atomic", false,
+	// 	"if set, upgrade process rolls back changes made in case of failed upgrade. "+
+	// 		"The --wait flag will be set automatically if --atomic is used")
+	f.BoolVar(&upgrade.RollbackOnFailure, "rollback-on-failure", false, "if set, Helm will rollback (uninstall) the installation upon failure. The --wait flag will be default to \"watcher\" if --rollback-on-failure is set")
+	f.BoolVar(&upgrade.RollbackOnFailure, "atomic", false, "deprecated")
+	f.MarkDeprecated("atomic", "use --rollback-on-failure instead")
 	f.IntVar(&upgrade.MaxHistory, "history-max", defaultMaxHistory, "limit the maximum number of revisions saved "+
 		"per release. Use 0 for no limit")
 	f.BoolVar(&upgrade.CleanupOnFail, "cleanup-on-fail", false,
@@ -692,11 +770,12 @@ func parseArgs4Upgrade(upgrade *action.Upgrade, args []string, valueOpts *values
 	f.BoolVar(&upgrade.SubNotes, "render-subchart-notes", false,
 		"if set, render subchart notes along with the parent")
 	f.StringVar(&upgrade.Description, "description", "", "add a custom description")
-	f.BoolVar(&upgrade.ChartPathOptions.InsecureSkipTLSverify, "insecure-skip-tls-verify", false,
+	f.BoolVar(&upgrade.ChartPathOptions.InsecureSkipTLSVerify, "insecure-skip-tls-verify", false,
 		"skip tls certificate checks for the chart download")
 	f.BoolVar(&upgrade.Verify, "verify", false, "verify the package before using it")
 
 	addValueOptionsFlags(f, valueOpts)
+	AddWaitFlag(f, &upgrade.WaitStrategy)
 	return f.Parse(args)
 }
 
@@ -711,6 +790,51 @@ func addValueOptionsFlags(f *pflag.FlagSet, v *values.Options) {
 	f.StringArrayVar(&v.FileValues, "set-file", []string{},
 		"set values from respective files specified via the command line (can specify multiple or separate "+
 			"values with commas: key1=path1,key2=path2)")
+}
+
+func AddWaitFlag(f *pflag.FlagSet, wait *kube.WaitStrategy) {
+	f.Var(
+		newWaitValue(kube.HookOnlyStrategy, wait),
+		"wait",
+		"wait until resources are ready (up to --timeout). Use '--wait' alone for 'watcher' strategy, or specify one of: 'watcher', 'hookOnly', 'legacy'. Default when flag is omitted: 'hookOnly'.",
+	)
+	f.Lookup("wait").NoOptDefVal = string(kube.StatusWatcherStrategy)
+}
+
+type waitValue kube.WaitStrategy
+
+func newWaitValue(defaultValue kube.WaitStrategy, ws *kube.WaitStrategy) *waitValue {
+	*ws = defaultValue
+	return (*waitValue)(ws)
+}
+
+func (ws *waitValue) String() string {
+	if ws == nil {
+		return ""
+	}
+	return string(*ws)
+}
+
+func (ws *waitValue) Set(s string) error {
+	switch s {
+	case string(kube.StatusWatcherStrategy), string(kube.LegacyStrategy), string(kube.HookOnlyStrategy):
+		*ws = waitValue(s)
+		return nil
+	case "true":
+		slog.Warn("--wait=true is deprecated (boolean value) and can be replaced with --wait=watcher")
+		*ws = waitValue(kube.StatusWatcherStrategy)
+		return nil
+	case "false":
+		slog.Warn("--wait=false is deprecated (boolean value) and can be replaced with --wait=hookOnly")
+		*ws = waitValue(kube.HookOnlyStrategy)
+		return nil
+	default:
+		return fmt.Errorf("invalid wait input %q. Valid inputs are %s, %s, and %s", s, kube.StatusWatcherStrategy, kube.HookOnlyStrategy, kube.LegacyStrategy)
+	}
+}
+
+func (ws *waitValue) Type() string {
+	return "WaitStrategy"
 }
 
 func getHelmUpgradeResult(rl *rspb.Release) *release.HelmUpgradeResult {

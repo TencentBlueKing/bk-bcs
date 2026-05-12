@@ -17,7 +17,7 @@ import (
 	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	helmrelease "helm.sh/helm/v3/pkg/release"
+	releaseCom "helm.sh/helm/v4/pkg/release/common"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
@@ -124,7 +124,7 @@ func (s *StopAddonsAction) saveDB(ctx context.Context, ns, chartName, releaseNam
 	s.version = old.ChartVersion
 	rl := entity.M{
 		entity.FieldKeyUpdateBy: s.updateBy,
-		entity.FieldKeyStatus:   helmrelease.StatusPendingUpgrade.String(),
+		entity.FieldKeyStatus:   releaseCom.StatusPendingUpgrade.String(),
 		entity.FieldKeyMessage:  "",
 	}
 	if err := s.model.UpdateRelease(ctx, s.req.GetClusterID(), ns, releaseName, rl); err != nil {

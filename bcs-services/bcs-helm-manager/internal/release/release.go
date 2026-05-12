@@ -19,16 +19,17 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"gopkg.in/yaml.v2"
-	"helm.sh/helm/v3/pkg/chart"
-	"helm.sh/helm/v3/pkg/release"
-	helmrelease "helm.sh/helm/v3/pkg/release"
-	"helm.sh/helm/v3/pkg/releaseutil"
+	"helm.sh/helm/v4/pkg/action"
+	chart "helm.sh/helm/v4/pkg/chart/v2"
+	releaseCom "helm.sh/helm/v4/pkg/release/common"
+	release "helm.sh/helm/v4/pkg/release/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/cli-runtime/pkg/resource"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/stringx"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
+	releaseutil "helm.sh/helm/v4/pkg/release/v1/util"
 )
 
 const (
@@ -65,21 +66,21 @@ type Release struct {
 	Description  string
 	Values       string
 	Manifest     string
-	Hooks        []*helmrelease.Hook
+	Hooks        []*release.Hook
 	Infos        []*resource.Info
 	Objects      []runtime.Object
 	Notes        string
 }
 
 // Transfer2Release transfer the data into helm release struct
-func (r *Release) Transfer2Release() *helmrelease.Release {
+func (r *Release) Transfer2Release() *release.Release {
 	if r == nil {
 		return nil
 	}
-	return &helmrelease.Release{
+	return &release.Release{
 		Name: r.Name,
-		Info: &helmrelease.Info{
-			Status: helmrelease.Status(r.Status),
+		Info: &release.Info{
+			Status: releaseCom.Status(r.Status),
 			Notes:  r.Notes,
 		},
 		Chart:     &chart.Chart{Metadata: &chart.Metadata{Name: r.Chart}},
@@ -200,9 +201,11 @@ type ListOption struct {
 // HelmInstallConfig 定义了helm执行install时的控制参数
 type HelmInstallConfig struct {
 	// simulate a install action
-	DryRun     bool
-	Replace    bool
-	ClientOnly bool
+	// DryRun v4版本已废弃，使用DryRunStrategy替代
+	DryRun         bool
+	DryRunStrategy action.DryRunStrategy
+	Replace        bool
+	ClientOnly     bool
 
 	ProjectCode string
 	Name        string
@@ -254,7 +257,9 @@ type HelmUninstallResult struct {
 // HelmUpgradeConfig 定义了helm执行upgrade时的控制参数
 type HelmUpgradeConfig struct {
 	// simulate a upgrade action
-	DryRun bool
+	// DryRun v4版本已废弃，使用DryRunStrategy替代
+	DryRun         bool
+	DryRunStrategy action.DryRunStrategy
 
 	ProjectCode string
 	Name        string
@@ -293,7 +298,9 @@ type HelmUpgradeResult struct {
 // HelmRollbackConfig 定义了helm执行rollback时的控制参数
 type HelmRollbackConfig struct {
 	// simulate a rollback action
-	DryRun bool
+	// DryRun v4版本已废弃，使用DryRunStrategy替代
+	DryRun         bool
+	DryRunStrategy action.DryRunStrategy
 
 	Name      string
 	Namespace string
