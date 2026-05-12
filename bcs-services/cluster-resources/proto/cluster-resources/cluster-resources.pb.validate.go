@@ -9754,6 +9754,17 @@ func (m *CreateTemplateSpaceReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
+	if !_CreateTemplateSpaceReq_Name_Pattern.MatchString(m.GetName()) {
+		err := CreateTemplateSpaceReqValidationError{
+			field:  "Name",
+			reason: "value does not match regex pattern \"^[a-zA-Z0-9_-]+$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
 	// no validation rules for Description
 
 	if len(errors) > 0 {
@@ -9836,6 +9847,8 @@ var _ interface {
 	ErrorName() string
 } = CreateTemplateSpaceReqValidationError{}
 
+var _CreateTemplateSpaceReq_Name_Pattern = regexp.MustCompile("^[a-zA-Z0-9_-]+$")
+
 // Validate checks the field values on UpdateTemplateSpaceReq with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
@@ -9885,6 +9898,17 @@ func (m *UpdateTemplateSpaceReq) validate(all bool) error {
 		err := UpdateTemplateSpaceReqValidationError{
 			field:  "Name",
 			reason: "value length must be between 1 and 64 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_UpdateTemplateSpaceReq_Name_Pattern.MatchString(m.GetName()) {
+		err := UpdateTemplateSpaceReqValidationError{
+			field:  "Name",
+			reason: "value does not match regex pattern \"^[a-zA-Z0-9_-]+$\"",
 		}
 		if !all {
 			return err
@@ -9973,6 +9997,8 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = UpdateTemplateSpaceReqValidationError{}
+
+var _UpdateTemplateSpaceReq_Name_Pattern = regexp.MustCompile("^[a-zA-Z0-9_-]+$")
 
 // Validate checks the field values on DeleteTemplateSpaceReq with the rules
 // defined in the proto definition for this message. If any rules are
@@ -10887,10 +10913,10 @@ func (m *CreateTemplateMetadataReq) validate(all bool) error {
 
 	// no validation rules for Description
 
-	if l := utf8.RuneCountInString(m.GetTemplateSpaceID()); l < 1 || l > 64 {
+	if l := utf8.RuneCountInString(m.GetTemplateSpaceID()); l < 0 || l > 64 {
 		err := CreateTemplateMetadataReqValidationError{
 			field:  "TemplateSpaceID",
-			reason: "value length must be between 1 and 64 runes, inclusive",
+			reason: "value length must be between 0 and 64 runes, inclusive",
 		}
 		if !all {
 			return err

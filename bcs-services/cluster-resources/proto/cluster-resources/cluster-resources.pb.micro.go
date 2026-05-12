@@ -4965,7 +4965,7 @@ func NewTemplateSetEndpoints() []*api.Endpoint {
 		},
 		{
 			Name:    "TemplateSet.CreateTemplateMetadata",
-			Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/{templateSpaceID}/metadatas"},
+			Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/metadatas"},
 			Method:  []string{"POST"},
 			Handler: "rpc",
 		},
@@ -5669,7 +5669,7 @@ func RegisterTemplateSetHandler(s server.Server, hdlr TemplateSetHandler, opts .
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "TemplateSet.CreateTemplateMetadata",
-		Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/{templateSpaceID}/metadatas"},
+		Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/metadatas"},
 		Method:  []string{"POST"},
 		Handler: "rpc",
 	}))
