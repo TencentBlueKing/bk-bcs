@@ -16,6 +16,7 @@ package handler
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	tcommon "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
@@ -36,6 +37,7 @@ type BcsApiHandler struct {
 	bkAppSecret string
 	bkEnv       string
 
+	// bkOuterIP: 蓝鲸出口 IP. 多个 IP 时以英文逗号分隔
 	bkOuterIP        string
 	bkAddrTemplateID string
 
@@ -411,7 +413,7 @@ func (b *BcsApiHandler) RegisterBkWhitelist(ctx context.Context, request *pb.Reg
 func (b *BcsApiHandler) GetBkOuterIP(ctx context.Context, request *pb.GetBkOuterIPRequest, response *pb.GetBkOuterIPResponse) error {
 	response.Code = common.CodeSuccess
 	response.Message = common.MsgSuccess
-	response.Data = []string{b.bkOuterIP}
+	response.Data = strings.Split(b.bkOuterIP, ",")
 	return nil
 }
 
