@@ -346,9 +346,7 @@ func (ngx *Nginx) dataGeneration() *generator {
 }
 
 func (ngx *Nginx) configValidation(filename string) error {
-	command := fmt.Sprintf("%s -t -c %s", ngx.option.ProxyExecutable, filename)
-	// NOCC:gas/subprocess(设计如此)
-	cmd := exec.Command("/bin/sh", "-c", command)
+	cmd := exec.Command(ngx.option.ProxyExecutable, "-t", "-c", filename)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		klog.Errorf("proxy nginx check config %s failed, err: %s. command output: %s", filename, err.Error(), string(output))
@@ -415,9 +413,7 @@ func (ngx *Nginx) reloadNginx(config string) error {
 	}
 	klog.V(3).Infof("Replace config file %s success", config)
 	// ready to reload
-	command := fmt.Sprintf("%s -s reload", ngx.option.ProxyExecutable)
-	// NOCC:gas/subprocess(设计如此)
-	cmd := exec.Command("/bin/sh", "-c", command)
+	cmd := exec.Command(ngx.option.ProxyExecutable, "-s", "reload")
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		klog.Errorf("proxy nginx reload %s failed, %s. detail %s", config, err.Error(), string(output))
