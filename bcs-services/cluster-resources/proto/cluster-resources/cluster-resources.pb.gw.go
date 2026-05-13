@@ -17688,17 +17688,6 @@ func request_TemplateSet_CreateTemplateMetadata_0(ctx context.Context, marshaler
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
 	}
 
-	val, ok = pathParams["templateSpaceID"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "templateSpaceID")
-	}
-
-	protoReq.TemplateSpaceID, err = runtime.String(val)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "templateSpaceID", err)
-	}
-
 	msg, err := client.CreateTemplateMetadata(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
@@ -17732,17 +17721,6 @@ func local_request_TemplateSet_CreateTemplateMetadata_0(ctx context.Context, mar
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
-	}
-
-	val, ok = pathParams["templateSpaceID"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "templateSpaceID")
-	}
-
-	protoReq.TemplateSpaceID, err = runtime.String(val)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "templateSpaceID", err)
 	}
 
 	msg, err := server.CreateTemplateMetadata(ctx, &protoReq)
@@ -29348,7 +29326,7 @@ var (
 
 	pattern_TemplateSet_ListTemplateMetadata_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6}, []string{"clusterresources", "v1", "projects", "projectCode", "template", "templateSpaceID", "metadatas"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_TemplateSet_CreateTemplateMetadata_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6}, []string{"clusterresources", "v1", "projects", "projectCode", "template", "templateSpaceID", "metadatas"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_TemplateSet_CreateTemplateMetadata_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 2, 5}, []string{"clusterresources", "v1", "projects", "projectCode", "template", "metadatas"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_TemplateSet_UpdateTemplateMetadata_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 2, 5, 1, 0, 4, 1, 5, 6}, []string{"clusterresources", "v1", "projects", "projectCode", "template", "metadatas", "id"}, "", runtime.AssumeColonVerbOpt(true)))
 
