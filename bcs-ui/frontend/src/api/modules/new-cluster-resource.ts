@@ -338,7 +338,7 @@ export const TemplateSetService = {
   // 获取模板文件元数据列表
   ListTemplateMetadata: (params?: ClusterResource.ListTemplateMetadataReq, config?: IFetchConfig): Promise<ClusterResource.CommonListResp extends { data: any } ? ClusterResource.CommonListResp['data'] : ClusterResource.CommonListResp> => request('get', '/clusterresources/v1/projects/$projectCode/template/$templateSpaceID/metadatas')(params, config),
   // 创建模板文件元数据
-  CreateTemplateMetadata: (params?: ClusterResource.CreateTemplateMetadataReq, config?: IFetchConfig): Promise<ClusterResource.CommonResp extends { data: any } ? ClusterResource.CommonResp['data'] : ClusterResource.CommonResp> => request('post', '/clusterresources/v1/projects/$projectCode/template/$templateSpaceID/metadatas')(params, config),
+  CreateTemplateMetadata: (params?: ClusterResource.CreateTemplateMetadataReq, config?: IFetchConfig): Promise<ClusterResource.CommonResp extends { data: any } ? ClusterResource.CommonResp['data'] : ClusterResource.CommonResp> => request('post', '/clusterresources/v1/projects/$projectCode/template/metadatas')(params, config),
   // 更新模板文件元数据
   UpdateTemplateMetadata: (params?: ClusterResource.UpdateTemplateMetadataReq, config?: IFetchConfig): Promise<ClusterResource.CommonResp extends { data: any } ? ClusterResource.CommonResp['data'] : ClusterResource.CommonResp> => request('put', '/clusterresources/v1/projects/$projectCode/template/metadatas/$id')(params, config),
   // 删除模板文件元数据

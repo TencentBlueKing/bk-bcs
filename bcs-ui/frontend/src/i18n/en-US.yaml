@@ -3984,6 +3984,7 @@ templateFile:
     import: Import
     export: Export all folders
     exportFolder: Export Folder
+    addSubFolder: Add Folder
     upgrade: Upgrade to Helm template
     rollback: Rollback
     toResourceView: Resource view
@@ -4036,6 +4037,8 @@ templateFile:
       switching back to a non-Helm template will no longer be supported.
     spaceSubTitle: The template folder and its template files will be removed
     emptyContent: The template file content cannot be empty
+    invalidChar: 'Folder name is invalid, only letters, numbers, - and _ are allowed'
+    invalidFileName: 'File name cannot start or end with /, and cannot contain //'
     success: success
     subTitle: 'Template file {templateFile} instance has been deployed to {cluster}'
     noChanges: No changes
