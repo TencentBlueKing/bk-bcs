@@ -122,6 +122,7 @@ postInitJob: "post init job"
 systemPreInit: "cluster nodes idle check"
 systemPostInit: "system post init"
 nodeMixedInit: "cluster nodes mixed init"
+systemCleanNode: "system clean node"
 
 #
 CreateCluster: "create cluster"

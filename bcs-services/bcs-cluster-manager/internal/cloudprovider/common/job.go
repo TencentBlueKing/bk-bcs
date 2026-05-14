@@ -124,8 +124,6 @@ func renderScript(ctx context.Context, clusterID, content, nodeIPs, operator str
 
 // JobExecuteScriptTask execute job script
 func JobExecuteScriptTask(taskID string, stepName string) error {
-	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
-		"start execute job script")
 	start := time.Now()
 	// get task information and validate
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
@@ -139,6 +137,9 @@ func JobExecuteScriptTask(taskID string, stepName string) error {
 	}
 	blog.Infof("JobExecuteScriptTask[%s] task %s run current step %s, system: %s, old state: %s, params %v",
 		taskID, taskID, stepName, step.System, step.Status, step.Params)
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start execute job script")
 
 	// clusterID / scriptContent(base64编码) / nodeIPs / operator
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]

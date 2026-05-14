@@ -51,8 +51,6 @@ func BuildCheckNodePodsTaskStep(task *proto.Task, clusterId string,
 
 // CheckNodePodsTask check node pods
 func CheckNodePodsTask(taskID string, stepName string) error {
-	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
-		"start to check cluster node business pods")
 	start := time.Now()
 
 	// get task and task current step
@@ -64,6 +62,9 @@ func CheckNodePodsTask(taskID string, stepName string) error {
 	if step == nil {
 		return nil
 	}
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start to check cluster node business pods")
 
 	// step login started here && extract parameter && check validate
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]

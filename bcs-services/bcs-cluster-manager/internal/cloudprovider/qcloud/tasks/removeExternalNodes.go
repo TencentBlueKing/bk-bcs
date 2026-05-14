@@ -25,8 +25,6 @@ import (
 
 // ReturnIDCNodeToResourcePoolTask clean IDCNodes in group task for background running
 func ReturnIDCNodeToResourcePoolTask(taskID, stepName string) error {
-	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
-		"start clean idc nodes in group")
 	start := time.Now()
 
 	// get task and task current step
@@ -41,6 +39,9 @@ func ReturnIDCNodeToResourcePoolTask(taskID, stepName string) error {
 	}
 	blog.Infof("ReturnIDCNodeToResourcePoolTask[%s] task %s run step %s, system: %s, old state: %s, params %v",
 		taskID, taskID, stepName, step.System, step.Status, step.Params)
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start clean idc nodes in group")
 
 	// extract valid parameter
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
@@ -97,8 +98,6 @@ func ReturnIDCNodeToResourcePoolTask(taskID, stepName string) error {
 
 // RemoveExternalNodesFromClusterTask remove external node from cluster
 func RemoveExternalNodesFromClusterTask(taskID string, stepName string) error {
-	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
-		"start remove external nodes from cluster")
 	start := time.Now()
 	// get task and task current step
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
@@ -112,6 +111,9 @@ func RemoveExternalNodesFromClusterTask(taskID string, stepName string) error {
 	}
 	blog.Infof("RemoveExternalNodesFromClusterTask[%s]: task %s run step %s, system: %s, old state: %s, params %v",
 		taskID, taskID, stepName, step.System, step.Status, step.Params)
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start remove external nodes from cluster")
 
 	// get data info
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]

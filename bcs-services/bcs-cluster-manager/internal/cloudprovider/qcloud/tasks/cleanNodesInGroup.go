@@ -30,8 +30,6 @@ import (
 
 // CleanNodeGroupNodesTask clean node group nodes task
 func CleanNodeGroupNodesTask(taskID string, stepName string) error {
-	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
-		"start clean nodegroup nodes")
 	start := time.Now()
 	// get task and task current step
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
@@ -42,6 +40,9 @@ func CleanNodeGroupNodesTask(taskID string, stepName string) error {
 	if step == nil {
 		return nil
 	}
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start clean nodegroup nodes")
 
 	// extract parameter && check validate
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
@@ -158,8 +159,6 @@ func removeAsgInstances(ctx context.Context, info *cloudprovider.CloudDependBasi
 
 // CheckClusterCleanNodsTask check cluster clean nodes task
 func CheckClusterCleanNodsTask(taskID string, stepName string) error {
-	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
-		"start check cluster clean nodes")
 	start := time.Now()
 	// get task and task current step
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
@@ -170,6 +169,9 @@ func CheckClusterCleanNodsTask(taskID string, stepName string) error {
 	if step == nil {
 		return nil
 	}
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start check cluster clean nodes")
 
 	// extract parameter && check validate
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]

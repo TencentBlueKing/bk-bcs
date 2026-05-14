@@ -67,8 +67,6 @@ func BuildRemoveInnerTaintTaskStep(task *proto.Task, clusterId, provider string)
 // NOCC:tosa/fn_length(忽略)
 // nolint function name should not exceed 35 characters
 func RemoveClusterNodesInnerTaintTask(taskID string, stepName string) error {
-	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
-		"start remove cluster nodes taint")
 	start := time.Now()
 
 	// get task and task current step
@@ -80,6 +78,9 @@ func RemoveClusterNodesInnerTaintTask(taskID string, stepName string) error {
 	if step == nil {
 		return nil
 	}
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start remove cluster nodes taint")
 
 	// step login started here
 	// extract parameter && check validate
@@ -213,8 +214,6 @@ func BuildNodeTaintsTaskStep(task *proto.Task, clusterID string, nodeIPs []strin
 
 // SetNodeTaintsTask set cluster nodes taints
 func SetNodeTaintsTask(taskID string, stepName string) error {
-	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
-		"start set cluster nodes taints")
 	start := time.Now()
 
 	// get task and task current step
@@ -229,6 +228,9 @@ func SetNodeTaintsTask(taskID string, stepName string) error {
 	}
 	blog.Infof("SetNodeTaintsTask[%s]: run step %s, system: %s, old state: %s, params %v",
 		taskID, stepName, step.System, step.Status, step.Params)
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start set cluster nodes taints")
 
 	// extract parameter
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]

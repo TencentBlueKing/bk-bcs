@@ -36,8 +36,6 @@ import (
 
 // ApplyExternalNodeMachinesTask from resource-manager service
 func ApplyExternalNodeMachinesTask(taskID string, stepName string) error { // nolint
-	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
-		"start apply instance from resource pool")
 	start := time.Now()
 
 	// get task and task current step
@@ -52,6 +50,9 @@ func ApplyExternalNodeMachinesTask(taskID string, stepName string) error { // no
 	}
 	blog.Infof("ApplyExternalNodeMachinesTask[%s] run current step %s, system: %s, old state: %s, params %v",
 		taskID, stepName, step.System, step.Status, step.Params)
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start apply instance from resource pool")
 
 	// extract valid parameter
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
@@ -466,8 +467,6 @@ func returnExternalNodes(ctx context.Context, info *cloudprovider.CloudDependBas
 
 // GetExternalNodeScriptTask get cluster external node script
 func GetExternalNodeScriptTask(taskID string, stepName string) error { // nolint
-	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
-		"start get cluster external node script")
 	start := time.Now()
 
 	// get task and task current step
@@ -482,6 +481,9 @@ func GetExternalNodeScriptTask(taskID string, stepName string) error { // nolint
 	}
 	blog.Infof("GetExternalNodeScriptTask[%s] task %s run current step %s, system: %s, old state: %s, params %v",
 		taskID, taskID, stepName, step.System, step.Status, step.Params)
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start get cluster external node script")
 
 	// extract valid info
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]

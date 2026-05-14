@@ -146,8 +146,6 @@ func BuildCheckKubeAgentStatusTaskStep(task *proto.Task, clusterID string) {
 
 // CheckKubeAgentStatusTask check cluster kubeAgent status task
 func CheckKubeAgentStatusTask(taskID string, stepName string) error {
-	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
-		"start check cluster kubeagent status")
 	start := time.Now()
 
 	// get task and task current step
@@ -162,6 +160,9 @@ func CheckKubeAgentStatusTask(taskID string, stepName string) error {
 	}
 	blog.Infof("CheckKubeAgentStatusTask[%s]: run step %s, system: %s, old state: %s, params %v",
 		taskID, stepName, step.System, step.Status, step.Params)
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start check cluster kubeagent status")
 
 	// extract parameter
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
@@ -264,8 +265,6 @@ func BuildCreateNamespaceTaskStep(task *proto.Task, clusterID string, ns Namespa
 
 // CreateNamespaceTask create cluster namespace
 func CreateNamespaceTask(taskID string, stepName string) error {
-	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
-		"start create cluster namespace")
 	start := time.Now()
 
 	// get task and task current step
@@ -280,6 +279,9 @@ func CreateNamespaceTask(taskID string, stepName string) error {
 	}
 	blog.Infof("CreateNamespaceTask[%s]: run step %s, system: %s, old state: %s, params %v",
 		taskID, stepName, step.System, step.Status, step.Params)
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start create cluster namespace")
 
 	// extract parameter
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
@@ -340,8 +342,6 @@ func BuildDeleteNamespaceTaskStep(task *proto.Task, clusterID, name string) {
 
 // DeleteNamespaceTask delete cluster namespace
 func DeleteNamespaceTask(taskID string, stepName string) error {
-	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
-		"start delete cluster namespace")
 	start := time.Now()
 
 	// get task and task current step
@@ -356,6 +356,9 @@ func DeleteNamespaceTask(taskID string, stepName string) error {
 	}
 	blog.Infof("DeleteNamespaceTask[%s]: run step %s, system: %s, old state: %s, params %v",
 		taskID, stepName, step.System, step.Status, step.Params)
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start delete cluster namespace")
 
 	// extract parameter
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
@@ -415,8 +418,6 @@ func BuildNodeAnnotationsTaskStep(task *proto.Task, clusterID string, nodeIPs []
 
 // SetNodeAnnotationsTask set cluster nodes annotations
 func SetNodeAnnotationsTask(taskID string, stepName string) error {
-	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
-		"start set node annotations")
 	start := time.Now()
 
 	// get task and task current step
@@ -431,6 +432,9 @@ func SetNodeAnnotationsTask(taskID string, stepName string) error {
 	}
 	blog.Infof("SetNodeAnnotationsTask[%s]: run step %s, system: %s, old state: %s, params %v",
 		taskID, stepName, step.System, step.Status, step.Params)
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start set node annotations")
 
 	// extract parameter
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
@@ -540,8 +544,6 @@ func BuildNodeLabelsTaskStep(task *proto.Task, clusterID string, nodeIPs []strin
 
 // SetNodeLabelsTask set cluster nodes labels
 func SetNodeLabelsTask(taskID string, stepName string) error {
-	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
-		"start set cluster nodes labels")
 	start := time.Now()
 
 	// get task and task current step
@@ -556,6 +558,9 @@ func SetNodeLabelsTask(taskID string, stepName string) error {
 	}
 	blog.Infof("SetNodeLabelsTask[%s]: run step %s, system: %s, old state: %s, params %v",
 		taskID, stepName, step.System, step.Status, step.Params)
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start set cluster nodes labels")
 
 	// extract parameter
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
@@ -854,8 +859,6 @@ func BuildCreateResourceQuotaTaskStep(task *proto.Task, clusterID string, quota 
 
 // CreateResourceQuotaTask create cluster namespace resource quota
 func CreateResourceQuotaTask(taskID string, stepName string) error {
-	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
-		"start create cluster namespace resource quota")
 	start := time.Now()
 
 	// get task and task current step
@@ -870,6 +873,9 @@ func CreateResourceQuotaTask(taskID string, stepName string) error {
 	}
 	blog.Infof("CreateResourceQuotaTask[%s]: run step %s, system: %s, old state: %s, params %v",
 		taskID, stepName, step.System, step.Status, step.Params)
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start create cluster namespace resource quota")
 
 	// extract parameter
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
@@ -959,8 +965,6 @@ func BuildDeleteResourceQuotaTaskStep(task *proto.Task, clusterID, namespace, na
 
 // DeleteResourceQuotaTask delete cluster namespace resource quota
 func DeleteResourceQuotaTask(taskID string, stepName string) error {
-	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
-		"start delete cluster namespace resource quota")
 	start := time.Now()
 
 	// get task and task current step
@@ -975,6 +979,9 @@ func DeleteResourceQuotaTask(taskID string, stepName string) error {
 	}
 	blog.Infof("DeleteResourceQuotaTask[%s]: run step %s, system: %s, old state: %s, params %v",
 		taskID, stepName, step.System, step.Status, step.Params)
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start delete cluster namespace resource quota")
 
 	// extract parameter
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
@@ -1058,8 +1065,6 @@ func BuildCheckClusterCleanNodesTaskStep(task *proto.Task, cloudID, clusterID st
 
 // CheckClusterCleanNodsTask check cluster clean nodes task
 func CheckClusterCleanNodsTask(taskID string, stepName string) error {
-	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
-		"start check cluster clean nodes")
 	start := time.Now()
 	// get task and task current step
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
@@ -1070,6 +1075,9 @@ func CheckClusterCleanNodsTask(taskID string, stepName string) error {
 	if step == nil {
 		return nil
 	}
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start check cluster clean nodes")
 
 	// extract parameter && check validate
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]

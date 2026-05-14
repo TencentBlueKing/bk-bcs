@@ -943,10 +943,11 @@ func (t *Task) BuildRemoveNodesFromClusterTask(cls *proto.Cluster, nodes []*prot
 			StepName: template.SystemInit,
 			Cluster:  cls,
 			Extra: template.ExtraInfo{
-				NodeIPList:   strings.Join(nodeIPs, ","),
-				NodeOperator: opt.Operator,
-				ModuleID:     cloudprovider.GetScaleInModuleID(nil, opt.NodeTemplate),
-				BusinessID:   cloudprovider.GetBusinessID(cls, nil, opt.NodeTemplate, false),
+				NodeIPList:      strings.Join(nodeIPs, ","),
+				NodeOperator:    opt.Operator,
+				ModuleID:        cloudprovider.GetScaleInModuleID(nil, opt.NodeTemplate),
+				BusinessID:      cloudprovider.GetBusinessID(cls, nil, opt.NodeTemplate, false),
+				TranslateMethod: template.SystemCleanNode,
 			}}.BuildSopsStep(task, opt.Cloud.ClusterManagement.DeleteNodesFromCluster, true)
 		if err != nil {
 			return nil, fmt.Errorf("BuildRemoveNodesFromClusterTask BuildBkSopsStepAction failed: %v", err)
