@@ -209,6 +209,7 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 				MasterIPList:    cloudprovider.DynamicMasterNodeIPListKey.String(),
 				ImageId:         "",
 				TranslateMethod: template.SystemBeforeInit,
+				AllowSkip:       true,
 			}}.BuildSopsStep(task, opt.Cloud.ClusterManagement.CreateCluster, true)
 		if err != nil {
 			return nil, fmt.Errorf("BuildCreateClusterTask BuildBkSopsStepAction failed: %v", err)
