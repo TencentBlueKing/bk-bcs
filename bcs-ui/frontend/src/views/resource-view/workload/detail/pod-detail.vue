@@ -72,14 +72,54 @@
       </div>
     </div>
     <div class="workload-detail-body">
+      <bcs-alert
+        v-if="!isMonitorInstalled"
+        class="mt-[16px]"
+        type="warning"
+        closable>
+        <template #title>
+          <i18n path="dashboard.workload.tips.noMonitor" tag="span">
+            <template #plugins>
+              <a class="text-[#3a84ff]" :href="handleGetPluginManageUrl()" target="_blank">{{ $t('nav.plugin') }}</a>
+            </template>
+          </i18n>
+        </template>
+      </bcs-alert>
       <div class="workload-metric">
         <Metric
-          :title="$t('metrics.cpuUsage')"
-          metric="cpu_usage"
+          :metric="activeCpuMetric"
           :params="params"
           category="pods"
           colors="#30d878"
           unit="percent-number">
+          <template #title>
+            <bk-dropdown-menu trigger="click" @show="isDropdownShow = true" @hide="isDropdownShow = false">
+              <div class="dropdown-trigger-text" slot="dropdown-trigger">
+                <span class="name">{{ cpuMetricObj[activeCpuMetric] }}</span>
+                <i :class="['bk-icon icon-angle-down',{ 'icon-flip': isDropdownShow }]"></i>
+              </div>
+              <ul class="bk-dropdown-list" slot="dropdown-content">
+                <li
+                  v-for="(value, key) in cpuMetricObj"
+                  :key="key"
+                  @click="handleChangeCpuMetric(key)">
+                  {{ value }}
+                </li>
+              </ul>
+            </bk-dropdown-menu>
+          </template>
+          <template #desc>
+            <div class="mb-[4px]">
+              {{ $t('metrics.cpuUsage') }}: {{ $t('metrics.cpuUsageDesc') }}
+              <span class="block">metrics: rate(container_cpu_usage_seconds_total[2m])</span>
+            </div>
+            <div>
+              {{ $t('metrics.cpuLimitUsage') }}: {{ $t('metrics.cpuLimitUsageDesc') }}
+              <span class="block">
+                metric: rate(container_cpu_usage_seconds_total[2m])/kube_pod_container_resource_limits_cpu_cores
+              </span>
+            </div>
+          </template>
         </Metric>
         <Metric
           :title="$t('metrics.memUsage1')"
@@ -92,7 +132,7 @@
         </Metric>
         <Metric
           :title="$t('k8s.networking')"
-          :metric="['network_receive', 'network_transmit']"
+          :metric="networkMetric"
           :params="params"
           category="pods"
           unit="byte"
@@ -367,7 +407,7 @@ import { computed, defineComponent, onMounted, ref, toRefs } from 'vue';
 import { filterXss } from '@blueking/xss-filter';
 
 import EventTable from './bk-monitor-event.vue';
-import useDetail from './use-detail';
+import useDetail, { useMonitorCollector } from './use-detail';
 
 import { addonsList } from '@/api/modules/helm';
 import { logCollectorEntrypoints } from '@/api/modules/monitor';
@@ -379,6 +419,7 @@ import CodeEditor from '@/components/monaco-editor/new-editor.vue';
 import StatusIcon from '@/components/status-icon';
 import { useAppData, useCluster, useProject } from '@/composables/use-app';
 import fullScreen from '@/directives/full-screen';
+import $i18n from '@/i18n/i18n-setup';
 import $store from '@/store';
 import EventQueryTable from '@/views/project-manage/event-query/event-query-table.vue';
 
@@ -451,6 +492,11 @@ export default defineComponent({
       defaultActivePanel: 'container',
       type: 'workloads',
     });
+    const {
+      isMonitorInstalled,
+      handleGetPluginManageUrl,
+      handleCheckMonitor,
+    } = useMonitorCollector();
     const { name, namespace, clusterId } = toRefs(props);
     const params = computed(() => ({
       $namespaceId: namespace.value,
@@ -538,6 +584,20 @@ export default defineComponent({
       };
     };
 
+    // cpu指标
+    const isDropdownShow = ref(false);
+    const activeCpuMetric = ref('cpu_usage');
+    const cpuMetricObj = computed(() => ({
+      cpu_usage: $i18n.t('metrics.cpuUsage'),
+      cpu_limit_usage: $i18n.t('metrics.cpuLimitUsage'),
+    }));
+    function handleChangeCpuMetric(value) {
+      activeCpuMetric.value = value;
+    }
+
+    // 网络指标
+    const networkMetric = ref(['network_receive', 'network_transmit']);
+
     // 容器操作
     // 1. 跳转WebConsole
     const { projectCode } = useProject();
@@ -557,8 +617,7 @@ export default defineComponent({
         terminalWins.set(row.containerID, win);
       }
     };
-    // 2. 日志检索
-    const isDropdownShow = ref(false);
+
     // 3. weterm
     function resolveLink(type: 'login' | 'debug', container: string) {
       window.open(`weterm://session/open/bcs?ns=${props.namespace}&pod=${metadata.value.name}&container=${container}&type=${type}&clusterId=${clusterId.value}&envId=${window.BCS_CONFIG.bkBcsEnvID}`);
@@ -583,6 +642,7 @@ export default defineComponent({
       handleGetStorage();
       handleGetContainer();
       handleFileLogDisabled();
+      handleCheckMonitor(clusterId.value);
     });
 
     return {
@@ -605,6 +665,9 @@ export default defineComponent({
       yaml,
       showYamlPanel,
       isDropdownShow,
+      activeCpuMetric,
+      cpuMetricObj,
+      networkMetric,
       logLinks,
       handleShowYamlPanel,
       handleGetStorage,
@@ -620,6 +683,9 @@ export default defineComponent({
       resolveLink,
       IS_INTERNAL: _INTERNAL_.value,
       isFileLogDisabled,
+      handleChangeCpuMetric,
+      isMonitorInstalled,
+      handleGetPluginManageUrl,
     };
   },
 });

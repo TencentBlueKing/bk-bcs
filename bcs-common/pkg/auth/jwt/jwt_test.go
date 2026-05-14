@@ -66,6 +66,7 @@ func TestJWTClient_JWTDecode(t *testing.T) {
 	token, err := cli.JWTSign(&UserInfo{
 		SubType:     User.String(),
 		UserName:    username,
+		TenantId:    "default",
 		ExpiredTime: 100,
 	})
 	if err != nil {

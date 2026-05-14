@@ -14,6 +14,7 @@
 package steps
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -95,7 +96,7 @@ func (s InstallBcsUnifiedApiserverStep) DoWork(t *types.Task) error {
 	}
 
 	// create helm release
-	err = helm.GetHelmClient().InstallUnifiedApiserver(&helm.BcsUnifiedApiserverOptions{
+	err = helm.GetHelmClient().InstallUnifiedApiserver(context.Background(), &helm.BcsUnifiedApiserverOptions{
 		ReleaseBaseOptions: helm.ReleaseBaseOptions{
 			ProjectID:       projectId,
 			ClusterID:       clusterId,

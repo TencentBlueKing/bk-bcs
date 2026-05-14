@@ -1,0 +1,17 @@
+apiVersion: dr.bkbcs.tencent.com/v1alpha1
+kind: DRPlan
+metadata:
+  name: demo-app
+  namespace: default
+spec:
+  description: 'Auto-generated from Helm template: demo-app'
+  failurePolicy: Stop
+  globalParams:
+  - name: feedNamespace
+    value: default
+  stages:
+  - description: Unified workflow for install/upgrade hooks and main resources
+    name: install
+    workflows:
+    - workflowRef:
+        name: demo-app-install

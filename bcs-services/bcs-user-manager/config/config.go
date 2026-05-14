@@ -122,6 +122,8 @@ type UserMgrConfig struct {
 
 	// 多租户
 	Tenant options.Tenant
+	// 共享集群权限配置
+	SharedCluster options.SharedCluster
 }
 
 var (

@@ -1103,13 +1103,13 @@ func (sw *SdkWrapper) BatchDeregisterTargets(region string, req *tclb.BatchDereg
 
 // BatchModifyTargetWeight batch modify target weight
 func (sw *SdkWrapper) BatchModifyTargetWeight(region string, req *tclb.BatchModifyTargetWeightRequest) error {
-	rounds := len(req.ModifyList) / MaxTargetForBatchRegisterEachTime
-	remains := len(req.ModifyList) % MaxTargetForBatchRegisterEachTime
+	rounds := len(req.ModifyList) / MaxRulesForBatchModifyTargetEachTime
+	remains := len(req.ModifyList) % MaxRulesForBatchModifyTargetEachTime
 
 	index := 0
 	for ; index <= rounds; index++ {
-		start := index * MaxTargetForBatchRegisterEachTime
-		end := (index + 1) * MaxTargetForBatchRegisterEachTime
+		start := index * MaxRulesForBatchModifyTargetEachTime
+		end := (index + 1) * MaxRulesForBatchModifyTargetEachTime
 		if index == rounds {
 			end = start + remains
 		}

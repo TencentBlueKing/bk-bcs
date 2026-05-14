@@ -318,6 +318,8 @@ export default [
           crd: route.query.crd,
           pod: route.query.pod,
           container: route.query.container,
+          version: route.query.version,
+          isCommonCrd: route.query.isCommonCrd,
         }),
         component: DashboardWorkloadDetail,
         beforeEnter: (to, from, next) => {

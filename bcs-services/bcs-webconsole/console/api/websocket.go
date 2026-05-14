@@ -65,6 +65,20 @@ func (q *wsQuery) GetTerminalSize() *types.TerminalSize {
 }
 
 // BCSWebSocketHandler WebSocket 连接处理函数
+//
+// @Summary      建立 WebConsole WebSocket 连接
+// @Description  通过 WebSocket 协议建立终端连接，需先通过 CreateWebConsoleSession 获取 session_id
+// @Tags         Console
+// @Accept       json
+// @Produce      json
+// @Param        sessionId    path      string  true   "WebSocket Session ID"
+// @Param        rows         query     integer false  "终端行数"
+// @Param        cols         query     integer false  "终端列数"
+// @Param        hide_banner  query     boolean false  "是否隐藏欢迎横幅"
+// @Param        lang         query     string  false  "语言"
+// @Success      101          {string}  string  "WebSocket 协议升级成功"
+// @Failure      400          {object}  types.APIResponse  "连接参数错误"
+// @Router       /ws/sessions/{sessionId}/ [get]
 // NOCC:golint/fnsize(设计如此:)
 func (s *service) BCSWebSocketHandler(c *gin.Context) { // nolint
 	// 还未建立 WebSocket 连接, 使用 Json 返回

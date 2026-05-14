@@ -24,4 +24,6 @@ var (
 	TaskType task.ParamKey = "taskType"
 	// QuotaResource quota resource
 	QuotaResource task.ParamKey = "quotaResource"
+	// ApprovalResultKey approval result
+	ApprovalResultKey task.ParamKey = "approvalResult"
 )

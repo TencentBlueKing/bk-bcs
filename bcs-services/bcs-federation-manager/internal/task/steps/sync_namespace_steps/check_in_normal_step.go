@@ -18,6 +18,7 @@ import (
 	"fmt"
 
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/task"
@@ -103,7 +104,7 @@ func (s CheckInNormalStep) DoWork(t *types.Task) error {
 
 	// 判断是否存在ns
 	subClusterNamespace, err := cluster.GetClusterClient().GetNamespace(subClusterID, nsName)
-	if err != nil {
+	if err != nil && !errors.IsNotFound(err) {
 		blog.Errorf("GetNamespace(%s, %s) failed! err:%s", nsName, subClusterID, err.Error())
 		return fmt.Errorf("GetNamespace(%s, %s) failed! err: %s", nsName, subClusterID, err.Error())
 	}
@@ -134,7 +135,7 @@ func (s CheckInNormalStep) DoWork(t *types.Task) error {
 func createNormalNamespaceQuota(nsName, subClusterID string, fedNamespace *corev1.Namespace) error {
 	blog.Infof("createNormalNamespaceQuota, subClusterID: %s, namespace: %s", fedNamespace.Name)
 
-	cerr := cluster.GetClusterClient().CreateClusterNamespace(nsName, subClusterID, fedNamespace.Annotations)
+	cerr := cluster.GetClusterClient().CreateClusterNamespace(subClusterID, nsName, fedNamespace.Annotations)
 	if cerr != nil {
 		blog.Errorf("createNormalNamespaceQuota failed, namespace: %s, err: %s", nsName, cerr.Error())
 		return cerr

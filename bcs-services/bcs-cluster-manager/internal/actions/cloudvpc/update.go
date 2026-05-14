@@ -69,6 +69,9 @@ func (ua *UpdateAction) updateCloudVPC(destCloudVPC *cmproto.CloudVPC) error {
 	if ua.req.GetUnderlay() != nil {
 		destCloudVPC.Underlay = ua.req.GetUnderlay()
 	}
+	if len(ua.req.Scenario) != 0 {
+		destCloudVPC.Scenario = ua.req.GetScenario()
+	}
 
 	return ua.model.UpdateCloudVPC(ua.ctx, destCloudVPC)
 }

@@ -241,9 +241,10 @@ type AddonData struct {
 
 // LogCollector log config
 type LogCollector struct {
-	HttpServer string `json:"httpServer"`
-	AddonName  string `json:"addonName"`
-	Token      string `json:"token"`
+	HttpServer       string `json:"httpServer"`
+	AddonName        string `json:"addonName"`
+	Token            string `json:"token"`
+	StorageClusterId uint   `json:"storageClusterId"`
 }
 
 // ComponentDeploy config

@@ -2815,6 +2815,34 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "vpcName",
+            "description": "vpcName. 业务名, 过滤业务私有的vpc",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "sort",
+            "description": "sort. 根据某个字段排序",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "order",
+            "description": "order. 升序或者降序",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "scenario",
+            "description": "scenario. vpc 使用场景",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -6275,8 +6303,8 @@
     },
     "/clustermanager/v1/projects/{projectID}/providers/{providerID}/autoscaler/resource_usage": {
       "get": {
-        "summary": "获取项目维度用户CA资源使用情况",
-        "description": "获取项目维度集群节点池的CA资源使用情况",
+        "summary": "获取项目维度用户资源使用情况",
+        "description": "获取项目维度集群节点池的资源使用情况",
         "operationId": "ClusterManager_GetProjectResourceQuotaUsage",
         "responses": {
           "200": {
@@ -6305,6 +6333,13 @@
             "description": "资源供应provider，目前支持 selfProvisionCloud/tencentCloud",
             "in": "path",
             "required": true,
+            "type": "string"
+          },
+          {
+            "name": "resourcePoolType",
+            "description": "resourcePoolType. 资源供应provider，目前支持 yunti/self， 默认为 yunti",
+            "in": "query",
+            "required": false,
             "type": "string"
           }
         ],
@@ -7495,6 +7530,111 @@
             "schema": {
               "$ref": "#/definitions/clustermanagerGetTopologyNodesRequest"
             }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
+    "/clustermanager/v2/cloudvpc": {
+      "get": {
+        "summary": "查询Cloud VPC列表",
+        "description": "根据查询条件过滤Cloud VPC列表，如果某项条件值为空，则忽略此条件。如果所有条件都为空，则默认查询所有集群，V2版本返回增加分页",
+        "operationId": "ClusterManager_ListCloudVPCV2",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerListCloudVPCV2Response"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "cloudID",
+            "description": "cloudID. 云类型，英文字符串",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "region",
+            "description": "region. vpc所属区域信息",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "vpcID",
+            "description": "vpcID. vpcID信息",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "networkType",
+            "description": "networkType. networkType网络类型(overlay/underlay)",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "businessID",
+            "description": "businessID. 业务ID, 过滤业务私有的vpc",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "vpcName",
+            "description": "vpcName. 业务名, 过滤业务私有的vpc",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "sort",
+            "description": "sort. 根据某个字段排序",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "order",
+            "description": "order. 升序或者降序",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "limit",
+            "description": "limit. 每页数量",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "page",
+            "description": "page. 页码",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "scenario",
+            "description": "scenario. vpc 使用场景",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -9727,6 +9867,11 @@
           "$ref": "#/definitions/clustermanagerCidr",
           "description": "underlayIP CIDR配置",
           "title": "underlay"
+        },
+        "scenario": {
+          "type": "string",
+          "description": "vpc 使用场景",
+          "title": "scenario"
         }
       },
       "description": "用于记录cloud对应不同区域的vpc信息",
@@ -9801,6 +9946,11 @@
           "type": "string",
           "description": "业务ID, 作用预留私有的业务vpc",
           "title": "businessID"
+        },
+        "scenario": {
+          "type": "string",
+          "description": "vpc 使用场景",
+          "title": "scenario"
         }
       },
       "title": "CloudVPCResp for web model"
@@ -11582,6 +11732,11 @@
           "$ref": "#/definitions/clustermanagerCidr",
           "description": "underlayIP CIDR配置",
           "title": "underlay"
+        },
+        "scenario": {
+          "type": "string",
+          "description": "vpc 使用场景",
+          "title": "scenario"
         }
       },
       "description": "创建cloud vpc请求",
@@ -16745,6 +16900,58 @@
         "message"
       ]
     },
+    "clustermanagerListCloudVPCResponseData": {
+      "type": "object",
+      "properties": {
+        "count": {
+          "type": "integer",
+          "format": "int64",
+          "description": "CloudVPC数量",
+          "title": "count"
+        },
+        "results": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerCloudVPCResp"
+          },
+          "description": "返回数据",
+          "title": "results"
+        }
+      }
+    },
+    "clustermanagerListCloudVPCV2Response": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/clustermanagerListCloudVPCResponseData",
+          "description": "获取到的信息",
+          "title": "data"
+        }
+      },
+      "description": "查询云VPC返回",
+      "title": "ListCloudVPCV2Response",
+      "required": [
+        "code",
+        "message"
+      ]
+    },
     "clustermanagerListCloudVpcsResponse": {
       "type": "object",
       "properties": {
@@ -21559,6 +21766,11 @@
           "$ref": "#/definitions/clustermanagerCidr",
           "description": "underlayIP CIDR配置",
           "title": "underlay"
+        },
+        "scenario": {
+          "type": "string",
+          "description": "vpc 使用场景",
+          "title": "scenario"
         }
       },
       "description": "更新云VPC请求",

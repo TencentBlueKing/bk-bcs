@@ -14,6 +14,14 @@
 
 package v1
 
+// HostNetPortPoolListerExpansion allows custom methods to be added to
+// HostNetPortPoolLister.
+type HostNetPortPoolListerExpansion interface{}
+
+// HostNetPortPoolNamespaceListerExpansion allows custom methods to be added to
+// HostNetPortPoolNamespaceLister.
+type HostNetPortPoolNamespaceListerExpansion interface{}
+
 // IngressListerExpansion allows custom methods to be added to
 // IngressLister.
 type IngressListerExpansion interface{}

@@ -1,0 +1,186 @@
+# DRPlan CRD Contract
+# API Version: dr.bkbcs.tencent.com/v1alpha1
+
+# ============================================
+# 示例 1: 单 Stage 预案
+# ============================================
+apiVersion: dr.bkbcs.tencent.com/v1alpha1
+kind: DRPlan
+metadata:
+  name: simple-dr-plan
+  # 触发执行（可选）
+  # annotations:
+  #   dr.bkbcs.tencent.com/trigger: execute  # execute | revert | cancel
+spec:
+  # 预案描述
+  description: "单应用容灾预案"
+
+  # 全局参数
+  globalParams:
+    - name: targetCluster
+      value: "cluster-backup-prod"
+    - name: notifyURL
+      value: "https://prod.notify.com/alert"
+    - name: timeout
+      value: "15m"
+  
+  # Stage 编排
+  stages:
+    - name: execute-failover
+      workflows:
+        - workflowRef:
+            name: example-workflow
+            namespace: production
+
+---
+
+# ============================================
+# 示例 2: 多 Stage 编排预案
+# ============================================
+apiVersion: dr.bkbcs.tencent.com/v1alpha1
+kind: DRPlan
+metadata:
+  name: multi-service-dr-plan
+spec:
+  description: "多组件系统容灾预案 - Stage 编排模式"
+  
+  # 全局参数（传递给所有 Workflow）
+  globalParams:
+    - name: targetRegion
+      value: "dr-region"
+    - name: drClusterNamespace
+      value: "clusternet-dr-shanghai"
+    - name: webhookURL
+      value: "https://hooks.example.com/drplan"
+  
+  # 全局失败策略
+  failurePolicy: Stop  # Stop | Continue
+  
+  # Stage 编排
+  stages:
+    # Stage 1: 通知开始
+    - name: notify-start
+      description: "发送容灾开始通知"
+      parallel: false
+      workflows:
+        - workflowRef:
+            name: notification-workflow
+            namespace: production
+          params:
+            - name: message
+              value: "容灾切换开始"
+            - name: event
+              value: "failover-start"
+    
+    # Stage 2: 基础设施层（并行）
+    - name: infrastructure
+      description: "数据库、缓存切换"
+      dependsOn: [notify-start]  # 依赖 notify-start 完成
+      parallel: true  # 本 Stage 内的 Workflow 并行执行
+      workflows:
+        - workflowRef:
+            name: mysql-failover
+            namespace: production
+          params:
+            - name: drDbHost
+              value: "dr-mysql.example.com"
+        
+        - workflowRef:
+            name: redis-failover
+            namespace: production
+          params:
+            - name: drRedisHost
+              value: "dr-redis.example.com"
+    
+    # Stage 3: 应用服务层（并行）
+    - name: applications
+      description: "业务服务切换"
+      dependsOn: [infrastructure]  # 依赖 infrastructure 完成
+      parallel: true
+      workflows:
+        - workflowRef:
+            name: service-failover
+            namespace: production
+          params:
+            - name: serviceName
+              value: "order-service"
+            - name: replicas
+              value: "5"
+        
+        - workflowRef:
+            name: service-failover
+            namespace: production
+          params:
+            - name: serviceName
+              value: "payment-service"
+            - name: replicas
+              value: "3"
+    
+    # Stage 4: 验证（顺序）
+    - name: validation
+      description: "健康检查和验证"
+      dependsOn: [applications]
+      parallel: false  # 顺序执行
+      workflows:
+        - workflowRef:
+            name: health-check-workflow
+            namespace: production
+    
+    # Stage 5: 通知完成
+    - name: notify-complete
+      description: "发送容灾完成通知"
+      dependsOn: [validation]
+      workflows:
+        - workflowRef:
+            name: notification-workflow
+            namespace: production
+          params:
+            - name: message
+              value: "容灾切换完成"
+            - name: event
+              value: "failover-complete"
+
+---
+
+# ============================================
+# DRPlan Status 示例
+# ============================================
+status:
+  # 预案状态
+  phase: Ready  # Ready | Executed | Invalid
+  
+  # 最后执行信息
+  lastExecutionTime: "2026-02-02T10:30:00Z"
+  lastExecutionRef: "multi-service-dr-plan-exec-001"
+  
+  # 当前执行（用于并发控制）
+  currentExecution:
+    name: "multi-service-dr-plan-exec-002"
+    namespace: "production"
+  
+  # 状态条件
+  conditions:
+    - type: WorkflowsReady
+      status: "True"
+      reason: AllWorkflowsExist
+      message: "All referenced workflows are ready"
+      lastTransitionTime: "2026-02-02T10:00:00Z"
+    - type: ParametersValid
+      status: "True"
+      reason: ValidationPassed
+      message: "All required parameters provided"
+      lastTransitionTime: "2026-02-02T10:00:00Z"
+    - type: DependenciesValid
+      status: "True"
+      reason: NoCyclicDependencies
+      message: "Stage dependencies are valid"
+      lastTransitionTime: "2026-02-02T10:00:00Z"
+  
+  observedGeneration: 1
+
+---
+# 触发执行示例
+# kubectl apply -f drplanexecution-execute.yaml
+# kubectl apply -f drplanexecution-revert.yaml（必须指定 revertExecutionRef）
+# 
+# 注意：Annotation 触发方式已移除

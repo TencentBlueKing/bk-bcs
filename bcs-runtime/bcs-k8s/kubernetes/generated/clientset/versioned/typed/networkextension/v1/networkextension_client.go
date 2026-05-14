@@ -22,6 +22,7 @@ import (
 
 type NetworkextensionV1Interface interface {
 	RESTClient() rest.Interface
+	HostNetPortPoolsGetter
 	IngressesGetter
 	ListenersGetter
 	PortBindingsGetter
@@ -31,6 +32,10 @@ type NetworkextensionV1Interface interface {
 // NetworkextensionV1Client is used to interact with features provided by the networkextension group.
 type NetworkextensionV1Client struct {
 	restClient rest.Interface
+}
+
+func (c *NetworkextensionV1Client) HostNetPortPools(namespace string) HostNetPortPoolInterface {
+	return newHostNetPortPools(c, namespace)
 }
 
 func (c *NetworkextensionV1Client) Ingresses(namespace string) IngressInterface {

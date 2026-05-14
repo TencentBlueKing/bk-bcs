@@ -1,0 +1,3727 @@
+openapi: 3.0.0
+info:
+  title: Helm Manager API Doc
+  version: 0.2.0
+paths:
+  /helmmanager/v1/available:
+    get:
+      summary: 查询helm-manager服务是否可用
+      description: 查询helm-manager服务是否可用
+      operationId: HelmManager_Available
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/helmmanagerAvailableResp"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      tags:
+        - HelmManager
+  "/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/addons":
+    get:
+      summary: 获取集群组件列表
+      description: 获取集群组件列表
+      operationId: ClusterAddons_ListAddons
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/helmmanagerListAddonsResp"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectCode
+          description: 项目代码
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: clusterID
+          description: 所在的集群ID
+          in: path
+          required: true
+          schema:
+            type: string
+      tags:
+        - ClusterAddons
+    post:
+      summary: 安装集群组件
+      description: 安装集群组件
+      operationId: ClusterAddons_InstallAddons
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/helmmanagerInstallAddonsResp"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectCode
+          description: 项目代码
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: clusterID
+          description: 所在的集群ID
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/helmmanagerInstallAddonsReq"
+        required: true
+      tags:
+        - ClusterAddons
+  "/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/addons/{name}":
+    get:
+      summary: 获取集群组件详情
+      description: 获取集群组件详情
+      operationId: ClusterAddons_GetAddonsDetail
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/helmmanagerGetAddonsDetailResp"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectCode
+          description: 项目代码
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: clusterID
+          description: 所在的集群ID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: name
+          description: 组件名称
+          in: path
+          required: true
+          schema:
+            type: string
+      tags:
+        - ClusterAddons
+    delete:
+      summary: 卸载集群组件
+      description: 删除组件所有内容
+      operationId: ClusterAddons_UninstallAddons
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/helmmanagerUninstallAddonsResp"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectCode
+          description: 项目代码
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: clusterID
+          description: 所在的集群ID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: name
+          description: 组件名称
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/helmmanagerUninstallAddonsReq"
+        required: true
+      tags:
+        - ClusterAddons
+    put:
+      summary: 更新集群组件
+      description: 更新集群组件
+      operationId: ClusterAddons_UpgradeAddons
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/helmmanagerUpgradeAddonsResp"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectCode
+          description: 项目代码
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: clusterID
+          description: 所在的集群ID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: name
+          description: 组件名称
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/helmmanagerUpgradeAddonsReq"
+        required: true
+      tags:
+        - ClusterAddons
+  "/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/addons/{name}/preview":
+    post:
+      summary: 预览更新集群组件
+      description: 预览更新集群组件
+      operationId: ClusterAddons_PreviewAddons
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/helmmanagerReleasePreviewResp"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectCode
+          description: 项目代码
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: clusterID
+          description: 所在的集群ID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: name
+          description: 组件名称
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/helmmanagerPreviewAddonsReq"
+        required: true
+      tags:
+        - ClusterAddons
+  "/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/addons/{name}/stop":
+    put:
+      summary: 停止集群组件运行
+      description: 停止组件实例运行，保留配置相关信息
+      operationId: ClusterAddons_StopAddons
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/helmmanagerStopAddonsResp"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectCode
+          description: 项目代码
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: clusterID
+          description: 所在的集群ID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: name
+          description: 组件名称
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/helmmanagerStopAddonsReq"
+        required: true
+      tags:
+        - ClusterAddons
+  "/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}":
+    get:
+      summary: 查询指定release详细信息
+      description: 查询指定release的详细信息
+      operationId: HelmManager_GetReleaseDetailV1
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/helmmanagerGetReleaseDetailV1Resp"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectCode
+          description: 项目代码
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: clusterID
+          description: 集群ID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: namespace
+          description: 查询目标namespace
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: name
+          description: 查询目标name
+          in: path
+          required: true
+          schema:
+            type: string
+      tags:
+        - HelmManager
+    delete:
+      summary: 执行指定集群的chart release uninstall
+      description: 执行指定集群的chart release uninstall
+      operationId: HelmManager_UninstallReleaseV1
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/helmmanagerUninstallReleaseV1Resp"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectCode
+          description: 项目代码
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: clusterID
+          description: 所在的集群ID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: namespace
+          description: 所在的namespace
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: name
+          description: chart release名称
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/helmmanagerUninstallReleaseV1Req"
+        required: true
+      tags:
+        - HelmManager
+    post:
+      summary: 执行指定集群的chart release install
+      description: 执行指定集群的chart release install
+      operationId: HelmManager_InstallReleaseV1
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/helmmanagerInstallReleaseV1Resp"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectCode
+          description: 项目代码
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: clusterID
+          description: 所在的集群ID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: namespace
+          description: 所在的namespace
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: name
+          description: chart release名称
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/helmmanagerInstallReleaseV1Req"
+        required: true
+      tags:
+        - HelmManager
+    put:
+      summary: 执行指定集群的chart release upgrade
+      description: 执行指定集群的chart release upgrade
+      operationId: HelmManager_UpgradeReleaseV1
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/helmmanagerUpgradeReleaseV1Resp"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectCode
+          description: 项目代码
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: clusterID
+          description: 所在的集群ID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: namespace
+          description: 所在的namespace
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: name
+          description: chart release名称
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/helmmanagerUpgradeReleaseV1Req"
+        required: true
+      tags:
+        - HelmManager
+  "/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}/expend":
+    get:
+      summary: Helm Release 详情扩展(ingress/service/secret)
+      description: Helm Release 详情扩展(ingress/service/secret)
+      operationId: HelmManager_GetReleaseDetailExtend
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/helmmanagerCommonResp"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectCode
+          description: 项目代码
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: clusterID
+          description: 所在的集群ID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: namespace
+          description: 所在的namespace
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: name
+          description: chart release名称
+          in: path
+          required: true
+          schema:
+            type: string
+      tags:
+        - HelmManager
+  "/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}/history":
+    get:
+      summary: 查询指定集群的chart release历史信息
+      description: 查询指定集群的chart release历史信息
+      operationId: HelmManager_GetReleaseHistory
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/helmmanagerGetReleaseHistoryResp"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectCode
+          description: 项目代码
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: clusterID
+          description: 所在的集群ID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: namespace
+          description: 所在的namespace
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: name
+          description: chart release名称
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: filter
+          description: filter. 状态过滤
+          in: query
+          required: false
+          schema:
+            type: string
+      tags:
+        - HelmManager
+  "/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}/import":
+    post:
+      summary: 导出 cluster releases
+      description: 导出 cluster releases
+      operationId: HelmManager_ImportClusterRelease
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/helmmanagerImportClusterReleaseResp"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectCode
+          description: 项目代码
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: clusterID
+          description: 集群ID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: namespace
+          description: 查询目标namespace
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: name
+          description: 查询目标name
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/helmmanagerImportClusterReleaseReq"
+        required: true
+      tags:
+        - HelmManager
+  "/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}/pods":
+    get:
+      summary: 获取 release pods
+      description: 获取 release 下所有pod, 支持根据时间筛选
+      operationId: HelmManager_GetReleasePods
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/helmmanagerCommonListResp"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectCode
+          description: 项目代码
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: clusterID
+          description: 所在的集群ID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: namespace
+          description: 所在的namespace
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: name
+          description: chart release名称
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: after
+          description: after. 查询指定时间之后的 pods
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int64
+      tags:
+        - HelmManager
+  "/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}/preview":
+    post:
+      summary: 预览 Release 资源
+      description: 预览 Release 资源，如果已经部署则同时展示 diff
+      operationId: HelmManager_ReleasePreview
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/helmmanagerReleasePreviewResp"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectCode
+          description: 项目代码
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: clusterID
+          description: 所在的集群ID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: namespace
+          description: 所在的namespace
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: name
+          description: chart release名称
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/helmmanagerReleasePreviewReq"
+        required: true
+      tags:
+        - HelmManager
+  "/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}/revisions/{revision}/manifest":
+    get:
+      summary: 查询指定集群的chart release manifest
+      description: 查询指定集群的chart release manifest
+      operationId: HelmManager_GetReleaseManifest
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/helmmanagerGetReleaseManifestResp"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectCode
+          description: 项目代码
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: clusterID
+          description: 所在的集群ID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: namespace
+          description: 所在的namespace
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: name
+          description: chart release名称
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: revision
+          description: release 版本
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      tags:
+        - HelmManager
+  "/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}/rollback":
+    put:
+      summary: 执行指定集群的chart release rollback
+      description: 执行指定集群的chart release rollback
+      operationId: HelmManager_RollbackReleaseV1
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/helmmanagerRollbackReleaseV1Resp"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectCode
+          description: 项目代码
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: clusterID
+          description: 所在的集群ID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: namespace
+          description: 所在的namespace
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: name
+          description: chart release名称
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/helmmanagerRollbackReleaseV1Req"
+        required: true
+      tags:
+        - HelmManager
+  "/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}/status":
+    get:
+      summary: 获取 release 资源的状态
+      description: 获取 release 下所有资源的部署状态，如果是 workload 则增加 pod 状态
+      operationId: HelmManager_GetReleaseStatus
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/helmmanagerCommonListResp"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectCode
+          description: 项目代码
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: clusterID
+          description: 所在的集群ID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: namespace
+          description: 所在的namespace
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: name
+          description: chart release名称
+          in: path
+          required: true
+          schema:
+            type: string
+      tags:
+        - HelmManager
+  "/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/releases":
+    get:
+      summary: 查询指定集群的chart release信息
+      description: 查询指定集群的chart release信息
+      operationId: HelmManager_ListReleaseV1
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/helmmanagerListReleaseV1Resp"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectCode
+          description: 项目代码
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: clusterID
+          description: 集群ID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: namespace
+          description: namespace. 指定命名空间查询，默认全部命名空间
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: name
+          description: name. 指定 release 名称查询，支持正则表达式，如 'ara[a-z]+' 可以搜索到 maudlin-arachnid
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: page
+          description: page. 页数
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int64
+        - name: size
+          description: size. 每页数量
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int64
+      tags:
+        - HelmManager
+  "/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/v2/releases":
+    get:
+      summary: 查询指定集群的chart release信息
+      description: 查询指定集群的chart release信息
+      operationId: HelmManager_ListReleaseV2
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/helmmanagerListReleaseV1Resp"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectCode
+          description: 项目代码
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: clusterID
+          description: 集群ID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: namespace
+          description: namespace. 指定命名空间查询，默认全部命名空间
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: name
+          description: name. 指定 release 名称查询，支持正则表达式，如 'ara[a-z]+' 可以搜索到 maudlin-arachnid
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: page
+          description: page. 页数
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int64
+        - name: size
+          description: size. 每页数量
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int64
+      tags:
+        - HelmManager
+  "/helmmanager/v1/projects/{projectCode}/repos":
+    get:
+      summary: 查询仓库列表
+      description: 查询仓库列表
+      operationId: HelmManager_ListRepository
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/helmmanagerListRepositoryResp"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectCode
+          description: 项目代码
+          in: path
+          required: true
+          schema:
+            type: string
+      tags:
+        - HelmManager
+    post:
+      summary: 创建仓库
+      description: 创建仓库
+      operationId: HelmManager_CreateRepository
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/helmmanagerCreateRepositoryResp"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectCode
+          description: 项目代码
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/helmmanagerCreateRepositoryReq"
+        required: true
+      tags:
+        - HelmManager
+  "/helmmanager/v1/projects/{projectCode}/repos/personal":
+    post:
+      summary: 创建个人仓库
+      description: 创建个人仓库
+      operationId: HelmManager_CreatePersonalRepo
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/helmmanagerCreatePersonalRepoResp"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectCode
+          description: 项目代码
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/helmmanagerCreatePersonalRepoReq"
+        required: true
+      tags:
+        - HelmManager
+  "/helmmanager/v1/projects/{projectCode}/repos/{name}":
+    get:
+      summary: 查询仓库
+      description: 查询仓库
+      operationId: HelmManager_GetRepository
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/helmmanagerGetRepositoryResp"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectCode
+          description: 项目代码
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: name
+          description: 仓库名称
+          in: path
+          required: true
+          schema:
+            type: string
+      tags:
+        - HelmManager
+    delete:
+      summary: 删除仓库
+      description: 删除仓库
+      operationId: HelmManager_DeleteRepository
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/helmmanagerDeleteRepositoryResp"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectCode
+          description: 项目代码
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: name
+          description: 仓库名称
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/helmmanagerDeleteRepositoryReq"
+        required: true
+      tags:
+        - HelmManager
+    put:
+      summary: 更新仓库
+      description: 更新仓库
+      operationId: HelmManager_UpdateRepository
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/helmmanagerUpdateRepositoryResp"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectCode
+          description: 项目代码
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: name
+          description: 仓库名称
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/helmmanagerUpdateRepositoryReq"
+        required: true
+      tags:
+        - HelmManager
+  "/helmmanager/v1/projects/{projectCode}/repos/{repoName}/charts":
+    get:
+      summary: 批量查询chart包
+      description: 批量查询chart包
+      operationId: HelmManager_ListChartV1
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/helmmanagerListChartV1Resp"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectCode
+          description: 项目代码
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: repoName
+          description: 仓库名称
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: page
+          description: page. 页数
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int64
+        - name: size
+          description: size. 每页数量
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int64
+        - name: name
+          description: name. chart 名称，支持模糊搜索
+          in: query
+          required: false
+          schema:
+            type: string
+      tags:
+        - HelmManager
+  "/helmmanager/v1/projects/{projectCode}/repos/{repoName}/charts/{name}":
+    get:
+      summary: 查询chart包详细信息
+      description: 查询chart包详细信息
+      operationId: HelmManager_GetChartDetailV1
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/helmmanagerGetChartDetailV1Resp"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectCode
+          description: 项目代码
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: repoName
+          description: 仓库名称
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: name
+          description: chart名称
+          in: path
+          required: true
+          schema:
+            type: string
+      tags:
+        - HelmManager
+    delete:
+      summary: 删除指定 chart
+      description: 删除指定 chart，将会从 chart 仓库中删除
+      operationId: HelmManager_DeleteChart
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/helmmanagerDeleteChartResp"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectCode
+          description: 项目代码
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: repoName
+          description: 仓库名称
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: name
+          description: chart名称
+          in: path
+          required: true
+          schema:
+            type: string
+      tags:
+        - HelmManager
+  "/helmmanager/v1/projects/{projectCode}/repos/{repoName}/charts/{name}/releases":
+    post:
+      summary: 获取 chart 关联的 releases
+      description: 获取 chart 关联的 releases
+      operationId: HelmManager_GetChartRelease
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/helmmanagerGetChartReleaseResp"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectCode
+          description: 项目代码
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: repoName
+          description: 仓库名称
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: name
+          description: chart名称
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/helmmanagerGetChartReleaseReq"
+        required: true
+      tags:
+        - HelmManager
+  "/helmmanager/v1/projects/{projectCode}/repos/{repoName}/charts/{name}/versions":
+    get:
+      summary: 查询chart包的版本列表
+      description: 查询chart包的版本列表
+      operationId: HelmManager_ListChartVersionV1
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/helmmanagerListChartVersionV1Resp"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectCode
+          description: 项目代码
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: repoName
+          description: 仓库名称
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: name
+          description: chart名称
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: page
+          description: page. 页数
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int64
+        - name: size
+          description: size. 每页数量
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int64
+      tags:
+        - HelmManager
+  "/helmmanager/v1/projects/{projectCode}/repos/{repoName}/charts/{name}/versions/{version}":
+    get:
+      summary: 查询指定版本的chart包详细信息
+      description: 查询指定版本的chart包详细信息
+      operationId: HelmManager_GetVersionDetailV1
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/helmmanagerGetVersionDetailV1Resp"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectCode
+          description: 项目代码
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: repoName
+          description: 仓库名称
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: name
+          description: chart名称
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: version
+          description: chart版本
+          in: path
+          required: true
+          schema:
+            type: string
+      tags:
+        - HelmManager
+    delete:
+      summary: 删除 chart 指定版本
+      description: 删除 chart 指定版本，将会从 chart 仓库中删除
+      operationId: HelmManager_DeleteChartVersion
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/helmmanagerDeleteChartVersionResp"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectCode
+          description: 项目代码
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: repoName
+          description: 仓库名称
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: name
+          description: chart名称
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: version
+          description: chart版本
+          in: path
+          required: true
+          schema:
+            type: string
+      tags:
+        - HelmManager
+  "/helmmanager/v1/projects/{projectCode}/repos/{repoName}/charts/{name}/versions/{version}/download":
+    get:
+      summary: 下载chart
+      description: 下载指定版本的chart
+      operationId: HelmManager_DownloadChart
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/apiHttpBody"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectCode
+          description: 项目代码
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: repoName
+          description: 仓库名称
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: name
+          description: chart名称
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: version
+          description: chart版本
+          in: path
+          required: true
+          schema:
+            type: string
+      tags:
+        - HelmManager
+security:
+  - ApiKeyAuth: []
+servers:
+  - url: /bcsapi/v4
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      name: Authorization
+      in: header
+  schemas:
+    apiHttpBody:
+      type: object
+      properties:
+        content_type:
+          type: string
+          description: The HTTP Content-Type header value specifying the content type of
+            the body.
+        data:
+          type: string
+          format: byte
+          description: The HTTP request/response body as raw binary.
+        extensions:
+          type: array
+          items:
+            $ref: "#/components/schemas/protobufAny"
+          description: >-
+            Application specific response metadata. Must be set in the first
+            response
+
+            for streaming APIs.
+      description: >-
+        Message that represents an arbitrary HTTP body. It should only be used
+        for
+
+        payload formats that can't be represented as JSON, such as raw binary or
+
+        an HTML page.
+
+
+
+        This message can be used both in streaming and non-streaming API methods in
+
+        the request as well as the response.
+
+
+        It can be used as a top-level request field, which is convenient if one
+
+        wants to extract parameters from either the URL or HTTP template into the
+
+        request fields and also want access to the raw HTTP body.
+
+
+        Example:
+
+            message GetResourceRequest {
+              // A unique request id.
+              string request_id = 1;
+
+              // The raw HTTP body is bound to this field.
+              google.api.HttpBody http_body = 2;
+
+            }
+
+            service ResourceService {
+              rpc GetResource(GetResourceRequest)
+                returns (google.api.HttpBody);
+              rpc UpdateResource(google.api.HttpBody)
+                returns (google.protobuf.Empty);
+
+            }
+
+        Example with streaming methods:
+
+            service CaldavService {
+              rpc GetCalendar(stream google.api.HttpBody)
+                returns (stream google.api.HttpBody);
+              rpc UpdateCalendar(stream google.api.HttpBody)
+                returns (stream google.api.HttpBody);
+
+            }
+
+        Use of this type only changes how the request and response bodies are
+
+        handled, all other features will continue to work unchanged.
+    helmmanagerAddons:
+      type: object
+      properties:
+        name:
+          type: string
+          description: 组件名称
+          title: name
+        chartName:
+          type: string
+          description: chart name
+          title: chartName
+        description:
+          type: string
+          description: 组件描述
+          title: description
+        logo:
+          type: string
+          description: logo
+          title: logo
+        docsLink:
+          type: string
+          description: 文档链接
+          title: docsLink
+        version:
+          type: string
+          description: 组件最新版本
+          title: version
+        currentVersion:
+          type: string
+          description: 组件当前安装版本，空代表没安装
+          title: currentVersion
+        namespace:
+          type: string
+          description: 部署的命名空间
+          title: namespace
+        defaultValues:
+          type: string
+          description: 默认配置，空代表可以直接安装，不需要填写自定义配置
+          title: defaultValues
+        currentValues:
+          type: string
+          description: 当前部署配置
+          title: currentValues
+        status:
+          type: string
+          description: 部署状态，同 Helm release 状态，空代表没安装
+          title: status
+        message:
+          type: string
+          description: 部署信息，部署异常则显示报错信息
+          title: message
+        supportedActions:
+          type: array
+          items:
+            type: string
+          description: 组件支持的操作，目前有 install, upgrade, stop, uninstall
+          title: supportedActions
+        releaseName:
+          type: string
+          description: 组件在集群中的 release name
+          title: releaseName
+        displayName:
+          type: string
+          description: 组件在集群中的别名
+          title: displayName
+      description: 集群组件
+      title: Addons
+    helmmanagerAvailableResp:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        result:
+          type: boolean
+          description: 返回结果
+          title: result
+      description: 查询helm-manager服务是否可用返回
+      title: AvailableResp
+    helmmanagerChart:
+      type: object
+      properties:
+        projectID:
+          type: string
+          description: 项目id
+          title: projectID
+        repository:
+          type: string
+          description: 仓库名称
+          title: repository
+        type:
+          type: string
+          description: 仓库类型
+          title: type
+        key:
+          type: string
+          description: chart key
+          title: key
+        name:
+          type: string
+          description: chart名称
+          title: name
+        latestVersion:
+          type: string
+          description: 最新的chart version
+          title: latestVersion
+        latestAppVersion:
+          type: string
+          description: 最新的app version
+          title: latestAppVersion
+        latestDescription:
+          type: string
+          description: 最新的description
+          title: latestDescription
+        createBy:
+          type: string
+          description: 创建者
+          title: createBy
+        updateBy:
+          type: string
+          description: 更新者
+          title: updateBy
+        createTime:
+          type: string
+          description: 创建时间
+          title: createTime
+        updateTime:
+          type: string
+          description: 更新时间
+          title: updateTime
+        projectCode:
+          type: string
+          description: 项目代号
+          title: projectCode
+        icon:
+          type: string
+          description: chart图标
+          title: icon
+    helmmanagerChartDetail:
+      type: object
+      properties:
+        name:
+          type: string
+          description: chart名称
+          title: name
+        version:
+          type: string
+          description: chart版本
+          title: version
+        readme:
+          type: string
+          description: chart自述
+          title: readme
+        valuesFile:
+          type: array
+          items:
+            type: string
+          description: values文件列表
+          title: valuesFile
+        contents:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/helmmanagerFileContent"
+          description: chart包所含文件
+          title: contents
+        url:
+          type: string
+          description: chart url
+          title: url
+    helmmanagerChartListData:
+      type: object
+      properties:
+        page:
+          type: integer
+          format: int64
+          description: 页数
+          title: page
+        size:
+          type: integer
+          format: int64
+          description: 每页数量
+          title: size
+        total:
+          type: integer
+          format: int64
+          description: 总数
+          title: total
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/helmmanagerChart"
+          description: 查询的仓库信息
+          title: data
+    helmmanagerChartVersion:
+      type: object
+      properties:
+        name:
+          type: string
+          description: chart name
+          title: name
+        version:
+          type: string
+          description: chart version
+          title: version
+        appVersion:
+          type: string
+          description: chart app version
+          title: appVersion
+        description:
+          type: string
+          description: chart description
+          title: description
+        createBy:
+          type: string
+          description: 创建者
+          title: createBy
+        updateBy:
+          type: string
+          description: 更新者
+          title: updateBy
+        createTime:
+          type: string
+          description: 创建时间
+          title: createTime
+        updateTime:
+          type: string
+          description: 更新时间
+          title: updateTime
+        url:
+          type: string
+          description: chart url
+          title: url
+    helmmanagerChartVersionListData:
+      type: object
+      properties:
+        page:
+          type: integer
+          format: int64
+          description: 页数
+          title: page
+        size:
+          type: integer
+          format: int64
+          description: 每页数量
+          title: size
+        total:
+          type: integer
+          format: int64
+          description: 总数
+          title: total
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/helmmanagerChartVersion"
+          description: 查询的chart版本列表
+          title: data
+    helmmanagerCommonListResp:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        result:
+          type: boolean
+          description: 返回结果
+          title: result
+        data:
+          type: array
+          items:
+            type: object
+          description: 返回数据
+          title: data
+        requestID:
+          type: string
+          description: requestID
+          title: requestID
+        web_annotations:
+          $ref: "#/components/schemas/helmmanagerWebAnnotations"
+      description: 通用列表返回
+      title: CommonListResp
+    helmmanagerCommonResp:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        result:
+          type: boolean
+          description: 返回结果
+          title: result
+        data:
+          type: object
+          description: 返回数据
+          title: data
+        requestID:
+          type: string
+          description: requestID
+          title: requestID
+        web_annotations:
+          $ref: "#/components/schemas/helmmanagerWebAnnotations"
+      description: 通用返回
+      title: CommonResp
+    helmmanagerCreatePersonalRepoReq:
+      type: object
+      properties:
+        projectCode:
+          type: string
+          description: 项目代码
+          title: projectCode
+      description: 创建个人仓库的参数
+      title: CreatePersonalRepoReq
+    helmmanagerCreatePersonalRepoResp:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        result:
+          type: boolean
+          description: 返回结果
+          title: result
+        data:
+          $ref: "#/components/schemas/helmmanagerRepository"
+        requestID:
+          type: string
+          description: requestID
+          title: requestID
+        web_annotations:
+          $ref: "#/components/schemas/helmmanagerWebAnnotations"
+      description: 创建个人仓库的返回
+      title: CreatePersonalRepoResp
+    helmmanagerCreateRepositoryReq:
+      type: object
+      properties:
+        projectCode:
+          type: string
+          description: 项目代码
+          title: projectCode
+        name:
+          type: string
+          description: 仓库名称
+          title: name
+        type:
+          type: string
+          description: 仓库类型，HELM(Helm仓库), GENERIC(通用二进制文件仓库)
+          title: type
+        takeover:
+          type: boolean
+          description: 是否为接管已存在的仓库
+          title: takeover
+        repoURL:
+          type: string
+          description: 接管仓库的仓库地址
+          title: repoURL
+        username:
+          type: string
+          description: 接管仓库的用户名
+          title: username
+        password:
+          type: string
+          description: 接管仓库的密码
+          title: password
+        remote:
+          type: boolean
+          description: 是否为远程仓库
+          title: remote
+        remoteURL:
+          type: string
+          description: 远程仓库地址
+          title: remoteURL
+        remoteUsername:
+          type: string
+          description: 远程仓库用户名
+          title: remoteUsername
+        remotePassword:
+          type: string
+          description: 远程仓库密码
+          title: remotePassword
+        displayName:
+          type: string
+          description: 展示名称
+          title: displayName
+      description: 创建仓库的参数
+      title: CreateRepositoryReq
+    helmmanagerCreateRepositoryResp:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        result:
+          type: boolean
+          description: 返回结果
+          title: result
+        data:
+          $ref: "#/components/schemas/helmmanagerRepository"
+        requestID:
+          type: string
+          description: requestID
+          title: requestID
+        web_annotations:
+          $ref: "#/components/schemas/helmmanagerWebAnnotations"
+      description: 创建仓库的返回
+      title: CreateRepositoryResp
+    helmmanagerDeleteChartResp:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        result:
+          type: boolean
+          description: 返回结果
+          title: result
+        requestID:
+          type: string
+          description: requestID
+          title: requestID
+        web_annotations:
+          $ref: "#/components/schemas/helmmanagerWebAnnotations"
+      description: 删除 Chart 的返回
+      title: DeleteChartResp
+    helmmanagerDeleteChartVersionResp:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        result:
+          type: boolean
+          description: 返回结果
+          title: result
+        requestID:
+          type: string
+          description: requestID
+          title: requestID
+        web_annotations:
+          $ref: "#/components/schemas/helmmanagerWebAnnotations"
+      description: 删除 Chart 版本的返回
+      title: DeleteChartVersionResp
+    helmmanagerDeleteRepositoryReq:
+      type: object
+      properties:
+        projectCode:
+          type: string
+          description: 项目代码
+          title: projectCode
+        name:
+          type: string
+          description: 仓库名称
+          title: name
+      description: 删除仓库的参数
+      title: DeleteRepositoryReq
+    helmmanagerDeleteRepositoryResp:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        result:
+          type: boolean
+          description: 返回结果
+          title: result
+        requestID:
+          type: string
+          description: requestID
+          title: requestID
+        web_annotations:
+          $ref: "#/components/schemas/helmmanagerWebAnnotations"
+      description: 删除仓库的返回
+      title: DeleteRepositoryResp
+    helmmanagerFileContent:
+      type: object
+      properties:
+        name:
+          type: string
+          description: 文件名
+          title: name
+        path:
+          type: string
+          description: 文件相对chart包入口的路径
+          title: path
+        content:
+          type: string
+          description: 文件内容
+          title: content
+    helmmanagerGetAddonsDetailResp:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        result:
+          type: boolean
+          description: 返回结果
+          title: result
+        data:
+          $ref: "#/components/schemas/helmmanagerAddons"
+        requestID:
+          type: string
+          description: requestID
+          title: requestID
+        web_annotations:
+          $ref: "#/components/schemas/helmmanagerWebAnnotations"
+      title: GetAddonsDetailResp
+    helmmanagerGetChartDetailV1Resp:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        result:
+          type: boolean
+          description: 返回结果
+          title: result
+        data:
+          $ref: "#/components/schemas/helmmanagerChart"
+        requestID:
+          type: string
+          description: requestID
+          title: requestID
+        web_annotations:
+          $ref: "#/components/schemas/helmmanagerWebAnnotations"
+      description: 查询chart包详细信息的返回
+      title: GetChartDetailV1Resp
+    helmmanagerGetChartReleaseReq:
+      type: object
+      properties:
+        projectCode:
+          type: string
+          description: 项目代码
+          title: projectCode
+        repoName:
+          type: string
+          description: 仓库名称
+          title: repoName
+        name:
+          type: string
+          description: chart名称
+          title: name
+        versions:
+          type: array
+          items:
+            type: string
+          description: chart版本, 不传版本则获取所有版本的 release
+          title: versions
+      description: 获取 chart 关联的 releases 请求参数
+      title: GetChartReleaseReq
+    helmmanagerGetChartReleaseResp:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        result:
+          type: boolean
+          description: 返回结果
+          title: result
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/helmmanagerRelease"
+          description: release信息
+          title: data
+        requestID:
+          type: string
+          description: requestID
+          title: requestID
+        web_annotations:
+          $ref: "#/components/schemas/helmmanagerWebAnnotations"
+      description: 获取 chart 关联的 releases 的返回
+      title: GetChartReleaseResp
+    helmmanagerGetReleaseDetailV1Resp:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        result:
+          type: boolean
+          description: 返回结果
+          title: result
+        data:
+          $ref: "#/components/schemas/helmmanagerReleaseDetail"
+        requestID:
+          type: string
+          description: requestID
+          title: requestID
+        web_annotations:
+          $ref: "#/components/schemas/helmmanagerWebAnnotations"
+      description: 查询指定release信息的返回
+      title: GetReleaseDetailV1Resp
+    helmmanagerGetReleaseHistoryResp:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        result:
+          type: boolean
+          description: 返回结果
+          title: result
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/helmmanagerReleaseHistory"
+          description: release history
+          title: data
+        requestID:
+          type: string
+          description: requestID
+          title: requestID
+        web_annotations:
+          $ref: "#/components/schemas/helmmanagerWebAnnotations"
+      description: release history的返回
+      title: GetReleaseHistoryResp
+    helmmanagerGetReleaseManifestResp:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        result:
+          type: boolean
+          description: 返回结果
+          title: result
+        data:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/helmmanagerFileContent"
+          description: release manifest
+          title: data
+        requestID:
+          type: string
+          description: requestID
+          title: requestID
+        web_annotations:
+          $ref: "#/components/schemas/helmmanagerWebAnnotations"
+      description: get release manifest的返回
+      title: GetReleaseManifestResp
+    helmmanagerGetRepositoryResp:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        result:
+          type: boolean
+          description: 返回结果
+          title: result
+        data:
+          $ref: "#/components/schemas/helmmanagerRepository"
+        requestID:
+          type: string
+          description: requestID
+          title: requestID
+        web_annotations:
+          $ref: "#/components/schemas/helmmanagerWebAnnotations"
+      description: 查询仓库的返回
+      title: GetRepositoryResp
+    helmmanagerGetVersionDetailV1Resp:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        result:
+          type: boolean
+          description: 返回结果
+          title: result
+        data:
+          $ref: "#/components/schemas/helmmanagerChartDetail"
+        requestID:
+          type: string
+          description: requestID
+          title: requestID
+        web_annotations:
+          $ref: "#/components/schemas/helmmanagerWebAnnotations"
+      description: 查询指定版本的chart包详细信息的返回
+      title: GetVersionDetailV1Resp
+    helmmanagerImportClusterReleaseReq:
+      type: object
+      properties:
+        projectCode:
+          type: string
+          description: 项目代码
+          title: projectCode
+        clusterID:
+          type: string
+          description: 集群ID
+          title: clusterID
+        namespace:
+          type: string
+          description: 查询目标namespace
+          title: namespace
+        name:
+          type: string
+          description: 查询目标name
+          title: name
+        repoName:
+          type: string
+          description: 仓库名称
+          title: repoName
+        chartName:
+          type: string
+          description: chart名称
+          title: chartName
+      description: 导出 cluster releases 请求参数
+      title: ImportClusterReleaseReq
+    helmmanagerImportClusterReleaseResp:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        result:
+          type: boolean
+          description: 返回结果
+          title: result
+        requestID:
+          type: string
+          description: requestID
+          title: requestID
+        web_annotations:
+          $ref: "#/components/schemas/helmmanagerWebAnnotations"
+      description: 导出 cluster releases 的返回
+      title: ImportClusterReleaseResp
+    helmmanagerInstallAddonsReq:
+      type: object
+      properties:
+        projectCode:
+          type: string
+          description: 项目代码
+          title: projectCode
+        clusterID:
+          type: string
+          description: 所在的集群ID
+          title: clusterID
+        name:
+          type: string
+          description: 组件名称
+          title: name
+        version:
+          type: string
+          description: 组件版本
+          title: version
+        values:
+          type: string
+          description: values
+          title: values
+      title: InstallAddonsReq
+    helmmanagerInstallAddonsResp:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        result:
+          type: boolean
+          description: 返回结果
+          title: result
+        requestID:
+          type: string
+          description: requestID
+          title: requestID
+        web_annotations:
+          $ref: "#/components/schemas/helmmanagerWebAnnotations"
+      title: InstallAddonsResp
+    helmmanagerInstallReleaseV1Req:
+      type: object
+      properties:
+        projectCode:
+          type: string
+          description: 项目代码
+          title: projectCode
+        clusterID:
+          type: string
+          description: 所在的集群ID
+          title: clusterID
+        namespace:
+          type: string
+          description: 所在的namespace
+          title: namespace
+        name:
+          type: string
+          description: chart release名称
+          title: name
+        repository:
+          type: string
+          description: chart所属的仓库
+          title: repository
+        chart:
+          type: string
+          description: chart名称
+          title: chart
+        version:
+          type: string
+          description: chart版本
+          title: version
+        values:
+          type: array
+          items:
+            type: string
+          description: values文件内容, 越靠后优先级越高
+          title: values
+        args:
+          type: array
+          items:
+            type: string
+          description: 额外的参数
+          title: args
+        valueFile:
+          type: string
+          description: value 文件，上一次更新使用的文件
+          title: valueFile
+        operator:
+          type: string
+          description: 操作者
+          title: operator
+        env:
+          type: string
+          description: 环境
+          title: env
+      description: 安装 release 的参数
+      title: InstallReleaseV1Req
+    helmmanagerInstallReleaseV1Resp:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        result:
+          type: boolean
+          description: 返回结果
+          title: result
+        requestID:
+          type: string
+          description: requestID
+          title: requestID
+        web_annotations:
+          $ref: "#/components/schemas/helmmanagerWebAnnotations"
+      description: 安装 release 的返回
+      title: InstallReleaseV1Resp
+    helmmanagerListAddonsResp:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        result:
+          type: boolean
+          description: 返回结果
+          title: result
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/helmmanagerAddons"
+          description: 组件列表
+          title: data
+        requestID:
+          type: string
+          description: requestID
+          title: requestID
+        web_annotations:
+          $ref: "#/components/schemas/helmmanagerWebAnnotations"
+      title: ListAddonsResp
+    helmmanagerListChartV1Resp:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        result:
+          type: boolean
+          description: 返回结果
+          title: result
+        data:
+          $ref: "#/components/schemas/helmmanagerChartListData"
+        requestID:
+          type: string
+          description: requestID
+          title: requestID
+        web_annotations:
+          $ref: "#/components/schemas/helmmanagerWebAnnotations"
+      description: 批量查询chart的返回
+      title: ListChartV1Resp
+    helmmanagerListChartVersionV1Resp:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        result:
+          type: boolean
+          description: 返回结果
+          title: result
+        data:
+          $ref: "#/components/schemas/helmmanagerChartVersionListData"
+        requestID:
+          type: string
+          description: requestID
+          title: requestID
+        web_annotations:
+          $ref: "#/components/schemas/helmmanagerWebAnnotations"
+      description: 查询chart版本的返回
+      title: ListChartVersionV1Resp
+    helmmanagerListReleaseV1Resp:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        result:
+          type: boolean
+          description: 返回结果
+          title: result
+        data:
+          $ref: "#/components/schemas/helmmanagerReleaseListData"
+        web_annotations:
+          $ref: "#/components/schemas/helmmanagerWebAnnotations"
+        requestID:
+          type: string
+          description: requestID
+          title: requestID
+      description: 查询指定集群的chart release信息的返回
+      title: ListReleaseV1Resp
+    helmmanagerListRepositoryResp:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        result:
+          type: boolean
+          description: 返回结果
+          title: result
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/helmmanagerRepository"
+          description: 仓库列表
+          title: data
+        requestID:
+          type: string
+          description: requestID
+          title: requestID
+        web_annotations:
+          $ref: "#/components/schemas/helmmanagerWebAnnotations"
+      description: 获取仓库列表的返回
+      title: ListRepositoryResp
+    helmmanagerPreviewAddonsReq:
+      type: object
+      properties:
+        projectCode:
+          type: string
+          description: 项目代码
+          title: projectCode
+        clusterID:
+          type: string
+          description: 所在的集群ID
+          title: clusterID
+        name:
+          type: string
+          description: 组件名称
+          title: name
+        version:
+          type: string
+          description: 组件版本
+          title: version
+        values:
+          type: string
+          description: values
+          title: values
+      title: PreviewAddonsReq
+    helmmanagerRelease:
+      type: object
+      properties:
+        name:
+          type: string
+          description: chart release名称
+          title: name
+        namespace:
+          type: string
+          description: 所在的namespace
+          title: namespace
+        revision:
+          type: integer
+          format: int64
+          description: 所处于的版本
+          title: revision
+        status:
+          type: string
+          description: 当前的状态
+          title: status
+        chart:
+          type: string
+          description: chart名称
+          title: chart
+        appVersion:
+          type: string
+          description: 所处于的app version
+          title: appVersion
+        updateTime:
+          type: string
+          description: 更新时间
+          title: updateTime
+        chartVersion:
+          type: string
+          description: chart的版本
+          title: chartVersion
+        createBy:
+          type: string
+          description: 创建者
+          title: createBy
+        updateBy:
+          type: string
+          description: 更新者
+          title: updateBy
+        message:
+          type: string
+          description: 报错消息
+          title: message
+        repo:
+          type: string
+          description: chart 仓库
+          title: repo
+        iamNamespaceID:
+          type: string
+          description: iamNamespaceID
+          title: iamNamespaceID
+        projectCode:
+          type: string
+          description: 项目编码
+          title: projectCode
+        clusterID:
+          type: string
+          description: 集群 ID
+          title: clusterID
+        env:
+          type: string
+          description: 环境
+          title: env
+    helmmanagerReleaseDetail:
+      type: object
+      properties:
+        name:
+          type: string
+          description: chart release名称
+          title: name
+        namespace:
+          type: string
+          description: 所在的namespace
+          title: namespace
+        revision:
+          type: integer
+          format: int64
+          description: 所处于的版本
+          title: revision
+        status:
+          type: string
+          description: 当前的状态
+          title: status
+        chart:
+          type: string
+          description: chart名称
+          title: chart
+        appVersion:
+          type: string
+          description: 所处于的app version
+          title: appVersion
+        updateTime:
+          type: string
+          description: 更新时间
+          title: updateTime
+        chartVersion:
+          type: string
+          description: chart的版本
+          title: chartVersion
+        values:
+          type: array
+          items:
+            type: string
+          description: 当前revision部署时的values文件
+          title: values
+        description:
+          type: string
+          description: release 描述
+          title: description
+        notes:
+          type: string
+          description: release notes
+          title: notes
+        args:
+          type: array
+          items:
+            type: string
+          description: 当前revision部署时的 helm 参数
+          title: args
+        createBy:
+          type: string
+          description: 创建者
+          title: createBy
+        updateBy:
+          type: string
+          description: 更新者
+          title: updateBy
+        message:
+          type: string
+          description: 报错消息
+          title: message
+        repo:
+          type: string
+          description: chart 仓库
+          title: repo
+        valueFile:
+          type: string
+          description: value 文件，上一次更新使用的文件
+          title: valueFile
+        releaseName:
+          type: string
+          description: chart release名称
+          title: releaseName
+        displayName:
+          type: string
+          description: release别名
+          title: displayName
+    helmmanagerReleaseHistory:
+      type: object
+      properties:
+        revision:
+          type: integer
+          format: int64
+          description: release revision
+          title: revision
+        name:
+          type: string
+          description: release name
+          title: name
+        namespace:
+          type: string
+          description: release namespace
+          title: namespace
+        updateTime:
+          type: string
+          description: 更新时间
+          title: updateTime
+        description:
+          type: string
+          description: release 描述
+          title: description
+        status:
+          type: string
+          description: release 状态
+          title: status
+        chart:
+          type: string
+          description: release chart
+          title: chart
+        chartVersion:
+          type: string
+          description: chart 版本
+          title: chartVersion
+        appVersion:
+          type: string
+          description: release appVersion
+          title: appVersion
+        values:
+          type: string
+          description: release values
+          title: values
+      description: release history
+      title: ReleaseHistory
+    helmmanagerReleaseListData:
+      type: object
+      properties:
+        page:
+          type: integer
+          format: int64
+          description: 页数
+          title: page
+        size:
+          type: integer
+          format: int64
+          description: 每页数量
+          title: size
+        total:
+          type: integer
+          format: int64
+          description: 总数
+          title: total
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/helmmanagerRelease"
+          description: 查询的chart release列表
+          title: data
+    helmmanagerReleasePreview:
+      type: object
+      properties:
+        newContents:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/helmmanagerFileContent"
+          description: 新版本 release manifest 内容，根据资源类型分类，键格式：{Kind}/{name}
+          title: newContents
+        oldContents:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/helmmanagerFileContent"
+          description: 旧版本 release manifest 内容，根据资源类型分类，键格式：{Kind}/{name}
+          title: oldContents
+        newContent:
+          type: string
+          description: 新版本 release manifest 内容
+          title: newContent
+        oldContent:
+          type: string
+          description: 旧版本 release manifest 内容
+          title: oldContent
+    helmmanagerReleasePreviewReq:
+      type: object
+      properties:
+        projectCode:
+          type: string
+          description: 项目代码
+          title: projectCode
+        clusterID:
+          type: string
+          description: 所在的集群ID
+          title: clusterID
+        namespace:
+          type: string
+          description: 所在的namespace
+          title: namespace
+        name:
+          type: string
+          description: chart release名称
+          title: name
+        repository:
+          type: string
+          description: chart所属的仓库
+          title: repository
+        chart:
+          type: string
+          description: chart名称
+          title: chart
+        version:
+          type: string
+          description: chart版本
+          title: version
+        values:
+          type: array
+          items:
+            type: string
+          description: values文件, 越靠后优先级越高
+          title: values
+        args:
+          type: array
+          items:
+            type: string
+          description: 额外的参数
+          title: args
+        revision:
+          type: integer
+          format: int64
+          description: release revision 版本, 如果revision为0, 则对比当前渲染结果和已部署的最新版本, 如果不为0,
+            则对比最新版本和指定版本
+          title: revision
+      description: release 预览的参数
+      title: ReleasePreviewReq
+    helmmanagerReleasePreviewResp:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        result:
+          type: boolean
+          description: 返回结果
+          title: result
+        data:
+          $ref: "#/components/schemas/helmmanagerReleasePreview"
+        requestID:
+          type: string
+          description: requestID
+          title: requestID
+        web_annotations:
+          $ref: "#/components/schemas/helmmanagerWebAnnotations"
+      description: release 预览的返回
+      title: ReleasePreviewResp
+    helmmanagerRepository:
+      type: object
+      properties:
+        projectCode:
+          type: string
+          description: 项目代码
+          title: projectCode
+        name:
+          type: string
+          description: 仓库名称
+          title: name
+        type:
+          type: string
+          description: 仓库类型
+          title: type
+        repoURL:
+          type: string
+          description: 当前仓库的url
+          title: repoURL
+        username:
+          type: string
+          description: 用户名
+          title: username
+        password:
+          type: string
+          description: 密码
+          title: password
+        remote:
+          type: boolean
+          description: 是否为远程仓库
+          title: remote
+        remoteURL:
+          type: string
+          description: 远程仓库地址
+          title: remoteURL
+        remoteUsername:
+          type: string
+          description: 远程仓库username
+          title: remoteUsername
+        remotePassword:
+          type: string
+          description: 远程仓库password
+          title: remotePassword
+        createBy:
+          type: string
+          description: 创建者
+          title: createBy
+        updateBy:
+          type: string
+          description: 更新者
+          title: updateBy
+        createTime:
+          type: string
+          description: 创建时间
+          title: createTime
+        updateTime:
+          type: string
+          description: 更新时间
+          title: updateTime
+        displayName:
+          type: string
+          description: 展示名称
+          title: displayName
+        public:
+          type: boolean
+          description: 是否是公共仓库
+          title: public
+    helmmanagerRollbackReleaseV1Req:
+      type: object
+      properties:
+        projectCode:
+          type: string
+          description: 项目代码
+          title: projectCode
+        clusterID:
+          type: string
+          description: 所在的集群ID
+          title: clusterID
+        namespace:
+          type: string
+          description: 所在的namespace
+          title: namespace
+        name:
+          type: string
+          description: chart release名称
+          title: name
+        revision:
+          type: integer
+          format: int64
+          description: 要回滚到的revision
+          title: revision
+      description: 回滚 release 的参数
+      title: RollbackReleaseV1Req
+    helmmanagerRollbackReleaseV1Resp:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        result:
+          type: boolean
+          description: 返回结果
+          title: result
+        requestID:
+          type: string
+          description: requestID
+          title: requestID
+        web_annotations:
+          $ref: "#/components/schemas/helmmanagerWebAnnotations"
+      description: 回滚 release 的返回
+      title: RollbackReleaseV1Resp
+    helmmanagerStopAddonsReq:
+      type: object
+      properties:
+        projectCode:
+          type: string
+          description: 项目代码
+          title: projectCode
+        clusterID:
+          type: string
+          description: 所在的集群ID
+          title: clusterID
+        name:
+          type: string
+          description: 组件名称
+          title: name
+      title: StopAddonsReq
+    helmmanagerStopAddonsResp:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        result:
+          type: boolean
+          description: 返回结果
+          title: result
+        requestID:
+          type: string
+          description: requestID
+          title: requestID
+        web_annotations:
+          $ref: "#/components/schemas/helmmanagerWebAnnotations"
+      title: StopAddonsResp
+    helmmanagerUninstallAddonsReq:
+      type: object
+      properties:
+        projectCode:
+          type: string
+          description: 项目代码
+          title: projectCode
+        clusterID:
+          type: string
+          description: 所在的集群ID
+          title: clusterID
+        name:
+          type: string
+          description: 组件名称
+          title: name
+      title: UninstallAddonsReq
+    helmmanagerUninstallAddonsResp:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        result:
+          type: boolean
+          description: 返回结果
+          title: result
+        requestID:
+          type: string
+          description: requestID
+          title: requestID
+        web_annotations:
+          $ref: "#/components/schemas/helmmanagerWebAnnotations"
+      title: UninstallAddonsResp
+    helmmanagerUninstallReleaseV1Req:
+      type: object
+      properties:
+        projectCode:
+          type: string
+          description: 项目代码
+          title: projectCode
+        clusterID:
+          type: string
+          description: 所在的集群ID
+          title: clusterID
+        namespace:
+          type: string
+          description: 所在的namespace
+          title: namespace
+        name:
+          type: string
+          description: chart release名称
+          title: name
+      description: 卸载 release 的参数
+      title: UninstallReleaseV1Req
+    helmmanagerUninstallReleaseV1Resp:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        result:
+          type: boolean
+          description: 返回结果
+          title: result
+        requestID:
+          type: string
+          description: requestID
+          title: requestID
+        web_annotations:
+          $ref: "#/components/schemas/helmmanagerWebAnnotations"
+      description: 卸载 release 的返回
+      title: UninstallReleaseV1Resp
+    helmmanagerUpdateRepositoryReq:
+      type: object
+      properties:
+        projectCode:
+          type: string
+          description: 项目代码
+          title: projectCode
+        name:
+          type: string
+          description: 仓库名称
+          title: name
+        type:
+          type: string
+          description: 仓库类型
+          title: type
+        remote:
+          type: boolean
+          description: 是否为远程仓库
+          title: remote
+        remoteURL:
+          type: string
+          description: 远程仓库地址
+          title: remoteURL
+        username:
+          type: string
+          description: 用户名
+          title: username
+        password:
+          type: string
+          description: 密码
+          title: password
+      description: 更新仓库的参数
+      title: UpdateRepositoryReq
+    helmmanagerUpdateRepositoryResp:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        result:
+          type: boolean
+          description: 返回结果
+          title: result
+        data:
+          $ref: "#/components/schemas/helmmanagerRepository"
+        requestID:
+          type: string
+          description: requestID
+          title: requestID
+        web_annotations:
+          $ref: "#/components/schemas/helmmanagerWebAnnotations"
+      description: 更新仓库的返回
+      title: UpdateRepositoryResp
+    helmmanagerUpgradeAddonsReq:
+      type: object
+      properties:
+        projectCode:
+          type: string
+          description: 项目代码
+          title: projectCode
+        clusterID:
+          type: string
+          description: 所在的集群ID
+          title: clusterID
+        name:
+          type: string
+          description: 组件名称
+          title: name
+        version:
+          type: string
+          description: 组件版本
+          title: version
+        values:
+          type: string
+          description: values
+          title: values
+      title: UpgradeAddonsReq
+    helmmanagerUpgradeAddonsResp:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        result:
+          type: boolean
+          description: 返回结果
+          title: result
+        requestID:
+          type: string
+          description: requestID
+          title: requestID
+        web_annotations:
+          $ref: "#/components/schemas/helmmanagerWebAnnotations"
+      title: UpgradeAddonsResp
+    helmmanagerUpgradeReleaseV1Req:
+      type: object
+      properties:
+        projectCode:
+          type: string
+          description: 项目代码
+          title: projectCode
+        clusterID:
+          type: string
+          description: 所在的集群ID
+          title: clusterID
+        namespace:
+          type: string
+          description: 所在的namespace
+          title: namespace
+        name:
+          type: string
+          description: chart release名称
+          title: name
+        repository:
+          type: string
+          description: chart所属的仓库
+          title: repository
+        chart:
+          type: string
+          description: chart名称
+          title: chart
+        version:
+          type: string
+          description: chart版本
+          title: version
+        values:
+          type: array
+          items:
+            type: string
+          description: values文件, 越靠后优先级越高
+          title: values
+        args:
+          type: array
+          items:
+            type: string
+          description: 额外的参数
+          title: args
+        valueFile:
+          type: string
+          description: value 文件，上一次更新使用的文件
+          title: valueFile
+        operator:
+          type: string
+          description: 操作者
+          title: operator
+        env:
+          type: string
+          description: 环境
+          title: env
+      description: 升级 release 的参数
+      title: UpgradeReleaseV1Req
+    helmmanagerUpgradeReleaseV1Resp:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        result:
+          type: boolean
+          description: 返回结果
+          title: result
+        requestID:
+          type: string
+          description: requestID
+          title: requestID
+        web_annotations:
+          $ref: "#/components/schemas/helmmanagerWebAnnotations"
+      description: 升级 release 的返回
+      title: UpgradeReleaseV1Resp
+    helmmanagerWebAnnotations:
+      type: object
+      properties:
+        perms:
+          type: object
+          description: 权限信息
+          title: perms
+      description: 权限信息返回
+      title: WebAnnotations
+    protobufAny:
+      type: object
+      properties:
+        type_url:
+          type: string
+          description: >-
+            A URL/resource name that uniquely identifies the type of the
+            serialized
+
+            protocol buffer message. This string must contain at least
+
+            one "/" character. The last segment of the URL's path must represent
+
+            the fully qualified name of the type (as in
+
+            `path/google.protobuf.Duration`). The name should be in a canonical form
+
+            (e.g., leading "." is not accepted).
+
+
+            In practice, teams usually precompile into the binary all types that they
+
+            expect it to use in the context of Any. However, for URLs which use the
+
+            scheme `http`, `https`, or no scheme, one can optionally set up a type
+
+            server that maps type URLs to message definitions as follows:
+
+
+            * If no scheme is provided, `https` is assumed.
+
+            * An HTTP GET on the URL must yield a [google.protobuf.Type][]
+              value in binary format, or produce an error.
+            * Applications are allowed to cache lookup results based on the
+              URL, or have them precompiled into a binary to avoid any
+              lookup. Therefore, binary compatibility needs to be preserved
+              on changes to types. (Use versioned type names to manage
+              breaking changes.)
+
+            Note: this functionality is not currently available in the official
+
+            protobuf release, and it is not used for type URLs beginning with
+
+            type.googleapis.com.
+
+
+            Schemes other than `http`, `https` (or the empty scheme) might be
+
+            used with implementation specific semantics.
+        value:
+          type: string
+          format: byte
+          description: Must be a valid serialized protocol buffer of the above specified
+            type.
+      description: >-
+        `Any` contains an arbitrary serialized protocol buffer message along
+        with a
+
+        URL that describes the type of the serialized message.
+
+
+        Protobuf library provides support to pack/unpack Any values in the form
+
+        of utility functions or additional generated methods of the Any type.
+
+
+        Example 1: Pack and unpack a message in C++.
+
+            Foo foo = ...;
+            Any any;
+            any.PackFrom(foo);
+            ...
+            if (any.UnpackTo(&foo)) {
+              ...
+            }
+
+        Example 2: Pack and unpack a message in Java.
+
+            Foo foo = ...;
+            Any any = Any.pack(foo);
+            ...
+            if (any.is(Foo.class)) {
+              foo = any.unpack(Foo.class);
+            }
+
+         Example 3: Pack and unpack a message in Python.
+
+            foo = Foo(...)
+            any = Any()
+            any.Pack(foo)
+            ...
+            if any.Is(Foo.DESCRIPTOR):
+              any.Unpack(foo)
+              ...
+
+         Example 4: Pack and unpack a message in Go
+
+             foo := &pb.Foo{...}
+             any, err := ptypes.MarshalAny(foo)
+             ...
+             foo := &pb.Foo{}
+             if err := ptypes.UnmarshalAny(any, foo); err != nil {
+               ...
+             }
+
+        The pack methods provided by protobuf library will by default use
+
+        'type.googleapis.com/full.type.name' as the type URL and the unpack
+
+        methods only use the fully qualified type name after the last '/'
+
+        in the type URL, for example "foo.bar.com/x/y.z" will yield type
+
+        name "y.z".
+
+
+
+        JSON
+
+        ====
+
+        The JSON representation of an `Any` value uses the regular
+
+        representation of the deserialized, embedded message, with an
+
+        additional field `@type` which contains the type URL. Example:
+
+            package google.profile;
+            message Person {
+              string first_name = 1;
+              string last_name = 2;
+            }
+
+            {
+              "@type": "type.googleapis.com/google.profile.Person",
+              "firstName": <string>,
+              "lastName": <string>
+            }
+
+        If the embedded message type is well-known and has a custom JSON
+
+        representation, that representation will be embedded adding a field
+
+        `value` which holds the custom JSON in addition to the `@type`
+
+        field. Example (for message [google.protobuf.Duration][]):
+
+            {
+              "@type": "type.googleapis.com/google.protobuf.Duration",
+              "value": "1.212s"
+            }
+    protobufNullValue:
+      type: string
+      enum:
+        - NULL_VALUE
+      default: NULL_VALUE
+      description: >-
+        `NullValue` is a singleton enumeration to represent the null value for
+        the
+
+        `Value` type union.
+
+         The JSON representation for `NullValue` is JSON `null`.
+
+         - NULL_VALUE: Null value.
+    runtimeError:
+      type: object
+      properties:
+        error:
+          type: string
+        code:
+          type: integer
+          format: int32
+        message:
+          type: string
+        details:
+          type: array
+          items:
+            $ref: "#/components/schemas/protobufAny"

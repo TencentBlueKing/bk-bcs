@@ -190,12 +190,30 @@ func BuildGetContainerAPIResp(
 			curContainerSpec = spec
 		}
 	}
+	if len(curContainerSpec) == 0 {
+		for _, csp := range mapx.GetList(podManifest, "spec.initContainers") {
+			spec, _ := csp.(map[string]interface{})
+			if containerName == spec["name"].(string) {
+				curContainerSpec = spec
+			}
+		}
+	}
+
 	for _, containerStatus := range mapx.GetList(podManifest, "status.containerStatuses") {
 		cs, _ := containerStatus.(map[string]interface{})
 		if containerName == cs["name"].(string) {
 			curContainerStatus = cs
 		}
 	}
+	if len(curContainerStatus) == 0 {
+		for _, containerStatus := range mapx.GetList(podManifest, "status.initContainerStatuses") {
+			cs, _ := containerStatus.(map[string]interface{})
+			if containerName == cs["name"].(string) {
+				curContainerStatus = cs
+			}
+		}
+	}
+
 	if len(curContainerSpec) == 0 || len(curContainerStatus) == 0 {
 		return nil, errorx.New(errcode.General, "container %s spec or status not found", containerName)
 	}

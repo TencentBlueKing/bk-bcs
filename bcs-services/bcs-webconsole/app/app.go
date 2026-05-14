@@ -224,6 +224,11 @@ func (c *WebConsoleManager) initMicroService() (micro.Service, microConf.Config,
 }
 
 // initHTTPService 初始化 gin Http 配置
+//
+// @title       BCS WebConsole API
+// @version     0.0.1
+// @description BCS WebConsole 提供基于 Web 的 Kubernetes 容器终端管理能力
+// @BasePath    /webconsole
 func (c *WebConsoleManager) initHTTPService() *gin.Engine {
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()

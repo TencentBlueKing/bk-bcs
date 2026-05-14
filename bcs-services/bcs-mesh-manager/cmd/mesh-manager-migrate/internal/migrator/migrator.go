@@ -505,9 +505,9 @@ func (m *Migrator) buildObservabilityConfig(
 	}
 
 	// 采样率配置
+	// istio < 1.21 版本使用 Pilot.TraceSampling（0.0-100.0）
 	if values.Pilot != nil && values.Pilot.TraceSampling != nil {
-		// Pilot 中的采样率是 0.0-1.0，需要转换为百分比
-		obsConfig.TracingConfig.TraceSamplingPercent = int32(*values.Pilot.TraceSampling * 100)
+		obsConfig.TracingConfig.TraceSamplingPercent = float32(*values.Pilot.TraceSampling)
 	}
 
 	return obsConfig

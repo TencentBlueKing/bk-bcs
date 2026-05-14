@@ -1,0 +1,6 @@
+replicaCount: {{ .Values.replicaCount }}
+image:
+  repository: {{ .Values.image.repository }}
+  tag: {{ index .Values.version "nginx" }}
+service:
+  type: ClusterIP

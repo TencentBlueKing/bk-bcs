@@ -37,8 +37,6 @@ func main() {
 		blog.Fatalf("init push service failed, %s", err.Error())
 	}
 
-	if err := server.Run(); err != nil {
-		blog.Fatalf("run push service failed, %s", err.Error())
-	}
+	server.Run()
 
 }

@@ -42,6 +42,8 @@
     <AddSubnetDialog
       :model-value="showSubnets"
       :cluster-data="clusterData"
+      :validate-msg="validateMsg"
+      :validate-fn="validateFn"
       @cancel="showSubnets = false"
       @confirm="handleConfirmAddSubnet" />
   </div>
@@ -60,6 +62,8 @@ import { ISubnet } from '@/views/cluster-manage/types/types';
 
 interface Props {
   data: ICluster
+  validateMsg?: string
+  validateFn?: Function
 }
 
 const props = defineProps<Props>();

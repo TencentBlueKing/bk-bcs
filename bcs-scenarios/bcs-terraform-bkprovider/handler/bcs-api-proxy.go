@@ -27,7 +27,8 @@ import (
 	pb "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-terraform-bkprovider/proto"
 )
 
-// BcsApiHandler api handler
+// BcsApiHandler is the api handler for bcs-terraform-bkprovider, which proxies requests
+// to BK NodeMan (host/agent management) and Tencent Cloud VPC (IP whitelist management).
 type BcsApiHandler struct {
 	adminUsers []string
 
@@ -41,7 +42,8 @@ type BcsApiHandler struct {
 	tVpcCli *xtencentcloud.VpcClient
 }
 
-// NewBcsApiHandler return new instance
+// NewBcsApiHandler creates and returns a new BcsApiHandler instance.
+// Panics if the Tencent Cloud VPC client cannot be created.
 func NewBcsApiHandler(opt *common.Options) *BcsApiHandler {
 	h := &BcsApiHandler{
 		adminUsers: opt.AdminUsers,
@@ -62,7 +64,7 @@ func NewBcsApiHandler(opt *common.Options) *BcsApiHandler {
 	return h
 }
 
-// InstallJob create job
+// InstallJob creates an agent installation job via BK NodeMan.
 func (b *BcsApiHandler) InstallJob(ctx context.Context, request *pb.InstallJobRequest,
 	response *pb.InstallJobResponse) error {
 	user, code, msg := getUserInfo(ctx)
@@ -72,7 +74,7 @@ func (b *BcsApiHandler) InstallJob(ctx context.Context, request *pb.InstallJobRe
 		return nil
 	}
 
-	nodeManCli := b.newBkNodeManCli(user.GetUsername())
+	nodeManCli := b.newBkNodeManCli(user)
 	installReq := &xbknodeman.InstallJobRequest{}
 	for _, host := range request.Hosts {
 		installReq.Hosts = append(installReq.Hosts, &xbknodeman.InstallHost{
@@ -107,7 +109,7 @@ func (b *BcsApiHandler) InstallJob(ctx context.Context, request *pb.InstallJobRe
 	return nil
 }
 
-// CreateCloud create cloud
+// CreateCloud creates a cloud area in BK NodeMan.
 func (b *BcsApiHandler) CreateCloud(ctx context.Context, request *pb.CloudCreateRequest,
 	response *pb.CloudCreateResponse) error {
 	user, code, msg := getUserInfo(ctx)
@@ -117,7 +119,7 @@ func (b *BcsApiHandler) CreateCloud(ctx context.Context, request *pb.CloudCreate
 		return nil
 	}
 
-	nodeManCli := b.newBkNodeManCli(user.GetUsername())
+	nodeManCli := b.newBkNodeManCli(user)
 	resp, err := nodeManCli.CreateCloud(ctx, &xbknodeman.CreateCloudRequest{
 		BkCloudName: request.BkCloudName,
 		Isp:         request.Isp,
@@ -136,7 +138,7 @@ func (b *BcsApiHandler) CreateCloud(ctx context.Context, request *pb.CloudCreate
 	return nil
 }
 
-// UpdateCloud update cloud
+// UpdateCloud updates the configuration of an existing cloud area in BK NodeMan.
 func (b *BcsApiHandler) UpdateCloud(ctx context.Context, request *pb.CloudUpdateRequest,
 	response *pb.CloudUpdateResponse) error {
 	user, code, msg := getUserInfo(ctx)
@@ -146,7 +148,7 @@ func (b *BcsApiHandler) UpdateCloud(ctx context.Context, request *pb.CloudUpdate
 		return nil
 	}
 
-	nodeManCli := b.newBkNodeManCli(user.GetUsername())
+	nodeManCli := b.newBkNodeManCli(user)
 	resp, err := nodeManCli.UpdateCloud(ctx, &xbknodeman.UpdateCloudRequest{
 		BkCloudID:   int64(request.BkCloudId),
 		BkCloudName: request.BkCloudName,
@@ -165,7 +167,7 @@ func (b *BcsApiHandler) UpdateCloud(ctx context.Context, request *pb.CloudUpdate
 	return nil
 }
 
-// ListCloud list all clouds
+// ListCloud retrieves all cloud areas from BK NodeMan.
 func (b *BcsApiHandler) ListCloud(ctx context.Context, request *pb.CloudListRequest,
 	response *pb.CloudListResponse) error {
 	user, code, msg := getUserInfo(ctx)
@@ -175,7 +177,7 @@ func (b *BcsApiHandler) ListCloud(ctx context.Context, request *pb.CloudListRequ
 		return nil
 	}
 
-	nodeManCli := b.newBkNodeManCli(user.GetUsername())
+	nodeManCli := b.newBkNodeManCli(user)
 	resp, err := nodeManCli.ListCloud(ctx, &xbknodeman.ListCloudRequest{})
 	if err != nil {
 		blog.Errorf("ListCloud failed,req:%s, err: %s", common.JsonMarshal(request), err.Error())
@@ -197,7 +199,7 @@ func (b *BcsApiHandler) ListCloud(ctx context.Context, request *pb.CloudListRequ
 	return nil
 }
 
-// DeleteCloud delete a cloud
+// DeleteCloud deletes a cloud area by its ID.
 func (b *BcsApiHandler) DeleteCloud(ctx context.Context, request *pb.CloudDeleteRequest,
 	response *pb.CloudDeleteResponse) error {
 	user, code, msg := getUserInfo(ctx)
@@ -214,7 +216,7 @@ func (b *BcsApiHandler) DeleteCloud(ctx context.Context, request *pb.CloudDelete
 	}
 
 	blog.Infof("[DeleteCloud]bk cloud id : %d, request user: %s", request.BkCloudId, user.GetUsername())
-	nodeManCli := b.newBkNodeManCli(user.GetUsername())
+	nodeManCli := b.newBkNodeManCli(user)
 	resp, err := nodeManCli.DeleteCloud(ctx, &xbknodeman.DeleteCloudRequest{
 		BkCloudID: int64(request.BkCloudId),
 	})
@@ -230,7 +232,7 @@ func (b *BcsApiHandler) DeleteCloud(ctx context.Context, request *pb.CloudDelete
 	return nil
 }
 
-// ListHost list hosts
+// ListHost queries hosts from BK NodeMan with pagination and filter conditions.
 func (b *BcsApiHandler) ListHost(ctx context.Context, request *pb.ListHostRequest,
 	response *pb.ListHostResponse) error {
 	user, code, msg := getUserInfo(ctx)
@@ -240,7 +242,7 @@ func (b *BcsApiHandler) ListHost(ctx context.Context, request *pb.ListHostReques
 		return nil
 	}
 
-	nodeManCli := b.newBkNodeManCli(user.GetUsername())
+	nodeManCli := b.newBkNodeManCli(user)
 	listReq := &xbknodeman.ListHostRequest{
 		Page:     int64(request.Page),
 		PageSize: int64(request.Pagesize),
@@ -285,7 +287,7 @@ func (b *BcsApiHandler) ListProxyHost(ctx context.Context, request *pb.ListProxy
 		return nil
 	}
 
-	nodeManCli := b.newBkNodeManCli(user.GetUsername())
+	nodeManCli := b.newBkNodeManCli(user)
 	listReq := &xbknodeman.GetProxyHostRequest{
 		BkCloudId: request.BkCloudId,
 	}
@@ -319,7 +321,7 @@ func (b *BcsApiHandler) GetJobDetail(ctx context.Context, request *pb.GetJobDeta
 		return nil
 	}
 
-	nodeManCli := b.newBkNodeManCli(user.GetUsername())
+	nodeManCli := b.newBkNodeManCli(user)
 	jobDetailReq := &xbknodeman.GetJobDetailRequest{
 		JobID:    request.JobId,
 		Page:     int64(request.Page),
@@ -454,6 +456,7 @@ func (b *BcsApiHandler) ListBkWhitelist(ctx context.Context, request *pb.ListBkW
 	return nil
 }
 
-func (b *BcsApiHandler) newBkNodeManCli(userName string) *xbknodeman.Client {
-	return xbknodeman.NewClient(b.bkEnv, b.bkAppCode, b.bkAppSecret, "", userName)
+// newBkNodeManCli creates a BK NodeMan API client with the current user's context.
+func (b *BcsApiHandler) newBkNodeManCli(user *BkUser) *xbknodeman.Client {
+	return xbknodeman.NewClient(b.bkEnv, b.bkAppCode, b.bkAppSecret, "", user.GetUsername(), user.TenantID)
 }

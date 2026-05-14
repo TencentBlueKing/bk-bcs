@@ -1,0 +1,183 @@
+# Default values for bcs-drplan-controller
+
+# Number of controller replicas
+replicaCount: 1
+
+image:
+  # Image repository
+  repository: bcs-drplan-controller
+  # Image pull policy
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion
+  tag: ""
+
+# Image pull secrets for private registries
+imagePullSecrets: []
+
+# Override the default name
+nameOverride: ""
+# Override the full name
+fullnameOverride: ""
+
+# ServiceAccount configuration
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Automatically mount a ServiceAccount's API credentials
+  automount: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+# Controller configuration
+controller:
+  # Log level (0=Info, 4=Debug)
+  logLevel: 0
+  # Enable leader election
+  leaderElection: true
+  # Metrics bind address
+  metricsAddr: ":8080"
+  # Health probe bind address
+  healthProbeAddr: ":8081"
+  # Reconcile frequency for DRPlanExecution (default: 30s)
+  reconcileFrequency: "30s"
+  # Enable HTTP/2
+  enableHTTP2: false
+  # Additional command-line arguments for the controller
+  # Example:
+  # extraArgs:
+  #   - -v=5
+  extraArgs: []
+
+# Webhook configuration
+webhook:
+  # Enable webhook server
+  enabled: true
+  # Webhook port
+  port: 9443
+  # Certificate configuration
+  certificate:
+    # Auto-generate certificates using Helm (recommended)
+    # If true, Helm will generate a self-signed CA and certificate
+    # Valid for 10 years (3650 days)
+    autoGenerate: true
+    # If autoGenerate is false, provide custom certificates (base64 encoded)
+    # Generate with: cat cert.pem | base64 -w 0
+    certPem: ""
+    # Generate with: cat key.pem | base64 -w 0
+    keyPem: ""
+    # Generate with: cat ca.pem | base64 -w 0
+    caBundle: ""
+
+# Resource limits and requests
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+# Pod annotations
+podAnnotations: {}
+
+# Pod labels
+podLabels: {}
+
+# Pod security context
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65532
+  fsGroup: 65532
+
+# Container security context
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+
+# Liveness probe configuration
+livenessProbe:
+  httpGet:
+    path: /healthz
+    port: 8081
+  initialDelaySeconds: 15
+  periodSeconds: 20
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+# Readiness probe configuration
+readinessProbe:
+  httpGet:
+    path: /readyz
+    port: 8081
+  initialDelaySeconds: 5
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+# Node selector
+nodeSelector: {}
+
+# Tolerations
+tolerations: []
+
+# Affinity rules
+affinity: {}
+
+# Priority class name
+priorityClassName: ""
+
+# CRD installation
+crds:
+  # Install CRDs as part of this chart
+  install: true
+  # Keep CRDs on chart uninstall
+  keep: true
+
+# RBAC configuration
+rbac:
+  # Create RBAC resources
+  create: true
+  # Additional rules to add to the controller's ClusterRole
+  additionalRules: []
+
+# Metrics service configuration
+metrics:
+  # Enable metrics service
+  enabled: true
+  # Service type
+  type: ClusterIP
+  # Service port
+  port: 8080
+  # ServiceMonitor for Prometheus Operator
+  serviceMonitor:
+    enabled: false
+    interval: 30s
+    scrapeTimeout: 10s
+    additionalLabels: {}
+
+# Additional environment variables
+env: []
+# - name: CUSTOM_VAR
+#   value: "value"
+
+# Additional volumes
+extraVolumes: []
+# - name: custom-vol
+#   emptyDir: {}
+
+# Additional volume mounts
+extraVolumeMounts: []
+# - name: custom-vol
+#   mountPath: /custom
+
+# Additional init containers
+initContainers: []
+
+# Additional sidecar containers
+sidecars: []

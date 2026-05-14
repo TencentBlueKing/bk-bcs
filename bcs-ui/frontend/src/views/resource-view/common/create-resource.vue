@@ -85,8 +85,8 @@ const props = defineProps({
     type: String as PropType<'Namespaced'|'Cluster'>,
     default: '',
   },
-  // CRD资源分两种，普通和定制，customized 用来区分普通和定制
-  customized: {
+  // CRD资源分两种，普通和定制，isCommonCrd 用来区分普通和定制
+  isCommonCrd: {
     type: [Boolean, String],
     default: false,
   },
@@ -135,7 +135,7 @@ const handleCreateResource = () => {
       crd: props.crd,
       formUpdate: props.formUpdate,
       scope: props.scope,
-      customized: props.customized,
+      isCommonCrd: props.isCommonCrd,
       version: props.crdOptions.version,
       group: props.crdOptions.group,
       resource: props.crdOptions.resource,

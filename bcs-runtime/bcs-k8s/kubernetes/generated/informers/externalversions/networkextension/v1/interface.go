@@ -20,6 +20,8 @@ import (
 
 // Interface provides access to all the informers in this group version.
 type Interface interface {
+	// HostNetPortPools returns a HostNetPortPoolInformer.
+	HostNetPortPools() HostNetPortPoolInformer
 	// Ingresses returns a IngressInformer.
 	Ingresses() IngressInformer
 	// Listeners returns a ListenerInformer.
@@ -39,6 +41,11 @@ type version struct {
 // New returns a new Interface.
 func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakListOptions internalinterfaces.TweakListOptionsFunc) Interface {
 	return &version{factory: f, namespace: namespace, tweakListOptions: tweakListOptions}
+}
+
+// HostNetPortPools returns a HostNetPortPoolInformer.
+func (v *version) HostNetPortPools() HostNetPortPoolInformer {
+	return &hostNetPortPoolInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
 // Ingresses returns a IngressInformer.

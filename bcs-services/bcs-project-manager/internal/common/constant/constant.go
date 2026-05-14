@@ -60,3 +60,22 @@ const (
 	// SystemTenantId system tenant id
 	SystemTenantId = "system"
 )
+
+const (
+	// ProviderInternal xxx
+	ProviderInternal = "internal"
+	// ProviderSelfProvision xxx
+	ProviderSelfProvision = "selfProvisionCloud"
+)
+
+// ProviderMap provider map
+var ProviderMap = map[string]string{
+	ProviderInternal: ProviderSelfProvision,
+}
+
+const (
+	// ResourceTypeYunti xxx
+	ResourceTypeYunti = "yunti"
+	// ResourceTypeSelf xxx
+	ResourceTypeSelf = "self"
+)

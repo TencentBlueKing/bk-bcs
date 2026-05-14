@@ -720,6 +720,34 @@ func Test_cmdbClient_GetBcsWorkload(t *testing.T) {
 			want:    nil,
 			wantErr: false,
 		},
+		{
+			name:   "test customResource",
+			fields: fields{},
+			args: args{
+				request: &client.GetBcsWorkloadRequest{
+					CommonRequest: client.CommonRequest{
+						BKBizID: 41,
+						Page: client.Page{
+							Limit: 100,
+							Start: 0,
+						},
+						Filter: &client.PropertyFilter{
+							Condition: "OR",
+							Rules: []client.Rule{
+								{
+									Field:    "bk_cluster_id",
+									Operator: "in",
+									Value:    []int64{879},
+								},
+							},
+						},
+					},
+					Kind: "customResource",
+				},
+			},
+			want:    nil,
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -837,6 +865,71 @@ func Test_cmdbClient_CreateBcsWorkload(t *testing.T) {
 				return
 			}
 			t.Logf("CreateBcsWorkload() got = %v", got)
+		})
+	}
+}
+
+// Test_cmdbClient_CreateBcsCustomResource tests the CreateBcsWorkload method of the cmdbClient with customResource kind.
+func Test_cmdbClient_CreateBcsCustomResource(t *testing.T) {
+	bkBizID := int64(100148)
+	kind := "customResource"
+	nsid := int64(1156)
+	name := "test-custom-resource"
+	replicas := int64(1)
+	minReadySeconds := int64(0)
+	strategyType := ""
+	crKind := "CronJob"
+	crApiVersion := "batch.tkestack.io/v1"
+
+	type fields struct {
+		config   *Options
+		userAuth string
+	}
+	type args struct {
+		request *client.CreateBcsWorkloadRequest
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    *[]int64
+		wantErr bool
+	}{
+		{
+			name:   "test customResource create",
+			fields: fields{},
+			args: args{
+				request: &client.CreateBcsWorkloadRequest{
+					BKBizID: &bkBizID,
+					Kind:    &kind,
+					Data: &[]client.CreateBcsWorkloadRequestData{
+						{
+							NamespaceID:     &nsid,
+							Name:            &name,
+							Labels:          &map[string]string{"app": "test"},
+							Selector:        &bkcmdbkube.LabelSelector{},
+							Replicas:        &replicas,
+							MinReadySeconds: &minReadySeconds,
+							StrategyType:    &strategyType,
+							CRKind:          &crKind,
+							CRApiVersion:    &crApiVersion,
+						},
+					},
+				},
+			},
+			want:    nil,
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := getCli()
+			got, err := c.CreateBcsWorkload(tt.args.request, nil)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("CreateBcsCustomResource() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			t.Logf("CreateBcsCustomResource() got = %v", got)
 		})
 	}
 }
@@ -1446,7 +1539,7 @@ func Test_deleteAllByBkBizID(t *testing.T) {
 	t.Logf("delete all pod success")
 
 	t.Logf("start delete all workload")
-	workloadTypes := []string{"deployment", "statefulSet", "daemonSet", "gameDeployment", "gameStatefulSet", "pods"}
+	workloadTypes := []string{"deployment", "statefulSet", "daemonSet", "gameDeployment", "gameStatefulSet", "pods", "customResource"}
 
 	for _, workloadType := range workloadTypes {
 		for {
@@ -1671,7 +1764,7 @@ func Test_deleteAllByBkBizIDAndBkClusterID(t *testing.T) {
 	t.Logf("delete all pod success")
 
 	t.Logf("start delete all workload")
-	workloadTypes := []string{"deployment", "statefulSet", "daemonSet", "gameDeployment", "gameStatefulSet", "pods"}
+	workloadTypes := []string{"deployment", "statefulSet", "daemonSet", "gameDeployment", "gameStatefulSet", "pods", "customResource"}
 
 	for _, workloadType := range workloadTypes {
 		for {
@@ -1986,7 +2079,7 @@ func getAllByBkBizIDNamespaces(namespaces map[int64]string, clusterUID string, c
 // Test_getAllByBkBizID tests get all bcs resources by bizid
 func Test_getAllByBkBizID(t *testing.T) { // nolint: cyclop
 	bkBizID = 110
-	workloadTypes := []string{"deployment", "statefulSet", "daemonSet", "gameDeployment", "gameStatefulSet"}
+	workloadTypes := []string{"deployment", "statefulSet", "daemonSet", "gameDeployment", "gameStatefulSet", "customResource"}
 	c := getCli()
 	t.Logf("start get all cluster")
 	clusters := make(map[int64]string, 0)

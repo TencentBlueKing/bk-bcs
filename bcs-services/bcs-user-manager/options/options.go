@@ -46,15 +46,16 @@ type UserManagerOptions struct {
 	// token notify feature
 	TokenNotify TokenNotifyOptions `json:"token_notify"`
 
-	IAMConfig        IAMConfig   `json:"iam_config"`
-	PermissionSwitch bool        `json:"permission_switch"`
-	Cmdb             CmdbConfig  `json:"cmdb"`
-	CommunityEdition bool        `json:"community_edition"`
-	TracingConf      TracingConf `json:"tracing_conf"`
-	BcsAPI           BcsAPI      `json:"bcs_api"`
-	Encrypt          Encrypt     `json:"encrypt" yaml:"encrypt"`
-	Activity         Activity    `json:"activity" yaml:"activity"`
-	Tenant           Tenant      `json:"tenant" yaml:"tenant"`
+	IAMConfig        IAMConfig     `json:"iam_config"`
+	PermissionSwitch bool          `json:"permission_switch"`
+	Cmdb             CmdbConfig    `json:"cmdb"`
+	CommunityEdition bool          `json:"community_edition"`
+	TracingConf      TracingConf   `json:"tracing_conf"`
+	BcsAPI           BcsAPI        `json:"bcs_api"`
+	Encrypt          Encrypt       `json:"encrypt" yaml:"encrypt"`
+	Activity         Activity      `json:"activity" yaml:"activity"`
+	Tenant           Tenant        `json:"tenant" yaml:"tenant"`
+	SharedCluster    SharedCluster `json:"shared_cluster" yaml:"shared_cluster"`
 }
 
 // TracingConf tracing config
@@ -182,4 +183,9 @@ type RedisConfig struct {
 // Tenant 多租户
 type Tenant struct {
 	Enable bool `json:"enable" yaml:"enable"`
+}
+
+// SharedCluster 共享集群配置
+type SharedCluster struct {
+	SkipResources []string `json:"skip_resources" yaml:"skip_resources"`
 }

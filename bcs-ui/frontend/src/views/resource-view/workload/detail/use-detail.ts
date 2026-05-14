@@ -2,6 +2,8 @@
 import yamljs from 'js-yaml';
 import { computed, ref } from 'vue';
 
+import { customResourceDetail, deleteCRDResource } from '@/api/modules/cluster-resource';
+import { ClusterAddonsService } from '@/api/modules/new-helm-manager';
 import $bkMessage from '@/common/bkmagic';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import $i18n from '@/i18n/i18n-setup';
@@ -22,6 +24,8 @@ export interface IDetailOptions {
   defaultActivePanel: string;
   clusterId: string;
   crd?: string;
+  version?: string;
+  isCommonCrd?: boolean | string;
 }
 
 export default function useDetail(options: IDetailOptions) {
@@ -29,6 +33,17 @@ export default function useDetail(options: IDetailOptions) {
   const detail = ref<IWorkloadDetail|null>(null);
   const activePanel = ref(options.defaultActivePanel);
   const showYamlPanel = ref(false);
+
+  const crdResource = computed(() => {
+    if (!options.crd) return '';
+    const firstDotIndex = options.crd.indexOf('.');
+    return firstDotIndex > -1 ? options.crd.substring(0, firstDotIndex) : options.crd;
+  });
+  const crdGroup = computed(() => {
+    if (!options.crd) return '';
+    const firstDotIndex = options.crd.indexOf('.');
+    return firstDotIndex > -1 ? options.crd.substring(firstDotIndex + 1) : '';
+  });
 
   // 标签数据
   const labels = computed(() => {
@@ -98,15 +113,34 @@ export default function useDetail(options: IDetailOptions) {
   };
 
   const handleGetCustomObjectDetail = async (loading = true) => {
-    const { name, crd, namespace, clusterId } = options;
+    const { name, crd, namespace, clusterId, isCommonCrd, version } = options;
     // workload详情
     isLoading.value = loading;
-    const res = await $store.dispatch('dashboard/getCustomObjectResourceDetail', {
-      $crdName: crd,
-      $namespaceId: namespace,
-      $name: name,
-      $clusterId: clusterId,
-    });
+    let res;
+    if (!isCommonCrd) {
+      res = await $store.dispatch('dashboard/getCustomObjectResourceDetail', {
+        $crdName: crd,
+        $namespaceId: namespace,
+        $name: name,
+        $clusterId: clusterId,
+      });
+    } else {
+      // 普通crd详情
+      res = await customResourceDetail({
+        format: 'manifest',
+        $clusterId: clusterId,
+        $name: name,
+        group: crdGroup.value,
+        namespace,
+        version,
+        resource: crdResource.value,
+      }, { needRes: true }).catch(() => ({
+        data: {
+          manifest: {},
+          manifestExt: {},
+        },
+      }));
+    }
     detail.value = res.data;
     webAnnotations.value = res.webAnnotations || { perms: {} };
     additionalColumns.value = res.webAnnotations?.additionalColumns;
@@ -122,7 +156,7 @@ export default function useDetail(options: IDetailOptions) {
   const handleUpdateResource = () => {
     const kind = detail.value?.manifest?.kind;
     const editMode = detail.value?.manifestExt?.editMode;
-    const { namespace, category, name, type } = options;
+    const { namespace, category, name, type, isCommonCrd, version } = options;
     if (editMode === 'form') {
       $router.push({
         name: 'dashboardFormResourceUpdate',
@@ -139,6 +173,12 @@ export default function useDetail(options: IDetailOptions) {
         },
       });
     } else {
+      const params = isCommonCrd ? {
+        isCommonCrd: `${isCommonCrd}`,
+        version,
+        group: crdGroup.value,
+        resource: crdResource.value,
+      } : {};
       $router.push({
         name: 'dashboardResourceUpdate',
         params: {
@@ -150,6 +190,7 @@ export default function useDetail(options: IDetailOptions) {
           category,
           kind,
           crd: options.crd,
+          ...params,
         },
       });
     }
@@ -158,7 +199,7 @@ export default function useDetail(options: IDetailOptions) {
   // 删除资源
   const handleDeleteResource = () => {
     const kind = detail.value?.manifest?.kind;
-    const { namespace, category, name, type, crd, clusterId } = options;
+    const { namespace, category, name, type, crd, clusterId, isCommonCrd, version } = options;
     $bkInfo({
       type: 'warning',
       clsName: 'custom-info-confirm',
@@ -167,7 +208,18 @@ export default function useDetail(options: IDetailOptions) {
       defaultInfo: true,
       confirmFn: async () => {
         let result = false;
-        if (type === 'crd') {
+        if (String(isCommonCrd) === 'true') {
+          result = await deleteCRDResource({
+            namespace,
+            kind,
+            $clusterId: clusterId,
+            $name: name,
+            group: crdGroup.value,
+            version,
+            resource: crdResource.value,
+          }).then(() => true)
+            .catch(() => false);
+        } else if (type === 'crd') {
           result = await $store.dispatch('dashboard/customResourceDelete', {
             namespace,
             $crd: crd,
@@ -227,5 +279,30 @@ export default function useDetail(options: IDetailOptions) {
     handleUpdateResource,
     handleDeleteResource,
     getJsonPathValue,
+  };
+}
+
+export function useMonitorCollector() {
+  function handleGetPluginManageUrl() {
+    const { href } = $router.resolve({
+      name: 'dbCrdcontroller',
+    });
+    return href;
+  }
+
+  // 检查是否安装监控采集器
+  const isMonitorInstalled = ref(true);
+  async function handleCheckMonitor(clusterId: string) {
+    const result = await ClusterAddonsService.GetAddonsDetail({
+      $clusterId: clusterId,
+      $name: 'bkmonitor-operator-stack',
+    })
+      .catch(() => {});
+    isMonitorInstalled.value = !!result?.status;
+  };
+  return {
+    handleGetPluginManageUrl,
+    isMonitorInstalled,
+    handleCheckMonitor,
   };
 }

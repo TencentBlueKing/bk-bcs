@@ -6,7 +6,7 @@ replace (
 	github.com/Tencent/bk-bcs/bcs-common => github.com/evanlixin/bk-bcs/bcs-common v0.0.0-20250616073156-6413baa64512
 	github.com/Tencent/bk-bcs/bcs-services/pkg => github.com/evanlixin/bk-bcs/bcs-services/pkg v0.0.0-20250616073156-6413baa64512
 	github.com/databus23/helm-diff/v3 => github.com/databus23/helm-diff/v3 v3.9.11
-	helm.sh/helm/v3 => github.com/adevjoe/helm/v3 v3.17.3-tx.1
+	helm.sh/helm/v3 => github.com/adevjoe/helm/v3 v3.17.3-tx.3
 	k8s.io/api => k8s.io/api v0.32.2
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.32.2
 	k8s.io/apimachinery => k8s.io/apimachinery v0.32.2

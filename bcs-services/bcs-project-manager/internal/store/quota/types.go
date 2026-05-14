@@ -56,8 +56,10 @@ func (qt ProjectQuotaType) String() string {
 }
 
 var (
-	// Host host 整机资源类型
+	// Host host 整机资源类型，对应selfProvisionCloud，承载yunti CA
 	Host ProjectQuotaType = "host"
+	// SelfHost 承载自建资源池，对应selfProvisionCloud，承载自建资源池
+	SelfHost ProjectQuotaType = "self_host"
 	// Common common 通用资源类型(包括区分不同类型的通用资源)
 	Common ProjectQuotaType = "common"
 	// Shared shared 共享集群资源类型
@@ -91,26 +93,75 @@ var (
 
 // ProjectQuota xxx
 type ProjectQuota struct {
-	CreateTime  int64                  `json:"createTime" bson:"createTime"`
-	UpdateTime  int64                  `json:"updateTime" bson:"updateTime"`
-	DeleteTime  int64                  `json:"deleteTime" bson:"deleteTime"`
-	Creator     string                 `json:"creator" bson:"creator"`
-	Updater     string                 `json:"updater" bson:"updater"`
-	QuotaId     string                 `json:"quotaId" bson:"quotaId"`
-	QuotaName   string                 `json:"quotaName" bson:"quotaName"`
-	Description string                 `json:"description" bson:"description"`
-	Provider    string                 `json:"provider" bson:"provider"`
-	QuotaType   ProjectQuotaType       `json:"quotaType" bson:"quotaType"`
-	Quota       *QuotaResource         `json:"quota" bson:"quota"`
-	ProjectId   string                 `json:"projectId" bson:"projectId"`
-	ProjectCode string                 `json:"projectCode" bson:"projectCode"`
-	ClusterId   string                 `json:"clusterId" bson:"clusterId"`
-	Namespace   string                 `json:"namespace" bson:"namespace"`
-	BusinessId  string                 `json:"businessId" bson:"businessId"`
-	IsDeleted   bool                   `json:"isDeleted" bson:"isDeleted"`
-	Status      ProjectQuotaStatusType `json:"status" bson:"status"`
-	Labels      map[string]string      `json:"labels" bson:"labels"`
-	Annotations map[string]string      `json:"annotations" bson:"annotations"`
+	CreateTime             int64                        `json:"createTime" bson:"createTime"`
+	UpdateTime             int64                        `json:"updateTime" bson:"updateTime"`
+	DeleteTime             int64                        `json:"deleteTime" bson:"deleteTime"`
+	Creator                string                       `json:"creator" bson:"creator"`
+	Updater                string                       `json:"updater" bson:"updater"`
+	QuotaId                string                       `json:"quotaId" bson:"quotaId"`
+	QuotaName              string                       `json:"quotaName" bson:"quotaName"`
+	Description            string                       `json:"description" bson:"description"`
+	Provider               string                       `json:"provider" bson:"provider"`
+	QuotaType              ProjectQuotaType             `json:"quotaType" bson:"quotaType"`
+	Quota                  *QuotaResource               `json:"quota" bson:"quota"`
+	ProjectId              string                       `json:"projectId" bson:"projectId"`
+	ProjectCode            string                       `json:"projectCode" bson:"projectCode"`
+	ClusterId              string                       `json:"clusterId" bson:"clusterId"`
+	Namespace              string                       `json:"namespace" bson:"namespace"`
+	BusinessId             string                       `json:"businessId" bson:"businessId"`
+	IsDeleted              bool                         `json:"isDeleted" bson:"isDeleted"`
+	Status                 ProjectQuotaStatusType       `json:"status" bson:"status"`
+	Labels                 map[string]string            `json:"labels" bson:"labels"`
+	Annotations            map[string]string            `json:"annotations" bson:"annotations"`
+	QuotaAttr              *ProjectQuotaAttr            `json:"quotaAttr" bson:"quotaAttr"`
+	QuotaSharedEnabled     bool                         `json:"quotaSharedEnabled" bson:"quotaSharedEnabled"`
+	QuotaSharedProjectList []*ProjectQuotaSharedProject `json:"quotaSharedProjectList" bson:"quotaSharedProjectList"`
+}
+
+// ProjectQuotaAttr 配额属性
+type ProjectQuotaAttr struct {
+	// SourceBkBizIDs, 资源来源 [all]不限业务; [100148]可使用100148业务 [1068, 100148]资源可来源于多个业务
+	SourceBkBizIDs string `json:"sourceBkBizIDs" bson:"sourceBkBizIDs"`
+	// SourceBkBizNames, 资源来源业务名称
+	SourceBkBizNames string `json:"sourceBkBizNames" bson:"sourceBkBizNames"`
+	// 计算类型 [General 通算, Intelligent智算]
+	ComputeType string `json:"computeType" bson:"computeType"`
+	// 购买时长类型 【once一次性、periodic周期性】 目前对于整机额度来说仅支持一次性购买
+	PurchaseDurationType string `json:"purchaseDurationType" bson:"purchaseDurationType"`
+	// 购买时长配置, 可能存在不限制时长
+	PurchaseDurationSettings string `json:"purchaseDurationSettings" bson:"purchaseDurationSettings"`
+	// 开始供应时间 UTC格式：2024-01-25 23:59:59
+	StartTime int64 `json:"startTime" bson:"startTime"`
+	// 截止供应时间 UTC格式：2024-01-31 23:59:59
+	EndTime int64 `json:"endTime" bson:"endTime"`
+}
+
+// ProjectQuotaLimit 配额限制
+type ProjectQuotaLimit struct {
+	// 配额数量（整机数量）
+	QuotaNum int64 `json:"quotaNum" bson:"quotaNum"`
+}
+
+// ProjectQuotaSharedProject 被共享的项目配置
+type ProjectQuotaSharedProject struct {
+	// 项目ID
+	ProjectID string `json:"projectId" bson:"projectId"`
+	// 项目Code
+	ProjectCode string `json:"projectCode" bson:"projectCode"`
+	// 项目名称
+	ProjectName string `json:"projectName" bson:"projectName"`
+	// 共享策略 ["elastic"弹性共享模式, "rigid"刚性共享模式]
+	ShareStrategy string `json:"shareStrategy" bson:"shareStrategy"`
+	// 使用上限配置
+	UsageLimit *ProjectQuotaLimit `json:"usageLimit" bson:"usageLimit"`
+	// 已使用量（实时统计）
+	UsedAmount *ProjectQuotaLimit `json:"usedAmount" bson:"usedAmount"`
+	// 共享开始时间
+	ShareStartTime int64 `json:"shareStartTime" bson:"shareStartTime"`
+	// 共享结束时间
+	ShareEndTime int64 `json:"shareEndTime" bson:"shareEndTime"`
+	// 共享状态 ["active"生效中, "expired"已过期, "suspended"已暂停]
+	Status string `json:"status" bson:"status"`
 }
 
 // QuotaResource quota resource type (包含整机资源类型 / 通用资源类型(按照匹配优先级确定项目维度、共享集群维度通用资源))

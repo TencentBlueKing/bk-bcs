@@ -1,0 +1,4496 @@
+openapi: 3.0.0
+info:
+  title: Bcs Project Manager API Doc
+  version: 0.0.1
+paths:
+  /bcsproject/v1/authorized_projects:
+    get:
+      summary: 查询有权限项目列表
+      description: 查询用户有权限的项目列表
+      operationId: BCSProject_ListAuthorizedProjects
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/bcsprojectListAuthorizedProjResp"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: all
+          description: all. 表示查询所有项目并且携带权限信息
+          in: query
+          required: false
+          schema:
+            type: boolean
+        - name: kind
+          description: kind. 按kind过滤项目
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: searchKey
+          description: businessID. 仅在all为true时生效, 表示通过项目名称/项目英文名模糊查询或项目ID/业务ID精确查询
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: offset
+          description: offset. 分页数据, 表示偏移量，仅在 all 为 true 时生效
+          in: query
+          required: false
+          schema:
+            type: string
+            format: int64
+        - name: limit
+          description: limit. 分页数据, 表示每页数量，仅在 all 为 true 时生效
+          in: query
+          required: false
+          schema:
+            type: string
+            format: int64
+      tags:
+        - BCSProject
+  /bcsproject/v1/business:
+    get:
+      summary: 查询业务列表
+      description: 查询业务列表
+      operationId: Business_ListBusiness
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/bcsprojectListBusinessResponse"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: useBCS
+          description: useBCS. 业务是否开启BCS容器服务
+          in: query
+          required: false
+          schema:
+            type: boolean
+      tags:
+        - Business
+  /bcsproject/v1/healthz:
+    get:
+      description: 探针API, 用于readiness探测
+      operationId: Healthz_Healthz
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/bcsprojectHealthzResponse"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      tags:
+        - Healthz
+  /bcsproject/v1/ping:
+    get:
+      description: 探针API, 用于liveness探测
+      operationId: Healthz_Ping
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/bcsprojectPingResponse"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      tags:
+        - Healthz
+  /bcsproject/v1/projectQuotas:
+    get:
+      summary: 查询项目资源quota列表
+      description: 通过查询参数过滤项目quota列表, 支持分页和全量数据
+      operationId: BCSProjectQuota_ListProjectQuotas
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/bcsprojectListProjectQuotasResponse"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: quotaId
+          description: quotaId. 配额Id
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: quotaName
+          description: quotaName. 配额中文名称
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: projectID
+          description: projectID. 项目ID, 全局唯一, 长度为32位字符串, 自动生成
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: projectCode
+          description: projectCode. 项目编码(英文缩写), 全局唯一, 长度不能超过32字符
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: businessID
+          description: businessID. 项目绑定的蓝鲸CMDB中业务ID信息
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: quotaType
+          description: quotaType. 资源类型(目前支持CA整机资源、共享集群维度资源)
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: provider
+          description: provider. 云底层资源提供方
+          in: query
+          required: false
+          schema:
+            type: string
+      tags:
+        - BCSProjectQuota
+    post:
+      summary: 创建项目配额信息
+      description: 创建项目配额信息
+      operationId: BCSProjectQuota_CreateProjectQuota
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/bcsprojectProjectQuotaResponse"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/bcsprojectCreateProjectQuotaRequest"
+        required: true
+      tags:
+        - BCSProjectQuota
+  "/bcsproject/v1/projectQuotas/projects/{projectIDOrCode}/quotas/statistics":
+    get:
+      summary: 查询项目配额使用情况
+      description: 查询用户项目quota的使用情况, 包括配额和已使用资源
+      operationId: BCSProjectQuota_GetProjectQuotasStatistics
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/bcsprojectGetProjectQuotasStatisticsResponse"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectIDOrCode
+          description: 项目ID或项目Code
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: quotaType
+          description: quotaType. 额度类型，支持 host/self_host/federation, 不填则为获取所有额度类型
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: isContainShared
+          description: isContainShared. 是否包含共享额度
+          in: query
+          required: false
+          schema:
+            type: boolean
+      tags:
+        - BCSProjectQuota
+  "/bcsproject/v1/projectQuotas/{quotaId}":
+    get:
+      summary: 查询项目quota资源信息
+      description: 通过quotaID查询项目quota信息
+      operationId: BCSProjectQuota_GetProjectQuota
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/bcsprojectProjectQuotaResponse"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: quotaId
+          description: 项目quotaID
+          in: path
+          required: true
+          schema:
+            type: string
+      tags:
+        - BCSProjectQuota
+    delete:
+      summary: DeleteProjectQuota 退回资源额度
+      description: 删除项目资源quota
+      operationId: BCSProjectQuota_DeleteProjectQuota
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/bcsprojectProjectQuotaResponse"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: quotaId
+          description: 项目资源quotaId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: onlyDeleteInfo
+          description: onlyDeleteInfo. 默认为false。设置为true时，仅删除所记录的信息，不会触发任何自动化流程。
+          in: query
+          required: false
+          schema:
+            type: boolean
+      tags:
+        - BCSProjectQuota
+    put:
+      summary: 更新项目资源quota
+      description: 更新项目quota信息
+      operationId: BCSProjectQuota_UpdateProjectQuota
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/bcsprojectProjectQuotaResponse"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: quotaId
+          description: 资源quotaId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/bcsprojectUpdateProjectQuotaRequest"
+        required: true
+      tags:
+        - BCSProjectQuota
+  "/bcsproject/v1/projectQuotas/{quotaId}/scaledown":
+    put:
+      summary: 缩容项目资源quota
+      description: 缩容项目quota
+      operationId: BCSProjectQuota_ScaleDownProjectQuota
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/bcsprojectScaleDownProjectQuotaResponse"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: quotaId
+          description: 配额Id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/bcsprojectScaleDownProjectQuotaRequest"
+        required: true
+      tags:
+        - BCSProjectQuota
+  "/bcsproject/v1/projectQuotas/{quotaId}/scaleup":
+    put:
+      summary: 扩容项目资源quota
+      description: 扩容项目quota
+      operationId: BCSProjectQuota_ScaleUpProjectQuota
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/bcsprojectScaleUpProjectQuotaResponse"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: quotaId
+          description: 配额Id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/bcsprojectScaleUpProjectQuotaRequest"
+        required: true
+      tags:
+        - BCSProjectQuota
+  "/bcsproject/v1/projectQuotas/{quotaId}/usage":
+    get:
+      summary: 查询项目配额使用情况
+      description: 查询用户项目quota的使用情况, 包括配额和已使用资源
+      operationId: BCSProjectQuota_GetProjectQuotasUsage
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/bcsprojectGetProjectQuotasUsageResp"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: quotaId
+          description: 项目quotaId
+          in: path
+          required: true
+          schema:
+            type: string
+      tags:
+        - BCSProjectQuota
+  /bcsproject/v1/projects:
+    get:
+      summary: 查询项目列表
+      description: 通过查询参数过滤项目列表, 支持分页和全量数据
+      operationId: BCSProject_ListProjects
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/bcsprojectListProjectsResponse"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectIDs
+          description: projectIDs. 项目ID, 多个以半角逗号分隔
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: names
+          description: names. 项目中文名称, 长度不能超过64字符, 多个以半角逗号分隔
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: projectCode
+          description: projectCode. 项目编码(英文缩写), 全局唯一, 长度不能超过64字符
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: searchName
+          description: searchName. 项目中文名称, 通过此字段模糊查询项目信息
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: kind
+          description: kind. 项目中集群类型, 允许k8s/mesos
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: offset
+          description: offset. 分页数据, 表示第几页
+          in: query
+          required: false
+          schema:
+            type: string
+            format: int64
+        - name: limit
+          description: limit. 分页数据, 每页数量
+          in: query
+          required: false
+          schema:
+            type: string
+            format: int64
+        - name: all
+          description: all. 表示查询全量数据
+          in: query
+          required: false
+          schema:
+            type: boolean
+        - name: businessID
+          description: businessID. 业务ID
+          in: query
+          required: false
+          schema:
+            type: string
+      tags:
+        - BCSProject
+    post:
+      summary: 创建项目
+      description: 创建项目信息
+      operationId: BCSProject_CreateProject
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/bcsprojectProjectResponse"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/bcsprojectCreateProjectRequest"
+        required: true
+      tags:
+        - BCSProject
+  "/bcsproject/v1/projects/{projectCode}/business":
+    get:
+      summary: 查询项目业务信息
+      description: 查询项目业务信息
+      operationId: Business_GetBusiness
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/bcsprojectGetBusinessResponse"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectCode
+          description: 项目英文名
+          in: path
+          required: true
+          schema:
+            type: string
+      tags:
+        - Business
+  "/bcsproject/v1/projects/{projectCode}/business/topology":
+    get:
+      summary: 查询业务拓扑列表
+      description: 查询业务拓扑列表
+      operationId: Business_GetBusinessTopology
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/bcsprojectGetBusinessTopologyResponse"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectCode
+          description: 项目英文名
+          in: path
+          required: true
+          schema:
+            type: string
+      tags:
+        - Business
+  "/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces":
+    get:
+      summary: 获取集群下所有命名空间
+      description: 获取集群下所有命名空间
+      operationId: Namespace_ListNamespaces
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/bcsprojectListNamespacesResponse"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectCode
+          description: 项目编码(英文缩写), 全局唯一, 长度不能超过64字符
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: clusterID
+          description: 集群ID
+          in: path
+          required: true
+          schema:
+            type: string
+      tags:
+        - Namespace
+    post:
+      summary: 创建命名空间
+      description: 创建命名空间
+      operationId: Namespace_CreateNamespace
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/bcsprojectCreateNamespaceResponse"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectCode
+          description: 项目编码(英文缩写), 全局唯一, 长度不能超过64字符
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: clusterID
+          description: 集群ID
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/bcsprojectCreateNamespaceRequest"
+        required: true
+      tags:
+        - Namespace
+  "/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/sync":
+    post:
+      summary: 同步命名空间
+      description: 同步命名空间
+      operationId: Namespace_SyncNamespace
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/bcsprojectSyncNamespaceResponse"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectCode
+          description: 项目编码(英文缩写), 全局唯一, 长度不能超过64字符
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: clusterID
+          description: 集群ID
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/bcsprojectSyncNamespaceRequest"
+        required: true
+      tags:
+        - Namespace
+  "/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}":
+    get:
+      summary: 获取单个命名空间
+      description: 获取单个命名空间
+      operationId: Namespace_GetNamespace
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/bcsprojectGetNamespaceResponse"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectCode
+          description: 项目编码(英文缩写), 全局唯一, 长度不能超过64字符
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: clusterID
+          description: 集群ID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: namespace
+          description: 命名空间名称
+          in: path
+          required: true
+          schema:
+            type: string
+      tags:
+        - Namespace
+    delete:
+      summary: 删除命名空间
+      description: 删除命名空间
+      operationId: Namespace_DeleteNamespace
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/bcsprojectDeleteNamespaceResponse"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectCode
+          description: 项目编码(英文缩写), 全局唯一, 长度不能超过64字符
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: clusterID
+          description: 集群ID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: namespace
+          description: 命名空间名称
+          in: path
+          required: true
+          schema:
+            type: string
+      tags:
+        - Namespace
+    put:
+      summary: 更新命名空间
+      description: 更新命名空间
+      operationId: Namespace_UpdateNamespace
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/bcsprojectUpdateNamespaceResponse"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectCode
+          description: 项目编码(英文缩写), 全局唯一, 长度不能超过64字符
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: clusterID
+          description: 集群ID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: namespace
+          description: 命名空间名称, 长度不能超过63字符,只能包含小写字母、数字，以及 '-',必须以字母开头，不能以 '-' 结尾
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/bcsprojectUpdateNamespaceRequest"
+        required: true
+      tags:
+        - Namespace
+  "/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/callback/create":
+    post:
+      summary: 创建命名空间itsm回调
+      description: 创建命名空间itsm回调
+      operationId: Namespace_CreateNamespaceCallback
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/bcsprojectNamespaceCallbackResponse"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectCode
+          description: 项目编码(英文缩写), 全局唯一, 长度不能超过64字符
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: clusterID
+          description: 集群ID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: namespace
+          description: 命名空间名称, 长度不能超过63字符,只能包含小写字母、数字，以及 '-',必须以字母开头，不能以 '-' 结尾
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        $ref: "#/components/requestBodies/bcsprojectNamespaceCallbackRequest"
+      tags:
+        - Namespace
+  "/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/callback/delete":
+    post:
+      summary: 删除命名空间 ITSM 回调
+      description: 删除命名空间 ITSM 回调
+      operationId: Namespace_DeleteNamespaceCallback
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/bcsprojectNamespaceCallbackResponse"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectCode
+          description: 项目编码(英文缩写), 全局唯一, 长度不能超过64字符
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: clusterID
+          description: 集群ID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: namespace
+          description: 命名空间名称, 长度不能超过63字符,只能包含小写字母、数字，以及 '-',必须以字母开头，不能以 '-' 结尾
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        $ref: "#/components/requestBodies/bcsprojectNamespaceCallbackRequest"
+      tags:
+        - Namespace
+  "/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/callback/update":
+    post:
+      summary: 更新命名空间 ITSM 回调
+      description: 更新命名空间 ITSM 回调
+      operationId: Namespace_UpdateNamespaceCallback
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/bcsprojectNamespaceCallbackResponse"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectCode
+          description: 项目编码(英文缩写), 全局唯一, 长度不能超过64字符
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: clusterID
+          description: 集群ID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: namespace
+          description: 命名空间名称, 长度不能超过63字符,只能包含小写字母、数字，以及 '-',必须以字母开头，不能以 '-' 结尾
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        $ref: "#/components/requestBodies/bcsprojectNamespaceCallbackRequest"
+      tags:
+        - Namespace
+  "/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/variables":
+    get:
+      summary: 获取命名空间的所有变量值
+      description: 获取命名空间的所有变量值
+      operationId: Variable_ListNamespaceVariables
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/bcsprojectListNamespaceVariablesResponse"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectCode
+          description: 项目编码(英文缩写), 全局唯一, 长度不能超过64字符
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: clusterID
+          description: 集群 id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: namespace
+          description: 命名空间名称
+          in: path
+          required: true
+          schema:
+            type: string
+      tags:
+        - Variable
+    put:
+      summary: 更新命名空间的所有变量值
+      description: 更新命名空间的所有变量值
+      operationId: Variable_UpdateNamespaceVariables
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/bcsprojectUpdateNamespaceVariablesResponse"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectCode
+          description: 项目编码(英文缩写), 全局唯一, 长度不能超过64字符
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: clusterID
+          description: 集群 id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: namespace
+          description: 命名空间名称
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/bcsprojectUpdateNamespaceVariablesRequest"
+        required: true
+      tags:
+        - Variable
+  "/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/variables/render":
+    get:
+      summary: 渲染变量在特定集群, 命名空间下的值
+      description: 渲染变量在特定集群, 命名空间下的值
+      operationId: Variable_RenderVariables
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/bcsprojectRenderVariablesResponse"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectCode
+          description: 项目编码(英文缩写), 全局唯一, 长度不能超过64字符
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: clusterID
+          description: 集群 id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: namespace
+          description: 命名空间名称
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: keyList
+          description: keyList. 变量 key 列表, 以半角逗号、分号或空格作为分隔
+          in: query
+          required: false
+          schema:
+            type: string
+      tags:
+        - Variable
+  "/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/withdraw":
+    post:
+      summary: 撤回命名空间审批
+      description: 撤回命名空间审批
+      operationId: Namespace_WithdrawNamespace
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/bcsprojectWithdrawNamespaceResponse"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectCode
+          description: 项目编码(英文缩写), 全局唯一, 长度不能超过64字符
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: clusterID
+          description: 集群ID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: namespace
+          description: 命名空间名称
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/bcsprojectWithdrawNamespaceRequest"
+        required: true
+      tags:
+        - Namespace
+  "/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/variables":
+    get:
+      summary: 获取集群的所有变量值
+      description: 获取集群的所有变量值
+      operationId: Variable_ListClusterVariables
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/bcsprojectListClusterVariablesResponse"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectCode
+          description: 项目编码(英文缩写), 全局唯一, 长度不能超过64字符
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: clusterID
+          description: 集群 id
+          in: path
+          required: true
+          schema:
+            type: string
+      tags:
+        - Variable
+    put:
+      summary: 更新集群的所有变量值
+      description: 更新集群的所有变量值
+      operationId: Variable_UpdateClusterVariables
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/bcsprojectUpdateClusterVariablesResponse"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectCode
+          description: 项目编码(英文缩写), 全局唯一, 长度不能超过64字符
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: clusterID
+          description: 集群 id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/bcsprojectUpdateClusterVariablesRequest"
+        required: true
+      tags:
+        - Variable
+  "/bcsproject/v1/projects/{projectCode}/variables":
+    get:
+      summary: 获取项目下所有变量定义
+      description: 获取项目下所有变量定义
+      operationId: Variable_ListVariableDefinitions
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/bcsprojectListVariableDefinitionsResponse"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectCode
+          description: 项目编码(英文缩写), 全局唯一, 长度不能超过64字符
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: scope
+          description: "scope. 变量作用域, 取值范围: global, cluster, namespace"
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: searchKey
+          description: searchKey. 变量key, 通过此字段模糊查询项目变量
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: offset
+          description: offset. 分页数据, 表示第几页
+          in: query
+          required: false
+          schema:
+            type: string
+            format: int64
+        - name: limit
+          description: limit. 分页数据, 每页数量
+          in: query
+          required: false
+          schema:
+            type: string
+            format: int64
+        - name: all
+          description: all. 是否查询全量数据
+          in: query
+          required: false
+          schema:
+            type: boolean
+      tags:
+        - Variable
+    delete:
+      summary: 批量删除变量定义
+      description: 批量删除变量定义
+      operationId: Variable_DeleteVariableDefinitions
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/bcsprojectDeleteVariableDefinitionsResponse"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectCode
+          description: 项目编码(英文缩写), 全局唯一, 长度不能超过64字符
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: idList
+          description: idList. 变量定义 id 列表, 以半角逗号、分号或空格作为分隔
+          in: query
+          required: false
+          schema:
+            type: string
+      tags:
+        - Variable
+    post:
+      summary: 创建变量
+      description: 创建变量
+      operationId: Variable_CreateVariable
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/bcsprojectCreateVariableResponse"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectCode
+          description: 项目编码(英文缩写), 全局唯一, 长度不能超过64字符
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/bcsprojectCreateVariableRequest"
+        required: true
+      tags:
+        - Variable
+  "/bcsproject/v1/projects/{projectCode}/variables/import":
+    post:
+      summary: 从文件中导入变量
+      description: 从文件中导入变量
+      operationId: Variable_ImportVariables
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/bcsprojectImportVariablesResponse"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectCode
+          description: 项目编码(英文缩写), 全局唯一, 长度不能超过64字符
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/bcsprojectImportVariablesRequest"
+        required: true
+      tags:
+        - Variable
+  "/bcsproject/v1/projects/{projectCode}/variables/{variableID}":
+    put:
+      summary: 更新变量
+      description: 更新变量
+      operationId: Variable_UpdateVariable
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/bcsprojectUpdateVariableResponse"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectCode
+          description: 项目编码(英文缩写), 全局唯一, 长度不能超过64字符
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: variableID
+          description: 项目编码(英文缩写), 全局唯一, 长度不能超过64字符
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/bcsprojectUpdateVariableRequest"
+        required: true
+      tags:
+        - Variable
+  "/bcsproject/v1/projects/{projectCode}/variables/{variableID}/cluster":
+    get:
+      summary: 获取所有集群的变量值
+      description: 获取所有集群的变量值
+      operationId: Variable_ListClustersVariables
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/bcsprojectListClustersVariablesResponse"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectCode
+          description: 项目编码(英文缩写), 全局唯一, 长度不能超过64字符
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: variableID
+          description: 变量 id
+          in: path
+          required: true
+          schema:
+            type: string
+      tags:
+        - Variable
+    put:
+      summary: 更新所有集群的变量值
+      description: 更新所有集群的变量值
+      operationId: Variable_UpdateClustersVariables
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/bcsprojectUpdateClustersVariablesResponse"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectCode
+          description: 项目编码(英文缩写), 全局唯一, 长度不能超过64字符
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: variableID
+          description: 变量 id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/bcsprojectUpdateClustersVariablesRequest"
+        required: true
+      tags:
+        - Variable
+  "/bcsproject/v1/projects/{projectCode}/variables/{variableID}/namespace":
+    get:
+      summary: 获取项目所有命名空间的变量值
+      description: 获取项目所有命名空间的变量值
+      operationId: Variable_ListNamespacesVariables
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/bcsprojectListNamespacesVariablesResponse"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectCode
+          description: 项目编码(英文缩写), 全局唯一, 长度不能超过64字符
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: variableID
+          description: 变量 id
+          in: path
+          required: true
+          schema:
+            type: string
+      tags:
+        - Variable
+    put:
+      summary: 更新项目所有命名空间的变量值
+      description: 更新项目所有命名空间的变量值
+      operationId: Variable_UpdateNamespacesVariables
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/bcsprojectUpdateNamespacesVariablesResponse"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectCode
+          description: 项目编码(英文缩写), 全局唯一, 长度不能超过64字符
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: variableID
+          description: 变量 id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/bcsprojectUpdateNamespacesVariablesRequest"
+        required: true
+      tags:
+        - Variable
+  "/bcsproject/v1/projects/{projectIDOrCode}":
+    get:
+      summary: 查询项目
+      description: 通过项目ID或英文缩写, 查询项目信息
+      operationId: BCSProject_GetProject
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/bcsprojectProjectResponse"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectIDOrCode
+          description: 项目ID或英文缩写
+          in: path
+          required: true
+          schema:
+            type: string
+      tags:
+        - BCSProject
+  "/bcsproject/v1/projects/{projectIDOrCode}/active":
+    get:
+      summary: 查询项目是否活跃
+      description: 查询项目是否活跃
+      operationId: BCSProject_GetProjectActive
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/bcsprojectGetProjectActiveResponse"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectIDOrCode
+          description: 项目ID或项目英文名
+          in: path
+          required: true
+          schema:
+            type: string
+      tags:
+        - BCSProject
+  "/bcsproject/v1/projects/{projectIDOrCode}/clusters/{clusterID}/api/v1/namespaces":
+    get:
+      summary: 获取原生命名空间内容
+      description: 获取原生命名空间内容
+      operationId: Namespace_ListNativeNamespacesContent
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                type: object
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectIDOrCode
+          description: 项目ID或项目英文名, 为 '-' 则不校验项目信息
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: clusterID
+          description: 集群ID
+          in: path
+          required: true
+          schema:
+            type: string
+      tags:
+        - Namespace
+  "/bcsproject/v1/projects/{projectIDOrCode}/clusters/{clusterID}/native/namespaces":
+    get:
+      summary: 获取原生命名空间列表
+      description: 获取原生命名空间列表
+      operationId: Namespace_ListNativeNamespaces
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/bcsprojectListNativeNamespacesResponse"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectIDOrCode
+          description: 项目ID或项目英文名, 为 '-' 则不校验项目信息
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: clusterID
+          description: 集群ID
+          in: path
+          required: true
+          schema:
+            type: string
+      tags:
+        - Namespace
+  "/bcsproject/v1/projects/{projectID}":
+    delete:
+      description: 删除项目
+      operationId: BCSProject_DeleteProject
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/bcsprojectProjectResponse"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectID
+          description: 项目ID
+          in: path
+          required: true
+          schema:
+            type: string
+      tags:
+        - BCSProject
+    put:
+      summary: 更新项目
+      description: 更新项目信息
+      operationId: BCSProject_UpdateProject
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/bcsprojectProjectResponse"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectID
+          description: 项目ID
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/bcsprojectUpdateProjectRequest"
+        required: true
+      tags:
+        - BCSProject
+  /bcsproject/v1/projects_for_iam:
+    get:
+      summary: 查询开启容器服务的项目列表用于IAM授权
+      description: 查询开启容器服务的项目列表用于IAM授权
+      operationId: BCSProject_ListProjectsForIAM
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/bcsprojectListProjectsForIAMResp"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      tags:
+        - BCSProject
+  "/bcsproject/v2/projectQuotas/projects/{projectIDOrCode}/quotas":
+    get:
+      summary: 查询项目资源quota列表
+      description: 通过查询参数过滤项目quota列表, 支持分页和全量数据
+      operationId: BCSProjectQuota_ListProjectQuotasV2
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/bcsprojectListProjectQuotasV2Response"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectIDOrCode
+          description: 项目ID 或者 项目Code
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: quotaId
+          description: quotaId. 配额Id
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: quotaName
+          description: quotaName. 配额中文名称
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: businessID
+          description: businessID. 项目绑定的蓝鲸CMDB中业务ID信息
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: quotaType
+          description: quotaType. 资源类型(目前支持CA整机资源、共享集群维度资源)
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: provider
+          description: provider. 云底层资源提供方
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: page
+          description: page. 分页页面
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int64
+        - name: limit
+          description: limit. 分页限制
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int64
+      tags:
+        - BCSProjectQuota
+  "/bcsproject/v2/projects/{projectID}":
+    put:
+      summary: 更新项目
+      description: 更新项目信息
+      operationId: BCSProject_UpdateProjectV2
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/bcsprojectProjectResponse"
+        default:
+          description: An unexpected error response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/runtimeError"
+      parameters:
+        - name: projectID
+          description: 项目ID
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/bcsprojectUpdateProjectV2Request"
+        required: true
+      tags:
+        - BCSProject
+security:
+  - ApiKeyAuth: []
+servers:
+  - url: /bcsapi/v4
+components:
+  requestBodies:
+    bcsprojectNamespaceCallbackRequest:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/bcsprojectNamespaceCallbackRequest"
+      required: true
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      name: Authorization
+      in: header
+  schemas:
+    bcsprojectAnnotation:
+      type: object
+      properties:
+        key:
+          type: string
+          description: key
+          title: key
+        value:
+          type: string
+          description: value
+          title: value
+    bcsprojectBusinessData:
+      type: object
+      properties:
+        businessID:
+          type: string
+          description: 业务ID
+          title: businessID
+        name:
+          type: string
+          description: 业务名称
+          title: name
+        maintainer:
+          type: array
+          items:
+            type: string
+          description: 业务运维人员
+          title: maintainer
+    bcsprojectCreateNamespaceRequest:
+      type: object
+      properties:
+        projectCode:
+          type: string
+          description: 项目编码(英文缩写), 全局唯一, 长度不能超过64字符
+          title: projectCode
+        clusterID:
+          type: string
+          description: 集群ID
+          title: projectCode
+        name:
+          type: string
+          description: 命名空间名称, 长度不能超过63字符,只能包含小写字母、数字，以及 '-',必须以字母开头，不能以 '-' 结尾
+          title: name
+        quota:
+          $ref: "#/components/schemas/bcsprojectResourceQuota"
+        labels:
+          type: array
+          items:
+            $ref: "#/components/schemas/bcsprojectLabel"
+          description: 命名空间标签
+          title: labels
+        annotations:
+          type: array
+          items:
+            $ref: "#/components/schemas/bcsprojectAnnotation"
+          description: 命名空间注解
+          title: annotations
+        variables:
+          type: array
+          items:
+            $ref: "#/components/schemas/bcsprojectVariableValue"
+          description: 命名空间变量列表
+          title: variables
+      description: 创建命名空间请求
+      title: CreateNamespaceRequest
+      required:
+        - projectCode
+        - clusterID
+        - name
+    bcsprojectCreateNamespaceResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        data:
+          $ref: "#/components/schemas/bcsprojectNamespaceData"
+        requestID:
+          type: string
+          description: 请求 ID
+          title: request id
+        web_annotations:
+          $ref: "#/components/schemas/bcsprojectPerms"
+    bcsprojectCreateProjectQuotaRequest:
+      type: object
+      properties:
+        quotaName:
+          type: string
+          description: 配额中文名称, 长度不能超过64字符
+          title: quotaName
+        projectID:
+          type: string
+          description: 项目ID, 全局唯一, 长度为32位字符串, 自动生成
+          title: projectID
+        projectCode:
+          type: string
+          description: 项目编码(英文缩写), 全局唯一, 长度不能超过32字符
+          title: projectCode
+        clusterId:
+          type: string
+          description: 集群ID
+          title: clusterId
+        clusterName:
+          type: string
+          description: 集群名称
+          title: clusterName
+        nameSpace:
+          type: string
+          description: 集群名称空间维度的额度管理
+          title: nameSpace
+        businessID:
+          type: string
+          description: 项目绑定的蓝鲸CMDB中业务ID信息
+          title: businessID
+        businessName:
+          type: string
+          description: 项目绑定的蓝鲸CMDB中业务名称
+          title: businessName
+        description:
+          type: string
+          description: 项目配额描述
+          title: description
+        quotaType:
+          type: string
+          description: 资源类型(目前支持CA整机资源、共享集群维度资源)
+          title: quotaType
+        provider:
+          type: string
+          description: quota资源的供应商, 不同provider支持多种类型的quota
+          title: provider
+        quota:
+          $ref: "#/components/schemas/bcsprojectQuotaResource"
+        labels:
+          type: object
+          additionalProperties:
+            type: string
+          description: 资源quota的标签配置
+          title: labels
+        annotations:
+          type: object
+          additionalProperties:
+            type: string
+          description: 资源quota的注解配置
+          title: annotations
+        quotaAttr:
+          $ref: "#/components/schemas/bcsprojectQuotaAttr"
+        quotaSharedEnabled:
+          type: boolean
+          description: 是否启用额度共享
+          title: quotaSharedEnabled
+        quotaSharedProjectList:
+          type: array
+          items:
+            $ref: "#/components/schemas/bcsprojectQuotaSharedProject"
+          description: 额度共享配置
+          title: quotaSharedProjectList
+      description: 创建项目维度的quota资源配额
+      title: CreateProjectQuotaRequest
+      required:
+        - name
+        - projectCode
+    bcsprojectCreateProjectRequest:
+      type: object
+      properties:
+        createTime:
+          type: string
+          description: 创建时间
+          title: createTime
+        creator:
+          type: string
+          description: 项目创建者
+          title: creator
+        projectID:
+          type: string
+          description: 项目ID, 全局唯一, 长度为32位字符串, 自动生成
+          title: projectID
+        name:
+          type: string
+          description: 项目中文名称, 长度不能超过64字符
+          title: name
+        projectCode:
+          type: string
+          description: 项目编码(英文缩写), 全局唯一, 长度不能超过64字符
+          title: projectCode
+        useBKRes:
+          type: boolean
+          description: 是否使用蓝鲸提供的资源池, 主要用于资源计费, 默认false
+          title: useBKRes
+        description:
+          type: string
+          description: 项目描述, 尽量限制在100字符
+          title: description
+        isOffline:
+          type: boolean
+          description: 项目是否已经下线, 默认false
+          title: isOffline
+        kind:
+          type: string
+          description: 项目中集群类型, 可选k8s/mesos
+          title: kind
+        businessID:
+          type: string
+          description: 项目绑定的蓝鲸CMDB中业务ID信息
+          title: businessID
+        isSecret:
+          type: boolean
+          description: 是否为保密项目, 默认为false
+          title: isSecret
+        projectType:
+          type: integer
+          format: int64
+          description: 项目类型, 保留字段, 默认为0, 可选 1:手游, 2:端游, 3:页游, 4:平台产品, 5:支撑产品
+          title: type
+        deployType:
+          type: integer
+          format: int64
+          description: 业务部署类型, 保留字段, 1:物理机部署, 2:容器部署
+          title: deployType
+        BGID:
+          type: string
+          description: 事业群ID, 保留字段, 默认为0
+          title: bgID
+        BGName:
+          type: string
+          description: 事业群名称, 保留字段, 默认为空
+          title: bgName
+        deptID:
+          type: string
+          description: 部门ID, 保留字段, 默认为0
+          title: deptID
+        deptName:
+          type: string
+          description: 部门名称, 保留字段, 默认为空
+          title: deptName
+        centerID:
+          type: string
+          description: 中心ID, 保留字段, 默认为0
+          title: centerID
+        centerName:
+          type: string
+          description: 中心名称, 保留字段, 默认为空
+          title: centerName
+        labels:
+          type: object
+          additionalProperties:
+            type: string
+          description: project的标签配置
+          title: labels
+        annotations:
+          type: object
+          additionalProperties:
+            type: string
+          description: project的注解配置
+          title: annotations
+      description: 创建项目
+      title: CreateProjectRequest
+      required:
+        - name
+        - projectCode
+    bcsprojectCreateVariableData:
+      type: object
+      properties:
+        id:
+          type: string
+          description: 变量 id
+          title: id
+        projectCode:
+          type: string
+          description: 项目编码(英文缩写), 全局唯一, 长度不能超过64字符
+          title: projectCode
+        name:
+          type: string
+          description: 变量名称, 长度不能超过32字符
+          title: name
+        key:
+          type: string
+          description: 变量 key, 项目内唯一, 长度不能超过64字符
+          title: key
+        scope:
+          type: string
+          description: "变量作用域, 取值范围: global, cluster, namespace"
+          title: name
+        default:
+          type: string
+          description: 变量默认值
+          title: default
+        desc:
+          type: string
+          description: 变量说明与描述, 限制在100字符以内
+          title: desc
+        category:
+          type: string
+          description: "变量类型, 取值范围: sys, custom"
+          title: category
+    bcsprojectCreateVariableRequest:
+      type: object
+      properties:
+        projectCode:
+          type: string
+          description: 项目编码(英文缩写), 全局唯一, 长度不能超过64字符
+          title: projectCode
+        name:
+          type: string
+          description: 变量名称, 长度不能超过32字符
+          title: name
+        key:
+          type: string
+          description: 变量 key，项目内唯一，长度不能超过64字符
+          title: key
+        scope:
+          type: string
+          description: 变量作用域，取值范围：global, cluster, namespace
+          title: name
+        default:
+          type: string
+          description: 变量默认值
+          title: default
+        desc:
+          type: string
+          description: 变量说明与描述, 限制在100字符以内
+          title: desc
+      description: 创建变量请求
+      title: CreateVariableRequest
+      required:
+        - projectCode
+        - name
+        - key
+    bcsprojectCreateVariableResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        data:
+          $ref: "#/components/schemas/bcsprojectCreateVariableData"
+        requestID:
+          type: string
+          description: 请求 ID
+          title: request id
+    bcsprojectDataDisk:
+      type: object
+      properties:
+        diskType:
+          type: string
+          description: 数据盘类型，LOCAL_BASIC（默认）,LOCAL_SSD,CLOUD_BASE,CLOUD_SSD,CLOUD_PREMIUM(高性能云硬盘)
+          title: diskType
+        diskSize:
+          type: string
+          description: 数据盘大小，10G起跳，默认为0，为0时不购买
+          title: diskSize
+      title: DataDisk 数据盘定义
+    bcsprojectDeleteNamespaceResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        data:
+          type: string
+          description: data
+          title: data
+        requestID:
+          type: string
+          description: 请求 ID
+          title: request id
+        perms:
+          $ref: "#/components/schemas/bcsprojectPerms"
+    bcsprojectDeleteVariableDefinitionsData:
+      type: object
+      properties:
+        total:
+          type: integer
+          format: int64
+          description: 删除数量
+          title: total
+      description: 批量删除变量定义数据
+      title: DeleteVariableDefinitionsData
+    bcsprojectDeleteVariableDefinitionsResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        data:
+          $ref: "#/components/schemas/bcsprojectDeleteVariableDefinitionsData"
+        requestID:
+          type: string
+          description: 请求 ID
+          title: request id
+    bcsprojectDeviceInfo:
+      type: object
+      properties:
+        deviceType:
+          type: string
+        deviceQuota:
+          type: string
+        deviceQuotaUsed:
+          type: string
+        attributes:
+          type: object
+          additionalProperties:
+            type: string
+      title: DeviceInfo device data (cpu/mem/gpu)
+    bcsprojectGetBusinessResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        data:
+          $ref: "#/components/schemas/bcsprojectBusinessData"
+        requestID:
+          type: string
+          description: 请求 ID
+          title: request id
+        web_annotations:
+          $ref: "#/components/schemas/bcsprojectPerms"
+    bcsprojectGetBusinessTopologyResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/bcsprojectTopologyData"
+          description: 返回可用业务列表
+          title: data
+        requestID:
+          type: string
+          description: 请求 ID
+          title: request id
+        web_annotations:
+          $ref: "#/components/schemas/bcsprojectPerms"
+    bcsprojectGetNamespaceResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        data:
+          $ref: "#/components/schemas/bcsprojectNamespaceData"
+        requestID:
+          type: string
+          description: 请求 ID
+          title: request id
+        web_annotations:
+          $ref: "#/components/schemas/bcsprojectPerms"
+    bcsprojectGetProjectActiveResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        data:
+          $ref: "#/components/schemas/bcsprojectProjectActiveData"
+        requestID:
+          type: string
+          description: 请求 ID
+          title: request id
+    bcsprojectGetProjectQuotasStatisticsResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        data:
+          $ref: "#/components/schemas/bcsprojectProjectQuotasStatisticsData"
+        requestID:
+          type: string
+          description: 请求 ID
+          title: request id
+    bcsprojectGetProjectQuotasUsageData:
+      type: object
+      properties:
+        quota:
+          $ref: "#/components/schemas/bcsprojectProjectQuota"
+        region:
+          type: string
+        instanceType:
+          type: string
+        quotaUsage:
+          $ref: "#/components/schemas/bcsprojectZoneResourceUsage"
+        cpu:
+          type: integer
+          format: int64
+        mem:
+          type: integer
+          format: int64
+        gpu:
+          type: integer
+          format: int64
+    bcsprojectGetProjectQuotasUsageResp:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        data:
+          $ref: "#/components/schemas/bcsprojectGetProjectQuotasUsageData"
+        requestID:
+          type: string
+          description: 请求 ID
+          title: request id
+        web_annotations:
+          $ref: "#/components/schemas/bcsprojectPerms"
+    bcsprojectHealthzData:
+      type: object
+      properties:
+        status:
+          type: string
+          description: 服务整体状态
+          title: status
+        mongoStatus:
+          type: string
+          description: 服务依赖的 mongo 状态
+          title: mongo status
+    bcsprojectHealthzResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        data:
+          $ref: "#/components/schemas/bcsprojectHealthzData"
+        requestID:
+          type: string
+          description: 请求 ID
+          title: request id
+    bcsprojectImportVariableData:
+      type: object
+      properties:
+        name:
+          type: string
+          description: 变量名称, 长度不能超过32字符
+          title: name
+        key:
+          type: string
+          description: 变量 key，项目内唯一，长度不能超过64字符
+          title: key
+        scope:
+          type: string
+          description: 变量作用域，取值范围：global, cluster, namespace
+          title: name
+        value:
+          type: string
+          description: 变量默认值
+          title: value
+        desc:
+          type: string
+          description: 变量说明与描述, 限制在100字符以内
+          title: desc
+        vars:
+          type: array
+          items:
+            $ref: "#/components/schemas/bcsprojectImportVariableVarData"
+          description: 变量值列表
+          title: vars
+    bcsprojectImportVariableVarData:
+      type: object
+      properties:
+        clusterID:
+          type: string
+          description: 集群ID
+          title: clusterID
+        namespace:
+          type: string
+          description: 命名空间
+          title: namespace
+        value:
+          type: string
+          description: 变量值
+          title: value
+    bcsprojectImportVariablesRequest:
+      type: object
+      properties:
+        projectCode:
+          type: string
+          description: 项目编码(英文缩写), 全局唯一, 长度不能超过64字符
+          title: projectCode
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/bcsprojectImportVariableData"
+          description: 变量列表
+          title: data
+      description: 从文件导入变量请求
+      title: ImportVariablesRequest
+      required:
+        - projectCode
+    bcsprojectImportVariablesResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        requestID:
+          type: string
+          description: 请求 ID
+          title: request id
+    bcsprojectInstanceTypeConfig:
+      type: object
+      properties:
+        region:
+          type: string
+          description: 地域
+          title: region
+        instanceType:
+          type: string
+          description: 机型
+          title: instanceType
+        cpu:
+          type: integer
+          format: int64
+          description: 机型cpu信息，与机型instanceType互斥，比instanceType优先级高
+          title: cpu
+        mem:
+          type: integer
+          format: int64
+          description: 机型mem信息，与机型instanceType互斥，比instanceType优先级高
+          title: mem
+        gpu:
+          type: integer
+          format: int64
+          description: 机型gpu信息，与机型instanceType互斥，比instanceType优先级高，可以会为0
+          title: gpu
+        zoneId:
+          type: string
+          description: 可用区Id
+          title: zoneId
+        zoneName:
+          type: string
+          description: 可用区名称
+          title: zoneName
+        quotaNum:
+          type: integer
+          format: int64
+          description: 机型申请的配额
+          title: quotaNum
+        quotaUsed:
+          type: integer
+          format: int64
+          description: 机型已使用的配额
+          title: quotaUsed
+        systemDisk:
+          $ref: "#/components/schemas/bcsprojectDataDisk"
+        dataDisks:
+          type: array
+          items:
+            $ref: "#/components/schemas/bcsprojectDataDisk"
+          description: 数据盘信息，无默认设置则不购买
+          title: dataDisks
+      title: InstanceTypeConfig 整机资源配置
+    bcsprojectLabel:
+      type: object
+      properties:
+        key:
+          type: string
+          description: key
+          title: key
+        value:
+          type: string
+          description: value
+          title: value
+    bcsprojectListAuthorizedProjResp:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        data:
+          $ref: "#/components/schemas/bcsprojectListProjectData"
+        requestID:
+          type: string
+          description: 请求 ID
+          title: request id
+        web_annotations:
+          $ref: "#/components/schemas/bcsprojectPerms"
+    bcsprojectListBusinessResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/bcsprojectBusinessData"
+          description: 返回可用业务列表
+          title: data
+        requestID:
+          type: string
+          description: 请求 ID
+          title: request id
+        web_annotations:
+          $ref: "#/components/schemas/bcsprojectPerms"
+    bcsprojectListClusterVariablesResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        data:
+          $ref: "#/components/schemas/bcsprojectListVariableValuesData"
+        requestID:
+          type: string
+          description: 请求 ID
+          title: request id
+    bcsprojectListClustersVariablesResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        data:
+          $ref: "#/components/schemas/bcsprojectListVariableValuesData"
+        requestID:
+          type: string
+          description: 请求 ID
+          title: request id
+    bcsprojectListNamespaceVariablesResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        data:
+          $ref: "#/components/schemas/bcsprojectListVariableValuesData"
+        requestID:
+          type: string
+          description: 请求 ID
+          title: request id
+    bcsprojectListNamespacesResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/bcsprojectNamespaceData"
+          description: 返回详细信息, 可以为空
+          title: data
+        requestID:
+          type: string
+          description: 请求 ID
+          title: request id
+        web_annotations:
+          $ref: "#/components/schemas/bcsprojectPerms"
+    bcsprojectListNamespacesVariablesResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        data:
+          $ref: "#/components/schemas/bcsprojectListVariableValuesData"
+        requestID:
+          type: string
+          description: 请求 ID
+          title: request id
+    bcsprojectListNativeNamespacesResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/bcsprojectNativeNamespaceData"
+          description: 返回详细信息, 可以为空
+          title: data
+        requestID:
+          type: string
+          description: 请求 ID
+          title: request id
+        web_annotations:
+          $ref: "#/components/schemas/bcsprojectPerms"
+    bcsprojectListProjectData:
+      type: object
+      properties:
+        total:
+          type: integer
+          format: int64
+          description: 总量
+          title: total
+        results:
+          type: array
+          items:
+            $ref: "#/components/schemas/bcsprojectProject"
+          description: 项目数据
+          title: results
+      description: 项目列表数据
+      title: ListProjectData
+    bcsprojectListProjectQuotasData:
+      type: object
+      properties:
+        total:
+          type: integer
+          format: int64
+          description: 总量
+          title: total
+        results:
+          type: array
+          items:
+            $ref: "#/components/schemas/bcsprojectProjectQuota"
+          description: 项目资源quota数据
+          title: results
+      description: 项目资源quota数据
+      title: ListProjectQuotasData
+    bcsprojectListProjectQuotasResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        data:
+          $ref: "#/components/schemas/bcsprojectListProjectQuotasData"
+        requestID:
+          type: string
+          description: 请求 ID
+          title: request id
+        web_annotations:
+          $ref: "#/components/schemas/bcsprojectPerms"
+    bcsprojectListProjectQuotasV2Response:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        data:
+          $ref: "#/components/schemas/bcsprojectListProjectQuotasData"
+        requestID:
+          type: string
+          description: 请求 ID
+          title: request id
+        web_annotations:
+          $ref: "#/components/schemas/bcsprojectPerms"
+    bcsprojectListProjectsForIAMResp:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/bcsprojectListProjectsForIAMRespProject"
+          description: 返回项目信息, 包含总量及项目列表
+          title: data
+        requestID:
+          type: string
+          description: 请求 ID
+          title: request id
+    bcsprojectListProjectsForIAMRespProject:
+      type: object
+      properties:
+        name:
+          type: string
+          description: 项目中文名称, 长度不能超过64字符
+          title: name
+        projectID:
+          type: string
+          description: 项目ID, 全局唯一, 长度为32位字符串, 自动生成
+          title: projectID
+        projectCode:
+          type: string
+          description: 项目编码(英文缩写), 全局唯一, 长度不能超过32字符
+          title: projectCode
+        businessID:
+          type: string
+          description: 项目绑定的蓝鲸CMDB中业务ID信息
+          title: businessID
+        managers:
+          type: string
+          description: 项目管理人员，默认为创建者+更新者
+          title: managers
+        bkmSpaceBizID:
+          type: integer
+          format: int32
+          description: 项目绑定的蓝鲸监控的空间业务ID
+          title: bkmSpaceBizID
+        bkmSpaceName:
+          type: string
+          description: 项目绑定的蓝鲸监控的空间名称
+          title: bkmSpaceName
+    bcsprojectListProjectsResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        data:
+          $ref: "#/components/schemas/bcsprojectListProjectData"
+        requestID:
+          type: string
+          description: 请求 ID
+          title: request id
+        web_annotations:
+          $ref: "#/components/schemas/bcsprojectPerms"
+    bcsprojectListVariableDefinitionData:
+      type: object
+      properties:
+        total:
+          type: integer
+          format: int64
+          description: 总量
+          title: total
+        results:
+          type: array
+          items:
+            $ref: "#/components/schemas/bcsprojectVariableDefinition"
+          description: 变量定义数据
+          title: results
+      description: 项目列表数据
+      title: ListVariableDefinitionData
+    bcsprojectListVariableDefinitionsResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        data:
+          $ref: "#/components/schemas/bcsprojectListVariableDefinitionData"
+        requestID:
+          type: string
+          description: 请求 ID
+          title: request id
+    bcsprojectListVariableValuesData:
+      type: object
+      properties:
+        total:
+          type: integer
+          format: int64
+          description: 总量
+          title: total
+        results:
+          type: array
+          items:
+            $ref: "#/components/schemas/bcsprojectVariableValue"
+          description: 集群变量数据
+          title: results
+      description: 集群变量列表数据
+      title: ListVariableValuesData
+    bcsprojectNamespaceCallbackRequest:
+      type: object
+      properties:
+        projectCode:
+          type: string
+          description: 项目编码(英文缩写), 全局唯一, 长度不能超过64字符
+          title: projectCode
+        clusterID:
+          type: string
+          description: 集群ID
+          title: projectCode
+        namespace:
+          type: string
+          description: 命名空间名称, 长度不能超过63字符,只能包含小写字母、数字，以及 '-',必须以字母开头，不能以 '-' 结尾
+          title: namespace
+        title:
+          type: string
+          description: ITSM 单据标题
+          title: title
+        currentStatus:
+          type: string
+          description: ITSM 单据状态
+          title: currentStatus
+        sn:
+          type: string
+          description: ITSM 单号
+          title: sn
+        ticketUrl:
+          type: string
+          description: ITSM 单据链接
+          title: ticket_url
+        approveResult:
+          type: boolean
+          description: 单据审批结果
+          title: approve_result
+        applyInCluster:
+          type: boolean
+          description: 是否下发到集群
+          title: applyInCluster
+      description: 命名空间itsm回调
+      title: NamespaceCallbackRequest
+      required:
+        - projectCode
+        - clusterID
+        - namespace
+    bcsprojectNamespaceCallbackResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        data:
+          type: string
+          description: 返回详细信息, 可以为空
+          title: data
+        requestID:
+          type: string
+          description: 请求 ID
+          title: request id
+        result:
+          type: boolean
+          description: 回调结果
+          title: result
+    bcsprojectNamespaceData:
+      type: object
+      properties:
+        uid:
+          type: string
+          description: uid
+          title: uid
+        name:
+          type: string
+          description: 命名空间名称
+          title: name
+        status:
+          type: string
+          description: 命名空间状态
+          title: status
+        createTime:
+          type: string
+          description: 创建时间
+          title: createTime
+        quota:
+          $ref: "#/components/schemas/bcsprojectResourceQuota"
+        used:
+          $ref: "#/components/schemas/bcsprojectResourceQuota"
+        cpuUseRate:
+          type: number
+          format: float
+          description: CPU使用率
+          title: cpuUseRate
+        memoryUseRate:
+          type: number
+          format: float
+          description: 命名空使用率
+          title: memoryUseRate
+        labels:
+          type: array
+          items:
+            $ref: "#/components/schemas/bcsprojectLabel"
+          description: 命名空间标签
+          title: labels
+        annotations:
+          type: array
+          items:
+            $ref: "#/components/schemas/bcsprojectAnnotation"
+          description: 命名空间注解
+          title: annotations
+        variables:
+          type: array
+          items:
+            $ref: "#/components/schemas/bcsprojectVariableValue"
+          description: 命名空间变量
+          title: variables
+        itsmTicketSN:
+          type: string
+          description: itsm 单号
+          title: itsmTicketSN
+        itsmTicketStatus:
+          type: string
+          description: itsm 单据状态
+          title: itsmTicketStatus
+        itsmTicketURL:
+          type: string
+          description: itsm 单据 URL
+          title: itsmTicketURL
+        itsmTicketType:
+          type: string
+          description: "itsm 单据类型: create, update, delete"
+          title: itsmTicketType
+        managers:
+          type: array
+          items:
+            type: string
+          description: 命名空间管理员
+          title: managers
+        isSystem:
+          type: boolean
+          description: 是否为系统命名空间, false则表示项目命名空间
+          title: isSystem
+    bcsprojectNativeNamespaceData:
+      type: object
+      properties:
+        uid:
+          type: string
+          description: uid
+          title: uid
+        name:
+          type: string
+          description: 命名空间名称
+          title: name
+        status:
+          type: string
+          description: 命名空间状态
+          title: status
+        createTime:
+          type: string
+          description: 创建时间
+          title: createTime
+        projectID:
+          type: string
+          description: 项目ID
+          title: projectID
+        projectCode:
+          type: string
+          description: 项目英文名
+          title: projectCode
+    bcsprojectNodeGroup:
+      type: object
+      properties:
+        clusterId:
+          type: string
+          description: 集群ID
+          title: clusterId
+        nodeGroupId:
+          type: string
+          description: 节点池ID
+          title: nodeGroupId
+        quotaNum:
+          type: integer
+          format: int64
+          description: 机型申请的配额
+          title: quotaNum
+        quotaUsed:
+          type: integer
+          format: int64
+          description: 机型已使用的配额
+          title: quotaUsed
+    bcsprojectPerms:
+      type: object
+      properties:
+        perms:
+          type: object
+          description: 用户针对项目的权限
+          title: perms
+    bcsprojectPingResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        data:
+          type: string
+          description: 返回服务状态, 包含服务整体状态和 mongo 状态
+          title: data
+        requestID:
+          type: string
+          description: 请求 ID
+          title: request id
+      description: Ping API 响应
+      title: PingResp
+    bcsprojectProject:
+      type: object
+      properties:
+        createTime:
+          type: string
+          description: 创建时间
+          title: createTime
+        updateTime:
+          type: string
+          description: 更新时间
+          title: updateTime
+        creator:
+          type: string
+          description: 项目创建者
+          title: creator
+        updater:
+          type: string
+          description: 项目更新者
+          title: updater
+        managers:
+          type: string
+          description: 项目管理人员，默认为创建者+更新者
+          title: managers
+        projectID:
+          type: string
+          description: 项目ID, 全局唯一, 长度为32位字符串, 自动生成
+          title: projectID
+        name:
+          type: string
+          description: 项目中文名称, 长度不能超过64字符
+          title: name
+        projectCode:
+          type: string
+          description: 项目编码(英文缩写), 全局唯一, 长度不能超过32字符
+          title: projectCode
+        useBKRes:
+          type: boolean
+          description: 是否使用蓝鲸提供的资源池, 主要用于资源计费, 默认false
+          title: useBKRes
+        description:
+          type: string
+          description: 项目描述, 尽量限制在100字符
+          title: description
+        isOffline:
+          type: boolean
+          description: 项目是否已经下线, 默认false
+          title: isOffline
+        kind:
+          type: string
+          description: 项目中集群类型, 可选k8s/mesos
+          title: kind
+        businessID:
+          type: string
+          description: 项目绑定的蓝鲸CMDB中业务ID信息
+          title: businessID
+        businessName:
+          type: string
+          description: 项目绑定的蓝鲸CMDB中业务名称
+          title: businessName
+        labels:
+          type: object
+          additionalProperties:
+            type: string
+          description: project的标签配置
+          title: labels
+        annotations:
+          type: object
+          additionalProperties:
+            type: string
+          description: project的注解配置
+          title: annotations
+      description: 项目的基本信息
+      title: Project
+    bcsprojectProjectActiveData:
+      type: object
+      properties:
+        isActive:
+          type: boolean
+          description: 是否活跃
+          title: isActive
+    bcsprojectProjectQuota:
+      type: object
+      properties:
+        quotaId:
+          type: string
+          description: 资源配额ID
+          title: quotaId
+        quotaName:
+          type: string
+          description: 配额中文名称, 长度不能超过64字符
+          title: quotaName
+        projectID:
+          type: string
+          description: 项目ID, 全局唯一, 长度为32位字符串, 自动生成
+          title: projectID
+        projectCode:
+          type: string
+          description: 项目编码(英文缩写), 全局唯一, 长度不能超过32字符
+          title: projectCode
+        clusterId:
+          type: string
+          description: 集群ID
+          title: clusterId
+        clusterName:
+          type: string
+          description: 集群名称
+          title: clusterName
+        nameSpace:
+          type: string
+          description: 集群名称空间维度的额度管理
+          title: nameSpace
+        businessID:
+          type: string
+          description: 项目绑定的蓝鲸CMDB中业务ID信息
+          title: businessID
+        businessName:
+          type: string
+          description: 项目绑定的蓝鲸CMDB中业务名称
+          title: businessName
+        description:
+          type: string
+          description: 项目配额描述
+          title: description
+        isDeleted:
+          type: boolean
+          description: 项目下该资源配额是否已下线(默认软删),同类型同种类资源仅不允许重复申请,可更改配额
+          title: isDeleted
+        quotaType:
+          type: string
+          description: 资源类型(目前支持CA整机资源、共享集群维度资源)
+          title: quotaType
+        quota:
+          $ref: "#/components/schemas/bcsprojectQuotaResource"
+        status:
+          type: string
+          description: 资源quota的状态(申请中、审批中、已申请)
+          title: status
+        message:
+          type: string
+          description: 不同状态中的具体原因(审批不通过、资源不足等原因)
+          title: message
+        createTime:
+          type: string
+          description: 创建时间
+          title: createTime
+        updateTime:
+          type: string
+          description: 更新时间
+          title: updateTime
+        creator:
+          type: string
+          description: 项目创建者
+          title: creator
+        updater:
+          type: string
+          description: 项目更新者
+          title: updater
+        provider:
+          type: string
+          description: 云底层资源提供方
+          title: provider
+        nodeGroups:
+          type: array
+          items:
+            $ref: "#/components/schemas/bcsprojectNodeGroup"
+          description: 相关nodeGroups
+          title: nodeGroups
+        labels:
+          type: object
+          additionalProperties:
+            type: string
+          description: 资源quota的标签配置
+          title: labels
+        annotations:
+          type: object
+          additionalProperties:
+            type: string
+          description: 资源quota的注解配置
+          title: annotations
+        quotaAttr:
+          $ref: "#/components/schemas/bcsprojectQuotaAttr"
+        quotaSharedEnabled:
+          type: boolean
+          description: 是否启用额度共享
+          title: quotaSharedEnabled
+        quotaSharedProjectList:
+          type: array
+          items:
+            $ref: "#/components/schemas/bcsprojectQuotaSharedProject"
+          description: 额度共享配置
+          title: quotaSharedProjectList
+      description: 项目配额信息(支持不同类型)
+      title: ProjectQuota
+    bcsprojectProjectQuotaResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        data:
+          $ref: "#/components/schemas/bcsprojectProjectQuota"
+        requestID:
+          type: string
+          description: 请求 ID
+          title: request id
+        task:
+          type: object
+          description: 异步任务task详情信息
+          title: task
+        web_annotations:
+          $ref: "#/components/schemas/bcsprojectPerms"
+    bcsprojectProjectQuotasStatisticsData:
+      type: object
+      properties:
+        cpu:
+          $ref: "#/components/schemas/bcsprojectQuotaResourceData"
+        mem:
+          $ref: "#/components/schemas/bcsprojectQuotaResourceData"
+        gpu:
+          $ref: "#/components/schemas/bcsprojectQuotaResourceData"
+    bcsprojectProjectResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        data:
+          $ref: "#/components/schemas/bcsprojectProject"
+        requestID:
+          type: string
+          description: 请求 ID
+          title: request id
+        web_annotations:
+          $ref: "#/components/schemas/bcsprojectPerms"
+    bcsprojectQuotaAttr:
+      type: object
+      properties:
+        sourceBkBizIDs:
+          type: string
+          description: 资源来源业务ID列表，资源来源 [all]不限业务; [100148]可使用100148业务 [1068,
+            100148]资源可来源于多个业务
+          title: sourceBkBizIDs
+        SourceBkBizNames:
+          type: string
+          description: 资源来源业务名称
+          title: SourceBkBizNames
+        computeType:
+          type: string
+          description: 计算类型，计算类型 [General 通算, Intelligent智算]
+          title: computeType
+        purchaseDurationType:
+          type: string
+          description: 购买时长类型，【once一次性、periodic周期性】 目前对于整机额度来说仅支持一次性购买
+          title: purchaseDurationType
+        purchaseDurationSettings:
+          type: string
+          description: 购买时长配置, 可能存在不限制时长
+          title: purchaseDurationSettings
+        startTime:
+          type: string
+          description: 开始供应时间 UTC格式：2024-01-25 23:59:59
+          title: startTime
+        endTime:
+          type: string
+          description: 截止供应时间 UTC格式：2024-01-31 23:59:59
+          title: endTime
+      description: 项目属性
+      title: QuotaAttr
+    bcsprojectQuotaLimit:
+      type: object
+      properties:
+        quotaNum:
+          type: string
+          format: int64
+          description: 配额数量（整机数量）
+          title: quotaNum
+      description: 项目配额信息(支持不同类型)
+      title: ProjectQuota
+    bcsprojectQuotaResource:
+      type: object
+      properties:
+        zoneResources:
+          $ref: "#/components/schemas/bcsprojectInstanceTypeConfig"
+        cpu:
+          $ref: "#/components/schemas/bcsprojectDeviceInfo"
+        mem:
+          $ref: "#/components/schemas/bcsprojectDeviceInfo"
+        gpu:
+          $ref: "#/components/schemas/bcsprojectDeviceInfo"
+    bcsprojectQuotaResourceData:
+      type: object
+      properties:
+        usedNum:
+          type: integer
+          format: int64
+          description: 已使用量
+          title: usedNum
+        availableNum:
+          type: integer
+          format: int64
+          description: 可使用量
+          title: availableNum
+        totalNum:
+          type: integer
+          format: int64
+          description: 总量
+          title: totalNum
+        useRate:
+          type: number
+          format: float
+          description: 利用率
+          title: useRate
+    bcsprojectQuotaSharedProject:
+      type: object
+      properties:
+        projectID:
+          type: string
+          description: 项目ID
+          title: projectID
+        projectCode:
+          type: string
+          description: 项目Code
+          title: projectCode
+        projectName:
+          type: string
+          description: 项目名称
+          title: projectName
+        shareStrategy:
+          type: string
+          description: 共享策略 [elastic弹性共享模式, rigid刚性共享模式]
+          title: shareStrategy
+        usageLimit:
+          $ref: "#/components/schemas/bcsprojectQuotaLimit"
+        usedAmount:
+          $ref: "#/components/schemas/bcsprojectQuotaLimit"
+        shareStartTime:
+          type: string
+          description: 共享开始时间
+          title: shareStartTime
+        shareEndTime:
+          type: string
+          description: 共享结束时间
+          title: shareEndTime
+        status:
+          type: string
+          description: 共享状态，[active生效中, expired已过期, suspended已暂停]
+          title: status
+      description: 被共享的项目配置
+      title: QuotaSharedProject
+    bcsprojectRenderVariablesResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/bcsprojectVariableValue"
+          description: 变量数据
+          title: results
+        requestID:
+          type: string
+          description: 请求 ID
+          title: request id
+    bcsprojectResourceQuota:
+      type: object
+      properties:
+        cpuRequests:
+          type: string
+          description: requests.cpu
+          title: requests.cpu
+        memoryRequests:
+          type: string
+          description: requests.memory
+          title: requests.memory
+        cpuLimits:
+          type: string
+          description: limits.cpu
+          title: limits.cpu
+        memoryLimits:
+          type: string
+          description: limits.cpu
+          title: limits.memory
+    bcsprojectScaleDownProjectQuotaRequest:
+      type: object
+      properties:
+        quotaId:
+          type: string
+          description: 配额Id
+          title: quotaId
+        quota:
+          $ref: "#/components/schemas/bcsprojectQuotaResource"
+        updater:
+          type: string
+          description: 操作人
+          title: updater
+      description: 缩容项目维度的资源quota
+      title: ScaleDownProjectQuotaRequest
+    bcsprojectScaleDownProjectQuotaResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        task:
+          type: object
+          description: 异步任务task详情信息
+          title: task
+        requestID:
+          type: string
+          description: 请求 ID
+          title: request id
+        web_annotations:
+          $ref: "#/components/schemas/bcsprojectPerms"
+    bcsprojectScaleUpProjectQuotaRequest:
+      type: object
+      properties:
+        quotaId:
+          type: string
+          description: 配额Id
+          title: quotaId
+        quota:
+          $ref: "#/components/schemas/bcsprojectQuotaResource"
+        updater:
+          type: string
+          description: 操作人
+          title: updater
+      description: 根据不同的资源类型增量扩容项目维度的资源quota
+      title: ScaleUpProjectQuotaRequest
+    bcsprojectScaleUpProjectQuotaResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        task:
+          type: object
+          description: 异步任务task详情信息
+          title: task
+        requestID:
+          type: string
+          description: 请求 ID
+          title: request id
+        web_annotations:
+          $ref: "#/components/schemas/bcsprojectPerms"
+    bcsprojectSyncNamespaceRequest:
+      type: object
+      properties:
+        projectCode:
+          type: string
+          description: 项目编码(英文缩写), 全局唯一, 长度不能超过64字符
+          title: projectCode
+        clusterID:
+          type: string
+          description: 集群ID
+          title: projectCode
+      description: 创建命名空间请求
+      title: CreateNamespaceRequest
+      required:
+        - projectCode
+        - clusterID
+    bcsprojectSyncNamespaceResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        data:
+          type: string
+          description: 返回详细信息, 可以为空
+          title: data
+        requestID:
+          type: string
+          description: 请求 ID
+          title: request id
+    bcsprojectTopologyData:
+      type: object
+      properties:
+        bk_inst_id:
+          type: integer
+          format: int64
+          description: 业务ID
+          title: bk_inst_id
+        bk_inst_name:
+          type: string
+          description: 业务名称
+          title: bk_inst_name
+        bk_obj_id:
+          type: string
+          description: bk_obj_id
+          title: bk_obj_id
+        bk_obj_name:
+          type: string
+          description: bk_obj_name
+          title: bk_obj_name
+        default:
+          type: integer
+          format: int64
+          description: default
+          title: default
+        child:
+          type: array
+          items:
+            $ref: "#/components/schemas/bcsprojectTopologyData"
+          description: child
+          title: child
+    bcsprojectUpdateClusterVariablesRequest:
+      type: object
+      properties:
+        projectCode:
+          type: string
+          description: 项目编码(英文缩写), 全局唯一, 长度不能超过64字符
+          title: projectCode
+        clusterID:
+          type: string
+          description: 集群 id
+          title: clusterID
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/bcsprojectVariableValue"
+          description: 集群变量值
+          title: data
+      description: 更新集群所有变量值请求
+      title: UpdateClusterVariablesRequest
+      required:
+        - projectCode
+        - clusterID
+    bcsprojectUpdateClusterVariablesResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        requestID:
+          type: string
+          description: 请求 ID
+          title: request id
+    bcsprojectUpdateClustersVariablesRequest:
+      type: object
+      properties:
+        projectCode:
+          type: string
+          description: 项目编码(英文缩写), 全局唯一, 长度不能超过64字符
+          title: projectCode
+        variableID:
+          type: string
+          description: 变量 id
+          title: variableID
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/bcsprojectVariableValue"
+          description: 集群变量值
+          title: data
+      description: 更新项目下集群变量值请求
+      title: UpdateClustersVariablesRequest
+      required:
+        - projectCode
+        - variableID
+    bcsprojectUpdateClustersVariablesResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        requestID:
+          type: string
+          description: 请求 ID
+          title: request id
+    bcsprojectUpdateNamespaceRequest:
+      type: object
+      properties:
+        projectCode:
+          type: string
+          description: 项目编码(英文缩写), 全局唯一, 长度不能超过64字符
+          title: projectCode
+        clusterID:
+          type: string
+          description: 集群ID
+          title: projectCode
+        namespace:
+          type: string
+          description: 命名空间名称, 长度不能超过63字符,只能包含小写字母、数字，以及 '-',必须以字母开头，不能以 '-' 结尾
+          title: namespace
+        labels:
+          type: array
+          items:
+            $ref: "#/components/schemas/bcsprojectLabel"
+          description: 命名空间标签
+          title: labels
+        annotations:
+          type: array
+          items:
+            $ref: "#/components/schemas/bcsprojectAnnotation"
+          description: 命名空间注解
+          title: annotations
+        quota:
+          $ref: "#/components/schemas/bcsprojectResourceQuota"
+      description: 更新命名空间配额请求
+      title: UpdateNamespaceRequest
+      required:
+        - projectCode
+        - clusterID
+        - namespace
+    bcsprojectUpdateNamespaceResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        requestID:
+          type: string
+          description: 请求 ID
+          title: request id
+        web_annotations:
+          $ref: "#/components/schemas/bcsprojectPerms"
+    bcsprojectUpdateNamespaceVariablesRequest:
+      type: object
+      properties:
+        projectCode:
+          type: string
+          description: 项目编码(英文缩写), 全局唯一, 长度不能超过64字符
+          title: projectCode
+        clusterID:
+          type: string
+          description: 集群 id
+          title: clusterID
+        namespace:
+          type: string
+          description: 命名空间名称
+          title: namespace
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/bcsprojectVariableValue"
+          description: 命名空间变量值
+          title: data
+      description: 更新命名空间所有变量值请求
+      title: UpdateNamespaceVariablesRequest
+      required:
+        - projectCode
+        - variableID
+    bcsprojectUpdateNamespaceVariablesResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        requestID:
+          type: string
+          description: 请求 ID
+          title: request id
+    bcsprojectUpdateNamespacesVariablesRequest:
+      type: object
+      properties:
+        projectCode:
+          type: string
+          description: 项目编码(英文缩写), 全局唯一, 长度不能超过64字符
+          title: projectCode
+        variableID:
+          type: string
+          description: 变量 id
+          title: variableID
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/bcsprojectVariableValue"
+          description: 命名空间变量值
+          title: data
+      description: 更新项目下命名空间变量值请求
+      title: UpdateNamespacesVariablesRequest
+      required:
+        - projectCode
+        - variableID
+    bcsprojectUpdateNamespacesVariablesResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        requestID:
+          type: string
+          description: 请求 ID
+          title: request id
+    bcsprojectUpdateProjectQuotaRequest:
+      type: object
+      properties:
+        quotaId:
+          type: string
+          description: 资源quotaId
+          title: quotaId
+        name:
+          type: string
+          description: 项目中文名称, 长度不能超过64字符
+          title: name
+        quota:
+          $ref: "#/components/schemas/bcsprojectQuotaResource"
+        updater:
+          type: string
+          description: 更新者
+          title: updater
+        labels:
+          type: object
+          additionalProperties:
+            type: string
+          description: 资源quota的标签配置
+          title: labels
+        annotations:
+          type: object
+          additionalProperties:
+            type: string
+          description: 资源quota的注解配置
+          title: annotations
+        quotaAttr:
+          $ref: "#/components/schemas/bcsprojectQuotaAttr"
+        quotaSharedEnabled:
+          type: boolean
+          description: 是否启用额度共享
+          title: quotaSharedEnabled
+        quotaSharedProjectList:
+          type: array
+          items:
+            $ref: "#/components/schemas/bcsprojectQuotaSharedProject"
+          description: 额度共享配置
+          title: quotaSharedProjectList
+      description: 更新项目quota请求
+      title: UpdateProjectQuotaRequest
+    bcsprojectUpdateProjectRequest:
+      type: object
+      properties:
+        projectID:
+          type: string
+          description: 项目ID
+          title: projectID
+        name:
+          type: string
+          description: 项目中文名称, 长度不能超过64字符
+          title: name
+        updater:
+          type: string
+          description: 更新者
+          title: updater
+        useBKRes:
+          type: boolean
+          description: 是否使用蓝鲸提供的资源池, 主要用于资源计费, 默认false
+          title: useBKRes
+        description:
+          type: string
+          description: 项目简要描述
+          title: description
+        isOffline:
+          type: boolean
+          description: 项目是否已经下线, 默认false
+          title: isOffline
+        kind:
+          type: string
+          description: 项目中集群类型, 可选k8s/mesos, 未来该字段可能废弃
+          title: kind
+        businessID:
+          type: string
+          description: 项目绑定的蓝鲸CMDB中业务ID信息
+          title: businessID
+        managers:
+          type: string
+          description: 项目管理员
+          title: managers
+        creator:
+          type: string
+          description: 创建人
+          title: creator
+        labels:
+          type: object
+          additionalProperties:
+            type: string
+          description: project的标签配置
+          title: labels
+        annotations:
+          type: object
+          additionalProperties:
+            type: string
+          description: project的注解配置
+          title: annotations
+      description: 更新项目请求
+      title: UpdateProjectRequest
+    bcsprojectUpdateProjectV2Request:
+      type: object
+      properties:
+        projectID:
+          type: string
+          description: 项目ID
+          title: projectID
+        businessID:
+          type: string
+          description: 项目绑定的蓝鲸CMDB中业务ID信息
+          title: businessID
+        managers:
+          type: string
+          description: 项目管理员
+          title: managers
+        name:
+          type: string
+          description: 项目中文名称, 长度不能超过64字符
+          title: name
+        projectCode:
+          type: string
+          description: 项目编码(英文缩写), 全局唯一, 长度不能超过64字符
+          title: projectCode
+        useBKRes:
+          type: boolean
+          description: 是否使用蓝鲸提供的资源池, 主要用于资源计费, 默认false
+          title: useBKRes
+        description:
+          type: string
+          description: 项目简要描述
+          title: description
+        isOffline:
+          type: boolean
+          description: 项目是否已经下线, 默认false
+          title: isOffline
+        kind:
+          type: string
+          description: 项目中集群类型, 可选k8s/mesos, 未来该字段可能废弃
+          title: kind
+        labels:
+          type: object
+          additionalProperties:
+            type: string
+          description: project的标签配置
+          title: labels
+        annotations:
+          type: object
+          additionalProperties:
+            type: string
+          description: project的注解配置
+          title: annotations
+        quotaAttr:
+          $ref: "#/components/schemas/bcsprojectQuotaAttr"
+        quotaSharedEnabled:
+          type: boolean
+          description: 是否启用额度共享
+          title: quotaSharedEnabled
+        quotaSharedProjectList:
+          type: array
+          items:
+            $ref: "#/components/schemas/bcsprojectQuotaSharedProject"
+          description: 额度共享配置
+          title: quotaSharedProjectList
+      description: 更新项目quota请求
+      title: UpdateProjectQuotaRequest
+    bcsprojectUpdateVariableData:
+      type: object
+      properties:
+        id:
+          type: string
+          description: 变量 id
+          title: id
+        projectCode:
+          type: string
+          description: 项目编码(英文缩写), 全局唯一, 长度不能超过64字符
+          title: projectCode
+        name:
+          type: string
+          description: 变量名称, 长度不能超过32字符
+          title: name
+        key:
+          type: string
+          description: 变量 key, 项目内唯一, 长度不能超过64字符
+          title: key
+        scope:
+          type: string
+          description: "变量作用域, 取值范围: global, cluster, namespace"
+          title: name
+        default:
+          type: string
+          description: 变量默认值
+          title: default
+        desc:
+          type: string
+          description: 变量说明与描述, 限制在100字符以内
+          title: desc
+        category:
+          type: string
+          description: "变量类型, 取值范围: sys, custom"
+          title: category
+    bcsprojectUpdateVariableRequest:
+      type: object
+      properties:
+        projectCode:
+          type: string
+          description: 项目编码(英文缩写), 全局唯一, 长度不能超过64字符
+          title: projectCode
+        variableID:
+          type: string
+          description: 项目编码(英文缩写), 全局唯一, 长度不能超过64字符
+          title: variableID
+        name:
+          type: string
+          description: 变量名称, 长度不能超过32字符
+          title: name
+        key:
+          type: string
+          description: 变量 key, 项目内唯一, 长度不能超过64字符
+          title: key
+        scope:
+          type: string
+          description: "变量作用域, 取值范围: global, cluster, namespace"
+          title: scope
+        default:
+          type: string
+          description: 变量默认值
+          title: default
+        desc:
+          type: string
+          description: 变量说明与描述, 限制在100字符以内
+          title: desc
+      description: 更新变量请求
+      title: UpdateVariableRequest
+      required:
+        - projectCode
+        - variableID
+    bcsprojectUpdateVariableResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        data:
+          $ref: "#/components/schemas/bcsprojectUpdateVariableData"
+        requestID:
+          type: string
+          description: 请求 ID
+          title: request id
+    bcsprojectVariableDefinition:
+      type: object
+      properties:
+        id:
+          type: string
+          description: 变量定义ID
+          title: id
+        key:
+          type: string
+          description: 变量 key
+          title: key
+        name:
+          type: string
+          description: 变量名称
+          title: name
+        default:
+          type: string
+          description: 变量默认键值对
+          title: default
+        defaultValue:
+          type: string
+          description: 变量默认值
+          title: default
+        scope:
+          type: string
+          description: "变量作用域, 取值范围: global, cluster, namespace"
+          title: scope
+        scopeName:
+          type: string
+          description: "变量作用域名称, 取值范围: 全局变量, 集群变量, 明明空间变量"
+          title: scopeName
+        category:
+          type: string
+          description: "类型, 取值范围: sys/custom"
+          title: category
+        categoryName:
+          type: string
+          description: "类型名称, 取值范围: 系统内置/自定义"
+          title: categoryName
+        desc:
+          type: string
+          description: 变量说明与描述, 限制在100字符以内
+          title: desc
+        created:
+          type: string
+          description: "创建时间, 格式: yyyy-MM-dd hh:mm:ss"
+          title: created
+        updated:
+          type: string
+          description: "修改时间, 格式: yyyy-MM-dd hh:mm:ss"
+          title: updated
+        creator:
+          type: string
+          description: 创建人
+          title: creator
+        updater:
+          type: string
+          description: 修改人
+          title: updater
+    bcsprojectVariableValue:
+      type: object
+      properties:
+        id:
+          type: string
+          description: 变量ID
+          title: id
+        key:
+          type: string
+          description: 变量key
+          title: key
+        name:
+          type: string
+          description: 变量名称
+          title: name
+        clusterID:
+          type: string
+          description: 集群ID
+          title: clusterID
+        clusterName:
+          type: string
+          description: 集群名称
+          title: clusterName
+        namespace:
+          type: string
+          description: 命名空间
+          title: namespace
+        value:
+          type: string
+          description: 变量的值
+          title: value
+        scope:
+          type: string
+          description: 变量作用域
+          title: scope
+    bcsprojectWithdrawNamespaceRequest:
+      type: object
+      properties:
+        projectCode:
+          type: string
+          description: 项目编码(英文缩写), 全局唯一, 长度不能超过64字符
+          title: projectCode
+        clusterID:
+          type: string
+          description: 集群ID
+          title: projectCode
+        namespace:
+          type: string
+          description: 命名空间名称
+          title: namespace
+      description: 创建命名空间请求
+      title: CreateNamespaceRequest
+      required:
+        - projectCode
+        - clusterID
+        - namespace
+    bcsprojectWithdrawNamespaceResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          description: 返回错误码
+          title: code
+        message:
+          type: string
+          description: 返回错误信息
+          title: message
+        data:
+          type: string
+          description: 返回详细信息, 可以为空
+          title: data
+        requestID:
+          type: string
+          description: 请求 ID
+          title: request id
+    bcsprojectZoneResourceUsage:
+      type: object
+      properties:
+        zone:
+          type: string
+        quota:
+          type: integer
+          format: int64
+        used:
+          type: integer
+          format: int64
+    protobufAny:
+      type: object
+      properties:
+        type_url:
+          type: string
+          description: >-
+            A URL/resource name that uniquely identifies the type of the
+            serialized
+
+            protocol buffer message. This string must contain at least
+
+            one "/" character. The last segment of the URL's path must represent
+
+            the fully qualified name of the type (as in
+
+            `path/google.protobuf.Duration`). The name should be in a canonical form
+
+            (e.g., leading "." is not accepted).
+
+
+            In practice, teams usually precompile into the binary all types that they
+
+            expect it to use in the context of Any. However, for URLs which use the
+
+            scheme `http`, `https`, or no scheme, one can optionally set up a type
+
+            server that maps type URLs to message definitions as follows:
+
+
+            * If no scheme is provided, `https` is assumed.
+
+            * An HTTP GET on the URL must yield a [google.protobuf.Type][]
+              value in binary format, or produce an error.
+            * Applications are allowed to cache lookup results based on the
+              URL, or have them precompiled into a binary to avoid any
+              lookup. Therefore, binary compatibility needs to be preserved
+              on changes to types. (Use versioned type names to manage
+              breaking changes.)
+
+            Note: this functionality is not currently available in the official
+
+            protobuf release, and it is not used for type URLs beginning with
+
+            type.googleapis.com.
+
+
+            Schemes other than `http`, `https` (or the empty scheme) might be
+
+            used with implementation specific semantics.
+        value:
+          type: string
+          format: byte
+          description: Must be a valid serialized protocol buffer of the above specified
+            type.
+      description: >-
+        `Any` contains an arbitrary serialized protocol buffer message along
+        with a
+
+        URL that describes the type of the serialized message.
+
+
+        Protobuf library provides support to pack/unpack Any values in the form
+
+        of utility functions or additional generated methods of the Any type.
+
+
+        Example 1: Pack and unpack a message in C++.
+
+            Foo foo = ...;
+            Any any;
+            any.PackFrom(foo);
+            ...
+            if (any.UnpackTo(&foo)) {
+              ...
+            }
+
+        Example 2: Pack and unpack a message in Java.
+
+            Foo foo = ...;
+            Any any = Any.pack(foo);
+            ...
+            if (any.is(Foo.class)) {
+              foo = any.unpack(Foo.class);
+            }
+
+         Example 3: Pack and unpack a message in Python.
+
+            foo = Foo(...)
+            any = Any()
+            any.Pack(foo)
+            ...
+            if any.Is(Foo.DESCRIPTOR):
+              any.Unpack(foo)
+              ...
+
+         Example 4: Pack and unpack a message in Go
+
+             foo := &pb.Foo{...}
+             any, err := ptypes.MarshalAny(foo)
+             ...
+             foo := &pb.Foo{}
+             if err := ptypes.UnmarshalAny(any, foo); err != nil {
+               ...
+             }
+
+        The pack methods provided by protobuf library will by default use
+
+        'type.googleapis.com/full.type.name' as the type URL and the unpack
+
+        methods only use the fully qualified type name after the last '/'
+
+        in the type URL, for example "foo.bar.com/x/y.z" will yield type
+
+        name "y.z".
+
+
+
+        JSON
+
+        ====
+
+        The JSON representation of an `Any` value uses the regular
+
+        representation of the deserialized, embedded message, with an
+
+        additional field `@type` which contains the type URL. Example:
+
+            package google.profile;
+            message Person {
+              string first_name = 1;
+              string last_name = 2;
+            }
+
+            {
+              "@type": "type.googleapis.com/google.profile.Person",
+              "firstName": <string>,
+              "lastName": <string>
+            }
+
+        If the embedded message type is well-known and has a custom JSON
+
+        representation, that representation will be embedded adding a field
+
+        `value` which holds the custom JSON in addition to the `@type`
+
+        field. Example (for message [google.protobuf.Duration][]):
+
+            {
+              "@type": "type.googleapis.com/google.protobuf.Duration",
+              "value": "1.212s"
+            }
+    protobufNullValue:
+      type: string
+      enum:
+        - NULL_VALUE
+      default: NULL_VALUE
+      description: >-
+        `NullValue` is a singleton enumeration to represent the null value for
+        the
+
+        `Value` type union.
+
+         The JSON representation for `NullValue` is JSON `null`.
+
+         - NULL_VALUE: Null value.
+    runtimeError:
+      type: object
+      properties:
+        error:
+          type: string
+        code:
+          type: integer
+          format: int32
+        message:
+          type: string
+        details:
+          type: array
+          items:
+            $ref: "#/components/schemas/protobufAny"

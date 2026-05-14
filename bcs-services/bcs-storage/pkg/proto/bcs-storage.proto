@@ -769,6 +769,17 @@ service Storage{
       summary : "批量查询watch资源"
     };
   }
+
+  // **** Cluster Clean(集群数据清理) ****
+  rpc CleanClusterData(CleanClusterDataRequest) returns(CleanClusterDataResponse){
+    option (google.api.http) = {
+      delete: "/bcsstorage/v2/clusters/{clusterId}/data"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据clusterId清理集群的所有数据"
+      summary : "清理集群数据"
+    };
+  }
 }
 
 /*
@@ -6937,5 +6948,56 @@ message K8SListWatchResourceResponse {
   repeated string data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "data",
     description : "数据"
+  }];
+}
+
+/*
+  cluster-clean.proto
+*/
+
+message CleanClusterDataRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "CleanClusterDataRequest",
+      description : "清理集群所有数据",
+      required: [
+        "clusterId"
+      ]
+    }
+  };
+
+  string clusterId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "clusterId",
+    description : "BCS内部使用集群ID，格式为BCS-K8S-XXXXX"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+}
+
+message CleanClusterDataResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "CleanClusterDataResponse",
+      description : "返回集群数据清理结果",
+      required: [
+        "code",
+        "message"
+      ]
+    }
+  };
+
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message",
+    description : "返回错误信息"
+  }];
+
+  map<string, int64> deletedCounts = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "deletedCounts",
+    description : "各数据类型删除的记录数"
   }];
 }

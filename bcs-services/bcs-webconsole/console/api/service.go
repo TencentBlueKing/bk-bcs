@@ -94,6 +94,16 @@ func (s service) RegisterRoute(router gin.IRoutes) {
 }
 
 // ListClusters 集群列表
+//
+// @Summary      获取项目下集群列表
+// @Description  根据项目ID获取该项目下所有集群列表
+// @Tags         Console
+// @Accept       json
+// @Produce      json
+// @Param        projectId  path      string              true  "项目ID"
+// @Success      200        {object}  types.APIResponse   "集群列表"
+// @Failure      400        {object}  types.APIResponse   "请求参数错误"
+// @Router       /api/projects/{projectId}/clusters/ [get]
 func (s *service) ListClusters(c *gin.Context) {
 	projectId := c.Param("projectId")
 	project, err := bcs.GetProject(c.Request.Context(), config.G.BCS, projectId)
@@ -111,6 +121,24 @@ func (s *service) ListClusters(c *gin.Context) {
 }
 
 // CreateWebConsoleSession 创建websocket session
+//
+// @Summary      创建 WebConsole Session
+// @Description  为指定集群创建 WebConsole 会话，返回 session_id 和 ws_url
+// @Tags         Console
+// @Accept       json
+// @Produce      json
+// @Param        projectId     path      string  true   "项目ID"
+// @Param        clusterId     path      string  true   "集群ID"
+// @Param        container_id  query     string  false  "容器ID（直连容器模式）"
+// @Param        namespace     query     string  false  "命名空间（直连容器模式）"
+// @Param        pod_name      query     string  false  "Pod名称（直连容器模式）"
+// @Param        container_name query    string  false  "容器名称（直连容器模式）"
+// @Param        source        query     string  false  "来源标识"
+// @Param        lang          query     string  false  "语言"
+// @Param        shell         query     string  false  "Shell 类型（sh/bash）"
+// @Success      200           {object}  types.APIResponse  "返回 session_id 和 ws_url"
+// @Failure      400           {object}  types.APIResponse  "请求参数错误"
+// @Router       /api/projects/{projectId}/clusters/{clusterId}/session/ [get]
 func (s *service) CreateWebConsoleSession(c *gin.Context) {
 	authCtx := route.MustGetAuthContext(c)
 
@@ -171,6 +199,17 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 }
 
 // CreatePortalSession xxx
+//
+// @Summary      Portal 换取 WebConsole Session
+// @Description  通过 Portal session_id 换取 WebConsole 可用的 session_id 和 ws_url（蓝鲸API网关鉴权）
+// @Tags         Portal
+// @Accept       json
+// @Produce      json
+// @Param        sessionId  path      string              true   "Portal Session ID"
+// @Param        lang       query     string              false  "语言"
+// @Success      200        {object}  types.APIResponse   "返回 session_id 和 ws_url"
+// @Failure      400        {object}  types.APIResponse   "session 不合法或已过期"
+// @Router       /api/portal/sessions/{sessionId}/ [get]
 func (s *service) CreatePortalSession(c *gin.Context) {
 	authCtx := route.MustGetAuthContext(c)
 	if authCtx.BindSession == nil {
@@ -198,6 +237,18 @@ func (s *service) CreatePortalSession(c *gin.Context) {
 }
 
 // CreateContainerPortalSession 创建 webconsole url api
+//
+// @Summary      创建容器级别 Portal Session
+// @Description  通过 OpenAPI 为指定容器创建 WebConsole 会话，返回 session_id 和 web_console_url（蓝鲸API网关 & App鉴权）
+// @Tags         Portal
+// @Accept       json
+// @Produce      json
+// @Param        projectId  path      string              true   "项目ID"
+// @Param        clusterId  path      string              true   "集群ID"
+// @Param        body       body      podmanager.OpenQuery true  "请求体"
+// @Success      200        {object}  types.APIResponse   "返回 session_id 和 web_console_url"
+// @Failure      400        {object}  types.APIResponse   "请求参数错误"
+// @Router       /api/portal/projects/{projectId}/clusters/{clusterId}/container/ [post]
 func (s *service) CreateContainerPortalSession(c *gin.Context) {
 	authCtx := route.MustGetAuthContext(c)
 
@@ -309,11 +360,33 @@ func makeWebSocketURL(sessionId, lang string, withScheme bool) string {
 }
 
 // CreateClusterPortalSession 集群级别的 webconsole openapi
+//
+// @Summary      创建集群级别 Portal Session
+// @Description  通过 OpenAPI 为指定集群创建 WebConsole 会话（蓝鲸API网关 & App鉴权），暂未实现
+// @Tags         Portal
+// @Accept       json
+// @Produce      json
+// @Param        projectId  path      string              true  "项目ID"
+// @Param        clusterId  path      string              true  "集群ID"
+// @Success      200        {object}  types.APIResponse   "返回 session 信息"
+// @Failure      400        {object}  types.APIResponse   "请求参数错误"
+// @Router       /api/portal/projects/{projectId}/clusters/{clusterId}/cluster/ [post]
 func (s *service) CreateClusterPortalSession(c *gin.Context) {
 	rest.APIError(c, "Not implemented")
 }
 
 // SetUserDelaySwitch 开启/关闭某个用户命令延时统计API
+//
+// @Summary      设置用户命令延时统计开关
+// @Description  开启或关闭指定用户的命令延时统计功能（需要管理员权限）
+// @Tags         CommandDelay
+// @Accept       json
+// @Produce      json
+// @Param        username  path      string               true  "用户名"
+// @Param        body      body      types.CommandDelay   true  "延时统计配置"
+// @Success      200       {object}  types.APIResponse    "操作成功"
+// @Failure      400       {object}  types.APIResponse    "请求参数错误"
+// @Router       /api/command/delay/{username} [put]
 func (s *service) SetUserDelaySwitch(c *gin.Context) {
 	// 参数解析
 	username := c.Param("username")
@@ -341,6 +414,16 @@ func (s *service) SetUserDelaySwitch(c *gin.Context) {
 }
 
 // GetUserDelaySwitch 获取某个用户命令延时统计API
+//
+// @Summary      查询用户命令延时统计开关状态
+// @Description  获取指定用户的命令延时统计开关配置（需要管理员权限）
+// @Tags         CommandDelay
+// @Accept       json
+// @Produce      json
+// @Param        username  path      string              true  "用户名"
+// @Success      200       {object}  types.APIResponse   "返回延时统计配置"
+// @Failure      400       {object}  types.APIResponse   "用户未设置或请求失败"
+// @Router       /api/command/delay/{username} [get]
 func (s *service) GetUserDelaySwitch(c *gin.Context) {
 	username := c.Param("username")
 	result, err := storage.GetDefaultRedisSession().Client.HGet(c, types.GetMeterKey(), username).Result()
@@ -363,6 +446,17 @@ func (s *service) GetUserDelaySwitch(c *gin.Context) {
 }
 
 // GetUserDelayMeter 查看用户+集群(选填)命令延时情况 API
+//
+// @Summary      查询用户命令延时数据
+// @Description  获取指定用户在各集群的命令延时统计数据，可按集群过滤（需要管理员权限）
+// @Tags         CommandDelay
+// @Accept       json
+// @Produce      json
+// @Param        username   path      string              true   "用户名"
+// @Param        clusterId  query     string              false  "集群ID（可选，不填返回所有集群）"
+// @Success      200        {object}  types.APIResponse   "返回延时统计数据列表"
+// @Failure      400        {object}  types.APIResponse   "请求失败"
+// @Router       /api/command/delay/{username}/meter [get]
 func (s *service) GetUserDelayMeter(c *gin.Context) {
 	username := c.Param("username")
 	clusterId := c.Query("clusterId")
@@ -453,6 +547,15 @@ func (s *service) GetUserDelayMeter(c *gin.Context) {
 }
 
 // GetDelayUsers 查看哪些用户开启命令延时情况 API
+//
+// @Summary      查询已开启命令延时统计的用户列表
+// @Description  获取所有已配置命令延时统计的用户及其配置信息（需要管理员权限）
+// @Tags         CommandDelay
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}  types.APIResponse   "返回用户延时配置 map"
+// @Failure      400  {object}  types.APIResponse   "请求失败"
+// @Router       /api/command/delay [get]
 func (s *service) GetDelayUsers(c *gin.Context) {
 	result, err := storage.GetDefaultRedisSession().Client.HGetAll(c, types.GetMeterKey()).Result()
 	if err != nil {

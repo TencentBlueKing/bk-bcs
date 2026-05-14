@@ -1,0 +1,225 @@
+apiVersion: dr.bkbcs.tencent.com/v1alpha1
+kind: DRWorkflow
+metadata:
+  name: demo-app-install
+  namespace: default
+spec:
+  actions:
+  - clusterExecutionMode: PerCluster
+    hookCleanup:
+      beforeCreate: true
+      onFailure: false
+      onSuccess: true
+    hookType: pre-install
+    name: release-name-db-migrate-pre-install
+    subscription:
+      name: release-name-db-migrate-sub
+      namespace: $(params.feedNamespace)
+      operation: Create
+      spec:
+        feeds:
+        - apiVersion: batch/v1
+          kind: Job
+          name: release-name-db-migrate
+          namespace: $(params.feedNamespace)
+        schedulingStrategy: Replication
+        subscribers:
+        - clusterAffinity: {}
+    timeout: 5m
+    type: Subscription
+    waitReady: true
+    when: mode == "install"
+  - clusterExecutionMode: PerCluster
+    dependsOn:
+    - release-name-db-migrate-pre-install
+    hookCleanup:
+      beforeCreate: true
+      onFailure: false
+      onSuccess: false
+    hookType: pre-install
+    name: release-name-validate-pre-install
+    subscription:
+      name: release-name-validate-sub
+      namespace: $(params.feedNamespace)
+      operation: Create
+      spec:
+        feeds:
+        - apiVersion: batch/v1
+          kind: Job
+          name: release-name-validate
+          namespace: $(params.feedNamespace)
+        schedulingStrategy: Replication
+        subscribers:
+        - clusterAffinity: {}
+    timeout: 5m
+    type: Subscription
+    waitReady: true
+    when: mode == "install"
+  - clusterExecutionMode: PerCluster
+    hookCleanup:
+      beforeCreate: true
+      onFailure: false
+      onSuccess: false
+    hookType: pre-upgrade
+    name: release-name-upgrade-prepare-pre-upgrade
+    subscription:
+      name: release-name-upgrade-prepare-sub
+      namespace: $(params.feedNamespace)
+      operation: Create
+      spec:
+        feeds:
+        - apiVersion: batch/v1
+          kind: Job
+          name: release-name-upgrade-prepare
+          namespace: $(params.feedNamespace)
+        schedulingStrategy: Replication
+        subscribers:
+        - clusterAffinity: {}
+    timeout: 5m
+    type: Subscription
+    waitReady: true
+    when: mode == "upgrade"
+  - dependsOn:
+    - release-name-validate-pre-install
+    - release-name-upgrade-prepare-pre-upgrade
+    name: create-subscription
+    subscription:
+      name: demo-app-subscription
+      namespace: $(params.feedNamespace)
+      operation: Apply
+      spec:
+        feeds:
+        - apiVersion: v1
+          kind: ConfigMap
+          name: release-name-config
+          namespace: $(params.feedNamespace)
+        - apiVersion: v1
+          kind: Service
+          name: release-name-svc
+          namespace: $(params.feedNamespace)
+        - apiVersion: apps/v1
+          kind: Deployment
+          name: release-name-server
+          namespace: $(params.feedNamespace)
+        schedulingStrategy: Replication
+        subscribers:
+        - clusterAffinity: {}
+    timeout: 5m
+    type: Subscription
+    when: mode == "install" || mode == "upgrade"
+  - clusterExecutionMode: PerCluster
+    dependsOn:
+    - create-subscription
+    hookCleanup:
+      beforeCreate: true
+      onFailure: false
+      onSuccess: true
+    hookType: post-install
+    name: release-name-install-smoke-post-install
+    subscription:
+      name: release-name-install-smoke-sub
+      namespace: $(params.feedNamespace)
+      operation: Create
+      spec:
+        feeds:
+        - apiVersion: batch/v1
+          kind: Job
+          name: release-name-install-smoke
+          namespace: $(params.feedNamespace)
+        schedulingStrategy: Replication
+        subscribers:
+        - clusterAffinity: {}
+    timeout: 5m
+    type: Subscription
+    waitReady: true
+    when: mode == "install"
+  - clusterExecutionMode: PerCluster
+    dependsOn:
+    - create-subscription
+    hookCleanup:
+      beforeCreate: true
+      onFailure: false
+      onSuccess: true
+    hookType: post-upgrade
+    name: release-name-upgrade-verify-post-upgrade
+    subscription:
+      name: release-name-upgrade-verify-sub
+      namespace: $(params.feedNamespace)
+      operation: Create
+      spec:
+        feeds:
+        - apiVersion: batch/v1
+          kind: Job
+          name: release-name-upgrade-verify
+          namespace: $(params.feedNamespace)
+        schedulingStrategy: Replication
+        subscribers:
+        - clusterAffinity: {}
+    timeout: 5m
+    type: Subscription
+    waitReady: true
+    when: mode == "upgrade"
+  - clusterExecutionMode: PerCluster
+    hookCleanup:
+      beforeCreate: true
+      onFailure: false
+      onSuccess: true
+    hookType: pre-delete
+    name: release-name-pre-delete-backup-pre-delete
+    subscription:
+      name: release-name-pre-delete-backup-sub
+      namespace: $(params.feedNamespace)
+      operation: Create
+      spec:
+        feeds:
+        - apiVersion: batch/v1
+          kind: Job
+          name: release-name-pre-delete-backup
+          namespace: $(params.feedNamespace)
+        schedulingStrategy: Replication
+        subscribers:
+        - clusterAffinity: {}
+    timeout: 5m
+    type: Subscription
+    waitReady: true
+    when: mode == "delete"
+  - dependsOn:
+    - release-name-pre-delete-backup-pre-delete
+    name: delete-subscription
+    subscription:
+      name: demo-app-subscription
+      namespace: $(params.feedNamespace)
+      operation: Delete
+    type: Subscription
+    when: mode == "delete"
+  - clusterExecutionMode: PerCluster
+    dependsOn:
+    - delete-subscription
+    hookCleanup:
+      beforeCreate: true
+      onFailure: false
+      onSuccess: true
+    hookType: post-delete
+    name: release-name-post-delete-notify-post-delete
+    subscription:
+      name: release-name-post-delete-notify-sub
+      namespace: $(params.feedNamespace)
+      operation: Create
+      spec:
+        feeds:
+        - apiVersion: batch/v1
+          kind: Job
+          name: release-name-post-delete-notify
+          namespace: $(params.feedNamespace)
+        schedulingStrategy: Replication
+        subscribers:
+        - clusterAffinity: {}
+    timeout: 5m
+    type: Subscription
+    waitReady: true
+    when: mode == "delete"
+  failurePolicy: FailFast
+  parameters:
+  - default: default
+    name: feedNamespace
+    type: string

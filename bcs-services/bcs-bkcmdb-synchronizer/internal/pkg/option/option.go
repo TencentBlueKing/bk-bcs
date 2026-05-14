@@ -43,6 +43,7 @@ type BkcmdbSynchronizerOption struct {
 	CMDB          CMDBConfig          `json:"cmdb"`
 	SharedCluster SharedClusterConfig `json:"shared_cluster"`
 	BkUser        BkUserConfig        `json:"bkUser"`
+	Metrics       MetricsConfig       `json:"metrics"`
 }
 
 // SynchronizerConfig synchronizer config
@@ -54,6 +55,33 @@ type SynchronizerConfig struct {
 	WhiteList             string `json:"whiteList"`
 	BlackList             string `json:"blackList"`
 	EnableMultiTenantMode bool   `json:"enableMultiTenantMode"`
+	// CustomResourceTypes map from clusterID to custom resource kinds to sync
+	// Only clusters configured in this map will have custom resources synced
+	// Example: {"cluster-id-1": ["BkApp", "CronJob"], "cluster-id-2": ["BkApp"]}
+	CustomResourceTypes map[string][]string `json:"customResourceTypes"`
+}
+
+// CustomResourceType defines parsed custom resource type configuration.
+type CustomResourceType struct {
+	// ResourceType is the custom resource type name (e.g., "BkApp")
+	ResourceType string
+}
+
+// ParseCustomResourceTypes parses the custom resource types configuration.
+// Configuration format: map[clusterID][]string
+// Example: {"cluster-id-1": ["BkApp", "CronJob"], "cluster-id-2": ["BkApp"]}
+func ParseCustomResourceTypes(configs map[string][]string) map[string][]CustomResourceType {
+	result := make(map[string][]CustomResourceType, len(configs))
+	for clusterID, kinds := range configs {
+		crTypes := make([]CustomResourceType, 0, len(kinds))
+		for _, kind := range kinds {
+			crTypes = append(crTypes, CustomResourceType{
+				ResourceType: kind,
+			})
+		}
+		result[clusterID] = crTypes
+	}
+	return result
 }
 
 // ClientConfig client config
@@ -130,4 +158,9 @@ func InitTClientTlsConfig() (*tls.Config, error) {
 
 	}
 	return tlsConfig, nil
+}
+
+// MetricsConfig metrics config
+type MetricsConfig struct {
+	Port int `json:"port"`
 }

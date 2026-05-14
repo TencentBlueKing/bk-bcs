@@ -30,6 +30,7 @@ import (
 	pm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/quota"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/convert"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/entity"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/stringx"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
@@ -105,32 +106,39 @@ func (ca *CreateQuotaAction) setDefaultReqValues() {
 // createProjectQuota create project quota && associate with provider
 func (ca *CreateQuotaAction) createProjectQuota() error {
 	pQuota := &quota.ProjectQuota{
-		CreateTime:  time.Now().Unix(),
-		UpdateTime:  time.Now().Unix(),
-		QuotaId:     stringx.GenerateRandomID("quota"),
-		QuotaName:   ca.req.QuotaName,
-		Description: ca.req.Description,
-		Provider:    ca.req.Provider,
-		QuotaType:   quota.ProjectQuotaType(ca.req.QuotaType),
-		Quota:       &quota.QuotaResource{},
-		ProjectId:   ca.req.ProjectID,
-		ProjectCode: ca.req.ProjectCode,
-		ClusterId:   ca.req.ClusterId,
-		Namespace:   ca.req.GetNameSpace(),
-		BusinessId:  ca.req.GetBusinessID(),
-		IsDeleted:   false,
-		Status:      quota.Creating,
-		Labels:      ca.req.GetLabels(),
-		Annotations: ca.req.GetAnnotations(),
+		CreateTime:             time.Now().Unix(),
+		UpdateTime:             time.Now().Unix(),
+		QuotaId:                stringx.GenerateRandomID("quota"),
+		QuotaName:              ca.req.QuotaName,
+		Description:            ca.req.Description,
+		Provider:               ca.req.Provider,
+		QuotaType:              quota.ProjectQuotaType(ca.req.QuotaType),
+		Quota:                  &quota.QuotaResource{},
+		ProjectId:              ca.req.ProjectID,
+		ProjectCode:            ca.req.ProjectCode,
+		ClusterId:              ca.req.ClusterId,
+		Namespace:              ca.req.GetNameSpace(),
+		BusinessId:             ca.req.GetBusinessID(),
+		IsDeleted:              false,
+		Status:                 quota.Creating,
+		Labels:                 ca.req.GetLabels(),
+		Annotations:            ca.req.GetAnnotations(),
+		QuotaAttr:              quota.TransProto2QuotaAttr(ca.req.GetQuotaAttr()),
+		QuotaSharedEnabled:     ca.req.QuotaSharedEnabled.GetValue(),
+		QuotaSharedProjectList: quota.TransProto2QuotaSharedProjects(ca.req.GetQuotaSharedProjectList()),
 	}
 
-	if ca.req.GetQuotaType() == string(quota.Host) && ca.req.Quota != nil {
+	if (ca.req.GetQuotaType() == string(quota.Host)) && ca.req.Quota != nil {
 		var conds []*operator.Condition
 
 		conds = append(conds, operator.NewLeafCondition(operator.Eq, operator.M{
 			"projectCode":                      ca.req.GetProjectCode(),
 			"quota.hostResources.zoneName":     ca.req.GetQuota().GetZoneResources().GetZoneName(),
 			"quota.hostResources.instanceType": ca.req.GetQuota().GetZoneResources().GetInstanceType(),
+		}))
+
+		conds = append(conds, operator.NewLeafCondition(operator.Ne, operator.M{
+			"status": quota.Deleted,
 		}))
 
 		cond := operator.NewBranchCondition(operator.And, conds...)
@@ -180,6 +188,14 @@ func (ca *CreateQuotaAction) dispatchTask() error {
 	return nil
 }
 
+// updateQuotaStatusToRunning update quota status to running directly (skip ITSM approval)
+func (ca *CreateQuotaAction) updateQuotaStatusToRunning() error {
+	return ca.model.UpdateProjectQuotaByField(ca.ctx, entity.M{
+		quota.FieldKeyQuotaId: ca.sQuota.QuotaId,
+		quota.FieldKeyStatus:  quota.Running.String(),
+	})
+}
+
 // Do create project request
 func (ca *CreateQuotaAction) Do(ctx context.Context,
 	req *proto.CreateProjectQuotaRequest, resp *proto.ProjectQuotaResponse) error {
@@ -195,15 +211,24 @@ func (ca *CreateQuotaAction) Do(ctx context.Context,
 	if err := ca.createProjectQuota(); err != nil {
 		return errorx.NewDBErr(err.Error())
 	}
+
+	// 如果跳过ITSM审批，直接更新状态为Running
+	if ca.req.GetSkipItsmApproval().GetValue() {
+		if err := ca.updateQuotaStatusToRunning(); err != nil {
+			return errorx.NewDBErr(err.Error())
+		}
+		resp.Data = ca.pQuota
+		return nil
+	}
+
+	// 走正常的任务审批流程
 	if err := ca.dispatchTask(); err != nil {
 		return errorx.NewBuildTaskErr(err.Error())
 	}
-
 	t := getTaskWithSN(ca.task.TaskID)
 	if t != nil {
 		ca.task = t
 	}
-
 	// set resp data
 	task, err := convert.MarshalInterfaceToValue(ca.task)
 	if err != nil {
@@ -211,6 +236,5 @@ func (ca *CreateQuotaAction) Do(ctx context.Context,
 	}
 	resp.Task = task
 	resp.Data = ca.pQuota
-
 	return nil
 }

@@ -6,7 +6,8 @@
     "hostID": ${synchronizer_hostID},
     "whiteList": "${synchronizer_whiteList}",
     "blackList": "${synchronizer_blackList}",
-    "enableMultiTenantMode": ${enableMultiTenantMode}
+    "enableMultiTenantMode": ${enableMultiTenantMode},
+    "customResourceTypes": {}
   },
   "client": {
     "client_crt_pwd": "${client_clientCrtPwd}",

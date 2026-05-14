@@ -40,20 +40,24 @@ func ParseDeploySpec(manifest map[string]interface{}, spec *model.DeploySpec) {
 	common.ParseLabels(templateLables, &spec.Labels.TemplateLabels)
 	ParseDeployReplicas(manifest, &spec.Replicas)
 	tmplSpec, _ := mapx.GetItems(manifest, "spec.template.spec")
-	podSpec, _ := tmplSpec.(map[string]interface{})
-	ParseNodeSelect(podSpec, &spec.NodeSelect)
-	ParseAffinity(podSpec, &spec.Affinity)
-	ParseToleration(podSpec, &spec.Toleration)
-	ParseNetworking(podSpec, &spec.Networking)
-	ParsePodSecurityCtx(podSpec, &spec.Security)
-	ParseSpecReadinessGates(podSpec, &spec.ReadinessGates)
-	ParseSpecOther(podSpec, &spec.Other)
+	if podSpec, ok := tmplSpec.(map[string]interface{}); ok {
+		ParseNodeSelect(podSpec, &spec.NodeSelect)
+		ParseAffinity(podSpec, &spec.Affinity)
+		ParseToleration(podSpec, &spec.Toleration)
+		ParseNetworking(podSpec, &spec.Networking)
+		ParsePodSecurityCtx(podSpec, &spec.Security)
+		ParseSpecReadinessGates(podSpec, &spec.ReadinessGates)
+		ParseSpecOther(podSpec, &spec.Other)
+	}
 }
 
 // ParseDeployReplicas xxx
 func ParseDeployReplicas(manifest map[string]interface{}, replicas *model.DeployReplicas) {
 	replicas.Cnt = mapx.GetIntStr(manifest, "spec.replicas")
-	replicas.UpdateStrategy = mapx.Get(manifest, "spec.strategy.type", resCsts.DefaultUpdateStrategy).(string)
+	if updateStrategy, ok := mapx.Get(manifest, "spec.strategy.type", resCsts.DefaultUpdateStrategy).(string); ok {
+		replicas.UpdateStrategy = updateStrategy
+	}
+
 	replicas.MaxSurge, replicas.MSUnit = resCsts.DefaultMaxSurge, util.UnitPercent
 	if maxSurge, err := mapx.GetItems(manifest, "spec.strategy.rollingUpdate.maxSurge"); err == nil {
 		replicas.MaxSurge, replicas.MSUnit = util.AnalyzeIntStr(maxSurge)

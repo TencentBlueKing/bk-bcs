@@ -1,0 +1,6 @@
+namespace: default
+version:
+  nginx: 0.1.1
+replicaCount: 1
+image:
+  repository: nginx

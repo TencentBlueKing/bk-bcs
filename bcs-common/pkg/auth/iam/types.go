@@ -34,6 +34,11 @@ const (
 	SystemIDBKBCS = "bk_bcs_app"
 	// IamAppURL permission system url
 	IamAppURL = ""
+
+	// HeaderTenantId header tenant id
+	HeaderTenantId = "X-Bk-Tenant-Id"
+	// DefaultTenantId default tenant id
+	DefaultTenantId = "default"
 )
 
 // BaseResponse base response

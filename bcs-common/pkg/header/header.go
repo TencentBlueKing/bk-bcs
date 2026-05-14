@@ -47,6 +47,9 @@ const (
 	//TracestateHeaderKey tracestate header key
 	TracestateKey = "Tracestate"
 
+	// BkTenantIdHeaderKey is the header name of X-Bk-Tenant-Id.
+	BkTenantIdHeaderKey = "X-Bk-Tenant-Id"
+
 	//LaneIDPrefix 染色的header前缀
 	LaneIDPrefix = "X-Lane-"
 )
@@ -74,6 +77,8 @@ func CustomHeaderMatcher(key string) (string, bool) {
 		return TraceparentKey, true
 	case TracestateKey:
 		return TracestateKey, true
+	case BkTenantIdHeaderKey:
+		return BkTenantIdHeaderKey, true
 	default:
 		return runtime.DefaultHeaderMatcher(key)
 	}

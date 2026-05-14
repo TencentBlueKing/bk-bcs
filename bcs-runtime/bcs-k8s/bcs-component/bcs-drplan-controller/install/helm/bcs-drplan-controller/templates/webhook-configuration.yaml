@@ -1,0 +1,176 @@
+{{- if .Values.webhook.enabled -}}
+{{- $fullName := include "bcs-drplan-controller.fullname" . -}}
+{{- $serviceName := include "bcs-drplan-controller.webhookServiceName" . -}}
+{{- $secretName := printf "%s-webhook-cert" $fullName -}}
+{{- $altNames := list ( printf "%s.%s" $serviceName .Release.Namespace ) ( printf "%s.%s.svc" $serviceName .Release.Namespace ) ( printf "%s.%s.svc.cluster.local" $serviceName .Release.Namespace ) -}}
+{{- $ca := genCA "drplan-controller-ca" 3650 -}}
+{{- $cert := genSignedCert $serviceName nil $altNames 3650 $ca -}}
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ $secretName }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "bcs-drplan-controller.labels" . | nindent 4 }}
+type: kubernetes.io/tls
+data:
+  {{- if .Values.webhook.certificate.autoGenerate }}
+  tls.crt: {{ $cert.Cert | b64enc }}
+  tls.key: {{ $cert.Key | b64enc }}
+  ca.crt: {{ $ca.Cert | b64enc }}
+  {{- else }}
+  tls.crt: {{ .Values.webhook.certificate.certPem }}
+  tls.key: {{ .Values.webhook.certificate.keyPem }}
+  ca.crt: {{ .Values.webhook.certificate.caBundle }}
+  {{- end }}
+
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: {{ $fullName }}-mutating-webhook-configuration
+  labels:
+    {{- include "bcs-drplan-controller.labels" . | nindent 4 }}
+webhooks:
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    {{- if .Values.webhook.certificate.autoGenerate }}
+    caBundle: {{ $ca.Cert | b64enc }}
+    {{- else }}
+    caBundle: {{ .Values.webhook.certificate.caBundle }}
+    {{- end }}
+    service:
+      name: {{ $serviceName }}
+      namespace: {{ .Release.Namespace }}
+      path: /mutate-dr-bkbcs-tencent-com-v1alpha1-drworkflow
+      port: 443
+  failurePolicy: Fail
+  name: mdrworkflow.dr.bkbcs.tencent.com
+  rules:
+  - apiGroups:
+    - dr.bkbcs.tencent.com
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - drworkflows
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    {{- if .Values.webhook.certificate.autoGenerate }}
+    caBundle: {{ $ca.Cert | b64enc }}
+    {{- else }}
+    caBundle: {{ .Values.webhook.certificate.caBundle }}
+    {{- end }}
+    service:
+      name: {{ $serviceName }}
+      namespace: {{ .Release.Namespace }}
+      path: /mutate-dr-bkbcs-tencent-com-v1alpha1-drplan
+      port: 443
+  failurePolicy: Fail
+  name: mdrplan.dr.bkbcs.tencent.com
+  rules:
+  - apiGroups:
+    - dr.bkbcs.tencent.com
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - drplans
+  sideEffects: None
+
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: {{ $fullName }}-validating-webhook-configuration
+  labels:
+    {{- include "bcs-drplan-controller.labels" . | nindent 4 }}
+webhooks:
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    {{- if .Values.webhook.certificate.autoGenerate }}
+    caBundle: {{ $ca.Cert | b64enc }}
+    {{- else }}
+    caBundle: {{ .Values.webhook.certificate.caBundle }}
+    {{- end }}
+    service:
+      name: {{ $serviceName }}
+      namespace: {{ .Release.Namespace }}
+      path: /validate-dr-bkbcs-tencent-com-v1alpha1-drworkflow
+      port: 443
+  failurePolicy: Fail
+  name: vdrworkflow.dr.bkbcs.tencent.com
+  rules:
+  - apiGroups:
+    - dr.bkbcs.tencent.com
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - drworkflows
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    {{- if .Values.webhook.certificate.autoGenerate }}
+    caBundle: {{ $ca.Cert | b64enc }}
+    {{- else }}
+    caBundle: {{ .Values.webhook.certificate.caBundle }}
+    {{- end }}
+    service:
+      name: {{ $serviceName }}
+      namespace: {{ .Release.Namespace }}
+      path: /validate-dr-bkbcs-tencent-com-v1alpha1-drplan
+      port: 443
+  failurePolicy: Fail
+  name: vdrplan.dr.bkbcs.tencent.com
+  rules:
+  - apiGroups:
+    - dr.bkbcs.tencent.com
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - drplans
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    {{- if .Values.webhook.certificate.autoGenerate }}
+    caBundle: {{ $ca.Cert | b64enc }}
+    {{- else }}
+    caBundle: {{ .Values.webhook.certificate.caBundle }}
+    {{- end }}
+    service:
+      name: {{ $serviceName }}
+      namespace: {{ .Release.Namespace }}
+      path: /validate-dr-bkbcs-tencent-com-v1alpha1-drplanexecution
+      port: 443
+  failurePolicy: Fail
+  name: vdrplanexecution.dr.bkbcs.tencent.com
+  rules:
+  - apiGroups:
+    - dr.bkbcs.tencent.com
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - drplanexecutions
+  sideEffects: None
+{{- end }}

@@ -235,7 +235,7 @@ func convertObservabilityConfigValues(
 	// 获取采样率
 	if istiodValues.Pilot != nil && istiodValues.Pilot.TraceSampling != nil {
 		result.ObservabilityConfig.TracingConfig.TraceSamplingPercent =
-			wrapperspb.Int32(int32(*istiodValues.Pilot.TraceSampling * 100))
+			wrapperspb.Float(float32(*istiodValues.Pilot.TraceSampling))
 	}
 
 	// 更新日志配置

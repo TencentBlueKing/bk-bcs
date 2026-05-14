@@ -56,7 +56,7 @@ func (nr *NamespaceReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 	if err := nr.k8sClient.Get(nr.ctx, req.NamespacedName, ns); err != nil {
 		if k8serrors.IsNotFound(err) {
 			blog.Infof("not found ns'%s/%s'", req.Namespace, req.Name)
-			return ctrl.Result{}, err
+			return ctrl.Result{}, nil
 		}
 		blog.Warnf("get ns failed, err: %v", err)
 		return ctrl.Result{

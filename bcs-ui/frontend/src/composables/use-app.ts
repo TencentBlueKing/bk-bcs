@@ -19,10 +19,20 @@ export interface IProject {
   enableVcluster: boolean
   project_name: string // 兼容旧版数据（不要再使用）
   project_id: string // 兼容旧版数据
+  annotations:  Record<string, string>
+  createTime: string
+  creator:  string
+  isOffline:  boolean
+  labels: Record<string, string>
+  managers: string
+  updateTime: string
+  updater:  string
+  useBKRes: boolean
 }
 // todo 完善类型
 export interface ICluster {
   region: string
+  businessID: string
   clusterID: string
   clusterName: string
   status: 'INITIALIZATION' | 'DELETING' | 'RUNNING'
@@ -169,6 +179,7 @@ export function useAppData() {
     PROJECTQUOTAS: false,
     PLATFORMMANAGE: false, // 平台管理默认不开启
     DEPLOYMENTMANAGEPULL: false,
+    ENABLEPOPUP: false, // ai小鲸划词弹窗默认不开启
   };
   async function getFeatureFlags(params: { projectCode: string }) {
     const data = await featureFlagsApi(params).catch(() => ({}));

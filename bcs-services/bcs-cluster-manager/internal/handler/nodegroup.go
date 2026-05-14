@@ -138,6 +138,10 @@ func (cm *ClusterManager) ListNodeGroup(ctx context.Context,
 	return nil
 }
 
+const (
+	nodegroupListDefaultLimit = 100
+)
+
 // ListNodeGroupV2 implements interface cmproto.ClusterManagerServer
 func (cm *ClusterManager) ListNodeGroupV2(ctx context.Context,
 	req *cmproto.ListNodeGroupV2Request, resp *cmproto.ListNodeGroupV2Response) error {
@@ -147,6 +151,12 @@ func (cm *ClusterManager) ListNodeGroupV2(ctx context.Context,
 	}
 	start := time.Now()
 	ca := nodegroup.NewListAction(cm.model)
+	if req.Limit == 0 {
+		req.Limit = nodegroupListDefaultLimit
+	}
+	if req.Page == 0 {
+		req.Page = 1
+	}
 	ca.Handle(ctx, req, resp)
 	metrics.ReportAPIRequestMetric("ListNodeGroupV2", "grpc", strconv.Itoa(int(resp.Code)), start)
 	blog.Infof("reqID: %s, action: ListNodeGroupV2, req %v, resp.Code %d, "+

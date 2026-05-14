@@ -197,14 +197,14 @@ func TestGenIstiodValues(t *testing.T) {
 						Enabled:              &wrappers.BoolValue{Value: true},
 						Endpoint:             &wrappers.StringValue{Value: "http://jaeger-collector.istio-system:14268/api/traces"},
 						BkToken:              &wrappers.StringValue{Value: "test-token"},
-						TraceSamplingPercent: &wrappers.Int32Value{Value: 10},
+						TraceSamplingPercent: &wrappers.FloatValue{Value: 10},
 					},
 				},
 			},
 			expectedFields: []string{
 				"mesh-obs", "net-obs", "accessLogFile", "/dev/stdout",
 				"JSON", `"timestamp"`, "enableTracing: true", "jaeger-collector.istio-system",
-				"traceSampling: 0.1",
+				"traceSampling: 10",
 			},
 		},
 		{
@@ -223,13 +223,13 @@ func TestGenIstiodValues(t *testing.T) {
 					TracingConfig: &meshmanager.TracingConfig{
 						Enabled:              &wrappers.BoolValue{Value: true},
 						Endpoint:             &wrappers.StringValue{Value: "http://zipkin.istio-system:9411/api/v2/spans"},
-						TraceSamplingPercent: &wrappers.Int32Value{Value: 5},
+						TraceSamplingPercent: &wrappers.FloatValue{Value: 5},
 					},
 				},
 			},
 			expectedFields: []string{
 				"mesh-legacy", "net-legacy", "enableTracing: true",
-				"zipkin.istio-system:9411", "traceSampling: 0.05",
+				"zipkin.istio-system:9411", "traceSampling: 5",
 			},
 		},
 		{
@@ -465,7 +465,7 @@ func TestGenIstiodValuesByComponents(t *testing.T) {
 				Enabled:              &wrappers.BoolValue{Value: true},
 				Endpoint:             &wrappers.StringValue{Value: "http://jaeger-collector.istio-system:14268/api/traces"},
 				BkToken:              &wrappers.StringValue{Value: "test-token"},
-				TraceSamplingPercent: &wrappers.Int32Value{Value: 10},
+				TraceSamplingPercent: &wrappers.FloatValue{Value: 10},
 			},
 		}
 
@@ -511,7 +511,7 @@ func TestGenIstiodValuesByComponents(t *testing.T) {
 				},
 			},
 			Pilot: &common.IstiodPilotConfig{
-				TraceSampling: pointer.Float64(0.1),
+				TraceSampling: pointer.Float32(10),
 			},
 		}
 
@@ -557,7 +557,7 @@ func TestGenIstiodValuesByComponents(t *testing.T) {
 				},
 			},
 			Pilot: &common.IstiodPilotConfig{
-				TraceSampling: pointer.Float64(0.1),
+				TraceSampling: pointer.Float32(10),
 			},
 		}
 

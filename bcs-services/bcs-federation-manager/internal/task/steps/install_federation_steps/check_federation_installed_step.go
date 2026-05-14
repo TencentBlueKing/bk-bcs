@@ -14,6 +14,7 @@
 package steps
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -66,14 +67,14 @@ func (s CheckFederationInstalledStep) DoWork(t *types.Task) error {
 		return fmt.Errorf("task[%s] not exist common param clusterId", t.TaskID)
 	}
 
-	isIstalled, err := helm.GetHelmClient().IsInstalledForFederation(&helm.ReleaseBaseOptions{
+	isIntalled, err := helm.GetHelmClient().IsInstalledForFederation(context.Background(), &helm.ReleaseBaseOptions{
 		ProjectID: projectId,
 		ClusterID: clusterId,
 	})
 	if err != nil {
 		return err
 	}
-	if isIstalled {
+	if isIntalled {
 		return fmt.Errorf("federation modules are already installed")
 	}
 

@@ -206,6 +206,10 @@ units:
     nDays: '{num} Day'
     nMonths: '{0} Months'
     nYears: '{0} Years'
+    leftDays: '{num} day remaining'
+    leftMonths: '{num} month remaining'
+    leftYears: '{num} year remaining'
+    leftHours: '{num} hour remaining'
   suffix:
     seconds: s
     days: Day
@@ -219,10 +223,17 @@ units:
   cores: '{0} Cores'
 metrics:
   cpuUsage: CPU usage
+  cpuLimitUsage: CPU usage limit
   diskUsage: Disk usage
   memUsage: Memory usage
   memUsage1: Memory usage
   podUsage: Pod usage
+  cpuUsageDesc: >-
+    CPU usage percentage per core. 100% means one core is fully utilized, 200%
+    means two cores are fully utilized
+  cpuLimitUsageDesc: >-
+    Percentage of actual CPU cores consumed relative to the Limit. May exceed
+    the limit, but typically stays within 100%
   cpuRequestUsage:
     text: CPU packing rate
     clusterDesc: >-
@@ -315,6 +326,7 @@ generic:
       Multiple commands are separated by spaces, eg: / bin / bash &amp; quote; -
       C &amp; quote; &amp; quote
     searchIp: 'Enter IP to search, separate multiple IPs with commas or spaces'
+    searchWith: 'Search {0}'
   button:
     resetSearch: Reset search
     validate: Validate
@@ -434,6 +446,7 @@ generic:
     codeMode: Code Mode
     enabled: Enabled
     disabled: Disabled
+    timeLeft: Time left
   status:
     part_failure: Part failure
     support: Support
@@ -809,9 +822,19 @@ cluster:
       vpc:
         text: VPC
         deficiencyIpNumTips: The number of available container network IP is insufficient
-        availableIpNum: 'Number of ip available: {0}'
         businessSpecificVPC: Business-specific VPC
         publicVPC: Public VPC
+        exclusiveVPC: Exclusive VPC
+        stressTestVPC: Stress Test VPC
+        publicVPCTips: >-
+          All business clusters under VPC share network resources and egress
+          gateways, stress testing is prohibited, suitable for small-scale
+          clusters (200 nodes and below)
+        exclusiveVPCTips: Business exclusive VPC network resources
+        stressTestVPCTips: >-
+          VPC is dedicated to deploying stress test clients for business, egress
+          and ingress bandwidth and connections need to be clearly defined,
+          please contact jonathantan to confirm resources
       networkSetting1:
         text: IP resource
         maxNodePodNum: Number of pod ip
@@ -1047,6 +1070,7 @@ cluster:
           cluster.
     label:
       tkeID: TKE Cluster ID
+      goRecord: View execution records
   ca:
     name: Cluster autoscaler
     title:
@@ -1238,6 +1262,9 @@ cluster:
           tips: Default use of GPU image provided by the platform
         CVM: CVM
         GPU: GPU
+        bizIDs: Business
+        availableQuota: Available Quota
+        providerTime: Provide duration
       title:
         nodeConfig: Node configuration
         initConfig: Initialization configuration
@@ -2967,6 +2994,9 @@ dashboard:
       noPerms: >-
         The current user does not have permission to view some resources. Please
         click here{0}
+      noMonitor: >-
+        The current cluster does not have a monitoring collector installed.
+        Please go to the {plugins} to install the monitoring collector
     label:
       upgrade:
         maxSurg: 'Maximum scheduling pod quantity (MaxSurge): {num}'
@@ -3710,6 +3740,11 @@ tke:
       maxBandWidth: Max bandwidth
     clusterAvailableNodes: Node capacity
     retain: Destruction node
+    selectVPC: Select VPC
+    vpcName: VPC Name
+    vpcID: VPCID
+    availableUnderlay: Available underlayIP number
+    availableOverlay: Available overlayIP number
   title:
     connectFailure:
       text: >-
@@ -3757,6 +3792,13 @@ tke:
     cidrMaskLen: 'Subnet mask length range: {0}'
     minPodIP: The Pod IP count must be greater than 0
     podIPsNeedLessThanVpcIPs: Pod IPs need less than VPC IPs
+    podIPsNeedLessThanUnderlayNum: >-
+      The number of available underlying IPs is insufficient. Please reduce the
+      number of IP applications; Or create a cluster before attempting to enable
+      VPC-CNI.
+    podIPsNeedLessThanUnderlayIPNum: >-
+      The number of available underlying IPs is insufficient. Please reduce the
+      number of IP applications;
     passwordNotSame: The passwords entered do not match
     minIpNum: >-
       To ensure that the cluster has enough IPs, the container network segment
@@ -3940,6 +3982,7 @@ templateFile:
     import: Import
     export: Export all folders
     exportFolder: Export Folder
+    addSubFolder: Add Folder
     upgrade: Upgrade to Helm template
     rollback: Rollback
     toResourceView: Resource view
@@ -3992,6 +4035,8 @@ templateFile:
       switching back to a non-Helm template will no longer be supported.
     spaceSubTitle: The template folder and its template files will be removed
     emptyContent: The template file content cannot be empty
+    invalidChar: 'Folder name is invalid, only letters, numbers, - and _ are allowed'
+    invalidFileName: 'File name cannot start or end with /, and cannot contain //'
     success: success
     subTitle: 'Template file {templateFile} instance has been deployed to {cluster}'
     noChanges: No changes

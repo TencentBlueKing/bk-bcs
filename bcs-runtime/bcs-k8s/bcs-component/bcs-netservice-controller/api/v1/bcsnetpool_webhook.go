@@ -42,10 +42,9 @@ func (r *BCSNetPool) SetupWebhookWithManager(mgr ctrl.Manager) error {
 		Complete()
 }
 
+// nolint
 // NOCC:tosa/linelength(设计如此)
-// +kubebuilder:webhook:path=/mutate-netservice-bkbcs-tencent-com-v1-bcsnetpool,mutating=true,
-// failurePolicy=fail,sideEffects=None,groups=netservice.bkbcs.tencent.com,
-// resources=bcsnetpools,verbs=create;update,versions=v1,name=mbcsnetpool.kb.io,admissionReviewVersions=v1
+// +kubebuilder:webhook:path=/mutate-netservice-bkbcs-tencent-com-v1-bcsnetpool,mutating=true,failurePolicy=fail,sideEffects=None,groups=netservice.bkbcs.tencent.com,resources=bcsnetpools,verbs=create;update,versions=v1,name=mbcsnetpool.kb.io,admissionReviewVersions=v1
 
 var _ admission.CustomDefaulter = &bcsNetPoolClient{}
 
@@ -54,10 +53,9 @@ func (c *bcsNetPoolClient) Default(ctx context.Context, obj runtime.Object) erro
 	return nil
 }
 
+// nolint
 // NOCC:tosa/linelength(设计如此)
-// +kubebuilder:webhook:path=/validate-netservice-bkbcs-tencent-com-v1-bcsnetpool,mutating=false,
-// failurePolicy=fail,sideEffects=None,groups=netservice.bkbcs.tencent.com,
-// resources=bcsnetpools,verbs=create;update;delete,versions=v1,name=vbcsnetpool.kb.io,admissionReviewVersions=v1
+// +kubebuilder:webhook:path=/validate-netservice-bkbcs-tencent-com-v1-bcsnetpool,mutating=false,failurePolicy=fail,sideEffects=None,groups=netservice.bkbcs.tencent.com,resources=bcsnetpools,verbs=create;update;delete,versions=v1,name=vbcsnetpool.kb.io,admissionReviewVersions=v1
 
 var _ admission.CustomValidator = &bcsNetPoolClient{}
 

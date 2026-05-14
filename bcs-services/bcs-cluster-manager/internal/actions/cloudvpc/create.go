@@ -60,6 +60,7 @@ func (ca *CreateAction) createCloudVPC() error {
 		Underlay:      ca.req.GetUnderlay(),
 		CreatTime:     timeStr,
 		UpdateTime:    timeStr,
+		Scenario:      ca.req.Scenario,
 	}
 	return ca.model.CreateCloudVPC(ca.ctx, cloudVPC)
 }

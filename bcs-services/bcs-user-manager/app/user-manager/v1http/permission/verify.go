@@ -535,6 +535,10 @@ func (cli *PermVerifyClient) verifyUserClusterScopedPermission(ctx context.Conte
 	actionID := ""
 	clusterType := returnClusterType(resource)
 	if clusterType == Shared {
+		// 共享集群特定资源跳过权限校验
+		if skipSpecificResources(action, resource) {
+			return true, nil
+		}
 		return false, fmt.Errorf("shared cluster[%s] not support %s permission", resource.ClusterID, clusterScopedType)
 	}
 
@@ -587,6 +591,20 @@ func (cli *PermVerifyClient) verifyUserClusterScopedPermission(ctx context.Conte
 
 	go addAudit(ctx, user, project.ProjectCode, action, actionID, resource)
 	return allow, nil
+}
+
+// skipSpecificResources check if the resource is in the skip list
+func skipSpecificResources(action string, resource ClusterResource) bool {
+	// 仅支持查看权限跳过
+	if action != http.MethodGet {
+		return false
+	}
+	for _, skipRes := range config.GetGlobalConfig().SharedCluster.SkipResources {
+		if skipRes == resource.ResourceType {
+			return true
+		}
+	}
+	return false
 }
 
 // getK8sRequestAPIInfo

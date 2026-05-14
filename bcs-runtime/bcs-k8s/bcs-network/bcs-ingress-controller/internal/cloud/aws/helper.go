@@ -184,7 +184,9 @@ func (e *Elb) ensureRule(region string, listener *networkextensionv1.Listener, l
 	if err != nil {
 		return err
 	}
-	exceptRules := e.generateExceptRules(listener.Spec.Rules, ruleTargetGroup)
+	exceptRules := e.generateExceptRules(
+		listener.Spec.LoadbalancerID, listener.Spec.Port, listener.Spec.Rules, ruleTargetGroup,
+	)
 	rules, err := e.sdkWrapper.DescribeRules(region, &elbv2.DescribeRulesInput{ListenerArn: &listenerArn}, 3)
 	if err != nil {
 		return fmt.Errorf("DescribeRules failed, err %s", err.Error())
@@ -292,7 +294,7 @@ func (e *Elb) ensureRuleTargetGroup(region string, listener *networkextensionv1.
 		if rule.TargetGroup == nil {
 			continue
 		}
-		tgName := getRuleTargetGroupName(rule.Domain, rule.Path)
+		tgName := getRuleTargetGroupName(listener.Spec.LoadbalancerID, listener.Spec.Port, rule.Domain, rule.Path)
 		tg, err := e.sdkWrapper.DescribeTargetGroups(region, &elbv2.DescribeTargetGroupsInput{
 			Names: []string{tgName}})
 		if err != nil {
@@ -413,21 +415,21 @@ func setModifyHealthCheck(input *elbv2.ModifyTargetGroupInput, rule *networkexte
 	}
 }
 
-// md5(domain+path) md5避免命名出现特殊字符
-func getRuleTargetGroupName(domain, path string) string {
+// md5(lbName+port+domain+path) md5避免命名出现特殊字符
+func getRuleTargetGroupName(lbName string, port int, domain, path string) string {
 	// NOCC:gas/crypto(误报 未使用于密钥)
-	return fmt.Sprintf("%x", (md5.Sum([]byte(domain + path))))
+	return fmt.Sprintf("%x", (md5.Sum([]byte(fmt.Sprintf("%s-%d-%s-%s", lbName, port, domain, path)))))
 }
 
 // generate rules from listener rules
-func (e *Elb) generateExceptRules(rules []networkextensionv1.ListenerRule,
+func (e *Elb) generateExceptRules(lbName string, port int, rules []networkextensionv1.ListenerRule,
 	ruleTgMap map[string]string) []types.Rule {
 	var except []types.Rule
 	for _, rule := range rules {
 		if rule.TargetGroup == nil {
 			continue
 		}
-		tgName := getRuleTargetGroupName(rule.Domain, rule.Path)
+		tgName := getRuleTargetGroupName(lbName, port, rule.Domain, rule.Path)
 		action := types.Action{
 			Type: types.ActionTypeEnumForward,
 			ForwardConfig: &types.ForwardActionConfig{

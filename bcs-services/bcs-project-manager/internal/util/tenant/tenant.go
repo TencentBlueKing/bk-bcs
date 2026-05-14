@@ -18,7 +18,6 @@ import (
 	"fmt"
 
 	middleauth "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
-	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
 	"go-micro.dev/v4/metadata"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/constant"
@@ -88,7 +87,7 @@ func GetTenantIdFromContext(ctx context.Context) string {
 	}
 
 	if tenantId == "" {
-		tenantId = utils.DefaultTenantId
+		tenantId = constant.DefaultTenantId
 	}
 
 	return tenantId
@@ -141,7 +140,7 @@ func GetAuthAndTenantInfoFromCtx(ctx context.Context) UserInfoCtx {
 	}
 
 	if user.ResourceTenantId == "" {
-		user.ResourceTenantId = utils.DefaultTenantId
+		user.ResourceTenantId = constant.DefaultTenantId
 	}
 
 	return user

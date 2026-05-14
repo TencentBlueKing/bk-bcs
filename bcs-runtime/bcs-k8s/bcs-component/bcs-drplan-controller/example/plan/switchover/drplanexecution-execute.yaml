@@ -1,0 +1,8 @@
+apiVersion: dr.bkbcs.tencent.com/v1alpha1
+kind: DRPlanExecution
+metadata:
+  name: nginx-switchover-plan-exec-001
+  namespace: default
+spec:
+  planRef: nginx-switchover-plan
+  operationType: Execute

@@ -110,6 +110,7 @@ export interface IRuleData {
 export interface IClusterGroup {
   'storage_cluster_id': number
   'storage_cluster_name': string
+  'storage_display_name': string
   'storage_version': string
   'storage_usage': number
   'storage_total': number

@@ -1,0 +1,859 @@
+---
+description: Go 代码规范（符合 golangci-lint 配置）
+globs: "**/*.go"
+alwaysApply: false
+---
+
+# Go 代码规范
+
+本规范基于项目的 `.golangci.yml` 配置，确保代码符合 golangci-lint 检查要求。
+
+**注意**：测试文件（`*_test.go`）有更宽松的规则（允许 dot-imports、更高复杂度等）。
+
+---
+
+## 1. 函数长度限制 (funlen)
+
+**限制**：每个函数最多 90 行
+
+**策略**：当函数超长时，按职责拆分为辅助函数
+
+```go
+// ❌ BAD - 函数过长（>90行）
+func ProcessOrder(ctx context.Context, order *Order) error {
+    // 验证订单
+    if order.ID == "" {
+        return errors.New("invalid order")
+    }
+    // ... 50行验证逻辑
+    
+    // 处理支付
+    // ... 50行支付逻辑
+    
+    // 发送通知
+    // ... 30行通知逻辑
+}
+
+// ✅ GOOD - 拆分为多个职责明确的函数
+func ProcessOrder(ctx context.Context, order *Order) error {
+    if err := validateOrder(order); err != nil {
+        return fmt.Errorf("validation failed: %w", err)
+    }
+    if err := processPayment(ctx, order); err != nil {
+        return fmt.Errorf("payment failed: %w", err)
+    }
+    return sendNotification(ctx, order)
+}
+
+func validateOrder(order *Order) error { /* ... */ }
+func processPayment(ctx context.Context, order *Order) error { /* ... */ }
+func sendNotification(ctx context.Context, order *Order) error { /* ... */ }
+```
+
+**特殊情况**：对于 `main()` 函数等初始化逻辑，如果结构清晰但确实过长，可使用：
+```go
+//nolint:funlen
+func main() {
+    // 大量初始化代码...
+}
+```
+
+---
+
+## 2. 常量提取 (goconst)
+
+**规则**：避免魔法字符串，提取为常量
+
+```go
+// ❌ BAD - 重复的字符串字面量
+if status == "Pending" {
+    log.Info("Order is Pending")
+}
+if status == "Pending" {
+    return errors.New("cannot modify Pending order")
+}
+
+// ✅ GOOD - 定义常量
+const (
+    StatusPending   = "Pending"
+    StatusCompleted = "Completed"
+)
+
+if status == StatusPending {
+    log.Info("Order is", StatusPending)
+}
+```
+
+**常量位置**：集中定义在 `api/v1alpha1/constants.go` 或包级别的 `constants.go`
+
+---
+
+## 3. 错误处理 (errcheck)
+
+**规则**：不要忽略错误返回值
+
+```go
+// ❌ BAD - 忽略错误
+file.Close()
+json.Unmarshal(data, &obj)
+
+// ✅ GOOD - 正确处理错误
+if err := file.Close(); err != nil {
+    klog.Warningf("Failed to close file: %v", err)
+}
+
+if err := json.Unmarshal(data, &obj); err != nil {
+    return fmt.Errorf("failed to unmarshal: %w", err)
+}
+
+// ✅ GOOD - defer 中也要检查错误
+defer func() {
+    if err := file.Close(); err != nil {
+        klog.Errorf("Failed to close file: %v", err)
+    }
+}()
+```
+
+**例外**：某些函数允许忽略（已在 `.golangci.yml` 中配置）：
+- `(*os.File).Close`
+- `(io.Closer).Close`
+- `fmt.Fprint*` 系列
+
+---
+
+## 4. 变量遮蔽 (govet shadow)
+
+**规则**：避免在内层作用域重新声明同名变量
+
+```go
+// ❌ BAD - err 被遮蔽
+result, err := fetchData()
+if err != nil {
+    return err
+}
+
+if needValidation {
+    // 这里的 err 遮蔽了外层的 err
+    if err := validate(result); err != nil {
+        return err
+    }
+}
+
+// ✅ GOOD - 使用不同变量名或重用外层变量
+result, err := fetchData()
+if err != nil {
+    return err
+}
+
+if needValidation {
+    err = validate(result)  // 重用外层 err
+    if err != nil {
+        return err
+    }
+}
+
+// ✅ GOOD - 或使用明确的新变量名
+if needValidation {
+    validationErr := validate(result)
+    if validationErr != nil {
+        return validationErr
+    }
+}
+```
+
+---
+
+## 5. 导出项注释 (revive exported)
+
+**规则**：所有导出的类型、函数、常量必须有注释
+
+```go
+// ❌ BAD - 缺少注释
+type UserService struct {
+    db *sql.DB
+}
+
+func (s *UserService) CreateUser(name string) error {
+    // ...
+}
+
+// ✅ GOOD - 完整注释
+// UserService provides user management operations
+type UserService struct {
+    db *sql.DB
+}
+
+// CreateUser creates a new user with the given name
+func (s *UserService) CreateUser(name string) error {
+    // ...
+}
+```
+
+**Package 注释**：每个包都需要 package 注释（在任一 `.go` 文件顶部）：
+```go
+// Package controller implements Kubernetes controllers for DR resources.
+package controller
+```
+
+---
+
+## 6. 命名规范 (revive)
+
+### 接口命名避免口吃
+
+```go
+// ❌ BAD - 在 executor 包中定义 ExecutorRegistry
+package executor
+type ExecutorRegistry interface { /* ... */ }
+// 使用时：executor.ExecutorRegistry（口吃）
+
+// ✅ GOOD - 简化命名
+package executor
+type Registry interface { /* ... */ }
+// 使用时：executor.Registry（简洁）
+```
+
+### 导出常量需要注释
+
+```go
+// ❌ BAD
+const DefaultRetryLimit = 3
+
+// ✅ GOOD
+// DefaultRetryLimit is the default maximum number of retry attempts
+const DefaultRetryLimit = 3
+
+// ✅ GOOD - 常量块注释
+// Retry configuration constants
+const (
+    // DefaultRetryLimit is the default maximum number of retry attempts
+    DefaultRetryLimit = 3
+    // DefaultRetryInterval is the default initial retry interval
+    DefaultRetryInterval = 5 * time.Second
+)
+```
+
+---
+
+## 7. 未使用的参数/返回值 (unparam)
+
+**规则**：移除总是为 nil 或从不使用的参数/返回值
+
+```go
+// ❌ BAD - result 总是返回 nil
+func validate(data string) (result *ValidationResult, error) {
+    if data == "" {
+        return nil, errors.New("empty data")
+    }
+    // 所有路径都 return nil, xxx
+    return nil, nil
+}
+
+// ✅ GOOD - 移除未使用的返回值
+func validate(data string) error {
+    if data == "" {
+        return errors.New("empty data")
+    }
+    return nil
+}
+```
+
+---
+
+## 8. 安全检查 (gosec)
+
+**启用的检查**：G201, G202, G101, G401-G404, G504
+
+### TLS 配置
+
+```go
+// ❌ BAD - 跳过 TLS 验证（生产环境）
+tr := &http.Transport{
+    TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+}
+
+// ✅ GOOD - 仅在测试/开发环境使用，并添加说明
+tr := &http.Transport{
+    TLSClientConfig: &tls.Config{
+        InsecureSkipVerify: true, // #nosec G402 -- Only used in test environment
+    },
+}
+```
+
+### 子进程调用
+
+```go
+// ❌ BAD - 直接使用变量构造命令
+cmd := exec.Command("kubectl", userInput)
+
+// ✅ GOOD - 验证输入或添加说明
+// #nosec G204 -- kubectl path is from trusted configuration
+cmd := exec.Command(kubectlPath, args...)
+```
+
+---
+
+## 9. 循环复杂度 (gocyclo)
+
+**限制**：复杂度 ≤ 20
+
+**策略**：提前返回、提取条件判断、使用状态机
+
+```go
+// ❌ BAD - 深层嵌套
+func processRequest(req *Request) error {
+    if req != nil {
+        if req.Valid() {
+            if req.Type == "A" {
+                if req.Data != nil {
+                    // 深层嵌套...
+                }
+            }
+        }
+    }
+    return nil
+}
+
+// ✅ GOOD - 提前返回
+func processRequest(req *Request) error {
+    if req == nil {
+        return errors.New("nil request")
+    }
+    if !req.Valid() {
+        return errors.New("invalid request")
+    }
+    if req.Type != "A" {
+        return errors.New("unsupported type")
+    }
+    if req.Data == nil {
+        return errors.New("missing data")
+    }
+    
+    // 主逻辑...
+    return nil
+}
+```
+
+---
+
+## 10. 格式化 (gofmt, goimports)
+
+**自动格式化**：在保存时运行 `gofmt` 和 `goimports`
+
+**Local imports 顺序**：
+```go
+import (
+    // 标准库
+    "context"
+    "fmt"
+    
+    // 第三方库
+    "k8s.io/client-go/kubernetes"
+    "sigs.k8s.io/controller-runtime/pkg/client"
+    
+    // 本项目（按字母顺序）
+    drv1alpha1 "github.com/Tencent/bk-bcs/.../api/v1alpha1"
+    "github.com/Tencent/bk-bcs/.../internal/executor"
+)
+```
+
+---
+
+## 快速检查
+
+**运行 lint**：
+```bash
+make lint          # 完整检查
+make lint-fix      # 自动修复部分问题
+```
+
+**常见修复命令**：
+```bash
+# 自动格式化
+gofmt -w .
+goimports -w -local github.com/Tencent/bk-bcs .
+
+# 查看详细错误
+golangci-lint run --verbose
+```
+
+---
+
+## 测试文件特殊规则
+
+测试文件（`*_test.go`）**豁免**以下规则：
+- ✅ 允许使用 dot imports（Ginkgo/Gomega BDD 框架）
+- ✅ 允许更高的函数长度和复杂度
+- ✅ 可以忽略部分错误检查
+
+```go
+// ✅ GOOD - 测试文件中的 dot imports
+import (
+    . "github.com/onsi/ginkgo/v2"
+    . "github.com/onsi/gomega"
+)
+```
+
+---
+
+## Google Go 代码规范
+
+基于 [Google Go Style Guide](https://google.github.io/styleguide/go/) 的最佳实践。
+
+### 11. 命名规范 (Google Style)
+
+#### MixedCaps 驼峰命名
+
+Go 使用 MixedCaps（大驼峰）或 mixedCaps（小驼峰），不使用下划线。
+
+```go
+// ❌ BAD - 使用下划线
+var user_name string
+func get_user_by_id(user_id int) {}
+
+// ✅ GOOD - 驼峰命名
+var userName string
+func getUserByID(userID int) {}
+```
+
+#### 缩写词全大写或全小写
+
+```go
+// ❌ BAD - 混合大小写
+type HttpServer struct {}
+func parseUrl(url string) {}
+var userId int
+
+// ✅ GOOD - 缩写词保持一致
+type HTTPServer struct {}  // 导出：全大写
+func parseURL(url string) {}  // 导出：全大写
+var userID int  // 私有：可以小写或驼峰
+```
+
+**常见缩写**：`API`, `HTTP`, `ID`, `JSON`, `URL`, `XML`, `DB`, `OS`, `IO`
+
+#### 包名简短、清晰
+
+```go
+// ❌ BAD - 包名过长或重复
+package user_management
+package http_utils
+
+// ✅ GOOD - 简短、有意义
+package user
+package httputil
+```
+
+**包名规则**：
+- 全小写，无下划线
+- 简短但有意义
+- 避免与标准库冲突
+- 不使用 `util`、`common`、`base` 等泛化名称
+
+#### Getter 不使用 Get 前缀
+
+```go
+// ❌ BAD
+func (u *User) GetName() string { return u.name }
+
+// ✅ GOOD
+func (u *User) Name() string { return u.name }
+
+// Setter 保留 Set 前缀
+func (u *User) SetName(name string) { u.name = name }
+```
+
+---
+
+### 12. 代码组织 (Google Style)
+
+#### 函数顺序
+
+按重要性和逻辑关系组织，通常顺序为：
+
+1. 导出的类型定义
+2. 导出的构造函数
+3. 导出的方法（按接口分组）
+4. 未导出的辅助函数
+
+```go
+// ✅ GOOD - 清晰的组织结构
+package user
+
+// 1. 导出的类型
+type Service struct {
+    db *sql.DB
+}
+
+// 2. 导出的构造函数
+func NewService(db *sql.DB) *Service {
+    return &Service{db: db}
+}
+
+// 3. 导出的方法
+func (s *Service) Create(ctx context.Context, user *User) error {
+    return s.create(ctx, user)
+}
+
+func (s *Service) Get(ctx context.Context, id string) (*User, error) {
+    return s.get(ctx, id)
+}
+
+// 4. 未导出的辅助函数
+func (s *Service) create(ctx context.Context, user *User) error {
+    // 实现细节
+}
+
+func (s *Service) get(ctx context.Context, id string) (*User, error) {
+    // 实现细节
+}
+```
+
+#### 接收者名称一致
+
+```go
+// ❌ BAD - 接收者名称不一致
+func (u *User) Name() string { return u.name }
+func (user *User) Age() int { return user.age }
+func (this *User) Email() string { return this.email }
+
+// ✅ GOOD - 使用统一的接收者名称
+func (u *User) Name() string { return u.name }
+func (u *User) Age() int { return u.age }
+func (u *User) Email() string { return u.email }
+```
+
+**接收者命名**：
+- 使用类型名首字母或前几个字母（`u` for `User`, `c` for `Client`）
+- 不使用 `me`, `this`, `self`
+- 1-2 个字母为佳
+
+---
+
+### 13. 注释规范 (Google Style)
+
+#### 完整句子，首字母大写
+
+```go
+// ❌ BAD - 不完整的句子
+// get user by id
+func GetUser(id string) {}
+
+// create new user
+func CreateUser(name string) {}
+
+// ✅ GOOD - 完整句子，首字母大写，句号结尾
+// GetUser retrieves a user by their ID.
+func GetUser(id string) {}
+
+// CreateUser creates a new user with the given name.
+func CreateUser(name string) {}
+```
+
+#### Package 注释
+
+```go
+// ✅ GOOD - Package 注释
+// Package user provides user management functionality.
+// 
+// This package handles user creation, retrieval, and updates,
+// with support for authentication and authorization.
+package user
+```
+
+**注意**：
+- Package 注释写在 `package` 语句之前
+- 以 "Package <name>" 开头
+- 可以跨多行，但第一行应该是概述
+
+#### TODO 注释
+
+```go
+// ✅ GOOD - 标准的 TODO 格式
+// TODO(username): Add input validation
+// TODO(username): Refactor to use new API
+```
+
+---
+
+### 14. 错误处理 (Google Style)
+
+#### 错误字符串格式
+
+错误信息应该：
+- **小写开头**（除非是专有名词）
+- **无标点结尾**
+- **简洁明确**
+
+```go
+// ❌ BAD
+return errors.New("User not found.")
+return errors.New("Failed to connect to database!")
+return fmt.Errorf("Error: invalid input")
+
+// ✅ GOOD
+return errors.New("user not found")
+return errors.New("failed to connect to database")
+return fmt.Errorf("invalid input: %s", input)
+```
+
+#### 错误包装使用 %w
+
+```go
+// ❌ BAD - 使用 %v 丢失错误链
+if err != nil {
+    return fmt.Errorf("failed to save user: %v", err)
+}
+
+// ✅ GOOD - 使用 %w 保留错误链
+if err != nil {
+    return fmt.Errorf("failed to save user: %w", err)
+}
+
+// 使用 errors.Is / errors.As 判断
+if errors.Is(err, sql.ErrNoRows) {
+    return nil, ErrUserNotFound
+}
+```
+
+#### 自定义错误类型
+
+```go
+// ✅ GOOD - 实现 error 接口
+type ValidationError struct {
+    Field   string
+    Message string
+}
+
+func (e *ValidationError) Error() string {
+    return fmt.Sprintf("validation failed on field %s: %s", e.Field, e.Message)
+}
+
+// 使用
+if name == "" {
+    return &ValidationError{Field: "name", Message: "cannot be empty"}
+}
+```
+
+---
+
+### 15. 并发安全 (Google Style)
+
+#### Context 传递
+
+```go
+// ❌ BAD - 不使用 context
+func FetchUser(id string) (*User, error) {
+    resp, err := http.Get("http://api.example.com/users/" + id)
+    // ...
+}
+
+// ✅ GOOD - 第一个参数是 context
+func FetchUser(ctx context.Context, id string) (*User, error) {
+    req, err := http.NewRequestWithContext(ctx, "GET", 
+        "http://api.example.com/users/"+id, nil)
+    if err != nil {
+        return nil, err
+    }
+    resp, err := http.DefaultClient.Do(req)
+    // ...
+}
+```
+
+**Context 规则**：
+- 第一个参数命名为 `ctx`
+- 不要将 context 存储在结构体中
+- 不要传递 `nil` context，使用 `context.TODO()` 或 `context.Background()`
+
+#### Goroutine 生命周期管理
+
+```go
+// ❌ BAD - goroutine 泄漏
+func processItems(items []Item) {
+    for _, item := range items {
+        go processItem(item)  // 无法等待完成
+    }
+}
+
+// ✅ GOOD - 使用 WaitGroup
+func processItems(items []Item) {
+    var wg sync.WaitGroup
+    for _, item := range items {
+        wg.Add(1)
+        go func(item Item) {
+            defer wg.Done()
+            processItem(item)
+        }(item)
+    }
+    wg.Wait()
+}
+
+// ✅ GOOD - 使用 errgroup（处理错误）
+func processItems(ctx context.Context, items []Item) error {
+    g, ctx := errgroup.WithContext(ctx)
+    for _, item := range items {
+        item := item  // 循环变量捕获
+        g.Go(func() error {
+            return processItem(ctx, item)
+        })
+    }
+    return g.Wait()
+}
+```
+
+#### Channel 关闭
+
+```go
+// ❌ BAD - 消费者关闭 channel
+func worker(ch chan int) {
+    for v := range ch {
+        process(v)
+    }
+    close(ch)  // 错误：消费者不应该关闭
+}
+
+// ✅ GOOD - 生产者关闭 channel
+func produce(ch chan<- int) {
+    defer close(ch)  // 生产者负责关闭
+    for i := 0; i < 10; i++ {
+        ch <- i
+    }
+}
+
+func consume(ch <-chan int) {
+    for v := range ch {  // range 会在 channel 关闭时退出
+        process(v)
+    }
+}
+```
+
+---
+
+### 16. 接口设计 (Google Style)
+
+#### 小接口原则
+
+```go
+// ❌ BAD - 接口过大
+type DataStore interface {
+    Create(ctx context.Context, data Data) error
+    Get(ctx context.Context, id string) (Data, error)
+    Update(ctx context.Context, data Data) error
+    Delete(ctx context.Context, id string) error
+    List(ctx context.Context, filter Filter) ([]Data, error)
+    Count(ctx context.Context) (int, error)
+}
+
+// ✅ GOOD - 小接口，按需组合
+type Reader interface {
+    Get(ctx context.Context, id string) (Data, error)
+    List(ctx context.Context, filter Filter) ([]Data, error)
+}
+
+type Writer interface {
+    Create(ctx context.Context, data Data) error
+    Update(ctx context.Context, data Data) error
+    Delete(ctx context.Context, id string) error
+}
+
+// 需要时组合
+type ReadWriter interface {
+    Reader
+    Writer
+}
+```
+
+#### 接受接口，返回结构体
+
+```go
+// ❌ BAD - 参数和返回值都是具体类型
+func ProcessData(db *sql.DB, data *MyData) *Result {
+    // ...
+}
+
+// ✅ GOOD - 参数是接口，返回值是具体类型
+func ProcessData(store DataStore, data *MyData) *Result {
+    // 使用接口，方便测试和扩展
+}
+```
+
+**原则**："Be conservative in what you send, be liberal in what you accept"
+
+---
+
+### 17. 测试规范 (Google Style)
+
+#### 表驱动测试
+
+```go
+// ✅ GOOD - 表驱动测试
+func TestValidateEmail(t *testing.T) {
+    tests := []struct {
+        name    string
+        email   string
+        wantErr bool
+    }{
+        {name: "valid email", email: "user@example.com", wantErr: false},
+        {name: "missing @", email: "user.example.com", wantErr: true},
+        {name: "missing domain", email: "user@", wantErr: true},
+        {name: "empty", email: "", wantErr: true},
+    }
+    
+    for _, tt := range tests {
+        t.Run(tt.name, func(t *testing.T) {
+            err := ValidateEmail(tt.email)
+            if (err != nil) != tt.wantErr {
+                t.Errorf("ValidateEmail(%q) error = %v, wantErr %v", 
+                    tt.email, err, tt.wantErr)
+            }
+        })
+    }
+}
+```
+
+#### 使用 t.Helper()
+
+```go
+// ✅ GOOD - 辅助函数标记为 helper
+func assertNoError(t *testing.T, err error) {
+    t.Helper()  // 错误时显示调用者的行号，而不是这个函数的行号
+    if err != nil {
+        t.Fatalf("unexpected error: %v", err)
+    }
+}
+
+func TestSomething(t *testing.T) {
+    err := doSomething()
+    assertNoError(t, err)  // 如果失败，显示这一行
+}
+```
+
+#### 测试命名
+
+```go
+// ✅ GOOD - 清晰的测试名称
+func TestUserService_Create_ValidInput(t *testing.T) {}
+func TestUserService_Create_DuplicateEmail(t *testing.T) {}
+func TestUserService_Get_NotFound(t *testing.T) {}
+
+// 或使用子测试
+func TestUserService_Create(t *testing.T) {
+    t.Run("valid input", func(t *testing.T) { /* ... */ })
+    t.Run("duplicate email", func(t *testing.T) { /* ... */ })
+}
+```
+
+---
+
+## 参考资源
+
+**官方文档**：
+- [Effective Go](https://golang.org/doc/effective_go)
+- [Google Go Style Guide](https://google.github.io/styleguide/go/)
+- [Go Code Review Comments](https://github.com/golang/go/wiki/CodeReviewComments)
+
+**工具**：
+- `golangci-lint` - 代码检查
+- `gofmt` - 代码格式化
+- `goimports` - 导入管理
+- `go vet` - 静态分析

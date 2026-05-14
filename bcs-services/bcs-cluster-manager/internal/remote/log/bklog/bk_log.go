@@ -48,10 +48,11 @@ func EnableMonitorAudit(projectID, clusterID string) error { // nolint
 	respData := &EnableMonitorAuditResponse{}
 
 	token := ioptions.GetGlobalCMOptions().ComponentDeploy.LogCollector.Token
+	esStorageClusterId := ioptions.GetGlobalCMOptions().ComponentDeploy.LogCollector.StorageClusterId
 
-	// api request empty json body
-	emptyBody := map[string]interface{}{
-		"": "",
+	// api request json body
+	requestBody := map[string]interface{}{
+		"storage_cluster_id": esStorageClusterId,
 	}
 
 	result, body, errs := gorequest.New().
@@ -61,7 +62,7 @@ func EnableMonitorAudit(projectID, clusterID string) error { // nolint
 		Set("Accept", "application/json").
 		Set("Connection", "close").
 		Set("Authorization", "Bearer "+token).
-		Send(emptyBody).
+		Send(requestBody).
 		End()
 
 	if len(errs) > 0 {

@@ -170,9 +170,15 @@ func (i *IstioUpdateAction) updateTelemetry(ctx context.Context) error {
 
 	// 更新链路追踪资源
 	if i.ObservabilityConfig.TracingConfig.Enabled.GetValue() {
-		traceSamplingPercent := 1
+		// istio 1.21以上版本才通过Telemetry API下发
+		if !utils.IsVersionSupported(*i.ChartVersion, ">=1.21") {
+			blog.Infof("[%s]istio version %s is less than 1.21, skip deploying Telemetry resource", i.MeshID, *i.ChartVersion)
+			return nil
+		}
+
+		traceSamplingPercent := float32(1)
 		if i.ObservabilityConfig.TracingConfig.TraceSamplingPercent.GetValue() != 0 {
-			traceSamplingPercent = int(i.ObservabilityConfig.TracingConfig.TraceSamplingPercent.GetValue())
+			traceSamplingPercent = float32(i.ObservabilityConfig.TracingConfig.TraceSamplingPercent.GetValue())
 		}
 		if err := k8s.DeployTelemetry(ctx, i.PrimaryClusters, traceSamplingPercent); err != nil {
 			blog.Errorf("[%s]deploy Telemetry failed for clusters, err: %s", i.MeshID, err)

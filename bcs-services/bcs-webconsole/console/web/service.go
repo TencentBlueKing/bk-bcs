@@ -264,11 +264,25 @@ func (s *service) ClusterGatePageHandler(c *gin.Context) {
 }
 
 // HealthyHandler xxx
+//
+// @Summary      健康检查
+// @Description  服务存活探针，返回 OK 表示服务正常运行
+// @Tags         System
+// @Produce      plain
+// @Success      200  {string}  string  "OK"
+// @Router       /-/healthy [get]
 func (s *service) HealthyHandler(c *gin.Context) {
 	c.Data(http.StatusOK, "text/plain; charset=utf-8", []byte("OK"))
 }
 
 // ReadyHandler xxx
+//
+// @Summary      就绪检查
+// @Description  服务就绪探针，返回 OK 表示服务已就绪可接收流量
+// @Tags         System
+// @Produce      plain
+// @Success      200  {string}  string  "OK"
+// @Router       /-/ready [get]
 func (s *service) ReadyHandler(c *gin.Context) {
 	c.Data(http.StatusOK, "text/plain; charset=utf-8", []byte("OK"))
 }

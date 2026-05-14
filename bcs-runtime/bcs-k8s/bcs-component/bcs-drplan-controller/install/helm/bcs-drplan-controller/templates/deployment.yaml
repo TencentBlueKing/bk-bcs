@@ -1,0 +1,123 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "bcs-drplan-controller.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "bcs-drplan-controller.labels" . | nindent 4 }}
+    control-plane: controller-manager
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "bcs-drplan-controller.selectorLabels" . | nindent 6 }}
+      control-plane: controller-manager
+  template:
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/default-container: manager
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "bcs-drplan-controller.labels" . | nindent 8 }}
+        control-plane: controller-manager
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "bcs-drplan-controller.serviceAccountName" . }}
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.priorityClassName }}
+      priorityClassName: {{ . }}
+      {{- end }}
+      {{- with .Values.initContainers }}
+      initContainers:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+      - name: manager
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        command:
+        - /usr/local/bin/bcs-drplan-controller
+        args:
+        - --leader-elect={{ .Values.controller.leaderElection }}
+        - --metrics-bind-address={{ .Values.controller.metricsAddr }}
+        - --health-probe-bind-address={{ .Values.controller.healthProbeAddr }}
+        - --enable-http2={{ .Values.controller.enableHTTP2 }}
+        - -v={{ .Values.controller.logLevel }}
+        {{- if .Values.webhook.enabled }}
+        - --webhook-port={{ .Values.webhook.port }}
+        - --webhook-cert-path=/tmp/k8s-webhook-server/serving-certs
+        {{- end }}
+        {{- with .Values.controller.extraArgs }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.env }}
+        env:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+        ports:
+        - containerPort: 8081
+          name: health
+          protocol: TCP
+        {{- if .Values.webhook.enabled }}
+        - containerPort: {{ .Values.webhook.port }}
+          name: webhook
+          protocol: TCP
+        {{- end }}
+        {{- with .Values.securityContext }}
+        securityContext:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+        livenessProbe:
+          {{- toYaml .Values.livenessProbe | nindent 10 }}
+        readinessProbe:
+          {{- toYaml .Values.readinessProbe | nindent 10 }}
+        {{- with .Values.resources }}
+        resources:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+        volumeMounts:
+        {{- if .Values.webhook.enabled }}
+        - mountPath: /tmp/k8s-webhook-server/serving-certs
+          name: cert
+          readOnly: true
+        {{- end }}
+        {{- with .Values.extraVolumeMounts }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- with .Values.sidecars }}
+      {{- toYaml . | nindent 6 }}
+      {{- end }}
+      volumes:
+      {{- if .Values.webhook.enabled }}
+      - name: cert
+        secret:
+          defaultMode: 420
+          secretName: {{ include "bcs-drplan-controller.webhookCertSecretName" . }}
+      {{- end }}
+      {{- with .Values.extraVolumes }}
+      {{- toYaml . | nindent 6 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      terminationGracePeriodSeconds: 10

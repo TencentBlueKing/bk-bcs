@@ -13,7 +13,7 @@ replace (
 
 require (
 	configcenter v0.0.0-00010101000000-000000000000
-	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20240830030550-c83253c3a207
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20260402013426-33f9185571c1
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/envoyproxy/protoc-gen-validate v1.0.4
 	github.com/go-micro/plugins/v4/registry/etcd v1.1.0
@@ -23,6 +23,7 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/parnurzeal/gorequest v0.2.16
 	github.com/patrickmn/go-cache v2.1.0+incompatible
+	github.com/prometheus/client_golang v1.19.0
 	github.com/rabbitmq/amqp091-go v1.5.0
 	go-micro.dev/v4 v4.8.1
 	google.golang.org/genproto/googleapis/api v0.0.0-20240318140521-94a12d6c2237
@@ -110,7 +111,6 @@ require (
 	github.com/pelletier/go-toml/v2 v2.0.8 // indirect
 	github.com/pjbgf/sha1cd v0.3.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/prometheus/client_golang v1.19.0 // indirect
 	github.com/prometheus/client_model v0.5.0 // indirect
 	github.com/prometheus/common v0.48.0 // indirect
 	github.com/prometheus/procfs v0.12.0 // indirect

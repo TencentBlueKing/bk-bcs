@@ -733,6 +733,7 @@ func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Nod
 				ImageId:         "",
 				TranslateMethod: template.SystemBeforeInit,
 				AllowSkip:       true,
+				InstancePasswd:  passwd,
 			}}.BuildSopsStep(task, opt.Cloud.ClusterManagement.AddNodesToCluster, true)
 		if err != nil {
 			return nil, fmt.Errorf("BuildAddNodesToClusterTask BuildBkSopsStepAction failed: %v", err)

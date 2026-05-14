@@ -1,10 +1,8 @@
 # ---------------- runner container ----------------
 
-FROM alpine:3.15
+FROM tencentos/tencentos4-minimal
 
 LABEL maintainer="Tencent BlueKing"
-
-RUN apk --update --no-cache add bash ca-certificates vim
 
 WORKDIR /data/workspace
 

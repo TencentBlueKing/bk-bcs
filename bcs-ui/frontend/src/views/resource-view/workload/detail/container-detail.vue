@@ -72,6 +72,19 @@
       </div>
     </div>
     <div class="workload-detail-body">
+      <bcs-alert
+        v-if="!isMonitorInstalled"
+        class="mt-[16px]"
+        type="warning"
+        closable>
+        <template #title>
+          <i18n path="dashboard.workload.tips.noMonitor" tag="span">
+            <template #plugins>
+              <a class="text-[#3a84ff]" :href="handleGetPluginManageUrl()" target="_blank">{{ $t('nav.plugin') }}</a>
+            </template>
+          </i18n>
+        </template>
+      </bcs-alert>
       <div class="workload-metric">
         <Metric
           :title="$t('metrics.cpuUsage')"
@@ -182,6 +195,8 @@ import { bkOverflowTips } from 'bk-magic-vue';
 import { computed, defineComponent, onMounted, ref, toRefs } from 'vue';
 
 import { formatTimeWithTimezone } from '@/common/util';
+import { useMonitorCollector } from './use-detail';
+
 import Metric from '@/components/metric.vue';
 import $store from '@/store';
 
@@ -225,6 +240,12 @@ export default defineComponent({
   },
   setup(props) {
     const { name, namespace, pod, clusterId } = toRefs(props);
+
+    const {
+      isMonitorInstalled,
+      handleGetPluginManageUrl,
+      handleCheckMonitor,
+    } = useMonitorCollector();
 
     // 详情loading
     const isLoading = ref(false);
@@ -294,6 +315,7 @@ export default defineComponent({
     onMounted(() => {
       handleGetDetail();
       handleGetContainerEnv();
+      handleCheckMonitor(props.clusterId);
     });
 
     return {
@@ -310,8 +332,10 @@ export default defineComponent({
       envs,
       lastState,
       formatTimeWithTimezone,
+      isMonitorInstalled,
       handleGetDetail,
       handleGetContainerEnv,
+      handleGetPluginManageUrl,
     };
   },
 });

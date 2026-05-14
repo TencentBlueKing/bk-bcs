@@ -229,7 +229,7 @@ func callIAM(ctx context.Context, user middleauth.AuthUser, action string, resou
 	[]authutils.ResourceAction, error) {
 	var isSharedCluster bool
 	if resourceID.ClusterID != "" {
-		cluster, err := clustermanager.GetCluster(ctx, resourceID.ClusterID)
+		cluster, err := clustermanager.GetCluster(ctx, resourceID.ClusterID, true)
 		if err != nil {
 			logging.Error("get cluster %s from cluster-manager failed, err: %s", cluster, err.Error())
 			return false, "", nil, errorx.NewReadableErr(errorx.PermDeniedErr, "校验用户权限失败")

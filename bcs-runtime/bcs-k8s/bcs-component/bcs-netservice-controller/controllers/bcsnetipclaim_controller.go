@@ -40,8 +40,8 @@ type BCSNetIPClaimReconciler struct {
 	Recorder record.EventRecorder
 }
 
-//+kubebuilder:rbac:groups=netservice.bkbcs.tencent.com,
-// resources=bcsnetipclaims,verbs=get;list;watch;create;update;patch;delete
+// nolint:lll
+//+kubebuilder:rbac:groups=netservice.bkbcs.tencent.com,resources=bcsnetipclaims,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=netservice.bkbcs.tencent.com,resources=bcsnetipclaims/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=netservice.bkbcs.tencent.com,resources=bcsnetips,verbs=get;list;watch;update;patch
 //+kubebuilder:rbac:groups=netservice.bkbcs.tencent.com,resources=bcsnetips/status,verbs=get;update;patch

@@ -1184,7 +1184,7 @@ type TracingConfig struct {
 	unknownFields protoimpl.UnknownFields
 
 	Enabled              *wrappers.BoolValue   `protobuf:"bytes,1,opt,name=enabled,proto3" json:"enabled,omitempty"`
-	TraceSamplingPercent *wrappers.Int32Value  `protobuf:"bytes,2,opt,name=traceSamplingPercent,proto3" json:"traceSamplingPercent,omitempty"`
+	TraceSamplingPercent *wrappers.FloatValue  `protobuf:"bytes,2,opt,name=traceSamplingPercent,proto3" json:"traceSamplingPercent,omitempty"`
 	Endpoint             *wrappers.StringValue `protobuf:"bytes,3,opt,name=endpoint,proto3" json:"endpoint,omitempty"`
 	BkToken              *wrappers.StringValue `protobuf:"bytes,4,opt,name=bkToken,proto3" json:"bkToken,omitempty"`
 }
@@ -1228,7 +1228,7 @@ func (x *TracingConfig) GetEnabled() *wrappers.BoolValue {
 	return nil
 }
 
-func (x *TracingConfig) GetTraceSamplingPercent() *wrappers.Int32Value {
+func (x *TracingConfig) GetTraceSamplingPercent() *wrappers.FloatValue {
 	if x != nil {
 		return x.TraceSamplingPercent
 	}
@@ -3251,7 +3251,7 @@ var file_bcs_mesh_manager_proto_rawDesc = []byte{
 	0x52, 0x07, 0x65, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64, 0x12, 0x7f, 0x0a, 0x14, 0x74, 0x72, 0x61,
 	0x63, 0x65, 0x53, 0x61, 0x6d, 0x70, 0x6c, 0x69, 0x6e, 0x67, 0x50, 0x65, 0x72, 0x63, 0x65, 0x6e,
 	0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1b, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65,
-	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x49, 0x6e, 0x74, 0x33, 0x32, 0x56,
+	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x46, 0x6c, 0x6f, 0x61, 0x74, 0x56,
 	0x61, 0x6c, 0x75, 0x65, 0x42, 0x2e, 0x92, 0x41, 0x2b, 0x2a, 0x14, 0x74, 0x72, 0x61, 0x63, 0x65,
 	0x53, 0x61, 0x6d, 0x70, 0x6c, 0x69, 0x6e, 0x67, 0x50, 0x65, 0x72, 0x63, 0x65, 0x6e, 0x74, 0x32,
 	0x13, 0xe9, 0x87, 0x87, 0xe6, 0xa0, 0xb7, 0xe7, 0x8e, 0x87, 0x2c, 0xe7, 0x99, 0xbe, 0xe5, 0x88,
@@ -3970,6 +3970,7 @@ var file_bcs_mesh_manager_proto_goTypes = []interface{}{
 	(*wrappers.StringValue)(nil),    // 38: google.protobuf.StringValue
 	(*wrappers.BoolValue)(nil),      // 39: google.protobuf.BoolValue
 	(*wrappers.Int32Value)(nil),     // 40: google.protobuf.Int32Value
+	(*wrappers.FloatValue)(nil),     // 41: google.protobuf.FloatValue
 }
 var file_bcs_mesh_manager_proto_depIdxs = []int32{
 	37, // 0: meshmanager.WebAnnotations.perms:type_name -> google.protobuf.Struct
@@ -4027,7 +4028,7 @@ var file_bcs_mesh_manager_proto_depIdxs = []int32{
 	38, // 52: meshmanager.LogCollectorConfig.accessLogEncoding:type_name -> google.protobuf.StringValue
 	38, // 53: meshmanager.LogCollectorConfig.accessLogFormat:type_name -> google.protobuf.StringValue
 	39, // 54: meshmanager.TracingConfig.enabled:type_name -> google.protobuf.BoolValue
-	40, // 55: meshmanager.TracingConfig.traceSamplingPercent:type_name -> google.protobuf.Int32Value
+	41, // 55: meshmanager.TracingConfig.traceSamplingPercent:type_name -> google.protobuf.FloatValue
 	38, // 56: meshmanager.TracingConfig.endpoint:type_name -> google.protobuf.StringValue
 	38, // 57: meshmanager.TracingConfig.bkToken:type_name -> google.protobuf.StringValue
 	39, // 58: meshmanager.MetricsConfig.metricsEnabled:type_name -> google.protobuf.BoolValue

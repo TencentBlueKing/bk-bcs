@@ -1,0 +1,957 @@
+openapi: 3.0.0
+info:
+  title: BCS-Monitor OpenAPI
+  contact: {}
+  version: ""
+paths:
+  /cpu_request_usage:
+    get:
+      tags:
+        - Metrics
+      summary: 集群 CPU 装箱率
+      responses:
+        "200":
+          description: OK
+          content:
+            "*/*":
+              schema:
+                type: string
+  /cpu_usage:
+    get:
+      tags:
+        - Metrics
+      summary: 集群 CPU 使用率
+      responses:
+        "200":
+          description: OK
+          content:
+            "*/*":
+              schema:
+                type: string
+  /disk_usage:
+    get:
+      tags:
+        - Metrics
+      summary: 集群磁盘使用率
+      responses:
+        "200":
+          description: OK
+          content:
+            "*/*":
+              schema:
+                type: string
+  /diskio_usage:
+    get:
+      tags:
+        - Metrics
+      summary: 集群磁盘IO使用率
+      responses:
+        "200":
+          description: OK
+          content:
+            "*/*":
+              schema:
+                type: string
+  /event_data_id:
+    get:
+      tags:
+        - Metrics
+      summary: 获取集群事件数据ID
+      responses:
+        "200":
+          description: OK
+          content:
+            "*/*":
+              schema:
+                type: string
+  /group/:group/max_node_num:
+    get:
+      tags:
+        - Metrics
+      summary: 集群最大节点池数目
+      responses:
+        "200":
+          description: OK
+          content:
+            "*/*":
+              schema:
+                type: string
+  /group/:group/node_num:
+    get:
+      tags:
+        - Metrics
+      summary: 集群节点池数目
+      responses:
+        "200":
+          description: OK
+          content:
+            "*/*":
+              schema:
+                type: string
+  /log_collector/entrypoints:
+    post:
+      tags:
+        - LogCollectors
+      summary: 获取容器日志查询入口
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  $ref: "#/components/schemas/pkg_api_logrule.Entrypoint"
+  /log_collector/rules:
+    get:
+      tags:
+        - LogCollectors
+      summary: 获取日志采集规则列表
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/pkg_api_logrule.GetLogRuleResp"
+    post:
+      tags:
+        - LogCollectors
+      summary: 创建日志采集规则
+      responses:
+        "200":
+          description: OK
+  /log_collector/rules/:id:
+    get:
+      tags:
+        - LogCollectors
+      summary: 获取日志采集规则详情
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/pkg_api_logrule.GetLogRuleResp"
+    put:
+      tags:
+        - LogCollectors
+      summary: 更新日志采集规则
+      responses:
+        "200":
+          description: OK
+    delete:
+      tags:
+        - LogCollectors
+      summary: 删除日志采集规则
+      responses:
+        "200":
+          description: OK
+  /log_collector/rules/:id/disable:
+    post:
+      tags:
+        - LogCollectors
+      summary: 停用日志采集规则
+      responses:
+        "200":
+          description: OK
+  /log_collector/rules/:id/enable:
+    post:
+      tags:
+        - LogCollectors
+      summary: 启用日志采集规则
+      responses:
+        "200":
+          description: OK
+  /log_collector/rules/:id/retry:
+    post:
+      tags:
+        - LogCollectors
+      summary: 重试日志采集规则
+      responses:
+        "200":
+          description: OK
+  /log_collector/storages/cluster_groups:
+    get:
+      tags:
+        - LogCollectors
+      summary: 获取 ES 存储集群
+      responses:
+        "200":
+          description: OK
+  /log_collector/storages/switch_storage:
+    post:
+      tags:
+        - LogCollectors
+      summary: 切换 ES 存储集群
+      responses:
+        "200":
+          description: OK
+  /memory_request_usage:
+    get:
+      tags:
+        - Metrics
+      summary: 集群内存装箱率
+      responses:
+        "200":
+          description: OK
+          content:
+            "*/*":
+              schema:
+                type: string
+  /memory_usage:
+    get:
+      tags:
+        - Metrics
+      summary: 集群内存使用率
+      responses:
+        "200":
+          description: OK
+          content:
+            "*/*":
+              schema:
+                type: string
+  /namespaces/:namespace/pod_monitors:
+    get:
+      tags:
+        - Metrics
+      summary: PodMonitor列表数据
+      responses:
+        "200":
+          description: OK
+          content:
+            "*/*":
+              schema:
+                type: string
+    post:
+      tags:
+        - Metrics
+      summary: PodMonitor列表数据
+      responses:
+        "200":
+          description: OK
+          content:
+            "*/*":
+              schema:
+                type: string
+  /namespaces/:namespace/pod_monitors/:name:
+    get:
+      tags:
+        - Metrics
+      summary: 删除PodMonitor
+      responses:
+        "200":
+          description: OK
+          content:
+            "*/*":
+              schema:
+                type: string
+    put:
+      tags:
+        - Metrics
+      summary: PodMonitor列表数据
+      responses:
+        "200":
+          description: OK
+          content:
+            "*/*":
+              schema:
+                type: string
+    delete:
+      tags:
+        - Metrics
+      summary: 删除PodMonitor
+      responses:
+        "200":
+          description: OK
+          content:
+            "*/*":
+              schema:
+                type: string
+  /namespaces/:namespace/pods/:pod/containers:
+    get:
+      tags:
+        - Logs
+      summary: 获取 Pod 容器列表
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/github_com_Tencent_bk-bcs_bcs-services_bcs-monitor_\
+                    pkg_component_k8sclient.Container"
+  /namespaces/:namespace/pods/:pod/logs:
+    get:
+      tags:
+        - Logs
+      summary: 查询容器日志
+      parameters:
+        - description: 容器名称
+          name: container_name
+          in: query
+          required: true
+          schema:
+            type: string
+        - description: 是否使用上一次日志, 异常退出使用
+          name: previous
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/github_com_Tencent_bk-bcs_bcs-services_bcs-monitor_\
+                    pkg_component_k8sclient.Log"
+  /namespaces/:namespace/pods/:pod/logs/download:
+    get:
+      tags:
+        - Logs
+      summary: 下载日志
+      parameters:
+        - description: 容器名称
+          name: container_name
+          in: query
+          required: true
+          schema:
+            type: string
+        - description: 是否使用上一次日志, 异常退出使用
+          name: previous
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+  /namespaces/:namespace/pods/:pod/logs/stream:
+    get:
+      tags:
+        - Logs
+      summary: SSE 实时日志流
+      parameters:
+        - description: 容器名称
+          name: container_name
+          in: query
+          required: true
+          schema:
+            type: string
+        - description: 开始时间
+          name: started_at
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            text/event-stream:
+              schema:
+                type: string
+  /namespaces/:namespace/pods/cpu_limit_usage:
+    post:
+      tags:
+        - Metrics
+      summary: Pod Limit CPU使用率
+      responses:
+        "200":
+          description: OK
+          content:
+            "*/*":
+              schema:
+                type: string
+  /namespaces/:namespace/pods/cpu_request_usage:
+    post:
+      tags:
+        - Metrics
+      summary: Pod Request CPU使用率
+      responses:
+        "200":
+          description: OK
+          content:
+            "*/*":
+              schema:
+                type: string
+  /namespaces/:namespace/pods/cpu_usage:
+    post:
+      tags:
+        - Metrics
+      summary: Pod CPU使用率
+      responses:
+        "200":
+          description: OK
+          content:
+            "*/*":
+              schema:
+                type: string
+  /namespaces/:namespace/pods/memory_used:
+    post:
+      tags:
+        - Metrics
+      summary: Pod 内存使用量
+      responses:
+        "200":
+          description: OK
+          content:
+            "*/*":
+              schema:
+                type: string
+  /namespaces/:namespace/pods/network_receive:
+    post:
+      tags:
+        - Metrics
+      summary: 网络接收量
+      responses:
+        "200":
+          description: OK
+          content:
+            "*/*":
+              schema:
+                type: string
+  /namespaces/:namespace/pods/network_transmit:
+    post:
+      tags:
+        - Metrics
+      summary: Pod 网络发送量
+      responses:
+        "200":
+          description: OK
+          content:
+            "*/*":
+              schema:
+                type: string
+  /namespaces/namespace/pods/:pod/containers/:container/cpu_limit:
+    get:
+      tags:
+        - Metrics
+      summary: 容器 CPU 限制
+      responses:
+        "200":
+          description: OK
+          content:
+            "*/*":
+              schema:
+                type: string
+  /namespaces/namespace/pods/:pod/containers/:container/cpu_usage:
+    get:
+      tags:
+        - Metrics
+      summary: 容器 CPU 使用率
+      responses:
+        "200":
+          description: OK
+          content:
+            "*/*":
+              schema:
+                type: string
+  /namespaces/namespace/pods/:pod/containers/:container/disk_read_total:
+    get:
+      tags:
+        - Metrics
+      summary: 容器磁盘读总量
+      responses:
+        "200":
+          description: OK
+          content:
+            "*/*":
+              schema:
+                type: string
+  /namespaces/namespace/pods/:pod/containers/:container/disk_write_total:
+    get:
+      tags:
+        - Metrics
+      summary: 容器磁盘写总量
+      responses:
+        "200":
+          description: OK
+          content:
+            "*/*":
+              schema:
+                type: string
+  /namespaces/namespace/pods/:pod/containers/:container/memory_limit:
+    get:
+      tags:
+        - Metrics
+      summary: 容器内存限制
+      responses:
+        "200":
+          description: OK
+          content:
+            "*/*":
+              schema:
+                type: string
+  /namespaces/namespace/pods/:pod/containers/:container/memory_used:
+    get:
+      tags:
+        - Metrics
+      summary: 容器内存使用量
+      responses:
+        "200":
+          description: OK
+          content:
+            "*/*":
+              schema:
+                type: string
+  /nodes/:node/cpu_request_usage:
+    get:
+      tags:
+        - Metrics
+      summary: 查询 CPU 装箱率
+      responses:
+        "200":
+          description: OK
+          content:
+            "*/*":
+              schema:
+                type: string
+  /nodes/:node/cpu_usage:
+    get:
+      tags:
+        - Metrics
+      summary: 查询 CPU 使用率
+      responses:
+        "200":
+          description: OK
+          content:
+            "*/*":
+              schema:
+                type: string
+  /nodes/:node/disk_usage:
+    get:
+      tags:
+        - Metrics
+      summary: 节点磁盘使用率
+      responses:
+        "200":
+          description: OK
+          content:
+            "*/*":
+              schema:
+                type: string
+  /nodes/:node/diskio_usage:
+    get:
+      tags:
+        - Metrics
+      summary: 节点磁盘IO
+      responses:
+        "200":
+          description: OK
+          content:
+            "*/*":
+              schema:
+                type: string
+  /nodes/:node/info:
+    get:
+      tags:
+        - Metrics
+      summary: 节点信息
+      responses:
+        "200":
+          description: OK
+          content:
+            "*/*":
+              schema:
+                type: string
+  /nodes/:node/memory_request_usage:
+    get:
+      tags:
+        - Metrics
+      summary: 节点内存装箱率
+      responses:
+        "200":
+          description: OK
+          content:
+            "*/*":
+              schema:
+                type: string
+  /nodes/:node/memory_usage:
+    get:
+      tags:
+        - Metrics
+      summary: 节点内存使用率
+      responses:
+        "200":
+          description: OK
+          content:
+            "*/*":
+              schema:
+                type: string
+  /nodes/:node/network_receive:
+    get:
+      tags:
+        - Metrics
+      summary: 节点网络发送
+      responses:
+        "200":
+          description: OK
+          content:
+            "*/*":
+              schema:
+                type: string
+  /nodes/:node/network_transmit:
+    get:
+      tags:
+        - Metrics
+      summary: 节点网络接收
+      responses:
+        "200":
+          description: OK
+          content:
+            "*/*":
+              schema:
+                type: string
+  /nodes/:node/overview:
+    get:
+      tags:
+        - Metrics
+      summary: 查询节点概览
+      responses:
+        "200":
+          description: OK
+          content:
+            "*/*":
+              schema:
+                type: string
+  /nodes/overviews:
+    post:
+      tags:
+        - Metrics
+      summary: 查询节点列表概览
+      responses:
+        "200":
+          description: OK
+          content:
+            "*/*":
+              schema:
+                type: string
+  /overview:
+    get:
+      tags:
+        - Metrics
+      summary: 集群概览数据
+      responses:
+        "200":
+          description: OK
+          content:
+            "*/*":
+              schema:
+                type: string
+  /pod_monitors/batchdelete:
+    post:
+      tags:
+        - Metrics
+      summary: 批量删除PodMonitor
+      responses:
+        "200":
+          description: OK
+          content:
+            "*/*":
+              schema:
+                type: string
+  /pod_usage:
+    get:
+      tags:
+        - Metrics
+      summary: 集群 POD 使用率
+      responses:
+        "200":
+          description: OK
+          content:
+            "*/*":
+              schema:
+                type: string
+  /service_monitors/batchdelete:
+    delete:
+      tags:
+        - Metrics
+      summary: 批量删除ServiceMonitor
+      responses:
+        "200":
+          description: OK
+          content:
+            "*/*":
+              schema:
+                type: string
+  /service_monitors/create/namespaces/:namespace/servicemonitors/:name:
+    post:
+      tags:
+        - Metrics
+      summary: ServiceMonitor列表数据
+      responses:
+        "200":
+          description: OK
+          content:
+            "*/*":
+              schema:
+                type: string
+  /service_monitors/namespaces/:namespace:
+    get:
+      tags:
+        - Metrics
+      summary: ServiceMonitor列表数据
+      responses:
+        "200":
+          description: OK
+          content:
+            "*/*":
+              schema:
+                type: string
+  /service_monitors/namespaces/:namespace/servicemonitors/:name:
+    delete:
+      tags:
+        - Metrics
+      summary: 删除ServiceMonitor
+      responses:
+        "200":
+          description: OK
+          content:
+            "*/*":
+              schema:
+                type: string
+  /service_monitors/update/namespaces/:namespace/servicemonitors/:name:
+    put:
+      tags:
+        - Metrics
+      summary: ServiceMonitor列表数据
+      responses:
+        "200":
+          description: OK
+          content:
+            "*/*":
+              schema:
+                type: string
+servers:
+  - url: /bcsapi/v4/monitor/api/projects/{projectId}/clusters/{clusterId}
+    variables:
+      projectId:
+        default: unknown
+      clusterId:
+        default: unknown
+components:
+  schemas:
+    github_com_Tencent_bk-bcs_bcs-services_bcs-monitor_pkg_component_bk_log.Conditions:
+      type: object
+      properties:
+        match_content:
+          type: string
+        match_type:
+          description: include, exclude(开发中，暂不支持)
+          type: string
+        separator:
+          description: 分隔符，| 等
+          type: string
+        separator_filters:
+          description: 分隔符过滤条件
+          type: array
+          items:
+            $ref: "#/components/schemas/github_com_Tencent_bk-bcs_bcs-services_bcs-monitor_\
+              pkg_component_bk_log.SeparatorFilters"
+        type:
+          description: match, separator
+          type: string
+    github_com_Tencent_bk-bcs_bcs-services_bcs-monitor_pkg_component_bk_log.Container:
+      type: object
+      properties:
+        container_name:
+          type: string
+        workload_name:
+          type: string
+        workload_type:
+          type: string
+    github_com_Tencent_bk-bcs_bcs-services_bcs-monitor_pkg_component_bk_log.DataInfo:
+      type: object
+      properties:
+        file_bkdata_data_id:
+          description: 计算平台文件日志 dataid
+          type: integer
+        file_data_id:
+          description: 文件日志 dataid
+          type: integer
+        std_bkdata_data_id:
+          description: 计算平台标准输出日志 dataid
+          type: integer
+        std_data_id:
+          description: 标准输出日志 dataid
+          type: integer
+    github_com_Tencent_bk-bcs_bcs-services_bcs-monitor_pkg_component_bk_log.Label:
+      type: object
+      properties:
+        key:
+          type: string
+        operator:
+          type: string
+        value:
+          type: string
+    github_com_Tencent_bk-bcs_bcs-services_bcs-monitor_pkg_component_bk_log.LabelSelector:
+      type: object
+      properties:
+        match_expressions:
+          type: array
+          items:
+            $ref: "#/components/schemas/github_com_Tencent_bk-bcs_bcs-services_bcs-monitor_\
+              pkg_component_bk_log.Label"
+        match_labels:
+          type: array
+          items:
+            $ref: "#/components/schemas/github_com_Tencent_bk-bcs_bcs-services_bcs-monitor_\
+              pkg_component_bk_log.Label"
+    github_com_Tencent_bk-bcs_bcs-services_bcs-monitor_pkg_component_bk_log.LogRule:
+      type: object
+      properties:
+        add_pod_label:
+          type: boolean
+        config:
+          $ref: "#/components/schemas/github_com_Tencent_bk-bcs_bcs-services_bcs-monitor_\
+            pkg_component_bk_log.LogRuleContainer"
+        data_info:
+          $ref: "#/components/schemas/github_com_Tencent_bk-bcs_bcs-services_bcs-monitor_\
+            pkg_component_bk_log.DataInfo"
+        extra_labels:
+          type: array
+          items:
+            $ref: "#/components/schemas/github_com_Tencent_bk-bcs_bcs-services_bcs-monitor_\
+              pkg_component_bk_log.Label"
+    github_com_Tencent_bk-bcs_bcs-services_bcs-monitor_pkg_component_bk_log.LogRuleContainer:
+      type: object
+      properties:
+        conditions:
+          $ref: "#/components/schemas/github_com_Tencent_bk-bcs_bcs-services_bcs-monitor_\
+            pkg_component_bk_log.Conditions"
+        container:
+          $ref: "#/components/schemas/github_com_Tencent_bk-bcs_bcs-services_bcs-monitor_\
+            pkg_component_bk_log.Container"
+        data_encoding:
+          type: string
+        enable_stdout:
+          type: boolean
+        label_selector:
+          $ref: "#/components/schemas/github_com_Tencent_bk-bcs_bcs-services_bcs-monitor_\
+            pkg_component_bk_log.LabelSelector"
+        multiline:
+          $ref: "#/components/schemas/github_com_Tencent_bk-bcs_bcs-services_bcs-monitor_\
+            pkg_component_bk_log.Multiline"
+        namespaces:
+          type: array
+          items:
+            type: string
+        paths:
+          type: array
+          items:
+            type: string
+    github_com_Tencent_bk-bcs_bcs-services_bcs-monitor_pkg_component_bk_log.Multiline:
+      type: object
+      properties:
+        multiline_max_lines:
+          type: string
+        multiline_pattern:
+          type: string
+        multiline_timeout:
+          type: string
+    github_com_Tencent_bk-bcs_bcs-services_bcs-monitor_pkg_component_bk_log.SeparatorFilters:
+      type: object
+      properties:
+        fieldindex:
+          description: 匹配项所在列
+          type: string
+        logic_op:
+          description: and, or
+          type: string
+        op:
+          description: 匹配方式，目前只有 =
+          type: string
+        word:
+          description: 匹配值
+          type: string
+    github_com_Tencent_bk-bcs_bcs-services_bcs-monitor_pkg_component_k8sclient.Container:
+      type: object
+      properties:
+        container_type:
+          type: string
+        name:
+          type: string
+    github_com_Tencent_bk-bcs_bcs-services_bcs-monitor_pkg_component_k8sclient.Log:
+      type: object
+      properties:
+        log:
+          type: string
+        time:
+          type: string
+    github_com_Tencent_bk-bcs_bcs-services_bcs-monitor_pkg_utils.JSONTime:
+      type: object
+      properties:
+        time.Time:
+          type: string
+    pkg_api_logrule.Entrypoint:
+      type: object
+      properties:
+        file_bk_base_url:
+          description: 跳转到数据平台地址
+          type: string
+        file_log_url:
+          type: string
+        std_bk_base_url:
+          description: 跳转到数据平台地址
+          type: string
+        std_log_url:
+          type: string
+    pkg_api_logrule.GetLogRuleResp:
+      type: object
+      properties:
+        created_at:
+          $ref: "#/components/schemas/github_com_Tencent_bk-bcs_bcs-services_bcs-monitor_\
+            pkg_utils.JSONTime"
+        creator:
+          type: string
+        description:
+          type: string
+        display_name:
+          type: string
+        entrypoint:
+          $ref: "#/components/schemas/pkg_api_logrule.Entrypoint"
+        file_index_set_id:
+          type: integer
+        id:
+          type: string
+        message:
+          type: string
+        name:
+          type: string
+        new_rule_id:
+          description: 当旧规则转换过新规则后，显示该字段
+          type: string
+        old:
+          type: boolean
+        rule:
+          $ref: "#/components/schemas/github_com_Tencent_bk-bcs_bcs-services_bcs-monitor_\
+            pkg_component_bk_log.LogRule"
+        rule_file_index_set_id:
+          type: integer
+        rule_id:
+          type: integer
+        rule_name:
+          type: string
+        rule_std_index_set_id:
+          type: integer
+        status:
+          type: string
+        std_index_set_id:
+          type: integer
+        updated_at:
+          $ref: "#/components/schemas/github_com_Tencent_bk-bcs_bcs-services_bcs-monitor_\
+            pkg_utils.JSONTime"
+        updator:
+          type: string

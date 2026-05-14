@@ -38,6 +38,10 @@ type IngressListenerConverter struct {
 	IsTCPUDPPortReuse bool
 	// send event
 	Eventer record.EventRecorder
+	// ExemptNamespaces namespaces exempt from namespace scope restriction.
+	// Ingresses in these namespaces can bind services and workloads across namespaces
+	// even when IsNamespaced is true.
+	ExemptNamespaces map[string]struct{}
 }
 
 // CheckIngressUpdateFinish return true if ingress update finished
@@ -103,6 +107,7 @@ func (c *IngressListenerConverter) GenerateListeners(ingress *networkextensionv1
 		ruleConverter := NewRuleConverter(c.Cli, lbObjs, ingress, ingress.GetName(), ingress.GetNamespace(), &rule,
 			c.Eventer)
 		ruleConverter.SetNamespaced(c.IsNamespaced)
+		ruleConverter.SetExemptNamespaces(c.ExemptNamespaces)
 		ruleConverter.SetTCPUDPPortReuse(c.IsTCPUDPPortReuse)
 		listeners, inErr := ruleConverter.DoConvert()
 		if inErr != nil {
@@ -114,6 +119,7 @@ func (c *IngressListenerConverter) GenerateListeners(ingress *networkextensionv1
 	for i, mapping := range ingress.Spec.PortMappings {
 		mappingConverter := NewMappingConverter(c.Cli, lbObjs, ingress.GetName(), ingress.GetNamespace(), &mapping, c.IsTCPUDPPortReuse)
 		mappingConverter.SetNamespaced(c.IsNamespaced)
+		mappingConverter.SetExemptNamespaces(c.ExemptNamespaces)
 		listeners, inErr := mappingConverter.DoConvert()
 		if inErr != nil {
 			blog.Errorf("convert mapping %d failed, err %s", i, inErr.Error())

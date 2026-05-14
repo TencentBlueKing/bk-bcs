@@ -1,5 +1,4 @@
-FROM alpine
-RUN apk --update --no-cache add ca-certificates bash vim curl
+FROM tencentos/tencentos4-minimal
 COPY bcs-webconsole /bcs-webconsole
 ENTRYPOINT ["/bcs-webconsole"]
 CMD []

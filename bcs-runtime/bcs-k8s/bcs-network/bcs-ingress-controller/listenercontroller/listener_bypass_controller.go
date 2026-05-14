@@ -54,7 +54,7 @@ func NewListenerBypassReconciler(ctx context.Context, client client.Client, lbID
 	return &ListenerBypassReconciler{
 		Ctx:           ctx,
 		Client:        client,
-		monitorHelper: apiclient.NewMonitorHelper(lbIDCache),
+		monitorHelper: apiclient.NewMonitorHelper(lbIDCache, options.UptimeCheckDisabled),
 		Option:        options,
 	}
 }

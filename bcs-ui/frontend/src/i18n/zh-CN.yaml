@@ -187,6 +187,10 @@ units:
     nDays: '{num}天'
     nMonths: '{0} 月'
     nYears: '{0} 年'
+    leftDays: '余{num}天'
+    leftMonths: '余{num}月'
+    leftYears: '余{num}年'
+    leftHours: '余{num}小时'
   suffix:
     seconds: 秒
     days: 天
@@ -200,11 +204,14 @@ units:
   cores: '{0} 核'
 metrics:
   usage: '使用率 {0}'
-  cpuUsage: CPU使用率
+  cpuUsage: CPU 使用率
+  cpuLimitUsage: CPU limit 使用率
   diskUsage: 磁盘使用率
   memUsage: 内存使用率
   memUsage1: 内存使用量
   podUsage: Pod使用率
+  cpuUsageDesc: CPU单核使用百分比，1个核用满则是 100%，2个核用满则是 200%
+  cpuLimitUsageDesc: CPU实际消耗核数占用Limit核数百分比，有可能会被超额使用，一般在100%之内
   cpuRequestUsage:
     text: CPU装箱率
     clusterDesc: >-
@@ -290,6 +297,7 @@ generic:
     searchDate: 选择日期
     command: 多个命令用空格分隔，例如/bin/bash &quot;-c&quot
     searchIp: '输入IP搜索, 多个IP用逗号或空格隔开'
+    searchWith: '搜索 {0}'
   button:
     clone: 克隆
     resetSearch: 调整筛选条件
@@ -409,6 +417,7 @@ generic:
     codeMode: 源码模式
     enabled: 已启用
     disabled: 已停用
+    timeLeft: 剩余时间
   status:
     part_failure: 部分失败
     support: 支持
@@ -725,9 +734,13 @@ cluster:
       vpc:
         text: 所属VPC
         deficiencyIpNumTips: 可用容器网络IP数量不足
-        availableIpNum: '可用IP数量: {0}'
         businessSpecificVPC: 业务专属VPC
-        publicVPC: 公共VPC
+        publicVPC: 公共 VPC
+        exclusiveVPC: 独占 VPC
+        stressTestVPC: 压测 VPC
+        publicVPCTips: vpc下所有业务集群共享网络资源与出口网关，禁止压测，适合小规格集群(200节点及以下)
+        exclusiveVPCTips: 业务独占vpc网络资源
+        stressTestVPCTips: vpc专用于业务部署压测客户端，使用需明确进出口带宽与连接数，请联系jonathantan确认资源
       networkSetting1:
         text: IP资源
         maxNodePodNum: Pod IP 数量
@@ -880,6 +893,7 @@ cluster:
         p2: 请确保集群内已删除所有 VPC-CNI 模式的Pod
     label:
       tkeID: TKE集群ID
+      goRecord: 查看执行记录
   ca:
     name: Cluster Autoscaler
     title:
@@ -1006,6 +1020,9 @@ cluster:
           tips: 默认使用平台提供 GPU 镜像
         CVM: 普通 CVM 节点池
         GPU: GPU 节点池
+        bizIDs: 来源业务
+        availableQuota: 剩余额度
+        providerTime: 提供时间
       title:
         nodeConfig: 节点配置
         initConfig: 初始化配置
@@ -2384,6 +2401,7 @@ dashboard:
       containerMemoryWorkingSetBytesOom: container_memory_working_set_bytes，limit限制时oom判断依据
       inplaceUpdateNotSupportRestart: 原地升级策略不支持滚动重启操作
       noPerms: '部分资源当前用户无查看权限，请点击此处{0}'
+      noMonitor: '当前集群未安装监控采集器，请前往 {plugins} 安装监控采集器。'
     label:
       upgrade:
         maxSurg: '最大调度Pod数量（maxSurge）: {num}'
@@ -3014,6 +3032,11 @@ tke:
         traffic_postpaid_by_hour: 按使用流量计费
         bandwidth_prepaid: 按带宽计费
       maxBandWidth: 购买宽带
+    selectVPC: 选择 VPC
+    vpcName: VPC 名称
+    vpcID: VPCID
+    availableUnderlay: 可用 underlayIP 数量
+    availableOverlay: 可用 overlayIP 数量
   title:
     installGseAgentFailed:
       text: 安装 GSE Agent 失败
@@ -3053,6 +3076,8 @@ tke:
     cidrMaskLen: '子网掩码长度范围 {0}'
     minPodIP: Pod IP需要大于 0
     podIPsNeedLessThanVpcIPs: Pod IP总数要小于私有网络IP数量
+    podIPsNeedLessThanUnderlayNum: 可用 underlayIP 数量不足，请减少 IP 申请数量；或创建集群后再尝试开启 VPC-CNI
+    podIPsNeedLessThanUnderlayIPNum: 可用 underlayIP 数量不足，请减少 IP 申请数量
     passwordNotSame: 两次输入的密码不一致
     minIpNum: '为保证集群有足够IP, 容器网段不能低于 {0} 个IP'
     supportCidrList: '仅支持 {0} 之间网段'
@@ -3163,6 +3188,7 @@ templateFile:
     import: 导入文件包
     export: 导出全部
     exportFolder: 导出文件夹
+    addSubFolder: 新建文件夹
     upgrade: 升级为 Helm 模板
     rollback: 撤销本次升级
     toResourceView: 去资源视图查看
@@ -3209,6 +3235,8 @@ templateFile:
     helmdesc: 当前文件已升级为 Helm 模板，保存后将不再支持切换回非 Helm 模板。
     spaceSubTitle: 模板文件夹及其中的模板文件将被删除
     emptyContent: 模板文件内容不能为空
+    invalidChar: 文件夹名称无效，只支持字母、数字、- 和 _
+    invalidFileName: 文件名不能以 / 开头或结尾，且不能包含 //
     success: 部署成功
     subTitle: '模板文件 {templateFile} 实例已部署至 {cluster}'
     noChanges: 未变更

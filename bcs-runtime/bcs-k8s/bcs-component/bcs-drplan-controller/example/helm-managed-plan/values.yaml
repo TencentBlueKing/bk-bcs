@@ -1,0 +1,25 @@
+# Namespace where DR resources are created
+namespace: default
+
+# Feed namespace for nginx resources in the parent cluster
+feedNamespace: default
+
+# Cluster A configuration
+clusterA:
+  name: cluster-a
+  managedClusterNamespace: clusternet-cluster-a
+  replicas: 1
+
+# Cluster B configuration
+clusterB:
+  name: cluster-b
+  managedClusterNamespace: clusternet-cluster-b
+  replicas: 2
+
+# DRPlan failure policy: Stop | Continue
+failurePolicy: Stop
+
+# HTTP health check endpoint (for the HTTP workflow example)
+healthCheck:
+  enabled: true
+  endpoint: "http://nginx.default.svc.cluster.local"

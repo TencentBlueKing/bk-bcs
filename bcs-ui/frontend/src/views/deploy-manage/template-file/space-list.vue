@@ -55,9 +55,17 @@
             @mouseleave="hoverItemID = ''"
             @click="handleChangeSpace(space.id)">
             <span class="flex items-center">
+              <!-- 收藏图标 -->
               <i
-                class="bcs-icon bcs-icon-star-shape text-[#ff9C01] mr-[3px] leading-[18px]"
+                class="bcs-icon bcs-icon-star-shape text-[#ff9C01] mr-[4px] leading-[18px]"
                 v-if="space?.fav"></i>
+              <!-- 文件夹图标 -->
+              <i
+                :class="[
+                  'bcs-icon text-[14px] mr-[4px] flex-shrink-0',
+                  !collapseSpaceIDs.includes(space.id) ? 'bcs-icon-folder' : 'bcs-icon-folder-open text-[#3A84FF]',
+                ]"
+              />
               <span class="bcs-ellipsis" v-bk-overflow-tips="{ interactive: false }">{{ space.name }}</span>
             </span>
             <!-- 空间操作 -->
@@ -77,6 +85,9 @@
                     <li class="bcs-dropdown-item" @click="addTemplateFile(space)">
                       {{ $t('templateFile.button.createFile') }}
                     </li>
+                    <li class="bcs-dropdown-item" @click="handleAddTempSubFolder(space.id, space.name)">
+                      {{ $t('templateFile.button.addSubFolder') }}
+                    </li>
                     <li class="bcs-dropdown-item" @click="handleFavorite(space)">
                       {{ space?.fav ?
                         $t('templateFile.button.RemoveFromFavorites') :
@@ -95,47 +106,25 @@
             </span>
           </div>
         </template>
-        <!-- 空间下文件列表 -->
-        <div
-          v-for="file in fileStore.fileListMap[space.id]"
-          :key="file.id"
-          offset="0, 6"
-          :class="[
-            'flex items-center justify-between h-[32px] pl-[36px] pr-[8px] text-[12px] hover:bg-[#F5F7FA]',
-            'cursor-pointer',
-            {
-              '!text-[#3A84FF] !bg-[#E1ECFF]': curFileID === file.id
-            }
-          ]"
-          @mouseenter="hoverItemID = file.id"
-          @mouseleave="hoverItemID = ''"
-          @click="handleChangeFile(space.id, file)">
-          <span class="bcs-ellipsis" v-bk-overflow-tips="{ interactive: false }">{{ file.name }}</span>
-          <!-- 文件操作 -->
-          <span @click.stop>
-            <PopoverSelector
-              v-if="hoverItemID === file.id || curPopover === file.id"
-              :on-hide="hidePopover"
-              :on-show="() => showPopover(file.id)">
-              <span class="bcs-icon-more-btn w-[16px] h-[16px]"><i class="bcs-icon bcs-icon-more"></i></span>
-              <template #content>
-                <ul>
-                  <li class="bcs-dropdown-item" @click="editFile(file)">{{ $t('generic.button.edit') }}</li>
-                  <li class="bcs-dropdown-item" @click="deployFile(file)">
-                    {{ $t('templateSet.button.deploy') }}
-                  </li>
-                  <li class="bcs-dropdown-item" @click="cloneVersion(file)">
-                    {{ $t('generic.button.clone') }}
-                  </li>
-                  <li class="bcs-dropdown-item" @click="mangeFileVersion(space, file)">
-                    {{ $t('templateFile.button.versionManage') }}
-                  </li>
-                  <li class="bcs-dropdown-item" @click="deleteFile(space, file)">{{ $t('generic.button.delete') }}</li>
-                </ul>
-              </template>
-            </PopoverSelector>
-          </span>
-        </div>
+        <!-- 空间下文件列表 - 树形渲染 -->
+        <FileTreeNode
+          v-for="node in getFilteredTree(space)"
+          :key="node.path"
+          :node="node"
+          :depth="1"
+          :cur-file-i-d="curFileID"
+          :space-i-d="space.id"
+          @toggle-expand="(path) => handleToggleExpand(space.id, path)"
+          @add-sub-folder="(path) => handleAddTempSubFolder(space.id, path)"
+          @rename-folder="(data) => handleRenameFolder(space.id, data)"
+          @delete-folder="(path) => handleDeleteFolder(space.id, path)"
+          @select-file="(data) => handleChangeFile(data.spaceID, data.file)"
+          @edit-file="(file) => editFile(file)"
+          @deploy-file="(file) => deployFile(file)"
+          @clone-version="(file) => cloneVersion(file)"
+          @manage-version="(file) => mangeFileVersion(space, file)"
+          @delete-file="(file) => deleteFile(space, file)"
+        />
       </CollapseItem>
       <bcs-exception type="empty" scene="part" v-if="!fileStore.spaceList.length" />
     </div>
@@ -144,7 +133,8 @@
       v-model="showNameDialog"
       :title="typeText.title[curType]"
       width="480"
-      header-position="left">
+      header-position="left"
+      @after-leave="repeatMsg = ''">
       <bcs-form :label-width="110">
         <bcs-form-item required :label="$t('templateFile.label.spaceName')">
           <Validate
@@ -169,6 +159,39 @@
             {{ typeText.button[curType] }}
           </bcs-button>
           <bcs-button @click="showNameDialog = false">{{ $t('generic.button.cancel') }}</bcs-button>
+        </div>
+      </template>
+    </bcs-dialog>
+    <!-- 新增子文件夹 -->
+    <bcs-dialog
+      v-model="showSubFolderDialog"
+      :title="$t('templateFile.button.addSubFolder')"
+      width="480"
+      header-position="left">
+      <bcs-form :label-width="110">
+        <bcs-form-item required :label="$t('templateFile.label.spaceName')">
+          <Validate
+            :message="subFolderErrorMsg"
+            error-display-type="normal">
+            <bcs-input
+              ref="subFolderInputRef"
+              :maxlength="64"
+              v-model.trim="subFolderName"
+              @change="subFolderErrorMsg = ''">
+            </bcs-input>
+          </Validate>
+        </bcs-form-item>
+      </bcs-form>
+      <template #footer>
+        <div>
+          <bcs-button
+            theme="primary"
+            :loading="false"
+            :disabled="!subFolderName"
+            @click="confirmAddSubFolder">
+            {{ $t('generic.button.create') }}
+          </bcs-button>
+          <bcs-button @click="showSubFolderDialog = false">{{ $t('generic.button.cancel') }}</bcs-button>
         </div>
       </template>
     </bcs-dialog>
@@ -219,6 +242,8 @@
 import { cloneDeep } from 'lodash';
 import { onBeforeMount, ref, set, watch } from 'vue';
 
+import FileTreeNode from './file-tree-node.vue';
+import { buildFileTree, filterTreeBySearch, IFileTreeNode } from './use-file-tree';
 import { searchKey, store as fileStore, updateListTemplateSpaceList, updateTemplateMetadataList } from './use-store';
 import VersionList from './version-list.vue';
 
@@ -257,6 +282,81 @@ const showPopover = (id: string) => {
 };
 // 文件夹是否重复
 const repeatMsg = ref('');
+// 子文件夹名称错误提示
+const subFolderErrorMsg = ref('');
+
+// 树形结构：跟踪每个空间展开的文件夹路径
+const expandedPathsMap = ref<Record<string, Set<string>>>({});
+
+// 获取指定空间的文件树（含搜索过滤）
+function getFilteredTree(space: ITemplateSpaceData): IFileTreeNode[] {
+  const files = fileStore.fileListMap[space.id] || [];
+  const tempFolders = fileStore.tempFoldersMap[space.id] || [];
+
+  // 重建树（当文件列表或临时文件夹变化时）
+  const tree = buildFileTree(files, tempFolders);
+
+  // 扁平化第一层文件夹：空间本身已是根容器，第一层文件夹的子节点直接提升
+  // 但保留空的文件夹节点，否则新创建的空文件夹不可见
+  const flattened = flattenFirstLevelFolders(tree);
+
+  // 恢复展开状态
+  const expandedPaths = expandedPathsMap.value[space.id];
+  if (expandedPaths) {
+    applyExpandedState(flattened, expandedPaths);
+  }
+
+  // 搜索过滤
+  if (searchKey.value) {
+    return filterTreeBySearch(flattened, searchKey.value);
+  }
+
+  return flattened;
+}
+
+// 递归判断文件夹是否包含文件（非文件夹）子节点（包括嵌套子文件夹中的文件）
+function hasFileChildren(node: IFileTreeNode): boolean {
+  for (const child of node.children) {
+    if (!child.isFolder) return true; // 找到文件节点
+    if (hasFileChildren(child)) return true; // 递归检查子文件夹
+  }
+  return false;
+}
+
+// 扁平化第一层文件夹：将顶层文件夹节点的子节点提升到顶层
+// 规则：
+// 1. 如果文件夹包含文件子节点（从文件路径解析出的文件夹），提升文件到顶层
+// 2. 如果文件夹只包含子文件夹（用户创建的嵌套文件夹结构），保留文件夹节点
+// 3. 如果文件夹为空且是临时创建的，保留该文件夹节点
+function flattenFirstLevelFolders(nodes: IFileTreeNode[]): IFileTreeNode[] {
+  const result: IFileTreeNode[] = [];
+  for (const node of nodes) {
+    if (node.isFolder) {
+      if (node.isTemp || hasFileChildren(node)) {
+        // 提升所有子节点到顶层
+        result.push(...node.children);
+      } else {
+        // 只包含子文件夹（用户创建的嵌套文件夹结构），保留该文件夹节点
+        result.push(node);
+      }
+    } else {
+      result.push(node);
+    }
+  }
+  return result;
+}
+
+// 应用展开状态到树节点
+function applyExpandedState(nodes: IFileTreeNode[], expandedPaths: Set<string>) {
+  nodes.forEach((node) => {
+    if (node.isFolder && expandedPaths.has(node.path)) {
+      node.expanded = true;
+    }
+    if (node.children.length > 0) {
+      applyExpandedState(node.children, expandedPaths);
+    }
+  });
+}
 
 // 展开 & 收起 空间
 const collapseSpaceIDs = ref<string[]>([]);
@@ -264,15 +364,156 @@ function handleCollapseChange(space: ITemplateSpaceData) {
   const index = collapseSpaceIDs.value.findIndex(id => space.id === id);
   if (index > -1) {
     collapseSpaceIDs.value.splice(index, 1);
+    // 切换空间时清除临时文件夹
+    delete fileStore.tempFoldersMap[space.id];
+    delete expandedPathsMap.value[space.id];
   } else {
     collapseSpaceIDs.value.push(space.id);
   }
+}
+
+// 根据当前选中的文件，自动展开其所有父文件夹及祖先文件夹
+function autoExpandForCurrentFile(spaceID: string) {
+  if (!curFileID.value) return;
+  const files = fileStore.fileListMap[spaceID] || [];
+  const curFile = files.find(f => f.id === curFileID.value);
+  if (!curFile?.name) return;
+
+  const segments = curFile.name.split('/');
+  if (segments.length <= 1) return; // 没有文件夹，无需展开
+
+  // 提取所有父文件夹路径（从第一段到倒数第二段）
+  // 例如 "folder1/folder2/folder3/file.yaml" -> ["folder1", "folder1/folder2", "folder1/folder2/folder3"]
+  const folderPaths: string[] = [];
+  for (let i = 1; i < segments.length; i++) {
+    folderPaths.push(segments.slice(0, i).join('/'));
+  }
+
+  if (!expandedPathsMap.value[spaceID]) {
+    expandedPathsMap.value[spaceID] = new Set();
+  }
+  folderPaths.forEach(p => expandedPathsMap.value[spaceID].add(p));
+  // 触发响应式更新
+  expandedPathsMap.value = { ...expandedPathsMap.value };
+}
+
+// 切换树节点展开状态
+function handleToggleExpand(spaceID: string, path: string) {
+  if (!expandedPathsMap.value[spaceID]) {
+    expandedPathsMap.value[spaceID] = new Set();
+  }
+  const expandedPaths = expandedPathsMap.value[spaceID];
+  if (expandedPaths.has(path)) {
+    expandedPaths.delete(path);
+  } else {
+    expandedPaths.add(path);
+  }
+  // 触发响应式更新
+  expandedPathsMap.value = { ...expandedPathsMap.value };
+}
+
+// 新增子文件夹 - 从空间操作菜单
+const showSubFolderDialog = ref(false);
+const subFolderName = ref('');
+const subFolderInputRef = ref();
+const curSubFolderSpaceID = ref('');
+const curSubFolderPath = ref(''); // 父文件夹路径（为空表示根目录）
+
+// 从树节点中新增子文件夹
+function handleAddTempSubFolder(spaceID: string, parentPath: string) {
+  hidePopover();
+  curSubFolderSpaceID.value = spaceID;
+  curSubFolderPath.value = parentPath;
+  subFolderName.value = '';
+  subFolderErrorMsg.value = '';
+  showSubFolderDialog.value = true;
+}
+
+function confirmAddSubFolder() {
+  if (!subFolderName.value || !curSubFolderSpaceID.value) return;
+
+  // 校验：只允许字母、数字、-、_
+  if (!/^[a-zA-Z0-9_-]+$/.test(subFolderName.value)) {
+    subFolderErrorMsg.value = $i18n.t('templateFile.tips.invalidChar');
+    return;
+  }
+
+  const spaceID = curSubFolderSpaceID.value;
+  const parentPath = curSubFolderPath.value;
+  const folderPath = parentPath ? `${parentPath}/${subFolderName.value}` : subFolderName.value;
+
+  // 支持输入多级路径（如 "a/b/c"），自动拆分
+  const segments = folderPath.split('/');
+  const paths: string[] = [];
+  for (let i = 1; i <= segments.length; i++) {
+    paths.push(segments.slice(0, i).join('/'));
+  }
+
+  const existing = fileStore.tempFoldersMap[spaceID] || [];
+  const updatedFolders = [...existing];
+  paths.forEach((p) => {
+    if (!updatedFolders.includes(p)) {
+      updatedFolders.push(p);
+    }
+  });
+  set(fileStore.tempFoldersMap, spaceID, updatedFolders);
+
+  // 自动展开新创建文件夹的所有父路径，确保用户能看到新文件夹
+  if (!expandedPathsMap.value[spaceID]) {
+    expandedPathsMap.value[spaceID] = new Set();
+  }
+  // 展开父路径（如果有的话）
+  if (parentPath) {
+    const parentSegments = parentPath.split('/');
+    for (let i = 1; i <= parentSegments.length; i++) {
+      expandedPathsMap.value[spaceID].add(parentSegments.slice(0, i).join('/'));
+    }
+  }
+  // 展开新创建的文件夹路径
+  paths.forEach(p => expandedPathsMap.value[spaceID].add(p));
+  // 触发响应式更新
+  expandedPathsMap.value = { ...expandedPathsMap.value };
+
+  showSubFolderDialog.value = false;
+}
+
+// 重命名子文件夹
+function handleRenameFolder(spaceID: string, data: { path: string; newName: string }) {
+  const { path, newName } = data;
+  const tempFolders = fileStore.tempFoldersMap[spaceID] || [];
+  const oldSegments = path.split('/');
+  const newSegments = [...oldSegments.slice(0, -1), newName];
+  const newPath = newSegments.join('/');
+
+  // 更新所有包含旧路径前缀的临时文件夹
+  const updatedFolders = tempFolders.map((f) => {
+    if (f === path || f.startsWith(`${path}/`)) {
+      return f.replace(path, newPath);
+    }
+    return f;
+  });
+
+  set(fileStore.tempFoldersMap, spaceID, updatedFolders);
+  delete expandedPathsMap.value[spaceID];
+}
+
+// 删除子文件夹
+function handleDeleteFolder(spaceID: string, path: string) {
+  const tempFolders = fileStore.tempFoldersMap[spaceID] || [];
+  const updatedFolders = tempFolders.filter(f => f !== path && !f.startsWith(`${path}/`));
+  set(fileStore.tempFoldersMap, spaceID, updatedFolders);
+  delete expandedPathsMap.value[spaceID];
 }
 
 // 切换空间
 async function handleChangeSpace(spaceID: string) {
   if (curSpaceID.value === spaceID && !curFileID.value) return;
 
+  // 切换空间时清除之前空间的临时文件夹
+  if (curSpaceID.value && curSpaceID.value !== spaceID) {
+    delete fileStore.tempFoldersMap[curSpaceID.value];
+    delete expandedPathsMap.value[curSpaceID.value];
+  }
   curSpaceID.value = spaceID;
   curFileID.value = '';
   await $router.replace({
@@ -281,7 +522,7 @@ async function handleChangeSpace(spaceID: string) {
       templateSpace: spaceID,
     },
   });
-}
+};
 
 // 切换详情
 function handleChangeFile(spaceID: string, file: IListTemplateMetadataItem) {
@@ -375,6 +616,12 @@ function showCloneSpaceDialog(space: ITemplateSpaceData) {
 // 创建 & 编辑工作空间的对话框确认事件
 async function fileNameConfirm() {
   if (!curEditSpace.value?.name || (curType.value !== 'create' && !curEditSpace.value?.id)) return;
+
+  // 校验：只允许字母、数字、-、_
+  if (!/^[a-zA-Z0-9_-]+$/.test(curEditSpace.value.name)) {
+    repeatMsg.value = $i18n.t('templateFile.tips.invalidChar');
+    return;
+  }
 
   saving.value = true;
   let res;
@@ -491,6 +738,9 @@ function addTemplateFile(space: ITemplateSpaceData) {
     name: 'addTemplateFile',
     params: {
       templateSpace: space.id,
+    },
+    query: {
+      folderPath: space.name,
     },
   });
 }
@@ -636,6 +886,15 @@ watch(showNameDialog, () => {
   }
 });
 
+// 新增子文件夹时聚焦输入框
+watch(showSubFolderDialog, () => {
+  if (showSubFolderDialog.value && subFolderInputRef.value) {
+    setTimeout(() => {
+      subFolderInputRef.value.focus();
+    });
+  }
+});
+
 // 获取空间下文件
 watch(collapseSpaceIDs, async () => {
   const ids = collapseSpaceIDs.value.filter(spaceID => !fileStore.fileListMap[spaceID]);
@@ -647,6 +906,8 @@ watch(collapseSpaceIDs, async () => {
   fileStore.loadingSpaceIDs = [...ids];
   await Promise.all(list).catch(() => []);
   fileStore.loadingSpaceIDs = [];
+  // 初始化时自动展开当前文件所在的父文件夹
+  ids.forEach(spaceID => autoExpandForCurrentFile(spaceID));
 }, { deep: true });
 
 const watchOnce = watch(() => fileStore.fileListMap[props.templateSpace || ''], () => {
@@ -656,6 +917,8 @@ const watchOnce = watch(() => fileStore.fileListMap[props.templateSpace || ''], 
     const spaceDoms = document.getElementById(`${props.templateSpace}`);
     spaceDoms?.scrollIntoView();
   });
+  // 首次加载时自动展开当前文件所在的父文件夹
+  autoExpandForCurrentFile(props.templateSpace || '');
   watchOnce();
 });
 
@@ -667,6 +930,8 @@ watch(() => props.templateSpace, () => {
 
 watch(searchKey, () => {
   updateListTemplateSpaceList();
+  // 清除树缓存以触发搜索过滤重建
+  expandedPathsMap.value = {};
 });
 
 watch(showImportDialog, () => {
@@ -677,6 +942,7 @@ onBeforeMount(() => {
   // 重置数据
   fileStore.spaceList = [];
   fileStore.fileListMap = {};
+  fileStore.tempFoldersMap = {};
   fileStore.loadingSpaceIDs = [];
   listTemplateSpace();
 });

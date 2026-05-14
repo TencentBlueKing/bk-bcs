@@ -33,6 +33,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/client"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/client/bkuser"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/store/model"
 	pmp "github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/types"
 )
@@ -51,6 +52,8 @@ const (
 	StatefulSet = "state7efulSet"
 	// Deployment 表示部署
 	Deployment = "deployment"
+	// CustomResource 表示自定义资源
+	CustomResource = "customResource"
 	// And 表示逻辑与操作
 	And = "AND"
 	// OR 表示逻辑或操作
@@ -179,6 +182,37 @@ func (c *cmdbClient) GetStorageClient() (bcsapi.Storage, error) {
 	panic("implement me")
 }
 
+// instrumentRequest 包装HTTP请求并收集metrics
+// nolint
+func (c *cmdbClient) instrumentRequest(method, endpoint string, fn func() (gorequest.Response, []byte,
+	[]error)) (gorequest.Response, []byte, []error) {
+	start := time.Now()
+
+	// 增加正在处理的请求数
+	metrics.CMDBRequestsInFlight.WithLabelValues(endpoint).Inc()
+	defer metrics.CMDBRequestsInFlight.WithLabelValues(endpoint).Dec()
+
+	// 执行实际请求
+	resp, body, errs := fn()
+
+	// 计算请求耗时
+	duration := time.Since(start).Seconds()
+
+	// 判断请求状态
+	status := "success"
+	if len(errs) > 0 {
+		status = "error"
+	} else if resp != nil && resp.StatusCode >= 400 {
+		status = "error"
+	}
+
+	// 记录metrics
+	metrics.CMDBRequestsTotal.WithLabelValues(method, endpoint, status).Inc()
+	metrics.CMDBRequestDuration.WithLabelValues(method, endpoint).Observe(duration)
+
+	return resp, body, errs
+}
+
 func (c *cmdbClient) generateGateWayAuth() (string, error) {
 	if c == nil {
 		return "", ErrServerNotInit
@@ -215,16 +249,18 @@ func (c *cmdbClient) GetBS2IDByBizID(bizID int64) (int, error) {
 		respData = &client.SearchBusinessResponse{}
 	)
 
-	_, _, errs := gorequest.New().
-		Timeout(defaultTimeOut).
-		Post(reqURL).
-		Set("Content-Type", "application/json").
-		Set("Accept", "application/json").
-		Set("X-Bkapi-Authorization", c.userAuth).
-		SetDebug(c.config.Debug).
-		Send(request).
-		Retry(3, 3*time.Second, 429).
-		EndStruct(&respData)
+	_, _, errs := c.instrumentRequest("POST", "get_bs2id_by_bizid", func() (gorequest.Response, []byte, []error) {
+		return gorequest.New().
+			Timeout(defaultTimeOut).
+			Post(reqURL).
+			Set("Content-Type", "application/json").
+			Set("Accept", "application/json").
+			Set("X-Bkapi-Authorization", c.userAuth).
+			SetDebug(c.config.Debug).
+			Send(request).
+			Retry(3, 3*time.Second, 429).
+			EndStruct(&respData)
+	})
 	if len(errs) > 0 {
 		blog.Errorf("call api GetBS2IDByBizID failed: %v", errs[0])
 		return 0, errs[0]
@@ -262,16 +298,18 @@ func (c *cmdbClient) GetBizInfo(bizID int64) (*client.Business, error) {
 		respData = &client.QueryBusinessInfoResp{}
 	)
 
-	_, _, errs := gorequest.New().
-		Timeout(defaultTimeOut).
-		Post(reqURL).
-		Set("Content-Type", "application/json").
-		Set("Accept", "application/json").
-		Set("X-Bkapi-Authorization", c.userAuth).
-		SetDebug(c.config.Debug).
-		Send(request).
-		Retry(3, 3*time.Second, 429).
-		EndStruct(&respData)
+	_, _, errs := c.instrumentRequest("POST", "get_biz_info", func() (gorequest.Response, []byte, []error) {
+		return gorequest.New().
+			Timeout(defaultTimeOut).
+			Post(reqURL).
+			Set("Content-Type", "application/json").
+			Set("Accept", "application/json").
+			Set("X-Bkapi-Authorization", c.userAuth).
+			SetDebug(c.config.Debug).
+			Send(request).
+			Retry(3, 3*time.Second, 429).
+			EndStruct(&respData)
+	})
 	if len(errs) > 0 {
 		blog.Errorf("call api GetBizInfo failed: %v", errs[0])
 		return nil, errs[0]
@@ -350,16 +388,18 @@ func (c *cmdbClient) GetHostInfo(hostIP []string) (*[]client.HostData, error) {
 		)
 
 		// 发送HTTP请求并处理响应
-		resp, _, errs := gorequest.New().
-			Timeout(defaultTimeOut).
-			Post(reqURL).
-			Set("Content-Type", "application/json").
-			Set("Accept", "application/json").
-			Set("X-Bkapi-Authorization", c.userAuth).
-			SetDebug(c.config.Debug).
-			Send(request).
-			Retry(3, 3*time.Second, 429).
-			EndStruct(&respData)
+		resp, _, errs := c.instrumentRequest("POST", "get_host_info", func() (gorequest.Response, []byte, []error) {
+			return gorequest.New().
+				Timeout(defaultTimeOut).
+				Post(reqURL).
+				Set("Content-Type", "application/json").
+				Set("Accept", "application/json").
+				Set("X-Bkapi-Authorization", c.userAuth).
+				SetDebug(c.config.Debug).
+				Send(request).
+				Retry(3, 3*time.Second, 429).
+				EndStruct(&respData)
+		})
 		// 检查是否有错误发生
 		if len(errs) > 0 {
 			blog.Errorf("call api QueryHost failed: %v", errs[0])
@@ -457,17 +497,19 @@ func (c *cmdbClient) GetHostsByBiz(ctx context.Context, bkBizID int64, hostIP []
 		)
 
 		// 发送HTTP请求并解析响应
-		resp, _, errs := gorequest.New().
-			Timeout(defaultTimeOut).
-			Post(reqURL).
-			Set("Content-Type", "application/json").
-			Set("Accept", "application/json").
-			Set("X-Bkapi-Authorization", userAuth).
-			Set("X-Bk-Tenant-Id", tenant).
-			SetDebug(c.config.Debug).
-			Send(request).
-			Retry(3, 3*time.Second, 429).
-			EndStruct(&respData)
+		resp, _, errs := c.instrumentRequest("POST", "get_hosts_by_biz", func() (gorequest.Response, []byte, []error) {
+			return gorequest.New().
+				Timeout(defaultTimeOut).
+				Post(reqURL).
+				Set("Content-Type", "application/json").
+				Set("Accept", "application/json").
+				Set("X-Bkapi-Authorization", userAuth).
+				Set("X-Bk-Tenant-Id", tenant).
+				SetDebug(c.config.Debug).
+				Send(request).
+				Retry(3, 3*time.Second, 429).
+				EndStruct(&respData)
+		})
 
 		// 检查请求是否有错误
 		if len(errs) > 0 {
@@ -559,18 +601,21 @@ func (c *cmdbClient) GetBcsCluster(ctx context.Context, request *client.GetBcsCl
 
 	reqURL := fmt.Sprintf("%s/api/v3/findmany/kube/cluster", c.config.Server)
 	respData := &client.GetBcsClusterResponse{}
-	// 使用gorequest库发送POST请求，并处理响应
-	resp, _, errs := gorequest.New().
-		Timeout(defaultTimeOut).
-		Post(reqURL).
-		Set("Content-Type", "application/json").
-		Set("Accept", "application/json").
-		Set("X-Bkapi-Authorization", userAuth).
-		Set("X-Bk-Tenant-Id", tenant).
-		SetDebug(c.config.Debug).
-		Send(request).
-		Retry(3, 3*time.Second, 429).
-		EndStruct(&respData)
+
+	// 使用instrumentRequest包装请求并收集metrics
+	resp, _, errs := c.instrumentRequest("POST", "get_cluster", func() (gorequest.Response, []byte, []error) {
+		return gorequest.New().
+			Timeout(defaultTimeOut).
+			Post(reqURL).
+			Set("Content-Type", "application/json").
+			Set("Accept", "application/json").
+			Set("X-Bkapi-Authorization", userAuth).
+			Set("X-Bk-Tenant-Id", tenant).
+			SetDebug(c.config.Debug).
+			Send(request).
+			Retry(3, 3*time.Second, 429).
+			EndStruct(&respData)
+	})
 	// 检查是否有错误发生
 	if len(errs) > 0 {
 		blog.Errorf("call api list_kube_cluster failed: %v", errs[0])
@@ -649,25 +694,27 @@ func (c *cmdbClient) CreateBcsCluster(
 	// 初始化响应数据结构
 	respData := &client.CreateBcsClusterResponse{}
 
-	// 使用gorequest库发送POST请求
-	resp, _, errs := gorequest.New().
-		// 设置请求超时时间
-		Timeout(defaultTimeOut).
-		// 指定请求方法和URL
-		Post(reqURL).
-		// 设置请求头，包括Content-Type, Accept和X-Bkapi-Authorization
-		Set("Content-Type", "application/json").
-		Set("Accept", "application/json").
-		Set("X-Bkapi-Authorization", userAuth).
-		Set("X-Bk-Tenant-Id", tenant).
-		// 根据配置决定是否开启调试模式
-		SetDebug(c.config.Debug).
-		// 发送请求体
-		Send(request).
-		// 设置重试策略
-		Retry(3, 3*time.Second, 429).
-		// 解析响应到respData结构体
-		EndStruct(&respData)
+	// 使用instrumentRequest包装请求并收集metrics
+	resp, _, errs := c.instrumentRequest("POST", "create_cluster", func() (gorequest.Response, []byte, []error) {
+		return gorequest.New().
+			// 设置请求超时时间
+			Timeout(defaultTimeOut).
+			// 指定请求方法和URL
+			Post(reqURL).
+			// 设置请求头，包括Content-Type, Accept和X-Bkapi-Authorization
+			Set("Content-Type", "application/json").
+			Set("Accept", "application/json").
+			Set("X-Bkapi-Authorization", userAuth).
+			Set("X-Bk-Tenant-Id", tenant).
+			// 根据配置决定是否开启调试模式
+			SetDebug(c.config.Debug).
+			// 发送请求体
+			Send(request).
+			// 设置重试策略
+			Retry(3, 3*time.Second, 429).
+			// 解析响应到respData结构体
+			EndStruct(&respData)
+	})
 	// 检查是否有错误发生
 	if len(errs) > 0 {
 		blog.Errorf("call api create_kube_cluster failed: %v", errs[0])
@@ -743,25 +790,27 @@ func (c *cmdbClient) UpdateBcsCluster(ctx context.Context, request *client.Updat
 	// 初始化响应数据结构
 	respData := &client.UpdateBcsClusterResponse{}
 
-	// 使用gorequest库发送PUT请求
-	resp, _, errs := gorequest.New().
-		// 设置请求超时时间
-		Timeout(defaultTimeOut).
-		// 指定HTTP方法和请求URL
-		Put(reqURL).
-		// 设置请求头部信息
-		Set("Content-Type", "application/json").
-		Set("Accept", "application/json").
-		Set("X-Bkapi-Authorization", userAuth).
-		Set("X-Bk-Tenant-Id", tenant).
-		// 开启调试模式（如果配置中开启）
-		SetDebug(c.config.Debug).
-		// 发送请求体数据
-		Send(request).
-		// 设置重试机制
-		Retry(3, 3*time.Second, 429).
-		// 解析响应到respData结构体
-		EndStruct(&respData)
+	// 使用instrumentRequest包装请求并收集metrics
+	resp, _, errs := c.instrumentRequest("PUT", "update_cluster", func() (gorequest.Response, []byte, []error) {
+		return gorequest.New().
+			// 设置请求超时时间
+			Timeout(defaultTimeOut).
+			// 指定HTTP方法和请求URL
+			Put(reqURL).
+			// 设置请求头部信息
+			Set("Content-Type", "application/json").
+			Set("Accept", "application/json").
+			Set("X-Bkapi-Authorization", userAuth).
+			Set("X-Bk-Tenant-Id", tenant).
+			// 开启调试模式（如果配置中开启）
+			SetDebug(c.config.Debug).
+			// 发送请求体数据
+			Send(request).
+			// 设置重试机制
+			Retry(3, 3*time.Second, 429).
+			// 解析响应到respData结构体
+			EndStruct(&respData)
+	})
 	// 检查是否有请求错误发生
 	if len(errs) > 0 {
 		blog.Errorf("call api batch_update_kube_cluster failed: %v", errs[0])
@@ -835,27 +884,29 @@ func (c *cmdbClient) UpdateBcsClusterType(ctx context.Context,
 	// 初始化响应数据结构
 	respData := &client.UpdateBcsClusterTypeResponse{}
 
-	// 使用gorequest库发送PUT请求
-	resp, _, errs := gorequest.New().
-		// 设置请求超时时间
-		Timeout(defaultTimeOut).
-		// 指定HTTP方法为PUT
-		Put(reqURL).
-		// 设置请求头Content-Type为application/json
-		Set("Content-Type", "application/json").
-		// 设置请求头Accept为application/json
-		Set("Accept", "application/json").
-		// 设置自定义认证头
-		Set("X-Bkapi-Authorization", userAuth).
-		Set("X-Bk-Tenant-Id", tenant).
-		// 根据配置决定是否开启调试模式
-		SetDebug(c.config.Debug).
-		// 发送请求体
-		Send(request).
-		// 设置重试策略：最多重试3次，每次间隔3秒，遇到429状态码也重试
-		Retry(3, 3*time.Second, 429).
-		// 将响应体解析到respData结构体中
-		EndStruct(&respData)
+	// 使用instrumentRequest包装请求并收集metrics
+	resp, _, errs := c.instrumentRequest("PUT", "update_cluster_type", func() (gorequest.Response, []byte, []error) {
+		return gorequest.New().
+			// 设置请求超时时间
+			Timeout(defaultTimeOut).
+			// 指定HTTP方法为PUT
+			Put(reqURL).
+			// 设置请求头Content-Type为application/json
+			Set("Content-Type", "application/json").
+			// 设置请求头Accept为application/json
+			Set("Accept", "application/json").
+			// 设置自定义认证头
+			Set("X-Bkapi-Authorization", userAuth).
+			Set("X-Bk-Tenant-Id", tenant).
+			// 根据配置决定是否开启调试模式
+			SetDebug(c.config.Debug).
+			// 发送请求体
+			Send(request).
+			// 设置重试策略：最多重试3次，每次间隔3秒，遇到429状态码也重试
+			Retry(3, 3*time.Second, 429).
+			// 将响应体解析到respData结构体中
+			EndStruct(&respData)
+	})
 	// 检查是否有错误发生
 	if len(errs) > 0 {
 		blog.Errorf("call api update_kube_cluster_type failed: %v", errs[0])
@@ -930,20 +981,20 @@ func (c *cmdbClient) DeleteBcsCluster(ctx context.Context, request *client.Delet
 	// 初始化响应数据结构
 	respData := &client.DeleteBcsClusterResponse{}
 
-	// 使用 gorequest 库发送 HTTP DELETE 请求
-	// 设置请求超时时间、内容类型、接受类型、授权头等信息
-	// 发送请求体并尝试重试，最多重试3次，每次间隔3秒，如果遇到429状态码也会重试
-	resp, _, errs := gorequest.New().
-		Timeout(defaultTimeOut).
-		Delete(reqURL).
-		Set("Content-Type", "application/json").
-		Set("Accept", "application/json").
-		Set("X-Bkapi-Authorization", userAuth).
-		Set("X-Bk-Tenant-Id", tenant).
-		SetDebug(c.config.Debug).
-		Send(request).
-		Retry(3, 3*time.Second, 429).
-		EndStruct(&respData)
+	// 使用instrumentRequest包装请求并收集metrics
+	resp, _, errs := c.instrumentRequest("DELETE", "delete_cluster", func() (gorequest.Response, []byte, []error) {
+		return gorequest.New().
+			Timeout(defaultTimeOut).
+			Delete(reqURL).
+			Set("Content-Type", "application/json").
+			Set("Accept", "application/json").
+			Set("X-Bkapi-Authorization", userAuth).
+			Set("X-Bk-Tenant-Id", tenant).
+			SetDebug(c.config.Debug).
+			Send(request).
+			Retry(3, 3*time.Second, 429).
+			EndStruct(&respData)
+	})
 
 	// 如果请求过程中出现错误，则记录错误并返回
 	if len(errs) > 0 {
@@ -1029,17 +1080,19 @@ func (c *cmdbClient) GetBcsNamespace(ctx context.Context,
 
 	reqURL := fmt.Sprintf("%s/api/v3/findmany/kube/namespace", c.config.Server)
 	respData := &client.GetBcsNamespaceResponse{}
-	resp, _, errs := gorequest.New().
-		Timeout(defaultTimeOut).
-		Post(reqURL).
-		Set("Content-Type", "application/json").
-		Set("Accept", "application/json").
-		Set("X-Bkapi-Authorization", userAuth).
-		Set("X-Bk-Tenant-Id", tenant).
-		SetDebug(c.config.Debug).
-		Send(request).
-		Retry(3, 3*time.Second, 429).
-		EndStruct(&respData)
+	resp, _, errs := c.instrumentRequest("POST", "get_namespace", func() (gorequest.Response, []byte, []error) {
+		return gorequest.New().
+			Timeout(defaultTimeOut).
+			Post(reqURL).
+			Set("Content-Type", "application/json").
+			Set("Accept", "application/json").
+			Set("X-Bkapi-Authorization", userAuth).
+			Set("X-Bk-Tenant-Id", tenant).
+			SetDebug(c.config.Debug).
+			Send(request).
+			Retry(3, 3*time.Second, 429).
+			EndStruct(&respData)
+	})
 	if len(errs) > 0 {
 		blog.Errorf("call api list_namespace failed: %v", errs[0])
 		return nil, errs[0]
@@ -1110,17 +1163,19 @@ func (c *cmdbClient) CreateBcsNamespace(ctx context.Context,
 	reqURL := fmt.Sprintf("%s/api/v3/createmany/kube/namespace", c.config.Server)
 	respData := &client.CreateBcsNamespaceResponse{}
 
-	resp, _, errs := gorequest.New().
-		Timeout(defaultTimeOut).
-		Post(reqURL).
-		Set("Content-Type", "application/json").
-		Set("Accept", "application/json").
-		Set("X-Bkapi-Authorization", userAuth).
-		Set("X-Bk-Tenant-Id", tenant).
-		SetDebug(c.config.Debug).
-		Send(request).
-		Retry(3, 3*time.Second, 429).
-		EndStruct(&respData)
+	resp, _, errs := c.instrumentRequest("POST", "create_namespace", func() (gorequest.Response, []byte, []error) {
+		return gorequest.New().
+			Timeout(defaultTimeOut).
+			Post(reqURL).
+			Set("Content-Type", "application/json").
+			Set("Accept", "application/json").
+			Set("X-Bkapi-Authorization", userAuth).
+			Set("X-Bk-Tenant-Id", tenant).
+			SetDebug(c.config.Debug).
+			Send(request).
+			Retry(3, 3*time.Second, 429).
+			EndStruct(&respData)
+	})
 	if len(errs) > 0 {
 		blog.Errorf("call api create_kube_namespace failed: %v", errs[0])
 		return nil, errs[0]
@@ -1213,17 +1268,19 @@ func (c *cmdbClient) UpdateBcsNamespace(ctx context.Context,
 	reqURL := fmt.Sprintf("%s/api/v3/updatemany/kube/namespace", c.config.Server)
 	respData := &client.UpdateBcsNamespaceResponse{}
 
-	resp, _, errs := gorequest.New().
-		Timeout(defaultTimeOut).
-		Put(reqURL).
-		Set("Content-Type", "application/json").
-		Set("Accept", "application/json").
-		Set("X-Bkapi-Authorization", userAuth).
-		Set("X-Bk-Tenant-Id", tenant).
-		SetDebug(c.config.Debug).
-		Send(request).
-		Retry(3, 3*time.Second, 429).
-		EndStruct(&respData)
+	resp, _, errs := c.instrumentRequest("PUT", "update_namespace", func() (gorequest.Response, []byte, []error) {
+		return gorequest.New().
+			Timeout(defaultTimeOut).
+			Put(reqURL).
+			Set("Content-Type", "application/json").
+			Set("Accept", "application/json").
+			Set("X-Bkapi-Authorization", userAuth).
+			Set("X-Bk-Tenant-Id", tenant).
+			SetDebug(c.config.Debug).
+			Send(request).
+			Retry(3, 3*time.Second, 429).
+			EndStruct(&respData)
+	})
 	if len(errs) > 0 {
 		blog.Errorf("call api batch_update_namespace failed: %v", errs[0])
 		return errs[0]
@@ -1286,17 +1343,19 @@ func (c *cmdbClient) DeleteBcsNamespace(ctx context.Context,
 	reqURL := fmt.Sprintf("%s/api/v3/deletemany/kube/namespace", c.config.Server)
 	respData := &client.DeleteBcsNamespaceResponse{}
 
-	resp, _, errs := gorequest.New().
-		Timeout(defaultTimeOut).
-		Delete(reqURL).
-		Set("Content-Type", "application/json").
-		Set("Accept", "application/json").
-		Set("X-Bkapi-Authorization", userAuth).
-		Set("X-Bk-Tenant-Id", tenant).
-		SetDebug(c.config.Debug).
-		Send(request).
-		Retry(3, 3*time.Second, 429).
-		EndStruct(&respData)
+	resp, _, errs := c.instrumentRequest("DELETE", "delete_namespace", func() (gorequest.Response, []byte, []error) {
+		return gorequest.New().
+			Timeout(defaultTimeOut).
+			Delete(reqURL).
+			Set("Content-Type", "application/json").
+			Set("Accept", "application/json").
+			Set("X-Bkapi-Authorization", userAuth).
+			Set("X-Bk-Tenant-Id", tenant).
+			SetDebug(c.config.Debug).
+			Send(request).
+			Retry(3, 3*time.Second, 429).
+			EndStruct(&respData)
+	})
 	if len(errs) > 0 {
 		blog.Errorf("call api batch_delete_namespace failed: %v", errs[0])
 		return errs[0]
@@ -1447,6 +1506,23 @@ func (c *cmdbClient) GetBcsWorkload(ctx context.Context,
 					blog.Errorf("unmarshal podsWorkload failed: %v", errUM)
 				}
 			}
+		case CustomResource:
+			var customResource []model.CustomResource
+			if err := query.Debug().Find(&customResource).Error; err != nil {
+				blog.Errorf("query customResource withDB failed: %v", err)
+			} else {
+				if customResourceMarshal, errM := json.Marshal(customResource); errM != nil {
+					blog.Errorf("marshal customResource failed: %v", errM)
+				} else {
+					var bkCustomResource []interface{}
+					errUM := json.Unmarshal(customResourceMarshal, &bkCustomResource)
+					if errUM == nil {
+						blog.Infof("GetBcsWorkload customResourceWithDB get: %d", len(bkCustomResource))
+						return &bkCustomResource, nil
+					}
+					blog.Errorf("unmarshal customResource failed: %v", errUM)
+				}
+			}
 		}
 	}
 
@@ -1464,17 +1540,19 @@ func (c *cmdbClient) GetBcsWorkload(ctx context.Context,
 	reqURL := fmt.Sprintf("%s/api/v3/findmany/kube/workload/%s", c.config.Server, request.Kind)
 	respData := &client.GetBcsWorkloadResponse{}
 
-	resp, _, errs := gorequest.New().
-		Timeout(defaultTimeOut).
-		Post(reqURL).
-		Set("Content-Type", "application/json").
-		Set("Accept", "application/json").
-		Set("X-Bkapi-Authorization", userAuth).
-		Set("X-Bk-Tenant-Id", tenant).
-		SetDebug(c.config.Debug).
-		Send(request).
-		Retry(3, 3*time.Second, 429).
-		EndStruct(&respData)
+	resp, _, errs := c.instrumentRequest("POST", "get_workload", func() (gorequest.Response, []byte, []error) {
+		return gorequest.New().
+			Timeout(defaultTimeOut).
+			Post(reqURL).
+			Set("Content-Type", "application/json").
+			Set("Accept", "application/json").
+			Set("X-Bkapi-Authorization", userAuth).
+			Set("X-Bk-Tenant-Id", tenant).
+			SetDebug(c.config.Debug).
+			Send(request).
+			Retry(3, 3*time.Second, 429).
+			EndStruct(&respData)
+	})
 	if len(errs) > 0 {
 		blog.Errorf("call api list_workload failed: %v, rid: %s", errs[0], respData.RequestID)
 		return nil, errs[0]
@@ -1661,6 +1739,34 @@ func (c *cmdbClient) GetBcsWorkload(ctx context.Context,
 						}
 					}
 				}
+			case CustomResource:
+				var customResource []model.CustomResource
+				if errM := json.Unmarshal(workloadMarshal, &customResource); errM != nil {
+					blog.Errorf("unmarshal customResource failed: %v", errM)
+				} else {
+					for _, cr := range customResource {
+						var existingCustomResource model.CustomResource
+						query := db.Session(&gorm.Session{NewDB: true})
+						if errCR := query.Where("id = ?", cr.ID).First(&existingCustomResource).Error; errCR != nil {
+							if errors.Is(errCR, gorm.ErrRecordNotFound) {
+								if errCRC := query.Create(&cr).Error; errCRC != nil {
+									blog.Errorf("create customResource failed: %v", errCRC)
+								}
+								blog.Infof("GetBcsWorkload customResourceWithDB create: %s.%s",
+									cr.ClusterUID, cr.Name)
+							} else {
+								blog.Errorf("query customResource failed: %v", errCR)
+							}
+						} else {
+							if errCRS := query.Save(&cr).Error; errCRS != nil {
+								blog.Errorf("update customResource failed: %v", errCRS)
+							} else {
+								blog.Infof("GetBcsWorkload customResourceWithDB update: %s.%s",
+									cr.ClusterUID, cr.Name)
+							}
+						}
+					}
+				}
 			}
 		}
 	}
@@ -1693,17 +1799,19 @@ func (c *cmdbClient) CreateBcsWorkload(ctx context.Context,
 	reqURL := fmt.Sprintf("%s/api/v3/createmany/kube/workload/%s", c.config.Server, *request.Kind)
 	respData := &client.CreateBcsWorkloadResponse{}
 
-	resp, _, errs := gorequest.New().
-		Timeout(defaultTimeOut).
-		Post(reqURL).
-		Set("Content-Type", "application/json").
-		Set("Accept", "application/json").
-		Set("X-Bkapi-Authorization", userAuth).
-		Set("X-Bk-Tenant-Id", tenant).
-		SetDebug(c.config.Debug).
-		Send(request).
-		Retry(3, 3*time.Second, 429).
-		EndStruct(&respData)
+	resp, _, errs := c.instrumentRequest("POST", "create_workload", func() (gorequest.Response, []byte, []error) {
+		return gorequest.New().
+			Timeout(defaultTimeOut).
+			Post(reqURL).
+			Set("Content-Type", "application/json").
+			Set("Accept", "application/json").
+			Set("X-Bkapi-Authorization", userAuth).
+			Set("X-Bk-Tenant-Id", tenant).
+			SetDebug(c.config.Debug).
+			Send(request).
+			Retry(3, 3*time.Second, 429).
+			EndStruct(&respData)
+	})
 	if len(errs) > 0 {
 		blog.Errorf("call api batch_create_workload failed: %v", errs[0])
 		return nil, errs[0]
@@ -1798,17 +1906,19 @@ func (c *cmdbClient) UpdateBcsWorkload(ctx context.Context,
 	reqURL := fmt.Sprintf("%s/api/v3/updatemany/kube/workload/%s", c.config.Server, *request.Kind)
 	respData := &client.UpdateBcsWorkloadResponse{}
 
-	resp, _, errs := gorequest.New().
-		Timeout(defaultTimeOut).
-		Put(reqURL).
-		Set("Content-Type", "application/json").
-		Set("Accept", "application/json").
-		Set("X-Bkapi-Authorization", userAuth).
-		Set("X-Bk-Tenant-Id", tenant).
-		SetDebug(c.config.Debug).
-		Send(request).
-		Retry(3, 3*time.Second, 429).
-		EndStruct(&respData)
+	resp, _, errs := c.instrumentRequest("PUT", "update_workload", func() (gorequest.Response, []byte, []error) {
+		return gorequest.New().
+			Timeout(defaultTimeOut).
+			Put(reqURL).
+			Set("Content-Type", "application/json").
+			Set("Accept", "application/json").
+			Set("X-Bkapi-Authorization", userAuth).
+			Set("X-Bk-Tenant-Id", tenant).
+			SetDebug(c.config.Debug).
+			Send(request).
+			Retry(3, 3*time.Second, 429).
+			EndStruct(&respData)
+	})
 	if len(errs) > 0 {
 		blog.Errorf("call api batch_update_workload failed: %v", errs[0])
 		return errs[0]
@@ -1872,17 +1982,19 @@ func (c *cmdbClient) DeleteBcsWorkload(ctx context.Context,
 	reqURL := fmt.Sprintf("%s/api/v3/deletemany/kube/workload/%s", c.config.Server, *request.Kind)
 	respData := &client.DeleteBcsWorkloadResponse{}
 
-	resp, _, errs := gorequest.New().
-		Timeout(defaultTimeOut).
-		Delete(reqURL).
-		Set("Content-Type", "application/json").
-		Set("Accept", "application/json").
-		Set("X-Bkapi-Authorization", userAuth).
-		Set("X-Bk-Tenant-Id", tenant).
-		SetDebug(c.config.Debug).
-		Send(request).
-		Retry(3, 3*time.Second, 429).
-		EndStruct(&respData)
+	resp, _, errs := c.instrumentRequest("DELETE", "delete_workload", func() (gorequest.Response, []byte, []error) {
+		return gorequest.New().
+			Timeout(defaultTimeOut).
+			Delete(reqURL).
+			Set("Content-Type", "application/json").
+			Set("Accept", "application/json").
+			Set("X-Bkapi-Authorization", userAuth).
+			Set("X-Bk-Tenant-Id", tenant).
+			SetDebug(c.config.Debug).
+			Send(request).
+			Retry(3, 3*time.Second, 429).
+			EndStruct(&respData)
+	})
 	if len(errs) > 0 {
 		blog.Errorf("call api batch_delete_workload failed: %v", errs[0])
 		return errs[0]
@@ -1959,6 +2071,15 @@ func deleteBcsWorkloadDB(request *client.DeleteBcsWorkloadRequest, db *gorm.DB) 
 				blog.Infof("DeleteBcsWorkload podsWordloadWithDB delete: %v", *request.IDs)
 			}
 		}
+	case CustomResource:
+		if db != nil {
+			query := db.Session(&gorm.Session{NewDB: true})
+			if err := query.Where("id in (?)", *request.IDs).Delete(&model.CustomResource{}).Error; err != nil {
+				blog.Errorf("delete bcs customResource failed: %v", err)
+			} else {
+				blog.Infof("DeleteBcsWorkload customResourceWithDB delete: %v", *request.IDs)
+			}
+		}
 	}
 }
 
@@ -2013,17 +2134,19 @@ func (c *cmdbClient) GetBcsNode(ctx context.Context,
 
 	reqURL := fmt.Sprintf("%s/api/v3/findmany/kube/node", c.config.Server)
 	respData := &client.GetBcsNodeResponse{}
-	resp, _, errs := gorequest.New().
-		Timeout(defaultTimeOut).
-		Post(reqURL).
-		Set("Content-Type", "application/json").
-		Set("Accept", "application/json").
-		Set("X-Bkapi-Authorization", userAuth).
-		Set("X-Bk-Tenant-Id", tenant).
-		SetDebug(c.config.Debug).
-		Send(request).
-		Retry(3, 3*time.Second, 429).
-		EndStruct(&respData)
+	resp, _, errs := c.instrumentRequest("POST", "get_node", func() (gorequest.Response, []byte, []error) {
+		return gorequest.New().
+			Timeout(defaultTimeOut).
+			Post(reqURL).
+			Set("Content-Type", "application/json").
+			Set("Accept", "application/json").
+			Set("X-Bkapi-Authorization", userAuth).
+			Set("X-Bk-Tenant-Id", tenant).
+			SetDebug(c.config.Debug).
+			Send(request).
+			Retry(3, 3*time.Second, 429).
+			EndStruct(&respData)
+	})
 	if len(errs) > 0 {
 		blog.Errorf("call api list_kube_node failed: %v", errs[0])
 		return nil, errs[0]
@@ -2094,17 +2217,19 @@ func (c *cmdbClient) CreateBcsNode(ctx context.Context,
 
 	reqURL := fmt.Sprintf("%s/api/v3/createmany/kube/node", c.config.Server)
 	respData := &client.CreateBcsNodeResponse{}
-	resp, _, errs := gorequest.New().
-		Timeout(defaultTimeOut).
-		Post(reqURL).
-		Set("Content-Type", "application/json").
-		Set("Accept", "application/json").
-		Set("X-Bkapi-Authorization", userAuth).
-		Set("X-Bk-Tenant-Id", tenant).
-		SetDebug(c.config.Debug).
-		Send(request).
-		Retry(3, 3*time.Second, 429).
-		EndStruct(&respData)
+	resp, _, errs := c.instrumentRequest("POST", "create_node", func() (gorequest.Response, []byte, []error) {
+		return gorequest.New().
+			Timeout(defaultTimeOut).
+			Post(reqURL).
+			Set("Content-Type", "application/json").
+			Set("Accept", "application/json").
+			Set("X-Bkapi-Authorization", userAuth).
+			Set("X-Bk-Tenant-Id", tenant).
+			SetDebug(c.config.Debug).
+			Send(request).
+			Retry(3, 3*time.Second, 429).
+			EndStruct(&respData)
+	})
 	if len(errs) > 0 {
 		blog.Errorf("call api batch_create_kube_node failed: %v", errs[0])
 		return nil, errs[0]
@@ -2200,17 +2325,19 @@ func (c *cmdbClient) UpdateBcsNode(ctx context.Context, request *client.UpdateBc
 	reqURL := fmt.Sprintf("%s/api/v3/updatemany/kube/node", c.config.Server)
 	respData := &client.UpdateBcsNodeResponse{}
 
-	resp, _, errs := gorequest.New().
-		Timeout(defaultTimeOut).
-		Put(reqURL).
-		Set("Content-Type", "application/json").
-		Set("Accept", "application/json").
-		Set("X-Bkapi-Authorization", userAuth).
-		Set("X-Bk-Tenant-Id", tenant).
-		SetDebug(c.config.Debug).
-		Send(request).
-		Retry(3, 3*time.Second, 429).
-		EndStruct(&respData)
+	resp, _, errs := c.instrumentRequest("PUT", "update_node", func() (gorequest.Response, []byte, []error) {
+		return gorequest.New().
+			Timeout(defaultTimeOut).
+			Put(reqURL).
+			Set("Content-Type", "application/json").
+			Set("Accept", "application/json").
+			Set("X-Bkapi-Authorization", userAuth).
+			Set("X-Bk-Tenant-Id", tenant).
+			SetDebug(c.config.Debug).
+			Send(request).
+			Retry(3, 3*time.Second, 429).
+			EndStruct(&respData)
+	})
 	if len(errs) > 0 {
 		blog.Errorf("call api batch_update_kube_node failed: %v", errs[0])
 		return errs[0]
@@ -2283,17 +2410,19 @@ func (c *cmdbClient) DeleteBcsNode(ctx context.Context, request *client.DeleteBc
 	reqURL := fmt.Sprintf("%s/api/v3/deletemany/kube/node", c.config.Server)
 	respData := &client.DeleteBcsNodeResponse{}
 
-	resp, _, errs := gorequest.New().
-		Timeout(defaultTimeOut).
-		Delete(reqURL).
-		Set("Content-Type", "application/json").
-		Set("Accept", "application/json").
-		Set("X-Bkapi-Authorization", userAuth).
-		Set("X-Bk-Tenant-Id", tenant).
-		SetDebug(c.config.Debug).
-		Send(request).
-		Retry(3, 3*time.Second, 429).
-		EndStruct(&respData)
+	resp, _, errs := c.instrumentRequest("DELETE", "delete_node", func() (gorequest.Response, []byte, []error) {
+		return gorequest.New().
+			Timeout(defaultTimeOut).
+			Delete(reqURL).
+			Set("Content-Type", "application/json").
+			Set("Accept", "application/json").
+			Set("X-Bkapi-Authorization", userAuth).
+			Set("X-Bk-Tenant-Id", tenant).
+			SetDebug(c.config.Debug).
+			Send(request).
+			Retry(3, 3*time.Second, 429).
+			EndStruct(&respData)
+	})
 	if len(errs) > 0 {
 		blog.Errorf("call api batch_delete_kube_node failed: %v", errs[0])
 		return errs[0]
@@ -2366,17 +2495,20 @@ func (c *cmdbClient) GetBcsPod(ctx context.Context,
 	reqURL := fmt.Sprintf("%s/api/v3/findmany/kube/pod", c.config.Server)
 	respData := &client.GetBcsPodResponse{}
 
-	resp, _, errs := gorequest.New().
-		Timeout(defaultTimeOut).
-		Post(reqURL).
-		Set("Content-Type", "application/json").
-		Set("Accept", "application/json").
-		Set("X-Bkapi-Authorization", userAuth).
-		Set("X-Bk-Tenant-Id", tenant).
-		SetDebug(c.config.Debug).
-		Send(request).
-		Retry(3, 3*time.Second, 429).
-		EndStruct(&respData)
+	// 使用instrumentRequest包装请求并收集metrics
+	resp, _, errs := c.instrumentRequest("POST", "get_pod", func() (gorequest.Response, []byte, []error) {
+		return gorequest.New().
+			Timeout(defaultTimeOut).
+			Post(reqURL).
+			Set("Content-Type", "application/json").
+			Set("Accept", "application/json").
+			Set("X-Bkapi-Authorization", userAuth).
+			Set("X-Bk-Tenant-Id", tenant).
+			SetDebug(c.config.Debug).
+			Send(request).
+			Retry(3, 3*time.Second, 429).
+			EndStruct(&respData)
+	})
 	if len(errs) > 0 {
 		blog.Errorf("call api list_pod failed: %v", errs[0])
 		return nil, errs[0]
@@ -2475,17 +2607,20 @@ func (c *cmdbClient) GetBcsContainer(ctx context.Context,
 	reqURL := fmt.Sprintf("%s/api/v3/findmany/kube/container", c.config.Server)
 	respData := &client.GetBcsContainerResponse{}
 
-	resp, _, errs := gorequest.New().
-		Timeout(defaultTimeOut).
-		Post(reqURL).
-		Set("Content-Type", "application/json").
-		Set("Accept", "application/json").
-		Set("X-Bkapi-Authorization", userAuth).
-		Set("X-Bk-Tenant-Id", tenant).
-		SetDebug(c.config.Debug).
-		Send(request).
-		Retry(3, 3*time.Second, 429).
-		EndStruct(&respData)
+	// 使用instrumentRequest包装请求并收集metrics
+	resp, _, errs := c.instrumentRequest("POST", "get_container", func() (gorequest.Response, []byte, []error) {
+		return gorequest.New().
+			Timeout(defaultTimeOut).
+			Post(reqURL).
+			Set("Content-Type", "application/json").
+			Set("Accept", "application/json").
+			Set("X-Bkapi-Authorization", userAuth).
+			Set("X-Bk-Tenant-Id", tenant).
+			SetDebug(c.config.Debug).
+			Send(request).
+			Retry(3, 3*time.Second, 429).
+			EndStruct(&respData)
+	})
 	if len(errs) > 0 {
 		blog.Errorf("call api list_kube_container failed: %v", errs[0])
 		return nil, errs[0]
@@ -2554,17 +2689,20 @@ func (c *cmdbClient) CreateBcsPod(ctx context.Context,
 	reqURL := fmt.Sprintf("%s/api/v3/createmany/kube/pod", c.config.Server)
 	respData := &client.CreateBcsPodResponse{}
 
-	resp, _, errs := gorequest.New().
-		Timeout(defaultTimeOut).
-		Post(reqURL).
-		Set("Content-Type", "application/json").
-		Set("Accept", "application/json").
-		Set("X-Bkapi-Authorization", userAuth).
-		Set("X-Bk-Tenant-Id", tenant).
-		SetDebug(c.config.Debug).
-		Send(request).
-		Retry(3, 3*time.Second, 429).
-		EndStruct(&respData)
+	// 使用instrumentRequest包装请求并收集metrics
+	resp, _, errs := c.instrumentRequest("POST", "create_pod", func() (gorequest.Response, []byte, []error) {
+		return gorequest.New().
+			Timeout(defaultTimeOut).
+			Post(reqURL).
+			Set("Content-Type", "application/json").
+			Set("Accept", "application/json").
+			Set("X-Bkapi-Authorization", userAuth).
+			Set("X-Bk-Tenant-Id", tenant).
+			SetDebug(c.config.Debug).
+			Send(request).
+			Retry(3, 3*time.Second, 429).
+			EndStruct(&respData)
+	})
 	if len(errs) > 0 {
 		blog.Errorf("call api batch_create_kube_pod failed: %v", errs[0])
 		return nil, errs[0]
@@ -2691,17 +2829,20 @@ func (c *cmdbClient) DeleteBcsPod(ctx context.Context, request *client.DeleteBcs
 	reqURL := fmt.Sprintf("%s/api/v3/deletemany/kube/pod", c.config.Server)
 	respData := &client.DeleteBcsPodResponse{}
 
-	resp, _, errs := gorequest.New().
-		Timeout(defaultTimeOut).
-		Delete(reqURL).
-		Set("Content-Type", "application/json").
-		Set("Accept", "application/json").
-		Set("X-Bkapi-Authorization", userAuth).
-		Set("X-Bk-Tenant-Id", tenant).
-		SetDebug(c.config.Debug).
-		Send(request).
-		Retry(3, 3*time.Second, 429).
-		EndStruct(&respData)
+	// 使用instrumentRequest包装请求并收集metrics
+	resp, _, errs := c.instrumentRequest("DELETE", "delete_pod", func() (gorequest.Response, []byte, []error) {
+		return gorequest.New().
+			Timeout(defaultTimeOut).
+			Delete(reqURL).
+			Set("Content-Type", "application/json").
+			Set("Accept", "application/json").
+			Set("X-Bkapi-Authorization", userAuth).
+			Set("X-Bk-Tenant-Id", tenant).
+			SetDebug(c.config.Debug).
+			Send(request).
+			Retry(3, 3*time.Second, 429).
+			EndStruct(&respData)
+	})
 	if len(errs) > 0 {
 		blog.Errorf("call api batch_delete_kube_pod failed: %v", errs[0])
 		return errs[0]

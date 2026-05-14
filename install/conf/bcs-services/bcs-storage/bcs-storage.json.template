@@ -2,6 +2,8 @@
   "address": "${localIp}",
   "ipv6_address": "${localIpv6}",
   "port": ${bcsStoragePort},
+  "http_port": ${bcsStoragePortV2},
+  "http_port_switch": ${bcsStoragePortV2Switch},
   "metric_port": ${bcsStorageMetricPort},
   "log_dir": "${log_dir}",
   "v": "${verbosity}",

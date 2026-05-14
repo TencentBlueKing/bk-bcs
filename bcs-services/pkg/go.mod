@@ -1,11 +1,15 @@
 module github.com/Tencent/bk-bcs/bcs-services/pkg
 
-go 1.20
+go 1.21
+
+toolchain go1.23.11
+
+replace github.com/Tencent/bk-bcs/bcs-common => ../../bcs-common
 
 require (
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20240418095107-1d05d2d5c43c
 	github.com/TencentBlueKing/bk-audit-go-sdk v0.0.6
-	github.com/TencentBlueKing/iam-go-sdk v0.1.6
+	github.com/TencentBlueKing/iam-go-sdk v1.0.1
 	github.com/google/uuid v1.6.0
 	go-micro.dev/v4 v4.8.1
 	k8s.io/klog/v2 v2.100.1
@@ -46,13 +50,13 @@ require (
 	github.com/sirupsen/logrus v1.9.2 // indirect
 	github.com/smartystreets/assertions v1.0.1 // indirect
 	go.uber.org/atomic v1.7.0 // indirect
-	golang.org/x/crypto v0.21.0 // indirect
-	golang.org/x/mod v0.12.0 // indirect
-	golang.org/x/net v0.23.0 // indirect
-	golang.org/x/sync v0.6.0 // indirect
-	golang.org/x/sys v0.18.0 // indirect
-	golang.org/x/text v0.14.0 // indirect
-	golang.org/x/tools v0.13.0 // indirect
+	golang.org/x/crypto v0.31.0 // indirect
+	golang.org/x/mod v0.17.0 // indirect
+	golang.org/x/net v0.33.0 // indirect
+	golang.org/x/sync v0.10.0 // indirect
+	golang.org/x/sys v0.28.0 // indirect
+	golang.org/x/text v0.21.0 // indirect
+	golang.org/x/tools v0.21.1-0.20240508182429-e35e4ccd0d2d // indirect
 	google.golang.org/protobuf v1.33.0 // indirect
 	moul.io/http2curl v1.0.0 // indirect
 )

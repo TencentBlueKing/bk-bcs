@@ -114,7 +114,8 @@
       v-model="showNameDialog"
       :title="$t('templateFile.title.rename')"
       width="480"
-      header-position="left">
+      header-position="left"
+      @after-leave="repeatMsg = ''">
       <bcs-form :label-width="110">
         <bcs-form-item required :label="$t('templateFile.label.spaceName')">
           <Validate
@@ -225,6 +226,9 @@ function addTemplateFile() {
     params: {
       templateSpace: props.templateSpace,
     },
+    query: {
+      folderPath: spaceDetail.value?.name || '',
+    },
   });
 }
 
@@ -238,12 +242,17 @@ function showRenameSpaceDialog() {
   showNameDialog.value = true;
 }
 async function fileNameConfirm() {
+  // 校验：只允许字母、数字、-、_
+  if (!/^[a-zA-Z0-9_-]+$/.test(curSpaceName.value)) {
+    repeatMsg.value = $i18n.t('templateFile.tips.invalidChar');
+    return;
+  }
   saving.value = true;
   const res = await TemplateSetService.UpdateTemplateSpace({
     name: curSpaceName.value,
     description: '',
     $id: props.templateSpace,
-  }, { globalError: false, needRes: true }).catch(() => false);
+  }, { globalError: true, needRes: true }).catch(() => false);
 
   if (res && res?.code === 0) {
     $bkMessage({
@@ -252,6 +261,7 @@ async function fileNameConfirm() {
     });
     getTemplateSpace();
     updateListTemplateSpaceList();// 更新空间列表
+    getTemplateMetadata();
     showNameDialog.value = false;
   } else if (res?.code === 7) {
     // 文件夹重名

@@ -90,6 +90,15 @@ export default defineComponent({
       type: String,
       default: '',
     },
+    // CRD信息
+    version: {
+      type: String,
+      default: '',
+    },
+    isCommonCrd: {
+      type: [Boolean, String],
+      default: false,
+    },
   },
   setup(props) {
     // 区分首次进入pod详情还是其他workload详情
@@ -106,6 +115,26 @@ export default defineComponent({
       GameStatefulSet: 'GameStatefulSet',
       Container: 'Container',
     };
+
+    // 从 crd 中提取 resource 和 group
+    // 格式: appsets.apps.sngame.dev -> resource: appsets, group: apps.sngame.dev
+    const crdResource = computed(() => {
+      if (!props.crd) return '';
+      const firstDotIndex = props.crd.indexOf('.');
+      return firstDotIndex > -1 ? props.crd.substring(0, firstDotIndex) : props.crd;
+    });
+    const crdGroup = computed(() => {
+      if (!props.crd) return '';
+      const firstDotIndex = props.crd.indexOf('.');
+      return firstDotIndex > -1 ? props.crd.substring(firstDotIndex + 1) : '';
+    });
+    const crdOptions = computed(() => (props.isCommonCrd ? {
+      group: crdGroup.value,
+      version: props.version,
+      resource: crdResource.value,
+      isCommonCrd: `${props.isCommonCrd}`,
+    } : {}));
+
     // 顶部导航内容
     const navList = computed<INavItem[]>(() => {
       const data: INavItem[] = [
@@ -149,6 +178,7 @@ export default defineComponent({
               kind: props.kind,
               crd: props.crd,
               pod: props.pod,
+              ...crdOptions.value,
             },
           },
         ] as INavItem[]);
@@ -169,6 +199,7 @@ export default defineComponent({
           crd: props.crd,
           pod: props.pod,
           container: props.container,
+          ...crdOptions.value,
         },
       });
       return data;
@@ -187,6 +218,7 @@ export default defineComponent({
         const newQuery = query ?? {
           crd: props.crd,
           kind: props.kind,
+          ...crdOptions.value,
         };
         if (!isEqual($router.currentRoute.query, newQuery)) {
           $router.replace({
@@ -202,6 +234,7 @@ export default defineComponent({
           kind: props.kind,
           crd: props.crd,
           pod: row.metadata.name,
+          ...crdOptions.value,
         },
       });
       componentId.value = 'PodDetail';
@@ -214,6 +247,7 @@ export default defineComponent({
           crd: props.crd,
           pod: props.category === 'pods' ? props.name : props.pod,
           container: row.name,
+          ...crdOptions.value,
         },
       });
       componentId.value = 'ContainerDetail';

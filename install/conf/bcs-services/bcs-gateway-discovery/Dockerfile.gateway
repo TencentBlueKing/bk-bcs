@@ -1,4 +1,4 @@
-FROM centos:centos7
+FROM tencentos/tencentos4-minimal
 
 #for command envsubst
 RUN yum install -y gettext

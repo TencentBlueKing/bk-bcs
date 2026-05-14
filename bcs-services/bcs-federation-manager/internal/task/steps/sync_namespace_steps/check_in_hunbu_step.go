@@ -128,7 +128,7 @@ func createHbNamespaceQuota(nsName, subClusterID string, labelsMap map[string]st
 		return nil
 	}
 
-	cerr := cluster.GetClusterClient().CreateClusterNamespace(nsName, subClusterID, annotations)
+	cerr := cluster.GetClusterClient().CreateClusterNamespace(subClusterID, nsName, annotations)
 	if cerr != nil {
 		blog.Errorf("createHbNamespaceQuota failed, namespace: %s, err: %s", nsName, cerr.Error())
 		return cerr

@@ -5,8 +5,15 @@
     :title="$t('tke.title.addSubnets')"
     :width="width || 480"
     @cancel="cancel">
-    <bk-form form-type="vertical">
-      <bk-form-item label="Pod IP" required>
+    <bk-form
+      form-type="vertical"
+      :ref="(v) => formRef = v"
+      :rules="subnetsRules">
+      <bk-form-item
+        label="Pod IP"
+        property="podIP"
+        error-display-type="normal"
+        required>
         <VpcCni
           :subnets="newSubnets"
           :region="clusterData.region"
@@ -32,19 +39,37 @@ import { computed, ref, watch } from 'vue';
 
 import { addSubnets } from '@/api/modules/cluster-manager';
 import { ICluster } from '@/composables/use-app';
+import $i18n from '@/i18n/i18n-setup';
 import VpcCni from '@/views/cluster-manage/components/vpc-cni.vue';
 
 interface Props {
   modelValue: boolean
   clusterData: ICluster
   width?: number
+  validateMsg?: string
   confirmFn?: Function
+  validateFn?: Function
 }
 
 const props = defineProps<Props>();
 const emits = defineEmits(['cancel', 'confirm']);
+const formRef = ref();
 
 const tableKey = ref('');
+const subnetsRules = computed(() => ({
+  podIP: [
+    {
+      trigger: 'change',
+      validator: () => {
+        if (props?.validateFn) {
+          return props?.validateFn?.(newSubnets.value);
+        }
+        return true;
+      },
+      message: props.validateMsg || $i18n.t('generic.validate.required'),
+    },
+  ],
+}));
 
 // 添加子网
 const newSubnets = ref([{
@@ -57,6 +82,12 @@ const handleSetSubnets = (data) => {
 };
 const pending = ref(false);
 const handleAddSubnets = async () => {
+  const valid = await formRef.value?.validate()
+    .then(() => true)
+    .catch(() => false);
+  if (!valid) {
+    return;
+  }
   pending.value = true;
   if (props.confirmFn) {
     await props.confirmFn(newSubnets.value.filter(item => item.ipCnt && item.zone));

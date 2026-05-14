@@ -161,9 +161,6 @@ func (cv *ClbValidater) validateListenerService(svc *networkextensionv1.ServiceR
 
 // validateListenerAttribute check listener attribute
 func (cv *ClbValidater) validateListenerAttribute(attr *networkextensionv1.IngressListenerAttribute) (bool, string) {
-	if attr.SessionTime != 0 && (attr.SessionTime < 30 || attr.SessionTime > 3600) {
-		return false, fmt.Sprintf("invalid session time %d, available [0, 30-3600]", attr.SessionTime)
-	}
 	if len(attr.LbPolicy) != 0 {
 		if attr.LbPolicy != "WRR" &&
 			attr.LbPolicy != "LEAST_CONN" &&

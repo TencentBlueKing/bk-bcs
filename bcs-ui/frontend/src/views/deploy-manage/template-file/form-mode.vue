@@ -41,7 +41,7 @@
                   {{ $t('templateFile.label.kindType') }}
                 </span>
                 <bcs-select
-                  class="flex-1 bg-[#fff]" searchable :clearable="false" :readonly="isEdit"
+                  class="flex-1 bg-[#fff] h-[32px]" searchable :clearable="false" :readonly="isEdit"
                   v-model="form.kind" @selected="handleKindChange(index)">
                   <bcs-option-group
                     v-for="item, i in kindList" :key="item.id"
@@ -62,7 +62,7 @@
               <span class="inline-flex items-center min-w-[240px]">
                 <span :class="['bcs-prefix mr-[-1px]', { 'bcs-required': !isEdit }]">apiVersion</span>
                 <bcs-select
-                  class="flex-1 bg-[#fff]" searchable :clearable="false" :readonly="isEdit"
+                  class="flex-1 bg-[#fff] h-[32px]" searchable :clearable="false" :readonly="isEdit"
                   v-model="form.apiVersion">
                   <bcs-option
                     v-for="item in kindApiVersionMap[form.kind]" :key="item.value" :id="item.value"

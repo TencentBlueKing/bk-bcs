@@ -3,8 +3,7 @@ FROM tencentos/tencentos4-minimal
 #for command envsubst
 RUN yum install -y gettext
 
-RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
-    && echo 'LANG="en_US.UTF-8"' > /etc/locale.conf
+RUN echo 'LANG="en_US.UTF-8"' > /etc/locale.conf
 ENV LANG=en_US.UTF-8 \
     LANGUAGE=en_US.UTF-8
 

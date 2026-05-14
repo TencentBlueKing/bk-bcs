@@ -36,7 +36,33 @@ var (
 const (
 	// PermDeniedCode perm denied code
 	PermDeniedCode = 40300
+	// DefaultTenantId default tenant id
+	DefaultTenantId = "default"
 )
+
+// UserInfo user info for perm check
+type UserInfo struct {
+	BkUserName string
+	TenantId   string
+}
+
+// GetBKUserName get bk user name
+func (u UserInfo) GetBKUserName() string {
+	return u.BkUserName
+}
+
+// GetTenantId get tenant id
+func (u UserInfo) GetTenantId() string {
+	if u.TenantId == "" {
+		return DefaultTenantId
+	}
+	return u.TenantId
+}
+
+// String xxx
+func (u UserInfo) String() string {
+	return fmt.Sprintf("TenantId: %s, BkUserName: %s", u.GetTenantId(), u.GetBKUserName())
+}
 
 // PermDeniedError permission denied,user need to apply
 type PermDeniedError struct {

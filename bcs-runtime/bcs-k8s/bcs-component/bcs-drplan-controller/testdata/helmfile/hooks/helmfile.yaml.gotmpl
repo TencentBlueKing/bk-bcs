@@ -1,0 +1,27 @@
+releases:
+  - name: demo-app
+    namespace: default
+    chart: ../basic/charts/nginx-0.1.1.tgz
+    version: 0.1.1
+    hooks:
+      - events:
+          - preapply
+        command: sleep
+        args:
+          - "1"
+      - events:
+          - cleanup
+          - presync
+        command: sleep
+        args:
+          - "1"
+      - events:
+          - postsync
+        command: sleep
+        args:
+          - "1"
+      - events:
+          - prepare
+        command: sleep
+        args:
+          - "1"

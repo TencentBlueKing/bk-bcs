@@ -532,7 +532,7 @@ func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Nod
 		return nil, fmt.Errorf("BuildAddNodesToClusterTask TaskOptions is lost")
 	}
 
-	if opt.Login == nil || (opt.Login.GetInitLoginPassword() == "" && opt.Login.GetKeyPair().GetKeyID() == "") {
+	if opt.Login == nil || (opt.Login.GetInitLoginPassword() == "" && opt.Login.GetKeyPair().GetKeySecret() == "") {
 		return nil, fmt.Errorf("BuildAddNodesToClusterTask login info empty")
 	}
 
