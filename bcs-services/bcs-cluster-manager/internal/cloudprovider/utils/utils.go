@@ -44,6 +44,9 @@ const (
 	BCSNodeGroupGkeTaintEffect = "NO_SCHEDULE"
 	// BCSNodeGroupAzureTaintEffect xxx
 	BCSNodeGroupAzureTaintEffect = "NoSchedule"
+
+	// QuotaPoolPrefix quota pool prefix
+	QuotaPoolPrefix = "BCS-quota-"
 )
 
 // SyncClusterInfoToPassCC sync clusterInfo to pass-cc

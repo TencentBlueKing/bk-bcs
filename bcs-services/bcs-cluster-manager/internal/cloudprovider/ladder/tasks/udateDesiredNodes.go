@@ -20,12 +20,14 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	tcommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/business"
 	providerutils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
@@ -57,7 +59,7 @@ func ApplyCVMFromResourcePoolTask(taskID, stepName string) error { // nolint
 	scalingNum, _ := strconv.Atoi(desiredNodes)
 
 	// inject taskID
-	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
+	ctx := cloudprovider.WithTaskIDAndStepNameForContext(context.Background(), taskID, stepName)
 
 	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
 		ClusterID:   clusterID,
@@ -83,11 +85,34 @@ func ApplyCVMFromResourcePoolTask(taskID, stepName string) error { // nolint
 	// get task old orderId
 	oldOrderID := state.Task.CommonParams[cloudprovider.DeviceRecordIDKey.String()]
 
+	// get quota
+	var quota *bcsproject.ProjectQuota
+	if dependInfo.NodeGroup.GetExtraInfo() != nil && strings.HasPrefix(strings.TrimSpace(
+		dependInfo.NodeGroup.GetExtraInfo()["devicePoolIds"]), providerutils.QuotaPoolPrefix) {
+		quota, err = project.GetProjectManagerClient().
+			GetProjectQuota(ctx, dependInfo.NodeGroup.GetExtraInfo()["devicePoolIds"])
+		if err != nil {
+			blog.Errorf("ApplyCVMFromResourcePoolTask[%s] GetProjectManagerClient failed, %s",
+				taskID, err.Error())
+			cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+				fmt.Sprintf("ApplyCVMFromResourcePoolTask[%s] GetProjectManagerClient , err:[%s]",
+					taskID, err.Error()))
+			retErr := fmt.Errorf("ApplyCVMFromResourcePoolTask failed: %s", err.Error())
+			_ = cloudprovider.DeleteVirtualNodes(clusterID, nodeGroupID, taskID)
+			_ = cloudprovider.UpdateNodeGroupDesiredSize(nodeGroupID, scalingNum, true)
+			_ = state.UpdateStepFailure(start, stepName, retErr)
+			return retErr
+		}
+	}
+
 	recordInstanceList, orderID, err := applyInstanceFromResourcePool(ctx, dependInfo, state,
-		oldOrderID, scalingNum, operator)
+		oldOrderID, scalingNum, operator, quota)
 	if err != nil {
 		blog.Errorf("ApplyCVMFromResourcePoolTask[%s] applyInstanceFromResourcePool for group %s orderID %s failed, %s",
 			taskID, nodeGroupID, orderID, err.Error())
+		cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+			fmt.Sprintf("ApplyCVMFromResourcePoolTask[%s] applyInstanceFromResourcePool for group[%s] orderID[%s] failed, err:[%s]",
+				taskID, nodeGroupID, orderID, err.Error()))
 		state.Task.CommonParams[cloudprovider.DeviceRecordIDKey.String()] = orderID
 		retErr := fmt.Errorf("ApplyCVMFromResourcePoolTask failed: %s", err.Error())
 		if manual == common.True {

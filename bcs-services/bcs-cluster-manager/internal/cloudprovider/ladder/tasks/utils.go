@@ -14,8 +14,10 @@ package tasks
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
 	"github.com/avast/retry-go"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
@@ -28,7 +30,7 @@ import (
 
 // 申请机器
 func applyInstanceFromResourcePool(ctx context.Context, info *cloudprovider.CloudDependBasicInfo,
-	state *cloudprovider.TaskState, oldOrderId string, desired int, operator string) (
+	state *cloudprovider.TaskState, oldOrderId string, desired int, operator string, quota *bcsproject.ProjectQuota) (
 	*providerutils.RecordInstanceList, string, error) {
 	var (
 		orderID string
@@ -46,9 +48,9 @@ func applyInstanceFromResourcePool(ctx context.Context, info *cloudprovider.Clou
 	// check if already submit old task
 	if len(oldOrderId) == 0 {
 		orderID, err = providerutils.ConsumeDevicesFromResourcePool(ctx, info.NodeGroup, resource.CVM.String(),
-			desired, operator)
+			desired, operator, quota)
 		if err != nil {
-			return nil, orderID, err
+			return nil, orderID, fmt.Errorf("ConsumeDevicesFromResourcePool failed:[%v]", err)
 		}
 	}
 
@@ -59,7 +61,7 @@ func applyInstanceFromResourcePool(ctx context.Context, info *cloudprovider.Clou
 
 	record, err := providerutils.CheckOrderStateFromResourcePool(ctx, getOrderId())
 	if err != nil {
-		return nil, getOrderId(), err
+		return nil, getOrderId(), fmt.Errorf("CheckOrderStateFromResourcePool failed:[%v]", err)
 	}
 	record.OrderID = getOrderId()
 

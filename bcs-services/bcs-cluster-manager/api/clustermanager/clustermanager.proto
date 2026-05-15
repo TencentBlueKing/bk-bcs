@@ -12476,6 +12476,25 @@ message InstanceType {
     title : "region",
     description : "机型所在地域, 主要用于自建集群节点池可能存在其他地域的情况"
   }];
+  InstanceExtraInfo extraInfo = 16 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "extraInfo",
+    description : "机型额外信息"
+  }];
+}
+
+message InstanceExtraInfo {
+  string providerBizIDs = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "providerBizIDs",
+    description : "来源业务ID"
+  }];
+  string providerStartTime = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "providerStartTime",
+    description : "来源业务开始时间"
+  }];
+  string providerEndTime = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "providerEndTime",
+    description : "来源业务结束时间"
+  }];
 }
 
 message ListCloudDiskTypesRequest {
