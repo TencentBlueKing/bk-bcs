@@ -16,6 +16,7 @@ package template
 import (
 	"context"
 	"path"
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -207,6 +208,69 @@ func (t *TemplateAction) List(ctx context.Context, templateSpaceID string) ([]ma
 		for _, v := range versions {
 			if v.Version == value.Version && v.TemplateName == value.Name {
 				mm["versionID"] = v.ID.Hex()
+			}
+		}
+		m = append(m, mm)
+	}
+	return m, nil
+}
+
+// ListTemplateMetadataVersions 通过模板文件夹 ID 获取模板文件列表（含版本 ID 和版本号）
+func (t *TemplateAction) ListTemplateMetadataVersions(ctx context.Context, spaceID string) (
+	[]map[string]interface{}, error) {
+	if err := t.checkAccess(ctx); err != nil {
+		return nil, err
+	}
+
+	p, err := project.FromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	templateSpace, err := t.model.GetTemplateSpace(ctx, spaceID)
+	if err != nil {
+		return nil, err
+	}
+
+	// 权限校验
+	if templateSpace.ProjectCode != p.Code {
+		return nil, errorx.New(errcode.NoPerm, i18n.GetMsg(ctx, "无权限访问"))
+	}
+
+	// 通过项目编码、文件夹名称检索模板元数据
+	cond := operator.NewLeafCondition(operator.Eq, operator.M{
+		entity.FieldKeyProjectCode:   p.Code,
+		entity.FieldKeyTemplateSpace: templateSpace.Name,
+	})
+	templates, err := t.model.ListTemplate(ctx, cond)
+	if err != nil {
+		return nil, err
+	}
+
+	// 获取该文件夹下所有版本信息
+	versions, err := t.model.ListTemplateVersion(ctx, operator.NewLeafCondition(operator.Eq, operator.M{
+		entity.FieldKeyProjectCode:   p.Code,
+		entity.FieldKeyTemplateSpace: templateSpace.Name,
+	}))
+	if err != nil {
+		return nil, err
+	}
+
+	// 存放模板文件，及版本号列表
+	m := make([]map[string]interface{}, 0)
+	for _, value := range templates {
+		mm := map[string]interface{}{
+			"templateName":  filepath.Join(templateSpace.Name, value.Name),
+			"latestVersion": value.Version,
+			"versionList":   []map[string]interface{}{},
+		}
+		// 匹配当前模板的版本信息，填充 versionID 和 version
+		for _, v := range versions {
+			if v.TemplateName == value.Name {
+				mm["versionList"] = append(mm["versionList"].([]map[string]interface{}), map[string]interface{}{
+					"version":   v.Version,
+					"versionID": v.ID.Hex(),
+				})
 			}
 		}
 		m = append(m, mm)
