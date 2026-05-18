@@ -117,12 +117,12 @@ func GetResourceUsage(ctx context.Context, projectID, provider, quotaType string
 			}
 			return provider
 		}(provider),
-		// ResourcePoolType: func(quotaType string) string {
-		// 	if findResourceType, ok := ResourceTypeMap[quotaType]; ok {
-		// 		return findResourceType
-		// 	}
-		// 	return quotaType
-		// }(quotaType),
+		ResourcePoolType: func(quotaType string) string {
+			if findResourceType, ok := ResourceTypeMap[quotaType]; ok {
+				return findResourceType
+			}
+			return quotaType
+		}(quotaType),
 	}
 	resp, err := cli.GetProjectResourceQuotaUsage(ctx, req)
 	if err != nil {
