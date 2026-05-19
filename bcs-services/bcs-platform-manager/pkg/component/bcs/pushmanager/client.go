@@ -13,38 +13,38 @@
 // Package pushmanager xxx
 package pushmanager
 
-import (
-	"crypto/tls"
+// import (
+// 	"crypto/tls"
 
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/pushmanager"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/discovery"
-	microRgt "go-micro.dev/v4/registry"
-)
+// 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/pushmanager"
+// 	"github.com/Tencent/bk-bcs/bcs-common/pkg/discovery"
+// 	microRgt "go-micro.dev/v4/registry"
+// )
 
-const (
-	// PushManagerServiceName push manager service name
-	PushManagerServiceName = "pushmanager.bkbcs.tencent.com"
-)
+// const (
+// 	// PushManagerServiceName push manager service name
+// 	PushManagerServiceName = "pushmanager.bkbcs.tencent.com"
+// )
 
-// SetClientConifg create push manager service client
-func SetClientConifg(tlsConfig *tls.Config, microRgt microRgt.Registry) error {
-	if !discovery.UseServiceDiscovery() {
-		dis := discovery.NewModuleDiscovery(PushManagerServiceName, microRgt)
-		err := dis.Start()
-		if err != nil {
-			return err
-		}
-		pushmanager.SetClientConfig(tlsConfig, dis)
-	} else {
-		pushmanager.SetClientConfig(tlsConfig, nil)
-	}
+// // SetClientConifg create push manager service client
+// func SetClientConifg(tlsConfig *tls.Config, microRgt microRgt.Registry) error {
+// 	if !discovery.UseServiceDiscovery() {
+// 		dis := discovery.NewModuleDiscovery(PushManagerServiceName, microRgt)
+// 		err := dis.Start()
+// 		if err != nil {
+// 			return err
+// 		}
+// 		pushmanager.SetClientConfig(tlsConfig, dis)
+// 	} else {
+// 		pushmanager.SetClientConfig(tlsConfig, nil)
+// 	}
 
-	return nil
-}
+// 	return nil
+// }
 
-// Close close client
-func Close(close func()) {
-	if close != nil {
-		close()
-	}
-}
+// // Close close client
+// func Close(close func()) {
+// 	if close != nil {
+// 		close()
+// 	}
+// }

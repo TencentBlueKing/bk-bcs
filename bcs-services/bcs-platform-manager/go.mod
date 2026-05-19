@@ -4,14 +4,12 @@ go 1.23.0
 
 replace (
 	configcenter => github.com/Tencent/bk-cmdb v0.0.0-20250710063351-e7cb8e8963fa
-	// 此为本地测试，后面proto更新到线上需要拉取线上的
-	github.com/Tencent/bk-bcs/bcs-common => ./../../bcs-common
 	k8s.io/client-go => k8s.io/client-go v0.32.2
 )
 
 require (
 	configcenter v0.0.0-00010101000000-000000000000
-	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20250926092740-c9190b0ef3cf
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20260514081201-6026cf9ef3f2
 	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20250729093702-993155773a94
 	github.com/dustin/go-humanize v1.0.1
 	github.com/ggicci/httpin v0.20.1

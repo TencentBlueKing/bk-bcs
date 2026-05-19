@@ -13,76 +13,76 @@
 // Package pushmanager xxx
 package pushmanager
 
-import (
-	"context"
-	"strings"
+// import (
+// 	"context"
+// 	"strings"
 
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/pushmanager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/config"
-)
+// 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/pushmanager"
+// 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/config"
+// )
 
-// PushEvents push events
-func PushEvents(ctx context.Context, event *pushmanager.PushEvent) (string, error) {
-	cli, close, err := pushmanager.GetClient(config.ServiceDomain)
-	if err != nil {
-		return "", err
-	}
+// // PushEvents push events
+// func PushEvents(ctx context.Context, event *pushmanager.PushEvent) (string, error) {
+// 	cli, close, err := pushmanager.GetClient(config.ServiceDomain)
+// 	if err != nil {
+// 		return "", err
+// 	}
 
-	defer Close(close)
+// 	defer Close(close)
 
-	resp, err := cli.CreatePushEvent(ctx, &pushmanager.CreatePushEventRequest{
-		Domain: event.Domain,
-		Event:  event,
-	})
-	if err != nil {
-		return "", err
-	}
+// 	resp, err := cli.CreatePushEvent(ctx, &pushmanager.CreatePushEventRequest{
+// 		Domain: event.Domain,
+// 		Event:  event,
+// 	})
+// 	if err != nil {
+// 		return "", err
+// 	}
 
-	return resp.EventId, nil
-}
+// 	return resp.EventId, nil
+// }
 
-// GetPushTemplate get push template
-func GetPushTemplate(ctx context.Context, domain, templateID string) (*pushmanager.TemplateContent, error) {
-	cli, close, err := pushmanager.GetClient(config.ServiceDomain)
-	if err != nil {
-		return nil, err
-	}
+// // GetPushTemplate get push template
+// func GetPushTemplate(ctx context.Context, domain, templateID string) (*pushmanager.TemplateContent, error) {
+// 	cli, close, err := pushmanager.GetClient(config.ServiceDomain)
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	defer Close(close)
+// 	defer Close(close)
 
-	resp, err := cli.GetPushTemplate(ctx, &pushmanager.GetPushTemplateRequest{
-		Domain:     domain,
-		TemplateId: templateID,
-	})
-	if err != nil {
-		return nil, err
-	}
+// 	resp, err := cli.GetPushTemplate(ctx, &pushmanager.GetPushTemplateRequest{
+// 		Domain:     domain,
+// 		TemplateId: templateID,
+// 	})
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	return resp.Template.Content, nil
-}
+// 	return resp.Template.Content, nil
+// }
 
-// ListPushTemplateByID list push template by id
-func ListPushTemplateByID(ctx context.Context, domain, templateID string) ([]*pushmanager.PushTemplate, error) {
-	cli, close, err := pushmanager.GetClient(config.ServiceDomain)
-	if err != nil {
-		return nil, err
-	}
+// // ListPushTemplateByID list push template by id
+// func ListPushTemplateByID(ctx context.Context, domain, templateID string) ([]*pushmanager.PushTemplate, error) {
+// 	cli, close, err := pushmanager.GetClient(config.ServiceDomain)
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	defer Close(close)
+// 	defer Close(close)
 
-	resp, err := cli.ListPushTemplates(ctx, &pushmanager.ListPushTemplatesRequest{
-		Domain: domain,
-	})
-	if err != nil {
-		return nil, err
-	}
+// 	resp, err := cli.ListPushTemplates(ctx, &pushmanager.ListPushTemplatesRequest{
+// 		Domain: domain,
+// 	})
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	templates := make([]*pushmanager.PushTemplate, 0)
-	for _, template := range resp.Templates {
-		if strings.Contains(template.TemplateId, templateID) {
-			templates = append(templates, template)
-		}
-	}
+// 	templates := make([]*pushmanager.PushTemplate, 0)
+// 	for _, template := range resp.Templates {
+// 		if strings.Contains(template.TemplateId, templateID) {
+// 			templates = append(templates, template)
+// 		}
+// 	}
 
-	return templates, nil
-}
+// 	return templates, nil
+// }

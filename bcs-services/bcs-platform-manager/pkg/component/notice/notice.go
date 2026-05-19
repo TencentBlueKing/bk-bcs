@@ -13,40 +13,40 @@
 // Package notice xxx
 package notice
 
-import (
-	"context"
+// import (
+// 	"context"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/config"
-)
+// 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/config"
+// )
 
-// TypePushManager pushmanager type
-const TypePushManager = "pushmanager"
+// // TypePushManager pushmanager type
+// const TypePushManager = "pushmanager"
 
-var Obj Notice
+// var Obj Notice
 
-// demo
-// err := notice.Obj.Send(ctx, "TEMPLATE_ID", nil)
-// if err != nil {
-// 	return err
+// // demo
+// // err := notice.Obj.Send(ctx, "TEMPLATE_ID", nil)
+// // if err != nil {
+// // 	return err
+// // }
+
+// // Notice notice interface
+// type Notice interface {
+// 	SendSMS(ctx context.Context, templateID string, params map[string]string) error
+// 	SendEmail(ctx context.Context, templateID string, params map[string]string) error
+// 	SendRTX(ctx context.Context, templateID string, params map[string]string) error
+// 	Send(ctx context.Context, templateID string, params map[string]string) error
 // }
 
-// Notice notice interface
-type Notice interface {
-	SendSMS(ctx context.Context, templateID string, params map[string]string) error
-	SendEmail(ctx context.Context, templateID string, params map[string]string) error
-	SendRTX(ctx context.Context, templateID string, params map[string]string) error
-	Send(ctx context.Context, templateID string, params map[string]string) error
-}
-
-// InitNotice init notice
-func InitNotice() {
-	noticeCnf := config.G.Notice
-	if noticeCnf.Type == "" || noticeCnf.Type == TypePushManager {
-		Obj = NewPushManager(PushManagerOptions{
-			Domain:    noticeCnf.PushManager.Domain,
-			Dimension: noticeCnf.PushManager.Dimension,
-			BkBizName: noticeCnf.PushManager.BkBizName,
-			Types:     noticeCnf.PushManager.Types,
-		})
-	}
-}
+// // InitNotice init notice
+// func InitNotice() {
+// 	noticeCnf := config.G.Notice
+// 	if noticeCnf.Type == "" || noticeCnf.Type == TypePushManager {
+// 		Obj = NewPushManager(PushManagerOptions{
+// 			Domain:    noticeCnf.PushManager.Domain,
+// 			Dimension: noticeCnf.PushManager.Dimension,
+// 			BkBizName: noticeCnf.PushManager.BkBizName,
+// 			Types:     noticeCnf.PushManager.Types,
+// 		})
+// 	}
+// }
