@@ -34,11 +34,15 @@ func getUserInfo(ctx context.Context) (*BkUser, uint32, string) {
 	md, _ := metadata.FromContext(ctx)
 
 	data, ok := md.Get(string(middleware.AuthUserKey))
+	if !ok || data == "" {
+		return nil, bcscommon.BcsErrCommHttpParametersFailed, bcscommon.BcsErrCommHttpParametersFailedStr
+	}
+
 	authUser := &middleware.AuthUser{}
 	if err := json.Unmarshal([]byte(data), authUser); err != nil {
 		return nil, bcscommon.BcsErrCommHttpParametersFailed, bcscommon.BcsErrCommHttpParametersFailedStr
 	}
-	if !ok || authUser.Username == "" {
+	if authUser.Username == "" {
 		return nil, bcscommon.BcsErrCommHttpParametersFailed, bcscommon.BcsErrCommHttpParametersFailedStr
 	}
 
