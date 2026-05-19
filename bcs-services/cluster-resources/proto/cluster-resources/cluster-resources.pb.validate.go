@@ -897,10 +897,10 @@ func (m *ResListReq) validate(all bool) error {
 
 	var errors []error
 
-	if !_ResListReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+	if l := utf8.RuneCountInString(m.GetProjectID()); l < 1 || l > 64 {
 		err := ResListReqValidationError{
 			field:  "ProjectID",
-			reason: "value does not match regex pattern \"^[0-9a-f]{64}$\"",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -1084,8 +1084,6 @@ var _ interface {
 	ErrorName() string
 } = ResListReqValidationError{}
 
-var _ResListReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{64}$")
-
 var _ResListReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]*$")
 
 var _ResListReq_Format_InLookup = map[string]struct{}{
@@ -1116,10 +1114,10 @@ func (m *ResGetReq) validate(all bool) error {
 
 	var errors []error
 
-	if !_ResGetReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+	if l := utf8.RuneCountInString(m.GetProjectID()); l < 1 || l > 64 {
 		err := ResGetReqValidationError{
 			field:  "ProjectID",
-			reason: "value does not match regex pattern \"^[0-9a-f]{64}$\"",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -1281,8 +1279,6 @@ var _ interface {
 	ErrorName() string
 } = ResGetReqValidationError{}
 
-var _ResGetReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{64}$")
-
 var _ResGetReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]*$")
 
 var _ResGetReq_Name_Pattern = regexp.MustCompile("[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*")
@@ -1315,10 +1311,10 @@ func (m *ResCreateReq) validate(all bool) error {
 
 	var errors []error
 
-	if !_ResCreateReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+	if l := utf8.RuneCountInString(m.GetProjectID()); l < 1 || l > 64 {
 		err := ResCreateReqValidationError{
 			field:  "ProjectID",
-			reason: "value does not match regex pattern \"^[0-9a-f]{64}$\"",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -1454,8 +1450,6 @@ var _ interface {
 	ErrorName() string
 } = ResCreateReqValidationError{}
 
-var _ResCreateReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{64}$")
-
 var _ResCreateReq_Format_InLookup = map[string]struct{}{
 	"":         {},
 	"manifest": {},
@@ -1484,10 +1478,10 @@ func (m *ResUpdateReq) validate(all bool) error {
 
 	var errors []error
 
-	if !_ResUpdateReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+	if l := utf8.RuneCountInString(m.GetProjectID()); l < 1 || l > 64 {
 		err := ResUpdateReqValidationError{
 			field:  "ProjectID",
-			reason: "value does not match regex pattern \"^[0-9a-f]{64}$\"",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -1667,8 +1661,6 @@ var _ interface {
 	ErrorName() string
 } = ResUpdateReqValidationError{}
 
-var _ResUpdateReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{64}$")
-
 var _ResUpdateReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]*$")
 
 var _ResUpdateReq_Name_Pattern = regexp.MustCompile("[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*")
@@ -1701,10 +1693,10 @@ func (m *ResRestartReq) validate(all bool) error {
 
 	var errors []error
 
-	if !_ResRestartReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+	if l := utf8.RuneCountInString(m.GetProjectID()); l < 1 || l > 64 {
 		err := ResRestartReqValidationError{
 			field:  "ProjectID",
-			reason: "value does not match regex pattern \"^[0-9a-f]{64}$\"",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -1845,8 +1837,6 @@ var _ interface {
 	ErrorName() string
 } = ResRestartReqValidationError{}
 
-var _ResRestartReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{64}$")
-
 var _ResRestartReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]*$")
 
 var _ResRestartReq_Name_Pattern = regexp.MustCompile("[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*")
@@ -1873,10 +1863,10 @@ func (m *ResPauseOrResumeReq) validate(all bool) error {
 
 	var errors []error
 
-	if !_ResPauseOrResumeReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+	if l := utf8.RuneCountInString(m.GetProjectID()); l < 1 || l > 64 {
 		err := ResPauseOrResumeReqValidationError{
 			field:  "ProjectID",
-			reason: "value does not match regex pattern \"^[0-9a-f]{64}$\"",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -2021,8 +2011,6 @@ var _ interface {
 	ErrorName() string
 } = ResPauseOrResumeReqValidationError{}
 
-var _ResPauseOrResumeReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{64}$")
-
 var _ResPauseOrResumeReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]*$")
 
 var _ResPauseOrResumeReq_Name_Pattern = regexp.MustCompile("[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*")
@@ -2049,10 +2037,10 @@ func (m *ResScaleReq) validate(all bool) error {
 
 	var errors []error
 
-	if !_ResScaleReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+	if l := utf8.RuneCountInString(m.GetProjectID()); l < 1 || l > 64 {
 		err := ResScaleReqValidationError{
 			field:  "ProjectID",
-			reason: "value does not match regex pattern \"^[0-9a-f]{64}$\"",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -2203,8 +2191,6 @@ var _ interface {
 	ErrorName() string
 } = ResScaleReqValidationError{}
 
-var _ResScaleReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{64}$")
-
 var _ResScaleReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]*$")
 
 var _ResScaleReq_Name_Pattern = regexp.MustCompile("[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*")
@@ -2231,10 +2217,10 @@ func (m *ResDeleteReq) validate(all bool) error {
 
 	var errors []error
 
-	if !_ResDeleteReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+	if l := utf8.RuneCountInString(m.GetProjectID()); l < 1 || l > 64 {
 		err := ResDeleteReqValidationError{
 			field:  "ProjectID",
-			reason: "value does not match regex pattern \"^[0-9a-f]{64}$\"",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -2374,8 +2360,6 @@ var _ interface {
 	ErrorName() string
 } = ResDeleteReqValidationError{}
 
-var _ResDeleteReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{64}$")
-
 var _ResDeleteReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]*$")
 
 var _ResDeleteReq_Name_Pattern = regexp.MustCompile("[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*")
@@ -2402,10 +2386,10 @@ func (m *GetResHistoryReq) validate(all bool) error {
 
 	var errors []error
 
-	if !_GetResHistoryReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+	if l := utf8.RuneCountInString(m.GetProjectID()); l < 1 || l > 64 {
 		err := GetResHistoryReqValidationError{
 			field:  "ProjectID",
-			reason: "value does not match regex pattern \"^[0-9a-f]{64}$\"",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -2546,8 +2530,6 @@ var _ interface {
 	ErrorName() string
 } = GetResHistoryReqValidationError{}
 
-var _GetResHistoryReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{64}$")
-
 var _GetResHistoryReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]*$")
 
 var _GetResHistoryReq_Name_Pattern = regexp.MustCompile("[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*")
@@ -2574,10 +2556,10 @@ func (m *RolloutRevisionReq) validate(all bool) error {
 
 	var errors []error
 
-	if !_RolloutRevisionReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+	if l := utf8.RuneCountInString(m.GetProjectID()); l < 1 || l > 64 {
 		err := RolloutRevisionReqValidationError{
 			field:  "ProjectID",
-			reason: "value does not match regex pattern \"^[0-9a-f]{64}$\"",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -2731,8 +2713,6 @@ var _ interface {
 	ErrorName() string
 } = RolloutRevisionReqValidationError{}
 
-var _RolloutRevisionReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{64}$")
-
 var _RolloutRevisionReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]*$")
 
 var _RolloutRevisionReq_Name_Pattern = regexp.MustCompile("[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*")
@@ -2759,10 +2739,10 @@ func (m *ResBatchRescheduleReq) validate(all bool) error {
 
 	var errors []error
 
-	if !_ResBatchRescheduleReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+	if l := utf8.RuneCountInString(m.GetProjectID()); l < 1 || l > 64 {
 		err := ResBatchRescheduleReqValidationError{
 			field:  "ProjectID",
-			reason: "value does not match regex pattern \"^[0-9a-f]{64}$\"",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -2969,8 +2949,6 @@ var _ interface {
 	ErrorName() string
 } = ResBatchRescheduleReqValidationError{}
 
-var _ResBatchRescheduleReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{64}$")
-
 var _ResBatchRescheduleReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]*$")
 
 var _ResBatchRescheduleReq_Name_Pattern = regexp.MustCompile("[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*")
@@ -2999,10 +2977,10 @@ func (m *ListPoByNodeReq) validate(all bool) error {
 
 	var errors []error
 
-	if !_ListPoByNodeReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+	if l := utf8.RuneCountInString(m.GetProjectID()); l < 1 || l > 64 {
 		err := ListPoByNodeReqValidationError{
 			field:  "ProjectID",
-			reason: "value does not match regex pattern \"^[0-9a-f]{64}$\"",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -3110,8 +3088,6 @@ var _ interface {
 	ErrorName() string
 } = ListPoByNodeReqValidationError{}
 
-var _ListPoByNodeReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{64}$")
-
 // Validate checks the field values on ContainerListReq with the rules defined
 // in the proto definition for this message. If any rules are violated, the
 // first error encountered is returned, or nil if there are no violations.
@@ -3134,10 +3110,10 @@ func (m *ContainerListReq) validate(all bool) error {
 
 	var errors []error
 
-	if !_ContainerListReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+	if l := utf8.RuneCountInString(m.GetProjectID()); l < 1 || l > 64 {
 		err := ContainerListReqValidationError{
 			field:  "ProjectID",
-			reason: "value does not match regex pattern \"^[0-9a-f]{64}$\"",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -3278,8 +3254,6 @@ var _ interface {
 	ErrorName() string
 } = ContainerListReqValidationError{}
 
-var _ContainerListReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{64}$")
-
 var _ContainerListReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 
 var _ContainerListReq_PodName_Pattern = regexp.MustCompile("[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*")
@@ -3306,10 +3280,10 @@ func (m *ContainerGetReq) validate(all bool) error {
 
 	var errors []error
 
-	if !_ContainerGetReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+	if l := utf8.RuneCountInString(m.GetProjectID()); l < 1 || l > 64 {
 		err := ContainerGetReqValidationError{
 			field:  "ProjectID",
-			reason: "value does not match regex pattern \"^[0-9a-f]{64}$\"",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -3472,8 +3446,6 @@ var _ interface {
 	ErrorName() string
 } = ContainerGetReqValidationError{}
 
-var _ContainerGetReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{64}$")
-
 var _ContainerGetReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 
 var _ContainerGetReq_PodName_Pattern = regexp.MustCompile("[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*")
@@ -3502,10 +3474,10 @@ func (m *GetK8SResTemplateReq) validate(all bool) error {
 
 	var errors []error
 
-	if !_GetK8SResTemplateReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+	if l := utf8.RuneCountInString(m.GetProjectID()); l < 1 || l > 64 {
 		err := GetK8SResTemplateReqValidationError{
 			field:  "ProjectID",
-			reason: "value does not match regex pattern \"^[0-9a-f]{64}$\"",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -3637,8 +3609,6 @@ var _ interface {
 	ErrorName() string
 } = GetK8SResTemplateReqValidationError{}
 
-var _GetK8SResTemplateReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{64}$")
-
 var _GetK8SResTemplateReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]*$")
 
 // Validate checks the field values on CObjListReq with the rules defined in
@@ -3663,10 +3633,10 @@ func (m *CObjListReq) validate(all bool) error {
 
 	var errors []error
 
-	if !_CObjListReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+	if l := utf8.RuneCountInString(m.GetProjectID()); l < 1 || l > 64 {
 		err := CObjListReqValidationError{
 			field:  "ProjectID",
-			reason: "value does not match regex pattern \"^[0-9a-f]{64}$\"",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -3817,8 +3787,6 @@ var _ interface {
 	ErrorName() string
 } = CObjListReqValidationError{}
 
-var _CObjListReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{64}$")
-
 var _CObjListReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]*$")
 
 var _CObjListReq_Format_InLookup = map[string]struct{}{
@@ -3849,10 +3817,10 @@ func (m *CObjGetReq) validate(all bool) error {
 
 	var errors []error
 
-	if !_CObjGetReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+	if l := utf8.RuneCountInString(m.GetProjectID()); l < 1 || l > 64 {
 		err := CObjGetReqValidationError{
 			field:  "ProjectID",
-			reason: "value does not match regex pattern \"^[0-9a-f]{64}$\"",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -4003,8 +3971,6 @@ var _ interface {
 	ErrorName() string
 } = CObjGetReqValidationError{}
 
-var _CObjGetReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{64}$")
-
 var _CObjGetReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]*$")
 
 var _CObjGetReq_Format_InLookup = map[string]struct{}{
@@ -4035,10 +4001,10 @@ func (m *CObjHistoryReq) validate(all bool) error {
 
 	var errors []error
 
-	if !_CObjHistoryReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+	if l := utf8.RuneCountInString(m.GetProjectID()); l < 1 || l > 64 {
 		err := CObjHistoryReqValidationError{
 			field:  "ProjectID",
-			reason: "value does not match regex pattern \"^[0-9a-f]{64}$\"",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -4179,8 +4145,6 @@ var _ interface {
 	ErrorName() string
 } = CObjHistoryReqValidationError{}
 
-var _CObjHistoryReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{64}$")
-
 var _CObjHistoryReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]*$")
 
 // Validate checks the field values on CObjRestartReq with the rules defined in
@@ -4205,10 +4169,10 @@ func (m *CObjRestartReq) validate(all bool) error {
 
 	var errors []error
 
-	if !_CObjRestartReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+	if l := utf8.RuneCountInString(m.GetProjectID()); l < 1 || l > 64 {
 		err := CObjRestartReqValidationError{
 			field:  "ProjectID",
-			reason: "value does not match regex pattern \"^[0-9a-f]{64}$\"",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -4349,8 +4313,6 @@ var _ interface {
 	ErrorName() string
 } = CObjRestartReqValidationError{}
 
-var _CObjRestartReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{64}$")
-
 var _CObjRestartReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]*$")
 
 // Validate checks the field values on CObjRolloutReq with the rules defined in
@@ -4375,10 +4337,10 @@ func (m *CObjRolloutReq) validate(all bool) error {
 
 	var errors []error
 
-	if !_CObjRolloutReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+	if l := utf8.RuneCountInString(m.GetProjectID()); l < 1 || l > 64 {
 		err := CObjRolloutReqValidationError{
 			field:  "ProjectID",
-			reason: "value does not match regex pattern \"^[0-9a-f]{64}$\"",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -4530,8 +4492,6 @@ var _ interface {
 	ErrorName() string
 } = CObjRolloutReqValidationError{}
 
-var _CObjRolloutReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{64}$")
-
 var _CObjRolloutReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]*$")
 
 // Validate checks the field values on CObjCreateReq with the rules defined in
@@ -4556,10 +4516,10 @@ func (m *CObjCreateReq) validate(all bool) error {
 
 	var errors []error
 
-	if !_CObjCreateReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+	if l := utf8.RuneCountInString(m.GetProjectID()); l < 1 || l > 64 {
 		err := CObjCreateReqValidationError{
 			field:  "ProjectID",
-			reason: "value does not match regex pattern \"^[0-9a-f]{64}$\"",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -4707,8 +4667,6 @@ var _ interface {
 	ErrorName() string
 } = CObjCreateReqValidationError{}
 
-var _CObjCreateReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{64}$")
-
 var _CObjCreateReq_Format_InLookup = map[string]struct{}{
 	"":         {},
 	"manifest": {},
@@ -4737,10 +4695,10 @@ func (m *CObjUpdateReq) validate(all bool) error {
 
 	var errors []error
 
-	if !_CObjUpdateReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+	if l := utf8.RuneCountInString(m.GetProjectID()); l < 1 || l > 64 {
 		err := CObjUpdateReqValidationError{
 			field:  "ProjectID",
-			reason: "value does not match regex pattern \"^[0-9a-f]{64}$\"",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -4921,8 +4879,6 @@ var _ interface {
 	ErrorName() string
 } = CObjUpdateReqValidationError{}
 
-var _CObjUpdateReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{64}$")
-
 var _CObjUpdateReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]*$")
 
 var _CObjUpdateReq_Format_InLookup = map[string]struct{}{
@@ -4953,10 +4909,10 @@ func (m *CObjScaleReq) validate(all bool) error {
 
 	var errors []error
 
-	if !_CObjScaleReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+	if l := utf8.RuneCountInString(m.GetProjectID()); l < 1 || l > 64 {
 		err := CObjScaleReqValidationError{
 			field:  "ProjectID",
-			reason: "value does not match regex pattern \"^[0-9a-f]{64}$\"",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -5107,8 +5063,6 @@ var _ interface {
 	ErrorName() string
 } = CObjScaleReqValidationError{}
 
-var _CObjScaleReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{64}$")
-
 var _CObjScaleReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]*$")
 
 // Validate checks the field values on CObjDeleteReq with the rules defined in
@@ -5133,10 +5087,10 @@ func (m *CObjDeleteReq) validate(all bool) error {
 
 	var errors []error
 
-	if !_CObjDeleteReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+	if l := utf8.RuneCountInString(m.GetProjectID()); l < 1 || l > 64 {
 		err := CObjDeleteReqValidationError{
 			field:  "ProjectID",
-			reason: "value does not match regex pattern \"^[0-9a-f]{64}$\"",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -5277,8 +5231,6 @@ var _ interface {
 	ErrorName() string
 } = CObjDeleteReqValidationError{}
 
-var _CObjDeleteReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{64}$")
-
 var _CObjDeleteReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]*$")
 
 // Validate checks the field values on CObjBatchRescheduleReq with the rules
@@ -5303,10 +5255,10 @@ func (m *CObjBatchRescheduleReq) validate(all bool) error {
 
 	var errors []error
 
-	if !_CObjBatchRescheduleReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+	if l := utf8.RuneCountInString(m.GetProjectID()); l < 1 || l > 64 {
 		err := CObjBatchRescheduleReqValidationError{
 			field:  "ProjectID",
-			reason: "value does not match regex pattern \"^[0-9a-f]{64}$\"",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -5512,8 +5464,6 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = CObjBatchRescheduleReqValidationError{}
-
-var _CObjBatchRescheduleReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{64}$")
 
 var _CObjBatchRescheduleReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]*$")
 
@@ -5868,10 +5818,10 @@ func (m *SubscribeReq) validate(all bool) error {
 
 	var errors []error
 
-	if !_SubscribeReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+	if l := utf8.RuneCountInString(m.GetProjectID()); l < 1 || l > 64 {
 		err := SubscribeReqValidationError{
 			field:  "ProjectID",
-			reason: "value does not match regex pattern \"^[0-9a-f]{64}$\"",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -6021,8 +5971,6 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = SubscribeReqValidationError{}
-
-var _SubscribeReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{64}$")
 
 // Validate checks the field values on SubscribeResp with the rules defined in
 // the proto definition for this message. If any rules are violated, the first
@@ -6214,10 +6162,10 @@ func (m *InvalidateDiscoveryCacheReq) validate(all bool) error {
 
 	var errors []error
 
-	if !_InvalidateDiscoveryCacheReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+	if l := utf8.RuneCountInString(m.GetProjectID()); l < 1 || l > 64 {
 		err := InvalidateDiscoveryCacheReqValidationError{
 			field:  "ProjectID",
-			reason: "value does not match regex pattern \"^[0-9a-f]{64}$\"",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -6319,8 +6267,6 @@ var _ interface {
 	ErrorName() string
 } = InvalidateDiscoveryCacheReqValidationError{}
 
-var _InvalidateDiscoveryCacheReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{64}$")
-
 // Validate checks the field values on FormRenderPreviewReq with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
@@ -6343,10 +6289,10 @@ func (m *FormRenderPreviewReq) validate(all bool) error {
 
 	var errors []error
 
-	if !_FormRenderPreviewReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+	if l := utf8.RuneCountInString(m.GetProjectID()); l < 1 || l > 64 {
 		err := FormRenderPreviewReqValidationError{
 			field:  "ProjectID",
-			reason: "value does not match regex pattern \"^[0-9a-f]{64}$\"",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -6484,8 +6430,6 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = FormRenderPreviewReqValidationError{}
-
-var _FormRenderPreviewReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{64}$")
 
 // Validate checks the field values on FormData with the rules defined in the
 // proto definition for this message. If any rules are violated, the first
@@ -7188,10 +7132,10 @@ func (m *GetResFormSchemaReq) validate(all bool) error {
 
 	var errors []error
 
-	if !_GetResFormSchemaReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+	if l := utf8.RuneCountInString(m.GetProjectID()); l < 1 || l > 64 {
 		err := GetResFormSchemaReqValidationError{
 			field:  "ProjectID",
-			reason: "value does not match regex pattern \"^[0-9a-f]{64}$\"",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -7322,8 +7266,6 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = GetResFormSchemaReqValidationError{}
-
-var _GetResFormSchemaReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{64}$")
 
 var _GetResFormSchemaReq_Action_InLookup = map[string]struct{}{
 	"":       {},
@@ -7480,10 +7422,10 @@ func (m *GetResSelectItemsReq) validate(all bool) error {
 
 	var errors []error
 
-	if !_GetResSelectItemsReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+	if l := utf8.RuneCountInString(m.GetProjectID()); l < 1 || l > 64 {
 		err := GetResSelectItemsReqValidationError{
 			field:  "ProjectID",
-			reason: "value does not match regex pattern \"^[0-9a-f]{64}$\"",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -7614,8 +7556,6 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = GetResSelectItemsReqValidationError{}
-
-var _GetResSelectItemsReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{64}$")
 
 // Validate checks the field values on ListViewConfigsReq with the rules
 // defined in the proto definition for this message. If any rules are

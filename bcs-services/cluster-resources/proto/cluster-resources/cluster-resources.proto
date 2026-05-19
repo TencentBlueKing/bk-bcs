@@ -2176,7 +2176,7 @@ message ResListReq {
 	};
 	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目 ID"
-	}, (validate.rules).string = {pattern: "^[0-9a-f]{64}$"}];
+	}, (validate.rules).string = {min_len: 1, max_len: 64}];
 	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "集群 ID"
 	}, (validate.rules).string = {min_len: 13, max_len: 14}];
@@ -2209,7 +2209,7 @@ message ResGetReq {
 	};
 	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目 ID"
-	}, (validate.rules).string = {pattern: "^[0-9a-f]{64}$"}];
+	}, (validate.rules).string = {min_len: 1, max_len: 64}];
 	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "集群 ID"
 	}, (validate.rules).string = {min_len: 13, max_len: 14}];
@@ -2233,7 +2233,7 @@ message ResCreateReq {
 	};
 	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目 ID"
-	}, (validate.rules).string = {pattern: "^[0-9a-f]{64}$"}];
+	}, (validate.rules).string = {min_len: 1, max_len: 64}];
 	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "集群 ID"
 	}, (validate.rules).string = {min_len: 13, max_len: 14}];
@@ -2249,7 +2249,7 @@ message ResUpdateReq {
 	};
 	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目 ID"
-	}, (validate.rules).string = {pattern: "^[0-9a-f]{64}$"}];
+	}, (validate.rules).string = {min_len: 1, max_len: 64}];
 	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "集群 ID"
 	}, (validate.rules).string = {min_len: 13, max_len: 14}];
@@ -2271,7 +2271,7 @@ message ResRestartReq {
 	};
 	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目 ID"
-	}, (validate.rules).string = {pattern: "^[0-9a-f]{64}$"}];
+	}, (validate.rules).string = {min_len: 1, max_len: 64}];
 	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "集群 ID"
 	}, (validate.rules).string = {min_len: 13, max_len: 14}];
@@ -2289,7 +2289,7 @@ message ResPauseOrResumeReq {
 	};
 	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目 ID"
-	}, (validate.rules).string = {pattern: "^[0-9a-f]{64}$"}];
+	}, (validate.rules).string = {min_len: 1, max_len: 64}];
 	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "集群 ID"
 	}, (validate.rules).string = {min_len: 13, max_len: 14}];
@@ -2311,7 +2311,7 @@ message ResScaleReq {
 	};
 	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目 ID"
-	}, (validate.rules).string = {pattern: "^[0-9a-f]{64}$"}];
+	}, (validate.rules).string = {min_len: 1, max_len: 64}];
 	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "集群 ID"
 	}, (validate.rules).string = {min_len: 13, max_len: 14}];
@@ -2332,7 +2332,7 @@ message ResDeleteReq {
 	};
 	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目 ID"
-	}, (validate.rules).string = {pattern: "^[0-9a-f]{64}$"}];
+	}, (validate.rules).string = {min_len: 1, max_len: 64}];
 	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "集群 ID"
 	}, (validate.rules).string = {min_len: 13, max_len: 14}];
@@ -2350,7 +2350,7 @@ message GetResHistoryReq {
 	};
 	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目 ID"
-	}, (validate.rules).string = {pattern: "^[0-9a-f]{64}$"}];
+	}, (validate.rules).string = {min_len: 1, max_len: 64}];
 	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "集群 ID"
 	}, (validate.rules).string = {min_len: 13, max_len: 14}];
@@ -2368,7 +2368,7 @@ message RolloutRevisionReq {
 	};
 	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目 ID"
-	}, (validate.rules).string = {pattern: "^[0-9a-f]{64}$"}];
+	}, (validate.rules).string = {min_len: 1, max_len: 64}];
 	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "集群 ID"
 	}, (validate.rules).string = {min_len: 13, max_len: 14}];
@@ -2389,7 +2389,7 @@ message ResBatchRescheduleReq {
 	};
 	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目 ID"
-	}, (validate.rules).string = {pattern: "^[0-9a-f]{64}$"}];
+	}, (validate.rules).string = {min_len: 1, max_len: 64}];
 	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "集群 ID"
 	}, (validate.rules).string = {min_len: 13, max_len: 14}];
@@ -2417,7 +2417,7 @@ message ListPoByNodeReq {
 	};
 	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目 ID"
-	}, (validate.rules).string = {pattern: "^[0-9a-f]{64}$"}];
+	}, (validate.rules).string = {min_len: 1, max_len: 64}];
 	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "集群 ID"
 	}, (validate.rules).string = {min_len: 13, max_len: 14}];
@@ -2432,7 +2432,7 @@ message ContainerListReq {
 	};
 	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目 ID"
-	}, (validate.rules).string = {pattern: "^[0-9a-f]{64}$"}];
+	}, (validate.rules).string = {min_len: 1, max_len: 64}];
 	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "集群 ID"
 	}, (validate.rules).string = {min_len: 13, max_len: 14}];
@@ -2450,7 +2450,7 @@ message ContainerGetReq {
 	};
 	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目 ID"
-	}, (validate.rules).string = {pattern: "^[0-9a-f]{64}$"}];
+	}, (validate.rules).string = {min_len: 1, max_len: 64}];
 	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "集群 ID"
 	}, (validate.rules).string = {min_len: 13, max_len: 14}];
@@ -2471,7 +2471,7 @@ message GetK8SResTemplateReq {
 	};
 	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目 ID"
-	}, (validate.rules).string = {pattern: "^[0-9a-f]{64}$"}];
+	}, (validate.rules).string = {min_len: 1, max_len: 64}];
 	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "集群 ID"
 	}, (validate.rules).string = {min_len: 13, max_len: 14}];
@@ -2489,7 +2489,7 @@ message CObjListReq {
 	};
 	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目 ID"
-	}, (validate.rules).string = {pattern: "^[0-9a-f]{64}$"}];
+	}, (validate.rules).string = {min_len: 1, max_len: 64}];
 	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "集群 ID"
 	}, (validate.rules).string = {min_len: 13, max_len: 14}];
@@ -2513,7 +2513,7 @@ message CObjGetReq {
 	};
 	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目 ID"
-	}, (validate.rules).string = {pattern: "^[0-9a-f]{64}$"}];
+	}, (validate.rules).string = {min_len: 1, max_len: 64}];
 	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "集群 ID"
 	}, (validate.rules).string = {min_len: 13, max_len: 14}];
@@ -2537,7 +2537,7 @@ message CObjHistoryReq {
 	};
 	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目 ID"
-	}, (validate.rules).string = {pattern: "^[0-9a-f]{64}$"}];
+	}, (validate.rules).string = {min_len: 1, max_len: 64}];
 	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "集群 ID"
 	}, (validate.rules).string = {min_len: 13, max_len: 14}];
@@ -2558,7 +2558,7 @@ message CObjRestartReq {
 	};
 	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目 ID"
-	}, (validate.rules).string = {pattern: "^[0-9a-f]{64}$"}];
+	}, (validate.rules).string = {min_len: 1, max_len: 64}];
 	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "集群 ID"
 	}, (validate.rules).string = {min_len: 13, max_len: 14}];
@@ -2579,7 +2579,7 @@ message CObjRolloutReq {
 	};
 	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目 ID"
-	}, (validate.rules).string = {pattern: "^[0-9a-f]{64}$"}];
+	}, (validate.rules).string = {min_len: 1, max_len: 64}];
 	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "集群 ID"
 	}, (validate.rules).string = {min_len: 13, max_len: 14}];
@@ -2603,7 +2603,7 @@ message CObjCreateReq {
 	};
 	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目 ID"
-	}, (validate.rules).string = {pattern: "^[0-9a-f]{64}$"}];
+	}, (validate.rules).string = {min_len: 1, max_len: 64}];
 	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "集群 ID"
 	}, (validate.rules).string = {min_len: 13, max_len: 14}];
@@ -2622,7 +2622,7 @@ message CObjUpdateReq {
 	};
 	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目 ID"
-	}, (validate.rules).string = {pattern: "^[0-9a-f]{64}$"}];
+	}, (validate.rules).string = {min_len: 1, max_len: 64}];
 	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "集群 ID"
 	}, (validate.rules).string = {min_len: 13, max_len: 14}];
@@ -2647,7 +2647,7 @@ message CObjScaleReq {
 	};
 	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目 ID"
-	}, (validate.rules).string = {pattern: "^[0-9a-f]{64}$"}];
+	}, (validate.rules).string = {min_len: 1, max_len: 64}];
 	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "集群 ID"
 	}, (validate.rules).string = {min_len: 13, max_len: 14}];
@@ -2671,7 +2671,7 @@ message CObjDeleteReq {
 	};
 	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目 ID"
-	}, (validate.rules).string = {pattern: "^[0-9a-f]{64}$"}];
+	}, (validate.rules).string = {min_len: 1, max_len: 64}];
 	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "集群 ID"
 	}, (validate.rules).string = {min_len: 13, max_len: 14}];
@@ -2692,7 +2692,7 @@ message CObjBatchRescheduleReq {
 	};
 	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目 ID"
-	}, (validate.rules).string = {pattern: "^[0-9a-f]{64}$"}];
+	}, (validate.rules).string = {min_len: 1, max_len: 64}];
 	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "集群 ID"
 	}, (validate.rules).string = {min_len: 13, max_len: 14}];
@@ -2771,7 +2771,7 @@ message SubscribeReq {
 	};
 	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目 ID"
-	}, (validate.rules).string = {pattern: "^[0-9a-f]{64}$"}];
+	}, (validate.rules).string = {min_len: 1, max_len: 64}];
 	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "集群 ID"
 	}, (validate.rules).string = {min_len: 13, max_len: 14}];
@@ -2822,7 +2822,7 @@ message InvalidateDiscoveryCacheReq {
 	};
 	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目 ID"
-	}, (validate.rules).string = {pattern: "^[0-9a-f]{64}$"}];
+	}, (validate.rules).string = {min_len: 1, max_len: 64}];
 	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "集群 ID"
 	}, (validate.rules).string = {min_len: 13, max_len: 14}];
@@ -2837,7 +2837,7 @@ message FormRenderPreviewReq {
 	};
 	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目 ID"
-	}, (validate.rules).string = {pattern: "^[0-9a-f]{64}$"}];
+	}, (validate.rules).string = {min_len: 1, max_len: 64}];
 	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "集群 ID"
 	}, (validate.rules).string = {min_len: 13, max_len: 14}];
@@ -2921,7 +2921,7 @@ message GetResFormSchemaReq {
 	};
 	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目 ID"
-	}, (validate.rules).string = {pattern: "^[0-9a-f]{64}$"}];
+	}, (validate.rules).string = {min_len: 1, max_len: 64}];
 	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "集群 ID"
 	}, (validate.rules).string = {min_len: 13, max_len: 14}];
@@ -2957,7 +2957,7 @@ message GetResSelectItemsReq {
 	};
 	string projectID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目 ID"
-	}, (validate.rules).string = {pattern: "^[0-9a-f]{64}$"}];
+	}, (validate.rules).string = {min_len: 1, max_len: 64}];
 	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "集群 ID"
 	}, (validate.rules).string = {min_len: 13, max_len: 14}];
