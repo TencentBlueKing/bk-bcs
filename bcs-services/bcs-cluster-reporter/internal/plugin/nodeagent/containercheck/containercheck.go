@@ -28,6 +28,7 @@ import (
 	"github.com/containerd/containerd/namespaces"
 	containerd "github.com/containerd/containerd/v2/client"
 	"github.com/docker/docker/api/types"
+	containertypes "github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/prometheus/client_golang/prometheus"
 	"k8s.io/klog/v2"
@@ -254,7 +255,7 @@ func dockerCheck(socketPath string, node pluginmanager.NodeConfig) ([]pluginmana
 		_ = cli.Close()
 	}()
 
-	containerList, err := cli.ContainerList(context.Background(), types.ContainerListOptions{})
+	containerList, err := cli.ContainerList(context.Background(), containertypes.ListOptions{})
 	if err != nil {
 		return nil, nil, err
 	}

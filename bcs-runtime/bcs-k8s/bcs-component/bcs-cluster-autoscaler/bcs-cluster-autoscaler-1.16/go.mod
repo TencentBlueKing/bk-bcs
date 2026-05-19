@@ -231,4 +231,17 @@ replace (
 	k8s.io/legacy-cloud-providers => k8s.io/legacy-cloud-providers v0.16.15
 	k8s.io/metrics => k8s.io/metrics v0.16.15
 	k8s.io/sample-apiserver => k8s.io/sample-apiserver v0.16.15
+
+	// 修复 logr API 不兼容问题：
+	// 该模块通过 OvertimeDog/cluster-autoscaler 间接引入 sigs.k8s.io/controller-runtime v0.6.3
+	// 与 k8s.io/klog/v2 v2.0.0/v2.2.0，这两个旧库使用 logr v0.x 的接口版 API
+	// （logr.Logger 是接口、logr.InfoLogger 存在）。一旦 go mod tidy 把 logr 解析成 v1.x
+	// 新结构体版本，就会触发：
+	//   - undefined: logr.InfoLogger
+	//   - cannot use *DelegatingLogger / NullLogger as logr.Logger
+	//   - logging.logr == nil mismatched types
+	// 因此把这三个组件锁定到接口版本配套：logr v0.2.0 + klog/v2 v2.2.0 + controller-runtime v0.6.3。
+	github.com/go-logr/logr => github.com/go-logr/logr v0.2.0
+	k8s.io/klog/v2 => k8s.io/klog/v2 v2.2.0
+	sigs.k8s.io/controller-runtime => sigs.k8s.io/controller-runtime v0.6.3
 )

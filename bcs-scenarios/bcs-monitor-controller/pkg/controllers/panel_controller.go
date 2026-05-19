@@ -32,7 +32,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	monitorextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/api/v1"
@@ -155,7 +154,7 @@ func (r *PanelReconciler) eventPredicate() predicate.Predicate {
 func (r *PanelReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&monitorextensionv1.Panel{}).
-		Watches(&source.Kind{Type: &v1.ConfigMap{}}, &configmapFilter{r.Client}).
+		Watches(&v1.ConfigMap{}, &configmapFilter{r.Client}).
 		WithEventFilter(r.eventPredicate()).
 		Complete(r)
 }
@@ -238,12 +237,14 @@ type configmapFilter struct {
 }
 
 // Create implement EventFilter
-func (cf *configmapFilter) Create(e event.CreateEvent, q workqueue.RateLimitingInterface) {
+func (cf *configmapFilter) Create(ctx context.Context, e event.TypedCreateEvent[client.Object],
+	q workqueue.TypedRateLimitingInterface[reconcile.Request]) {
 	return
 }
 
 // Update implement EventFilter
-func (cf *configmapFilter) Update(e event.UpdateEvent, q workqueue.RateLimitingInterface) {
+func (cf *configmapFilter) Update(ctx context.Context, e event.TypedUpdateEvent[client.Object],
+	q workqueue.TypedRateLimitingInterface[reconcile.Request]) {
 	newCm, okNew := e.ObjectNew.(*v1.ConfigMap)
 	oldCm, okOld := e.ObjectOld.(*v1.ConfigMap)
 	if !okNew || !okOld {
@@ -269,7 +270,7 @@ func (cf *configmapFilter) Update(e event.UpdateEvent, q workqueue.RateLimitingI
 	}
 
 	panelList := &monitorextensionv1.PanelList{}
-	if inErr := cf.cli.List(context.Background(), panelList, &client.ListOptions{
+	if inErr := cf.cli.List(ctx, panelList, &client.ListOptions{
 		LabelSelector: selector,
 	}); inErr != nil {
 		blog.Errorf("list panel failed, err: %s", err.Error())
@@ -287,11 +288,13 @@ func (cf *configmapFilter) Update(e event.UpdateEvent, q workqueue.RateLimitingI
 }
 
 // Delete implement EventFilter
-func (cf *configmapFilter) Delete(e event.DeleteEvent, q workqueue.RateLimitingInterface) {
+func (cf *configmapFilter) Delete(ctx context.Context, e event.TypedDeleteEvent[client.Object],
+	q workqueue.TypedRateLimitingInterface[reconcile.Request]) {
 	return
 }
 
 // Generic implement EventFilter
-func (cf *configmapFilter) Generic(e event.GenericEvent, q workqueue.RateLimitingInterface) {
+func (cf *configmapFilter) Generic(ctx context.Context, e event.TypedGenericEvent[client.Object],
+	q workqueue.TypedRateLimitingInterface[reconcile.Request]) {
 	return
 }

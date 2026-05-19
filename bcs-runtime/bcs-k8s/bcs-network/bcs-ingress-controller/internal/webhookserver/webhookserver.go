@@ -111,7 +111,8 @@ func NewHookServer(opt *ServerOption, k8sClient client.Client, lbClient cloud.Lo
 }
 
 // Start start http server
-func (s *Server) Start(stop <-chan struct{}) error {
+// controller-runtime v0.7+ Runnable 接口签名变为 Start(ctx context.Context) error
+func (s *Server) Start(ctx context.Context) error {
 	blog.Infof("start webhook server")
 	mux := http.NewServeMux()
 	// register handler function
@@ -136,7 +137,7 @@ func (s *Server) Start(stop <-chan struct{}) error {
 		blog.Errorf("failed to patch pod %s/%s, err %s", s.podNamespace, s.podName, err.Error())
 		return err
 	}
-	<-stop
+	<-ctx.Done()
 	blog.Infof("Got controller stop signal, shutting down webhook server gracefully...")
 	s.ipv6Server.Shutdown(context.Background())
 	// patch pod label to remove leader

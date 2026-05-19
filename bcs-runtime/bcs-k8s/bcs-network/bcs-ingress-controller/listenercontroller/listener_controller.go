@@ -106,7 +106,7 @@ func (lc *ListenerReconciler) getListenerEventHandler(listener *networkextension
 }
 
 // Reconcile reconclie listener
-func (lc *ListenerReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+func (lc *ListenerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	metrics.IncreaseEventCounter("listener", metrics.EventTypeUnknown)
 
 	blog.V(2).Infof("listener %+v triggered", req.NamespacedName)

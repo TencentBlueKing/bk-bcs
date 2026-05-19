@@ -51,7 +51,7 @@ func NewNamespaceReconciler(ctx context.Context, k8sClient client.Client,
 
 // Reconcile reconcile port pool
 // portbinding name is same with pod name
-func (nr *NamespaceReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+func (nr *NamespaceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	blog.V(3).Infof("namespace %+v triggered", req.NamespacedName)
 	ns := &k8scorev1.Namespace{}
 	if err := nr.k8sClient.Get(nr.ctx, req.NamespacedName, ns); err != nil {

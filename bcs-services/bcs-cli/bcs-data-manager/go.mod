@@ -17,7 +17,7 @@ require (
 	github.com/stretchr/testify v1.8.0
 	github.com/tidwall/pretty v1.2.1
 	github.com/ugorji/go/codec v1.2.7
-	google.golang.org/grpc v1.46.2
+	google.golang.org/grpc v1.79.3
 )
 
 require (

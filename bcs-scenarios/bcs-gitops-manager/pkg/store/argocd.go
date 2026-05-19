@@ -21,6 +21,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"slices"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -44,7 +45,6 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/watch"
-	"k8s.io/kubernetes/pkg/kubelet/util/sliceutils"
 
 	applicationpkg "github.com/argoproj/argo-cd/v2/pkg/apiclient/application"
 	appsetpkg "github.com/argoproj/argo-cd/v2/pkg/apiclient/applicationset"
@@ -134,7 +134,7 @@ func (cd *argo) ApplicationNormalizeWhenDiff(app *v1alpha1.Application, target,
 	live *unstructured.Unstructured, hideData bool) error {
 	var err error
 	if hideData {
-		target, live, err = gitopsdiff.HideSecretData(target, live)
+		target, live, err = gitopsdiff.HideSecretData(target, live, nil)
 		if err != nil {
 			return fmt.Errorf("error hiding secret data: %s", err)
 		}
@@ -144,7 +144,7 @@ func (cd *argo) ApplicationNormalizeWhenDiff(app *v1alpha1.Application, target,
 	if err != nil {
 		return fmt.Errorf("error getting resource overrides: %s", err)
 	}
-	ignoreNormalizer, err := normalizers.NewIgnoreNormalizer(app.Spec.IgnoreDifferences, resourceOverrides)
+	ignoreNormalizer, err := normalizers.NewIgnoreNormalizer(app.Spec.IgnoreDifferences, resourceOverrides, normalizers.IgnoreNormalizerOpts{})
 	if err != nil {
 		return errors.Wrapf(err, "create ignore normalizer failed")
 	}
@@ -393,7 +393,7 @@ func (cd *argo) ListRepository(ctx context.Context, projNames []string) (*v1alph
 	// filter specified project
 	items := v1alpha1.Repositories{}
 	for _, repo := range repos.Items {
-		if sliceutils.StringInSlice(repo.Project, projNames) {
+		if slices.Contains(projNames, repo.Project) {
 			items = append(items, repo)
 		}
 	}
@@ -452,7 +452,7 @@ func (cd *argo) GetApplicationRevisionsMetadata(ctx context.Context, repos,
 
 	result := make([]*v1alpha1.RevisionMetadata, 0, len(repos))
 	for i, repo := range repos {
-		argoRepo, err := cd.argoDB.GetRepository(ctx, repo)
+		argoRepo, err := cd.argoDB.GetRepository(ctx, repo, "")
 		if err != nil {
 			return nil, errors.Wrapf(err, "get repo '%s' from db failed", repo)
 		}
@@ -506,7 +506,7 @@ func (cd *argo) GetApplicationManifests(ctx context.Context, name, revision stri
 func (cd *argo) GetApplicationManifestsFromRepoServerWithMultiSources(ctx context.Context,
 	application *v1alpha1.Application) ([]*apiclient.ManifestResponse, error) {
 	repoUrl := application.Spec.Source.RepoURL
-	repo, err := cd.argoDB.GetRepository(ctx, repoUrl)
+	repo, err := cd.argoDB.GetRepository(ctx, repoUrl, application.Spec.Project)
 	if err != nil {
 		return nil, errors.Wrapf(err, "get repo '%s' failed", repoUrl)
 	}
@@ -525,7 +525,14 @@ func (cd *argo) GetApplicationManifestsFromRepoServerWithMultiSources(ctx contex
 	defer repoCloser.Close()
 
 	// Store the map of all sources having ref field into a map for applications with sources field
-	refSources, err := utilargo.GetRefSources(context.Background(), application.Spec, cd.argoDB)
+	refSources, err := utilargo.GetRefSources(
+		context.Background(),
+		application.Spec.Sources,
+		application.Spec.Project,
+		cd.argoDB.GetRepository,
+		[]string{},
+		false,
+	)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to get ref sources")
 	}

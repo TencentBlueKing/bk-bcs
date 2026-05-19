@@ -69,7 +69,7 @@ func NewPortBindingReconciler(ctx context.Context, cleanInterval time.Duration, 
 
 // Reconcile reconcile port pool
 // portbinding name is same with pod name
-func (pbr *PortBindingReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+func (pbr *PortBindingReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	blog.V(3).Infof("PortBinding %+v triggered", req.NamespacedName)
 	portBinding := &networkextensionv1.PortBinding{}
 	isPortBindingFound := true

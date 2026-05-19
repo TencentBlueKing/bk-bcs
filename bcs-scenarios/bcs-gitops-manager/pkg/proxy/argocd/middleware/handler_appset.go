@@ -66,8 +66,16 @@ func (h *handler) CheckCreateApplicationSet(ctx context.Context,
 			DisableTLS:       false,
 			StrictValidation: false,
 		})
-	argoCDService, err := services.NewArgoCDService(h.option.Storage.GetArgoDB(),
+	// argo-cd v2.14 起 NewArgoCDService 第一个参数从 db.ArgoDB 改为 getRepository 闭包
+	argoDB := h.option.Storage.GetArgoDB()
+	getRepository := func(ctx context.Context, url string, project string) (*v1alpha1.Repository, error) {
+		return argoDB.GetRepository(ctx, url, project)
+	}
+	argoCDService, err := services.NewArgoCDService(getRepository,
 		true, repoClientSet, false)
+	if err != nil {
+		blog.Infof("RequestID[%s] NewArgoCDService failed", RequestID(ctx))
+	}
 	// this will render the Applications by ApplicationSet's generators
 	// refer to: https://github.com/argoproj/argo-cd/blob/v2.8.2/applicationset/controllers/applicationset_controller.go#L499
 	results := make([]*v1alpha1.Application, 0)
@@ -78,7 +86,12 @@ func (h *handler) CheckCreateApplicationSet(ctx context.Context,
 		}
 		var tsResult []generators.TransformResult
 		listGenerator := generators.NewListGenerator()
-		gitGenerator := generators.NewGitGenerator(argoCDService)
+		// argo-cd v2.14 起 NewGitGenerator 多了一个 namespace 参数；
+		// 此处仅用于渲染模板，不实际读 K8s 资源，传 appset 自身命名空间
+		gitGenerator := generators.NewGitGenerator(argoCDService, appset.Namespace)
+		// argo-cd v2.14 起 Transform 多了一个 client.Client 参数；
+		// 当前业务通过 checkApplicationSetGenerator 已限制只允许 List/Git/Matrix（均不需要 client），
+		// 故传 nil 安全
 		tsResult, err = generators.Transform(generator, map[string]generators.Generator{
 			"List": listGenerator,
 			"Git":  gitGenerator,
@@ -86,7 +99,7 @@ func (h *handler) CheckCreateApplicationSet(ctx context.Context,
 				"List": listGenerator,
 				"Git":  gitGenerator,
 			}),
-		}, appset.Spec.Template, appset, map[string]interface{}{})
+		}, appset.Spec.Template, appset, map[string]interface{}{}, nil)
 		if err != nil {
 			return nil, http.StatusBadRequest, errors.Wrapf(err, "transform generator[%d] failed", i)
 		}

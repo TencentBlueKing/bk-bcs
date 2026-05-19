@@ -68,7 +68,7 @@ func NewPortPoolReconciler(
 }
 
 // Reconcile reconcile port pool
-func (ppr *PortPoolReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+func (ppr *PortPoolReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	blog.V(3).Infof("PortPool %+v triggered", req.NamespacedName)
 	if !ppr.isCacheSync {
 		if err := ppr.initPortPoolCache(); err != nil {

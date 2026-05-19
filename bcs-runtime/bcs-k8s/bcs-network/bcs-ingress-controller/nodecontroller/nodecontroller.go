@@ -64,7 +64,7 @@ func NewNodeReconciler(ctx context.Context, k8sclient client.Client,
 }
 
 // Reconcile reconcile node
-func (r *NodeReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+func (r *NodeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	blog.Infof("Node %+v triggered", req.NamespacedName)
 	node := &corev1.Node{}
 	if err := r.k8sClient.Get(r.ctx, req.NamespacedName, node); err != nil {

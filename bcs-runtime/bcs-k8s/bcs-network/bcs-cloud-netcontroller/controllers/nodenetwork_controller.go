@@ -39,7 +39,7 @@ type NodeNetworkReconciler struct {
 }
 
 // Reconcile reconcile node info
-func (r *NodeNetworkReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+func (r *NodeNetworkReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	blog.V(3).Infof("node network %s event trigger", req.NamespacedName.String())
 	r.processor.OnEvent(NodeNetworkEvent{
 		NodeName:      req.NamespacedName.Name,

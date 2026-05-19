@@ -1,6 +1,6 @@
 module github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-project-manager
 
-go 1.20
+go 1.23.0
 
 replace (
 	github.com/chai2010/gettext-go v1.0.2 => github.com/chai2010/gettext-go v0.1.0
@@ -39,7 +39,7 @@ require (
 	github.com/PuerkitoBio/purell v1.1.1 // indirect
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/elazarl/goproxy v0.0.0-20210110162100-a92cc753f88e // indirect
+	github.com/elazarl/goproxy v0.0.0-20230731152917-f99041a5c027 // indirect
 	github.com/emicklei/go-restful/v3 v3.8.0 // indirect
 	github.com/envoyproxy/protoc-gen-validate v0.6.13 // indirect
 	github.com/evanphx/json-patch v4.12.0+incompatible // indirect
@@ -72,7 +72,7 @@ require (
 	github.com/miekg/dns v1.1.50 // indirect
 	github.com/mitchellh/go-wordwrap v1.0.0 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
-	github.com/moby/spdystream v0.2.0 // indirect
+	github.com/moby/spdystream v0.5.1 // indirect
 	github.com/moby/term v0.0.0-20210619224110-3f7ff695adc6 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
@@ -95,13 +95,12 @@ require (
 	go.starlark.net v0.0.0-20200306205701-8dd3e2ee1dd5 // indirect
 	golang.org/x/mod v0.10.0 // indirect
 	golang.org/x/net v0.19.0 // indirect
-	golang.org/x/oauth2 v0.5.0 // indirect
+	golang.org/x/oauth2 v0.27.0 // indirect
 	golang.org/x/sys v0.15.0 // indirect
 	golang.org/x/term v0.15.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/time v0.1.0 // indirect
 	golang.org/x/tools v0.9.1 // indirect
-	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20230110181048-76db0878b65f // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
@@ -123,5 +122,5 @@ require (
 
 require (
 	github.com/chai2010/gettext-go v1.0.2 // indirect
-	google.golang.org/grpc v1.51.0 // indirect
+	google.golang.org/grpc v1.79.3 // indirect
 )

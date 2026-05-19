@@ -19,7 +19,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/util"
-	"github.com/docker/docker/api/types"
+	containertypes "github.com/docker/docker/api/types/container"
 )
 
 func TestGetDockerCli(t *testing.T) {
@@ -29,7 +29,7 @@ func TestGetDockerCli(t *testing.T) {
 	}
 
 	ctx := util.GetCtx(time.Second * 10)
-	containerList, err := cli.ContainerList(ctx, types.ContainerListOptions{})
+	containerList, err := cli.ContainerList(ctx, containertypes.ListOptions{})
 	if err != nil {
 		t.Errorf(err.Error())
 	}

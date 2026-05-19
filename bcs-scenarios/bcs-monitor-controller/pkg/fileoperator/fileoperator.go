@@ -11,6 +11,7 @@
  *
  */
 
+// Package fileoperator do file operation
 package fileoperator
 
 import (

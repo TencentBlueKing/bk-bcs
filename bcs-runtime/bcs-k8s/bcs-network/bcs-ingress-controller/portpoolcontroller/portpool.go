@@ -133,7 +133,7 @@ func (pph *PortPoolHandler) ensurePortPool(pool *networkextensionv1.PortPool) (b
 
 	pool.Status.Status = checkPortPoolStatus(pool)
 
-	err := pph.k8sClient.Status().Update(context.Background(), pool, &client.UpdateOptions{})
+	err := pph.k8sClient.Status().Update(context.Background(), pool)
 	if err != nil {
 		return true, fmt.Errorf("update %s/%s status failed, err %s", pool.GetNamespace(), pool.GetName(), err.Error())
 	}
@@ -200,7 +200,7 @@ func (pph *PortPoolHandler) deletePortPool(pool *networkextensionv1.PortPool) (b
 			pool.Status.PoolItemStatuses = append(pool.Status.PoolItemStatuses, itemStatus)
 		}
 	}
-	if err := pph.k8sClient.Status().Update(context.Background(), pool, &client.UpdateOptions{}); err != nil {
+	if err := pph.k8sClient.Status().Update(context.Background(), pool); err != nil {
 		return true, fmt.Errorf("update pool %s/%s failed when port pool was deleted, err %s",
 			pool.GetNamespace(), pool.GetName(), err.Error())
 	}

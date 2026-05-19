@@ -103,7 +103,7 @@ func (ir *IngressReconciler) getIngressPredicate() predicate.Predicate {
 }
 
 // Reconcile reconcile bcs ingress
-func (ir *IngressReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+func (ir *IngressReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	metrics.IncreaseEventCounter("ingress", metrics.EventTypeUnknown)
 
 	blog.V(3).Infof("ingress %+v triggered", req.NamespacedName)

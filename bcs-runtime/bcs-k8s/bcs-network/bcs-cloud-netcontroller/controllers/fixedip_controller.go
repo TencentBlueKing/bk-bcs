@@ -64,7 +64,7 @@ func (f *FixedIPReconciler) initCloudNetClient() error {
 }
 
 // Reconcile reconcile fixed ip object
-func (f *FixedIPReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+func (f *FixedIPReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	return ctrl.Result{}, nil
 }
 

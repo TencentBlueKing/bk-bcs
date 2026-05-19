@@ -75,7 +75,7 @@ func getNodePredicate() predicate.Predicate {
 }
 
 // Reconcile reconcile k8s node info
-func (nr *NodeReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+func (nr *NodeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	tmpNode := &k8scorev1.Node{}
 	if err := nr.Client.Get(context.Background(), req.NamespacedName, tmpNode); err != nil {
 		if k8serrors.IsNotFound(err) {

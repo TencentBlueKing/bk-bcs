@@ -103,7 +103,7 @@ func (pbh *portBindingHandler) ensurePortBinding(portBinding *networkextensionv1
 	portBinding.Status.PortBindingType = pbh.portBindingType
 	updateStatus := portBinding.Status.Status
 
-	if err := pbh.k8sClient.Status().Update(context.Background(), portBinding, &client.UpdateOptions{}); err != nil {
+	if err := pbh.k8sClient.Status().Update(context.Background(), portBinding); err != nil {
 		return true, fmt.Errorf("ensure port binding %s/%s failed, err %s",
 			portBinding.GetName(), portBinding.GetNamespace(), err.Error())
 	}
@@ -183,7 +183,7 @@ func (pbh *portBindingHandler) cleanPortBinding(portBinding *networkextensionv1.
 	}
 	portBinding.Status.UpdateTime = bcsnetcommon.FormatTime(time.Now())
 	if err := pbh.k8sClient.Status().Update(
-		context.Background(), portBinding, &client.UpdateOptions{}); err != nil {
+		context.Background(), portBinding); err != nil {
 		return true, fmt.Errorf("update port binding %s/%s when delete failed, err %s",
 			portBinding.GetName(), portBinding.GetNamespace(), err.Error())
 	}

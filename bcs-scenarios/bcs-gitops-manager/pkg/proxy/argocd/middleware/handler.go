@@ -208,7 +208,7 @@ func (h *handler) CheckBusinessPermission(ctx context.Context, bizID string, act
 	for _, proj := range projectList.Items {
 		projectBizID := common.GetBCSProjectBusinessKey(proj.Annotations)
 		if projectBizID == bizID {
-			statusCode, err = h.CheckProjectPermissionByID(ctx, proj.Name,
+			statusCode, _ = h.CheckProjectPermissionByID(ctx, proj.Name,
 				common.GetBCSProjectID(proj.Annotations), action)
 			// 只要拥有一个project的权限，则允许操作
 			if statusCode == http.StatusOK {
@@ -225,6 +225,7 @@ func (h *handler) CheckNamespaceScopedResourcePermission(ctx context.Context, pr
 	user := ctx.Value(ctxKeyUser).(*proxy.UserInfo)
 	var permit bool
 	var err error
+	// 按 action 分发到对应的命名空间资源权限校验
 	switch action {
 	case iamnamespace.NameSpaceScopedView:
 		permit, _, _, err = h.namespacePermission.
@@ -258,6 +259,7 @@ func (h *handler) CheckProjectPermissionByID(ctx context.Context, projectName, p
 	h.analysisClient.UpdateActivityUser(projectName, user.GetUser())
 	var permit bool
 	var err error
+	// 按 action 分发到对应的项目权限校验
 	switch action {
 	case iam.ProjectView:
 		permit, _, _, err = h.projectPermission.CanViewProject(user.GetUser(), projectID)
@@ -296,6 +298,7 @@ func (h *handler) CheckClusterPermission(ctx context.Context, query *clusterclie
 	}
 
 	var permit bool
+	// 按 action 分发到对应的集群权限校验
 	switch action {
 	case iam.ClusterView:
 		permit, _, _, err = h.clusterPermission.CanViewCluster(user.GetUser(), projectID, argoCluster.Name)
@@ -326,7 +329,7 @@ func (h *handler) CheckRepositoryPermission(ctx context.Context, repoName string
 	if repo == nil {
 		return nil, http.StatusNotFound, errors.Errorf("repository '%s' not found", repoName)
 	}
-	if slices.Contains[string](h.option.PublicProjects, repo.Project) {
+	if slices.Contains(h.option.PublicProjects, repo.Project) {
 		return repo, http.StatusOK, nil
 	}
 	projectName := repo.Project
@@ -544,10 +547,11 @@ func (h *handler) ListClusters(ctx context.Context, projectNames []string) (
 		return nil, http.StatusInternalServerError, errors.Wrapf(err, "list clusters from storage failure")
 	}
 
+	// 按 BCS 项目维度对集群分桶，便于按项目批量鉴权
 	projectClusters := make(map[string][]string)
 	controlledClusters := make(map[string]v1alpha1.Cluster)
 	for _, cls := range clusterList.Items {
-		if !slices.Contains[string](projectNames, cls.Project) {
+		if !slices.Contains(projectNames, cls.Project) {
 			continue
 		}
 		controlProjectID := common.GetBCSProjectID(cls.Annotations)
@@ -623,6 +627,7 @@ func (h *handler) ListApplications(ctx context.Context, query *appclient.Applica
 			preferMap[prefer.Name] = struct{}{}
 		}
 
+		// add collect annotation label
 		for i := range projApps {
 			if _, ok := preferMap[projApps[i].Name]; !ok {
 				continue

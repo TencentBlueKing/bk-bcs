@@ -102,7 +102,8 @@ func main() {
 		LeaderElection:          true,
 		LeaderElectionID:        "33fb49e.cloudlbconroller.bkbcs.tencent.com",
 		LeaderElectionNamespace: opts.ElectionNamespace,
-		NewClient: func(cache cache.Cache, config *rest.Config, options client.Options) (client.Client, error) {
+		NewClient: func(cache cache.Cache, config *rest.Config, options client.Options,
+			uncachedObjects ...client.Object) (client.Client, error) {
 			// 调高对K8S client的QPS限制，优化大批量监听器时的处理效率
 			config.QPS = float32(opts.KubernetesQPS)
 			config.Burst = opts.KubernetesBurst
@@ -112,14 +113,11 @@ func main() {
 				return nil, err
 			}
 
-			return &client.DelegatingClient{
-				Reader: &client.DelegatingReader{
-					CacheReader:  cache,
-					ClientReader: c,
-				},
-				Writer:       c,
-				StatusClient: c,
-			}, nil
+			return client.NewDelegatingClient(client.NewDelegatingClientInput{
+				CacheReader:     cache,
+				Client:          c,
+				UncachedObjects: uncachedObjects,
+			})
 		},
 	})
 	if err != nil {
@@ -337,7 +335,7 @@ func initHttpServer(op *option.ControllerOption, mgr manager.Manager, nodeCache 
 
 // initClient 根据使用云厂商的不同，返回对应云厂商的实现
 func initClient(opts *option.ControllerOption, cli client.Client, eventWatcher eventer.WatchEventInterface) (cloud.
-	Validater, cloud.LoadBalance, cloudnode.NodeClient) {
+Validater, cloud.LoadBalance, cloudnode.NodeClient) {
 	var validater cloud.Validater
 	var lbClient cloud.LoadBalance
 	var nodeClient cloudnode.NodeClient

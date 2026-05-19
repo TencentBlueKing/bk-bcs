@@ -150,7 +150,7 @@ func (p *PodPortBindingHandler) updatePodCondition(pod *k8scorev1.Pod, status st
 			Message: constant.ConditionMessageReadyBcsIngressPortBinding,
 		})
 	}
-	if err := p.k8sClient.Status().Update(context.Background(), pod, &client.UpdateOptions{}); err != nil {
+	if err := p.k8sClient.Status().Update(context.Background(), pod); err != nil {
 		err = errors.Wrapf(err, "update pod %s/%s condition failed", pod.GetName(), pod.GetNamespace())
 		blog.Warnf("%s", err.Error())
 		return err

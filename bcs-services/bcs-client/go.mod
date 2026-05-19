@@ -4,6 +4,13 @@ go 1.17
 
 replace (
 	bitbucket.org/ww/goautoneg => github.com/adjust/goautoneg v0.0.0-20150426214442-d788f35a0315
+
+	// 修复 docker/distribution v2.8.3+incompatible 与 distribution/reference 低版本不兼容问题：
+	// docker/distribution v2.8.3+incompatible 的 reference_deprecated.go 调用了独立模块
+	// github.com/distribution/reference 的 SplitHostname，该函数自 v0.5.0 起才存在。
+	// 强制锁定到 v0.6.0，避免被传递依赖降级导致 undefined: reference.SplitHostname。
+	github.com/distribution/reference => github.com/distribution/reference v0.6.0
+
 	github.com/Tencent/bk-bcs/bcs-common => github.com/Tencent/bk-bcs/bcs-common v0.0.0-20220329091816-5b868e90d386
 	github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamedeployment-operator => ../../bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator
 	github.com/Tencent/bk-bcs/bcs-k8s/bcs-gamestatefulset-operator => ../../bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator
