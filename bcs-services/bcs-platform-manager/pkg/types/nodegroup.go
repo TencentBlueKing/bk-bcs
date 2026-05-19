@@ -41,7 +41,7 @@ type ListNodeGroupData struct {
 
 // NodeGroup pool for kubernetes cluster-autoscaling
 type NodeGroup struct {
-	NodeGroupID      string               `json:"nodeGroupID"`
+	NodeGroupID      string               `json:"nodeGroupID" in:"path=nodeGroupID"`
 	Name             string               `json:"name"`
 	ClusterID        string               `json:"clusterID"`
 	Region           string               `json:"region"`

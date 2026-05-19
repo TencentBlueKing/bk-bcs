@@ -29,7 +29,7 @@ import (
 
 // ProjectAction project action interface
 type ProjectAction interface { // nolint
-	ListProject(ctx context.Context, req *bcsproject.ListProjectsRequest) (*types.ListProjectsResp, error)
+	ListProject(ctx context.Context, req *types.ListProjectsReq) (*types.ListProjectsResp, error)
 	GetProject(ctx context.Context, projectIDOrCode string) (*types.GetProjectsResp, error)
 	UpdateProject(ctx context.Context, req *types.UpdateProjectReq) (bool, error)
 	UpdateProjectManagers(ctx context.Context, req *types.UpdateProjectManagersReq) (bool, error)
@@ -46,14 +46,24 @@ func NewProjectAction() ProjectAction {
 }
 
 // ListProject list project
-func (a *Action) ListProject(ctx context.Context, req *bcsproject.ListProjectsRequest) (
+func (a *Action) ListProject(ctx context.Context, req *types.ListProjectsReq) (
 	*types.ListProjectsResp, error) {
 	businesses, err := cmdb.GetCmdbClient().GetBusiness()
 	if err != nil {
 		return nil, utils.SystemError(err)
 	}
 
-	data, err := projectrmgr.ListProject(ctx, req)
+	data, err := projectrmgr.ListProject(ctx, &bcsproject.ListProjectsRequest{
+		ProjectIDs:  req.ProjectIDs,
+		Names:       req.Names,
+		ProjectCode: req.ProjectCode,
+		SearchName:  req.SearchName,
+		Kind:        req.Kind,
+		Offset:      req.Offset,
+		Limit:       req.Limit,
+		All:         req.All,
+		BusinessID:  req.BusinessID,
+	})
 	if err != nil {
 		return nil, utils.SystemError(err)
 	}

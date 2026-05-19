@@ -29,6 +29,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/api/nodegroup"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/api/operation"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/api/project"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/api/quota"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/api/task"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/api/templateconfig"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/config"
@@ -161,7 +162,7 @@ func registerRoutes() http.Handler {
 		route.Put("/project/{projectID}", rest.Handle(project.UpdateProject))
 		route.Put("/project/{projectID}/managers", rest.Handle(project.UpdateProjectManagers))
 		route.Put("/project/{projectID}/business", rest.Handle(project.UpdateProjectBusiness))
-		//route.Put("/project/{projectID}/isOffline", rest.Handle(project.UpdateProjectIsOffline))
+		// route.Put("/project/{projectID}/isOffline", rest.Handle(project.UpdateProjectIsOffline))
 
 		// operation log 相关接口
 		route.Get("/operationlogs", rest.Handle(operation.ListOperationLogs))
@@ -173,6 +174,16 @@ func registerRoutes() http.Handler {
 		route.Post("/nodegroup/{nodeGroupID}/autoscale/disable", rest.Handle(nodegroup.DisableNodeGroupAutoScale))
 		route.Put("/nodegroup/{nodeGroupID}", rest.Handle(nodegroup.UpdateNodeGroup))
 		route.Post("/nodegroup/{nodeGroupID}/boundsize", rest.Handle(nodegroup.UpdateGroupMinMaxSize))
+
+		// quota 额度相关接口
+		route.Post("/quota", rest.Handle(quota.CreateProjectQuota))
+		route.Get("/quota/{quotaId}", rest.Handle(quota.GetProjectQuota))
+		route.Put("/quota/{quotaId}", rest.Handle(quota.UpdateProjectQuota))
+		route.Put("/quota/{quotaId}/scaleup", rest.Handle(quota.ScaleUpProjectQuota))
+		route.Put("/quota/{quotaId}/scaledown", rest.Handle(quota.ScaleDownProjectQuota))
+		route.Delete("/quota/{quotaId}", rest.Handle(quota.DeleteProjectQuota))
+		route.Get("/quota", rest.Handle(quota.ListProjectQuotasV2))
+		route.Get("/quota/statistics", rest.Handle(quota.GetProjectQuotasStatistics))
 	})
 
 	return r

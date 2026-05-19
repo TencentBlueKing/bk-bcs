@@ -16,8 +16,6 @@ package project
 import (
 	"context"
 
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
-
 	actions "github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/actions/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/types"
 )
@@ -29,17 +27,7 @@ import (
 // @Success 200 {array} types.ListProjectsResp
 // @Router  /project [get]
 func ListProject(ctx context.Context, req *types.ListProjectsReq) (*types.ListProjectsResp, error) {
-	result, err := actions.NewProjectAction().ListProject(ctx, &bcsproject.ListProjectsRequest{
-		ProjectIDs:  req.ProjectIDs,
-		Names:       req.Names,
-		ProjectCode: req.ProjectCode,
-		SearchName:  req.SearchName,
-		Kind:        req.Kind,
-		Offset:      req.Offset,
-		Limit:       req.Limit,
-		All:         req.All,
-		BusinessID:  req.BusinessID,
-	})
+	result, err := actions.NewProjectAction().ListProject(ctx, req)
 	if err != nil {
 		return nil, err
 	}
