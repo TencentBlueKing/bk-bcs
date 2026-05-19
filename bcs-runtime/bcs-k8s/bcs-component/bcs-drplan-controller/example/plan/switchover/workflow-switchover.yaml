@@ -29,7 +29,7 @@ spec:
       localization:
         operation: Create
         name: nginx-replicas-switchover-a
-        namespace: "{{ .params.managedClusterNamespaceA }}"
+        namespace: "$(params.managedClusterNamespaceA)"
         spec:
           priority: 800
           overridePolicy: ApplyNow
@@ -37,7 +37,7 @@ spec:
             apiVersion: apps/v1
             kind: Deployment
             name: nginx
-            namespace: "{{ .params.feedNamespace }}"
+            namespace: "$(params.feedNamespace)"
           overrides:
             - name: replicas-scale-zero
               type: MergePatch
@@ -50,7 +50,7 @@ spec:
       localization:
         operation: Create
         name: nginx-replicas-switchover-b
-        namespace: "{{ .params.managedClusterNamespaceB }}"
+        namespace: "$(params.managedClusterNamespaceB)"
         spec:
           priority: 800
           overridePolicy: ApplyNow
@@ -58,7 +58,7 @@ spec:
             apiVersion: apps/v1
             kind: Deployment
             name: nginx
-            namespace: "{{ .params.feedNamespace }}"
+            namespace: "$(params.feedNamespace)"
           overrides:
             - name: replicas-scale-three
               type: MergePatch

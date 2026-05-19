@@ -1,0 +1,486 @@
+{
+  "template_type": "architecture",
+  "style": 1,
+  "width": 1360,
+  "height": 920,
+  "title": "DRPlan + Clusternet + Istio 三集群预案与流量切换架构",
+  "subtitle": "两个双活集群承接业务流量，第三个集群作为冷备集群在故障时接管",
+  "containers": [
+    {
+      "x": 40,
+      "y": 104,
+      "width": 1280,
+      "height": 144,
+      "label": "控制平面",
+      "header_prefix": "01",
+      "subtitle": "预案定义、执行触发与编排控制",
+      "stroke": "#cbd5e1",
+      "fill": "none"
+    },
+    {
+      "x": 40,
+      "y": 284,
+      "width": 1280,
+      "height": 116,
+      "label": "联邦下发与流量入口",
+      "header_prefix": "02",
+      "subtitle": "统一下发资源，并承接南北向流量入口",
+      "stroke": "#cbd5e1",
+      "fill": "none"
+    },
+    {
+      "x": 40,
+      "y": 430,
+      "width": 1280,
+      "height": 304,
+      "label": "受管集群",
+      "header_prefix": "03",
+      "subtitle": "集群 A 与集群 B 双活，集群 C 为冷备",
+      "stroke": "#cbd5e1",
+      "fill": "none"
+    },
+    {
+      "x": 60,
+      "y": 484,
+      "width": 392,
+      "height": 200,
+      "label": "双活集群 A",
+      "subtitle": "默认承接部分业务流量",
+      "stroke": "#dbeafe",
+      "fill": "#f8fbff"
+    },
+    {
+      "x": 484,
+      "y": 484,
+      "width": 392,
+      "height": 200,
+      "label": "双活集群 B",
+      "subtitle": "默认承接部分业务流量",
+      "stroke": "#dcfce7",
+      "fill": "#f8fdf8"
+    },
+    {
+      "x": 908,
+      "y": 484,
+      "width": 392,
+      "height": 200,
+      "label": "冷备集群 C",
+      "subtitle": "默认不承接流量，故障时接管",
+      "stroke": "#e5e7eb",
+      "fill": "#fafafa"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "sre",
+      "kind": "user_avatar",
+      "x": 86,
+      "y": 136,
+      "width": 156,
+      "height": 74,
+      "label": "平台运维",
+      "type_label": "用户",
+      "fill": "#ffffff",
+      "stroke": "#93c5fd",
+      "icon_fill": "#eff6ff",
+      "icon_stroke": "#2563eb",
+      "flat": true
+    },
+    {
+      "id": "plan",
+      "kind": "rect",
+      "x": 304,
+      "y": 142,
+      "width": 198,
+      "height": 64,
+      "label": "DRPlan + 工作流",
+      "type_label": "预案定义",
+      "fill": "#ffffff",
+      "stroke": "#cbd5e1",
+      "flat": true
+    },
+    {
+      "id": "controller",
+      "kind": "double_rect",
+      "x": 572,
+      "y": 134,
+      "width": 244,
+      "height": 80,
+      "label": "drplan-controller",
+      "type_label": "编排执行",
+      "fill": "#eff6ff",
+      "stroke": "#2563eb"
+    },
+    {
+      "id": "execution",
+      "kind": "rect",
+      "x": 924,
+      "y": 142,
+      "width": 206,
+      "height": 64,
+      "label": "DRPlanExecution",
+      "type_label": "执行 / 回退",
+      "fill": "#ffffff",
+      "stroke": "#cbd5e1",
+      "flat": true
+    },
+    {
+      "id": "traffic",
+      "kind": "rect",
+      "x": 86,
+      "y": 316,
+      "width": 156,
+      "height": 52,
+      "label": "客户端流量",
+      "type_label": "入口",
+      "fill": "#ffffff",
+      "stroke": "#cbd5e1",
+      "flat": true
+    },
+    {
+      "id": "clusternet",
+      "kind": "double_rect",
+      "x": 360,
+      "y": 306,
+      "width": 260,
+      "height": 72,
+      "label": "Clusternet 中枢",
+      "type_label": "联邦分发",
+      "fill": "#f8fafc",
+      "stroke": "#64748b"
+    },
+    {
+      "id": "gateway",
+      "kind": "double_rect",
+      "x": 782,
+      "y": 304,
+      "width": 274,
+      "height": 76,
+      "label": "Istio 网关 / DNS",
+      "type_label": "流量入口",
+      "fill": "#fff7ed",
+      "stroke": "#f97316"
+    },
+    {
+      "id": "a-rules",
+      "kind": "double_rect",
+      "x": 96,
+      "y": 546,
+      "width": 156,
+      "height": 76,
+      "label": "Istio 流量规则",
+      "sublabel": "虚拟服务 + 目标规则",
+      "type_label": "集群 A 网格",
+      "fill": "#eff6ff",
+      "stroke": "#2563eb"
+    },
+    {
+      "id": "a-svc",
+      "kind": "rect",
+      "x": 278,
+      "y": 554,
+      "width": 138,
+      "height": 62,
+      "label": "服务 A",
+      "type_label": "工作负载",
+      "fill": "#ffffff",
+      "stroke": "#93c5fd",
+      "flat": true
+    },
+    {
+      "id": "b-rules",
+      "kind": "double_rect",
+      "x": 520,
+      "y": 546,
+      "width": 156,
+      "height": 76,
+      "label": "Istio 流量规则",
+      "sublabel": "虚拟服务 + 目标规则",
+      "type_label": "集群 B 网格",
+      "fill": "#f0fdf4",
+      "stroke": "#16a34a"
+    },
+    {
+      "id": "b-svc",
+      "kind": "rect",
+      "x": 702,
+      "y": 554,
+      "width": 138,
+      "height": 62,
+      "label": "服务 B",
+      "type_label": "工作负载",
+      "fill": "#ffffff",
+      "stroke": "#86efac",
+      "flat": true
+    },
+    {
+      "id": "c-rules",
+      "kind": "double_rect",
+      "x": 944,
+      "y": 546,
+      "width": 156,
+      "height": 76,
+      "label": "Istio 流量规则",
+      "sublabel": "虚拟服务 + 目标规则",
+      "type_label": "集群 C 网格",
+      "fill": "#f3f4f6",
+      "stroke": "#9ca3af"
+    },
+    {
+      "id": "c-svc",
+      "kind": "rect",
+      "x": 1126,
+      "y": 554,
+      "width": 138,
+      "height": 62,
+      "label": "冷备服务",
+      "type_label": "工作负载",
+      "fill": "#ffffff",
+      "stroke": "#d1d5db",
+      "flat": true
+    }
+  ],
+  "arrows": [
+    {
+      "source": "sre",
+      "target": "plan",
+      "source_port": "right",
+      "target_port": "left",
+      "flow": "control",
+      "label": "编写预案"
+    },
+    {
+      "source": "plan",
+      "target": "controller",
+      "source_port": "right",
+      "target_port": "left",
+      "flow": "control",
+      "label": "装载"
+    },
+    {
+      "source": "execution",
+      "target": "controller",
+      "source_port": "left",
+      "target_port": "right",
+      "flow": "control",
+      "label": "触发"
+    },
+    {
+      "source": "controller",
+      "target": "clusternet",
+      "source_port": "bottom",
+      "target_port": "top",
+      "flow": "control",
+      "label": "编排执行"
+    },
+    {
+      "source": "controller",
+      "target": "execution",
+      "source_port": "right",
+      "target_port": "left",
+      "flow": "feedback",
+      "dashed": true,
+      "label": "状态 / 回退",
+      "route_points": [
+        [
+          836,
+          220
+        ],
+        [
+          1180,
+          220
+        ],
+        [
+          1180,
+          174
+        ]
+      ]
+    },
+    {
+      "source": "traffic",
+      "target": "gateway",
+      "source_port": "right",
+      "target_port": "left",
+      "flow": "read",
+      "label": "业务请求",
+      "corridor_y": [
+        342
+      ],
+      "label_dx": 180,
+      "label_dy": -22
+    },
+    {
+      "source": "clusternet",
+      "target": "a-rules",
+      "source_port": "bottom",
+      "target_port": "top",
+      "flow": "write",
+      "dashed": true,
+      "label": "下发流量规则",
+      "corridor_x": [
+        174
+      ],
+      "label_dx": -36,
+      "label_dy": 18
+    },
+    {
+      "source": "clusternet",
+      "target": "a-svc",
+      "source_port": "bottom",
+      "target_port": "top",
+      "flow": "write",
+      "dashed": true,
+      "label": "下发应用",
+      "corridor_x": [
+        346
+      ],
+      "label_dx": 34,
+      "label_dy": 36
+    },
+    {
+      "source": "clusternet",
+      "target": "b-rules",
+      "source_port": "bottom",
+      "target_port": "top",
+      "flow": "write",
+      "dashed": true,
+      "label": "下发流量规则",
+      "corridor_x": [
+        598
+      ],
+      "label_dx": -30,
+      "label_dy": 18
+    },
+    {
+      "source": "clusternet",
+      "target": "b-svc",
+      "source_port": "bottom",
+      "target_port": "top",
+      "flow": "write",
+      "dashed": true,
+      "label": "下发应用",
+      "corridor_x": [
+        770
+      ],
+      "label_dx": 26,
+      "label_dy": 36
+    },
+    {
+      "source": "clusternet",
+      "target": "c-rules",
+      "source_port": "bottom",
+      "target_port": "top",
+      "flow": "write",
+      "dashed": true,
+      "label": "下发流量规则",
+      "corridor_x": [
+        1022
+      ],
+      "label_dx": -24,
+      "label_dy": 18
+    },
+    {
+      "source": "clusternet",
+      "target": "c-svc",
+      "source_port": "bottom",
+      "target_port": "top",
+      "flow": "write",
+      "dashed": true,
+      "label": "下发应用",
+      "corridor_x": [
+        1194
+      ],
+      "label_dx": 20,
+      "label_dy": 36
+    },
+    {
+      "source": "gateway",
+      "target": "a-rules",
+      "source_port": "bottom",
+      "target_port": "top",
+      "flow": "data",
+      "label": "双活流量 A",
+      "corridor_x": [
+        908,
+        174
+      ]
+    },
+    {
+      "source": "gateway",
+      "target": "b-rules",
+      "source_port": "bottom",
+      "target_port": "top",
+      "flow": "data",
+      "label": "双活流量 B",
+      "corridor_x": [
+        918,
+        598
+      ]
+    },
+    {
+      "source": "gateway",
+      "target": "c-rules",
+      "source_port": "bottom",
+      "target_port": "top",
+      "flow": "data",
+      "dashed": true,
+      "label": "冷备接管",
+      "corridor_x": [
+        1022
+      ]
+    },
+    {
+      "source": "a-rules",
+      "target": "a-svc",
+      "source_port": "right",
+      "target_port": "left",
+      "flow": "read",
+      "label": "路由"
+    },
+    {
+      "source": "b-rules",
+      "target": "b-svc",
+      "source_port": "right",
+      "target_port": "left",
+      "flow": "read",
+      "label": "路由"
+    },
+    {
+      "source": "c-rules",
+      "target": "c-svc",
+      "source_port": "right",
+      "target_port": "left",
+      "flow": "read",
+      "dashed": true,
+      "label": "激活后路由"
+    }
+  ],
+  "legend": [
+    {
+      "flow": "control",
+      "label": "预案执行控制流"
+    },
+    {
+      "flow": "write",
+      "label": "联邦资源下发流"
+    },
+    {
+      "flow": "read",
+      "label": "集群内服务路由"
+    },
+    {
+      "flow": "data",
+      "label": "业务流量与切换路径"
+    },
+    {
+      "flow": "feedback",
+      "label": "执行状态与回退"
+    }
+  ],
+  "legend_position": "bottom-right",
+  "legend_box": true,
+  "legend_box_fill": "#ffffff",
+  "legend_x": 980,
+  "legend_y": 768,
+  "footer": "DRPlan 负责预案生命周期与执行。Clusternet 负责应用和 Istio 资源联邦下发。Istio 通过 VirtualService 与 DestinationRule 实现双活分流与冷备接管。"
+}

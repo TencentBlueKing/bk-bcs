@@ -63,6 +63,11 @@ const rules = ref({
       trigger: 'blur',
       required: true,
     },
+    {
+      message: $i18n.t('templateFile.tips.invalidFileName'),
+      trigger: 'blur',
+      validator: (value: string) => !/^\/|\/$|\/\//.test(value),
+    },
   ],
 });
 // 取消修改

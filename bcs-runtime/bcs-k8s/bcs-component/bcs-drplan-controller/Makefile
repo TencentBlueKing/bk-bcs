@@ -1,4 +1,6 @@
 VERSION ?=  $(shell git describe --tags --match='v*' --dirty='.dirty')
+GIT_COMMIT ?= $(shell git rev-parse --short HEAD 2>/dev/null || echo unknown)
+BUILD_DATE ?= $(shell date -u +%Y-%m-%dT%H:%M:%SZ)
 # Image URL to use all building/pushing image targets
 REPO ?= docker.io
 REGISTRY ?= $(REPO)/bcs-drplan-controller
@@ -99,21 +101,25 @@ cleanup-test-e2e: ## Tear down the Kind cluster used for e2e tests
 
 .PHONY: lint
 lint: golangci-lint ## Run golangci-lint linter
-	"$(GOLANGCI_LINT)" run
+	GOCACHE="$(LINT_GOCACHE)" GOLANGCI_LINT_CACHE="$(LINT_CACHE)" "$(GOLANGCI_LINT)" run $(LINT_TARGETS)
 
 .PHONY: lint-fix
 lint-fix: golangci-lint ## Run golangci-lint linter and perform fixes
-	"$(GOLANGCI_LINT)" run --fix
+	GOCACHE="$(LINT_GOCACHE)" GOLANGCI_LINT_CACHE="$(LINT_CACHE)" "$(GOLANGCI_LINT)" run --fix $(LINT_TARGETS)
 
 .PHONY: lint-config
 lint-config: golangci-lint ## Verify golangci-lint linter configuration
-	"$(GOLANGCI_LINT)" config verify
+	GOLANGCI_LINT_CACHE="$(LINT_CACHE)" "$(GOLANGCI_LINT)" config verify
 
 ##@ Build
 
 .PHONY: build
 build: manifests generate fmt vet ## Build manager binary.
 	go build -o bin/dr-plan-controller cmd/main.go
+
+.PHONY: build-gen
+build-gen: fmt vet ## Build drplan-gen CLI tool.
+	go build -ldflags "-X main.version=$(VERSION) -X main.gitCommit=$(GIT_COMMIT) -X main.buildDate=$(BUILD_DATE)" -o bin/drplan-gen cmd/drplan-gen/main.go
 
 .PHONY: run
 run: manifests generate fmt vet ## Run a controller from your host.
@@ -208,6 +214,10 @@ ENVTEST_K8S_VERSION ?= $(shell v='$(call gomodver,k8s.io/api)'; \
   printf '%s\n' "$$v" | sed -E 's/^v?[0-9]+\.([0-9]+).*/1.\1/')
 
 GOLANGCI_LINT_VERSION ?= v2.7.2
+GOLANGCI_LINT_BUILD_ID ?= $(GOLANGCI_LINT_VERSION)-$(shell go env GOVERSION)
+LINT_TARGETS ?= ./api/... ./cmd/... ./internal/... ./test/...
+LINT_GOCACHE ?= /tmp/go-build
+LINT_CACHE ?= /tmp/golangci-lint
 .PHONY: kustomize
 kustomize: $(KUSTOMIZE) ## Download kustomize locally if necessary.
 $(KUSTOMIZE): $(LOCALBIN)
@@ -232,28 +242,25 @@ $(ENVTEST): $(LOCALBIN)
 	$(call go-install-tool,$(ENVTEST),sigs.k8s.io/controller-runtime/tools/setup-envtest,$(ENVTEST_VERSION))
 
 .PHONY: golangci-lint
-golangci-lint: $(GOLANGCI_LINT) ## Download golangci-lint locally if necessary.
-$(GOLANGCI_LINT): $(LOCALBIN)
-	$(call go-install-tool,$(GOLANGCI_LINT),github.com/golangci/golangci-lint/v2/cmd/golangci-lint,$(GOLANGCI_LINT_VERSION))
+golangci-lint: $(LOCALBIN) ## Download golangci-lint locally if necessary.
+	$(call go-install-tool,$(GOLANGCI_LINT),github.com/golangci/golangci-lint/v2/cmd/golangci-lint,$(GOLANGCI_LINT_VERSION),$(GOLANGCI_LINT_BUILD_ID))
 
 # go-install-tool will 'go install' any package with custom target and name of binary, if it doesn't exist
 # $1 - target path with name of binary
 # $2 - package url which can be installed
 # $3 - specific version of package
 define go-install-tool
-@[ -f "$(1)-$(3)" ] && [ "$$(readlink -- "$(1)" 2>/dev/null)" = "$(1)-$(3)" ] || { \
+@[ -f "$(1)-$(if $(4),$(4),$(3))" ] && [ "$$(readlink -- "$(1)" 2>/dev/null)" = "$(1)-$(if $(4),$(4),$(3))" ] || { \
 set -e; \
 package=$(2)@$(3) ;\
 echo "Downloading $${package}" ;\
 rm -f "$(1)" ;\
 GOBIN="$(LOCALBIN)" go install $${package} ;\
-mv "$(LOCALBIN)/$$(basename "$(1)")" "$(1)-$(3)" ;\
+mv "$(LOCALBIN)/$$(basename "$(1)")" "$(1)-$(if $(4),$(4),$(3))" ;\
 } ;\
-ln -sf "$$(realpath "$(1)-$(3)")" "$(1)"
+ln -sf "$$(realpath "$(1)-$(if $(4),$(4),$(3))")" "$(1)"
 endef
 
 define gomodver
 $(shell go list -m -f '{{if .Replace}}{{.Replace.Version}}{{else}}{{.Version}}{{end}}' $(1) 2>/dev/null)
 endef
-
-

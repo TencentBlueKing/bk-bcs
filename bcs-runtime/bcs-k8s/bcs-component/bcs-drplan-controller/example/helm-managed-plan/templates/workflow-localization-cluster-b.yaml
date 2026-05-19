@@ -1,0 +1,36 @@
+# DRWorkflow: Cluster B localization — replicas and nginx config overrides.
+apiVersion: dr.bkbcs.tencent.com/v1alpha1
+kind: DRWorkflow
+metadata:
+  name: {{ .Release.Name }}-localization-{{ .Values.clusterB.name }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "nginx-drplan.labels" . | nindent 4 }}
+spec:
+  failurePolicy: FailFast
+  parameters:
+    - name: managedClusterNamespace
+      type: string
+      description: "ManagedCluster namespace for cluster B"
+      default: {{ .Values.clusterB.managedClusterNamespace | quote }}
+  actions:
+    - name: create-localization-{{ .Values.clusterB.name }}
+      type: Localization
+      timeout: 1m
+      localization:
+        operation: Create
+        name: nginx-overrides-{{ .Values.clusterB.name }}
+        namespace: "$(params.managedClusterNamespace)"
+        spec:
+          priority: 500
+          overridePolicy: ApplyNow
+          feed:
+            apiVersion: apps/v1
+            kind: Deployment
+            name: nginx
+            namespace: "$(params.feedNamespace)"
+          overrides:
+            - name: replicas-{{ .Values.clusterB.name }}
+              type: MergePatch
+              value: |
+                {"spec":{"replicas":{{ .Values.clusterB.replicas }}}}

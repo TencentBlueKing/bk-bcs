@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package webhook implements admission webhooks for DR resources.
 package webhook
 
 import (

@@ -78,10 +78,62 @@ spec:
                       - boolean
                       type: string
                     value:
-                      description: Value is the explicit value to use (e.g. when passing
-                        params in DRPlan stage). Takes precedence over Default when
-                        both set.
+                      description: |-
+                        Value is the explicit value to use (e.g. when passing params in DRPlan stage). Takes precedence over Default when both set.
+                        Mutually exclusive with ValueFrom.
                       type: string
+                    valueFrom:
+                      description: |-
+                        ValueFrom dynamically resolves a parameter value from a Kubernetes resource.
+                        Mutually exclusive with Value.
+                      properties:
+                        manifestRef:
+                          description: ManifestRef resolves a value from a Kubernetes
+                            resource field via JSONPath.
+                          properties:
+                            apiVersion:
+                              description: APIVersion is the resource API version
+                                (e.g. "batch/v1")
+                              type: string
+                            jsonPath:
+                              description: JSONPath is the JSONPath expression to
+                                extract the value (e.g. "{.metadata.name}")
+                              type: string
+                            kind:
+                              description: Kind is the resource kind (e.g. "Job")
+                              type: string
+                            labelSelector:
+                              description: |-
+                                LabelSelector is a label selector string (e.g. "app=foo,env=prod").
+                                Mutually exclusive with Name. Supports $(params.xxx) placeholders.
+                              type: string
+                            name:
+                              description: |-
+                                Name is the exact resource name. Mutually exclusive with LabelSelector.
+                                Supports $(params.xxx) placeholders.
+                              type: string
+                            namespace:
+                              description: Namespace is the resource namespace. Supports
+                                $(params.xxx) placeholders.
+                              type: string
+                            select:
+                              default: Last
+                              description: |-
+                                Select specifies which resource to pick when multiple matches are found.
+                                Last (default): pick by latest creationTimestamp; First: pick by earliest;
+                                Single: require exactly 1 match; Any: pick arbitrarily.
+                              enum:
+                              - Last
+                              - First
+                              - Single
+                              - Any
+                              type: string
+                          required:
+                          - apiVersion
+                          - jsonPath
+                          - kind
+                          type: object
+                      type: object
                   required:
                   - name
                   type: object
@@ -154,10 +206,63 @@ spec:
                                   - boolean
                                   type: string
                                 value:
-                                  description: Value is the explicit value to use
-                                    (e.g. when passing params in DRPlan stage). Takes
-                                    precedence over Default when both set.
+                                  description: |-
+                                    Value is the explicit value to use (e.g. when passing params in DRPlan stage). Takes precedence over Default when both set.
+                                    Mutually exclusive with ValueFrom.
                                   type: string
+                                valueFrom:
+                                  description: |-
+                                    ValueFrom dynamically resolves a parameter value from a Kubernetes resource.
+                                    Mutually exclusive with Value.
+                                  properties:
+                                    manifestRef:
+                                      description: ManifestRef resolves a value from
+                                        a Kubernetes resource field via JSONPath.
+                                      properties:
+                                        apiVersion:
+                                          description: APIVersion is the resource
+                                            API version (e.g. "batch/v1")
+                                          type: string
+                                        jsonPath:
+                                          description: JSONPath is the JSONPath expression
+                                            to extract the value (e.g. "{.metadata.name}")
+                                          type: string
+                                        kind:
+                                          description: Kind is the resource kind (e.g.
+                                            "Job")
+                                          type: string
+                                        labelSelector:
+                                          description: |-
+                                            LabelSelector is a label selector string (e.g. "app=foo,env=prod").
+                                            Mutually exclusive with Name. Supports $(params.xxx) placeholders.
+                                          type: string
+                                        name:
+                                          description: |-
+                                            Name is the exact resource name. Mutually exclusive with LabelSelector.
+                                            Supports $(params.xxx) placeholders.
+                                          type: string
+                                        namespace:
+                                          description: Namespace is the resource namespace.
+                                            Supports $(params.xxx) placeholders.
+                                          type: string
+                                        select:
+                                          default: Last
+                                          description: |-
+                                            Select specifies which resource to pick when multiple matches are found.
+                                            Last (default): pick by latest creationTimestamp; First: pick by earliest;
+                                            Single: require exactly 1 match; Any: pick arbitrarily.
+                                          enum:
+                                          - Last
+                                          - First
+                                          - Single
+                                          - Any
+                                          type: string
+                                      required:
+                                      - apiVersion
+                                      - jsonPath
+                                      - kind
+                                      type: object
+                                  type: object
                               required:
                               - name
                               type: object

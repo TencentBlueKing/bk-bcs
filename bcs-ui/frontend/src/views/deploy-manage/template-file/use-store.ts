@@ -11,6 +11,7 @@ export const store = reactive<{
   spaceLoading: boolean
   loadingSpaceIDs: string[]
   fileListMap: Record<string, IListTemplateMetadataItem[]>
+  tempFoldersMap: Record<string, string[]> // 临时子文件夹路径映射，key 为 spaceID
   editMode?: 'yaml'|'form'
   isFormModeDisabled: boolean
   varList: string[],
@@ -20,6 +21,7 @@ export const store = reactive<{
   spaceList: [], // 空间列表
   loadingSpaceIDs: [], // 空间下文件加载状态
   fileListMap: {},
+  tempFoldersMap: {}, // 临时子文件夹路径
   editMode: undefined,
   isFormModeDisabled: false, // 详情模式下是否禁用表单模式
   varList: [],

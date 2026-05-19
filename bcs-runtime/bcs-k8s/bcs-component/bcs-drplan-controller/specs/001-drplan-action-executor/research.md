@@ -33,50 +33,57 @@
 
 ## 3. 参数模板引擎
 
-**Decision**: 使用 Go text/template
+**Decision**: 使用 Tekton 风格的变量替换语法 `$(params.xxx)`
 
 **Rationale**:
-- Go 标准库，无额外依赖
-- 语法简单（`{{ .params.xxx }}`），用户易学
-- 支持条件、循环等高级特性（预留扩展）
+- 语法简洁直观（`$(params.xxx)`），与 Tekton Pipeline 风格一致
+- 无需 Go template 的复杂语法，降低用户学习成本
+- 底层使用正则表达式进行字符串替换，实现简单可靠
 
 **Alternatives Considered**:
+- Go text/template (`{{ .params.xxx }}`): 功能强大但语法冗长，与 YAML 花括号冲突易混淆
 - Jsonnet: 功能强大但学习曲线陡峭
 - CEL (Common Expression Language): Kubernetes 原生支持，但主要用于验证而非模板
 - envsubst: 功能太简单，不支持默认值
 
 **Implementation Notes**:
 ```go
-// 参数替换示例
-tmpl, _ := template.New("action").Parse(actionConfig)
-var buf bytes.Buffer
-tmpl.Execute(&buf, map[string]interface{}{
-    "params": resolvedParams,
-    "planName": plan.Name,
+// 参数替换示例：使用正则匹配 $(variable.path) 并替换
+result := paramRegex.ReplaceAllStringFunc(input, func(match string) string {
+    key := match[2 : len(match)-1] // 提取 "params.xxx" 部分
+    if val, ok := resolvedParams[key]; ok {
+        return val
+    }
+    return match // 未匹配的保留原样
 })
 ```
 
 **错误处理策略**:
 
-| 错误场景                           | 处理方式           | 说明                                  |
-| ---------------------------------- | ------------------ | ------------------------------------- |
-| 未定义参数 `{{ .params.unknown }}` | 返回错误，阻止执行 | 模板使用 `Option("missingkey=error")` |
-| 空值参数 `{{ .params.empty }}`     | 替换为空字符串     | 允许空值，由动作自行处理              |
-| 模板语法错误 `{{ .params.`         | 返回错误，阻止执行 | `template.Parse()` 返回错误           |
-| 类型不匹配（期望 int 得到 string） | 替换后由动作校验   | 模板引擎不做类型检查                  |
+| 错误场景                           | 处理方式           | 说明                             |
+| ---------------------------------- | ------------------ | -------------------------------- |
+| 未定义参数 `$(params.unknown)`     | 返回错误，阻止执行 | 替换后检查是否仍有未解析的占位符 |
+| 空值参数 `$(params.empty)`         | 替换为空字符串     | 允许空值，由动作自行处理         |
+| 语法错误 `$(params.`              | 保留原样           | 不符合 `$(...)` 格式则不替换     |
+| 类型不匹配（期望 int 得到 string） | 替换后由动作校验   | 模板引擎不做类型检查             |
 
 ```go
 // 推荐实现
-func RenderTemplate(templateStr string, data map[string]interface{}) (string, error) {
-    tmpl, err := template.New("").Option("missingkey=error").Parse(templateStr)
-    if err != nil {
-        return "", fmt.Errorf("template parse error: %w", err)
+func RenderTemplate(templateStr string, data map[string]string) (string, error) {
+    re := regexp.MustCompile(`\$\(([^)]+)\)`)
+    var missingKeys []string
+    result := re.ReplaceAllStringFunc(templateStr, func(match string) string {
+        key := match[2 : len(match)-1]
+        if val, ok := data[key]; ok {
+            return val
+        }
+        missingKeys = append(missingKeys, key)
+        return match
+    })
+    if len(missingKeys) > 0 {
+        return "", fmt.Errorf("unresolved variables: %v", missingKeys)
     }
-    var buf bytes.Buffer
-    if err := tmpl.Execute(&buf, data); err != nil {
-        return "", fmt.Errorf("template execute error: %w", err)
-    }
-    return buf.String(), nil
+    return result, nil
 }
 ```
 
@@ -312,7 +319,7 @@ spec:
     - name: run-sync-job
       type: Job
       dependsOn: [create-localization, create-subscription]  # 等待两者
-      when: "{{ .outputs.create-localization.phase == 'Succeeded' }}"
+      when: "$(outputs.create-localization.phase == 'Succeeded')"
 ```
 
 **DAG 执行逻辑**：

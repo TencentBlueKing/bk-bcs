@@ -24,6 +24,10 @@ type FakeNetworkextensionV1 struct {
 	*testing.Fake
 }
 
+func (c *FakeNetworkextensionV1) HostNetPortPools(namespace string) v1.HostNetPortPoolInterface {
+	return &FakeHostNetPortPools{c, namespace}
+}
+
 func (c *FakeNetworkextensionV1) Ingresses(namespace string) v1.IngressInterface {
 	return &FakeIngresses{c, namespace}
 }

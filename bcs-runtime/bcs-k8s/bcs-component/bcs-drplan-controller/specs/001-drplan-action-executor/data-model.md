@@ -82,7 +82,7 @@
 | retryPolicy  | RetryPolicy               | No       | 重试策略                                                               |
 | rollback     | Action                    | No       | 自定义回滚动作                                                         |
 | dependsOn    | []string                  | No       | 依赖的动作名称列表（扩展预留，用于 DAG）                               |
-| when         | string                    | No       | 条件表达式（扩展预留，如 `{{ .outputs.step1.phase == 'Succeeded' }}`） |
+| when         | string                    | No       | 条件表达式（扩展预留，如 `$(outputs.step1.phase == 'Succeeded')`） |
 
 > **注意**：`dependsOn` 和 `when` 为 Phase 2 扩展预留，首版忽略这些字段，按列表顺序执行。
 
@@ -168,7 +168,7 @@
 
 **说明**：
 - `manifest` 字段包含完整的 Kubernetes 资源定义（YAML 格式）
-- 支持参数占位符（如 `{{ .params.resourceName }}`）
+- 支持参数占位符（如 `$(params.resourceName)`）
 - 支持任意 K8s 资源类型（内置资源和自定义 CRD）
 
 **校验规则**：
@@ -183,10 +183,10 @@ resource:
     apiVersion: v1
     kind: ConfigMap
     metadata:
-      name: "{{ .params.configName }}"
-      namespace: "{{ .params.namespace }}"
+      name: "$(params.configName)"
+      namespace: "$(params.namespace)"
     data:
-      key: "{{ .params.value }}"
+      key: "$(params.value)"
 ```
 
 ### RetryPolicy

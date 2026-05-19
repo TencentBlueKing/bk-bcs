@@ -7,6 +7,8 @@
 - [概述](#概述)
 - [前置条件](#前置条件)
 - [快速开始](#快速开始)
+- [drplan-gen 生成式使用](#drplan-gen-生成式使用)
+- [Helm Hook 对标使用方式](#helm-hook-对标使用方式)
 - [创建工作流 (DRWorkflow)](#创建工作流-drworkflow)
 - [创建预案 (DRPlan)](#创建预案-drplan)
 - [触发预案执行](#触发预案执行)
@@ -154,7 +156,7 @@ spec:
         body: |
           {
             "message": "容灾预案已触发",
-            "timestamp": "{{ .timestamp }}"
+            "timestamp": "$(timestamp)"
           }
         timeout: 30s
 ```
@@ -184,9 +186,12 @@ metadata:
   namespace: default
 spec:
   description: "我的第一个容灾预案"
-  workflowRef:
-    name: simple-notify
-    namespace: default
+  stages:
+    - name: execute
+      workflows:
+        - workflowRef:
+            name: simple-notify
+            namespace: default
 ```
 
 应用配置：
@@ -206,10 +211,9 @@ metadata:
   name: my-first-execution
   namespace: default
 spec:
-  planRef:
-    name: my-first-plan
-    namespace: default
-  operation: Execute
+  planRef: my-first-plan
+  operationType: Execute
+  mode: Install
 ```
 
 应用配置：
@@ -223,6 +227,96 @@ kubectl apply -f execute-plan.yaml
 ```bash
 kubectl get drplanexecution my-first-execution -o yaml
 ```
+
+---
+
+## drplan-gen 生成式使用
+
+`drplan-gen` 用于把 `helm template` / `helmfile template` 的渲染结果，直接生成为 DRPlan 可执行编排文件（`DRPlan + DRWorkflow + DRPlanExecution`）。
+
+### 1. 构建与版本查看
+
+```bash
+make build-gen
+./bin/drplan-gen --version
+./bin/drplan-gen version
+```
+
+### 2. 典型生成方式
+
+```bash
+# 方式 1：管道输入（推荐）
+helm template demo-app ./testdata/charts/demo-app \
+  | ./bin/drplan-gen --name demo-app --namespace default -o ./output/
+
+# 方式 2：文件输入
+./bin/drplan-gen --name demo-app --namespace default -f rendered.yaml -o ./output/
+```
+
+### 3. 生成文件说明
+
+默认会生成：
+
+- `drplan.yaml`
+- `workflow-install.yaml`
+- `drplanexecution-install.yaml`
+- `drplanexecution-upgrade.yaml`
+- `drplanexecution-delete.yaml`
+- `drplanexecution-revert.yaml`
+
+建议应用顺序：
+
+```bash
+kubectl apply -f output/workflow-install.yaml
+kubectl apply -f output/drplan.yaml
+kubectl apply -f output/drplanexecution-install.yaml
+```
+
+更多参数与生成细节可参考：[drplan-gen-guide.md](./drplan-gen-guide.md)。
+
+---
+
+## Helm Hook 对标使用方式
+
+当前推荐通过 `drplan-gen + mode + when + waitReady + dependsOn` 对标 Helm Hook 的执行语义。
+
+### 1. Hook 映射关系
+
+| Helm Hook 能力 | DRPlan 映射方式 |
+|---|---|
+| `pre-install` | 生成 action，`when: mode == "install"`，位于主资源前 |
+| `post-install` | 生成 action，`when: mode == "install"`，位于主资源后 |
+| `pre-upgrade` | 生成 action，`when: mode == "upgrade"`，位于主资源前 |
+| `post-upgrade` | 生成 action，`when: mode == "upgrade"`，位于主资源后 |
+| `pre-delete` / `post-delete` | 生成 Delete 链路 action，`when: mode == "delete"` |
+| `pre-rollback` / `post-rollback` | 生成 Revert 链路 action，`when: mode == "rollback"` |
+| `hook-weight` | 生成 `dependsOn` DAG，按 weight 分层 |
+| `hook-delete-policy` | 映射为 `hookCleanup.beforeCreate/onSuccess/onFailure` |
+| `test` / `test-success` | 不进入部署执行链路（不生成 action） |
+
+### 2. 执行方式（Install / Upgrade / Delete / Revert）
+
+`when` 的判断依赖 `DRPlanExecution.spec.mode`，所以 Hook 场景必须显式指定 `mode`：
+
+```bash
+kubectl apply -f output/drplanexecution-install.yaml   # mode: Install
+kubectl apply -f output/drplanexecution-upgrade.yaml   # mode: Upgrade
+kubectl apply -f output/drplanexecution-delete.yaml    # mode: Delete
+kubectl apply -f output/drplanexecution-revert.yaml    # mode: Rollback, operationType: Revert
+```
+
+### 3. 使用要点
+
+- Hook action 默认会生成为 `Subscription` action，并开启 `waitReady: true`，用于等待子集群下发资源就绪。
+- `when` 支持 `mode == "<value>"` 以及 `||` 组合（如 `mode == "install" || mode == "upgrade"`）。
+- install/upgrade 组合 Hook 仍会拆分为多个 action，用于保持 pre/post 位置与依赖关系。
+- `dependsOn` 由生成器自动写入，用于保证 pre/main/post 执行顺序和同权重并发语义。
+
+### 4. 与 Helm 的已知差异
+
+- 同一 hook weight 下，DRPlan 默认并行；Helm 为串行。
+- rollback hook 通过 `DRPlanExecution(operationType=Revert, mode=Rollback)` 触发，和 Helm CLI 的触发入口不同。
+- 详细语义和设计背景可参考：[helm-hook-pattern.md](./helm-hook-pattern.md) 与 [hook-delete-policy-design.md](./hook-delete-policy-design.md)。
 
 ---
 
@@ -262,6 +356,118 @@ spec:
         <action-specific-config>
 ```
 
+### waitReady、when 与 mode
+
+以下能力是当前推荐使用方式，尤其适合 Helm hook、install / upgrade 分流以及跨集群资源就绪等待。
+
+#### `waitReady`
+
+`waitReady` 用于定义“动作什么时候才算完成”：
+
+- 不设置或 `false`：资源创建成功即认为动作成功
+- `true`：等待资源 Ready 后再继续执行后续 action
+
+当前实现中，**`waitReady` 只对 `Subscription` action 生效**。
+
+其检查链路为：
+
+1. 读取 `Subscription.status.bindingClusters`
+2. 解析每个绑定集群的 `namespace/name`
+3. 读取对应 `ManagedCluster.spec.clusterId`
+4. 通过 SocketProxy 直查子集群 feed 资源是否 Ready
+
+示例：
+
+```yaml
+actions:
+  - name: distribute-to-dr-cluster
+    type: Subscription
+    timeout: 5m
+    waitReady: true
+    subscription:
+      operation: Create
+      name: app-sub
+      namespace: $(params.feedNamespace)
+      spec:
+        schedulingStrategy: Replication
+        feeds:
+          - apiVersion: apps/v1
+            kind: Deployment
+            name: my-app
+            namespace: $(params.feedNamespace)
+        subscribers:
+          - clusterAffinity: {}
+```
+
+#### `when`
+
+`when` 用于控制 action 是否执行。
+
+当前支持：
+
+```yaml
+when: mode == "install"
+when: mode == "upgrade"
+when: mode == "install" || mode == "upgrade"
+```
+
+不支持复杂表达式，例如 `&&`、`in`、`!=`：
+
+```yaml
+when: mode in ["install"]
+when: mode == "install" && mode == "upgrade"
+```
+
+#### `DRPlanExecution.spec.mode`
+
+`when` 的判断值来自执行实例的 `spec.mode`：
+
+```yaml
+apiVersion: dr.bkbcs.tencent.com/v1alpha1
+kind: DRPlanExecution
+metadata:
+  name: demo-app-exec-001
+  namespace: default
+spec:
+  planRef: demo-app
+  operationType: Execute
+  mode: Install
+```
+
+如果不设置 `mode`，当前执行器会走兼容逻辑：**不按 `when` 过滤**，动作仍然执行。
+
+#### hook 场景下的推荐顺序
+
+在一个 workflow 中，推荐按以下层次组织 action：
+
+1. `pre-install`
+2. `pre-upgrade`
+3. 主资源 Subscription
+4. `post-install`
+5. `post-upgrade`
+
+然后配合：
+
+- `when: mode == "install"` / `when: mode == "upgrade"`
+- hook action 设置 `waitReady: true`
+- 用 `dependsOn` 明确表达前后依赖，而不是依赖天然串行
+
+#### 模板变量语法
+
+当前推荐使用：
+
+```yaml
+$(params.xxx)
+```
+
+历史写法仍兼容：
+
+```yaml
+{{ .params.xxx }}
+```
+
+新配置建议统一使用 `$(params.xxx)`，避免和 Helm / Go template 语法混淆。
+
 ### 示例 1: HTTP 动作
 
 ```yaml
@@ -269,16 +475,16 @@ actions:
   - name: notify-oncall
     type: HTTP
     http:
-      url: "{{ .params.notifyURL }}"
+      url: "$(params.notifyURL)"
       method: POST
       headers:
         Content-Type: "application/json"
-        Authorization: "Bearer {{ .params.token }}"
+        Authorization: "Bearer $(params.token)"
       body: |
         {
           "event": "failover",
-          "plan": "{{ .planName }}",
-          "cluster": "{{ .params.targetCluster }}"
+          "plan": "$(planName)",
+          "cluster": "$(params.targetCluster)"
         }
       timeout: 30s
       expectedStatusCodes: [200, 201, 202]
@@ -292,7 +498,7 @@ actions:
   - name: backup-database
     type: Job
     job:
-      namespace: "{{ .params.targetNamespace }}"
+      namespace: "$(params.targetNamespace)"
       generateName: "db-backup-"
       template:
         spec:
@@ -302,8 +508,8 @@ actions:
               image: backup-tool:v1.0
               command: ["backup.sh"]
               args:
-                - "--host={{ .params.dbHost }}"
-                - "--database={{ .params.dbName }}"
+                - "--host=$(params.dbHost)"
+                - "--database=$(params.dbName)"
       backoffLimit: 3
       timeout: 600s
     # Job 自动回滚：删除创建的 Job 资源
@@ -317,8 +523,8 @@ actions:
     type: Localization
     localization:
       operation: Create
-      name: "app-{{ .planName }}"
-      namespace: "{{ .params.drClusterNamespace }}"  # ManagedCluster 命名空间
+      name: "app-$(planName)"
+      namespace: "$(params.drClusterNamespace)"  # ManagedCluster 命名空间
       priority: 500  # 可选，优先级
       feed:  # 源资源引用
         apiVersion: apps/v1
@@ -350,21 +556,21 @@ actions:
     localization:
       operation: Patch
       name: existing-app-localization
-      namespace: "{{ .params.drClusterNamespace }}"  # ManagedCluster 命名空间
+      namespace: "$(params.drClusterNamespace)"  # ManagedCluster 命名空间
       overrides:
         - name: scale-up
           type: JSONPatch
           value: |
             - op: replace
               path: /spec/replicas
-              value: {{ .params.replicas }}
+              value: $(params.replicas)
     # Patch 必须显式定义回滚
     rollback:
       type: Localization
       localization:
         operation: Patch
         name: existing-app-localization
-        namespace: "{{ .params.drClusterNamespace }}"
+        namespace: "$(params.drClusterNamespace)"
         overrides:
           - name: scale-down
             type: JSONPatch
@@ -382,7 +588,7 @@ actions:
     type: Subscription
     subscription:
       operation: Create
-      name: "app-dr-subscription-{{ .planName }}"
+      name: "app-dr-subscription-$(planName)"
       namespace: default  # Subscription CR 的命名空间
       schedulingStrategy: Replication  # Replication | Dividing
       feeds:  # 要分发的资源列表
@@ -401,7 +607,7 @@ actions:
       subscribers:  # 目标集群选择
         - clusterAffinity:
             matchLabels:
-              region: "{{ .params.targetRegion }}"
+              region: "$(params.targetRegion)"
               purpose: disaster-recovery
     # Subscription Create 自动回滚：删除创建的 Subscription 资源
 ```
@@ -424,12 +630,12 @@ actions:
         apiVersion: v1
         kind: ConfigMap
         metadata:
-          name: "dr-config-{{ .planName }}"
-          namespace: "{{ .params.namespace }}"
+          name: "dr-config-$(planName)"
+          namespace: "$(params.namespace)"
         data:
           dr-mode: "active"
-          dr-region: "{{ .params.targetRegion }}"
-          db-host: "{{ .params.drDbHost }}"
+          dr-region: "$(params.targetRegion)"
+          db-host: "$(params.drDbHost)"
     # Create 自动回滚：删除创建的 ConfigMap
   
   # 场景 2: 创建 Secret
@@ -442,11 +648,11 @@ actions:
         kind: Secret
         metadata:
           name: "dr-credentials"
-          namespace: "{{ .params.namespace }}"
+          namespace: "$(params.namespace)"
         type: Opaque
         stringData:
-          username: "{{ .params.drUsername }}"
-          password: "{{ .params.drPassword }}"
+          username: "$(params.drUsername)"
+          password: "$(params.drPassword)"
     # Create 自动回滚：删除创建的 Secret
   
   # 场景 3: 操作自定义 CRD
@@ -459,22 +665,12 @@ actions:
         kind: BackupPolicy
         metadata:
           name: "dr-backup-policy"
-          namespace: "{{ .params.namespace }}"
+          namespace: "$(params.namespace)"
         spec:
           schedule: "0 */6 * * *"
           retention: 7
-          destination: "{{ .params.drBackupLocation }}"
-    # Apply 通常用于幂等操作，回滚时需要显式定义
-    rollback:
-      type: KubernetesResource
-      resource:
-        operation: Delete
-        manifest: |
-          apiVersion: custom.example.com/v1
-          kind: BackupPolicy
-          metadata:
-            name: "dr-backup-policy"
-            namespace: "{{ .params.namespace }}"
+          destination: "$(params.drBackupLocation)"
+    # Apply 未显式定义 rollback 时，默认回滚为删除执行时记录的资源
   
   # 场景 4: Patch 操作（必须定义 rollback）
   - name: update-existing-config
@@ -486,7 +682,7 @@ actions:
         kind: ConfigMap
         metadata:
           name: "app-config"
-          namespace: "{{ .params.namespace }}"
+          namespace: "$(params.namespace)"
         data:
           mode: "dr"  # 更新为 DR 模式
     # Patch 必须显式定义回滚
@@ -499,7 +695,7 @@ actions:
           kind: ConfigMap
           metadata:
             name: "app-config"
-            namespace: "{{ .params.namespace }}"
+            namespace: "$(params.namespace)"
           data:
             mode: "normal"  # 恢复为 normal 模式
 ```
@@ -508,7 +704,7 @@ actions:
 - **适用场景**：操作专用类型未覆盖的 K8s 资源（ConfigMap、Secret、自定义 CRD 等）
 - **operation 类型**：
   - `Create`：创建资源，自动回滚为删除
-  - `Apply`：幂等操作（server-side apply），需要显式定义回滚
+  - `Apply`：幂等操作（server-side apply），未显式定义 rollback 时自动回滚为删除
   - `Patch`：更新资源，**必须**显式定义回滚
   - `Delete`：删除资源，无自动回滚
 - **优势**：无需修改 Controller 即可支持任意 K8s 资源
@@ -552,10 +748,10 @@ spec:
       localization:
         operation: Create
         name: "scaled-app"
-        clusterNamespace: "{{ .params.targetCluster }}"
+        clusterNamespace: "$(params.targetCluster)"
         overrides:
           - path: /spec/replicas
-            value: {{ .params.replicas }}
+            value: $(params.replicas)
 ```
 
 ---
@@ -766,10 +962,9 @@ metadata:
   name: failover-execution-001
   namespace: production
 spec:
-  planRef:
-    name: failover-to-backup
-    namespace: production
-  operation: Execute  # Execute | Revert
+  planRef: failover-to-backup
+  operationType: Execute  # Execute | Revert
+  mode: Install
 ```
 
 执行：
@@ -778,18 +973,18 @@ spec:
 kubectl apply -f execute.yaml
 ```
 
-### 方式 2: 使用 Annotation 触发
+### 方式 2: 使用不同 mode 触发安装 / 升级路径
 
-直接在 DRPlan 上添加 annotation：
-
-```bash
-# 触发执行
-kubectl annotate drplan failover-to-backup \
-  -n production \
-  dr.bkbcs.tencent.com/trigger=execute
-
-# 系统会自动创建 DRPlanExecution CR
-# 执行完成后 annotation 会被自动清除
+```yaml
+apiVersion: dr.bkbcs.tencent.com/v1alpha1
+kind: DRPlanExecution
+metadata:
+  name: failover-execution-upgrade
+  namespace: production
+spec:
+  planRef: failover-to-backup
+  operationType: Execute
+  mode: Upgrade
 ```
 
 ### 并发控制
@@ -797,10 +992,8 @@ kubectl annotate drplan failover-to-backup \
 同一个 DRPlan 同时只能有一个执行在进行中：
 
 ```bash
-# 如果已有执行在运行中，再次触发会被拒绝
-kubectl annotate drplan failover-to-backup \
-  -n production \
-  dr.bkbcs.tencent.com/trigger=execute
+# 如果已有执行在运行中，再次创建 execution 会被拒绝
+kubectl apply -f another-execution.yaml
 
 # 错误示例输出：
 # Error: Plan has an execution in progress: failover-execution-001
@@ -832,7 +1025,7 @@ kubectl get drplanexecution failover-execution-001 -n production -o yaml
 
 ```yaml
 status:
-  phase: Running  # Pending | Running | Succeeded | Failed | Cancelled
+  phase: Running  # Pending | Running | Succeeded | Failed | Canceled
   
   # 参数快照
   resolvedParams:
@@ -916,7 +1109,6 @@ status:
   currentExecution:
     name: failover-execution-001
     namespace: production
-    operation: Execute
     startTime: "2026-01-30T10:00:00Z"
   
   # 最后一次成功执行
@@ -932,7 +1124,7 @@ status:
 
 ### 触发回滚的前提条件
 
-1. DRPlan 状态必须为 `Executed`（已执行过）
+1. DRPlan 状态必须为 `Ready` 或 `Executed`
 2. 没有其他执行正在进行中
 
 ### 方式 1: 创建 Revert 执行
@@ -946,10 +1138,9 @@ metadata:
   name: failover-revert-001
   namespace: production
 spec:
-  planRef:
-    name: failover-to-backup
-    namespace: production
-  operation: Revert  # 回滚操作
+  planRef: failover-to-backup
+  operationType: Revert  # 回滚操作
+  revertExecutionRef: failover-execution-001
 ```
 
 执行：
@@ -958,13 +1149,7 @@ spec:
 kubectl apply -f revert.yaml
 ```
 
-### 方式 2: 使用 Annotation 触发回滚
-
-```bash
-kubectl annotate drplan failover-to-backup \
-  -n production \
-  dr.bkbcs.tencent.com/trigger=revert
-```
+`revertExecutionRef` 必须显式指定要回滚的那次 `Execute`。
 
 ### 回滚执行逻辑
 
@@ -974,6 +1159,7 @@ kubectl annotate drplan failover-to-backup \
 | ---------------------------------- | -------------------------------- |
 | HTTP 动作（无 rollback）           | 跳过（无法自动逆向）             |
 | Job 动作（无 rollback）            | 自动删除创建的 Job 资源          |
+| KubernetesResource Create/Apply（无 rollback） | 自动删除执行时记录的资源 |
 | Localization Create（无 rollback） | 自动删除创建的 Localization 资源 |
 | Localization Patch（有 rollback）  | 执行定义的回滚动作               |
 | Localization Delete（无 rollback） | 跳过（无法恢复）                 |
@@ -1005,25 +1191,19 @@ kubectl annotate drplanexecution failover-execution-001 \
   dr.bkbcs.tencent.com/cancel=true
 ```
 
-**方式 2**: 在 DRPlan 上触发取消（会取消当前执行）：
-
-```bash
-kubectl annotate drplan failover-to-backup \
-  -n production \
-  dr.bkbcs.tencent.com/trigger=cancel
-```
+取消入口以 `DRPlanExecution` 为准，不再推荐通过 `DRPlan` annotation 触发。
 
 ### 取消执行的行为
 
 1. **停止后续动作**：尚未执行的动作不会再执行，状态保持 `Pending`
 2. **等待当前动作**：正在运行的动作会等待其完成或超时
-3. **更新状态**：执行状态变为 `Cancelled`
+3. **更新状态**：执行状态变为 `Canceled`
 4. **释放锁定**：清空 `DRPlan.status.currentExecution`，允许新执行
 
 ### 限制条件
 
 - 只能取消状态为 `Pending` 或 `Running` 的执行
-- 已完成的执行（`Succeeded`/`Failed`/`Cancelled`）无法再次取消
+- 已完成的执行（`Succeeded`/`Failed`/`Canceled`）无法再次取消
 
 ### 验证取消结果
 
@@ -1033,7 +1213,7 @@ kubectl get drplanexecution failover-execution-001 -n production -o yaml
 
 ```yaml
 status:
-  phase: Cancelled
+  phase: Canceled
   message: "Execution cancelled by user"
   actionStatuses:
     - name: notify-oncall
@@ -1132,16 +1312,16 @@ spec:
     - name: notify-start
       type: HTTP
       http:
-        url: "{{ .params.webhookURL }}"
+        url: "$(params.webhookURL)"
         method: POST
         headers:
           Content-Type: "application/json"
         body: |
           {
             "event": "failover_started",
-            "plan": "{{ .planName }}",
-            "target_cluster": "{{ .params.drClusterNamespace }}",
-            "timestamp": "{{ .timestamp }}"
+            "plan": "$(planName)",
+            "target_cluster": "$(params.drClusterNamespace)",
+            "timestamp": "$(timestamp)"
           }
         timeout: 30s
     
@@ -1150,8 +1330,8 @@ spec:
       type: Localization
       localization:
         operation: Create
-        name: "app-dr-localization-{{ .planName }}"
-        namespace: "{{ .params.drClusterNamespace }}"  # ManagedCluster 命名空间
+        name: "app-dr-localization-$(planName)"
+        namespace: "$(params.drClusterNamespace)"  # ManagedCluster 命名空间
         priority: 600  # 高优先级确保覆盖生效
         feed:  # 关联到 Deployment 资源
           apiVersion: apps/v1
@@ -1164,7 +1344,7 @@ spec:
             value: |
               - op: replace
                 path: /spec/replicas
-                value: {{ .params.replicas }}
+                value: $(params.replicas)
           - name: update-db-config
             type: JSONPatch
             value: |
@@ -1172,7 +1352,7 @@ spec:
                 path: /spec/template/spec/containers/0/env
                 value:
                   - name: DB_HOST
-                    value: "{{ .params.drDbHost }}"
+                    value: "$(params.drDbHost)"
                   - name: DR_MODE
                     value: "active"
                   - name: REGION
@@ -1183,7 +1363,7 @@ spec:
               metadata:
                 labels:
                   dr-mode: "active"
-                  failover-plan: "{{ .planName }}"
+                  failover-plan: "$(planName)"
       # Localization Create 自动回滚：删除创建的 Localization
     
     # 步骤 3: 创建 Subscription 将应用分发到 DR 集群
@@ -1191,7 +1371,7 @@ spec:
       type: Subscription
       subscription:
         operation: Create
-        name: "app-dr-subscription-{{ .planName }}"
+        name: "app-dr-subscription-$(planName)"
         namespace: default  # Subscription CR 的命名空间
         schedulingStrategy: Replication
         feeds:  # 要分发的资源列表
@@ -1237,16 +1417,16 @@ spec:
     - name: notify-complete
       type: HTTP
       http:
-        url: "{{ .params.webhookURL }}"
+        url: "$(params.webhookURL)"
         method: POST
         headers:
           Content-Type: "application/json"
         body: |
           {
             "event": "failover_completed",
-            "plan": "{{ .planName }}",
+            "plan": "$(planName)",
             "status": "success",
-            "timestamp": "{{ .timestamp }}"
+            "timestamp": "$(timestamp)"
           }
         timeout: 30s
 ```
@@ -1312,16 +1492,10 @@ metadata:
   name: app-dr-exec-$(date +%Y%m%d-%H%M%S)
   namespace: production
 spec:
-  planRef:
-    name: app-dr-plan
-    namespace: production
-  operation: Execute
+  planRef: app-dr-plan
+  operationType: Execute
+  mode: Install
 EOF
-
-# 或方式 2: 使用 annotation
-kubectl annotate drplan app-dr-plan \
-  -n production \
-  dr.bkbcs.tencent.com/trigger=execute
 ```
 
 #### 步骤 4: 监控执行进度
@@ -1368,9 +1542,17 @@ kubectl get drplanexecution $EXEC_NAME -n production -o yaml
 
 ```bash
 # 触发回滚
-kubectl annotate drplan app-dr-plan \
-  -n production \
-  dr.bkbcs.tencent.com/trigger=revert
+kubectl apply -f - <<EOF
+apiVersion: dr.bkbcs.tencent.com/v1alpha1
+kind: DRPlanExecution
+metadata:
+  name: app-dr-revert-$(date +%Y%m%d-%H%M%S)
+  namespace: production
+spec:
+  planRef: app-dr-plan
+  operationType: Revert
+  revertExecutionRef: $EXEC_NAME
+EOF
 
 # 监控回滚进度
 REVERT_EXEC=$(kubectl get drplanexecution -n production \
@@ -1455,15 +1637,15 @@ spec:
     - name: send-notification
       type: HTTP
       http:
-        url: "{{ .params.webhookURL }}"
+        url: "$(params.webhookURL)"
         method: POST
         headers:
           Content-Type: "application/json"
         body: |
           {
-            "event": "{{ .params.event }}",
-            "message": "{{ .params.message }}",
-            "timestamp": "{{ .timestamp }}"
+            "event": "$(params.event)",
+            "message": "$(params.message)",
+            "timestamp": "$(timestamp)"
           }
         timeout: 30s
 ```
@@ -1497,8 +1679,8 @@ spec:
         body: |
           {
             "service": "mysql",
-            "target_host": "{{ .params.drDbHost }}",
-            "target_port": "{{ .params.drDbPort }}"
+            "target_host": "$(params.drDbHost)",
+            "target_port": "$(params.drDbPort)"
           }
         timeout: 60s
       rollback:
@@ -1537,12 +1719,12 @@ spec:
       type: Localization
       localization:
         operation: Create
-        name: "{{ .params.serviceName }}-localization"
-        namespace: "{{ .params.drClusterNamespace }}"
+        name: "$(params.serviceName)-localization"
+        namespace: "$(params.drClusterNamespace)"
         feed:
           apiVersion: apps/v1
           kind: Deployment
-          name: "{{ .params.serviceName }}"
+          name: "$(params.serviceName)"
           namespace: production
         overrides:
           - name: scale-replicas
@@ -1550,7 +1732,7 @@ spec:
             value: |
               - op: replace
                 path: /spec/replicas
-                value: {{ .params.replicas }}
+                value: $(params.replicas)
           - name: add-dr-label
             type: MergePatch
             value: |
@@ -1562,17 +1744,17 @@ spec:
       type: Subscription
       subscription:
         operation: Create
-        name: "{{ .params.serviceName }}-subscription"
+        name: "$(params.serviceName)-subscription"
         namespace: default
         schedulingStrategy: Replication
         feeds:
           - apiVersion: apps/v1
             kind: Deployment
-            name: "{{ .params.serviceName }}"
+            name: "$(params.serviceName)"
             namespace: production
           - apiVersion: v1
             kind: Service
-            name: "{{ .params.serviceName }}"
+            name: "$(params.serviceName)"
             namespace: production
         subscribers:
           - clusterAffinity:
@@ -1583,7 +1765,7 @@ spec:
       type: Job
       job:
         namespace: production
-        generateName: "health-{{ .params.serviceName }}-"
+        generateName: "health-$(params.serviceName)-"
         template:
           spec:
             restartPolicy: Never
@@ -1593,7 +1775,7 @@ spec:
                 command: ["/bin/sh", "-c"]
                 args:
                   - |
-                    curl -f http://{{ .params.serviceName }}.production.svc/health && exit 0 || exit 1
+                    curl -f http://$(params.serviceName).production.svc/health && exit 0 || exit 1
         timeout: 300s
 ```
 
@@ -1774,16 +1956,10 @@ metadata:
   name: ecommerce-dr-exec-$(date +%Y%m%d-%H%M%S)
   namespace: production
 spec:
-  planRef:
-    name: ecommerce-dr-plan
-    namespace: production
-  operation: Execute
+  planRef: ecommerce-dr-plan
+  operationType: Execute
+  mode: Install
 EOF
-
-# 方式 2: 使用 annotation
-kubectl annotate drplan ecommerce-dr-plan \
-  -n production \
-  dr.bkbcs.tencent.com/trigger=execute
 ```
 
 #### 步骤 4: 监控执行进度（Stage 视图）
@@ -1878,9 +2054,17 @@ kubectl get drplanexecution $EXEC_NAME -n production \
 
 ```bash
 # 触发回滚
-kubectl annotate drplan ecommerce-dr-plan \
-  -n production \
-  dr.bkbcs.tencent.com/trigger=revert
+kubectl apply -f - <<EOF
+apiVersion: dr.bkbcs.tencent.com/v1alpha1
+kind: DRPlanExecution
+metadata:
+  name: ecommerce-dr-revert-$(date +%Y%m%d-%H%M%S)
+  namespace: production
+spec:
+  planRef: ecommerce-dr-plan
+  operationType: Revert
+  revertExecutionRef: $EXEC_NAME
+EOF
 
 # 监控回滚进度
 REVERT_EXEC=$(kubectl get drplanexecution -n production \
@@ -2006,15 +2190,15 @@ kubectl describe drplanexecution <exec-name> -n <namespace>
 
 ### 问题 4: 无法触发回滚
 
-**原因**：DRPlan 状态不是 `Executed`
+**原因**：DRPlan 状态不是 `Ready` 或 `Executed`，或者 `revertExecutionRef` 不合法
 
 **解决**：
 ```bash
 # 检查预案状态
 kubectl get drplan <plan-name> -n <namespace> -o jsonpath='{.status.phase}'
 
-# 只有 Executed 状态才能回滚
-# 如果是 Ready 状态，说明还未执行过
+# Ready 和 Executed 都允许创建 Revert execution
+# 但 revertExecutionRef 必须指向同一预案下、已成功完成的 Execute execution
 ```
 
 ---

@@ -30,17 +30,31 @@ type DRPlanExecutionSpec struct {
 	// +kubebuilder:validation:Enum=Execute;Revert
 	OperationType string `json:"operationType"`
 
+	// Mode is the execution mode for Execute operation.
+	// It is used by action-level `when` conditions (e.g. install/upgrade path selection).
+	// When not set, executors keep backward-compatible behavior and do not filter by mode.
+	// +optional
+	// +kubebuilder:validation:Enum=Install;Upgrade;Delete;Rollback
+	Mode string `json:"mode,omitempty"`
+
 	// RevertExecutionRef specifies which execution to revert (required for Revert operation).
 	// Must reference an existing DRPlanExecution with operationType=Execute and phase=Succeeded.
 	// This ensures precise control over which execution to rollback.
 	// +optional
 	RevertExecutionRef string `json:"revertExecutionRef,omitempty"`
+
+	// Params are execution-level parameters with the highest priority.
+	// They override DRPlan.spec.globalParams and stage-level params with the same name.
+	// Each param supports either a static value or a dynamic valueFrom.manifestRef.
+	// Note: the reserved key "mode" is managed by the Mode field and cannot be overridden here.
+	// +optional
+	Params []Parameter `json:"params,omitempty"`
 }
 
 // DRPlanExecutionStatus defines the observed state of DRPlanExecution.
 type DRPlanExecutionStatus struct {
-	// Phase is the execution phase: Pending, Running, Succeeded, Failed, Cancelled
-	// +kubebuilder:validation:Enum=Pending;Running;Succeeded;Failed;Cancelled;Unknown
+	// Phase is the execution phase: Pending, Running, Succeeded, Failed, Canceled
+	// +kubebuilder:validation:Enum=Pending;Running;Succeeded;Failed;Canceled;Unknown
 	// +optional
 	Phase string `json:"phase,omitempty"`
 
@@ -76,8 +90,8 @@ type StageStatus struct {
 	// Name is the stage name
 	Name string `json:"name"`
 
-	// Phase is the stage phase: Pending, Running, Succeeded, Failed, Skipped
-	// +kubebuilder:validation:Enum=Pending;Running;Succeeded;Failed;Skipped
+	// Phase is the stage phase: Pending, Running, Succeeded, Failed, Skipped, Canceled
+	// +kubebuilder:validation:Enum=Pending;Running;Succeeded;Failed;Skipped;Canceled
 	Phase string `json:"phase"`
 
 	// Parallel indicates whether this stage executes workflows in parallel
@@ -114,8 +128,8 @@ type WorkflowExecutionStatus struct {
 	// WorkflowRef is the workflow reference
 	WorkflowRef ObjectReference `json:"workflowRef"`
 
-	// Phase is the workflow phase: Pending, Running, Succeeded, Failed, Skipped
-	// +kubebuilder:validation:Enum=Pending;Running;Succeeded;Failed;Skipped
+	// Phase is the workflow phase: Pending, Running, Succeeded, Failed, Skipped, Canceled
+	// +kubebuilder:validation:Enum=Pending;Running;Succeeded;Failed;Skipped;Canceled
 	Phase string `json:"phase"`
 
 	// StartTime is the start time

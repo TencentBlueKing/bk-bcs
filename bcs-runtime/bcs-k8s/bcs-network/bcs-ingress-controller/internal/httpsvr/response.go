@@ -68,3 +68,14 @@ func errResponse(code int, err error) *APIRespone {
 		Data:    nil,
 	}
 }
+
+// CreateResponseDataWithCode creates a JSON error response with a specific error code.
+func CreateResponseDataWithCode(code int, err error) []byte {
+	resp := errResponse(code, err)
+	bytes, jsonErr := json.Marshal(resp)
+	if jsonErr != nil {
+		blog.Errorf("marshal failed, resp: %+v, err: %s", resp, jsonErr.Error())
+		return CreateResponseData(unknownError, "", nil)
+	}
+	return bytes
+}

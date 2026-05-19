@@ -160,7 +160,7 @@ func (r *ReleaseInstallAction) Validate(ctx context.Context) error {
 	// get manifest from helm dry run
 	result, err := release.InstallRelease(r.releaseHandler, r.projectID, r.projectCode, r.clusterID, r.name,
 		r.namespace, r.chartName, r.version, r.username, r.username, r.args, nil, r.contents, r.values,
-		true, true, true)
+		true, true, false)
 	if err != nil {
 		return err
 	}

@@ -33,9 +33,6 @@ func NodeDrainPodTask(taskID string, stepName string) error { // nolint
 	// step2: for range node use goroutine run k8s command to drain pod
 	// step3: record success and failed result
 
-	message := fmt.Sprintf("start run node drain pod task, [TaskID:%s][Step:%s] ", taskID, stepName)
-	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName, message)
-
 	start := time.Now()
 
 	// get task and task current step
@@ -50,6 +47,9 @@ func NodeDrainPodTask(taskID string, stepName string) error { // nolint
 	}
 	blog.Infof("NodeDrainPodTask[%s] task %s run current step %s, system: %s, old state: %s, params %v",
 		taskID, taskID, stepName, step.System, step.Status, step.Params)
+
+	message := fmt.Sprintf("start run node drain pod task, [TaskID:%s][Step:%s] ", taskID, stepName)
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName, message)
 
 	// get node drain pod common parameter
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]

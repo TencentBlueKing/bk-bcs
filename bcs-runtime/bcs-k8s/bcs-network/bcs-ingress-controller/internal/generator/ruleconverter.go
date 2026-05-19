@@ -51,6 +51,10 @@ type RuleConverter struct {
 	rule *networkextensionv1.IngressRule
 	// if true, ingress can only select service, endpoint and workload in the same namespace
 	isNamespaced bool
+	// exemptNamespaces namespaces exempt from namespace scope restriction.
+	// Ingresses in these namespaces can bind services and workloads across namespaces
+	// even when isNamespaced is true.
+	exemptNamespaces map[string]struct{}
 	// if true, allow tcp listener and udp listener use same port
 	isTCPUDPPortReuse bool
 	// eventer send event
@@ -85,6 +89,20 @@ func NewRuleConverter(
 // SetNamespaced set namespaced flag
 func (rc *RuleConverter) SetNamespaced(isNamespaced bool) {
 	rc.isNamespaced = isNamespaced
+}
+
+// SetExemptNamespaces set namespaces exempt from namespace scope restriction
+func (rc *RuleConverter) SetExemptNamespaces(namespaces map[string]struct{}) {
+	rc.exemptNamespaces = namespaces
+}
+
+// isIngressNamespaceExempt returns true if the ingress namespace is in the exempt list
+func (rc *RuleConverter) isIngressNamespaceExempt() bool {
+	if rc == nil || rc.exemptNamespaces == nil {
+		return false
+	}
+	_, ok := rc.exemptNamespaces[rc.ingressNamespace]
+	return ok
 }
 
 // SetTCPUDPPortReuse set isTCPUDPPortReuse flag
@@ -271,7 +289,9 @@ func (rc *RuleConverter) generateServiceBackendList(svcRoute *networkextensionv1
 	// set namespace when namespaced flag is set
 	svcNamespace := svcRoute.ServiceNamespace
 	// use ingressNS as default
-	if rc.isNamespaced || svcNamespace == "" {
+	if svcNamespace == "" {
+		svcNamespace = rc.ingressNamespace
+	} else if rc.isNamespaced && !rc.isIngressNamespaceExempt() {
 		svcNamespace = rc.ingressNamespace
 	}
 
@@ -438,7 +458,10 @@ func (rc *RuleConverter) generateBackends(matchedEps []federationv1.MultiCluster
 }
 
 func (rc *RuleConverter) getServiceNamespace(svcRoute *networkextensionv1.ServiceRoute) string {
-	if rc.isNamespaced || svcRoute.ServiceNamespace == "" {
+	if svcRoute.ServiceNamespace == "" {
+		return rc.ingressNamespace
+	}
+	if rc.isNamespaced && !rc.isIngressNamespaceExempt() {
 		return rc.ingressNamespace
 	}
 	return svcRoute.ServiceNamespace
@@ -584,7 +607,7 @@ func (rc *RuleConverter) getPodsByLabels(ns string, labels map[string]string) ([
 	if len(labels) == 0 {
 		return nil, nil
 	}
-	if rc.isNamespaced {
+	if rc.isNamespaced && !rc.isIngressNamespaceExempt() {
 		ns = rc.ingressNamespace
 	}
 	podList := &k8scorev1.PodList{}

@@ -42,7 +42,11 @@ type MappingConverter struct {
 	ingressNamespace string
 	mapping          *networkextensionv1.IngressPortMapping
 	// if true, ingress can only select service, endpoint and workload in the same namespace
-	isNamespaced      bool
+	isNamespaced bool
+	// exemptNamespaces namespaces exempt from namespace scope restriction.
+	// Ingresses in these namespaces can bind workloads across namespaces
+	// even when isNamespaced is true.
+	exemptNamespaces  map[string]struct{}
 	isTCPUDPPortReuse bool
 }
 
@@ -64,6 +68,20 @@ func NewMappingConverter(
 // SetNamespaced set namespaced flag
 func (mg *MappingConverter) SetNamespaced(isNamespaced bool) {
 	mg.isNamespaced = isNamespaced
+}
+
+// SetExemptNamespaces set namespaces exempt from namespace scope restriction
+func (mg *MappingConverter) SetExemptNamespaces(namespaces map[string]struct{}) {
+	mg.exemptNamespaces = namespaces
+}
+
+// isIngressNamespaceExempt returns true if the ingress namespace is in the exempt list
+func (mg *MappingConverter) isIngressNamespaceExempt() bool {
+	if mg == nil || mg.exemptNamespaces == nil {
+		return false
+	}
+	_, ok := mg.exemptNamespaces[mg.ingressNamespace]
+	return ok
 }
 
 // get selector by workload
@@ -176,7 +194,7 @@ func (mg *MappingConverter) DoConvert() ([]networkextensionv1.Listener, error) {
 
 	// set namespace when namespaced flag is set
 	workloadNamespace := mg.mapping.WorkloadNamespace
-	if mg.isNamespaced {
+	if mg.isNamespaced && !mg.isIngressNamespaceExempt() {
 		workloadNamespace = mg.ingressNamespace
 	}
 

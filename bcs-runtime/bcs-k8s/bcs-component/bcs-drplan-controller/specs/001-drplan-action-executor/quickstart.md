@@ -58,9 +58,9 @@ spec:
     - name: notify-start
       type: HTTP
       http:
-        url: "{{ .params.notifyURL }}"
+        url: "$(params.notifyURL)"
         method: POST
-        body: '{"event": "dr-started", "cluster": "{{ .params.targetCluster }}"}'
+        body: '{"event": "dr-started", "cluster": "$(params.targetCluster)"}'
       timeout: "30s"
 
     - name: switch-traffic
@@ -68,7 +68,7 @@ spec:
       http:
         url: "https://traffic-api.example.com/switch"
         method: POST
-        body: '{"target": "{{ .params.targetCluster }}"}'
+        body: '{"target": "$(params.targetCluster)"}'
       rollback:
         type: HTTP
         http:
@@ -78,9 +78,9 @@ spec:
     - name: notify-complete
       type: HTTP
       http:
-        url: "{{ .params.notifyURL }}"
+        url: "$(params.notifyURL)"
         method: POST
-        body: '{"event": "dr-completed", "cluster": "{{ .params.targetCluster }}"}'
+        body: '{"event": "dr-completed", "cluster": "$(params.targetCluster)"}'
 ```
 
 ```bash
@@ -406,10 +406,10 @@ spec:
           kind: ConfigMap
           metadata:
             name: "dr-config"
-            namespace: "{{ .params.namespace }}"
+            namespace: "$(params.namespace)"
           data:
             dr-mode: "active"
-            db-host: "{{ .params.drDbHost }}"
+            db-host: "$(params.drDbHost)"
       # Create 自动回滚：删除创建的 ConfigMap
 ```
 

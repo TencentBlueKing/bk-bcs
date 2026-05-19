@@ -51,6 +51,8 @@ const (
 	StatefulSet = "state7efulSet"
 	// Deployment 表示部署
 	Deployment = "deployment"
+	// CustomResource 表示自定义资源
+	CustomResource = "customResource"
 	// And 表示逻辑与操作
 	And = "AND"
 	// OR 表示逻辑或操作
@@ -1373,6 +1375,23 @@ func (c *cmdbClient) GetBcsWorkload(
 					blog.Errorf("unmarshal podsWorkload failed: %v", errUM)
 				}
 			}
+		case CustomResource:
+			var customResource []model.CustomResource
+			if err := query.Debug().Find(&customResource).Error; err != nil {
+				blog.Errorf("query customResource withDB failed: %v", err)
+			} else {
+				if customResourceMarshal, errM := json.Marshal(customResource); errM != nil {
+					blog.Errorf("marshal customResource failed: %v", errM)
+				} else {
+					var bkCustomResource []interface{}
+					errUM := json.Unmarshal(customResourceMarshal, &bkCustomResource)
+					if errUM == nil {
+						blog.Infof("GetBcsWorkload customResourceWithDB get: %d", len(bkCustomResource))
+						return &bkCustomResource, nil
+					}
+					blog.Errorf("unmarshal customResource failed: %v", errUM)
+				}
+			}
 		}
 	}
 
@@ -1573,6 +1592,34 @@ func (c *cmdbClient) GetBcsWorkload(
 							} else {
 								blog.Infof("GetBcsWorkload podsWordloadWithDB update: %s.%s",
 									p.ClusterUID, p.Name)
+							}
+						}
+					}
+				}
+			case CustomResource:
+				var customResource []model.CustomResource
+				if errM := json.Unmarshal(workloadMarshal, &customResource); errM != nil {
+					blog.Errorf("unmarshal customResource failed: %v", errM)
+				} else {
+					for _, cr := range customResource {
+						var existingCustomResource model.CustomResource
+						query := db.Session(&gorm.Session{NewDB: true})
+						if errCR := query.Where("id = ?", cr.ID).First(&existingCustomResource).Error; errCR != nil {
+							if errors.Is(errCR, gorm.ErrRecordNotFound) {
+								if errCRC := query.Create(&cr).Error; errCRC != nil {
+									blog.Errorf("create customResource failed: %v", errCRC)
+								}
+								blog.Infof("GetBcsWorkload customResourceWithDB create: %s.%s",
+									cr.ClusterUID, cr.Name)
+							} else {
+								blog.Errorf("query customResource failed: %v", errCR)
+							}
+						} else {
+							if errCRS := query.Save(&cr).Error; errCRS != nil {
+								blog.Errorf("update customResource failed: %v", errCRS)
+							} else {
+								blog.Infof("GetBcsWorkload customResourceWithDB update: %s.%s",
+									cr.ClusterUID, cr.Name)
 							}
 						}
 					}
@@ -1838,6 +1885,15 @@ func deleteBcsWorkloadDB(request *client.DeleteBcsWorkloadRequest, db *gorm.DB) 
 				blog.Errorf("delete bcs podsWordload failed: %v", err)
 			} else {
 				blog.Infof("DeleteBcsWorkload podsWordloadWithDB delete: %v", *request.IDs)
+			}
+		}
+	case CustomResource:
+		if db != nil {
+			query := db.Session(&gorm.Session{NewDB: true})
+			if err := query.Where("id in (?)", *request.IDs).Delete(&model.CustomResource{}).Error; err != nil {
+				blog.Errorf("delete bcs customResource failed: %v", err)
+			} else {
+				blog.Infof("DeleteBcsWorkload customResourceWithDB delete: %v", *request.IDs)
 			}
 		}
 	}

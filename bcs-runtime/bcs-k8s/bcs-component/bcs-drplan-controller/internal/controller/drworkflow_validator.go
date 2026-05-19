@@ -70,15 +70,103 @@ func (v *LocalizationActionValidator) Validate(action *drv1alpha1.Action, index 
 	if loc.Namespace == "" {
 		errors = append(errors, fmt.Sprintf("action[%d] %s: Localization.Namespace is required", index, action.Name))
 	}
-	if loc.Operation == "Create" {
-		if loc.Spec == nil {
-			errors = append(errors, fmt.Sprintf("action[%d] %s: Localization.Spec is required when operation=Create", index, action.Name))
-		} else if loc.Spec.APIVersion == "" || loc.Spec.Kind == "" || loc.Spec.Name == "" {
-			errors = append(errors, fmt.Sprintf("action[%d] %s: Localization.Spec.Feed (apiVersion, kind, name) is required when operation=Create", index, action.Name))
+	if loc.Operation == drv1alpha1.OperationDelete {
+		return errors
+	}
+	if loc.Spec == nil {
+		errors = append(errors, fmt.Sprintf("action[%d] %s: Localization.Spec is required when operation=%s", index, action.Name, effectiveOperation(loc.Operation)))
+		return errors
+	}
+	if loc.Operation != drv1alpha1.OperationPatch &&
+		(loc.Spec.APIVersion == "" || loc.Spec.Kind == "" || loc.Spec.Name == "") {
+		errors = append(errors, fmt.Sprintf(
+			"action[%d] %s: Localization.Spec.Feed (apiVersion, kind, name) is required when operation=%s",
+			index, action.Name, effectiveOperation(loc.Operation),
+		))
+	}
+	if loc.Operation == drv1alpha1.OperationPatch && action.Rollback == nil {
+		errors = append(errors, fmt.Sprintf("action[%d] %s: rollback is required for Localization Patch operation", index, action.Name))
+	}
+
+	return errors
+}
+
+// GlobalizationActionValidator validates Globalization actions
+type GlobalizationActionValidator struct{}
+
+// Validate validates Globalization action configuration
+func (v *GlobalizationActionValidator) Validate(action *drv1alpha1.Action, index int) []string {
+	var errors []string
+
+	if action.Globalization == nil {
+		errors = append(errors, fmt.Sprintf("action[%d] %s: Globalization configuration is required", index, action.Name))
+		return errors
+	}
+
+	glob := action.Globalization
+	if glob.Name == "" {
+		errors = append(errors, fmt.Sprintf("action[%d] %s: Globalization.Name is required", index, action.Name))
+	}
+	if glob.Operation == drv1alpha1.OperationDelete {
+		return errors
+	}
+	if glob.Spec == nil {
+		errors = append(errors, fmt.Sprintf("action[%d] %s: Globalization.Spec is required when operation=%s", index, action.Name, effectiveOperation(glob.Operation)))
+		return errors
+	}
+	if glob.Operation != drv1alpha1.OperationPatch &&
+		(glob.Spec.APIVersion == "" || glob.Spec.Kind == "" || glob.Spec.Name == "") {
+		errors = append(errors, fmt.Sprintf(
+			"action[%d] %s: Globalization.Spec.Feed (apiVersion, kind, name) is required when operation=%s",
+			index, action.Name, effectiveOperation(glob.Operation),
+		))
+	}
+	if glob.Operation == drv1alpha1.OperationPatch && action.Rollback == nil {
+		errors = append(errors, fmt.Sprintf("action[%d] %s: rollback is required for Globalization %s operation", index, action.Name, glob.Operation))
+	}
+
+	return errors
+}
+
+// HelmChartActionValidator validates HelmChart actions
+type HelmChartActionValidator struct{}
+
+// Validate validates HelmChart action configuration
+func (v *HelmChartActionValidator) Validate(action *drv1alpha1.Action, index int) []string {
+	var errors []string
+
+	if action.HelmChart == nil {
+		errors = append(errors, fmt.Sprintf("action[%d] %s: HelmChart configuration is required", index, action.Name))
+		return errors
+	}
+
+	chart := action.HelmChart
+	if chart.Name == "" {
+		errors = append(errors, fmt.Sprintf("action[%d] %s: HelmChart.Name is required", index, action.Name))
+	}
+	if chart.Namespace == "" {
+		errors = append(errors, fmt.Sprintf("action[%d] %s: HelmChart.Namespace is required", index, action.Name))
+	}
+	if chart.Operation == drv1alpha1.OperationDelete {
+		return errors
+	}
+	if chart.Spec == nil {
+		errors = append(errors, fmt.Sprintf("action[%d] %s: HelmChart.Spec is required when operation=%s", index, action.Name, effectiveOperation(chart.Operation)))
+		return errors
+	}
+	if chart.Operation != drv1alpha1.OperationPatch {
+		if chart.Spec.Repository == "" {
+			errors = append(errors, fmt.Sprintf("action[%d] %s: HelmChart.Spec.Repo is required when operation=%s", index, action.Name, effectiveOperation(chart.Operation)))
+		}
+		if chart.Spec.Chart == "" {
+			errors = append(errors, fmt.Sprintf("action[%d] %s: HelmChart.Spec.Chart is required when operation=%s", index, action.Name, effectiveOperation(chart.Operation)))
+		}
+		if chart.Spec.TargetNamespace == "" {
+			errors = append(errors, fmt.Sprintf("action[%d] %s: HelmChart.Spec.TargetNamespace is required when operation=%s", index, action.Name, effectiveOperation(chart.Operation)))
 		}
 	}
-	if loc.Operation == "Patch" && action.Rollback == nil {
-		errors = append(errors, fmt.Sprintf("action[%d] %s: rollback is required for Localization Patch operation", index, action.Name))
+	if chart.Operation == drv1alpha1.OperationPatch && action.Rollback == nil {
+		errors = append(errors, fmt.Sprintf("action[%d] %s: rollback is required for HelmChart %s operation", index, action.Name, chart.Operation))
 	}
 
 	return errors
@@ -99,10 +187,10 @@ func (v *SubscriptionActionValidator) Validate(action *drv1alpha1.Action, index 
 	if action.Subscription.Name == "" {
 		errors = append(errors, fmt.Sprintf("action[%d] %s: Subscription.Name is required", index, action.Name))
 	}
-	if action.Subscription.Operation == "Patch" && action.Rollback == nil {
+	if action.Subscription.Operation == drv1alpha1.OperationPatch && action.Rollback == nil {
 		errors = append(errors, fmt.Sprintf("action[%d] %s: rollback is required for Subscription Patch operation", index, action.Name))
 	}
-	if action.Subscription.Operation == "Create" {
+	if action.Subscription.Operation == drv1alpha1.OperationCreate {
 		if action.Subscription.Spec == nil {
 			errors = append(errors, fmt.Sprintf("action[%d] %s: Subscription.Spec is required when operation=Create", index, action.Name))
 		} else {
@@ -134,8 +222,7 @@ func (v *KubernetesResourceActionValidator) Validate(action *drv1alpha1.Action, 
 		errors = append(errors, fmt.Sprintf("action[%d] %s: KubernetesResource.Manifest is required", index, action.Name))
 	}
 
-	needsRollback := action.Resource.Operation == "Patch" || action.Resource.Operation == "Apply"
-	if needsRollback && action.Rollback == nil {
+	if action.Resource.Operation == drv1alpha1.OperationPatch && action.Rollback == nil {
 		errors = append(errors, fmt.Sprintf("action[%d] %s: rollback is required for KubernetesResource %s operation",
 			index, action.Name, action.Resource.Operation))
 	}
@@ -158,6 +245,8 @@ func NewActionValidatorRegistry() *ActionValidatorRegistry {
 	registry.validators["HTTP"] = &HTTPActionValidator{}
 	registry.validators["Job"] = &JobActionValidator{}
 	registry.validators["Localization"] = &LocalizationActionValidator{}
+	registry.validators["Globalization"] = &GlobalizationActionValidator{}
+	registry.validators["HelmChart"] = &HelmChartActionValidator{}
 	registry.validators["Subscription"] = &SubscriptionActionValidator{}
 	registry.validators["KubernetesResource"] = &KubernetesResourceActionValidator{}
 
@@ -205,4 +294,11 @@ func validateParameters(parameters []drv1alpha1.Parameter) []string {
 	}
 
 	return errors
+}
+
+func effectiveOperation(operation string) string {
+	if operation == "" {
+		return drv1alpha1.OperationCreate
+	}
+	return operation
 }

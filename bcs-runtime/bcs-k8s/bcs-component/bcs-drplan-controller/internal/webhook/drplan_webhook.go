@@ -25,9 +25,11 @@ import (
 	drv1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-drplan-controller/api/v1alpha1"
 )
 
+//nolint:lll // kubebuilder webhook markers must stay on one line
 // NOCC:tosa/linelength(设计如此)
 // +kubebuilder:webhook:path=/mutate-dr-bkbcs-tencent-com-v1alpha1-drplan,mutating=true,failurePolicy=fail,sideEffects=None,groups=dr.bkbcs.tencent.com,resources=drplans,verbs=create;update,versions=v1alpha1,name=mdrplan.kb.io,admissionReviewVersions=v1
 
+//nolint:lll // kubebuilder webhook markers must stay on one line
 // NOCC:tosa/linelength(设计如此)
 // +kubebuilder:webhook:path=/validate-dr-bkbcs-tencent-com-v1alpha1-drplan,mutating=false,failurePolicy=fail,sideEffects=None,groups=dr.bkbcs.tencent.com,resources=drplans,verbs=create;update;delete,versions=v1alpha1,name=vdrplan.kb.io,admissionReviewVersions=v1
 

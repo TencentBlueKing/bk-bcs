@@ -39,6 +39,7 @@ type BaseRequest struct {
 	BkAppSecret string `json:"bk_app_secret,omitempty"`
 	AccessToken string `json:"access_token,omitempty"`
 	BkUsername  string `json:"bk_username,omitempty"`
+	TenantID    string `json:"tenant_id,omitempty"`
 }
 
 // BaseResponse contains the common information of all responses
@@ -57,12 +58,13 @@ type ApiResponse struct {
 }
 
 // NewBaseRequest create a request object
-func NewBaseRequest(bkAppCode, bkAppSecret, accessToken, bkUsername string) *BaseRequest {
+func NewBaseRequest(bkAppCode, bkAppSecret, accessToken, bkUsername, tenantID string) *BaseRequest {
 	return &BaseRequest{
 		BkAppCode:   bkAppCode,
 		BkAppSecret: bkAppSecret,
 		AccessToken: accessToken,
 		BkUsername:  bkUsername,
+		TenantID:    tenantID,
 	}
 }
 

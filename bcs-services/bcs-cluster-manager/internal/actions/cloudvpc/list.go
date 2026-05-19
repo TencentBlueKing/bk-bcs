@@ -84,7 +84,7 @@ func (la *ListAction) listCloudVPC() error { // nolint
 			continue
 		}
 
-		if !matchCloudVPC(cloudVPCs[i], la.req.BusinessID, la.req.Scenario) {
+		if la.req.VpcID == "" && la.req.VpcName == "" && !matchCloudVPC(cloudVPCs[i], la.req.BusinessID, la.req.Scenario) {
 			continue
 		}
 

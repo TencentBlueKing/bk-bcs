@@ -115,6 +115,19 @@
       </div>
     </div>
     <div class="workload-detail-body">
+      <bcs-alert
+        v-if="!isMonitorInstalled"
+        class="mt-[16px]"
+        type="warning"
+        closable>
+        <template #title>
+          <i18n path="dashboard.workload.tips.noMonitor" tag="span">
+            <template #plugins>
+              <a class="text-[#3a84ff]" :href="handleGetPluginManageUrl()" target="_blank">{{ $t('nav.plugin') }}</a>
+            </template>
+          </i18n>
+        </template>
+      </bcs-alert>
       <div class="workload-metric" v-bkloading="{ isLoading: podLoading }">
         <Metric
           :metric="activeCpuMetric"
@@ -411,7 +424,7 @@ import { filterXss } from '@blueking/xss-filter';
 
 import EventTable from './bk-monitor-event.vue';
 import detailBasicList from './detail-basic';
-import useDetail from './use-detail';
+import useDetail, { useMonitorCollector } from './use-detail';
 
 import { crdEnlargeCapacityChange, enlargeCapacityChange } from '@/api/base';
 import $bkMessage from '@/common/bkmagic';
@@ -534,6 +547,11 @@ export default defineComponent({
       defaultActivePanel: 'pod',
       type: curType,
     });
+    const {
+      isMonitorInstalled,
+      handleGetPluginManageUrl,
+      handleCheckMonitor,
+    } = useMonitorCollector();
     const podLoading = ref(false);
     const workloadPods = ref<IDetail|null>(null);
     const basicInfoList = detailBasicList({
@@ -876,6 +894,7 @@ export default defineComponent({
       await Promise.all([
         handleGetWorkloadPods(),
         handleGetRSData(),
+        handleCheckMonitor(clusterId.value),
       ]);
       loading.value = false;
       // 开启轮询
@@ -954,6 +973,8 @@ export default defineComponent({
       handleConfirmScaleShow,
       handleShowScale,
       handleChangeCpuMetric,
+      isMonitorInstalled,
+      handleGetPluginManageUrl,
     };
   },
 });

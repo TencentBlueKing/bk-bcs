@@ -1,0 +1,43 @@
+# DRPlan: nginx install plan — first localize for both clusters, then subscribe.
+#
+# This template mixes Helm values and DR variable syntax safely:
+#   - Helm resolves .Values.xxx and .Release.Name at install time
+#   - DR controller resolves $(params.feedNamespace) at plan execution time
+apiVersion: dr.bkbcs.tencent.com/v1alpha1
+kind: DRPlan
+metadata:
+  name: {{ .Release.Name }}-install-plan
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "nginx-drplan.labels" . | nindent 4 }}
+spec:
+  description: "Nginx DR plan: localize for two clusters, then create subscription"
+  failurePolicy: {{ .Values.failurePolicy }}
+  globalParams:
+    - name: feedNamespace
+      value: {{ .Values.feedNamespace | quote }}
+  stages:
+    - name: localize
+      description: "Create Localizations for cluster A and B"
+      parallel: true
+      workflows:
+        - workflowRef:
+            name: {{ .Release.Name }}-localization-{{ .Values.clusterA.name }}
+            namespace: {{ .Values.namespace }}
+          params:
+            - name: managedClusterNamespace
+              value: {{ .Values.clusterA.managedClusterNamespace | quote }}
+        - workflowRef:
+            name: {{ .Release.Name }}-localization-{{ .Values.clusterB.name }}
+            namespace: {{ .Values.namespace }}
+          params:
+            - name: managedClusterNamespace
+              value: {{ .Values.clusterB.managedClusterNamespace | quote }}
+    - name: deploy-subscription
+      description: "Create Subscription to distribute nginx resources"
+      dependsOn:
+        - localize
+      workflows:
+        - workflowRef:
+            name: {{ .Release.Name }}-subscription
+            namespace: {{ .Values.namespace }}

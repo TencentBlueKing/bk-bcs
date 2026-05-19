@@ -14,6 +14,8 @@
 
 package v1
 
+type HostNetPortPoolExpansion interface{}
+
 type IngressExpansion interface{}
 
 type ListenerExpansion interface{}

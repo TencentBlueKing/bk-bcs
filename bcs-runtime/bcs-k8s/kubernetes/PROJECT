@@ -33,4 +33,7 @@ resources:
 - group: federation
   kind: MultiClusterEndpointSlice
   version: v1
+- group: networkextension
+  kind: HostNetPortPool
+  version: v1
 version: "2"

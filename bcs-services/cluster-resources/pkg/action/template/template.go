@@ -16,9 +16,12 @@ package template
 import (
 	"context"
 	"path"
+	"regexp"
+	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"github.com/feiin/go-xss"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"gopkg.in/yaml.v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -212,6 +215,7 @@ func (t *TemplateAction) List(ctx context.Context, templateSpaceID string) ([]ma
 }
 
 // Create xxx
+// nolint:funlen
 func (t *TemplateAction) Create(ctx context.Context, req *clusterRes.CreateTemplateMetadataReq) (
 	string, string, error) {
 	if err := t.checkAccess(ctx); err != nil {
@@ -228,15 +232,20 @@ func (t *TemplateAction) Create(ctx context.Context, req *clusterRes.CreateTempl
 		return "", "", errorx.New(errcode.ValidateErr, i18n.GetMsg(ctx, ("版本字段不能为空")))
 	}
 
-	templateSpace, err := t.model.GetTemplateSpace(ctx, req.GetTemplateSpaceID())
+	// 校验模板文件名
+	templateSpaceName, templateName, err := parseTemplateName(ctx, req.GetName())
+	if err != nil {
+		return "", "", err
+	}
+	templateSpace, err := t.getOrCreateTemplateSpace(ctx, p.Code, templateSpaceName, req.GetTemplateSpaceID())
 	if err != nil {
 		return "", "", err
 	}
 
-	// 检测模板元数据是否重复
+	// 检测模板元数据及文件夹路径是否重复
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{
 		entity.FieldKeyProjectCode:   p.Code,
-		entity.FieldKeyName:          req.GetName(),
+		entity.FieldKeyName:          templateName,
 		entity.FieldKeyTemplateSpace: templateSpace.Name,
 	})
 	templates, err := t.model.ListTemplate(ctx, cond)
@@ -258,7 +267,7 @@ func (t *TemplateAction) Create(ctx context.Context, req *clusterRes.CreateTempl
 		templateVersion := &entity.TemplateVersion{
 			ProjectCode:   p.Code,
 			Description:   req.GetVersionDescription(),
-			TemplateName:  req.GetName(),
+			TemplateName:  templateName,
 			TemplateSpace: templateSpace.Name,
 			Version:       req.GetVersion(),
 			EditFormat:    req.GetEditFormat(),
@@ -273,7 +282,7 @@ func (t *TemplateAction) Create(ctx context.Context, req *clusterRes.CreateTempl
 	}
 
 	template := &entity.Template{
-		Name:          req.GetName(),
+		Name:          templateName,
 		ProjectCode:   p.Code,
 		Description:   xss.FilterXSS(req.GetDescription(), xss.XssOption{}),
 		TemplateSpace: templateSpace.Name,
@@ -323,9 +332,13 @@ func (t *TemplateAction) Update(ctx context.Context, req *clusterRes.UpdateTempl
 		return errorx.New(errcode.NoPerm, i18n.GetMsg(ctx, "无权限访问"))
 	}
 
+	_, templateName, err := parseTemplateName(ctx, req.GetName())
+	if err != nil {
+		return err
+	}
 	// 检测是否重复
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{
-		entity.FieldKeyName:          req.GetName(),
+		entity.FieldKeyName:          templateName,
 		entity.FieldKeyProjectCode:   p.Code,
 		entity.FieldKeyTemplateSpace: template.TemplateSpace,
 	})
@@ -340,9 +353,9 @@ func (t *TemplateAction) Update(ctx context.Context, req *clusterRes.UpdateTempl
 	}
 
 	// 如果元数据名称有更新需要先更新版本集合
-	if template.Name != req.GetName() {
+	if template.Name != templateName {
 		updateTemplateVersion := entity.M{
-			"templateName":  req.GetName(),
+			"templateName":  templateName,
 			"templateSpace": template.TemplateSpace,
 		}
 		if err = t.model.UpdateTemplateVersionBySpecial(
@@ -353,7 +366,7 @@ func (t *TemplateAction) Update(ctx context.Context, req *clusterRes.UpdateTempl
 
 	renderMode := constants.RenderMode(req.GetRenderMode()).GetRenderMode()
 	updateTemplate := entity.M{
-		"name":            req.GetName(),
+		"name":            templateName,
 		"description":     xss.FilterXSS(req.GetDescription(), xss.XssOption{}),
 		"updator":         userName,
 		"tags":            req.GetTags(),
@@ -703,4 +716,66 @@ func (t *TemplateAction) renderTemplates(ctx context.Context, templates []entity
 		}
 	}
 	return manifests, nil
+}
+
+// getOrCreateTemplateSpace 根据名称查找或自动创建模板文件夹
+func (t *TemplateAction) getOrCreateTemplateSpace(ctx context.Context,
+	projectCode, templateSpaceName, templateSpaceID string) (*entity.TemplateSpace, error) {
+	// 支持路径格式 name (如 a/b/c.yaml)，自动解析并创建父级文件夹
+	if templateSpaceID == "" {
+		// 先按完整路径名精确查找
+		cond := operator.NewLeafCondition(operator.Eq, operator.M{
+			entity.FieldKeyProjectCode: projectCode,
+			entity.FieldKeyName:        templateSpaceName,
+		})
+		spaces, err := t.model.ListTemplateSpace(ctx, cond)
+		if err != nil {
+			return nil, err
+		}
+		if len(spaces) > 0 {
+			return spaces[0], nil
+		}
+
+		// 不存在则创建
+		templateSpace := &entity.TemplateSpace{
+			Name:        templateSpaceName,
+			ProjectCode: projectCode,
+			Tags:        []string{},
+		}
+		id, err := t.model.CreateTemplateSpace(ctx, templateSpace)
+		if err != nil {
+			return nil, err
+		}
+		templateSpace.ID, _ = primitive.ObjectIDFromHex(id)
+		return templateSpace, nil
+	}
+
+	templateSpace, err := t.model.GetTemplateSpace(ctx, templateSpaceID)
+	if err != nil {
+		return nil, err
+	}
+	return templateSpace, nil
+}
+
+// templateNamePattern 文件夹及子文件夹名称只允许字母、数字、下划线、连字符
+var templateNamePattern = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
+
+// parseTemplateName 解析模板文件夹及模板名称
+func parseTemplateName(ctx context.Context, name string) (string, string, error) {
+	// 规范化路径：压缩连续斜杠，去除前后斜杠
+	templateName := regexp.MustCompile(`/+`).ReplaceAllString(strings.Trim(name, "/"), "/")
+	path := strings.Split(templateName, "/")
+	if len(path) < 2 {
+		return "", "", errorx.New(errcode.ValidateErr, i18n.GetMsg(ctx, "无效的模板文件路径名称"))
+	}
+	// 校验文件夹名称是否符合要求
+	for i := 0; i < len(path)-1; i++ {
+		if !templateNamePattern.MatchString(path[i]) {
+			return "", "", errorx.New(errcode.ValidateErr,
+				i18n.GetMsg(ctx, "文件夹名称仅支持字母、数字、_ 和 -"))
+		}
+	}
+	// 需要把父文件夹和子文件夹及文件名称分开
+	p := strings.SplitN(templateName, "/", 2)
+	return p[0], p[1], nil
 }

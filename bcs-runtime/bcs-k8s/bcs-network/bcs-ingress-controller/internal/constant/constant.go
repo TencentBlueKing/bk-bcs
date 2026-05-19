@@ -51,6 +51,8 @@ const (
 
 	// FinalizerNameBcsIngressController finalizer name of bcs ingress controller
 	FinalizerNameBcsIngressController = "ingresscontroller.bkbcs.tencent.com"
+	// FinalizerNameHostNetPortPool finalizer name for HostNetPortPool CRD
+	FinalizerNameHostNetPortPool = "hostnetportpool.bkbcs.tencent.com"
 	// FinalizerNameUptimeCheck finalizer name of uptime check cleaning
 	FinalizerNameUptimeCheck = "uptimecheck.bkbcs.tencent.com"
 	// CloudTencent tencent cloud
@@ -160,6 +162,20 @@ const (
 	AnnotationForPortPoolBindingStatus = "status.portpools.networkextension.bkbcs.tencent.com"
 	// AnnotationForPortPoolReadinessGate port pool readiness gate 声明是否需要为Pod写入端口绑定ReadinessGate
 	AnnotationForPortPoolReadinessGate = "readinessgate.portpools.networkextension.bkbcs.tencent.com"
+
+	// AnnotationForHostNetPortPool declares which HostNetPortPool the Pod requests ports from.
+	AnnotationForHostNetPortPool = "hostnetportpool.networkextension.bkbcs.tencent.com"
+	// AnnotationForHostNetPortPoolNamespace is the namespace of the target HostNetPortPool.
+	// Optional; defaults to the Pod's own namespace.
+	AnnotationForHostNetPortPoolNamespace = "hostnetportpool.ns.networkextension.bkbcs.tencent.com"
+	// AnnotationForHostNetPortPoolPortCount is the number of ports the Pod requests.
+	// Optional; defaults to segmentLength (i.e. 1 segment).
+	// Controller allocates ceil(portCount / segmentLength) contiguous segments.
+	AnnotationForHostNetPortPoolPortCount = "hostnetportpool.portcount.networkextension.bkbcs.tencent.com"
+	// AnnotationForHostNetPortPoolBindingResult is the allocation result injected by the controller (JSON).
+	AnnotationForHostNetPortPoolBindingResult = "hostnetportpool.result.networkextension.bkbcs.tencent.com"
+	// AnnotationForHostNetPortPoolBindingStatus is the allocation status: Ready / NotReady / Failed.
+	AnnotationForHostNetPortPoolBindingStatus = "hostnetportpool.status.networkextension.bkbcs.tencent.com"
 
 	// ConditionTypeBcsIngressPortBinding readiness gate condition type for port binding of bcs-ingress-controller
 	ConditionTypeBcsIngressPortBinding = "networkextension.bkbcs.tencent.com/portbinding-ready"

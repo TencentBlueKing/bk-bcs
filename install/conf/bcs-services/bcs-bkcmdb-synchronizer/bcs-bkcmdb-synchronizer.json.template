@@ -5,7 +5,8 @@
     "bkBizID": ${synchronizer_bkBizID},
     "hostID": ${synchronizer_hostID},
     "whiteList": "${synchronizer_whiteList}",
-    "blackList": "${synchronizer_blackList}"
+    "blackList": "${synchronizer_blackList}",
+    "customResourceTypes": {}
   },
   "client": {
     "client_crt_pwd": "${client_clientCrtPwd}",

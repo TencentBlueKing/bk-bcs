@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package controller implements Kubernetes controllers for DR resources.
 package controller
 
 import (
@@ -107,79 +108,109 @@ func (r *DRPlanReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 func (r *DRPlanReconciler) validatePlan(ctx context.Context, plan *drv1alpha1.DRPlan) []string {
 	var errors []string
 
-	// Validate stages
+	// Validate stages exist
 	if len(plan.Spec.Stages) == 0 {
-		errors = append(errors, "at least one stage is required")
-		return errors
+		return []string{"at least one stage is required"}
 	}
 
 	// Validate each stage
 	stageNames := make(map[string]bool)
 	for i, stage := range plan.Spec.Stages {
-		// Check unique stage names
-		if stageNames[stage.Name] {
-			errors = append(errors, fmt.Sprintf("duplicate stage name: %s", stage.Name))
-		}
-		stageNames[stage.Name] = true
-
-		// Validate stage
-		if stage.Name == "" {
-			errors = append(errors, fmt.Sprintf("stage[%d]: name is required", i))
-		}
-
-		// Validate workflows
-		if len(stage.Workflows) == 0 {
-			errors = append(errors, fmt.Sprintf("stage[%d] %s: at least one workflow is required", i, stage.Name))
-		}
-
-		// Validate workflow references
-		for j, wfRef := range stage.Workflows {
-			if wfRef.WorkflowRef.Name == "" {
-				errors = append(errors, fmt.Sprintf("stage[%d] %s workflow[%d]: workflowRef.name is required", i, stage.Name, j))
-			}
-
-			// Check if workflow exists
-			workflow := &drv1alpha1.DRWorkflow{}
-			namespace := wfRef.WorkflowRef.Namespace
-			if namespace == "" {
-				namespace = plan.Namespace
-			}
-			key := client.ObjectKey{
-				Name:      wfRef.WorkflowRef.Name,
-				Namespace: namespace,
-			}
-			if err := r.Get(ctx, key, workflow); err != nil {
-				if apierrors.IsNotFound(err) {
-					errors = append(errors, fmt.Sprintf("stage[%d] %s workflow[%d]: workflow %s/%s not found", i, stage.Name, j, namespace, wfRef.WorkflowRef.Name))
-				} else {
-					errors = append(errors, fmt.Sprintf("stage[%d] %s workflow[%d]: failed to get workflow %s/%s: %v", i, stage.Name, j, namespace, wfRef.WorkflowRef.Name, err))
-				}
-			} else if workflow.Status.Phase != drv1alpha1.PlanPhaseReady {
-				errors = append(errors, fmt.Sprintf(
-					"stage[%d] %s workflow[%d]: workflow %s/%s is not ready (phase=%s)",
-					i, stage.Name, j, namespace, wfRef.WorkflowRef.Name, workflow.Status.Phase))
-			}
-		}
-
-		// Validate stage dependencies
-		for _, depName := range stage.DependsOn {
-			if !stageNames[depName] {
-				errors = append(errors, fmt.Sprintf("stage[%d] %s: depends on non-existent stage '%s'", i, stage.Name, depName))
-			}
-			if depName == stage.Name {
-				errors = append(errors, fmt.Sprintf("stage[%d] %s: cannot depend on itself", i, stage.Name))
-			}
-		}
+		errors = append(errors, r.validateStageBasics(i, stage, stageNames)...)
+		errors = append(errors, r.validateStageWorkflowRefs(ctx, i, stage, plan.Namespace)...)
+		errors = append(errors, r.validateStageDeps(i, stage, stageNames)...)
 	}
 
-	// Validate stage dependency graph (detect cycles)
-	if cycleErrors := r.validateStageDependencyCycles(plan.Spec.Stages); len(cycleErrors) > 0 {
-		errors = append(errors, cycleErrors...)
-	}
+	// Validate dependency cycles
+	errors = append(errors, r.validateStageDependencyCycles(plan.Spec.Stages)...)
 
 	// Validate global parameters
+	errors = append(errors, r.validateGlobalParams(plan.Spec.GlobalParams)...)
+
+	return errors
+}
+
+// validateStageBasics validates basic stage structure (name, workflows count)
+func (r *DRPlanReconciler) validateStageBasics(index int, stage drv1alpha1.Stage, stageNames map[string]bool) []string {
+	var errors []string
+
+	// Check unique stage names
+	if stageNames[stage.Name] {
+		errors = append(errors, fmt.Sprintf("duplicate stage name: %s", stage.Name))
+	}
+	stageNames[stage.Name] = true
+
+	// Validate stage name
+	if stage.Name == "" {
+		errors = append(errors, fmt.Sprintf("stage[%d]: name is required", index))
+	}
+
+	// Validate workflows count
+	if len(stage.Workflows) == 0 {
+		errors = append(errors, fmt.Sprintf("stage[%d] %s: at least one workflow is required", index, stage.Name))
+	}
+
+	return errors
+}
+
+// validateStageWorkflowRefs validates workflow references for a stage
+func (r *DRPlanReconciler) validateStageWorkflowRefs(ctx context.Context, stageIndex int, stage drv1alpha1.Stage, planNamespace string) []string {
+	var errors []string
+
+	for j, wfRef := range stage.Workflows {
+		if wfRef.WorkflowRef.Name == "" {
+			errors = append(errors, fmt.Sprintf("stage[%d] %s workflow[%d]: workflowRef.name is required", stageIndex, stage.Name, j))
+			continue
+		}
+
+		// Determine workflow namespace
+		namespace := wfRef.WorkflowRef.Namespace
+		if namespace == "" {
+			namespace = planNamespace
+		}
+
+		// Check if workflow exists and is ready
+		workflow := &drv1alpha1.DRWorkflow{}
+		key := client.ObjectKey{Name: wfRef.WorkflowRef.Name, Namespace: namespace}
+		if err := r.Get(ctx, key, workflow); err != nil {
+			if apierrors.IsNotFound(err) {
+				errors = append(errors, fmt.Sprintf("stage[%d] %s workflow[%d]: workflow %s/%s not found",
+					stageIndex, stage.Name, j, namespace, wfRef.WorkflowRef.Name))
+			} else {
+				errors = append(errors, fmt.Sprintf("stage[%d] %s workflow[%d]: failed to get workflow %s/%s: %v",
+					stageIndex, stage.Name, j, namespace, wfRef.WorkflowRef.Name, err))
+			}
+		} else if workflow.Status.Phase != drv1alpha1.PlanPhaseReady {
+			errors = append(errors, fmt.Sprintf("stage[%d] %s workflow[%d]: workflow %s/%s is not ready (phase=%s)",
+				stageIndex, stage.Name, j, namespace, wfRef.WorkflowRef.Name, workflow.Status.Phase))
+		}
+	}
+
+	return errors
+}
+
+// validateStageDeps validates stage dependencies
+func (r *DRPlanReconciler) validateStageDeps(index int, stage drv1alpha1.Stage, stageNames map[string]bool) []string {
+	var errors []string
+
+	for _, depName := range stage.DependsOn {
+		if !stageNames[depName] {
+			errors = append(errors, fmt.Sprintf("stage[%d] %s: depends on non-existent stage '%s'", index, stage.Name, depName))
+		}
+		if depName == stage.Name {
+			errors = append(errors, fmt.Sprintf("stage[%d] %s: cannot depend on itself", index, stage.Name))
+		}
+	}
+
+	return errors
+}
+
+// validateGlobalParams validates global parameters
+func (r *DRPlanReconciler) validateGlobalParams(params []drv1alpha1.Parameter) []string {
+	var errors []string
 	paramNames := make(map[string]bool)
-	for i, param := range plan.Spec.GlobalParams {
+
+	for i, param := range params {
 		if param.Name == "" {
 			errors = append(errors, fmt.Sprintf("globalParams[%d]: name is required", i))
 		}

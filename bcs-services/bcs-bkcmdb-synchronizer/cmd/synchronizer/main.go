@@ -58,6 +58,11 @@ func init() {
 		blog.Fatalf("load config failed, err: %s", err.Error())
 	}
 
+	// Parse and set custom resource types from environment variable
+	if err := common.SetCustomResourceTypesFromEnv(BkcmdbSynchronizerOption); err != nil {
+		blog.Warnf("parse custom resource types from env failed: %s, using default", err)
+	}
+
 	if err := common.DecryptCMOption(BkcmdbSynchronizerOption); err != nil {
 		blog.Fatalf("load config failed, err: %s", err.Error())
 	}

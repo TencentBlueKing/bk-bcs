@@ -2996,6 +2996,9 @@ dashboard:
       noPerms: >-
         The current user does not have permission to view some resources. Please
         click here{0}
+      noMonitor: >-
+        The current cluster does not have a monitoring collector installed.
+        Please go to the {plugins} to install the monitoring collector
     label:
       upgrade:
         maxSurg: 'Maximum scheduling pod quantity (MaxSurge): {num}'
@@ -3981,6 +3984,7 @@ templateFile:
     import: Import
     export: Export all folders
     exportFolder: Export Folder
+    addSubFolder: Add Folder
     upgrade: Upgrade to Helm template
     rollback: Rollback
     toResourceView: Resource view
@@ -4033,6 +4037,8 @@ templateFile:
       switching back to a non-Helm template will no longer be supported.
     spaceSubTitle: The template folder and its template files will be removed
     emptyContent: The template file content cannot be empty
+    invalidChar: 'Folder name is invalid, only letters, numbers, - and _ are allowed'
+    invalidFileName: 'File name cannot start or end with /, and cannot contain //'
     success: success
     subTitle: 'Template file {templateFile} instance has been deployed to {cluster}'
     noChanges: No changes

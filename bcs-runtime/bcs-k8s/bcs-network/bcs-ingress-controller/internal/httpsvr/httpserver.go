@@ -51,4 +51,5 @@ func InitRouters(ws *restful.WebService, httpServerClient *HttpServerClient) {
 
 	ws.Route(ws.GET("/readiness_probe").To(httpServerClient.readinessProbe))
 
+	ws.Route(ws.GET("/api/v1/hostnetportpool/bindingresult").To(httpServerClient.getHostNetPortPoolBindingResult))
 }

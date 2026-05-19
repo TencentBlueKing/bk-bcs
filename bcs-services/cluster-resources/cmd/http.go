@@ -357,7 +357,7 @@ func packTemplateSpace(fileName string, templateContents map[string][]TemplateCo
 	for templateSpaceName, contents := range templateContents {
 		// 创建 tar.Header
 		header := &tar.Header{
-			Name: transName(templateSpaceName) + "/",
+			Name: transName(templateSpaceName, "") + "/",
 			Mode: 0700,
 		}
 
@@ -368,8 +368,11 @@ func packTemplateSpace(fileName string, templateContents map[string][]TemplateCo
 		}
 
 		for _, v := range contents {
-			// 写入 header
-			header.Name = filepath.Join(transName(templateSpaceName), transName(v.TemplateName)+".yaml")
+			// 写入 header，默认导出文件为.yaml，文件结尾为.yaml格式的则不加.yaml
+			header.Name = transName(templateSpaceName, v.TemplateName)
+			if !strings.HasSuffix(header.Name, ".yaml") {
+				header.Name += ".yaml"
+			}
 			header.Size = int64(len(v.Content))
 			err = tarWriter.WriteHeader(header)
 			if err != nil {
@@ -404,11 +407,11 @@ func getFileData(filePath string, w http.ResponseWriter) error {
 }
 
 // 转换文件夹/文件名称
-func transName(s string) string {
-	if strings.Contains(s, "/") {
-		s = strings.ReplaceAll(s, "/", "_")
+func transName(templateSpaceName, templateName string) string {
+	if templateName == "" {
+		return templateSpaceName
 	}
-	return s
+	return filepath.Join(templateSpaceName, templateName)
 }
 
 // 解析tgz内容
@@ -447,12 +450,8 @@ func parseTarContent(r *http.Request) ([]string, map[string][]TemplateContent, e
 		// 处理压缩文件
 		switch header.Typeflag {
 		case tar.TypeDir:
-			// 校验文件夹格式，仅允许有一个文件夹层： folder/
-			folders := strings.Split(header.Name, "/")
-			if len(folders) != 2 || folders[1] != "" {
-				return templateSpaceNames, tarContent, fmt.Errorf("invalid tar folder: %s", header.Name)
-			}
-			tarContent[folders[0]] = []TemplateContent{}
+			// 文件夹里面没内容的不导入
+			continue
 		case tar.TypeReg:
 			if maxSize+header.Size > MaxFileSize {
 				return templateSpaceNames, tarContent,
@@ -460,11 +459,11 @@ func parseTarContent(r *http.Request) ([]string, map[string][]TemplateContent, e
 			}
 			maxSize = header.Size + maxSize
 			// 处理文件
-			filePath := strings.Split(header.Name, "/")
-			if len(filePath) != 2 {
+			filePath := strings.SplitN(header.Name, "/", 2)
+			if len(filePath) < 2 {
 				return templateSpaceNames, tarContent, fmt.Errorf("invalid tar filepath: %s", header.Name)
 			}
-
+			// 根文件夹和文件名称分开
 			templateSpaceName := filePath[0]
 			templateName := filePath[1]
 

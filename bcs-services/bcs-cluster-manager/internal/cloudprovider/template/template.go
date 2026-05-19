@@ -54,6 +54,8 @@ const (
 	NodeMixedInit = "nodeMixedInit"
 	// NodeMixedInitCh mixed init ch
 	NodeMixedInitCh = "混部集群节点初始化"
+	// SystemCleanNode system clean node
+	SystemCleanNode = "systemCleanNode"
 )
 
 // using task commonName inject dynamic parameters when processing

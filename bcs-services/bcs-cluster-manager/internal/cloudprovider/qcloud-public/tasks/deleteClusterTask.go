@@ -27,8 +27,6 @@ import (
 
 // DeleteTKEClusterTask delete cluster task
 func DeleteTKEClusterTask(taskID string, stepName string) error { // nolint
-	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
-		"start delete tke cluster")
 	start := time.Now()
 	// get task and task current step
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
@@ -42,6 +40,9 @@ func DeleteTKEClusterTask(taskID string, stepName string) error { // nolint
 	}
 	blog.Infof("DeleteTKEClusterTask[%s]: task %s run step %s, system: %s, old state: %s, params %v",
 		taskID, taskID, stepName, step.System, step.Status, step.Params)
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start delete tke cluster")
 
 	// step login started here
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
@@ -126,8 +127,6 @@ func DeleteTKEClusterTask(taskID string, stepName string) error { // nolint
 
 // CleanClusterDBInfoTask clean cluster DB info
 func CleanClusterDBInfoTask(taskID string, stepName string) error { // nolint
-	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
-		"start clean cluster db info")
 	start := time.Now()
 	// get task and task current step
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
@@ -141,6 +140,9 @@ func CleanClusterDBInfoTask(taskID string, stepName string) error { // nolint
 	}
 	blog.Infof("CleanClusterDBInfoTask[%s]: task %s run step %s, system: %s, old state: %s, params %v",
 		taskID, taskID, stepName, step.System, step.Status, step.Params)
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start clean cluster db info")
 
 	// step login started here
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]

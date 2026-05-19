@@ -4,6 +4,8 @@
 *exvim*
 *vendor*
 *go.sum
+!bcs-scenarios/bcs-terraform-bkprovider/go.sum
+
 
 __pycache__/
 *.py[cod]
@@ -140,3 +142,9 @@ scripts/Tongsuo-8.3.2/
 pre-*-bkcodeai
 git-sync.sh
 .ftp/mcp.json
+
+### PreCI ###
+.codecc
+
+# Cursor
+.cursor

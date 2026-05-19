@@ -1,0 +1,10 @@
+replicaCount: 2
+image:
+  repository: nginx
+  tag: "1.25"
+service:
+  port: 80
+dbMigrate:
+  image: busybox:1.36
+validate:
+  image: busybox:1.36

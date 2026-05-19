@@ -104,7 +104,7 @@
   </BcsContent>
 </template>
 <script setup lang="ts">
-import { onBeforeMount, reactive, ref } from 'vue';
+import { computed, onBeforeMount, reactive, ref } from 'vue';
 
 import FileMetadataDialog from './file-metadata.vue';
 import FormMode from './form-mode.vue';
@@ -125,9 +125,11 @@ interface Props {
 
 const props = defineProps<Props>();
 
+const folderPath = computed(() => ($router.currentRoute as unknown as Record<string, Record<string, string>>).query?.folderPath || '');
+
 const creating = ref(false);
 const formData = reactive<ClusterResource.CreateTemplateMetadataReq>({
-  $templateSpaceID: props.templateSpace,
+  templateSpaceID: props.templateSpace,
   name: `template-${Math.floor(Date.now() / 1000)}`,
   description: '',
   content: '',
@@ -232,7 +234,8 @@ async function handleCreateFile(versionData: Pick<ClusterResource.CreateTemplate
   const params = isHelm.value ? { renderMode: 'Helm' } : {};
   const result = await TemplateSetService.CreateTemplateMetadata({
     ...formData,
-    $templateSpaceID: props.templateSpace,
+    templateSpaceID: props.templateSpace,
+    name: folderPath.value ? `${folderPath.value}/${formData.name}` : formData.name,
     content,
     ...params,
   }).then(() => true)
@@ -261,7 +264,8 @@ async function handleSaveDraft() {
   const params = isHelm.value ? { renderMode: 'Helm' } : {};
   const result = await TemplateSetService.CreateTemplateMetadata({
     ...formData,
-    $templateSpaceID: props.templateSpace,
+    templateSpaceID: props.templateSpace,
+    name: folderPath.value ? `${folderPath.value}/${formData.name}` : formData.name,
     ...params,
   }).then(() => true)
     .catch(() => false);

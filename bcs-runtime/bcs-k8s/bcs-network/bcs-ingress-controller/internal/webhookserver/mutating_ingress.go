@@ -13,6 +13,8 @@
 package webhookserver
 
 import (
+	stderrors "errors"
+
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/admission/v1"
 
@@ -34,7 +36,7 @@ func (s *Server) mutateIngress(ingress *networkextensionv1.Ingress, operation v1
 	_, err := s.ingressConverter.GetIngressLoadBalancers(ingress)
 	if err != nil {
 		// 避免lb被删除后导致ingress无法正常更新
-		if operation == v1.Update && err == cloud.ErrLoadbalancerNotFound {
+		if operation == v1.Update && stderrors.Is(err, cloud.ErrLoadbalancerNotFound) {
 			return nil, nil
 		}
 		return nil, err

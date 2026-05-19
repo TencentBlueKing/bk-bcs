@@ -1,0 +1,19 @@
+bases:
+  - env.yaml
+---
+helmDefaults:
+  wait: false
+  waitForJobs: false
+  timeout: 600
+  createNamespace: false
+  atomic: true
+releases:
+  - name: nginx-demo
+    namespace: {{ .Values.namespace }}
+    chart: ./charts/nginx-{{ index .Values.version "nginx" }}.tgz
+    version: {{ index .Values.version "nginx" }}
+    missingFileHandler: Warn
+    values:
+      - ./values/common.yaml.gotmpl
+      - ./values/override.yaml.gotmpl
+      - ./values/optional-custom.yaml.gotmpl

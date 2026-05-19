@@ -59,6 +59,11 @@ type ControllerOption struct {
 	// IsNamespaceScope if the ingress can only be associated with the service and workload in the same namespace
 	IsNamespaceScope bool
 
+	// NamespaceScopeExemptNamespaces comma-separated namespaces exempt from namespace scope restriction.
+	// When IsNamespaceScope is true, ingresses in these namespaces can still bind services and workloads
+	// across namespaces. Only takes effect when IsNamespaceScope is true.
+	NamespaceScopeExemptNamespaces string
+
 	// LogConfig for blog
 	conf.LogConfig
 
@@ -234,6 +239,10 @@ func (op *ControllerOption) BindFromCommandLine() {
 	flag.StringVar(&op.ElectionNamespace, "election_namespace", "bcs-system", "namespace for leader election")
 	flag.BoolVar(&op.IsNamespaceScope, "is_namespace_scope", false,
 		"if the ingress can only be associated with the service and workload in the same namespace")
+	flag.StringVar(&op.NamespaceScopeExemptNamespaces, "namespace_scope_exempt_namespaces", "",
+		"comma-separated namespaces that are exempt from namespace scope restriction, "+
+			"ingresses in these namespaces can bind services across namespaces, "+
+			"only takes effect when is_namespace_scope is true")
 	flag.StringVar(&checkIntervalStr, "portbinding_check_interval", "3m",
 		"check interval of port binding, golang time format")
 

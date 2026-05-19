@@ -23,11 +23,16 @@ import (
 	drv1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-drplan-controller/api/v1alpha1"
 )
 
+// Retry configuration constants
 const (
-	DefaultRetryLimit        = 3
-	DefaultRetryInterval     = 5 * time.Second
+	// DefaultRetryLimit is the default maximum number of retry attempts
+	DefaultRetryLimit = 3
+	// DefaultRetryInterval is the default initial retry interval
+	DefaultRetryInterval = 5 * time.Second
+	// DefaultBackoffMultiplier is the default exponential backoff multiplier
 	DefaultBackoffMultiplier = 2.0
-	MaxRetryInterval         = 5 * time.Minute
+	// MaxRetryInterval is the maximum retry interval allowed
+	MaxRetryInterval = 5 * time.Minute
 )
 
 // RetryConfig holds retry configuration
@@ -119,7 +124,7 @@ func RetryWithBackoff(ctx context.Context, config *RetryConfig, fn RetryFunc) er
 		// Check context cancellation before sleeping
 		select {
 		case <-ctx.Done():
-			return fmt.Errorf("retry cancelled: %w", ctx.Err())
+			return fmt.Errorf("retry canceled: %w", ctx.Err())
 		default:
 		}
 
@@ -133,7 +138,7 @@ func RetryWithBackoff(ctx context.Context, config *RetryConfig, fn RetryFunc) er
 		select {
 		case <-ctx.Done():
 			timer.Stop()
-			return fmt.Errorf("retry cancelled during backoff: %w", ctx.Err())
+			return fmt.Errorf("retry canceled during backoff: %w", ctx.Err())
 		case <-timer.C:
 			// Continue to next attempt
 		}

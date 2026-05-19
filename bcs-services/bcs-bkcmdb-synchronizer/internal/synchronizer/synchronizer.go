@@ -17,7 +17,7 @@ package synchronizer
 import (
 	"crypto/tls"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net"
 	"net/http"
 	_ "net/http/pprof" //nolint
@@ -30,14 +30,12 @@ import (
 	"time"
 
 	bkcmdbkube "configcenter/src/kube/types" // nolint
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	pmp "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
 	cmp "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
-	amqp "github.com/rabbitmq/amqp091-go"
-
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	amqp "github.com/rabbitmq/amqp091-go"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/client"
 	cm "github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/client/clustermanager"
@@ -684,7 +682,7 @@ func (s *Synchronizer) syncHandler(podIndex int, whiteList, blackList []string) 
 		}
 
 		// 读取响应体
-		body, err := ioutil.ReadAll(resp.Body)
+		body, err := io.ReadAll(resp.Body)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			blog.Errorf("Error reading response body: %v", err)

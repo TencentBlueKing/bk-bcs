@@ -382,7 +382,7 @@ declare namespace ClusterResource {
     $projectCode?: string // 项目编码
     name: string // 模板文件元数据名称
     description: string // 模板文件元数据描述
-    $templateSpaceID: string // 模板文件文件夹
+    templateSpaceID: string // 模板文件文件夹
     tags: string[] // 模板文件元数据标签
     versionDescription: string // 模板文件版本描述
     version: string // 模板文件版本

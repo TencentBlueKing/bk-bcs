@@ -29,8 +29,8 @@ const (
 	// PhaseSkipped indicates the resource was intentionally skipped
 	PhaseSkipped = "Skipped"
 
-	// PhaseCancelled indicates the resource was cancelled before completion
-	PhaseCancelled = "Cancelled"
+	// PhaseCancelled indicates the resource was canceled before completion
+	PhaseCancelled = "Canceled"
 
 	// PhaseUnknown indicates the resource phase cannot be determined
 	PhaseUnknown = "Unknown"
@@ -89,6 +89,12 @@ const (
 	// ActionTypeLocalization represents a Clusternet Localization action
 	ActionTypeLocalization = "Localization"
 
+	// ActionTypeGlobalization represents a Clusternet Globalization action
+	ActionTypeGlobalization = "Globalization"
+
+	// ActionTypeHelmChart represents a Clusternet HelmChart action
+	ActionTypeHelmChart = "HelmChart"
+
 	// ActionTypeSubscription represents a Clusternet Subscription action
 	ActionTypeSubscription = "Subscription"
 
@@ -109,6 +115,10 @@ const (
 
 	// OperationDelete deletes a resource
 	OperationDelete = "Delete"
+
+	// OperationReplace deletes the existing resource then creates a new one.
+	// Maps to Helm's hook-delete-policy: before-hook-creation.
+	OperationReplace = "Replace"
 )
 
 // HTTP Method constants
@@ -166,4 +176,26 @@ const (
 
 	// ParameterTypeBoolean represents a boolean parameter
 	ParameterTypeBoolean = "boolean"
+)
+
+// ClusterExecutionMode constants
+const (
+	// ClusterExecutionModeGlobal executes the action as a single aggregate across all binding clusters.
+	// This is the default when ClusterExecutionMode is empty.
+	ClusterExecutionModeGlobal = "Global"
+
+	// ClusterExecutionModePerCluster splits the action into per-cluster child Subscriptions at runtime.
+	ClusterExecutionModePerCluster = "PerCluster"
+)
+
+// Namespace constants
+const (
+	// DefaultNamespace is the default namespace when not specified
+	DefaultNamespace = "default"
+)
+
+// Status Message constants
+const (
+	// MessageRollbackSuccess indicates successful rollback with custom action
+	MessageRollbackSuccess = "Rolled back: executed custom rollback action"
 )

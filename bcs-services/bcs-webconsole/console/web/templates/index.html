@@ -479,6 +479,26 @@
                                 }, window.location.origin)
                             }
                             return false;
+                        } else if (e.ctrlKey && e.shiftKey && e.code === 'KeyC') {
+                            // Windows下Ctrl+Shift+C会打开浏览器开发者工具, 拦截该快捷键用于复制选中文本
+                            e.preventDefault();
+                            var selection = self.term.getSelection();
+                            if (selection) {
+                                if (navigator.clipboard && navigator.clipboard.writeText) {
+                                    navigator.clipboard.writeText(selection);
+                                } else {
+                                    // fallback for insecure contexts
+                                    var textarea = document.createElement('textarea');
+                                    textarea.value = selection;
+                                    textarea.style.position = 'fixed';
+                                    textarea.style.opacity = '0';
+                                    document.body.appendChild(textarea);
+                                    textarea.select();
+                                    document.execCommand('copy');
+                                    document.body.removeChild(textarea);
+                                }
+                            }
+                            return false;
                         }
                     })
                 },

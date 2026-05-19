@@ -54,19 +54,36 @@ type NamespacedLB struct {
 	// func for create cloud.LoadBalance
 	newLBFunc func(map[string][]byte, client.Client, eventer.WatchEventInterface) (cloud.LoadBalance, error)
 
+	// defaultClient is the load balance client built from the controller's global credentials
+	// (e.g. env-var based TENCENTCLOUD_ACCESS_KEY_ID/TENCENTCLOUD_ACESS_KEY). It is used as the
+	// cloud client for ingresses whose namespace is listed in exemptNamespaces, so that those
+	// ingresses bypass per-namespace secret/controllerconfig lookup. When defaultClient is nil
+	// the exemption is disabled and the original per-namespace behavior applies to every ns.
+	defaultClient cloud.LoadBalance
+
+	// exemptNamespaces is the set of namespaces that should use defaultClient instead of the
+	// per-namespace secret/controllerconfig. A nil or empty set disables the exemption.
+	exemptNamespaces map[string]struct{}
+
 	clientLock sync.Mutex
 }
 
-// NewNamespacedLB create namespaced lb client
+// NewNamespacedLB create namespaced lb client.
+// defaultClient and exemptNamespaces are optional; when both are provided, ingresses whose
+// namespace is in exemptNamespaces will reuse defaultClient directly (built from the controller's
+// global credentials) and skip the per-namespace secret/controllerconfig lookup. Passing a nil
+// defaultClient OR a nil/empty exemptNamespaces keeps the original per-namespace behavior.
 func NewNamespacedLB(ctx context.Context, k8sClient client.Client, eventWatcher eventer.WatchEventInterface,
 	newLBFunc func(data map[string][]byte, cli client.Client, eventWatcher eventer.WatchEventInterface) (cloud.
-		LoadBalance, error)) *NamespacedLB {
+		LoadBalance, error), defaultClient cloud.LoadBalance, exemptNamespaces map[string]struct{}) *NamespacedLB {
 	lb := &NamespacedLB{
 		k8sClient:                  k8sClient,
 		eventWatcher:               eventWatcher,
 		nsClientSet:                make(map[string]cloud.LoadBalance),
 		ncClientResourceVersionMap: make(map[string]string),
 		newLBFunc:                  newLBFunc,
+		defaultClient:              defaultClient,
+		exemptNamespaces:           exemptNamespaces,
 	}
 
 	go func() {
@@ -85,10 +102,25 @@ func NewNamespacedLB(ctx context.Context, k8sClient client.Client, eventWatcher 
 	return lb
 }
 
+// isExempt reports whether the namespace is whitelisted to use defaultClient.
+// Returns false when either defaultClient is nil or the namespace is not in the set,
+// so callers fall back to the per-namespace credential lookup in both cases.
+func (nc *NamespacedLB) isExempt(ns string) bool {
+	if nc.defaultClient == nil || len(nc.exemptNamespaces) == 0 {
+		return false
+	}
+	_, ok := nc.exemptNamespaces[ns]
+	return ok
+}
+
 func (nc *NamespacedLB) reloadNsClient() {
 	nc.clientLock.Lock()
 	defer nc.clientLock.Unlock()
 	for ns := range nc.nsClientSet {
+		// exempt namespaces reuse defaultClient so there is no per-ns secret to reload
+		if nc.isExempt(ns) {
+			continue
+		}
 		cloudSecret, resourceVersion, err := nc.getNsSecret(ns)
 		if err != nil {
 			blog.Errorf("get namespace[%s] cloud secret failed, err: %s", ns, err.Error())
@@ -168,6 +200,11 @@ func (nc *NamespacedLB) initNsClient(ns string) (cloud.LoadBalance, string, erro
 
 // get client for certain namespace, if it is not existed, try to create one
 func (nc *NamespacedLB) getNsClient(ns string) (cloud.LoadBalance, error) {
+	// exempt namespaces bypass per-ns secret/controllerconfig lookup and reuse
+	// the controller's global-credentials client directly.
+	if nc.isExempt(ns) {
+		return nc.defaultClient, nil
+	}
 	tmpClient, ok := nc.nsClientSet[ns]
 	if !ok {
 		newClient, resourceVersion, err := nc.initNsClient(ns)

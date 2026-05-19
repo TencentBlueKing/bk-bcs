@@ -137,6 +137,11 @@ func getQuotaUsage(q *quota.ProjectQuota) {
 		if gpuNvdia.AsApproximateFloat64() != 0 {
 			q.Quota.Gpu.DeviceQuotaUsed = strconv.FormatFloat(gpuNvdia.AsApproximateFloat64(), 'f', 2, 64)
 		}
+		// 获取紫霄 GPU 使用量
+		gpuGcu := quotaStorage.Status.TotalQuota.Used["requests.tencent.com/gcu"]
+		if gpuGcu.AsApproximateFloat64() != 0 {
+			q.Quota.Gpu.DeviceQuotaUsed = strconv.FormatFloat(gpuGcu.AsApproximateFloat64(), 'f', 2, 64)
+		}
 		// 获取通用GPU使用量
 		gpu := quotaStorage.Status.TotalQuota.Used["gpu"]
 		if gpu.AsApproximateFloat64() != 0 {
@@ -208,6 +213,11 @@ func setGPUUsageForProto(q *proto.ProjectQuota, quotaStorage *bcsstorage.MultiCl
 	gpuNvdia := quotaStorage.Status.TotalQuota.Used["requests.nvidia.com/gpu"]
 	if gpuNvdia.AsApproximateFloat64() != 0 {
 		q.Quota.Gpu.DeviceQuotaUsed = strconv.FormatFloat(gpuNvdia.AsApproximateFloat64(), 'f', 2, 64)
+	}
+	// 获取紫霄 GPU 使用量
+	gpuGcu := quotaStorage.Status.TotalQuota.Used["requests.tencent.com/gcu"]
+	if gpuGcu.AsApproximateFloat64() != 0 {
+		q.Quota.Gpu.DeviceQuotaUsed = strconv.FormatFloat(gpuGcu.AsApproximateFloat64(), 'f', 2, 64)
 	}
 	// 获取通用GPU使用量
 	gpu := quotaStorage.Status.TotalQuota.Used["gpu"]

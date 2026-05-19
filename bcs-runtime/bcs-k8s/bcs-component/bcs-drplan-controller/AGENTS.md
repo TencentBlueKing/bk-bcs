@@ -52,6 +52,12 @@ Do not move files around. The CLI expects files in specific locations.
 ### Always Use CLI Commands
 Always use `kubebuilder create api` and `kubebuilder create webhook` to scaffold. Do NOT create files manually.
 
+### Documentation Language
+All landed project documents, implementation notes, specs, and plans MUST be written in Chinese unless the user explicitly requires another language.
+
+### Lint Compliance
+All code changes MUST satisfy the rules defined in `.golangci.yml`. Treat `.golangci.yml` as the source of truth for lint and style requirements, including line length, exported symbol comments, and other enabled linters.
+
 ### E2E Tests Require an Isolated Kind Cluster
 The e2e tests are designed to validate the solution in an isolated environment (similar to GitHub Actions CI).
 Ensure you run them against a dedicated [Kind](https://kind.sigs.k8s.io/) cluster (not your “real” dev/prod cluster).
@@ -67,6 +73,7 @@ make generate   # Regenerate DeepCopy methods
 **After editing `*.go` files:**
 ```
 make lint-fix   # Auto-fix code style
+make lint       # Enforce .golangci.yml rules
 make test       # Run unit tests
 ```
 

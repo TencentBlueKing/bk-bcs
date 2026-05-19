@@ -36,13 +36,13 @@ spec:
     - name: notify-oncall
       type: HTTP
       http:
-        url: "{{ .params.notifyURL }}"
+        url: "$(params.notifyURL)"
         method: POST
         headers:
           Content-Type: "application/json"
         body: |
           {
-            "cluster": "{{ .params.targetCluster }}",
+            "cluster": "$(params.targetCluster)",
             "action": "dr-started"
           }
         successCodes: [200, 201, 202]
@@ -60,8 +60,8 @@ spec:
       type: Localization
       localization:
         operation: Create       # Create | Patch | Delete
-        name: "dr-app-{{ .planName }}"
-        namespace: "{{ .params.targetCluster }}"  # ManagedCluster 命名空间
+        name: "dr-app-$(planName)"
+        namespace: "$(params.targetCluster)"  # ManagedCluster 命名空间
         priority: 500
         feed:  # 源资源引用
           apiVersion: apps/v1
@@ -93,21 +93,21 @@ spec:
       localization:
         operation: Patch
         name: "existing-app-localization"
-        namespace: "{{ .params.targetCluster }}"
+        namespace: "$(params.targetCluster)"
         overrides:
           - name: scale-replicas
             type: JSONPatch
             value: |
               - op: replace
                 path: /spec/replicas
-                value: {{ .params.replicas }}
+                value: $(params.replicas)
       timeout: "3m"
       rollback:
         type: Localization
         localization:
           operation: Patch
           name: "existing-app-localization"
-          namespace: "{{ .params.targetCluster }}"
+          namespace: "$(params.targetCluster)"
           overrides:
             - name: scale-replicas
               type: JSONPatch
@@ -125,7 +125,7 @@ spec:
       localization:
         operation: Patch
         name: "existing-app-localization"
-        namespace: "{{ .params.targetCluster }}"
+        namespace: "$(params.targetCluster)"
         priority: 800  # 提升优先级
         overrides:
           - name: enable-dr-mode
@@ -133,14 +133,14 @@ spec:
             value: |
               metadata:
                 labels:
-                  dr-mode: "{{ .params.drMode }}"
+                  dr-mode: "$(params.drMode)"
       timeout: "3m"
       rollback:
         type: Localization
         localization:
           operation: Patch
           name: "existing-app-localization"
-          namespace: "{{ .params.targetCluster }}"
+          namespace: "$(params.targetCluster)"
           priority: 500  # 恢复原始优先级
           overrides:
             - name: enable-dr-mode
@@ -158,7 +158,7 @@ spec:
       type: Subscription
       subscription:
         operation: Create       # Create | Patch | Delete
-        name: "dr-app-subscription-{{ .planName }}"
+        name: "dr-app-subscription-$(planName)"
         namespace: "clusternet-system"
         feeds:
           - apiVersion: apps/v1
@@ -225,11 +225,11 @@ spec:
                 command: ["sh", "-c"]
                 args:
                   - |
-                    echo "Syncing data to {{ .params.targetCluster }}..."
+                    echo "Syncing data to $(params.targetCluster)..."
                     # 执行数据同步逻辑
                 env:
                   - name: TARGET_CLUSTER
-                    value: "{{ .params.targetCluster }}"
+                    value: "$(params.targetCluster)"
         ttlSecondsAfterFinished: 3600
       timeout: "30m"
       # 未定义 rollback，自动逆操作：删除 Job
@@ -247,7 +247,7 @@ spec:
         body: |
           {
             "domain": "app.example.com",
-            "target": "{{ .params.targetCluster }}-ingress.example.com"
+            "target": "$(params.targetCluster)-ingress.example.com"
           }
       rollback:
         type: HTTP
@@ -274,10 +274,10 @@ spec:
           kind: ConfigMap
           metadata:
             name: "dr-config"
-            namespace: "{{ .params.targetCluster }}"
+            namespace: "$(params.targetCluster)"
           data:
-            dr-mode: "{{ .params.drMode }}"
-            db-endpoint: "{{ .params.dbEndpoint }}"
+            dr-mode: "$(params.drMode)"
+            db-endpoint: "$(params.dbEndpoint)"
       # Create 自动回滚：删除创建的 ConfigMap
       timeout: "30s"
     
@@ -293,7 +293,7 @@ spec:
           kind: ConfigMap
           metadata:
             name: "app-config"
-            namespace: "{{ .params.targetCluster }}"
+            namespace: "$(params.targetCluster)"
           data:
             mode: "dr"
       # Patch 必须显式定义回滚
@@ -306,7 +306,7 @@ spec:
             kind: ConfigMap
             metadata:
               name: "app-config"
-              namespace: "{{ .params.targetCluster }}"
+              namespace: "$(params.targetCluster)"
             data:
               mode: "normal"
 

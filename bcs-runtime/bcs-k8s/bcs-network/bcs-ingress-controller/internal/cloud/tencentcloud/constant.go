@@ -77,6 +77,8 @@ const (
 	MaxListenersForDescribeEachTime = 100
 	// MaxTargetForBatchRegisterEachTime max target number for batch registering each time
 	MaxTargetForBatchRegisterEachTime = 250
+	// MaxRulesForBatchModifyTargetEachTime max rule number for batch modifying target weight each time
+	MaxRulesForBatchModifyTargetEachTime = 100
 	// MaxLoadBalancersForDescribeHealthStatus max loadbalancers to describe health status
 	MaxLoadBalancersForDescribeHealthStatus = 5
 

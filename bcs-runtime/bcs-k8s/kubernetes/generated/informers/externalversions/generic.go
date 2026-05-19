@@ -72,6 +72,8 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Monitor().V1().ServiceMonitors().Informer()}, nil
 
 		// Group=networkextension, Version=v1
+	case networkextensionv1.SchemeGroupVersion.WithResource("hostnetportpools"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Networkextension().V1().HostNetPortPools().Informer()}, nil
 	case networkextensionv1.SchemeGroupVersion.WithResource("ingresses"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Networkextension().V1().Ingresses().Informer()}, nil
 	case networkextensionv1.SchemeGroupVersion.WithResource("listeners"):

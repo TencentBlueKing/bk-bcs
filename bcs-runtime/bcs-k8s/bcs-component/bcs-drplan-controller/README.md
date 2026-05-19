@@ -132,7 +132,6 @@ kubectl annotate drplanexecution <execution-name> dr.bkbcs.tencent.com/cancel=tr
 - [Specification](specs/001-drplan-action-executor/spec.md) - Feature specification
 - [Data Model](specs/001-drplan-action-executor/data-model.md) - CRD data model
 - [Quick Start](specs/001-drplan-action-executor/quickstart.md) - Quick start guide
-- [Annotation Trigger (DEPRECATED)](docs/trigger-annotation.md) - Legacy annotation-based trigger (removed)
 
 ## 🛠️ Development
 

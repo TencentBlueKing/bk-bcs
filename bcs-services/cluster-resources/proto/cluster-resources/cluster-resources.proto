@@ -1727,7 +1727,7 @@ service TemplateSet {
 	// 创建模板文件元数据
 	rpc CreateTemplateMetadata(CreateTemplateMetadataReq) returns (CommonResp) {
 		option (google.api.http) = {
-			post: "/clusterresources/v1/projects/{projectCode}/template/{templateSpaceID}/metadatas"
+			post: "/clusterresources/v1/projects/{projectCode}/template/metadatas"
 			body: "*"
 		};
 		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
@@ -3158,7 +3158,7 @@ message CreateTemplateSpaceReq {
 	}, (validate.rules).string = {min_len : 1, max_len : 32}];
 	string name = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "文件夹名称"
-	}, (validate.rules).string = {min_len : 1, max_len : 64}];
+	}, (validate.rules).string = {min_len : 1, max_len : 64, pattern: "^[a-zA-Z0-9_-]+$"}];
 	string description = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "文件夹描述"
 	}];
@@ -3179,7 +3179,7 @@ message UpdateTemplateSpaceReq {
 	}, (validate.rules).string = {min_len : 1, max_len : 32}];
 	string name = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "文件夹名称"
-	}, (validate.rules).string = {min_len : 1, max_len : 64}];
+	}, (validate.rules).string = {min_len : 1, max_len : 64, pattern: "^[a-zA-Z0-9_-]+$"}];
 	string description = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "文件夹描述"
 	}];
@@ -3290,7 +3290,7 @@ message CreateTemplateMetadataReq {
 	}];
 	string templateSpaceID = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "模板文件文件夹"
-	}, (validate.rules).string = {min_len : 1, max_len : 64}];
+	}, (validate.rules).string = {min_len : 0, max_len : 64}];
 	repeated string tags = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "模板文件元数据标签"
 	}];
