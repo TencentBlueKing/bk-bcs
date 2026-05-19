@@ -9504,10 +9504,10 @@ func (m *GetTemplateSpaceReq) validate(all bool) error {
 
 	}
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
 		err := GetTemplateSpaceReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -9617,10 +9617,10 @@ func (m *ListTemplateSpaceReq) validate(all bool) error {
 
 	var errors []error
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
 		err := ListTemplateSpaceReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -9732,10 +9732,10 @@ func (m *CreateTemplateSpaceReq) validate(all bool) error {
 
 	var errors []error
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
 		err := CreateTemplateSpaceReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -9870,10 +9870,10 @@ func (m *UpdateTemplateSpaceReq) validate(all bool) error {
 
 	}
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
 		err := UpdateTemplateSpaceReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -10008,10 +10008,10 @@ func (m *DeleteTemplateSpaceReq) validate(all bool) error {
 
 	}
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
 		err := DeleteTemplateSpaceReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -10133,10 +10133,10 @@ func (m *CopyTemplateSpaceReq) validate(all bool) error {
 
 	}
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
 		err := CopyTemplateSpaceReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -10250,10 +10250,10 @@ func (m *ListTemplateSpaceCollectReq) validate(all bool) error {
 
 	var errors []error
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
 		err := ListTemplateSpaceCollectReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -10364,10 +10364,10 @@ func (m *CreateTemplateSpaceCollectReq) validate(all bool) error {
 
 	var errors []error
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
 		err := CreateTemplateSpaceCollectReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -10489,10 +10489,10 @@ func (m *DeleteTemplateSpaceCollectReq) validate(all bool) error {
 
 	var errors []error
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
 		err := DeleteTemplateSpaceCollectReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -10626,10 +10626,10 @@ func (m *GetTemplateMetadataReq) validate(all bool) error {
 
 	}
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
 		err := GetTemplateMetadataReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -10739,10 +10739,10 @@ func (m *ListTemplateMetadataReq) validate(all bool) error {
 
 	var errors []error
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
 		err := ListTemplateMetadataReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -10863,10 +10863,10 @@ func (m *CreateTemplateMetadataReq) validate(all bool) error {
 
 	var errors []error
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
 		err := CreateTemplateMetadataReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -11030,10 +11030,10 @@ func (m *UpdateTemplateMetadataReq) validate(all bool) error {
 
 	}
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
 		err := UpdateTemplateMetadataReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -11182,10 +11182,10 @@ func (m *DeleteTemplateMetadataReq) validate(all bool) error {
 
 	}
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
 		err := DeleteTemplateMetadataReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -11307,10 +11307,10 @@ func (m *GetTemplateVersionReq) validate(all bool) error {
 
 	}
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
 		err := GetTemplateVersionReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -11420,10 +11420,10 @@ func (m *GetTemplateResourcesReq) validate(all bool) error {
 
 	var errors []error
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
 		err := GetTemplateResourcesReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -11537,10 +11537,10 @@ func (m *GetTemplateAssociateLabelsReq) validate(all bool) error {
 
 	var errors []error
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
 		err := GetTemplateAssociateLabelsReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -11666,10 +11666,10 @@ func (m *GetTemplateAssociatePortsReq) validate(all bool) error {
 
 	var errors []error
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
 		err := GetTemplateAssociatePortsReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -11943,10 +11943,10 @@ func (m *ListTemplateVersionReq) validate(all bool) error {
 
 	var errors []error
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
 		err := ListTemplateVersionReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -12067,10 +12067,10 @@ func (m *CreateTemplateVersionReq) validate(all bool) error {
 
 	var errors []error
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
 		err := CreateTemplateVersionReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -12224,10 +12224,10 @@ func (m *DeleteTemplateVersionReq) validate(all bool) error {
 
 	}
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
 		err := DeleteTemplateVersionReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -12350,10 +12350,10 @@ func (m *CreateTemplateSetReq) validate(all bool) error {
 
 	// no validation rules for Description
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
 		err := CreateTemplateSetReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -12657,10 +12657,10 @@ func (m *ListTemplateFileVariablesReq) validate(all bool) error {
 
 	var errors []error
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
 		err := ListTemplateFileVariablesReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -12793,10 +12793,10 @@ func (m *DeployTemplateFileReq) validate(all bool) error {
 
 	var errors []error
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
 		err := DeployTemplateFileReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -12932,10 +12932,10 @@ func (m *ConvertTemplateToHelmReq) validate(all bool) error {
 
 	var errors []error
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
 		err := ConvertTemplateToHelmReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -13068,10 +13068,10 @@ func (m *GetEnvManageReq) validate(all bool) error {
 
 	}
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
 		err := GetEnvManageReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -13179,10 +13179,10 @@ func (m *ListEnvManagesReq) validate(all bool) error {
 
 	var errors []error
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
 		err := ListEnvManagesReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -13292,10 +13292,10 @@ func (m *CreateEnvManageReq) validate(all bool) error {
 
 	var errors []error
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
 		err := CreateEnvManageReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -13462,10 +13462,10 @@ func (m *UpdateEnvManageReq) validate(all bool) error {
 
 	}
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
 		err := UpdateEnvManageReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -13768,10 +13768,10 @@ func (m *DeleteEnvManageReq) validate(all bool) error {
 
 	}
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
 		err := DeleteEnvManageReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err

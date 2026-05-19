@@ -3131,7 +3131,7 @@ message GetTemplateSpaceReq {
 	}, (validate.rules).string = {len : 24}];
 	string projectCode = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目编码"
-	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+	}, (validate.rules).string = {min_len : 1, max_len : 64}];
 }
 
 message ListTemplateSpaceReq {
@@ -3140,7 +3140,7 @@ message ListTemplateSpaceReq {
 	};
 	string projectCode = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目编码"
-	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+	}, (validate.rules).string = {min_len : 1, max_len : 64}];
 	string name = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "文件夹名称"
 	}];
@@ -3155,7 +3155,7 @@ message CreateTemplateSpaceReq {
 	};
 	string projectCode = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目编码"
-	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+	}, (validate.rules).string = {min_len : 1, max_len : 64}];
 	string name = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "文件夹名称"
 	}, (validate.rules).string = {min_len : 1, max_len : 64}];
@@ -3176,7 +3176,7 @@ message UpdateTemplateSpaceReq {
 	}, (validate.rules).string = {len : 24}];
 	string projectCode = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目编码"
-	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+	}, (validate.rules).string = {min_len : 1, max_len : 64}];
 	string name = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "文件夹名称"
 	}, (validate.rules).string = {min_len : 1, max_len : 64}];
@@ -3197,7 +3197,7 @@ message DeleteTemplateSpaceReq {
 	}, (validate.rules).string = {len : 24}];
 	string projectCode = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目编码"
-	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+	}, (validate.rules).string = {min_len : 1, max_len : 64}];
 }
 
 message CopyTemplateSpaceReq {
@@ -3209,7 +3209,7 @@ message CopyTemplateSpaceReq {
 	}, (validate.rules).string = {len : 24}];
 	string projectCode = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目编码"
-	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+	}, (validate.rules).string = {min_len : 1, max_len : 64}];
 	string name = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "名称"
 	}];
@@ -3224,7 +3224,7 @@ message ListTemplateSpaceCollectReq {
 	};
 	string projectCode = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目编码"
-	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+	}, (validate.rules).string = {min_len : 1, max_len : 64}];
 }
 
 message CreateTemplateSpaceCollectReq {
@@ -3233,7 +3233,7 @@ message CreateTemplateSpaceCollectReq {
 	};
 	string projectCode = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目编码"
-	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+	}, (validate.rules).string = {min_len : 1, max_len : 64}];
 	string templateSpaceID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "模板文件文件夹ID"
 	}, (validate.rules).string = {min_len : 1, max_len : 64}];
@@ -3245,7 +3245,7 @@ message DeleteTemplateSpaceCollectReq {
 	};
 	string projectCode = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目编码"
-	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+	}, (validate.rules).string = {min_len : 1, max_len : 64}];
 	string templateSpaceID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "模板文件文件夹ID"
 	}, (validate.rules).string = {min_len : 1, max_len : 64}];
@@ -3260,7 +3260,7 @@ message GetTemplateMetadataReq {
 	}, (validate.rules).string = {len : 24}];
 	string projectCode = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目编码"
-	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+	}, (validate.rules).string = {min_len : 1, max_len : 64}];
 }
 
 message ListTemplateMetadataReq {
@@ -3269,7 +3269,7 @@ message ListTemplateMetadataReq {
 	};
 	string projectCode = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目编码"
-	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+	}, (validate.rules).string = {min_len : 1, max_len : 64}];
 	string templateSpaceID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "模板文件文件夹"
 	}, (validate.rules).string = {min_len : 1, max_len : 64}];
@@ -3281,7 +3281,7 @@ message CreateTemplateMetadataReq {
 	};
 	string projectCode = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目编码"
-	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+	}, (validate.rules).string = {min_len : 1, max_len : 64}];
 	string name = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "模板文件元数据名称"
 	}, (validate.rules).string = {min_len : 1, max_len : 64}];
@@ -3332,7 +3332,7 @@ message UpdateTemplateMetadataReq {
 	}, (validate.rules).string = {len : 24}];
 	string projectCode = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目编码"
-	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+	}, (validate.rules).string = {min_len : 1, max_len : 64}];
 	string name = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "模板文件元数据名称"
 	}, (validate.rules).string = {min_len : 1, max_len : 64}];
@@ -3381,7 +3381,7 @@ message DeleteTemplateMetadataReq {
 	}, (validate.rules).string = {len : 24}];
 	string projectCode = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目编码"
-	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+	}, (validate.rules).string = {min_len : 1, max_len : 64}];
 }
 
 message GetTemplateVersionReq {
@@ -3393,7 +3393,7 @@ message GetTemplateVersionReq {
 	}, (validate.rules).string = {len : 24}];
 	string projectCode = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目编码"
-	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+	}, (validate.rules).string = {min_len : 1, max_len : 64}];
 }
 
 message GetTemplateResourcesReq {
@@ -3402,7 +3402,7 @@ message GetTemplateResourcesReq {
 	};
 	string projectCode = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目编码"
-	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+	}, (validate.rules).string = {min_len : 1, max_len : 64}];
 	string templateSpace = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "模板文件文件夹名称"
 	}];
@@ -3417,7 +3417,7 @@ message GetTemplateAssociateLabelsReq {
 	};
 	string projectCode = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目编码"
-	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+	}, (validate.rules).string = {min_len : 1, max_len : 64}];
 	string templateSpace = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "模板文件文件夹名称"
 	}];
@@ -3435,7 +3435,7 @@ message GetTemplateAssociatePortsReq {
 	};
 	string projectCode = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目编码"
-	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+	}, (validate.rules).string = {min_len : 1, max_len : 64}];
 	string templateSpace = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "模板文件文件夹名称"
 	}];
@@ -3474,7 +3474,7 @@ message ListTemplateVersionReq {
 	};
 	string projectCode = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目编码"
-	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+	}, (validate.rules).string = {min_len : 1, max_len : 64}];
 	string templateID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "模板文件元数据ID"
 	}, (validate.rules).string = {min_len : 1, max_len : 64}];
@@ -3486,7 +3486,7 @@ message CreateTemplateVersionReq {
 	};
 	string projectCode = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目编码"
-	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+	}, (validate.rules).string = {min_len : 1, max_len : 64}];
 	string description = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "模板文件版本描述"
 	}];
@@ -3519,7 +3519,7 @@ message DeleteTemplateVersionReq {
 	}, (validate.rules).string = {len : 24}];
 	string projectCode = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目编码"
-	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+	}, (validate.rules).string = {min_len : 1, max_len : 64}];
 }
 
 message CreateTemplateSetReq {
@@ -3534,7 +3534,7 @@ message CreateTemplateSetReq {
 	}];
 	string projectCode = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目编码"
-	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+	}, (validate.rules).string = {min_len : 1, max_len : 64}];
 	string version = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "模板集版本"
 	}, (validate.rules).string = {min_len : 1, max_len : 64}];
@@ -3576,7 +3576,7 @@ message ListTemplateFileVariablesReq {
 	};
 	string projectCode = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目编码"
-	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+	}, (validate.rules).string = {min_len : 1, max_len : 64}];
 	repeated string templateVersions = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "模板文件列表"
 	}];
@@ -3594,7 +3594,7 @@ message DeployTemplateFileReq {
 	};
 	string projectCode = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目编码"
-	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+	}, (validate.rules).string = {min_len : 1, max_len : 64}];
 	repeated string templateVersions = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "模板文件列表"
 	}];
@@ -3618,7 +3618,7 @@ message ConvertTemplateToHelmReq {
 	};
 	string projectCode = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目编码"
-	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+	}, (validate.rules).string = {min_len : 1, max_len : 64}];
 	string content = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "模板文件内容"
 	}, (validate.rules).string = {min_len : 1}];
@@ -3633,7 +3633,7 @@ message GetEnvManageReq {
 	}, (validate.rules).string = {len : 24}];
 	string projectCode = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目编码"
-	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+	}, (validate.rules).string = {min_len : 1, max_len : 64}];
 }
 
 message ListEnvManagesReq {
@@ -3642,7 +3642,7 @@ message ListEnvManagesReq {
 	};
 	string projectCode = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目编码"
-	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+	}, (validate.rules).string = {min_len : 1, max_len : 64}];
 }
 
 message CreateEnvManageReq {
@@ -3651,7 +3651,7 @@ message CreateEnvManageReq {
 	};
 	string projectCode = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目编码"
-	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+	}, (validate.rules).string = {min_len : 1, max_len : 64}];
 	string env = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "环境名称"
 	}, (validate.rules).string = {min_len : 1, max_len : 64}];
@@ -3669,7 +3669,7 @@ message UpdateEnvManageReq {
 	}, (validate.rules).string = {len : 24}];
 	string projectCode = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目编码"
-	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+	}, (validate.rules).string = {min_len : 1, max_len : 64}];
 	repeated ClusterNamespaces clusterNamespaces = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "关联命名空间"
 	}, (validate.rules).repeated = {min_items : 0}];
@@ -3702,7 +3702,7 @@ message DeleteEnvManageReq {
 	}, (validate.rules).string = {len : 24}];
 	string projectCode = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目编码"
-	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+	}, (validate.rules).string = {min_len : 1, max_len : 64}];
 }
 
 message FetchMultiClusterResourceReq {
