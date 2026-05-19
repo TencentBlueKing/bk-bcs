@@ -722,10 +722,10 @@ func (m *CreateRepositoryReq) validate(all bool) error {
 
 	var errors []error
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
 		err := CreateRepositoryReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -733,10 +733,10 @@ func (m *CreateRepositoryReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 64 {
 		err := CreateRepositoryReqValidationError{
 			field:  "Name",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -1034,10 +1034,10 @@ func (m *CreatePersonalRepoReq) validate(all bool) error {
 
 	var errors []error
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
 		err := CreatePersonalRepoReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -1315,10 +1315,10 @@ func (m *UpdateRepositoryReq) validate(all bool) error {
 
 	var errors []error
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
 		err := UpdateRepositoryReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -1326,10 +1326,10 @@ func (m *UpdateRepositoryReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 64 {
 		err := UpdateRepositoryReqValidationError{
 			field:  "Name",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -1617,10 +1617,10 @@ func (m *GetRepositoryReq) validate(all bool) error {
 
 	var errors []error
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
 		err := GetRepositoryReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -1628,10 +1628,10 @@ func (m *GetRepositoryReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 64 {
 		err := GetRepositoryReqValidationError{
 			field:  "Name",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -1907,10 +1907,10 @@ func (m *ListRepositoryReq) validate(all bool) error {
 
 	var errors []error
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
 		err := ListRepositoryReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -2193,10 +2193,10 @@ func (m *DeleteRepositoryReq) validate(all bool) error {
 
 	var errors []error
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
 		err := DeleteRepositoryReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -2204,10 +2204,10 @@ func (m *DeleteRepositoryReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 64 {
 		err := DeleteRepositoryReqValidationError{
 			field:  "Name",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -3374,10 +3374,10 @@ func (m *ListChartV1Req) validate(all bool) error {
 
 	// no validation rules for Size
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
 		err := ListChartV1ReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -3664,10 +3664,10 @@ func (m *GetChartDetailV1Req) validate(all bool) error {
 
 	var errors []error
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
 		err := GetChartDetailV1ReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -3971,10 +3971,10 @@ func (m *ListChartVersionV1Req) validate(all bool) error {
 
 	// no validation rules for Size
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
 		err := ListChartVersionV1ReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -4274,10 +4274,10 @@ func (m *GetVersionDetailV1Req) validate(all bool) error {
 
 	var errors []error
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
 		err := GetVersionDetailV1ReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -4588,10 +4588,10 @@ func (m *DeleteChartReq) validate(all bool) error {
 
 	var errors []error
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
 		err := DeleteChartReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -4858,10 +4858,10 @@ func (m *DeleteChartVersionReq) validate(all bool) error {
 
 	var errors []error
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
 		err := DeleteChartVersionReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -5143,10 +5143,10 @@ func (m *DownloadChartReq) validate(all bool) error {
 
 	var errors []error
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
 		err := DownloadChartReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -5287,10 +5287,10 @@ func (m *UploadChartReq) validate(all bool) error {
 
 	var errors []error
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
 		err := UploadChartReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -5552,10 +5552,10 @@ func (m *GetChartReleaseReq) validate(all bool) error {
 
 	var errors []error
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
 		err := GetChartReleaseReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -5860,10 +5860,10 @@ func (m *ImportClusterReleaseReq) validate(all bool) error {
 
 	var errors []error
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
 		err := ImportClusterReleaseReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -6571,10 +6571,10 @@ func (m *ListReleaseV1Req) validate(all bool) error {
 
 	var errors []error
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
 		err := ListReleaseV1ReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -6869,10 +6869,10 @@ func (m *GetReleaseDetailV1Req) validate(all bool) error {
 
 	var errors []error
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
 		err := GetReleaseDetailV1ReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -7183,10 +7183,10 @@ func (m *InstallReleaseV1Req) validate(all bool) error {
 
 	var errors []error
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
 		err := InstallReleaseV1ReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -7507,10 +7507,10 @@ func (m *UninstallReleaseV1Req) validate(all bool) error {
 
 	var errors []error
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
 		err := UninstallReleaseV1ReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -7792,10 +7792,10 @@ func (m *UpgradeReleaseV1Req) validate(all bool) error {
 
 	var errors []error
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
 		err := UpgradeReleaseV1ReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -8089,10 +8089,10 @@ func (m *RollbackReleaseV1Req) validate(all bool) error {
 
 	var errors []error
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
 		err := RollbackReleaseV1ReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -8376,10 +8376,10 @@ func (m *ReleasePreviewReq) validate(all bool) error {
 
 	var errors []error
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
 		err := ReleasePreviewReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -8927,10 +8927,10 @@ func (m *GetReleaseHistoryReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
 		err := GetReleaseHistoryReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -9368,10 +9368,10 @@ func (m *GetReleaseManifestReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
 		err := GetReleaseManifestReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -9701,10 +9701,10 @@ func (m *GetReleaseStatusReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
 		err := GetReleaseStatusReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -9847,10 +9847,10 @@ func (m *GetReleaseDetailExtendReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
 		err := GetReleaseDetailExtendReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -9993,10 +9993,10 @@ func (m *GetReleasePodsReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
 		err := GetReleasePodsReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -10108,10 +10108,10 @@ func (m *ListAddonsReq) validate(all bool) error {
 
 	var errors []error
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
 		err := ListAddonsReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -10527,10 +10527,10 @@ func (m *GetAddonsDetailReq) validate(all bool) error {
 
 	var errors []error
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
 		err := GetAddonsDetailReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -10549,10 +10549,10 @@ func (m *GetAddonsDetailReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 64 {
 		err := GetAddonsDetailReqValidationError{
 			field:  "Name",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -10830,10 +10830,10 @@ func (m *InstallAddonsReq) validate(all bool) error {
 
 	var errors []error
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
 		err := InstallAddonsReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -10852,10 +10852,10 @@ func (m *InstallAddonsReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 64 {
 		err := InstallAddonsReqValidationError{
 			field:  "Name",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -11106,10 +11106,10 @@ func (m *UpgradeAddonsReq) validate(all bool) error {
 
 	var errors []error
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
 		err := UpgradeAddonsReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -11128,10 +11128,10 @@ func (m *UpgradeAddonsReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 64 {
 		err := UpgradeAddonsReqValidationError{
 			field:  "Name",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -11382,10 +11382,10 @@ func (m *PreviewAddonsReq) validate(all bool) error {
 
 	var errors []error
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
 		err := PreviewAddonsReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -11404,10 +11404,10 @@ func (m *PreviewAddonsReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 64 {
 		err := PreviewAddonsReqValidationError{
 			field:  "Name",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -11528,10 +11528,10 @@ func (m *StopAddonsReq) validate(all bool) error {
 
 	var errors []error
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
 		err := StopAddonsReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -11550,10 +11550,10 @@ func (m *StopAddonsReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 64 {
 		err := StopAddonsReqValidationError{
 			field:  "Name",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -11798,10 +11798,10 @@ func (m *UninstallAddonsReq) validate(all bool) error {
 
 	var errors []error
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
 		err := UninstallAddonsReqValidationError{
 			field:  "ProjectCode",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -11820,10 +11820,10 @@ func (m *UninstallAddonsReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 64 {
 		err := UninstallAddonsReqValidationError{
 			field:  "Name",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err

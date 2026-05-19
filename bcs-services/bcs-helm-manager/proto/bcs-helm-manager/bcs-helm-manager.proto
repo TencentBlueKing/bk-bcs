@@ -514,11 +514,11 @@ message CreateRepositoryReq {
     optional string projectCode = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "projectCode",
         description: "项目代码"
-    }, (validate.rules).string = {min_len : 1 , max_len : 32}];
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
     optional string name = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "name",
         description: "仓库名称"
-    }, (validate.rules).string = {min_len : 1 , max_len : 32}];
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
     optional string type = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "type",
         description: "仓库类型，HELM(Helm仓库), GENERIC(通用二进制文件仓库)"
@@ -606,7 +606,7 @@ message CreatePersonalRepoReq {
     optional string projectCode = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "projectCode",
         description: "项目代码"
-    }, (validate.rules).string = {min_len : 1 , max_len : 32}];
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
 }
 
 message CreatePersonalRepoResp {
@@ -654,11 +654,11 @@ message UpdateRepositoryReq {
     optional string projectCode = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "projectCode",
         description: "项目代码"
-    }, (validate.rules).string = {min_len : 1 , max_len : 32}];
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
     optional string name = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "name",
         description: "仓库名称"
-    }, (validate.rules).string = {min_len : 1 , max_len : 32}];
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
     optional string type = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "type",
         description: "仓库类型"
@@ -726,11 +726,11 @@ message GetRepositoryReq {
     optional string projectCode = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "projectCode",
         description: "项目代码"
-    }, (validate.rules).string = {min_len : 1, max_len : 32}];
+    }, (validate.rules).string = {min_len : 1, max_len : 64}];
     optional string name = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "name",
         description: "仓库名称"
-    }, (validate.rules).string = {min_len : 1, max_len : 32}];
+    }, (validate.rules).string = {min_len : 1, max_len : 64}];
 }
 
 message GetRepositoryResp {
@@ -778,7 +778,7 @@ message ListRepositoryReq {
     optional string projectCode = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "projectCode",
         description: "项目代码"
-    }, (validate.rules).string = {min_len : 1 , max_len : 32}];
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
 }
 
 message ListRepositoryResp {
@@ -826,11 +826,11 @@ message DeleteRepositoryReq {
     optional string projectCode = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "projectCode",
         description: "项目代码"
-    }, (validate.rules).string = {min_len : 1 , max_len : 32}];
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
     optional string name = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "name",
         description: "仓库名称"
-    }, (validate.rules).string = {min_len : 1 , max_len : 32}];
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
 }
 
 message DeleteRepositoryResp {
@@ -1127,7 +1127,7 @@ message ListChartV1Req {
     required string projectCode = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "projectCode",
         description: "项目代码"
-    }, (validate.rules).string = {min_len : 1 , max_len : 32}];
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
     required string repoName = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "repoName",
         description: "仓库名称"
@@ -1183,7 +1183,7 @@ message GetChartDetailV1Req {
     required string projectCode = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "projectCode",
         description: "项目代码"
-    }, (validate.rules).string = {min_len : 1 , max_len : 32}];
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
     required string repoName = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "repoName",
         description: "仓库名称"
@@ -1247,7 +1247,7 @@ message ListChartVersionV1Req {
     required string projectCode = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "projectCode",
         description: "项目代码"
-    }, (validate.rules).string = {min_len : 1 , max_len : 32}];
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
     required string repoName = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "repoName",
         description: "仓库名称"
@@ -1303,7 +1303,7 @@ message GetVersionDetailV1Req {
     required string projectCode = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "projectCode",
         description: "项目代码"
-    }, (validate.rules).string = {min_len : 1 , max_len : 32}];
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
     required string repoName = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "repoName",
         description: "仓库名称"
@@ -1363,7 +1363,7 @@ message DeleteChartReq {
     required string projectCode = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "projectCode",
         description: "项目代码"
-    }, (validate.rules).string = {min_len : 1 , max_len : 32}];
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
     required string repoName = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "repoName",
         description: "仓库名称"
@@ -1415,7 +1415,7 @@ message DeleteChartVersionReq {
     required string projectCode = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "projectCode",
         description: "项目代码"
-    }, (validate.rules).string = {min_len : 1 , max_len : 32}];
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
     required string repoName = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "repoName",
         description: "仓库名称"
@@ -1471,7 +1471,7 @@ message DownloadChartReq {
     required string projectCode = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "projectCode",
         description: "项目代码"
-    }, (validate.rules).string = {min_len : 1 , max_len : 32}];
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
     required string repoName = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "repoName",
         description: "仓库名称"
@@ -1497,7 +1497,7 @@ message UploadChartReq {
     optional string projectCode = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "projectCode",
         description: "项目代码"
-    }, (validate.rules).string = {min_len : 1 , max_len : 32}];
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
     optional string repoName = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "repoName",
         description: "仓库名称"
@@ -1557,7 +1557,7 @@ message GetChartReleaseReq {
     optional string projectCode = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "projectCode",
         description: "项目代码"
-    }, (validate.rules).string = {min_len : 1 , max_len : 32}];
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
     optional string repoName = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "repoName",
         description: "仓库名称"
@@ -1617,7 +1617,7 @@ message ImportClusterReleaseReq {
     optional string projectCode = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "projectCode",
         description: "项目代码"
-    }, (validate.rules).string = {min_len : 1 , max_len : 32}];
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
     optional string clusterID = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "clusterID",
         description: "集群ID"
@@ -1846,7 +1846,7 @@ message ListReleaseV1Req {
     required string projectCode = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "projectCode",
         description: "项目代码"
-    }, (validate.rules).string = {min_len : 1 , max_len : 32}];
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
     required string clusterID = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "clusterID",
         description: "集群ID"
@@ -1914,7 +1914,7 @@ message GetReleaseDetailV1Req {
     required string projectCode = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "projectCode",
         description: "项目代码"
-    }, (validate.rules).string = {min_len : 1 , max_len : 32}];
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
     required string clusterID = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "clusterID",
         description: "集群ID"
@@ -1974,7 +1974,7 @@ message InstallReleaseV1Req {
     optional string projectCode = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "projectCode",
         description: "项目代码"
-    }, (validate.rules).string = {min_len : 1 , max_len : 32}];
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
     optional string clusterID = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "clusterID",
         description: "所在的集群ID"
@@ -2062,7 +2062,7 @@ message UninstallReleaseV1Req {
     optional string projectCode = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "projectCode",
         description: "项目代码"
-    }, (validate.rules).string = {min_len : 1 , max_len : 32}];
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
     optional string clusterID = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "clusterID",
         description: "所在的集群ID"
@@ -2118,7 +2118,7 @@ message UpgradeReleaseV1Req {
     optional string projectCode = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "projectCode",
         description: "项目代码"
-    }, (validate.rules).string = {min_len : 1 , max_len : 32}];
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
     optional string clusterID = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "clusterID",
         description: "所在的集群ID"
@@ -2206,7 +2206,7 @@ message RollbackReleaseV1Req {
     optional string projectCode = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "projectCode",
         description: "项目代码"
-    }, (validate.rules).string = {min_len : 1 , max_len : 32}];
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
     optional string clusterID = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "clusterID",
         description: "所在的集群ID"
@@ -2266,7 +2266,7 @@ message ReleasePreviewReq {
     optional string projectCode = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "projectCode",
         description: "项目代码"
-    }, (validate.rules).string = {min_len : 1 , max_len : 32}];
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
     optional string clusterID = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "clusterID",
         description: "所在的集群ID"
@@ -2381,7 +2381,7 @@ message GetReleaseHistoryReq {
     required string projectCode = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "projectCode",
         description: "项目代码"
-    }, (validate.rules).string = {min_len : 1 , max_len : 32}];
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
     optional string filter = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "filter",
         description: "状态过滤"
@@ -2495,7 +2495,7 @@ message GetReleaseManifestReq {
     required string projectCode = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "projectCode",
         description: "项目代码"
-    }, (validate.rules).string = {min_len : 1 , max_len : 32}];
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
     required uint32 revision = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "revision",
         description: "release 版本"
@@ -2559,7 +2559,7 @@ message GetReleaseStatusReq {
     required string projectCode = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "projectCode",
         description: "项目代码"
-    }, (validate.rules).string = {min_len : 1 , max_len : 32}];
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
 }
 
 message GetReleaseDetailExtendReq {
@@ -2585,7 +2585,7 @@ message GetReleaseDetailExtendReq {
     required string projectCode = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "projectCode",
         description: "项目代码"
-    }, (validate.rules).string = {min_len : 1, max_len : 32}];
+    }, (validate.rules).string = {min_len : 1, max_len : 64}];
 }
 
 message GetReleasePodsReq {
@@ -2611,7 +2611,7 @@ message GetReleasePodsReq {
     required string projectCode = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "projectCode",
         description: "项目代码"
-    }, (validate.rules).string = {min_len : 1 , max_len : 32}];
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
     optional uint32 after = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "after",
         description: "查询指定时间之后的 pods"
@@ -2628,7 +2628,7 @@ message ListAddonsReq {
     required string projectCode = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "projectCode",
         description: "项目代码"
-    }, (validate.rules).string = {min_len : 1 , max_len : 32}];
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
     required string clusterID = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "clusterID",
         description: "所在的集群ID"
@@ -2748,7 +2748,7 @@ message GetAddonsDetailReq {
     required string projectCode = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "projectCode",
         description: "项目代码"
-    }, (validate.rules).string = {min_len : 1 , max_len : 32}];
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
     required string clusterID = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "clusterID",
         description: "所在的集群ID"
@@ -2756,7 +2756,7 @@ message GetAddonsDetailReq {
     required string name = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "name",
         description: "组件名称"
-    }, (validate.rules).string = {min_len : 1 , max_len : 32}];
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
 }
 
 message GetAddonsDetailResp {
@@ -2802,7 +2802,7 @@ message InstallAddonsReq {
     optional string projectCode = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "projectCode",
         description: "项目代码"
-    }, (validate.rules).string = {min_len : 1 , max_len : 32}];
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
     optional string clusterID = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "clusterID",
         description: "所在的集群ID"
@@ -2810,7 +2810,7 @@ message InstallAddonsReq {
     required string name = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "name",
         description: "组件名称"
-    }, (validate.rules).string = {min_len : 1 , max_len : 32}];
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
     required string version = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "version",
         description: "组件版本"
@@ -2860,7 +2860,7 @@ message UpgradeAddonsReq {
     optional string projectCode = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "projectCode",
         description: "项目代码"
-    }, (validate.rules).string = {min_len : 1 , max_len : 32}];
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
     optional string clusterID = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "clusterID",
         description: "所在的集群ID"
@@ -2868,7 +2868,7 @@ message UpgradeAddonsReq {
     optional string name = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "name",
         description: "组件名称"
-    }, (validate.rules).string = {min_len : 1 , max_len : 32}];
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
     optional string version = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "version",
         description: "组件版本"
@@ -2918,7 +2918,7 @@ message PreviewAddonsReq {
     optional string projectCode = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "projectCode",
         description: "项目代码"
-    }, (validate.rules).string = {min_len : 1 , max_len : 32}];
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
     optional string clusterID = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "clusterID",
         description: "所在的集群ID"
@@ -2926,7 +2926,7 @@ message PreviewAddonsReq {
     optional string name = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "name",
         description: "组件名称"
-    }, (validate.rules).string = {min_len : 1 , max_len : 32}];
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
     optional string version = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "version",
         description: "组件版本"
@@ -2947,7 +2947,7 @@ message StopAddonsReq {
     optional string projectCode = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "projectCode",
         description: "项目代码"
-    }, (validate.rules).string = {min_len : 1 , max_len : 32}];
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
     optional string clusterID = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "clusterID",
         description: "所在的集群ID"
@@ -2955,7 +2955,7 @@ message StopAddonsReq {
     optional string name = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "name",
         description: "组件名称"
-    }, (validate.rules).string = {min_len : 1 , max_len : 32}];
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
 }
 
 message StopAddonsResp {
@@ -2997,7 +2997,7 @@ message UninstallAddonsReq {
     optional string projectCode = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "projectCode",
         description: "项目代码"
-    }, (validate.rules).string = {min_len : 1 , max_len : 32}];
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
     optional string clusterID = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "clusterID",
         description: "所在的集群ID"
@@ -3005,7 +3005,7 @@ message UninstallAddonsReq {
     optional string name = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "name",
         description: "组件名称"
-    }, (validate.rules).string = {min_len : 1 , max_len : 32}];
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
 }
 
 message UninstallAddonsResp {
