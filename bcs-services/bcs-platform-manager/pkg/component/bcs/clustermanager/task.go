@@ -23,7 +23,8 @@ import (
 )
 
 // ListTask 获取任务列表
-/*func ListTask(ctx context.Context, req *clustermanager.ListTaskV2Request) (*clustermanager.ListTaskV2ResponseData, error) {
+/*func ListTask(ctx context.Context, req *clustermanager.ListTaskV2Request) (
+    *clustermanager.ListTaskV2ResponseData, error) {
 	cli, close, err := clustermanager.GetClient(config.ServiceDomain)
 	if err != nil {
 		return nil, err

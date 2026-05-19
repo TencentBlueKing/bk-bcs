@@ -17,10 +17,11 @@ import (
 	"context"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
+	"github.com/golang/protobuf/ptypes/wrappers"
+
 	projectrmgr "github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/component/bcs/projectmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/utils"
-	"github.com/golang/protobuf/ptypes/wrappers"
 )
 
 // QuotaAction project action interface

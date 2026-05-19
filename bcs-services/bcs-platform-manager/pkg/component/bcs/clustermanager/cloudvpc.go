@@ -65,7 +65,8 @@ func UpdateCloudVPC(ctx context.Context, req *clustermanager.UpdateCloudVPCReque
 }
 
 // ListCloudSubnets 获取cloud vpc下的子网列表
-func ListCloudSubnets(ctx context.Context, req *clustermanager.ListCloudSubnetsRequest) ([]*clustermanager.Subnet, error) {
+func ListCloudSubnets(ctx context.Context, req *clustermanager.ListCloudSubnetsRequest) (
+	[]*clustermanager.Subnet, error) {
 	cli, close, err := clustermanager.GetClient(config.ServiceDomain)
 	if err != nil {
 		return nil, err
@@ -86,7 +87,8 @@ func ListCloudSubnets(ctx context.Context, req *clustermanager.ListCloudSubnetsR
 }
 
 // ListRecommendCloudVpcCidr 获取cloud vpc 推荐cidr列表
-/*func ListRecommendCloudVpcCidr(ctx context.Context, req *clustermanager.ListRecommendCloudVpcCidrRequest) (*clustermanager.CidrInfo, error) {
+/*func ListRecommendCloudVpcCidr(ctx context.Context, req *clustermanager.ListRecommendCloudVpcCidrRequest) (
+    *clustermanager.CidrInfo, error) {
 	cli, close, err := clustermanager.GetClient(config.ServiceDomain)
 	if err != nil {
 		return nil, err

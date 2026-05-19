@@ -17,10 +17,10 @@ import (
 	"context"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/types"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/utils"
 
 	clustermgr "github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/component/bcs/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/utils"
 )
 
 // NodeGroupAction nodegroup action interface

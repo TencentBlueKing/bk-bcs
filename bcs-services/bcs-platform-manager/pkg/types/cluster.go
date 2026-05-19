@@ -177,7 +177,7 @@ type UpdateClusterProjectBusinessReq struct {
 	BusinessID string `json:"businessID"`
 }
 
-// ClusterBasicSettings cluster basic setting
+// ClusterBasicSetting cluster basic setting
 type ClusterBasicSetting struct {
 	OS                        string            `json:"OS"`
 	Version                   string            `json:"version"`
@@ -350,7 +350,7 @@ type NetworkSetting struct {
 	NetworkMode         string        `json:"networkMode"`
 }
 
-// Subnet subnet
+// SubnetSource subnet
 type SubnetSource struct {
 	New     []*NewSubnet      `json:"new"`
 	Existed *ExistedSubnetIDs `json:"existed"`

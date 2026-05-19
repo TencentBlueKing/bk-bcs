@@ -527,7 +527,8 @@ func (a *Action) UpdateClusterBasicInfo(ctx context.Context, req *types.UpdateCl
 }
 
 // UpdateClusterNetworkConfig update cluster network config
-func (a *Action) UpdateClusterNetworkConfig(ctx context.Context, req *types.UpdateClusterNetworkConfigReq) (bool, error) {
+func (a *Action) UpdateClusterNetworkConfig(ctx context.Context, req *types.UpdateClusterNetworkConfigReq) (
+	bool, error) {
 	result, err := clustermgr.UpdateCluster(ctx, &clustermanager.UpdateClusterReq{
 		ClusterID: req.ClusterID,
 		NetworkSettings: func() *clustermanager.NetworkSetting {
@@ -585,7 +586,8 @@ func (a *Action) UpdateClusterNetworkConfig(ctx context.Context, req *types.Upda
 }
 
 // UpdateClusterControlPlaneConfig update cluster control plane config
-func (a *Action) UpdateClusterControlPlaneConfig(ctx context.Context, req *types.UpdateClusterControlPlaneConfigReq) (bool, error) {
+func (a *Action) UpdateClusterControlPlaneConfig(ctx context.Context, req *types.UpdateClusterControlPlaneConfigReq) (
+	bool, error) {
 	result, err := clustermgr.UpdateCluster(ctx, &clustermanager.UpdateClusterReq{
 		ClusterID: req.ClusterID,
 		Master:    req.Master,
@@ -626,7 +628,7 @@ func (a *Action) UpdateClusterProjectBusiness(ctx context.Context,
 	return result, nil
 }
 
-func (a *Action) AddClusterCidr(ctx context.Context, req *types.AddClusterCidrReq) (bool, error) {
+func (a *Action) AddClusterCidr(ctx context.Context, req *types.AddClusterCidrReq) (bool, error) { // nolint
 	/*result, err := clustermgr.AddClusterCidr(ctx, &clustermanager.AddClusterCidrReq{
 		ClusterID: req.ClusterID,
 		Cidrs:     req.Cidrs,

@@ -56,7 +56,8 @@ func UpdateCloudVPC(ctx context.Context, req *types.UpdateCloudVPCReq) (*bool, e
 // @Produce json
 // @Success 200 {bool} bool
 // @Router  /cloudvpc [get]
-func GetCloudVPCRecommendCIDR(ctx context.Context, req *types.GetCloudVPCRecommendCIDRReq) (*types.GetCloudVPCRecommendCIDRResp, error) {
+func GetCloudVPCRecommendCIDR(ctx context.Context, req *types.GetCloudVPCRecommendCIDRReq) (
+	*types.GetCloudVPCRecommendCIDRResp, error) {
 	result, err := actions.NewCloudVPCAction().GetCloudVPCRecommendCIDR(ctx, req)
 	if err != nil {
 		return nil, err

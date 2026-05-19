@@ -28,7 +28,8 @@ type CloudVPCAction interface { // nolint
 	// CreateCloudVPC create cloud vpc
 	CreateCloudVPC(ctx context.Context, req *types.CreateCloudVPCReq) (bool, error)
 	UpdateCloudVPC(ctx context.Context, req *types.UpdateCloudVPCReq) (bool, error)
-	GetCloudVPCRecommendCIDR(ctx context.Context, req *types.GetCloudVPCRecommendCIDRReq) (*types.GetCloudVPCRecommendCIDRResp, error)
+	GetCloudVPCRecommendCIDR(ctx context.Context, req *types.GetCloudVPCRecommendCIDRReq) (
+		*types.GetCloudVPCRecommendCIDRResp, error)
 }
 
 // Action action for cloud vpc
@@ -163,7 +164,8 @@ func (a *Action) UpdateCloudVPC(ctx context.Context, req *types.UpdateCloudVPCRe
 }
 
 // GetCloudVPCRecommendCIDR get cloud vpc recommend cidr
-func (a *Action) GetCloudVPCRecommendCIDR(ctx context.Context, req *types.GetCloudVPCRecommendCIDRReq) (*types.GetCloudVPCRecommendCIDRResp, error) {
+func (a *Action) GetCloudVPCRecommendCIDR(ctx context.Context, req *types.GetCloudVPCRecommendCIDRReq) (
+	*types.GetCloudVPCRecommendCIDRResp, error) {
 	/*cidrs, err := clustermgr.ListRecommendCloudVpcCidr(ctx, &clustermanager.ListRecommendCloudVpcCidrRequest{
 		CloudID:     req.CloudID,
 		Region:      req.Region,

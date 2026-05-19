@@ -25,7 +25,7 @@ import (
 )
 
 // GetCluster get cluster from cluster manager
-func GetCluster(ctx context.Context, clusterID, ProjectID string) (*clustermanager.Cluster, error) {
+func GetCluster(ctx context.Context, clusterID, projectID string) (*clustermanager.Cluster, error) {
 	if cacheResult, ok := storage.LocalCache.Slot.Get(getClusterCacheKey(clusterID)); ok {
 		return cacheResult.(*clustermanager.Cluster), nil
 	}
@@ -39,7 +39,7 @@ func GetCluster(ctx context.Context, clusterID, ProjectID string) (*clustermanag
 
 	p, err := cli.GetCluster(ctx, &clustermanager.GetClusterReq{
 		ClusterID: clusterID,
-		ProjectId: ProjectID,
+		ProjectId: projectID,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("GetCluster error: %s", err)

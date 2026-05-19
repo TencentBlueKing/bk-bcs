@@ -17,10 +17,10 @@ import (
 	"context"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/types"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/utils"
 
 	clustermgr "github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/component/bcs/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/utils"
 )
 
 // OperationAction operation action interface
@@ -37,7 +37,7 @@ func NewOperationAction() OperationAction {
 }
 
 // ListOperationLogs list operation logs
-func (a *Action) ListOperationLogs(ctx context.Context, req *types.ListOperationLogsReq) (
+func (a *Action) ListOperationLogs(ctx context.Context, req *types.ListOperationLogsReq) ( // nolint
 	*types.ListOperationLogsResp, error) {
 	logs, err := clustermgr.ListOperationLogs(ctx, &clustermanager.ListOperationLogsRequest{
 		V2:           req.V2,

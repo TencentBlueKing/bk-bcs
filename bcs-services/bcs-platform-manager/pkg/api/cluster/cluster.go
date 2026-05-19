@@ -149,7 +149,8 @@ func UpdateClusterNetworkConfig(ctx context.Context, req *types.UpdateClusterNet
 // @Produce json
 // @Success 200 {bool} bool
 // @Router  /cluster/{clusterID}/controlplaneconfig [put]
-func UpdateClusterControlPlaneConfig(ctx context.Context, req *types.UpdateClusterControlPlaneConfigReq) (*bool, error) {
+func UpdateClusterControlPlaneConfig(ctx context.Context, req *types.UpdateClusterControlPlaneConfigReq) (
+	*bool, error) {
 	result, err := actions.NewClusterAction().UpdateClusterControlPlaneConfig(ctx, req)
 	if err != nil {
 		return nil, err
