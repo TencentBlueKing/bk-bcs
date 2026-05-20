@@ -170,3 +170,34 @@ func (m *ModelCluster) ListCluster(ctx context.Context, cond *operator.Condition
 	}
 	return retClusterList, nil
 }
+
+// ListClusterByPage list clusters by page
+func (m *ModelCluster) ListClusterByPage(ctx context.Context, cond *operator.Condition, opt *options.ListOption) (
+	int64, []*types.Cluster, error) {
+	retClusterList := make([]*types.Cluster, 0)
+	finder := m.db.Table(m.tableName).Find(cond)
+	if len(opt.Sort) != 0 {
+		finder = finder.WithSort(util.MapInt2MapIf(opt.Sort))
+	}
+	if opt.Offset != 0 {
+		finder = finder.WithStart(opt.Offset)
+	}
+	if opt.Limit == 0 {
+		finder = finder.WithLimit(defaultClusterListLength)
+	} else {
+		finder = finder.WithLimit(opt.Limit)
+	}
+
+	if opt.All {
+		finder = finder.WithLimit(0)
+	}
+	total, err := finder.Count(ctx)
+	if err != nil {
+		return 0, nil, err
+	}
+
+	if err := finder.All(ctx, &retClusterList); err != nil {
+		return 0, nil, err
+	}
+	return total, retClusterList, nil
+}
