@@ -10,44 +10,27 @@
  * limitations under the License.
  */
 
-// Package pod xxx
-package pod
+// Package operation operation operate
+package operation
 
 import (
 	"context"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/storage"
+	actions "github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/actions/operation"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/types"
 )
 
-// PodsAction pod action
-type PodsAction interface {
-	GetPodContainers(ctx context.Context, projectId, clusterId string) (*types.SampleResponse, error)
-}
-
-// Action action for pod
-type Action struct {
-	model storage.Storage
-}
-
-// NewPodAction new pod action
-func NewPodAction(model storage.Storage) PodsAction {
-	return &Action{
-		model: model,
-	}
-}
-
-// GetPodContainers get business info
-func (a *Action) GetPodContainers(ctx context.Context, projectId, clusterId string) (*types.SampleResponse, error) {
-
-	audit, err := a.model.GetAudit(ctx, projectId, clusterId)
+// ListOperationLogs 获取操作日志列表
+// @Summary 操作日志列表
+// @Tags    Logs
+// @Produce json
+// @Success 200 {struct} types.ListOperationLogsResp
+// @Router  /operationlogs [get]
+func ListOperationLogs(ctx context.Context, req *types.ListOperationLogsReq) (*types.ListOperationLogsResp, error) {
+	result, err := actions.NewOperationAction().ListOperationLogs(ctx, req)
 	if err != nil {
 		return nil, err
 	}
 
-	sr := &types.SampleResponse{
-		Id:                  audit.ID.Hex(),
-		CollectorConfigName: audit.CollectorConfigName,
-	}
-	return sr, nil
+	return result, nil
 }
