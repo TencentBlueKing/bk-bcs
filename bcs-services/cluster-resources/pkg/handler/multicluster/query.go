@@ -787,14 +787,15 @@ func checkMultiClusterAccess(ctx context.Context, kind string, clusters []*clust
 				log.Error(ctx, "get project %s cluster %s ns failed, %v", projInfo.Code, v.ClusterID, err)
 				continue
 			}
-			if len(clusterNs) == 0 {
-				continue
-			}
 			for _, nsItem := range clusterNs {
 				if !nsItem.IsActive() {
 					continue
 				}
 				nss = append(nss, nsItem.Name)
+			}
+			// 集群中没有活跃命名空间或者命名空间为空，则忽略
+			if len(nss) == 0 {
+				continue
 			}
 		}
 
