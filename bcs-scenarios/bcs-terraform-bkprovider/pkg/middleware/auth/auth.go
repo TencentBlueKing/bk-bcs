@@ -113,19 +113,7 @@ func (j *JWTAuth) AuthorizationFunc(fn server.HandlerFunc) server.HandlerFunc {
 		}
 		authUser := middleware.AuthUser{}
 
-		// parse client token from header
-		clientName, ok := md.Get(middleware.InnerClientHeaderKey)
-		if ok {
-			authUser.InnerClient = clientName
-		}
-
-		// parse username from header
-		username, ok := md.Get(middleware.CustomUsernameHeaderKey)
-		if ok {
-			authUser.Username = username
-		}
-
-		// parse jwt token from header
+		// parse jwt token from header first - this is the primary authentication source
 		jwtToken, ok := md.Get(middleware.AuthorizationHeaderKey)
 		if ok {
 			u, err := j.GetJWTInfoWithAuthorization(jwtToken)
@@ -141,6 +129,12 @@ func (j *JWTAuth) AuthorizationFunc(fn server.HandlerFunc) server.HandlerFunc {
 			if len(u.BKAppCode) != 0 {
 				authUser.ClientName = u.BKAppCode
 			}
+		}
+
+		// parse client token from header
+		clientName, ok := md.Get(middleware.InnerClientHeaderKey)
+		if ok {
+			authUser.InnerClient = clientName
 		}
 
 		// set auth user to context

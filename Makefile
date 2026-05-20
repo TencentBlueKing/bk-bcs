@@ -157,7 +157,7 @@ storage:pre
 kube-sche:pre
 	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
 	cp -R ${BCS_CONF_COMPONENT_PATH}/bcs-k8s-custom-scheduler ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
-	cd ${BCS_COMPONENT_PATH}/bcs-k8s-custom-scheduler && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-custom-scheduler/bcs-k8s-custom-scheduler ./main.go
+	cd ${BCS_COMPONENT_PATH}/bcs-k8s-custom-scheduler && go mod tidy -compat=1.17 && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-custom-scheduler/bcs-k8s-custom-scheduler ./main.go
 
 multi-ns-proxy:pre
 	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
@@ -269,7 +269,7 @@ bkcmdb-synchronizer:
 # network plugins section
 
 ingress-controller:pre
-	cd ${BCS_NETWORK_PATH} && go mod tidy && make ingress-controller
+	cd ${BCS_NETWORK_PATH} && go mod tidy -compat=1.17 && make ingress-controller
 
 #end of network plugins
 

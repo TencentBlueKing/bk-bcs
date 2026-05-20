@@ -243,9 +243,9 @@ func (nm *NodeManager) getInnerInstanceTypes(ctx context.Context, info cloudprov
 
 	var targetTypes []resource.InstanceType
 
-	if utils.StringInSlice(quoteGrayMode, []string{project.QuotaGrayOverMode, project.QuotaGrayNormalMode}) &&
-		info.Provider != resource.SelfPool {
-		targetTypes, err = nm.GetInstanceTypeByProjectQuotaList(info.ProjectID, info.Region, info.Provider, info.InstanceType)
+	if utils.StringInSlice(quoteGrayMode, []string{project.QuotaGrayOverMode, project.QuotaGrayNormalMode}) {
+		targetTypes, err = nm.GetInstanceTypeByProjectQuotaList(info.ProjectID, info.Region, info.Provider,
+			info.InstanceType)
 		if err != nil {
 			blog.Errorf("GetProjectManagerClient GetNodeGroupAndZoneResourceQuotas[%s:%s] failed: %v",
 				info.ProjectID, info.Region, err)
@@ -306,6 +306,16 @@ func (nm *NodeManager) getInnerInstanceTypes(ctx context.Context, info cloudprov
 				return disks
 			}(),
 			AvailableQuota: uint32(t.OversoldAvailable),
+			ExtraInfo: func() *proto.InstanceExtraInfo {
+				if t.ExtraInfo == nil {
+					return &proto.InstanceExtraInfo{}
+				}
+				return &proto.InstanceExtraInfo{
+					ProviderBizIDs:    t.ExtraInfo.ProviderBizIDs,
+					ProviderStartTime: t.ExtraInfo.ProviderStartTime,
+					ProviderEndTime:   t.ExtraInfo.ProviderEndTime,
+				}
+			}(),
 		})
 	}
 
@@ -357,11 +367,11 @@ func (nm *NodeManager) getInnerInstanceTypes(ctx context.Context, info cloudprov
 // GetInstanceTypeByProjectQuotaList get instanceType from zoneResource by project quota list info
 func (nm *NodeManager) GetInstanceTypeByProjectQuotaList(
 	projectId, region string, provider string, instanceType string) ([]resource.InstanceType, error) {
-	listProjectQuotasData, err := project.GetProjectManagerClient().ListProjectQuotas(projectId,
-		project.ProjectQuotaHostType, project.ProjectQuotaProvider)
+	listProjectQuotasData, err := project.GetProjectManagerClient().ListProjectQuotasV2(projectId,
+		project.ProjectQuotaHostType, project.ProjectQuotaProviderInternal)
 	if err != nil {
 		blog.Errorf("GetProjectManagerClient GetListProjectQuotas[%s:%s:%s] failed: %v", projectId,
-			project.ProjectQuotaHostType, project.ProjectQuotaProvider, err)
+			project.ProjectQuotaHostType, project.ProjectQuotaProviderInternal, err)
 		return nil, err
 	}
 
@@ -421,6 +431,11 @@ func (nm *NodeManager) GetInstanceTypeByProjectQuotaList(
 			DataDisks:         nm.ConvertDataDisk(zoneResources.GetDataDisks()),
 			OversoldAvailable: int32(availableQuota),
 			Region:            zoneResources.GetRegion(),
+			ExtraInfo: &resource.InstanceExtraInfo{
+				ProviderBizIDs:    projectQuota.GetQuotaAttr().GetSourceBkBizIDs(),
+				ProviderStartTime: projectQuota.GetQuotaAttr().GetStartTime(),
+				ProviderEndTime:   projectQuota.GetQuotaAttr().GetEndTime(),
+			},
 		})
 	}
 

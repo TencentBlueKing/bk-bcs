@@ -19,7 +19,7 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armsubscriptions v1.3.0
 	github.com/GehirnInc/crypt v0.0.0-20230320061759-8cc1b52080c5
 	github.com/RichardKnop/machinery/v2 v2.0.11
-	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20250521083331-e37404b7dd2a
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20260114084116-7ca5469f5bfc
 	github.com/Tencent/bk-bcs/bcs-common/common/encryptv2 v0.0.0-20230908045126-c9d09981a9c5
 	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20250728085520-0a1d3fa13c6b
 	github.com/apparentlymart/go-cidr v1.1.0
@@ -75,7 +75,7 @@ require github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/cbs v1.0.1052
 require (
 	github.com/Azure/azure-sdk-for-go/profile/p20200901 v0.1.1
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerservice/armcontainerservice/v3 v3.0.0
-	github.com/emicklei/go-restful/v3 v3.9.0
+	github.com/emicklei/go-restful/v3 v3.11.0
 )
 
 require (
@@ -125,7 +125,7 @@ require (
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
 	github.com/go-openapi/jsonreference v0.20.0 // indirect
-	github.com/go-openapi/swag v0.19.14 // indirect
+	github.com/go-openapi/swag v0.19.15 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-playground/validator/v10 v10.19.0 // indirect
