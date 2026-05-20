@@ -17,8 +17,11 @@ import (
 	"bytes"
 	"context"
 	"io"
+	"path/filepath"
 	"strconv"
 	"strings"
+	"unicode"
+	"unicode/utf8"
 
 	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/gin-gonic/gin"
@@ -70,6 +73,13 @@ func (s *service) UploadHandler(c *gin.Context) {
 		return
 	}
 
+	safeFileName, err := validateUploadFileName(file.Filename)
+	if err != nil {
+		logger.Errorf("invalid upload file name %s, err: %s", file.Filename, err.Error())
+		rest.APIError(c, i18n.T(c, "文件名不合法"))
+		return
+	}
+
 	opened, err := file.Open()
 	if err != nil {
 		logger.Errorf("open file from request failed, err: %s", err.Error())
@@ -101,7 +111,7 @@ func (s *service) UploadHandler(c *gin.Context) {
 			close(errChan)
 		}()
 		e := tarWriter.WriteHeader(&tar.Header{
-			Name: file.Filename,
+			Name: safeFileName,
 			Size: file.Size,
 			Mode: 0644,
 		})
@@ -253,6 +263,26 @@ func (s *service) CheckDownloadHandler(c *gin.Context) {
 
 	data := types.CheckPassed{Passed: true}
 	rest.APIOK(c, msg, data)
+}
+
+func validateUploadFileName(fileName string) (string, error) {
+	if fileName == "" || !utf8.ValidString(fileName) {
+		return "", errors.Errorf("invalid file name")
+	}
+	if filepath.IsAbs(fileName) || strings.Contains(fileName, "/") || strings.Contains(fileName, "\\") ||
+		strings.Contains(fileName, "..") {
+		return "", errors.Errorf("invalid file name %s", fileName)
+	}
+	for _, r := range fileName {
+		if unicode.IsControl(r) {
+			return "", errors.Errorf("invalid file name %s", fileName)
+		}
+	}
+	baseName := filepath.Base(fileName)
+	if baseName != fileName || baseName == "." || baseName == string(filepath.Separator) {
+		return "", errors.Errorf("invalid file name %s", fileName)
+	}
+	return baseName, nil
 }
 
 func checkPathIsDir(path, sessionID string) error {

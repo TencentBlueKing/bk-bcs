@@ -44,6 +44,11 @@ type BcsClusterReporterOptions struct {
 	BizID         string
 	RunMode       string
 	LabelSelector string
+	Addr          string
+
+	EnablePprof bool
+	PprofAddr   string
+	PprofToken  string
 }
 
 // NewBcsClusterReporterOptions init options
@@ -78,6 +83,10 @@ func (bcro *BcsClusterReporterOptions) AddFlags(fs *pflag.FlagSet) {
 	fs.StringVarP(&bcro.BizID, "bizID", "", "incluster", "Set cluster bizID")
 	fs.StringVarP(&bcro.LabelSelector, "labelSelector", "", "", "Label to select clusters")
 	fs.StringVar(&bcro.RunMode, "runMode", "daemon", "daemon, once")
+	fs.StringVar(&bcro.Addr, "addr", "", "addr to bind listen, default: ${POD_IP}:6216 or 127.0.0.1:6216")
+	fs.BoolVar(&bcro.EnablePprof, "enablePprof", false, "enable pprof debug endpoint, disabled by default")
+	fs.StringVar(&bcro.PprofAddr, "pprofAddr", "127.0.0.1:6217", "pprof addr to bind listen, only localhost is allowed")
+	fs.StringVar(&bcro.PprofToken, "pprofToken", "", "bearer token for pprof endpoint")
 }
 
 // NodeAgentOptions component options

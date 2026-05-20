@@ -14,7 +14,6 @@ package route
 
 import (
 	"net/http"
-	"os"
 	"strings"
 	"time"
 
@@ -117,7 +116,6 @@ func APIAuthRequired() gin.HandlerFunc {
 		switch {
 		case initContextWithPortalSession(c, authCtx):
 		case initContextWithBCSJwt(c, authCtx):
-		case initContextWithDevEnv(c, authCtx):
 		default:
 			// 统一翻译格式解决冲突问题
 			err := UnauthorizedError
@@ -136,34 +134,6 @@ func APIAuthRequired() gin.HandlerFunc {
 // EnvToken xxx
 type EnvToken struct {
 	Username string
-}
-
-// initContextWithDevEnv Dev环境, 可以设置环境变量
-func initContextWithDevEnv(c *gin.Context, authCtx *AuthContext) bool {
-	if config.G.Base.RunEnv != config.DevEnv {
-		return false
-	}
-
-	// 本地用户认证
-	username := os.Getenv("WEBCONSOLE_USERNAME")
-	if username != "" {
-		authCtx.BindEnv = &EnvToken{Username: username}
-		authCtx.Username = username
-	}
-
-	// AppCode 认证
-	appCode := c.GetHeader("X-BKAPI-JWT-APPCODE")
-	if appCode != "" {
-		authCtx.BindBCS = &UserClaimsInfo{
-			BKAppCode: appCode,
-		}
-	}
-
-	if username != "" || appCode != "" {
-		return true
-	}
-
-	return false
 }
 
 // BCSJWTDecode BCS 网关 JWT 解码

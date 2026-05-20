@@ -17,6 +17,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -93,13 +94,17 @@ func Run() error {
 
 func run(ctx context.Context) {
 	r := gin.Default()
-	pprof.Register(r)
+	// enable pprof
+	if bcro.EnablePprof {
+		startPprofServer()
+	}
 	go func() {
-		if err := r.Run(":6216"); err != nil {
-			klog.Fatalf(err.Error())
+		if err := r.Run(getListenAddr()); err != nil {
+			klog.Fatalf("%s", err.Error())
 		}
 	}()
 
+	// get clusters
 	getClusters()
 
 	go func() {
@@ -157,7 +162,7 @@ func run(ctx context.Context) {
 			err = pdf.Output(c.Writer)
 			if err != nil {
 				c.String(http.StatusInternalServerError, "Failed to generate PDF")
-				klog.Errorf(err.Error())
+				klog.Errorf("%s", err.Error())
 				return
 			}
 			c.Header("Content-Type", "application/pdf")
@@ -166,6 +171,7 @@ func run(ctx context.Context) {
 			// 将PDF内容写入HTTP响应
 		})
 
+		// pdf
 		r.GET("biz/:bizID/pdf", func(c *gin.Context) {
 			bizID := c.Param("bizID")
 
@@ -178,7 +184,7 @@ func run(ctx context.Context) {
 			err = pdf.Output(c.Writer)
 			if err != nil {
 				c.String(http.StatusInternalServerError, "Failed to generate PDF")
-				klog.Errorf(err.Error())
+				klog.Errorf("%s", err.Error())
 				return
 			}
 			c.Header("Content-Type", "application/pdf")
@@ -186,6 +192,7 @@ func run(ctx context.Context) {
 			return
 		})
 
+		// html
 		r.GET("cluster/:clusterID/html", func(c *gin.Context) {
 			clusterID := c.Param("clusterID")
 
@@ -199,6 +206,7 @@ func run(ctx context.Context) {
 			return
 		})
 
+		// html
 		r.GET("biz/:bizID/html", func(c *gin.Context) {
 			bizID := c.Param("bizID")
 
@@ -237,18 +245,87 @@ func run(ctx context.Context) {
 	klog.Infof("done stop plugins")
 }
 
+// get listen addr
+func getListenAddr() string {
+	if bcro.Addr != "" {
+		return bcro.Addr
+	}
+	if podIP := os.Getenv("POD_IP"); podIP != "" {
+		return podIP + ":6216"
+	}
+	return "127.0.0.1:6216"
+}
+
+// start pprof server
+func startPprofServer() {
+	if strings.TrimSpace(bcro.PprofToken) == "" {
+		klog.Warning("pprof endpoint is disabled because pprofToken is empty")
+		return
+	}
+
+	addr, err := getPprofListenAddr()
+	if err != nil {
+		klog.Warningf("pprof endpoint is disabled: %s", err.Error())
+		return
+	}
+
+	// create pprof router
+	pprofRouter := gin.New()
+	pprofRouter.Use(gin.Logger(), gin.Recovery(), pprofAuthMiddleware())
+	pprof.Register(pprofRouter)
+	go func() {
+		klog.Infof("pprof endpoint is enabled on %s", addr)
+		if err := pprofRouter.Run(addr); err != nil {
+			klog.Fatalf("%s", err.Error())
+		}
+	}()
+}
+
+// get pprof listen addr
+func getPprofListenAddr() (string, error) {
+	addr := strings.TrimSpace(bcro.PprofAddr)
+	if addr == "" {
+		addr = "127.0.0.1:6217"
+	}
+
+	host, port, err := net.SplitHostPort(addr)
+	if err != nil {
+		return "", fmt.Errorf("invalid pprofAddr %q: %w", addr, err)
+	}
+	if port == "" {
+		return "", fmt.Errorf("invalid pprofAddr %q: missing port", addr)
+	}
+
+	ip := net.ParseIP(host)
+	if ip == nil || !ip.IsLoopback() {
+		return "", fmt.Errorf("pprofAddr must bind to localhost")
+	}
+	return net.JoinHostPort(ip.String(), port), nil
+}
+
+// pprof auth middleware
+func pprofAuthMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if c.GetHeader("Authorization") != "Bearer "+bcro.PprofToken {
+			c.AbortWithStatus(http.StatusUnauthorized)
+			return
+		}
+		c.Next()
+	}
+}
+
 // Execute rootCmd
 func Execute() {
 	err := rootCmd.Execute()
 	if err != nil {
-		klog.Fatalf(err.Error())
+		klog.Fatalf("%s", err.Error())
 	}
 }
 
 // CheckErr check err
 func CheckErr(err error) {
 	if err != nil {
-		klog.Fatalf(err.Error())
+		klog.Fatalf("%s", err.Error())
 	}
 }
 
@@ -311,17 +388,17 @@ func getClusters() {
 		bcsClusterConfigList, err := GetClusterConfigFromBCS(bcro.BcsClusterManagerToken,
 			bcro.BcsClusterManagerApiserver, bcro.BcsGatewayApiserver, bcro.BcsGatewayToken, selecterMap, clusterConfigList)
 		if err != nil {
-			klog.Fatalf(err.Error())
+			klog.Fatalf("%s", err.Error())
 		}
 		clusterConfigList = bcsClusterConfigList
 	}
 
 	// 从文件夹获取kubeconfig的配置
 	if bcro.KubeConfigDir != "" {
-		klog.Infof(bcro.KubeConfigDir)
+		klog.Infof("%s", bcro.KubeConfigDir)
 		fileClusterConfigList, err := GetClusterInfo(bcro.KubeConfigDir, clusterConfigList)
 		if err != nil {
-			klog.Fatalf(err.Error())
+			klog.Fatalf("%s", err.Error())
 		}
 		klog.Infof("fileClusterConfigList: %v", fileClusterConfigList)
 		for key, value := range fileClusterConfigList {

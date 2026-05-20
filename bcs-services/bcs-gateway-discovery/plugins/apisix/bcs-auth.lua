@@ -94,6 +94,9 @@ function _M.rewrite(conf, ctx)
     local user_agent = core.request.header(ctx, "User-Agent")
     local use_login = is_from_browser(user_agent) -- 是否对接蓝鲸统一登录
 
+    -- 清理不可信任头部
+    core.request.set_header(ctx, "X-Bcs-Client", nil)
+
     local auth = authentication:new(use_login, conf.run_env)
     local jwt_token = auth:authenticate(conf, ctx)
 

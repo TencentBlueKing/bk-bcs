@@ -1466,8 +1466,6 @@ func (s *Storage) GetSecretK8S(ctx context.Context, req *storage.SecretK8SReques
 		rsp.Code = common.AdditionErrorCode + 500
 		return nil
 	}
-	// 打印请求体
-	blog.Infof("GetSecretK8S req: %v", util.PrettyStruct(req))
 
 	data, err := dynamicquery.HandlerSecretK8SRequest(ctx, req)
 	if err != nil {
@@ -1488,9 +1486,6 @@ func (s *Storage) GetSecretK8S(ctx context.Context, req *storage.SecretK8SReques
 	rsp.Result = true
 	rsp.Code = common.BcsSuccess
 	rsp.Message = common.BcsSuccessStr
-
-	// 打印响应体
-	blog.Infof("GetSecretK8S rsp: %v", util.PrettyStruct(rsp))
 	return nil
 }
 
@@ -1504,8 +1499,6 @@ func (s *Storage) PostSecretK8S(ctx context.Context, req *storage.SecretK8SReque
 		rsp.Code = common.AdditionErrorCode + 500
 		return nil
 	}
-	// 打印请求体
-	blog.Infof("PostSecretK8S req: %v", util.PrettyStruct(req))
 
 	data, err := dynamicquery.HandlerSecretK8SRequest(ctx, req)
 	if err != nil {
@@ -1526,9 +1519,6 @@ func (s *Storage) PostSecretK8S(ctx context.Context, req *storage.SecretK8SReque
 	rsp.Result = true
 	rsp.Code = common.BcsSuccess
 	rsp.Message = common.BcsSuccessStr
-
-	// 打印响应体
-	blog.Infof("PostSecretK8S rsp: %v", util.PrettyStruct(rsp))
 	return nil
 }
 
