@@ -52,7 +52,7 @@ proto:
 
 .PHONY: build
 build:
-	go build ${LDFLAG} -o bcs-gitops-pre-check *.go
+	echo ""
 
 .PHONY: test
 test:

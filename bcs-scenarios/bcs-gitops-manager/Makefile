@@ -77,32 +77,23 @@ test:
 
 .PHONY: manager
 manager: tidy
-	mkdir -p ${OUTPUT}/bcs-gitops-manager
-	cp -r images/manager/* ${OUTPUT}/bcs-gitops-manager/
-	go build ${LDFLAG} -o ${OUTPUT}/bcs-gitops-manager/bcs-gitops-manager main.go
+	echo ""
 
 .PHONY: proxy
 proxy: tidy
-	mkdir -p ${OUTPUT}/bcs-gitops-proxy
-	cp -r images/proxy/* ${OUTPUT}/bcs-gitops-proxy/
-	go build ${LDFLAG} -o ${OUTPUT}/bcs-gitops-proxy/bcs-gitops-proxy cmd/proxy/main.go
+	echo ""
 
 .PHONY: webhook
 webhook: tidy
-	mkdir -p ${OUTPUT}/bcs-gitops-webhook
-	cp -r images/webhook/* ${OUTPUT}/bcs-gitops-webhook/
-	go build ${LDFLAG} -o ${OUTPUT}/bcs-gitops-webhook/bcs-gitops-webhook cmd/webhook/main.go
+	echo ""
 
 .PHONY: docker
 docker: manager proxy
-	cd ${OUTPUT}/bcs-gitops-manager/ && docker build -t bcs-gitops-manager:${imagetag} . && cd -
-	cd ${OUTPUT}/bcs-gitops-proxy/ && docker build -t bcs-gitops-proxy:${imagetag} . && cd -
+	echo ""
 
 .PHONY: gitgenerator-webhook
 gitgenerator-webhook: tidy
-	mkdir -p ${OUTPUT}/bcs-gitops-gitgenerator-webhook
-	cp -r images/gitgenerator-webhook/* ${OUTPUT}/bcs-gitops-gitgenerator-webhook/
-	go build ${LDFLAG} -o ${OUTPUT}/bcs-gitops-gitgenerator-webhook/bcs-gitops-gitgenerator-webhook cmd/gitgenerator-webhook/main.go
+	echo ""
 
 .PHONY: build
 build: manager proxy

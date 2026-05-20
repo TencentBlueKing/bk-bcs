@@ -13,22 +13,6 @@
 // Package main xxx
 package main
 
-import (
-	goflag "flag"
-	"fmt"
-	"os"
-
-	"github.com/spf13/pflag"
-
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/cmd/manager"
-)
-
 func main() {
-	command := manager.NewCommand()
-	pflag.CommandLine.AddGoFlagSet(goflag.CommandLine)
 
-	if err := command.Execute(); err != nil {
-		fmt.Fprintf(os.Stderr, "gitops manager starting failed %s\n", err.Error())
-		os.Exit(1)
-	}
 }

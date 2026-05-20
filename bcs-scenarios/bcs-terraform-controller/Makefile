@@ -46,9 +46,7 @@ help: ## Display this help.
 
 .PHONY: terraform-controller
 terraform-controller:
-	mkdir -p ${OUTPUT}/bcs-terraform-controller
-	cp -r images/terraform/. ${OUTPUT}/bcs-terraform-controller/
-	go build ${LDFLAG} -o ${OUTPUT}/bcs-terraform-controller/bcs-terraform-controller main.go
+	echo ""
 
 .PHONY: manifests
 manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.

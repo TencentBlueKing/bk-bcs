@@ -13,50 +13,6 @@
 // Package main xxx
 package main
 
-import (
-	"context"
-	"fmt"
-	"os"
-	"os/signal"
-	"syscall"
-
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
-
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-pre-check/cmd"
-)
-
 func main() {
-	opts := cmd.DefaultOptions()
 
-	conf.Parse(opts)
-	blog.InitLogs(opts.LogConfig)
-	defer blog.CloseLogs()
-	ctx, cancel := context.WithCancel(context.Background())
-	go func() {
-		interrupt := make(chan os.Signal, 10)
-		signal.Notify(interrupt, syscall.SIGINT, syscall.SIGTERM, syscall.SIGUSR1, syscall.SIGUSR2)
-		for s := range interrupt {
-			blog.Infof("Received signal %v from system. Exit!", s)
-			cancel()
-			return
-		}
-	}()
-	// config option verification
-	if err := opts.Complete(); err != nil {
-		fmt.Fprintf(os.Stderr, "server option complete failed, %s\n", err.Error())
-		return
-	}
-	if err := opts.Validate(); err != nil {
-		fmt.Fprintf(os.Stderr, "server option validate failed, %s\n", err.Error())
-		return
-	}
-	blog.Infof("opts:%v", opts)
-	s := cmd.NewServer(ctx, cancel, opts)
-	if err := s.Init(); err != nil {
-		blog.Fatalf("init server failed: %s", err.Error())
-	}
-	if err := s.Run(); err != nil {
-		blog.Fatalf("run server failed: %s", err.Error())
-	}
 }

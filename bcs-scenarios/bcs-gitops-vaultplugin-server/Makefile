@@ -45,6 +45,4 @@ tidy:
 
 .PHONY: vaultplugin
 vaultplugin: tidy
-	mkdir -p ${OUTPUT}/bcs-gitops-vaultplugin-server
-	cp -r images/vaultplugin-server/* ${OUTPUT}/bcs-gitops-vaultplugin-server/
-	go build ${LDFLAG} -o ${OUTPUT}/bcs-gitops-vaultplugin-server/bcs-gitops-vaultplugin-server main.go
+	echo ""
