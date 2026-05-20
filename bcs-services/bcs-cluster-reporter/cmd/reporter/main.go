@@ -17,11 +17,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/metricmanager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin"
-	v12 "k8s.io/api/core/v1"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	metricsclientset "k8s.io/metrics/pkg/client/clientset/versioned"
+	"net"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -30,24 +26,29 @@ import (
 	"time"
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/cmd/options"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/api/bcs"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/k8s"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/pluginmanager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/util"
 	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v2"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
 	"k8s.io/klog"
+	metricsclientset "k8s.io/metrics/pkg/client/clientset/versioned"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/cmd/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/api/bcs"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/k8s"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/metricmanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin"
 	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin/capacitycheck"
 	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin/clustercheck"
 	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin/nodecheck"
 	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin/systemappcheck"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/pluginmanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/util"
 )
 
 var (
@@ -88,13 +89,17 @@ func Run() error {
 
 func run(ctx context.Context) {
 	r := gin.Default()
-	pprof.Register(r)
+	// enable pprof
+	if bcro.EnablePprof {
+		startPprofServer()
+	}
 	go func() {
-		if err := r.Run(":6216"); err != nil {
-			klog.Fatalf(err.Error())
+		if err := r.Run(getListenAddr()); err != nil {
+			klog.Fatalf("%s", err.Error())
 		}
 	}()
 
+	// get clusters
 	getClusters()
 
 	go func() {
@@ -119,71 +124,6 @@ func run(ctx context.Context) {
 
 	// start webserver
 	if bcro.RunMode == pluginmanager.RunModeDaemon {
-		r.GET("cluster/:clusterID/pdf", func(c *gin.Context) {
-			clusterID := c.Param("clusterID")
-			pdf, reportErr := pluginmanager.GetClusterReport(clusterID, bcro.Plugins)
-			if reportErr != nil {
-				c.String(404, fmt.Sprintf("cluster %s not found", clusterID))
-				return
-			}
-			err = pdf.Output(c.Writer)
-			if err != nil {
-				c.String(http.StatusInternalServerError, "Failed to generate PDF")
-				klog.Errorf(err.Error())
-				return
-			}
-			c.Header("Content-Type", "application/pdf")
-			c.Header("Content-Disposition", "attachment; filename=output.pdf")
-			return
-			// 将PDF内容写入HTTP响应
-		})
-
-		r.GET("biz/:bizID/pdf", func(c *gin.Context) {
-			bizID := c.Param("bizID")
-
-			pdf, reportErr := pluginmanager.GetBizReport(bizID, bcro.Plugins)
-			if reportErr != nil {
-				c.String(404, fmt.Sprintf("biz %s not found", bizID))
-				return
-			}
-
-			err = pdf.Output(c.Writer)
-			if err != nil {
-				c.String(http.StatusInternalServerError, "Failed to generate PDF")
-				klog.Errorf(err.Error())
-				return
-			}
-			c.Header("Content-Type", "application/pdf")
-			c.Header("Content-Disposition", "attachment; filename=output.pdf")
-			return
-		})
-
-		r.GET("cluster/:clusterID/html", func(c *gin.Context) {
-			clusterID := c.Param("clusterID")
-
-			html, htmlErr := pluginmanager.GetClusterReportHtml(clusterID, bcro.Plugins)
-			if htmlErr != nil {
-				c.String(404, fmt.Sprintf("cluster %s not found", clusterID))
-				return
-			}
-
-			c.String(200, html)
-			return
-		})
-
-		r.GET("biz/:bizID/html", func(c *gin.Context) {
-			bizID := c.Param("bizID")
-
-			html, htmlErr := pluginmanager.GetBizReportHtml(bizID, bcro.Plugins)
-			if htmlErr != nil {
-				c.String(404, fmt.Sprintf("biz %s not found", bizID))
-				return
-			}
-
-			c.String(200, html)
-			return
-		})
-
 		r.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
 		// config mm
@@ -207,18 +147,87 @@ func run(ctx context.Context) {
 	klog.Infof("done stop plugins")
 }
 
+// get listen addr
+func getListenAddr() string {
+	if bcro.Addr != "" {
+		return bcro.Addr
+	}
+	if podIP := os.Getenv("POD_IP"); podIP != "" {
+		return podIP + ":6216"
+	}
+	return "127.0.0.1:6216"
+}
+
+// start pprof server
+func startPprofServer() {
+	if strings.TrimSpace(bcro.PprofToken) == "" {
+		klog.Warning("pprof endpoint is disabled because pprofToken is empty")
+		return
+	}
+
+	addr, err := getPprofListenAddr()
+	if err != nil {
+		klog.Warningf("pprof endpoint is disabled: %s", err.Error())
+		return
+	}
+
+	// create pprof router
+	pprofRouter := gin.New()
+	pprofRouter.Use(gin.Logger(), gin.Recovery(), pprofAuthMiddleware())
+	pprof.Register(pprofRouter)
+	go func() {
+		klog.Infof("pprof endpoint is enabled on %s", addr)
+		if err := pprofRouter.Run(addr); err != nil {
+			klog.Fatalf("%s", err.Error())
+		}
+	}()
+}
+
+// get pprof listen addr
+func getPprofListenAddr() (string, error) {
+	addr := strings.TrimSpace(bcro.PprofAddr)
+	if addr == "" {
+		addr = "127.0.0.1:6217"
+	}
+
+	host, port, err := net.SplitHostPort(addr)
+	if err != nil {
+		return "", fmt.Errorf("invalid pprofAddr %q: %w", addr, err)
+	}
+	if port == "" {
+		return "", fmt.Errorf("invalid pprofAddr %q: missing port", addr)
+	}
+
+	ip := net.ParseIP(host)
+	if ip == nil || !ip.IsLoopback() {
+		return "", fmt.Errorf("pprofAddr must bind to localhost")
+	}
+	return net.JoinHostPort(ip.String(), port), nil
+}
+
+// pprof auth middleware
+func pprofAuthMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if c.GetHeader("Authorization") != "Bearer "+bcro.PprofToken {
+			c.AbortWithStatus(http.StatusUnauthorized)
+			return
+		}
+		c.Next()
+	}
+}
+
 // Execute rootCmd
 func Execute() {
 	err := rootCmd.Execute()
 	if err != nil {
-		klog.Fatalf(err.Error())
+		klog.Fatalf("%s", err.Error())
 	}
 }
 
 // CheckErr check err
 func CheckErr(err error) {
 	if err != nil {
-		klog.Fatalf(err.Error())
+		klog.Fatalf("%s", err.Error())
 	}
 }
 
@@ -280,17 +289,17 @@ func getClusters() {
 		bcsClusterConfigList, err := GetClusterConfigFromBCS(bcro.BcsClusterManagerToken,
 			bcro.BcsClusterManagerApiserver, bcro.BcsGatewayApiserver, bcro.BcsGatewayToken, clusterConfigList)
 		if err != nil {
-			klog.Fatalf(err.Error())
+			klog.Fatalf("%s", err.Error())
 		}
 		clusterConfigList = bcsClusterConfigList
 	}
 
 	// 从文件夹获取kubeconfig的配置
 	if bcro.KubeConfigDir != "" {
-		klog.Infof(bcro.KubeConfigDir)
+		klog.Infof("%s", bcro.KubeConfigDir)
 		fileClusterConfigList, err := GetClusterInfo(bcro.KubeConfigDir, clusterConfigList)
 		if err != nil {
-			klog.Fatalf(err.Error())
+			klog.Fatalf("%s", err.Error())
 		}
 		for key, value := range fileClusterConfigList {
 			clusterConfigList[key] = value
@@ -510,7 +519,7 @@ func GetClusterConfig(clusterID string, config *rest.Config) (*pluginmanager.Clu
 	}
 
 	// 跳过work node为0的集群
-	nodeList, err := clientSet.CoreV1().Nodes().List(util.GetCtx(time.Second*10), v1.ListOptions{ResourceVersion: "0"})
+	nodeList, err := clientSet.CoreV1().Nodes().List(util.GetCtx(time.Second*10), metav1.ListOptions{ResourceVersion: "0"})
 	masterList := make([]string, 0, 0)
 	if err != nil {
 		klog.Errorf("get %s node failed: %s", clusterID, err.Error())
@@ -521,7 +530,7 @@ func GetClusterConfig(clusterID string, config *rest.Config) (*pluginmanager.Clu
 				if key == "node-role.kubernetes.io/master" && (val == "true" || val == "") {
 					nodeNum = nodeNum - 1
 					for _, address := range node.Status.Addresses {
-						if address.Type == v12.NodeInternalIP {
+						if address.Type == corev1.NodeInternalIP {
 							masterList = append(masterList, address.Address)
 						}
 					}
