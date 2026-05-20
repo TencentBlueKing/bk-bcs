@@ -1369,7 +1369,7 @@ func openClusterAdminKubeConfig(ctx context.Context, info *cloudprovider.CloudDe
 }
 
 // UpdateCreateClusterDBInfoTask update cluster DB info
-func UpdateCreateClusterDBInfoTask(taskID string, stepName string) error {
+func UpdateCreateClusterDBInfoTask(taskID string, stepName string) error { // nolint
 	start := time.Now()
 	// get task and task current step
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
