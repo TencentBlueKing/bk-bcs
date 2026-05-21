@@ -182,7 +182,7 @@ export default function () {
 
   const labelSuggest = async (params: { clusterNamespaces: IClusterNamespace[]}) => {
     if (!params.clusterNamespaces?.length) return [];
-    const data = await labelSuggestApi(params).catch(() => ({ values: [] }));
+    const data = await labelSuggestApi(params, { cancelWhenRouteChange: false }).catch(() => ({ values: [] }));
     return data.values;
   };
 
@@ -191,7 +191,7 @@ export default function () {
     clusterNamespaces: IClusterNamespace[]
   }) => {
     if (!params.clusterNamespaces?.length || !params.label) return [];
-    const data = await valuesSuggestApi(params).catch(() => ({ values: [] }));
+    const data = await valuesSuggestApi(params, { cancelWhenRouteChange: false }).catch(() => ({ values: [] }));
     return data.values;
   };
 

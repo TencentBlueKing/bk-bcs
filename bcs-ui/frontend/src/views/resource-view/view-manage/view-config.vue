@@ -607,10 +607,14 @@ const handleSaveAs = async (changeView = true) => {
 // 将查询参数同步到url
 const curNsList = computed(() => $store.state.viewNs.viewNsList);
 function handleUpdateUrlQuery(data: Partial<MultiClusterResourcesType>|undefined) {
+  // 兼容<更多资源>场景
+  const curQuery = JSON.parse(JSON.stringify($router?.currentRoute?.query || {}));
   if (!curTmpViewData.value?.filter && isClusterMode.value) {
     // 未传入数据
     $router.replace({
-      query: {},
+      query: {
+        ...curQuery,
+      },
     }).catch(() => {});
     return;
   };
@@ -627,6 +631,7 @@ function handleUpdateUrlQuery(data: Partial<MultiClusterResourcesType>|undefined
   const creator = data?.creator?.join();
   const labelSelector = data?.labelSelector?.length ? encodeURIComponent(JSON.stringify(data.labelSelector)) : '';
   const params = {
+    ...curQuery,
     crd: curCrdData.value?.crd,
     kind: curCrdData.value?.kind,
     scope: curCrdData.value?.scope, // 自定义资源

@@ -324,6 +324,7 @@ const resolveMenuLink = (item: IMenu) => {
   });
   return href;
 };
+const deleteKeys = ['crd', 'kind', 'scope', 'group', 'version', 'resource', 'namespaced'];
 const handleChangeMenu = (item: IMenu) => {
   if (route.value.name === item.route) return;
 
@@ -332,9 +333,7 @@ const handleChangeMenu = (item: IMenu) => {
     ...route.value.query,
     viewID: dashboardViewID.value,
   });
-  delete queryData.crd;
-  delete queryData.kind;
-  delete queryData.scope;
+  deleteKeys.forEach(key => delete queryData[key]);
   !dashboardViewID.value && (delete queryData.viewID);
   $router.push({
     name: item.route || item.children?.[0]?.route || '404',
