@@ -295,7 +295,7 @@ export function useMonitorCollector() {
   async function handleCheckMonitor(clusterId: string) {
     const result = await ClusterAddonsService.GetAddonsDetail({
       $clusterId: clusterId,
-      $name: 'bkmonitor-operator-stack',
+      $name: window.BK_MONITOR_ADDON_NAME || 'bkmonitor-operator-stack',
     })
       .catch(() => {});
     isMonitorInstalled.value = !!result?.status;
