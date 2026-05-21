@@ -38,6 +38,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/contextx"
 	httpUtil "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/http"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/httpx"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/stringx"
 )
 
 // SpaceNames model template space name
@@ -459,13 +460,11 @@ func parseTarContent(r *http.Request) ([]string, map[string][]TemplateContent, e
 			}
 			maxSize = header.Size + maxSize
 			// 处理文件
-			filePath := strings.SplitN(header.Name, "/", 2)
-			if len(filePath) < 2 {
-				return templateSpaceNames, tarContent, fmt.Errorf("invalid tar filepath: %s", header.Name)
+			templateSpaceName, templateName, err := stringx.ParseTemplateName(header.Name)
+			// 不符合的文件跳过
+			if err != nil {
+				continue
 			}
-			// 根文件夹和文件名称分开
-			templateSpaceName := filePath[0]
-			templateName := filePath[1]
 
 			buf := make([]byte, header.Size)
 			n, err := tarReader.Read(buf)

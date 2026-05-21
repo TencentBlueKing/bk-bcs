@@ -9757,7 +9757,7 @@ func (m *CreateTemplateSpaceReq) validate(all bool) error {
 	if !_CreateTemplateSpaceReq_Name_Pattern.MatchString(m.GetName()) {
 		err := CreateTemplateSpaceReqValidationError{
 			field:  "Name",
-			reason: "value does not match regex pattern \"^[a-zA-Z0-9_-]+$\"",
+			reason: "value does not match regex pattern \"^[^\\\\\\\\/:*?\\\"<>|]+$\"",
 		}
 		if !all {
 			return err
@@ -9847,7 +9847,7 @@ var _ interface {
 	ErrorName() string
 } = CreateTemplateSpaceReqValidationError{}
 
-var _CreateTemplateSpaceReq_Name_Pattern = regexp.MustCompile("^[a-zA-Z0-9_-]+$")
+var _CreateTemplateSpaceReq_Name_Pattern = regexp.MustCompile("^[^\\\\/:*?\"<>|]+$")
 
 // Validate checks the field values on UpdateTemplateSpaceReq with the rules
 // defined in the proto definition for this message. If any rules are
@@ -9908,7 +9908,7 @@ func (m *UpdateTemplateSpaceReq) validate(all bool) error {
 	if !_UpdateTemplateSpaceReq_Name_Pattern.MatchString(m.GetName()) {
 		err := UpdateTemplateSpaceReqValidationError{
 			field:  "Name",
-			reason: "value does not match regex pattern \"^[a-zA-Z0-9_-]+$\"",
+			reason: "value does not match regex pattern \"^[^\\\\\\\\/:*?\\\"<>|]+$\"",
 		}
 		if !all {
 			return err
@@ -9998,7 +9998,7 @@ var _ interface {
 	ErrorName() string
 } = UpdateTemplateSpaceReqValidationError{}
 
-var _UpdateTemplateSpaceReq_Name_Pattern = regexp.MustCompile("^[a-zA-Z0-9_-]+$")
+var _UpdateTemplateSpaceReq_Name_Pattern = regexp.MustCompile("^[^\\\\/:*?\"<>|]+$")
 
 // Validate checks the field values on DeleteTemplateSpaceReq with the rules
 // defined in the proto definition for this message. If any rules are

@@ -17,9 +17,7 @@ import (
 	"context"
 	"path"
 	"path/filepath"
-	"regexp"
 	"sort"
-	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"github.com/coreos/go-semver/semver"
@@ -48,6 +46,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/stringx"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
@@ -321,9 +320,9 @@ func (t *TemplateAction) Create(ctx context.Context, req *clusterRes.CreateTempl
 	}
 
 	// 校验模板文件名
-	templateSpaceName, templateName, err := parseTemplateName(ctx, req.GetName())
+	templateSpaceName, templateName, err := stringx.ParseTemplateName(req.GetName())
 	if err != nil {
-		return "", "", err
+		return "", "", errorx.New(errcode.ValidateErr, i18n.GetMsg(ctx, err.Error()))
 	}
 	templateSpace, err := t.getOrCreateTemplateSpace(ctx, p.Code, templateSpaceName, req.GetTemplateSpaceID())
 	if err != nil {
@@ -420,9 +419,9 @@ func (t *TemplateAction) Update(ctx context.Context, req *clusterRes.UpdateTempl
 		return errorx.New(errcode.NoPerm, i18n.GetMsg(ctx, "无权限访问"))
 	}
 
-	_, templateName, err := parseTemplateName(ctx, req.GetName())
+	_, templateName, err := stringx.ParseTemplateName(req.GetName())
 	if err != nil {
-		return err
+		return errorx.New(errcode.ValidateErr, i18n.GetMsg(ctx, err.Error()))
 	}
 	// 检测是否重复
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{
@@ -843,27 +842,4 @@ func (t *TemplateAction) getOrCreateTemplateSpace(ctx context.Context,
 		return nil, err
 	}
 	return templateSpace, nil
-}
-
-// templateNamePattern 文件夹及子文件夹名称只允许字母、数字、下划线、连字符
-var templateNamePattern = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
-
-// parseTemplateName 解析模板文件夹及模板名称
-func parseTemplateName(ctx context.Context, name string) (string, string, error) {
-	// 规范化路径：压缩连续斜杠，去除前后斜杠
-	templateName := regexp.MustCompile(`/+`).ReplaceAllString(strings.Trim(name, "/"), "/")
-	path := strings.Split(templateName, "/")
-	if len(path) < 2 {
-		return "", "", errorx.New(errcode.ValidateErr, i18n.GetMsg(ctx, "无效的模板文件路径名称"))
-	}
-	// 校验文件夹名称是否符合要求
-	for i := 0; i < len(path)-1; i++ {
-		if !templateNamePattern.MatchString(path[i]) {
-			return "", "", errorx.New(errcode.ValidateErr,
-				i18n.GetMsg(ctx, "文件夹名称仅支持字母、数字、_ 和 -"))
-		}
-	}
-	// 需要把父文件夹和子文件夹及文件名称分开
-	p := strings.SplitN(templateName, "/", 2)
-	return p[0], p[1], nil
 }
