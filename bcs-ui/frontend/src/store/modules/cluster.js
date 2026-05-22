@@ -24,7 +24,7 @@
 * IN THE SOFTWARE.
 */
 
-import _ from 'lodash';
+import { snakeCase } from 'lodash';
 
 import http from '@/api';
 import {
@@ -764,7 +764,7 @@ export default {
           continue;
         }
         delete params[key];
-        params[_.snakeCase(key)] = value;
+        params[snakeCase(key)] = value;
       }
 
       return http.get(
@@ -801,7 +801,7 @@ export default {
           continue;
         }
         delete params[key];
-        params[_.snakeCase(key)] = value;
+        params[snakeCase(key)] = value;
       }
 
       return http.get(
@@ -838,7 +838,7 @@ export default {
           continue;
         }
         delete params[key];
-        params[_.snakeCase(key)] = value;
+        params[snakeCase(key)] = value;
       }
 
       return http.get(
@@ -875,7 +875,7 @@ export default {
           continue;
         }
         delete params[key];
-        params[_.snakeCase(key)] = value;
+        params[snakeCase(key)] = value;
       }
 
       return http.get(
@@ -912,7 +912,7 @@ export default {
           continue;
         }
         delete params[key];
-        params[_.snakeCase(key)] = value;
+        params[snakeCase(key)] = value;
       }
 
       return http.get(
