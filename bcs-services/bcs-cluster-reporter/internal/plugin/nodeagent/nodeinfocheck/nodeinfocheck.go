@@ -166,6 +166,17 @@ func (p *Plugin) Check(option pluginmanager.CheckOption) {
 				Result:   nodeMetadata.Zone,
 			})
 
+			// 检测node标签与实际云可用区是否一致
+			if zoneLabel, ok := nodeconfig.Node.Labels["topology.com.tencent.cloud.csi.cbs/zone"]; ok && nodeMetadata.Zone != zoneLabel {
+				result.Items = append(result.Items, pluginmanager.CheckItem{
+					ItemName:   pluginName,
+					ItemTarget: nodeName,
+					Normal:     false,
+					Detail:     fmt.Sprintf("node is %s, label is %s", nodeMetadata.Zone, zoneLabel),
+					Status:     errorStatus,
+				})
+			}
+
 			gvsList = append(gvsList, &metricmanager.GaugeVecSet{
 				Labels: []string{nodeName, RegionItemType, nodeMetadata.Region}, Value: float64(1),
 			})

@@ -191,18 +191,44 @@ func (p *Plugin) Check(option pluginmanager.CheckOption) {
 
 // GetTimeOffset xxx
 func GetTimeOffset(timeserver string) (time.Duration, error) {
-	localTime := time.Now()
+	// 使用 NTP 算法的时钟偏移而不是直接相减，以抵消 RTT 的影响
+	opts := ntp.QueryOptions{
+		Timeout: 3 * time.Second,
+		TTL:     0, // 使用系统默认 TTL；若网络要求可按需设置
+		// LocalAddress: "", // 如需绑定特定本地地址可设置
+	}
 
-	ntpServer := timeserver
-
-	ntpTime, err := ntp.Time(ntpServer)
+	resp, err := ntp.QueryWithOptions(timeserver, opts)
 	if err != nil {
 		return 0, err
 	}
 
-	diff := ntpTime.Sub(localTime)
+	// 基本校验：响应有效且未被标记为未同步
+	if err := resp.Validate(); err != nil {
+		return 0, fmt.Errorf("invalid ntp response: %w", err)
+	}
 
-	return diff, nil
+	// 可选质量门槛（根据环境调参）：
+	// - 过大的根距离（root distance, 近似上界误差）
+	// - 过高的 Stratum
+	// - 过大的 RTT
+	const (
+		maxRootDistance = 250 * time.Millisecond
+		maxRTT          = 500 * time.Millisecond
+		maxStratum      = 15 // 16 表示未同步
+	)
+	if resp.RootDistance > maxRootDistance {
+		klog.Errorf("root distance too large: %v", resp.RootDistance)
+	}
+	if resp.RTT > maxRTT {
+		klog.Errorf("rtt too large: %v", resp.RTT)
+	}
+	if resp.Stratum > maxStratum {
+		klog.Errorf("stratum too high: %d", resp.Stratum)
+	}
+
+	// 使用 NTP 算法计算的时钟偏移（已考虑网络延迟）
+	return resp.ClockOffset, nil
 }
 
 // Ready xxx

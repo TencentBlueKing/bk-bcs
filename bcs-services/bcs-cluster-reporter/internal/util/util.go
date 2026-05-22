@@ -21,6 +21,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"sync"
 	"time"
 
 	"gopkg.in/yaml.v2"
@@ -196,4 +197,41 @@ func ExecCommand(cmd []string) string {
 	}
 
 	return string(output)
+}
+
+// NewSafeChannel 创建一个新的安全通道包装器
+// 该包装器确保通道可以被安全地关闭，即使多次调用关闭操作也不会引发panic
+// 参数:
+//   - ch: 需要被安全管理的通道
+// 返回:
+//   - SafeChannel: 安全通道包装器实例
+func NewSafeChannel(ch chan struct{}) SafeChannel {
+	return SafeChannel{
+		ch:   ch,
+		once: sync.Once{},
+		done: false,
+	}
+}
+
+// SafeChannel 安全通道结构体，用于管理通道的安全关闭
+// 通过 sync.Once 确保通道只被关闭一次，避免重复关闭导致的panic
+type SafeChannel struct {
+	ch   chan struct{} // 被管理的通道
+	once sync.Once    // 确保关闭操作只执行一次
+	done bool         // 标记通道是否已关闭
+}
+
+// Done 检查安全通道是否已经关闭
+// 返回:
+//   - bool: 如果通道已关闭返回true，否则返回false
+func (sc *SafeChannel) Done() bool {
+	return sc.done
+}
+
+// SafeClose 安全地关闭通道
+// 该方法使用 sync.Once 确保关闭操作只执行一次，即使多次调用也不会引发panic
+// 关闭后会将 done 标记设置为 true
+func (sc *SafeChannel) SafeClose() {
+	sc.once.Do(func() { close(sc.ch) })
+	sc.done = true
 }

@@ -186,7 +186,7 @@ func CheckETCD(podList []*v1.Pod, cluster *pluginmanager.ClusterConfig, deepChec
 	// 检查参数
 	floatFlagList := []plugin.FloatFlag{
 		{Name: "--heartbeat-interval",
-			CompareType: "ge",
+			CompareType: "gt",
 			Value:       1000,
 			Needed:      true,
 		},
@@ -537,6 +537,11 @@ func CheckCoredns(clientSet *kubernetes.Clientset) []pluginmanager.CheckItem {
 		ItemTarget: "coredns",
 		Tags:       nil,
 		Level:      pluginmanager.RISKLevel,
+	}
+
+	_, err := clientSet.AppsV1().Deployments("kube-system").Get(util.GetCtx(10*time.Second), "coredns", metav1.GetOptions{ResourceVersion: "0"})
+	if err != nil && strings.Contains(err.Error(), "not found") {
+		return result
 	}
 
 	cm, err := clientSet.CoreV1().ConfigMaps("kube-system").Get(util.GetCtx(10*time.Second), "coredns", metav1.GetOptions{ResourceVersion: "0"})

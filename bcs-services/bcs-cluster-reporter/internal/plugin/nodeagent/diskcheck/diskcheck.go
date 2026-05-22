@@ -17,6 +17,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/metricmanager"
@@ -139,6 +140,10 @@ func (p *Plugin) Check(option pluginmanager.CheckOption) {
 	}
 
 	for _, mountInfo := range mountInfoList {
+		// 不检查pvc的目录
+		if strings.Contains(mountInfo.Mountpoint, "csi") && strings.Contains(mountInfo.Mountpoint, "pv") {
+			continue
+		}
 		err = TestFS(node.HostPath, mountInfo.Mountpoint)
 		if err != nil {
 			klog.Infof("test fs %s failed: %s", mountInfo.Mountpoint, err.Error())
@@ -155,15 +160,14 @@ func (p *Plugin) Check(option pluginmanager.CheckOption) {
 			})
 
 		} else {
+			fsGaugeVecSetList = append(fsGaugeVecSetList, &metricmanager.GaugeVecSet{
+				Labels: []string{mountInfo.Mountpoint, nodeName, NormalStatus}, Value: float64(1),
+			})
 			klog.Infof("test fs %s success", mountInfo.Mountpoint)
 		}
 	}
 
 	if len(fsGaugeVecSetList) == 0 {
-		fsGaugeVecSetList = append(fsGaugeVecSetList, &metricmanager.GaugeVecSet{
-			Labels: []string{"/", nodeName, NormalStatus}, Value: float64(1),
-		})
-
 		result = append(result, pluginmanager.CheckItem{
 			ItemName:   pluginName,
 			ItemTarget: nodeName,

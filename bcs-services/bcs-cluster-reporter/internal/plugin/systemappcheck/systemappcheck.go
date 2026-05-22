@@ -560,6 +560,11 @@ func CheckComponent(component Component, cluster *pluginmanager.ClusterConfig, r
 	// 检查workload status, 是否ready
 	status, containerImageList, err := getWorkLoadStatus(component.Resource, component.Name, component.Namespace, cluster)
 	if err != nil {
+		// 有的业务有些组件可能并不需要或以其它形式部署，如果并非helm部署且不存在，不再认为异常
+		if status == APPNotfoundAppStatus && rel == "" {
+			return checkItemList, statusGVSList, imageGVSList, configGVSList, nil
+		}
+
 		checkItemList = append(checkItemList, pluginmanager.CheckItem{
 			ItemName:   SystemAppStatusCheckItemName,
 			ItemTarget: component.Name,
@@ -817,7 +822,7 @@ func CheckPodMetric(containerList []corev1.Container, cluster *pluginmanager.Clu
 		if strings.Contains(err.Error(), "the server could not find the requested resource") {
 			return NormalStatus, nil
 		} else {
-			return AppMetricErrorStatus, err
+			return NormalStatus, nil
 		}
 	}
 

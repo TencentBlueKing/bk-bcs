@@ -2,8 +2,6 @@ module github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter
 
 go 1.22.0
 
-toolchain go1.23.2
-
 replace (
 	github.com/prometheus/common => github.com/prometheus/common v0.42.0
 	// 引用 release-1.18-fix-go 分支，主要改动移除pilot/pkg/xds/fake.go 修复go1.21+编译问题
