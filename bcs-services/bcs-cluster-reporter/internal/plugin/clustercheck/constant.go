@@ -16,6 +16,7 @@ package clustercheck
 const (
 	pluginName                               = "clustercheck"
 	ClusterAvailabilityCheckMetricName       = "cluster_availability"
+	ClusterWebhookCrossMetricName            = "cluster_webhook_cross"
 	ClusterVersionMetricName                 = "cluster_version"
 	ClusterCheckDurationMeticName            = "cluster_check_duration_seconds"
 	ClusterApiserverCertExpirationMetricName = "cluster_apiserver_cert_expiration"

@@ -3961,8 +3961,12 @@ templateFile:
     modifyMetadata: Modify Metadata
     editNewVersion: Edit New Version
     deployFile: Deploy Template File
+    batchDeployFile: Batch Deploy Template Files
     deploySetting: Deployment Settings
     deployReview: Deployment Preview
+    selectTemplateFile: Select Template Files (Multi-select)
+    selectedFiles: Selected Template Files
+    files: file(s)
     disableYamlToForm: Unable to switch mode
     fileList: File List
     import: Import file package
@@ -3974,6 +3978,7 @@ templateFile:
     createFile: Create Template File
     delete: Delete
     deploy: Deploy
+    batchDeploy: Batch Deploy
     previewAndDeploy: Preview and deploy
     versionManage: Version Management
     confirmDeploy: Confirm Deployment
@@ -3991,6 +3996,7 @@ templateFile:
     searchFile: Template File Name/Type/Category Tag/Version/Updater/Update Time
     searchVersion: Version Number/Version Log/Updater
     searchSpace: Folder Name
+    searchFileName: Template File Name
   label:
     name: Name
     templateName: Template name
@@ -4017,6 +4023,8 @@ templateFile:
     byCluster: By Cluster
     versionDiff: Version comparison
     untitled: Untitled
+    path: Path
+    selectedCount: 'Selected {count} file(s)'
   tips:
     disableYamlToFormReason: >-
       Source file, {0}, please continue to use the source mode to edit the
@@ -4035,9 +4043,13 @@ templateFile:
       switching back to a non-Helm template will no longer be supported.
     spaceSubTitle: The template folder and its template files will be removed
     emptyContent: The template file content cannot be empty
-    invalidChar: 'Folder name is invalid, only letters, numbers, - and _ are allowed'
-    invalidFileName: 'File name cannot start or end with /, and cannot contain //'
+    invalidPath: 'File path cannot start or end with /, and cannot contain consecutive //'
+    invalidFolderName: >-
+      Folder name only supports the following characters are not allowed: \ / : * ? " < > |
+    invalidFileName: 'File name only supports the following characters are not allowed: \ / : * ? " < > |'
     success: success
+    selectVersion: Please select a version for all files
+    noFilesSelected: Please select template files to deploy from the left panel
     subTitle: 'Template file {templateFile} instance has been deployed to {cluster}'
     noChanges: No changes
   tag:

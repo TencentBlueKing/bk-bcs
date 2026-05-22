@@ -793,11 +793,11 @@ func (ng *NodeGroup) checkRpqByRm(group *proto.NodeGroup, scaleUpNum uint32, any
 func (ng *NodeGroup) getResourcePoolByProjectQuotaList(projectId, region, instanceType string) (
 	[]*resource.DevicePoolInfo, error) {
 
-	listProjectQuotasData, err := project.GetProjectManagerClient().ListProjectQuotas(projectId,
-		project.ProjectQuotaHostType, project.ProjectQuotaProvider)
+	listProjectQuotasData, err := project.GetProjectManagerClient().ListProjectQuotasV2(projectId,
+		project.ProjectQuotaHostType, project.ProjectQuotaProviderInternal)
 	if err != nil {
 		blog.Errorf("GetProjectManagerClient ListProjectQuotas[%s:%s:%s] failed: %v",
-			projectId, project.ProjectQuotaHostType, project.ProjectQuotaProvider, err)
+			projectId, project.ProjectQuotaHostType, project.ProjectQuotaProviderInternal, err)
 		return nil, err
 	}
 

@@ -134,7 +134,7 @@
                     <bcs-radio
                       :value="nodePoolConfig.launchTemplate.instanceType === row.nodeType"
                       :disabled="row.status === 'SOLD_OUT' || isEdit">
-                      <span class="bcs-ellipsis">{{row.typeName || row.nodeType}}</span>
+                      <span class="bcs-ellipsis">{{row.typeName || row.nodeType || '--'}}</span>
                     </bcs-radio>
                   </span>
                 </template>
@@ -159,12 +159,12 @@
                   <span>{{ row.availableQuota || '--' }}</span>
                 </template>
               </bcs-table-column>
-              <!-- <bcs-table-column
+              <bcs-table-column
                 :label="$t('generic.label.specifications')"
                 min-width="160"
                 show-overflow-tooltip
                 prop="nodeType">
-              </bcs-table-column> -->
+              </bcs-table-column>
               <bcs-table-column
                 label="CPU"
                 prop="cpu"

@@ -33,6 +33,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/template"
 	cutils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/utils"
 	intercommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/project"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/resource"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tenant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
@@ -938,6 +940,32 @@ func (ng *NodeGroup) GetExternalNodeScript(group *proto.NodeGroup, internal bool
 // CheckResourcePoolQuota check resource pool quota when revise group limit
 func (ng *NodeGroup) CheckResourcePoolQuota(
 	ctx context.Context, group *proto.NodeGroup, operation string, scaleUpNum uint32) error {
+	cloud, err := cloudprovider.GetCloudByProvider(cloudName)
+	if err == nil && cloud.GetConfInfo().GetDisableCheckGroupResource() {
+		return nil
+	}
+
+	// self pool check resource pool quota
+	// 目前仅支持 单资源池的消费
+	if group.GetExtraInfo() != nil && utils.StringContainInSlice(group.ExtraInfo[resource.ResourcePoolType],
+		[]string{resource.SelfPool}) && strings.HasPrefix(group.GetExtraInfo()[string(resource.ResourcePoolID)],
+		cutils.QuotaPoolPrefix) {
+		blog.Infof("CheckResourcePoolQuota[%s] check resource pool quota for self pool", group.NodeGroupID)
+		quota, err := project.GetProjectManagerClient().GetProjectQuota(ctx,
+			group.GetExtraInfo()[string(resource.ResourcePoolID)])
+		if err != nil {
+			blog.Errorf("CheckResourcePoolQuota[%s] GetProjectQuota failed: %v", group.NodeGroupID, err)
+			return err
+		}
+		zoneResources := quota.GetQuota().GetZoneResources()
+		availableQuota := zoneResources.GetQuotaNum() - zoneResources.GetQuotaUsed()
+		if scaleUpNum > availableQuota {
+			return fmt.Errorf("CheckResourcePoolQuota[%s] scale up num %d is greater than quota %d",
+				group.NodeGroupID, scaleUpNum, availableQuota)
+		}
+		return nil
+	}
+
 	return nil
 }
 

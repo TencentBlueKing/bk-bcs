@@ -17,6 +17,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"strconv"
 	"strings"
 	"time"
@@ -56,6 +57,8 @@ func ApplyNodesFromResourcePoolTask(taskID, stepName string) error { // nolint
 	operator := step.Params[cloudprovider.OperatorKey.String()]
 	manual := state.Task.CommonParams[cloudprovider.ManualKey.String()]
 
+	ctx := cloudprovider.WithTaskIDAndStepNameForContext(context.Background(), taskID, stepName)
+
 	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
 		ClusterID:   clusterID,
 		CloudID:     cloudID,
@@ -74,13 +77,14 @@ func ApplyNodesFromResourcePoolTask(taskID, stepName string) error { // nolint
 		return retErr
 	}
 
-	ctx := cloudprovider.WithTaskIDAndStepNameForContext(context.Background(), taskID, stepName)
-
 	// apply Instance from ResourcePool, get instance ipList and device idList
 	recordInstanceList, err := applyNodesFromResourcePool(ctx, dependInfo, scalingNum, operator)
 	if err != nil {
 		blog.Errorf("ApplyNodesFromResourcePoolTask[%s] requestInstancesFromPool for NodeGroup "+
 			"%s step %s failed, %s", taskID, nodeGroupID, stepName, err.Error())
+		cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+			fmt.Sprintf("ApplyCVMFromResourcePoolTask[%s] applyNodesFromResourcePool for NodeGroup[%s] failed, err:[%s]",
+				taskID, nodeGroupID, err.Error()))
 		retErr := fmt.Errorf("requestInstancesFromPool failed: %s", err.Error())
 		if manual == common.True {
 			_ = cloudprovider.UpdateVirtualNodeStatus(clusterID, nodeGroupID, taskID)
@@ -103,6 +107,9 @@ func ApplyNodesFromResourcePoolTask(taskID, stepName string) error { // nolint
 	if err != nil {
 		blog.Errorf("ApplyNodesFromResourcePoolTask[%s] saveClusterNodes for NodeGroup %s step %s failed, %s",
 			taskID, nodeGroupID, stepName, err.Error())
+		cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+			fmt.Sprintf("ApplyCVMFromResourcePoolTask[%s] saveNodesToDB for group[%s] failed, err:[%s]",
+				taskID, nodeGroupID, err.Error()))
 		retErr := fmt.Errorf("ApplyDesiredNodesTask failed, %s", err.Error())
 		_, _ = providerutils.DestroyDeviceList(ctx, dependInfo, recordInstanceList.DeviceIDList, operator)
 		if manual == common.True {
@@ -134,7 +141,7 @@ func ApplyNodesFromResourcePoolTask(taskID, stepName string) error { // nolint
 func applyNodesFromResourcePool(ctx context.Context, info *cloudprovider.CloudDependBasicInfo,
 	desired int, operator string) (*providerutils.RecordInstanceList, error) {
 	orderID, err := providerutils.ConsumeDevicesFromResourcePool(ctx, info.NodeGroup,
-		resource.IDC.String(), desired, operator)
+		resource.IDC.String(), desired, operator, nil)
 	if err != nil {
 		return nil, err
 	}

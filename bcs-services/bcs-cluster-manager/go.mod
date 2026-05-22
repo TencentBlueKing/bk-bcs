@@ -3,8 +3,8 @@ module github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager
 go 1.21
 
 replace (
-	github.com/Tencent/bk-bcs/bcs-common => github.com/evanlixin/bk-bcs/bcs-common v0.0.0-20251219081340-800069d3a93d
-	github.com/Tencent/bk-bcs/bcs-services/pkg => github.com/evanlixin/bk-bcs/bcs-services/pkg v0.0.0-20251219081340-800069d3a93d
+	github.com/Tencent/bk-bcs/bcs-common => github.com/Tencent/bk-bcs/bcs-common v0.0.0-20260514075415-73423f40290d
+	github.com/Tencent/bk-bcs/bcs-services/pkg => github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20260514075415-73423f40290d
 	k8s.io/api => k8s.io/api v0.26.1
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.26.1
 	k8s.io/apimachinery => k8s.io/apimachinery v0.26.1
@@ -22,7 +22,7 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armsubscriptions v1.3.0
 	github.com/GehirnInc/crypt v0.0.0-20230320061759-8cc1b52080c5
 	github.com/RichardKnop/machinery/v2 v2.0.11
-	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20250521083331-e37404b7dd2a
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20260114084116-7ca5469f5bfc
 	github.com/Tencent/bk-bcs/bcs-common/common/encryptv2 v0.0.0-20230908045126-c9d09981a9c5
 	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20250728085520-0a1d3fa13c6b
 	github.com/apparentlymart/go-cidr v1.1.0

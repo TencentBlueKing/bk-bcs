@@ -25,7 +25,7 @@ bcs-terraform-bkprovider 是蓝鲸容器服务（BlueKing Container Service, BCS
 | `GetJobDetail` | POST | `/terraform-bkprovider/v1/get_job_detail` | 获取任务详情 |
 | `RegisterBkWhitelist` | POST | `/terraform-bkprovider/v1/register_bk_whitelist` | 注册出口 IP 到蓝鲸白名单 |
 | `ListBkWhitelist` | GET | `/terraform-bkprovider/v1/list_bk_whitelist` | 查询蓝鲸白名单 |
-| `GetBkOuterIP` | GET | `/terraform-bkprovider/v1/get_bk_outer_ip` | 获取蓝鲸出口 IP |
+| `GetBkOuterIP` | GET | `/terraform-bkprovider/v1/get_bk_outer_ip` | 获取蓝鲸出口 IP 列表 |
 
 详细的 API 文档可通过 Swagger UI 查看：`/terraform-bkprovider/swagger/`
 

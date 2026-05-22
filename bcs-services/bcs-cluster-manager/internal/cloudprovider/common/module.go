@@ -96,8 +96,6 @@ func BuildCheckNodeIpsInCmdbStep(task *proto.Task, cluster *proto.Cluster) {
 
 // TransferHostModuleTask transfer host module task
 func TransferHostModuleTask(taskID string, stepName string) error { // nolint
-	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
-		"start transfer host module")
 	start := time.Now()
 	// get task information and validate
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
@@ -110,6 +108,9 @@ func TransferHostModuleTask(taskID string, stepName string) error { // nolint
 
 	// projectID
 	projectId := step.Params[cloudprovider.ProjectIDKey.String()]
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start transfer host module")
+
 	// get bkBizID
 	bkBizIDString := step.Params[cloudprovider.BKBizIDKey.String()]
 	// get nodeIPs
@@ -274,8 +275,6 @@ func TransBizNodeModule(ctx context.Context, biz, module int, hostIPs []string) 
 
 // RemoveHostFromCMDBTask remove host from cmdb task
 func RemoveHostFromCMDBTask(taskID string, stepName string) error {
-	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
-		"remove host from cmdb")
 	start := time.Now()
 	// get task information and validate
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
@@ -288,6 +287,9 @@ func RemoveHostFromCMDBTask(taskID string, stepName string) error {
 
 	// projectID
 	projectId := step.Params[cloudprovider.ProjectIDKey.String()]
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"remove host from cmdb")
+
 	// get bkBizID
 	bkBizIDString := step.Params[cloudprovider.BKBizIDKey.String()]
 	// get nodeIPs

@@ -1499,7 +1499,7 @@
 /* eslint-disable @typescript-eslint/no-this-alias */
 /* eslint-disable @typescript-eslint/no-require-imports */
 import yamljs from 'js-yaml';
-import _ from 'lodash';
+import { merge } from 'lodash';
 
 import header from './header.vue';
 import tabs from './tabs.vue';
@@ -2595,7 +2595,7 @@ export default {
         const { containers } = appObj.spec.template.spec;
         const containerCopys = [];
         containers.forEach((container) => {
-          const copy = _.merge({}, cParams, container);
+          const copy = merge({}, cParams, container);
           containerCopys.push(copy);
         });
         containers.splice(0, containers.length, ...containerCopys);
@@ -2605,13 +2605,13 @@ export default {
         const { initContainers } = appObj.spec.template.spec;
         const containerCopys = [];
         initContainers.forEach((container) => {
-          const copy = _.merge({}, cParams, container);
+          const copy = merge({}, cParams, container);
           containerCopys.push(copy);
         });
         initContainers.splice(0, initContainers.length, ...containerCopys);
       }
 
-      const newConfObj = _.merge({}, applicationParams.config, appObj);
+      const newConfObj = merge({}, applicationParams.config, appObj);
       const jsonFromat = this.formatJson(newConfObj);
       this.curApplication.config = jsonFromat;
       this.curApplication.desc = this.curDesc;

@@ -20,7 +20,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	// "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
 	"github.com/patrickmn/go-cache"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
@@ -39,6 +39,8 @@ const (
 	ProjectQuotaHostType = "host"
 	// ProjectQuotaProvider storage type
 	ProjectQuotaProvider = "selfProvisionCloud"
+	// ProjectQuotaProviderInternal internal provider
+	ProjectQuotaProviderInternal = "internal"
 
 	labelQuotaGrayKey = "quota-gray"
 
@@ -93,7 +95,7 @@ func (pm *ProManClient) getProjectManagerClient() (*ProjectClient, func(), error
 
 // GetProjectInfo get project detailed info
 func (pm *ProManClient) GetProjectInfo(
-	ctx context.Context, projectIdOrCode string, isCache bool) (*Project, error) {
+	ctx context.Context, projectIdOrCode string, isCache bool) (*bcsproject.Project, error) {
 	if pm == nil {
 		return nil, errServerNotInit
 	}
@@ -103,7 +105,7 @@ func (pm *ProManClient) GetProjectInfo(
 	if isCache {
 		v, ok := pm.cache.Get(key)
 		if ok {
-			if project, ok := v.(*Project); ok {
+			if project, ok := v.(*bcsproject.Project); ok {
 				return project, nil
 			}
 		}
@@ -123,7 +125,7 @@ func (pm *ProManClient) GetProjectInfo(
 	start := time.Now()
 
 	resp, err := cli.Project.GetProject(ctx,
-		&GetProjectRequest{ProjectIDOrCode: projectIdOrCode})
+		&bcsproject.GetProjectRequest{ProjectIDOrCode: projectIdOrCode})
 	if err != nil {
 		metrics.ReportLibRequestMetric("project", "GetProject", "grpc", metrics.LibCallStatusErr, start)
 		blog.Errorf("GetProjectInfo[%s] GetProject failed: %v", projectIdOrCode, err)
@@ -143,16 +145,16 @@ func (pm *ProManClient) GetProjectInfo(
 	return resp.GetData(), nil
 }
 
-// ListProjectQuotas get project quota list info
-func (pm *ProManClient) ListProjectQuotas(projectId, quotaType, provider string) (
-	*ListProjectQuotasData, error) {
+// ListProjectQuotasV2 get project quota list info by page
+func (pm *ProManClient) ListProjectQuotasV2(projectId, quotaType, provider string) (
+	*bcsproject.ListProjectQuotasData, error) {
 	if pm == nil {
 		return nil, errServerNotInit
 	}
 
 	cli, closeCon, errGet := pm.getProjectManagerClient()
 	if errGet != nil {
-		blog.Errorf("GetProjectInfo[%s] getProjectManagerClient failed: %v", projectId, errGet)
+		blog.Errorf("ListProjectQuotasV2[%s] getProjectManagerClient failed: %v", projectId, errGet)
 		return nil, errGet
 	}
 	defer func() {
@@ -161,24 +163,71 @@ func (pm *ProManClient) ListProjectQuotas(projectId, quotaType, provider string)
 		}
 	}()
 
-	start := time.Now()
-	resp, err := cli.Quota.ListProjectQuotas(context.Background(),
-		&ListProjectQuotasRequest{ProjectID: projectId, QuotaType: quotaType, Provider: provider})
-	if err != nil {
-		metrics.ReportLibRequestMetric("project", "GetProject", "grpc",
-			metrics.LibCallStatusErr, start)
-		blog.Errorf("GetProjectInfo[%s] GetProject failed: %v", projectId, err)
-		return nil, err
-	}
-	metrics.ReportLibRequestMetric("project", "GetProject", "grpc",
-		metrics.LibCallStatusOK, start)
+	const (
+		pageSize     = 100
+		queryTimeout = 30 * time.Second
+	)
 
-	if resp.Code != 0 {
-		blog.Errorf("GetProjectInfo[%s] GetProject err: %v", projectId, resp.GetMessage())
-		return nil, errors.New(resp.Message)
+	ctx, cancel := context.WithTimeout(context.Background(), queryTimeout)
+	defer cancel()
+
+	var (
+		page    uint32 = 1
+		total   uint32
+		results []*bcsproject.ProjectQuota
+	)
+
+	for {
+		// 检查超时
+		select {
+		case <-ctx.Done():
+			blog.Errorf("ListProjectQuotasV2[%s] timeout after %d records", projectId, len(results))
+			return nil, ctx.Err()
+		default:
+		}
+
+		start := time.Now()
+		resp, err := cli.Quota.ListProjectQuotasV2(ctx,
+			&bcsproject.ListProjectQuotasV2Request{
+				ProjectIDOrCode: projectId,
+				QuotaType:       quotaType,
+				Provider:        provider,
+				Page:            page,
+				Limit:           pageSize,
+			})
+		if err != nil {
+			metrics.ReportLibRequestMetric("project", "ListProjectQuotasV2", "grpc",
+				metrics.LibCallStatusErr, start)
+			blog.Errorf("ListProjectQuotasV2[%s] page %d failed: %v", projectId, page, err)
+			return nil, err
+		}
+		metrics.ReportLibRequestMetric("project", "ListProjectQuotasV2", "grpc",
+			metrics.LibCallStatusOK, start)
+
+		if resp.Code != 0 {
+			blog.Errorf("ListProjectQuotasV2[%s] page %d err: %v", projectId, page, resp.GetMessage())
+			return nil, errors.New(resp.Message)
+		}
+
+		data := resp.GetData()
+		if data == nil {
+			break
+		}
+
+		total = data.GetTotal()
+		pageResults := data.GetResults()
+		results = append(results, pageResults...)
+
+		if uint32(len(results)) >= total || uint32(len(pageResults)) < pageSize {
+			break
+		}
+		page++
 	}
 
-	return resp.GetData(), nil
+	return &bcsproject.ListProjectQuotasData{
+		Total:   total,
+		Results: results,
+	}, nil
 }
 
 // CheckProjectQuotaGrayLabel get project is has quota-gray label
@@ -194,4 +243,38 @@ func (pm *ProManClient) CheckProjectQuotaGrayLabel(ctx context.Context, projectI
 		}
 	}
 	return "", nil
+}
+
+// GetProjectQuota get project quota by project quota id
+func (pm *ProManClient) GetProjectQuota(ctx context.Context, projectQuotaID string) (*bcsproject.ProjectQuota, error) {
+	if pm == nil {
+		return nil, errServerNotInit
+	}
+
+	cli, closeCon, errGet := pm.getProjectManagerClient()
+	if errGet != nil {
+		blog.Errorf("GetProjectQuota[%s] getProjectManagerClient failed: %v", projectQuotaID, errGet)
+		return nil, errGet
+	}
+	defer func() {
+		if closeCon != nil {
+			closeCon()
+		}
+	}()
+
+	start := time.Now()
+	resp, err := cli.Quota.GetProjectQuota(ctx, &bcsproject.GetProjectQuotaRequest{QuotaId: projectQuotaID})
+	if err != nil {
+		metrics.ReportLibRequestMetric("project", "GetProjectQuota", "grpc", metrics.LibCallStatusErr, start)
+		blog.Errorf("GetProjectQuota[%s] GetProjectQuota failed: %v", projectQuotaID, err)
+		return nil, err
+	}
+	metrics.ReportLibRequestMetric("project", "GetProjectQuota", "grpc", metrics.LibCallStatusOK, start)
+
+	if resp.Code != 0 {
+		blog.Errorf("GetProjectQuota[%s] GetProjectQuota err: %v", projectQuotaID, resp.GetMessage())
+		return nil, errors.New(resp.Message)
+	}
+
+	return resp.GetData(), nil
 }

@@ -27,8 +27,6 @@ import (
 
 // DeleteCloudNodeGroupTask delete cloud node group task
 func DeleteCloudNodeGroupTask(taskID string, stepName string) error { // nolint
-	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
-		"start delete cloud nodegroup")
 	start := time.Now()
 	// get task information and validate
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
@@ -38,6 +36,9 @@ func DeleteCloudNodeGroupTask(taskID string, stepName string) error { // nolint
 	if step == nil {
 		return nil
 	}
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start delete cloud nodegroup")
 
 	// step login started here
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]

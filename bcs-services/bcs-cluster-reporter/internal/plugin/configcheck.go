@@ -41,7 +41,12 @@ func CheckFlag(flagList []string, floatFlag FloatFlag) string {
 					return fmt.Sprintf("%s value is %s, not float64", floatFlag.Name, strList[1])
 				}
 
-				if floatFlag.CompareType == "ge" {
+				switch floatFlag.CompareType {
+				case "gt":
+					if floatFlag.Value > value {
+						return fmt.Sprintf(StringMap[CheckFlagLeDetailFormat], floatFlag.Name, strList[1], floatFlag.Value)
+					}
+				case "ge":
 					if floatFlag.Value >= value {
 						return fmt.Sprintf(StringMap[CheckFlagLeDetailFormat], floatFlag.Name, strList[1], floatFlag.Value)
 					}

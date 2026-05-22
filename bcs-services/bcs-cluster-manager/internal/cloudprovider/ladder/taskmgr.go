@@ -270,10 +270,11 @@ func (t *Task) BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.Node
 			StepName: template.SystemInit,
 			Cluster:  opt.Cluster,
 			Extra: template.ExtraInfo{
-				NodeIPList:   strings.Join(nodeIPs, ","),
-				NodeOperator: opt.Operator,
-				ModuleID:     cloudprovider.GetScaleInModuleID(opt.AsOption, group.NodeTemplate),
-				BusinessID:   cloudprovider.GetBusinessID(opt.Cluster, opt.AsOption, group.NodeTemplate, false),
+				NodeIPList:      strings.Join(nodeIPs, ","),
+				NodeOperator:    opt.Operator,
+				ModuleID:        cloudprovider.GetScaleInModuleID(opt.AsOption, group.NodeTemplate),
+				BusinessID:      cloudprovider.GetBusinessID(opt.Cluster, opt.AsOption, group.NodeTemplate, false),
+				TranslateMethod: template.SystemCleanNode,
 			}}.BuildSopsStep(task, opt.Cloud.NodeGroupManagement.CleanNodesInGroup, true)
 		if err != nil {
 			return nil, fmt.Errorf("BuildCleanNodesInGroupTask business BuildBkSopsStepAction failed: %v", err)

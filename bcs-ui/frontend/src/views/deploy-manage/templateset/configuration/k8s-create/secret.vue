@@ -166,7 +166,7 @@
 /* eslint-disable @typescript-eslint/no-this-alias */
 /* eslint-disable @typescript-eslint/no-require-imports */
 import yamljs from 'js-yaml';
-import _ from 'lodash';
+import { merge } from 'lodash';
 
 import header from './header.vue';
 import tabs from './tabs.vue';
@@ -664,7 +664,7 @@ export default {
         return false;
       }
 
-      const newConfObj = _.merge({}, secretParams.config, appObj);
+      const newConfObj = merge({}, secretParams.config, appObj);
       const jsonFromat = this.formatJson(newConfObj);
       this.curSecret.config = jsonFromat;
       this.initSecretKeyList(this.curSecret);

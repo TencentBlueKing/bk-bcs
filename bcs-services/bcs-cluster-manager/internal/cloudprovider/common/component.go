@@ -81,8 +81,6 @@ func BuildWatchComponentTaskStep(task *proto.Task, cls *proto.Cluster, namespace
 
 // EnsureWatchComponentTask deploy bcs-k8s-watch task, if not exist, create it, if exist, update it
 func EnsureWatchComponentTask(taskID string, stepName string) error {
-	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
-		"start ensure watch component")
 	start := time.Now()
 	// get task information and validate
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
@@ -92,6 +90,9 @@ func EnsureWatchComponentTask(taskID string, stepName string) error {
 	if step == nil {
 		return nil
 	}
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start ensure watch component")
 
 	ctx := cloudprovider.WithTaskIDAndStepNameForContext(context.Background(), taskID, stepName)
 	// get auto scaling option
@@ -329,8 +330,6 @@ func getVClusterAndHostCluster(clusterID, hostClusterID string) (*proto.Cluster,
 
 // InstallVclusterTask ensure auto scaler task, if not exist, create it, if exist, update it
 func InstallVclusterTask(taskID string, stepName string) error {
-	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
-		"start install vcluster")
 	start := time.Now()
 	// get task information and validate
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
@@ -340,6 +339,9 @@ func InstallVclusterTask(taskID string, stepName string) error {
 	if step == nil {
 		return nil
 	}
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start install vcluster")
 
 	// get vcluster option
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
@@ -538,8 +540,6 @@ func BuildUnInstallVclusterTaskStep(task *proto.Task, clusterID, hostClusterID s
 
 // UnInstallVclusterTask delete vcluster
 func UnInstallVclusterTask(taskID string, stepName string) error {
-	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
-		"start delete vcluster")
 	start := time.Now()
 	// get task information and validate
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
@@ -549,6 +549,9 @@ func UnInstallVclusterTask(taskID string, stepName string) error {
 	if step == nil {
 		return nil
 	}
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start delete vcluster")
 
 	// get vcluster option
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
@@ -683,8 +686,6 @@ func getClusterNodeGroups(clusterID string) ([]*proto.NodeGroup, error) {
 
 // EnsureAutoScalerTask ensure auto scaler task, if not exist, create it, if exist, update it
 func EnsureAutoScalerTask(taskID string, stepName string) error {
-	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
-		"start ensure auto scaler")
 	start := time.Now()
 	// get task information and validate
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
@@ -694,6 +695,9 @@ func EnsureAutoScalerTask(taskID string, stepName string) error {
 	if step == nil {
 		return nil
 	}
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start ensure auto scaler")
 
 	// get auto scaling option
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
@@ -856,8 +860,6 @@ func BuildLogCollectorAddonTaskStep(task *proto.Task, cls *proto.Cluster) {
 
 // EnsureLogCollectorTask deploy bcs log collector addon
 func EnsureLogCollectorTask(taskID string, stepName string) error {
-	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
-		"start ensure bcs log collector addon task")
 	start := time.Now()
 	// get task information and validate
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
@@ -867,6 +869,9 @@ func EnsureLogCollectorTask(taskID string, stepName string) error {
 	if step == nil {
 		return nil
 	}
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start ensure bcs log collector addon task")
 
 	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
 

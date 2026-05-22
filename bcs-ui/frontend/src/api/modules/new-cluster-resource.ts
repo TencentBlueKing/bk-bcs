@@ -349,6 +349,8 @@ export const TemplateSetService = {
   GetTemplateContent: (params?: ClusterResource.GetTemplateContentReq, config?: IFetchConfig): Promise<ClusterResource.CommonResp extends { data: any } ? ClusterResource.CommonResp['data'] : ClusterResource.CommonResp> => request('post', '/clusterresources/v1/projects/$projectCode/template/detail')(params, config),
   // 获取模板文件版本列表
   ListTemplateVersion: (params?: ClusterResource.ListTemplateVersionReq, config?: IFetchConfig): Promise<ClusterResource.CommonListResp extends { data: any } ? ClusterResource.CommonListResp['data'] : ClusterResource.CommonListResp> => request('get', '/clusterresources/v1/projects/$projectCode/template/$templateID/versions')(params, config),
+  // 获取模板文件版本列表（元数据）
+  ListTemplateMetadataVersion: (params?: ClusterResource.ListTemplateVersionReq, config?: IFetchConfig): Promise<ClusterResource.CommonListResp extends { data: any } ? ClusterResource.CommonListResp['data'] : ClusterResource.CommonListResp> => request('get', '/clusterresources/v1/projects/$projectCode/template/$templateID/metadata/versions')(params, config),
   // 创建模板文件版本
   CreateTemplateVersion: (params?: ClusterResource.CreateTemplateVersionReq, config?: IFetchConfig): Promise<ClusterResource.CommonResp extends { data: any } ? ClusterResource.CommonResp['data'] : ClusterResource.CommonResp> => request('post', '/clusterresources/v1/projects/$projectCode/template/$templateID/versions')(params, config),
   // 删除模板文件版本

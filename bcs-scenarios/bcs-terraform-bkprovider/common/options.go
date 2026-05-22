@@ -73,7 +73,7 @@ type BkSystemConfig struct {
 
 	// 蓝鲸网关白名单
 	BkAddressTemplateID string `json:"bkAddressTemplateID"`
-	// 蓝鲸出口IP
+	// 蓝鲸出口 IP，多个 IP 时以英文逗号分隔
 	BkOuterIP string `json:"bkOuterIP"`
 }
 

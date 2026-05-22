@@ -45,6 +45,20 @@ const DashboardHPA = () => import(/* webpackChunkName: 'dashboard' */'@/views/re
 
 const UpdateRecord = () => import(/* webpackChunkName: 'dashboard' */'@/views/resource-view/workload/update-record.vue');
 
+// category 参数到列表路由名的映射
+const CATEGORY_TO_LIST_ROUTE: Record<string, string> = {
+  deployments: 'dashboardWorkloadDeployments',
+  daemonsets: 'dashboardWorkloadDaemonSets',
+  statefulsets: 'dashboardWorkloadStatefulSets',
+  cronjobs: 'dashboardWorkloadCronJobs',
+  jobs: 'dashboardWorkloadJobs',
+  pods: 'dashboardWorkloadPods',
+  gamestatefulsets: 'dashboardGameStatefulSets',
+  gamedeployments: 'dashboardGameDeployments',
+  hooktemplates: 'dashboardHookTemplates',
+  customobjects: 'dashboardCustomObjects',
+};
+
 export default [
   {
     path: 'clusters/:clusterId',
@@ -322,6 +336,12 @@ export default [
           isCommonCrd: route.query.isCommonCrd,
         }),
         component: DashboardWorkloadDetail,
+        meta: {
+          backRoute: (route) => {
+            const routeName = CATEGORY_TO_LIST_ROUTE[route.params.category as string];
+            return routeName ? { name: routeName, params: route.params } : undefined;
+          },
+        },
         beforeEnter: (to, from, next) => {
           // 设置当前详情的父级菜单
           to.meta.menuId = String(to.query.kind).toUpperCase();

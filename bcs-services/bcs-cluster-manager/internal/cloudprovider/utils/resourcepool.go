@@ -16,8 +16,10 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
@@ -54,6 +56,9 @@ func createResourcePool(ctx context.Context, data *cloudprovider.CloudDependBasi
 	pool cloudprovider.ResourcePoolData) (string, error) {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
+	if strings.HasPrefix(pool.ResourcePoolID, QuotaPoolPrefix) {
+		pool.ResourcePoolID = ""
+	}
 	consumerID, err := tresource.GetResourceManagerClient().CreateResourcePool(ctx, resource.ResourcePoolInfo{
 		Name:      data.NodeGroup.NodeGroupID,
 		Provider:  pool.Provider,
@@ -106,10 +111,25 @@ func DestroyDeviceList(ctx context.Context, info *cloudprovider.CloudDependBasic
 }
 
 // buildApplyCvmInstanceRequest build resource request
-func buildApplyCvmInstanceRequest(group *proto.NodeGroup, operator string) *resource.ApplyInstanceReq {
+func buildApplyCvmInstanceRequest(group *proto.NodeGroup, operator string,
+	quota *bcsproject.ProjectQuota) *resource.ApplyInstanceReq {
+	var providerBizIDs string
+	var startTime int64
+	var endTime int64
+	if quota != nil && quota.GetQuotaAttr() != nil {
+		providerBizIDs = quota.GetQuotaAttr().GetSourceBkBizIDs()
+		st, _ := time.Parse(time.RFC3339, quota.GetQuotaAttr().GetStartTime())
+		et, _ := time.Parse(time.RFC3339, quota.GetQuotaAttr().GetEndTime())
+		if !st.IsZero() {
+			startTime = st.Unix()
+		}
+		if !et.IsZero() {
+			endTime = et.Unix()
+		}
+	}
 	return &resource.ApplyInstanceReq{
-		NodeType: resource.CVM,
-
+		NodeType:           resource.CVM,
+		BusinessID:         quota.GetBusinessID(),
 		Region:             group.GetRegion(),
 		VpcID:              group.GetAutoScaling().GetVpcID(),
 		ZoneList:           group.GetAutoScaling().GetZones(),
@@ -160,8 +180,11 @@ func buildApplyCvmInstanceRequest(group *proto.NodeGroup, operator string) *reso
 			SecurityService: group.GetLaunchTemplate().GetIsSecurityService(),
 			MonitorService:  group.GetLaunchTemplate().GetIsMonitorService(),
 		},
-		PoolID:   group.GetConsumerID(),
-		Operator: operator,
+		PoolID:         group.GetConsumerID(),
+		Operator:       operator,
+		ProviderBizIDs: providerBizIDs,
+		StartTime:      startTime,
+		EndTime:        endTime,
 	}
 }
 
@@ -186,7 +209,8 @@ func buildApplyIdcNodesRequest(group *proto.NodeGroup, operator string) *resourc
 
 // ConsumeDevicesFromResourcePool apply cvm instances to generate orderID form resource pool
 func ConsumeDevicesFromResourcePool(
-	ctx context.Context, group *proto.NodeGroup, resourceType string, nodeNum int, operator string) (string, error) {
+	ctx context.Context, group *proto.NodeGroup, resourceType string, nodeNum int, operator string,
+	quota *bcsproject.ProjectQuota) (string, error) {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
 	ctx = utils.WithTraceIDForContext(ctx, taskID)
@@ -194,7 +218,7 @@ func ConsumeDevicesFromResourcePool(
 	req := &resource.ApplyInstanceReq{} // nolint ineffassign(ineffectual assignment to req)
 	switch resourceType {
 	case resource.CVM.String():
-		req = buildApplyCvmInstanceRequest(group, operator)
+		req = buildApplyCvmInstanceRequest(group, operator, quota)
 	case resource.IDC.String():
 		req = buildApplyIdcNodesRequest(group, operator)
 	default:

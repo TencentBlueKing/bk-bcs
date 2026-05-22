@@ -30,6 +30,7 @@ type HostConf struct {
 	BKIAMHost             string `yaml:"bk_iam_host"`             // 权限中心
 	BKCCHost              string `yaml:"bk_cc_host"`              // cmdb
 	BKMonitorHost         string `yaml:"bk_monitor_host"`         // 蓝鲸监控
+	BKMonitorAddonName    string `yaml:"bk_monitor_addon_name"`   // 蓝鲸监控插件名称
 	BKSREHOST             string `yaml:"bk_sre_host"`             // 申请服务器地址
 	BKUserHost            string `yaml:"bk_user_host"`            // 用户中心地址
 	BKUserUIHost          string `yaml:"bk_user_ui_host"`         // 用户中心UI地址

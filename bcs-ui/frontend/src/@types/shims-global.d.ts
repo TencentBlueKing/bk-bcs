@@ -47,6 +47,7 @@ interface Window {
   readonly DEVOPS_HOST: string
   readonly LOGIN_FULL: string
   readonly BKMONITOR_HOST: string
+  readonly BK_MONITOR_ADDON_NAME: string
   readonly RUN_ENV: string
   readonly BK_USER_HOST: string
   readonly PREFERRED_DOMAINS: string

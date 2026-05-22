@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
@@ -27,11 +28,11 @@ import (
 // ProjectClient xxx
 // nolint:revive
 type ProjectClient struct {
-	Healthz   HealthzClient
-	Project   BCSProjectClient
-	Namespace NamespaceClient
-	Variable  VariableClient
-	Quota     BCSProjectQuotaClient
+	Healthz   bcsproject.HealthzClient
+	Project   bcsproject.BCSProjectClient
+	Namespace bcsproject.NamespaceClient
+	Variable  bcsproject.VariableClient
+	Quota     bcsproject.BCSProjectQuotaClient
 }
 
 // NewProjectManagerClient create ProjectManager SDK implementation
@@ -88,11 +89,11 @@ func NewProjectManagerClient(config *bcsapi.Config) (*ProjectClient, func()) {
 	}
 	// init project manager client
 	c := &ProjectClient{
-		Healthz:   NewHealthzClient(conn),
-		Project:   NewBCSProjectClient(conn),
-		Namespace: NewNamespaceClient(conn),
-		Variable:  NewVariableClient(conn),
-		Quota:     NewBCSProjectQuotaClient(conn),
+		Healthz:   bcsproject.NewHealthzClient(conn),
+		Project:   bcsproject.NewBCSProjectClient(conn),
+		Namespace: bcsproject.NewNamespaceClient(conn),
+		Variable:  bcsproject.NewVariableClient(conn),
+		Quota:     bcsproject.NewBCSProjectQuotaClient(conn),
 	}
 	return c, func() { _ = conn.Close() }
 }

@@ -32,8 +32,6 @@ import (
 
 // ImportClusterNodesTask call tkeInterface or kubeConfig import cluster nodes
 func ImportClusterNodesTask(taskID string, stepName string) error {
-	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
-		"start import cluster nodes")
 	start := time.Now()
 
 	// get task and task current step
@@ -48,6 +46,9 @@ func ImportClusterNodesTask(taskID string, stepName string) error {
 	}
 	blog.Infof("ImportClusterNodesTask[%s]: task %s run step %s, system: %s, old state: %s, params %v",
 		taskID, taskID, stepName, step.System, step.Status, step.Params)
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start import cluster nodes")
 
 	// step login started here
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
@@ -117,8 +118,6 @@ func ImportClusterNodesTask(taskID string, stepName string) error {
 
 // RegisterClusterKubeConfigTask register cluster kubeConfig connection
 func RegisterClusterKubeConfigTask(taskID string, stepName string) error {
-	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
-		"start register cluster kubeconfig connection")
 	start := time.Now()
 	// get task and task current step
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
@@ -132,6 +131,9 @@ func RegisterClusterKubeConfigTask(taskID string, stepName string) error {
 	}
 	blog.Infof("RegisterClusterKubeConfigTask[%s]: task %s run step %s, system: %s, old state: %s, params %v",
 		taskID, taskID, stepName, step.System, step.Status, step.Params)
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start register cluster kubeconfig connection")
 
 	// step login started here
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]

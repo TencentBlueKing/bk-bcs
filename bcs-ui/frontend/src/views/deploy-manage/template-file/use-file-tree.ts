@@ -1,4 +1,4 @@
-import { IListTemplateMetadataItem } from '@/@types/cluster-resource-patch';
+import { IListTemplateMetadataItem, ITemplateSpaceData } from '@/@types/cluster-resource-patch';
 
 export interface IFileTreeNode {
   name: string;              // 当前节点名称（最后一段，如 "prod"）
@@ -8,6 +8,10 @@ export interface IFileTreeNode {
   file?: IListTemplateMetadataItem; // 叶子文件节点对应的文件数据
   expanded?: boolean;        // 是否展开
   isTemp?: boolean;          // 是否为临时创建的文件夹
+  isSpace?: boolean;         // 是否为空间节点
+  spaceData?: ITemplateSpaceData; // 空间节点对应的原始数据
+  loading?: boolean;         // 是否加载中（空间节点使用）
+  spaceID?: string;          // 所属空间ID（用于统一树中子节点标识所属空间）
 }
 
 /**
@@ -19,6 +23,7 @@ export interface IFileTreeNode {
 export function buildFileTree(
   files: IListTemplateMetadataItem[] = [],
   tempFolders: string[] = [],
+  spaceID?: string,
 ): IFileTreeNode[] {
   const root: IFileTreeNode[] = [];
   const nodeMap = new Map<string, IFileTreeNode>();
@@ -73,6 +78,7 @@ export function buildFileTree(
         isFolder: false,
         children: [],
         file,
+        spaceID,
       };
       root.push(fileNode);
     } else {
@@ -87,6 +93,7 @@ export function buildFileTree(
         isFolder: false,
         children: [],
         file,
+        spaceID,
       };
       // 避免重复添加
       if (!parentNode.children.some(c => c.path === fileName && !c.isFolder)) {

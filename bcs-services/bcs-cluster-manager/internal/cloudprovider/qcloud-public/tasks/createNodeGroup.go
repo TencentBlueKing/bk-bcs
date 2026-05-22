@@ -37,8 +37,6 @@ import (
 
 // CreateCloudNodeGroupTask create cloud node group task
 func CreateCloudNodeGroupTask(taskID string, stepName string) error { // nolint
-	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
-		"start create cloud nodegroup")
 	start := time.Now()
 	// get task information and validate
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
@@ -48,6 +46,9 @@ func CreateCloudNodeGroupTask(taskID string, stepName string) error { // nolint
 	if step == nil {
 		return nil
 	}
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start create cloud nodegroup")
 
 	// step login started here
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
@@ -165,8 +166,6 @@ func generateCreateNodePoolInput(group *proto.NodeGroup, cluster *proto.Cluster)
 
 // CheckCloudNodeGroupStatusTask check cloud node group status task
 func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error { // nolint
-	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
-		"start check cloud nodegroup status")
 	start := time.Now()
 	// get task information and validate
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
@@ -176,6 +175,9 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error { // no
 	if step == nil {
 		return nil
 	}
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start check cloud nodegroup status")
 
 	// step login started here
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]

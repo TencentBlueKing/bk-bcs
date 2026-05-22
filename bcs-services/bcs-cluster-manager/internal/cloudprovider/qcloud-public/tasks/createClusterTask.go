@@ -804,8 +804,6 @@ func createTkeCluster(ctx context.Context, info *cloudprovider.CloudDependBasicI
 
 // CreateTkeClusterTask call qcloud interface to create cluster
 func CreateTkeClusterTask(taskID string, stepName string) error {
-	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
-		"start create tke cluster")
 	start := time.Now()
 
 	// get task and task current step
@@ -820,6 +818,9 @@ func CreateTkeClusterTask(taskID string, stepName string) error {
 	}
 	blog.Infof("CreateTkeClusterTask[%s]: task %s run step %s, system: %s, old state: %s, params %v",
 		taskID, taskID, stepName, step.System, step.Status, step.Params)
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start create tke cluster")
 
 	// task data
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
@@ -942,8 +943,6 @@ func checkClusterStatus(ctx context.Context, info *cloudprovider.CloudDependBasi
 
 // CheckTkeClusterStatusTask check cluster create status
 func CheckTkeClusterStatusTask(taskID string, stepName string) error {
-	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
-		"start check tke cluster status")
 	start := time.Now()
 	// get task and task current step
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
@@ -957,6 +956,9 @@ func CheckTkeClusterStatusTask(taskID string, stepName string) error {
 	}
 	blog.Infof("CheckTkeClusterStatusTask[%s]: task %s run step %s, system: %s, old state: %s, params %v",
 		taskID, taskID, stepName, step.System, step.Status, step.Params)
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start check tke cluster status")
 
 	// step login started here
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
@@ -1008,8 +1010,6 @@ func CheckTkeClusterStatusTask(taskID string, stepName string) error {
 
 // CheckCreateClusterNodeStatusTask check cluster node status
 func CheckCreateClusterNodeStatusTask(taskID string, stepName string) error { // nolint
-	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
-		"start check create cluster node status")
 	start := time.Now()
 
 	// get task and task current step
@@ -1024,6 +1024,9 @@ func CheckCreateClusterNodeStatusTask(taskID string, stepName string) error { //
 	}
 	blog.Infof("CheckCreateClusterNodeStatusTask[%s] task %s run current step %s, system: %s, old state: %s, params %v",
 		taskID, taskID, stepName, step.System, step.Status, step.Params)
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start check create cluster node status")
 
 	// extract valid info
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
@@ -1107,8 +1110,6 @@ func CheckCreateClusterNodeStatusTask(taskID string, stepName string) error { //
 
 // RegisterTkeClusterKubeConfigTask register cluster kubeconfig
 func RegisterTkeClusterKubeConfigTask(taskID string, stepName string) error { // nolint
-	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
-		"start register tke cluster kubeconfig")
 	start := time.Now()
 
 	// get task and task current step
@@ -1123,6 +1124,9 @@ func RegisterTkeClusterKubeConfigTask(taskID string, stepName string) error { //
 	}
 	blog.Infof("RegisterTkeClusterKubeConfigTask[%s] task %s run current step %s, system: %s, old state: %s, params %v",
 		taskID, taskID, stepName, step.System, step.Status, step.Params)
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start register tke cluster kubeconfig")
 
 	// inject taskID
 	ctx := cloudprovider.WithTaskIDAndStepNameForContext(context.Background(), taskID, stepName)
@@ -1368,8 +1372,6 @@ func openClusterAdminKubeConfig(ctx context.Context, info *cloudprovider.CloudDe
 // UpdateCreateClusterDBInfoTask update cluster DB info
 // nolint:funlen
 func UpdateCreateClusterDBInfoTask(taskID string, stepName string) error {
-	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
-		"start update cluster db info")
 	start := time.Now()
 	// get task and task current step
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
@@ -1383,6 +1385,9 @@ func UpdateCreateClusterDBInfoTask(taskID string, stepName string) error {
 	}
 	blog.Infof("UpdateCreateClusterDBInfoTask[%s]: task %s run step %s, system: %s, old state: %s, params %v",
 		taskID, taskID, stepName, step.System, step.Status, step.Params)
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start update cluster db info")
 
 	// step login started here
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]

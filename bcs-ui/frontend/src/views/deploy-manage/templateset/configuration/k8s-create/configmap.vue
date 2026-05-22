@@ -170,7 +170,7 @@
 
 <script>
 import yamljs from 'js-yaml';
-import _ from 'lodash';
+import { merge } from 'lodash';
 
 import header from './header.vue';
 import tabs from './tabs.vue';
@@ -659,7 +659,7 @@ export default {
         editor.gotoLine(annot[0].row, annot[0].column, true);
         return false;
       }
-      const newConfObj = _.merge({}, configmapParams.config, appObj);
+      const newConfObj = merge({}, configmapParams.config, appObj);
       const jsonFromat = this.formatJson(newConfObj);
       this.curConfigmap.config = jsonFromat;
       this.initConfigmapKeyList(this.curConfigmap);

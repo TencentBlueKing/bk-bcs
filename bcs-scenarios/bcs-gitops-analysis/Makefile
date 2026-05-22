@@ -49,6 +49,4 @@ test:
 
 .PHONY: analysis
 analysis: tidy
-	mkdir -p ${OUTPUT}/bcs-gitops-analysis
-	cp -r images/analysis/* ${OUTPUT}/bcs-gitops-analysis/
-	go build ${LDFLAG} -o ${OUTPUT}/bcs-gitops-analysis/bcs-gitops-analysis main.go
+	echo ""

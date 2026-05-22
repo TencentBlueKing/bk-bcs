@@ -132,6 +132,18 @@ const router = new VueRouter({
 
 // 自定义back逻辑
 VueRouter.prototype.back = () => {
+  const route = router.currentRoute;
+  const backRoute = route.meta?.backRoute;
+
+  // 有声明的 backRoute 时优先使用，确保返回目标确定
+  if (backRoute) {
+    const resolved = typeof backRoute === 'function' ? backRoute(route) : backRoute;
+    if (resolved) {
+      router.replace(resolved);
+      return;
+    }
+  }
+  // 从其他站点输入 URL 进入时 window.history.length 不确定，router.back() 会退出当前 SPA
   if (window.history.length <= 2) {
     router.push({
       name: $store.state.curNav?.route || 'home',

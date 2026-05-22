@@ -28,6 +28,7 @@
 ### 容器镜像编译环境
 #### 官方编译镜像
 ```shell
+hub.bktencent.com/blueking/centos8:go1.25.2_node20.18.2
 hub.bktencent.com/blueking/centos8:go1.23.2_node20.18.2
 hub.bktencent.com/blueking/centos7:go1.20.2_node16.20.2
 ```

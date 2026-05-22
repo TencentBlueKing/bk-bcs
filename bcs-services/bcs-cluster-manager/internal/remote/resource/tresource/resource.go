@@ -1140,12 +1140,17 @@ func buildCVMConsumeDeviceDesireReq(desiredNodes uint32, req *resource.ApplyInst
 		return nil, err
 	}
 
+	if (req.StartTime < 0 || req.EndTime < 0) || (req.StartTime > req.EndTime) {
+		return nil, fmt.Errorf("quota time is invalid")
+	}
+
 	var zones = make([]string, 0)
 	for i := range availableZones {
 		zones = append(zones, availableZones[i].Zone)
 	}
 	zoneStr := strings.Join(zones, ",")
 	subnetStr := ""
+	businessID, _ := strconv.ParseInt(req.BusinessID, 10, 64)
 
 	desires := make([]*ConsumeDesire, 0)
 
@@ -1186,6 +1191,10 @@ func buildCVMConsumeDeviceDesireReq(desiredNodes uint32, req *resource.ApplyInst
 			Zone:   &zoneStr,
 			Subnet: &subnetStr,
 		},
+		BusinessID:     &businessID,
+		ProviderBizIDs: &req.ProviderBizIDs,
+		StartTime:      &req.StartTime,
+		EndTime:        &req.EndTime,
 	})
 
 	// build consume device request

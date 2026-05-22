@@ -18,8 +18,8 @@ import (
 	"fmt"
 	"time"
 
-	// "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/auth"
@@ -36,7 +36,7 @@ type DeleteAction struct {
 	template *cmproto.NotifyTemplate
 	req      *cmproto.DeleteNotifyTemplateRequest
 	resp     *cmproto.DeleteNotifyTemplateResponse
-	project  *project.Project
+	project  *bcsproject.Project
 }
 
 // NewDeleteAction create delete action for notifyTemplate

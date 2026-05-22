@@ -41,9 +41,7 @@ endif
 
 .PHONY: gitops-workflow
 gitops-workflow:
-	mkdir -p ${OUTPUT}/bcs-gitops-workflow
-	cp -r images/workflow/. ${OUTPUT}/bcs-gitops-workflow/
-	go build ${LDFLAG} -o ${OUTPUT}/bcs-gitops-workflow/bcs-gitops-workflow main.go
+	echo ""
 
 .PHONY: manifests
 manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.

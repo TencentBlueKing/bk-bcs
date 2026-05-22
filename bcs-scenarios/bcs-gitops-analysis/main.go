@@ -10,42 +10,9 @@
  * limitations under the License.
  */
 
-// Package main xx
+// Package main xxx
 package main
 
-import (
-	"context"
-	"os"
-	"os/signal"
-	"syscall"
-
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-analysis/options"
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-analysis/pkg/manager"
-)
-
 func main() {
-	op := options.Parse()
-	blog.InitLogs(op.LogConfig)
-	defer blog.CloseLogs()
 
-	ctx, cancel := context.WithCancel(context.Background())
-	go func() {
-		interrupt := make(chan os.Signal, 10)
-		signal.Notify(interrupt, syscall.SIGINT, syscall.SIGKILL, syscall.SIGTERM,
-			syscall.SIGUSR1, syscall.SIGUSR2)
-		for s := range interrupt {
-			blog.Infof("Received signal %v from system. Exit!", s)
-			cancel()
-			return
-		}
-	}()
-	mgr := manager.NewAnalysisManager()
-	if err := mgr.Init(); err != nil {
-		panic(err)
-	}
-	if err := mgr.Start(ctx); err != nil {
-		panic(err)
-	}
 }

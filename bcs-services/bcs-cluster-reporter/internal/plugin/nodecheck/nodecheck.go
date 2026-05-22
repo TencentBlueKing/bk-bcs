@@ -338,6 +338,12 @@ func getClusterNodeInfo(cluster *pluginmanager.ClusterConfig) (map[string]v12.No
 							masterList = append(masterList, address.Address)
 						}
 					}
+				} else if key == "node-role.kubernetes.io/control-plane" && (val == "true" || val == "") {
+					for _, address := range node.Status.Addresses {
+						if address.Type == v12.NodeInternalIP {
+							masterList = append(masterList, address.Address)
+						}
+					}
 				} else if key == "kubernetes.io/os" && val == "windows" {
 					windowsNum = windowsNum + 1
 					nodeInfo[node.Name] = plugin.NodeInfo{

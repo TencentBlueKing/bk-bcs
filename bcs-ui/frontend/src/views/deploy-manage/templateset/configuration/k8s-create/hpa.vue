@@ -208,7 +208,7 @@
 /* eslint-disable no-case-declarations */
 /* eslint-disable @typescript-eslint/no-this-alias */
 import yamljs from 'js-yaml';
-import _ from 'lodash';
+import { merge } from 'lodash';
 
 import header from './header.vue';
 import tabs from './tabs.vue';
@@ -585,7 +585,7 @@ export default {
         return false;
       }
 
-      const newConfObj = _.merge({}, hpaParams.config, appObj);
+      const newConfObj = merge({}, hpaParams.config, appObj);
       const jsonFromat = this.formatJson(newConfObj);
       this.curHPA.config = jsonFromat;
       this.toJsonDialogConf.isShow = false;

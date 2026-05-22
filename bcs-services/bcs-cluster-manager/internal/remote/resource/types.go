@@ -139,6 +139,14 @@ type ApplyInstanceReq struct {
 
 	// Selector labels match
 	Selector map[string]string
+
+	// 业务ID
+	BusinessID string
+
+	// 来源业务
+	ProviderBizIDs string
+	StartTime      int64
+	EndTime        int64
 }
 
 // ApplyInstanceResp return async task bu orderID or return instanceIDs and check instance status
@@ -190,6 +198,15 @@ type InstanceType struct {
 	DataDisks         []*DataDisk
 	OversoldAvailable int32
 	Region            string
+	ExtraInfo         *InstanceExtraInfo
+}
+
+// InstanceExtraInfo instance extra info
+type InstanceExtraInfo struct {
+	// 来源业务ID
+	ProviderBizIDs    string
+	ProviderStartTime string
+	ProviderEndTime   string
 }
 
 // InstanceSpec size

@@ -1,6 +1,6 @@
 <template>
   <bcs-select
-    class="h-[32px]"
+    class="min-h-[32px]"
     :loading="nsLoading"
     multiple
     :popover-min-width="360"

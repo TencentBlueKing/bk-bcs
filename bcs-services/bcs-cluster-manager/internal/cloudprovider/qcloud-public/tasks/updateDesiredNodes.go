@@ -34,8 +34,6 @@ import (
 
 // ApplyInstanceMachinesTask update desired nodes task
 func ApplyInstanceMachinesTask(taskID string, stepName string) error { // nolint
-	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
-		"start update desired nodes")
 	start := time.Now()
 
 	// get task and task current step
@@ -47,6 +45,9 @@ func ApplyInstanceMachinesTask(taskID string, stepName string) error { // nolint
 	if step == nil {
 		return nil
 	}
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start update desired nodes")
 
 	// extract parameter && check validate
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
@@ -391,8 +392,6 @@ func getAsgIDByNodePool(ctx context.Context, info *cloudprovider.CloudDependBasi
 // CheckClusterNodesStatusTask check update desired nodes status task. nodes already add to cluster,
 // thus not rollback desiredNum and only record status
 func CheckClusterNodesStatusTask(taskID string, stepName string) error { // nolint
-	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
-		"start check cluster nodes status")
 	start := time.Now()
 
 	// get task and task current step
@@ -404,6 +403,9 @@ func CheckClusterNodesStatusTask(taskID string, stepName string) error { // noli
 	if step == nil {
 		return nil
 	}
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start check cluster nodes status")
 
 	// step login started here
 	// extract parameter && check validate

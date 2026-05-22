@@ -1,5 +1,6 @@
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import Vue from 'vue';
+import type { RawLocation, Route } from 'vue-router';
 
 import VueI18n from './vue-i18n';
 
@@ -20,5 +21,6 @@ declare module 'vue-router' {
     menuId?: string // 父菜单ID
     id?: string // 当前菜单ID
     title?: string // 标题
+    backRoute?: RawLocation | ((route: Route) => RawLocation | undefined) // 声明式返回路由
   }
 }

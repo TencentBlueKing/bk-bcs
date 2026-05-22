@@ -26,8 +26,6 @@ import (
 
 // RemoveNodesFromClusterTask remove node from cluster
 func RemoveNodesFromClusterTask(taskID string, stepName string) error {
-	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
-		"start remove nodes from cluster")
 	start := time.Now()
 	// get task and task current step
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
@@ -41,6 +39,9 @@ func RemoveNodesFromClusterTask(taskID string, stepName string) error {
 	}
 	blog.Infof("RemoveNodesFromClusterTask[%s]: task %s run step %s, system: %s, old state: %s, params %v",
 		taskID, taskID, stepName, step.System, step.Status, step.Params)
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start remove nodes from cluster")
 
 	// get data info
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
@@ -104,8 +105,6 @@ func RemoveNodesFromClusterTask(taskID string, stepName string) error {
 
 // UpdateRemoveNodeDBInfoTask update remove node DB info
 func UpdateRemoveNodeDBInfoTask(taskID string, stepName string) error {
-	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
-		"start update remove node db info")
 	start := time.Now()
 
 	// get task and task current step
@@ -120,6 +119,9 @@ func UpdateRemoveNodeDBInfoTask(taskID string, stepName string) error {
 	}
 	blog.Infof("UpdateRemoveNodeDBInfoTask[%s] task %s run current step %s, system: %s, old state: %s, params %v",
 		taskID, taskID, stepName, step.System, step.Status, step.Params)
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start update remove node db info")
 
 	// extract valid info
 	success := cloudprovider.ParseNodeIpOrIdFromCommonMap(state.Task.CommonParams,

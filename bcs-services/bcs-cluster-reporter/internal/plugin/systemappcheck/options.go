@@ -50,7 +50,7 @@ func (o *Options) Validate() error {
 	// }
 
 	if o.Namespaces == nil || len(o.Namespaces) == 0 {
-		o.Namespaces = []string{"kube-system", "bk-system", "bcs-system", "bkmonitor-operator"}
+		o.Namespaces = []string{"kube-system", "bk-system", "bcs-system", "bkmonitor-operator", "istio-system"}
 	}
 
 	if o.Components != nil {

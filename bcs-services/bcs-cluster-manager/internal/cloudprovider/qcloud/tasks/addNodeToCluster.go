@@ -31,8 +31,6 @@ import (
 
 // ModifyInstancesVpcTask modify nodes vpc task
 func ModifyInstancesVpcTask(taskID string, stepName string) error {
-	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
-		fmt.Sprintf("ModifyInstancesVpcTask[%s] start task", taskID))
 	start := time.Now()
 
 	// get task and task current step
@@ -47,6 +45,9 @@ func ModifyInstancesVpcTask(taskID string, stepName string) error {
 	}
 	blog.Infof("ModifyInstancesVpcTask[%s] task %s run current step %s, system: %s, old state: %s, params %v",
 		taskID, taskID, stepName, step.System, step.Status, step.Params)
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		fmt.Sprintf("ModifyInstancesVpcTask[%s] start task", taskID))
 
 	// extract valid info
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
@@ -96,8 +97,6 @@ func ModifyInstancesVpcTask(taskID string, stepName string) error {
 
 // CheckInstanceStateTask check instance operation state
 func CheckInstanceStateTask(taskID string, stepName string) error { // nolint
-	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
-		fmt.Sprintf("CheckInstanceStateTask[%s] start check instance operation status", taskID))
 	start := time.Now()
 
 	// get task and task current step
@@ -112,6 +111,9 @@ func CheckInstanceStateTask(taskID string, stepName string) error { // nolint
 	}
 	blog.Infof("CheckInstanceStateTask[%s] task %s run current step %s, system: %s, old state: %s, params %v",
 		taskID, taskID, stepName, step.System, step.Status, step.Params)
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		fmt.Sprintf("CheckInstanceStateTask[%s] start check instance operation status", taskID))
 
 	// extract valid info
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
@@ -316,8 +318,6 @@ func handleClusterWorkerNodesData(ctx context.Context, clusterID string,
 
 // AddNodesToClusterTask add node to cluster
 func AddNodesToClusterTask(taskID string, stepName string) error { // nolint
-	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
-		fmt.Sprintf("AddNodesToClusterTask[%s] start add nodes to cluster", taskID))
 	start := time.Now()
 
 	// get task and task current step
@@ -332,6 +332,9 @@ func AddNodesToClusterTask(taskID string, stepName string) error { // nolint
 	}
 	blog.Infof("AddNodesToClusterTask[%s] task %s run current step %s, system: %s, old state: %s, params %v",
 		taskID, taskID, stepName, step.System, step.Status, step.Params)
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		fmt.Sprintf("AddNodesToClusterTask[%s] start add nodes to cluster", taskID))
 
 	// extract valid info
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
@@ -520,8 +523,6 @@ func AddNodesToClusterTask(taskID string, stepName string) error { // nolint
 
 // CheckAddNodesStatusTask check add node status
 func CheckAddNodesStatusTask(taskID string, stepName string) error { // nolint
-	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
-		fmt.Sprintf("CheckAddNodesStatusTask[%s] start check add nodes status", taskID))
 	start := time.Now()
 
 	// get task and task current step
@@ -536,6 +537,9 @@ func CheckAddNodesStatusTask(taskID string, stepName string) error { // nolint
 	}
 	blog.Infof("CheckAddNodesStatusTask[%s] task %s run current step %s, system: %s, old state: %s, params %v",
 		taskID, taskID, stepName, step.System, step.Status, step.Params)
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		fmt.Sprintf("CheckAddNodesStatusTask[%s] start check add nodes status", taskID))
 
 	// extract valid info
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
@@ -667,8 +671,6 @@ func CheckAddNodesStatusTask(taskID string, stepName string) error { // nolint
 
 // UpdateNodeDBInfoTask update node DB info
 func UpdateNodeDBInfoTask(taskID string, stepName string) error { // nolint
-	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
-		fmt.Sprintf("UpdateNodeDBInfoTask[%s] start update node db info", taskID))
 	start := time.Now()
 
 	// get task and task current step
@@ -683,6 +685,9 @@ func UpdateNodeDBInfoTask(taskID string, stepName string) error { // nolint
 	}
 	blog.Infof("UpdateNodeDBInfoTask[%s] task %s run current step %s, system: %s, old state: %s, params %v",
 		taskID, taskID, stepName, step.System, step.Status, step.Params)
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		fmt.Sprintf("UpdateNodeDBInfoTask[%s] start update node db info", taskID))
 
 	// extract valid info
 	passwd := state.Task.CommonParams[cloudprovider.PasswordKey.String()]

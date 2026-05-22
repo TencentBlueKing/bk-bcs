@@ -81,8 +81,6 @@ func BuildInstallGseAgentTaskStep(task *proto.Task, gseInfo *GseInstallInfo, opt
 
 // InstallGSEAgentTask install gse agent task
 func InstallGSEAgentTask(taskID string, stepName string) error { // nolint
-	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
-		"start install gse agent")
 	start := time.Now()
 	// get task information and validate
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
@@ -92,6 +90,10 @@ func InstallGSEAgentTask(taskID string, stepName string) error { // nolint
 	if step == nil {
 		return nil
 	}
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"start install gse agent")
+
 	// get cluster/nodeGroup
 	clusterIDString := step.Params[cloudprovider.ClusterIDKey.String()]
 	groupIDString := step.Params[cloudprovider.NodeGroupIDKey.String()]
