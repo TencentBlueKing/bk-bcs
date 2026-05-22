@@ -174,6 +174,7 @@ func (e *EmbedWeb) IndexHandler() http.Handler {
 			"DEVOPS_ARTIFACTORY_HOST":   config.G.FrontendConf.Host.DevOpsArtifactoryHost,
 			"PAAS_HOST":                 config.G.FrontendConf.Host.BKPaaSHost,
 			"BKMONITOR_HOST":            config.G.FrontendConf.Host.BKMonitorHost,
+			"BK_MONITOR_ADDON_NAME":     config.G.FrontendConf.Host.BKMonitorAddonName,
 			"BK_IAM_HOST":               config.G.FrontendConf.Host.BKIAMHost,
 			"BK_CC_HOST":                config.G.FrontendConf.Host.BKCCHost,
 			"BK_SRE_HOST":               config.G.FrontendConf.Host.BKSREHOST,
