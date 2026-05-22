@@ -16,10 +16,11 @@ package template
 import (
 	"context"
 	"path"
-	"regexp"
-	"strings"
+	"path/filepath"
+	"sort"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	"github.com/coreos/go-semver/semver"
 	"github.com/feiin/go-xss"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"gopkg.in/yaml.v2"
@@ -45,6 +46,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/stringx"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
@@ -214,6 +216,91 @@ func (t *TemplateAction) List(ctx context.Context, templateSpaceID string) ([]ma
 	return m, nil
 }
 
+// ListTemplateMetadataVersions 通过模板文件夹 ID 获取模板文件列表（含版本 ID 和版本号）
+func (t *TemplateAction) ListTemplateMetadataVersions(ctx context.Context, spaceID string) (
+	[]map[string]interface{}, error) {
+	if err := t.checkAccess(ctx); err != nil {
+		return nil, err
+	}
+
+	p, err := project.FromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	templateSpace, err := t.model.GetTemplateSpace(ctx, spaceID)
+	if err != nil {
+		return nil, err
+	}
+
+	// 权限校验
+	if templateSpace.ProjectCode != p.Code {
+		return nil, errorx.New(errcode.NoPerm, i18n.GetMsg(ctx, "无权限访问"))
+	}
+
+	// 通过项目编码、文件夹名称检索模板元数据
+	cond := operator.NewLeafCondition(operator.Eq, operator.M{
+		entity.FieldKeyProjectCode:   p.Code,
+		entity.FieldKeyTemplateSpace: templateSpace.Name,
+	})
+	templates, err := t.model.ListTemplate(ctx, cond)
+	if err != nil {
+		return nil, err
+	}
+
+	// 获取该文件夹下所有版本信息
+	versions, err := t.model.ListTemplateVersion(ctx, operator.NewLeafCondition(operator.Eq, operator.M{
+		entity.FieldKeyProjectCode:   p.Code,
+		entity.FieldKeyTemplateSpace: templateSpace.Name,
+	}))
+	if err != nil {
+		return nil, err
+	}
+
+	// 存放模板文件，及版本号列表
+	m := make([]map[string]interface{}, 0)
+	for _, value := range templates {
+		mm := map[string]interface{}{
+			"templateName":  filepath.Join(templateSpace.Name, value.Name),
+			"latestVersion": value.Version,
+			"versionList":   []map[string]interface{}{},
+		}
+		// 匹配当前模板的版本信息，填充 versionID 和 version
+		var versionList []map[string]interface{}
+		for _, v := range versions {
+			if v.TemplateName == value.Name {
+				versionList = append(versionList, map[string]interface{}{
+					"version":   v.Version,
+					"versionID": v.ID.Hex(),
+					"createAt":  v.CreateAt,
+				})
+			}
+		}
+		// 区分语义化版本及非语义化版本排序
+		var semVersion []map[string]interface{}
+		var nonSemVersion []map[string]interface{}
+		for _, vl := range versionList {
+			if _, err = semver.NewVersion(vl["version"].(string)); err != nil {
+				nonSemVersion = append(nonSemVersion, vl)
+				continue
+			}
+			semVersion = append(semVersion, vl)
+		}
+		sort.Slice(semVersion, func(i, j int) bool {
+			v1, _ := semver.NewVersion(semVersion[i]["version"].(string))
+			v2, _ := semver.NewVersion(semVersion[j]["version"].(string))
+			return v2.LessThan(*v1)
+		})
+		// 非语义化版本按时间倒序排序
+		sort.Slice(nonSemVersion, func(i, j int) bool {
+			return nonSemVersion[i]["createAt"].(int64) > nonSemVersion[j]["createAt"].(int64)
+		})
+		mm["versionList"] = append(semVersion, nonSemVersion...)
+		m = append(m, mm)
+	}
+	return m, nil
+}
+
 // Create xxx
 // nolint:funlen
 func (t *TemplateAction) Create(ctx context.Context, req *clusterRes.CreateTemplateMetadataReq) (
@@ -233,9 +320,9 @@ func (t *TemplateAction) Create(ctx context.Context, req *clusterRes.CreateTempl
 	}
 
 	// 校验模板文件名
-	templateSpaceName, templateName, err := parseTemplateName(ctx, req.GetName())
+	templateSpaceName, templateName, err := stringx.ParseTemplateName(req.GetName())
 	if err != nil {
-		return "", "", err
+		return "", "", errorx.New(errcode.ValidateErr, i18n.GetMsg(ctx, err.Error()))
 	}
 	templateSpace, err := t.getOrCreateTemplateSpace(ctx, p.Code, templateSpaceName, req.GetTemplateSpaceID())
 	if err != nil {
@@ -332,9 +419,9 @@ func (t *TemplateAction) Update(ctx context.Context, req *clusterRes.UpdateTempl
 		return errorx.New(errcode.NoPerm, i18n.GetMsg(ctx, "无权限访问"))
 	}
 
-	_, templateName, err := parseTemplateName(ctx, req.GetName())
+	_, templateName, err := stringx.ParseTemplateName(req.GetName())
 	if err != nil {
-		return err
+		return errorx.New(errcode.ValidateErr, i18n.GetMsg(ctx, err.Error()))
 	}
 	// 检测是否重复
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{
@@ -755,27 +842,4 @@ func (t *TemplateAction) getOrCreateTemplateSpace(ctx context.Context,
 		return nil, err
 	}
 	return templateSpace, nil
-}
-
-// templateNamePattern 文件夹及子文件夹名称只允许字母、数字、下划线、连字符
-var templateNamePattern = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
-
-// parseTemplateName 解析模板文件夹及模板名称
-func parseTemplateName(ctx context.Context, name string) (string, string, error) {
-	// 规范化路径：压缩连续斜杠，去除前后斜杠
-	templateName := regexp.MustCompile(`/+`).ReplaceAllString(strings.Trim(name, "/"), "/")
-	path := strings.Split(templateName, "/")
-	if len(path) < 2 {
-		return "", "", errorx.New(errcode.ValidateErr, i18n.GetMsg(ctx, "无效的模板文件路径名称"))
-	}
-	// 校验文件夹名称是否符合要求
-	for i := 0; i < len(path)-1; i++ {
-		if !templateNamePattern.MatchString(path[i]) {
-			return "", "", errorx.New(errcode.ValidateErr,
-				i18n.GetMsg(ctx, "文件夹名称仅支持字母、数字、_ 和 -"))
-		}
-	}
-	// 需要把父文件夹和子文件夹及文件名称分开
-	p := strings.SplitN(templateName, "/", 2)
-	return p[0], p[1], nil
 }

@@ -50,12 +50,18 @@
   en: "unsupported transformer form: %s"
 - msgID: 文件夹名称重复
   en: "Folder name duplicated"
-- msgID: 文件夹名称仅支持字母、数字、_ 和 -
-  en: "Folder name only supports letters, digits, _ and -"
+- msgID: 文件夹名称不能为空
+  en: "Folder name cannot be empty"
+- msgID: 文件夹或者文件名称不能为空
+  en: "Folder or file name cannot be empty"
+- msgID: 文件夹或者文件名称不能包含字符：\/:*?"<>|
+  en: "Folder or file name cannot contain characters: \\/:*?\"<>|"
+- msgID: 文件名称不能包含字符：\/:*?\"<>|
+  en: "File name cannot contain characters: \\/:*?\"<>|"
+- msgID: 文件路径不能以 / 开头或结尾，也不能包含连续的 //
+  en: "File path cannot start with / end with /, or contain consecutive //"
 - msgID: 无效的模板文件路径名称
   en: "Invalid template file path name"
-- msgID: templateSpaceID 不能为空
-  en: "templateSpaceID is required"
 - msgID: 该文件夹收藏不存在
   en: "Folder name collect does not exist"
 - msgID: 元数据名称重复
