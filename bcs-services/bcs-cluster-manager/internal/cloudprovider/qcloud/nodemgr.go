@@ -234,16 +234,21 @@ func (nm *NodeManager) getInnerInstanceTypes(ctx context.Context, info cloudprov
 	[]*proto.InstanceType, error) {
 	blog.Infof("getInnerInstanceTypes %+v", info)
 
-	quoteGrayMode, err := project.GetProjectManagerClient().CheckProjectQuotaGrayLabel(ctx, info.ProjectID)
+	quoteGrayMode, ladderQuota, err := project.GetProjectManagerClient().CheckProjectQuotaAndLadderLabel(ctx, info.ProjectID)
 	if err != nil {
-		blog.Errorf("GetProjectManagerClient GetProjectQuotaGrayLabel[%s] failed: %v",
+		blog.Errorf("GetProjectManagerClient CheckProjectQuotaAndLadderLabel[%s] failed: %v",
 			info.ProjectID, err)
 		return nil, err
 	}
 
 	var targetTypes []resource.InstanceType
 
-	if utils.StringInSlice(quoteGrayMode, []string{project.QuotaGrayOverMode, project.QuotaGrayNormalMode}) {
+	// yunti 全局走 resourcemanager，当开启白名单且 ladder-quota 为true 才走额度
+	// self 自建资源池随白名单切换
+	if utils.StringInSlice(quoteGrayMode,
+		[]string{project.QuotaGrayOverMode, project.QuotaGrayNormalMode}) &&
+		((info.Provider == resource.YunTiPool && ladderQuota == "true") ||
+			info.Provider == resource.SelfPool) {
 		targetTypes, err = nm.GetInstanceTypeByProjectQuotaList(info.ProjectID, info.Region, info.Provider,
 			info.InstanceType)
 		if err != nil {
