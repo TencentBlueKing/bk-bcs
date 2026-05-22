@@ -89,6 +89,7 @@ const TemplateFileDetail = () => import(/* webpackChunkName: 'k8sTemplateset' */
 const TemplateFileList = () => import(/* webpackChunkName: 'k8sTemplateset' */'@/views/deploy-manage/template-file/file-list.vue');
 const AddTemplateFileVersion = () => import(/* webpackChunkName: 'k8sTemplateset' */'@/views/deploy-manage/template-file/add-templatefile-version.vue');
 const TemplateFileDeploy = () => import(/* webpackChunkName: 'k8sTemplateset' */'@/views/deploy-manage/deploy/deploy.vue');
+const TemplateSpaceBatchDeploy = () => import(/* webpackChunkName: 'k8sTemplateset' */'@/views/deploy-manage/deploy/batch-deploy.vue');
 
 // 模板集
 const TemplateSetV2 = () => import(/* webpackChunkName: 'k8sTemplateset' */'@/views/deploy-manage/new-template-set/index.vue');
@@ -215,6 +216,16 @@ const childRoutes = [
     props: route => ({ ...route.query, ...route.params }),
     name: 'templateFileDeploy',
     component: TemplateFileDeploy,
+    meta: {
+      menuId: 'TEMPLATE_FILE',
+    },
+  },
+  // 模板文件批量部署
+  {
+    path: 'template/deploy/space/:templateSpaceID',
+    props: route => ({ ...route.query, ...route.params }),
+    name: 'templateSpaceBatchDeploy',
+    component: TemplateSpaceBatchDeploy,
     meta: {
       menuId: 'TEMPLATE_FILE',
     },

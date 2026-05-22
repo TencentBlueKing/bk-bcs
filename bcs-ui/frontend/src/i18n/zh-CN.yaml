@@ -3169,8 +3169,12 @@ templateFile:
     modifyMetadata: 修改基本信息
     editNewVersion: 编辑新版本
     deployFile: 部署模板文件
+    batchDeployFile: 批量部署模板文件
     deploySetting: 部署设置
     deployReview: 部署预览
+    selectTemplateFile: 选择模板文件（支持多选）
+    selectedFiles: 已选择的模板文件
+    files: 个文件
     disableYamlToForm: 无法切换模式
     fileList: 文件列表
     import: 导入文件包
@@ -3182,6 +3186,7 @@ templateFile:
     createFile: 新建模板文件
     delete: 删除
     deploy: 部署
+    batchDeploy: 批量部署
     previewAndDeploy: 预览并部署
     versionManage: 版本管理
     confirmDeploy: 确认部署
@@ -3199,6 +3204,7 @@ templateFile:
     searchFile: 模板文件名称/类型/版本/更新人
     searchVersion: 版本号/版本日志/更新人
     searchSpace: 搜索文件夹
+    searchFileName: 模板文件名称
   label:
     name: 名称
     templateName: 模板名称
@@ -3225,6 +3231,8 @@ templateFile:
     byCluster: 按集群
     versionDiff: 版本对比
     untitled: 未命名
+    path: 所属路径
+    selectedCount: '已选择 {count} 个文件'
   tips:
     disableYamlToFormReason: '源码文件中，{0}，请继续使用源码模式编辑模板或修改再尝试'
     disableYamlToFormReasonHelm: Helm模板暂不支持表单模式
@@ -3237,9 +3245,12 @@ templateFile:
     helmdesc: 当前文件已升级为 Helm 模板，保存后将不再支持切换回非 Helm 模板。
     spaceSubTitle: 模板文件夹及其中的模板文件将被删除
     emptyContent: 模板文件内容不能为空
-    invalidChar: 文件夹名称无效，只支持字母、数字、- 和 _
-    invalidFileName: 文件名不能以 / 开头或结尾，且不能包含 //
+    invalidPath: 文件路径不能以 / 开头或结尾，且不能包含连续的 //
+    invalidFolderName: '文件夹名称不支持以下字符：\ / : * ? " < > |'
+    invalidFileName: '文件名称不支持以下字符：\ / : * ? " < > |'
     success: 部署成功
+    selectVersion: 请为所有文件选择版本
+    noFilesSelected: 请在左侧选择要部署的模板文件
     subTitle: '模板文件 {templateFile} 实例已部署至 {cluster}'
     noChanges: 未变更
   tag:

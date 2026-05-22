@@ -32,6 +32,7 @@ import { ref, watch } from 'vue';
 
 import { filterPlainText } from '@blueking/xss-filter';
 
+import { TEMPLATE_FOLDER_REGEX } from '@/common/constant';
 import $i18n from '@/i18n/i18n-setup';
 
 type FormValue = Pick<ClusterResource.CreateTemplateMetadataReq, 'name'|'description'>;
@@ -56,6 +57,7 @@ const emits = defineEmits<Emits>();
 const formKey = ref(0);
 const metaDataFormRef = ref();
 const formData = ref<FormValue>(cloneDeep(props.data));
+const regex = new RegExp(TEMPLATE_FOLDER_REGEX);
 const rules = ref({
   name: [
     {
@@ -63,13 +65,57 @@ const rules = ref({
       trigger: 'blur',
       required: true,
     },
+    // 验证路径格式：不能以 / 开头或结尾，不能包含 //，名称段不能为空
+    {
+      message: $i18n.t('templateFile.tips.invalidPath'),
+      trigger: 'blur',
+      validator: (value: string) => {
+        if (!value) return true;
+        return !value.startsWith('/') && !value.endsWith('/') && !value.includes('//') && !value.split('/').some(seg => !seg);
+      },
+    },
+    // 验证文件夹名称：使用 TEMPLATE_FOLDER_REGEX
+    {
+      message: $i18n.t('templateFile.tips.invalidFolderName'),
+      trigger: 'blur',
+      validator: (value: string) => {
+        if (!value) return true;
+        const segments = value.split('/');
+        // 验证所有文件夹部分（除了最后一段文件名）
+        for (let i = 0; i < segments.length - 1; i++) {
+          if (!regex.test(segments[i])) {
+            return false;
+          }
+        }
+        return true;
+      },
+    },
+    // 验证文件名称：不能包含特殊字符 \ : * ? " < > |
     {
       message: $i18n.t('templateFile.tips.invalidFileName'),
       trigger: 'blur',
-      validator: (value: string) => !/^\/|\/$|\/\//.test(value),
+      validator: (value: string) => {
+        if (!value) return true;
+        const segments = value.split('/');
+        const fileName = segments[segments.length - 1];
+        // 文件名不能包含 \/ : * ? " < > | 等特殊字符
+        return regex.test(fileName);
+      },
     },
   ],
 });
+/**
+ * 自动去除名称中每一段结尾的 . 和空格
+ */
+function handleResetName() {
+  if (!formData.value.name) return;
+  formData.value.name = formData.value.name
+    .split('/')
+    .map(seg => seg.trim().replace(/\.+$/, ''))
+    .filter(seg => seg !== '')
+    .join('/');
+}
+
 // 取消修改
 function cancel() {
   emits('cancel', formData.value);
@@ -79,6 +125,7 @@ async function confirm() {
   const result = await metaDataFormRef.value?.validate().catch(() => false);
   if (!result) return;
 
+  handleResetName();
   const data = cloneDeep(formData.value);
   const xssDesc = filterPlainText(data.description);
   if (data.description !== xssDesc) {

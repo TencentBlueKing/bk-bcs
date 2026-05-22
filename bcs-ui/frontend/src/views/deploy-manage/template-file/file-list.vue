@@ -17,6 +17,9 @@
         <bcs-button theme="primary" @click="addTemplateFile">
           {{ $t('templateFile.button.createFile') }}
         </bcs-button>
+        <bcs-button v-if="fileList?.length" theme="primary" @click="batchDeploySpace">
+          {{ $t('templateFile.button.batchDeploy') }}
+        </bcs-button>
         <span
           @click="toggleFavSpace"
           v-bk-tooltips="spaceDetail?.fav ? $t('templateFile.tips.unbookmark') : $t('templateFile.tips.bookmark')"
@@ -170,6 +173,7 @@ import VersionList from './version-list.vue';
 import { IListTemplateMetadataItem, ITemplateSpaceData } from '@/@types/cluster-resource-patch';
 import { TemplateSetService } from '@/api/modules/new-cluster-resource';
 import $bkMessage from '@/common/bkmagic';
+import { TEMPLATE_FOLDER_REGEX } from '@/common/constant';
 import { formatTime } from '@/common/util';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import Row from '@/components/layout/Row.vue';
@@ -232,6 +236,16 @@ function addTemplateFile() {
   });
 }
 
+// 批量部署
+function batchDeploySpace() {
+  $router.push({
+    name: 'templateSpaceBatchDeploy',
+    params: {
+      templateSpaceID: props.templateSpace,
+    },
+  });
+}
+
 // 重命名空间
 const repeatMsg = ref('');
 const showNameDialog = ref(false);
@@ -241,18 +255,30 @@ function showRenameSpaceDialog() {
   curSpaceName.value = spaceDetail.value?.name || '';
   showNameDialog.value = true;
 }
+/**
+ * 自动去除名称中每一段结尾的 . 和空格
+ */
+function handleResetName() {
+  if (!curSpaceName.value) return;
+  curSpaceName.value = curSpaceName.value
+    .split('/')
+    .map(seg => seg.trim().replace(/\.+$/, ''))
+    .filter(seg => seg !== '')
+    .join('/');
+}
 async function fileNameConfirm() {
-  // 校验：只允许字母、数字、-、_
-  if (!/^[a-zA-Z0-9_-]+$/.test(curSpaceName.value)) {
-    repeatMsg.value = $i18n.t('templateFile.tips.invalidChar');
+  // 校验文件夹名称
+  if (!new RegExp(TEMPLATE_FOLDER_REGEX).test(curSpaceName.value)) {
+    repeatMsg.value = $i18n.t('templateFile.tips.invalidFolderName');
     return;
   }
+  handleResetName();
   saving.value = true;
   const res = await TemplateSetService.UpdateTemplateSpace({
     name: curSpaceName.value,
     description: '',
     $id: props.templateSpace,
-  }, { globalError: true, needRes: true }).catch(() => false);
+  }, { globalError: false, needRes: true }).catch(() => false);
 
   if (res && res?.code === 0) {
     $bkMessage({
@@ -266,6 +292,9 @@ async function fileNameConfirm() {
   } else if (res?.code === 7) {
     // 文件夹重名
     repeatMsg.value = res?.message || $i18n.t('generic.validate.fieldRepeat', [$i18n.t('templateFile.label.spaceName')]);
+  } else if (res?.code === 1) {
+    // 文件名称不通过
+    repeatMsg.value = res?.message || $i18n.t('templateFile.tips.invalidFolderName');
   }
   saving.value = false;
 }

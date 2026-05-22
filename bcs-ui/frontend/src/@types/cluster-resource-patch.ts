@@ -53,6 +53,17 @@ export interface ITemplateVersionItem {
   'renderMode': string
 }
 
+export interface IMetadataVersionItem {
+  version: string
+  versionID: string
+}
+
+export interface IMetadataVersionGroup {
+  latestVersion: string
+  templateName: string
+  versionList: IMetadataVersionItem[]
+}
+
 export interface IVarItem {
   key: string
   value: string

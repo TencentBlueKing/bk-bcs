@@ -97,6 +97,9 @@
                     <li class="bcs-dropdown-item" @click="exportTemplateSpace(space)">
                       {{ $t('templateFile.button.exportFolder') }}
                     </li>
+                    <li class="bcs-dropdown-item" @click="batchDeploySpace(space)">
+                      {{ $t('templateFile.button.batchDeploy') }}
+                    </li>
                     <li class="bcs-dropdown-item" @click="deleteSpace(space)">
                       {{ $t('templateFile.button.delete') }}
                     </li>
@@ -251,6 +254,7 @@ import { IListTemplateMetadataItem, ITemplateSpaceData } from '@/@types/cluster-
 import { exportTemplate, importTemplate } from '@/api/modules/cluster-resource';
 import { TemplateSetService } from '@/api/modules/new-cluster-resource';
 import $bkMessage from '@/common/bkmagic';
+import { TEMPLATE_FOLDER_REGEX } from '@/common/constant';
 import { download } from '@/common/util';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import CollapseItem from '@/components/collapse-item.vue';
@@ -294,7 +298,7 @@ function getFilteredTree(space: ITemplateSpaceData): IFileTreeNode[] {
   const tempFolders = fileStore.tempFoldersMap[space.id] || [];
 
   // 重建树（当文件列表或临时文件夹变化时）
-  const tree = buildFileTree(files, tempFolders);
+  const tree = buildFileTree(files, tempFolders, space.id);
 
   // 扁平化第一层文件夹：空间本身已是根容器，第一层文件夹的子节点直接提升
   // 但保留空的文件夹节点，否则新创建的空文件夹不可见
@@ -429,15 +433,26 @@ function handleAddTempSubFolder(spaceID: string, parentPath: string) {
   showSubFolderDialog.value = true;
 }
 
+/**
+ * 自动去除名称中每一段结尾的 . 和空格
+ */
+function handleResetName(name: string) {
+  if (!name) return '';
+  return name
+    .split('/')
+    .map(seg => seg.trim().replace(/\.+$/, ''))
+    .filter(seg => seg !== '')
+    .join('/');
+}
 function confirmAddSubFolder() {
+  subFolderName.value = handleResetName(subFolderName.value);
   if (!subFolderName.value || !curSubFolderSpaceID.value) return;
 
-  // 校验：只允许字母、数字、-、_
-  if (!/^[a-zA-Z0-9_-]+$/.test(subFolderName.value)) {
-    subFolderErrorMsg.value = $i18n.t('templateFile.tips.invalidChar');
+  // 校验文件夹名称
+  if (!new RegExp(TEMPLATE_FOLDER_REGEX).test(subFolderName.value)) {
+    subFolderErrorMsg.value = $i18n.t('templateFile.tips.invalidFolderName');
     return;
   }
-
   const spaceID = curSubFolderSpaceID.value;
   const parentPath = curSubFolderPath.value;
   const folderPath = parentPath ? `${parentPath}/${subFolderName.value}` : subFolderName.value;
@@ -615,11 +630,12 @@ function showCloneSpaceDialog(space: ITemplateSpaceData) {
 }
 // 创建 & 编辑工作空间的对话框确认事件
 async function fileNameConfirm() {
+  curEditSpace.value.name = handleResetName(curEditSpace.value.name);
   if (!curEditSpace.value?.name || (curType.value !== 'create' && !curEditSpace.value?.id)) return;
 
-  // 校验：只允许字母、数字、-、_
-  if (!/^[a-zA-Z0-9_-]+$/.test(curEditSpace.value.name)) {
-    repeatMsg.value = $i18n.t('templateFile.tips.invalidChar');
+  // 校验文件夹名称
+  if (!new RegExp(TEMPLATE_FOLDER_REGEX).test(curEditSpace.value.name)) {
+    repeatMsg.value = $i18n.t('templateFile.tips.invalidFolderName');
     return;
   }
 
@@ -659,6 +675,9 @@ async function fileNameConfirm() {
   } else if (res?.code === 7) {
     // 文件夹重名
     repeatMsg.value = res?.message || $i18n.t('generic.validate.fieldRepeat', [$i18n.t('templateFile.label.spaceName')]);
+  } else if (res?.code === 1) {
+    // 校验不通过
+    repeatMsg.value = res?.message || $i18n.t('templateFile.tips.invalidFolderName');
   }
   saving.value = false;
 }
@@ -785,12 +804,18 @@ function deleteFile(space: ITemplateSpaceData, file: IListTemplateMetadataItem) 
         .catch(() => false);
       if (result) {
         await getTemplateMetadata(space.id);
-        $router.replace({
-          name: 'templateFileList',
-          params: {
-            templateSpace: props.templateSpace as string,
-          },
-        });
+        // 如果不在列表页，则跳转到列表页
+        if ($router.currentRoute.name !== 'templateFileList') {
+          $router.replace({
+            name: 'templateFileList',
+            params: {
+              templateSpace: props.templateSpace as string,
+            },
+          });
+        } else {
+          // 在列表页直接刷新
+          refresh();
+        }
       }
     },
   });
@@ -830,14 +855,39 @@ function deployFile(file: IListTemplateMetadataItem) {
   });
 }
 
-// 克隆版本
-function cloneVersion(file: IListTemplateMetadataItem) {
+// 批量部署空间
+function batchDeploySpace(space: ITemplateSpaceData) {
   hidePopover();
+  $router.push({
+    name: 'templateSpaceBatchDeploy',
+    params: {
+      templateSpaceID: space.id,
+    },
+  });
+}
+
+// 克隆版本
+function cloneVersion(node: IFileTreeNode) {
+  const { file, spaceID } = node;
+  hidePopover();
+
+  if (!spaceID || !file) return;
+  // 从文件名中提取目录路径
+  const nameSegments = file.name.split('/');
+  let folderPath = '';
+  if (nameSegments.length > 1) {
+    // 去掉最后一段（文件名），剩下的就是目录路径
+    folderPath = nameSegments.slice(0, -1).join('/');
+  }
+
   $router.push({
     name: 'addTemplateFile',
     params: {
-      templateSpace: props.templateSpace as string,
+      templateSpace: spaceID as string,
       versionID: file.versionID,
+    },
+    query: {
+      folderPath: folderPath || undefined,
     },
   });
 }
