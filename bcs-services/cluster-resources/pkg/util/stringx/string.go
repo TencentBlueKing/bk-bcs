@@ -14,6 +14,7 @@
 package stringx
 
 import (
+	"errors"
 	"math/rand"
 	"net"
 	"regexp"
@@ -113,4 +114,35 @@ func ReplaceIllegalChars(username string) string {
 	// 只允许 A-Za-z0-9-_.，其他的全部替换成 "_"
 	re := regexp.MustCompile(`[^A-Za-z0-9\-_.]`)
 	return re.ReplaceAllString(username, "_")
+}
+
+// templatePattern 文件夹及文件名称不支持字符：\ / : * ? " < > |
+var templatePattern = regexp.MustCompile(`^[^\\/:*?"<>|]+$`)
+
+// ParseTemplateName 解析模板文件夹及模板名称
+func ParseTemplateName(name string) (string, string, error) {
+	// 校验路径：文件路径不能以 / 开头或结尾，也不能包含连续的 //
+	if strings.HasPrefix(name, "/") || strings.HasSuffix(name, "/") || strings.Contains(name, "//") {
+		return "", "", errors.New("文件路径不能以 / 开头或结尾，也不能包含连续的 //")
+	}
+	path := strings.Split(name, "/")
+	if len(path) < 2 {
+		return "", "", errors.New("无效的模板文件路径名称")
+	}
+
+	// 校验文件夹及文件名称是否符合要求
+	for i := 0; i < len(path); i++ {
+		// 去除右边包含空格，点号(.)
+		n := strings.TrimRight(path[i], " .")
+		if n == "" {
+			return "", "", errors.New(`文件夹或者文件名称不能为空`)
+		}
+		if !templatePattern.MatchString(n) {
+			return "", "", errors.New(`文件夹或者文件名称不能包含字符：\/:*?"<>|`)
+		}
+		path[i] = n
+	}
+	// 需要把父文件夹和子文件夹及文件名称分开
+	subTemplateaName := strings.Join(path[1:], "/")
+	return path[0], subTemplateaName, nil
 }

@@ -16,6 +16,7 @@ package templatespace
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
@@ -175,6 +176,11 @@ func (t *TemplateSpaceAction) Create(ctx context.Context, req *clusterRes.Create
 		return "", err
 	}
 
+	spaceName, err := validateTemplateSpaceName(ctx, req.GetName())
+	if err != nil {
+		return "", err
+	}
+
 	p, err := project.FromContext(ctx)
 	if err != nil {
 		return "", err
@@ -183,7 +189,7 @@ func (t *TemplateSpaceAction) Create(ctx context.Context, req *clusterRes.Create
 	// 检测是否重复
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{
 		entity.FieldKeyProjectCode: p.Code,
-		entity.FieldKeyName:        req.Name,
+		entity.FieldKeyName:        spaceName,
 	})
 	templateSpaces, err := t.model.ListTemplateSpace(ctx, cond)
 	if err != nil {
@@ -195,7 +201,7 @@ func (t *TemplateSpaceAction) Create(ctx context.Context, req *clusterRes.Create
 	}
 
 	templateSpace := &entity.TemplateSpace{
-		Name:        req.GetName(),
+		Name:        spaceName,
 		ProjectCode: p.Code,
 		Description: xss.FilterXSS(req.GetDescription(), xss.XssOption{}),
 		Tags:        req.GetTags(),
@@ -210,6 +216,11 @@ func (t *TemplateSpaceAction) Create(ctx context.Context, req *clusterRes.Create
 // Update xxx
 func (t *TemplateSpaceAction) Update(ctx context.Context, req *clusterRes.UpdateTemplateSpaceReq) error {
 	if err := t.checkAccess(ctx); err != nil {
+		return err
+	}
+
+	spaceName, err := validateTemplateSpaceName(ctx, req.GetName())
+	if err != nil {
 		return err
 	}
 
@@ -230,7 +241,7 @@ func (t *TemplateSpaceAction) Update(ctx context.Context, req *clusterRes.Update
 
 	// 检测是否重复
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{
-		entity.FieldKeyName:        req.GetName(),
+		entity.FieldKeyName:        spaceName,
 		entity.FieldKeyProjectCode: p.Code,
 	})
 	templateSpaces, err := t.model.ListTemplateSpace(ctx, cond)
@@ -244,9 +255,9 @@ func (t *TemplateSpaceAction) Update(ctx context.Context, req *clusterRes.Update
 	}
 
 	// 文件夹名称变更的情况下，更新顺序 templateversion -> template -> templatespace
-	if templateSpace.Name != req.GetName() {
+	if templateSpace.Name != spaceName {
 		templateVersion := entity.M{
-			"templateSpace": req.GetName(),
+			"templateSpace": spaceName,
 		}
 		err = t.model.UpdateTemplateVersionBySpecial(
 			ctx, templateSpace.ProjectCode, "", templateSpace.Name, templateVersion)
@@ -255,7 +266,7 @@ func (t *TemplateSpaceAction) Update(ctx context.Context, req *clusterRes.Update
 		}
 
 		template := entity.M{
-			"templateSpace": req.GetName(),
+			"templateSpace": spaceName,
 		}
 		err = t.model.UpdateTemplateBySpecial(ctx, templateSpace.ProjectCode, templateSpace.Name, template)
 		if err != nil {
@@ -265,7 +276,7 @@ func (t *TemplateSpaceAction) Update(ctx context.Context, req *clusterRes.Update
 	}
 
 	updateTemplateSpace := entity.M{
-		"name":        req.GetName(),
+		"name":        spaceName,
 		"description": xss.FilterXSS(req.GetDescription(), xss.XssOption{}),
 		"tags":        req.GetTags(),
 	}
@@ -396,4 +407,15 @@ func (t *TemplateSpaceAction) Copy(ctx context.Context, id, name, desc string) (
 		return "", err
 	}
 	return newId, nil
+}
+
+// validateTemplateSpaceName 校验文件夹名称
+func validateTemplateSpaceName(ctx context.Context, name string) (string, error) {
+	// 去除右边包含空格，点号(.)
+	name = strings.TrimRight(name, " .")
+
+	if name == "" {
+		return "", errorx.New(errcode.ValidateErr, i18n.GetMsg(ctx, "文件夹名称不能为空"))
+	}
+	return name, nil
 }

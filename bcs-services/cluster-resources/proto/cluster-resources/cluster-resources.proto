@@ -3169,7 +3169,8 @@ message CreateTemplateSpaceReq {
 	}, (validate.rules).string = {min_len : 1, max_len : 32}];
 	string name = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "文件夹名称"
-	}, (validate.rules).string = {min_len : 1, max_len : 64, pattern: "^[a-zA-Z0-9_-]+$"}];
+	}, (validate.rules).string = {min_len : 1, max_len : 64, 
+		pattern: "^[^\\\\/:*?\"<>|]+$"}];
 	string description = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "文件夹描述"
 	}];
@@ -3190,7 +3191,8 @@ message UpdateTemplateSpaceReq {
 	}, (validate.rules).string = {min_len : 1, max_len : 32}];
 	string name = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "文件夹名称"
-	}, (validate.rules).string = {min_len : 1, max_len : 64, pattern: "^[a-zA-Z0-9_-]+$"}];
+	}, (validate.rules).string = {min_len : 1, max_len : 64, 
+		pattern: "^[^\\\\/:*?\"<>|]+$"}];
 	string description = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "文件夹描述"
 	}];
