@@ -167,6 +167,20 @@ func (h *Handler) ListTemplateMetadata(
 	return nil
 }
 
+// ListTemplateMetadataVersions 通过模板文件夹 ID 获取模板文件列表（含版本信息）
+func (h *Handler) ListTemplateMetadataVersions(
+	ctx context.Context, in *clusterRes.ListTemplateMetadataVersionsReq, out *clusterRes.CommonListResp) error {
+	action := template.NewTemplateAction(h.model)
+	data, err := action.ListTemplateMetadataVersions(ctx, in.GetTemplateSpaceID())
+	if err != nil {
+		return err
+	}
+	if out.Data, err = pbstruct.MapSlice2ListValue(data); err != nil {
+		return err
+	}
+	return nil
+}
+
 // CreateTemplateMetadata 创建模板文件元数据
 func (h *Handler) CreateTemplateMetadata(
 	ctx context.Context, in *clusterRes.CreateTemplateMetadataReq, out *clusterRes.CommonResp) error {

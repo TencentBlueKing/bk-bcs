@@ -53,7 +53,7 @@ func ParsePoSpec(manifest map[string]interface{}, spec *model.PoSpec) {
 func ParseNodeSelect(podSpec map[string]interface{}, nodeSelect *model.NodeSelect) {
 	nodeSelect.Type = resCsts.NodeSelectTypeAnyAvailable
 	nodeSelector := mapx.GetMap(podSpec, "nodeSelector")
-	if nodeSelector != nil {
+	if len(nodeSelector) != 0 {
 		nodeSelect.Type = resCsts.NodeSelectTypeSchedulingRule
 		for k := range nodeSelector {
 			nodeSelect.Selector = append(nodeSelect.Selector,

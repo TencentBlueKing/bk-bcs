@@ -1724,6 +1724,17 @@ service TemplateSet {
 		};
 	}
 
+	// 通过模板文件夹ID获取模板文件列表（含版本信息）
+	rpc ListTemplateMetadataVersions(ListTemplateMetadataVersionsReq) returns (CommonListResp) {
+		option (google.api.http) = {
+			get: "/clusterresources/v1/projects/{projectCode}/template/{templateSpaceID}/metadata/versions"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "通过模板文件夹ID获取模板文件及版本信息"
+			summary: "Get template list with version info by space ID"
+		};
+	}
+
 	// 创建模板文件元数据
 	rpc CreateTemplateMetadata(CreateTemplateMetadataReq) returns (CommonResp) {
 		option (google.api.http) = {
@@ -3273,6 +3284,18 @@ message ListTemplateMetadataReq {
 	string templateSpaceID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "模板文件文件夹"
 	}, (validate.rules).string = {min_len : 1, max_len : 64}];
+}
+
+message ListTemplateMetadataVersionsReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "ListTemplateMetadataVersionsReq", description: "通过模板文件夹ID获取模板文件列表"}
+	};
+	string projectCode = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目编码"
+	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+	string templateSpaceID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "模板文件夹 ID"
+	}, (validate.rules).string = {len : 24}];
 }
 
 message CreateTemplateMetadataReq {
