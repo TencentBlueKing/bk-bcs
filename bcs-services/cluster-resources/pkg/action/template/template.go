@@ -18,9 +18,11 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	"github.com/coreos/go-semver/semver"
 	"github.com/feiin/go-xss"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"gopkg.in/yaml.v2"
@@ -265,14 +267,36 @@ func (t *TemplateAction) ListTemplateMetadataVersions(ctx context.Context, space
 			"versionList":   []map[string]interface{}{},
 		}
 		// 匹配当前模板的版本信息，填充 versionID 和 version
+		var versionList []map[string]interface{}
 		for _, v := range versions {
 			if v.TemplateName == value.Name {
-				mm["versionList"] = append(mm["versionList"].([]map[string]interface{}), map[string]interface{}{
+				versionList = append(versionList, map[string]interface{}{
 					"version":   v.Version,
 					"versionID": v.ID.Hex(),
+					"createAt":  v.CreateAt,
 				})
 			}
 		}
+		// 区分语义化版本及非语义化版本排序
+		var semVersion []map[string]interface{}
+		var nonSemVersion []map[string]interface{}
+		for _, vl := range versionList {
+			if _, err = semver.NewVersion(vl["version"].(string)); err != nil {
+				nonSemVersion = append(nonSemVersion, vl)
+				continue
+			}
+			semVersion = append(semVersion, vl)
+		}
+		sort.Slice(semVersion, func(i, j int) bool {
+			v1, _ := semver.NewVersion(semVersion[i]["version"].(string))
+			v2, _ := semver.NewVersion(semVersion[j]["version"].(string))
+			return v2.LessThan(*v1)
+		})
+		// 非语义化版本按时间倒序排序
+		sort.Slice(nonSemVersion, func(i, j int) bool {
+			return nonSemVersion[i]["createAt"].(int64) > nonSemVersion[j]["createAt"].(int64)
+		})
+		mm["versionList"] = append(semVersion, nonSemVersion...)
 		m = append(m, mm)
 	}
 	return m, nil
