@@ -54,7 +54,8 @@ image:
 ```yaml
 svcConf:
   redis:
-    address: "127.0.0.1:6379"
+    host: "bcs-redis-master"
+    port: 6379
     db: 0
     ## 为空则从环境变量获取
     password: "your_redis_password"
@@ -150,6 +151,15 @@ svcConf:
     enabled: false
     endpoint: ""
     token: ""
+
+  ## tls 配置
+  tls_conf:
+    server_cert: "/data/bcs/cert/bcs/bcs-server.crt"
+    server_key: "/data/bcs/cert/bcs/bcs-server.key"
+    server_ca: "/data/bcs/cert/bcs/bcs-ca.crt"
+    client_cert: "/data/bcs/cert/bcs/bcs-client.crt"
+    client_key: "/data/bcs/cert/bcs/bcs-client.key"
+    client_ca: "/data/bcs/cert/bcs/bcs-ca.crt"
 ```
 
 ### 部署 Chart

@@ -22,6 +22,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/storage"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/types"
 )
 
 // GetCluster get cluster from cluster manager
@@ -147,4 +148,89 @@ func AddSubnetToCluster(ctx context.Context, req *clustermanager.AddSubnetToClus
 
 func getClusterCacheKey(clusterID string) string {
 	return fmt.Sprintf("bcs.Cluster.%s", clusterID)
+}
+
+// ListCluster list cluster from cluster manager
+func ListCluster(ctx context.Context,
+	req *clustermanager.ListClusterReq) ([]*types.Cluster, error) {
+	cli, close, err := clustermanager.GetClient(config.ServiceDomain)
+	defer func() {
+		if close != nil {
+			close()
+		}
+	}()
+	if err != nil {
+		return nil, err
+	}
+	p, err := cli.ListCluster(ctx, req)
+	if err != nil {
+		return nil, fmt.Errorf("ListCluster error: %s", err)
+	}
+	if p.Code != 0 {
+		return nil, fmt.Errorf("ListCluster error, code: %d, message: %s", p.Code, p.GetMessage())
+	}
+	var clusterList []*types.Cluster
+	for _, cls := range p.Data {
+		clusterList = append(clusterList, &types.Cluster{
+			ProjectID:       cls.ProjectID,
+			ClusterID:       cls.ClusterID,
+			ClusterName:     cls.ClusterName,
+			BKBizID:         cls.BusinessID,
+			Status:          cls.Status,
+			IsShared:        cls.IsShared,
+			ClusterType:     cls.ClusterType,
+			Provider:        cls.Provider,
+			Region:          cls.Region,
+			VpcID:           cls.VpcID,
+			NetworkSettings: convertNetworkSettings(cls),
+		})
+	}
+	return clusterList, nil
+}
+
+func convertNetworkSettings(cls *clustermanager.Cluster) *types.NetworkSettings {
+	if cls.NetworkSettings == nil {
+		return nil
+	}
+	return &types.NetworkSettings{
+		EniSubnetIDs:  cls.NetworkSettings.EniSubnetIDs,
+		MaxNodePodNum: int(cls.NetworkSettings.MaxNodePodNum),
+		MaxServiceNum: int(cls.NetworkSettings.MaxServiceNum),
+		EnableVPCCni:  cls.NetworkSettings.EnableVPCCni,
+		SubnetSource:  convertSubnetSource(cls.NetworkSettings.SubnetSource),
+	}
+}
+
+func convertSubnetSource(cls *clustermanager.SubnetSource) *types.SubnetSource {
+	if cls == nil {
+		return nil
+	}
+	return &types.SubnetSource{
+		New:     convertNewSubnet(cls.New),
+		Existed: convertExistedSubnetIDs(cls.Existed),
+	}
+}
+
+func convertNewSubnet(cls []*clustermanager.NewSubnet) []*types.NewSubnet {
+	if len(cls) == 0 {
+		return nil
+	}
+	var newSubnets []*types.NewSubnet
+	for _, subnet := range cls {
+		newSubnets = append(newSubnets, &types.NewSubnet{
+			Mask:  subnet.Mask,
+			Zone:  subnet.Zone,
+			IpCnt: subnet.IpCnt,
+		})
+	}
+	return newSubnets
+}
+
+func convertExistedSubnetIDs(cls *clustermanager.ExistedSubnetIDs) *types.ExistedSubnetIDs {
+	if cls == nil {
+		return nil
+	}
+	return &types.ExistedSubnetIDs{
+		Ids: cls.Ids,
+	}
 }

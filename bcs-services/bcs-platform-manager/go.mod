@@ -4,6 +4,7 @@ go 1.23.0
 
 replace (
 	configcenter => github.com/Tencent/bk-cmdb v0.0.0-20250710063351-e7cb8e8963fa
+	github.com/Tencent/bk-bcs/bcs-common => github.com/LidolLxf/bk-bcs/bcs-common v0.0.0-20260520092228-899beff9282c
 	k8s.io/client-go => k8s.io/client-go v0.32.2
 )
 
@@ -23,6 +24,7 @@ require (
 	github.com/golang-jwt/jwt/v4 v4.5.2
 	github.com/golang/protobuf v1.5.4
 	github.com/google/uuid v1.6.0
+	github.com/hibiken/asynq v0.25.1
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/oklog/run v1.1.0
 	github.com/parnurzeal/gorequest v0.2.16
@@ -30,8 +32,10 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/cobra v1.9.1
 	github.com/spf13/viper v1.20.1
-	github.com/stretchr/testify v1.10.0
 	github.com/swaggo/http-swagger v1.3.4
+	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common v1.1.49
+	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/ses v1.1.0
+	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/sms v1.1.49
 	go-micro.dev/v4 v4.10.2
 	go.mongodb.org/mongo-driver v1.9.1
 	go.opentelemetry.io/contrib/instrumentation/go.mongodb.org/mongo-driver/mongo/otelmongo v0.33.0
@@ -138,11 +142,12 @@ require (
 	github.com/oxtoacart/bpool v0.0.0-20190530202638-03653db5a59c // indirect
 	github.com/pelletier/go-toml/v2 v2.2.3 // indirect
 	github.com/pjbgf/sha1cd v0.3.0 // indirect
-	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/prometheus/client_golang v1.19.0 // indirect
 	github.com/prometheus/client_model v0.5.0 // indirect
 	github.com/prometheus/common v0.48.0 // indirect
 	github.com/prometheus/procfs v0.12.0 // indirect
+	github.com/redis/go-redis/v9 v9.7.0 // indirect
+	github.com/robfig/cron/v3 v3.0.1 // indirect
 	github.com/rs/xid v1.4.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/sagikazarmark/locafero v0.7.0 // indirect

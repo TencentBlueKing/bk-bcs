@@ -2,8 +2,8 @@ apiVersion: v2
 name: bcs-platform-manager
 description: 蓝鲸容器服务 bcs-services/bcs-platform-manager 模块
 type: application
-version: v1.29.12
-appVersion: v1.29.12
+version: v1.29.13
+appVersion: v1.29.13
 dependencies:
   - name: common
     repository: https://charts.bitnami.com/bitnami
