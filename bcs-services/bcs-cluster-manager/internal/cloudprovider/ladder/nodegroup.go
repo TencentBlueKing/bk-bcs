@@ -24,6 +24,7 @@ import (
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	cutils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/daemon"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/project"
@@ -566,10 +567,41 @@ func (ng *NodeGroup) CheckResourcePoolQuota(
 	}
 
 	if group.GetExtraInfo() != nil && utils.StringContainInSlice(group.ExtraInfo[resource.ResourcePoolType],
-		[]string{resource.SelfPool, resource.CrPool}) {
+		[]string{resource.CrPool}) {
 		return nil
 	}
 
+	if group.GetExtraInfo() != nil && utils.StringContainInSlice(group.ExtraInfo[resource.ResourcePoolType],
+		[]string{resource.SelfPool}) {
+		blog.Infof("CheckResourcePoolQuota [%s] use quota resource, "+
+			"resourceType: [%s], devicePoolIds: [%s]",
+			group.NodeGroupID, group.GetExtraInfo()[resource.ResourcePoolType],
+			group.GetExtraInfo()[resource.DevicePoolIds])
+		// GetExtraInfo 存在 BCS-quota- 前缀相当于开启白名单+开关，不需要单独设置开关
+		// 如果存在该前缀，则走额度校验，否则不校验
+		if strings.HasPrefix(group.GetExtraInfo()[resource.DevicePoolIds],
+			cutils.QuotaPoolPrefix) {
+			// self pool check resource pool quota
+			// 目前仅支持 单资源池的消费
+			quota, err := project.GetProjectManagerClient().GetProjectQuota(ctx,
+				group.GetExtraInfo()[resource.DevicePoolIds])
+			if err != nil {
+				blog.Errorf("CheckResourcePoolQuota[%s] GetProjectQuota failed: %v", group.NodeGroupID, err)
+				return err
+			}
+			zoneResources := quota.GetQuota().GetZoneResources()
+			availableQuota := zoneResources.GetQuotaNum() - zoneResources.GetQuotaUsed()
+			if scaleUpNum > availableQuota {
+				return fmt.Errorf("CheckResourcePoolQuota[%s] scale up num %d is greater than quota %d",
+					group.NodeGroupID, scaleUpNum, availableQuota)
+			}
+			return nil
+		}
+
+		return nil
+	}
+
+	// 默认走 yunti, group.ExtraInfo 可能为空
 	if group.GetRegion() == "" || group.GetLaunchTemplate().GetInstanceType() == "" || scaleUpNum <= 0 {
 		return nil
 	}
@@ -587,24 +619,30 @@ func (ng *NodeGroup) CheckResourcePoolQuota(
 		return false
 	}()
 
-	quotaGrayValue, err := project.GetProjectManagerClient().CheckProjectQuotaGrayLabel(ctx, group.GetProjectID())
+	quotaGrayValue, ladderQuota, err := project.GetProjectManagerClient().CheckProjectQuotaAndLadderLabel(ctx, group.GetProjectID())
 	if err != nil {
 		blog.Errorf("GetProjectManagerClient GetProjectQuotaGrayLabel[%s] failed: %v",
 			group.GetProjectID(), err)
 		return err
 	}
 
-	switch quotaGrayValue {
-	case project.QuotaGrayOverMode:
-		if operation != "" {
-			scaleUpNum = group.GetAutoScaling().GetMaxSize() + scaleUpNum
-		}
-		return ng.checkRpqByPjModeOversold(group, scaleUpNum, anyZone)
-	case project.QuotaGrayNormalMode:
-		return ng.checkRpqByPjModeNormal(group, scaleUpNum, anyZone)
-	default:
-	}
+	blog.Infof("CheckResourcePoolQuota [%s] use quota resource, "+
+		"resourceType: [%s], devicePoolIds: [%s], quotaGrayValue: [%s], ladderQuota: [%s]",
+		group.NodeGroupID, group.GetExtraInfo()[resource.ResourcePoolType],
+		group.GetExtraInfo()[resource.DevicePoolIds], quotaGrayValue, ladderQuota)
 
+	if ladderQuota == "true" {
+		switch quotaGrayValue {
+		case project.QuotaGrayOverMode:
+			if operation != "" {
+				scaleUpNum = group.GetAutoScaling().GetMaxSize() + scaleUpNum
+			}
+			return ng.checkRpqByPjModeOversold(group, scaleUpNum, anyZone)
+		case project.QuotaGrayNormalMode:
+			return ng.checkRpqByPjModeNormal(group, scaleUpNum, anyZone)
+		default:
+		}
+	}
 	return ng.checkRpqByRm(group, scaleUpNum, anyZone)
 }
 

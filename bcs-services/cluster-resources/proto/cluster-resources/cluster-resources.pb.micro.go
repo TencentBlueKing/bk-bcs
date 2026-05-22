@@ -4964,6 +4964,12 @@ func NewTemplateSetEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		{
+			Name:    "TemplateSet.ListTemplateMetadataVersions",
+			Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/{templateSpaceID}/metadata/versions"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
 			Name:    "TemplateSet.CreateTemplateMetadata",
 			Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/metadatas"},
 			Method:  []string{"POST"},
@@ -5121,6 +5127,8 @@ type TemplateSetService interface {
 	GetTemplateMetadata(ctx context.Context, in *GetTemplateMetadataReq, opts ...client.CallOption) (*CommonResp, error)
 	// 获取模板文件元数据列表
 	ListTemplateMetadata(ctx context.Context, in *ListTemplateMetadataReq, opts ...client.CallOption) (*CommonListResp, error)
+	// 通过模板文件夹ID获取模板文件列表（含版本信息）
+	ListTemplateMetadataVersions(ctx context.Context, in *ListTemplateMetadataVersionsReq, opts ...client.CallOption) (*CommonListResp, error)
 	// 创建模板文件元数据
 	CreateTemplateMetadata(ctx context.Context, in *CreateTemplateMetadataReq, opts ...client.CallOption) (*CommonResp, error)
 	// 更新模板文件元数据
@@ -5271,6 +5279,16 @@ func (c *templateSetService) GetTemplateMetadata(ctx context.Context, in *GetTem
 
 func (c *templateSetService) ListTemplateMetadata(ctx context.Context, in *ListTemplateMetadataReq, opts ...client.CallOption) (*CommonListResp, error) {
 	req := c.c.NewRequest(c.name, "TemplateSet.ListTemplateMetadata", in)
+	out := new(CommonListResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *templateSetService) ListTemplateMetadataVersions(ctx context.Context, in *ListTemplateMetadataVersionsReq, opts ...client.CallOption) (*CommonListResp, error) {
+	req := c.c.NewRequest(c.name, "TemplateSet.ListTemplateMetadataVersions", in)
 	out := new(CommonListResp)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
@@ -5522,6 +5540,8 @@ type TemplateSetHandler interface {
 	GetTemplateMetadata(context.Context, *GetTemplateMetadataReq, *CommonResp) error
 	// 获取模板文件元数据列表
 	ListTemplateMetadata(context.Context, *ListTemplateMetadataReq, *CommonListResp) error
+	// 通过模板文件夹ID获取模板文件列表（含版本信息）
+	ListTemplateMetadataVersions(context.Context, *ListTemplateMetadataVersionsReq, *CommonListResp) error
 	// 创建模板文件元数据
 	CreateTemplateMetadata(context.Context, *CreateTemplateMetadataReq, *CommonResp) error
 	// 更新模板文件元数据
@@ -5580,6 +5600,7 @@ func RegisterTemplateSetHandler(s server.Server, hdlr TemplateSetHandler, opts .
 		DeleteTemplateSpaceCollect(ctx context.Context, in *DeleteTemplateSpaceCollectReq, out *CommonResp) error
 		GetTemplateMetadata(ctx context.Context, in *GetTemplateMetadataReq, out *CommonResp) error
 		ListTemplateMetadata(ctx context.Context, in *ListTemplateMetadataReq, out *CommonListResp) error
+		ListTemplateMetadataVersions(ctx context.Context, in *ListTemplateMetadataVersionsReq, out *CommonListResp) error
 		CreateTemplateMetadata(ctx context.Context, in *CreateTemplateMetadataReq, out *CommonResp) error
 		UpdateTemplateMetadata(ctx context.Context, in *UpdateTemplateMetadataReq, out *CommonResp) error
 		DeleteTemplateMetadata(ctx context.Context, in *DeleteTemplateMetadataReq, out *CommonResp) error
@@ -5664,6 +5685,12 @@ func RegisterTemplateSetHandler(s server.Server, hdlr TemplateSetHandler, opts .
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "TemplateSet.ListTemplateMetadata",
 		Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/{templateSpaceID}/metadatas"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "TemplateSet.ListTemplateMetadataVersions",
+		Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/{templateSpaceID}/metadata/versions"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
@@ -5844,6 +5871,10 @@ func (h *templateSetHandler) GetTemplateMetadata(ctx context.Context, in *GetTem
 
 func (h *templateSetHandler) ListTemplateMetadata(ctx context.Context, in *ListTemplateMetadataReq, out *CommonListResp) error {
 	return h.TemplateSetHandler.ListTemplateMetadata(ctx, in, out)
+}
+
+func (h *templateSetHandler) ListTemplateMetadataVersions(ctx context.Context, in *ListTemplateMetadataVersionsReq, out *CommonListResp) error {
+	return h.TemplateSetHandler.ListTemplateMetadataVersions(ctx, in, out)
 }
 
 func (h *templateSetHandler) CreateTemplateMetadata(ctx context.Context, in *CreateTemplateMetadataReq, out *CommonResp) error {

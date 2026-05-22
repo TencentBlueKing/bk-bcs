@@ -44,6 +44,8 @@ const (
 
 	labelQuotaGrayKey = "quota-gray"
 
+	labelLadderQuotaKey = "ladder-quota"
+
 	// QuotaGrayOverMode over-provisioning
 	QuotaGrayOverMode = "over-provisioning"
 	// QuotaGrayNormalMode normal
@@ -243,6 +245,31 @@ func (pm *ProManClient) CheckProjectQuotaGrayLabel(ctx context.Context, projectI
 		}
 	}
 	return "", nil
+}
+
+// CheckProjectQuotaAndLadderLabel get project is has quota-gray and ladder quota label
+func (pm *ProManClient) CheckProjectQuotaAndLadderLabel(
+	ctx context.Context, projectId string) (string, string, error) {
+	projInfo, err := ProjectClient.GetProjectInfo(ctx, projectId, true)
+	if err != nil {
+		blog.Errorf("CheckProjectQuotaAndLadderLabel GetProjectInfo[%s] failed: %v", projectId, err)
+		return "", "", err
+	}
+
+	var (
+		labelQuotaGray   string
+		labelLadderQuota string
+	)
+
+	for key := range projInfo.GetLabels() {
+		if key == labelQuotaGrayKey {
+			labelQuotaGray = projInfo.GetLabels()[key]
+		}
+		if key == labelLadderQuotaKey {
+			labelLadderQuota = projInfo.GetLabels()[key]
+		}
+	}
+	return labelQuotaGray, labelLadderQuota, nil
 }
 
 // GetProjectQuota get project quota by project quota id

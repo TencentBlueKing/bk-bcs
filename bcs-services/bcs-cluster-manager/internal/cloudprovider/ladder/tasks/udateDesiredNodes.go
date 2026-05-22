@@ -111,7 +111,7 @@ func ApplyCVMFromResourcePoolTask(taskID, stepName string) error { // nolint
 		blog.Errorf("ApplyCVMFromResourcePoolTask[%s] applyInstanceFromResourcePool for group %s orderID %s failed, %s",
 			taskID, nodeGroupID, orderID, err.Error())
 		cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
-			fmt.Sprintf("ApplyCVMFromResourcePoolTask[%s] applyInstanceFromResourcePool for group[%s] orderID[%s] failed, err:[%s]",
+			fmt.Sprintf("ApplyCVMFromResourcePoolTask[%s] applyInstanceFromResourcePool for group[%s] orderID[%s] failed, err:[%s]", // nolint
 				taskID, nodeGroupID, orderID, err.Error()))
 		state.Task.CommonParams[cloudprovider.DeviceRecordIDKey.String()] = orderID
 		retErr := fmt.Errorf("ApplyCVMFromResourcePoolTask failed: %s", err.Error())
