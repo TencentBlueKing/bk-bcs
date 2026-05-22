@@ -304,7 +304,7 @@
 /* eslint-disable @typescript-eslint/no-this-alias */
 /* eslint-disable @typescript-eslint/no-require-imports */
 import yamljs from 'js-yaml';
-import _ from 'lodash';
+import { merge } from 'lodash';
 
 import header from './header.vue';
 import tabs from './tabs.vue';
@@ -762,7 +762,7 @@ export default {
         editor.gotoLine(annot[0].row, annot[0].column, true);
         return false;
       }
-      const newConfObj = _.merge({}, serviceParams.config, appObj);
+      const newConfObj = merge({}, serviceParams.config, appObj);
       const jsonFromat = this.formatJson(newConfObj);
       this.curService.config = jsonFromat;
       this.toJsonDialogConf.isShow = false;

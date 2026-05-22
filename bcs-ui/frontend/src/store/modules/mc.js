@@ -24,7 +24,7 @@
 * IN THE SOFTWARE.
 */
 
-import _ from 'lodash';
+import { snakeCase } from 'lodash';
 
 import http from '@/api';
 import { json2Query } from '@/common/util';
@@ -88,7 +88,7 @@ export default {
           continue;
         }
         delete params[key];
-        params[_.snakeCase(key)] = value;
+        params[snakeCase(key)] = value;
       }
 
       delete params.projId;
@@ -127,7 +127,7 @@ export default {
           continue;
         }
         delete params[key];
-        params[_.snakeCase(key)] = value;
+        params[snakeCase(key)] = value;
       }
 
       return http.get(
