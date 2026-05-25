@@ -964,7 +964,6 @@ export default defineComponent({
       cpuMetricObj,
       networkMetric,
       podImages,
-      timeFormat,
       handleShowYamlPanel,
       gotoPodDetail,
       handleGetExtData,
