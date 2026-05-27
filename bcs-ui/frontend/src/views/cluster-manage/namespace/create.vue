@@ -101,30 +101,60 @@
             } : ''"
             error-display-type="normal"
             property="quota">
-            <div class="flex">
-              <div class="flex mr-[20px]">
-                <span class="mr-[15px] text-[14px]">CPU</span>
-                <bcs-input
-                  v-model="formData.quota.cpuRequests"
-                  class="w-[250px]"
-                  type="number"
-                  :min="1"
-                  :max="512000"
-                  :precision="0">
-                  <div class="group-text" slot="append">{{ $t('units.suffix.cores') }}</div>
-                </bcs-input>
+            <div>
+              <div class="flex items-center mb-[15px]">
+                <span class="mr-[15px] text-[14px] w-[50px]">CPU</span>
+                <div class="flex items-center mr-[20px]">
+                  <span class="mr-[10px] text-[12px] text-[#979ba5]">Request</span>
+                  <bcs-input
+                    v-model="formData.quota.cpuRequests"
+                    class="w-[180px]"
+                    type="number"
+                    :min="1"
+                    :max="512000"
+                    :precision="0">
+                    <div class="group-text" slot="append">{{ $t('units.suffix.cores') }}</div>
+                  </bcs-input>
+                </div>
+                <div class="flex items-center">
+                  <span class="mr-[10px] text-[12px] text-[#979ba5]">Limit</span>
+                  <bcs-input
+                    v-model="formData.quota.cpuLimits"
+                    class="w-[180px]"
+                    type="number"
+                    :min="1"
+                    :max="512000"
+                    :precision="0">
+                    <div class="group-text" slot="append">{{ $t('units.suffix.cores') }}</div>
+                  </bcs-input>
+                </div>
               </div>
-              <div class="flex">
-                <span class="mr-[15px] text-[14px]">MEM</span>
-                <bcs-input
-                  v-model="formData.quota.memoryRequests"
-                  class="w-[250px]"
-                  type="number"
-                  :min="1"
-                  :max="1024000"
-                  :precision="0">
-                  <div class="group-text" slot="append">GiB</div>
-                </bcs-input>
+              <div class="flex items-center">
+                <span class="mr-[15px] text-[14px] w-[50px]">MEM</span>
+                <div class="flex items-center mr-[20px]">
+                  <span class="mr-[10px] text-[12px] text-[#979ba5]">Request</span>
+                  <bcs-input
+                    v-model="formData.quota.memoryRequests"
+                    class="w-[180px]"
+                    type="number"
+                    :min="1"
+                    :max="1024000"
+                    :precision="0">
+                    <div class="group-text" slot="append">GiB</div>
+                  </bcs-input>
+                </div>
+                <div class="flex items-center">
+                  <span class="mr-[10px] text-[12px] text-[#979ba5]">Limit</span>
+                  <bcs-input
+                    v-model="formData.quota.memoryLimits"
+                    class="w-[180px]"
+                    type="number"
+                    :min="1"
+                    :max="1024000"
+                    :precision="0">
+                    <div class="group-text" slot="append">GiB</div>
+                  </bcs-input>
+                </div>
               </div>
             </div>
           </bk-form-item>
@@ -206,15 +236,30 @@ export default defineComponent({
           trigger: 'blur',
         },
       ],
-      quota: isSharedCluster.value ? [
+      quota: [
         {
           validator() {
-            return Number(formData.value.quota.cpuRequests) >= 1 && Number(formData.value.quota.memoryRequests) >= 1;
+            const { cpuRequests, cpuLimits, memoryRequests, memoryLimits } = formData.value.quota;
+            const cpuReq = Number(cpuRequests);
+            const cpuLim = Number(cpuLimits);
+            const memReq = Number(memoryRequests);
+            const memLim = Number(memoryLimits);
+            if (isSharedCluster.value) {
+              return cpuReq >= 1 && cpuLim >= cpuReq && memReq >= 1 && memLim >= memReq;
+            }
+            // 非共享集群允许均为空
+            if (!cpuRequests && !cpuLimits && !memoryRequests && !memoryLimits) {
+              return true;
+            }
+            // 若填了其中任何一个，必须全部填且满足关系
+            return !!(cpuRequests && cpuLimits && memoryRequests && memoryLimits && cpuReq >= 0 && cpuLim >= cpuReq && memReq >= 0 && memLim >= memReq);
           },
-          message: $i18n.t('dashboard.ns.validate.setMinMaxMemCpu'),
+          message: $i18n.locale === 'en-US'
+            ? 'Please set valid CPU and Memory quotas (Limit >= Request >= 0 / 1 for shared cluster)'
+            : '请设置合法的 CPU、内存配额，且 Limit 需大于等于 Request（共享集群最小值不小于1）',
           trigger: 'blur',
         },
-      ] : [],
+      ],
       labels: [
         {
           validator() {
@@ -288,12 +333,13 @@ export default defineComponent({
         }
         isLoading.value = true;
         let quota: Record<string, string> | null = null;
-        if (formData.value.quota.cpuRequests || formData.value.quota.memoryRequests) {
+        const { cpuRequests, cpuLimits, memoryRequests, memoryLimits } = formData.value.quota;
+        if (cpuRequests || cpuLimits || memoryRequests || memoryLimits) {
           quota = {
-            cpuLimits: String(formData.value.quota.cpuRequests),
-            cpuRequests: String(formData.value.quota.cpuRequests),
-            memoryLimits: `${formData.value.quota.memoryRequests}Gi`,
-            memoryRequests: `${formData.value.quota.memoryRequests}Gi`,
+            cpuLimits: String(cpuLimits),
+            cpuRequests: String(cpuRequests),
+            memoryLimits: `${memoryLimits}Gi`,
+            memoryRequests: `${memoryRequests}Gi`,
           };
         }
         const result = await handleCreatedNamespace({
