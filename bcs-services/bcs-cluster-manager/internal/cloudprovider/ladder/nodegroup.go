@@ -570,6 +570,7 @@ func (ng *NodeGroup) CheckResourcePoolQuota(
 			cutils.QuotaPoolPrefix) {
 			// self pool check resource pool quota
 			// 目前仅支持 单资源池的消费
+			// nolint:govet
 			quota, err := project.GetProjectManagerClient().GetProjectQuota(ctx,
 				group.GetExtraInfo()[resource.DevicePoolIds])
 			if err != nil {
@@ -606,7 +607,8 @@ func (ng *NodeGroup) CheckResourcePoolQuota(
 		return false
 	}()
 
-	quotaGrayValue, ladderQuota, err := project.GetProjectManagerClient().CheckProjectQuotaAndLadderLabel(ctx, group.GetProjectID())
+	quotaGrayValue, ladderQuota, err := project.GetProjectManagerClient().
+		CheckProjectQuotaAndLadderLabel(ctx, group.GetProjectID())
 	if err != nil {
 		blog.Errorf("GetProjectManagerClient GetProjectQuotaGrayLabel[%s] failed: %v",
 			group.GetProjectID(), err)
