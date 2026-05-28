@@ -234,7 +234,8 @@ func (nm *NodeManager) getInnerInstanceTypes(ctx context.Context, info cloudprov
 	[]*proto.InstanceType, error) {
 	blog.Infof("getInnerInstanceTypes %+v", info)
 
-	quoteGrayMode, ladderQuota, err := project.GetProjectManagerClient().CheckProjectQuotaAndLadderLabel(ctx, info.ProjectID)
+	quoteGrayMode, ladderQuota, err := project.GetProjectManagerClient().
+		CheckProjectQuotaAndLadderLabel(ctx, info.ProjectID)
 	if err != nil {
 		blog.Errorf("GetProjectManagerClient CheckProjectQuotaAndLadderLabel[%s] failed: %v",
 			info.ProjectID, err)
