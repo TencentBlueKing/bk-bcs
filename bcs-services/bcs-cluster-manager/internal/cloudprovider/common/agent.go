@@ -190,7 +190,10 @@ func InstallGSEAgentTask(taskID string, stepName string) error { // nolint
 	// install gse agent
 	hosts := make([]nodeman.JobInstallHost, 0)
 	ips := strings.Split(nodeIPs, ",")
-	ipv6s := strings.Split(nodeIPv6s, ",")
+	var ipv6s []string
+	if len(nodeIPv6s) > 0 {
+		ipv6s = strings.Split(nodeIPv6s, ",")
+	}
 
 	// delete ips when install agent if hostIPs exist cmdb
 	err = RemoveHostFromCmdb(ctx, bkBizID, nodeIPs)

@@ -685,22 +685,31 @@ func GetInstanceIPsByID(ctx context.Context, nodeIDs []string) []string {
 	return nodeIPs
 }
 
-// GetInstanceIPv6sByID get InstanceIPv6 by NodeID
+// GetInstanceIPv6sByID get InstanceIPv6 by NodeID.
+// Note: 该函数返回的 slice 长度与传入的 nodeIDs 保持 1:1 对齐（对缺失 IPv6 或查询失败的节点追加空字符串 "" 占位）。
+// 如果传入的所有节点均无 IPv6 地址，则返回一个长度为 0 的空切片。
 func GetInstanceIPv6sByID(ctx context.Context, nodeIDs []string) []string {
 	var (
 		nodeIPv6s = make([]string, 0)
 		taskID    = GetTaskIDFromContext(ctx)
+		hasIPv6   = false
 	)
 
 	for _, id := range nodeIDs {
 		node, err := GetStorageModel().GetNode(context.Background(), id)
 		if err != nil {
 			blog.Errorf("GetInstanceIPv6sByID[%s] nodeID[%s] failed: %v", taskID, id, err)
+			nodeIPv6s = append(nodeIPv6s, "")
 			continue
 		}
 		if node.InnerIPv6 != "" {
-			nodeIPv6s = append(nodeIPv6s, node.InnerIPv6)
+			hasIPv6 = true
 		}
+		nodeIPv6s = append(nodeIPv6s, node.InnerIPv6)
+	}
+
+	if !hasIPv6 {
+		return make([]string, 0)
 	}
 
 	return nodeIPv6s
