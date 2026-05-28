@@ -343,9 +343,14 @@ func (v *VpcClient) CreateSubnet(vpcId, subnetName, zone string, subnet *net.IPN
 	}
 
 	if enableIPv6 {
+		if resp.Response.Subnet == nil || resp.Response.Subnet.SubnetId == nil {
+			return nil, fmt.Errorf("CreateSubnet response subnet or subnet ID is nil")
+		}
+
 		ipv6Cidr, err := v.allocateIpv6SubnetCidr(vpcId)
 		if err != nil {
-			blog.Errorf("CreateSubnet allocateIpv6SubnetCidr failed, err: %s", err.Error())
+			blog.Errorf("CreateSubnet allocateIpv6SubnetCidr failed, err: %s, rollback and delete subnet %s", err.Error(), *resp.Response.Subnet.SubnetId)
+			_ = v.DeleteSubnet(*resp.Response.Subnet.SubnetId)
 			return nil, err
 		}
 
@@ -361,7 +366,8 @@ func (v *VpcClient) CreateSubnet(vpcId, subnetName, zone string, subnet *net.IPN
 
 		_, err = v.client.AssignIpv6SubnetCidrBlock(assignReq)
 		if err != nil {
-			blog.Errorf("AssignIpv6SubnetCidrBlock failed, err: %s", err.Error())
+			blog.Errorf("AssignIpv6SubnetCidrBlock failed, err: %s, rollback and delete subnet %s", err.Error(), *resp.Response.Subnet.SubnetId)
+			_ = v.DeleteSubnet(*resp.Response.Subnet.SubnetId)
 			return nil, err
 		}
 	}
@@ -441,6 +447,10 @@ func (v *VpcClient) allocateIpv6SubnetCidr(vpcId string) (string, error) {
 
 // findFreeIpv6Subnet 在VPC IPv6 CIDR范围内寻找一个空闲的/64子网段
 func findFreeIpv6Subnet(vpcNet *net.IPNet, used []*net.IPNet) (string, error) {
+	if vpcNet.IP.To4() != nil {
+		return "", fmt.Errorf("vpc network %s is not a valid IPv6 network", vpcNet.String())
+	}
+
 	// IPv6子网段固定为/64
 	const subnetBits = 64
 	vpcOnes, _ := vpcNet.Mask.Size()
@@ -451,6 +461,12 @@ func findFreeIpv6Subnet(vpcNet *net.IPNet, used []*net.IPNet) (string, error) {
 
 	// 可用的子网数量 = 2^(64 - vpcMaskLen)
 	subnetCount := uint64(1) << (subnetBits - vpcOnes)
+
+	// Limit candidates check to prevent CPU exhaustion on very large VPC CIDR blocks
+	const maxCandidates = 65536
+	if subnetCount > maxCandidates {
+		subnetCount = maxCandidates
+	}
 
 	// 将VPC起始IP转为uint64用于递增（取前8字节即IPv6地址的高64位）
 	vpcIP := vpcNet.IP.To16()
@@ -480,7 +496,7 @@ func findFreeIpv6Subnet(vpcNet *net.IPNet, used []*net.IPNet) (string, error) {
 		}
 	}
 
-	return "", fmt.Errorf("no free IPv6 /%d subnet available in vpc cidr %s", subnetBits, vpcNet.String())
+	return "", fmt.Errorf("no free IPv6 /%d subnet available in vpc cidr %s (checked %d candidates)", subnetBits, vpcNet.String(), subnetCount)
 }
 
 // ipv6HighBits 取IPv6地址高64位作为uint64
