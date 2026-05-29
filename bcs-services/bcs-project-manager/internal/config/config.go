@@ -184,7 +184,8 @@ type TaskConfig struct {
 
 // SharedClusterConfig 共享集群相关配置
 type SharedClusterConfig struct {
-	AnnoKeyProjCode string `yaml:"annoKeyProjCode"`
+	AnnoKeyProjCode  string `yaml:"annoKeyProjCode"`
+	AllowAdjustQuota bool   `yaml:"allowAdjustQuota"`
 }
 
 // ProjectConfig 项目的配置信息
