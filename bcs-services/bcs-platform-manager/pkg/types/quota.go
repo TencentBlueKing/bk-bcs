@@ -13,6 +13,10 @@
 // Package types pod types
 package types
 
+import (
+	_struct "github.com/golang/protobuf/ptypes/struct"
+)
+
 // CreateProjectQuotaReq xxx
 type CreateProjectQuotaReq struct {
 	QuotaName              string                `json:"quotaName"`
@@ -45,17 +49,17 @@ type QuotaResource struct {
 
 // InstanceTypeConfig 整机资源配置
 type InstanceTypeConfig struct {
-	Region       string      `json:"region,"`
-	InstanceType string      `json:"instanceType,"`
-	Cpu          uint32      `json:"cpu,"`
-	Mem          uint32      `json:"mem,"`
-	Gpu          uint32      `json:"gpu,"`
-	ZoneId       string      `json:"zoneId,"`
-	ZoneName     string      `json:"zoneName,"`
-	QuotaNum     uint32      `json:"quotaNum,"`
-	QuotaUsed    uint32      `json:"quotaUsed,"`
-	SystemDisk   *DataDisk   `json:"systemDisk,"`
-	DataDisks    []*DataDisk `json:"dataDisks,"`
+	Region       string      `json:"region"`
+	InstanceType string      `json:"instanceType"`
+	Cpu          uint32      `json:"cpu"`
+	Mem          uint32      `json:"mem"`
+	Gpu          uint32      `json:"gpu"`
+	ZoneId       string      `json:"zoneId"`
+	ZoneName     string      `json:"zoneName"`
+	QuotaNum     uint32      `json:"quotaNum"`
+	QuotaUsed    uint32      `json:"quotaUsed"`
+	SystemDisk   *DataDisk   `json:"systemDisk"`
+	DataDisks    []*DataDisk `json:"dataDisks"`
 }
 
 // QuotaAttr xxx
@@ -117,7 +121,7 @@ type ProjectQuota struct {
 	Creator                string                `json:"creator"`
 	Updater                string                `json:"updater"`
 	Provider               string                `json:"provider"`
-	NodeGroups             []*NodeGroup          `json:"nodeGroups"`
+	NodeGroups             []*NodeGroupQuota     `json:"nodeGroups"`
 	Labels                 map[string]string     `json:"labels"`
 	Annotations            map[string]string     `json:"annotations"`
 	QuotaAttr              *QuotaAttr            `json:"quotaAttr"`
@@ -175,8 +179,38 @@ type ListProjectQuotasV2Req struct {
 
 // ListProjectQuotasData xxx
 type ListProjectQuotasData struct {
-	Total   uint32          `json:"total"`
-	Results []*ProjectQuota `json:"results"`
+	Total   uint32              `json:"total"`
+	Results []*ProjectQuotaData `json:"results"`
+}
+
+// ProjectQuotaData xxx
+type ProjectQuotaData struct {
+	QuotaId   string `json:"quotaId"`
+	QuotaName string `json:"quotaName"`
+	// ProjectID              string                `json:"projectID"`
+	// ProjectCode            string                `json:"projectCode"`
+	// ClusterId              string                `json:"clusterId"`
+	// ClusterName            string                `json:"clusterName"`
+	// NameSpace              string                `json:"nameSpace"`
+	// BusinessID             string                `json:"businessID"`
+	// BusinessName           string                `json:"businessName"`
+	// Description            string                `json:"description"`
+	IsDeleted bool           `json:"isDeleted"`
+	QuotaType string         `json:"quotaType"`
+	Quota     *QuotaResource `json:"quota"`
+	Status    string         `json:"status"`
+	// Message                string                `json:"message"`
+	// CreateTime             string                `json:"createTime"`
+	UpdateTime string `json:"updateTime"`
+	// Creator                string                `json:"creator"`
+	Updater string `json:"updater"`
+	// Provider string `json:"provider"`
+	// NodeGroups         []*NodeGroupQuota `json:"nodeGroups"`
+	// Labels             map[string]string `json:"labels"`
+	// Annotations        map[string]string `json:"annotations"`
+	// QuotaAttr          *QuotaAttr `json:"quotaAttr"`
+	// QuotaSharedEnabled bool       `json:"quotaSharedEnabled"`
+	// QuotaSharedProjectList []*QuotaSharedProject `json:"quotaSharedProjectList"`
 }
 
 // GetProjectQuotasUsageData xxx
@@ -222,4 +256,18 @@ type QuotaResourceData struct {
 // GetProjectQuotaReq xxx
 type GetProjectQuotaReq struct {
 	QuotaId string `json:"quotaId" in:"path=quotaId"`
+}
+
+// GetProjectQuotaData xxx
+type GetProjectQuotaData struct {
+	Data *ProjectQuota   `json:"data"`
+	Task *_struct.Struct `json:"task"`
+}
+
+// NodeGroupQuota xxx
+type NodeGroupQuota struct {
+	ClusterId   string `json:"clusterId"`
+	NodeGroupId string `json:"nodeGroupId"`
+	QuotaNum    uint32 `json:"quotaNum"`
+	QuotaUsed   uint32 `json:"quotaUsed"`
 }
