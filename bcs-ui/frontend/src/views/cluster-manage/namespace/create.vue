@@ -254,9 +254,7 @@ export default defineComponent({
             // 若填了其中任何一个，必须全部填且满足关系
             return !!(cpuRequests && cpuLimits && memoryRequests && memoryLimits && cpuReq >= 0 && cpuLim >= cpuReq && memReq >= 0 && memLim >= memReq);
           },
-          message: $i18n.locale === 'en-US'
-            ? 'Please set valid CPU and Memory quotas (Limit >= Request >= 0 / 1 for shared cluster)'
-            : '请设置合法的 CPU、内存配额，且 Limit 需大于等于 Request（共享集群最小值不小于1）',
+          message: $i18n.t('dashboard.ns.validate.setValidQuota'),
           trigger: 'blur',
         },
       ],
