@@ -110,7 +110,7 @@
                     v-model="formData.quota.cpuRequests"
                     class="w-[180px]"
                     type="number"
-                    :min="1"
+                    :min="isSharedCluster ? 1 : 0"
                     :max="512000"
                     :precision="0">
                     <div class="group-text" slot="append">{{ $t('units.suffix.cores') }}</div>
@@ -122,7 +122,7 @@
                     v-model="formData.quota.cpuLimits"
                     class="w-[180px]"
                     type="number"
-                    :min="1"
+                    :min="isSharedCluster ? 1 : 0"
                     :max="512000"
                     :precision="0">
                     <div class="group-text" slot="append">{{ $t('units.suffix.cores') }}</div>
@@ -137,19 +137,19 @@
                     v-model="formData.quota.memoryRequests"
                     class="w-[180px]"
                     type="number"
-                    :min="1"
+                    :min="isSharedCluster ? 1 : 0"
                     :max="1024000"
                     :precision="0">
                     <div class="group-text" slot="append">GiB</div>
                   </bcs-input>
                 </div>
                 <div class="flex items-center">
-                  <span class="mr-[10px] text-[12px] text-[#979ba5]">Limit</span>
+                  <span class="mr-[10px] text-[#979ba5] text-[12px]">Limit</span>
                   <bcs-input
                     v-model="formData.quota.memoryLimits"
                     class="w-[180px]"
                     type="number"
-                    :min="1"
+                    :min="isSharedCluster ? 1 : 0"
                     :max="1024000"
                     :precision="0">
                     <div class="group-text" slot="append">GiB</div>

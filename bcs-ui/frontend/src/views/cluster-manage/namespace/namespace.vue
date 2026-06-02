@@ -333,7 +333,7 @@
               v-model="setQuotaConf.quota.cpuRequests"
               class="w-[150px] mr-[20px]"
               type="number"
-              :min="1"
+              :min="isSharedCluster ? 1 : 0"
               :max="512000"
               :precision="0">
               <div class="group-text" slot="append">{{ $t('units.suffix.cores') }}</div>
@@ -343,7 +343,7 @@
               v-model="setQuotaConf.quota.cpuLimits"
               class="w-[150px]"
               type="number"
-              :min="1"
+              :min="isSharedCluster ? 1 : 0"
               :max="512000"
               :precision="0">
               <div class="group-text" slot="append">{{ $t('units.suffix.cores') }}</div>
@@ -360,7 +360,7 @@
               v-model="setQuotaConf.quota.memoryRequests"
               class="w-[150px] mr-[20px]"
               type="number"
-              :min="1"
+              :min="isSharedCluster ? 1 : 0"
               :max="1024000"
               :precision="0">
               <div class="group-text" slot="append">GiB</div>
@@ -370,7 +370,7 @@
               v-model="setQuotaConf.quota.memoryLimits"
               class="w-[150px]"
               type="number"
-              :min="1"
+              :min="isSharedCluster ? 1 : 0"
               :max="1024000"
               :precision="0">
               <div class="group-text" slot="append">GiB</div>
