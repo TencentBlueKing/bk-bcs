@@ -92,9 +92,10 @@ bcsGateway:
 taskConfig:
   address: ""
   exchange: ""
-  workerCnt: ""
+  workerCnt: 0
 sharedClusterConfig:
   annoKeyProjCode: ""
+  allowAdjustQuota: false
 systemConfig:
   systemNameSpaces:
   - "bcs"

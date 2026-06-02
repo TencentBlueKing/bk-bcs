@@ -2371,6 +2371,7 @@ dashboard:
       name: 命名空间名称只能包含小写字母、数字以及连字符(-)，连字符（-）后面必须接英文或者数字
       sharedClusterNs: '命名规则：{prefix}自定义名称'
       setMinMaxMemCpu: 请设置MEN、CPU配额，且两者最小值不小于0
+      setValidQuota: 请设置合法的 CPU、内存配额，且 Limit 需大于等于 Request（共享集群最小值不小于1）
     status:
       waitingApproval: 待审批
       createNamespace: 创建命名空间
