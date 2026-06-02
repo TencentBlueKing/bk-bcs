@@ -175,3 +175,34 @@ func load(quota *corev1.ResourceQuota, cpuLimits, cpuRequests, memoryLimits, mem
 	}
 	return nil
 }
+
+// ValidateQuotaEquality checks if CPU/Memory request and limit are equal.
+func ValidateQuotaEquality(quota *proto.ResourceQuota) error {
+	if quota == nil {
+		return nil
+	}
+	cpuLimit, err := resource.ParseQuantity(quota.CpuLimits)
+	if err != nil {
+		return errorx.NewParamErr("invalid cpu limits")
+	}
+	cpuRequest, err := resource.ParseQuantity(quota.CpuRequests)
+	if err != nil {
+		return errorx.NewParamErr("invalid cpu requests")
+	}
+	if cpuLimit.Cmp(cpuRequest) != 0 {
+		return errorx.NewReadableErr(errorx.ParamErr, "cpu limits and requests must be consistent under shared cluster")
+	}
+
+	memLimit, err := resource.ParseQuantity(quota.MemoryLimits)
+	if err != nil {
+		return errorx.NewParamErr("invalid memory limits")
+	}
+	memRequest, err := resource.ParseQuantity(quota.MemoryRequests)
+	if err != nil {
+		return errorx.NewParamErr("invalid memory requests")
+	}
+	if memLimit.Cmp(memRequest) != 0 {
+		return errorx.NewReadableErr(errorx.ParamErr, "memory limits and requests must be consistent under shared cluster")
+	}
+	return nil
+}
