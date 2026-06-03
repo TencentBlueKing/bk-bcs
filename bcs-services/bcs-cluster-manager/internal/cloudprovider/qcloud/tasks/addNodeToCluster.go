@@ -73,6 +73,17 @@ func ModifyInstancesVpcTask(taskID string, stepName string) error {
 	// inject taskID
 	ctx := cloudprovider.WithTaskIDAndStepNameForContext(context.Background(), taskID, stepName)
 
+	err = business.PreCheckModifyInstancesVpc(ctx, nodeIds, dependInfo.CmOption)
+	if err != nil {
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
+			fmt.Sprintf("ModifyInstancesVpcTask PreCheckModifyInstancesVpc failed, nodeIds:[%s], err:[%s]", nodeIds, err))
+		blog.Errorf("ModifyInstancesVpcTask[%s]: PreCheckModifyInstancesVpc for nodes[%v] failed, %s",
+			taskID, nodeIds, err.Error())
+		retErr := fmt.Errorf("ModifyInstancesVpcTask PreCheckModifyInstancesVpc err, %s", err.Error())
+		_ = state.UpdateStepFailure(start, stepName, retErr)
+		return retErr
+	}
+
 	err = business.ModifyInstancesVpcAttribute(ctx, vpcID, nodeIds, dependInfo.CmOption)
 	if err != nil {
 		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
@@ -492,7 +503,7 @@ func AddNodesToClusterTask(taskID string, stepName string) error { // nolint
 		for i := range successNodeIds {
 			cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
 				fmt.Sprintf("success node [%d/%d]: ID[%s], IP[%s]",
-					i+1, len(idList), successNodeIds[i], idToIPMap[failedNodeIds[i]]))
+					i+1, len(idList), successNodeIds[i], idToIPMap[successNodeIds[i]]))
 		}
 		retErr := fmt.Errorf("AddNodesToClusterTask partfailure failedNodes: [%v]", strings.Join(failedNodeIds, ","))
 		if err := state.UpdateStepPartFailure(start, stepName, retErr); err != nil {

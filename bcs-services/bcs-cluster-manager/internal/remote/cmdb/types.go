@@ -51,6 +51,8 @@ const (
 	fieldHostName    = "bk_host_name" // 主机名称
 	fieldOsType      = "bk_os_type"   // 操作系统类型
 	fieldOsName      = "bk_os_name"   // 操作系统名称
+	// fieldCloudInstID field bk cloud inst id
+	fieldCloudInstID = "bk_cloud_inst_id"
 	// FieldAssetId 固资号ID
 	FieldAssetId = "bk_asset_id"
 
@@ -89,7 +91,7 @@ var (
 		fieldHostOutIPV6, fieldHostID, fieldDeviceType, fieldIDCCityName, fieldIDCCityID, fieldDeviceClass,
 		fieldHostCPU, fieldCpuModule, fieldHostMem, fieldHostDisk, fieldOperator, fieldBakOperator, fieldRack,
 		fieldIDCName, fieldSubZoneID, fieldIDCAreaID, fieldIDCArea, fieldIspName, fieldAgentId,
-		FieldAssetId, fieldSvrTypeName}
+		FieldAssetId, fieldSvrTypeName, fieldCloudInstID}
 
 	fieldHostIPSelectorInfo = []string{FieldHostIP, fieldHostIPv6, fieldCloudID, fieldHostName, fieldOsType,
 		fieldOsName, fieldHostID, fieldOperator, fieldBakOperator, fieldAgentId}
@@ -313,6 +315,7 @@ type HostDetailData struct {
 	SubZoneID        string `json:"sub_zone_id"`
 	CpuModule        string `json:"bk_cpu_module"`
 	SvrTypeName      string `json:"svr_type_name"`
+	BkCloudInstID    string `json:"bk_cloud_inst_id"`
 }
 
 // BizInfo business id info
