@@ -160,14 +160,16 @@ func AllocateSubnet(opt *cloudprovider.CommonOption, vpcId, zone string,
 
 		freesIpv6, errLocal := GetFreeIpv6Nets(opt, vpcId)
 		if errLocal != nil {
-			blog.Errorf("AllocateSubnet GetFreeIpv6Nets failed, err: %s, rollback and delete subnet %s", errLocal.Error(), *ret.SubnetId)
+			blog.Errorf("AllocateSubnet GetFreeIpv6Nets failed, err: %s, rollback and delete subnet %s",
+				errLocal.Error(), *ret.SubnetId)
 			_ = vpcCli.DeleteSubnet(*ret.SubnetId)
 			return nil, errLocal
 		}
 
 		ipv6Cidr, errLocal := cidrtree.AllocateFromFrees(64, freesIpv6)
 		if errLocal != nil {
-			blog.Errorf("AllocateSubnet AllocateFromFrees IPv6 failed, err: %s, rollback and delete subnet %s", errLocal.Error(), *ret.SubnetId)
+			blog.Errorf("AllocateSubnet AllocateFromFrees IPv6 failed, err: %s, rollback and delete subnet %s",
+				errLocal.Error(), *ret.SubnetId)
 			_ = vpcCli.DeleteSubnet(*ret.SubnetId)
 			return nil, errLocal
 		}
@@ -175,7 +177,8 @@ func AllocateSubnet(opt *cloudprovider.CommonOption, vpcId, zone string,
 		blog.Infof("AllocateSubnet assign IPv6 cidr[%s] for subnet[%s]", ipv6Cidr.String(), *ret.SubnetId)
 		errLocal = vpcCli.AssignIpv6SubnetCidrBlock(vpcId, *ret.SubnetId, ipv6Cidr.String())
 		if errLocal != nil {
-			blog.Errorf("AssignIpv6SubnetCidrBlock failed, err: %s, rollback and delete subnet %s", errLocal.Error(), *ret.SubnetId)
+			blog.Errorf("AssignIpv6SubnetCidrBlock failed, err: %s, rollback and delete subnet %s",
+				errLocal.Error(), *ret.SubnetId)
 			_ = vpcCli.DeleteSubnet(*ret.SubnetId)
 			return nil, errLocal
 		}
