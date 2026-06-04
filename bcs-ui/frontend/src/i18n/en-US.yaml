@@ -225,7 +225,8 @@ units:
   cores: '{0} Cores'
 metrics:
   cpuUsage: CPU usage
-  cpuLimitUsage: CPU usage limit
+  cpuLimitUsage: CPU limit usage
+  cpuResUsage: CPU request usage
   diskUsage: Disk usage
   memUsage: Memory usage
   memUsage1: Memory usage
@@ -236,6 +237,10 @@ metrics:
   cpuLimitUsageDesc: >-
     Percentage of actual CPU cores consumed relative to the Limit. May exceed
     the limit, but typically stays within 100%
+  cpuResUsageDesc: >-
+    The percentage of actual CPU usage relative to the requested CPU resources.
+    This metric may exceed 100%, indicating that the actual CPU consumption is
+    higher than the requested CPU resources.
   cpuRequestUsage:
     text: CPU packing rate
     clusterDesc: >-
