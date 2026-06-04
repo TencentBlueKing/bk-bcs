@@ -24,6 +24,7 @@ const userRequest = createRequest({
 });
 // user
 export const userInfo = userRequest('get', '/users/info');
+export const getTokensByUsername = userRequest('get', '/users/$username/tokens');
 
 // 操作审计
 const v3Request = createRequest({

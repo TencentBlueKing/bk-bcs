@@ -221,11 +221,45 @@
           </div>
         </template>
       </bk-sideslider>
+      <!-- KubeConfig SideSlider -->
+      <bcs-sideslider
+        :is-show.sync="showKubeConfigSlider"
+        quick-close
+        title="KubeConfig"
+        width="800">
+        <template #content>
+          <div v-bkloading="{ isLoading: tokenLoading }" class="h-[calc(100vh-52px)] overflow-auto">
+            <!-- 工具栏 -->
+            <div
+              :class="[
+                'flex items-center justify-end pl-[16px] pr-[16px] h-[40px]',
+                'border-solid border-[#dcdee5] bg-[#2e2e2e]'
+              ]">
+              <i
+                class="bcs-icon bcs-icon-copy text-[#979BA5] hover:text-[#3A84FF] cursor-pointer text-[14px]"
+                @click="handleCopyKubeConfig"></i>
+            </div>
+            <!-- 编辑器 -->
+            <CodeEditor
+              class="!h-[calc(100%-40px)]"
+              readonly
+              :value="kubeConfigContent"
+              :options="{ roundedSelection: false, scrollBeyondLastLine: false, renderLineHighlight: 'none' }"
+              width="100%"
+              lang="yaml">
+            </CodeEditor>
+          </div>
+        </template>
+      </bcs-sideslider>
     </bk-form>
   </div>
 </template>
 <script lang="ts">
 import { merge } from 'lodash';
+/* eslint-disable import/no-webpack-loader-syntax */
+import clusterDemoConfig from 'text-loader?modules!@/views/user-token/cluster-demo.yaml';
+import shareClusterDemoConfig from 'text-loader?modules!@/views/user-token/share-cluster-demo.yaml';
+/* eslint-enable import/no-webpack-loader-syntax */
 import { computed, defineComponent, onMounted, ref, toRefs } from 'vue';
 
 import { filterPlainText } from '@blueking/xss-filter';
@@ -235,11 +269,14 @@ import ClusterVisibleRange from '../components/cluster-visible-range.vue';
 import EditFormItem from '../components/edit-form-item.vue';
 
 import { modifyCluster } from '@/api/modules/cluster-manager';
+import { getTokensByUsername } from '@/api/modules/user-manager';
 import $bkMessage from '@/common/bkmagic';
 import { CLUSTER_ENV, LABEL_KEY_REGEXP } from '@/common/constant';
+import { copyText, renderTemplate } from '@/common/util';
 import DescList from '@/components/desc-list.vue';
 import KeyValue from '@/components/key-value.vue';
 import LoadingIcon from '@/components/loading-icon.vue';
+import CodeEditor from '@/components/monaco-editor/new-editor.vue';
 import useSideslider from '@/composables/use-sideslider';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
@@ -260,6 +297,7 @@ export default defineComponent({
     DescList,
     NodemanArea,
     ClusterVisibleRange,
+    CodeEditor,
   },
   props: {
     clusterId: {
@@ -398,9 +436,63 @@ export default defineComponent({
     };
 
     // 集群kubeconfig
-    const handleGotoToken = () => {
+    const showKubeConfigSlider = ref(false);
+    const tokenLoading = ref(false);
+    const userToken = ref('');
+    const isClusterInSelfProject = computed(() => $store.getters.curProjectId === curCluster.value?.projectID);
+
+    const kubeConfigContent = computed(() => {
+      if (!curCluster.value) return '';
+      const tokenValue = userToken.value || `\${${$i18n.t('apiToken.text')}}`;
+      const { clusterID, is_shared: isShared } = curCluster.value;
+      if (isShared && !isClusterInSelfProject.value) {
+        return renderTemplate(shareClusterDemoConfig, {
+          username: user.value.username,
+          token: tokenValue,
+          bcs_api_host: window.BCS_API_HOST,
+          projectCode: $store.getters.curProjectCode,
+          cluster_id: clusterID,
+        });
+      }
+      return renderTemplate(clusterDemoConfig, {
+        username: user.value.username,
+        token: tokenValue,
+        bcs_api_host: window.BCS_API_HOST,
+        projectID: $store.getters.curProjectId,
+        cluster_id: clusterID,
+      });
+    });
+
+    const handleGotoToken = async () => {
+      tokenLoading.value = true;
+      try {
+        const tokenList = await getTokensByUsername({
+          $username: user.value.username,
+        });
+        userToken.value = tokenList?.[0]?.token || '';
+        if (!userToken.value) {
+          handleGoCreateToken();
+        } else {
+          showKubeConfigSlider.value = true;
+        }
+      } catch (e) {
+        userToken.value = '';
+      } finally {
+        tokenLoading.value = false;
+      }
+    };
+
+    const handleGoCreateToken = () => {
       const { href } = $router.resolve({ name: 'token' });
       window.open(href);
+    };
+
+    const handleCopyKubeConfig = () => {
+      copyText(kubeConfigContent.value);
+      $bkMessage({
+        theme: 'success',
+        message: $i18n.t('generic.msg.success.copy'),
+      });
     };
 
     const {
@@ -476,6 +568,11 @@ export default defineComponent({
       handleSaveVar,
       handleCancelSetVar,
       handleGotoToken,
+      showKubeConfigSlider,
+      tokenLoading,
+      kubeConfigContent,
+      handleGoCreateToken,
+      handleCopyKubeConfig,
       setChanged,
       handleBeforeClose,
       CLUSTER_ENV,
