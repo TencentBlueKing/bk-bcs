@@ -135,9 +135,32 @@ func (c *CloudValidate) ListCloudVpcsValidate(req *proto.ListCloudVpcsRequest,
 	return nil
 }
 
+// UpdateCloudVpcsValidate xxx
+func (c *CloudValidate) UpdateCloudVpcsValidate(req *proto.UpdateCloudVpcsRequest,
+	account *proto.Account) error {
+
+	return cloudprovider.ErrCloudNotImplemented
+}
+
 // ListCloudSubnetsValidate xxx
 func (c *CloudValidate) ListCloudSubnetsValidate(req *proto.ListCloudSubnetsRequest,
 	account *proto.Account) error {
+	return cloudprovider.ErrCloudNotImplemented
+}
+
+// CreateCloudSubnetsValidate implements cloudprovider.CloudValidateManager.
+func (c *CloudValidate) CreateCloudSubnetsValidate(req *proto.CreateCloudSubnetsRequest, account *proto.Account) error {
+	return cloudprovider.ErrCloudNotImplemented
+}
+
+// UpdateCloudSubnetsValidate xxx
+func (c *CloudValidate) UpdateCloudSubnetsValidate(req *proto.UpdateCloudSubnetsRequest,
+	account *proto.Account) error {
+	return cloudprovider.ErrCloudNotImplemented
+}
+
+// DeleteCloudSubnetsValidate implements cloudprovider.CloudValidateManager.
+func (c *CloudValidate) DeleteCloudSubnetsValidate(req *proto.DeleteCloudSubnetsRequest, account *proto.Account) error {
 	return cloudprovider.ErrCloudNotImplemented
 }
 
