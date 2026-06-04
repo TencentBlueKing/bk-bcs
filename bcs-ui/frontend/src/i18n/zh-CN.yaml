@@ -1105,6 +1105,7 @@ cluster:
             io1: 预调配IOPS SSD(io1)
             st1: 高吞吐量HDD(st1)
             sc1: 吞吐量优化型Cold HDD(sc1)
+            hyperdisk: 均衡型超级磁盘
           disk:
             system: 系统盘
             data: 数据盘

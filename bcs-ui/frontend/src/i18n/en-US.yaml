@@ -1359,6 +1359,7 @@ cluster:
             io2: Provisioned IOPS io2
             st1: Throughput Optimized HDD st1
             sc1: Cold HDD sc1
+            hyperdisk: Hyperdisk Banlanced
           disk:
             system: System disk
             data: Data disk
@@ -4047,8 +4048,11 @@ templateFile:
     emptyContent: The template file content cannot be empty
     invalidPath: 'File path cannot start or end with /, and cannot contain consecutive //'
     invalidFolderName: >-
-      Folder name only supports the following characters are not allowed: \ / : * ? " < > |
-    invalidFileName: 'File name only supports the following characters are not allowed: \ / : * ? " < > |'
+      Folder name only supports the following characters are not allowed: \ / :
+      * ? " < > |
+    invalidFileName: >-
+      File name only supports the following characters are not allowed: \ / : *
+      ? " < > |
     success: success
     selectVersion: Please select a version for all files
     noFilesSelected: Please select template files to deploy from the left panel
