@@ -22,9 +22,11 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
 	bcsapiClusterManager "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
+	corev1 "k8s.io/api/core/v1"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/bcsstorage"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/provider/manager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/provider/utils"
@@ -33,6 +35,14 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/quota"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
 )
+
+// getExtraGPUResourceKeys 获取配置中额外补充的 GPU 资源 key 列表。
+func getExtraGPUResourceKeys() []string {
+	if config.GlobalConf == nil {
+		return nil
+	}
+	return config.GlobalConf.SystemConfig.GPUResourceKeys
+}
 
 func checkProjectValidate(model store.ProjectModel, projectId, projectCode, name string) (*pm.Project, error) {
 	if len(projectId) == 0 && len(projectCode) == 0 && len(strings.TrimSpace(name)) == 0 {
@@ -147,6 +157,16 @@ func getQuotaUsage(q *quota.ProjectQuota) {
 		if gpu.AsApproximateFloat64() != 0 {
 			q.Quota.Gpu.DeviceQuotaUsed = strconv.FormatFloat(gpu.AsApproximateFloat64(), 'f', 2, 64)
 		}
+		// 获取配置中额外补充的 GPU 使用量
+		if len(getExtraGPUResourceKeys()) > 0 {
+			for _, key := range getExtraGPUResourceKeys() {
+				gpuRes := quotaStorage.Status.TotalQuota.Used[corev1.ResourceName(key)]
+				if gpuRes.AsApproximateFloat64() != 0 {
+					q.Quota.Gpu.DeviceQuotaUsed = strconv.FormatFloat(gpuRes.AsApproximateFloat64(), 'f', 2, 64)
+					break
+				}
+			}
+		}
 	}
 }
 
@@ -223,6 +243,16 @@ func setGPUUsageForProto(q *proto.ProjectQuota, quotaStorage *bcsstorage.MultiCl
 	gpu := quotaStorage.Status.TotalQuota.Used["gpu"]
 	if gpu.AsApproximateFloat64() != 0 {
 		q.Quota.Gpu.DeviceQuotaUsed = strconv.FormatFloat(gpu.AsApproximateFloat64(), 'f', 2, 64)
+	}
+	// 获取配置中额外补充的 GPU 使用量
+	if len(getExtraGPUResourceKeys()) > 0 {
+		for _, key := range getExtraGPUResourceKeys() {
+			gpuRes := quotaStorage.Status.TotalQuota.Used[corev1.ResourceName(key)]
+			if gpuRes.AsApproximateFloat64() != 0 {
+				q.Quota.Gpu.DeviceQuotaUsed = strconv.FormatFloat(gpuRes.AsApproximateFloat64(), 'f', 2, 64)
+				break
+			}
+		}
 	}
 }
 

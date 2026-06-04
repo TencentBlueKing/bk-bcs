@@ -98,3 +98,5 @@ sharedClusterConfig:
 systemConfig:
   systemNameSpaces:
   - "bcs"
+  gpuResourceKeys:
+  - "kunlunxin.com/xpu"

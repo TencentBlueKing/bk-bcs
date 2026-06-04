@@ -189,6 +189,8 @@ type SharedClusterConfig struct {
 // SystemCommonConfig 系统公共配置
 type SystemCommonConfig struct {
 	SystemNameSpaces []string `yaml:"systemNameSpaces"`
+	// GPUResourceKeys 额外补充的 GPU 资源 key 列表
+	GPUResourceKeys []string `yaml:"gpuResourceKeys"`
 }
 
 // ProjectConfig 项目的配置信息

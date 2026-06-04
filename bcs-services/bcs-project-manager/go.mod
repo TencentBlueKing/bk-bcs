@@ -13,7 +13,7 @@ require (
 require (
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20260129073335-3600fdcdb90f
 	github.com/Tencent/bk-bcs/bcs-common/common/task v0.0.0-20240619071101-df2f4bc5060b
-	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20240418123107-72b120390195
+	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20260528095648-471a7deee909
 	github.com/TencentBlueKing/iam-go-sdk v0.1.6
 	github.com/envoyproxy/protoc-gen-validate v1.0.4
 	github.com/go-micro/plugins/v4/registry/etcd v1.1.0
