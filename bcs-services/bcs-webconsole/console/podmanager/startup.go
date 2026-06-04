@@ -79,6 +79,25 @@ func matchContainerById(pod *v1.Pod, containerId string) (*types.Container, erro
 		return container, nil
 	}
 
+	// 检查 initContainer (支持重启策略为 Always 的情况)
+	for _, container := range pod.Status.InitContainerStatuses {
+		if container.ContainerID != "docker://"+containerId && container.ContainerID != "containerd://"+containerId {
+			continue
+		}
+
+		reason, ok := IsContainerReady(&container)
+		if !ok {
+			return nil, errors.Errorf("InitContainer %s not ready, %s", container.Name, reason)
+		}
+
+		container := &types.Container{
+			Namespace:     pod.Namespace,
+			PodName:       pod.Name,
+			ContainerName: container.Name,
+		}
+		return container, nil
+	}
+
 	// 不返回错误, 到上层处理
 	return nil, nil
 }
@@ -121,6 +140,25 @@ func (m *StartupManager) GetContainerByName(namespace, podName, containerName st
 		reason, ok := IsContainerReady(&container)
 		if !ok {
 			return nil, errors.Errorf("Container %s not ready, %s", containerName, reason)
+		}
+
+		container := &types.Container{
+			Namespace:     pod.Namespace,
+			PodName:       pod.Name,
+			ContainerName: container.Name,
+		}
+		return container, nil
+	}
+
+	// 检查 initContainer (支持重启策略为 Always 的情况)
+	for _, container := range pod.Status.InitContainerStatuses {
+		if container.Name != containerName {
+			continue
+		}
+
+		reason, ok := IsContainerReady(&container)
+		if !ok {
+			return nil, errors.Errorf("InitContainer %s not ready, %s", containerName, reason)
 		}
 
 		container := &types.Container{
