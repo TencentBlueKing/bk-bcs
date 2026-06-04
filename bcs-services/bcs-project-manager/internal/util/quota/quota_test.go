@@ -16,7 +16,10 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/api/resource"
+
+	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
 )
 
 func TestQuota(t *testing.T) {
@@ -31,4 +34,42 @@ func TestQuota(t *testing.T) {
 		t.Fatal(err)
 	}
 	fmt.Println(q2.AsApproximateFloat64())
+}
+
+func TestValidateQuotaEquality(t *testing.T) {
+	// Case 1: Nil quota
+	err := ValidateQuotaEquality(nil)
+	assert.Nil(t, err)
+
+	// Case 2: Equal CPU and Memory
+	qEqual := &proto.ResourceQuota{
+		CpuLimits:      "2",
+		CpuRequests:    "2000m",
+		MemoryLimits:   "4Gi",
+		MemoryRequests: "4096Mi",
+	}
+	err = ValidateQuotaEquality(qEqual)
+	assert.Nil(t, err)
+
+	// Case 3: Unequal CPU
+	qUnequalCPU := &proto.ResourceQuota{
+		CpuLimits:      "2",
+		CpuRequests:    "1000m",
+		MemoryLimits:   "4Gi",
+		MemoryRequests: "4Gi",
+	}
+	err = ValidateQuotaEquality(qUnequalCPU)
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "cpu limits and requests must be consistent under shared cluster")
+
+	// Case 4: Unequal Memory
+	qUnequalMem := &proto.ResourceQuota{
+		CpuLimits:      "2",
+		CpuRequests:    "2",
+		MemoryLimits:   "4Gi",
+		MemoryRequests: "2Gi",
+	}
+	err = ValidateQuotaEquality(qUnequalMem)
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "memory limits and requests must be consistent under shared cluster")
 }
