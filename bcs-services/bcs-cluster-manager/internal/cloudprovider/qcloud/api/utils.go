@@ -461,6 +461,7 @@ func generateClusterAdvancedSet(request *ClusterAdvancedSettings) *tke.ClusterAd
 		AuditEnabled:       common.BoolPtr(request.AuditEnabled),
 		IsNonStaticIpMode:  common.BoolPtr(request.IsNonStaticIpMode),
 		VpcCniType:         common.StringPtr(request.VpcCniType),
+		IsDualStack:        common.BoolPtr(request.IsDualStack),
 	}
 	if len(request.NetworkType) > 0 {
 		clusterAdvance.NetworkType = common.StringPtr(request.NetworkType)

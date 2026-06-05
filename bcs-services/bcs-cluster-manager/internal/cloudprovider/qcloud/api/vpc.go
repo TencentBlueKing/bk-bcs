@@ -371,3 +371,22 @@ func (v *VpcClient) DescribeNetworkAccountTypeRequest() (string, error) {
 
 	return *resp.Response.NetworkAccountType, nil
 }
+
+// AssignIpv6SubnetCidrBlock 分配IPv6子网段到子网
+func (v *VpcClient) AssignIpv6SubnetCidrBlock(vpcId, subnetId, ipv6Cidr string) error {
+	assignReq := vpc.NewAssignIpv6SubnetCidrBlockRequest()
+	assignReq.VpcId = common.StringPtr(vpcId)
+	assignReq.Ipv6SubnetCidrBlocks = []*vpc.Ipv6SubnetCidrBlock{
+		{
+			SubnetId:      common.StringPtr(subnetId),
+			Ipv6CidrBlock: common.StringPtr(ipv6Cidr),
+		},
+	}
+
+	_, err := v.client.AssignIpv6SubnetCidrBlock(assignReq)
+	if err != nil {
+		blog.Errorf("AssignIpv6SubnetCidrBlock failed, err: %s", err.Error())
+		return err
+	}
+	return nil
+}

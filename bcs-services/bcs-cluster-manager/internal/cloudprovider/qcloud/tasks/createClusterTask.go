@@ -199,6 +199,7 @@ func generateClusterAdvancedInfo(cluster *proto.Cluster) *api.ClusterAdvancedSet
 		NetworkType:        cluster.ClusterAdvanceSettings.NetworkType,
 		DeletionProtection: cluster.ClusterAdvanceSettings.DeletionProtection,
 		AuditEnabled:       cluster.ClusterAdvanceSettings.AuditEnabled,
+		IsDualStack:        cluster.ClusterAdvanceSettings.IsDualStack,
 	}
 
 	// extraArgs

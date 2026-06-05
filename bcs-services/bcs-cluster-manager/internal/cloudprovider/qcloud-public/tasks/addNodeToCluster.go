@@ -239,6 +239,12 @@ func CheckAddNodesStatusTask(taskID string, stepName string) error {
 	}
 	state.Task.CommonParams[cloudprovider.SuccessClusterNodeIDsKey.String()] = strings.Join(addSuccessNodes, ",")
 
+	// save node ipv6
+	successNodeIPv6s := cloudprovider.GetInstanceIPv6sByID(ctx, addSuccessNodes)
+	if len(successNodeIPv6s) > 0 {
+		state.Task.CommonParams[cloudprovider.NodeIPv6sKey.String()] = strings.Join(successNodeIPv6s, ",")
+	}
+
 	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
 		"check added nodes status successful")
 

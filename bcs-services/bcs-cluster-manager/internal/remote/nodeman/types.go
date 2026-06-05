@@ -126,6 +126,8 @@ type JobInstallHost struct {
 	OSType             OSType   `json:"os_type"`
 	InnerIP            string   `json:"inner_ip"`
 	OuterIP            string   `json:"outer_ip"`
+	InnerIPv6          string   `json:"inner_ipv6"`
+	OuterIPv6          string   `json:"outer_ipv6"`
 	LoginIP            string   `json:"login_ip"`
 	DataIP             string   `json:"data_ip"`
 	Account            string   `json:"account"`

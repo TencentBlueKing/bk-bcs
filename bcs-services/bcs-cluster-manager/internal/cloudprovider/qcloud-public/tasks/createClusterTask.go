@@ -62,7 +62,8 @@ func generateClusterCIDRInfo(ctx context.Context,
 		if len(info.Cluster.GetNetworkSettings().GetSubnetSource().GetNew()) > 0 {
 			// 各个可用区自动分配指定数量的子网
 			ids, err := business.AllocateClusterVpcCniSubnets(ctx, info.Cluster.ClusterID, info.Cluster.VpcID,
-				info.Cluster.GetNetworkSettings().GetSubnetSource().GetNew(), info.CmOption)
+				info.Cluster.GetNetworkSettings().GetSubnetSource().GetNew(), info.CmOption,
+				info.Cluster.GetClusterAdvanceSettings().GetIsDualStack())
 			if err != nil {
 				return nil, err
 			}
@@ -151,6 +152,7 @@ func generateClusterAdvancedInfo(cluster *proto.Cluster) *api.ClusterAdvancedSet
 		RuntimeVersion:     cluster.ClusterAdvanceSettings.RuntimeVersion,
 		DeletionProtection: cluster.ClusterAdvanceSettings.DeletionProtection,
 		AuditEnabled:       cluster.ClusterAdvanceSettings.AuditEnabled,
+		IsDualStack:        cluster.ClusterAdvanceSettings.IsDualStack,
 	}
 
 	// cluster control component extraArgs
@@ -449,6 +451,12 @@ func generateNewRunInstance(info *cloudprovider.CloudDependBasicInfo, role strin
 				return common.StringPtr(info.Cluster.GetVpcID())
 			}(),
 			SubnetId: common.StringPtr(templates[i].SubnetID),
+			Ipv6AddressCount: func() *uint64 {
+				if info.Cluster.GetClusterAdvanceSettings().GetIsDualStack() {
+					return common.Uint64Ptr(1)
+				}
+				return nil
+			}(),
 		}
 
 		// 公网带宽相关信息设置
@@ -1094,6 +1102,8 @@ func CheckCreateClusterNodeStatusTask(taskID string, stepName string) error { //
 		strings.Join(business.GetInstanceIPs(addSuccessNodes), ",")
 	state.Task.CommonParams[cloudprovider.DynamicNodeIPListKey.String()] =
 		strings.Join(business.GetInstanceIPs(addSuccessNodes), ",")
+	state.Task.CommonParams[cloudprovider.NodeIPv6sKey.String()] =
+		strings.Join(cloudprovider.GetInstanceIPv6sByID(ctx, business.GetInstanceIDs(addSuccessNodes)), ",")
 
 	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
 		"check cluster instance status successful")
