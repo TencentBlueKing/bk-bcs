@@ -141,26 +141,11 @@
           </template>
         </PopoverSelector>
         <!-- 用户设置 -->
-        <PopoverSelector class="ml-[4px]">
-          <span class="flex items-center text-[#96A2B9] hover:text-[#d3d9e4]">
-            <bk-user-display-name class="text-[14px]" :user-id="user.username"></bk-user-display-name>
-            <i class="ml-[4px] text-[12px] bk-icon icon-down-shape"></i>
-          </span>
-          <template #content>
-            <ul>
-              <li class="bcs-dropdown-item" @click="handleGotoUserCenter">{{ $t('blueking.userCenter') }}</li>
-              <li
-                :class="[
-                  'bcs-dropdown-item',
-                  !curProject.projectID ? 'cursor-not-allowed text-[#999] hover:!text-[#999]' : ''
-                ]"
-                @click="handleGotoUserToken">
-                {{ $t('blueking.apiToken') }}
-              </li>
-              <li class="bcs-dropdown-item" @click="handleLogout">{{ $t('blueking.signOut') }}</li>
-            </ul>
-          </template>
-        </PopoverSelector>
+        <BkLoginUserinfo
+          :userinfo="userinfo"
+          :render-slot="renderSlot"
+          :action-list="actionList"
+        />
       </template>
       <!-- 左侧菜单 -->
       <template #menu>
@@ -186,10 +171,13 @@
 <script lang="ts">
 import { computed, defineComponent, onBeforeUnmount, onMounted, reactive, ref, toRef, watch } from 'vue';
 
+import BkLoginUserinfo from '@blueking/login-userinfo/vue2/index.umd.min';
+
 import PopoverSelector from '../../components/popover-selector.vue';
 
 import useMenu, { IMenu } from './use-menu';
 
+import '@blueking/login-userinfo/vue2/vue2.css';
 import { releaseNote } from '@/api/modules/project';
 import { setCookie } from '@/common/util';
 import AiAssistantBtn from '@/components/assistant/ai-assistant-btn.vue';
@@ -212,6 +200,7 @@ export default defineComponent({
     ProjectSelector,
     PopoverSelector,
     AiAssistantBtn,
+    BkLoginUserinfo,
   },
   setup() {
     const { init } = useCalcHeight([
@@ -256,6 +245,13 @@ export default defineComponent({
     const showSystemLog = ref(false);
     const showFeatures = ref(false);
     const user = computed(() => $store.state.user);
+    const userinfo = computed(() => ({
+      name: user.value.username,
+      organization: user.value.tenant_id,
+      timezone: user.value.time_zone,
+    }));
+    const renderSlot = (h: any) => h('bk-user-display-name', { 'user-id': user.value.username });
+
     const curProject = computed(() => $store.state.curProject);
     // 当前一级导航
     const activeNav = computed(() => $store.state.curNav?.root || {});
@@ -432,6 +428,28 @@ export default defineComponent({
       window.open(window.BCS_CONFIG.backToLegacyButtonUrl);
     };
 
+    const actionList = computed(() => [
+      {
+        text: $i18n.t('blueking.userCenter'),
+        icon: 'bcs-icon bcs-icon-user',
+        theme: 'primary' as const,
+        handle: handleGotoUserCenter,
+      },
+      {
+        text: $i18n.t('blueking.apiToken'),
+        icon: 'bcs-icon bcs-icon-authority',
+        theme: 'primary' as const,
+        hidden: !curProject.value.projectID,
+        handle: handleGotoUserToken,
+      },
+      {
+        text: $i18n.t('blueking.signOut'),
+        icon: 'bcs-icon bcs-icon-export',
+        theme: 'danger' as const,
+        handle: handleLogout,
+      },
+    ].filter(item => !item.hidden));
+
     watch(route, () => {
       if (!route.value.name) return;
 
@@ -478,6 +496,9 @@ export default defineComponent({
       user,
       showPreVersionBtn,
       flagsMap,
+      userinfo,
+      actionList,
+      renderSlot,
       handleGoHome,
       handleChangeLang,
       handleGotoHelp,
@@ -520,5 +541,24 @@ export default defineComponent({
 }
 >>> .container-content {
   padding: 0!important;
+}
+
+:deep(.bk-login-userinfo) {
+  font-size: 14px;
+  color: #96A2B9;
+  &:hover {
+    color: #3A84FF;
+  }
+
+  .bk-login-userinfo-payload-item {
+    font-size: 14px;
+  }
+
+  .bk-login-userinfo-panel {
+    z-index: 9999;
+    position: fixed !important;
+    top: 52px !important;
+    right: 10px !important;
+  }
 }
 </style>
