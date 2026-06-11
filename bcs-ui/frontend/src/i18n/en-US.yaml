@@ -3683,6 +3683,7 @@ tke:
     publicKey: Public key
     secretKey: Secret key
     ipNum: IPs
+    ipNum1: IPs (Remaining/Total)
     zone: Zone
     staticIpMode: Static ip mode
     enableStaticIpMode: Enable static ip mode

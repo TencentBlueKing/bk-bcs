@@ -2976,7 +2976,8 @@ tke:
     privateImage: 私有镜像
     bcsImage: 平台镜像
     clusterImage: 集群镜像
-    ipNum: IP数量
+    ipNum: IP 数量
+    ipNum1: IP 数量（剩余/总数）
     zone: 可用区
     staticIpMode: 固定 Pod IP
     enableStaticIpMode: 开启支持

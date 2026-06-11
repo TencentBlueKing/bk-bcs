@@ -21,7 +21,7 @@
         <bk-table-column :label="$t('tke.label.subnetID')" prop="subnetID"></bk-table-column>
         <bk-table-column :label="$t('tke.label.subnetName')" prop="subnetName"></bk-table-column>
         <bk-table-column label="CIDR" prop="cidrRange"></bk-table-column>
-        <bk-table-column :label="$t('tke.label.ipNum')" prop="counts">
+        <bk-table-column :label="$t('tke.label.ipNum1')" prop="counts">
           <template #default="{ row }">
             <span>{{ getIpNumber(row) }}</span>
           </template>
