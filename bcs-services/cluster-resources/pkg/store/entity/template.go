@@ -50,6 +50,7 @@ func (t *Template) ToMap() map[string]interface{} {
 	m := make(map[string]interface{}, 0)
 	m["id"] = t.ID.Hex()
 	m["name"] = filepath.Join(t.TemplateSpace, t.Name)
+	m["realName"] = t.Name
 	m["projectCode"] = t.ProjectCode
 	m["description"] = t.Description
 	m["templateSpace"] = t.TemplateSpace
