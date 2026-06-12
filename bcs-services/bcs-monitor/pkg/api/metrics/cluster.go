@@ -161,3 +161,37 @@ func ClusterDiskioUsage(c context.Context, req *query.UsageQuery) (*promclient.R
 	}
 	return handler.ClusterDiskioUsage(rctx, req)
 }
+
+// ClusterCPURequestWithInitUsage 集群含 InitContainer 的 CPU 装箱率
+// @Summary 集群含 InitContainer 的 CPU 装箱率
+// @Tags    Metrics
+// @Success 200 {string} string
+// @Router  /cpu_request_with_init_usage [get]
+func ClusterCPURequestWithInitUsage(c context.Context, req *query.UsageQuery) (*promclient.ResultData, error) {
+	rctx, err := rest.GetRestContext(c)
+	if err != nil {
+		return nil, err
+	}
+	handler, err := query.HandlerFactory(c, rctx.ClusterId)
+	if err != nil {
+		return nil, err
+	}
+	return handler.ClusterCPURequestWithInitUsage(rctx, req)
+}
+
+// ClusterMemoryRequestWithInitUsage 集群含 InitContainer 的内存装箱率
+// @Summary 集群含 InitContainer 的内存装箱率
+// @Tags    Metrics
+// @Success 200 {string} string
+// @Router  /memory_request_with_init_usage [get]
+func ClusterMemoryRequestWithInitUsage(c context.Context, req *query.UsageQuery) (*promclient.ResultData, error) {
+	rctx, err := rest.GetRestContext(c)
+	if err != nil {
+		return nil, err
+	}
+	handler, err := query.HandlerFactory(c, rctx.ClusterId)
+	if err != nil {
+		return nil, err
+	}
+	return handler.ClusterMemoryRequestWithInitUsage(rctx, req)
+}

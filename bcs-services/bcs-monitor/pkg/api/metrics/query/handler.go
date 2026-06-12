@@ -37,6 +37,8 @@ type Handler interface {
 	ClusterMemoryRequestUsage(c *rest.Context, query *UsageQuery) (*promclient.ResultData, error)
 	ClusterDiskUsage(c *rest.Context, query *UsageQuery) (*promclient.ResultData, error)
 	ClusterDiskioUsage(c *rest.Context, query *UsageQuery) (*promclient.ResultData, error)
+	ClusterCPURequestWithInitUsage(c *rest.Context, query *UsageQuery) (*promclient.ResultData, error)
+	ClusterMemoryRequestWithInitUsage(c *rest.Context, query *UsageQuery) (*promclient.ResultData, error)
 }
 
 // HandlerFactory 自动切换Prometheus/蓝鲸监控
