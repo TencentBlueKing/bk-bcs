@@ -129,7 +129,7 @@ func GetFreeIPNets(opt *cloudprovider.CommonOption, vpcId string) ([]*net.IPNet,
 
 // AllocateSubnet allocate directrouter subnet
 func AllocateSubnet(opt *cloudprovider.CommonOption, vpcId, zone string,
-	mask int, clusterId, subnetName string) (*cidrtree.Subnet, error) {
+	mask int, clusterId, subnetName string, enableIPv6 bool) (*cidrtree.Subnet, error) {
 	frees, err := GetFreeIPNets(opt, vpcId)
 	if err != nil {
 		return nil, err
@@ -151,6 +151,43 @@ func AllocateSubnet(opt *cloudprovider.CommonOption, vpcId, zone string,
 	ret, err := vpcCli.CreateSubnet(vpcId, subnetName, zone, sub)
 	if err != nil {
 		return nil, err
+	}
+
+	if enableIPv6 {
+		if ret == nil || ret.SubnetId == nil {
+			return nil, fmt.Errorf("CreateSubnet response subnet or subnet ID is nil")
+		}
+
+		freesIpv6, errLocal := GetFreeIpv6Nets(opt, vpcId)
+		if errLocal != nil {
+			blog.Errorf("AllocateSubnet GetFreeIpv6Nets failed, err: %s, rollback and delete subnet %s",
+				errLocal.Error(), *ret.SubnetId)
+			_ = vpcCli.DeleteSubnet(*ret.SubnetId)
+			return nil, errLocal
+		}
+
+		ipv6Cidr, errLocal := cidrtree.AllocateFromFrees(64, freesIpv6)
+		if errLocal != nil {
+			blog.Errorf("AllocateSubnet AllocateFromFrees IPv6 failed, err: %s, rollback and delete subnet %s",
+				errLocal.Error(), *ret.SubnetId)
+			_ = vpcCli.DeleteSubnet(*ret.SubnetId)
+			return nil, errLocal
+		}
+
+		blog.Infof("AllocateSubnet assign IPv6 cidr[%s] for subnet[%s]", ipv6Cidr.String(), *ret.SubnetId)
+		errLocal = vpcCli.AssignIpv6SubnetCidrBlock(vpcId, *ret.SubnetId, ipv6Cidr.String())
+		if errLocal != nil {
+			blog.Errorf("AssignIpv6SubnetCidrBlock failed, err: %s, rollback and delete subnet %s",
+				errLocal.Error(), *ret.SubnetId)
+			_ = vpcCli.DeleteSubnet(*ret.SubnetId)
+			return nil, errLocal
+		}
+
+		// Re-describe subnet to get the updated IPv6 information
+		subnets, errLocal := vpcCli.DescribeSubnets([]string{*ret.SubnetId}, nil)
+		if errLocal == nil && len(subnets) > 0 {
+			ret = subnets[0]
+		}
 	}
 
 	return subnetFromVpcSubnet(ret), err
@@ -176,7 +213,7 @@ func subnetFromVpcSubnet(info *vpc.Subnet) (n *cidrtree.Subnet) {
 
 // AllocateClusterVpcCniSubnets 集群分配所需的vpc-cni子网资源
 func AllocateClusterVpcCniSubnets(ctx context.Context, clusterId, vpcId string,
-	subnets []*proto.NewSubnet, opt *cloudprovider.CommonOption) ([]string, error) {
+	subnets []*proto.NewSubnet, opt *cloudprovider.CommonOption, isDualStack bool) ([]string, error) {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
 	subnetIDs := make([]string, 0)
@@ -197,7 +234,7 @@ func AllocateClusterVpcCniSubnets(ctx context.Context, clusterId, vpcId string,
 			mask = utils.DefaultMask
 		}
 
-		sub, err := AllocateSubnet(opt, vpcId, subnets[i].Zone, mask, clusterId, "")
+		sub, err := AllocateSubnet(opt, vpcId, subnets[i].Zone, mask, clusterId, "", isDualStack)
 		if err != nil {
 			blog.Errorf("AllocateClusterVpcCniSubnets[%s] failed: %v", taskID, err)
 			continue
@@ -659,4 +696,68 @@ func AllocateGrCidrSubnet(opt *cloudprovider.CommonOption, cloudId, vpcId string
 	}
 
 	return ret, err
+}
+
+// GetVpcIpv6Cidr 获取 VPC 的 IPv6 CIDR 段
+func GetVpcIpv6Cidr(opt *cloudprovider.CommonOption, vpcId string) (*net.IPNet, error) {
+	vpcCli, err := api.NewVPCClient(opt)
+	if err != nil {
+		return nil, err
+	}
+
+	vpcs, err := vpcCli.DescribeVpcs([]string{vpcId}, nil)
+	if err != nil {
+		return nil, fmt.Errorf("DescribeVpcs[%s] failed: %v", vpcId, err)
+	}
+	if len(vpcs) == 0 || vpcs[0].Ipv6CidrBlock == nil || *vpcs[0].Ipv6CidrBlock == "" {
+		return nil, fmt.Errorf("vpc[%s] has no IPv6 cidr block, please enable IPv6 for the VPC first", vpcId)
+	}
+
+	_, vpcNet, err := net.ParseCIDR(*vpcs[0].Ipv6CidrBlock)
+	if err != nil {
+		return nil, fmt.Errorf("parse vpc IPv6 cidr[%s] failed: %v", *vpcs[0].Ipv6CidrBlock, err)
+	}
+
+	return vpcNet, nil
+}
+
+// GetAllocatedIpv6SubnetsByVpc 获取 VPC 下已有子网分配的 IPv6 段
+func GetAllocatedIpv6SubnetsByVpc(opt *cloudprovider.CommonOption, vpcId string) ([]*net.IPNet, error) {
+	vpcCli, err := api.NewVPCClient(opt)
+	if err != nil {
+		return nil, err
+	}
+
+	usedIpv6Cidrs := make([]*net.IPNet, 0)
+	subnets, err := vpcCli.DescribeSubnets(nil, []*api.Filter{
+		{Name: "vpc-id", Values: []string{vpcId}},
+	})
+	if err != nil {
+		return nil, fmt.Errorf("DescribeSubnets for vpc[%s] failed: %v", vpcId, err)
+	}
+	for _, sub := range subnets {
+		if sub.Ipv6CidrBlock != nil && *sub.Ipv6CidrBlock != "" {
+			_, ipNet, parseErr := net.ParseCIDR(*sub.Ipv6CidrBlock)
+			if parseErr == nil {
+				usedIpv6Cidrs = append(usedIpv6Cidrs, ipNet)
+			}
+		}
+	}
+
+	return usedIpv6Cidrs, nil
+}
+
+// GetFreeIpv6Nets 获取 VPC 下空闲的 IPv6 网段列表
+func GetFreeIpv6Nets(opt *cloudprovider.CommonOption, vpcId string) ([]*net.IPNet, error) {
+	vpcNet, err := GetVpcIpv6Cidr(opt, vpcId)
+	if err != nil {
+		return nil, err
+	}
+
+	used, err := GetAllocatedIpv6SubnetsByVpc(opt, vpcId)
+	if err != nil {
+		return nil, err
+	}
+
+	return cidrtree.GetFreeIPNets([]*net.IPNet{vpcNet}, nil, used), nil
 }

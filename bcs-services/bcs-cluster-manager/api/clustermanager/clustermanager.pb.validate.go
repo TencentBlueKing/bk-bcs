@@ -1696,6 +1696,8 @@ func (m *ClusterAdvanceSetting) validate(all bool) error {
 		}
 	}
 
+	// no validation rules for IsDualStack
+
 	if len(errors) > 0 {
 		return ClusterAdvanceSettingMultiError(errors)
 	}
@@ -52631,6 +52633,8 @@ func (m *OsImage) validate(all bool) error {
 		}
 
 	}
+
+	// no validation rules for SupportIpv6
 
 	if len(errors) > 0 {
 		return OsImageMultiError(errors)

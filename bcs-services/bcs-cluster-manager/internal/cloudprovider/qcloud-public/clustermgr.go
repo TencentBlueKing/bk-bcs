@@ -760,7 +760,8 @@ func (c *Cluster) AddSubnetsToCluster(ctx context.Context, subnet *proto.SubnetS
 	}
 
 	allocateSubnets, err := business.AllocateClusterVpcCniSubnets(ctx,
-		opt.Cluster.GetClusterID(), opt.Cluster.GetVpcID(), subnet.GetNew(), &opt.CommonOption)
+		opt.Cluster.GetClusterID(), opt.Cluster.GetVpcID(), subnet.GetNew(), &opt.CommonOption,
+		opt.Cluster.GetClusterAdvanceSettings().GetIsDualStack())
 	if err != nil {
 		blog.Errorf("AddSubnetsToCluster AllocateClusterVpcCniSubnets failed: %v", err)
 		return err

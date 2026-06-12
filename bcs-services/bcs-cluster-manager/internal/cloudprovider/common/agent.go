@@ -102,6 +102,8 @@ func InstallGSEAgentTask(taskID string, stepName string) error { // nolint
 	// bkCloudIDString := step.Params[cloudprovider.BKCloudIDKey.String()]
 	// get nodeIPs
 	nodeIPs := state.Task.CommonParams[cloudprovider.NodeIPsKey.String()]
+	// get nodeIPv6s
+	nodeIPv6s := state.Task.CommonParams[cloudprovider.NodeIPv6sKey.String()]
 	// get password
 	passwd := step.Params[cloudprovider.PasswordKey.String()]
 	// get user
@@ -188,6 +190,10 @@ func InstallGSEAgentTask(taskID string, stepName string) error { // nolint
 	// install gse agent
 	hosts := make([]nodeman.JobInstallHost, 0)
 	ips := strings.Split(nodeIPs, ",")
+	var ipv6s []string
+	if len(nodeIPv6s) > 0 {
+		ipv6s = strings.Split(nodeIPv6s, ",")
+	}
 
 	// delete ips when install agent if hostIPs exist cmdb
 	err = RemoveHostFromCmdb(ctx, bkBizID, nodeIPs)
@@ -195,13 +201,18 @@ func InstallGSEAgentTask(taskID string, stepName string) error { // nolint
 		blog.Errorf("InstallGSEAgentTask %s RemoveHostFromCmdb error, %s", taskID, err.Error())
 	}
 
-	for _, v := range ips {
+	for i, v := range ips {
+		ipv6 := ""
+		if i < len(ipv6s) {
+			ipv6 = ipv6s[i]
+		}
 		hosts = append(hosts, nodeman.JobInstallHost{
 			BKCloudID: bkCloudID,
 			APID:      apID,
 			BKBizID:   bkBizID,
 			OSType:    nodeman.LinuxOSType,
 			InnerIP:   v,
+			InnerIPv6: ipv6,
 			LoginIP:   v,
 			Account:   user,
 			Port: func() int {
@@ -260,6 +271,8 @@ func InstallGSEAgentTask(taskID string, stepName string) error { // nolint
 			ForceUpdateAgentId: true,
 		})
 	}
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		fmt.Sprintf("install gse agent for biz %d, ipv4: %s, ipv6: %s", bkBizID, nodeIPs, nodeIPv6s))
 	job, err := nodeManClient.JobInstall(nodeman.InstallAgentJob, hosts)
 	if err != nil {
 		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,

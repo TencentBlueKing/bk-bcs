@@ -135,6 +135,19 @@ func (la *ListCloudOsImageAction) listCloudImageOs() error {
 	}
 	barrier.Wait()
 
+	// check image support ipv6
+	if la.cloud.GetOsManagement() != nil && len(la.cloud.GetOsManagement().GetIpv6ImageID()) > 0 {
+		ipv6Images := make(map[string]struct{})
+		for _, id := range la.cloud.GetOsManagement().GetIpv6ImageID() {
+			ipv6Images[id] = struct{}{}
+		}
+		for _, img := range imageOsList {
+			if _, ok := ipv6Images[img.ImageID]; ok {
+				img.SupportIpv6 = true
+			}
+		}
+	}
+
 	la.OsImageList = imageOsList
 	return nil
 }
