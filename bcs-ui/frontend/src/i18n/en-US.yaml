@@ -2957,10 +2957,9 @@ dashboard:
         joint characters (-), and even characters (-) must be connected in
         English or numbers later
       sharedClusterNs: 'Name rule: {prefix}Custom Name'
-      setMinMaxMemCpu: >-
-        Please set CPU and MEM quotas, and the minimum value must be greater
-        than 0.
-      setValidQuota: Please set valid CPU and Memory quotas (Limit >= Request >= 0 / 1 for shared cluster)
+      setValidQuota: >-
+        Please set valid CPU and Memory quotas (Limit >= Request >= 0 / 1 for
+        shared cluster)
     status:
       waitingApproval: Pending
       createNamespace: Create naming space

@@ -1,11 +1,14 @@
 <template>
   <BcsContent :title="$t('projects.project.info')" hide-back>
     <bk-form class="project-info">
-      <bk-form-item :label="$t('projects.project.name')">
-        <span class="text-[#313238] text-[12px]">{{ curProject.name }}</span>
+      <bk-form-item :label="$t('projects.project.name')" desc="Project Name">
+        <span class="text-[#313238] text-[12px] select-all">{{ curProject.name }}</span>
       </bk-form-item>
-      <bk-form-item class="!mt-[0px]" :label="$t('projects.project.engName')">
-        <span class="text-[#313238] text-[12px]">{{ curProject.projectCode }}</span>
+      <bk-form-item class="!mt-[0px]" :label="$t('projects.project.engName')" desc="Project Code">
+        <span class="text-[#313238] text-[12px] select-all">{{ curProject.projectCode }}</span>
+      </bk-form-item>
+      <bk-form-item class="!mt-[0px]" :label="$t('projects.project.ID')" desc="Project ID">
+        <span class="text-[#313238] text-[12px] select-all">{{ curProject.projectID }}</span>
       </bk-form-item>
       <bk-form-item class="!mt-[0px]" :label="$t('projects.project.intro')">
         <span class="text-[#313238] text-[12px]">{{ curProject.description || '--' }}</span>
