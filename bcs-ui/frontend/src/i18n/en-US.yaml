@@ -3122,6 +3122,7 @@ apiToken:
       You have no current operating permissions, please continue to operate
       after creating a new API Token
     renewOK: Renewal
+    tokenExpired: Your Token has expired, please go to {0} to renew it
 logCollector:
   text: Log Collection
   tips:

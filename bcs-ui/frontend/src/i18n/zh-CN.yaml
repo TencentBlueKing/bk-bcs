@@ -2506,6 +2506,7 @@ apiToken:
   msg:
     emptyDataTips: 您暂无当前操作权限，请新建API密钥后继续操作
     renewOK: 续期成功
+    tokenExpired: 您的 Token 已过期，请前往 {0} 续期
 logCollector:
   text: 日志采集
   tips:

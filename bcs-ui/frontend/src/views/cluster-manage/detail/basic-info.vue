@@ -227,6 +227,14 @@
         quick-close
         title="KubeConfig"
         width="800">
+        <template #header>
+          <div class="flex justify-between items-center">
+            <span>KubeConfig</span>
+            <i18n v-if="isTokenExpired" class="text-[12px] text-[red] ml-[4px]" path="apiToken.msg.tokenExpired">
+              <a :href="tokenLink" target="_blank" class="text-[#3a84ff]">{{ $t('blueking.apiToken') }}</a>
+            </i18n>
+          </div>
+        </template>
         <template #content>
           <div v-bkloading="{ isLoading: tokenLoading }" class="h-[calc(100vh-52px)] overflow-auto">
             <!-- 工具栏 -->
@@ -463,6 +471,7 @@ export default defineComponent({
       });
     });
 
+    const isTokenExpired = ref(false);
     const handleGotoToken = async () => {
       tokenLoading.value = true;
       try {
@@ -470,6 +479,7 @@ export default defineComponent({
           $username: user.value.username,
         });
         userToken.value = tokenList?.[0]?.token || '';
+        isTokenExpired.value = tokenList?.[0]?.status !== 1;
         if (!userToken.value) {
           handleGoCreateToken();
         } else {
@@ -482,9 +492,9 @@ export default defineComponent({
       }
     };
 
+    const tokenLink = computed(() => $router.resolve({ name: 'token' }).href);
     const handleGoCreateToken = () => {
-      const { href } = $router.resolve({ name: 'token' });
-      window.open(href);
+      window.open(tokenLink.value, '_blank');
     };
 
     const handleCopyKubeConfig = () => {
@@ -570,7 +580,9 @@ export default defineComponent({
       handleGotoToken,
       showKubeConfigSlider,
       tokenLoading,
+      isTokenExpired,
       kubeConfigContent,
+      tokenLink,
       handleGoCreateToken,
       handleCopyKubeConfig,
       setChanged,
