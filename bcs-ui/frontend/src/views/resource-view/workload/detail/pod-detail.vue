@@ -607,7 +607,7 @@ export default defineComponent({
 
     // 容器操作
     // 1. 跳转WebConsole
-    const { projectCode } = useProject();
+    const { projectCode, projectID } = useProject();
     const terminalWins = new Map();
     const handleShowTerminal = (row) => {
       const url = `${window.BCS_API_HOST}/bcsapi/v4/webconsole/projects/${projectCode.value}/clusters/${clusterId.value}/?namespace=${props.namespace}&pod_name=${props.name}&container_name=${row.name}`;
@@ -627,7 +627,7 @@ export default defineComponent({
 
     // 3. weterm
     function resolveLink(type: 'login' | 'debug', container: string) {
-      window.open(`weterm://session/open/bcs?ns=${props.namespace}&pod=${metadata.value.name}&container=${container}&type=${type}&clusterId=${clusterId.value}&envId=${window.BCS_CONFIG.bkBcsEnvID}`);
+      window.open(`weterm://session/open/bcs?ns=${props.namespace}&pod=${metadata.value.name}&container=${container}&type=${type}&clusterId=${clusterId.value}&envId=${window.BCS_CONFIG.bkBcsEnvID}&projectID=${projectID.value}&projectCode=${projectCode.value}`);
     }
     // 文件日志检索禁用逻辑
     const isFileLogDisabled = ref(false);
