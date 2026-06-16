@@ -198,8 +198,8 @@ func (cli *CceClient) CreateKubernetesClusterCert(clsId string, duration int32) 
 	request := &model.CreateKubernetesClusterCertRequest{
 		ClusterId: clsId,
 	}
-	request.Body = &model.CertDuration{
-		Duration: duration,
+	request.Body = &model.ClusterCertDuration{
+		Duration: &duration,
 	}
 
 	response, err := cli.cce.CreateKubernetesClusterCert(request)
