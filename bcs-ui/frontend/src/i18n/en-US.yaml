@@ -2702,6 +2702,8 @@ deploy:
     importError:
       invalidJSON: Invalid JSON format, please check the file content
       failed: File import failed, please check the file format
+    validate:
+      descTooLong: 'Variable "{name}": Description exceeds 255 characters (current: {length})'
     namespace: Naming space
     globalEnv: Global
     namespaceEnv: Namespace
