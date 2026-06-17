@@ -2700,8 +2700,8 @@ deploy:
       The vars of the namespace variable need to contain the cluster ID
       cluster_id, the namespace name namespace and the variable value
     importError:
-      invalidJSON: 'File import failed: Invalid JSON format, please check the file content'
-      failed: 'File import failed, please check the file format and content'
+      invalidJSON: Invalid JSON format, please check the file content
+      failed: File import failed, please check the file format
     namespace: Naming space
     globalEnv: Global
     namespaceEnv: Namespace
