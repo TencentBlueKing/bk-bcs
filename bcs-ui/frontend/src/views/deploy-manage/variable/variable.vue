@@ -378,6 +378,13 @@ export default defineComponent({
           }
         } catch (error) {
           console.error(error);
+          const errorMsg = error instanceof SyntaxError
+            ? $i18n.t('deploy.variable.importError.invalidJSON')
+            : error?.message || $i18n.t('deploy.variable.importError.failed');
+          $bkMessage({
+            theme: 'error',
+            message: errorMsg,
+          });
         }
         fileLoading.value = false;
       };
