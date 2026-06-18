@@ -25,14 +25,15 @@ import (
 
 // Project 项目信息
 type Project struct {
-	Name          string `json:"name"`
-	ProjectId     string `json:"projectID"`
-	TenantId      string `json:"tenantID"`
-	Code          string `json:"projectCode"`
-	CcBizID       string `json:"businessID"`
-	Creator       string `json:"creator"`
-	Kind          string `json:"kind"`
-	RawCreateTime string `json:"createTime"`
+	Name              string `json:"name"`
+	ProjectId         string `json:"projectID"`
+	TenantId          string `json:"tenantID"`
+	TenantProjectCode string `json:"tenantProjectCode"`
+	Code              string `json:"projectCode"`
+	CcBizID           string `json:"businessID"`
+	Creator           string `json:"creator"`
+	Kind              string `json:"kind"`
+	RawCreateTime     string `json:"createTime"`
 }
 
 // String :

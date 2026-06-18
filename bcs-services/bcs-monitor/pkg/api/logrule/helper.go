@@ -172,7 +172,7 @@ func (req *CreateLogRuleReq) toBKLog(c *rest.Context) *bklog.CreateBCSCollectorR
 	req.Rule.LogRuleContainer.LabelSelector = bklog.LabelSelector{
 		MatchLabels: matchLabels, MatchExpressions: matchExpressions}
 	return &bklog.CreateBCSCollectorReq{
-		SpaceUID:              GetSpaceID(c.ProjectCode),
+		SpaceUID:              GetSpaceID(c.TenantProjectCode),
 		ProjectID:             c.ProjectId,
 		CollectorConfigName:   req.DisplayName,
 		CollectorConfigNameEN: req.RuleName,
@@ -228,7 +228,7 @@ func (req *UpdateLogRuleReq) toBKLog(c *rest.Context, ruleName string) *bklog.Up
 	req.Rule.LogRuleContainer.LabelSelector = bklog.LabelSelector{
 		MatchLabels: matchLabels, MatchExpressions: matchExpressions}
 	return &bklog.UpdateBCSCollectorReq{
-		SpaceUID:              GetSpaceID(c.ProjectCode),
+		SpaceUID:              GetSpaceID(c.TenantProjectCode),
 		ProjectID:             c.ProjectId,
 		CollectorConfigName:   req.DisplayName,
 		CollectorConfigNameEN: ruleName,
