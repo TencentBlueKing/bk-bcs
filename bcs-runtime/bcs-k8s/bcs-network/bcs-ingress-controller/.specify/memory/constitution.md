@@ -115,7 +115,7 @@ bcs-ingress-controller 作为网络基础设施的关键组件，
 - 代码变更 MUST 提交 PR/MR，禁止直接推送到主分支
 - PR/MR MUST 至少经过 1 位 Reviewer 审核通过后方可合并
 - CI 流水线 MUST 包含：编译检查、lint 检查、单元测试、敏感信息扫描
-- Commit message MUST 遵循 BCS 项目的提交规范（参见 BCSDev iWiki 代码提交规范）
+- Commit message MUST 遵循 BCS 项目的提交规范
 - 提交前 MUST 确保无敏感信息（IP、密码、密钥等）泄漏
 - 重大架构变更 MUST 先编写设计文档，经团队讨论后再实施
 - CRD 字段变更 MUST 保持向后兼容，废弃字段使用 `deprecated` 注释标记

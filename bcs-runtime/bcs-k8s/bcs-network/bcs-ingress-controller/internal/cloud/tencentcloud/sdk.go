@@ -46,6 +46,8 @@ const (
 
 	// EnvNameTencentCloudClbDomain env name of tencent cloud clb domain
 	EnvNameTencentCloudClbDomain = "TENCENTCLOUD_CLB_DOMAIN"
+	// EnvNameTencentCloudSslDomain env name of tencent cloud ssl domain
+	EnvNameTencentCloudSslDomain = "TENCENTCLOUD_SSL_DOMAIN"
 	// EnvNameTencentCloudRegion env name of tencent cloud region
 	EnvNameTencentCloudRegion = "TENCENTCLOUD_REGION"
 	// EnvNameTencentCloudAccessKeyID env name of tencent cloud access key id
@@ -118,7 +120,7 @@ func NewSdkWrapper() (*SdkWrapper, error) {
 	sw.credential = credential
 	sw.cpf = cpf
 
-	sw.throttler = throttle.NewTokenBucket(sw.ratelimitqps, sw.ratelimitbucketSize)
+	sw.throttler = GetSharedRateLimiter()
 	sw.bcsClusterID = os.Getenv(constant.EnvNameBkBCSClusterID)
 	sw.listenerNameValidateMode = os.Getenv(constant.EnvNameListenerNameValidateMode)
 	return sw, nil
@@ -146,7 +148,7 @@ func NewSdkWrapperWithSecretIDKey(id, key string) (*SdkWrapper, error) {
 	sw.credential = credential
 	sw.cpf = cpf
 
-	sw.throttler = throttle.NewTokenBucket(sw.ratelimitqps, sw.ratelimitbucketSize)
+	sw.throttler = GetSharedRateLimiter()
 	sw.bcsClusterID = os.Getenv(constant.EnvNameBkBCSClusterID)
 	sw.listenerNameValidateMode = os.Getenv(constant.EnvNameListenerNameValidateMode)
 	return sw, nil
@@ -175,7 +177,7 @@ func NewSdkWrapperWithParams(id, key, domain string) (*SdkWrapper, error) {
 	sw.credential = credential
 	sw.cpf = cpf
 
-	sw.throttler = throttle.NewTokenBucket(sw.ratelimitqps, sw.ratelimitbucketSize)
+	sw.throttler = GetSharedRateLimiter()
 	sw.bcsClusterID = os.Getenv(constant.EnvNameBkBCSClusterID)
 	sw.listenerNameValidateMode = os.Getenv(constant.EnvNameListenerNameValidateMode)
 	return sw, nil

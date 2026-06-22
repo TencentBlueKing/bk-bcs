@@ -3,7 +3,7 @@
 **Feature Branch**: `001-hostnet-port-allocation`  
 **Created**: 2026-03-16  
 **Status**: Draft  
-**Input**: 基于 iWiki 技术方案和已完成的 HostNetPortPool CRD 类型定义，实现 Pod 使用 hostNetwork 网络模式时，IngressController 的动态端口分配逻辑。
+**Input**: 基于技术方案和已完成的 HostNetPortPool CRD 类型定义，实现 Pod 使用 hostNetwork 网络模式时，IngressController 的动态端口分配逻辑。
 
 ## Clarifications
 

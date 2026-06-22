@@ -67,7 +67,7 @@ func NewAPIWrapper() (*APIWrapper, error) {
 	clbAPI := qcloud.NewAPI(clbClient, nil)
 	a.apiCli = clbAPI
 	// set api call rate limit
-	a.throttler = throttle.NewTokenBucket(int64(defaultThrottleQPS), int64(defaultBucketSize))
+	a.throttler = GetSharedRateLimiter()
 
 	return a, nil
 }
@@ -90,7 +90,7 @@ func NewAPIWrapperWithSecretIDKey(id, key string) (*APIWrapper, error) {
 	clbAPI := qcloud.NewAPI(clbClient, nil)
 	a.apiCli = clbAPI
 	// set api call rate limit
-	a.throttler = throttle.NewTokenBucket(int64(defaultThrottleQPS), int64(defaultBucketSize))
+	a.throttler = GetSharedRateLimiter()
 
 	return a, nil
 }
