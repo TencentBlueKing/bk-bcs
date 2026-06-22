@@ -165,7 +165,7 @@ export function useAppData() {
   const flagsMap = computed(() => $store.state.featureFlags);
   const defaultFlags = {
     CLOUDTOKEN: false,
-    PROJECT_LIST: false,
+    PROJECT_LIST: true,
     AZURECLOUD: true,
     IMPORTSOPSCLUSTER: true,
     PLATFORMMANAGE: false, // 平台管理默认不开启
