@@ -41,7 +41,7 @@ func CreateProjectQuota(ctx context.Context, req *types.CreateProjectQuotaReq) (
 // @Produce json
 // @Success 200 {struct} types.ProjectQuota
 // @Router  /quota/{quotaID} [get]
-func GetProjectQuota(ctx context.Context, req *types.GetProjectQuotaReq) (*types.ProjectQuota, error) {
+func GetProjectQuota(ctx context.Context, req *types.GetProjectQuotaReq) (*types.GetProjectQuotaData, error) {
 	result, err := actions.NewQuotaAction().GetProjectQuota(ctx, req.QuotaId)
 	if err != nil {
 		return nil, err
