@@ -31,7 +31,6 @@ import (
 	"time"
 
 	bkcmdbkube "configcenter/src/kube/types" // nolint
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	cmp "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -50,6 +49,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/store/db/sqlite"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/syncer"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/tenant"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/tenant/tenantutils"
 	pmp "github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/types"
 )
 
@@ -439,20 +439,44 @@ func (s *Synchronizer) startSyncStorage(cluster *cmp.Cluster) {
 // getWorkList get work list for podIndex
 func (s *Synchronizer) getWorkList(podIndex int, whiteList, blackList []string) (ClusterList, map[string]*cmp.Cluster,
 	ClusterList, error) {
-	cmCli, err := s.getClusterManagerGrpcGwClient()
-	if err != nil {
-		blog.Errorf("get cluster manager grpc gw client failed, err: %s", err.Error())
-		return nil, nil, nil, err
-	}
-
+	// 集群列表
+	clusters := make([]*cmp.Cluster, 0)
+	cmClis := make([]*client.ClusterManagerClientWithHeader, 0)
 	lcReq := cmp.ListClusterReq{}
-	resp, err := cmCli.Cli.ListCluster(cmCli.Ctx, &lcReq)
-	if err != nil {
-		blog.Errorf("list cluster failed, err: %s", err.Error())
-		return nil, nil, nil, err
+	if s.BkcmdbSynchronizerOption.Synchronizer.EnableMultiTenantMode {
+		tenantCmClis, err := s.getTenantClusterManagerGrpcGwClient()
+		if err != nil {
+			blog.Errorf("get cluster manager grpc gw client failed, err: %s", err.Error())
+			return nil, nil, nil, err
+		}
+		for _, cmCli := range tenantCmClis {
+			resp, err := cmCli.Cli.ListCluster(cmCli.Ctx, &lcReq)
+			if err != nil {
+				blog.Errorf("list cluster failed tenantID: %s, err: %s",
+					tenantutils.GetTenantIdFromContext(cmCli.Ctx), err.Error())
+				return nil, nil, nil, err
+			}
+			clusters = common.FilterListerCluster(clusters, resp.Data)
+			cmClis = append(cmClis, cmCli)
+		}
+	} else {
+		cmCli, err := s.getClusterManagerGrpcGwClient()
+		if err != nil {
+			blog.Errorf("get cluster manager grpc gw client failed, err: %s", err.Error())
+			return nil, nil, nil, err
+		}
+
+		lcReq := cmp.ListClusterReq{}
+		resp, err := cmCli.Cli.ListCluster(cmCli.Ctx, &lcReq)
+		if err != nil {
+			blog.Errorf("list cluster failed, err: %s", err.Error())
+			return nil, nil, nil, err
+		}
+		clusters = resp.Data
+		cmClis = append(cmClis, cmCli)
 	}
 
-	clusters := resp.Data
+	blog.Infof("start sync at %s", time.Now().Format("2006-01-02 15:04:05"))
 
 	clusterMap := make(map[string]*cmp.Cluster)
 	var clusterList ClusterList
@@ -853,6 +877,10 @@ func (s *Synchronizer) sync(done <-chan bool, cluster *cmp.Cluster) {
 }
 func (s *Synchronizer) getClusterManagerGrpcGwClient() (cmCli *client.ClusterManagerClientWithHeader, err error) {
 	return cm.GetClusterManagerGrpcGwClient()
+}
+
+func (s *Synchronizer) getTenantClusterManagerGrpcGwClient() (cmCli []*client.ClusterManagerClientWithHeader, err error) {
+	return cm.GetTenantClusterManagerGrpcGwClient()
 }
 
 // cleanupOrphanedClustersInCMDB 清理CMDB中孤立的集群数据

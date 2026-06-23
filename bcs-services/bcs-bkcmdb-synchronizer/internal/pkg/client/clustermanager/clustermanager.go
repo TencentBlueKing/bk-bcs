@@ -32,8 +32,10 @@ import (
 	"google.golang.org/grpc/metadata"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/client"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/client/bkuser"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/discovery"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/option"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/tenant/tenantutils"
 	pmp "github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/types"
 )
 
@@ -49,11 +51,12 @@ var (
 
 // Options for init clusterManager
 type Options struct {
-	Module          string
-	Address         string
-	EtcdRegistry    registry.Registry
-	ClientTLSConfig *tls.Config
-	AuthToken       string
+	Module                string
+	Address               string
+	EtcdRegistry          registry.Registry
+	ClientTLSConfig       *tls.Config
+	AuthToken             string
+	EnableMultiTenantMode bool
 }
 
 func (o *Options) validate() bool {
@@ -273,6 +276,9 @@ func (cm *clusterManagerClient) NewCMGrpcClientWithHeader(ctx context.Context,
 	if len(cm.opts.AuthToken) != 0 {
 		header["Authorization"] = fmt.Sprintf("Bearer %s", cm.opts.AuthToken)
 	}
+	if cm.opts.EnableMultiTenantMode {
+		header["X-Bk-Tenant-Id"] = tenantutils.GetTenantIdFromContext(ctx)
+	}
 	md := metadata.New(header)
 	return &client.ClusterManagerClientWithHeader{
 		Ctx: metadata.NewOutgoingContext(ctx, md),
@@ -346,6 +352,43 @@ func NewClusterManagerGrpcGwClient(opts *Options) (cmCli *client.ClusterManagerC
 	return cmCli, nil
 }
 
+// NewTenantClusterManagerGrpcGwClient return cluster manager grpc gateway client in tenant mode
+func NewTenantClusterManagerGrpcGwClient(opts *Options) (cmClis []*client.ClusterManagerClientWithHeader, err error) {
+	cli := NewClusterManagerClient(opts)
+	if cli == nil {
+		return nil, fmt.Errorf("init cluster manager client failed")
+	}
+	cmConn, err := cli.GetClusterManagerConn()
+	if err != nil || cmConn == nil {
+		return nil, fmt.Errorf("get cluster manager conn failed, err %s", err.Error())
+	}
+
+	cmClis = make([]*client.ClusterManagerClientWithHeader, 0)
+	if opts.EnableMultiTenantMode {
+		tenants, errT := bkuser.GetBkUserClient().ListTenant(context.Background())
+		if errT != nil {
+			blog.Errorf("ListTenant error, %s", errT.Error())
+			return nil, fmt.Errorf("ListTenant error, %s", errT.Error())
+		}
+
+		for _, tenant := range tenants {
+			ctx := context.Background()
+			ctx = tenantutils.WithTenantIdFromContext(ctx, tenant.ID)
+			cmCli := cli.NewCMGrpcClientWithHeader(ctx, cmConn)
+			_, errT = cmCli.Cli.ListCluster(cmCli.Ctx, &cmp.ListClusterReq{})
+			if errT != nil {
+				blog.Infof("cmcli ping error %s, tenantID: %s", errT.Error(), tenant.ID)
+				continue
+			}
+			cmClis = append(cmClis, cmCli)
+			blog.Infof("init tenant cluster manager client successfully, tenantID: %s", tenant.ID)
+		}
+	}
+
+	blog.Infof("init tenant cluster manager client successfully")
+	return cmClis, nil
+}
+
 // GetClusterManagerGrpcGwClient get cluster manager client
 func GetClusterManagerGrpcGwClient() (cmCli *client.ClusterManagerClientWithHeader, err error) {
 	tlsConfig, err := option.InitTClientTlsConfig()
@@ -360,9 +403,33 @@ func GetClusterManagerGrpcGwClient() (cmCli *client.ClusterManagerClientWithHead
 		ClientTLSConfig: tlsConfig,
 		AuthToken:       option.GetGlobalConfig().Bcsapi.BearerToken,
 	}
+
 	cmCli, err = NewClusterManagerGrpcGwClient(opts)
 	if err != nil {
 		return nil, err
 	}
 	return cmCli, nil
+}
+
+// GetTenantClusterManagerGrpcGwClient get cluster manager client in tenant mode
+func GetTenantClusterManagerGrpcGwClient() (cmClis []*client.ClusterManagerClientWithHeader, err error) {
+	tlsConfig, err := option.InitTClientTlsConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	opts := &Options{
+		Module:                ModuleClusterManager,
+		Address:               option.GetGlobalConfig().Bcsapi.GrpcAddr,
+		EtcdRegistry:          nil,
+		ClientTLSConfig:       tlsConfig,
+		AuthToken:             option.GetGlobalConfig().Bcsapi.BearerToken,
+		EnableMultiTenantMode: option.GetGlobalConfig().Synchronizer.EnableMultiTenantMode,
+	}
+
+	cmClis, err = NewTenantClusterManagerGrpcGwClient(opts)
+	if err != nil {
+		return nil, err
+	}
+	return cmClis, nil
 }

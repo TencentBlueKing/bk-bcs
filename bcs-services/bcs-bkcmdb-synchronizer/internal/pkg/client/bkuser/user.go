@@ -113,3 +113,45 @@ func (c *Client) QueryUserInfoByTenantLoginName(ctx context.Context, tenantId,
 
 	return data.Data, nil
 }
+
+// ListTenantResp list tenant response
+type ListTenantResp struct {
+	Data []BkTenant `json:"data"`
+}
+
+// BkTenant bk tenant
+type BkTenant struct {
+	ID     string `json:"id"`
+	Name   string `json:"name"`
+	Status string `json:"status"`
+}
+
+// ListTenant list bk tenant
+func (c *Client) ListTenant(ctx context.Context) ([]BkTenant, error) {
+	path := fmt.Sprintf("%s/%s", c.Server, "api/v3/open/tenants/")
+
+	data := &ListTenantResp{}
+
+	rsp, _, errs := gorequest.New().
+		Timeout(client.DefaultTimeOut).
+		Get(path).
+		Set("Content-Type", "application/json").
+		Set("Accept", "application/json").
+		Set("X-Bkapi-Authorization", c.userAuth).
+		Set(client.BkTenantIdHeaderKey, "system").
+		SetDebug(c.Debug).
+		EndStruct(&data)
+	if len(errs) > 0 {
+		blog.Errorf("call api blueking BkUser ListTenant failed: %v", errs[0])
+		return nil, errs[0]
+	}
+
+	if rsp.StatusCode < 200 || rsp.StatusCode >= 300 {
+		blog.Errorf("call api blueking BkUser ListTenant failed with status: %d",
+			rsp.StatusCode)
+		return nil, fmt.Errorf("api failed return statusCode: %d", rsp.StatusCode)
+	}
+	blog.Infof("call api blueking BkUser ListTenant with url(%s) successfully", path)
+
+	return data.Data, nil
+}

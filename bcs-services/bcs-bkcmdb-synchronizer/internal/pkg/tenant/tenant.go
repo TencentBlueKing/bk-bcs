@@ -71,23 +71,3 @@ func WithTenantIdByResourceForContext(ctx context.Context, resource ResourceMeta
 	// 注入租户信息
 	return context.WithValue(ctx, constants.BkTenantIdHeaderKey, pro.TenantID), nil
 }
-
-// WithTenantIdFromContext set tenantID to context
-func WithTenantIdFromContext(ctx context.Context, tenantId string) context.Context {
-	return context.WithValue(ctx, constants.BkTenantIdHeaderKey, tenantId)
-}
-
-// GetTenantIdFromContext get tenantId from context
-func GetTenantIdFromContext(ctx context.Context) string {
-	tenantId := ""
-
-	if id, ok := ctx.Value(constants.BkTenantIdHeaderKey).(string); ok {
-		tenantId = id
-	}
-
-	if tenantId == "" {
-		tenantId = string(constants.DefaultTenantId)
-	}
-
-	return tenantId
-}

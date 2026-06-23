@@ -67,9 +67,9 @@ type BcsBkcmdbSynchronizerHandler struct {
 	// BkcmdbSynchronizerOption *option.BkcmdbSynchronizerOption
 	Syncer *syncer.Syncer
 	// BkCluster *bkcmdbkube.Cluster
-	Chn   *amqp.Channel
-	CmCli *client.ClusterManagerClientWithHeader
-	PmCli *client.ProjectManagerClientWithHeader
+	Chn    *amqp.Channel
+	CmClis []*client.ClusterManagerClientWithHeader
+	PmCli  *client.ProjectManagerClientWithHeader
 }
 
 // Handler is the handler of bcs-bkcmdb-synchronizer
@@ -88,13 +88,19 @@ type MsgHeader struct {
 
 // NewBcsBkcmdbSynchronizerHandler create a new handler
 func NewBcsBkcmdbSynchronizerHandler(sync *syncer.Syncer) *BcsBkcmdbSynchronizerHandler {
-	cmCli, _ := cm.GetClusterManagerGrpcGwClient()
+	cmClis := make([]*client.ClusterManagerClientWithHeader, 0)
+	if sync.BkcmdbSynchronizerOption.Synchronizer.EnableMultiTenantMode {
+		cmClis, _ = cm.GetTenantClusterManagerGrpcGwClient()
+	} else {
+		cmCli, _ := cm.GetClusterManagerGrpcGwClient()
+		cmClis = append(cmClis, cmCli)
+	}
 	pmCli, _ := pm.GetProjectManagerGrpcGwClient()
 
 	return &BcsBkcmdbSynchronizerHandler{
 		//BkcmdbSynchronizerOption: option,
 		Syncer: sync,
-		CmCli:  cmCli,
+		CmClis: cmClis,
 		PmCli:  pmCli,
 	}
 }
@@ -253,15 +259,18 @@ func (b *BcsBkcmdbSynchronizerHandler) handleCluster(ctx context.Context,
 		ClusterID: clusterId,
 	}
 
+	// 获取集群列表数据
+	clusters := make([]*cmp.Cluster, 0)
 	// 调用API列出集群
-	resp, err := b.CmCli.Cli.ListCluster(b.CmCli.Ctx, &lcReq)
-	if err != nil {
-		blog.Errorf("list cluster failed, err: %s", err.Error())
-		return nil, err
+	for _, cmCli := range b.CmClis {
+		resp, err := cmCli.Cli.ListCluster(cmCli.Ctx, &lcReq)
+		if err != nil {
+			blog.Errorf("list cluster failed, err: %s", err.Error())
+			return nil, err
+		}
+		clusters = common.FilterListerCluster(clusters, resp.Data)
 	}
 
-	// 获取集群列表数据
-	clusters := resp.Data
 	// 创建集群映射表
 	clusterMap := make(map[string]*cmp.Cluster)
 	// 创建集群ID列表
@@ -1009,13 +1018,17 @@ func (b *BcsBkcmdbSynchronizerHandler) handlePodCreate(ctx context.Context,
 		ClusterID: bkCluster.Uid,
 	}
 
-	resp, err := b.CmCli.Cli.ListCluster(b.CmCli.Ctx, &lcReq)
-	if err != nil {
-		blog.Errorf("list cluster failed, err: %s", err.Error())
-		return err
+	// 获取集群列表数据
+	clusters := make([]*cmp.Cluster, 0)
+	// 调用API列出集群
+	for _, cmCli := range b.CmClis {
+		resp, err := cmCli.Cli.ListCluster(cmCli.Ctx, &lcReq)
+		if err != nil {
+			blog.Errorf("list cluster failed, err: %s", err.Error())
+			return err
+		}
+		clusters = common.FilterListerCluster(clusters, resp.Data)
 	}
-
-	clusters := resp.Data
 
 	bkNamespaces, err := b.Syncer.GetBkNamespaces(ctx, bkCluster.BizID, &client.PropertyFilter{
 		Condition: "AND",
@@ -1417,13 +1430,17 @@ func (b *BcsBkcmdbSynchronizerHandler) handlePodsCreate(ctx context.Context, pod
 		ClusterID: bkCluster.Uid,
 	}
 
-	resp, err := b.CmCli.Cli.ListCluster(b.CmCli.Ctx, &lcReq)
-	if err != nil {
-		blog.Errorf("list cluster failed, err: %s", err.Error())
-		return err
+	// 获取集群列表数据
+	clusters := make([]*cmp.Cluster, 0)
+	// 调用API列出集群
+	for _, cmCli := range b.CmClis {
+		resp, err := cmCli.Cli.ListCluster(cmCli.Ctx, &lcReq)
+		if err != nil {
+			blog.Errorf("list cluster failed, err: %s", err.Error())
+			return err
+		}
+		clusters = common.FilterListerCluster(clusters, resp.Data)
 	}
-
-	clusters := resp.Data
 
 	for _, pod := range podsCreate {
 		var operator []string

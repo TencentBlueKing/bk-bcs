@@ -24,6 +24,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
 
+	cmp "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/option"
 )
 
@@ -143,4 +144,23 @@ func IsKindInSlice(kind string, whitelist []string) bool {
 		}
 	}
 	return false
+}
+
+func FilterListerCluster(listCluster []*cmp.Cluster, newListCluster []*cmp.Cluster) []*cmp.Cluster {
+	if len(newListCluster) == 0 {
+		return listCluster
+	}
+
+	clusterMap := make(map[string]*cmp.Cluster)
+	for _, cluster := range listCluster {
+		cls := cluster
+		clusterMap[cluster.ClusterID] = cls
+	}
+	for _, cluster := range newListCluster {
+		if _, ok := clusterMap[cluster.ClusterID]; !ok {
+			listCluster = append(listCluster, cluster)
+		}
+	}
+
+	return listCluster
 }

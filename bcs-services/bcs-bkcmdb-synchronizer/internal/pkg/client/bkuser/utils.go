@@ -22,12 +22,12 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/client"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/client/cache"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/tenant"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/tenant/tenantutils"
 )
 
 // GetGatewayAuthAndTenantInfo generate blueking gateway auth and tenant info, user is bkUserName
 func GetGatewayAuthAndTenantInfo(ctx context.Context, auth *client.AuthInfo, user string) (string, string, error) {
-	tenantId := tenant.GetTenantIdFromContext(ctx)
+	tenantId := tenantutils.GetTenantIdFromContext(ctx)
 
 	// 优先使用传入的user，否则根据租户获取用户名
 	if user != "" {
