@@ -37498,6 +37498,8 @@ func (m *BatchDeleteClusterNodesRequest) validate(all bool) error {
 
 	// no validation rules for DeleteMode
 
+	// no validation rules for SkipCheckNodePods
+
 	if len(errors) > 0 {
 		return BatchDeleteClusterNodesRequestMultiError(errors)
 	}
@@ -37951,6 +37953,8 @@ func (m *DeleteNodesRequest) validate(all bool) error {
 	// no validation rules for NodeGroupID
 
 	// no validation rules for IsExternalNode
+
+	// no validation rules for SkipCheckNodePods
 
 	if len(errors) > 0 {
 		return DeleteNodesRequestMultiError(errors)
@@ -39041,6 +39045,8 @@ func (m *CleanNodesInGroupRequest) validate(all bool) error {
 	}
 
 	// no validation rules for Manual
+
+	// no validation rules for SkipCheckNodePods
 
 	if len(errors) > 0 {
 		return CleanNodesInGroupRequestMultiError(errors)

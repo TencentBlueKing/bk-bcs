@@ -221,13 +221,15 @@ func (t *Task) BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.Node
 	cleanTask.BuildCordonNodesStep(task)
 
 	// step1: check business node pods
-	common.BuildCheckNodePodsTaskStep(task, opt.Cluster.ClusterID, nodeIPs, func() []cloudprovider.StepOption {
-		if opt.Manual {
-			return []cloudprovider.StepOption{cloudprovider.WithStepAllowSkip(true)}
-		}
+	if !opt.SkipCheckNodePods {
+		common.BuildCheckNodePodsTaskStep(task, opt.Cluster.ClusterID, nodeIPs, func() []cloudprovider.StepOption {
+			if opt.Manual {
+				return []cloudprovider.StepOption{cloudprovider.WithStepAllowSkip(true)}
+			}
 
-		return []cloudprovider.StepOption{cloudprovider.WithStepSkipFailed(true)}
-	}())
+			return []cloudprovider.StepOption{cloudprovider.WithStepSkipFailed(true)}
+		}())
+	}
 
 	// step2: shield nodes alarm
 	common.BuildShieldAlertTaskStep(task, opt.Cluster.GetClusterID(), cloudprovider.ImageIdKey.String())

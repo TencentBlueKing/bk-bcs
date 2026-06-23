@@ -9916,6 +9916,10 @@ message BatchDeleteClusterNodesRequest {
     title : "deleteMode",
     description : "删除模式，retain(移除集群节点，但是保留主机)，terminate(只支持按量计费的机器)，默认是RETAIN"
   }];
+  bool skipCheckNodePods = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "skipCheckNodePods",
+    description : "是否跳过检查节点业务pods"
+  }];
 }
 
 message BatchDeleteClusterNodesResponse {
@@ -10003,6 +10007,10 @@ message DeleteNodesRequest {
   bool isExternalNode = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "是否是第三方节点(IDC节点)",
     description : "下架第三方节点需置为true, 且必须关联nodeGroupID"
+  }];
+  bool skipCheckNodePods = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "skipCheckNodePods",
+    description : "是否跳过检查节点业务pods"
   }];
 }
 
@@ -10179,6 +10187,10 @@ message CleanNodesInGroupRequest {
   bool manual = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "manual",
     description : "用户手动下架CA节点时，当失败时候支持用户跳过；自动下架时, 自动跳过失败步骤"
+  }];
+  bool skipCheckNodePods = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "skipCheckNodePods",
+    description : "是否跳过检查节点业务pods"
   }];
 }
 

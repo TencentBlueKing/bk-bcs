@@ -4261,6 +4261,14 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "skipCheckNodePods",
+            "description": "skipCheckNodePods. 是否跳过",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
           }
         ],
         "tags": [

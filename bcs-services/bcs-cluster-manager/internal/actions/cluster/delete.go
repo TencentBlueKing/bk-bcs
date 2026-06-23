@@ -340,6 +340,23 @@ func (da *DeleteAction) getCloudInfo(ctx context.Context) error {
 	return nil
 }
 
+func (da *DeleteAction) handleOnlyDeleteInfo() bool {
+	if da.req.OnlyDeleteInfo || da.isImporterCluster() {
+		// clean all relative resource then delete cluster finally
+		if err := da.cleanLocalInformation(); err != nil {
+			blog.Errorf("only delete Cluster %s local information err, %s", da.req.ClusterID, err.Error())
+			da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
+			return true
+		}
+
+		blog.Infof("only Delete Cluster %s local information successfully", da.req.ClusterID)
+		da.resp.Data = da.cluster
+		da.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
+		return true
+	}
+	return false
+}
+
 // Handle delete cluster request
 func (da *DeleteAction) Handle(ctx context.Context, req *cmproto.DeleteClusterReq, resp *cmproto.DeleteClusterResp) { // nolint
 	if req == nil || resp == nil {
@@ -396,17 +413,7 @@ func (da *DeleteAction) Handle(ctx context.Context, req *cmproto.DeleteClusterRe
 	//     and IsForced = false (check resource, can't delete cluster if resource do not nil).
 	// if delete importer cluster need to delete cluster extra data, thus set IsForced = true
 	// connect := utils.CheckClusterConnection(da.kube, da.req.ClusterID)
-	if req.OnlyDeleteInfo || da.isImporterCluster() {
-		// clean all relative resource then delete cluster finally
-		if err := da.cleanLocalInformation(); err != nil {
-			blog.Errorf("only delete Cluster %s local information err, %s", req.ClusterID, err.Error())
-			da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
-			return
-		}
-
-		blog.Infof("only Delete Cluster %s local information successfully", req.ClusterID)
-		da.resp.Data = da.cluster
-		da.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
+	if da.handleOnlyDeleteInfo() {
 		return
 	}
 	blog.Infof("try to delete Cluster %s entity in cloud and local information", req.ClusterID)
@@ -768,6 +775,27 @@ func (da *DeleteNodesAction) checkClusterNodeInfoDeletion() ([]string, error) {
 	return nodeInnerIPs, nil
 }
 
+func (da *DeleteNodesAction) handleOnlyDeleteNodeInfo() bool {
+	if da.req.OnlyDeleteInfo {
+		nodeInnerIPs, err := da.checkClusterNodeInfoDeletion()
+		if err != nil || len(nodeInnerIPs) == 0 {
+			da.setResp(common.BcsErrClusterManagerDataEmptyErr,
+				fmt.Sprintf("DeleteNodesAction checkClusterNodeInfoDeletion failed: %s",
+					"nodeInnerIPs empty"))
+			return true
+		}
+
+		err = da.model.DeleteClusterNodesByIPs(da.ctx, da.req.ClusterID, nodeInnerIPs)
+		if err != nil {
+			da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
+			return true
+		}
+		da.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
+		return true
+	}
+	return false
+}
+
 // Handle delete cluster nodes request
 func (da *DeleteNodesAction) Handle(ctx context.Context, req *cmproto.DeleteNodesRequest,
 	resp *cmproto.DeleteNodesResponse) {
@@ -786,21 +814,7 @@ func (da *DeleteNodesAction) Handle(ctx context.Context, req *cmproto.DeleteNode
 	}
 
 	// only delete nodeInfo
-	if da.req.OnlyDeleteInfo {
-		nodeInnerIPs, err := da.checkClusterNodeInfoDeletion()
-		if err != nil || len(nodeInnerIPs) == 0 {
-			da.setResp(common.BcsErrClusterManagerDataEmptyErr,
-				fmt.Sprintf("DeleteNodesAction checkClusterNodeInfoDeletion failed: %s",
-					"nodeInnerIPs empty"))
-			return
-		}
-
-		err = da.model.DeleteClusterNodesByIPs(da.ctx, da.req.ClusterID, nodeInnerIPs)
-		if err != nil {
-			da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
-			return
-		}
-		da.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
+	if da.handleOnlyDeleteNodeInfo() {
 		return
 	}
 
@@ -958,11 +972,12 @@ func (da *DeleteNodesAction) deleteNodesFromClusterTask() error {
 
 	// default cluster delete nodes mode retain
 	task, err := clusterMgr.DeleteNodesFromCluster(da.cluster, da.nodes, &cloudprovider.DeleteNodesOption{
-		CommonOption: *cmOption,
-		Operator:     da.req.Operator,
-		DeleteMode:   da.req.DeleteMode,
-		Cloud:        da.cloud,
-		NodeTemplate: da.nodeTemplate,
+		CommonOption:      *cmOption,
+		Operator:          da.req.Operator,
+		DeleteMode:        da.req.DeleteMode,
+		Cloud:             da.cloud,
+		NodeTemplate:      da.nodeTemplate,
+		SkipCheckNodePods: da.req.SkipCheckNodePods,
 	})
 	if err != nil {
 		blog.Errorf("cloudprovider %s deleteNodes %v from Cluster %s failed, %s",
