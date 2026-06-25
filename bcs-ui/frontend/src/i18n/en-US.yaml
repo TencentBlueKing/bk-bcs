@@ -2801,6 +2801,7 @@ dashboard:
     label:
       createMoreNamespaceVars: 'You can create more variables in the namespace through {action}'
       noNamespaceVariables: No naming space variables
+      otherQuotas: Other Quotas
     msg:
       undoSuccess: Undo success
     quota:
