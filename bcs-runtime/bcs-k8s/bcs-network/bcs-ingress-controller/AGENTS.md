@@ -1,277 +1,91 @@
-# AGENTS.md -- bcs-ingress-controller
-
-## Project Snapshot
-
-BCS Ingress Controller -- Kubernetes Operator managing network extension CRDs
-(PortPool, PortBinding, Listener, Ingress, HostNetPortPool).
-Go 1.20+, controller-runtime v0.6.3, go-restful HTTP API, Prometheus metrics.
-go.mod lives at bcs-network/ parent; CRD types in ../../kubernetes/apis/networkextension/v1/.
-Completed features: HostNetPortPool hostNetwork port allocation; Namespace scope exemption for
-federated cluster ingresses (see "Namespace Scope Exemption" section below).
-
-## Build and Test
-
-Build binary (run from bcs-ingress-controller/ dir):
-
-    cd .. && make ingress-controller
-
-Build + Docker image push (run from bcs-network/ dir):
-
-    make ingress-controller
-    VERSION=$(git describe --always)-$(date +%y.%m.%d)
-    BUILD_DIR=../../../build/bcs.${VERSION}/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller
-    docker build -t mirrors.tencent.com/<your_repository>/bcs-ingress-controller:latest -f ${BUILD_DIR}/Dockerfile ${BUILD_DIR}
-    docker push mirrors.tencent.com/<your_repository>/bcs-ingress-controller:latest
-
-Unit tests with coverage report:
-
-    cd .. && make test-ingress-controller
-
-Run single package tests:
-
-    cd .. && go test -v -run TestReconcile ./bcs-ingress-controller/hostnetportcontroller/...
-
-## K8s Cluster Deploy
-
-    export KUBECONFIG=<path_to_your_kubeconfig>
-    kubectl rollout restart -n bcs-system deployment/bcsingresscontroller
-
-## Code Conventions
-
-- Code comments: **English**. Docs / PR / chat: **Chinese**
-- Format: gofmt / goimports, explicit error handling, no naked returns
-- Constants in internal/constant/constant.go -- never use string literals for annotation keys
-- Controllers: controller-runtime Reconcile, must be **idempotent**
-- Tests: **table-driven**, colocated *_test.go, fake client from controller-runtime/pkg/client/fake
-- Metrics: init() registration in internal/metrics/*.go, namespace bkbcs_ingressctrl
-- Logging: bcs-common/common/blog -- not stdlib log or klog
-- HTTP: go-restful WebService, routes registered in internal/httpsvr/httpserver.go InitRouters()
-- **Naming**: Function names MUST NOT exceed 35 characters. Keep function names concise and descriptive.
-
-## Patterns -- DO
-
-**New controller** -- follow portpoolcontroller/portpool_controller.go:
-- Struct: ctx, client.Client, domain cache, record.EventRecorder
-- Constructor NewXxxReconciler(ctx, cli, cache, eventer)
-- SetupWithManager(mgr) with For(primaryCRD) + Watches(source.Kind)
-- Reconcile(): fetch resource -> handle IsNotFound gracefully -> business logic -> update status
-- Register in main.go via SetupWithManager(mgr)
-
-**New metrics** -- follow internal/metrics/portpool.go:
-- Package-level var block with prometheus.NewGaugeVec / CounterVec / HistogramVec
-- init() calls metrics.Registry.MustRegister(...)
-- Exported helpers: ReportXxx(...), CleanXxx(...), IncreaseXxx(...)
-
-**New HTTP endpoint** -- follow internal/httpsvr/portpool.go:
-- Handler method (h *HttpServerClient) handlerName(req, resp)
-- Register in InitRouters() at internal/httpsvr/httpserver.go
-
-**New cache** -- follow internal/portpoolcache/:
-- Thread-safe with sync.RWMutex, types in separate types.go
-- RebuildFromAPIServer() for cold-start / leader election recovery
-
-**New constants** -- append to internal/constant/constant.go with exported const + godoc comment
-
-## Namespace Scope Exemption
-
-Flag `--is_namespace_scope` (bool) restricts each Ingress to services in the same namespace.
-Flag `--namespace_scope_exempt_namespaces` (string, comma-separated) lists namespaces that bypass
-both restrictions: they may reference cross-namespace services AND use the controller's global
-cloud credentials (env `TENCENTCLOUD_ACCESS_KEY_ID` / `TENCENTCLOUD_ACESS_KEY`) instead of
-requiring a per-namespace Secret / ControllerConfig.
-
-**Data flow for exempt namespaces:**
-
-    ControllerOption.NamespaceScopeExemptNamespaces (string)
-      └─ parseExemptNamespaces() → map[string]struct{}
-           ├─ IngressConverterOpt.ExemptNamespaces              (generator/ingressconverter.go)
-           │    └─ IngressListenerConverter.ExemptNamespaces
-           │         ├─ RuleConverter.exemptNamespaces          (generator/ruleconverter.go)
-           │         │    └─ isIngressNamespaceExempt() skips cross-ns override
-           │         └─ MappingConverter.exemptNamespaces       (generator/mappingconverter.go)
-           │              └─ isIngressNamespaceExempt() skips cross-ns override
-           └─ newNamespacedLBWithExempt() → NamespacedLB
-                └─ NamespacedLB.defaultClient + exemptNamespaces (namespacedlb/namespacedclient.go)
-                     └─ getNsClient(): exempt ns → defaultClient, others → per-ns secret lookup
-
-**Adding a new cloud provider to the exemption pattern:**
-
-1. Add `initXxxClient(ctx, opts, cli, ew, exemptNsMap)` in main.go following `initTencentCloudClient`.
-2. Call `newNamespacedLBWithExempt(...)` in the `isNamespaceScope` branch.
-3. Add the new case to `initClient`'s switch.
-
-**Secret key names for per-ns Secret (note historical typo in key name):**
-
-    kubectl create secret generic ingress-secret.networkextension.bkbcs.tencent.com \
-      -n <namespace> \
-      --from-literal=TENCENTCLOUD_ACCESS_KEY_ID="<secretID>" \
-      --from-literal=TENCENTCLOUD_ACESS_KEY="<secretKey>"   # ACESS (not ACCESS) -- matches code constant
-
-**Unit tests:**
-- Generator layer: `internal/generator/namespace_scope_exempt_test.go` (14 cases)
-- NamespacedLB layer: `internal/cloud/namespacedlb/namespacedclient_test.go` (7 test funcs)
-- Flag parsing: `main_test.go::TestParseExemptNamespaces` (7 cases)
-
-## initClient Decomposition
-
-`initClient` (main.go) is a pure dispatcher -- keep function cyclomatic complexity low (≤ 5 for simple dispatch functions):
-
-    initClient()
-      parseExemptNamespaces()           # string → map[string]struct{}
-      switch cloud →
-        initTencentCloudClient()
-        initAWSClient()
-        initGCPClient()
-        initAzureClient()
-
-Each `initXxxClient` calls `newNamespacedLBWithExempt` when `IsNamespaceScope=true`.
-Do NOT add business logic back into `initClient` -- put it in the per-cloud function.
-
-**Note:** All functions should maintain reasonable cyclomatic complexity. Complicated functions (complexity > 10) should be decomposed into smaller, focused functions.
-
-## Patterns -- DON'T
-
-- Import log / klog directly -- use blog
-- Hardcode annotation keys -- add constant in internal/constant/constant.go
-- Skip error checking on k8s API calls (client.Get, client.Update, etc.)
-- Create controllers without registering in main.go
-- Assume go.mod is in this directory -- it is at ../go.mod, run go mod tidy from ../
-- Add cloud init logic directly into `initClient` -- add a new `initXxxClient` function instead
-- Use `TENCENTCLOUD_ACCESS_KEY` (correct spelling) in Secrets -- the code constant is `TENCENTCLOUD_ACESS_KEY` (typo, one C)
-
-## Key Files
-
-| Purpose | Path |
-|---------|------|
-| Entry point, wires all controllers / checkers / HTTP | main.go |
-| All constants and annotation keys | internal/constant/constant.go |
-| CLI flags and controller config | internal/option/option.go |
-| HTTP API route registration | internal/httpsvr/httpserver.go |
-| Webhook admission handlers | internal/webhookserver/ |
-| CRD Go type definitions | ../../kubernetes/apis/networkextension/v1/ |
-| CRD YAML manifests | ../../kubernetes/config/crd/bases/ |
-| Generated clientset / listers / informers | ../../kubernetes/generated/ |
-| Build Makefile | ../Makefile |
-| Ingress → Listener conversion entry | internal/generator/ingressconverter.go |
-| Rule-based listener conversion (L7) | internal/generator/ruleconverter.go |
-| Port-mapping listener conversion (L4) | internal/generator/mappingconverter.go |
-| Namespaced cloud client (per-ns credential) | internal/cloud/namespacedlb/namespacedclient.go |
-
-## Controllers and CRDs
-
-| Controller | CRD / Resource | Directory |
-|------------|---------------|-----------|
-| Ingress | networkextension.Ingress | ingresscontroller/ |
-| Listener | networkextension.Listener | listenercontroller/ |
-| PortPool | networkextension.PortPool | portpoolcontroller/ |
-| PortBinding | networkextension.PortBinding | portbindingcontroller/ |
-| HostNetPortPool | networkextension.HostNetPortPool | hostnetportcontroller/ |
-| Namespace | core/v1.Namespace | namespacecontroller/ |
-| Node | core/v1.Node | nodecontroller/ |
-
-## Module Layout
-
-    bcs-ingress-controller/
-      main.go                     # Wires everything
-      {name}controller/           # One dir per controller
-        controller.go             # Reconciler + SetupWithManager
-        *_test.go                 # Colocated tests
-      internal/
-        constant/                 # Shared constants
-        metrics/                  # Prometheus metrics (one file per subsystem)
-        httpsvr/                  # REST API handlers + route registration
-        check/                    # Periodic consistency checkers
-        cloud/                    # Cloud adapters (aws/ azure/ gcp/ tencentcloud/)
-        webhookserver/            # Admission webhooks
-        hostnetportpoolcache/     # HostNetPortPool in-memory cache
-        portpoolcache/            # PortPool in-memory cache
-        generator/                # Ingress to Listener conversion
-        ingresscache/             # Service/workload cache for Ingress
-        nodecache/                # Node metadata cache
-        apiclient/                # External API client helpers
-        option/                   # CLI option parsing
-        worker/                   # Worker/sync utilities
-      bcs-ingress-inspector/      # Separate diagnostic binary (NOT main controller)
-      specs/                      # Feature design documents
-      benchmark/                  # Performance test scripts and fixtures
-
-## JIT Search Commands
-
-Find all Reconcile implementations:
-
-    rg -n "func.*Reconcile\(" --type go
-    # Or more specifically:
-    rg -n "\) Reconcile\(" --type go
-
-Find annotation / constant definitions:
-
-    rg -n "const\b" internal/constant/constant.go
-
-Find Prometheus metric definitions:
-
-    rg -n "prometheus\.New" internal/metrics/
-
-Find HTTP routes:
-
-    rg -n "ws\.Route" internal/httpsvr/
-
-Find CRD type structs:
-
-    rg -n "type .*(Spec|Status) struct" ../../kubernetes/apis/networkextension/v1/
-
-Find where controllers are registered:
-
-    rg -n "SetupWithManager" main.go
-
-Find webhook handlers:
-
-    rg -n "Handle\(" internal/webhookserver/
-
-Find all test files:
-
-    rg -l "_test\.go" --type go
-
-Find namespace-scope exemption touch-points:
-
-    rg -n "ExemptNamespace\|exemptNamespace\|isExempt\|isIngressNamespaceExempt" --type go
-
-Find per-cloud init functions:
-
-    rg -n "^func init.*Client\b" main.go
-
-## Common Gotchas
-
-- go.mod is at **bcs-network/** level -- always run go mod tidy from ../
-- CRD types live in a **separate Go module** (../../kubernetes/), linked via replace directive
-- controller-runtime v0.6.3 + effective k8s client v0.18.6 -- old API style, no generics
-- bcs-ingress-inspector/ is a **separate binary** with its own main.go, not part of this controller
-- The cloud/ adapters have vendor-specific SDKs -- only import the one you need
-
-## Pre-PR Checklist (updated)
-
-Run tests before submitting:
-
-    cd .. && make test-ingress-controller && echo "All tests OK"
-
-Quick exemption-feature regression (fast, no cluster needed):
-
-    go test -count=1 -run 'TestParseExemptNamespaces|TestRuleConverter|TestMappingConverter|TestIsExempt|TestGetNsClient|TestReloadNsClient|TestNewNamespacedLB' \
-      ./internal/cloud/namespacedlb/... ./internal/generator/... . 2>&1 | grep -E 'PASS|FAIL|ok'
-
-Verify:
-- New constants added to internal/constant/constant.go
-- New controllers registered in main.go via SetupWithManager
-- New metrics registered via init() in internal/metrics/
-- New HTTP routes added in internal/httpsvr/httpserver.go InitRouters()
-- CRD type changes: regenerate deepcopy and manifests in ../../kubernetes/
-- gofmt / goimports clean
-- All functions maintain reasonable cyclomatic complexity (decompose functions with complexity > 10)
-
-## Completed Features
-
-- ~~hostnet-port-allocation~~: HostNetPortPool dynamic port allocation for hostNetwork Pods (done)
-- Design docs: specs/001-hostnet-port-allocation/
-- ~~namespace-scope-exemption~~: Federated cluster ingresses in whitelisted namespaces bypass
-  cross-namespace service binding restriction and per-namespace cloud credential requirement.
-  Key flag: `--namespace_scope_exempt_namespaces`; key files: internal/generator/{rule,mapping,listener,ingress}converter.go,
-  internal/cloud/namespacedlb/namespacedclient.go, main.go (parseExemptNamespaces/newNamespacedLBWithExempt/initXxxClient).
+# AGENTS.md — bcs-ingress-controller
+
+> Agent 认知本项目的第一站。详细规范见 `docs/harness/`，代码索引见 `docs/dev-map/`。
+
+## 项目概述
+
+- **名称**：BCS Ingress Controller
+- **定位**：Kubernetes Operator，管理网络扩展 CRD（Ingress、Listener、PortPool、PortBinding、HostNetPortPool）
+- **技术栈**：Go 1.20+、controller-runtime v0.6.3、go-restful、Prometheus
+- **模块路径**：go.mod 在 `../`（bcs-network/）；CRD 类型在 `../../kubernetes/apis/networkextension/v1/`
+
+## 目录结构
+
+```
+bcs-ingress-controller/
+├── main.go                     # 入口：注册 Controller / HTTP / Webhook
+├── {name}controller/           # 每个 CRD 一个 Reconcile 控制器
+├── internal/
+│   ├── constant/               # Annotation Key 与共享常量
+│   ├── option/                 # CLI 参数
+│   ├── generator/              # Ingress → Listener 转换
+│   ├── cloud/                  # 多云 LB 适配（aws/azure/gcp/tencentcloud）
+│   ├── httpsvr/                # REST 管理 API
+│   ├── webhookserver/          # Admission Webhook
+│   ├── portpoolcache/          # PortPool 内存缓存
+│   ├── hostnetportpoolcache/   # HostNetPortPool 内存缓存
+│   ├── metrics/                # Prometheus 指标（namespace bkbcs_ingressctrl）
+│   └── check/                  # 周期性一致性检查
+├── docs/
+│   ├── harness/                # AI Agent 运行环境规范（五大组件）
+│   ├── standards/              # 技术开发规范（安全/质量/后端/接口）
+│   ├── dev-map/                # 开发地图（源文件/模块/依赖索引）
+│   ├── adr/                    # 架构决策记录（ADR）
+│   ├── reqs/                   # 需求文档（TAPD 澄清产出）
+│   └── glossary.md             # 词汇表
+├── specs/                      # 功能设计文档
+├── cli-util/                   # 独立 CLI 工具（如 validate-listener-name）
+├── project.json                # TAPD workspace_id / owner 配置
+└── bcs-ingress-inspector/      # 独立诊断二进制（非主 Controller）
+```
+
+## 关键规范
+
+| 类型 | 入口 |
+|------|------|
+| Harness 规范（架构约束、工具能力、执行验证） | [docs/harness/README.md](docs/harness/README.md) |
+| 技术开发规范（安全红线、代码评审、后端/API） | [docs/standards/README.md](docs/standards/README.md) |
+| 开发地图（模块索引与依赖） | [docs/dev-map/README.md](docs/dev-map/README.md) |
+| 架构决策记录（ADR） | [docs/adr/README.md](docs/adr/README.md) |
+| 词汇表 | [docs/glossary.md](docs/glossary.md) |
+
+## 构建与测试
+
+```bash
+cd .. && make ingress-controller          # 构建
+cd .. && make test-ingress-controller     # 全量测试 + 覆盖率
+go test -v -run TestReconcile ./hostnetportcontroller/...  # 单包测试
+```
+
+部署：`kubectl rollout restart -n bcs-system deployment/bcsingresscontroller`
+
+## 核心约定（速查）
+
+- 日志用 `bcs-common/common/blog`，禁止 log/klog
+- Annotation Key 放 `internal/constant/constant.go`，禁止硬编码
+- Controller Reconcile 必须幂等；新 Controller 须在 `main.go` 注册
+- 导出函数须有 GoDoc 注释（英文）
+- 函数名 ≤ 35 字符（含测试函数）；圈复杂度 > 10 须拆分
+- `initClient` 保持纯分发，云初始化放 `initXxxClient`
+- 测试：表驱动，colocated `*_test.go`，fake client
+
+## 全流程覆盖规划
+
+| 环节 | Skill / 入口 | 状态 |
+|------|-------------|------|
+| Harness 规范生成 | harness-engineering → harness-generating | ✅ 已建设 |
+| 文档一致性巡检 | harness-engineering → harness-gardening | ✅ 已建设 |
+| 需求澄清/评估 | tapd-story-clarification / tapd-story-evaluation | ✅ 已建设（TAPD workspace 70046748） |
+| 迭代研发 | tapd-iteration-runner / tapd-story-pipeline | ✅ 已建设（workspace 70046748，owner adelaidahe） |
+| Spec Kit TDD | speckit-specify → plan → tasks → implement | ✅ 已建设 |
+| 代码评审 | code-review | ✅ 已建设 |
+| 安全检查 | bk-security-redlines | ✅ 已建设 |
+| 工作汇总 | work-summary | ✅ 已建设 |
+
+> Skill 清单、MCP 配置、环境检查结果详见 [docs/harness/tooling.md](docs/harness/tooling.md)。
+
+## 已完成特性
+
+- HostNetPortPool hostNetwork 端口动态分配（`specs/001-hostnet-port-allocation/`）
+- Namespace Scope Exemption：白名单 NS 可跨 NS 引用 Service 并使用全局云凭证（详见 harness 架构约束文档）
+- SSL 证书过期 Prometheus 指标：CertificateChecker 周期性查询腾讯云证书剩余天数（`specs/stories/1070046748135050873/`，默认关闭，需 CLI 开关启用）

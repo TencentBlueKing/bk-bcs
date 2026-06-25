@@ -120,7 +120,7 @@
                 v-model="nodePoolConfig.launchTemplate.systemDisk.diskType"
                 :disabled="isEdit"
                 :clearable="false"
-                class="min-width-150 bg-[#fff]">
+                class="!min-w-[150px] bg-[#fff]">
                 <bcs-option
                   v-for="diskItem in diskEnum"
                   :key="diskItem.id"
@@ -158,7 +158,7 @@
                     :disabled="isEdit"
                     v-model="disk.diskType"
                     :clearable="false"
-                    class="min-width-150 bg-[#fff]">
+                    class="!min-w-[150px] bg-[#fff]">
                     <bcs-option
                       v-for="diskItem in diskEnum"
                       :key="diskItem.id"
@@ -268,6 +268,7 @@ import usePage from '@/composables/use-page';
 import $i18n from '@/i18n/i18n-setup';
 import $store from '@/store/index';
 import Values from '@/views/cluster-manage/components/values.vue';
+import useCloud from '@/views/cluster-manage/use-cloud';
 
 export default defineComponent({
   components: { Values },
@@ -311,20 +312,8 @@ export default defineComponent({
     const formRef = ref<any>(null);
     const basicFormRef = ref<any>(null);
     // 磁盘类型
-    const diskEnum = ref([
-      {
-        id: 'pd-balanced',
-        name: $i18n.t('cluster.ca.nodePool.create.instanceTypeConfig.diskType.balanced'),
-      },
-      {
-        id: 'pd-ssd',
-        name: $i18n.t('cluster.ca.nodePool.create.instanceTypeConfig.diskType.ssd'),
-      },
-      {
-        id: 'pd-standard',
-        name: $i18n.t('cluster.ca.nodePool.create.instanceTypeConfig.diskType.standard'),
-      },
-    ]);
+    const { googleDiskEnum: diskEnum } = useCloud();
+
     const user = computed(() => $store.state.user);
     const nodePoolConfig = ref({
       $id: defaultValues.value.$id || `id_${Date.now()}`,

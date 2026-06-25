@@ -21,9 +21,9 @@ import (
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
-// TestEnsureApplicationGatewayListener test ensure azure application gateway listener
+// TestEnsureAppGatewayListener test ensure azure application gateway listener
 // NOCC:tosa/fn_length(测试函数)
-func TestEnsureApplicationGatewayListener(t *testing.T) {
+func TestEnsureAppGatewayListener(t *testing.T) {
 	listener := &networkextensionv1.Listener{
 		TypeMeta:   metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{Namespace: "default", Name: "listener-3"},

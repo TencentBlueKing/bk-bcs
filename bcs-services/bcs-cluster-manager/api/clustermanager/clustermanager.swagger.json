@@ -4261,6 +4261,14 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "skipCheckNodePods",
+            "description": "skipCheckNodePods. 是否跳过",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
           }
         ],
         "tags": [
@@ -10270,6 +10278,12 @@
           "$ref": "#/definitions/clustermanagerClusterConnectSetting",
           "description": "集群开启内外网设，公有云必须设置此参数",
           "title": "clusterConnectSetting"
+        },
+        "isDualStack": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "集群VPC-CNI模式下是否开启IPv6双栈，默认false",
+          "title": "isDualStack"
         }
       }
     },
@@ -19393,6 +19407,14 @@
           "additionalProperties": {
             "type": "string"
           }
+        },
+        "ipv6ImageID": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "支持IPv6双栈的镜像ID列表",
+          "title": "ipv6ImageID"
         }
       },
       "description": "用于记录一些固定的系统信息，用于帮助OS层面信息展示",
@@ -19529,6 +19551,12 @@
           },
           "description": "镜像关联的集群信息",
           "title": "clusters"
+        },
+        "supportIpv6": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "是否支持IPv6双栈",
+          "title": "supportIpv6"
         }
       },
       "description": "操作系统镜像",

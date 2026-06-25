@@ -111,11 +111,17 @@
           <template #desc>
             <div class="mb-[4px]">
               {{ $t('metrics.cpuUsage') }}: {{ $t('metrics.cpuUsageDesc') }}
-              <span class="block">metrics: rate(container_cpu_usage_seconds_total[2m])</span>
+              <span class="block opacity-70">metrics: rate(container_cpu_usage_seconds_total[2m])</span>
+            </div>
+            <div>
+              {{ $t('metrics.cpuResUsage') }}: {{ $t('metrics.cpuResUsageDesc') }}
+              <span class="block opacity-70">
+                metric: rate(container_cpu_usage_seconds_total[2m])/kube_pod_container_resource_requests_cpu_cores
+              </span>
             </div>
             <div>
               {{ $t('metrics.cpuLimitUsage') }}: {{ $t('metrics.cpuLimitUsageDesc') }}
-              <span class="block">
+              <span class="block opacity-70">
                 metric: rate(container_cpu_usage_seconds_total[2m])/kube_pod_container_resource_limits_cpu_cores
               </span>
             </div>
@@ -589,6 +595,7 @@ export default defineComponent({
     const activeCpuMetric = ref('cpu_usage');
     const cpuMetricObj = computed(() => ({
       cpu_usage: $i18n.t('metrics.cpuUsage'),
+      cpu_request_usage: $i18n.t('metrics.cpuResUsage'),
       cpu_limit_usage: $i18n.t('metrics.cpuLimitUsage'),
     }));
     function handleChangeCpuMetric(value) {
@@ -600,7 +607,7 @@ export default defineComponent({
 
     // 容器操作
     // 1. 跳转WebConsole
-    const { projectCode } = useProject();
+    const { projectCode, projectID } = useProject();
     const terminalWins = new Map();
     const handleShowTerminal = (row) => {
       const url = `${window.BCS_API_HOST}/bcsapi/v4/webconsole/projects/${projectCode.value}/clusters/${clusterId.value}/?namespace=${props.namespace}&pod_name=${props.name}&container_name=${row.name}`;
@@ -620,7 +627,7 @@ export default defineComponent({
 
     // 3. weterm
     function resolveLink(type: 'login' | 'debug', container: string) {
-      window.open(`weterm://session/open/bcs?ns=${props.namespace}&pod=${metadata.value.name}&container=${container}&type=${type}&clusterId=${clusterId.value}&envId=${window.BCS_CONFIG.bkBcsEnvID}`);
+      window.open(`weterm://session/open/bcs?ns=${props.namespace}&pod=${metadata.value.name}&container=${container}&type=${type}&clusterId=${clusterId.value}&envId=${window.BCS_CONFIG.bkBcsEnvID}&projectID=${projectID.value}&projectCode=${projectCode.value}`);
     }
     // 文件日志检索禁用逻辑
     const isFileLogDisabled = ref(false);

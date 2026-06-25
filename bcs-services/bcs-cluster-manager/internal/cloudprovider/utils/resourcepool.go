@@ -113,11 +113,13 @@ func DestroyDeviceList(ctx context.Context, info *cloudprovider.CloudDependBasic
 // buildApplyCvmInstanceRequest build resource request
 func buildApplyCvmInstanceRequest(group *proto.NodeGroup, operator string,
 	quota *bcsproject.ProjectQuota) *resource.ApplyInstanceReq {
-	var providerBizIDs string
-	var startTime int64
-	var endTime int64
+	var (
+		providerBizIDs []string
+		startTime      int64
+		endTime        int64
+	)
 	if quota != nil && quota.GetQuotaAttr() != nil {
-		providerBizIDs = quota.GetQuotaAttr().GetSourceBkBizIDs()
+		providerBizIDs = utils.Split(quota.GetQuotaAttr().GetSourceBkBizIDs())
 		st, _ := time.Parse(time.RFC3339, quota.GetQuotaAttr().GetStartTime())
 		et, _ := time.Parse(time.RFC3339, quota.GetQuotaAttr().GetEndTime())
 		if !st.IsZero() {

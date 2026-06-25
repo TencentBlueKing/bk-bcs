@@ -120,7 +120,7 @@ func GetIngressProtocolLayer(ingress *networkextensionv1.Ingress) string {
 	transportCnt := 0
 	applicationCnt := 0
 	for _, rule := range ingress.Spec.Rules {
-		if InLayer7Protocol(rule.Protocol) {
+		if InLayer4Protocol(rule.Protocol) {
 			transportCnt++
 		}
 		if InLayer7Protocol(rule.Protocol) {
@@ -128,7 +128,7 @@ func GetIngressProtocolLayer(ingress *networkextensionv1.Ingress) string {
 		}
 	}
 	for _, portMapping := range ingress.Spec.PortMappings {
-		if InLayer7Protocol(portMapping.Protocol) {
+		if InLayer4Protocol(portMapping.Protocol) {
 			transportCnt++
 		}
 		if InLayer7Protocol(portMapping.Protocol) {

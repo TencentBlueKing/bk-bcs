@@ -223,7 +223,8 @@ units:
   cores: '{0} Cores'
 metrics:
   cpuUsage: CPU usage
-  cpuLimitUsage: CPU usage limit
+  cpuLimitUsage: CPU limit usage
+  cpuResUsage: CPU request usage
   diskUsage: Disk usage
   memUsage: Memory usage
   memUsage1: Memory usage
@@ -234,6 +235,10 @@ metrics:
   cpuLimitUsageDesc: >-
     Percentage of actual CPU cores consumed relative to the Limit. May exceed
     the limit, but typically stays within 100%
+  cpuResUsageDesc: >-
+    The percentage of actual CPU usage relative to the requested CPU resources.
+    This metric may exceed 100%, indicating that the actual CPU consumption is
+    higher than the requested CPU resources.
   cpuRequestUsage:
     text: CPU packing rate
     clusterDesc: >-
@@ -1357,6 +1362,7 @@ cluster:
             io2: Provisioned IOPS io2
             st1: Throughput Optimized HDD st1
             sc1: Cold HDD sc1
+            hyperdisk: Hyperdisk Banlanced
           disk:
             system: System disk
             data: Data disk
@@ -2949,9 +2955,9 @@ dashboard:
         joint characters (-), and even characters (-) must be connected in
         English or numbers later
       sharedClusterNs: 'Name rule: {prefix}Custom Name'
-      setMinMaxMemCpu: >-
-        Please set CPU and MEM quotas, and the minimum value must be greater
-        than 0.
+      setValidQuota: >-
+        Please set valid CPU and Memory quotas (Limit >= Request >= 0 / 1 for
+        shared cluster)
     status:
       waitingApproval: Pending
       createNamespace: Create naming space
@@ -3113,6 +3119,7 @@ apiToken:
       You have no current operating permissions, please continue to operate
       after creating a new API Token
     renewOK: Renewal
+    tokenExpired: Your Token has expired, please go to {0} to renew it
 logCollector:
   text: Log Collection
   tips:
@@ -3674,6 +3681,7 @@ tke:
     publicKey: Public key
     secretKey: Secret key
     ipNum: IPs
+    ipNum1: IPs (Remaining/Total)
     zone: Zone
     staticIpMode: Static ip mode
     enableStaticIpMode: Enable static ip mode

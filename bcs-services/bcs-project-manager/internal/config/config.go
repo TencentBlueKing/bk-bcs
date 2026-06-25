@@ -195,12 +195,15 @@ type TaskConfig struct {
 
 // SharedClusterConfig 共享集群相关配置
 type SharedClusterConfig struct {
-	AnnoKeyProjCode string `yaml:"annoKeyProjCode"`
+	AnnoKeyProjCode  string `yaml:"annoKeyProjCode"`
+	AllowAdjustQuota bool   `yaml:"allowAdjustQuota"`
 }
 
 // SystemCommonConfig 系统公共配置
 type SystemCommonConfig struct {
 	SystemNameSpaces []string `yaml:"systemNameSpaces"`
+	// GPUResourceKeys 额外补充的 GPU 资源 key 列表
+	GPUResourceKeys []string `yaml:"gpuResourceKeys"`
 }
 
 // ProjectConfig 项目的配置信息

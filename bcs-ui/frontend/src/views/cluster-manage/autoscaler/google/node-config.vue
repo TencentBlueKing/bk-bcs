@@ -126,7 +126,7 @@
                   v-model="nodePoolConfig.launchTemplate.systemDisk.diskType"
                   :disabled="isEdit"
                   :clearable="false"
-                  class="min-width-150 bg-[#fff]">
+                  class="!min-w-[150px] bg-[#fff]">
                   <bcs-option
                     v-for="diskItem in diskEnum"
                     :key="diskItem.id"
@@ -164,7 +164,7 @@
                       :disabled="isEdit"
                       v-model="disk.diskType"
                       :clearable="false"
-                      class="min-width-150 bg-[#fff]">
+                      class="!min-w-[150px] bg-[#fff]">
                       <bcs-option
                         v-for="diskItem in diskEnum"
                         :key="diskItem.id"
@@ -322,6 +322,7 @@ import $store from '@/store/index';
 import Schema from '@/views/cluster-manage/autoscaler/resolve-schema';
 import { useClusterInfo } from '@/views/cluster-manage/cluster/use-cluster';
 import Values from '@/views/cluster-manage/components/values.vue';
+import useCloud from '@/views/cluster-manage/use-cloud';
 
 export default defineComponent({
   components: { FormGroup, Values },
@@ -354,20 +355,8 @@ export default defineComponent({
     const formRef = ref<any>(null);
     const basicFormRef = ref<any>(null);
     // 磁盘类型
-    const diskEnum = ref([
-      {
-        id: 'pd-balanced',
-        name: $i18n.t('cluster.ca.nodePool.create.instanceTypeConfig.diskType.balanced'),
-      },
-      {
-        id: 'pd-ssd',
-        name: $i18n.t('cluster.ca.nodePool.create.instanceTypeConfig.diskType.ssd'),
-      },
-      {
-        id: 'pd-standard',
-        name: $i18n.t('cluster.ca.nodePool.create.instanceTypeConfig.diskType.standard'),
-      },
-    ]);
+    const { googleDiskEnum: diskEnum } = useCloud();
+
     const confirmPassword = ref(''); // 确认密码
     const nodePoolConfig = ref({
       nodeGroupID: defaultValues.value.nodeGroupID, // 编辑时

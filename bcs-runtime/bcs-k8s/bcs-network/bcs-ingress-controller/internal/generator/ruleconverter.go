@@ -392,6 +392,12 @@ func (rc *RuleConverter) generateMcsBackendList(svcRoute *networkextensionv1.Ser
 			break
 		}
 	}
+	if svcPort == nil {
+		rc.eventf(rc.ingress, k8scorev1.EventTypeWarning, constant.EventIngressBindFailed,
+			fmt.Sprintf("port %d is not found in multiClusterService %s/%s, please add port definition on multiClusterService",
+				svcRoute.ServicePort, svcNamespace, svcRoute.ServiceName))
+		return nil, nil
+	}
 
 	// 遍历所有mEps找到和service对应的eps（MultiClusterService和MultiClusterEndpoints可能不在一个命名空间）
 	multiClusterEndpointsList := &federationv1.MultiClusterEndpointSliceList{}
@@ -420,7 +426,10 @@ func (rc *RuleConverter) generateMcsBackendList(svcRoute *networkextensionv1.Ser
 }
 
 func (rc *RuleConverter) isPortMatch(port federationv1.EndpointPort, svcPort *k8scorev1.ServicePort) bool {
-	return (*port.Name == svcPort.TargetPort.String() || int(*port.Port) == svcPort.TargetPort.IntValue()) && *port.Protocol == svcPort.Protocol
+	portMatch := (port.Name != nil && (*port.Name == svcPort.TargetPort.String())) ||
+		(port.Port != nil && int(*port.Port) == svcPort.TargetPort.IntValue())
+	protocolMatch := port.Protocol != nil && *port.Protocol == svcPort.Protocol
+	return portMatch && protocolMatch
 }
 
 func (rc *RuleConverter) generateBackends(matchedEps []federationv1.MultiClusterEndpointSlice, svcPort *k8scorev1.ServicePort, svcRoute *networkextensionv1.ServiceRoute) []networkextensionv1.ListenerBackend {

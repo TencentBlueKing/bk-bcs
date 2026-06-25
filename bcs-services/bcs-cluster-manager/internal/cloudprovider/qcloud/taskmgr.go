@@ -898,9 +898,11 @@ func (t *Task) BuildRemoveNodesFromClusterTask(cls *proto.Cluster, nodes []*prot
 	removeNodesTask.BuildCordonNodesStep(task)
 
 	// step2: check business node pods
-	common.BuildCheckNodePodsTaskStep(task, cls.ClusterID, nodeIPs, []cloudprovider.StepOption{
-		cloudprovider.WithStepAllowSkip(true),
-	})
+	if !opt.SkipCheckNodePods {
+		common.BuildCheckNodePodsTaskStep(task, cls.ClusterID, nodeIPs, []cloudprovider.StepOption{
+			cloudprovider.WithStepAllowSkip(true),
+		})
+	}
 
 	// step3: 业务自定义缩容流程: 支持 缩容节点前置脚本和前置标准运维流程
 	if opt.NodeTemplate != nil && len(opt.NodeTemplate.ScaleInPreScript) > 0 {

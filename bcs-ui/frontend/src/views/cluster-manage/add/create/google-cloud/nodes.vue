@@ -177,6 +177,7 @@ import { useFocusOnErrorField } from '@/composables/use-focus-on-error-field';
 import $i18n from '@/i18n/i18n-setup';
 import $store from '@/store/index';
 import TopoSelector from '@/views/cluster-manage/autoscaler/components/topo-select-tree.vue';
+import useCloud from '@/views/cluster-manage/use-cloud';
 
 const props = defineProps({
   region: {
@@ -423,20 +424,8 @@ async function getNodeGroupData() {
   loading.value = false;
 }
 // 磁盘类型
-const diskEnum = ref([
-  {
-    id: 'pd-balanced',
-    name: $i18n.t('cluster.ca.nodePool.create.instanceTypeConfig.diskType.balanced'),
-  },
-  {
-    id: 'pd-ssd',
-    name: $i18n.t('cluster.ca.nodePool.create.instanceTypeConfig.diskType.ssd'),
-  },
-  {
-    id: 'pd-standard',
-    name: $i18n.t('cluster.ca.nodePool.create.instanceTypeConfig.diskType.standard'),
-  },
-]);
+const { googleDiskEnum: diskEnum } = useCloud();
+
 const user = computed(() => $store.state.user);
 function setNodeInfo(data, index) {
   return {

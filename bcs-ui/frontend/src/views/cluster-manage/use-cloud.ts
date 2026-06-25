@@ -100,6 +100,25 @@ export default function () {
     },
   };
 
+  const googleDiskEnum = ref([
+    {
+      id: 'pd-balanced',
+      name: $i18n.t('cluster.ca.nodePool.create.instanceTypeConfig.diskType.balanced'),
+    },
+    {
+      id: 'pd-ssd',
+      name: $i18n.t('cluster.ca.nodePool.create.instanceTypeConfig.diskType.ssd'),
+    },
+    {
+      id: 'pd-standard',
+      name: $i18n.t('cluster.ca.nodePool.create.instanceTypeConfig.diskType.standard'),
+    },
+    {
+      id: 'hyperdisk-balanced',
+      name: $i18n.t('cluster.ca.nodePool.create.instanceTypeConfig.diskType.hyperdisk'),
+    },
+  ]);
+
   // 云账号列表
   const cloudAccountList = ref<ICloudAccount[]>([]);
   const cloudAccountLoading = ref(false);
@@ -256,5 +275,6 @@ export default function () {
     securityGroups,
     handleGetSecurityGroups,
     providerNameMap,
+    googleDiskEnum,
   };
 }

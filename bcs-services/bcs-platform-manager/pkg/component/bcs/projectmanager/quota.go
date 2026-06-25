@@ -44,7 +44,7 @@ func CreateProjectQuota(ctx context.Context, req *bcsproject.CreateProjectQuotaR
 }
 
 // GetProjectQuota 获取项目资源额度
-func GetProjectQuota(ctx context.Context, quotaId string) (*bcsproject.ProjectQuota, error) {
+func GetProjectQuota(ctx context.Context, quotaId string) (*bcsproject.ProjectQuotaResponse, error) {
 	cli, close, err := bcsproject.GetClient(config.ServiceDomain)
 	if err != nil {
 		return nil, err
@@ -61,7 +61,7 @@ func GetProjectQuota(ctx context.Context, quotaId string) (*bcsproject.ProjectQu
 		return nil, fmt.Errorf("GetProjectQuota error, code: %d, message: %s", p.Code, p.GetMessage())
 	}
 
-	return p.Data, nil
+	return p, nil
 }
 
 // UpdateProjectQuota 更新项目资源额度

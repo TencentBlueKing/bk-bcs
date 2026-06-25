@@ -2179,6 +2179,10 @@ message ClusterAdvanceSetting {
     title: "clusterConnectSetting",
     description: "集群开启内外网设，公有云必须设置此参数"
   }];
+  bool isDualStack = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "isDualStack",
+    description: "集群VPC-CNI模式下是否开启IPv6双栈，默认false"
+  }];
 }
 
 // ClusterConnectSetting ApiServer内外网访问信息
@@ -2516,8 +2520,12 @@ message OSInfo {
     description: "默认云上安全组，方便用户在cli、SaaS进行选择"
   }];
   map<string, string> regions = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "regions", 
+    title: "regions",
     description: "云上默认置入的区域信息，key是字符串，values是中文说明"
+  }];
+  repeated string ipv6ImageID = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "ipv6ImageID",
+    description: "支持IPv6双栈的镜像ID列表"
   }];
 }
 
@@ -9916,6 +9924,10 @@ message BatchDeleteClusterNodesRequest {
     title : "deleteMode",
     description : "删除模式，retain(移除集群节点，但是保留主机)，terminate(只支持按量计费的机器)，默认是RETAIN"
   }];
+  bool skipCheckNodePods = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "skipCheckNodePods",
+    description : "是否跳过检查节点业务pods"
+  }];
 }
 
 message BatchDeleteClusterNodesResponse {
@@ -10003,6 +10015,10 @@ message DeleteNodesRequest {
   bool isExternalNode = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "是否是第三方节点(IDC节点)",
     description : "下架第三方节点需置为true, 且必须关联nodeGroupID"
+  }];
+  bool skipCheckNodePods = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "skipCheckNodePods",
+    description : "是否跳过检查节点业务pods"
   }];
 }
 
@@ -10179,6 +10195,10 @@ message CleanNodesInGroupRequest {
   bool manual = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "manual",
     description : "用户手动下架CA节点时，当失败时候支持用户跳过；自动下架时, 自动跳过失败步骤"
+  }];
+  bool skipCheckNodePods = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "skipCheckNodePods",
+    description : "是否跳过检查节点业务pods"
   }];
 }
 
@@ -13001,6 +13021,10 @@ message OsImage {
   repeated ClusterInfo clusters = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "clusters",
     description : "镜像关联的集群信息"
+  }];
+  bool supportIpv6 = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "supportIpv6",
+    description : "是否支持IPv6双栈"
   }];
 }
 

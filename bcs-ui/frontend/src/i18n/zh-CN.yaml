@@ -206,12 +206,14 @@ metrics:
   usage: '使用率 {0}'
   cpuUsage: CPU 使用率
   cpuLimitUsage: CPU limit 使用率
+  cpuResUsage: CPU request 使用率
   diskUsage: 磁盘使用率
   memUsage: 内存使用率
   memUsage1: 内存使用量
   podUsage: Pod使用率
-  cpuUsageDesc: CPU单核使用百分比，1个核用满则是 100%，2个核用满则是 200%
-  cpuLimitUsageDesc: CPU实际消耗核数占用Limit核数百分比，有可能会被超额使用，一般在100%之内
+  cpuUsageDesc: CPU 单核使用百分比，1个核用满则是 100%，2个核用满则是 200%
+  cpuLimitUsageDesc: CPU 实际消耗核数占用 limit 核数百分比，有可能会被超额使用，一般在100%之内
+  cpuResUsageDesc: CPU 实际消耗核数占用 request 核数百分比，该指标可能超过 100%，表示实际 CPU 使用量超过了申请的 CPU 资源
   cpuRequestUsage:
     text: CPU装箱率
     clusterDesc: >-
@@ -1103,6 +1105,7 @@ cluster:
             io1: 预调配IOPS SSD(io1)
             st1: 高吞吐量HDD(st1)
             sc1: 吞吐量优化型Cold HDD(sc1)
+            hyperdisk: 均衡型超级磁盘
           disk:
             system: 系统盘
             data: 数据盘
@@ -2368,7 +2371,7 @@ dashboard:
       emptyNs: 请选择命名空间
       name: 命名空间名称只能包含小写字母、数字以及连字符(-)，连字符（-）后面必须接英文或者数字
       sharedClusterNs: '命名规则：{prefix}自定义名称'
-      setMinMaxMemCpu: 请设置MEN、CPU配额，且两者最小值不小于0
+      setValidQuota: 请设置合法的 CPU、内存配额，且 Limit 需大于等于 Request（共享集群最小值不小于1）
     status:
       waitingApproval: 待审批
       createNamespace: 创建命名空间
@@ -2500,6 +2503,7 @@ apiToken:
   msg:
     emptyDataTips: 您暂无当前操作权限，请新建API密钥后继续操作
     renewOK: 续期成功
+    tokenExpired: 您的 Token 已过期，请前往 {0} 续期
 logCollector:
   text: 日志采集
   tips:
@@ -2970,7 +2974,8 @@ tke:
     privateImage: 私有镜像
     bcsImage: 平台镜像
     clusterImage: 集群镜像
-    ipNum: IP数量
+    ipNum: IP 数量
+    ipNum1: IP 数量（剩余/总数）
     zone: 可用区
     staticIpMode: 固定 Pod IP
     enableStaticIpMode: 开启支持

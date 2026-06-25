@@ -25,6 +25,7 @@ type Interval int
 const (
 	CheckPerMin Interval = iota
 	CheckPer10Min
+	CheckPer60Min
 )
 
 // CheckRunner start check list
@@ -32,6 +33,7 @@ type CheckRunner struct {
 	ctx           context.Context
 	checkPerMin   []Checker
 	checkPer10Min []Checker
+	checkPer60Min []Checker
 }
 
 // NewCheckRunner return new check runner
@@ -40,6 +42,7 @@ func NewCheckRunner(ctx context.Context) *CheckRunner {
 		ctx:           ctx,
 		checkPerMin:   make([]Checker, 0),
 		checkPer10Min: make([]Checker, 0),
+		checkPer60Min: make([]Checker, 0),
 	}
 }
 
@@ -50,6 +53,8 @@ func (c *CheckRunner) Register(checker Checker, interval Interval) *CheckRunner 
 		c.checkPerMin = append(c.checkPerMin, checker)
 	case CheckPer10Min:
 		c.checkPer10Min = append(c.checkPer10Min, checker)
+	case CheckPer60Min:
+		c.checkPer60Min = append(c.checkPer60Min, checker)
 	default:
 		c.checkPerMin = append(c.checkPerMin, checker)
 	}
@@ -61,9 +66,11 @@ func (c *CheckRunner) Start() {
 	go func() {
 		tickerMin := time.NewTicker(time.Minute)
 		tickerMin10 := time.NewTicker(time.Minute * 10)
+		ticker60Min := time.NewTicker(time.Hour)
 		defer func() {
 			tickerMin.Stop()
 			tickerMin10.Stop()
+			ticker60Min.Stop()
 		}()
 		for {
 			select {
@@ -73,6 +80,10 @@ func (c *CheckRunner) Start() {
 				}
 			case <-tickerMin10.C:
 				for _, item := range c.checkPer10Min {
+					go item.Run()
+				}
+			case <-ticker60Min.C:
+				for _, item := range c.checkPer60Min {
 					go item.Run()
 				}
 			case <-c.ctx.Done():

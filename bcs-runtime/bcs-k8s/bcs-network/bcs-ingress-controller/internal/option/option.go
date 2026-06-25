@@ -138,6 +138,9 @@ type ControllerOption struct {
 
 	// UptimeCheckDisabled 为true时跳过拨测任务的创建和删除，避免影响主流程
 	UptimeCheckDisabled bool
+
+	// CertificateCheckEnabled enables SSL certificate expiry checker (default false).
+	CertificateCheckEnabled bool
 }
 
 // Conf 服务配置
@@ -289,6 +292,8 @@ func (op *ControllerOption) BindFromCommandLine() {
 
 	flag.BoolVar(&op.UptimeCheckDisabled, "uptime_check_disabled", false,
 		"if true, skip uptime check task creation and deletion to avoid affecting main binding flow")
+	flag.BoolVar(&op.CertificateCheckEnabled, "certificate_check_enabled", false,
+		"if true, register certificate expiry checker for tencentcloud (requires ssl:DescribeCertificates permission)")
 
 	flag.Parse()
 

@@ -67,6 +67,8 @@ var (
 		Name:      "request_total",
 		Help:      "The total number of requests for bkbcs ingress controller to call other system api",
 	}, []string{"system", "handler", "method", "status"})
+	// LibRequestTotal exposes lib-layer outbound request counter for tests and dashboards.
+	LibRequestTotal = requestsTotalLib
 	requestLatencyLib = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Namespace: "bkbcs_ingressctrl",
 		Subsystem: "lib",

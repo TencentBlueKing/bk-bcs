@@ -96,7 +96,7 @@ bcsGateway:
 taskConfig:
   address: ""
   exchange: ""
-  workerCnt: ""
+  workerCnt: 0
 sharedClusterConfig:
   annoKeyProjCode: ""
 enableMultiTenant: false
@@ -104,6 +104,9 @@ bkUser:
   host: ""
   timeout: 10
   debug: false
+  allowAdjustQuota: false
 systemConfig:
   systemNameSpaces:
   - "bcs"
+  gpuResourceKeys:
+  - "kunlunxin.com/xpu"

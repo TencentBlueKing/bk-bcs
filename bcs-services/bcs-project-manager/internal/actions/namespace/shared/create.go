@@ -141,5 +141,10 @@ func (a *SharedNamespaceAction) validateCreate(ctx context.Context, req *proto.C
 	if err := quotautils.ValidateResourceQuota(req.Quota); err != nil {
 		return err
 	}
+	if !config.GlobalConf.SharedClusterConfig.AllowAdjustQuota {
+		if err := quotautils.ValidateQuotaEquality(req.Quota); err != nil {
+			return err
+		}
+	}
 	return nil
 }

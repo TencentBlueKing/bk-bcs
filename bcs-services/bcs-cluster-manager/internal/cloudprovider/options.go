@@ -334,6 +334,8 @@ type DeleteNodesOption struct {
 	Operator   string
 	IsForce    bool
 	DeleteMode string
+	//SkipCheckNodePods for auto skip check node pods step
+	SkipCheckNodePods bool
 	// cloud is used for cloudprovider template
 	Cloud        *proto.Cloud
 	NodeTemplate *proto.NodeTemplate
@@ -478,6 +480,8 @@ type CleanNodesOption struct {
 	AsOption *proto.ClusterAutoScalingOption
 	Operator string
 	Manual   bool
+	//SkipCheckNodePods for auto skip check node pods step
+	SkipCheckNodePods bool
 }
 
 // CleanNodesResponse response for clean nodes in NodeGroup

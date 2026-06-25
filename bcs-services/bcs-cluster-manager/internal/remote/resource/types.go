@@ -144,7 +144,7 @@ type ApplyInstanceReq struct {
 	BusinessID string
 
 	// 来源业务
-	ProviderBizIDs string
+	ProviderBizIDs []string
 	StartTime      int64
 	EndTime        int64
 }

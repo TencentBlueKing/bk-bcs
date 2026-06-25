@@ -207,6 +207,7 @@ func generateClusterAdvancedInfo(cluster *proto.Cluster) *api.ClusterAdvancedSet
 		NetworkType:        cluster.ClusterAdvanceSettings.NetworkType,
 		DeletionProtection: cluster.ClusterAdvanceSettings.DeletionProtection,
 		AuditEnabled:       cluster.ClusterAdvanceSettings.AuditEnabled,
+		IsDualStack:        cluster.ClusterAdvanceSettings.IsDualStack,
 	}
 
 	// extraArgs
@@ -807,6 +808,17 @@ func CreateModifyInstancesVpcTask(taskID string, stepName string) error {
 	nodeIDs := make([]string, 0)
 	for i := range nodes {
 		nodeIDs = append(nodeIDs, nodes[i].NodeID)
+	}
+
+	err = business.PreCheckModifyInstancesVpc(ctx, nodeIDs, dependInfo.CmOption)
+	if err != nil {
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
+			fmt.Sprintf("CreateModifyInstancesVpcTask PreCheckModifyInstancesVpc failed, nodeIds:[%s], err:[%s]", nodeIDs, err))
+		blog.Errorf("CreateModifyInstancesVpcTask[%s]: PreCheckModifyInstancesVpc for nodes[%v] failed, %s",
+			taskID, nodeIDs, err.Error())
+		retErr := fmt.Errorf("CreateModifyInstancesVpcTask PreCheckModifyInstancesVpc err, %s", err.Error())
+		_ = state.UpdateStepFailure(start, stepName, retErr)
+		return retErr
 	}
 
 	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,

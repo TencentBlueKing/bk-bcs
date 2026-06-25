@@ -23,7 +23,7 @@
   </BcsContent>
 </template>
 <script lang="ts">
-import { computed, defineComponent, onMounted, ref, toRefs } from 'vue';
+import { computed, defineComponent, onBeforeMount, onMounted, ref, toRefs } from 'vue';
 
 import NodeConfig from './node-config.vue';
 import NodePoolInfo from './node-pool-info.vue';
@@ -36,6 +36,7 @@ import $store from '@/store/index';
 import Schema from '@/views/cluster-manage/autoscaler/resolve-schema';
 import { useClusterList } from '@/views/cluster-manage/cluster/use-cluster';
 import HeaderNav from '@/views/cluster-manage/components/header-nav.vue';
+import useProjects from '@/views/project-manage/project/use-project';
 
 export default defineComponent({
   components: {
@@ -58,6 +59,8 @@ export default defineComponent({
   setup(props) {
     const { clusterId, nodeGroupID } = toRefs(props);
     const { clusterList } = useClusterList();
+    const { fetchProjectInfo } = useProjects();
+    const curProjectCode = computed(() => $store.state.curProject.projectCode);
     const curCluster = computed(() => ($store.state as any).cluster.clusterList
       ?.find(item => item.clusterID === clusterId.value) || {});
     const navList = computed(() => {
@@ -161,6 +164,13 @@ export default defineComponent({
       }
     };
 
+    onBeforeMount(async () => {
+      if (!curProjectCode.value) return;
+      // 获取最新项目信息
+      await fetchProjectInfo({
+        $projectId: curProjectCode.value,
+      });
+    });
     onMounted(async () => {
       isLoading.value = true;
       await handleGetSchemaData();

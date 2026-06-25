@@ -1696,6 +1696,8 @@ func (m *ClusterAdvanceSetting) validate(all bool) error {
 		}
 	}
 
+	// no validation rules for IsDualStack
+
 	if len(errors) > 0 {
 		return ClusterAdvanceSettingMultiError(errors)
 	}
@@ -37527,6 +37529,8 @@ func (m *BatchDeleteClusterNodesRequest) validate(all bool) error {
 
 	// no validation rules for DeleteMode
 
+	// no validation rules for SkipCheckNodePods
+
 	if len(errors) > 0 {
 		return BatchDeleteClusterNodesRequestMultiError(errors)
 	}
@@ -37980,6 +37984,8 @@ func (m *DeleteNodesRequest) validate(all bool) error {
 	// no validation rules for NodeGroupID
 
 	// no validation rules for IsExternalNode
+
+	// no validation rules for SkipCheckNodePods
 
 	if len(errors) > 0 {
 		return DeleteNodesRequestMultiError(errors)
@@ -39070,6 +39076,8 @@ func (m *CleanNodesInGroupRequest) validate(all bool) error {
 	}
 
 	// no validation rules for Manual
+
+	// no validation rules for SkipCheckNodePods
 
 	if len(errors) > 0 {
 		return CleanNodesInGroupRequestMultiError(errors)
@@ -52693,6 +52701,8 @@ func (m *OsImage) validate(all bool) error {
 		}
 
 	}
+
+	// no validation rules for SupportIpv6
 
 	if len(errors) > 0 {
 		return OsImageMultiError(errors)

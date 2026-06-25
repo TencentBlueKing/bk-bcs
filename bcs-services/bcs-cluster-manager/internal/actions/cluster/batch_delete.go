@@ -314,11 +314,12 @@ func getNodeDataIPList(nodes []nodeData) []string {
 func (ba *BatchDeleteClusterNodesAction) handleGroupNodes(ipList []string, groupID string) {
 	var (
 		cleanNodesRequest = &cmproto.CleanNodesInGroupRequest{
-			ClusterID:   ba.req.ClusterID,
-			Nodes:       ipList,
-			NodeGroupID: groupID,
-			Operator:    ba.req.Operator,
-			Manual:      true,
+			ClusterID:         ba.req.ClusterID,
+			Nodes:             ipList,
+			NodeGroupID:       groupID,
+			Operator:          ba.req.Operator,
+			Manual:            true,
+			SkipCheckNodePods: ba.req.SkipCheckNodePods,
 		}
 		cleanNodesResp = &cmproto.CleanNodesInGroupResponse{}
 	)
@@ -349,12 +350,13 @@ func (ba *BatchDeleteClusterNodesAction) handleGroupNodes(ipList []string, group
 func (ba *BatchDeleteClusterNodesAction) handleManualNodes(ipList []string, groupID string, external bool) {
 	var (
 		deleteNodesRequest = &cmproto.DeleteNodesRequest{
-			ClusterID:      ba.req.ClusterID,
-			Nodes:          strings.Join(ipList, ","),
-			Operator:       ba.req.Operator,
-			NodeGroupID:    groupID,
-			IsExternalNode: external,
-			DeleteMode:     ba.req.DeleteMode,
+			ClusterID:         ba.req.ClusterID,
+			Nodes:             strings.Join(ipList, ","),
+			Operator:          ba.req.Operator,
+			NodeGroupID:       groupID,
+			IsExternalNode:    external,
+			DeleteMode:        ba.req.DeleteMode,
+			SkipCheckNodePods: ba.req.SkipCheckNodePods,
 		}
 
 		deleteNodesResp = &cmproto.DeleteNodesResponse{}

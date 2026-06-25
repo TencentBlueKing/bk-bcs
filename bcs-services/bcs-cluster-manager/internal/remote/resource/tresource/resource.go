@@ -1150,7 +1150,16 @@ func buildCVMConsumeDeviceDesireReq(desiredNodes uint32, req *resource.ApplyInst
 	}
 	zoneStr := strings.Join(zones, ",")
 	subnetStr := ""
-	businessID, _ := strconv.ParseInt(req.BusinessID, 10, 64)
+
+	var businessID int64
+	if req.BusinessID != "" {
+		var err error
+		businessID, err = strconv.ParseInt(req.BusinessID, 10, 64)
+		if err != nil {
+			blog.Errorf("buildCVMConsumeDeviceDesireReq ParseInt[%s] failed: %v", req.BusinessID, err)
+			return nil, fmt.Errorf("buildCVMConsumeDeviceDesireReq ParseInt[%s] failed: %v", req.BusinessID, err)
+		}
+	}
 
 	desires := make([]*ConsumeDesire, 0)
 
@@ -1192,7 +1201,7 @@ func buildCVMConsumeDeviceDesireReq(desiredNodes uint32, req *resource.ApplyInst
 			Subnet: &subnetStr,
 		},
 		BusinessID:     &businessID,
-		ProviderBizIDs: &req.ProviderBizIDs,
+		ProviderBizIDs: req.ProviderBizIDs,
 		StartTime:      &req.StartTime,
 		EndTime:        &req.EndTime,
 	})

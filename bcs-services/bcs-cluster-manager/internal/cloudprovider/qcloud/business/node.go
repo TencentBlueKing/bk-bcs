@@ -648,3 +648,89 @@ func sortInstancesByZone(ids []string, opt *cloudprovider.CommonOption) (map[str
 
 	return zoneNodes, nil
 }
+
+// PreCheckModifyInstancesVpc 迁移 VPC 前置校验：通过 CMDB 查询实例信息，
+// 对比 CMDB 中记录的云实例 ID（BkCloudInstID）与传入的 instanceId 是否一致
+// 不一致说明 CMDB 数据与实际云资源不匹配，返回错误
+func PreCheckModifyInstancesVpc(ctx context.Context, nodeIds []string, opt *cloudprovider.CommonOption) error {
+	taskID, stepName := cloudprovider.GetTaskIDAndStepNameFromContext(ctx)
+
+	// 通过数据库获取云上 id -> ip 的映射
+	idToIPMap := cloudprovider.GetNodeIdToIpMapByNodeIds(nodeIds)
+	if len(idToIPMap) == 0 {
+		return fmt.Errorf("PreCheckModifyInstancesVpc[%s] idToIPMap is empty, ids:[%v]", taskID, nodeIds)
+	}
+
+	// 获取云上 ip 列表，并构建 ip -> id 的反向映射，方便后续比对
+	ips := make([]string, 0, len(idToIPMap))
+	ipToInstID := make(map[string]string, len(idToIPMap))
+	for instID, ip := range idToIPMap {
+		ips = append(ips, ip)
+		ipToInstID[ip] = instID
+	}
+
+	// 查询 CMDB 获取 ip -> BkCloudInstID 的映射
+	cmdbIPToInstID, err := listCMDBInstIDByIps(ips)
+	if err != nil {
+		blog.Errorf("PreCheckModifyInstancesVpc[%s] listCMDBInstIDByIps failed: %v, ips: %v",
+			taskID, err, ips)
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
+			fmt.Sprintf("PreCheckModifyInstancesVpc listCMDBInstIDByIps failed, nodeIds:[%s], err:[%s]", nodeIds, err))
+		return fmt.Errorf("PreCheckModifyInstancesVpc[%s] query CMDB failed: %v", taskID, err)
+	}
+
+	// 对比 CMDB 中的 BkCloudInstID 与传入的 instanceId
+	var mismatchList []string
+	idx := 1
+	for ip, instID := range ipToInstID {
+		cmdbInstID, ok := cmdbIPToInstID[ip]
+		if !ok || cmdbInstID == "" {
+			errMsg := fmt.Sprintf("[%d] ip[%s] id[%s]: BkCloudInstID is empty or not found in CMDB", idx, ip, instID)
+			mismatchList = append(mismatchList, errMsg)
+			blog.Errorf("PreCheckModifyInstancesVpc[%s] %s", taskID, errMsg)
+			cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
+				fmt.Sprintf("PreCheckModifyInstancesVpc %s", errMsg))
+			idx++
+			continue
+		}
+		if cmdbInstID != instID {
+			errMsg := fmt.Sprintf("[%d] ip[%s]: cmdb instID[%s] != actual instID[%s]", idx, ip, cmdbInstID, instID)
+			mismatchList = append(mismatchList, errMsg)
+			blog.Errorf("PreCheckModifyInstancesVpc[%s] %s", taskID, errMsg)
+			cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
+				fmt.Sprintf("PreCheckModifyInstancesVpc %s", errMsg))
+			idx++
+		}
+	}
+
+	if len(mismatchList) > 0 {
+		return fmt.Errorf("PreCheckModifyInstancesVpc[%s] CMDB instID mismatch(total %d):\n%s",
+			taskID, len(mismatchList), strings.Join(mismatchList, "\n"))
+	}
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		fmt.Sprintf("PreCheckModifyInstancesVpc[%s] all instances passed CMDB instID check, count:%d, instanceIDs:[%v]",
+			taskID, len(idToIPMap), nodeIds))
+	blog.Infof("PreCheckModifyInstancesVpc[%s] all instances passed CMDB instID check, count:%d, instanceIDs:[%v]",
+		taskID, len(idToIPMap), nodeIds)
+	return nil
+}
+
+// listCMDBInstIDByIps 通过 IP 列表查询 CMDB，返回 IP -> BkCloudInstID 的映射
+func listCMDBInstIDByIps(ips []string) (map[string]string, error) {
+	hostDataList, err := cmdb.GetCmdbClient().QueryHostInfoWithoutBiz(cmdb.FieldHostIP, ips, cmdb.Page{
+		Start: 0,
+		Limit: len(ips),
+	})
+	if err != nil {
+		blog.Errorf("ListCMDBInstIDByIps QueryHostInfoWithoutBiz failed: [%v], ips:[%s]", err, ips)
+		return nil, err
+	}
+
+	ipToInstID := make(map[string]string, len(hostDataList))
+	for i := range hostDataList {
+		ipToInstID[hostDataList[i].BKHostInnerIP] = hostDataList[i].BkCloudInstID
+	}
+
+	return ipToInstID, nil
+}
