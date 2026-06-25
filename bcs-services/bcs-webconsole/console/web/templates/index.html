@@ -127,6 +127,22 @@
     <script src="{{ .settings.SITE_STATIC_URL }}/web/static/assets/vue/vue-i18n.js"></script>
     <script src="{{ .settings.SITE_STATIC_URL }}/web/static/assets/vue/bk-magic-vue.min.js"></script>
     <script type="text/javascript" defer>
+        var debounce = (func, delay) => { 
+            let timer;  // 定时器
+            return function () { 
+                let context = this;  // 记录 this 值,防止在回调函数中丢失
+                let args = arguments;  // 函数参数
+                //如果定时器存在，则清除定时器(如果没有,也没必要进行处理)
+                timer ? clearTimeout(timer) : null; 
+                timer = setTimeout(() => { 
+                    // 防止 this 值变为 window
+                    func.apply(context, args) 
+                }, delay);
+            } 
+        }
+        var setText = (call) =>{
+            return debounce(call,100);
+        }
         var localeLang = "{{ .Language }}"
         if (localeLang == "en") {
             localeLang = "enUS"
@@ -479,7 +495,46 @@
                                 }, window.location.origin)
                             }
                             return false;
-                        } else if (e.ctrlKey && e.shiftKey && e.code === 'KeyC') {
+                        } else if (e.ctrlKey && !e.shiftKey && e.code === 'KeyC') {
+                            // Windows下Ctrl+C: 有文本选中时复制, 无选中时发送原始Ctrl+C
+                            var selection = self.term.getSelection();
+                            if (selection) {
+                                e.preventDefault();
+                                if (navigator.clipboard && navigator.clipboard.writeText) {
+                                    navigator.clipboard.writeText(selection);
+                                } else {
+                                    var textarea = document.createElement('textarea');
+                                    textarea.value = selection;
+                                    textarea.style.position = 'fixed';
+                                    textarea.style.opacity = '0';
+                                    document.body.appendChild(textarea);
+                                    textarea.select();
+                                    document.execCommand('copy');
+                                    document.body.removeChild(textarea);
+                                }
+                                return false;
+                            }
+                            // 无选中内容, 不拦截, 由xterm默认发送
+                        } else if (e.ctrlKey && !e.shiftKey && e.code === 'KeyV') {
+                        // Windows下Ctrl+V粘贴快捷键支持
+                        if (navigator.clipboard && navigator.clipboard.readText) {
+                            navigator.clipboard.readText().then(function (text) {
+                                if (text) {
+                                    // 防抖，防止粘贴多次
+                                    setText(() => {
+                                        self.term.paste(text);
+                                    })
+                                }
+                            }).catch(function (err) {
+                                console.error({
+                                    name: err.name,
+                                    message: err.message,
+                                    stack: err.stack
+                                });
+                            });                        
+                        }
+                        return false;
+                    } else if (e.ctrlKey && e.shiftKey && e.code === 'KeyC') {
                             // Windows下Ctrl+Shift+C会打开浏览器开发者工具, 拦截该快捷键用于复制选中文本
                             e.preventDefault();
                             var selection = self.term.getSelection();

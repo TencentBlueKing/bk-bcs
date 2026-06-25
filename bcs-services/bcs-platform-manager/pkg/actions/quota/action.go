@@ -27,7 +27,7 @@ import (
 // QuotaAction project action interface
 type QuotaAction interface { // nolint
 	CreateProjectQuota(ctx context.Context, req *types.CreateProjectQuotaReq) (bool, error)
-	GetProjectQuota(ctx context.Context, quotaId string) (*types.ProjectQuota, error)
+	GetProjectQuota(ctx context.Context, quotaId string) (*types.GetProjectQuotaData, error)
 	UpdateProjectQuota(ctx context.Context, req *types.UpdateProjectQuotaReq) (bool, error)
 	ScaleUpProjectQuota(ctx context.Context, req *types.ScaleUpProjectQuotaReq) (bool, error)
 	ScaleDownProjectQuota(ctx context.Context, req *types.ScaleDownProjectQuotaReq) (bool, error)
@@ -75,12 +75,16 @@ func (a *Action) CreateProjectQuota(ctx context.Context, req *types.CreateProjec
 }
 
 // GetProjectQuota 获取项目资源额度
-func (a *Action) GetProjectQuota(ctx context.Context, quotaId string) (*types.ProjectQuota, error) {
-	data, err := projectrmgr.GetProjectQuota(ctx, quotaId)
+func (a *Action) GetProjectQuota(ctx context.Context, quotaId string) (*types.GetProjectQuotaData, error) {
+	rsp, err := projectrmgr.GetProjectQuota(ctx, quotaId)
 	if err != nil {
 		return nil, utils.SystemError(err)
 	}
-	return conver2TypeQuota(data), nil
+
+	return &types.GetProjectQuotaData{
+		Data: conver2TypeQuota(rsp.Data),
+		Task: rsp.Task,
+	}, nil
 }
 
 // UpdateProjectQuota 更新项目资源额度
@@ -163,9 +167,18 @@ func (a *Action) ListProjectQuotasV2(ctx context.Context, req *types.ListProject
 		return nil, utils.SystemError(err)
 	}
 
-	results := make([]*types.ProjectQuota, 0)
+	results := make([]*types.ProjectQuotaData, 0)
 	for _, item := range data.Results {
-		results = append(results, conver2TypeQuota(item))
+		results = append(results, &types.ProjectQuotaData{
+			QuotaId:    item.QuotaId,
+			QuotaName:  item.QuotaName,
+			IsDeleted:  item.IsDeleted,
+			QuotaType:  item.QuotaType,
+			Quota:      conver2TypeQuotaResource(item.Quota),
+			Status:     item.Status,
+			UpdateTime: item.UpdateTime,
+			Updater:    item.Updater,
+		})
 	}
 
 	return &types.ListProjectQuotasData{
@@ -210,24 +223,39 @@ func (a *Action) GetProjectQuotasStatistics(ctx context.Context, req *types.GetP
 	}
 
 	return &types.ProjectQuotasStatisticsData{
-		Cpu: &types.QuotaResourceData{
-			UsedNum:      data.Cpu.UsedNum,
-			AvailableNum: data.Cpu.AvailableNum,
-			TotalNum:     data.Cpu.TotalNum,
-			UseRate:      data.Cpu.UseRate,
-		},
-		Mem: &types.QuotaResourceData{
-			UsedNum:      data.Mem.UsedNum,
-			AvailableNum: data.Mem.AvailableNum,
-			TotalNum:     data.Mem.TotalNum,
-			UseRate:      data.Mem.UseRate,
-		},
-		Gpu: &types.QuotaResourceData{
-			UsedNum:      data.Gpu.UsedNum,
-			AvailableNum: data.Gpu.AvailableNum,
-			TotalNum:     data.Gpu.TotalNum,
-			UseRate:      data.Gpu.UseRate,
-		},
+		Cpu: func() *types.QuotaResourceData {
+			if data.Cpu == nil {
+				return &types.QuotaResourceData{}
+			}
+			return &types.QuotaResourceData{
+				UsedNum:      data.Cpu.UsedNum,
+				AvailableNum: data.Cpu.AvailableNum,
+				TotalNum:     data.Cpu.TotalNum,
+				UseRate:      data.Cpu.UseRate,
+			}
+		}(),
+		Mem: func() *types.QuotaResourceData {
+			if data.Mem == nil {
+				return &types.QuotaResourceData{}
+			}
+			return &types.QuotaResourceData{
+				UsedNum:      data.Mem.UsedNum,
+				AvailableNum: data.Mem.AvailableNum,
+				TotalNum:     data.Mem.TotalNum,
+				UseRate:      data.Mem.UseRate,
+			}
+		}(),
+		Gpu: func() *types.QuotaResourceData {
+			if data.Gpu == nil {
+				return &types.QuotaResourceData{}
+			}
+			return &types.QuotaResourceData{
+				UsedNum:      data.Gpu.UsedNum,
+				AvailableNum: data.Gpu.AvailableNum,
+				TotalNum:     data.Gpu.TotalNum,
+				UseRate:      data.Gpu.UseRate,
+			}
+		}(),
 	}, nil
 }
 
@@ -253,9 +281,20 @@ func conver2TypeQuota(quota *bcsproject.ProjectQuota) *types.ProjectQuota {
 		Creator:      quota.Creator,
 		Updater:      quota.Updater,
 		Provider:     quota.Provider,
-		NodeGroups:   []*types.NodeGroup{},
-		Labels:       quota.Labels,
-		Annotations:  quota.Annotations,
+		NodeGroups: func() []*types.NodeGroupQuota {
+			nodeGroups := make([]*types.NodeGroupQuota, 0)
+			for _, item := range quota.NodeGroups {
+				nodeGroups = append(nodeGroups, &types.NodeGroupQuota{
+					ClusterId:   item.ClusterId,
+					NodeGroupId: item.NodeGroupId,
+					QuotaNum:    item.QuotaNum,
+					QuotaUsed:   item.QuotaUsed,
+				})
+			}
+			return nodeGroups
+		}(),
+		Labels:      quota.Labels,
+		Annotations: quota.Annotations,
 		QuotaAttr: func() *types.QuotaAttr {
 			if quota.QuotaAttr == nil {
 				return &types.QuotaAttr{}
