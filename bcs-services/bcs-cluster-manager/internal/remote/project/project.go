@@ -250,7 +250,7 @@ func (pm *ProManClient) CheckProjectQuotaGrayLabel(ctx context.Context, projectI
 // CheckProjectQuotaAndLadderLabel get project is has quota-gray and ladder quota label
 func (pm *ProManClient) CheckProjectQuotaAndLadderLabel(
 	ctx context.Context, projectId string) (string, string, error) {
-	projInfo, err := ProjectClient.GetProjectInfo(ctx, projectId, true)
+	projInfo, err := projectClient.GetProjectInfo(ctx, projectId, true)
 	if err != nil {
 		blog.Errorf("CheckProjectQuotaAndLadderLabel GetProjectInfo[%s] failed: %v", projectId, err)
 		return "", "", err
