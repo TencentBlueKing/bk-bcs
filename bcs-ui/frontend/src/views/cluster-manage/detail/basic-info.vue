@@ -34,6 +34,9 @@
         <bk-form-item :label="$t('cluster.create.label.clusterVersion')">
           {{ clusterVersion }}
         </bk-form-item>
+        <bk-form-item label="API Server">
+          {{ clusterData.extraInfo?.apiServer || '--' }}
+        </bk-form-item>
         <bk-form-item
           :label="$t('cluster.detail.label.tkeID')"
           v-if="clusterData.providerType === 'tke' && clusterData.clusterType !== 'virtual'">
