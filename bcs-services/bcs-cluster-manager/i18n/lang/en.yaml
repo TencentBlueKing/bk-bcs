@@ -181,3 +181,7 @@ kube-api-qps: "QPS to use while talking with kubernetes API server. The number m
 max-pods: "Number of Pods that can run on this kubelet. "
 root-dir: "Directory path for managing kubelet files (volume mounts, etc)."
 v: "Number for the log level verbosity"
+
+# error message
+ClusterUnderlayUsageRatioLimitErrMessage: "Current cluster subnet IP usage ratio is %.2f%%,
+ which is below the standard %.2f%%, unable to expand, please contact BCS assistant for expansion"

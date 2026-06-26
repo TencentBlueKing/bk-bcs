@@ -845,17 +845,29 @@ func (c *Cluster) AddSubnetsToCluster(ctx context.Context, subnet *proto.SubnetS
 	}
 
 	// 检测当前集群子网资源使用率, 如果使用率达标则继续扩容, 不达标则拒绝扩容
-	zoneSubnetRatio, _, _, err := business.GetClusterCurrentVpcCniSubnets(opt.Cluster, false)
+	_, totalRatio, _, err := business.GetClusterCurrentVpcCniSubnets(opt.Cluster, false)
 	if err != nil {
 		return fmt.Errorf("AddSubnetsToCluster failed: %v", err)
 	}
 
-	goalRatio := opt.Cloud.GetNetworkInfo().GetUnderlayRatio()
-	for i := range subnet.GetNew() {
-		zoneRatio, ok := zoneSubnetRatio[subnet.GetNew()[i].GetZone()]
-		if ok && zoneRatio.Ratio < float64(goalRatio) {
-			return fmt.Errorf("zone[%s] usage lt goalRatio %+v", subnet.GetNew()[i].GetZone(), goalRatio)
-		}
+	// 检查各区子网使用率
+	//goalRatio := opt.Cloud.GetNetworkInfo().GetUnderlayRatio()
+	//for i := range subnet.GetNew() {
+	//	zoneRatio, ok := zoneSubnetRatio[subnet.GetNew()[i].GetZone()]
+	//	if ok && zoneRatio.Ratio < float64(goalRatio) {
+	//		return fmt.Errorf("zone[%s] usage lt goalRatio %+v", subnet.GetNew()[i].GetZone(), goalRatio)
+	//	}
+	//}
+
+	// 检查集群子网整体使用率
+	underlayUsageRatioLimit := opt.Cloud.GetNetworkInfo().GetClusterUnderlayUsageRatioLimit()
+	// subnetUsageRatioLimit 为 0 相当于关闭
+	if underlayUsageRatioLimit > 0 && totalRatio < float64(underlayUsageRatioLimit) {
+		errMsg := fmt.Sprintf("cluster[%s] underlayIP currentUsageRatio %+v lt UsageRatioLimit %+v",
+			opt.Cluster.ClusterID, totalRatio, underlayUsageRatioLimit)
+		blog.Errorf(errMsg)
+		i18nMsg := i18n.Tf(ctx, "ClusterUnderlayUsageRatioLimitErrMessage", totalRatio, underlayUsageRatioLimit)
+		return fmt.Errorf("%s", i18nMsg)
 	}
 
 	if opt.IsSync {

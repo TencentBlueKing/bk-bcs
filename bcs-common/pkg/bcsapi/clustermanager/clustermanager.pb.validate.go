@@ -10463,6 +10463,8 @@ func (m *CloudNetworkInfo) validate(all bool) error {
 
 	}
 
+	// no validation rules for VpcUsageRatioLimit
+
 	if len(errors) > 0 {
 		return CloudNetworkInfoMultiError(errors)
 	}

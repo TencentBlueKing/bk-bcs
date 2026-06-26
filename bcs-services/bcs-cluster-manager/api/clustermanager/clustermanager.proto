@@ -3821,6 +3821,11 @@ message CloudNetworkInfo {
       title: "vpcCniModes",
       description: "vpc-cni插件下支持的网络模式"
     }];
+  float clusterUnderlayUsageRatioLimit = 9 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title: "clusterUnderlayUsageRatioLimit",
+      description: "集群子网使用率比率限制，集群使用率比率未达标不可继续添加子网"
+    }];
 }
 
 message EnvCidrStep {

@@ -3617,6 +3617,14 @@
             "required": false,
             "type": "boolean",
             "format": "boolean"
+          },
+          {
+            "name": "skipCheckNodePods",
+            "description": "skipCheckNodePods. 是否跳过检查节点业务pods",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
           }
         ],
         "tags": [
@@ -4264,7 +4272,7 @@
           },
           {
             "name": "skipCheckNodePods",
-            "description": "skipCheckNodePods. 是否跳过",
+            "description": "skipCheckNodePods. 是否跳过检查节点业务pods",
             "in": "query",
             "required": false,
             "type": "boolean",
@@ -8977,6 +8985,12 @@
           "format": "boolean",
           "description": "用户手动下架CA节点时，当失败时候支持用户跳过；自动下架时, 自动跳过失败步骤",
           "title": "manual"
+        },
+        "skipCheckNodePods": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "是否跳过检查节点业务pods",
+          "title": "skipCheckNodePods"
         }
       },
       "description": "从节点池中清理回收指定IP节点",
@@ -9605,6 +9619,12 @@
           },
           "description": "vpc-cni插件下支持的网络模式",
           "title": "vpcCniModes"
+        },
+        "clusterSubnetUsageRatioLimit": {
+          "type": "number",
+          "format": "float",
+          "description": "集群子网使用率比率限制，集群使用率比率未达标不可继续添加子网",
+          "title": "clusterSubnetUsageRatioLimit"
         }
       },
       "description": "用于记录公共网络配置信息",

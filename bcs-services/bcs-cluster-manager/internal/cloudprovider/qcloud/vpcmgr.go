@@ -250,9 +250,9 @@ func (c *VPCManager) GetVpcIpUsage(
 }
 
 // GetClusterIpUsage get cluster overlay ip usage
-func (c *VPCManager) GetClusterIpUsage(clusterId string, ipType string, opt *cloudprovider.CommonOption) (
+func (c *VPCManager) GetClusterIpUsage(clusterID string, ipType string, opt *cloudprovider.CommonOption) (
 	uint32, uint32, error) {
-	cls, err := cloudprovider.GetStorageModel().GetCluster(context.Background(), clusterId)
+	cls, err := cloudprovider.GetStorageModel().GetCluster(context.Background(), clusterID)
 	if err != nil {
 		return 0, 0, err
 	}
