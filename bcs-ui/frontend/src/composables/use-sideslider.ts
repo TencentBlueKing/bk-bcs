@@ -23,6 +23,7 @@ export default function useSideslider(data: Ref<any> = ref(''), config: IConfig 
       title: $i18n.t('generic.msg.info.exitTips.text'),
       subTitle: $i18n.t('generic.msg.info.exitTips.subTitle'),
       clsName: 'custom-info-confirm default-info',
+      width: 480,
       okText: $i18n.t('generic.button.exit'),
       cancelText: $i18n.t('generic.button.cancel'),
       confirmFn() {

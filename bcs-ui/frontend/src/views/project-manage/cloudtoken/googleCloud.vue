@@ -136,9 +136,9 @@
             <div
               class="flex items-center justify-between h-[40px] bg-[#2E2E2E] shadow pl-[24px] pr-[16px]"
               ref="editorRef">
-              <span class="text-[#979BA5] text-[14px] flex items-center">
-                <i class="bk-icon icon-info-circle"></i>
-                <span class="ml-[10px]">{{ $t('googleCloud.tips.onlySupportJsonFile') }}</span>
+              <span class="text-[#979BA5] text-[14px] flex items-start">
+                <i class="bk-icon icon-info-circle flex-shrink-0 mt-[2px]"></i>
+                <span class="ml-[10px] leading-[20px]">{{ $t('googleCloud.tips.onlySupportJsonFile') }}</span>
               </span>
               <span class="text-[#979BA5] flex items-center">
                 <!-- 导入 -->
