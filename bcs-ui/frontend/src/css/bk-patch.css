@@ -1478,3 +1478,7 @@
 .custom-select-popover .bk-select-search-wrapper {
     padding: 4px 0 0;
 }
+
+.bk-resize-layout>.bk-resize-layout-aside .bk-resize-collapse {
+    overflow: clip;
+}
