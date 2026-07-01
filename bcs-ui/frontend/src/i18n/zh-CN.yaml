@@ -2359,6 +2359,7 @@ dashboard:
       allNamespaces: 全部命名空间
       projectNS: '项目命名空间{0}'
       systemNS: '系统命名空间{0}'
+      otherQuotas: 其他配额
     msg:
       undoSuccess: 撤回成功
     quota:

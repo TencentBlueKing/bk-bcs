@@ -48,10 +48,14 @@ func (c *IndependentNamespaceAction) ListNamespaces(ctx context.Context,
 		return errorx.NewClusterErr(err.Error())
 	}
 	quotaMap := map[string]corev1.ResourceQuota{}
+	otherQuotasMap := map[string][]*proto.OtherQuota{}
 	if quotaList, e := client.CoreV1().ResourceQuotas("").List(ctx, metav1.ListOptions{}); e == nil {
 		for _, quota := range quotaList.Items {
-			if quota.GetName() == quota.GetNamespace() {
-				quotaMap[quota.GetName()] = quota
+			nsName := quota.GetNamespace()
+			if quota.GetName() == nsName {
+				quotaMap[nsName] = quota
+			} else {
+				otherQuotasMap[nsName] = append(otherQuotasMap[nsName], quotautils.TransferToProtoOtherQuota(&quota))
 			}
 		}
 	}
@@ -80,6 +84,9 @@ func (c *IndependentNamespaceAction) ListNamespaces(ctx context.Context,
 		// get quota
 		if quota, ok := quotaMap[ns.GetName()]; ok {
 			retData.Quota, retData.Used, retData.CpuUseRate, retData.MemoryUseRate = quotautils.TransferToProto(&quota)
+		}
+		if otherQuotas, ok := otherQuotasMap[ns.GetName()]; ok {
+			retData.OtherQuotas = otherQuotas
 		}
 		// get variables
 		retData.Variables = variablesMap[ns.GetName()]

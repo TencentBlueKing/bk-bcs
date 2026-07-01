@@ -28,7 +28,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -40,7 +40,8 @@
             "description": "all. 表示查询所有项目并且携带权限信息",
             "in": "query",
             "required": false,
-            "type": "boolean"
+            "type": "boolean",
+            "format": "boolean"
           },
           {
             "name": "kind",
@@ -91,7 +92,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -103,7 +104,8 @@
             "description": "useBCS. 业务是否开启BCS容器服务",
             "in": "query",
             "required": false,
-            "type": "boolean"
+            "type": "boolean",
+            "format": "boolean"
           }
         ],
         "tags": [
@@ -123,7 +125,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -146,7 +148,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -170,7 +172,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -243,7 +245,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -264,53 +266,6 @@
         ]
       }
     },
-    "/bcsproject/v1/projectQuotas/projects/{projectIDOrCode}/quotas/statistics": {
-      "get": {
-        "summary": "查询项目配额使用情况",
-        "description": "查询用户项目quota的使用情况, 包括配额和已使用资源",
-        "operationId": "BCSProjectQuota_GetProjectQuotasStatistics",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/bcsprojectGetProjectQuotasStatisticsResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "projectIDOrCode",
-            "description": "项目ID或项目Code",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "quotaType",
-            "description": "quotaType. 额度类型，支持 host/self_host/federation, 不填则为获取所有额度类型",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "isContainShared",
-            "description": "isContainShared. 是否包含共享额度",
-            "in": "query",
-            "required": false,
-            "type": "boolean"
-          }
-        ],
-        "tags": [
-          "BCSProjectQuota"
-        ]
-      }
-    },
     "/bcsproject/v1/projectQuotas/{quotaId}": {
       "get": {
         "summary": "查询项目quota资源信息",
@@ -324,7 +279,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -355,7 +310,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -368,20 +323,6 @@
             "in": "path",
             "required": true,
             "type": "string"
-          },
-          {
-            "name": "onlyDeleteInfo",
-            "description": "onlyDeleteInfo. 默认为false。设置为true时，仅删除所记录的信息，不会触发任何自动化流程。",
-            "in": "query",
-            "required": false,
-            "type": "boolean"
-          },
-          {
-            "name": "skipItsmApproval",
-            "description": "skipItsmApproval. 是否跳过ITSM审批流程，仅限内部服务调用时使用",
-            "in": "query",
-            "required": false,
-            "type": "boolean"
           }
         ],
         "tags": [
@@ -400,7 +341,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -441,7 +382,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -482,7 +423,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -523,7 +464,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -556,7 +497,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -619,7 +560,8 @@
             "description": "all. 表示查询全量数据",
             "in": "query",
             "required": false,
-            "type": "boolean"
+            "type": "boolean",
+            "format": "boolean"
           },
           {
             "name": "businessID",
@@ -645,7 +587,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -679,7 +621,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -712,7 +654,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -745,7 +687,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -783,7 +725,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -831,7 +773,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -879,7 +821,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -924,7 +866,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -969,7 +911,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1024,7 +966,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1079,7 +1021,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1134,7 +1076,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1189,7 +1131,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1234,7 +1176,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1289,7 +1231,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1343,7 +1285,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1398,7 +1340,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1436,7 +1378,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1484,7 +1426,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1533,7 +1475,8 @@
             "description": "all. 是否查询全量数据",
             "in": "query",
             "required": false,
-            "type": "boolean"
+            "type": "boolean",
+            "format": "boolean"
           }
         ],
         "tags": [
@@ -1552,7 +1495,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1590,7 +1533,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1631,7 +1574,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1672,7 +1615,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1720,7 +1663,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1758,7 +1701,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1806,7 +1749,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1844,7 +1787,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1892,7 +1835,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1925,7 +1868,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1958,7 +1901,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1998,7 +1941,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -2037,7 +1980,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -2068,7 +2011,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -2109,137 +2052,12 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
           }
         },
-        "tags": [
-          "BCSProject"
-        ]
-      }
-    },
-    "/bcsproject/v2/projectQuotas/projects/{projectIDOrCode}/quotas": {
-      "get": {
-        "summary": "查询项目资源quota列表",
-        "description": "通过查询参数过滤项目quota列表, 支持分页和全量数据",
-        "operationId": "BCSProjectQuota_ListProjectQuotasV2",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/bcsprojectListProjectQuotasV2Response"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "projectIDOrCode",
-            "description": "项目ID 或者 项目Code",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "quotaId",
-            "description": "quotaId. 配额Id",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "quotaName",
-            "description": "quotaName. 配额中文名称",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "businessID",
-            "description": "businessID. 项目绑定的蓝鲸CMDB中业务ID信息",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "quotaType",
-            "description": "quotaType. 资源类型(目前支持CA整机资源、共享集群维度资源)",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "provider",
-            "description": "provider. 云底层资源提供方",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "page",
-            "description": "page. 分页页面",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int64"
-          },
-          {
-            "name": "limit",
-            "description": "limit. 分页限制",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int64"
-          }
-        ],
-        "tags": [
-          "BCSProjectQuota"
-        ]
-      }
-    },
-    "/bcsproject/v2/projects/{projectID}": {
-      "put": {
-        "summary": "更新项目",
-        "description": "更新项目信息",
-        "operationId": "BCSProject_UpdateProjectV2",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/bcsprojectProjectResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "projectID",
-            "description": "项目ID",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/bcsprojectUpdateProjectV2Request"
-            }
-          }
-        ],
         "tags": [
           "BCSProject"
         ]
@@ -2439,40 +2257,7 @@
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          },
-          "description": "资源quota的标签配置",
-          "title": "labels"
-        },
-        "annotations": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          },
-          "description": "资源quota的注解配置",
-          "title": "annotations"
-        },
-        "quotaAttr": {
-          "$ref": "#/definitions/bcsprojectQuotaAttr",
-          "description": "额度属性",
-          "title": "quotaAttr"
-        },
-        "quotaSharedEnabled": {
-          "type": "boolean",
-          "description": "是否启用额度共享",
-          "title": "quotaSharedEnabled"
-        },
-        "quotaSharedProjectList": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/bcsprojectQuotaSharedProject"
-          },
-          "description": "额度共享配置",
-          "title": "quotaSharedProjectList"
-        },
-        "skipItsmApproval": {
-          "type": "boolean",
-          "description": "是否跳过ITSM审批流程，仅限内部服务调用时使用",
-          "title": "skipItsmApproval"
+          }
         }
       },
       "description": "创建项目维度的quota资源配额",
@@ -2512,6 +2297,7 @@
         },
         "useBKRes": {
           "type": "boolean",
+          "format": "boolean",
           "description": "是否使用蓝鲸提供的资源池, 主要用于资源计费, 默认false",
           "title": "useBKRes"
         },
@@ -2522,6 +2308,7 @@
         },
         "isOffline": {
           "type": "boolean",
+          "format": "boolean",
           "description": "项目是否已经下线, 默认false",
           "title": "isOffline"
         },
@@ -2537,6 +2324,7 @@
         },
         "isSecret": {
           "type": "boolean",
+          "format": "boolean",
           "description": "是否为保密项目, 默认为false",
           "title": "isSecret"
         },
@@ -2581,22 +2369,6 @@
           "type": "string",
           "description": "中心名称, 保留字段, 默认为空",
           "title": "centerName"
-        },
-        "labels": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          },
-          "description": "project的标签配置",
-          "title": "labels"
-        },
-        "annotations": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          },
-          "description": "project的注解配置",
-          "title": "annotations"
         }
       },
       "description": "创建项目",
@@ -2814,9 +2586,6 @@
         "deviceQuota": {
           "type": "string"
         },
-        "deviceQuotaUsed": {
-          "type": "string"
-        },
         "attributes": {
           "type": "object",
           "additionalProperties": {
@@ -2939,32 +2708,6 @@
         "data": {
           "$ref": "#/definitions/bcsprojectProjectActiveData",
           "description": "返回项目活跃信息",
-          "title": "data"
-        },
-        "requestID": {
-          "type": "string",
-          "description": "请求 ID",
-          "title": "request id"
-        }
-      }
-    },
-    "bcsprojectGetProjectQuotasStatisticsResponse": {
-      "type": "object",
-      "properties": {
-        "code": {
-          "type": "integer",
-          "format": "int64",
-          "description": "返回错误码",
-          "title": "code"
-        },
-        "message": {
-          "type": "string",
-          "description": "返回错误信息",
-          "title": "message"
-        },
-        "data": {
-          "$ref": "#/definitions/bcsprojectProjectQuotasStatisticsData",
-          "description": "返回项目quota资源使用情况统计",
           "title": "data"
         },
         "requestID": {
@@ -3571,37 +3314,6 @@
         }
       }
     },
-    "bcsprojectListProjectQuotasV2Response": {
-      "type": "object",
-      "properties": {
-        "code": {
-          "type": "integer",
-          "format": "int64",
-          "description": "返回错误码",
-          "title": "code"
-        },
-        "message": {
-          "type": "string",
-          "description": "返回错误信息",
-          "title": "message"
-        },
-        "data": {
-          "$ref": "#/definitions/bcsprojectListProjectQuotasData",
-          "description": "返回项目quota信息, 包含总量及项目quota列表",
-          "title": "data"
-        },
-        "requestID": {
-          "type": "string",
-          "description": "请求 ID",
-          "title": "request id"
-        },
-        "web_annotations": {
-          "$ref": "#/definitions/bcsprojectPerms",
-          "description": "项目更多信息，主要是权限相关",
-          "title": "web_annotations"
-        }
-      }
-    },
     "bcsprojectListProjectsForIAMResp": {
       "type": "object",
       "properties": {
@@ -3811,11 +3523,13 @@
         },
         "approveResult": {
           "type": "boolean",
+          "format": "boolean",
           "description": "单据审批结果",
           "title": "approve_result"
         },
         "applyInCluster": {
           "type": "boolean",
+          "format": "boolean",
           "description": "是否下发到集群",
           "title": "applyInCluster"
         }
@@ -3854,6 +3568,7 @@
         },
         "result": {
           "type": "boolean",
+          "format": "boolean",
           "description": "回调结果",
           "title": "result"
         }
@@ -3956,10 +3671,13 @@
           "description": "命名空间管理员",
           "title": "managers"
         },
-        "isSystem": {
-          "type": "boolean",
-          "description": "是否为系统命名空间, false则表示项目命名空间",
-          "title": "isSystem"
+        "otherQuotas": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bcsprojectOtherQuota"
+          },
+          "description": "其他配额信息",
+          "title": "otherQuotas"
         }
       }
     },
@@ -4022,6 +3740,21 @@
           "format": "int64",
           "description": "机型已使用的配额",
           "title": "quotaUsed"
+        }
+      }
+    },
+    "bcsprojectOtherQuota": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "配额名称",
+          "title": "name"
+        },
+        "quota": {
+          "$ref": "#/definitions/bcsprojectResourceQuota",
+          "description": "配额总量",
+          "title": "quota"
         }
       }
     },
@@ -4108,6 +3841,7 @@
         },
         "useBKRes": {
           "type": "boolean",
+          "format": "boolean",
           "description": "是否使用蓝鲸提供的资源池, 主要用于资源计费, 默认false",
           "title": "useBKRes"
         },
@@ -4118,6 +3852,7 @@
         },
         "isOffline": {
           "type": "boolean",
+          "format": "boolean",
           "description": "项目是否已经下线, 默认false",
           "title": "isOffline"
         },
@@ -4135,22 +3870,6 @@
           "type": "string",
           "description": "项目绑定的蓝鲸CMDB中业务名称",
           "title": "businessName"
-        },
-        "labels": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          },
-          "description": "project的标签配置",
-          "title": "labels"
-        },
-        "annotations": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          },
-          "description": "project的注解配置",
-          "title": "annotations"
         }
       },
       "description": "项目的基本信息",
@@ -4161,6 +3880,7 @@
       "properties": {
         "isActive": {
           "type": "boolean",
+          "format": "boolean",
           "description": "是否活跃",
           "title": "isActive"
         }
@@ -4221,6 +3941,7 @@
         },
         "isDeleted": {
           "type": "boolean",
+          "format": "boolean",
           "description": "项目下该资源配额是否已下线(默认软删),同类型同种类资源仅不允许重复申请,可更改配额",
           "title": "isDeleted"
         },
@@ -4276,40 +3997,6 @@
           },
           "description": "相关nodeGroups",
           "title": "nodeGroups"
-        },
-        "labels": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          },
-          "description": "资源quota的标签配置",
-          "title": "labels"
-        },
-        "annotations": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          },
-          "description": "资源quota的注解配置",
-          "title": "annotations"
-        },
-        "quotaAttr": {
-          "$ref": "#/definitions/bcsprojectQuotaAttr",
-          "description": "额度属性",
-          "title": "quotaAttr"
-        },
-        "quotaSharedEnabled": {
-          "type": "boolean",
-          "description": "是否启用额度共享",
-          "title": "quotaSharedEnabled"
-        },
-        "quotaSharedProjectList": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/bcsprojectQuotaSharedProject"
-          },
-          "description": "额度共享配置",
-          "title": "quotaSharedProjectList"
         }
       },
       "description": "项目配额信息(支持不同类型)",
@@ -4351,26 +4038,6 @@
         }
       }
     },
-    "bcsprojectProjectQuotasStatisticsData": {
-      "type": "object",
-      "properties": {
-        "cpu": {
-          "$ref": "#/definitions/bcsprojectQuotaResourceData",
-          "description": "CPU资源",
-          "title": "cpu"
-        },
-        "mem": {
-          "$ref": "#/definitions/bcsprojectQuotaResourceData",
-          "description": "Mem资源",
-          "title": "mem"
-        },
-        "gpu": {
-          "$ref": "#/definitions/bcsprojectQuotaResourceData",
-          "description": "GPU资源",
-          "title": "gpu"
-        }
-      }
-    },
     "bcsprojectProjectResponse": {
       "type": "object",
       "properties": {
@@ -4402,61 +4069,6 @@
         }
       }
     },
-    "bcsprojectQuotaAttr": {
-      "type": "object",
-      "properties": {
-        "sourceBkBizIDs": {
-          "type": "string",
-          "description": "资源来源业务ID列表，资源来源 [all]不限业务; [100148]可使用100148业务 [1068, 100148]资源可来源于多个业务",
-          "title": "sourceBkBizIDs"
-        },
-        "SourceBkBizNames": {
-          "type": "string",
-          "description": "资源来源业务名称",
-          "title": "SourceBkBizNames"
-        },
-        "computeType": {
-          "type": "string",
-          "description": "计算类型，计算类型 [General 通算, Intelligent智算]",
-          "title": "computeType"
-        },
-        "purchaseDurationType": {
-          "type": "string",
-          "description": "购买时长类型，【once一次性、periodic周期性】 目前对于整机额度来说仅支持一次性购买",
-          "title": "purchaseDurationType"
-        },
-        "purchaseDurationSettings": {
-          "type": "string",
-          "description": "购买时长配置, 可能存在不限制时长",
-          "title": "purchaseDurationSettings"
-        },
-        "startTime": {
-          "type": "string",
-          "description": "开始供应时间 UTC格式：2024-01-25 23:59:59",
-          "title": "startTime"
-        },
-        "endTime": {
-          "type": "string",
-          "description": "截止供应时间 UTC格式：2024-01-31 23:59:59",
-          "title": "endTime"
-        }
-      },
-      "description": "项目属性",
-      "title": "QuotaAttr"
-    },
-    "bcsprojectQuotaLimit": {
-      "type": "object",
-      "properties": {
-        "quotaNum": {
-          "type": "string",
-          "format": "int64",
-          "description": "配额数量（整机数量）",
-          "title": "quotaNum"
-        }
-      },
-      "description": "项目配额信息(支持不同类型)",
-      "title": "ProjectQuota"
-    },
     "bcsprojectQuotaResource": {
       "type": "object",
       "properties": {
@@ -4481,99 +4093,6 @@
           "title": "gpu"
         }
       }
-    },
-    "bcsprojectQuotaResourceData": {
-      "type": "object",
-      "properties": {
-        "usedNum": {
-          "type": "integer",
-          "format": "int64",
-          "description": "已使用量",
-          "title": "usedNum"
-        },
-        "availableNum": {
-          "type": "integer",
-          "format": "int64",
-          "description": "可使用量",
-          "title": "availableNum"
-        },
-        "totalNum": {
-          "type": "integer",
-          "format": "int64",
-          "description": "总量",
-          "title": "totalNum"
-        },
-        "useRate": {
-          "type": "number",
-          "format": "float",
-          "description": "利用率",
-          "title": "useRate"
-        }
-      }
-    },
-    "bcsprojectQuotaSharedProject": {
-      "type": "object",
-      "properties": {
-        "projectID": {
-          "type": "string",
-          "description": "项目ID",
-          "title": "projectID"
-        },
-        "projectCode": {
-          "type": "string",
-          "description": "项目Code",
-          "title": "projectCode"
-        },
-        "projectName": {
-          "type": "string",
-          "description": "项目名称",
-          "title": "projectName"
-        },
-        "shareStrategy": {
-          "type": "string",
-          "description": "共享策略 [elastic弹性共享模式, rigid刚性共享模式]",
-          "title": "shareStrategy"
-        },
-        "usageLimit": {
-          "$ref": "#/definitions/bcsprojectQuotaLimit",
-          "description": "使用上限配置",
-          "title": "usageLimit"
-        },
-        "usedAmount": {
-          "$ref": "#/definitions/bcsprojectQuotaLimit",
-          "description": "已使用量",
-          "title": "usedAmount"
-        },
-        "shareStartTime": {
-          "type": "string",
-          "description": "共享开始时间",
-          "title": "shareStartTime"
-        },
-        "shareEndTime": {
-          "type": "string",
-          "description": "共享结束时间",
-          "title": "shareEndTime"
-        },
-        "status": {
-          "type": "string",
-          "description": "共享状态，[active生效中, expired已过期, suspended已暂停]",
-          "title": "status"
-        }
-      },
-      "description": "被共享的项目配置",
-      "title": "QuotaSharedProject"
-    },
-    "bcsprojectQuotaSharedProjectList": {
-      "type": "object",
-      "properties": {
-        "values": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/bcsprojectQuotaSharedProject"
-          }
-        }
-      },
-      "title": "QuotaSharedProjectList 额度共享配置列表包装类型（用于区分未传值和空值）"
     },
     "bcsprojectRenderVariablesResponse": {
       "type": "object",
@@ -4646,11 +4165,6 @@
           "type": "string",
           "description": "操作人",
           "title": "updater"
-        },
-        "skipItsmApproval": {
-          "type": "boolean",
-          "description": "是否跳过ITSM审批流程，仅限内部服务调用时使用",
-          "title": "skipItsmApproval"
         }
       },
       "description": "缩容项目维度的资源quota",
@@ -4704,11 +4218,6 @@
           "type": "string",
           "description": "操作人",
           "title": "updater"
-        },
-        "skipItsmApproval": {
-          "type": "boolean",
-          "description": "是否跳过ITSM审批流程，仅限内部服务调用时使用",
-          "title": "skipItsmApproval"
         }
       },
       "description": "根据不同的资源类型增量扩容项目维度的资源quota",
@@ -5133,37 +4642,6 @@
           "type": "string",
           "description": "更新者",
           "title": "updater"
-        },
-        "labels": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          },
-          "description": "资源quota的标签配置",
-          "title": "labels"
-        },
-        "annotations": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          },
-          "description": "资源quota的注解配置",
-          "title": "annotations"
-        },
-        "quotaAttr": {
-          "$ref": "#/definitions/bcsprojectQuotaAttr",
-          "description": "额度属性",
-          "title": "quotaAttr"
-        },
-        "quotaSharedEnabled": {
-          "type": "boolean",
-          "description": "是否启用额度共享",
-          "title": "quotaSharedEnabled"
-        },
-        "quotaSharedProjectList": {
-          "$ref": "#/definitions/bcsprojectQuotaSharedProjectList",
-          "description": "额度共享配置",
-          "title": "quotaSharedProjectList"
         }
       },
       "description": "更新项目quota请求",
@@ -5189,6 +4667,7 @@
         },
         "useBKRes": {
           "type": "boolean",
+          "format": "boolean",
           "description": "是否使用蓝鲸提供的资源池, 主要用于资源计费, 默认false",
           "title": "useBKRes"
         },
@@ -5199,6 +4678,7 @@
         },
         "isOffline": {
           "type": "boolean",
+          "format": "boolean",
           "description": "项目是否已经下线, 默认false",
           "title": "isOffline"
         },
@@ -5221,109 +4701,10 @@
           "type": "string",
           "description": "创建人",
           "title": "creator"
-        },
-        "labels": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          },
-          "description": "project的标签配置",
-          "title": "labels"
-        },
-        "annotations": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          },
-          "description": "project的注解配置",
-          "title": "annotations"
         }
       },
       "description": "更新项目请求",
       "title": "UpdateProjectRequest"
-    },
-    "bcsprojectUpdateProjectV2Request": {
-      "type": "object",
-      "properties": {
-        "projectID": {
-          "type": "string",
-          "description": "项目ID",
-          "title": "projectID"
-        },
-        "businessID": {
-          "type": "string",
-          "description": "项目绑定的蓝鲸CMDB中业务ID信息",
-          "title": "businessID"
-        },
-        "managers": {
-          "type": "string",
-          "description": "项目管理员",
-          "title": "managers"
-        },
-        "name": {
-          "type": "string",
-          "description": "项目中文名称, 长度不能超过64字符",
-          "title": "name"
-        },
-        "projectCode": {
-          "type": "string",
-          "description": "项目编码(英文缩写), 全局唯一, 长度不能超过64字符",
-          "title": "projectCode"
-        },
-        "useBKRes": {
-          "type": "boolean",
-          "description": "是否使用蓝鲸提供的资源池, 主要用于资源计费, 默认false",
-          "title": "useBKRes"
-        },
-        "description": {
-          "type": "string",
-          "description": "项目简要描述",
-          "title": "description"
-        },
-        "isOffline": {
-          "type": "boolean",
-          "description": "项目是否已经下线, 默认false",
-          "title": "isOffline"
-        },
-        "kind": {
-          "type": "string",
-          "description": "项目中集群类型, 可选k8s/mesos, 未来该字段可能废弃",
-          "title": "kind"
-        },
-        "labels": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          },
-          "description": "project的标签配置",
-          "title": "labels"
-        },
-        "annotations": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          },
-          "description": "project的注解配置",
-          "title": "annotations"
-        },
-        "quotaAttr": {
-          "$ref": "#/definitions/bcsprojectQuotaAttr",
-          "description": "额度属性",
-          "title": "quotaAttr"
-        },
-        "quotaSharedEnabled": {
-          "type": "boolean",
-          "description": "是否启用额度共享",
-          "title": "quotaSharedEnabled"
-        },
-        "quotaSharedProjectList": {
-          "$ref": "#/definitions/bcsprojectQuotaSharedProjectList",
-          "description": "额度共享配置",
-          "title": "quotaSharedProjectList"
-        }
-      },
-      "description": "更新项目quota请求",
-      "title": "UpdateProjectQuotaRequest"
     },
     "bcsprojectUpdateVariableData": {
       "type": "object",
