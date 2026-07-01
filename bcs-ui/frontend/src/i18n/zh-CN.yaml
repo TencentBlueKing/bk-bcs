@@ -3044,6 +3044,7 @@ tke:
     vpcID: VPCID
     availableUnderlay: 可用 underlayIP 数量
     availableOverlay: 可用 overlayIP 数量
+    vpcCniAvailableIP: 表示该 VPC 可以往 VPC CNI 添加的 IP 数量，非集群 IP 余量。
   title:
     installGseAgentFailed:
       text: 安装 GSE Agent 失败

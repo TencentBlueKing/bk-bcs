@@ -3755,6 +3755,7 @@ tke:
     vpcID: VPCID
     availableUnderlay: Available underlayIP number
     availableOverlay: Available overlayIP number
+    vpcCniAvailableIP: Represents the number of IP addresses that can be added to VPC CNI in this VPC, not the cluster's remaining IP capacity.
   title:
     connectFailure:
       text: >-
