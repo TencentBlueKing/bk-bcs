@@ -7,6 +7,7 @@
           size="small"
           class="small-select !w-[160px] ml-[24px]"
           cluster-type="all"
+          sync-query-value
           v-model="clusterId" />
         <!-- 组件版本和更新 -->
         <bcs-badge

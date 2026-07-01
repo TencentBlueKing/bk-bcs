@@ -7,12 +7,22 @@ import $store from '@/store';
 import useViewConfig from '@/views/resource-view/view-manage/use-view-config';
 
 export type ClusterType = 'independent' | 'managed' |'virtual' | 'shared' | 'all';
+/**
+ * 集群选择器
+ * @param emits 事件
+ * @param defaultClusterID 默认集群ID
+ * @param clusterType 集群类型，默认 ['independent', 'managed']，可选值：'independent' | 'managed' |'virtual' | 'shared' | 'all'
+ * @param updateStore 是否更新store中的当前集群，默认true
+ * @param validateClusterID 是否校验当前集群ID是否在当前场景中可用，默认true
+ * @param syncQueryValue 是否同步路由query参数，注意！！！路由变化默认会取消之前未完成的请求，具体请查看 cancelWhenRouteChange 配置项
+ */
 export default function useClusterSelector(
   emits: any,
   defaultClusterID: string,
   clusterType: ClusterType | Omit<ClusterType, 'all'>[] = ['independent', 'managed'],
   updateStore = true,
   validateClusterID = true,
+  syncQueryValue = false,
 ) {
   const { clusterList } = useCluster();
   const keyword = ref('');
@@ -91,11 +101,18 @@ export default function useClusterSelector(
   });
   const isClusterDataEmpty = computed(() => clusterData.value.every(item => !item.list.length));
 
-  const localValue = ref<string>(defaultClusterID || $store.getters.curClusterId);
+  // 当 syncQueryValue 为 true 时，优先从路由query参数中读取 clusterId
+  const queryClusterID = syncQueryValue ? ($router.currentRoute?.query?.clusterId as string) : '';
+  const localValue = ref<string>(queryClusterID || defaultClusterID || $store.getters.curClusterId);
 
   const handleClusterChange = (clusterId = '') => {
     localValue.value = clusterId;
     updateStore && $store.commit('updateCurCluster', clusterList.value.find(item => item.clusterID === clusterId));
+    // 当 syncQueryValue 为 true 时，将集群变更同步写入路由 query 参数
+    if (syncQueryValue && localValue.value !== ($router.currentRoute?.query?.clusterId as string)) {
+      const currentQuery = { ...$router.currentRoute?.query };
+      $router.replace({ query: { ...currentQuery, clusterId } });
+    }
     emits('change', clusterId);
   };
 

@@ -173,7 +173,7 @@ watch(
 const { clusterList, curClusterId } = useCluster();
 // 初始化当前集群和试图ID信息
 const initClusterAndViewID = () => {
-  let cluster;
+  let cluster = clusterList.value.find(item => item.clusterID === curClusterId.value);
   let viewID = $router.currentRoute?.query?.viewID || dashboardViewID.value || '';
   let pathClusterID = $router.currentRoute?.params?.clusterId;
   if (pathClusterID === '-') {

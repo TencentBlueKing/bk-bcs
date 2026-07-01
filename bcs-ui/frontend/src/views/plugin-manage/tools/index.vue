@@ -8,6 +8,7 @@
           <ClusterSelectComb
             :search.sync="searchKeyword"
             :cluster-id.sync="searchScope"
+            sync-query-value
             :show-search="false"
             :cluster-type="['independent', 'managed', 'virtual']"
             @search-change="search"
@@ -222,7 +223,7 @@
 </template>
 
 <script>
-import { addonsDetail, addonsInstall, addonsList, addonsUninstall } from '@/api/modules/helm';
+import { addonsInstall, addonsList, addonsUninstall } from '@/api/modules/helm';
 import { catchErrorHandler } from '@/common/util';
 import ClusterSelectComb from '@/components/cluster-selector/cluster-select-comb.vue';
 import BcsContent from '@/components/layout/Content.vue';
@@ -259,7 +260,6 @@ export default {
         'failed-rollback': this.$t('deploy.helm.rollbackFailed'),
         'failed-uninstall': this.$t('generic.status.deleteFailed'),
       },
-      isInitLoading: true,
       isPageLoading: false,
       crdControllerList: [],
       crdControllerListCache: [],
@@ -334,40 +334,11 @@ export default {
       return this.$store.getters.curClusterId;
     },
   },
-  // watch: {
-  //   curClusterId() {
-  //     this.searchScope = this.curClusterId;
-  //     this.search();
-  //   },
-  // },
-  mounted() {
-    this.init();
-  },
   beforeRouteLeave(to, from, next) {
     this.clearAllInterval();
     next();
   },
   methods: {
-    async init() {
-      try {
-        if (this.clusterList.length) {
-          // if (this.curClusterId) {
-          //     this.searchScope = this.curClusterId
-          // } else {
-          //     this.searchScope = this.clusterList[0].cluster_id
-          // }
-          this.getCrdControllersByCluster();
-        } else {
-          this.isInitLoading = false;
-          this.isPageLoading = false;
-        }
-      } catch (e) {
-        catchErrorHandler(e, this);
-        this.isInitLoading = false;
-        this.isPageLoading = false;
-      }
-    },
-
     async haneldEnableCrdController(crdcontroller) {
       // 清空数据
       this.editorOptions.content = '';
@@ -399,7 +370,6 @@ export default {
         }).catch(() => false);
         this.getCrdControllersByCluster();
         this.refreshList();
-        // this.getCrdcontrollerStatus(crdcontroller);
       } catch (e) {
         catchErrorHandler(e, this);
       } finally {
@@ -463,9 +433,6 @@ export default {
       }
     },
     async getCrdControllersByCluster() {
-      if (this.isPageLoading) {
-        return false;
-      }
       if (!this.searchScope) {
         return false;
       }
@@ -474,16 +441,10 @@ export default {
       try {
         await this.refreshList();
         this.clearAllInterval();
-        // this.crdControllerList.forEach((item) => {
-        //   if (this.pendingStatus.includes(item.status)) {
-        //     this.getCrdcontrollerStatus(item);
-        //   }
-        // });
       } catch (e) {
         catchErrorHandler(e, this);
       } finally {
         setTimeout(() => {
-          this.isInitLoading = false;
           this.isPageLoading = false;
         }, 200);
       }
@@ -556,59 +517,6 @@ export default {
         return true;
       }
       return false;
-    },
-
-    /**
-           * 获取crdcontroller状态
-           * @param  {object} crdcontroller crdcontroller
-           * @param  {number} index 索引
-           */
-    getCrdcontrollerStatus(crdcontroller) {
-      if (crdcontroller.id === undefined) {
-        return false;
-      }
-      const crdcontrollerId = crdcontroller.id;
-      const clusterId = crdcontroller.cluster_id || this.searchScope;
-      // eslint-disable-next-line @typescript-eslint/no-this-alias
-      const self = this;
-
-      clearInterval(this.statusTimer[crdcontroller.id]);
-      // eslint-disable-next-line @typescript-eslint/no-misused-promises
-      this.statusTimer[crdcontroller.id] = setInterval(async () => {
-        try {
-          const item = await addonsDetail({
-            $clusterId: clusterId,
-            $name: crdcontroller.name,
-          }).catch(() => ({}));
-          const data = {
-            ...item,
-            // 兼容旧数据
-            chart_name: item.chartName,
-            default_values: item.defaultValues,
-            description: item.description,
-            help_link: item.docsLink,
-            id: item.name,
-            cluster_id: clusterId,
-            message: item.message,
-            status: item.status,
-            logo: item.logo,
-            name: item.name,
-            supported_actions: item.supportedActions,
-            version: item.version,
-          };
-          if (!this.pendingStatus.includes(data.status) || !data.status) {
-            clearInterval(self.statusTimer[crdcontroller.id]);
-            this.crdControllerList.forEach((item) => {
-              if (item.id === crdcontrollerId) {
-                item.status = data.status;
-                item.message = data.message;
-              }
-            });
-          }
-        } catch (e) {
-          catchErrorHandler(e, this);
-        }
-      }, 2000);
     },
     // 卸载组件
     handleUninstall(crdcontroller) {
