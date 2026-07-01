@@ -2234,6 +2234,7 @@ dashboard:
     label:
       createMoreNamespaceVars: '可通过 {action} 创建更多作用在命名空间的变量'
       noNamespaceVariables: 暂无命名空间变量
+      otherQuotas: 其他配额
     msg:
       undoSuccess: 撤回成功
     quota:
