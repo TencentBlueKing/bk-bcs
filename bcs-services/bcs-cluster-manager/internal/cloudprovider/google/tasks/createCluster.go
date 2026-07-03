@@ -70,6 +70,7 @@ func CreateGKEClusterTask(taskID string, stepName string) error {
 		return retErr
 	}
 
+	// retrieve all node groups associated with the cluster creation task
 	nodeGroups := make([]*proto.NodeGroup, 0)
 	for _, ngID := range strings.Split(nodeGroupIDs, ",") {
 		if ngID == "" {
@@ -103,6 +104,7 @@ func CreateGKEClusterTask(taskID string, stepName string) error {
 		return retErr
 	}
 
+	// persist the GKE system ID to local cluster record for future reference
 	dependInfo.Cluster.SystemID = clsId
 
 	err = cloudprovider.UpdateCluster(dependInfo.Cluster)
@@ -129,6 +131,9 @@ func CreateGKEClusterTask(taskID string, stepName string) error {
 	return nil
 }
 
+// createGKECluster creates a GKE cluster via Google Cloud API.
+// If the cluster already exists, it returns the existing cluster name directly.
+// It also sets cluster extra info such as location type and autopilot mode.
 func createGKECluster(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, groups []*proto.NodeGroup) (
 	string, error) {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
@@ -138,7 +143,9 @@ func createGKECluster(ctx context.Context, info *cloudprovider.CloudDependBasicI
 		return "", fmt.Errorf("create GkeService failed")
 	}
 
+	// GKE cluster names must be lowercase
 	clusterName := strings.ToLower(info.Cluster.ClusterID)
+	// check if cluster already exists to support idempotent creation on retry
 	cluster, err := client.GetCluster(context.Background(), clusterName)
 	if err != nil {
 		if !strings.Contains(err.Error(), "Not found") && !strings.Contains(err.Error(), "notFound") {
@@ -146,6 +153,7 @@ func createGKECluster(ctx context.Context, info *cloudprovider.CloudDependBasicI
 		}
 	}
 
+	// cluster already exists, return directly for idempotency
 	if cluster != nil && cluster.Name != "" {
 		return clusterName, nil
 	}
@@ -175,6 +183,8 @@ func createGKECluster(ctx context.Context, info *cloudprovider.CloudDependBasicI
 	return clusterName, nil
 }
 
+// generateCreateClusterRequest builds the GKE CreateClusterRequest based on cluster configuration,
+// including network settings, private cluster config, node pools, and autopilot mode.
 func generateCreateClusterRequest(info *cloudprovider.CloudDependBasicInfo, // nolint
 	groups []*proto.NodeGroup) *container.CreateClusterRequest {
 	req := &container.CreateClusterRequest{
@@ -243,6 +253,7 @@ func generateCreateClusterRequest(info *cloudprovider.CloudDependBasicInfo, // n
 		}
 	}
 
+	// collect master node zones as cluster locations for multi-zone deployment
 	for _, template := range info.Cluster.Template {
 		if template.GetNodeRole() == common.NodeRoleMaster {
 			if len(template.Zone) != 0 {
@@ -260,16 +271,19 @@ func generateCreateClusterRequest(info *cloudprovider.CloudDependBasicInfo, // n
 		},
 	}
 
+	// managed cluster uses autopilot mode; standard cluster uses Calico network policy
 	if info.Cluster.ManageType == common.ClusterManageTypeManaged {
 		req.Cluster.Autopilot = &container.Autopilot{
 			Enabled: true,
 		}
 	} else {
+		// standard cluster: configure network policy with Calico provider
 		req.Cluster.NetworkPolicy = &container.NetworkPolicy{
 			Enabled:  true,
 			Provider: "CALICO",
 		}
 
+		// disable managed monitoring for standard clusters to use custom monitoring
 		req.Cluster.MonitoringConfig = &container.MonitoringConfig{
 			AdvancedDatapathObservabilityConfig: &container.AdvancedDatapathObservabilityConfig{
 				EnableMetrics: false,
@@ -290,12 +304,14 @@ func generateCreateClusterRequest(info *cloudprovider.CloudDependBasicInfo, // n
 		}
 	}
 
+	// set default max pods per node constraint for IP allocation planning
 	if info.Cluster.NetworkSettings != nil && info.Cluster.NetworkSettings.MaxNodePodNum > 0 {
 		req.Cluster.DefaultMaxPodsConstraint = &container.MaxPodsConstraint{
 			MaxPodsPerNode: int64(info.Cluster.NetworkSettings.MaxNodePodNum),
 		}
 	}
 
+	// configure VPC network and subnet for cluster networking
 	if info.Cluster.VpcID != "" {
 		req.Cluster.Network = info.Cluster.VpcID
 	}
@@ -396,6 +412,8 @@ func checkClusterStatus(ctx context.Context, info *cloudprovider.CloudDependBasi
 		return retErr
 	}
 
+	// poll cluster status with 30-minute timeout, checking every 10 seconds.
+	// GKE cluster creation typically takes 5-15 minutes depending on configuration.
 	ctx, cancel := context.WithTimeout(ctx, 30*time.Minute)
 	defer cancel()
 
@@ -495,11 +513,13 @@ func CheckGKENodeGroupsStatusTask(taskID string, stepName string) error {
 	return nil
 }
 
+// checkNodesGroupStatus polls the status of node groups until all are running or in error state.
+// It returns lists of successfully running node group IDs and failed node group IDs.
 func checkNodesGroupStatus(ctx context.Context, info *cloudprovider.CloudDependBasicInfo,
 	systemID string, nodeGroupIDs []string) ([]string, []string, error) {
 	var (
-		addSuccessNodeGroups = make([]string, 0)
-		addFailureNodeGroups = make([]string, 0)
+		addSuccessNodeGroups = make([]string, 0) // node groups that reached running state
+		addFailureNodeGroups = make([]string, 0) // node groups that reached error state
 	)
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
@@ -520,10 +540,11 @@ func checkNodesGroupStatus(ctx context.Context, info *cloudprovider.CloudDependB
 
 	}
 
+	// poll node pool status with 10-minute timeout
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Minute)
 	defer cancel()
 
-	// loop cluster status
+	// loop cluster status until all node pools reach terminal state
 	err = loop.LoopDoFunc(ctx, func() error {
 		index := 0
 		running, failure := make([]string, 0), make([]string, 0)
@@ -637,10 +658,14 @@ func UpdateGKENodesGroupToDBTask(taskID string, stepName string) error {
 	return nil
 }
 
+// updateNodeGroups updates node group status in the database after creation.
+// For failed node groups, it marks them as failed; for successful ones, it retrieves
+// instance group manager and instance template info, then updates the node group record.
 func updateNodeGroups(ctx context.Context, info *cloudprovider.CloudDependBasicInfo,
 	addFailedNodeGroupIDs, addSuccessNodeGroupIDs []string) error {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
+	// mark failed node groups with error status in database
 	if len(addFailedNodeGroupIDs) > 0 {
 		for _, ngID := range addFailedNodeGroupIDs {
 			err := cloudprovider.UpdateNodeGroupStatus(ngID, common.StatusCreateNodeGroupFailed)
@@ -666,6 +691,7 @@ func updateNodeGroups(ctx context.Context, info *cloudprovider.CloudDependBasicI
 			return fmt.Errorf("updateNodeGroups GetNodeGroupByGroupID failed, %s", err)
 		}
 
+		// save desired size before updating group info from cloud
 		desiredSize := group.AutoScaling.DesiredSize
 		group.CloudNodeGroupID = strings.ToLower(group.NodeGroupID)
 		np, errPool := containerCli.GetClusterNodePool(context.Background(),
@@ -676,8 +702,8 @@ func updateNodeGroups(ctx context.Context, info *cloudprovider.CloudDependBasicI
 			return nil
 		}
 
-		// get instanceGroupManager
-		newIt, igm, err := getIgmAndIt(computeCli, np, group, taskID)
+		// get nodepool associated instanceGroupManager and instanceTemplate
+		it, igm, err := getIgmAndIt(computeCli, np, group, taskID)
 		if err != nil {
 			blog.Errorf("updateNodeGroups[%s]: getIgmAndIt failed: %v", taskID, err)
 			retErr := fmt.Errorf("getIgmAndIt failed, %s", err)
@@ -685,7 +711,7 @@ func updateNodeGroups(ctx context.Context, info *cloudprovider.CloudDependBasicI
 		}
 
 		group.Status = common.StatusRunning
-		group = generateNodeGroupFromIgmAndIt(group, igm, newIt, info.CmOption)
+		group = generateNodeGroupFromIgmAndIt(group, igm, it, info.CmOption)
 		group.AutoScaling.DesiredSize = desiredSize
 		// update node group cloud args id
 		err = cloudprovider.GetStorageModel().UpdateNodeGroup(context.Background(), group)
@@ -695,6 +721,7 @@ func updateNodeGroups(ctx context.Context, info *cloudprovider.CloudDependBasicI
 			return retErr
 		}
 
+		// scale up node pool by creating instances if desired size > 0
 		if desiredSize > 0 {
 			mig, err := api.GetInstanceGroupManager(client.ComputeServiceClient, group.AutoScaling.AutoScalingID)
 			if err != nil {
@@ -702,6 +729,7 @@ func updateNodeGroups(ctx context.Context, info *cloudprovider.CloudDependBasicI
 					taskID, group.AutoScaling.AutoScalingID, err)
 				return err
 			}
+			// generate unique instance names based on the MIG base instance name
 			instanceNames := generateInstanceName(mig.BaseInstanceName, uint64(desiredSize))
 			_, err = api.CreateInstanceForGroupManager(client.ComputeServiceClient,
 				group.AutoScaling.AutoScalingID, instanceNames)
@@ -786,8 +814,11 @@ func CheckGKEClusterNodesStatusTask(taskID string, stepName string) error {
 	return nil
 }
 
+// checkClusterNodesStatus polls compute instances in all node groups until all nodes
+// reach a terminal state (running or terminated). Returns lists of successful and failed node IDs.
 func checkClusterNodesStatus(ctx context.Context, info *cloudprovider.CloudDependBasicInfo,
 	nodeGroupIDs []string) ([]string, []string, error) {
+	// calculate total expected nodes count and collect auto scaling IDs
 	var totalNodesNum uint32
 	var addSuccessNodes, addFailureNodes = make([]string, 0), make([]string, 0)
 	asIDs := make([]string, 0)
@@ -909,10 +940,10 @@ func UpdateGKENodesToDBTask(taskID string, stepName string) error {
 		return retErr
 	}
 
-	// sync clusterData to pass-cc
+	// sync clusterData to pass-cc for cluster lifecycle management
 	providerutils.SyncClusterInfoToPassCC(taskID, dependInfo.Cluster)
 
-	// sync cluster perms
+	// sync cluster permissions to grant creator access to cluster resources
 	providerutils.AuthClusterResourceCreatorPerm(ctx, dependInfo.Cluster.ClusterID,
 		dependInfo.Cluster.ClusterName, dependInfo.Cluster.Creator)
 
@@ -926,6 +957,8 @@ func UpdateGKENodesToDBTask(taskID string, stepName string) error {
 	return nil
 }
 
+// updateNodeToDB retrieves instance information from GCE for each node group,
+// creates node records in the database, and updates task common params with node IPs.
 func updateNodeToDB(ctx context.Context, state *cloudprovider.TaskState, info *cloudprovider.CloudDependBasicInfo,
 	nodeGroupIDs []string) error {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
@@ -935,6 +968,7 @@ func updateNodeToDB(ctx context.Context, state *cloudprovider.TaskState, info *c
 		return fmt.Errorf("get cloud gke client err, %s", err)
 	}
 
+	// iterate over node groups and persist each instance as a node record
 	addSuccessNodes := make([]string, 0)
 	for _, ngID := range nodeGroupIDs {
 		nodeGroup, errGet := actions.GetNodeGroupByGroupID(cloudprovider.GetStorageModel(), ngID)
@@ -942,11 +976,13 @@ func updateNodeToDB(ctx context.Context, state *cloudprovider.TaskState, info *c
 			return fmt.Errorf("updateNodeToDB GetNodeGroupByGroupID information failed, %s", errGet)
 		}
 
+		// parse instance group manager resource info from auto scaling ID
 		igmInfo, errGet := api.GetGCEResourceInfo(nodeGroup.AutoScaling.AutoScalingID)
 		if errGet != nil {
 			return fmt.Errorf("updateNodeToDB[%s] get igm info failed: %v", taskID, errGet)
 		}
 
+		// list all managed instances in the instance group
 		instances, errGet := cli.ListInstanceGroupsInstances(ctx, igmInfo[3], igmInfo[(len(igmInfo)-1)])
 		if errGet != nil {
 			blog.Errorf("updateNodeToDB[%s] failed: %v", taskID, errGet)
@@ -979,6 +1015,7 @@ func updateNodeToDB(ctx context.Context, state *cloudprovider.TaskState, info *c
 		}
 	}
 
+	// store successfully created node IPs in task common params for downstream steps
 	state.Task.CommonParams[cloudprovider.DynamicNodeIPListKey.String()] = strings.Join(addSuccessNodes, ",")
 	state.Task.CommonParams[cloudprovider.NodeIPsKey.String()] = strings.Join(addSuccessNodes, ",")
 	state.Task.CommonParams[cloudprovider.NodeNamesKey.String()] = strings.Join(addSuccessNodes, ",")
@@ -1030,6 +1067,7 @@ func RegisterGKEClusterKubeConfigTask(taskID string, stepName string) error { //
 		return retErr
 	}
 
+	// decrypt kubeconfig and encode it to base64 for kubernetes client initialization
 	config, _ := encrypt.Decrypt(nil, dependInfo.Cluster.KubeConfig)
 	kubeRet := base64.StdEncoding.EncodeToString([]byte(config))
 
@@ -1041,9 +1079,11 @@ func RegisterGKEClusterKubeConfigTask(taskID string, stepName string) error { //
 		return retErr
 	}
 
+	// wait for nodes to be registered in kubernetes if cluster has successfully created nodes
 	addSuccessNodes := state.Task.CommonParams[cloudprovider.SuccessClusterNodeIDsKey.String()]
 	if len(addSuccessNodes) > 0 {
 		var nodes *corev1.NodeList
+		// poll kubernetes API until nodes appear, with 10-minute timeout
 		toCtx, cancel := context.WithTimeout(ctx, 10*time.Minute)
 		defer cancel()
 		err = loop.LoopDoFunc(toCtx, func() error {

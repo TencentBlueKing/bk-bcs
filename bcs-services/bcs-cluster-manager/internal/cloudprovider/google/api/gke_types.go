@@ -58,6 +58,9 @@ type NodePool struct {
 	UpgradeSettings *UpgradeSettings `json:"upgradeSettings,omitempty"`
 	// Version the version of the Kubernetes of this node
 	Version string `json:"version,omitempty"`
+	// NetworkConfig networking configuration for this NodePool.
+	// Used to control public IP assignment (enablePrivateNodes) at the node pool level.
+	NetworkConfig *NodeNetworkConfig `json:"networkConfig,omitempty"`
 }
 
 // Taint Kubernetes taint
@@ -82,6 +85,18 @@ type NodeConfig struct {
 	Labels map[string]string `json:"labels,omitempty"`
 	Tags   []string          `json:"tags,omitempty"`
 	Taints []*Taint          `json:"taints,omitempty"`
+	// Metadata the metadata key/value pairs assigned to instances in the cluster.
+	// Supported non-reserved keys: ssh-keys, block-project-ssh-keys, etc.
+	// Reserved keys (forbidden): startup-script, kube-env, instance-template, etc.
+	Metadata map[string]string `json:"metadata,omitempty"`
+}
+
+// NodeNetworkConfig parameters for node pool-level network config
+type NodeNetworkConfig struct {
+	// EnablePrivateNodes whether nodes have internal IP addresses only.
+	// true  → nodes get no external IP (private nodes)
+	// false → nodes get external IP (public IP assigned)
+	EnablePrivateNodes bool `json:"enablePrivateNodes,omitempty"`
 }
 
 // NodePoolAutoscaling gke nodePool auto scaling

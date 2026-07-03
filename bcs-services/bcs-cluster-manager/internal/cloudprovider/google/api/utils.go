@@ -239,6 +239,9 @@ func GenerateNodePool(input *CreateNodePoolRequest) *container.NodePool {
 			DiskType:   input.NodePool.Config.DiskType,
 			DiskSizeGb: input.NodePool.Config.DiskSizeGb,
 			ImageType:  input.NodePool.Config.ImageType,
+			// Metadata: supports ssh-keys, block-project-ssh-keys, etc.
+			// Note: GKE reserved keys (startup-script, kube-env, etc.) are NOT allowed here.
+			Metadata: input.NodePool.Config.Metadata,
 		}
 	}
 	if input.NodePool.Management != nil {
@@ -248,9 +251,16 @@ func GenerateNodePool(input *CreateNodePoolRequest) *container.NodePool {
 		}
 	}
 
-	if input.NodePool.MaxPodsConstraint.MaxPodsPerNode > 0 {
+	if input.NodePool.MaxPodsConstraint != nil && input.NodePool.MaxPodsConstraint.MaxPodsPerNode > 0 {
 		nodePool.MaxPodsConstraint = &container.MaxPodsConstraint{
 			MaxPodsPerNode: input.NodePool.MaxPodsConstraint.MaxPodsPerNode,
+		}
+	}
+
+	// NetworkConfig: controls public IP at node pool level via enablePrivateNodes
+	if input.NodePool.NetworkConfig != nil {
+		nodePool.NetworkConfig = &container.NodeNetworkConfig{
+			EnablePrivateNodes: input.NodePool.NetworkConfig.EnablePrivateNodes,
 		}
 	}
 
@@ -268,6 +278,9 @@ func GetGCEResourceInfo(url string) ([]string, error) {
 }
 
 // GetInstanceGroupManager get zonal/regional InstanceGroupManager
+// Compatible with both URL formats:
+//   - instanceGroupManagers: standard IGM SelfLink
+//   - instanceGroups: returned by GKE NodePool.InstanceGroupUrls; zone and name are identical to the IGM
 func GetInstanceGroupManager(computeCli *ComputeServiceClient, url string) (*compute.InstanceGroupManager, error) {
 	igmInfo, err := GetGCEResourceInfo(url)
 	if err != nil {
@@ -275,7 +288,10 @@ func GetInstanceGroupManager(computeCli *ComputeServiceClient, url string) (*com
 		return nil, err
 	}
 	var igm *compute.InstanceGroupManager
-	if utils.StringInSlice("instanceGroupManagers", igmInfo) && len(igmInfo) >= 6 {
+	// support both instanceGroupManagers and instanceGroups URL:
+	// GKE NodePool.InstanceGroupUrls[0] uses instanceGroups format, but zone/name are the same as the IGM
+	if (utils.StringInSlice("instanceGroupManagers", igmInfo)) &&
+		len(igmInfo) >= 6 {
 		igm, err = computeCli.GetInstanceGroupManager(context.Background(), igmInfo[3], igmInfo[(len(igmInfo)-1)])
 		if err != nil {
 			blog.Errorf("GetInstanceGroupManager failed: %v", err)

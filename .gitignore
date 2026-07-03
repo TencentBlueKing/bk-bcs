@@ -148,3 +148,5 @@ git-sync.sh
 
 # Cursor
 .cursor
+
+.project.json
