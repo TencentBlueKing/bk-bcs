@@ -3610,9 +3610,6 @@ googleCA:
       depend on these restricted features, currently only the operating system
       “Ubuntu including Containerd (ubuntu_containerd)” is supported.
     zone: 'Currently, only a single availability zone is supported.'
-    dataDisk: >-
-      After purchasing a data disk and adding nodes, you need to manually format
-      and mount the disk.
     securityGroup: >-
       Node pool uses VPC firewall rules to control the incoming/outgoing traffic
       of node instances, please go to the {0} page to set up.
@@ -3753,6 +3750,9 @@ tke:
     vpcID: VPCID
     availableUnderlay: Available underlayIP number
     availableOverlay: Available overlayIP number
+    vpcCniAvailableIP: >-
+      Represents the number of IP addresses that can be added to VPC CNI in this
+      VPC, not the cluster's remaining IP capacity.
   title:
     connectFailure:
       text: >-

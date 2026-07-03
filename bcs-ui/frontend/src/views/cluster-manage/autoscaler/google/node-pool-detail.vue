@@ -112,13 +112,6 @@
           <bk-form-item label="系统盘">
             {{systemDisk || '--'}}
           </bk-form-item>
-          <bk-form-item :label="$t('cluster.ca.nodePool.create.instanceTypeConfig.disk.data')">
-            <bk-button
-              text
-              size="small"
-              style="padding: 0;"
-              @click="showDataDisks = true">{{$t('generic.button.view')}}</bk-button>
-          </bk-form-item>
         </bk-form>
         <bcs-tab class="mt20">
           <bcs-tab-panel :label="$t('cluster.ca.nodePool.create.scaleInitConfig.userScript')" name="scaleOutPostAction">
@@ -193,32 +186,6 @@
         <bcs-table-column :label="$t('generic.label.value')" prop="value"></bcs-table-column>
       </bcs-table>
     </bcs-dialog>
-    <!-- 数据盘 -->
-    <bcs-dialog
-      theme="primary"
-      v-model="showDataDisks"
-      :show-footer="false"
-      :title="$t('cluster.ca.nodePool.create.instanceTypeConfig.disk.data')"
-      header-position="left"
-      width="600">
-      <bcs-table
-        :data="dataDisks"
-        :outer-border="false"
-        :header-border="false"
-        :header-cell-style="{ background: '#fff' }"
-      >
-        <bcs-table-column :label="$t('generic.label.kind')" prop="diskType">
-          <template #default="{ row }">
-            {{ diskTypeMap[row.diskType] }}
-          </template>
-        </bcs-table-column>
-        <bcs-table-column :label="$t('generic.label.size')" prop="diskSize">
-          <template #default="{ row }">
-            {{ `${row.diskSize} GiB` }}
-          </template>
-        </bcs-table-column>
-      </bcs-table>
-    </bcs-dialog>
   </BcsContent>
 </template>
 <script lang="ts">
@@ -260,7 +227,6 @@ export default defineComponent({
   },
   setup(props) {
     const { clusterList } = useClusterList();
-    const showDataDisks = ref(false);
     const showLabels = ref(false);
     const showTaints = ref(false);
     const nodePoolData = useChainingRef<any>({}, [
@@ -370,7 +336,6 @@ export default defineComponent({
       value: nodePoolData.value.nodeTemplate.annotations[key],
     })));
     const taints = computed(() => nodePoolData.value?.nodeTemplate?.taints || []);
-    const dataDisks = computed(() => nodePoolData.value?.nodeTemplate?.dataDisks || []);
 
     // 集群详情
     const { clusterOS, clusterData, getClusterDetail } = useClusterInfo();
@@ -417,8 +382,6 @@ export default defineComponent({
     });
     return {
       systemDisk,
-      dataDisks,
-      showDataDisks,
       diskTypeMap,
       clusterData,
       clusterOS,

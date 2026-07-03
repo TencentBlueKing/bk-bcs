@@ -113,10 +113,10 @@ export default function () {
       id: 'pd-standard',
       name: $i18n.t('cluster.ca.nodePool.create.instanceTypeConfig.diskType.standard'),
     },
-    {
-      id: 'hyperdisk-balanced',
-      name: $i18n.t('cluster.ca.nodePool.create.instanceTypeConfig.diskType.hyperdisk'),
-    },
+    // {
+    //   id: 'hyperdisk-balanced',
+    //   name: $i18n.t('cluster.ca.nodePool.create.instanceTypeConfig.diskType.hyperdisk'),
+    // },
   ]);
 
   // 云账号列表

@@ -384,7 +384,6 @@ const defaultValues = ref({
   launchTemplate: {
     CPU: 4,
     Mem: 8,
-    dataDisks: [],
     imageInfo: {
       imageID: 'img-eb30mz89',
     },
@@ -461,7 +460,6 @@ function setNodeInfo(data, index) {
         keySecret: '',
       },
       initLoginUsername: '', // 用户名
-      dataDisks: data?.hardwareProfile?.dataDisks || [], // 数据盘
       // 默认值
       isSecurityService: true,
       isMonitorService: true,
@@ -471,7 +469,6 @@ function setNodeInfo(data, index) {
       },
     },
     nodeTemplate: {
-      dataDisks: data?.hardwareProfile?.dataDisks || [],
       nodeOS: data?.instanceProfile?.nodeOS || '', // 节点操作系统,
       dockerGraphPath: '/data/bcs/service/docker',
     },
