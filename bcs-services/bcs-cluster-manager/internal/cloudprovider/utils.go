@@ -741,6 +741,7 @@ func GetNodesByInstanceIDs(instanceIDs []string) []*proto.Node {
 	for _, id := range instanceIDs {
 		node, err := GetStorageModel().GetNode(context.Background(), id)
 		if err != nil {
+			blog.Errorf("GetNodesByInstanceIDs instanceID[%s] failed: %v", id, err)
 			continue
 		}
 
@@ -964,15 +965,19 @@ func GetIDToIPMap(nodeIDs, nodeIPs []string) map[string]string {
 }
 
 // GetNodeIdToIpMapByNodeIds get nodeId mapTo nodeIp
-func GetNodeIdToIpMapByNodeIds(nodeIds []string) map[string]string {
+func GetNodeIdToIpMapByNodeIds(ctx context.Context, nodeIds []string) map[string]string {
+	taskID := GetTaskIDFromContext(ctx)
+	blog.Info("GetNodeIdToIpMapByNodeIds[%s] nodeIds: %s", taskID, nodeIds)
 	nodes := GetNodesByInstanceIDs(nodeIds)
 
-	idToIpmap := make(map[string]string, 0)
+	blog.Info("GetNodeIdToIpMapByNodeIds[%s] nodes: %s", taskID, nodes)
+	idToIPMap := make(map[string]string, 0)
 	for i := range nodes {
-		idToIpmap[nodes[i].GetNodeID()] = nodes[i].GetInnerIP()
+		idToIPMap[nodes[i].GetNodeID()] = nodes[i].GetInnerIP()
 	}
 
-	return idToIpmap
+	blog.Info("GetNodeIdToIpMapByNodeIds[%s] idToIPMap: %s", taskID, idToIPMap)
+	return idToIPMap
 }
 
 // IsExternalNodePool check group external nodePool

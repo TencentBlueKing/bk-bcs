@@ -79,9 +79,9 @@ func ModifyInstancesVpcTask(taskID string, stepName string) error {
 			fmt.Sprintf("ModifyInstancesVpcTask PreCheckModifyInstancesVpc failed, nodeIds:[%s], err:[%s]", nodeIds, err))
 		blog.Errorf("ModifyInstancesVpcTask[%s]: PreCheckModifyInstancesVpc for nodes[%v] failed, %s",
 			taskID, nodeIds, err.Error())
-		retErr := fmt.Errorf("ModifyInstancesVpcTask PreCheckModifyInstancesVpc err, %s", err.Error())
-		_ = state.UpdateStepFailure(start, stepName, retErr)
-		return retErr
+		//retErr := fmt.Errorf("ModifyInstancesVpcTask PreCheckModifyInstancesVpc err, %s", err.Error())
+		//_ = state.UpdateStepFailure(start, stepName, retErr)
+		//return retErr
 	}
 
 	err = business.ModifyInstancesVpcAttribute(ctx, vpcID, nodeIds, dependInfo.CmOption)
@@ -382,9 +382,6 @@ func AddNodesToClusterTask(taskID string, stepName string) error { // nolint
 		_ = state.UpdateStepFailure(start, stepName, fmt.Errorf("NodeID & InnerIP params err"))
 		return fmt.Errorf("task %s parameter err", taskID)
 	}
-	idToIPMap := cloudprovider.GetNodeIdToIpMapByNodeIds(idList)
-
-	blog.Infof("AddNodesToClusterTask[%s] GetNodeIdToIpMapByNodeIds %v", taskID, idToIPMap)
 
 	// cluster/cloud/nodeGroup/cloudCredential Info
 	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
@@ -402,6 +399,9 @@ func AddNodesToClusterTask(taskID string, stepName string) error { // nolint
 
 	// inject taskID
 	ctx := cloudprovider.WithTaskIDAndStepNameForContext(context.Background(), taskID, stepName)
+
+	idToIPMap := cloudprovider.GetNodeIdToIpMapByNodeIds(ctx, idList)
+	blog.Infof("AddNodesToClusterTask[%s] GetNodeIdToIpMapByNodeIds %v", taskID, idToIPMap)
 
 	// handle instance list
 	existedInstance, notExistedInstance, err := business.FilterClusterInstanceFromNodesIDs(ctx, dependInfo, idList)
