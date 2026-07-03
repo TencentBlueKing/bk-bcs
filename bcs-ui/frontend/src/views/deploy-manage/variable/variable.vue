@@ -368,7 +368,31 @@ export default defineComponent({
         try {
           const data = e?.target?.result as string || '';
           event.target.value = '';
-          const result = await handleImportVariable({ data: JSON.parse(data) });
+          const parsedData = JSON.parse(data);
+
+          // Validate imported data
+          const validationErrors: string[] = [];
+          if (Array.isArray(parsedData)) {
+            parsedData.forEach((item, index) => {
+              // Validate desc length (only field with explicit maxlength in the form)
+              if (item.desc && item.desc.length > 255) {
+                const identifier = item.name || `Item ${index + 1}`;
+                validationErrors.push($i18n.t('deploy.variable.validate.descTooLong', { name: identifier, length: item.desc.length }));
+              }
+            });
+          }
+
+          if (validationErrors.length > 0) {
+            $bkMessage({
+              theme: 'error',
+              message: validationErrors.join('; '),
+              limit: 1,
+            });
+            fileLoading.value = false;
+            return;
+          }
+
+          const result = await handleImportVariable({ data: parsedData });
           if (result) {
             $bkMessage({
               theme: 'success',
@@ -378,6 +402,13 @@ export default defineComponent({
           }
         } catch (error) {
           console.error(error);
+          const errorMsg = error instanceof SyntaxError
+            ? $i18n.t('deploy.variable.importError.invalidJSON')
+            : error?.message || $i18n.t('deploy.variable.importError.failed');
+          $bkMessage({
+            theme: 'error',
+            message: errorMsg,
+          });
         }
         fileLoading.value = false;
       };

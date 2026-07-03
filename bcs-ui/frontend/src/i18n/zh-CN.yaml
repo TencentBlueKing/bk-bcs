@@ -2140,6 +2140,11 @@ deploy:
     scopeTips: scope值含义，global表示全局变量，cluster表示集群变量，namespace表示命名空间变量
     clusterTips: cluster和namespace变量需要提供vars关键字，cluster变量的vars需要包含集群ID cluster_id和变量值 value
     nsTips: namespace变量的vars需要包含集群ID cluster_id、命名空间名称 namespace 和变量值 value
+    importError:
+      invalidJSON: JSON格式不正确，请检查文件内容
+      failed: 文件导入失败，请检查文件格式
+    validate:
+      descTooLong: 变量"{name}"：描述超过255个字符（当前：{length}）
     namespace: 所属命名空间
     globalEnv: 全局变量
     namespaceEnv: 命名空间变量
