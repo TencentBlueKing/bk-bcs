@@ -126,6 +126,11 @@ func Error(ctx context.Context, msg string, vars ...interface{}) {
 	GetLogger().Error(wrapLogMsg(ctx, fmt.Sprintf(msg, vars...)))
 }
 
+// Debug xxx
+func Debug(ctx context.Context, msg string, vars ...interface{}) {
+	GetLogger().Debug(wrapLogMsg(ctx, fmt.Sprintf(msg, vars...)))
+}
+
 // wrapLogMsg 向日志中补充 requestID，username 信息
 func wrapLogMsg(ctx context.Context, msg string) string {
 	requestID, username := ctx.Value(ctxkey.RequestIDKey), ctx.Value(ctxkey.UsernameKey)

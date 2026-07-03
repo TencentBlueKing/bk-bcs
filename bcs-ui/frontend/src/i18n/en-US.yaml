@@ -2801,6 +2801,7 @@ dashboard:
     label:
       createMoreNamespaceVars: 'You can create more variables in the namespace through {action}'
       noNamespaceVariables: No naming space variables
+      otherQuotas: Other Quotas
     msg:
       undoSuccess: Undo success
     quota:
@@ -2821,6 +2822,7 @@ dashboard:
       setMinMaxMemCpu: >-
         Please set CPU and MEM quotas, and the minimum value must be greater
         than 0.
+      setValidQuota: Please set valid CPU and Memory quotas (Limit >= Request >= 0 / 1 for shared cluster)
     status:
       waitingApproval: Pending
       createNamespace: Create naming space

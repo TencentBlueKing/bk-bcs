@@ -72,6 +72,7 @@ func main() { // nolint
 	flag.String("mongo_replicaset", "", "mongo replica set name")
 	flag.Uint("mongo_connecttimeout", 3, "mongo server connnect timeout")
 	flag.String("mongo_database", "", "database in mongo for cluster manager")
+	flag.String("mongo_authdatabase", "", "auth database in mongo for cluster manager")
 	flag.String("mongo_username", "", "mongo username for cluster manager")
 	flag.String("mongo_password", "", "mongo passsword for cluster manager")
 	flag.Uint("mongo_maxpoolsize", 0, "mongo client connection pool max size, 0 means not set")

@@ -58,6 +58,7 @@ func RunTaskManager() (*task.TaskManager, error) {
 			Hosts:                 strings.Split(config.GlobalConf.Mongo.Address, ","),
 			Replicaset:            config.GlobalConf.Mongo.Replicaset,
 			ConnectTimeoutSeconds: int(config.GlobalConf.Mongo.ConnectTimeout),
+			AuthDatabase:          config.GlobalConf.Mongo.AuthDatabase,
 			Database:              config.GlobalConf.Mongo.Database,
 			Username:              config.GlobalConf.Mongo.Username,
 			Password:              password,

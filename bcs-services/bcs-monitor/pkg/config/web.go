@@ -22,6 +22,7 @@ type WebConf struct {
 	Host        string   `yaml:"host"`
 	RoutePrefix string   `yaml:"route_prefix"`
 	BaseURL     *url.URL `yaml:"-"`
+	QueryAuth   bool     `yaml:"query_auth"`
 }
 
 // init 初始化

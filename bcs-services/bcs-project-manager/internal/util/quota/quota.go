@@ -126,6 +126,26 @@ func TransferToProto(q *corev1.ResourceQuota) (
 	return quota, used, cpuUseRate, memoryUseRate
 }
 
+// TransferToProtoOtherQuota transfer k8s ResourceQuota to proto OtherQuota
+func TransferToProtoOtherQuota(q *corev1.ResourceQuota) *proto.OtherQuota {
+	if q == nil {
+		return nil
+	}
+	cpuLimitsQuota := q.Status.Hard[corev1.ResourceLimitsCPU]
+	cpuRequestQuota := q.Status.Hard[corev1.ResourceRequestsCPU]
+	memoryLimitsQuota := q.Status.Hard[corev1.ResourceLimitsMemory]
+	memoryRequestsQuota := q.Status.Hard[corev1.ResourceRequestsMemory]
+	return &proto.OtherQuota{
+		Name: q.GetName(),
+		Quota: &proto.ResourceQuota{
+			CpuLimits:      cpuLimitsQuota.String(),
+			CpuRequests:    cpuRequestQuota.String(),
+			MemoryLimits:   memoryLimitsQuota.String(),
+			MemoryRequests: memoryRequestsQuota.String(),
+		},
+	}
+}
+
 // LoadFromProto load k8s ResourceQuota from proto ResourceQuota
 func LoadFromProto(k8sQuota *corev1.ResourceQuota, protoQuota *proto.ResourceQuota) error {
 	return load(k8sQuota, protoQuota.GetCpuLimits(), protoQuota.GetCpuRequests(),
@@ -172,6 +192,37 @@ func load(quota *corev1.ResourceQuota, cpuLimits, cpuRequests, memoryLimits, mem
 			return err
 		}
 		quota.Spec.Hard[corev1.ResourceRequestsMemory] = memoryRequests
+	}
+	return nil
+}
+
+// ValidateQuotaEquality checks if CPU/Memory request and limit are equal.
+func ValidateQuotaEquality(quota *proto.ResourceQuota) error {
+	if quota == nil {
+		return nil
+	}
+	cpuLimit, err := resource.ParseQuantity(quota.CpuLimits)
+	if err != nil {
+		return errorx.NewParamErr("invalid cpu limits")
+	}
+	cpuRequest, err := resource.ParseQuantity(quota.CpuRequests)
+	if err != nil {
+		return errorx.NewParamErr("invalid cpu requests")
+	}
+	if cpuLimit.Cmp(cpuRequest) != 0 {
+		return errorx.NewReadableErr(errorx.ParamErr, "cpu limits and requests must be consistent under shared cluster")
+	}
+
+	memLimit, err := resource.ParseQuantity(quota.MemoryLimits)
+	if err != nil {
+		return errorx.NewParamErr("invalid memory limits")
+	}
+	memRequest, err := resource.ParseQuantity(quota.MemoryRequests)
+	if err != nil {
+		return errorx.NewParamErr("invalid memory requests")
+	}
+	if memLimit.Cmp(memRequest) != 0 {
+		return errorx.NewReadableErr(errorx.ParamErr, "memory limits and requests must be consistent under shared cluster")
 	}
 	return nil
 }

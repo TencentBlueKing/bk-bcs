@@ -1,6 +1,7 @@
 /* eslint-disable no-unused-expressions */
 import { debounce } from 'lodash';
 import { computed, defineComponent, onMounted, PropType, ref, watch } from 'vue';
+import xss from 'xss';
 
 import AnsiParser from '../common/ansi-parser';
 import TransformStringPixel from '../common/transform-string-pixel';
@@ -230,7 +231,11 @@ export default defineComponent({
                                     }
                                     <span class="log-item-content"
                                         style={{ 'margin-left': this.showTimeStamp && data.breakLine ? '150px' : '' }}
-                                        domProps-InnerHTML={data.html}>
+                                        domProps-InnerHTML={xss(data.html, {
+                                          whiteList: {},
+                                          stripIgnoreTag: true,
+                                          stripIgnoreTagBody: ['script'],
+                                        })}>
                                     </span>
                                 </div>
                           ),

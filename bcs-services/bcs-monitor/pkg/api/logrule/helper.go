@@ -21,6 +21,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	"github.com/feiin/go-xss"
 
 	bklog "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bk_log"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
@@ -161,6 +162,13 @@ type UpdateLogRuleReq struct {
 	DisplayName string        `json:"display_name" form:"display_name"`
 	Description string        `json:"description"`
 	Rule        bklog.LogRule `json:"rule"`
+}
+
+// Validate UpdateLogRuleReq validate
+func (req *UpdateLogRuleReq) Validate() error {
+	req.DisplayName = xss.FilterXSS(req.DisplayName, xss.XssOption{})
+	req.Description = xss.FilterXSS(req.Description, xss.XssOption{})
+	return nil
 }
 
 // toEntity convert to entity.LogRule

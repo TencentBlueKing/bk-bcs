@@ -26,7 +26,7 @@
       </div>
       <div class="layout-right">
         <div class="content-wraper">
-          <div v-html="logContent" class="markdowm-container" />
+          <div v-html="filterXSSContent" class="markdowm-container" />
         </div>
       </div>
     </div>
@@ -35,6 +35,7 @@
 
 <script>
 import MarkdownIt from 'markdown-it';
+import xss from 'xss';
 export default {
   name: 'VersionLog',
   props: {
@@ -77,6 +78,13 @@ export default {
         return defaultRender(tokens, idx, options, env, self);
       };
       return md.render(this.list[this.activeIndex].content);
+    },
+    filterXSSContent() {
+      return xss(this.logContent, {
+        whiteList: {},
+        stripIgnoreTag: true,
+        stripIgnoreTagBody: ['script'],
+      });
     },
     latestBcsVerSion() {
       return this.list[0]?.version || '';

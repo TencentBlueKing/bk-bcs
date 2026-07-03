@@ -132,13 +132,13 @@ func restyErrHook(r *resty.Request, err error) {
 }
 
 func restyAfterResponseHook(c *resty.Client, r *resty.Response) error {
-	blog.Infof("[%s] [Traceparent: %s] RESP: %s", store.RequestIDValue(r.Request.Context()),
-		r.Request.RawRequest.Header.Get("Traceparent"), restyResponseToCurl(r))
+	blog.Debug(fmt.Sprintf("[%s] [Traceparent: %s] RESP: %s", store.RequestIDValue(r.Request.Context()),
+		r.Request.RawRequest.Header.Get("Traceparent"), restyResponseToCurl(r)))
 	return nil
 }
 
 func restyBeforeRequestHook(c *resty.Client, r *resty.Request) error {
-	blog.Infof("[%s] REQ: %s", store.RequestIDValue(r.Context()), restyReqToCurl(r))
+	blog.Debug(fmt.Sprintf("[%s] REQ: %s", store.RequestIDValue(r.Context()), restyReqToCurl(r)))
 	tracing.SetRequestIDValue(r.RawRequest, store.RequestIDValue(r.Context()))
 	return nil
 }

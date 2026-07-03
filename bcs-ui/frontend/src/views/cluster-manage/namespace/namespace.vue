@@ -327,22 +327,50 @@
           label="CPU"
           property="quota"
           error-display-type="normal">
-          <div class="flex mr-[20px]">
+          <div class="flex items-center">
+            <span class="mr-[10px] text-[12px] text-[#979ba5]">Request</span>
             <bcs-input
               v-model="setQuotaConf.quota.cpuRequests"
-              class="w-[200px]"
+              class="w-[150px] mr-[20px]"
               type="number"
-              :min="1"
+              :min="isSharedCluster ? 1 : 0"
               :max="512000"
               :precision="0">
               <div class="group-text" slot="append">{{ $t('units.suffix.cores') }}</div>
             </bcs-input>
-            <span class="mx-[10px]">Mem</span>
+            <span class="mr-[10px] text-[12px] text-[#979ba5]">Limit</span>
+            <bcs-input
+              v-model="setQuotaConf.quota.cpuLimits"
+              class="w-[150px]"
+              type="number"
+              :min="isSharedCluster ? 1 : 0"
+              :max="512000"
+              :precision="0">
+              <div class="group-text" slot="append">{{ $t('units.suffix.cores') }}</div>
+            </bcs-input>
+          </div>
+        </bk-form-item>
+        <bk-form-item
+          v-if="showQuota"
+          label="Memory"
+          error-display-type="normal">
+          <div class="flex items-center">
+            <span class="mr-[10px] text-[12px] text-[#979ba5]">Request</span>
             <bcs-input
               v-model="setQuotaConf.quota.memoryRequests"
-              class="w-[200px]"
+              class="w-[150px] mr-[20px]"
               type="number"
-              :min="1"
+              :min="isSharedCluster ? 1 : 0"
+              :max="1024000"
+              :precision="0">
+              <div class="group-text" slot="append">GiB</div>
+            </bcs-input>
+            <span class="mr-[10px] text-[12px] text-[#979ba5]">Limit</span>
+            <bcs-input
+              v-model="setQuotaConf.quota.memoryLimits"
+              class="w-[150px]"
+              type="number"
+              :min="isSharedCluster ? 1 : 0"
               :max="1024000"
               :precision="0">
               <div class="group-text" slot="append">GiB</div>
@@ -498,8 +526,14 @@ export default defineComponent({
       if (!setQuotaConf.value.quota.cpuRequests) {
         setQuotaConf.value.quota.cpuRequests = '1';
       }
+      if (!setQuotaConf.value.quota.cpuLimits) {
+        setQuotaConf.value.quota.cpuLimits = '1';
+      }
       if (!setQuotaConf.value.quota.memoryRequests) {
         setQuotaConf.value.quota.memoryRequests = '1';
+      }
+      if (!setQuotaConf.value.quota.memoryLimits) {
+        setQuotaConf.value.quota.memoryLimits = '1';
       }
       showQuota.value = !showQuota.value;
     };
@@ -507,10 +541,20 @@ export default defineComponent({
     const quotaRules = [
       {
         validator() {
-          return setQuotaConf.value.quota.cpuRequests && setQuotaConf.value.quota.memoryRequests
-              && setQuotaConf.value.quota.cpuRequests !== 'NaN' && setQuotaConf.value.quota.memoryRequests !== 'NaN';
+          const { cpuRequests, cpuLimits, memoryRequests, memoryLimits } = setQuotaConf.value.quota;
+          const cpuReq = Number(cpuRequests);
+          const cpuLim = Number(cpuLimits);
+          const memReq = Number(memoryRequests);
+          const memLim = Number(memoryLimits);
+          if (!cpuRequests || !cpuLimits || !memoryRequests || !memoryLimits) {
+            return false;
+          }
+          if (isSharedCluster.value) {
+            return cpuReq >= 1 && cpuLim >= cpuReq && memReq >= 1 && memLim >= memReq;
+          }
+          return cpuReq >= 0 && cpuLim >= cpuReq && memReq >= 0 && memLim >= memReq;
         },
-        message: $i18n.t('dashboard.ns.validate.setMinMaxMemCpu'),
+        message: $i18n.t('dashboard.ns.validate.setValidQuota'),
         trigger: 'blur',
       },
     ];
@@ -668,10 +712,10 @@ export default defineComponent({
       setQuotaConf.value.annotations = annotations;
       if (quota) {
         setQuotaConf.value.quota = {
-          cpuLimits: quota.cpuLimits || '',
-          cpuRequests: unitConvert(quota.cpuRequests, '', 'cpu'),
-          memoryLimits: quota.memoryLimits || '',
-          memoryRequests: unitConvert(quota.memoryRequests, 'Gi', 'mem'),
+          cpuLimits: unitConvert(quota.cpuLimits || '', '', 'cpu'),
+          cpuRequests: unitConvert(quota.cpuRequests || '', '', 'cpu'),
+          memoryLimits: unitConvert(quota.memoryLimits || '', 'Gi', 'mem'),
+          memoryRequests: unitConvert(quota.memoryRequests || '', 'Gi', 'mem'),
         };
       }
     };
@@ -687,9 +731,9 @@ export default defineComponent({
           labels,
           annotations,
           quota: showQuota.value ? {
-            cpuLimits: String(quota.cpuRequests),
+            cpuLimits: String(quota.cpuLimits),
             cpuRequests: String(quota.cpuRequests),
-            memoryLimits: `${quota.memoryRequests}Gi`,
+            memoryLimits: `${quota.memoryLimits}Gi`,
             memoryRequests: `${quota.memoryRequests}Gi`,
           } : null,
         });

@@ -177,8 +177,8 @@ func restyErrHook(r *resty.Request, err error) {
 }
 
 func restyAfterResponseHook(c *resty.Client, r *resty.Response) error {
-	blog.Infof("[%s] REQ: %s", RequestIDValue(r.Request.Context()), restyReqToCurl(r.Request))
-	blog.Infof("[%s] RESP: %s", RequestIDValue(r.Request.Context()), restyResponseToCurl(r))
+	blog.V(6).Infof("[%s] REQ: %s", RequestIDValue(r.Request.Context()), restyReqToCurl(r.Request))
+	blog.V(6).Infof("[%s] RESP: %s", RequestIDValue(r.Request.Context()), restyResponseToCurl(r))
 	return nil
 }
 

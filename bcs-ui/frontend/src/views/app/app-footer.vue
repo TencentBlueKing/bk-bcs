@@ -11,14 +11,15 @@
     </div>
     <div v-else>
       <div class="mb5 link">
-        <span v-html="config.i18n.footerInfoHTML"></span>
+        <span v-html="footerHTML"></span>
       </div>
       <p>{{ config.footerCopyrightContent }}</p>
     </div>
   </div>
 </template>
 <script lang="ts">
-import { defineComponent } from 'vue';
+import { computed, defineComponent } from 'vue';
+import xss from 'xss';
 
 import usePlatform from '@/composables/use-platform';
 
@@ -26,10 +27,12 @@ export default defineComponent({
   name: 'BcsFooter',
   setup() {
     const { config } = usePlatform();
+    const footerHTML = computed(() => xss(config.i18n.footerInfoHTML));
     return {
       config,
       PAAS_HOST: window.PAAS_HOST,
       version: localStorage.getItem('__bcs_latest_version__'),
+      footerHTML,
     };
   },
 });

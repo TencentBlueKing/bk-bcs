@@ -26,6 +26,7 @@ import (
 	"github.com/thanos-io/thanos/pkg/store"
 	"google.golang.org/grpc/metadata"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest/tracing"
 )
 
@@ -69,6 +70,13 @@ func (t *TenantAuthMiddleware) NewHandler(handlerName string, handler http.Handl
 	handleFunc := t.ins.NewHandler(handlerName, handler)
 
 	return func(w http.ResponseWriter, r *http.Request) {
+		if config.G.Web.QueryAuth {
+			// 仅内部调用
+			if r.Header.Get("Authorization") != "Bearer admin" {
+				api.RespondError(w, &api.ApiError{Typ: api.ErrorInternal, Err: errors.New("forbidden")}, nil)
+				return
+			}
+		}
 		labelMatchers, err := parseLabelMatchersParam(r)
 		if err != nil {
 			api.RespondError(w, err, nil)

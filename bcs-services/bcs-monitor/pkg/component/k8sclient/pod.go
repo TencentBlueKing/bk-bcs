@@ -22,6 +22,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/feiin/go-xss"
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -173,7 +174,8 @@ func parseLog(rawLog string) (*Log, error) {
 	if len(item) != 2 {
 		return nil, errors.Errorf("invalid log, %s", rawLog)
 	}
-	return &Log{Time: item[0], Log: item[1]}, nil
+	log := xss.FilterXSS(item[1], xss.XssOption{})
+	return &Log{Time: item[0], Log: log}, nil
 }
 
 // GetPodContainers 获取 Pod 容器名称列表
