@@ -129,30 +129,33 @@ func createGKENodeGroup(cmOption *cloudprovider.CommonOption, group *proto.NodeG
 
 // generateCreateNodePoolInput generate create node pool input
 func generateCreateNodePoolInput(group *proto.NodeGroup, cluster *proto.Cluster) *api.CreateNodePoolRequest {
-	req := &api.CreateNodePoolRequest{
-		NodePool: &api.NodePool{
-			// gke nodePool名称中不允许有大写字母
-			Name:             group.CloudNodeGroupID,
-			Config:           generateNodeConfig(group),
-			InitialNodeCount: int64(group.AutoScaling.DesiredSize),
-			Locations:        group.AutoScaling.Zones,
-			MaxPodsConstraint: &api.MaxPodsConstraint{
-				MaxPodsPerNode: 0,
-			},
-			Autoscaling: &api.NodePoolAutoscaling{
-				// 不开启谷歌云 CA 组件，因为需要部署 BCS 自己的 CA 组件
-				Enabled: false,
-			},
-			Management: generateNodeManagement(group, cluster),
-		},
+	// gke nodePool 名称不允许包含大写字母
+	nodePool := &api.NodePool{
+		Name:             group.CloudNodeGroupID,
+		Config:           generateNodeConfig(group),
+		InitialNodeCount: int64(group.AutoScaling.DesiredSize),
+		Locations:        group.AutoScaling.Zones,
+		// 不开启谷歌云原生 CA 组件，由 BCS 自身 CA 组件接管弹性伸缩
+		Autoscaling: &api.NodePoolAutoscaling{Enabled: false},
+		Management:  generateNodeManagement(group, cluster),
 	}
 
-	// 如果节点池不指定最大 Pods 限制时，gke会使用集群默认值
-	if group.NodeTemplate.MaxPodsPerNode > 0 {
-		req.NodePool.MaxPodsConstraint.MaxPodsPerNode = int64(group.NodeTemplate.MaxPodsPerNode)
+	// MaxPodsConstraint 未指定时 GKE 使用集群默认值，仅在明确设置时才下发
+	if group.NodeTemplate != nil && group.NodeTemplate.MaxPodsPerNode > 0 {
+		nodePool.MaxPodsConstraint = &api.MaxPodsConstraint{
+			MaxPodsPerNode: int64(group.NodeTemplate.MaxPodsPerNode),
+		}
 	}
 
-	return req
+	// 公网 IP 控制（迁移自原 newItFromBaseIt，GKE 已不支持通过 Compute API 修改实例模板）：
+	//   enablePrivateNodes=true  → 节点仅有内网 IP，不分配公网 IP
+	//   enablePrivateNodes=false → 节点分配公网 IP（默认继承集群配置）
+	if group.LaunchTemplate != nil && group.LaunchTemplate.InternetAccess != nil &&
+		!group.LaunchTemplate.InternetAccess.PublicIPAssigned {
+		nodePool.NetworkConfig = &api.NodeNetworkConfig{EnablePrivateNodes: true}
+	}
+
+	return &api.CreateNodePoolRequest{NodePool: nodePool}
 }
 
 // CheckCloudNodeGroupStatusTask check cloud node group status task
@@ -235,7 +238,7 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error { // no
 	}
 
 	// get instanceGroupManager
-	newIt, igm, err := getIgmAndIt(computeCli, cloudNodeGroup, group, taskID)
+	it, igm, err := getIgmAndIt(computeCli, cloudNodeGroup, group, taskID)
 	if err != nil {
 		blog.Errorf("CheckCloudNodeGroupStatusTask[%s]: getIgmAndIt failed: %v", taskID, err)
 		retErr := fmt.Errorf("getIgmAndIt failed, %s", err.Error())
@@ -243,9 +246,9 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error { // no
 		return retErr
 	}
 
-	// update node group cloud args id
+	// record igm && it info to nodeGroup in db
 	err = cloudprovider.GetStorageModel().UpdateNodeGroup(context.Background(), generateNodeGroupFromIgmAndIt(group,
-		igm, newIt, cmOption))
+		igm, it, cmOption))
 	if err != nil {
 		blog.Errorf("CreateCloudNodeGroupTask[%s]: updateNodeGroupCloudArgsID[%s] in task %s step %s failed, %s",
 			taskID, nodeGroupID, taskID, stepName, err.Error())
@@ -269,55 +272,70 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error { // no
 }
 
 // getIgmAndIt get instanceGroupManager and instanceTemplate
+// Only reads IGM and IT metadata for DB population; no longer patches the IGM.
+//
+// Background: GKE no longer allows patching a GKE-managed IGM's instance template via the Compute API.
+// Individual node pool features have been migrated to the GKE NodePool API:
+//   - SSH keys      → NodeConfig.metadata["ssh-keys"]       (set in generateNodeConfig)
+//   - Public IP     → NodePool.networkConfig.enablePrivateNodes (set in generateCreateNodePoolInput)
+//   - Startup script → GKE reserved key, not supported; use DaemonSet instead
+//   - Data disks    → GKE NodePool API does not support extra persistent disks; use DaemonSet instead
 func getIgmAndIt(computeCli *api.ComputeServiceClient, cloudNodeGroup *container.NodePool, group *proto.NodeGroup,
 	taskID string) (*compute.InstanceTemplate, *compute.InstanceGroupManager, error) {
 	// get instanceGroupManager
+	// Note: cloudNodeGroup.InstanceGroupUrls[0] uses instanceGroups URL format;
+	// GetInstanceGroupManager now handles both instanceGroups and instanceGroupManagers URLs.
 	igm, err := api.GetInstanceGroupManager(computeCli, cloudNodeGroup.InstanceGroupUrls[0])
 	if err != nil {
 		blog.Errorf("taskID[%s] getIgmAndIt GetInstanceGroupManager failed: %v", taskID, err)
 		return nil, nil, err
 	}
 
-	// get instanceTemplate info
+	// get instanceTemplate info (read-only, used only for DB field population)
 	it, err := api.GetInstanceTemplate(computeCli, igm.InstanceTemplate)
 	if err != nil {
-		blog.Errorf("taskID[%s] getIgmAndIt GetInstanceGroupManager failed: %v", taskID, err)
+		blog.Errorf("taskID[%s] getIgmAndIt GetInstanceTemplate failed: %v", taskID, err)
 		return nil, nil, err
 	}
 
-	oldItName := it.Name
-	newIt := it
-	err = newItFromBaseIt(newIt, group, computeCli, igm.InstanceTemplate, taskID)
-	if err != nil {
-		return nil, nil, err
-	}
+	// [DISABLED] The following block created a new instance template and patched the IGM to apply
+	// custom configurations (data disks, public IP, SSH keys, startup script).
+	// GKE no longer allows patching GKE-managed IGMs via the Compute API.
+	// These features have been migrated to GKE NodePool API fields (see function doc above).
+	//
+	// oldItName := it.Name
+	// newIt := it
+	// err = newItFromBaseIt(newIt, group, computeCli, igm.InstanceTemplate, taskID)
+	// if err != nil {
+	// 	return nil, nil, err
+	// }
+	//
+	// err = patchIgm(newIt, igm, computeCli, taskID)
+	// if err != nil {
+	// 	return nil, nil, err
+	// }
+	//
+	// if newIt.Name != oldItName {
+	// 	location, errLocal := api.GetInstanceTemplateLocation(it.SelfLink)
+	// 	if errLocal != nil {
+	// 		blog.Errorf("taskID[%s] GetInstanceTemplateLocation failed: %v", taskID, err)
+	// 		return newIt, igm, nil
+	// 	}
+	// 	// 如果使用了新模版,则删除旧模版
+	// 	o, err2 := computeCli.DeleteInstanceTemplate(context.Background(), *location, oldItName)
+	// 	if err2 != nil {
+	// 		return nil, nil, err2
+	// 	}
+	//
+	// 	err2 = checkOperationStatus(computeCli, o.SelfLink, taskID, 3*time.Second)
+	// 	if err2 != nil {
+	// 		return nil, nil, err2
+	// 	}
+	//
+	// 	blog.Infof("taskID[%s] DeleteInstanceTemplate[%s] success, operationID[%s]", taskID, oldItName, o.SelfLink)
+	// }
 
-	err = patchIgm(newIt, igm, computeCli, taskID)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	if newIt.Name != oldItName {
-		location, errLocal := api.GetInstanceTemplateLocation(it.SelfLink)
-		if errLocal != nil {
-			blog.Errorf("taskID[%s] GetInstanceTemplateLocation failed: %v", taskID, err)
-			return newIt, igm, nil
-		}
-		// 如果使用了新模版,则删除旧模版
-		o, err2 := computeCli.DeleteInstanceTemplate(context.Background(), *location, oldItName)
-		if err2 != nil {
-			return nil, nil, err2
-		}
-
-		err2 = checkOperationStatus(computeCli, o.SelfLink, taskID, 3*time.Second)
-		if err2 != nil {
-			return nil, nil, err2
-		}
-
-		blog.Infof("taskID[%s] DeleteInstanceTemplate[%s] success, operationID[%s]", taskID, oldItName, o.SelfLink)
-	}
-
-	return newIt, igm, nil
+	return it, igm, nil
 }
 
 // patchIgm patch instanceGroupManager
@@ -381,7 +399,7 @@ func newItFromBaseIt(newIt *compute.InstanceTemplate, group *proto.NodeGroup, //
 	if group.LaunchTemplate.KeyPair != nil && len(group.LaunchTemplate.KeyPair.KeyPublic) > 0 {
 		var existSshKeys string
 		rawKeyPub, _ := encrypt.Decrypt(nil, group.LaunchTemplate.KeyPair.KeyPublic)
-		newSshKey := group.LaunchTemplate.InitLoginUsername + ":" + rawKeyPub
+		newSshKey := group.LaunchTemplate.InitLoginUsername + ":" + strings.TrimSpace(rawKeyPub)
 		for k := range newIt.Properties.Metadata.Items {
 			if newIt.Properties.Metadata.Items[k].Key == api.MetadataKeySshKey {
 				existSshKeys = *newIt.Properties.Metadata.Items[k].Value
@@ -557,6 +575,19 @@ func generateNodeConfig(nodeGroup *proto.NodeGroup) *api.NodeConfig {
 	if template.ImageInfo != nil {
 		conf.ImageType = template.ImageInfo.ImageName
 	}
+
+	// SSH 密钥配置：迁移自原 newItFromBaseIt（通过修改实例模板的方式，GKE 已不支持）。
+	// GKE NodePool API 支持通过 NodeConfig.metadata 设置 ssh-keys（非保留键）。
+	// 注意：GKE 不支持密码登录，仅支持 SSH 密钥认证。
+	if template.GetKeyPair() != nil && len(template.GetKeyPair().GetKeyPublic()) > 0 {
+		rawKeyPub, _ := encrypt.Decrypt(nil, template.KeyPair.KeyPublic)
+		newSshKey := template.InitLoginUsername + ":" + strings.TrimSpace(rawKeyPub)
+		conf.Metadata = map[string]string{
+			api.MetadataKeySshKey:             newSshKey,
+			api.MetadataKeyBlockProjectSshKey: "true",
+		}
+	}
+
 	return conf
 }
 

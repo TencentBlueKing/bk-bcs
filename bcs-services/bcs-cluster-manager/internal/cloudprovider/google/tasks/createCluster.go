@@ -135,7 +135,12 @@ func CreateGKEClusterTask(taskID string, stepName string) error {
 	return nil
 }
 
-// createGKECluster create gke cluster
+// createGKECluster creates a GKE cluster via the Google Container Service API.
+// It first checks if a cluster with the same name already exists (idempotent behavior).
+// If the cluster does not exist, it builds a CreateClusterRequest and submits it to GCP.
+// It also determines the cluster location type (regional vs zonal) based on region format,
+// and sets cluster extra info including whether autopilot mode is enabled.
+// Returns the cluster name (lowercase clusterID) on success.
 func createGKECluster(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, groups []*proto.NodeGroup) (
 	string, error) {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
@@ -333,7 +338,10 @@ func generateCreateClusterRequest(info *cloudprovider.CloudDependBasicInfo, // n
 	return req
 }
 
-// generateCreateClusterNodePoolInput generate create node pool input
+// generateCreateClusterNodePoolInput constructs a CreateNodePoolRequest from a NodeGroup and Cluster.
+// It configures the node pool with lowercase naming (GKE requirement), node configuration,
+// location constraints, max pods per node, and autoscaling settings.
+// Note: Google Cloud autoscaler (CA) is disabled because BCS deploys its own CA component.
 func generateCreateClusterNodePoolInput(group *proto.NodeGroup, cluster *proto.Cluster) *api.CreateNodePoolRequest {
 	if group.NodeTemplate.MaxPodsPerNode == 0 {
 		// 节点池不指定最大 Pods 限制时，使用集群默认值
@@ -428,7 +436,9 @@ func CheckGKEClusterStatusTask(taskID string, stepName string) error {
 	return nil
 }
 
-// checkClusterStatus check cluster status
+// checkClusterStatus polls the GKE cluster creation status until it reaches a terminal state (Running/Error).
+// It uses a loop with 10-second intervals and a 30-minute timeout to avoid blocking indefinitely.
+// Returns nil when cluster reaches Running state, or an error if cluster enters Error state or times out.
 func checkClusterStatus(ctx context.Context, info *cloudprovider.CloudDependBasicInfo) error {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
@@ -561,7 +571,10 @@ func CheckGKENodeGroupsStatusTask(taskID string, stepName string) error {
 	return nil
 }
 
-// checkNodesGroupStatus check nodes group status
+// checkNodesGroupStatus polls node pool provisioning status for all specified node groups.
+// It queries GKE API with 10-second intervals and a 10-minute timeout.
+// Returns two slices: successfully provisioned node group IDs and failed node group IDs.
+// A node group is considered failed if its status is Error or RunningWithError.
 func checkNodesGroupStatus(ctx context.Context, info *cloudprovider.CloudDependBasicInfo,
 	systemID string, nodeGroupIDs []string) ([]string, []string, error) {
 	var (
@@ -648,7 +661,10 @@ func checkNodesGroupStatus(ctx context.Context, info *cloudprovider.CloudDependB
 	return addSuccessNodeGroups, addFailureNodeGroups, nil
 }
 
-// UpdateGKENodesGroupToDBTask update GKE nodepool
+// UpdateGKENodesGroupToDBTask persists node group information to the database after creation.
+// It retrieves the actual node pool configuration from GKE, including the instance group manager
+// and instance template details, then updates the node group records in the storage layer.
+// For node groups with desired size > 0, it also triggers instance creation in the MIG.
 func UpdateGKENodesGroupToDBTask(taskID string, stepName string) error {
 	start := time.Now()
 	// get task and task current step
@@ -705,7 +721,11 @@ func UpdateGKENodesGroupToDBTask(taskID string, stepName string) error {
 	return nil
 }
 
-// updateNodeGroups update node groups
+// updateNodeGroups synchronizes node group states with the database after cluster creation.
+// For failed node groups, it updates their status to StatusCreateNodeGroupFailed.
+// For successful node groups, it retrieves the instance group manager and instance template
+// from GCP, generates the node group configuration, and persists it to the database.
+// If the desired size is greater than 0, it also creates instances in the managed instance group.
 func updateNodeGroups(ctx context.Context, info *cloudprovider.CloudDependBasicInfo,
 	addFailedNodeGroupIDs, addSuccessNodeGroupIDs []string) error {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
@@ -746,8 +766,8 @@ func updateNodeGroups(ctx context.Context, info *cloudprovider.CloudDependBasicI
 			return nil
 		}
 
-		// get instanceGroupManager
-		newIt, igm, err := getIgmAndIt(computeCli, np, group, taskID)
+		// get nodepool associated instanceGroupManager and instanceTemplate
+		it, igm, err := getIgmAndIt(computeCli, np, group, taskID)
 		if err != nil {
 			blog.Errorf("updateNodeGroups[%s]: getIgmAndIt failed: %v", taskID, err)
 			retErr := fmt.Errorf("getIgmAndIt failed, %s", err)
@@ -755,7 +775,7 @@ func updateNodeGroups(ctx context.Context, info *cloudprovider.CloudDependBasicI
 		}
 
 		group.Status = common.StatusRunning
-		group = generateNodeGroupFromIgmAndIt(group, igm, newIt, info.CmOption)
+		group = generateNodeGroupFromIgmAndIt(group, igm, it, info.CmOption)
 		group.AutoScaling.DesiredSize = desiredSize
 		// update node group cloud args id
 		err = cloudprovider.GetStorageModel().UpdateNodeGroup(context.Background(), group)
@@ -786,7 +806,10 @@ func updateNodeGroups(ctx context.Context, info *cloudprovider.CloudDependBasicI
 	return nil
 }
 
-// CheckGKEClusterNodesStatusTask check cluster nodes status
+// CheckGKEClusterNodesStatusTask monitors the provisioning status of individual nodes within GKE node groups.
+// It retrieves instance information from the managed instance groups and tracks which nodes
+// successfully reached Running state versus those that terminated with errors.
+// The function stores successful and failed node IDs in task common parameters for downstream steps.
 func CheckGKEClusterNodesStatusTask(taskID string, stepName string) error {
 	start := time.Now()
 	// get task and task current step
@@ -856,7 +879,10 @@ func CheckGKEClusterNodesStatusTask(taskID string, stepName string) error {
 	return nil
 }
 
-// checkClusterNodesStatus check cluster nodes status
+// checkClusterNodesStatus polls instance status within all managed instance groups associated
+// with the given node groups. It uses 1-second polling intervals with a 10-minute timeout.
+// Returns two slices: instance resource URLs for running nodes and terminated/failed nodes.
+// The function aggregates the desired node count from all node groups to determine completion.
 func checkClusterNodesStatus(ctx context.Context, info *cloudprovider.CloudDependBasicInfo,
 	nodeGroupIDs []string) ([]string, []string, error) {
 	var totalNodesNum uint32
@@ -937,7 +963,10 @@ func checkClusterNodesStatus(ctx context.Context, info *cloudprovider.CloudDepen
 	return addSuccessNodes, addFailureNodes, nil
 }
 
-// UpdateGKENodesToDBTask update GKE nodes
+// UpdateGKENodesToDBTask persists node information to the database after successful cluster creation.
+// It retrieves instance details from GCP, creates node records in the storage layer,
+// synchronizes cluster info to pass-cc, and grants resource creator permissions.
+// Node IPs are stored in task common parameters for subsequent workflow steps.
 func UpdateGKENodesToDBTask(taskID string, stepName string) error {
 	start := time.Now()
 	// get task and task current step
@@ -1005,7 +1034,10 @@ func UpdateGKENodesToDBTask(taskID string, stepName string) error {
 	return nil
 }
 
-// updateNodeToDB update node to db
+// updateNodeToDB iterates over successful node groups, retrieves each instance's details from GCP,
+// converts them to internal node representations, and persists them to the database.
+// It also collects inner IPs of running nodes and stores them in task common parameters
+// (DynamicNodeIPList, NodeIPs, NodeNames) for use by downstream task steps.
 func updateNodeToDB(ctx context.Context, state *cloudprovider.TaskState, info *cloudprovider.CloudDependBasicInfo,
 	nodeGroupIDs []string) error {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
