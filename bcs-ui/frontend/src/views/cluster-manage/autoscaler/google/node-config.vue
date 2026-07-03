@@ -135,70 +135,21 @@
                   </bcs-option>
                 </bcs-select>
               </div>
-              <bcs-select
+              <bk-input
                 class="w-[88px] bg-[#fff] ml10"
+                type="number"
                 :disabled="isEdit"
-                :clearable="false"
+                :min="50"
+                :max="2000"
                 v-model="nodePoolConfig.launchTemplate.systemDisk.diskSize">
-                <bcs-option id="50" name="50"></bcs-option>
-                <bcs-option id="100" name="100"></bcs-option>
-              </bcs-select>
+              </bk-input>
               <span :class="['company', { disabled: isEdit }]">GB</span>
+              <p
+                class="error-tips bcs-ellipsis ml-[6px] flex-1"
+                v-if="nodePoolConfig.launchTemplate.systemDisk.diskSize % 10 !== 0">
+                {{$t('cluster.ca.nodePool.create.instanceTypeConfig.validate.systemDisk')}}
+              </p>
             </div>
-            <div class="mt20">
-              <bk-checkbox
-                :disabled="isEdit"
-                v-model="showDataDisks"
-                @change="handleShowDataDisksChange">
-                <span v-bk-tooltips="$t('googleCA.tips.dataDisk')">
-                  {{$t('cluster.ca.nodePool.create.instanceTypeConfig.label.purchaseDataDisk')}}
-                </span>
-              </bk-checkbox>
-            </div>
-            <template v-if="showDataDisks">
-              <div class="panel" v-for="(disk, index) in nodePoolConfig.nodeTemplate.dataDisks" :key="index">
-                <div class="panel-item">
-                  <div class="prefix-select">
-                    <span :class="['prefix', { disabled: isEdit }]">{{$t('cluster.ca.nodePool.create.instanceTypeConfig.disk.data')}}</span>
-                    <bcs-select
-                      :disabled="isEdit"
-                      v-model="disk.diskType"
-                      :clearable="false"
-                      class="!min-w-[150px] bg-[#fff]">
-                      <bcs-option
-                        v-for="diskItem in diskEnum"
-                        :key="diskItem.id"
-                        :id="diskItem.id"
-                        :name="diskItem.name">
-                      </bcs-option>
-                    </bcs-select>
-                  </div>
-                  <bk-input
-                    class="max-width-130 ml10"
-                    type="number"
-                    :disabled="isEdit"
-                    :min="50"
-                    :max="16380"
-                    v-model="disk.diskSize">
-                  </bk-input>
-                  <span :class="['company', { disabled: isEdit }]">GB</span>
-                </div>
-                <p class="error-tips" v-if="disk.diskSize % 10 !== 0">{{$t('cluster.ca.nodePool.create.instanceTypeConfig.validate.dataDisks')}}</p>
-                <span :class="['panel-delete', { disabled: isEdit }]" @click="handleDeleteDiskData(index)">
-                  <i class="bk-icon icon-close3-shape"></i>
-                </span>
-              </div>
-              <div
-                :class="['add-panel-btn', { disabled: isEdit || nodePoolConfig.nodeTemplate.dataDisks.length > 4 }]"
-                v-bk-tooltips="{
-                  content: $t('cluster.ca.nodePool.create.instanceTypeConfig.validate.maxDataDisks'),
-                  disabled: nodePoolConfig.nodeTemplate.dataDisks.length <= 4
-                }"
-                @click="handleAddDiskData">
-                <i class="bk-icon left-icon icon-plus"></i>
-                <span>{{$t('cluster.ca.nodePool.create.instanceTypeConfig.button.addDataDisks')}}</span>
-              </div>
-            </template>
             <span class="inline-flex mt15">
               <bk-checkbox
                 :disabled="isEdit"
@@ -391,14 +342,12 @@ export default defineComponent({
           keySecret: defaultValues.value.launchTemplate?.keyPair?.keySecret || '',
         },
         initLoginPassword: defaultValues.value.launchTemplate?.initLoginPassword, // 密码
-        dataDisks: defaultValues.value.launchTemplate?.dataDisks || [], // 数据盘
         // 默认值
         isSecurityService: defaultValues.value.launchTemplate?.isSecurityService || true,
         isMonitorService: defaultValues.value.launchTemplate?.isMonitorService || true,
         networkTag: defaultValues.value.launchTemplate?.networkTag || [],
       },
       nodeTemplate: {
-        dataDisks: defaultValues.value.nodeTemplate?.dataDisks || [],
         dockerGraphPath: defaultValues.value.nodeTemplate?.dockerGraphPath, // 容器目录
         runtime: {
           containerRuntime: defaultValues.value.nodeTemplate?.runtime?.containerRuntime, // 运行时容器组件
@@ -638,26 +587,6 @@ export default defineComponent({
       pageSizeChange,
     } = usePage(instanceTypesList);
 
-    // 数据盘
-    const showDataDisks = ref(!!nodePoolConfig.value.nodeTemplate.dataDisks.length);
-    const defaultDiskItem = {
-      diskType: 'pd-balanced',
-      diskSize: '100',
-      autoFormatAndMount: true,
-    };
-    const handleShowDataDisksChange = (show) => {
-      nodePoolConfig.value.nodeTemplate.dataDisks = show
-        ? [JSON.parse(JSON.stringify(defaultDiskItem))] : [];
-    };
-    const handleDeleteDiskData = (index) => {
-      if (isEdit.value) return;
-      nodePoolConfig.value.nodeTemplate.dataDisks.splice(index, 1);
-    };
-    const handleAddDiskData = () => {
-      if (isEdit.value || nodePoolConfig.value.nodeTemplate.dataDisks.length > 4) return;
-      nodePoolConfig.value.nodeTemplate.dataDisks.push(JSON.parse(JSON.stringify(defaultDiskItem)));
-    };
-
     // 免费分配公网IP
     watch(() => nodePoolConfig.value.launchTemplate.internetAccess.publicIPAssigned, (publicIPAssigned) => {
       nodePoolConfig.value.launchTemplate.internetAccess.internetMaxBandwidth = publicIPAssigned ? '10' : '0';
@@ -665,20 +594,11 @@ export default defineComponent({
 
     // 操作
     const getNodePoolData = () => {
-      // 系统盘、数据盘、宽度大小要转换为字符串类型
+      // 系统盘、带宽大小要转换为字符串类型
       // eslint-disable-next-line max-len
       nodePoolConfig.value.launchTemplate.systemDisk.diskSize = String(nodePoolConfig.value.launchTemplate.systemDisk.diskSize);
-      nodePoolConfig.value.nodeTemplate.dataDisks = nodePoolConfig.value.nodeTemplate.dataDisks.map(item => ({
-        ...item,
-        diskSize: String(item.diskSize),
-      }));
       // eslint-disable-next-line max-len
       nodePoolConfig.value.launchTemplate.internetAccess.internetMaxBandwidth = String(nodePoolConfig.value.launchTemplate.internetAccess.internetMaxBandwidth);
-      // 数据盘后端存了两个地方
-      nodePoolConfig.value.launchTemplate.dataDisks = nodePoolConfig.value.nodeTemplate.dataDisks.map(item => ({
-        diskType: item.diskType,
-        diskSize: item.diskSize,
-      }));
       // CPU和mem信息从机型获取
       nodePoolConfig.value.launchTemplate.CPU = curInstanceItem.value.cpu;
       nodePoolConfig.value.launchTemplate.Mem = curInstanceItem.value.memory;
@@ -704,9 +624,8 @@ export default defineComponent({
       //     nodeConfigRef.value.scrollTop = nodeConfigRef.value.scrollHeight;
       //   }
       // }
-      // eslint-disable-next-line max-len
-      const validateDataDiskSize = nodePoolConfig.value.nodeTemplate.dataDisks.every(item => item.diskSize % 10 === 0);
-      if (!basicFormValidate || !result || !validateDataDiskSize) return false;
+      const validateSystemDisk = nodePoolConfig.value.launchTemplate.systemDisk.diskSize % 10 === 0;
+      if (!basicFormValidate || !result || !validateSystemDisk) return false;
 
       return true;
     };
@@ -772,9 +691,6 @@ export default defineComponent({
       pageSizeChange,
       instanceRowClass,
       handleCheckInstanceType,
-      handleShowDataDisksChange,
-      handleDeleteDiskData,
-      handleAddDiskData,
       handleNext,
       handleCancel,
       getSchemaByProp,
@@ -789,7 +705,6 @@ export default defineComponent({
       instanceTypesList,
       osImageLoading,
       osImageList,
-      showDataDisks,
       clusterAdvanceSettings,
       handleSetZoneData,
       openLink,
@@ -870,65 +785,6 @@ export default defineComponent({
         background-color: #fafbfd;
         &.disabled {
           border-color: #dcdee5;
-        }
-    }
-    >>> .panel {
-        background: #F5F7FA;
-        padding: 16px 24px;
-        margin-top: 2px;
-        margin-bottom: 16px;
-        position: relative;
-        &-item {
-            display: flex;
-            align-items: center;
-            height: 32px;
-            .label {
-                display: inline-block;
-                width: 80px;
-            }
-
-        }
-        &-delete {
-            position: absolute;
-            cursor: pointer;
-            color: #979ba5;
-            top: 0;
-            right: 8px;
-            &:hover {
-                color: #3a84ff;
-            }
-            &.disabled {
-                color: #C4C6CC;
-                cursor: not-allowed;
-            }
-        }
-        .bk-form-control {
-            display: flex;
-            width: auto;
-            align-items: center;
-        }
-    }
-    >>> .add-panel-btn {
-        cursor: pointer;
-        background: #fafbfd;
-        border: 1px dashed #c4c6cc;
-        border-radius: 2px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        height: 32px;
-        font-size: 12px;
-        .bk-icon {
-            font-size: 20px;
-        }
-        &:hover {
-            border-color: #3a84ff;
-            color: #3a84ff;
-        }
-        &.disabled {
-            color: #C4C6CC;
-            cursor: not-allowed;
-            border-color: #C4C6CC;
         }
     }
     .bcs-icon-info-circle-shape {
