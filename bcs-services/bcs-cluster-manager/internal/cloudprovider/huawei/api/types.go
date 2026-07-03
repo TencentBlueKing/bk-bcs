@@ -293,8 +293,8 @@ type PublicIp struct {
 	Enable bool
 }
 
-func GetChargeConfig(charge ChargePrepaid) (billingMode int32, periodType string, periodNum int32,
-	isAutoRenew string, isAutoPay string) {
+func GetChargeConfig(charge ChargePrepaid) (billingMode model.NodeTemplateBillingMode, periodType string,
+	periodNum int32, isAutoRenew string, isAutoPay string) {
 	periodType = "month"
 	periodNum = 1
 	isAutoRenew = "false"
@@ -302,7 +302,7 @@ func GetChargeConfig(charge ChargePrepaid) (billingMode int32, periodType string
 
 	periodNum = int32(charge.Period)
 	if charge.ChargeType == icommon.PREPAID {
-		billingMode = 1
+		billingMode = model.GetNodeTemplateBillingModeEnum().E_1
 		if charge.Period >= 12 {
 			periodType = "year"
 			periodNum = int32(charge.Period / 12)
@@ -314,11 +314,11 @@ func GetChargeConfig(charge ChargePrepaid) (billingMode int32, periodType string
 	return
 }
 
-func GetPublicIp(publicIp PublicIp) *model.NodePublicIp {
+func GetPublicIp(publicIp PublicIp) *model.NodeEipSpec {
 	if publicIp.Enable {
 		shareType := eipModel.GetCreatePublicipBandwidthOptionShareTypeEnum().PER.Value()
-		return &model.NodePublicIp{
-			Iptype: common.StringPtr("5_bgp"),
+		return &model.NodeEipSpec{
+			Iptype: "5_bgp",
 			Bandwidth: &model.NodeBandwidth{
 				Chargemode: func() *string {
 					if publicIp.ChangeType == ChargemodeBandwidth {
@@ -355,8 +355,9 @@ func GetRuntime(containerRuntime string) *model.Runtime {
 
 func (req CreateNodePoolRequest) trans2NodePoolTemplate() *model.CreateNodePoolRequest {
 	var (
-		NodePoolSpecType = model.GetNodePoolSpecTypeEnum().VM
-		taints           = Taint2ModelTaint(req.Spec.Template.Taints)
+		NodePoolSpecType      = model.GetNodePoolSpecTypeEnum().VM
+		taints                = Taint2ModelTaint(req.Spec.Template.Taints)
+		policyOnExistingNodes = "ignore"
 	)
 
 	dataVolumes, storageSelectors, storageGroups := GetDataVolumeAndStorgeConfig(req.Spec.Template.DataVolumes)
@@ -373,22 +374,22 @@ func (req CreateNodePoolRequest) trans2NodePoolTemplate() *model.CreateNodePoolR
 			},
 			Spec: &model.NodePoolSpec{
 				Type: &NodePoolSpecType,
-				NodeTemplate: &model.NodeSpec{
-					Flavor: req.Spec.Template.Flavor,
-					Az:     req.Spec.Template.Az,
+				NodeTemplate: &model.NodeTemplate{
+					Flavor: &req.Spec.Template.Flavor,
+					Az:     &req.Spec.Template.Az,
 					Os:     &req.Spec.Template.Os,
 					Login:  Login2ModelLogin(&req.Spec.Template.Login),
 					RootVolume: &model.Volume{
 						Size:       req.Spec.Template.RootVolume.Size,
 						Volumetype: req.Spec.Template.RootVolume.VolumeType,
 					},
-					DataVolumes: dataVolumes,
+					DataVolumes: &dataVolumes,
 					Storage: &model.Storage{
 						StorageSelectors: storageSelectors,
 						StorageGroups:    storageGroups,
 					},
 					BillingMode: &billingMode,
-					Taints:      &taints,
+					Taints:      taints,
 					K8sTags:     req.Spec.Template.Labels,
 					Runtime:     GetRuntime(req.Spec.Template.ContainerRuntime),
 					InitializedConditions: &[]string{
@@ -419,6 +420,9 @@ func (req CreateNodePoolRequest) trans2NodePoolTemplate() *model.CreateNodePoolR
 					}
 					return &securityIds
 				}(),
+				TaintPolicyOnExistingNodes:    &policyOnExistingNodes,
+				LabelPolicyOnExistingNodes:    &policyOnExistingNodes,
+				UserTagsPolicyOnExistingNodes: &policyOnExistingNodes,
 			},
 		},
 	}
@@ -477,7 +481,7 @@ func (un UpdateNodePoolRequest) trans2ModelUpdateNodePoolRequest(clsId string, n
 	}
 
 	nodePoolMeta := &model.NodePoolMetadataUpdate{
-		Name: un.Name,
+		Name: &un.Name,
 	}
 
 	nodeSpec := &model.NodeSpecUpdate{
@@ -533,7 +537,7 @@ type AddNodesRequest struct {
 }
 
 // Taint2ModelTaint trans taint
-func Taint2ModelTaint(taints []v1.Taint) []model.Taint {
+func Taint2ModelTaint(taints []v1.Taint) *[]model.Taint {
 	mTaints := make([]model.Taint, 0)
 
 	for i := range taints {
@@ -544,7 +548,7 @@ func Taint2ModelTaint(taints []v1.Taint) []model.Taint {
 		})
 	}
 
-	return mTaints
+	return &mTaints
 }
 
 // Login2ModelLogin trans login
@@ -601,7 +605,7 @@ func (ar AddNodesRequest) Trans2AddNodesRequest(clsId string, opt *cloudprovider
 				K8sOptions: func() *model.ReinstallK8sOptionsConfig {
 					return &model.ReinstallK8sOptionsConfig{
 						Labels:  ar.Labels,
-						Taints:  &taints,
+						Taints:  taints,
 						MaxPods: &ar.MaxPods,
 					}
 				}(),
@@ -957,6 +961,7 @@ func (c *CreateClusterRequest) Trans2CreateClusterRequest() *model.CreateCluster
 	confOverName := "kube-apiserver"
 	confName := "support-overload"
 	var confValue interface{} = true
+	billingModeValue := billingMode.Value()
 
 	req := &model.CreateClusterRequest{
 		Body: &model.Cluster{
@@ -982,7 +987,7 @@ func (c *CreateClusterRequest) Trans2CreateClusterRequest() *model.CreateCluster
 					SecurityGroup: &c.Spec.SecurityGroupID,
 				},
 				ServiceNetwork: &model.ServiceNetwork{IPv4CIDR: &c.Spec.ServiceCidr},
-				BillingMode:    &billingMode,
+				BillingMode:    &billingModeValue,
 				ClusterTags:    &clusterTags,
 				KubeProxyMode: func() *model.ClusterSpecKubeProxyMode {
 					proxyMode := model.GetClusterSpecKubeProxyModeEnum().IPTABLES
