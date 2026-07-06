@@ -219,7 +219,7 @@ const handleGetAccountsList = async () => {
   accountLoading.value = false;
 };
 const CloudTokenLink = computed(() => {
-  const { href } = $router.resolve({ name: cloudId });
+  const { href } = $router.resolve({ name: 'amazonCloud' });
   return href;
 });
 // 根据云凭证获取区域列表
