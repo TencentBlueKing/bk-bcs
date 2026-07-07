@@ -160,8 +160,14 @@ func (r *HostNetPodReconciler) reconcilePod(pod *k8scorev1.Pod) (ctrl.Result, er
 			return ctrl.Result{RequeueAfter: 3 * time.Second}, nil
 		}
 		r.patchPodBindingAnnotation(pod, "Failed")
-		r.eventer.Eventf(pod, k8scorev1.EventTypeWarning, "AllocateHostNetPortFailed",
-			"No available segment on node %s from pool %s: %v", pod.Spec.NodeName, poolKey, allocErr)
+		if errors.Is(allocErr, hostnetportpoolcache.ErrCrossPoolConflict) {
+			r.eventer.Eventf(pod, k8scorev1.EventTypeWarning, "HostNetPortRangeOverlapBlocked",
+				"Port allocation blocked on node %s: pool %s overlaps with another pool on this node",
+				pod.Spec.NodeName, poolKey)
+		} else {
+			r.eventer.Eventf(pod, k8scorev1.EventTypeWarning, "AllocateHostNetPortFailed",
+				"No available segment on node %s from pool %s: %v", pod.Spec.NodeName, poolKey, allocErr)
+		}
 		metrics.ReportHostNetAllocateFailed(pod.Name, pod.Namespace, true)
 		metrics.IncreaseHostNetAllocateFailedTotal(poolName, pod.Spec.NodeName)
 		blog.Warnf("hostnetport: allocate failed for pod %s: %v", podKey, allocErr)

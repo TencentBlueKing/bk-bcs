@@ -25,6 +25,25 @@ import (
 // ErrPoolNotInCache indicates the requested pool has not been synced into the cache yet.
 var ErrPoolNotInCache = errors.New("pool not found in cache")
 
+// ErrCrossPoolConflict indicates allocation failed because the only candidate physical
+// port range is already occupied by another overlapping pool on the same node. This is
+// the last-resort guard that prevents overlapping pools from double-allocating the same
+// physical port to different pods even when the admission webhook is bypassed or fails.
+var ErrCrossPoolConflict = errors.New("cross pool port range conflict")
+
+// RangesOverlap reports whether two half-open port ranges [aStart, aEnd) and
+// [bStart, bEnd) overlap. It is shared by the webhook, the pool reconciler and the
+// allocation cache so overlap semantics stay consistent across all defense layers.
+func RangesOverlap(aStart, aEnd, bStart, bEnd int) bool {
+	return aStart < bEnd && bStart < aEnd
+}
+
+// portRange is an inclusive physical port interval occupied by a pool on a node.
+type portRange struct {
+	start int
+	end   int
+}
+
 // HostNetPortPoolSegment represents a single port segment in a node allocator.
 type HostNetPortPoolSegment struct {
 	StartPort int
@@ -269,12 +288,23 @@ func (c *HostNetPortPoolCache) allocateContiguousLocked(poolKey, nodeName, podKe
 
 	alloc := c.getOrCreateNodeAllocator(entry, nodeName)
 
+	// Collect physical port ranges already occupied by other overlapping pools on the
+	// same node. A segment is only usable if it is neither allocated within this pool
+	// nor physically taken by another pool, guaranteeing no double-allocation.
+	occupied := c.collectOtherPoolOccupiedRanges(poolKey, nodeName)
+
 	bestStart := -1
 	currentRun := 0
 	maxContiguousFree := 0
+	crossPoolBlocked := false
 
 	for i, seg := range alloc.Segments {
-		if !seg.Allocated {
+		usable := !seg.Allocated
+		if usable && segmentOverlapsOccupied(seg, occupied) {
+			usable = false
+			crossPoolBlocked = true
+		}
+		if usable {
 			currentRun++
 			if currentRun > maxContiguousFree {
 				maxContiguousFree = currentRun
@@ -289,6 +319,13 @@ func (c *HostNetPortPoolCache) allocateContiguousLocked(poolKey, nodeName, podKe
 
 	if bestStart == -1 {
 		totalFree := alloc.TotalCount - alloc.AllocatedCount
+		// Distinguish cross-pool exclusion so callers can surface a dedicated event/metric.
+		if crossPoolBlocked {
+			return 0, 0, fmt.Errorf(
+				"no %d contiguous free segments on node %s in pool %s blocked by overlapping pool "+
+					"(totalFree=%d, maxContiguousFree=%d): %w",
+				segmentsNeeded, nodeName, poolKey, totalFree, maxContiguousFree, ErrCrossPoolConflict)
+		}
 		return 0, 0, fmt.Errorf(
 			"no %d contiguous free segments on node %s in pool %s "+
 				"(totalFree=%d, maxContiguousFree=%d)",
@@ -336,6 +373,40 @@ func (c *HostNetPortPoolCache) findExistingAllocation(
 		}
 	}
 	return 0, 0, false
+}
+
+// collectOtherPoolOccupiedRanges returns the physical port ranges already allocated by
+// pools OTHER than poolKey on the given node. Used to enforce cross-pool physical port
+// exclusivity during allocation. Must be called with c.Mutex held.
+func (c *HostNetPortPoolCache) collectOtherPoolOccupiedRanges(poolKey, nodeName string) []portRange {
+	var occupied []portRange
+	for key, entry := range c.pools {
+		if key == poolKey {
+			continue
+		}
+		alloc, ok := entry.NodeAllocators[nodeName]
+		if !ok {
+			continue
+		}
+		for _, seg := range alloc.Segments {
+			if seg.Allocated {
+				occupied = append(occupied, portRange{start: seg.StartPort, end: seg.EndPort})
+			}
+		}
+	}
+	return occupied
+}
+
+// segmentOverlapsOccupied reports whether a segment's physical port span collides with any
+// occupied range. Segment span is inclusive [StartPort, EndPort]; occupied ranges are also
+// inclusive, so overlap is checked with inclusive boundaries.
+func segmentOverlapsOccupied(seg *HostNetPortPoolSegment, occupied []portRange) bool {
+	for _, r := range occupied {
+		if RangesOverlap(seg.StartPort, seg.EndPort+1, r.start, r.end+1) {
+			return true
+		}
+	}
+	return false
 }
 
 // Release frees a specific port range on a node within a pool.

@@ -116,6 +116,7 @@ func (s *Server) Start(stop <-chan struct{}) error {
 	mux.HandleFunc("/portpool/v1/validate", s.HandleValidatingWebhook)
 	mux.HandleFunc("/portpool/v1/mutate", s.HandleMutatingWebhook)
 	mux.HandleFunc("/portpool/v1/delete", s.HandleDeletePortPoolWebhook)
+	mux.HandleFunc("/hostnetportpool/v1/validate", s.HandleValidatingHostNetPortPool)
 	mux.HandleFunc("/crd/v1/validate", s.HandleValidatingCRD)
 	mux.HandleFunc("/ingress/v1/mutate", s.HandleValidatingIngress)
 	mux.HandleFunc("/node/v1/mutate", s.HandleMutatingNodeWebhook)
@@ -155,6 +156,11 @@ func (s *Server) NeedLeaderElection() bool {
 // HandleValidatingWebhook handle validating webhook request
 func (s *Server) HandleValidatingWebhook(w http.ResponseWriter, r *http.Request) {
 	s.handleWebhook(w, r, "validate", newDelegateToV1AdmitHandler(s.validatingWebhook))
+}
+
+// HandleValidatingHostNetPortPool handle HostNetPortPool validating webhook request
+func (s *Server) HandleValidatingHostNetPortPool(w http.ResponseWriter, r *http.Request) {
+	s.handleWebhook(w, r, "validate", newDelegateToV1AdmitHandler(s.validatingHostNetPortPool))
 }
 
 // HandleMutatingWebhook handle mutating webhook request
@@ -293,6 +299,39 @@ func (s *Server) validatingWebhook(ar v1.AdmissionReview) *v1.AdmissionResponse 
 		blog.Warnf("PortPool %s/%s is invalid, err %s", portPool.GetName(), portPool.GetNamespace(), err.Error())
 		return errResponse(fmt.Errorf("PortPool %s/%s is invalid, err %s",
 			portPool.GetName(), portPool.GetNamespace(), err.Error()))
+	}
+
+	return &v1.AdmissionResponse{Allowed: true}
+}
+
+// validatingHostNetPortPool 校验 HostNetPortPool 创建/更新，避免端口范围重叠
+func (s *Server) validatingHostNetPortPool(ar v1.AdmissionReview) *v1.AdmissionResponse {
+	req := ar.Request
+	// only hook create and update operation
+	if req.Operation != v1.Create && req.Operation != v1.Update {
+		blog.Warnf("operation is not create or update, ignore")
+		return &v1.AdmissionResponse{Allowed: true}
+	}
+	if req.Kind.Kind != constant.KindHostNetPortPool {
+		blog.Warnf("kind %s is not HostNetPortPool", req.Kind.Kind)
+		return errResponse(fmt.Errorf("kind %s is not HostNetPortPool", req.Kind.Kind))
+	}
+	if req.Kind.Group != networkextensionv1.GroupVersion.Group {
+		blog.Warnf("group %s is not %s", req.Kind.Group, networkextensionv1.GroupVersion.Group)
+		return errResponse(fmt.Errorf("group %s is not %s", req.Kind.Group, networkextensionv1.GroupVersion.Group))
+	}
+
+	pool := &networkextensionv1.HostNetPortPool{}
+	if err := json.Unmarshal(req.Object.Raw, pool); err != nil {
+		blog.Warnf("decode %s to HostNetPortPool failed, err %s", string(req.Object.Raw), err.Error())
+		return errResponse(fmt.Errorf("decode %s to HostNetPortPool failed, err %s",
+			string(req.Object.Raw), err.Error()))
+	}
+	if err := s.validateHostNetPortPool(pool); err != nil {
+		blog.Warnf("HostNetPortPool %s/%s is invalid, err %s",
+			pool.GetNamespace(), pool.GetName(), err.Error())
+		return errResponse(fmt.Errorf("HostNetPortPool %s/%s is invalid, err %s",
+			pool.GetNamespace(), pool.GetName(), err.Error()))
 	}
 
 	return &v1.AdmissionResponse{Allowed: true}

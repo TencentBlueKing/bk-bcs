@@ -15,6 +15,7 @@ package hostnetportcontroller
 import (
 	"context"
 	"encoding/json"
+	"strings"
 	"testing"
 
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
@@ -867,6 +868,43 @@ func TestReconcilePool_ShrinkEvent(t *testing.T) {
 
 	if result.RequeueAfter == 0 {
 		t.Error("expected requeue for shrink conflict")
+	}
+}
+
+func TestReconcilePool_OverlapEvent(t *testing.T) {
+	poolA := newPool("pool-a", "default", 10000, 10100, 10)
+	poolA.Finalizers = []string{constant.FinalizerNameHostNetPortPool}
+	poolB := newPool("pool-b", "other", 10050, 10150, 10)
+	poolB.Finalizers = []string{constant.FinalizerNameHostNetPortPool}
+
+	scheme := newTestScheme()
+	cli := k8sfake.NewFakeClientWithScheme(scheme, poolA, poolB)
+	cache := hostnetportpoolcache.NewHostNetPortPoolCache()
+	eventer := record.NewFakeRecorder(100)
+	r := NewHostNetPortPoolReconciler(context.Background(), cli, cache, eventer)
+	cache.AddPool(poolA)
+	cache.AddPool(poolB)
+	r.cacheSynced = true
+
+	if _, err := r.Reconcile(ctrl.Request{
+		NamespacedName: types.NamespacedName{Namespace: "default", Name: "pool-a"},
+	}); err != nil {
+		t.Fatalf("Reconcile failed: %v", err)
+	}
+
+	foundOverlap := false
+	for {
+		select {
+		case evt := <-eventer.Events:
+			if strings.Contains(evt, "PortRangeOverlap") {
+				foundOverlap = true
+			}
+		default:
+			if !foundOverlap {
+				t.Fatal("expected PortRangeOverlap event, got none")
+			}
+			return
+		}
 	}
 }
 
