@@ -399,6 +399,10 @@ export default defineComponent({
     const handleShowFeatures = () => {
       showFeatures.value = true;
     };
+    // 跳转权限中心
+    const handleGotoIAM = () => {
+      window.open(window.BK_IAM_HOST);
+    };
     // 跳转个人中心
     const handleGotoUserCenter = () => {
       window.open(`${window.BK_USER_UI_HOST}${window.BK_USER_UI_HOST.endsWith('/') ? '' : '/'}personal-center`);
@@ -430,6 +434,12 @@ export default defineComponent({
 
     const actionList = computed(() => [
       {
+        text: $i18n.t('apiToken.action.link.iam'),
+        icon: 'bcs-icon bcs-icon-authority',
+        theme: 'primary' as const,
+        handle: handleGotoIAM,
+      },
+      {
         text: $i18n.t('blueking.userCenter'),
         icon: 'bcs-icon bcs-icon-user',
         theme: 'primary' as const,
@@ -437,7 +447,7 @@ export default defineComponent({
       },
       {
         text: $i18n.t('blueking.apiToken'),
-        icon: 'bcs-icon bcs-icon-authority',
+        icon: 'bcs-icon bcs-icon-key',
         theme: 'primary' as const,
         hidden: !curProject.value.projectID,
         handle: handleGotoUserToken,

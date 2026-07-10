@@ -77,7 +77,7 @@ blueking:
   features: Features
   features1: Product features
   apiToken: API token
-  userCenter: Personal Center
+  userCenter: Personal Settings
   signOut: Sign out
   desktop: BlueKing Desktop
   help: Help
@@ -3119,7 +3119,7 @@ apiToken:
       You have no current operating permissions, please continue to operate
       after creating a new API Token
     renewOK: Renewal
-    tokenExpired: Your Token has expired, please go to {0} to renew it
+    tokenExpired: 'Your Token has expired, please go to {0} to renew it'
 logCollector:
   text: Log Collection
   tips:
@@ -3750,9 +3750,6 @@ tke:
     vpcID: VPCID
     availableUnderlay: Available underlayIP number
     availableOverlay: Available overlayIP number
-    vpcCniAvailableIP: >-
-      Represents the number of IP addresses that can be added to VPC CNI in this
-      VPC, not the cluster's remaining IP capacity.
   title:
     connectFailure:
       text: >-
