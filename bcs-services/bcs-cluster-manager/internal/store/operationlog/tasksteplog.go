@@ -46,8 +46,6 @@ var (
 		{
 			Name: taskStepTableName + "_idx",
 			Key: bson.D{
-				bson.E{Key: resourceType, Value: 1},
-				bson.E{Key: resourceID, Value: 1},
 				bson.E{Key: taskID, Value: 1},
 			},
 			Unique: false,
