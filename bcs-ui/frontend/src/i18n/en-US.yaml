@@ -2945,6 +2945,7 @@ dashboard:
       allNamespaces: All namespaces
       projectNS: 'Project namespace {0}'
       systemNS: 'System namespace {0}'
+      otherQuotas: Other Quotas
     msg:
       undoSuccess: Undo success
     quota:
