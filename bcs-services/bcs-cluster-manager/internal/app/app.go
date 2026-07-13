@@ -1067,7 +1067,7 @@ func (cm *ClusterManager) initMicro() error { // nolint
 	if err := dualStackListener.AddListener(ipv4, port); err != nil { // 添加主地址监听
 		return err
 	}
-	if ipv6 != ipv4 {
+	if ipv6 != "" && ipv6 != ipv4 {
 		err := dualStackListener.AddListener(ipv6, port) // 添加副地址监听
 		if err != nil {
 			return err
