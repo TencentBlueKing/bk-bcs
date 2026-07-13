@@ -9,7 +9,7 @@
       </bk-button>
     </template>
     <!-- 失败状态 -->
-    <template v-else-if="['CREATE-FAILURE', 'DELETE-FAILURE'].includes(row.status)">
+    <template v-else-if="['CREATE-FAILURE', 'DELETE-FAILURE', 'IMPORT-FAILURE'].includes(row.status)">
       <bk-button
         class="mr-[10px]"
         text
