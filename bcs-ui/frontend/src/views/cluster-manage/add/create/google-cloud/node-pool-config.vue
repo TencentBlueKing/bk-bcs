@@ -671,5 +671,9 @@ export default defineComponent({
     .bcs-icon-info-circle-shape {
         color: #979ba5;
     }
+    .error-tips {
+        color: red;
+        font-size: 12px;
+    }
 }
 </style>

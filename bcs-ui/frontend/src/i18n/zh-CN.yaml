@@ -2144,7 +2144,7 @@ deploy:
       invalidJSON: JSON格式不正确，请检查文件内容
       failed: 文件导入失败，请检查文件格式
     validate:
-      descTooLong: 变量"{name}"：描述超过255个字符（当前：{length}）
+      descTooLong: '变量"{name}"：描述超过255个字符（当前：{length}）'
     namespace: 所属命名空间
     globalEnv: 全局变量
     namespaceEnv: 命名空间变量
