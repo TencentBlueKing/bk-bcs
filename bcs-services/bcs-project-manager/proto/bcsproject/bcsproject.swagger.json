@@ -28,7 +28,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -40,7 +40,8 @@
             "description": "all. 表示查询所有项目并且携带权限信息",
             "in": "query",
             "required": false,
-            "type": "boolean"
+            "type": "boolean",
+            "format": "boolean"
           },
           {
             "name": "kind",
@@ -91,7 +92,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -103,7 +104,8 @@
             "description": "useBCS. 业务是否开启BCS容器服务",
             "in": "query",
             "required": false,
-            "type": "boolean"
+            "type": "boolean",
+            "format": "boolean"
           }
         ],
         "tags": [
@@ -123,7 +125,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -146,7 +148,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -170,7 +172,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -243,7 +245,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -277,7 +279,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -303,7 +305,8 @@
             "description": "isContainShared. 是否包含共享额度",
             "in": "query",
             "required": false,
-            "type": "boolean"
+            "type": "boolean",
+            "format": "boolean"
           }
         ],
         "tags": [
@@ -324,7 +327,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -355,7 +358,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -374,14 +377,16 @@
             "description": "onlyDeleteInfo. 默认为false。设置为true时，仅删除所记录的信息，不会触发任何自动化流程。",
             "in": "query",
             "required": false,
-            "type": "boolean"
+            "type": "boolean",
+            "format": "boolean"
           },
           {
             "name": "skipItsmApproval",
             "description": "skipItsmApproval. 是否跳过ITSM审批流程，仅限内部服务调用时使用",
             "in": "query",
             "required": false,
-            "type": "boolean"
+            "type": "boolean",
+            "format": "boolean"
           }
         ],
         "tags": [
@@ -400,7 +405,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -441,7 +446,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -482,7 +487,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -523,7 +528,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -556,7 +561,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -619,7 +624,8 @@
             "description": "all. 表示查询全量数据",
             "in": "query",
             "required": false,
-            "type": "boolean"
+            "type": "boolean",
+            "format": "boolean"
           },
           {
             "name": "businessID",
@@ -645,7 +651,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -679,7 +685,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -712,7 +718,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -745,7 +751,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -783,7 +789,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -831,7 +837,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -879,7 +885,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -924,7 +930,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -969,7 +975,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1024,7 +1030,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1079,7 +1085,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1134,7 +1140,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1189,7 +1195,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1234,7 +1240,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1289,7 +1295,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1343,7 +1349,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1398,7 +1404,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1436,7 +1442,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1484,7 +1490,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1533,7 +1539,8 @@
             "description": "all. 是否查询全量数据",
             "in": "query",
             "required": false,
-            "type": "boolean"
+            "type": "boolean",
+            "format": "boolean"
           }
         ],
         "tags": [
@@ -1552,7 +1559,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1590,7 +1597,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1631,7 +1638,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1672,7 +1679,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1720,7 +1727,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1758,7 +1765,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1806,7 +1813,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1844,7 +1851,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1892,7 +1899,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1925,7 +1932,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1958,7 +1965,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1998,7 +2005,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -2037,7 +2044,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -2068,7 +2075,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -2109,7 +2116,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -2133,7 +2140,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -2217,7 +2224,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -2439,17 +2446,13 @@
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          },
-          "description": "资源quota的标签配置",
-          "title": "labels"
+          }
         },
         "annotations": {
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          },
-          "description": "资源quota的注解配置",
-          "title": "annotations"
+          }
         },
         "quotaAttr": {
           "$ref": "#/definitions/bcsprojectQuotaAttr",
@@ -2458,6 +2461,7 @@
         },
         "quotaSharedEnabled": {
           "type": "boolean",
+          "format": "boolean",
           "description": "是否启用额度共享",
           "title": "quotaSharedEnabled"
         },
@@ -2471,6 +2475,7 @@
         },
         "skipItsmApproval": {
           "type": "boolean",
+          "format": "boolean",
           "description": "是否跳过ITSM审批流程，仅限内部服务调用时使用",
           "title": "skipItsmApproval"
         }
@@ -2512,6 +2517,7 @@
         },
         "useBKRes": {
           "type": "boolean",
+          "format": "boolean",
           "description": "是否使用蓝鲸提供的资源池, 主要用于资源计费, 默认false",
           "title": "useBKRes"
         },
@@ -2522,6 +2528,7 @@
         },
         "isOffline": {
           "type": "boolean",
+          "format": "boolean",
           "description": "项目是否已经下线, 默认false",
           "title": "isOffline"
         },
@@ -2537,6 +2544,7 @@
         },
         "isSecret": {
           "type": "boolean",
+          "format": "boolean",
           "description": "是否为保密项目, 默认为false",
           "title": "isSecret"
         },
@@ -2586,17 +2594,13 @@
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          },
-          "description": "project的标签配置",
-          "title": "labels"
+          }
         },
         "annotations": {
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          },
-          "description": "project的注解配置",
-          "title": "annotations"
+          }
         }
       },
       "description": "创建项目",
@@ -3811,11 +3815,13 @@
         },
         "approveResult": {
           "type": "boolean",
+          "format": "boolean",
           "description": "单据审批结果",
           "title": "approve_result"
         },
         "applyInCluster": {
           "type": "boolean",
+          "format": "boolean",
           "description": "是否下发到集群",
           "title": "applyInCluster"
         }
@@ -3854,6 +3860,7 @@
         },
         "result": {
           "type": "boolean",
+          "format": "boolean",
           "description": "回调结果",
           "title": "result"
         }
@@ -3958,8 +3965,17 @@
         },
         "isSystem": {
           "type": "boolean",
+          "format": "boolean",
           "description": "是否为系统命名空间, false则表示项目命名空间",
           "title": "isSystem"
+        },
+        "otherQuotas": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bcsprojectOtherQuota"
+          },
+          "description": "其他配额信息",
+          "title": "otherQuotas"
         }
       }
     },
@@ -4022,6 +4038,21 @@
           "format": "int64",
           "description": "机型已使用的配额",
           "title": "quotaUsed"
+        }
+      }
+    },
+    "bcsprojectOtherQuota": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "配额名称",
+          "title": "name"
+        },
+        "quota": {
+          "$ref": "#/definitions/bcsprojectResourceQuota",
+          "description": "配额总量",
+          "title": "quota"
         }
       }
     },
@@ -4108,6 +4139,7 @@
         },
         "useBKRes": {
           "type": "boolean",
+          "format": "boolean",
           "description": "是否使用蓝鲸提供的资源池, 主要用于资源计费, 默认false",
           "title": "useBKRes"
         },
@@ -4118,6 +4150,7 @@
         },
         "isOffline": {
           "type": "boolean",
+          "format": "boolean",
           "description": "项目是否已经下线, 默认false",
           "title": "isOffline"
         },
@@ -4140,17 +4173,13 @@
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          },
-          "description": "project的标签配置",
-          "title": "labels"
+          }
         },
         "annotations": {
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          },
-          "description": "project的注解配置",
-          "title": "annotations"
+          }
         }
       },
       "description": "项目的基本信息",
@@ -4161,6 +4190,7 @@
       "properties": {
         "isActive": {
           "type": "boolean",
+          "format": "boolean",
           "description": "是否活跃",
           "title": "isActive"
         }
@@ -4221,6 +4251,7 @@
         },
         "isDeleted": {
           "type": "boolean",
+          "format": "boolean",
           "description": "项目下该资源配额是否已下线(默认软删),同类型同种类资源仅不允许重复申请,可更改配额",
           "title": "isDeleted"
         },
@@ -4281,17 +4312,13 @@
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          },
-          "description": "资源quota的标签配置",
-          "title": "labels"
+          }
         },
         "annotations": {
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          },
-          "description": "资源quota的注解配置",
-          "title": "annotations"
+          }
         },
         "quotaAttr": {
           "$ref": "#/definitions/bcsprojectQuotaAttr",
@@ -4300,6 +4327,7 @@
         },
         "quotaSharedEnabled": {
           "type": "boolean",
+          "format": "boolean",
           "description": "是否启用额度共享",
           "title": "quotaSharedEnabled"
         },
@@ -4649,6 +4677,7 @@
         },
         "skipItsmApproval": {
           "type": "boolean",
+          "format": "boolean",
           "description": "是否跳过ITSM审批流程，仅限内部服务调用时使用",
           "title": "skipItsmApproval"
         }
@@ -4707,6 +4736,7 @@
         },
         "skipItsmApproval": {
           "type": "boolean",
+          "format": "boolean",
           "description": "是否跳过ITSM审批流程，仅限内部服务调用时使用",
           "title": "skipItsmApproval"
         }
@@ -5138,17 +5168,13 @@
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          },
-          "description": "资源quota的标签配置",
-          "title": "labels"
+          }
         },
         "annotations": {
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          },
-          "description": "资源quota的注解配置",
-          "title": "annotations"
+          }
         },
         "quotaAttr": {
           "$ref": "#/definitions/bcsprojectQuotaAttr",
@@ -5157,6 +5183,7 @@
         },
         "quotaSharedEnabled": {
           "type": "boolean",
+          "format": "boolean",
           "description": "是否启用额度共享",
           "title": "quotaSharedEnabled"
         },
@@ -5189,6 +5216,7 @@
         },
         "useBKRes": {
           "type": "boolean",
+          "format": "boolean",
           "description": "是否使用蓝鲸提供的资源池, 主要用于资源计费, 默认false",
           "title": "useBKRes"
         },
@@ -5199,6 +5227,7 @@
         },
         "isOffline": {
           "type": "boolean",
+          "format": "boolean",
           "description": "项目是否已经下线, 默认false",
           "title": "isOffline"
         },
@@ -5226,17 +5255,13 @@
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          },
-          "description": "project的标签配置",
-          "title": "labels"
+          }
         },
         "annotations": {
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          },
-          "description": "project的注解配置",
-          "title": "annotations"
+          }
         }
       },
       "description": "更新项目请求",
@@ -5272,6 +5297,7 @@
         },
         "useBKRes": {
           "type": "boolean",
+          "format": "boolean",
           "description": "是否使用蓝鲸提供的资源池, 主要用于资源计费, 默认false",
           "title": "useBKRes"
         },
@@ -5282,6 +5308,7 @@
         },
         "isOffline": {
           "type": "boolean",
+          "format": "boolean",
           "description": "项目是否已经下线, 默认false",
           "title": "isOffline"
         },
@@ -5294,17 +5321,13 @@
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          },
-          "description": "project的标签配置",
-          "title": "labels"
+          }
         },
         "annotations": {
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          },
-          "description": "project的注解配置",
-          "title": "annotations"
+          }
         },
         "quotaAttr": {
           "$ref": "#/definitions/bcsprojectQuotaAttr",
@@ -5313,6 +5336,7 @@
         },
         "quotaSharedEnabled": {
           "type": "boolean",
+          "format": "boolean",
           "description": "是否启用额度共享",
           "title": "quotaSharedEnabled"
         },

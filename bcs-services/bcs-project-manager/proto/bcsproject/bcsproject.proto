@@ -1549,6 +1549,21 @@ message NamespaceData {
     title: "isSystem",
     description: "是否为系统命名空间, false则表示项目命名空间"
   }];
+  repeated OtherQuota otherQuotas = 18[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "otherQuotas",
+    description: "其他配额信息"
+  }];
+}
+
+message OtherQuota {
+  string name = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "name",
+    description: "配额名称"
+  }];
+  ResourceQuota quota = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "quota",
+    description: "配额总量"
+  }];
 }
 
 message NativeNamespaceData {

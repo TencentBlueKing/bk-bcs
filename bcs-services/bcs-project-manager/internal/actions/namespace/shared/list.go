@@ -81,10 +81,14 @@ func (a *SharedNamespaceAction) ListNamespaces(ctx context.Context,
 	}
 	// list all quota in cluster
 	quotaMap := map[string]corev1.ResourceQuota{}
+	otherQuotasMap := map[string][]*proto.OtherQuota{}
 	if quotaList, e := client.CoreV1().ResourceQuotas("").List(ctx, metav1.ListOptions{}); e == nil {
 		for _, quota := range quotaList.Items {
-			if quota.GetName() == quota.GetNamespace() {
-				quotaMap[quota.GetName()] = quota
+			nsName := quota.GetNamespace()
+			if quota.GetName() == nsName {
+				quotaMap[nsName] = quota
+			} else {
+				otherQuotasMap[nsName] = append(otherQuotasMap[nsName], quotautils.TransferToProtoOtherQuota(&quota))
 			}
 		}
 	}
@@ -96,7 +100,7 @@ func (a *SharedNamespaceAction) ListNamespaces(ctx context.Context,
 		logging.Error("batch list variables failed, err: %s", err.Error())
 		return errorx.NewClusterErr(err.Error())
 	}
-	list, err := loadRetDatasFromCluster(ctx, req.ClusterID, namespaces, variablesMap, quotaMap, existns)
+	list, err := loadRetDatasFromCluster(ctx, req.ClusterID, namespaces, variablesMap, quotaMap, otherQuotasMap, existns)
 	if err != nil {
 		return err
 	}
@@ -227,7 +231,7 @@ func loadListRetDataFromDB(namespace nsm.Namespace) *proto.NamespaceData {
 
 func loadRetDatasFromCluster(ctx context.Context, clusterID string, namespaces []corev1.Namespace,
 	variablesMap map[string][]*proto.VariableValue, quotaMap map[string]corev1.ResourceQuota,
-	existns map[string]nsm.Namespace) ([]*proto.NamespaceData, error) {
+	otherQuotasMap map[string][]*proto.OtherQuota, existns map[string]nsm.Namespace) ([]*proto.NamespaceData, error) {
 	retDatas := []*proto.NamespaceData{}
 	for _, namespace := range namespaces {
 		retData := &proto.NamespaceData{
@@ -241,6 +245,9 @@ func loadRetDatasFromCluster(ctx context.Context, clusterID string, namespaces [
 		if quota, ok := quotaMap[namespace.GetName()]; ok {
 			retData.Quota, retData.Used, retData.CpuUseRate, retData.MemoryUseRate =
 				quotautils.TransferToProto(&quota)
+		}
+		if otherQuotas, ok := otherQuotasMap[namespace.GetName()]; ok {
+			retData.OtherQuotas = otherQuotas
 		}
 		// get variables
 		retData.Variables = variablesMap[namespace.GetName()]

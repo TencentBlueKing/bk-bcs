@@ -134,6 +134,26 @@ func TransferToProto(q *corev1.ResourceQuota) (
 	return quota, used, cpuUseRate, memoryUseRate
 }
 
+// TransferToProtoOtherQuota transfer k8s ResourceQuota to proto OtherQuota
+func TransferToProtoOtherQuota(q *corev1.ResourceQuota) *proto.OtherQuota {
+	if q == nil {
+		return nil
+	}
+	cpuLimitsQuota := q.Status.Hard[corev1.ResourceLimitsCPU]
+	cpuRequestQuota := q.Status.Hard[corev1.ResourceRequestsCPU]
+	memoryLimitsQuota := q.Status.Hard[corev1.ResourceLimitsMemory]
+	memoryRequestsQuota := q.Status.Hard[corev1.ResourceRequestsMemory]
+	return &proto.OtherQuota{
+		Name: q.GetName(),
+		Quota: &proto.ResourceQuota{
+			CpuLimits:      cpuLimitsQuota.String(),
+			CpuRequests:    cpuRequestQuota.String(),
+			MemoryLimits:   memoryLimitsQuota.String(),
+			MemoryRequests: memoryRequestsQuota.String(),
+		},
+	}
+}
+
 // LoadFromProto load k8s ResourceQuota from proto ResourceQuota
 func LoadFromProto(k8sQuota *corev1.ResourceQuota, protoQuota *proto.ResourceQuota) error {
 	return load(k8sQuota, protoQuota.GetCpuLimits(), protoQuota.GetCpuRequests(),
