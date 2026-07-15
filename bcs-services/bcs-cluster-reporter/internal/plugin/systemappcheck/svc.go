@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-// Package systemappcheck xxx
+// Package systemappcheck 系统应用检查插件，检查集群中系统组件的部署状态、镜像版本和配置
 package systemappcheck
 
 import (
@@ -27,7 +27,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/util"
 )
 
-// CheckService xxx
+// CheckService 检查集群中 LoadBalancer 类型 Service 的配置状态
 func CheckService(cluster *pluginmanager.ClusterConfig, clusterID string) ([]pluginmanager.CheckItem, []*metricmanager.GaugeVecSet, error) {
 	namespaceList, err := cluster.ClientSet.CoreV1().Namespaces().List(util.GetCtx(time.Second*10), metav1.ListOptions{ResourceVersion: "0"})
 	if err != nil {
@@ -36,6 +36,7 @@ func CheckService(cluster *pluginmanager.ClusterConfig, clusterID string) ([]plu
 
 	checkItemList := make([]pluginmanager.CheckItem, 0, 0)
 	gvsList := make([]*metricmanager.GaugeVecSet, 0, 0)
+	var mu sync.Mutex
 
 	var wg sync.WaitGroup
 	routinePool := util.NewRoutinePool(20)
@@ -57,6 +58,7 @@ func CheckService(cluster *pluginmanager.ClusterConfig, clusterID string) ([]plu
 			for _, svc := range serviceList.Items {
 				if svc.Spec.Type == "LoadBalancer" {
 					if len(svc.Status.LoadBalancer.Ingress) == 0 {
+						mu.Lock()
 						checkItemList = append(checkItemList, pluginmanager.CheckItem{
 							ItemName:   SystemAppConfigCheckItem,
 							ItemTarget: svc.Name,
@@ -70,6 +72,7 @@ func CheckService(cluster *pluginmanager.ClusterConfig, clusterID string) ([]plu
 							Labels: []string{cluster.ClusterID, cluster.BusinessID, namespace.Name, svc.Name, "service", ConfigErrorStatus},
 							Value:  1,
 						})
+						mu.Unlock()
 					}
 				}
 			}

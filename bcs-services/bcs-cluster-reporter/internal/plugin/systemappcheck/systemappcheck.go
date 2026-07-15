@@ -10,10 +10,11 @@
  * limitations under the License.
  */
 
-// Package systemappcheck xxx
+// Package systemappcheck 系统应用检查插件，检查集群中系统组件的部署状态、镜像版本和配置
 package systemappcheck
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"reflect"
@@ -38,7 +39,7 @@ import (
 	internalUtil "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/util"
 )
 
-// Plugin xxx
+// Plugin 系统应用检查插件
 type Plugin struct {
 	opt *Options
 	pluginmanager.ClusterPlugin
@@ -85,7 +86,7 @@ func init() {
 	metricmanager.Register(systemAppConfig)
 }
 
-// Setup xxx
+// Setup 初始化插件配置并启动检查循环
 func (p *Plugin) Setup(configFilePath string, runMode string) error {
 	p.opt = &Options{}
 
@@ -151,19 +152,19 @@ func (p *Plugin) Setup(configFilePath string, runMode string) error {
 	return nil
 }
 
-// Stop xxx
+// Stop 停止插件运行
 func (p *Plugin) Stop() error {
 	p.StopChan <- 1
 	klog.Infof("plugin %s stopped", p.Name())
 	return nil
 }
 
-// Name xxx
+// Name 返回插件名称
 func (p *Plugin) Name() string {
 	return pluginName
 }
 
-// Check xxx
+// Check 执行系统应用检查
 func (p *Plugin) Check(option pluginmanager.CheckOption) {
 	start := time.Now()
 	p.CheckLock.Lock()
@@ -311,27 +312,26 @@ func (p *Plugin) checkClusters(clusterConfigs map[string]*pluginmanager.ClusterC
 
 			// 获取配置文件中的component列表(有可能不是helm方式部署的)
 			clusterComponent := make([]Component, 0, 0)
-			for index, _ := range p.opt.Components {
-				if strings.EqualFold(p.opt.Components[index].Resource, deployment) &&
-					strings.EqualFold(p.opt.Components[index].Resource, daemonset) &&
-					strings.EqualFold(p.opt.Components[index].Resource, statefulset) {
-					klog.Errorf("unsupported resource type %s", p.opt.Components[index])
+			for index := range p.opt.Components {
+				if !strings.EqualFold(p.opt.Components[index].Resource, deployment) &&
+					!strings.EqualFold(p.opt.Components[index].Resource, daemonset) &&
+					!strings.EqualFold(p.opt.Components[index].Resource, statefulset) {
+					klog.Errorf("unsupported resource type %s", p.opt.Components[index].Resource)
 					continue
 				}
 				clusterComponent = append(clusterComponent, p.opt.Components[index])
 			}
 
 			// 遍历各个namespace下的releases，基于release进行应用状态的检测
-			checkItemList, relStatusGVSList, statusGVSList, imageGVSList, configGVSList, componentList :=
-				CheckRelease(namespaceList, getter, cluster, p.opt.ComponentVersionConf)
-			clusterResult.Items = append(clusterResult.Items, checkItemList...)
-			loopSystemAppChartGVSList = append(loopSystemAppChartGVSList, relStatusGVSList...)
-			loopSystemAppStatusGVSList = append(loopSystemAppStatusGVSList, statusGVSList...)
-			loopSystemAppImageGVSList = append(loopSystemAppImageGVSList, imageGVSList...)
-			loopSystemAppConfigGVSList = append(loopSystemAppConfigGVSList, configGVSList...)
+			releaseResult := CheckRelease(namespaceList, getter, cluster, p.opt.ComponentVersionConf)
+			clusterResult.Items = append(clusterResult.Items, releaseResult.CheckItems...)
+			loopSystemAppChartGVSList = append(loopSystemAppChartGVSList, releaseResult.ChartGVSList...)
+			loopSystemAppStatusGVSList = append(loopSystemAppStatusGVSList, releaseResult.StatusGVSList...)
+			loopSystemAppImageGVSList = append(loopSystemAppImageGVSList, releaseResult.ImageGVSList...)
+			loopSystemAppConfigGVSList = append(loopSystemAppConfigGVSList, releaseResult.ConfigGVSList...)
 
 			// 如果component列表中的应用已经通过helm部署了，则不再需要单独确认
-			for _, component := range componentList {
+			for _, component := range releaseResult.ComponentList {
 				for index, c := range clusterComponent {
 					if c.Name == component.Name &&
 						c.Namespace == component.Namespace &&
@@ -345,16 +345,15 @@ func (p *Plugin) checkClusters(clusterConfigs map[string]*pluginmanager.ClusterC
 
 			// 检查指定组件
 			for _, component := range clusterComponent {
-				componentCheckItemList, componentStatusGVSList, componentImageGVSList, componentConfigGVSList, err :=
-					CheckComponent(component, cluster, "", p.opt.ComponentVersionConf)
+				compResult, err := CheckComponent(component, cluster, "", p.opt.ComponentVersionConf)
 				if err != nil {
 					klog.Errorf("%s %s CheckComponent failed: %s", clusterID, component.Name, err.Error())
 				}
 
-				clusterResult.Items = append(clusterResult.Items, componentCheckItemList...)
-				loopSystemAppStatusGVSList = append(loopSystemAppStatusGVSList, componentStatusGVSList...)
-				loopSystemAppImageGVSList = append(loopSystemAppImageGVSList, componentImageGVSList...)
-				loopSystemAppConfigGVSList = append(loopSystemAppConfigGVSList, componentConfigGVSList...)
+				clusterResult.Items = append(clusterResult.Items, compResult.CheckItems...)
+				loopSystemAppStatusGVSList = append(loopSystemAppStatusGVSList, compResult.StatusGVSList...)
+				loopSystemAppImageGVSList = append(loopSystemAppImageGVSList, compResult.ImageGVSList...)
+				loopSystemAppConfigGVSList = append(loopSystemAppConfigGVSList, compResult.ConfigGVSList...)
 			}
 			trace.Step("check component")
 
@@ -406,16 +405,16 @@ func (p *Plugin) checkClusters(clusterConfigs map[string]*pluginmanager.ClusterC
 }
 
 // CheckRelease 检查release详情
-func CheckRelease(namespaceList []string, getter *k8s.RESTClientGetter, cluster *pluginmanager.ClusterConfig, componentVersionConfList []ComponentVersionConf) (
-	[]pluginmanager.CheckItem, []*metricmanager.GaugeVecSet, []*metricmanager.GaugeVecSet, []*metricmanager.GaugeVecSet, []*metricmanager.GaugeVecSet, []Component) {
-
+func CheckRelease(namespaceList []string, getter *k8s.RESTClientGetter, cluster *pluginmanager.ClusterConfig, componentVersionConfList []ComponentVersionConf) ReleaseCheckResult {
 	var syncLock sync.Mutex
-	checkItemList := make([]pluginmanager.CheckItem, 0, 0)
-	relStatusGvsList := make([]*metricmanager.GaugeVecSet, 0, 0)
-	relComponentStatusGVSList := make([]*metricmanager.GaugeVecSet, 0, 0)
-	relImageGVSList := make([]*metricmanager.GaugeVecSet, 0, 0)
-	relConfigGVSList := make([]*metricmanager.GaugeVecSet, 0, 0)
-	componentList := make([]Component, 0, 0)
+	result := ReleaseCheckResult{
+		CheckItems:    make([]pluginmanager.CheckItem, 0),
+		ChartGVSList:  make([]*metricmanager.GaugeVecSet, 0),
+		StatusGVSList: make([]*metricmanager.GaugeVecSet, 0),
+		ImageGVSList:  make([]*metricmanager.GaugeVecSet, 0),
+		ConfigGVSList: make([]*metricmanager.GaugeVecSet, 0),
+		ComponentList: make([]Component, 0),
+	}
 
 	var wg sync.WaitGroup
 
@@ -434,7 +433,6 @@ func CheckRelease(namespaceList []string, getter *k8s.RESTClientGetter, cluster 
 			// 获取release列表
 			client := action.NewList(actionConfig)
 			client.Deployed = true
-			// client.AllNamespaces = true
 			relList, err := client.Run()
 			if err != nil {
 				klog.Errorf("%s helm get deployed chart failed: %s", cluster.ClusterID, err.Error())
@@ -458,10 +456,10 @@ func CheckRelease(namespaceList []string, getter *k8s.RESTClientGetter, cluster 
 				if checkItem.Normal {
 					checkItem.Status = NormalStatus
 				}
-				checkItemList = append(checkItemList, checkItem)
+				result.CheckItems = append(result.CheckItems, checkItem)
 
 				// 生成release状态指标
-				relStatusGvsList = append(relStatusGvsList, &metricmanager.GaugeVecSet{
+				result.ChartGVSList = append(result.ChartGVSList, &metricmanager.GaugeVecSet{
 					Labels: []string{cluster.ClusterID, cluster.BusinessID, namespace, rel.Chart.Name(), rel.Chart.Metadata.Version, rel.Info.Status.String(), rel.Name},
 					Value:  1,
 				})
@@ -469,8 +467,7 @@ func CheckRelease(namespaceList []string, getter *k8s.RESTClientGetter, cluster 
 
 				manifest := rel.Manifest
 				// exclude non-workload resource manifest
-				resourceRe := regexp.MustCompile(`(?m)^---$`)
-				resourceManifestList := resourceRe.Split(manifest, -1)
+				resourceManifestList := resourceManifestRe.Split(manifest, -1)
 
 				workloadTypeList := []string{deployment, daemonset, statefulset}
 				workLoadManifestMap := make(map[string][]string)
@@ -505,17 +502,16 @@ func CheckRelease(namespaceList []string, getter *k8s.RESTClientGetter, cluster 
 						}
 
 						// 获取release下workload的详细信息
-						relCheckItemList, statusGVSList, imageGVSList, configGVSList, err :=
-							CheckComponent(component, cluster, rel.Name, componentVersionConfList)
+						compResult, err := CheckComponent(component, cluster, rel.Name, componentVersionConfList)
 						if err != nil {
 							klog.Errorf("%s %s %s CheckComponent failed: %s", cluster.ClusterID, rel.Name, component.Name, err.Error())
 						}
 						syncLock.Lock()
-						componentList = append(componentList, component)
-						checkItemList = append(checkItemList, relCheckItemList...)
-						relComponentStatusGVSList = append(relComponentStatusGVSList, statusGVSList...)
-						relImageGVSList = append(relImageGVSList, imageGVSList...)
-						relConfigGVSList = append(relConfigGVSList, configGVSList...)
+						result.ComponentList = append(result.ComponentList, component)
+						result.CheckItems = append(result.CheckItems, compResult.CheckItems...)
+						result.StatusGVSList = append(result.StatusGVSList, compResult.StatusGVSList...)
+						result.ImageGVSList = append(result.ImageGVSList, compResult.ImageGVSList...)
+						result.ConfigGVSList = append(result.ConfigGVSList, compResult.ConfigGVSList...)
 						syncLock.Unlock()
 					}
 				}
@@ -524,7 +520,7 @@ func CheckRelease(namespaceList []string, getter *k8s.RESTClientGetter, cluster 
 	}
 
 	wg.Wait()
-	return checkItemList, relStatusGvsList, relComponentStatusGVSList, relImageGVSList, relConfigGVSList, componentList
+	return result
 }
 
 // GetStatus get workload ready status
@@ -541,31 +537,55 @@ func GetStatus(updatedReplicas int, availableReplicas int, replicas int, nodeNum
 
 }
 
+// ComponentCheckResult 组件检查结果，封装 CheckComponent 的返回值
+type ComponentCheckResult struct {
+	CheckItems    []pluginmanager.CheckItem
+	StatusGVSList []*metricmanager.GaugeVecSet
+	ImageGVSList  []*metricmanager.GaugeVecSet
+	ConfigGVSList []*metricmanager.GaugeVecSet
+}
+
+// newEmptyComponentCheckResult 创建空的组件检查结果
+func newEmptyComponentCheckResult() ComponentCheckResult {
+	return ComponentCheckResult{
+		CheckItems:    make([]pluginmanager.CheckItem, 0),
+		StatusGVSList: make([]*metricmanager.GaugeVecSet, 0),
+		ImageGVSList:  make([]*metricmanager.GaugeVecSet, 0),
+		ConfigGVSList: make([]*metricmanager.GaugeVecSet, 0),
+	}
+}
+
+// ReleaseCheckResult release 检查结果，封装 CheckRelease 的返回值
+type ReleaseCheckResult struct {
+	CheckItems       []pluginmanager.CheckItem
+	ChartGVSList     []*metricmanager.GaugeVecSet
+	StatusGVSList    []*metricmanager.GaugeVecSet
+	ImageGVSList     []*metricmanager.GaugeVecSet
+	ConfigGVSList    []*metricmanager.GaugeVecSet
+	ComponentList    []Component
+}
+
 // CheckComponent 检查应用workload详情
 func CheckComponent(component Component, cluster *pluginmanager.ClusterConfig, rel string,
-	componentVersionConfList []ComponentVersionConf) (
-	[]pluginmanager.CheckItem, []*metricmanager.GaugeVecSet, []*metricmanager.GaugeVecSet, []*metricmanager.GaugeVecSet, error) {
+	componentVersionConfList []ComponentVersionConf) (ComponentCheckResult, error) {
 	// daemonset可能按需部署，比如vcluster不部署daemonset
 	if component.Name == "kube-proxy" && cluster.ClusterType == "virtual" {
-		return nil, nil, nil, nil, nil
+		return newEmptyComponentCheckResult(), nil
 	} else if component.Name == "kube-proxy" && cluster.ALLEKLET {
-		return nil, nil, nil, nil, nil
+		return newEmptyComponentCheckResult(), nil
 	}
 
-	checkItemList := make([]pluginmanager.CheckItem, 0, 0)
-	statusGVSList := make([]*metricmanager.GaugeVecSet, 0, 0)
-	imageGVSList := make([]*metricmanager.GaugeVecSet, 0, 0)
-	configGVSList := make([]*metricmanager.GaugeVecSet, 0, 0)
+	result := newEmptyComponentCheckResult()
 
 	// 检查workload status, 是否ready
 	status, containerImageList, err := getWorkLoadStatus(component.Resource, component.Name, component.Namespace, cluster)
 	if err != nil {
 		// 有的业务有些组件可能并不需要或以其它形式部署，如果并非helm部署且不存在，不再认为异常
-		if status == APPNotfoundAppStatus && rel == "" {
-			return checkItemList, statusGVSList, imageGVSList, configGVSList, nil
+		if status == AppNotFoundStatus && rel == "" {
+			return result, nil
 		}
 
-		checkItemList = append(checkItemList, pluginmanager.CheckItem{
+		result.CheckItems = append(result.CheckItems, pluginmanager.CheckItem{
 			ItemName:   SystemAppStatusCheckItemName,
 			ItemTarget: component.Name,
 			Status:     status,
@@ -575,22 +595,22 @@ func CheckComponent(component Component, cluster *pluginmanager.ClusterConfig, r
 			Tags:       map[string]string{"component": component.Name},
 		})
 
-		statusGVSList = append(statusGVSList, &metricmanager.GaugeVecSet{
+		result.StatusGVSList = append(result.StatusGVSList, &metricmanager.GaugeVecSet{
 			Labels: []string{cluster.ClusterID, cluster.BusinessID, component.Namespace, component.Name, component.Resource, status, rel},
 			Value:  1,
 		})
-		return checkItemList, statusGVSList, imageGVSList, configGVSList, err
+		return result, err
 	}
 
 	if status != NormalStatus {
 		klog.Infof("%s %s %s status is %s", cluster.ClusterID, component.Name, component.Namespace, status)
 		// 如果找不到对应的workload，则直接返回
-		if status == APPNotfoundAppStatus {
-			return checkItemList, statusGVSList, imageGVSList, configGVSList, err
+		if status == AppNotFoundStatus {
+			return result, err
 		}
 	}
 
-	checkItemList = append(checkItemList, pluginmanager.CheckItem{
+	result.CheckItems = append(result.CheckItems, pluginmanager.CheckItem{
 		ItemName:   SystemAppStatusCheckItemName,
 		ItemTarget: component.Name,
 		Status:     status,
@@ -599,7 +619,7 @@ func CheckComponent(component Component, cluster *pluginmanager.ClusterConfig, r
 		Normal:     status == NormalStatus,
 		Tags:       map[string]string{"component": component.Name},
 	})
-	statusGVSList = append(statusGVSList, &metricmanager.GaugeVecSet{
+	result.StatusGVSList = append(result.StatusGVSList, &metricmanager.GaugeVecSet{
 		Labels: []string{cluster.ClusterID, cluster.BusinessID, component.Namespace, component.Name, component.Resource, status, rel},
 		Value:  1,
 	})
@@ -607,7 +627,7 @@ func CheckComponent(component Component, cluster *pluginmanager.ClusterConfig, r
 	// 检查workload镜像
 	for _, ci := range containerImageList {
 		status = GetImageStatus(ci, componentVersionConfList)
-		checkItemList = append(checkItemList, pluginmanager.CheckItem{
+		result.CheckItems = append(result.CheckItems, pluginmanager.CheckItem{
 			ItemName:   SystemAppImageVersionCheckItemName,
 			ItemTarget: component.Name,
 			Status:     NormalStatus,
@@ -617,86 +637,117 @@ func CheckComponent(component Component, cluster *pluginmanager.ClusterConfig, r
 			Tags:       map[string]string{"component": component.Name},
 		})
 
-		imageGVSList = append(imageGVSList, &metricmanager.GaugeVecSet{
+		result.ImageGVSList = append(result.ImageGVSList, &metricmanager.GaugeVecSet{
 			Labels: []string{cluster.ClusterID, cluster.BusinessID, component.Namespace, component.Name, component.Resource, ci.container, ci.image, status, rel},
 			Value:  1,
 		})
 	}
 
-	return checkItemList, statusGVSList, imageGVSList, configGVSList, err
+	return result, err
 }
 
-// getWorkLoadStatus xxx
-func getWorkLoadStatus(workloadType string, workloadName string, namespace string, cluster *pluginmanager.ClusterConfig) (string, []containerImage, error) {
-	var containerImageList []containerImage
-	var status = NormalStatus
-	var err error
-	ctx := internalUtil.GetCtx(10 * time.Second)
-	for i := 0; i < 2; i++ {
-		switch strings.ToLower(workloadType) {
-		case strings.ToLower(deployment):
-			var deploy *v1.Deployment
-			deploy, err = cluster.ClientSet.AppsV1().Deployments(namespace).Get(ctx, workloadName, metav1.GetOptions{
-				ResourceVersion: "0",
-			})
+// isRetryableError 判断错误是否为可重试的临时性错误，如超时、服务暂时不可用等
+func isRetryableError(err error) bool {
+	if err == nil {
+		return false
+	}
+	errMsg := err.Error()
+	// 超时类错误
+	if strings.Contains(errMsg, "Timeout") || strings.Contains(errMsg, "timeout") || strings.Contains(errMsg, "deadline") {
+		return true
+	}
+	// apiserver 暂时不可用（503），如 "the server is currently unable to handle the request"
+	if strings.Contains(errMsg, "unable to handle the request") || strings.Contains(errMsg, "ServiceUnavailable") {
+		return true
+	}
+	// 连接拒绝/重置等网络抖动
+	if strings.Contains(errMsg, "connection refused") || strings.Contains(errMsg, "connection reset") {
+		return true
+	}
+	return false
+}
 
-			if err != nil {
-				status = AppErrorStatus
-				if strings.Contains(err.Error(), "not found") {
-					status = APPNotfoundAppStatus
-				}
-			} else {
-				containerImageList, status, err = getDeployCheckResult(deploy, cluster)
-			}
+// workloadFetchResult workload 获取结果
+type workloadFetchResult struct {
+	containerImages []containerImage
+	status          string
+	err             error
+}
 
-		case strings.ToLower(daemonset):
-			var ds *v1.DaemonSet
-			ds, err = cluster.ClientSet.AppsV1().DaemonSets(namespace).Get(ctx, workloadName, metav1.GetOptions{
-				ResourceVersion: "0",
-			})
+// handleWorkloadError 统一处理 workload 获取错误，返回对应的 status
+func handleWorkloadError(err error) string {
+	if err == nil {
+		return NormalStatus
+	}
+	if strings.Contains(err.Error(), "not found") {
+		return AppNotFoundStatus
+	}
+	return AppErrorStatus
+}
 
-			if err != nil {
-				status = AppErrorStatus
-				if strings.Contains(err.Error(), "not found") {
-					status = APPNotfoundAppStatus
-				}
-			} else {
-				containerImageList, status, err = getDSCheckResult(ds, cluster)
-			}
-
-		case strings.ToLower(statefulset):
-			var sts *v1.StatefulSet
-			sts, err = cluster.ClientSet.AppsV1().StatefulSets(namespace).Get(ctx, workloadName, metav1.GetOptions{
-				ResourceVersion: "0",
-			})
-
-			if err != nil {
-				status = AppErrorStatus
-				if strings.Contains(err.Error(), "not found") {
-					status = APPNotfoundAppStatus
-				}
-			} else {
-				containerImageList, status, err = getSTSCheckResult(sts, cluster)
-			}
-		default:
-			klog.Errorf("unsupported resource type %s", workloadType)
+// fetchWorkload 根据资源类型获取 workload 并返回检查结果，消除三种资源类型的重复代码
+func fetchWorkload(workloadType, workloadName, namespace string, cluster *pluginmanager.ClusterConfig, ctx context.Context) workloadFetchResult {
+	switch strings.ToLower(workloadType) {
+	case strings.ToLower(deployment):
+		deploy, err := cluster.ClientSet.AppsV1().Deployments(namespace).Get(ctx, workloadName, metav1.GetOptions{
+			ResourceVersion: "0",
+		})
+		if err != nil {
+			return workloadFetchResult{status: handleWorkloadError(err), err: err}
 		}
-		if err == nil {
-			break
-		} else if strings.Contains(err.Error(), "Timeout") || strings.Contains(err.Error(), "timeout") || strings.Contains(err.Error(), "deadline") {
+		containerImages, status, err := getDeployCheckResult(deploy, cluster)
+		return workloadFetchResult{containerImages: containerImages, status: status, err: err}
+
+	case strings.ToLower(daemonset):
+		ds, err := cluster.ClientSet.AppsV1().DaemonSets(namespace).Get(ctx, workloadName, metav1.GetOptions{
+			ResourceVersion: "0",
+		})
+		if err != nil {
+			return workloadFetchResult{status: handleWorkloadError(err), err: err}
+		}
+		containerImages, status, err := getDSCheckResult(ds, cluster)
+		return workloadFetchResult{containerImages: containerImages, status: status, err: err}
+
+	case strings.ToLower(statefulset):
+		sts, err := cluster.ClientSet.AppsV1().StatefulSets(namespace).Get(ctx, workloadName, metav1.GetOptions{
+			ResourceVersion: "0",
+		})
+		if err != nil {
+			return workloadFetchResult{status: handleWorkloadError(err), err: err}
+		}
+		containerImages, status, err := getSTSCheckResult(sts, cluster)
+		return workloadFetchResult{containerImages: containerImages, status: status, err: err}
+
+	default:
+		klog.Errorf("unsupported resource type %s", workloadType)
+		return workloadFetchResult{status: AppErrorStatus, err: fmt.Errorf("unsupported resource type %s", workloadType)}
+	}
+}
+
+// getWorkLoadStatus 获取workload的状态信息，支持对临时性错误进行重试
+func getWorkLoadStatus(workloadType string, workloadName string, namespace string, cluster *pluginmanager.ClusterConfig) (string, []containerImage, error) {
+	const maxRetry = 3
+	ctx := internalUtil.GetCtx(10 * time.Second)
+
+	for i := 0; i < maxRetry; i++ {
+		result := fetchWorkload(workloadType, workloadName, namespace, cluster, ctx)
+
+		if result.err == nil {
+			return result.status, result.containerImages, nil
+		}
+
+		if isRetryableError(result.err) {
+			klog.Warningf("namespace: %s workload: %s GetWorkLoad retryable error (attempt %d/%d): %s",
+				namespace, workloadName, i+1, maxRetry, result.err.Error())
+			time.Sleep(time.Duration(i+1) * 2 * time.Second)
 			ctx = internalUtil.GetCtx(20 * time.Second)
 			continue
-		} else {
-			break
 		}
+
+		return result.status, nil, fmt.Errorf("namespace: %s worload: %s GetWorkLoad failed: %s", namespace, workloadName, result.err.Error())
 	}
 
-	if err != nil {
-		return status, nil, fmt.Errorf("namespace: %s worload: %s GetWorkLoad failed: %s", namespace, workloadName, err.Error())
-	}
-
-	return status, containerImageList, nil
-
+	return AppErrorStatus, nil, fmt.Errorf("namespace: %s worload: %s GetWorkLoad failed after %d retries", namespace, workloadName, maxRetry)
 }
 
 // GetComponentFromManifest get component by parsing workload manifest
@@ -819,11 +870,7 @@ func CheckPodMetric(containerList []corev1.Container, cluster *pluginmanager.Clu
 
 	if err != nil {
 		klog.Infof("%s get metric failed: %s", cluster.ClusterID, err.Error())
-		if strings.Contains(err.Error(), "the server could not find the requested resource") {
-			return NormalStatus, nil
-		} else {
-			return NormalStatus, nil
-		}
+		return NormalStatus, nil
 	}
 
 	for _, container := range containerList {
@@ -899,7 +946,7 @@ func GetImageStatus(image containerImage, componentVersionConfList []ComponentVe
 		if versionConf.NiceToUpgrade != "" {
 			niceToUpgradeVersion, err := version.NewVersion(versionConf.NiceToUpgrade)
 			if err != nil {
-				return ImageStatusNeedUpgrade
+				return ImageStatusUnknown
 			}
 
 			if imageVersion.LessThan(niceToUpgradeVersion) {

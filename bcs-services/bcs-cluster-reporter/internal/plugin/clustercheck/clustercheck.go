@@ -339,30 +339,33 @@ func (p *Plugin) Check(option pluginmanager.CheckOption) {
 				}
 			}()
 
-			// check apiserver cert
+			// check apiserver cert（异步执行，结果存入局部变量，Wait 后再合并，避免并发 append）
 			getServerCertWG := sync.WaitGroup{}
+			var certCheckItemList []pluginmanager.CheckItem
+			var certGvsList []*metricmanager.GaugeVecSet
+			var webhookGvs *metricmanager.GaugeVecSet
 			if len(cluster.Master) > 0 {
 				getServerCertWG.Add(1)
 				go func() {
 					defer func() {
 						getServerCertWG.Done()
 					}()
-					checkItemList, gvsList, err := getApiserverCert(cluster)
+					var err error
+					certCheckItemList, certGvsList, err = getApiserverCert(cluster)
 					if err != nil {
 						klog.Errorf("%s check apiserver cert expiration failed: %s", cluster.ClusterID, err.Error())
-					} else {
-						clusterResult.Items = append(clusterResult.Items, checkItemList...)
-						loopCertificateExpirationGVSList = append(loopCertificateExpirationGVSList, gvsList...)
+						certCheckItemList = nil
+						certGvsList = nil
 					}
 
 					_, webhookList, err := CheckWebhookNamespaceCrossHook(cluster)
 					if err != nil {
 						klog.Errorf("%s CheckWebhookNamespaceCrossHook failed: %s", cluster.ClusterID, err.Error())
 					} else if len(webhookList) > 0 {
-						loopClusterWebhookGaugeVecSetList = append(loopClusterWebhookGaugeVecSetList, &metricmanager.GaugeVecSet{
+						webhookGvs = &metricmanager.GaugeVecSet{
 							Labels: []string{cluster.ClusterID, cluster.BusinessID, strings.Join(webhookList, ",")},
 							Value:  1,
-						})
+						}
 					}
 
 				}()
@@ -374,6 +377,10 @@ func (p *Plugin) Check(option pluginmanager.CheckOption) {
 				klog.Errorf("%s testClusterByCreateUnstructuredObj failed: %s", clusterId, err.Error())
 			}
 
+			// 等待异步证书检查执行完成，之后所有 append 在单协程内进行，避免并发数据竞争
+			getServerCertWG.Wait()
+
+			clusterResult.Items = append(clusterResult.Items, certCheckItemList...)
 			clusterResult.Items = append(clusterResult.Items, checkItemList...)
 			clusterResult.InfoItemList = append(clusterResult.InfoItemList, infoItemList...)
 			loopClusterChecktGaugeVecSetList = append(loopClusterChecktGaugeVecSetList, gvs)
@@ -382,9 +389,10 @@ func (p *Plugin) Check(option pluginmanager.CheckOption) {
 				Labels: []string{clusterId, cluster.BusinessID, cluster.Version},
 				Value:  1,
 			})
-
-			// 等待异步证书检查执行完成
-			getServerCertWG.Wait()
+			loopCertificateExpirationGVSList = append(loopCertificateExpirationGVSList, certGvsList...)
+			if webhookGvs != nil {
+				loopClusterWebhookGaugeVecSetList = append(loopClusterWebhookGaugeVecSetList, webhookGvs)
+			}
 			klog.Infof("end clustercheck for %s", clusterId)
 
 			// 获取写锁，更新指标和结果
@@ -441,8 +449,11 @@ func (p *Plugin) Check(option pluginmanager.CheckOption) {
 
 	wg.Wait()
 
+	// 加锁清理已删除集群数据，避免与 Ready()/GetResult() 并发访问 map
+	p.WriteLock.Lock()
+
 	// clean deleted cluster data
-	for clusterID, _ := range p.ReadyMap {
+	for clusterID := range p.ReadyMap {
 		if _, ok := clusterConfigs[clusterID]; !ok {
 			p.ReadyMap[clusterID] = false
 			klog.Infof("delete cluster %s", clusterID)
@@ -450,7 +461,7 @@ func (p *Plugin) Check(option pluginmanager.CheckOption) {
 	}
 
 	// 从readymap和指标中清理已删除集群
-	for clusterID, _ := range p.ReadyMap {
+	for clusterID := range p.ReadyMap {
 		if _, ok := clusterConfigs[clusterID]; !ok {
 			delete(p.ReadyMap, clusterID)
 			metricmanager.DeleteMetric(clusterAvailability, clusterCheckGaugeVecSetList[clusterID])
@@ -467,6 +478,8 @@ func (p *Plugin) Check(option pluginmanager.CheckOption) {
 			klog.Infof("delete cluster %s", clusterID)
 		}
 	}
+
+	p.WriteLock.Unlock()
 }
 
 // getApiserverCert 通过API端口获取APIServer证书过期时间
@@ -669,11 +682,12 @@ func testClusterByCreateUnstructuredObj(unstructuredObj *unstructured.Unstructur
 		// 清理残留resource
 		go func() {
 			backgroundDeletion := metav1.DeletePropagationBackground
+			labelSelector := "bcs-cluster-reporter=bcs-cluster-reporter"
 
-			// 获取所有的匹配job，避免历史残留
+			// 1. 先删除 Job，阻止 Job Controller 继续创建新 Pod
 			jobList, listErr := clusterConfig.ClientSet.BatchV1().Jobs(namespace).List(context.Background(), metav1.ListOptions{
 				ResourceVersion: "0",
-				LabelSelector:   "bcs-cluster-reporter=bcs-cluster-reporter",
+				LabelSelector:   labelSelector,
 			})
 			if listErr != nil {
 				klog.Errorf("%s get job failed %s", clusterConfig.ClusterID, listErr.Error())
@@ -688,6 +702,28 @@ func testClusterByCreateUnstructuredObj(unstructuredObj *unstructured.Unstructur
 					})
 					if err != nil {
 						klog.Errorf("%s delete job failed %s", clusterConfig.ClusterID, err.Error())
+					}
+				}
+			}
+
+			// 2. 显式清理残留 Pod，避免已完成（Completed）的 Pod 残留
+			//    Background 级联删除依赖 GC 异步清理，可能出现 Pod 残留；
+			//    上次清理失败时也会产生孤儿 Pod，此处统一兜底清理
+			podList, podListErr := clusterConfig.ClientSet.CoreV1().Pods(namespace).List(context.Background(), metav1.ListOptions{
+				ResourceVersion: "0",
+				LabelSelector:   labelSelector,
+			})
+			if podListErr != nil {
+				klog.Errorf("%s get pod failed: %s", clusterConfig.ClusterID, podListErr.Error())
+			} else if len(podList.Items) > 0 {
+				klog.Infof("%s found %d residual pod(s) to delete", clusterConfig.ClusterID, len(podList.Items))
+				for _, pod := range podList.Items {
+					if podErr := clusterConfig.ClientSet.CoreV1().Pods(namespace).Delete(context.Background(), pod.Name, metav1.DeleteOptions{
+						GracePeriodSeconds: int64Ptr(5),
+					}); podErr != nil {
+						klog.Errorf("%s delete pod %s failed: %s", clusterConfig.ClusterID, pod.Name, podErr.Error())
+					} else {
+						klog.Infof("%s delete pod %s success", clusterConfig.ClusterID, pod.Name)
 					}
 				}
 			}
@@ -1018,5 +1054,7 @@ func (p *Plugin) Ready(clusterID string) bool {
 // 返回:
 //   - pluginmanager.CheckResult: 检查结果
 func (p *Plugin) GetResult(clusterID string) pluginmanager.CheckResult {
+	p.WriteLock.Lock()
+	defer p.WriteLock.Unlock()
 	return p.Result[clusterID]
 }
