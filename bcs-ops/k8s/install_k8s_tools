@@ -74,7 +74,7 @@ EOF
     fi
   done
 
-  if grep -i "TencentOS Server 4.[0-9]*" /etc/tlinux-release;then
+  if grep -i "TencentOS Server 4" /etc/tlinux-release;then
     yum install -y -q dnf-utils
   else
     yum install -y -q yum-utils
