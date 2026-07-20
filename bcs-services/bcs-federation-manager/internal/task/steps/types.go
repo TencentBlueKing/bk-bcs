@@ -125,4 +125,6 @@ const (
 
 	// ManagedClusterLabelsKey managed cluster labels
 	ManagedClusterLabelsKey = "managedClusterLabels"
+	// HostNamespaceAnnotationsKey host namespace annotations (serialized JSON)
+	HostNamespaceAnnotationsKey = "hostNamespaceAnnotations"
 )

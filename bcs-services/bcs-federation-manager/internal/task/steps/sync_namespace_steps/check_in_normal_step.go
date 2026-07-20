@@ -55,8 +55,6 @@ func (s CheckInNormalStep) GetName() string {
 
 // DoWork for worker exec task
 func (s CheckInNormalStep) DoWork(t *types.Task) error {
-	blog.Infof("CheckInNormalStep is running")
-
 	step, exist := t.GetStep(s.GetName())
 	if !exist {
 		return fmt.Errorf("task[%s] not exist step[%s]", t.TaskID, s.GetName())
@@ -77,8 +75,11 @@ func (s CheckInNormalStep) DoWork(t *types.Task) error {
 		return fedsteps.ParamsNotFoundError(t.TaskID, fedsteps.HostClusterIdKey)
 	}
 
+	blog.Infof("CheckInNormalStep is running, taskId: %s, hostClusterID: %s, subClusterID: %s, namespace: %s",
+		t.GetTaskID(), hostClusterID, subClusterID, nsName)
+
 	if nsName == "" || hostClusterID == "" {
-		return fmt.Errorf("getFedNamespaceQuota task params error, fedNamespace: %s, hostClusterID: %s",
+		return fmt.Errorf("CheckInNormalStep task params error, namespace: %s, hostClusterID: %s",
 			nsName, hostClusterID)
 	}
 
@@ -88,74 +89,112 @@ func (s CheckInNormalStep) DoWork(t *types.Task) error {
 	}
 
 	if nsStr == "" {
-		blog.Errorf("getFedNamespaceQuota task params error, fedNamespace: %s, hostClusterId: %s",
-			nsName, hostClusterID)
-		return fmt.Errorf("getFedNamespaceQuota task params error, fedNamespace: %s, hostClusterId: %s",
+		return fmt.Errorf("CheckInNormalStep syncNamespaceQuota param is empty, namespace: %s, hostClusterID: %s",
 			nsName, hostClusterID)
 	}
 
 	fedNamespace := &corev1.Namespace{}
 	nerr := json.Unmarshal([]byte(nsStr), &fedNamespace)
 	if nerr != nil {
-		blog.Errorf("unmarshal namespace failed, fedNamespace: %s, hostClusterId: %s, err: %s",
+		blog.Errorf("CheckInNormalStep unmarshal namespace failed, namespace: %s, hostClusterID: %s, err: %s",
 			nsName, hostClusterID, nerr.Error())
-		return fmt.Errorf("unmarshal namespace failed, fedNamespace: %s, hostClusterId: %s", nsName, hostClusterID)
+		return fmt.Errorf("unmarshal namespace failed, namespace: %s, hostClusterID: %s, err: %s",
+			nsName, hostClusterID, nerr.Error())
 	}
 
-	// 判断是否存在ns
 	subClusterNamespace, err := cluster.GetClusterClient().GetNamespace(subClusterID, nsName)
 	if err != nil && !errors.IsNotFound(err) {
-		blog.Errorf("GetNamespace(%s, %s) failed! err:%s", nsName, subClusterID, err.Error())
-		return fmt.Errorf("GetNamespace(%s, %s) failed! err: %s", nsName, subClusterID, err.Error())
+		blog.Errorf("CheckInNormalStep GetNamespace failed, subClusterID: %s, namespace: %s, err: %s",
+			subClusterID, nsName, err.Error())
+		return fmt.Errorf("GetNamespace(%s, %s) failed, err: %s", subClusterID, nsName, err.Error())
 	}
 
-	// 当subClusterNamespace未注册时，才去新增
 	if subClusterNamespace == nil {
 		cerr := createNormalNamespaceQuota(nsName, subClusterID, fedNamespace)
 		if cerr != nil {
-			blog.Errorf("createNormalNamespaceQuota failed, fedNamespace: %s, err: %s", nsName, cerr.Error())
-			return fmt.Errorf("createNormalNamespaceQuota failed, fedNamespace: %s, err: %s", nsName, cerr.Error())
+			blog.Errorf("CheckInNormalStep createNormalNamespaceQuota failed, subClusterID: %s, namespace: %s, err: %s",
+				subClusterID, nsName, cerr.Error())
+			return fmt.Errorf("createNormalNamespaceQuota failed, subClusterID: %s, namespace: %s, err: %s",
+				subClusterID, nsName, cerr.Error())
 		}
-		blog.Infof("CheckInNormalStep Success, taskId: %s, taskName: %s, subClusterNamespace: %s, subClusterID: %s",
-			t.GetTaskID(), step.GetName(), nsName, subClusterID)
+		blog.Infof("CheckInNormalStep create success, taskId: %s, stepName: %s, subClusterID: %s, namespace: %s",
+			t.GetTaskID(), step.GetName(), subClusterID, nsName)
 		return nil
 	}
 
 	uerr := updateNormalNamespaceQuota(subClusterID, subClusterNamespace, fedNamespace)
 	if uerr != nil {
-		blog.Errorf("updateNormalNamespaceQuota failed, subClusterNamespace: %s, err: %s", nsName, uerr.Error())
-		return fmt.Errorf("updateNormalNamespaceQuota failed, subClusterNamespace: %s, err: %s", nsName, uerr.Error())
+		blog.Errorf("CheckInNormalStep updateNormalNamespaceQuota failed, subClusterID: %s, namespace: %s, err: %s",
+			subClusterID, nsName, uerr.Error())
+		return fmt.Errorf("updateNormalNamespaceQuota failed, subClusterID: %s, namespace: %s, err: %s",
+			subClusterID, nsName, uerr.Error())
 	}
 
-	blog.Infof("CheckInNormalStep Success, taskId: %s, taskName: %s, subClusterNamespace: %s, subClusterID: %s",
-		t.GetTaskID(), step.GetName(), nsName, subClusterID)
+	blog.Infof("CheckInNormalStep update success, taskId: %s, stepName: %s, subClusterID: %s, namespace: %s",
+		t.GetTaskID(), step.GetName(), subClusterID, nsName)
 	return nil
+}
+
+// buildNormalSubClusterAnnotations builds annotations for sub-cluster namespace based on host namespace annotations.
+// Priority: obs-cmdb-business-id > bill-projectcode > projectcode
+func buildNormalSubClusterAnnotations(hostAnnotations map[string]string) map[string]string {
+	annotations := make(map[string]string)
+
+	if val, ok := hostAnnotations[cluster.FedNamespaceObsCmdbBusinessIdKey]; ok && val != "" {
+		annotations[cluster.SubClusterBusinessLevel2IdKey] = val
+		return annotations
+	}
+
+	if val, ok := hostAnnotations[cluster.FedNamespaceBillProjectCodeKey]; ok && val != "" {
+		annotations[cluster.FedNamespaceProjectCodeKey] = val
+		return annotations
+	}
+
+	if val, ok := hostAnnotations[cluster.FedNamespaceProjectCodeKey]; ok && val != "" {
+		annotations[cluster.FedNamespaceProjectCodeKey] = val
+		return annotations
+	}
+
+	return annotations
 }
 
 func createNormalNamespaceQuota(nsName, subClusterID string, fedNamespace *corev1.Namespace) error {
-	blog.Infof("createNormalNamespaceQuota, subClusterID: %s, namespace: %s", fedNamespace.Name)
+	annotations := buildNormalSubClusterAnnotations(fedNamespace.Annotations)
+	blog.Infof("createNormalNamespaceQuota, subClusterID: %s, namespace: %s, annotations: %v",
+		subClusterID, nsName, annotations)
 
-	cerr := cluster.GetClusterClient().CreateClusterNamespace(subClusterID, nsName, fedNamespace.Annotations)
+	cerr := cluster.GetClusterClient().CreateClusterNamespace(subClusterID, nsName, annotations)
 	if cerr != nil {
-		blog.Errorf("createNormalNamespaceQuota failed, namespace: %s, err: %s", nsName, cerr.Error())
+		blog.Errorf("createNormalNamespaceQuota failed, subClusterID: %s, namespace: %s, err: %s",
+			subClusterID, nsName, cerr.Error())
 		return cerr
 	}
 
-	blog.Infof("createNormalNamespaceQuota namespace %s Success", nsName)
+	blog.Infof("createNormalNamespaceQuota success, subClusterID: %s, namespace: %s", subClusterID, nsName)
 	return nil
 }
 
-func updateNormalNamespaceQuota(subClusterId string, subClusterNamespace *corev1.Namespace, fedNamespace *corev1.Namespace) error {
-	blog.Infof("updateNormalNamespaceQuota, namespace: %s", subClusterNamespace.Name)
+func updateNormalNamespaceQuota(subClusterId string, subClusterNamespace *corev1.Namespace,
+	fedNamespace *corev1.Namespace) error {
+	blog.Infof("updateNormalNamespaceQuota, subClusterID: %s, namespace: %s", subClusterId, subClusterNamespace.Name)
 
-	subClusterNamespace.Annotations = fedNamespace.Annotations
+	if subClusterNamespace.Annotations == nil {
+		subClusterNamespace.Annotations = make(map[string]string)
+	}
+	newAnnotations := buildNormalSubClusterAnnotations(fedNamespace.Annotations)
+	for k, v := range newAnnotations {
+		subClusterNamespace.Annotations[k] = v
+	}
+
 	cerr := cluster.GetClusterClient().UpdateNamespace(subClusterId, subClusterNamespace)
 	if cerr != nil {
-		blog.Errorf("updateNormalNamespaceQuota failed, namespace: %s, err: %s", subClusterNamespace.Name, cerr.Error())
+		blog.Errorf("updateNormalNamespaceQuota failed, subClusterID: %s, namespace: %s, err: %s",
+			subClusterId, subClusterNamespace.Name, cerr.Error())
 		return cerr
 	}
 
-	blog.Infof("updateNormalNamespaceQuota namespace %s Success", subClusterNamespace.Name)
+	blog.Infof("updateNormalNamespaceQuota success, subClusterID: %s, namespace: %s",
+		subClusterId, subClusterNamespace.Name)
 	return nil
 }
 

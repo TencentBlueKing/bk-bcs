@@ -312,10 +312,11 @@ func NewSyncHbNamespaceQuotaTask(opt *SyncHbNamespaceQuotaOptions) *SyncHbNamesp
 
 // SyncHbNamespaceQuotaOptions sync namespace quota options
 type SyncHbNamespaceQuotaOptions struct {
-	Namespace     string // 命名空间
-	HostClusterID string // 联邦集群hostID
-	SubClusterID  string // 子集群id
-	Labels        string
+	Namespace              string // 命名空间
+	HostClusterID          string // 联邦集群hostID
+	SubClusterID           string // 子集群id
+	Labels                 string
+	HostNamespaceAnnotations string // host namespace annotations (serialized JSON)
 }
 
 // SyncHbNamespaceQuota handle namespace quota
@@ -375,6 +376,9 @@ func (s *SyncHbNamespaceQuota) BuildTask(creator string, opts ...types.TaskOptio
 	t.AddCommonParams(fedsteps.HostClusterIdKey, s.opt.HostClusterID)
 	t.AddCommonParams(fedsteps.SubClusterIdKey, s.opt.SubClusterID)
 	t.AddCommonParams(fedsteps.ManagedClusterLabelsKey, s.opt.Labels)
+	if s.opt.HostNamespaceAnnotations != "" {
+		t.AddCommonParams(fedsteps.HostNamespaceAnnotationsKey, s.opt.HostNamespaceAnnotations)
+	}
 
 	return t, nil
 }
