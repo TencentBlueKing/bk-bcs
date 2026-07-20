@@ -542,6 +542,19 @@ func (w *Watcher) genSyncData(nsedName types.NamespacedName, obj interface{}, ev
 
 		// mask data
 		w.dataMasking(dMeta)
+
+		// enrich pod with the top-level workload it belongs to before syncing to storage.
+		if w.resourceType == ResourceTypePod {
+			if kind, wlName := w.resolveWorkload(dMeta); kind != "" {
+				annos := dMeta.GetAnnotations()
+				if annos == nil {
+					annos = make(map[string]string)
+				}
+				annos[AnnotationWorkloadKindKey] = kind
+				annos[AnnotationWorkloadNameKey] = wlName
+				dMeta.SetAnnotations(annos)
+			}
+		}
 	}
 
 	ownerUID := ""
