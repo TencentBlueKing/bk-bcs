@@ -84,11 +84,13 @@ func getTaskWithSN(taskID string) *types.Task {
 		if err != nil {
 			logging.Error("GetTaskWithID error: %v", err)
 		}
-		// 检查任务是否包含SN号
-		sn, ok := t.GetCommonParams(utils.ItsmSnKey.String())
-		if ok {
-			logging.Info("sn: %s", sn)
-			return t
+		if t != nil {
+			// 检查任务是否包含SN号
+			sn, ok := t.GetCommonParams(utils.ItsmSnKey.String())
+			if ok {
+				logging.Info("sn: %s", sn)
+				return t
+			}
 		}
 
 		// 检查是否超时
@@ -97,6 +99,7 @@ func getTaskWithSN(taskID string) *types.Task {
 			logging.Error("Get sn timeout.")
 			return nil
 		default:
+			time.Sleep(1 * time.Second)
 			// 未超时继续循环
 		}
 	}
