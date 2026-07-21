@@ -4,7 +4,7 @@ go 1.21
 
 toolchain go1.23.11
 
-replace github.com/Tencent/bk-bcs/bcs-common => ../../bcs-common
+replace github.com/Tencent/bk-bcs/bcs-common => github.com/Tencent/bk-bcs/bcs-common v0.0.0-20260703073010-610df57086a6
 
 require (
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20240418095107-1d05d2d5c43c

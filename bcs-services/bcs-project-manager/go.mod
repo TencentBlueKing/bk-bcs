@@ -3,7 +3,7 @@ module github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager
 go 1.21
 
 replace (
-	github.com/Tencent/bk-bcs/bcs-common => ../../bcs-common
+	github.com/Tencent/bk-bcs/bcs-common => github.com/Tencent/bk-bcs/bcs-common v0.0.0-20260703073010-610df57086a6
 	github.com/Tencent/bk-bcs/bcs-services/pkg => ../pkg
 )
 

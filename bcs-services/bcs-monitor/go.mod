@@ -3,8 +3,8 @@ module github.com/Tencent/bk-bcs/bcs-services/bcs-monitor
 go 1.23.0
 
 replace (
-	github.com/Tencent/bk-bcs/bcs-common => github.com/evanlixin/bk-bcs/bcs-common v0.0.0-20250616073156-6413baa64512
-	github.com/Tencent/bk-bcs/bcs-services/pkg => github.com/evanlixin/bk-bcs/bcs-services/pkg v0.0.0-20250616073156-6413baa64512
+	github.com/Tencent/bk-bcs/bcs-common => github.com/Tencent/bk-bcs/bcs-common v0.0.0-20260703073010-610df57086a6
+	github.com/Tencent/bk-bcs/bcs-services/pkg => github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20260703073010-610df57086a6
 )
 
 require (
@@ -270,7 +270,7 @@ require (
 	github.com/OneOfOne/xxhash v1.2.6 // indirect
 	github.com/clusternet/clusternet v0.13.0
 	github.com/go-logr/logr v1.4.1 // indirect
-	github.com/go-openapi/spec v0.20.6 // indirect
+	github.com/go-openapi/spec v0.20.9 // indirect
 	github.com/go-openapi/swag v0.21.1 // indirect
 	github.com/go-playground/validator/v10 v10.25.0
 	github.com/mailru/easyjson v0.7.7 // indirect

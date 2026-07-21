@@ -88,8 +88,12 @@ github.com/Shopify/sarama v1.19.0/go.mod h1:FVkBWblsNy7DGZRfXLU0O9RCGt5g3g3yEuWX
 github.com/Shopify/sarama v1.30.0/go.mod h1:zujlQQx1kzHsh4jfV1USnptCQrHAEZ2Hk8fTKCulPVs=
 github.com/Shopify/toxiproxy v2.1.4+incompatible/go.mod h1:OXgGpZ6Cli1/URJOF1DMxUHB2q5Ap20/P/eIdh4G0pI=
 github.com/Shopify/toxiproxy/v2 v2.1.6-0.20210914104332-15ea381dcdae/go.mod h1:/cvHQkZ1fst0EmZnA5dFtiQdWCNCFYzb+uE2vqVgvx0=
+github.com/Tencent/bk-bcs/bcs-common v0.0.0-20260703073010-610df57086a6 h1:DfZIbeTRoE3oEZ8uHjmkJVdmsnyWc8h/AIjvgfqXV4U=
+github.com/Tencent/bk-bcs/bcs-common v0.0.0-20260703073010-610df57086a6/go.mod h1:XAH258PKu06kc8pzxeOAhvzhfCVBKp9tNlaLn3XhC+s=
 github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common v0.0.0-20220330120237-0bbed74dcf6d h1:9sTR/WFfAGfCw1IsXuY4SedSmcE76wUlroAByEIIKEA=
 github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common v0.0.0-20220330120237-0bbed74dcf6d/go.mod h1:Fn7b5H1/9p+YbCjD436PlPigo7+eM4p2WQCVEg8b3tk=
+github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20260703073010-610df57086a6 h1:DXJk4IM7F2yiWDf0nL2xW5Z1JFkIl85umReqFzYc4YA=
+github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20260703073010-610df57086a6/go.mod h1:7Ej1mxKqVP1xKwnRSwzwRsg/thlqcaSyDtYt0GcSfU8=
 github.com/TencentBlueKing/gopkg v1.1.0 h1:/89NOzIbqEqVRQoPYf0ZEB9J0BgHeLZVIZt3XsSvaoU=
 github.com/TencentBlueKing/gopkg v1.1.0/go.mod h1:C8xV79ap0bF2pR10YfhsxO5w5LtJlPakrRunkRbl2yw=
 github.com/TencentBlueKing/iam-go-sdk v1.0.1 h1:3sOtorCwAVlQJymf8zvw/g4++EvKlAnl2nZmHZ3ksHQ=
@@ -202,10 +206,6 @@ github.com/envoyproxy/go-control-plane v0.9.10-0.20210907150352-cf90f659a021/go.
 github.com/envoyproxy/protoc-gen-validate v0.1.0/go.mod h1:iSmxcyjqTsJpI2R4NaDN7+kN2VEUnK/pcBlmesArF7c=
 github.com/envoyproxy/protoc-gen-validate v1.0.4 h1:gVPz/FMfvh57HdSJQyvBtF00j8JU4zdyUgIUNhlgg0A=
 github.com/envoyproxy/protoc-gen-validate v1.0.4/go.mod h1:qys6tmnRsYrQqIhm2bvKZH4Blx/1gTIZ2UKVY1M+Yew=
-github.com/evanlixin/bk-bcs/bcs-common v0.0.0-20251219081340-800069d3a93d h1:DOOoGEd0TrK/UXFPVSm89wptLKrl3Aw+OQMj6LxLZ/A=
-github.com/evanlixin/bk-bcs/bcs-common v0.0.0-20251219081340-800069d3a93d/go.mod h1:XAH258PKu06kc8pzxeOAhvzhfCVBKp9tNlaLn3XhC+s=
-github.com/evanlixin/bk-bcs/bcs-services/pkg v0.0.0-20251219081340-800069d3a93d h1:TGnXHHhp05RZVvrJYjQgiIvfhZ8/0vcoMkC2vju64/E=
-github.com/evanlixin/bk-bcs/bcs-services/pkg v0.0.0-20251219081340-800069d3a93d/go.mod h1:7K6BODjVGGv9gTDu7iXAdby9ST8GGIJzploMOwjgmws=
 github.com/evanphx/json-patch v4.9.0+incompatible/go.mod h1:50XU6AFN0ol/bzJsmQLiYLvXMP4fmwYFNcr97nuDLSk=
 github.com/evanphx/json-patch v4.12.0+incompatible h1:4onqiflcdA9EOZ4RxV643DvftH5pOlLGNtQ5lPWQu84=
 github.com/evanphx/json-patch v4.12.0+incompatible/go.mod h1:50XU6AFN0ol/bzJsmQLiYLvXMP4fmwYFNcr97nuDLSk=

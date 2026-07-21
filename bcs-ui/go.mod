@@ -3,9 +3,9 @@ module github.com/Tencent/bk-bcs/bcs-ui
 go 1.23
 
 replace (
-	github.com/Tencent/bk-bcs/bcs-common => github.com/evanlixin/bk-bcs/bcs-common v0.0.0-20251219081340-800069d3a93d
-	github.com/Tencent/bk-bcs/bcs-common/pkg/auth => github.com/evanlixin/bk-bcs/bcs-common/pkg/auth v0.0.0-20251219081340-800069d3a93d
-	github.com/Tencent/bk-bcs/bcs-services/pkg => github.com/evanlixin/bk-bcs/bcs-services/pkg v0.0.0-20251219081340-800069d3a93d
+	github.com/Tencent/bk-bcs/bcs-common => github.com/Tencent/bk-bcs/bcs-common v0.0.0-20260703073010-610df57086a6
+	github.com/Tencent/bk-bcs/bcs-common/pkg/auth => github.com/Tencent/bk-bcs/bcs-common/pkg/auth v0.0.0-20260703073010-610df57086a6
+	github.com/Tencent/bk-bcs/bcs-services/pkg => github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20260703073010-610df57086a6
 )
 
 require (
