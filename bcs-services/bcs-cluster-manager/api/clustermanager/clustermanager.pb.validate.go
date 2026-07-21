@@ -10465,6 +10465,8 @@ func (m *CloudNetworkInfo) validate(all bool) error {
 
 	// no validation rules for ClusterUnderlayUsageRatioLimit
 
+	// no validation rules for ClusterUnderlayUsageIPNumLimit
+
 	if len(errors) > 0 {
 		return CloudNetworkInfoMultiError(errors)
 	}

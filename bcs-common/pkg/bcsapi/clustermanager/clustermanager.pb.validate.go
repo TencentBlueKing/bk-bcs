@@ -10463,7 +10463,9 @@ func (m *CloudNetworkInfo) validate(all bool) error {
 
 	}
 
-	// no validation rules for VpcUsageRatioLimit
+	// no validation rules for ClusterUnderlayUsageRatioLimit
+
+	// no validation rules for ClusterUnderlayUsageIPNumLimit
 
 	if len(errors) > 0 {
 		return CloudNetworkInfoMultiError(errors)
@@ -37500,34 +37502,7 @@ func (m *BatchDeleteClusterNodesRequest) validate(all bool) error {
 
 	// no validation rules for DeleteMode
 
-	if all {
-		switch v := interface{}(m.GetSkipCheckNodePods()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, BatchDeleteClusterNodesRequestValidationError{
-					field:  "SkipCheckNodePods",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, BatchDeleteClusterNodesRequestValidationError{
-					field:  "SkipCheckNodePods",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetSkipCheckNodePods()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return BatchDeleteClusterNodesRequestValidationError{
-				field:  "SkipCheckNodePods",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
+	// no validation rules for SkipCheckNodePods
 
 	if len(errors) > 0 {
 		return BatchDeleteClusterNodesRequestMultiError(errors)
@@ -37982,6 +37957,8 @@ func (m *DeleteNodesRequest) validate(all bool) error {
 	// no validation rules for NodeGroupID
 
 	// no validation rules for IsExternalNode
+
+	// no validation rules for SkipCheckNodePods
 
 	if len(errors) > 0 {
 		return DeleteNodesRequestMultiError(errors)
@@ -39072,6 +39049,8 @@ func (m *CleanNodesInGroupRequest) validate(all bool) error {
 	}
 
 	// no validation rules for Manual
+
+	// no validation rules for SkipCheckNodePods
 
 	if len(errors) > 0 {
 		return CleanNodesInGroupRequestMultiError(errors)

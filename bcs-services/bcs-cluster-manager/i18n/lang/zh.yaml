@@ -181,4 +181,4 @@ root-dir: "设置用于管理 kubelet 文件的根目录"
 v: "设置 kubelet 日志级别详细程度的数值"
 
 # 错误消息
-ClusterUnderlayUsageRatioLimitErrMessage: "当前集群子网IP使用率为 %.2f%%，使用率未达到标准 %.2f%%，无法扩容，请联系BCS助手扩容"
+ClusterUnderlayUsageLimitErrMessage: "当前集群子网IP可用数量为 %d（标准 %d），且使用率为 %.2f%%（标准 %.2f%%），无法扩容，请联系BCS助手扩容"

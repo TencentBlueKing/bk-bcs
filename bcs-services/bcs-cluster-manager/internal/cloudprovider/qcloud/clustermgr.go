@@ -845,7 +845,7 @@ func (c *Cluster) AddSubnetsToCluster(ctx context.Context, subnet *proto.SubnetS
 	}
 
 	// 检测当前集群子网资源使用率, 如果使用率达标则继续扩容, 不达标则拒绝扩容
-	_, totalRatio, _, err := business.GetClusterCurrentVpcCniSubnets(opt.Cluster, false)
+	zoneSubnetNum, totalRatio, _, err := business.GetClusterCurrentVpcCniSubnets(opt.Cluster, false)
 	if err != nil {
 		return fmt.Errorf("AddSubnetsToCluster failed: %v", err)
 	}
@@ -859,14 +859,27 @@ func (c *Cluster) AddSubnetsToCluster(ctx context.Context, subnet *proto.SubnetS
 	//	}
 	//}
 
+	// 检查集群子网可用IP数量, 计算总的可用数量
+	underlayUsageIPNumLimit := opt.Cloud.GetNetworkInfo().GetClusterUnderlayUsageIPNumLimit()
+	var totalAvailableIPs uint64
+	for _, zoneRatio := range zoneSubnetNum {
+		totalAvailableIPs += zoneRatio.AvailableIps
+	}
+	// underlayUsageIPNumLimit 为 0 相当于关闭; 按 IP 个数计
+	ipNumLimitHit := underlayUsageIPNumLimit > 0 && totalAvailableIPs > uint64(underlayUsageIPNumLimit)
+
 	// 检查集群子网整体使用率
 	underlayUsageRatioLimit := opt.Cloud.GetNetworkInfo().GetClusterUnderlayUsageRatioLimit()
-	// subnetUsageRatioLimit 为 0 相当于关闭
-	if underlayUsageRatioLimit > 0 && totalRatio < float64(underlayUsageRatioLimit) {
-		errMsg := fmt.Sprintf("cluster[%s] underlayIP currentUsageRatio %+v lt UsageRatioLimit %+v",
-			opt.Cluster.ClusterID, totalRatio, underlayUsageRatioLimit)
+	// underlayUsageRatioLimit 为 0 相当于关闭
+	ratioLimitHit := underlayUsageRatioLimit > 0 && totalRatio < float64(underlayUsageRatioLimit)
+
+	// 仅当 IP 个数限制与整体使用率限制同时触发时才禁止扩容(各自为 0 表示关闭该限制)
+	if ipNumLimitHit && ratioLimitHit {
+		errMsg := fmt.Sprintf("cluster[%s] underlayIP availableNum %d gt UsageIPNumLimit %d and currentUsageRatio %+v lt UsageRatioLimit %+v",
+			opt.Cluster.ClusterID, totalAvailableIPs, underlayUsageIPNumLimit, totalRatio, underlayUsageRatioLimit)
 		blog.Errorf(errMsg)
-		i18nMsg := i18n.Tf(ctx, "ClusterUnderlayUsageRatioLimitErrMessage", totalRatio, underlayUsageRatioLimit)
+		i18nMsg := i18n.Tf(ctx, "ClusterUnderlayUsageLimitErrMessage",
+			totalAvailableIPs, underlayUsageIPNumLimit, totalRatio, underlayUsageRatioLimit)
 		return fmt.Errorf("%s", i18nMsg)
 	}
 
