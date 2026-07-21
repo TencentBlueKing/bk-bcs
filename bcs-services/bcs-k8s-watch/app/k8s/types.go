@@ -26,6 +26,9 @@ type WatcherInterface interface {
 	// Run starts the watcher.
 	Run(stopCh <-chan struct{})
 
+	// HasSynced returns whether the watcher cache has completed its initial sync.
+	HasSynced() bool
+
 	// AddEvent is event to sync new resource.
 	AddEvent(obj interface{})
 

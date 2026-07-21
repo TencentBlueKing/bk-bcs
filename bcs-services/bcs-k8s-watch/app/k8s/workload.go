@@ -50,35 +50,44 @@ func getControllerOwner(owners []metav1.OwnerReference) *metav1.OwnerReference {
 // resolveWorkload resolves the top-level workload (kind, name) that the given
 // pod belongs to by walking up the ownerReferences chain. For pods owned by a
 // ReplicaSet, it looks up the ReplicaSet from the shared local cache to find
-// its owning Deployment. It returns empty strings when no owner can be found.
-func (w *Watcher) resolveWorkload(pod *unstructured.Unstructured) (kind, name string) {
+// its owning Deployment. The resolved result is false while the ReplicaSet
+// cache is still performing its initial sync.
+func (w *Watcher) resolveWorkload(pod *unstructured.Unstructured) (kind, name string, resolved bool) {
 	owner := getControllerOwner(pod.GetOwnerReferences())
 	if owner == nil {
-		return "", ""
+		return "", "", true
 	}
 
 	// pods managed by a Deployment are owned by a ReplicaSet, walk one more
 	// hop to resolve the top-level Deployment.
 	if owner.Kind == ResourceTypeReplicaSet {
-		if dep := w.resolveReplicaSetOwner(pod.GetNamespace(), owner.Name); dep != nil {
-			return dep.Kind, dep.Name
+		dep, resolved := w.resolveReplicaSetOwner(pod.GetNamespace(), owner.Name)
+		if !resolved {
+			return "", "", false
 		}
-		// fall back to the ReplicaSet itself when the Deployment can not be resolved.
-		return owner.Kind, owner.Name
+		if dep != nil {
+			return dep.Kind, dep.Name, true
+		}
+		// Fall back only after the ReplicaSet cache is synced or when the
+		// ReplicaSet resource is not watched.
+		return owner.Kind, owner.Name, true
 	}
 
 	// other kinds (StatefulSet/DaemonSet/Job/GameDeployment/GameStatefulSet ...)
 	// are already the top-level workload.
-	return owner.Kind, owner.Name
+	return owner.Kind, owner.Name, true
 }
 
 // resolveReplicaSetOwner looks up the ReplicaSet from the shared local cache and
-// returns its controller owner (typically a Deployment). It returns nil when the
-// ReplicaSet is not watched, not yet cached, or has no controller owner.
-func (w *Watcher) resolveReplicaSetOwner(namespace, name string) *metav1.OwnerReference {
+// returns its controller owner (typically a Deployment). The resolved result is
+// false while the ReplicaSet cache has not completed its initial sync.
+func (w *Watcher) resolveReplicaSetOwner(namespace, name string) (*metav1.OwnerReference, bool) {
 	sw, ok := w.sharedWatchers[ResourceTypeReplicaSet]
 	if !ok || sw == nil {
-		return nil
+		return nil, true
+	}
+	if !sw.HasSynced() {
+		return nil, false
 	}
 
 	key := name
@@ -86,12 +95,15 @@ func (w *Watcher) resolveReplicaSetOwner(namespace, name string) *metav1.OwnerRe
 		key = namespace + "/" + name
 	}
 	obj, exist, err := sw.GetByKey(key)
-	if err != nil || !exist {
-		return nil
+	if err != nil {
+		return nil, false
+	}
+	if !exist {
+		return nil, true
 	}
 	rs, ok := obj.(*unstructured.Unstructured)
 	if !ok {
-		return nil
+		return nil, true
 	}
-	return getControllerOwner(rs.GetOwnerReferences())
+	return getControllerOwner(rs.GetOwnerReferences()), true
 }

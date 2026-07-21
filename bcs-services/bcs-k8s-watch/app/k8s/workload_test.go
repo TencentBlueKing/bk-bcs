@@ -22,10 +22,13 @@ import (
 
 // fakeWatcher is a minimal WatcherInterface implementation for tests, backed by a map.
 type fakeWatcher struct {
-	store map[string]interface{}
+	store  map[string]interface{}
+	synced bool
 }
 
 func (f *fakeWatcher) Run(stopCh <-chan struct{}) {}
+
+func (f *fakeWatcher) HasSynced() bool { return f.synced }
 
 func (f *fakeWatcher) AddEvent(obj interface{}) {}
 
@@ -130,9 +133,12 @@ func TestResolveWorkload(t *testing.T) {
 		{Kind: "Deployment", Name: "web", Controller: boolPtr(true)},
 	})
 
-	rsWatcher := &fakeWatcher{store: map[string]interface{}{
-		"ns1/web-6d8f": rs,
-	}}
+	rsWatcher := &fakeWatcher{
+		store: map[string]interface{}{
+			"ns1/web-6d8f": rs,
+		},
+		synced: true,
+	}
 
 	w := &Watcher{
 		resourceType: ResourceTypePod,
@@ -146,6 +152,7 @@ func TestResolveWorkload(t *testing.T) {
 		pod      *unstructured.Unstructured
 		wantKind string
 		wantName string
+		resolved bool
 	}{
 		{
 			desc: "pod -> replicaset -> deployment",
@@ -154,6 +161,7 @@ func TestResolveWorkload(t *testing.T) {
 			}),
 			wantKind: "Deployment",
 			wantName: "web",
+			resolved: true,
 		},
 		{
 			desc: "replicaset not cached, fall back to replicaset",
@@ -162,6 +170,7 @@ func TestResolveWorkload(t *testing.T) {
 			}),
 			wantKind: "ReplicaSet",
 			wantName: "missing-rs",
+			resolved: true,
 		},
 		{
 			desc: "pod owned by statefulset directly",
@@ -170,21 +179,46 @@ func TestResolveWorkload(t *testing.T) {
 			}),
 			wantKind: "StatefulSet",
 			wantName: "db",
+			resolved: true,
 		},
 		{
 			desc:     "pod without owner returns empty",
 			pod:      podWithOwners("ns1", "bare-pod", nil),
 			wantKind: "",
 			wantName: "",
+			resolved: true,
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.desc, func(t *testing.T) {
-			kind, name := w.resolveWorkload(test.pod)
+			kind, name, resolved := w.resolveWorkload(test.pod)
 			if kind != test.wantKind || name != test.wantName {
 				t.Errorf("got kind=%q name=%q, want kind=%q name=%q", kind, name, test.wantKind, test.wantName)
 			}
+			if resolved != test.resolved {
+				t.Errorf("got resolved=%v, want resolved=%v", resolved, test.resolved)
+			}
 		})
+	}
+}
+
+func TestWorkloadWaitsForReplicaSetCache(t *testing.T) {
+	w := &Watcher{
+		resourceType: ResourceTypePod,
+		sharedWatchers: map[string]WatcherInterface{
+			ResourceTypeReplicaSet: &fakeWatcher{
+				store:  map[string]interface{}{},
+				synced: false,
+			},
+		},
+	}
+	pod := podWithOwners("ns1", "web-6d8f-abc", []metav1.OwnerReference{
+		{Kind: ResourceTypeReplicaSet, Name: "web-6d8f", Controller: boolPtr(true)},
+	})
+
+	kind, name, resolved := w.resolveWorkload(pod)
+	if resolved {
+		t.Fatalf("got kind=%q name=%q resolved=true, want unresolved workload", kind, name)
 	}
 }

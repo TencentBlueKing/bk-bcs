@@ -245,6 +245,11 @@ func (w *Watcher) ListKeys() []string {
 	return w.store.ListKeys()
 }
 
+// HasSynced returns whether the watcher cache has completed its initial sync.
+func (w *Watcher) HasSynced() bool {
+	return w.controller != nil && w.controller.HasSynced()
+}
+
 // Run starts the watcher.
 func (w *Watcher) Run(stopCh <-chan struct{}) {
 	// do with handler data
@@ -453,7 +458,11 @@ func (w *Watcher) processNextWorkItem() bool {
 		return true
 	}
 	if !isExisted {
-		data := w.genSyncData(tObj, nil, action.SyncDataActionDelete)
+		data, retry := w.genSyncData(tObj, nil, action.SyncDataActionDelete)
+		if retry {
+			w.eventQueue.AddRateLimited(obj)
+			return true
+		}
 		if data == nil {
 			// event should be filtered
 			return true
@@ -462,7 +471,11 @@ func (w *Watcher) processNextWorkItem() bool {
 		w.eventQueue.Forget(obj)
 		return true
 	}
-	data := w.genSyncData(tObj, storeObj, action.SyncDataActionUpdate)
+	data, retry := w.genSyncData(tObj, storeObj, action.SyncDataActionUpdate)
+	if retry {
+		w.eventQueue.AddRateLimited(obj)
+		return true
+	}
 	if data == nil {
 		// event should be filtered
 		return true
@@ -502,13 +515,14 @@ func (w *Watcher) isEventShouldFilter(meta types.NamespacedName, eventAction str
 	return false
 }
 
-func (w *Watcher) genSyncData(nsedName types.NamespacedName, obj interface{}, eventAction string) *action.SyncData {
+func (w *Watcher) genSyncData(nsedName types.NamespacedName, obj interface{},
+	eventAction string) (*action.SyncData, bool) {
 	namespace := nsedName.Namespace
 	name := nsedName.Name
 
 	if w.isEventShouldFilter(nsedName, eventAction) {
 		glog.V(2).Infof("watcher metadata is filtered %s %s: %s/%s", eventAction, w.resourceType, namespace, name)
-		return nil
+		return nil, false
 	}
 
 	var dMeta *unstructured.Unstructured
@@ -517,7 +531,7 @@ func (w *Watcher) genSyncData(nsedName types.NamespacedName, obj interface{}, ev
 		dMeta, isObj = obj.(*unstructured.Unstructured)
 		if !isObj {
 			glog.Errorf("Error casting to unstructured Object, obj: %+v", obj)
-			return nil
+			return nil, false
 		}
 		// must deepcopy obj before modify it, otherwise will panic
 		dMeta = dMeta.DeepCopy()
@@ -545,7 +559,12 @@ func (w *Watcher) genSyncData(nsedName types.NamespacedName, obj interface{}, ev
 
 		// enrich pod with the top-level workload it belongs to before syncing to storage.
 		if w.resourceType == ResourceTypePod {
-			if kind, wlName := w.resolveWorkload(dMeta); kind != "" {
+			kind, wlName, resolved := w.resolveWorkload(dMeta)
+			if !resolved {
+				glog.V(2).Infof("workload of pod %s/%s is not resolved, requeue", namespace, name)
+				return nil, true
+			}
+			if kind != "" {
 				annos := dMeta.GetAnnotations()
 				if annos == nil {
 					annos = make(map[string]string)
@@ -569,7 +588,7 @@ func (w *Watcher) genSyncData(nsedName types.NamespacedName, obj interface{}, ev
 		RequeueQ:  w.GetTriggerQueue(),
 	}
 
-	return syncData
+	return syncData, false
 }
 
 // mask data by masker
