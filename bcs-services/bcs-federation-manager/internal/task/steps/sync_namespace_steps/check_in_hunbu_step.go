@@ -55,8 +55,6 @@ func (s CheckInHunbuStep) GetName() string {
 
 // DoWork for worker exec task
 func (s CheckInHunbuStep) DoWork(t *types.Task) error {
-	blog.Infof("CheckInHunbuStep is running")
-
 	step, exist := t.GetStep(s.GetName())
 	if !exist {
 		return fmt.Errorf("task[%s] not exist step[%s]", t.TaskID, s.GetName())
@@ -72,8 +70,13 @@ func (s CheckInHunbuStep) DoWork(t *types.Task) error {
 		return fedsteps.ParamsNotFoundError(t.TaskID, fedsteps.SubClusterIdKey)
 	}
 
+	hostClusterID, _ := t.GetCommonParams(fedsteps.HostClusterIdKey)
+
+	blog.Infof("CheckInHunbuStep is running, taskId: %s, hostClusterID: %s, subClusterID: %s, namespace: %s",
+		t.GetTaskID(), hostClusterID, subClusterID, nsName)
+
 	if nsName == "" || subClusterID == "" {
-		return fmt.Errorf("get namespace quota task params error, namespace: %s, subClusterID: %s",
+		return fmt.Errorf("CheckInHunbuStep task params error, namespace: %s, subClusterID: %s",
 			nsName, subClusterID)
 	}
 
@@ -84,62 +87,77 @@ func (s CheckInHunbuStep) DoWork(t *types.Task) error {
 
 	managedClusterLabelsMap := make(map[string]string)
 	if err := json.Unmarshal([]byte(managedClusterLabelsStr), &managedClusterLabelsMap); err != nil {
-		blog.Errorf("unmarshal managed cluster labels %s error, %s", managedClusterLabelsStr, err.Error())
-		return fmt.Errorf("unmarshal managed cluster labels %s error, %s", managedClusterLabelsStr, err.Error())
+		blog.Errorf("CheckInHunbuStep unmarshal managed cluster labels failed, subClusterID: %s, err: %s",
+			subClusterID, err.Error())
+		return fmt.Errorf("unmarshal managed cluster labels error: %s", err.Error())
 	}
 
-	// 判断是否存在ns
+	hostAnnotations := make(map[string]string)
+	if hostAnnotationsStr, exists := t.GetCommonParams(fedsteps.HostNamespaceAnnotationsKey); exists &&
+		hostAnnotationsStr != "" {
+		if err := json.Unmarshal([]byte(hostAnnotationsStr), &hostAnnotations); err != nil {
+			blog.Errorf("CheckInHunbuStep unmarshal host namespace annotations failed, subClusterID: %s, "+
+				"namespace: %s, err: %s", subClusterID, nsName, err.Error())
+			return fmt.Errorf("unmarshal host namespace annotations error: %s", err.Error())
+		}
+	}
+
 	namespace, err := cluster.GetClusterClient().GetNamespace(subClusterID, nsName)
 	if err != nil && !errors.IsNotFound(err) {
-		blog.Errorf("GetNamespace(%s, %s) failed! err:%s", nsName, subClusterID, err.Error())
-		return fmt.Errorf("GetNamespace(%s, %s) failed! err:%s", nsName, subClusterID, err.Error())
+		blog.Errorf("CheckInHunbuStep GetNamespace failed, subClusterID: %s, namespace: %s, err: %s",
+			subClusterID, nsName, err.Error())
+		return fmt.Errorf("GetNamespace(%s, %s) failed, err: %s", subClusterID, nsName, err.Error())
 	}
 
-	// 当namespace未注册时，才去新增
 	if namespace == nil {
-		cerr := createHbNamespaceQuota(nsName, subClusterID, managedClusterLabelsMap)
+		cerr := createHbNamespaceQuota(nsName, subClusterID, managedClusterLabelsMap, hostAnnotations)
 		if cerr != nil {
-			blog.Errorf("createHbNamespaceQuota failed, namespace: %s, err: %s", nsName, cerr.Error())
-			return fmt.Errorf("createHbNamespaceQuota failed, namespace: %s, err: %s", nsName, cerr.Error())
+			blog.Errorf("CheckInHunbuStep createHbNamespaceQuota failed, subClusterID: %s, namespace: %s, err: %s",
+				subClusterID, nsName, cerr.Error())
+			return fmt.Errorf("createHbNamespaceQuota failed, subClusterID: %s, namespace: %s, err: %s",
+				subClusterID, nsName, cerr.Error())
 		}
-		blog.Infof("CheckInHunbuStep Success, taskId: %s, taskName: %s, namespace: %s, subClusterID: %s",
-			t.GetTaskID(), step.GetName(), nsName, subClusterID)
+		blog.Infof("CheckInHunbuStep create success, taskId: %s, stepName: %s, subClusterID: %s, namespace: %s",
+			t.GetTaskID(), step.GetName(), subClusterID, nsName)
 		return nil
 	}
 
-	uerr := updateHbNamespaceQuota(subClusterID, namespace, managedClusterLabelsMap)
+	uerr := updateHbNamespaceQuota(subClusterID, namespace, managedClusterLabelsMap, hostAnnotations)
 	if uerr != nil {
-		blog.Errorf("updateHbNamespaceQuota failed, namespace: %s, err: %s", nsName, uerr.Error())
-		return fmt.Errorf("updateHbNamespaceQuota failed, namespace: %s, err: %s", nsName, uerr.Error())
+		blog.Errorf("CheckInHunbuStep updateHbNamespaceQuota failed, subClusterID: %s, namespace: %s, err: %s",
+			subClusterID, nsName, uerr.Error())
+		return fmt.Errorf("updateHbNamespaceQuota failed, subClusterID: %s, namespace: %s, err: %s",
+			subClusterID, nsName, uerr.Error())
 	}
 
-	blog.Infof("CheckInHunbuStep Success, taskId: %s, taskName: %s, namespace: %s, subClusterID: %s",
-		t.GetTaskID(), step.GetName(), nsName, subClusterID)
+	blog.Infof("CheckInHunbuStep update success, taskId: %s, stepName: %s, subClusterID: %s, namespace: %s",
+		t.GetTaskID(), step.GetName(), subClusterID, nsName)
 	return nil
 }
 
-func createHbNamespaceQuota(nsName, subClusterID string, labelsMap map[string]string) error {
-	blog.Infof("createHbNamespaceQuota, namespace: %s, labels: %v", nsName, labelsMap)
-
+func createHbNamespaceQuota(nsName, subClusterID string, labelsMap, hostAnnotations map[string]string) error {
 	annotations := buildHbReq(labelsMap)
-	if annotations == nil {
-		blog.Errorf("buildHbCreateReq failed, subClusterId: %s, namespace: %s, labelsMap: %v",
-			subClusterID, nsName, labelsMap)
-		return nil
+
+	projectAnnotations := buildNormalSubClusterAnnotations(hostAnnotations)
+	for k, v := range projectAnnotations {
+		annotations[k] = v
 	}
+
+	blog.Infof("createHbNamespaceQuota, subClusterID: %s, namespace: %s, annotations: %v",
+		subClusterID, nsName, annotations)
 
 	cerr := cluster.GetClusterClient().CreateClusterNamespace(subClusterID, nsName, annotations)
 	if cerr != nil {
-		blog.Errorf("createHbNamespaceQuota failed, namespace: %s, err: %s", nsName, cerr.Error())
+		blog.Errorf("createHbNamespaceQuota failed, subClusterID: %s, namespace: %s, err: %s",
+			subClusterID, nsName, cerr.Error())
 		return cerr
 	}
 
-	blog.Infof("createHbNamespaceQuota namespace %s Success", nsName)
+	blog.Infof("createHbNamespaceQuota success, subClusterID: %s, namespace: %s", subClusterID, nsName)
 	return nil
 }
 
 func buildHbReq(labelsMap map[string]string) map[string]string {
-
 	hbNsAnnotations := make(map[string]string)
 	if labelsMap[cluster.LabelsMixerClusterKey] == cluster.ValueIsTrue {
 		hbNsAnnotations[cluster.AnnotationMixerClusterMixerNamespaceKey] = cluster.ValueIsTrue
@@ -158,28 +176,32 @@ func buildHbReq(labelsMap map[string]string) map[string]string {
 	return hbNsAnnotations
 }
 
-func updateHbNamespaceQuota(subClusterId string, namespace *corev1.Namespace, labels map[string]string) error {
+func updateHbNamespaceQuota(subClusterId string, namespace *corev1.Namespace,
+	labels, hostAnnotations map[string]string) error {
+	blog.Infof("updateHbNamespaceQuota, subClusterID: %s, namespace: %s", subClusterId, namespace.Name)
 
-	blog.Infof("updateHbNamespaceQuota, namespace: %s, labels: %v", namespace.Name, labels)
-	annotations := namespace.Annotations
+	if namespace.Annotations == nil {
+		namespace.Annotations = make(map[string]string)
+	}
+
 	reqAnnotations := buildHbReq(labels)
-	if reqAnnotations == nil {
-		blog.Errorf("buildHbUpdateReq failed, namespace: %s, labels: %v", namespace.Name, labels)
-		return nil
-	}
-
 	for k, v := range reqAnnotations {
-		annotations[k] = v
+		namespace.Annotations[k] = v
 	}
 
-	namespace.Annotations = annotations
+	projectAnnotations := buildNormalSubClusterAnnotations(hostAnnotations)
+	for k, v := range projectAnnotations {
+		namespace.Annotations[k] = v
+	}
+
 	cerr := cluster.GetClusterClient().UpdateNamespace(subClusterId, namespace)
 	if cerr != nil {
-		blog.Errorf("updateHbNamespaceQuota failed, namespace: %s, err: %s", namespace.Name, cerr.Error())
+		blog.Errorf("updateHbNamespaceQuota failed, subClusterID: %s, namespace: %s, err: %s",
+			subClusterId, namespace.Name, cerr.Error())
 		return cerr
 	}
 
-	blog.Infof("updateHbNamespaceQuota namespace %s Success", namespace.Name)
+	blog.Infof("updateHbNamespaceQuota success, subClusterID: %s, namespace: %s", subClusterId, namespace.Name)
 	return nil
 }
 

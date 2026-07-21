@@ -4,6 +4,7 @@
       class="mr-[5px]"
       :value="clusterId"
       :cluster-type="clusterType"
+      :sync-query-value="syncQueryValue"
       v-show="showClusterSelect"
       @change="handleClusterChange">
     </ClusterSelect>
@@ -48,6 +49,15 @@ export default defineComponent({
     clusterType: {
       type: [String, Array] as PropType<ClusterType|ClusterType[]>,
       default: () => ['independent', 'managed'],
+    },
+    /**
+     * 是否同步更新url query参数
+     * 注意！！！路由变化默认会取消之前未完成的请求
+     * 具体请查看 cancelWhenRouteChange 配置项
+     */
+    syncQueryValue: {
+      type: Boolean,
+      default: false,
     },
   },
   emits: ['cluster-change', 'search-change', 'search-enter', 'refresh', 'update:clusterId', 'update:search'],

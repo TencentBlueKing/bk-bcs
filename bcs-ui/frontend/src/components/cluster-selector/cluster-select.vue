@@ -99,10 +99,19 @@ export default defineComponent({
       type: Boolean,
       default: true,
     },
+    /**
+     * 是否同步更新url query参数
+     * 注意！！！路由变化默认会取消之前未完成的请求
+     * 具体请查看 cancelWhenRouteChange 配置项
+     */
+    syncQueryValue: {
+      type: Boolean,
+      default: false,
+    },
   },
   emits: ['change'],
   setup(props, ctx) {
-    const { value, clusterType, validateClusterId } = toRefs(props);
+    const { value, clusterType, validateClusterId, syncQueryValue } = toRefs(props);
 
     const normalStatusList = ['RUNNING'];
     const hoverClusterID = ref<string>();
@@ -114,7 +123,14 @@ export default defineComponent({
       clusterData,
       handleToggleCollapse,
       handleClusterChange,
-    } = useClusterSelector(ctx.emit, value.value, clusterType.value, true, validateClusterId.value);
+    } = useClusterSelector(
+      ctx.emit,
+      value.value,
+      clusterType.value,
+      true,
+      validateClusterId.value,
+      syncQueryValue.value,
+    );
 
     watch(value, (v) => {
       localValue.value = v;

@@ -312,8 +312,8 @@ generic:
       development: Function is under development
       development1: 'Function under development, not yet available'
       exitTips:
-        text: Confirm that leaving the current page?
-        subTitle: Leaving will lead to loss of information loss
+        text: Confirm leaving the current page?
+        subTitle: Leaving will lead to information loss
       exitEdit:
         text: Confirm to exit the editing state
         subTitle: 'After you log out, your modified content will be lost'
@@ -2697,6 +2697,13 @@ deploy:
     nsTips: >-
       The vars of the namespace variable need to contain the cluster ID
       cluster_id, the namespace name namespace and the variable value
+    importError:
+      invalidJSON: 'Invalid JSON format, please check the file content'
+      failed: 'File import failed, please check the file format'
+    validate:
+      descTooLong: >-
+        Variable "{name}": Description exceeds 255 characters (current:
+        {length})
     namespace: Naming space
     globalEnv: Global
     namespaceEnv: Namespace
@@ -2938,6 +2945,7 @@ dashboard:
       allNamespaces: All namespaces
       projectNS: 'Project namespace {0}'
       systemNS: 'System namespace {0}'
+      otherQuotas: Other Quotas
     msg:
       undoSuccess: Undo success
     quota:
@@ -3750,6 +3758,9 @@ tke:
     vpcID: VPCID
     availableUnderlay: Available underlayIP number
     availableOverlay: Available overlayIP number
+    vpcCniAvailableIP: >-
+      Represents the number of IP addresses that can be added to VPC CNI in this
+      VPC, not the cluster's remaining IP capacity.
   title:
     connectFailure:
       text: >-

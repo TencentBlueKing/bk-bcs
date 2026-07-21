@@ -13,8 +13,11 @@
           <span class="mr-[16px] text-[#979BA5]">
             {{ $t('tke.label.availableOverlay') }} : {{ vpc?.overlay?.availableIPNum }}
           </span>
-          <span class="text-[#979BA5]">
-            {{ $t('tke.label.availableUnderlay') }} : {{ vpc?.underlay?.availableIPNum }}
+          <span
+            class="text-[#979BA5] underline decoration-dashed underline-offset-2"
+            v-bk-tooltips="{ content: $t('tke.label.vpcCniAvailableIP') }"
+          >
+            <span>{{ $t('tke.label.availableUnderlay') }}</span> : {{ vpc?.underlay?.availableIPNum }}
           </span>
         </div>
       </bk-form-item>

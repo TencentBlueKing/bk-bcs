@@ -68,6 +68,13 @@ const (
 	NamespaceTerminating = "Terminating"
 	// CreateNamespaceTaskId task id
 	CreateNamespaceTaskId = "federation.bkbcs.tencent.com/create-namespace-taskId"
+	// FedNamespaceObsCmdbBusinessIdKey host namespace annotation for cmdb level2 business id
+	FedNamespaceObsCmdbBusinessIdKey = "federation.bkbcs.tencent.com/obs-cmdb-business-id"
+	// FedNamespaceBillProjectCodeKey host namespace annotation for billing project code
+	FedNamespaceBillProjectCodeKey = "federation.bkbcs.tencent.com/bill-projectcode"
+	// SubClusterBusinessLevel2IdKey sub cluster namespace annotation for business level2 id
+	SubClusterBusinessLevel2IdKey = "io.tencent.bcs.businesslevel2id"
+
 	// FedNamespaceBkBizId taiji bk_biz_id
 	FedNamespaceBkBizId = "federation.bkbcs.tencent.com/bk-biz-id"
 	// FedNamespaceBkModuleId  taiji bk_module_id
@@ -267,10 +274,16 @@ func NewClient(opts *ClientOptions) (Client, error) {
 		return nil, fmt.Errorf("conn is nil")
 	}
 
+	header := map[string]string{
+		"Content-Type":  "application/json",
+		"Authorization": fmt.Sprintf("Bearer %s", opts.Token),
+	}
+
 	return &clusterClient{
-		opt:        opts,
-		clusterSvc: clustermanager.NewClusterManagerClient(conn),
-		conn:       conn,
+		opt:           opts,
+		defaultHeader: header,
+		clusterSvc:    clustermanager.NewClusterManagerClient(conn),
+		conn:          conn,
 	}, nil
 }
 

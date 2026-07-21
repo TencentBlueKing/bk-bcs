@@ -299,6 +299,7 @@ func GetChargeConfig(charge ChargePrepaid) (billingMode model.NodeTemplateBillin
 	periodNum = 1
 	isAutoRenew = "false"
 	isAutoPay = "true"
+	billingMode = model.GetNodeTemplateBillingModeEnum().E_0
 
 	periodNum = int32(charge.Period)
 	if charge.ChargeType == icommon.PREPAID {

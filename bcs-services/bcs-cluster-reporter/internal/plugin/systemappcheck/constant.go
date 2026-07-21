@@ -10,8 +10,10 @@
  * limitations under the License.
  */
 
-// Package systemappcheck xxx
+// Package systemappcheck 系统应用检查插件，检查集群中系统组件的部署状态、镜像版本和配置
 package systemappcheck
+
+import "regexp"
 
 const (
 	pluginName                         = "systemappcheck"
@@ -32,7 +34,7 @@ const (
 	AppMetricErrorStatus      = "metric_error"
 
 	ChartVersionNormalStatus = "deployed"
-	APPNotfoundAppStatus     = "appnotfound"
+	AppNotFoundStatus = "appnotfound"
 
 	ConfigErrorStatus         = "configerr"
 	SVCConfigErrorStatus      = "svc configerr"
@@ -75,7 +77,7 @@ var (
 		ConfigInconsistencyStatus: "配置不一致",
 		ConfigNotFoundStatus:      "配置不存在",
 		ConfigOtherErrorStatus:    "其它问题",
-		APPNotfoundAppStatus:      "应用不存在",
+		AppNotFoundStatus:          "应用不存在",
 		NolabelStatus:             "没有标签",
 		AppErrorStatus:            "错误",
 		AppStatusMemoryHighStatus: "应用内存高",
@@ -110,7 +112,7 @@ var (
 		ConfigInconsistencyStatus: ConfigInconsistencyStatus,
 		ConfigNotFoundStatus:      ConfigNotFoundStatus,
 		ConfigOtherErrorStatus:    "other err",
-		APPNotfoundAppStatus:      APPNotfoundAppStatus,
+		AppNotFoundStatus:          AppNotFoundStatus,
 		NolabelStatus:             NolabelStatus,
 		AppErrorStatus:            AppErrorStatus,
 		AppStatusMemoryHighStatus: AppStatusMemoryHighStatus,
@@ -132,4 +134,7 @@ var (
 	}
 
 	StringMap = ChinenseStringMap
+
+	// resourceManifestRe 用于分割 YAML 中多个资源的正则表达式
+	resourceManifestRe = regexp.MustCompile(`(?m)^---$`)
 )

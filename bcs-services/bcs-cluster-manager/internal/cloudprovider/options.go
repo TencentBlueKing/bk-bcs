@@ -115,6 +115,8 @@ type CloudConf struct {
 	MaxNodeCount uint32
 	// CreateClusterNodesLimit for create cluster nodes limit
 	CreateClusterNodesLimit uint32
+	// ClusterSubnetUsageRatioLimit for cluster subnet usage ratio limit
+	ClusterSubnetUsageRatioLimit float32
 }
 
 // InitClusterConfigOption init cluster default cloud config

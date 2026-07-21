@@ -244,6 +244,11 @@ func (r *HostNetPortPoolReconciler) reconcilePool(
 			poolKey, pool.Spec.StartPort, pool.Spec.EndPort)
 	}
 
+	// Fallback overlap self-check: if the admission webhook is bypassed or fails, this
+	// surfaces overlapping pools via Event/metric. It does not block the pool because
+	// the allocation cache already guarantees physical ports are never double-allocated.
+	r.detectRangeOverlap(pool)
+
 	nodeAllocs := r.cache.GetNodeAllocations(poolKey)
 	if !nodeAllocationsEqual(pool.Status.NodeAllocations, nodeAllocs) ||
 		pool.Status.Status != "Ready" {
@@ -296,6 +301,37 @@ func (r *HostNetPortPoolReconciler) handlePoolDeletion(
 	}
 	blog.Infof("hostnetport: removed finalizer and cache for pool %s", poolKey)
 	return ctrl.Result{}, nil
+}
+
+// detectRangeOverlap lists all HostNetPortPools cluster-wide and emits a warning Event plus
+// metric for every other pool whose port range overlaps the given pool. This is a
+// non-blocking fallback for the admission webhook; it never rejects the pool.
+func (r *HostNetPortPoolReconciler) detectRangeOverlap(pool *networkextensionv1.HostNetPortPool) {
+	poolList := &networkextensionv1.HostNetPortPoolList{}
+	if err := r.client.List(r.ctx, poolList); err != nil {
+		blog.Warnf("hostnetport: list pools for overlap check failed: %v", err)
+		return
+	}
+
+	newStart := int(pool.Spec.StartPort)
+	newEnd := int(pool.Spec.EndPort)
+	for i := range poolList.Items {
+		other := &poolList.Items[i]
+		if other.GetName() == pool.GetName() && other.GetNamespace() == pool.GetNamespace() {
+			continue
+		}
+		if !hostnetportpoolcache.RangesOverlap(
+			newStart, newEnd, int(other.Spec.StartPort), int(other.Spec.EndPort)) {
+			continue
+		}
+		conflictPool := fmt.Sprintf("%s/%s", other.GetNamespace(), other.GetName())
+		r.eventer.Eventf(pool, k8scorev1.EventTypeWarning, "PortRangeOverlap",
+			"Port range %d-%d overlaps with HostNetPortPool %s range %d-%d; "+
+				"overlapping ports will not be double-allocated but this configuration should be fixed",
+			pool.Spec.StartPort, pool.Spec.EndPort, conflictPool, other.Spec.StartPort, other.Spec.EndPort)
+		blog.Warnf("hostnetport: pool %s/%s range overlaps with %s",
+			pool.Namespace, pool.Name, conflictPool)
+	}
 }
 
 func nodeAllocationsEqual(

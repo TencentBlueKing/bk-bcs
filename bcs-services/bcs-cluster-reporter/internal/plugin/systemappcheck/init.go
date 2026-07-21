@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-// Package systemappcheck xxx
+// Package systemappcheck 系统应用检查插件，检查集群中系统组件的部署状态、镜像版本和配置
 package systemappcheck
 
 import "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/pluginmanager"

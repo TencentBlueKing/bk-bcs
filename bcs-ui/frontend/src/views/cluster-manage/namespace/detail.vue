@@ -61,6 +61,31 @@
           <bk-table-column label="Value" prop="value"></bk-table-column>
         </bk-table>
       </bcs-tab-panel>
+      <bcs-tab-panel name="otherQuotas" :label="$t('dashboard.ns.label.otherQuotas')" v-if="data.otherQuotas && data.otherQuotas.length">
+        <bk-table :data="data.otherQuotas">
+          <bk-table-column :label="$t('generic.label.name')" prop="name" min-width="120"></bk-table-column>
+          <bk-table-column label="CPU Limits">
+            <template #default="{ row }">
+              {{ row.quota && row.quota.cpuLimits ? `${unitConvert(row.quota.cpuLimits, '', 'cpu')}${$t('units.suffix.cores')}` : '--' }}
+            </template>
+          </bk-table-column>
+          <bk-table-column label="CPU Requests">
+            <template #default="{ row }">
+              {{ row.quota && row.quota.cpuRequests ? `${unitConvert(row.quota.cpuRequests, '', 'cpu')}${$t('units.suffix.cores')}` : '--' }}
+            </template>
+          </bk-table-column>
+          <bk-table-column label="Memory Limits">
+            <template #default="{ row }">
+              {{ row.quota && row.quota.memoryLimits ? `${unitConvert(row.quota.memoryLimits, 'Gi', 'mem')}Gi` : '--' }}
+            </template>
+          </bk-table-column>
+          <bk-table-column label="Memory Requests">
+            <template #default="{ row }">
+              {{ row.quota && row.quota.memoryRequests ? `${unitConvert(row.quota.memoryRequests, 'Gi', 'mem')}Gi` : '--' }}
+            </template>
+          </bk-table-column>
+        </bk-table>
+      </bcs-tab-panel>
     </bcs-tab>
   </div>
 </template>

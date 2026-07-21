@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-// Package systemappcheck xxx
+// Package systemappcheck 系统应用检查插件，检查集群中系统组件的部署状态、镜像版本和配置
 package systemappcheck
 
 import (
@@ -334,40 +334,7 @@ func checkApiserverAudit(pod *v1.Pod, auditLogPath string, cluster *pluginmanage
 
 	// analysis audit log file
 	for _, file := range files {
-		klog.Infof("read file:%s", file)
-
-		// 打开文件
-		f, err := os.Open(file)
-		if err != nil {
-			klog.Errorf("open file error: %s", err.Error())
-			continue
-		}
-		defer f.Close()
-
-		// 创建一个 Scanner 逐行读取文件
-		scanner := bufio.NewScanner(f)
-		scanner.Buffer(make([]byte, 64*1024), 1024*1024)
-		for scanner.Scan() {
-			line := scanner.Text()
-			var event k8s.AuditEvent
-
-			// 解析 JSON 行
-			if err := json.Unmarshal([]byte(line), &event); err != nil {
-				fmt.Println("unmarshal failed:", err)
-				continue
-			}
-
-			// 将事件添加到审计日志中;避免添加同一event 不同stage的情况
-			if addedEvent, ok := auditLog.Events[string(event.AuditID)]; !ok {
-				auditLog.Events[string(event.AuditID)] = event
-			} else if event.StageTimestamp.Unix() > addedEvent.StageTimestamp.Unix() {
-				auditLog.Events[string(event.AuditID)] = event
-			}
-		}
-
-		if err := scanner.Err(); err != nil {
-			klog.Errorf("scan error: %s", err.Error())
-		}
+		parseAuditLogFile(file, auditLog)
 	}
 
 	klog.Infof("event count: %d\n", len(auditLog.Events))
@@ -417,76 +384,40 @@ func checkApiserverAudit(pod *v1.Pod, auditLogPath string, cluster *pluginmanage
 
 	// print result to log and return
 	result := make([]pluginmanager.CheckItem, 0)
-	klog.Infof("request count")
-	for index, stat := range countStats {
-		if index < 1 {
-			result = append(result, pluginmanager.CheckItem{
-				ItemName:   SystemAppStatusCheckItemName,
-				ItemTarget: "apiserver",
-				Status:     NormalStatus,
-				Normal:     true,
-				Detail: fmt.Sprintf("useragent: %s, verb: %s, uri: %s, count: %d, average: %v, max: %v\n",
-					stat.UserAgent, stat.Verb, stat.URI, stat.Count, stat.TotalTime/time.Duration(stat.Count), stat.MaxAuditEvent.Duration),
-				Tags:  nil,
-				Level: pluginmanager.WARNLevel,
-			})
-		}
-
-		if index >= 10 {
-			break
-		}
-		klog.Infof("useragent: %s, verb: %s, uri: %s, count: %d, average: %v, max: %v\n",
-			stat.UserAgent, stat.Verb, stat.URI, stat.Count, stat.TotalTime/time.Duration(stat.Count), stat.MaxAuditEvent.Duration)
-	}
-
-	klog.Infof("request average duration")
-	for index, stat := range averageStats {
-		if index < 1 {
-			result = append(result, pluginmanager.CheckItem{
-				ItemName:   SystemAppStatusCheckItemName,
-				ItemTarget: "apiserver",
-				Status:     NormalStatus,
-				Normal:     true,
-				Detail: fmt.Sprintf("useragent: %s, verb: %s, uri: %s, count: %d, average: %v, max: %v\n",
-					stat.UserAgent, stat.Verb, stat.URI, stat.Count, stat.TotalTime/time.Duration(stat.Count), stat.MaxAuditEvent.Duration),
-				Tags:  nil,
-				Level: pluginmanager.WARNLevel,
-			})
-		}
-
-		if index >= 10 {
-			break
-		}
-		klog.Infof("useragent: %s, verb: %s, uri: %s, count: %d, average: %v, max: %v\n",
-			stat.UserAgent, stat.Verb, stat.URI, stat.Count, stat.TotalTime/time.Duration(stat.Count), stat.MaxAuditEvent.Duration)
-	}
-
-	klog.Infof("request max duration")
-	for index, stat := range timeStats {
-		if index < 1 {
-			result = append(result, pluginmanager.CheckItem{
-				ItemName:   SystemAppStatusCheckItemName,
-				ItemTarget: "apiserver",
-				Status:     NormalStatus,
-				Normal:     true,
-				Detail: fmt.Sprintf("useragent: %s, verb: %s, uri: %s, count: %d, average: %v, max: %v\n",
-					stat.UserAgent, stat.Verb, stat.URI, stat.Count, stat.TotalTime/time.Duration(stat.Count), stat.MaxAuditEvent.Duration),
-				Tags:  nil,
-				Level: pluginmanager.WARNLevel,
-			})
-		}
-
-		if index >= 10 {
-			break
-		}
-		klog.Infof("useragent: %s, verb: %s, uri: %s, count: %d, average: %v, max: %v\n",
-			stat.UserAgent, stat.Verb, stat.URI, stat.Count, stat.TotalTime/time.Duration(stat.Count), stat.MaxAuditEvent.Duration)
-	}
+	result = logStatsResult("request count", countStats, result)
+	result = logStatsResult("request average duration", averageStats, result)
+	result = logStatsResult("request max duration", timeStats, result)
 
 	return result, nil
 }
 
-// CheckLabel xxx
+// logStatsResult 输出请求统计结果到日志，并将第一条记录添加到检查结果中
+func logStatsResult(title string, stats []*k8s.RequestStats, result []pluginmanager.CheckItem) []pluginmanager.CheckItem {
+	klog.Infof(title)
+	for index, stat := range stats {
+		detail := fmt.Sprintf("useragent: %s, verb: %s, uri: %s, count: %d, average: %v, max: %v\n",
+			stat.UserAgent, stat.Verb, stat.URI, stat.Count, stat.TotalTime/time.Duration(stat.Count), stat.MaxAuditEvent.Duration)
+		if index == 0 {
+			result = append(result, pluginmanager.CheckItem{
+				ItemName:   SystemAppStatusCheckItemName,
+				ItemTarget: "apiserver",
+				Status:     NormalStatus,
+				Normal:     true,
+				Detail:     detail,
+				Tags:       nil,
+				Level:      pluginmanager.WARNLevel,
+			})
+		}
+
+		if index >= 10 {
+			break
+		}
+		klog.Infof(detail)
+	}
+	return result
+}
+
+// CheckLabel 检查静态 Pod 是否具有标签
 func CheckLabel(pod *v1.Pod) []pluginmanager.CheckItem {
 	checkItem := pluginmanager.CheckItem{
 		ItemName:   SystemAppConfigCheckItem,
@@ -692,4 +623,37 @@ func containsIP(s string) bool {
 	ipRegex := `\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b`
 	match, _ := regexp.MatchString(ipRegex, s)
 	return match
+}
+
+// parseAuditLogFile 解析单个审计日志文件，将事件添加到 auditLog 中
+// 提取为独立函数确保 defer f.Close() 在每次调用后及时释放文件句柄
+func parseAuditLogFile(filePath string, auditLog k8s.AuditLog) {
+	f, err := os.Open(filePath)
+	if err != nil {
+		klog.Errorf("open file error: %s", err.Error())
+		return
+	}
+	defer f.Close()
+
+	scanner := bufio.NewScanner(f)
+	scanner.Buffer(make([]byte, 64*1024), 1024*1024)
+	for scanner.Scan() {
+		line := scanner.Text()
+		var event k8s.AuditEvent
+
+		if err := json.Unmarshal([]byte(line), &event); err != nil {
+			klog.V(4).Infof("unmarshal audit event failed: %s", err.Error())
+			continue
+		}
+
+		if addedEvent, ok := auditLog.Events[string(event.AuditID)]; !ok {
+			auditLog.Events[string(event.AuditID)] = event
+		} else if event.StageTimestamp.Unix() > addedEvent.StageTimestamp.Unix() {
+			auditLog.Events[string(event.AuditID)] = event
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		klog.Errorf("scan error: %s", err.Error())
+	}
 }

@@ -8,6 +8,7 @@
           v-model="params.clusterId"
           cluster-type="all"
           searchable
+          sync-query-value
           @change="handleClusterChange">
         </ClusterSelect>
         <NamespaceSelect

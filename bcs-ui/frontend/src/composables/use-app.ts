@@ -19,14 +19,14 @@ export interface IProject {
   enableVcluster: boolean
   project_name: string // 兼容旧版数据（不要再使用）
   project_id: string // 兼容旧版数据
-  annotations:  Record<string, string>
+  annotations: Record<string, string>
   createTime: string
-  creator:  string
-  isOffline:  boolean
+  creator: string
+  isOffline: boolean
   labels: Record<string, string>
   managers: string
   updateTime: string
-  updater:  string
+  updater: string
   useBKRes: boolean
 }
 // todo 完善类型
@@ -55,7 +55,7 @@ export interface ICluster {
   provider: CloudID,
   projectID: string
   clusterBasicSettings: any
-  environment: 'stag'|'debug'|'prod'
+  environment: 'stag' | 'debug' | 'prod'
   extraInfo?: Record<string, any>
   manageType: 'INDEPENDENT_CLUSTER' | 'MANAGED_CLUSTER'
   clusterType: string

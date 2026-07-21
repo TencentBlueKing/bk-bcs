@@ -314,10 +314,15 @@ func (sync *Synchronizer) doSync(localKeys []string, data []map[string]string, w
 			if exists && err == nil {
 				ns, name, _ := cache.SplitMetaNamespaceKey(key)
 				// build sync data.
-				syncData := watcher.genSyncData(types.NamespacedName{
+				itemKey := types.NamespacedName{
 					Name:      name,
 					Namespace: ns,
-				}, item, action.SyncDataActionAdd)
+				}
+				syncData, retry := watcher.genSyncData(itemKey, item, action.SyncDataActionAdd)
+				if retry {
+					watcher.eventQueue.AddRateLimited(itemKey)
+					continue
+				}
 
 				if syncData == nil {
 					// maybe filtered.

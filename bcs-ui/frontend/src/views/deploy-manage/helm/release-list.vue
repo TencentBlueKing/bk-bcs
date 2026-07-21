@@ -2,7 +2,12 @@
   <BcsContent :title="$t('deploy.helm.releases')" hide-back>
     <Row>
       <template #right>
-        <ClusterSelect v-model="clusterID" cluster-type="all" @change="handleClusterChange"></ClusterSelect>
+        <ClusterSelect
+          v-model="clusterID"
+          cluster-type="all"
+          sync-query-value
+          @change="handleClusterChange">
+        </ClusterSelect>
         <NamespaceSelect
           :cluster-id="clusterID"
           class="w-[250px] ml-[5px]"
@@ -597,16 +602,8 @@ export default defineComponent({
       pagination.value.current = 1;
       handleGetList();
     };
-    const handleClusterChange = async (val) => {
+    const handleClusterChange = () => {
       ns.value = '';
-      if (val) {
-        await $router.replace({
-          query: {
-            ...currentRoute.query,
-            clusterId: val,
-          },
-        });
-      }
       handleResetList();
     };
 

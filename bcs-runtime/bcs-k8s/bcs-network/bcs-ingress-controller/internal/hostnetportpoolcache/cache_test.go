@@ -13,6 +13,7 @@
 package hostnetportpoolcache
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"sync"
@@ -1088,5 +1089,96 @@ func TestAllocContigIdempotentConc(t *testing.T) {
 	allocs := c.GetNodeAllocations("ns/p")
 	if len(allocs) != 1 || allocs[0].AllocatedCount != 1 {
 		t.Fatalf("expected exactly 1 allocated segment, got %+v", allocs)
+	}
+}
+
+func TestRangesOverlap(t *testing.T) {
+	tests := []struct {
+		name                           string
+		aStart, aEnd, bStart, bEnd int
+		want                       bool
+	}{
+		{"disjoint left", 30000, 30100, 30100, 30200, false},
+		{"disjoint right", 30100, 30200, 30000, 30100, false},
+		{"full overlap", 30000, 30100, 30000, 30100, true},
+		{"partial overlap", 30000, 30100, 30050, 30150, true},
+		{"contained", 30000, 30200, 30050, 30100, true},
+		{"wrapped by superset", 30000, 30100, 29000, 30200, true},
+		{"touching boundary is not overlap", 30000, 30100, 30099, 30150, true},
+		{"adjacent exact boundary", 30000, 30100, 30100, 30150, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := RangesOverlap(tt.aStart, tt.aEnd, tt.bStart, tt.bEnd); got != tt.want {
+				t.Fatalf("RangesOverlap(%d,%d,%d,%d)=%v, want %v",
+					tt.aStart, tt.aEnd, tt.bStart, tt.bEnd, got, tt.want)
+			}
+		})
+	}
+}
+
+// TestAllocContigCrossPoolBlocked verifies that when two pools have overlapping
+// port ranges, the same physical port is never allocated to pods from both pools on the
+// same node. The second pool's allocation must be pushed to a non-overlapping segment.
+func TestAllocContigCrossPoolBlocked(t *testing.T) {
+	c := NewHostNetPortPoolCache()
+	// pool A: 30000-30100, pool B overlaps on 30000-30050 and extends to 30150.
+	c.AddPool(makePool("pool-a", "ns", 30000, 30100, 10))
+	c.AddPool(makePool("pool-b", "ns", 30000, 30150, 10))
+
+	// pod-1 grabs 30000-30009 in pool A on node-1.
+	aStart, aEnd, err := c.AllocateContiguous("ns/pool-a", "node-1", "ns/pod-1", 1)
+	if err != nil {
+		t.Fatalf("pool-a allocation failed: %v", err)
+	}
+	if aStart != 30000 || aEnd != 30009 {
+		t.Fatalf("expected pool-a to allocate 30000-30009, got %d-%d", aStart, aEnd)
+	}
+
+	// pod-2 in pool B on the same node must NOT reuse 30000-30009.
+	bStart, bEnd, err := c.AllocateContiguous("ns/pool-b", "node-1", "ns/pod-2", 1)
+	if err != nil {
+		t.Fatalf("pool-b allocation failed: %v", err)
+	}
+	if RangesOverlap(aStart, aEnd+1, bStart, bEnd+1) {
+		t.Fatalf("pool-b allocation %d-%d overlaps pool-a allocation %d-%d", bStart, bEnd, aStart, aEnd)
+	}
+}
+
+// TestAllocContigCrossPoolExhausted verifies that when the only remaining segments
+// of a pool are physically occupied by an overlapping pool, allocation fails with
+// ErrCrossPoolConflict rather than double-allocating.
+func TestAllocContigCrossPoolExhausted(t *testing.T) {
+	c := NewHostNetPortPoolCache()
+	// Two fully overlapping single-segment pools on the same range.
+	c.AddPool(makePool("pool-a", "ns", 30000, 30010, 10))
+	c.AddPool(makePool("pool-b", "ns", 30000, 30010, 10))
+
+	if _, _, err := c.AllocateContiguous("ns/pool-a", "node-1", "ns/pod-1", 1); err != nil {
+		t.Fatalf("pool-a allocation failed: %v", err)
+	}
+
+	_, _, err := c.AllocateContiguous("ns/pool-b", "node-1", "ns/pod-2", 1)
+	if err == nil {
+		t.Fatal("expected cross pool conflict error, got nil")
+	}
+	if !errors.Is(err, ErrCrossPoolConflict) {
+		t.Fatalf("expected ErrCrossPoolConflict, got %v", err)
+	}
+}
+
+// TestAllocContigDiffNodeNoBlock verifies overlapping pools do not block each
+// other on different nodes, since physical ports are per-node.
+func TestAllocContigDiffNodeNoBlock(t *testing.T) {
+	c := NewHostNetPortPoolCache()
+	c.AddPool(makePool("pool-a", "ns", 30000, 30010, 10))
+	c.AddPool(makePool("pool-b", "ns", 30000, 30010, 10))
+
+	if _, _, err := c.AllocateContiguous("ns/pool-a", "node-1", "ns/pod-1", 1); err != nil {
+		t.Fatalf("pool-a allocation on node-1 failed: %v", err)
+	}
+	// pool-b on node-2 should succeed even though ranges fully overlap.
+	if _, _, err := c.AllocateContiguous("ns/pool-b", "node-2", "ns/pod-2", 1); err != nil {
+		t.Fatalf("pool-b allocation on node-2 should succeed, got %v", err)
 	}
 }

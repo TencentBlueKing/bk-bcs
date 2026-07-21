@@ -10,14 +10,28 @@
  * limitations under the License.
  */
 
-// Package systemappcheck xxx
+// Package systemappcheck 系统应用检查插件，检查集群中系统组件的部署状态、镜像版本和配置
 package systemappcheck
 
 import (
 	"strings"
 )
 
-// Options bcs log options
+// defaultComponents 默认需要检查的系统组件列表
+var defaultComponents = []Component{
+	{
+		Namespace: "kube-system",
+		Name:      "kube-proxy",
+		Resource:  "daemonset",
+	},
+	{
+		Namespace: "kube-system",
+		Name:      "coredns",
+		Resource:  "deployment",
+	},
+}
+
+// Options 系统应用检查插件的配置选项
 type Options struct {
 	Components           []Component            `json:"components" yaml:"components"`
 	ComponentVersionConf []ComponentVersionConf `json:"componentVersionConf" yaml:"componentVersionConf"`
@@ -25,14 +39,14 @@ type Options struct {
 	Namespaces           []string               `json:"namespaces" yaml:"namespaces"`
 }
 
-// Component xxx
+// Component 需要检查的组件定义
 type Component struct {
 	Namespace string `json:"namespace" yaml:"namespace"`
 	Name      string `json:"name" yaml:"name"`
 	Resource  string `json:"resource" yaml:"resource"`
 }
 
-// ComponentVersionConf component version config
+// ComponentVersionConf 组件版本配置，用于检查镜像版本是否需要升级
 type ComponentVersionConf struct {
 	Name string `json:"name" yaml:"name"`
 
@@ -40,32 +54,14 @@ type ComponentVersionConf struct {
 	NeedUpgrade   string `json:"needUpgrade" yaml:"needUpgrade"`
 }
 
-// Validate validate options
+// Validate 校验并补全配置选项
 func (o *Options) Validate() error {
-	// if len(o.KubeMaster) == 0 {
-	//	return fmt.Errorf("kube_master cannot be empty")
-	// }
-	// if len(o.Kubeconfig) == 0 {
-	//	return fmt.Errorf("kubeconfig cannot be empty")
-	// }
-
 	if o.Namespaces == nil || len(o.Namespaces) == 0 {
 		o.Namespaces = []string{"kube-system", "bk-system", "bcs-system", "bkmonitor-operator", "istio-system"}
 	}
 
 	if o.Components != nil {
-		components := []Component{
-			{
-				Namespace: "kube-system",
-				Name:      "kube-proxy",
-				Resource:  "daemonset",
-			}, {
-				Namespace: "kube-system",
-				Name:      "coredns",
-				Resource:  "deployment",
-			},
-		}
-		for _, component := range components {
+		for _, component := range defaultComponents {
 			setFlag := false
 			for _, optionComponent := range o.Components {
 				if optionComponent.Name == component.Name &&
@@ -80,17 +76,8 @@ func (o *Options) Validate() error {
 			}
 		}
 	} else {
-		o.Components = []Component{
-			{
-				Namespace: "kube-system",
-				Name:      "kube-proxy",
-				Resource:  "daemonset",
-			}, {
-				Namespace: "kube-system",
-				Name:      "coredns",
-				Resource:  "deployment",
-			},
-		}
+		o.Components = make([]Component, len(defaultComponents))
+		copy(o.Components, defaultComponents)
 	}
 
 	return nil

@@ -4070,6 +4070,14 @@
           "format": "boolean",
           "description": "是否为系统命名空间, false则表示项目命名空间",
           "title": "isSystem"
+        },
+        "otherQuotas": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bcsprojectOtherQuota"
+          },
+          "description": "其他配额信息",
+          "title": "otherQuotas"
         }
       }
     },
@@ -4157,6 +4165,21 @@
           "format": "int64",
           "description": "机型已使用的配额",
           "title": "quotaUsed"
+        }
+      }
+    },
+    "bcsprojectOtherQuota": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "配额名称",
+          "title": "name"
+        },
+        "quota": {
+          "$ref": "#/definitions/bcsprojectResourceQuota",
+          "description": "配额总量",
+          "title": "quota"
         }
       }
     },

@@ -55,14 +55,12 @@ func (s UpdateFederationNamespaceStatusStep) GetName() string {
 
 // DoWork for worker exec task
 func (s UpdateFederationNamespaceStatusStep) DoWork(t *types.Task) error {
-	blog.Infof("quota service task is run")
-
 	step, exist := t.GetStep(s.GetName())
 	if !exist {
 		return fmt.Errorf("task[%s] not exist step[%s]", t.TaskID, s.GetName())
 	}
 
-	hostClusterIdKey, ok := step.GetParam(fedsteps.HostClusterIdKey)
+	hostClusterID, ok := step.GetParam(fedsteps.HostClusterIdKey)
 	if !ok {
 		return fedsteps.ParamsNotFoundError(t.TaskID, fedsteps.HostClusterIdKey)
 	}
@@ -72,18 +70,29 @@ func (s UpdateFederationNamespaceStatusStep) DoWork(t *types.Task) error {
 		return fedsteps.ParamsNotFoundError(t.TaskID, fedsteps.NamespaceKey)
 	}
 
+	blog.Infof("UpdateFederationNamespaceStatusStep is running, taskId: %s, hostClusterID: %s, namespace: %s",
+		t.GetTaskID(), hostClusterID, namespace)
+
 	if err := retry.Do(func() error {
-		federationClusterNamespace, err := cluster.GetClusterClient().GetNamespace(hostClusterIdKey, namespace)
+		federationClusterNamespace, err := cluster.GetClusterClient().GetNamespace(hostClusterID, namespace)
 		if err != nil {
+			blog.Errorf("UpdateFederationNamespaceStatusStep GetNamespace failed, taskId: %s, "+
+				"hostClusterID: %s, namespace: %s, err: %s",
+				t.GetTaskID(), hostClusterID, namespace, err.Error())
 			return err
 		}
 
-		// 将 任务id，状态 写入到annotations中
+		if federationClusterNamespace.Annotations == nil {
+			federationClusterNamespace.Annotations = make(map[string]string)
+		}
 		federationClusterNamespace.Annotations[cluster.CreateNamespaceTaskId] = t.GetTaskID()
 		federationClusterNamespace.Annotations[cluster.HostClusterNamespaceStatus] = cluster.NamespaceSuccess
 		federationClusterNamespace.Annotations[cluster.NamespaceUpdateTimestamp] = time.Now().Format(time.RFC3339)
-		err = cluster.GetClusterClient().UpdateNamespace(hostClusterIdKey, federationClusterNamespace)
+		err = cluster.GetClusterClient().UpdateNamespace(hostClusterID, federationClusterNamespace)
 		if err != nil {
+			blog.Errorf("UpdateFederationNamespaceStatusStep UpdateNamespace failed, taskId: %s, "+
+				"hostClusterID: %s, namespace: %s, err: %s",
+				t.GetTaskID(), hostClusterID, namespace, err.Error())
 			return err
 		}
 
@@ -93,8 +102,9 @@ func (s UpdateFederationNamespaceStatusStep) DoWork(t *types.Task) error {
 		return err
 	}
 
-	blog.Infof("update status task taskId: %s, taskType: %s, taskName: %s result: %v\n",
-		t.GetTaskID(), t.GetTaskType(), step.GetName(), fedsteps.Success)
+	blog.Infof("UpdateFederationNamespaceStatusStep success, taskId: %s, stepName: %s, "+
+		"hostClusterID: %s, namespace: %s",
+		t.GetTaskID(), step.GetName(), hostClusterID, namespace)
 	return nil
 }
 

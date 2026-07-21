@@ -377,6 +377,9 @@ func createFederationNamespace(hostClusterId string, manager *FederationManager,
 	selector := ""
 	blog.Infof("createFederationNamespace hostClusterId: %s, req: %+v", hostClusterId, req)
 
+	if req.Annotations == nil {
+		req.Annotations = make(map[string]string)
+	}
 	// 联邦子集群亲和性
 	if req.ClusterAffinity != nil {
 		req.Annotations[cluster.ClusterAffinityMode] = req.ClusterAffinity.Mode
@@ -537,6 +540,9 @@ func (f *FederationManager) updateFederationNamespace(fedCluster *store.Federati
 		return fmt.Errorf("UpdateFederationClusterNamespace.GetNamespace failed, err: %s", "ns is nil")
 	}
 
+	if ns.Annotations == nil {
+		ns.Annotations = make(map[string]string)
+	}
 	// 更新annotations
 	for key, val := range req.Annotations {
 		ns.Annotations[key] = val

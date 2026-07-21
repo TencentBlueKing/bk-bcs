@@ -656,7 +656,7 @@ func PreCheckModifyInstancesVpc(ctx context.Context, nodeIds []string, opt *clou
 	taskID, stepName := cloudprovider.GetTaskIDAndStepNameFromContext(ctx)
 
 	// 通过数据库获取云上 id -> ip 的映射
-	idToIPMap := cloudprovider.GetNodeIdToIpMapByNodeIds(nodeIds)
+	idToIPMap := cloudprovider.GetNodeIdToIpMapByNodeIds(ctx, nodeIds)
 	if len(idToIPMap) == 0 {
 		return fmt.Errorf("PreCheckModifyInstancesVpc[%s] idToIPMap is empty, ids:[%v]", taskID, nodeIds)
 	}
@@ -668,6 +668,7 @@ func PreCheckModifyInstancesVpc(ctx context.Context, nodeIds []string, opt *clou
 		ips = append(ips, ip)
 		ipToInstID[ip] = instID
 	}
+	blog.Info("PreCheckModifyInstancesVpc[%s] ipToInstID: %s", taskID, ipToInstID)
 
 	// 查询 CMDB 获取 ip -> BkCloudInstID 的映射
 	cmdbIPToInstID, err := listCMDBInstIDByIps(ctx, ips)
@@ -678,6 +679,8 @@ func PreCheckModifyInstancesVpc(ctx context.Context, nodeIds []string, opt *clou
 			fmt.Sprintf("PreCheckModifyInstancesVpc listCMDBInstIDByIps failed, nodeIds:[%s], err:[%s]", nodeIds, err))
 		return fmt.Errorf("PreCheckModifyInstancesVpc[%s] query CMDB failed: %v", taskID, err)
 	}
+
+	blog.Info("PreCheckModifyInstancesVpc[%s] cmdbIPToInstID: %s", taskID, cmdbIPToInstID)
 
 	// 对比 CMDB 中的 BkCloudInstID 与传入的 instanceId
 	var mismatchList []string

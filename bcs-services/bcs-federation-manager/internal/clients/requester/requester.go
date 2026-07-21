@@ -48,6 +48,12 @@ func (r *requester) DoGetRequest(url string, header map[string]string) ([]byte, 
 		blog.Errorf("do get request error, url: %s, error: %v", url, err)
 		return nil, fmt.Errorf("do get request error, url: %s, error: %v", url, err)
 	}
+	if rsp.StatusCode() >= 400 {
+		blog.Errorf("do get request unexpected status code %d, url: %s, body: %s",
+			rsp.StatusCode(), url, rsp.String())
+		return nil, fmt.Errorf("do get request unexpected status code %d, url: %s, body: %s",
+			rsp.StatusCode(), url, rsp.String())
+	}
 	return rsp.Body(), nil
 }
 
@@ -57,6 +63,12 @@ func (r *requester) DoPostRequest(url string, header map[string]string, data []b
 	if err != nil {
 		blog.Errorf("do post request error, url: %s, error: %v", url, err)
 		return nil, fmt.Errorf("do post request error, url: %s, error: %v", url, err)
+	}
+	if rsp.StatusCode() >= 400 {
+		blog.Errorf("do post request unexpected status code %d, url: %s, body: %s",
+			rsp.StatusCode(), url, rsp.String())
+		return nil, fmt.Errorf("do post request unexpected status code %d, url: %s, body: %s",
+			rsp.StatusCode(), url, rsp.String())
 	}
 	return rsp.Body(), nil
 }
@@ -68,6 +80,12 @@ func (r *requester) DoPutRequest(url string, header map[string]string, data []by
 		blog.Errorf("do put request error, url: %s, error: %v", url, err)
 		return nil, fmt.Errorf("do put request error, url: %s, error: %v", url, err)
 	}
+	if rsp.StatusCode() >= 400 {
+		blog.Errorf("do put request unexpected status code %d, url: %s, body: %s",
+			rsp.StatusCode(), url, rsp.String())
+		return nil, fmt.Errorf("do put request unexpected status code %d, url: %s, body: %s",
+			rsp.StatusCode(), url, rsp.String())
+	}
 	return rsp.Body(), nil
 }
 
@@ -78,6 +96,12 @@ func (r *requester) DoPatchRequest(url string, header map[string]string, data []
 		blog.Errorf("do patch request error, url: %s, error: %v", url, err)
 		return nil, fmt.Errorf("do patch request error, url: %s, error: %v", url, err)
 	}
+	if rsp.StatusCode() >= 400 {
+		blog.Errorf("do patch request unexpected status code %d, url: %s, body: %s",
+			rsp.StatusCode(), url, rsp.String())
+		return nil, fmt.Errorf("do patch request unexpected status code %d, url: %s, body: %s",
+			rsp.StatusCode(), url, rsp.String())
+	}
 	return rsp.Body(), nil
 }
 
@@ -87,6 +111,12 @@ func (r *requester) DoDeleteRequest(url string, header map[string]string) ([]byt
 	if err != nil {
 		blog.Errorf("do delete request error, url: %s, error: %v", url, err)
 		return nil, fmt.Errorf("do delete request error, url: %s, error: %v", url, err)
+	}
+	if rsp.StatusCode() >= 400 {
+		blog.Errorf("do delete request unexpected status code %d, url: %s, body: %s",
+			rsp.StatusCode(), url, rsp.String())
+		return nil, fmt.Errorf("do delete request unexpected status code %d, url: %s, body: %s",
+			rsp.StatusCode(), url, rsp.String())
 	}
 	return rsp.Body(), nil
 }

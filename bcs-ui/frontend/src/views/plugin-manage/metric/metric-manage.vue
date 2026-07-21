@@ -15,6 +15,7 @@
       <template #right>
         <ClusterSelectComb
           :cluster-id.sync="clusterID"
+          sync-query-value
           :placeholder="$t('generic.placeholder.searchName')"
           :search.sync="searchValue"
           :cluster-type="['independent', 'managed', 'virtual']"

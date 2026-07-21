@@ -68,12 +68,15 @@ func (c *IndependentNamespaceAction) GetNamespace(ctx context.Context,
 		retData.Annotations = append(retData.Annotations, &proto.Annotation{Key: k, Value: v})
 	}
 	// get quota
-	quota, err := getNamespaceQuota(ctx, req.GetClusterID(), ns.GetName(), client)
+	quota, otherQuotas, err := getNamespaceQuota(ctx, req.GetClusterID(), ns.GetName(), client)
 	if err != nil {
 		return err
 	}
 	if quota != nil {
 		retData.Quota, retData.Used, retData.CpuUseRate, retData.MemoryUseRate = quotautils.TransferToProto(quota)
+	}
+	for _, q := range otherQuotas {
+		retData.OtherQuotas = append(retData.OtherQuotas, quotautils.TransferToProtoOtherQuota(q))
 	}
 
 	// get variables
@@ -100,18 +103,25 @@ func (c *IndependentNamespaceAction) GetNamespace(ctx context.Context,
 }
 
 func getNamespaceQuota(ctx context.Context, clusterID, namespace string, clientset *kubernetes.Clientset) (
-	*corev1.ResourceQuota, error) {
-	quota, err := clientset.CoreV1().ResourceQuotas(namespace).Get(ctx, namespace, metav1.GetOptions{})
+	*corev1.ResourceQuota, []*corev1.ResourceQuota, error) {
+	quotaList, err := clientset.CoreV1().ResourceQuotas(namespace).List(ctx, metav1.ListOptions{})
 	if err != nil && !errors.IsNotFound(err) {
-		logging.Error("get resourceQuota %s/%s failed, err: %s", clusterID, namespace, err.Error())
-		return nil, errorx.NewClusterErr(err.Error())
+		logging.Error("list resourceQuotas in namespace %s/%s failed, err: %s", clusterID, namespace, err.Error())
+		return nil, nil, errorx.NewClusterErr(err.Error())
 	}
-
-	// get quota
 	if errors.IsNotFound(err) {
-		return nil, nil
+		return nil, nil, nil
 	}
-	return quota, nil
+	var defaultQuota *corev1.ResourceQuota
+	var otherQuotas []*corev1.ResourceQuota
+	for i := range quotaList.Items {
+		if quotaList.Items[i].GetName() == namespace {
+			defaultQuota = &quotaList.Items[i]
+		} else {
+			otherQuotas = append(otherQuotas, &quotaList.Items[i])
+		}
+	}
+	return defaultQuota, otherQuotas, nil
 }
 
 func listNamespaceVariables(ctx context.Context,

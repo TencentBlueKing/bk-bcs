@@ -235,6 +235,8 @@ const (
 	KindIngress = "Ingress"
 	// KindPortPool kind of port pool
 	KindPortPool = "PortPool"
+	// KindHostNetPortPool kind of host network port pool
+	KindHostNetPortPool = "HostNetPortPool"
 	// KindListener kind of listener
 	KindListener = "Listener"
 	// KindPortBinding kind of port binding
