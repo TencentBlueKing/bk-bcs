@@ -8532,6 +8532,11 @@
           "type": "string",
           "description": "创建eks节点池时指定的iam角色名称",
           "title": "serviceRole"
+        },
+        "podSubnetID": {
+          "type": "string",
+          "description": "创建azure节点池时Pod 启动时将加入的子网ID，如果省略，将不会添加该字段",
+          "title": "podSubnetID"
         }
       },
       "title": "AutoScalingGroup define auto scaling information"

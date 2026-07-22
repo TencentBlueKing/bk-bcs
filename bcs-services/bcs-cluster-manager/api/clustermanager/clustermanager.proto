@@ -4021,6 +4021,10 @@ message AutoScalingGroup {
     title: "serviceRole",
     description: "创建eks节点池时指定的iam角色名称"
   }];
+  string podSubnetID = 17[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "podSubnetID",
+    description: "创建azure节点池时Pod 启动时将加入的子网ID，如果省略，将不会添加该字段"
+  }];
 }
 
 message TimeRange {
