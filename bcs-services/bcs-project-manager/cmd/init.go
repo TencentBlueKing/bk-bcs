@@ -360,9 +360,9 @@ func (p *ProjectService) initMicro() error {
 			wrapper.NewAuthHeaderAdapter,
 			authWrapper.AuthenticationFunc,
 			wrapper.NewAuthLogWrapper,
+			wrapper.CheckUserResourceTenantAttrFunc,
 			authWrapper.AuthorizationFunc,
 			wrapper.NewAuditWrapper,
-			wrapper.CheckUserResourceTenantAttrFunc,
 			micro.NewTracingWrapper(),
 		),
 	)
