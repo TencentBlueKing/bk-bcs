@@ -238,8 +238,7 @@ func (s *Synchronizer) Run() {
 		blackList = strings.Split(s.BkcmdbSynchronizerOption.Synchronizer.BlackList, ",")
 	}
 
-	blog.Infof("whiteList: %v, len: %d", whiteList, len(whiteList))
-	blog.Infof("blackList: %v, len: %d", blackList, len(blackList))
+	blog.Infof("whiteList: %v, len: %d; blackList: %v, len: %d", whiteList, len(whiteList), blackList, len(blackList))
 
 	hostname, err := os.Hostname()
 	if err != nil {
@@ -295,6 +294,11 @@ func (s *Synchronizer) Run() {
 		gm.Start(w, clusterMap[w])
 	}
 
+	// 初始清理本地缓存
+	if s.BkcmdbSynchronizerOption.Synchronizer.CleanLocalCache {
+		s.cleanupLocalCaches(workList)
+	}
+
 	go func() {
 		time.Sleep(time.Second * 10)
 		ticker := time.NewTicker(10 * time.Minute)
@@ -330,6 +334,12 @@ func (s *Synchronizer) Run() {
 					blog.Errorf("cleanup orphaned clusters failed: %s", err.Error())
 				}
 			}
+
+			// 清理本地不再负责的集群缓存
+			if s.BkcmdbSynchronizerOption.Synchronizer.CleanLocalCache {
+				s.cleanupLocalCaches(workListT)
+			}
+
 			prevWorkList, prevClusterMap = workListT, clusterMapT
 		}
 	}()
@@ -735,7 +745,7 @@ func (s *Synchronizer) syncStoreHandler(podIndex int, whiteList, blackList []str
 func (s *Synchronizer) syncStorage(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster, force bool) {
 	path := "/data/bcs/bcs-bkcmdb-synchronizer/db/" + bkCluster.Uid + ".db"
 
-	db := sqlite.Open(path)
+	db := sqlite.Open(path, s.BkcmdbSynchronizerOption.Synchronizer.SqlLogLevel)
 	if db == nil {
 		blog.Errorf("open db failed, path: %s", path)
 	}
@@ -1024,4 +1034,38 @@ func (s *Synchronizer) cleanupOrphanedClustersInCMDB(clusterMapT map[string]*cmp
 
 	blog.Infof("cleanup orphaned clusters completed, deleted %d clusters total across all businesses", totalOrphanedCount)
 	return nil
+}
+
+// cleanupLocalCaches 清理本地不再负责的集群缓存文件
+func (s *Synchronizer) cleanupLocalCaches(currentWorkList ClusterList) {
+	dbDir := "/data/bcs/bcs-bkcmdb-synchronizer/db/"
+	files, err := ioutil.ReadDir(dbDir)
+	if err != nil {
+		blog.Errorf("read db dir %s failed: %v", dbDir, err)
+		return
+	}
+
+	workListMap := make(map[string]bool)
+	for _, clusterID := range currentWorkList {
+		workListMap[clusterID+".db"] = true
+	}
+
+	for _, file := range files {
+		if file.IsDir() {
+			continue
+		}
+
+		fileName := file.Name()
+		if !strings.HasSuffix(fileName, ".db") {
+			continue
+		}
+
+		if _, ok := workListMap[fileName]; !ok {
+			blog.Infof("cleaning up orphaned local cache: %s", fileName)
+			err := os.Remove(dbDir + fileName)
+			if err != nil {
+				blog.Errorf("remove orphaned local cache %s failed: %v", fileName, err)
+			}
+		}
+	}
 }
