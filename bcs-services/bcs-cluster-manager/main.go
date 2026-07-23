@@ -137,7 +137,9 @@ func main() { // nolint
 	}
 
 	// init serverConfig Ipv6Address
-	opt.ServerConfig.Ipv6Address = util.InitIPv6Address(opt.ServerConfig.Ipv6Address)
+	if opt.ServerConfig.Ipv6Address != "" && opt.Address != opt.ServerConfig.Ipv6Address {
+		opt.ServerConfig.Ipv6Address = util.InitIPv6Address(opt.ServerConfig.Ipv6Address)
+	}
 	blog.Infof("service ipv6 server address: %s", opt.ServerConfig.Ipv6Address)
 
 	clusterManager := app.NewClusterManager(opt)

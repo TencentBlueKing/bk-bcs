@@ -92,8 +92,11 @@ func (m *MicroServer) initHTTPServer() error {
 		strconv.FormatUint(m.op.GRPCPort, 10)), grpcDialOpts); err != nil {
 		return errors.Wrapf(err, "register http gateway failed")
 	}
-
-	m.httpServer = ipv6server.NewTlsIPv6Server([]string{m.op.Address, m.op.IPv6Address},
+	addresses := []string{m.op.Address}
+	if m.op.IPv6Address != "" && m.op.Address != m.op.IPv6Address {
+		addresses = append(addresses, m.op.Address)
+	}
+	m.httpServer = ipv6server.NewTlsIPv6Server(addresses,
 		strconv.FormatUint(m.op.HttpPort, 10), "tcp", m.serverTLSConfig, gMux,
 	)
 
@@ -125,8 +128,10 @@ func (m *MicroServer) initGrpcServer() (err error) {
 	if err = dualStackListener.AddListener(ipv4, port); err != nil { // 添加IPv4地址监听
 		return errors.Wrapf(err, "add IPv4 address failed")
 	}
-	if err = dualStackListener.AddListener(ipv6, port); err != nil { // 添加IPv6地址监听
-		return errors.Wrapf(err, "add IPv6 address failed")
+	if ipv6 != "" && ipv6 != ipv4 {
+		if err = dualStackListener.AddListener(ipv6, port); err != nil { // 添加IPv6地址监听
+			return errors.Wrapf(err, "add IPv6 address failed")
+		}
 	}
 
 	// 创建go-micro服务
