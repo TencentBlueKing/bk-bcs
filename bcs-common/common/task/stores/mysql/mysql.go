@@ -109,9 +109,15 @@ func (s *mysqlStore) ListStepRecordByTaskIDs(ctx context.Context, taskIDs []stri
 func (s *mysqlStore) ListTask(ctx context.Context, opt *iface.ListOption) (*iface.Pagination[types.Task], error) {
 	tx := s.db.WithContext(ctx)
 
-	// 条件过滤 0值gorm自动忽略查询
+	// task_id 过滤：TaskIDs 优先，与 TaskID 互斥
+	if len(opt.TaskIDs) > 0 {
+		tx = tx.Where("task_id IN ?", opt.TaskIDs)
+	} else if opt.TaskID != "" {
+		tx = tx.Where("task_id = ?", opt.TaskID)
+	}
+
+	// 其余条件过滤，0值gorm自动忽略查询
 	tx = tx.Where(&TaskRecord{
-		TaskID:        opt.TaskID,
 		TaskType:      opt.TaskType,
 		TaskName:      opt.TaskName,
 		TaskIndex:     opt.TaskIndex,
