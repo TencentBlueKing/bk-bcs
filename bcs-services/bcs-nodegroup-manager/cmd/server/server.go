@@ -27,11 +27,12 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/header"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
-	grpccli "github.com/asim/go-micro/plugins/client/grpc/v4"
-	"github.com/asim/go-micro/plugins/registry/etcd/v4"
-	grpcsvr "github.com/asim/go-micro/plugins/server/grpc/v4"
-	etcdsync "github.com/asim/go-micro/plugins/sync/etcd/v4"
+	grpccli "github.com/go-micro/plugins/v4/client/grpc"
+	"github.com/go-micro/plugins/v4/registry/etcd"
+	grpcsvr "github.com/go-micro/plugins/v4/server/grpc"
+	etcdsync "github.com/go-micro/plugins/v4/sync/etcd"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go-micro.dev/v4"
@@ -329,6 +330,7 @@ func (s *Server) initGatewayServer() error {
 	ctx, _ := context.WithCancel(s.svrContext) // nolint
 	// register grpc server information
 	mux := runtime.NewServeMux(
+		runtime.WithIncomingHeaderMatcher(header.CustomHeaderMatcher),
 		runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{}),
 	)
 	opts := []grpc.DialOption{grpc.WithTransportCredentials(credentials.NewTLS(s.opt.clientTLS))}
