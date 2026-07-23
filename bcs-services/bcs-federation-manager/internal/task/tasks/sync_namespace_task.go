@@ -312,10 +312,11 @@ func NewSyncHbNamespaceQuotaTask(opt *SyncHbNamespaceQuotaOptions) *SyncHbNamesp
 
 // SyncHbNamespaceQuotaOptions sync namespace quota options
 type SyncHbNamespaceQuotaOptions struct {
-	Namespace              string // 命名空间
-	HostClusterID          string // 联邦集群hostID
-	SubClusterID           string // 子集群id
-	Labels                 string
+	Namespace                string // 命名空间
+	HostClusterID            string // 联邦集群hostID
+	SubClusterID             string // 子集群id
+	OBSProductID             string // obs产品id
+	Labels                   string
 	HostNamespaceAnnotations string // host namespace annotations (serialized JSON)
 }
 
@@ -373,6 +374,7 @@ func (s *SyncHbNamespaceQuota) BuildTask(creator string, opts ...types.TaskOptio
 
 	t.CurrentStep = t.StepSequence[0]
 	t.AddCommonParams(fedsteps.NamespaceKey, s.opt.Namespace)
+	t.AddCommonParams(fedsteps.OBSProductIDKey, s.opt.OBSProductID)
 	t.AddCommonParams(fedsteps.HostClusterIdKey, s.opt.HostClusterID)
 	t.AddCommonParams(fedsteps.SubClusterIdKey, s.opt.SubClusterID)
 	t.AddCommonParams(fedsteps.ManagedClusterLabelsKey, s.opt.Labels)
@@ -403,6 +405,7 @@ type SyncNormalNamespaceQuotaOptions struct {
 	Namespace     string // 命名空间
 	HostClusterID string // 联邦集群hostID
 	SubClusterID  string // 子集群id
+	OBSProductID  string // obs产品id
 }
 
 // SyncNormalNamespaceQuota handle namespace quota
@@ -461,6 +464,7 @@ func (s *SyncNormalNamespaceQuota) BuildTask(creator string, opts ...types.TaskO
 
 	t.CurrentStep = t.StepSequence[0]
 	t.AddCommonParams(fedsteps.NamespaceKey, s.opt.Namespace)
+	t.AddCommonParams(fedsteps.OBSProductIDKey, s.opt.OBSProductID)
 	t.AddCommonParams(fedsteps.HostClusterIdKey, s.opt.HostClusterID)
 	t.AddCommonParams(fedsteps.SubClusterIdKey, s.opt.SubClusterID)
 

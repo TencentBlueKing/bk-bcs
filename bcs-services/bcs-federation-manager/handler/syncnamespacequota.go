@@ -191,6 +191,13 @@ func (s *SyncNamespaceQuotaController) syncNamespaceToSubClusters(ns v1.Namespac
 	blog.Infof("syncNamespaceToSubClusters starting, fedClusterID: %s, hostClusterID: %s, namespace: %s, "+
 		"subClusterIDs: %v", s.fedClusterID, s.hostClusterID, ns.Name, subClusterIDs)
 
+	// 获取命名空间注解
+	annotations := ns.Annotations
+	if annotations == nil {
+		annotations = make(map[string]string)
+	}
+	// 若注解中有io.tencent.bcs.obsproductid，则需要同步
+	obsID := annotations[cluster.ObsProductID]
 	for _, subClusterID := range subClusterIDs {
 		if subClusterID == "" {
 			blog.Errorf("syncNamespaceToSubClusters: empty subClusterID, fedClusterID: %s, namespace: %s",
@@ -205,11 +212,10 @@ func (s *SyncNamespaceQuotaController) syncNamespaceToSubClusters(ns v1.Namespac
 			continue
 		}
 
-		taskID, err := s.getManagedClusterAndBuildTask(ns, subClusterID)
+		taskID, err := s.getManagedClusterAndBuildTask(ns, subClusterID, obsID)
 		if err != nil {
-			blog.Errorf("getManagedClusterAndBuildTask failed, fedClusterID: %s, hostClusterID: %s, "+
-				"subClusterID: %s, namespace: %s, err: %s",
-				s.fedClusterID, s.hostClusterID, subClusterID, ns.Name, err.Error())
+			blog.Errorf("getManagedClusterAndBuildTask failed, hostClusterID %s, subClusterID %s, "+
+				"namespace %s, obsID %s, err %s", s.hostClusterID, subClusterID, ns.Name, obsID, err.Error())
 			continue
 		}
 
@@ -261,8 +267,8 @@ func (s *SyncNamespaceQuotaController) updateNamespace(taskID string, ns v1.Name
 	return nil
 }
 
-func (s *SyncNamespaceQuotaController) getManagedClusterAndBuildTask(ns v1.Namespace,
-	subClusterID string) (string, error) {
+// 获取有效的子集群范围
+func (s *SyncNamespaceQuotaController) getManagedClusterAndBuildTask(ns v1.Namespace, subClusterID, obsID string) (string, error) {
 	if ns.Name == "" || subClusterID == "" {
 		return "", fmt.Errorf("getManagedClusterAndBuildTask: nsName or subClusterID is empty")
 	}
@@ -287,7 +293,7 @@ func (s *SyncNamespaceQuotaController) getManagedClusterAndBuildTask(ns v1.Names
 			s.hostClusterID, subClusterID)
 	}
 
-	taskID, berr := s.buildSubClusterTask(ns, subClusterID, managedCluster.Labels)
+	taskID, berr := s.buildSubClusterTask(ns, subClusterID, obsID, managedCluster.Labels)
 	if berr != nil {
 		blog.Errorf("buildSubClusterTask failed, hostClusterID %s, subClusterID %s, namespace %s, err %s",
 			s.hostClusterID, subClusterID, ns.Name, berr.Error())
@@ -299,7 +305,8 @@ func (s *SyncNamespaceQuotaController) getManagedClusterAndBuildTask(ns v1.Names
 	return taskID, nil
 }
 
-func (s *SyncNamespaceQuotaController) buildSubClusterTask(ns v1.Namespace, subClusterID string,
+// 构建子集群任务
+func (s *SyncNamespaceQuotaController) buildSubClusterTask(ns v1.Namespace, subClusterID, obsID string,
 	managedClusterLabels map[string]string) (string, error) {
 
 	nsName := ns.Name
@@ -330,37 +337,36 @@ func (s *SyncNamespaceQuotaController) buildSubClusterTask(ns v1.Namespace, subC
 		blog.Infof("buildSubClusterTask skipping suanli, hostClusterID [%s], subClusterID [%s], namespace [%s]",
 			s.hostClusterID, subClusterID, nsName)
 		return "", nil
+	case cluster.SubClusterForHunbu:
+		bytes, berr := json.Marshal(managedClusterLabels)
+		if berr != nil {
+			blog.Errorf("json.Marshal managedClusterLabels failed, err: %s", berr.Error())
+			return "", berr
+		}
+		t, err = fedtasks.NewSyncHbNamespaceQuotaTask(&fedtasks.SyncHbNamespaceQuotaOptions{
+			Namespace:                nsName,
+			HostClusterID:            s.hostClusterID,
+			SubClusterID:             subClusterID,
+			Labels:                   string(bytes),
+			OBSProductID:             obsID,
+			HostNamespaceAnnotations: hostAnnotationsStr,
+		}).BuildTask("admin")
+		if err != nil {
+			blog.Errorf("build hunbu task failed, hostClusterID %s, subClusterID %s, namespace %s, err: %s",
+				s.hostClusterID, subClusterID, nsName, err.Error())
+			return "", err
+		}
 	default:
-		if isMixerCluster == cluster.ValueIsTrue {
-			labelsBytes, berr := json.Marshal(managedClusterLabels)
-			if berr != nil {
-				blog.Errorf("json.Marshal managedClusterLabels failed, subClusterID: %s, err: %s",
-					subClusterID, berr.Error())
-				return "", berr
-			}
-			t, err = fedtasks.NewSyncHbNamespaceQuotaTask(&fedtasks.SyncHbNamespaceQuotaOptions{
-				Namespace:                nsName,
-				HostClusterID:            s.hostClusterID,
-				SubClusterID:             subClusterID,
-				Labels:                   string(labelsBytes),
-				HostNamespaceAnnotations: hostAnnotationsStr,
-			}).BuildTask("admin")
-			if err != nil {
-				blog.Errorf("build hunbu task failed, hostClusterID %s, subClusterID %s, namespace %s, err: %s",
-					s.hostClusterID, subClusterID, nsName, err.Error())
-				return "", err
-			}
-		} else {
-			t, err = fedtasks.NewSyncNormalNamespaceQuotaTask(&fedtasks.SyncNormalNamespaceQuotaOptions{
-				HostClusterID: s.hostClusterID,
-				Namespace:     nsName,
-				SubClusterID:  subClusterID,
-			}).BuildTask("admin")
-			if err != nil {
-				blog.Errorf("build normal task failed, hostClusterID %s, subClusterID %s, namespace %s, err: %s",
-					s.hostClusterID, subClusterID, nsName, err.Error())
-				return "", err
-			}
+		t, err = fedtasks.NewSyncNormalNamespaceQuotaTask(&fedtasks.SyncNormalNamespaceQuotaOptions{
+			HostClusterID: s.hostClusterID,
+			Namespace:     nsName,
+			SubClusterID:  subClusterID,
+			OBSProductID:  obsID,
+		}).BuildTask("admin")
+		if err != nil {
+			blog.Errorf("build normal task failed, hostClusterID %s, subClusterID %s, namespace %s, err: %s",
+				s.hostClusterID, subClusterID, nsName, err.Error())
+			return "", err
 		}
 	}
 

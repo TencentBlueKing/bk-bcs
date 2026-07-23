@@ -65,6 +65,8 @@ func (s CheckInHunbuStep) DoWork(t *types.Task) error {
 		return fedsteps.ParamsNotFoundError(t.TaskID, fedsteps.NamespaceKey)
 	}
 
+	obsProductID, _ := t.GetCommonParams(fedsteps.OBSProductIDKey)
+
 	subClusterID, ok := t.GetCommonParams(fedsteps.SubClusterIdKey)
 	if !ok {
 		return fedsteps.ParamsNotFoundError(t.TaskID, fedsteps.SubClusterIdKey)
@@ -102,6 +104,11 @@ func (s CheckInHunbuStep) DoWork(t *types.Task) error {
 		}
 	}
 
+	if obsProductID != "" {
+		managedClusterLabelsMap[cluster.ObsProductID] = obsProductID
+	}
+
+	// 判断是否存在ns
 	namespace, err := cluster.GetClusterClient().GetNamespace(subClusterID, nsName)
 	if err != nil && !errors.IsNotFound(err) {
 		blog.Errorf("CheckInHunbuStep GetNamespace failed, subClusterID: %s, namespace: %s, err: %s",
@@ -171,6 +178,10 @@ func buildHbReq(labelsMap map[string]string) map[string]string {
 			hbNsAnnotations[cluster.AnnotationMixerClusterPreemptionClassKey] = cluster.MixerClusterPreemptionClassValue
 			hbNsAnnotations[cluster.AnnotationMixerClusterPreemptionValueKey] = cluster.MixerClusterPreemptionValue
 		}
+	}
+
+	if labelsMap[cluster.ObsProductID] != "" {
+		hbNsAnnotations[cluster.ObsProductID] = labelsMap[cluster.ObsProductID]
 	}
 
 	return hbNsAnnotations
