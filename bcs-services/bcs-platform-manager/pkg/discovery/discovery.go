@@ -18,7 +18,9 @@ import (
 	"crypto/tls"
 	"strings"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
+	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	etcd "github.com/go-micro/plugins/v4/registry/etcd"
 	"go-micro.dev/v4"
@@ -39,6 +41,7 @@ type ServiceDiscovery struct {
 	srv             micro.Service
 	microRgt        registry.Registry
 	clientTLSConfig *tls.Config
+	TLSConfig       *tls.Config
 }
 
 // NewServiceDiscovery :
@@ -72,6 +75,11 @@ func (s *ServiceDiscovery) Run() error {
 }
 
 func (s *ServiceDiscovery) init() error {
+	// initTLSConfig client TLS 配置
+	if err := s.initTLSConfig(); err != nil {
+		return err
+	}
+
 	// etcd 服务发现注册
 	etcdRegistry, err := s.initEtcdRegistry()
 	if err != nil {
@@ -85,6 +93,35 @@ func (s *ServiceDiscovery) init() error {
 
 	if etcdRegistry != nil {
 		s.srv.Init(micro.Registry(etcdRegistry))
+	}
+	return nil
+}
+
+// initTLSConfig xxx
+// init server and client tls config
+func (s *ServiceDiscovery) initTLSConfig() error {
+	if len(config.G.TLSConf.ServerCert) != 0 && len(config.G.TLSConf.ServerKey) != 0 &&
+		len(config.G.TLSConf.ServerCa) != 0 {
+		tlsConfig, err := ssl.ServerTslConfVerityClient(config.G.TLSConf.ServerCa, config.G.TLSConf.ServerCert,
+			config.G.TLSConf.ServerKey, static.ServerCertPwd)
+		if err != nil {
+			blog.Errorf("load platform manager server tls config failed, err %s", err.Error())
+			return err
+		}
+		s.TLSConfig = tlsConfig
+		blog.Info("load platform manager server tls config successfully")
+	}
+
+	if len(config.G.TLSConf.ClientCert) != 0 && len(config.G.TLSConf.ClientKey) != 0 &&
+		len(config.G.TLSConf.ClientCa) != 0 {
+		tlsConfig, err := ssl.ClientTslConfVerity(config.G.TLSConf.ClientCa, config.G.TLSConf.ClientCert,
+			config.G.TLSConf.ClientKey, static.ClientCertPwd)
+		if err != nil {
+			blog.Errorf("load platform manager client tls config failed, err %s", err.Error())
+			return err
+		}
+		s.clientTLSConfig = tlsConfig
+		blog.Info("load platform manager client tls config successfully")
 	}
 	return nil
 }
