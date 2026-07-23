@@ -144,3 +144,15 @@ func (p *Federation) GetClusterDiskioTotal(ctx context.Context, projectID, clust
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	return nil, nil
 }
+
+// GetClusterCPURequestWithInitUsage 获取含 InitContainer 的 CPU 核心装箱率
+func (p *Federation) GetClusterCPURequestWithInitUsage(ctx context.Context, projectID, clusterID string,
+	start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
+	return nil, nil
+}
+
+// GetClusterMemoryRequestWithInitUsage 获取含 InitContainer 的内存装箱率
+func (p *Federation) GetClusterMemoryRequestWithInitUsage(ctx context.Context, projectID, clusterID string,
+	start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
+	return nil, nil
+}
