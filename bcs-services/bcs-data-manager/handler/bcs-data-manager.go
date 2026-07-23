@@ -88,7 +88,7 @@ func (e *BcsDataManager) GetProjectInfo(ctx context.Context,
 		return nil
 	}
 	if req.GetProject() == "" && req.GetBusiness() == "" && req.GetProjectCode() != "" {
-		project, err := e.resourceGetter.GetProjectInfo(ctx, "", req.GetProjectCode(), nil)
+		project, err := e.resourceGetter.GetProjectInfo(ctx, "", req.GetProjectCode())
 		if err != nil {
 			rsp.Message = fmt.Sprintf("get project info err:%v", err)
 			rsp.Code = bcsCommon.AdditionErrorCode + 500
@@ -169,7 +169,7 @@ func (e *BcsDataManager) GetClusterListByProject(ctx context.Context, req *bcsda
 		return nil
 	}
 	if req.GetProject() == "" && req.GetBusiness() == "" && req.GetProjectCode() != "" {
-		project, err := e.resourceGetter.GetProjectInfo(ctx, "", req.GetProjectCode(), nil)
+		project, err := e.resourceGetter.GetProjectInfo(ctx, "", req.GetProjectCode())
 		if err != nil {
 			rsp.Message = fmt.Sprintf("get project info err:%v", err)
 			rsp.Code = bcsCommon.AdditionErrorCode + 500

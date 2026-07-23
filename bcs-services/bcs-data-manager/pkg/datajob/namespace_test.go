@@ -14,13 +14,13 @@ package datajob
 
 import (
 	"context"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/cmanager"
+	"testing"
+	"time"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/mock"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/utils"
 	"github.com/stretchr/testify/assert"
-	"testing"
-	"time"
 )
 
 func TestNamespaceDayImplementPolicy(t *testing.T) {
@@ -56,15 +56,11 @@ func TestNamespaceDayImplementPolicy(t *testing.T) {
 		Dimension:   types.DimensionDay,
 		CurrentTime: utils.FormatTime(time.Now(), types.DimensionDay),
 	}
-	cmCli := &cmanager.ClusterManagerClientWithHeader{
-		Cli: mock.NewMockCm(),
-		Ctx: ctx,
-	}
+
 	client := &types.Clients{
 		MonitorClient:   nil,
 		K8sStorageCli:   mock.NewMockStorage(),
 		MesosStorageCli: mock.NewMockStorage(),
-		CmCli:           cmCli,
 	}
 	minutePolicy.ImplementPolicy(ctx, minuteOpts, client)
 	hourPolicy.ImplementPolicy(ctx, hourOpts, client)
@@ -99,15 +95,11 @@ func TestNamespaceHourImplementPolicy(t *testing.T) {
 		Dimension:   types.DimensionHour,
 		CurrentTime: utils.FormatTime(time.Now(), types.DimensionHour),
 	}
-	cmCli := &cmanager.ClusterManagerClientWithHeader{
-		Cli: mock.NewMockCm(),
-		Ctx: ctx,
-	}
+
 	client := &types.Clients{
 		MonitorClient:   nil,
 		K8sStorageCli:   mock.NewMockStorage(),
 		MesosStorageCli: mock.NewMockStorage(),
-		CmCli:           cmCli,
 	}
 	minutePolicy.ImplementPolicy(ctx, minuteOpts, client)
 	hourPolicy.ImplementPolicy(ctx, hourOpts, client)
@@ -132,15 +124,11 @@ func TestNamespaceMinuteImplementPolicy(t *testing.T) {
 		Dimension:   types.DimensionMinute,
 		CurrentTime: utils.FormatTime(time.Now(), types.DimensionMinute),
 	}
-	cmCli := &cmanager.ClusterManagerClientWithHeader{
-		Cli: mock.NewMockCm(),
-		Ctx: ctx,
-	}
+
 	client := &types.Clients{
 		MonitorClient:   nil,
 		K8sStorageCli:   mock.NewMockStorage(),
 		MesosStorageCli: mock.NewMockStorage(),
-		CmCli:           cmCli,
 	}
 	minutePolicy.ImplementPolicy(ctx, opts, client)
 	bucket, err := utils.GetBucketTime(opts.CurrentTime, types.DimensionMinute)
