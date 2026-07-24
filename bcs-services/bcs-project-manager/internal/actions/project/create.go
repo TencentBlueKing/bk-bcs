@@ -22,6 +22,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/bcscc"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/bcsstorage"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
 	pm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/project"
@@ -66,6 +67,16 @@ func (ca *CreateAction) Do(ctx context.Context, req *proto.CreateProjectRequest)
 	if err != nil {
 		return nil, errorx.NewDBErr(err.Error())
 	}
+
+	// 向 bcs storage 写入数据
+	go func() {
+		if err := bcsstorage.SyncProjectData(p); err != nil {
+			logging.Error("[ALARM-CC-PROJECT] create project %s/%s in storage failed, err: %s",
+				p.ProjectID, p.ProjectCode, err.Error())
+		}
+
+	}()
+
 	// 向 bcs cc 写入数据
 	go func() {
 		if err := bcscc.CreateProject(p); err != nil {
