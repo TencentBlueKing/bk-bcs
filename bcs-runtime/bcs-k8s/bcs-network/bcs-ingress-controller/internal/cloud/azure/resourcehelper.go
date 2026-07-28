@@ -62,10 +62,10 @@ const (
 	ResourceTypeBackendHttpSettingsCollection resourceType = "backendHttpSettingsCollection"
 	// ResourceTypeURLPathMaps resource type of urlPathMaps
 	ResourceTypeURLPathMaps resourceType = "urlPathMaps"
-	// ResourceTypeSSLCertificate resource type of sslCertificate
-	ResourceTypeSSLCertificate resourceType = "sslCertificate"
-	// ResourceTypeSSLProfile resource type of sslProfile
-	ResourceTypeSSLProfile resourceType = "sslProfile"
+	// ResourceTypeSSLCertificate resource type of sslCertificates
+	ResourceTypeSSLCertificate resourceType = "sslCertificates"
+	// ResourceTypeSSLProfile resource type of sslProfiles
+	ResourceTypeSSLProfile resourceType = "sslProfiles"
 )
 
 // NewResourceHelper return resource helper
