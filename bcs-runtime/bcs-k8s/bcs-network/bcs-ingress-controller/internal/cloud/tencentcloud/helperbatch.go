@@ -446,7 +446,10 @@ func (c *Clb) batchCreate7LayerListener(region string, listeners []*networkexten
 	req.Protocol = tcommon.StringPtr(listener.Spec.Protocol)
 	req.Certificate = transIngressCertificate(listener.Spec.Certificate)
 	if listener.Spec.ListenerAttribute != nil {
-		req.SniSwitch = tcommon.Int64Ptr(int64(listener.Spec.ListenerAttribute.SniSwitch))
+		// SNI is only applicable to HTTPS listeners.
+		if listener.Spec.Protocol == networkextensionv1.ProtocolHTTPS {
+			req.SniSwitch = tcommon.Int64Ptr(int64(listener.Spec.ListenerAttribute.SniSwitch))
+		}
 		req.KeepaliveEnable = tcommon.Int64Ptr(int64(listener.Spec.ListenerAttribute.KeepAliveEnable))
 	}
 
@@ -592,9 +595,16 @@ func (c *Clb) updateL7ListenerAndCollectRsChanges(
 	batchRegTargets := make(map[string][]networkextensionv1.ListenerBackend)
 	batchDeregTargets := make(map[string][]networkextensionv1.ListenerBackend)
 	batchModWeightTargets := make(map[string][]networkextensionv1.ListenerBackend)
-	// if listener certificate is defined and is different from remote cloud listener attribute, then do update
-	if ingressListener.Spec.Certificate != nil &&
-		!reflect.DeepEqual(ingressListener.Spec.Certificate, cloudListener.Spec.Certificate) {
+	// Tencent Cloud CLB cannot disable SNI once enabled; only warn on such drift.
+	if sniDisableRequested(cloudListener.Spec.ListenerAttribute, ingressListener.Spec.ListenerAttribute) {
+		blog.Warnf("listener %s/%s requests disabling SNI, but Tencent Cloud CLB does not support disabling SNI "+
+			"once enabled; delete and recreate the listener with sniSwitch:0 to disable it",
+			ingressListener.GetNamespace(), ingressListener.GetName())
+	}
+	// if listener certificate changed, or SNI needs to be enabled (0->1), then do update
+	if (ingressListener.Spec.Certificate != nil &&
+		!reflect.DeepEqual(ingressListener.Spec.Certificate, cloudListener.Spec.Certificate)) ||
+		needEnableSni(cloudListener.Spec.ListenerAttribute, ingressListener.Spec.ListenerAttribute) {
 		err := c.updateListenerAttrAndCerts(region, cloudListener.Status.ListenerID, ingressListener)
 		if err != nil {
 			err = errors.Wrapf(err, "updateListenerAttrAndCerts in updateHTTPListener failed")
@@ -914,9 +924,15 @@ func (c *Clb) resolveUpdateListener(lbID, region string, updatedListeners []*net
 			// 根据云接口返回的Err，细分每个listener的失败原因
 			for index, inErr := range isErrArr {
 				if inErr == nil {
-					retMap[group[index].GetName()] = cloud.Result{
+					result := cloud.Result{
 						IsError: false,
-						Res:     cloudListenerGroup[index].Status.ListenerID}
+						Res:     cloudListenerGroup[index].Status.ListenerID,
+					}
+					if sniDisableRequested(cloudListenerGroup[index].Spec.ListenerAttribute,
+						group[index].Spec.ListenerAttribute) {
+						result.Warning = cloud.MsgSniDisableUnsupported
+					}
+					retMap[group[index].GetName()] = result
 				} else {
 					retMap[group[index].GetName()] = cloud.Result{IsError: true, Err: inErr}
 					blog.Warnf("update listener %s failed in batch, err: %s", group[index].GetName(), inErr.Error())

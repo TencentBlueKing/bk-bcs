@@ -361,7 +361,15 @@ func (s *Server) mutatingIngress(ar v1.AdmissionReview) *v1.AdmissionResponse {
 		return errResponse(fmt.Errorf("decode %s to ingress failed, err %s", string(req.Object.Raw),
 			err.Error()))
 	}
-	patches, err := s.mutateIngress(ingress, req.Operation)
+	var oldIngress *networkextensionv1.Ingress
+	if req.Operation == v1.Update && len(req.OldObject.Raw) > 0 {
+		oldIngress = &networkextensionv1.Ingress{}
+		if err := json.Unmarshal(req.OldObject.Raw, oldIngress); err != nil {
+			blog.Warnf("decode old ingress failed, skip SNI update check, err %s", err.Error())
+			oldIngress = nil
+		}
+	}
+	patches, err := s.mutateIngress(ingress, oldIngress, req.Operation)
 	if err != nil {
 		blog.Warnf("mutate ingress failed, err: %v", err)
 		return errResponse(err)

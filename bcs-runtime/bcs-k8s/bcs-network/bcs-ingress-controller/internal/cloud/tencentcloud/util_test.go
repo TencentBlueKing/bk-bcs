@@ -18,6 +18,8 @@ import (
 	"testing"
 
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
+	tclb "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/clb/v20180317"
+	tcommon "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 )
 
 // TestSplitListenersToDiffProtocol test function splitListenersToDiffProtocol
@@ -129,6 +131,75 @@ func TestSplitListenerToDiffBatch(t *testing.T) {
 			tmpListStr, _ := json.Marshal(tmpList)
 			resultListStr, _ := json.Marshal(test.resultList)
 			t.Errorf("expect %s, but get %s", resultListStr, tmpListStr)
+		}
+	}
+}
+
+// TestNeedEnableSni test needEnableSni, only 0->1 should return true
+func TestNeedEnableSni(t *testing.T) {
+	attr := func(sni int) *networkextensionv1.IngressListenerAttribute {
+		return &networkextensionv1.IngressListenerAttribute{SniSwitch: sni}
+	}
+	testCases := []struct {
+		name  string
+		cloud *networkextensionv1.IngressListenerAttribute
+		local *networkextensionv1.IngressListenerAttribute
+		want  bool
+	}{
+		{"off to on", attr(0), attr(1), true},
+		{"nil cloud to on", nil, attr(1), true},
+		{"on to on", attr(1), attr(1), false},
+		{"on to off", attr(1), attr(0), false},
+		{"off to off", attr(0), attr(0), false},
+		{"nil local", attr(0), nil, false},
+	}
+	for _, tc := range testCases {
+		if got := needEnableSni(tc.cloud, tc.local); got != tc.want {
+			t.Errorf("%s: needEnableSni = %v, want %v", tc.name, got, tc.want)
+		}
+	}
+}
+
+// TestSniDisableRequested test sniDisableRequested, only 1->0 should return true
+func TestSniDisableRequested(t *testing.T) {
+	attr := func(sni int) *networkextensionv1.IngressListenerAttribute {
+		return &networkextensionv1.IngressListenerAttribute{SniSwitch: sni}
+	}
+	testCases := []struct {
+		name  string
+		cloud *networkextensionv1.IngressListenerAttribute
+		local *networkextensionv1.IngressListenerAttribute
+		want  bool
+	}{
+		{"on to off", attr(1), attr(0), true},
+		{"on to nil", attr(1), nil, true},
+		{"off to on", attr(0), attr(1), false},
+		{"on to on", attr(1), attr(1), false},
+		{"off to off", attr(0), attr(0), false},
+	}
+	for _, tc := range testCases {
+		if got := sniDisableRequested(tc.cloud, tc.local); got != tc.want {
+			t.Errorf("%s: sniDisableRequested = %v, want %v", tc.name, got, tc.want)
+		}
+	}
+}
+
+// TestConvertListenerAttributeSni test SNI read-back from cloud listener
+func TestConvertListenerAttributeSni(t *testing.T) {
+	testCases := []struct {
+		name string
+		sni  *int64
+		want int
+	}{
+		{"enabled", tcommon.Int64Ptr(1), 1},
+		{"disabled", tcommon.Int64Ptr(0), 0},
+		{"nil", nil, 0},
+	}
+	for _, tc := range testCases {
+		lis := &tclb.Listener{SniSwitch: tc.sni}
+		attr := convertListenerAttribute(lis)
+		if attr.SniSwitch != tc.want {
+			t.Errorf("%s: convertListenerAttribute SniSwitch = %v, want %v", tc.name, attr.SniSwitch, tc.want)
 		}
 	}
 }

@@ -87,16 +87,22 @@ func (cv *ClbValidater) validateSSLProtocols(rule *networkextensionv1.IngressRul
 		return true, ""
 	}
 
+	sniEnabled := rule.ListenerAttribute != nil && rule.ListenerAttribute.SniSwitch != 0
+	// SNI is only applicable to HTTPS listeners; reject it on TCP_SSL/QUIC.
+	if sniEnabled && rule.Protocol != ClbProtocolHTTPS {
+		return false, fmt.Sprintf("sniSwitch is only supported on HTTPS listener, got protocol %s", rule.Protocol)
+	}
+
 	// sni off
-	if rule.ListenerAttribute == nil || rule.ListenerAttribute.SniSwitch == 0 {
+	if !sniEnabled {
 		if rule.Certificate == nil {
-			return false, fmt.Sprintf("certificate cannot be empty for protocol https")
+			return false, fmt.Sprintf("certificate cannot be empty for protocol %s", rule.Protocol)
 		}
 		if ok, msg := cv.validateCertificate(rule.Certificate); !ok {
 			return false, msg
 		}
 	} else {
-		// sni open
+		// sni open (HTTPS only)
 		for _, route := range rule.Routes {
 			if route.Certificate == nil {
 				return false, fmt.Sprintf("route certificate cannot be empty for protocol https with sni open")

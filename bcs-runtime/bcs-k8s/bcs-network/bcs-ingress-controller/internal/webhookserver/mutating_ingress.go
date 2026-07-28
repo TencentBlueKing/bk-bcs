@@ -14,6 +14,7 @@ package webhookserver
 
 import (
 	stderrors "errors"
+	"fmt"
 
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/admission/v1"
@@ -22,7 +23,15 @@ import (
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
-func (s *Server) mutateIngress(ingress *networkextensionv1.Ingress, operation v1.Operation) ([]PatchOperation, error) {
+func (s *Server) mutateIngress(ingress, oldIngress *networkextensionv1.Ingress, operation v1.Operation) (
+	[]PatchOperation, error) {
+	// SNI 一旦开启无法在线关闭（腾讯云约束）。更新时若把某端口的 SNI 从开启改为关闭，
+	// 直接拒绝并提示用户删除该规则/监听器后重建，避免产生无法生效的静默配置。
+	if operation == v1.Update {
+		if ok, msg := checkSNINotDisabledOnUpdate(oldIngress, ingress); !ok {
+			return nil, errors.New(msg)
+		}
+	}
 	// 对于必须修改ingress配置的错误，返回errResponse
 	isValid, msg := s.ingressValidater.IsIngressValid(ingress)
 	if !isValid {
@@ -48,4 +57,31 @@ func (s *Server) mutateIngress(ingress *networkextensionv1.Ingress, operation v1
 	}
 
 	return nil, nil
+}
+
+// checkSNINotDisabledOnUpdate rejects disabling SNI (1->0) on an existing HTTPS listener.
+// Tencent Cloud CLB does not support disabling SNI once enabled; the listener must be
+// deleted and recreated. This only compares the Ingress spec (old vs new) and cannot
+// detect SNI enabled out-of-band on the CLB console.
+func checkSNINotDisabledOnUpdate(oldIngress, newIngress *networkextensionv1.Ingress) (bool, string) {
+	if oldIngress == nil {
+		return true, ""
+	}
+	oldSNIOn := make(map[int]bool)
+	for _, rule := range oldIngress.Spec.Rules {
+		if rule.ListenerAttribute != nil && rule.ListenerAttribute.SniSwitch != 0 {
+			oldSNIOn[rule.Port] = true
+		}
+	}
+	for _, rule := range newIngress.Spec.Rules {
+		if !oldSNIOn[rule.Port] {
+			continue
+		}
+		newSNIOn := rule.ListenerAttribute != nil && rule.ListenerAttribute.SniSwitch != 0
+		if !newSNIOn {
+			return false, fmt.Sprintf("cannot disable SNI on port %d: Tencent Cloud CLB does not support disabling "+
+				"SNI once enabled; delete the rule/listener and recreate it with sniSwitch:0", rule.Port)
+		}
+	}
+	return true, ""
 }

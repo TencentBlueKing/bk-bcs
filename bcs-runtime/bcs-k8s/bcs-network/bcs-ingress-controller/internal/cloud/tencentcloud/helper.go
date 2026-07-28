@@ -126,6 +126,11 @@ func (c *Clb) create7LayerListener(region string, listener *networkextensionv1.L
 	req.ListenerNames = tcommon.StringPtrs([]string{listener.GetName()})
 	req.Protocol = tcommon.StringPtr(listener.Spec.Protocol)
 	req.Certificate = transIngressCertificate(listener.Spec.Certificate)
+	// SNI is only applicable to HTTPS listeners, pass it through on creation.
+	if listener.Spec.Protocol == networkextensionv1.ProtocolHTTPS &&
+		listener.Spec.ListenerAttribute != nil {
+		req.SniSwitch = tcommon.Int64Ptr(int64(listener.Spec.ListenerAttribute.SniSwitch))
+	}
 
 	ctime := time.Now()
 	listenerIDs, err := c.sdkWrapper.CreateListener(region, req)
@@ -331,9 +336,18 @@ func (c *Clb) updateListener(region string, ingressListener, cloudListener *netw
 
 // update http and https listener
 func (c *Clb) updateHTTPListener(region string, ingressListener, cloudListener *networkextensionv1.Listener) error {
-	// if listener certificate is defined and is different from remote cloud listener attribute, then do update
-	if ingressListener.Spec.Certificate != nil &&
-		!reflect.DeepEqual(ingressListener.Spec.Certificate, cloudListener.Spec.Certificate) {
+	// Tencent Cloud CLB cannot disable SNI once enabled; only warn on such drift.
+	if sniDisableRequested(cloudListener.Spec.ListenerAttribute, ingressListener.Spec.ListenerAttribute) {
+		blog.Warnf("listener %s/%s requests disabling SNI, but Tencent Cloud CLB does not support disabling SNI "+
+			"once enabled; delete and recreate the listener with sniSwitch:0 to disable it",
+			ingressListener.GetNamespace(), ingressListener.GetName())
+	}
+	// if listener certificate changed, or SNI needs to be enabled (0->1), then do update.
+	// SNI enablement moves certificates to the rule/domain level, so the listener-level
+	// certificate may be nil and cannot be relied on to trigger the ModifyListener call.
+	if (ingressListener.Spec.Certificate != nil &&
+		!reflect.DeepEqual(ingressListener.Spec.Certificate, cloudListener.Spec.Certificate)) ||
+		needEnableSni(cloudListener.Spec.ListenerAttribute, ingressListener.Spec.ListenerAttribute) {
 		err := c.updateListenerAttrAndCerts(region, cloudListener.Status.ListenerID, ingressListener)
 		if err != nil {
 			blog.Errorf("updateListenerAttrAndCerts in updateHTTPListener failed, err %s", err.Error())
@@ -439,11 +453,14 @@ func (c *Clb) updateListenerAttrAndCerts(region, listenerID string, listener *ne
 		}
 		req.HealthCheck = transIngressHealtchCheck(attr.HealthCheck)
 
-		// 注意：未开启SNI的监听器可以开启SNI；已开启SNI的监听器不能关闭SNI。
-		req.SniSwitch = tcommon.Int64Ptr(int64(attr.SniSwitch))
+		// SNI 仅适用于 HTTPS 监听器；且腾讯云不支持关闭已开启的 SNI。
+		// 因此仅在 HTTPS 且期望开启时下发 SniSwitch=1，其余情况不下发（避免误发四层监听器
+		// 或对已开启 SNI 的监听器下发 0 触发报错）。
+		if listener.Spec.Protocol == networkextensionv1.ProtocolHTTPS && attr.SniSwitch == 1 {
+			req.SniSwitch = tcommon.Int64Ptr(int64(attr.SniSwitch))
+		}
 		req.KeepaliveEnable = tcommon.Int64Ptr(int64(attr.KeepAliveEnable))
 	} else {
-		req.SniSwitch = tcommon.Int64Ptr(0)
 		req.KeepaliveEnable = tcommon.Int64Ptr(0)
 	}
 	// keep alive enable参数仅支持HTTPS/HTTP监听器
@@ -578,7 +595,7 @@ func (c *Clb) updateListenerRule(region, lbID, listenerID string,
 
 // add listener rule
 func (c *Clb) addListenerRule(region, lbID, listenerID string, listenerAttribute *networkextensionv1.
-IngressListenerAttribute, rule networkextensionv1.ListenerRule) error {
+	IngressListenerAttribute, rule networkextensionv1.ListenerRule) error {
 	// construct create rule request
 	req := tclb.NewCreateRuleRequest()
 	req.LoadBalancerId = tcommon.StringPtr(lbID)

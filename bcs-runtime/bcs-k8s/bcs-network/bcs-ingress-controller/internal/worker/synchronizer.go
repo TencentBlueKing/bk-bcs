@@ -312,7 +312,17 @@ func (h *EventHandler) ensureMultiListeners(listeners []*networkextensionv1.List
 			h.eventQueue.Done(obj)
 			continue
 		}
-		if inErr := h.patchListenerStatus(li, listenerResult.Res, networkextensionv1.ListenerStatusSynced,
+		if listenerResult.Warning != "" {
+			if inErr := h.handleListenerEnsureWarning(li, listenerResult.Res, listenerResult.Warning); inErr != nil {
+				blog.Warnf("patch listener warning status of %s/%s failed, err %s",
+					li.GetName(), li.GetNamespace(), inErr.Error())
+				metrics.ReportHandleListenerMetric(len(listeners), h.isBulkMode, metrics.ListenerMethodEnsureListener,
+					inErr, startTime)
+				h.eventQueue.AddRateLimited(obj)
+				h.eventQueue.Done(obj)
+				continue
+			}
+		} else if inErr := h.patchListenerStatus(li, listenerResult.Res, networkextensionv1.ListenerStatusSynced,
 			"multi ensure success"); inErr != nil {
 			blog.Warnf("patch listener id of %s/%s failed, err %s", li.GetName(), li.GetNamespace(), inErr.Error())
 			metrics.ReportHandleListenerMetric(len(listeners), h.isBulkMode, metrics.ListenerMethodEnsureListener,
@@ -326,7 +336,7 @@ func (h *EventHandler) ensureMultiListeners(listeners []*networkextensionv1.List
 		h.eventQueue.Done(obj)
 	}
 	metrics.ReportHandleListenerMetric(len(listeners), h.isBulkMode, metrics.ListenerMethodEnsureListener,
-	nil, startTime)
+		nil, startTime)
 	return nil
 }
 
@@ -465,6 +475,16 @@ func (h *EventHandler) ensureListener(li *networkextensionv1.Listener) error {
 	} else {
 		listenerID, err = h.lbClient.EnsureListener(h.region, li)
 		if err != nil {
+			var warnErr *cloud.ListenerEnsureWarning
+			if errors.As(err, &warnErr) {
+				metrics.ReportHandleListenerMetric(1, h.isBulkMode, metrics.ListenerMethodEnsureListener, nil, startTime)
+				if inErr := h.handleListenerEnsureWarning(li, warnErr.ListenerID, warnErr.Message); inErr != nil {
+					blog.Warnf("patch listener warning status of %s/%s failed, err %s",
+						li.GetName(), li.GetNamespace(), inErr.Error())
+					return fmt.Errorf("patch listener warning status failed, err %s", inErr.Error())
+				}
+				return nil
+			}
 			h.recordListenerFailedEvent(li, err)
 			metrics.ReportHandleListenerMetric(1, h.isBulkMode, metrics.ListenerMethodEnsureListener, err, startTime)
 			blog.Errorf("cloud lb client EnsureListener failed, err %s", err.Error())

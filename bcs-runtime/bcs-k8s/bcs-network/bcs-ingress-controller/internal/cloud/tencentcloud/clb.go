@@ -204,6 +204,12 @@ func (c *Clb) EnsureListener(region string, listener *networkextensionv1.Listene
 	if err := c.updateListener(region, listener, cloudListener); err != nil {
 		return "", err
 	}
+	if sniDisableRequested(cloudListener.Spec.ListenerAttribute, listener.Spec.ListenerAttribute) {
+		return cloudListener.Status.ListenerID, &cloud.ListenerEnsureWarning{
+			ListenerID: cloudListener.Status.ListenerID,
+			Message:    cloud.MsgSniDisableUnsupported,
+		}
+	}
 	return cloudListener.Status.ListenerID, nil
 }
 
