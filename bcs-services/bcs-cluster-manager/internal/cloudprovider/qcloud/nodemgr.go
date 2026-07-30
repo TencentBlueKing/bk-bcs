@@ -373,11 +373,21 @@ func (nm *NodeManager) getInnerInstanceTypes(ctx context.Context, info cloudprov
 // GetInstanceTypeByProjectQuotaList get instanceType from zoneResource by project quota list info
 func (nm *NodeManager) GetInstanceTypeByProjectQuotaList(
 	projectId, region string, provider string, instanceType string) ([]resource.InstanceType, error) {
+
+	var projectQuotaType string
+	switch provider {
+	case resource.YunTiPool:
+		projectQuotaType = project.ProjectQuotaHostType
+	case resource.SelfPool:
+		projectQuotaType = project.ProjectQuotaSelfHostType
+	default:
+	}
+
 	listProjectQuotasData, err := project.GetProjectManagerClient().ListProjectQuotasV2(projectId,
-		project.ProjectQuotaHostType, project.ProjectQuotaProviderInternal)
+		projectQuotaType, project.ProjectQuotaProviderInternal)
 	if err != nil {
 		blog.Errorf("GetProjectManagerClient GetListProjectQuotas[%s:%s:%s] failed: %v", projectId,
-			project.ProjectQuotaHostType, project.ProjectQuotaProviderInternal, err)
+			projectQuotaType, project.ProjectQuotaProviderInternal, err)
 		return nil, err
 	}
 
