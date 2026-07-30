@@ -20,11 +20,20 @@ import (
 	v1 "k8s.io/api/admission/v1"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/utils"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
 func (s *Server) mutateIngress(ingress, oldIngress *networkextensionv1.Ingress, operation v1.Operation) (
 	[]PatchOperation, error) {
+	// Ingress name is used as Listener label key; k8s label keys are limited to 63 chars.
+	// Reject CREATE of overlong names to fail fast. UPDATE of already-existing overlong
+	// Ingress is allowed so ops can still patch/delete; reconcile uses hashed label keys.
+	if operation == v1.Create {
+		if ok, msg := checkIngressNameLength(ingress); !ok {
+			return nil, errors.New(msg)
+		}
+	}
 	// SNI 一旦开启无法在线关闭（腾讯云约束）。更新时若把某端口的 SNI 从开启改为关闭，
 	// 直接拒绝并提示用户删除该规则/监听器后重建，避免产生无法生效的静默配置。
 	if operation == v1.Update {
@@ -57,6 +66,22 @@ func (s *Server) mutateIngress(ingress, oldIngress *networkextensionv1.Ingress, 
 	}
 
 	return nil, nil
+}
+
+// checkIngressNameLength rejects Ingress names longer than the k8s label key limit.
+// Listener CRs use the Ingress name as a label key for ownership queries.
+func checkIngressNameLength(ingress *networkextensionv1.Ingress) (bool, string) {
+	if ingress == nil {
+		return true, ""
+	}
+	name := ingress.GetName()
+	if len(name) > utils.MaxK8sLabelLen {
+		return false, fmt.Sprintf(
+			"ingress name %q length %d exceeds kubernetes label key limit %d; "+
+				"Listener uses ingress name as label key, please shorten the name",
+			name, len(name), utils.MaxK8sLabelLen)
+	}
+	return true, ""
 }
 
 // checkSNINotDisabledOnUpdate rejects disabling SNI (1->0) on an existing HTTPS listener.

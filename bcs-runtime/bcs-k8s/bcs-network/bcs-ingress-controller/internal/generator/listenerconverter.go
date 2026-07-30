@@ -25,6 +25,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/utils"
 )
 
 // IngressListenerConverter convert listeners by ingress, do not operator listener directly
@@ -159,9 +160,19 @@ func (c *IngressListenerConverter) getListeners(ingressName, ingressNamespace st
 	[]networkextensionv1.Listener, error) {
 	existedListenerList := &networkextensionv1.ListenerList{}
 	selector, err := k8smetav1.LabelSelectorAsSelector(k8smetav1.SetAsLabelSelector(k8slabels.Set(map[string]string{
-		ingressName: networkextensionv1.LabelValueForIngressName,
+		utils.GenIngressLabelKey(ingressName):           networkextensionv1.LabelValueForIngressName,
 		networkextensionv1.LabelKeyForIsSegmentListener: networkextensionv1.LabelValueFalse,
 	})))
+	// CRITICAL: must check LabelSelectorAsSelector error. When ingress name exceeds 63 chars,
+	// selector construction fails and returns nil; ignoring the error makes List return ALL
+	// listeners in the namespace, and subsequent GetDiffListeners deletes unrelated listeners
+	// on the shared CLB.
+	if err != nil {
+		blog.Errorf("get selector for listeners of ingress %s/%s failed, err %s",
+			ingressName, ingressNamespace, err.Error())
+		return nil, fmt.Errorf("get selector for listeners of ingress %s/%s failed, err %s",
+			ingressName, ingressNamespace, err.Error())
+	}
 	err = c.Cli.List(context.TODO(), existedListenerList, &client.ListOptions{
 		Namespace:     ingressNamespace,
 		LabelSelector: selector})
@@ -178,9 +189,15 @@ func (c *IngressListenerConverter) getSegmentListeners(ingressName, ingressNames
 	[]networkextensionv1.Listener, error) {
 	existedListenerList := &networkextensionv1.ListenerList{}
 	selector, err := k8smetav1.LabelSelectorAsSelector(k8smetav1.SetAsLabelSelector(k8slabels.Set(map[string]string{
-		ingressName: networkextensionv1.LabelValueForIngressName,
+		utils.GenIngressLabelKey(ingressName):           networkextensionv1.LabelValueForIngressName,
 		networkextensionv1.LabelKeyForIsSegmentListener: networkextensionv1.LabelValueTrue,
 	})))
+	if err != nil {
+		blog.Errorf("get selector for segment listeners of ingress %s/%s failed, err %s",
+			ingressName, ingressNamespace, err.Error())
+		return nil, fmt.Errorf("get selector for segment listeners of ingress %s/%s failed, err %s",
+			ingressName, ingressNamespace, err.Error())
+	}
 	err = c.Cli.List(context.TODO(), existedListenerList, &client.ListOptions{
 		Namespace:     ingressNamespace,
 		LabelSelector: selector})

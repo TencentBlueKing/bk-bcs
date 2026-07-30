@@ -28,6 +28,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/metrics"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/utils"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
@@ -54,9 +55,16 @@ func (h *HttpServerClient) listListener(request *restful.Request, response *rest
 		}
 		existedListenerList := &networkextensionv1.ListenerList{}
 		selector, err := k8smetav1.LabelSelectorAsSelector(k8smetav1.SetAsLabelSelector(k8slabels.Set(map[string]string{
-			ingress.Name: networkextensionv1.LabelValueForIngressName,
+			utils.GenIngressLabelKey(ingress.Name):          networkextensionv1.LabelValueForIngressName,
 			networkextensionv1.LabelKeyForIsSegmentListener: networkextensionv1.LabelValueFalse,
 		})))
+		if err != nil {
+			blog.Errorf("get selector for listeners filter by ingress %s failed, err %s",
+				request.PathParameter("name"), err.Error())
+			mf(strconv.Itoa(http.StatusInternalServerError))
+			data = CreateResponseData(err, "failed", nil)
+			break
+		}
 		err = h.Mgr.GetClient().List(context.TODO(), existedListenerList, &client.ListOptions{
 			Namespace:     ingress.Namespace,
 			LabelSelector: selector})

@@ -35,6 +35,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/metrics"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/utils"
 )
 
 // RuleConverter rule converter
@@ -144,13 +145,15 @@ func (rc *RuleConverter) generate7LayerListener(region, lbID string) (*networkex
 	li.SetNamespace(rc.ingressNamespace)
 	// set ingress name in labels
 	// the ingress name in labels is used for checking conficts
+	// GenIngressLabelKey keeps key/value within k8s 63-char limit
+	ingressLabelKey := utils.GenIngressLabelKey(rc.ingressName)
 	li.SetLabels(map[string]string{
-		rc.ingressName: networkextensionv1.LabelValueForIngressName,
+		ingressLabelKey: networkextensionv1.LabelValueForIngressName,
 		networkextensionv1.LabelKeyForIsSegmentListener: networkextensionv1.LabelValueFalse,
 		networkextensionv1.LabelKeyForLoadbalanceID:     GetLabelLBId(lbID),
 		networkextensionv1.LabelKeyForLoadbalanceRegion: region,
 		networkextensionv1.LabelKeyForOwnerKind:         constant.KindIngress,
-		networkextensionv1.LabelKeyForOwnerName:         rc.ingressName,
+		networkextensionv1.LabelKeyForOwnerName:         ingressLabelKey,
 	})
 	li.Status.Ingress = rc.ingressName
 	li.Finalizers = append(li.Finalizers, constant.FinalizerNameBcsIngressController)
@@ -223,13 +226,15 @@ func (rc *RuleConverter) generate4LayerListener(region, lbID string) (*networkex
 	li.SetNamespace(rc.ingressNamespace)
 	// set ingress name in labels
 	// the ingress name in labels is used for checking conficts
+	// GenIngressLabelKey keeps key/value within k8s 63-char limit
+	ingressLabelKey := utils.GenIngressLabelKey(rc.ingressName)
 	li.SetLabels(map[string]string{
-		rc.ingressName: networkextensionv1.LabelValueForIngressName,
+		ingressLabelKey: networkextensionv1.LabelValueForIngressName,
 		networkextensionv1.LabelKeyForIsSegmentListener: networkextensionv1.LabelValueFalse,
 		networkextensionv1.LabelKeyForLoadbalanceID:     GetLabelLBId(lbID),
 		networkextensionv1.LabelKeyForLoadbalanceRegion: region,
 		networkextensionv1.LabelKeyForOwnerKind:         constant.KindIngress,
-		networkextensionv1.LabelKeyForOwnerName:         rc.ingressName,
+		networkextensionv1.LabelKeyForOwnerName:         ingressLabelKey,
 	})
 	li.Status.Ingress = rc.ingressName
 	li.Finalizers = append(li.Finalizers, constant.FinalizerNameBcsIngressController)

@@ -31,6 +31,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/utils"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
@@ -320,13 +321,15 @@ func (slc *segmentListenerConverter) generateListener(start, end, rsStart int) (
 	}
 	li.SetName(listenerName)
 	li.SetNamespace(slc.ingressNamespace)
+	// GenIngressLabelKey keeps key/value within k8s 63-char limit
+	ingressLabelKey := utils.GenIngressLabelKey(slc.ingressName)
 	li.SetLabels(map[string]string{
-		slc.ingressName: networkextensionv1.LabelValueForIngressName,
+		ingressLabelKey: networkextensionv1.LabelValueForIngressName,
 		networkextensionv1.LabelKeyForIsSegmentListener: segLabelValue,
 		networkextensionv1.LabelKeyForLoadbalanceID:     GetLabelLBId(slc.lbID),
 		networkextensionv1.LabelKeyForLoadbalanceRegion: slc.region,
 		networkextensionv1.LabelKeyForOwnerKind:         constant.KindIngress,
-		networkextensionv1.LabelKeyForOwnerName:         slc.ingressName,
+		networkextensionv1.LabelKeyForOwnerName:         ingressLabelKey,
 	})
 	li.Status.Ingress = slc.ingressName
 	li.Finalizers = append(li.Finalizers, constant.FinalizerNameBcsIngressController)

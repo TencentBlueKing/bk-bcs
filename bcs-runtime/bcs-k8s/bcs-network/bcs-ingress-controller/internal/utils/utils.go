@@ -20,12 +20,34 @@ import (
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
+const (
+	// MaxK8sLabelLen is the max length of a kubernetes label key or value.
+	MaxK8sLabelLen = 63
+	// labelKeyPrefixLen is the prefix length kept when truncating overlong label keys.
+	labelKeyPrefixLen = 50
+	// labelKeyHashLen is the md5 hex prefix length appended after truncation.
+	labelKeyHashLen = 13
+)
+
 // GenPortBindingLabel 生成portBinding label, 当长度超过63时（k8s限制）， 将截取前50位+md5值的前13位作为label key
 func GenPortBindingLabel(name string, namespace string) string {
 	result := fmt.Sprintf(networkextensionv1.PortPoolBindingLabelKeyFormat, name, namespace)
-	if len(result) > 63 {
-		hash := fmt.Sprintf("%x", md5.Sum([]byte(result)))
-		return result[:50] + hash[:13]
+	return truncateLabelKey(result)
+}
+
+// GenIngressLabelKey generates a k8s-safe label key/value from an Ingress name.
+// Listener CRs use the Ingress name as a label key (and as owner-name value);
+// both are limited to 63 characters. Longer names are truncated with an md5
+// suffix (prefix 50 + hash 13) to stay unique and valid.
+func GenIngressLabelKey(ingressName string) string {
+	return truncateLabelKey(ingressName)
+}
+
+// truncateLabelKey returns key unchanged if len<=63; otherwise prefix50+md5[:13].
+func truncateLabelKey(key string) string {
+	if len(key) <= MaxK8sLabelLen {
+		return key
 	}
-	return result
+	hash := fmt.Sprintf("%x", md5.Sum([]byte(key)))
+	return key[:labelKeyPrefixLen] + hash[:labelKeyHashLen]
 }
