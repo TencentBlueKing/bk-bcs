@@ -67,6 +67,22 @@ func PodCPUUsage(c context.Context, req *PodUsageQuery) (*promclient.ResultData,
 	return handlePodMetric(rctx, promql, req)
 }
 
+// PodCPUPeakUsage Pod CPU峰值使用率
+// @Summary Pod CPU峰值使用率
+// @Tags    Metrics
+// @Success 200 {string} string
+// @Router  /namespaces/:namespace/pods/cpu_peak_usage [POST]
+func PodCPUPeakUsage(c context.Context, req *PodUsageQuery) (*promclient.ResultData, error) {
+	rctx, err := rest.GetRestContext(c)
+	if err != nil {
+		return nil, err
+	}
+	promql :=
+		`bcs:pod:cpu_peak_usage{cluster_id="%<clusterId>s", namespace="%<namespace>s", pod_name=~"%<podNameList>s", %<provider>s}` // nolint
+
+	return handlePodMetric(rctx, promql, req)
+}
+
 // PodCPULimitUsage Pod Limit CPU使用率
 // @Summary Pod Limit CPU使用率
 // @Tags    Metrics
