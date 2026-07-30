@@ -280,6 +280,8 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error { // no
 //   - Public IP     → NodePool.networkConfig.enablePrivateNodes (set in generateCreateNodePoolInput)
 //   - Startup script → GKE reserved key, not supported; use DaemonSet instead
 //   - Data disks    → GKE NodePool API does not support extra persistent disks; use DaemonSet instead
+//
+// nolint: unparam
 func getIgmAndIt(computeCli *api.ComputeServiceClient, cloudNodeGroup *container.NodePool, group *proto.NodeGroup,
 	taskID string) (*compute.InstanceTemplate, *compute.InstanceGroupManager, error) {
 	// get instanceGroupManager
@@ -339,6 +341,7 @@ func getIgmAndIt(computeCli *api.ComputeServiceClient, cloudNodeGroup *container
 }
 
 // patchIgm patch instanceGroupManager
+// nolint: unused
 func patchIgm(newIt *compute.InstanceTemplate, igm *compute.InstanceGroupManager, computeCli *api.ComputeServiceClient,
 	taskID string) error {
 	ItInfo := strings.Split(newIt.SelfLink, "/")
