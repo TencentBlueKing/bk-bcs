@@ -103,7 +103,8 @@ func AbortWithForbiddenWithPerms(c *Context, perms *Perms) render.Renderer {
 		permissions = append(permissions, action.Action)
 	}
 	msg := fmt.Sprintf("permission denied, need %s permission", strings.Join(permissions, ", "))
-	return &Result{Code: 40403, Message: msg, RequestId: c.RequestId, WebAnnotations: &WebAnnotations{Perms: perms}, HTTPCode: http.StatusOK}
+	return &Result{Code: 40403, Message: msg, RequestId: c.RequestId, WebAnnotations: &WebAnnotations{Perms: perms},
+		HTTPCode: http.StatusOK}
 }
 
 // AbortWithJSONError 目前的UI规范, 返回200状态码, 通过里面的code判断请求成功与否
