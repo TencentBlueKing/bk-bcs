@@ -41,8 +41,8 @@ const (
 	FieldKeyProjectCode = "projectCode"
 	// FieldKeyKind kind
 	FieldKeyKind = "kind"
-	// FieldKeyTenantID tenantId
-	FieldKeyTenantID = "tenantId"
+	// FieldKeyTenantID tenantID
+	FieldKeyTenantID = "tenantID"
 	// FieldKeyTenantProjectCode tenantProjectCode
 	FieldKeyTenantProjectCode = "tenantProjectCode"
 )
