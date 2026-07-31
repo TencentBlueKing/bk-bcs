@@ -116,7 +116,7 @@ type CloudConf struct {
 	// CreateClusterNodesLimit for create cluster nodes limit
 	CreateClusterNodesLimit uint32
 	// clusterUnderlayUsageRatioLimit for cluster underlay usage ratio limit
-	clusterUnderlayUsageRatioLimit float32
+	clusterUnderlayUsageRatioLimit float32 // nolint: unused
 	// ClusterUnderlayUsageIPNumLimit for cluster underlay usage IP num limit
 	ClusterUnderlayUsageIPNumLimit uint32
 }
@@ -334,7 +334,7 @@ type DeleteNodesOption struct {
 	Operator   string
 	IsForce    bool
 	DeleteMode string
-	//SkipCheckNodePods for auto skip check node pods step
+	// SkipCheckNodePods for auto skip check node pods step
 	SkipCheckNodePods bool
 	// cloud is used for cloudprovider template
 	Cloud        *proto.Cloud
@@ -480,7 +480,7 @@ type CleanNodesOption struct {
 	AsOption *proto.ClusterAutoScalingOption
 	Operator string
 	Manual   bool
-	//SkipCheckNodePods for auto skip check node pods step
+	// SkipCheckNodePods for auto skip check node pods step
 	SkipCheckNodePods bool
 }
 

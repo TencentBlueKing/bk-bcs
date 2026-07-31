@@ -56,6 +56,7 @@ var AvailableNodeMetrics = []string{
 	"bcs:node:network_transmit",
 	"bcs:node:network_receive",
 	"bcs:pod:cpu_usage",
+	"bcs:pod:cpu_peak_usage",
 	"bcs:pod:cpu_limit_usage",
 	"bcs:pod:cpu_request_usage",
 	"bcs:pod:memory_used",

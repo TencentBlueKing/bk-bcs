@@ -72,6 +72,13 @@ func (m *Federation) GetPodCPUUsage(ctx context.Context, projectID, clusterID, n
 	return m.handlePodMetric(ctx, projectID, clusterID, namespace, podNameList, start, end, step, fn)
 }
 
+// GetPodCPUPeakUsage POD CPU 峰值使用率
+func (m *Federation) GetPodCPUPeakUsage(ctx context.Context, projectID, clusterID, namespace string,
+	podNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
+	fn := base.MetricHandler.GetPodCPUPeakUsage
+	return m.handlePodMetric(ctx, projectID, clusterID, namespace, podNameList, start, end, step, fn)
+}
+
 // GetPodCPULimitUsage POD CPU Limit 使用率
 func (m *Federation) GetPodCPULimitUsage(ctx context.Context, projectID, clusterID, namespace string,
 	podNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
