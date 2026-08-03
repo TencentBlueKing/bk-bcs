@@ -392,6 +392,7 @@ import useLog, { IClusterGroup, IRuleData } from './use-log';
 
 import $bkMessage from '@/common/bkmagic';
 import { LOG_COLLECTOR } from '@/common/constant';
+import { formatTimeWithTimezone } from '@/common/util';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import ClusterSelect from '@/components/cluster-selector/cluster-select.vue';
 import ContentHeader from '@/components/layout/Header.vue';
