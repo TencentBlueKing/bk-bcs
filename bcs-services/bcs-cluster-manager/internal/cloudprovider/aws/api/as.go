@@ -160,3 +160,18 @@ func (as *AutoScalingClient) SuspendProcesses(asName *string, processesName []st
 	blog.Infof("SuspendProcesses suspend processes %s successful", processesName)
 	return nil
 }
+
+// ResumeProcesses resume processes
+func (as *AutoScalingClient) ResumeProcesses(asName *string, processesName []string) error {
+	_, err := as.asClient.ResumeProcesses(&autoscaling.ScalingProcessQuery{
+		AutoScalingGroupName: asName,
+		ScalingProcesses:     aws.StringSlice(processesName),
+	})
+	if err != nil {
+		blog.Errorf("ResumeProcesses failed: %s", err)
+		return err
+	}
+
+	blog.Infof("ResumeProcesses resume processes %s successful", processesName)
+	return nil
+}
