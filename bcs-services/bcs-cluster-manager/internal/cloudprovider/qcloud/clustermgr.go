@@ -851,8 +851,8 @@ func (c *Cluster) AddSubnetsToCluster(ctx context.Context, subnet *proto.SubnetS
 	}
 
 	// 检查各区子网使用率
-	//goalRatio := opt.Cloud.GetNetworkInfo().GetUnderlayRatio()
-	//for i := range subnet.GetNew() {
+	// goalRatio := opt.Cloud.GetNetworkInfo().GetUnderlayRatio()
+	// for i := range subnet.GetNew() {
 	//	zoneRatio, ok := zoneSubnetRatio[subnet.GetNew()[i].GetZone()]
 	//	if ok && zoneRatio.Ratio < float64(goalRatio) {
 	//		return fmt.Errorf("zone[%s] usage lt goalRatio %+v", subnet.GetNew()[i].GetZone(), goalRatio)

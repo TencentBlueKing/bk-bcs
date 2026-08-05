@@ -79,9 +79,9 @@ func ModifyInstancesVpcTask(taskID string, stepName string) error {
 			fmt.Sprintf("ModifyInstancesVpcTask PreCheckModifyInstancesVpc failed, nodeIds:[%s], err:[%s]", nodeIds, err))
 		blog.Errorf("ModifyInstancesVpcTask[%s]: PreCheckModifyInstancesVpc for nodes[%v] failed, %s",
 			taskID, nodeIds, err.Error())
-		//retErr := fmt.Errorf("ModifyInstancesVpcTask PreCheckModifyInstancesVpc err, %s", err.Error())
-		//_ = state.UpdateStepFailure(start, stepName, retErr)
-		//return retErr
+		// retErr := fmt.Errorf("ModifyInstancesVpcTask PreCheckModifyInstancesVpc err, %s", err.Error())
+		// _ = state.UpdateStepFailure(start, stepName, retErr)
+		// return retErr
 	}
 
 	err = business.ModifyInstancesVpcAttribute(ctx, vpcID, nodeIds, dependInfo.CmOption)
