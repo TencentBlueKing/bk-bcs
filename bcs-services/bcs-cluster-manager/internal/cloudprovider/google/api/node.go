@@ -248,15 +248,22 @@ func (n *NodeManager) transInstanceIDsToNodes(ids []string, opt *cloudprovider.L
 // @param Instance: gcloud instance information, can not be nil;
 // @return Node: cluster-manager node information;
 func InstanceToNode(cli *ComputeServiceClient, ins *computev1.Instance) *proto.Node {
-	zoneInfo, _ := GetGCEResourceInfo(ins.Zone)
-	zone, _ := cli.GetZone(context.Background(), zoneInfo[len(zoneInfo)-1])
+	zoneInfo, err := GetGCEResourceInfo(ins.Zone)
+	if err != nil {
+		blog.Errorf("InstanceToNode GetGCEResourceInfo error: %s", err)
+	}
+
+	zone, err := cli.GetZone(context.Background(), zoneInfo[len(zoneInfo)-1])
+	if err != nil {
+		blog.Errorf("InstanceToNode GetZone error: %s", err)
+	}
 
 	node := &proto.Node{}
 	node.NodeID = strconv.Itoa(int(ins.Id))
 	node.NodeName = ins.Name
 	node.InnerIP = ins.NetworkInterfaces[0].NetworkIP
 
-	if zoneInfo != nil {
+	if zoneInfo != nil && zone != nil {
 		node.ZoneID = zone.Zone
 		zoneID, _ := strconv.Atoi(zone.ZoneID)
 		node.Zone = uint32(zoneID)
