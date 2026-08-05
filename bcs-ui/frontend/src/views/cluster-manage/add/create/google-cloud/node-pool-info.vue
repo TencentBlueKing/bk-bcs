@@ -13,98 +13,115 @@
       <FormGroup :title="$t('cluster.ca.nodePool.create.scaleInitConfig.title')" :allow-toggle="false">
         <p>{{$t('cluster.nodeTemplate.label.postInstall.title')}}</p>
         <div class="mt-[10px]">
-          <bcs-select class="max-w-[524px]" :clearable="false" v-model="scaleOutPostActionType">
-            <bcs-option id="simple" :name="$t('cluster.nodeTemplate.label.postInstall.type.scripts')"></bcs-option>
+          <bcs-select class="max-w-[524px]" clearable v-model="scaleOutPostActionType">
             <bcs-option id="complex" :name="$t('cluster.nodeTemplate.label.postInstall.type.sops')"></bcs-option>
           </bcs-select>
+          <template v-if="scaleOutPostActionType === 'complex'">
+            <BkSops
+              class="mt10"
+              actions-key="postActions"
+              :cluster-id="cluster.clusterID"
+              :addons="nodePoolInfoData.nodeTemplate.scaleOutExtraAddons"
+              :allow-skip-when-failed="allowSkipScaleOutWhenFailed"
+              ref="scaleOutRef">
+            </BkSops>
+            <p class="mt-[10px]">{{$t('generic.label.whenFailed')}}</p>
+            <bk-radio-group class="mt-[8px]" v-model="allowSkipScaleOutWhenFailed">
+              <bk-radio :value="false" class="text-[12px]">
+                {{ $t('cluster.ca.nodePool.create.scaleInitConfig.postInit.errorHandling.radio1') }}
+                <span class="text-[#699DF4]">
+                  [{{ $t('cluster.ca.nodePool.create.scaleInitConfig.label.keyStepsRecommended') }}]
+                </span>
+                <i
+                  class="bk-icon icon-info-circle"
+                  v-bk-tooltips="$t('cluster.ca.nodePool.create.scaleInitConfig.postInit.errorHandling.tips1')">
+                </i>
+              </bk-radio>
+              <bk-radio :value="true" class="text-[12px]">
+                {{ $t('cluster.ca.nodePool.create.scaleInitConfig.postInit.errorHandling.radio2') }}
+                <span class="text-[#979BA5]">
+                  [{{ $t('cluster.ca.nodePool.create.scaleInitConfig.label.unKeyStepsRecommended') }}]
+                </span>
+                <i
+                  class="bk-icon icon-info-circle"
+                  v-bk-tooltips="$t('cluster.ca.nodePool.create.scaleInitConfig.postInit.errorHandling.tips2')">
+                </i>
+              </bk-radio>
+            </bk-radio-group>
+          </template>
+        </div>
+      </FormGroup>
+      <div class="px-[16px]"><bcs-divider class="!my-[0px]"></bcs-divider></div>
+      <FormGroup :title="$t('cluster.ca.nodePool.create.scaleInitConfig.scaleInPreScript')" :allow-toggle="false">
+        <bcs-select class="max-w-[524px]" clearable v-model="scaleInPreActionType">
+          <bcs-option id="simple" :name="$t('cluster.nodeTemplate.label.postInstall.type.scripts')"></bcs-option>
+          <bcs-option id="complex" :name="$t('cluster.nodeTemplate.label.postInstall.type.sops')"></bcs-option>
+        </bcs-select>
+        <template v-if="scaleInPreActionType === 'simple'">
           <bcs-input
             type="textarea"
             class="mt10"
             :rows="6"
             :placeholder="$t('cluster.ca.nodePool.create.scaleInitConfig.placeholder')"
-            v-if="scaleOutPostActionType === 'simple'"
-            v-model="nodePoolInfoData.nodeTemplate.userScript">
+            v-model="nodePoolInfoData.nodeTemplate.scaleInPreScript">
           </bcs-input>
+          <p class="mt-[10px]">{{$t('generic.label.whenFailed')}}</p>
+          <bk-radio-group class="mt-[8px]" v-model="allowSkipScaleInWhenFailed">
+            <bk-radio :value="false" class="text-[12px]">
+              {{ $t('cluster.ca.nodePool.create.scaleInitConfig.recycleClean.errorHandling.radio1') }}
+              <span class="text-[#699DF4]">
+                [{{ $t('cluster.ca.nodePool.create.scaleInitConfig.label.keyStepsRecommended') }}]
+              </span>
+              <i
+                class="bk-icon icon-info-circle"
+                v-bk-tooltips="$t('cluster.ca.nodePool.create.scaleInitConfig.recycleClean.errorHandling.tips1')">
+              </i>
+            </bk-radio>
+            <bk-radio :value="true" class="text-[12px]">
+              {{ $t('cluster.ca.nodePool.create.scaleInitConfig.recycleClean.errorHandling.radio2') }}
+              <span class="text-[#979BA5]">
+                [{{ $t('cluster.ca.nodePool.create.scaleInitConfig.label.unKeyStepsRecommended') }}]
+              </span>
+              <i
+                class="bk-icon icon-info-circle"
+                v-bk-tooltips="$t('cluster.ca.nodePool.create.scaleInitConfig.recycleClean.errorHandling.tips2')">
+              </i>
+            </bk-radio>
+          </bk-radio-group>
+        </template>
+        <template v-else-if="scaleInPreActionType === 'complex'">
           <BkSops
             class="mt10"
-            actions-key="postActions"
+            actions-key="preActions"
+            :addons="nodePoolInfoData.nodeTemplate.scaleInExtraAddons"
             :cluster-id="cluster.clusterID"
-            :addons="nodePoolInfoData.nodeTemplate.scaleOutExtraAddons"
-            :allow-skip-when-failed="allowSkipScaleOutWhenFailed"
-            ref="scaleOutRef"
-            v-else>
+            :allow-skip-when-failed="allowSkipScaleInWhenFailed"
+            ref="scaleInRef">
           </BkSops>
-        </div>
-        <p class="mt-[10px]">{{$t('generic.label.whenFailed')}}</p>
-        <bk-radio-group class="mt-[8px]" v-model="allowSkipScaleOutWhenFailed">
-          <bk-radio :value="false" class="text-[12px]">
-            {{ $t('cluster.ca.nodePool.create.scaleInitConfig.postInit.errorHandling.radio1') }}
-            <span class="text-[#699DF4]">
-              [{{ $t('cluster.ca.nodePool.create.scaleInitConfig.label.keyStepsRecommended') }}]
-            </span>
-            <i
-              class="bk-icon icon-info-circle"
-              v-bk-tooltips="$t('cluster.ca.nodePool.create.scaleInitConfig.postInit.errorHandling.tips1')">
-            </i>
-          </bk-radio>
-          <bk-radio :value="true" class="text-[12px]">
-            {{ $t('cluster.ca.nodePool.create.scaleInitConfig.postInit.errorHandling.radio2') }}
-            <span class="text-[#979BA5]">
-              [{{ $t('cluster.ca.nodePool.create.scaleInitConfig.label.unKeyStepsRecommended') }}]
-            </span>
-            <i
-              class="bk-icon icon-info-circle"
-              v-bk-tooltips="$t('cluster.ca.nodePool.create.scaleInitConfig.postInit.errorHandling.tips2')">
-            </i>
-          </bk-radio>
-        </bk-radio-group>
-      </FormGroup>
-      <div class="px-[16px]"><bcs-divider class="!my-[0px]"></bcs-divider></div>
-      <FormGroup :title="$t('cluster.ca.nodePool.create.scaleInitConfig.scaleInPreScript')" :allow-toggle="false">
-        <bcs-select class="max-w-[524px]" :clearable="false" v-model="scaleInPreActionType">
-          <bcs-option id="simple" :name="$t('cluster.nodeTemplate.label.postInstall.type.scripts')"></bcs-option>
-          <bcs-option id="complex" :name="$t('cluster.nodeTemplate.label.postInstall.type.sops')"></bcs-option>
-        </bcs-select>
-        <bcs-input
-          type="textarea"
-          class="mt10"
-          :rows="6"
-          :placeholder="$t('cluster.ca.nodePool.create.scaleInitConfig.placeholder')"
-          v-if="scaleInPreActionType === 'simple'"
-          v-model="nodePoolInfoData.nodeTemplate.scaleInPreScript">
-        </bcs-input>
-        <BkSops
-          class="mt10"
-          actions-key="preActions"
-          :addons="nodePoolInfoData.nodeTemplate.scaleInExtraAddons"
-          :cluster-id="cluster.clusterID"
-          :allow-skip-when-failed="allowSkipScaleInWhenFailed"
-          ref="scaleInRef"
-          v-else>
-        </BkSops>
-        <p class="mt-[10px]">{{$t('generic.label.whenFailed')}}</p>
-        <bk-radio-group class="mt-[8px]" v-model="allowSkipScaleInWhenFailed">
-          <bk-radio :value="false" class="text-[12px]">
-            {{ $t('cluster.ca.nodePool.create.scaleInitConfig.recycleClean.errorHandling.radio1') }}
-            <span class="text-[#699DF4]">
-              [{{ $t('cluster.ca.nodePool.create.scaleInitConfig.label.keyStepsRecommended') }}]
-            </span>
-            <i
-              class="bk-icon icon-info-circle"
-              v-bk-tooltips="$t('cluster.ca.nodePool.create.scaleInitConfig.recycleClean.errorHandling.tips1')">
-            </i>
-          </bk-radio>
-          <bk-radio :value="true" class="text-[12px]">
-            {{ $t('cluster.ca.nodePool.create.scaleInitConfig.recycleClean.errorHandling.radio2') }}
-            <span class="text-[#979BA5]">
-              [{{ $t('cluster.ca.nodePool.create.scaleInitConfig.label.unKeyStepsRecommended') }}]
-            </span>
-            <i
-              class="bk-icon icon-info-circle"
-              v-bk-tooltips="$t('cluster.ca.nodePool.create.scaleInitConfig.recycleClean.errorHandling.tips2')">
-            </i>
-          </bk-radio>
-        </bk-radio-group>
+          <p class="mt-[10px]">{{$t('generic.label.whenFailed')}}</p>
+          <bk-radio-group class="mt-[8px]" v-model="allowSkipScaleInWhenFailed">
+            <bk-radio :value="false" class="text-[12px]">
+              {{ $t('cluster.ca.nodePool.create.scaleInitConfig.recycleClean.errorHandling.radio1') }}
+              <span class="text-[#699DF4]">
+                [{{ $t('cluster.ca.nodePool.create.scaleInitConfig.label.keyStepsRecommended') }}]
+              </span>
+              <i
+                class="bk-icon icon-info-circle"
+                v-bk-tooltips="$t('cluster.ca.nodePool.create.scaleInitConfig.recycleClean.errorHandling.tips1')">
+              </i>
+            </bk-radio>
+            <bk-radio :value="true" class="text-[12px]">
+              {{ $t('cluster.ca.nodePool.create.scaleInitConfig.recycleClean.errorHandling.radio2') }}
+              <span class="text-[#979BA5]">
+                [{{ $t('cluster.ca.nodePool.create.scaleInitConfig.label.unKeyStepsRecommended') }}]
+              </span>
+              <i
+                class="bk-icon icon-info-circle"
+                v-bk-tooltips="$t('cluster.ca.nodePool.create.scaleInitConfig.recycleClean.errorHandling.tips2')">
+              </i>
+            </bk-radio>
+          </bk-radio-group>
+        </template>
       </FormGroup>
     </div>
     <div class="bcs-border-top z-10 flex items-center sticky bottom-0 bg-[#fff] h-[60px] px-[24px]" v-if="showFooter">
@@ -175,8 +192,8 @@ export default defineComponent({
       labels: {},
     });
 
-    const scaleOutPostActionType = ref<'complex' | 'simple'>('simple');
-    const scaleInPreActionType = ref<'complex' | 'simple'>('simple');
+    const scaleOutPostActionType = ref<'complex' | ''>('');
+    const scaleInPreActionType = ref<'complex' | 'simple' | ''>('');
 
     const nodePoolInfoRef = ref<any>(null);
     const basicInfoRef = ref<any>(null);
@@ -186,22 +203,25 @@ export default defineComponent({
     const getNodePoolData = () => {
       // 处理基本参数
       nodePoolInfoData.value = mergeDeep(nodePoolInfoData.value, basicInfoRef.value?.nodePoolInfo || {});
-      // 处理扩容脚本参数
+      // 处理扩容后置流程参数
       if (scaleOutPostActionType.value === 'complex') {
         nodePoolInfoData.value.nodeTemplate.userScript = '';
         nodePoolInfoData.value.nodeTemplate.scaleOutExtraAddons = scaleOutRef.value?.bkSopsData;
       } else {
+        nodePoolInfoData.value.nodeTemplate.userScript = '';
         nodePoolInfoData.value.nodeTemplate.scaleOutExtraAddons = {};
-        nodePoolInfoData.value.nodeTemplate.allowSkipScaleOutWhenFailed = allowSkipScaleOutWhenFailed.value;
       }
 
-      // 处理缩容前置脚本参数
+      // 处理缩容前置流程参数
       if (scaleInPreActionType.value === 'complex') {
         nodePoolInfoData.value.nodeTemplate.scaleInPreScript = '';
         nodePoolInfoData.value.nodeTemplate.scaleInExtraAddons = scaleInRef.value?.bkSopsData;
-      } else {
+      } else if (scaleInPreActionType.value === 'simple') {
         nodePoolInfoData.value.nodeTemplate.scaleInExtraAddons = {};
         nodePoolInfoData.value.nodeTemplate.allowSkipScaleInWhenFailed = allowSkipScaleInWhenFailed.value;
+      } else {
+        nodePoolInfoData.value.nodeTemplate.scaleInPreScript = '';
+        nodePoolInfoData.value.nodeTemplate.scaleInExtraAddons = {};
       }
 
       // 处理label参数 后端label放两地方
@@ -244,21 +264,20 @@ export default defineComponent({
     const allowSkipScaleInWhenFailed = ref(true);
 
     onMounted(() => {
-      scaleOutPostActionType.value = nodePoolInfoData.value.nodeTemplate.scaleOutExtraAddons?.postActions?.length ? 'complex' : 'simple';
-      scaleInPreActionType.value = nodePoolInfoData.value.nodeTemplate.scaleInExtraAddons?.preActions?.length ? 'complex' : 'simple';
-      if (scaleOutPostActionType.value === 'complex') {
-        const addons = nodePoolInfoData.value.nodeTemplate?.scaleOutExtraAddons;
-        const plugin = addons?.postActions?.[0];// 取postAction第1个（目前只支持一个），但是后端设计为了数组
-        allowSkipScaleOutWhenFailed.value = !!addons?.plugins?.[plugin]?.allowSkipWhenFailed;
-      } else {
-        allowSkipScaleOutWhenFailed.value = !!nodePoolInfoData.value.nodeTemplate.allowSkipScaleOutWhenFailed;
+      const scaleOutAddons = nodePoolInfoData.value.nodeTemplate?.scaleOutExtraAddons;
+      if (scaleOutAddons?.postActions?.length) {
+        scaleOutPostActionType.value = 'complex';
+        const plugin = scaleOutAddons.postActions[0];// 取postAction第1个（目前只支持一个），但是后端设计为了数组
+        allowSkipScaleOutWhenFailed.value = !!scaleOutAddons.plugins?.[plugin]?.allowSkipWhenFailed;
       }
 
-      if (scaleInPreActionType.value === 'complex') {
-        const addons = nodePoolInfoData.value.nodeTemplate?.scaleInExtraAddons;
-        const plugin = addons?.preActions?.[0];// 取preAction第1个（目前只支持一个），但是后端设计为了数组
-        allowSkipScaleInWhenFailed.value = !!addons?.plugins?.[plugin]?.allowSkipWhenFailed;
-      } else {
+      const scaleInAddons = nodePoolInfoData.value.nodeTemplate?.scaleInExtraAddons;
+      if (scaleInAddons?.preActions?.length) {
+        scaleInPreActionType.value = 'complex';
+        const plugin = scaleInAddons.preActions[0];// 取preAction第1个（目前只支持一个），但是后端设计为了数组
+        allowSkipScaleInWhenFailed.value = !!scaleInAddons.plugins?.[plugin]?.allowSkipWhenFailed;
+      } else if (nodePoolInfoData.value.nodeTemplate.scaleInPreScript) {
+        scaleInPreActionType.value = 'simple';
         allowSkipScaleInWhenFailed.value = nodePoolInfoData.value.nodeTemplate.allowSkipScaleInWhenFailed !== undefined
           ? !!nodePoolInfoData.value.nodeTemplate.allowSkipScaleInWhenFailed
           : true;

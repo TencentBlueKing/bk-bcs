@@ -1209,6 +1209,7 @@ cluster:
         nodeCountsMaxSize: The number of Node count cannot be greater than the Node quota
         minNodes: The number of Node count must be greater than 0
       label:
+        ID: Node pool ID
         nameAndID: Node pool name (ID)
         nodeQuota: Node quota
         nodeCounts: Node count
@@ -3467,9 +3468,6 @@ googleCA:
       depend on these restricted features, currently only the operating system
       “Ubuntu including Containerd (ubuntu_containerd)” is supported.
     zone: 'Currently, only a single availability zone is supported.'
-    dataDisk: >-
-      After purchasing a data disk and adding nodes, you need to manually format
-      and mount the disk.
     securityGroup: >-
       Node pool uses VPC firewall rules to control the incoming/outgoing traffic
       of node instances, please go to the {0} page to set up.
