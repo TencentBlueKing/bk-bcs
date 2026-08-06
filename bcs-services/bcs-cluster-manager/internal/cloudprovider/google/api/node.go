@@ -231,7 +231,11 @@ func (n *NodeManager) transInstanceIDsToNodes(ids []string, opt *cloudprovider.L
 	var nodes []*proto.Node
 	for _, in := range insList.Items {
 		blog.Infof("transInstanceIDsToNodes instance[%s], ip[%s]", in.Name, in.NetworkInterfaces[0].NetworkIP)
-		node := InstanceToNode(client, in)
+		node, err := InstanceToNode(client, in)
+		if err != nil {
+			blog.Errorf("transInstanceIDsToNodes InstanceToNode failed, %s", err.Error())
+			return nil, err
+		}
 		// clean duplicated Node if user input multiple ip that
 		// belong to one instance
 		if _, ok := nodeMap[node.NodeID]; ok {
@@ -247,15 +251,17 @@ func (n *NodeManager) transInstanceIDsToNodes(ids []string, opt *cloudprovider.L
 // InstanceToNode parse Instance information in gcloud to Node in clustermanager
 // @param Instance: gcloud instance information, can not be nil;
 // @return Node: cluster-manager node information;
-func InstanceToNode(cli *ComputeServiceClient, ins *computev1.Instance) *proto.Node {
+func InstanceToNode(cli *ComputeServiceClient, ins *computev1.Instance) (*proto.Node, error) {
 	zoneInfo, err := GetGCEResourceInfo(ins.Zone)
 	if err != nil {
 		blog.Errorf("InstanceToNode GetGCEResourceInfo error: %s", err)
+		return nil, err
 	}
 
 	zone, err := cli.GetZone(context.Background(), zoneInfo[len(zoneInfo)-1])
 	if err != nil {
 		blog.Errorf("InstanceToNode GetZone error: %s", err)
+		return nil, err
 	}
 
 	node := &proto.Node{}
@@ -277,7 +283,7 @@ func InstanceToNode(cli *ComputeServiceClient, ins *computev1.Instance) *proto.N
 	node.VPC = networkInfo[len(networkInfo)-1]
 	node.Status = ins.Status
 
-	return node
+	return node, nil
 }
 
 // ListRuntimeInfo get runtime info list

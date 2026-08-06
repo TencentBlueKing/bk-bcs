@@ -1001,7 +1001,10 @@ func updateNodeToDB(ctx context.Context, state *cloudprovider.TaskState, info *c
 				return fmt.Errorf("updateNodeToDB get instance[%s] failed, %v", instance.Instance, errGet)
 			}
 
-			node := api.InstanceToNode(cli, ins)
+			node, errToNode := api.InstanceToNode(cli, ins)
+			if errToNode != nil {
+				return fmt.Errorf("updateNodeToDB InstanceToNode[%s] failed, %v", instance.Instance, errToNode)
+			}
 
 			if ins.Status == api.InstanceStatusRunning {
 				addSuccessNodes = append(addSuccessNodes, node.InnerIP)
