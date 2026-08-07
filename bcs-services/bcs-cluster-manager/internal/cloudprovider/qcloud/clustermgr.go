@@ -851,8 +851,8 @@ func (c *Cluster) AddSubnetsToCluster(ctx context.Context, subnet *proto.SubnetS
 	}
 
 	// 检查各区子网使用率
-	//goalRatio := opt.Cloud.GetNetworkInfo().GetUnderlayRatio()
-	//for i := range subnet.GetNew() {
+	// goalRatio := opt.Cloud.GetNetworkInfo().GetUnderlayRatio()
+	// for i := range subnet.GetNew() {
 	//	zoneRatio, ok := zoneSubnetRatio[subnet.GetNew()[i].GetZone()]
 	//	if ok && zoneRatio.Ratio < float64(goalRatio) {
 	//		return fmt.Errorf("zone[%s] usage lt goalRatio %+v", subnet.GetNew()[i].GetZone(), goalRatio)
@@ -875,6 +875,7 @@ func (c *Cluster) AddSubnetsToCluster(ctx context.Context, subnet *proto.SubnetS
 
 	// 仅当 IP 个数限制与整体使用率限制同时触发时才禁止扩容(各自为 0 表示关闭该限制)
 	if ipNumLimitHit && ratioLimitHit {
+		// nolint: lll
 		errMsg := fmt.Sprintf("cluster[%s] underlayIP availableNum %d gt UsageIPNumLimit %d and currentUsageRatio %+v lt UsageRatioLimit %+v",
 			opt.Cluster.ClusterID, totalAvailableIPs, underlayUsageIPNumLimit, totalRatio, underlayUsageRatioLimit)
 		blog.Errorf(errMsg)
