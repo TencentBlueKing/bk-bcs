@@ -104,6 +104,7 @@ func parseTemplateFileVar(template, renderMode string) []string {
 	vars := make([]string, 0)
 	matches := re.FindAllStringSubmatch(template, -1)
 	for _, match := range matches {
+		// nolint: gosimple
 		if match == nil || len(match) < 2 {
 			continue
 		}

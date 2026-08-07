@@ -259,7 +259,7 @@ var exceptedContainers = []model.Container{
 				SuccessThreshold: 1,
 				FailureThreshold: 3,
 				Type:             resCsts.ProbeTypeTCPSocket,
-				Port:             80,
+				Port:             "80",
 			},
 			LivenessProbe: model.Probe{
 				Enabled:          true,

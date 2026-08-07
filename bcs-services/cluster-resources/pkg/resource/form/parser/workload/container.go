@@ -165,11 +165,11 @@ func parseProbe(raw map[string]interface{}, probe *model.Probe) {
 		probe.Enabled = true
 		probe.Type = resCsts.ProbeTypeHTTPGet
 		probe.Path = mapx.GetStr(httpGet, "path")
-		probe.Port = mapx.GetInt64(httpGet, "port")
+		probe.Port = mapx.GetIntStr(httpGet, "port")
 	} else if tcpSocket, ok := raw["tcpSocket"].(map[string]interface{}); ok {
 		probe.Enabled = true
 		probe.Type = resCsts.ProbeTypeTCPSocket
-		probe.Port = mapx.GetInt64(tcpSocket, "port")
+		probe.Port = mapx.GetIntStr(tcpSocket, "port")
 	} else if exec, ok := raw["exec"].(map[string]interface{}); ok {
 		probe.Enabled = true
 		probe.Type = resCsts.ProbeTypeExec

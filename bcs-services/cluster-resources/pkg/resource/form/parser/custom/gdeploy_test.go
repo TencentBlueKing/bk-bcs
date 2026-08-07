@@ -137,7 +137,7 @@ var exceptedContainerGroup = model.ContainerGroup{
 					SuccessThreshold: 1,
 					FailureThreshold: 3,
 					Type:             "tcpSocket",
-					Port:             80,
+					Port:             "80",
 				},
 				LivenessProbe: model.Probe{
 					Enabled:          true,
