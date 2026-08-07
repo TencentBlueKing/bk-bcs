@@ -1,3 +1,5 @@
+//go:build integration
+
 /*
  * Tencent is pleased to support the open source community by making Blueking Container Service available.
  * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
@@ -9,6 +11,11 @@
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+// These tests talk to a real azure subscription through env credentials and mutate real
+// load balancers / application gateways. Run them explicitly with:
+//
+//	go test -tags integration ./internal/cloud/azure/...
 
 package azure
 

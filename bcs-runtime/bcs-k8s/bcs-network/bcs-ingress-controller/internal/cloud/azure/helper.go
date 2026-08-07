@@ -75,18 +75,24 @@ func (a *Alb) ensureLoadBalancerListener(region string, listeners []*networkexte
 	}
 
 	// ensure失败的监听器，需要将原因返回上层
+	// 遍历全部listener而非successListenerList，否则address pool阶段失败的listener
+	// 不会出现在retMap中，上层只能给出笼统的错误
 	retMap := make(map[string]cloud.Result)
-	for _, li := range successListenerList {
+	for _, li := range listeners {
 		if errI, ok := failedListenerMap.Load(li.GetName()); ok {
+			err, isErr := errI.(error)
+			if !isErr {
+				err = fmt.Errorf("ensure listener '%s' failed", li.GetName())
+			}
 			retMap[li.GetName()] = cloud.Result{
 				IsError: true,
-				Err:     errI.(error),
+				Err:     err,
 			}
-		} else {
-			retMap[li.GetName()] = cloud.Result{
-				IsError: false,
-				Res:     li.GetName(),
-			}
+			continue
+		}
+		retMap[li.GetName()] = cloud.Result{
+			IsError: false,
+			Res:     li.GetName(),
 		}
 	}
 
@@ -158,6 +164,13 @@ func (a *Alb) ensureLoadBalancer(region string, listeners []*networkextensionv1.
 	// 2. ensure loadBalancingRules
 	lb, err = a.ensureLoadBalancingRule(lb, listeners)
 	if err != nil {
+		return err
+	}
+
+	if err = validateLBChildNamesUnique(lb); err != nil {
+		return err
+	}
+	if err = validateLBRuleEndpointsUnique(lb); err != nil {
 		return err
 	}
 
@@ -253,7 +266,8 @@ func (a *Alb) ensureLoadBalancingRule(loadBalancer *armnetwork.LoadBalancer,
 
 		if listener.Spec.ListenerAttribute != nil && listener.Spec.ListenerAttribute.SessionTime != 0 {
 			sessionTime := listener.Spec.ListenerAttribute.SessionTime
-			// sessionTime unit is seconds
+			// sessionTime is in minutes here, matching azure's idleTimeoutInMinutes range of 4~30
+			// which validateLBListenerAttribute enforces
 			newRule.Properties.IdleTimeoutInMinutes = to.Int32Ptr(int32(sessionTime))
 		}
 
@@ -282,23 +296,8 @@ func (a *Alb) deleteLoadBalancerListener(region string, listeners []*networkexte
 	// 一批listener属于同一个lb
 	lbName := listeners[0].Spec.LoadbalancerID
 
-	group := &errgroup.Group{}
-	// 设置goroutine上限
-	group.SetLimit(DeleteGoroutineLimit)
-
 	for _, listener := range listeners {
-		poolName := getLBRuleTgName(listener.Name, listener.Spec.Port)
-		poolNameSet.Add(poolName)
-		group.Go(func() error {
-			if err := a.sdkWrapper.DeleteLoadBalanceAddressPool(lbName, poolName); err != nil {
-				return err
-			}
-			return nil
-		})
-	}
-
-	if err := group.Wait(); err != nil {
-		return err
+		poolNameSet.Add(getLBRuleTgName(listener.Name, listener.Spec.Port))
 	}
 
 	lbResp, err := a.sdkWrapper.GetLoadBalancer(region, lbName)
@@ -307,7 +306,7 @@ func (a *Alb) deleteLoadBalancerListener(region string, listeners []*networkexte
 	}
 
 	lb := lbResp.LoadBalancer
-	// 2. delete probe
+	// 1. delete probe
 	newProbes := make([]*armnetwork.Probe, 0)
 	for _, probe := range lb.Properties.Probes {
 		if probe.Name != nil && poolNameSet.Contains(*probe.Name) {
@@ -318,7 +317,7 @@ func (a *Alb) deleteLoadBalancerListener(region string, listeners []*networkexte
 	}
 	lb.Properties.Probes = newProbes
 
-	// 3. delete rule
+	// 2. delete rule
 	newRules := make([]*armnetwork.LoadBalancingRule, 0)
 	for _, rule := range lb.Properties.LoadBalancingRules {
 		if rule.Name != nil && poolNameSet.Contains(*rule.Name) {
@@ -329,9 +328,32 @@ func (a *Alb) deleteLoadBalancerListener(region string, listeners []*networkexte
 	}
 
 	lb.Properties.LoadBalancingRules = newRules
-	_, err = a.sdkWrapper.CreateOrUpdateLoadBalancer(lbName, lb)
 
-	if err != nil {
+	if err = validateLBChildNamesUnique(&lb); err != nil {
+		return err
+	}
+
+	// 3. 必须先解除loadBalancingRule/probe对addressPool的引用再删除addressPool，
+	// 否则azure会拒绝删除仍被引用的addressPool
+	if _, err = a.sdkWrapper.CreateOrUpdateLoadBalancer(lbName, lb); err != nil {
+		return err
+	}
+
+	group := &errgroup.Group{}
+	// 设置goroutine上限
+	group.SetLimit(DeleteGoroutineLimit)
+
+	for _, listener := range listeners {
+		poolName := getLBRuleTgName(listener.Name, listener.Spec.Port)
+		group.Go(func() error {
+			if err := a.sdkWrapper.DeleteLoadBalanceAddressPool(lbName, poolName); err != nil {
+				return err
+			}
+			return nil
+		})
+	}
+
+	if err := group.Wait(); err != nil {
 		return err
 	}
 
@@ -390,13 +412,34 @@ func (a *Alb) ensureApplicationGatewayListener(region string, listeners []*netwo
 	// 7. URLPathMap
 	appGateway = a.ensureUrlPathMap(appGateway, listeners)
 
-	// 7. request routing rule
+	// 8. request routing rule
 	appGateway, err = a.ensureRequestRoutingRule(appGateway, listeners)
 	if err != nil {
 		return err
 	}
 
-	// 8. update application gateway
+	// 9. drop routes that belong to these listeners but are no longer declared in their spec,
+	// otherwise they keep referencing pools/settings that step 3~5 already removed
+	appGateway = cleanupStaleAgRoutes(appGateway, listeners)
+
+	// 10. a routing rule shared with another listener survives step 9, but its rule level backend
+	// may still point at a pool this reconcile deleted, repair those references before sending
+	appGateway = a.repairAgDanglingRefs(appGateway, listeners)
+
+	if err = backfillRoutingRulePriorities(appGateway); err != nil {
+		return err
+	}
+	if err = validateAgChildNamesUnique(appGateway); err != nil {
+		return err
+	}
+	if err = validateAgNoDanglingRefs(appGateway, listeners); err != nil {
+		return err
+	}
+	if err = validateAgRulePriorityUnique(appGateway, listeners); err != nil {
+		return err
+	}
+
+	// 11. update application gateway
 	_, err = a.sdkWrapper.CreateOrUpdateApplicationGateway(listeners[0].Spec.LoadbalancerID, *appGateway)
 	if err != nil {
 		return err
@@ -405,20 +448,57 @@ func (a *Alb) ensureApplicationGatewayListener(region string, listeners []*netwo
 	return nil
 }
 
+// repairAgDanglingRefs clears rule level backend references that this reconcile invalidated.
+// Only path based routing rules are repaired. Azure routes a path based rule entirely through its
+// URLPathMap, whose DefaultBackendAddressPool serves unmatched requests, so the rule level backend
+// carries no routing meaning and dropping it is what the Azure reference model prescribes. Rules
+// written by an older version of this controller still carry it, and a rule shared with another
+// listener is not rewritten by ensure*, so the stale reference has to be cleared here.
+// Basic rules are left alone: there the rule level backend is authoritative, so a dangling one is
+// reported by validateAgNoDanglingRefs instead of being silently changed.
+func (a *Alb) repairAgDanglingRefs(appGateway *armnetwork.ApplicationGateway,
+	listeners []*networkextensionv1.Listener) *armnetwork.ApplicationGateway {
+	if appGateway == nil || appGateway.Properties == nil || len(listeners) == 0 {
+		return appGateway
+	}
+	checker := newAgBackendRefChecker(appGateway, listeners)
+
+	for _, routingRule := range appGateway.Properties.RequestRoutingRules {
+		if !isPathBasedRoutingRule(routingRule) {
+			continue
+		}
+		if checker.isDangling(subResourceName(routingRule.Properties.BackendAddressPool), checker.pools) {
+			routingRule.Properties.BackendAddressPool = nil
+		}
+		if checker.isDangling(subResourceName(routingRule.Properties.BackendHTTPSettings), checker.settings) {
+			routingRule.Properties.BackendHTTPSettings = nil
+		}
+	}
+
+	return appGateway
+}
+
 func (a *Alb) ensureFrontendPortForAg(appGateway *armnetwork.ApplicationGateway,
 	listeners []*networkextensionv1.Listener) *armnetwork.ApplicationGateway {
 	for _, listener := range listeners {
 		listenPort := listener.Spec.Port
+		portName := fmt.Sprintf("port_%d", listenPort)
 
+		exists := false
 		for _, port := range appGateway.Properties.FrontendPorts {
-			if port.Name != nil && *port.Name == fmt.Sprintf("port_%d", listenPort) {
-				return appGateway
+			if port.Name != nil && *port.Name == portName {
+				exists = true
+				break
 			}
+		}
+		if exists {
+			// continue so remaining listeners can still ensure their ports
+			continue
 		}
 
 		appGateway.Properties.FrontendPorts = append(appGateway.Properties.FrontendPorts,
 			&armnetwork.ApplicationGatewayFrontendPort{
-				Name:       to.StringPtr(fmt.Sprintf("port_%d", listenPort)),
+				Name:       to.StringPtr(portName),
 				Properties: &armnetwork.ApplicationGatewayFrontendPortPropertiesFormat{Port: to.Int32Ptr(int32(listenPort))},
 			})
 	}
@@ -449,23 +529,22 @@ func (a *Alb) ensureAddrPoolForAg(appGateway *armnetwork.ApplicationGateway,
 				},
 			})
 		}
-
-		newPools = append(newPools, &armnetwork.ApplicationGatewayBackendAddressPool{
-			Name: to.StringPtr(DefaultBackendPoolName),
-			Properties: &armnetwork.ApplicationGatewayBackendAddressPoolPropertiesFormat{
-				BackendAddresses: make([]*armnetwork.ApplicationGatewayBackendAddress, 0),
-			},
-		})
-
 	}
 
-	for _, listener := range listeners {
-		// exclude pool relates to current listener
-		for _, pool := range appGateway.Properties.BackendAddressPools {
-			if strings.HasPrefix(*pool.Name, listener.Name) || *pool.Name == DefaultBackendPoolName {
-				continue
-			}
+	// default pool is shared; add once regardless of listener count
+	newPools = append(newPools, &armnetwork.ApplicationGatewayBackendAddressPool{
+		Name: to.StringPtr(DefaultBackendPoolName),
+		Properties: &armnetwork.ApplicationGatewayBackendAddressPoolPropertiesFormat{
+			BackendAddresses: make([]*armnetwork.ApplicationGatewayBackendAddress, 0),
+		},
+	})
 
+	// keep pools not owned by listeners being reconciled (once each)
+	for _, pool := range appGateway.Properties.BackendAddressPools {
+		if pool == nil || pool.Name == nil {
+			continue
+		}
+		if keepExistingAgResource(*pool.Name, listeners, DefaultBackendPoolName) {
 			newPools = append(newPools, pool)
 		}
 	}
@@ -525,13 +604,12 @@ func (a *Alb) ensureBackendSettings(appGateway *armnetwork.ApplicationGateway,
 		},
 	})
 
-	for _, listener := range listeners {
-		// exclude settings relates to current listener
-		for _, setting := range appGateway.Properties.BackendHTTPSettingsCollection {
-			if strings.HasPrefix(*setting.Name, listener.Name) || *setting.Name == DefaultBackendSettingName {
-				continue
-			}
-
+	// keep settings not owned by listeners being reconciled (once each)
+	for _, setting := range appGateway.Properties.BackendHTTPSettingsCollection {
+		if setting == nil || setting.Name == nil {
+			continue
+		}
+		if keepExistingAgResource(*setting.Name, listeners, DefaultBackendSettingName) {
 			newSettings = append(newSettings, setting)
 		}
 	}
@@ -576,8 +654,12 @@ func (a *Alb) ensureProbeForAg(appGateway *armnetwork.ApplicationGateway,
 					Port:                                to.Int32Ptr(int32(healthCheck.HealthCheckPort)),
 					Protocol:                            transAgProtocolPtr(healthCheck.HealthCheckProtocol),
 					Timeout:                             to.Int32Ptr(int32(DefaultRequestTimeout)),
-					UnhealthyThreshold:                  to.Int32Ptr(int32(healthCheck.UnHealthNum)),
+					// azure only accepts 1~20 here, sending the unset 0 fails the whole gateway update
+					UnhealthyThreshold: to.Int32Ptr(int32(DefaultProbeUnhealthyThreshold)),
 				},
+			}
+			if healthCheck.UnHealthNum != 0 {
+				newProbe.Properties.UnhealthyThreshold = to.Int32Ptr(int32(healthCheck.UnHealthNum))
 			}
 			// 用户未配置健康检查端口时，使用后端服务的端口
 			if healthCheck.HealthCheckPort == 0 {
@@ -610,13 +692,12 @@ func (a *Alb) ensureProbeForAg(appGateway *armnetwork.ApplicationGateway,
 		}
 	}
 
-	for _, listener := range listeners {
-		// exclude probe relates to current listener
-		for _, probe := range appGateway.Properties.Probes {
-			if strings.HasPrefix(*probe.Name, listener.Name) {
-				continue
-			}
-
+	// keep probes not owned by listeners being reconciled (once each)
+	for _, probe := range appGateway.Properties.Probes {
+		if probe == nil || probe.Name == nil {
+			continue
+		}
+		if keepExistingAgResource(*probe.Name, listeners) {
 			newProbes = append(newProbes, probe)
 		}
 	}
@@ -639,12 +720,12 @@ func (a *Alb) ensureHttpListenerForAg(appGateway *armnetwork.ApplicationGateway,
 	for _, listener := range listeners {
 		for _, rule := range listener.Spec.Rules {
 			httpListenerName := getHttpListenerName(listener.Spec.Port, rule.Domain)
+			// AGW allows one HTTP listener per port+hostname; multi-path rules share it
+			if listenerNameSet.Contains(httpListenerName) {
+				continue
+			}
 
 			listenPort := listener.Spec.Port
-			var hostNamePtr *string
-			if rule.Domain != "" {
-				hostNamePtr = to.StringPtr(rule.Domain)
-			}
 
 			// translate cr field to cloud request field
 			newHttpListener := &armnetwork.ApplicationGatewayHTTPListener{
@@ -653,14 +734,29 @@ func (a *Alb) ensureHttpListenerForAg(appGateway *armnetwork.ApplicationGateway,
 					FrontendIPConfiguration: a.resourceHelper.getSubResourceByID(*frontIPConfigurationID),
 					FrontendPort: a.resourceHelper.genSubResource(ResourceProviderApplicationGateway,
 						listener.Spec.LoadbalancerID, ResourceTypeFrontendPorts, fmt.Sprintf("port_%d", listenPort)),
-					HostName: hostNamePtr,
 					Protocol: transAgProtocolPtr(listener.Spec.Protocol),
 				},
 			}
-			if strings.ToUpper(listener.Spec.Protocol) == AzureProtocolHTTPS && listener.Spec.Certificate != nil {
-				newHttpListener.Properties.SSLCertificate = a.resourceHelper.genSubResource(
-					ResourceProviderApplicationGateway, listener.Spec.LoadbalancerID, ResourceTypeSSLCertificate,
-					listener.Spec.Certificate.CertID)
+			// HostName only takes one concrete name, a wildcard has to go through HostNames.
+			// The two fields are mutually exclusive.
+			switch {
+			case rule.Domain == "":
+			case isWildcardDomain(rule.Domain):
+				newHttpListener.Properties.HostNames = []*string{to.StringPtr(rule.Domain)}
+			default:
+				newHttpListener.Properties.HostName = to.StringPtr(rule.Domain)
+			}
+			if strings.ToUpper(listener.Spec.Protocol) == AzureProtocolHTTPS {
+				if listener.Spec.Certificate != nil {
+					newHttpListener.Properties.SSLCertificate = a.resourceHelper.genSubResource(
+						ResourceProviderApplicationGateway, listener.Spec.LoadbalancerID,
+						ResourceTypeSSLCertificate, listener.Spec.Certificate.CertID)
+				}
+				// A https listener carrying a host name is a multi site listener, azure requires SNI
+				// for those so that several domains can share one frontend port.
+				if rule.Domain != "" {
+					newHttpListener.Properties.RequireServerNameIndication = to.BoolPtr(true)
+				}
 			}
 
 			newHttpListenerList = append(newHttpListenerList, newHttpListener)
@@ -686,8 +782,17 @@ func (a *Alb) ensureRequestRoutingRule(appGateway *armnetwork.ApplicationGateway
 	routingRuleMap := make(map[string]*armnetwork.ApplicationGatewayRequestRoutingRule)
 
 	for _, routingRule := range appGateway.Properties.RequestRoutingRules {
+		if routingRule == nil || routingRule.Name == nil {
+			continue
+		}
 		routingRuleMap[*routingRule.Name] = routingRule
 	}
+
+	// priority决定多站点匹配顺序，用户显式声明的值优先于自动分配，且自动分配不得占用这些值
+	userPriorities := collectUserRulePriorities(listeners)
+	reserved := reservedPrioritySet(userPriorities)
+
+	ensuredRuleNames := mapset.NewThreadUnsafeSet()
 
 	for _, listener := range listeners {
 		for _, rule := range listener.Spec.Rules {
@@ -704,7 +809,8 @@ func (a *Alb) ensureRequestRoutingRule(appGateway *armnetwork.ApplicationGateway
 					listener.Spec.LoadbalancerID, ResourceTypeURLPathMaps, httpListenerName)
 			}
 
-			if routingRule, ok := routingRuleMap[httpListenerName]; ok {
+			if routingRule, ok := routingRuleMap[httpListenerName]; ok &&
+				routingRule.Properties != nil && routingRule.Properties.RuleType != nil {
 				if *routingRule.Properties.RuleType != ruleType {
 					return nil, fmt.Errorf("conflict rule type in routingRule[%s], exists: %s, want: %s, "+
 						"routingRule info :%s", httpListenerName, *routingRule.Properties.RuleType, ruleType,
@@ -712,18 +818,24 @@ func (a *Alb) ensureRequestRoutingRule(appGateway *armnetwork.ApplicationGateway
 				}
 			}
 
+			// one RequestRoutingRule per port+domain; extra paths merge via URLPathMap
+			if ensuredRuleNames.Contains(httpListenerName) {
+				continue
+			}
+
 			// Azure 规定一个ruleTg中的所有backend都必须是相同的port
 			ruleTgName := getRuleTgName(listener.Name, rule.Domain, rule.Path, listener.Spec.Port)
-			// 每条rule需要有唯一的优先级，这里会选择1～20000中没被使用过的最小优先级
-			priority := generatePriority(appGateway)
+			priority := resolveRulePriority(appGateway, routingRuleMap, httpListenerName,
+				rule.Domain, userPriorities, reserved)
+			if priority == 0 {
+				// azure rejects priority 0, fail fast instead of sending an invalid request
+				return nil, fmt.Errorf("no available request routing rule priority on gateway '%s', "+
+					"all %d priorities are in use", listener.Spec.LoadbalancerID, MaxRoutingRulePriority)
+			}
 
 			newRoutingRule := &armnetwork.ApplicationGatewayRequestRoutingRule{
 				Name: to.StringPtr(httpListenerName),
 				Properties: &armnetwork.ApplicationGatewayRequestRoutingRulePropertiesFormat{
-					BackendAddressPool: a.resourceHelper.genSubResource(ResourceProviderApplicationGateway,
-						listener.Spec.LoadbalancerID, ResourceTypeBackendAddressPools, ruleTgName),
-					BackendHTTPSettings: a.resourceHelper.genSubResource(ResourceProviderApplicationGateway,
-						listener.Spec.LoadbalancerID, ResourceTypeBackendHttpSettingsCollection, ruleTgName),
 					HTTPListener: a.resourceHelper.genSubResource(ResourceProviderApplicationGateway,
 						listener.Spec.LoadbalancerID, ResourceTypeHttpListeners, httpListenerName),
 					LoadDistributionPolicy: nil,
@@ -732,8 +844,19 @@ func (a *Alb) ensureRequestRoutingRule(appGateway *armnetwork.ApplicationGateway
 					URLPathMap:             pathMapResource,
 				},
 			}
+			// A path based rule routes purely through its URLPathMap, whose DefaultBackendAddressPool
+			// handles unmatched requests. Only a basic rule carries the backend on the rule itself.
+			if ruleType == armnetwork.ApplicationGatewayRequestRoutingRuleTypeBasic {
+				newRoutingRule.Properties.BackendAddressPool = a.resourceHelper.genSubResource(
+					ResourceProviderApplicationGateway, listener.Spec.LoadbalancerID,
+					ResourceTypeBackendAddressPools, ruleTgName)
+				newRoutingRule.Properties.BackendHTTPSettings = a.resourceHelper.genSubResource(
+					ResourceProviderApplicationGateway, listener.Spec.LoadbalancerID,
+					ResourceTypeBackendHttpSettingsCollection, ruleTgName)
+			}
 
 			routingRuleMap[httpListenerName] = newRoutingRule
+			ensuredRuleNames.Add(httpListenerName)
 
 			// add into rule list for build priority
 			appGateway.Properties.RequestRoutingRules = append(appGateway.Properties.RequestRoutingRules, newRoutingRule)
@@ -753,6 +876,9 @@ func (a *Alb) ensureUrlPathMap(appGateway *armnetwork.ApplicationGateway,
 	listeners []*networkextensionv1.Listener) *armnetwork.ApplicationGateway {
 	urlPathMapMap := make(map[string]*armnetwork.ApplicationGatewayURLPathMap)
 	for _, urlPathMap := range appGateway.Properties.URLPathMaps {
+		if urlPathMap == nil || urlPathMap.Name == nil {
+			continue
+		}
 		urlPathMapMap[*urlPathMap.Name] = urlPathMap
 	}
 
@@ -820,6 +946,162 @@ func (a *Alb) ensureUrlPathMap(appGateway *armnetwork.ApplicationGateway,
 
 }
 
+// agDesiredRoutes holds the child resource names the current listener specs would generate
+type agDesiredRoutes struct {
+	tgNames       mapset.Set
+	listenerNames mapset.Set
+	ports         map[int]struct{}
+	listeners     []*networkextensionv1.Listener
+}
+
+func newAgDesiredRoutes(listeners []*networkextensionv1.Listener) *agDesiredRoutes {
+	desired := &agDesiredRoutes{
+		tgNames:       mapset.NewThreadUnsafeSet(),
+		listenerNames: mapset.NewThreadUnsafeSet(),
+		ports:         make(map[int]struct{}),
+		listeners:     listeners,
+	}
+	for _, listener := range listeners {
+		desired.ports[listener.Spec.Port] = struct{}{}
+		for _, rule := range listener.Spec.Rules {
+			desired.tgNames.Add(getRuleTgName(listener.Name, rule.Domain, rule.Path, listener.Spec.Port))
+			desired.listenerNames.Add(getHttpListenerName(listener.Spec.Port, rule.Domain))
+		}
+	}
+	return desired
+}
+
+// isStaleTgName reports whether a target group name belongs to one of the listeners being reconciled
+// but is no longer part of what their current spec asks for
+func (d *agDesiredRoutes) isStaleTgName(name string) bool {
+	return name != "" && isAgResourceOwnedByListener(name, d.listeners) && !d.tgNames.Contains(name)
+}
+
+// cleanupStaleAgRoutes removes pathRules / routingRules / httpListeners that were generated for the
+// given listeners but no longer match their current spec. Resources created manually on the gateway
+// reference other pools, so they are left untouched.
+func cleanupStaleAgRoutes(appGateway *armnetwork.ApplicationGateway,
+	listeners []*networkextensionv1.Listener) *armnetwork.ApplicationGateway {
+	if appGateway == nil || appGateway.Properties == nil {
+		return appGateway
+	}
+
+	desired := newAgDesiredRoutes(listeners)
+	remainingPathMaps := prunePathRules(appGateway, desired)
+	usedListeners, droppedListeners := pruneRoutingRules(appGateway, desired, remainingPathMaps)
+	pruneOrphanHttpListeners(appGateway, desired, usedListeners, droppedListeners)
+
+	return appGateway
+}
+
+// prunePathRules drops stale pathRules and any path map emptied by that removal, returning the names
+// of the path maps still present. A path map that never had a pathRule is left alone, it was not
+// created by this controller.
+func prunePathRules(appGateway *armnetwork.ApplicationGateway, desired *agDesiredRoutes) mapset.Set {
+	urlPathMaps := make([]*armnetwork.ApplicationGatewayURLPathMap, 0, len(appGateway.Properties.URLPathMaps))
+	remaining := mapset.NewThreadUnsafeSet()
+
+	for _, pathMap := range appGateway.Properties.URLPathMaps {
+		if pathMap == nil || pathMap.Properties == nil {
+			continue
+		}
+		hadPathRule := len(pathMap.Properties.PathRules) != 0
+		pathRules := keepFreshPathRules(pathMap.Properties.PathRules, desired)
+		pathMap.Properties.PathRules = pathRules
+		if hadPathRule && len(pathRules) == 0 {
+			continue
+		}
+		urlPathMaps = append(urlPathMaps, pathMap)
+		if pathMap.Name != nil {
+			remaining.Add(*pathMap.Name)
+		}
+	}
+
+	appGateway.Properties.URLPathMaps = urlPathMaps
+	return remaining
+}
+
+// keepFreshPathRules filters out path rules whose backend was removed by the current spec
+func keepFreshPathRules(all []*armnetwork.ApplicationGatewayPathRule,
+	desired *agDesiredRoutes) []*armnetwork.ApplicationGatewayPathRule {
+	kept := make([]*armnetwork.ApplicationGatewayPathRule, 0, len(all))
+	for _, pathRule := range all {
+		if pathRule == nil || pathRule.Properties == nil {
+			continue
+		}
+		if desired.isStaleTgName(subResourceName(pathRule.Properties.BackendAddressPool)) {
+			continue
+		}
+		kept = append(kept, pathRule)
+	}
+	return kept
+}
+
+// pruneRoutingRules drops stale routing rules and reports the http listener names still in use and
+// the ones left orphaned. For path based rules the URLPathMap decides routing, so only a removed
+// path map makes them stale: the rule level BackendAddressPool may point at any of the listeners
+// sharing the path map, so dropping a rule based on it would break the other listeners.
+func pruneRoutingRules(appGateway *armnetwork.ApplicationGateway, desired *agDesiredRoutes,
+	remainingPathMaps mapset.Set) (used mapset.Set, dropped mapset.Set) {
+	routingRules := make([]*armnetwork.ApplicationGatewayRequestRoutingRule, 0,
+		len(appGateway.Properties.RequestRoutingRules))
+	used = mapset.NewThreadUnsafeSet()
+	dropped = mapset.NewThreadUnsafeSet()
+
+	for _, routingRule := range appGateway.Properties.RequestRoutingRules {
+		if routingRule == nil || routingRule.Properties == nil {
+			continue
+		}
+		listenerName := subResourceName(routingRule.Properties.HTTPListener)
+		pathMapName := subResourceName(routingRule.Properties.URLPathMap)
+
+		stale := desired.isStaleTgName(subResourceName(routingRule.Properties.BackendAddressPool))
+		if pathMapName != "" {
+			stale = !remainingPathMaps.Contains(pathMapName)
+		}
+		if stale {
+			if listenerName != "" {
+				dropped.Add(listenerName)
+			}
+			continue
+		}
+
+		routingRules = append(routingRules, routingRule)
+		if listenerName != "" {
+			used.Add(listenerName)
+		}
+	}
+
+	appGateway.Properties.RequestRoutingRules = routingRules
+	return used, dropped
+}
+
+// pruneOrphanHttpListeners drops only the generated listeners left without a routing rule by
+// pruneRoutingRules, so listeners created manually on the gateway are never touched
+func pruneOrphanHttpListeners(appGateway *armnetwork.ApplicationGateway, desired *agDesiredRoutes,
+	used mapset.Set, dropped mapset.Set) {
+	httpListeners := make([]*armnetwork.ApplicationGatewayHTTPListener, 0,
+		len(appGateway.Properties.HTTPListeners))
+
+	for _, httpListener := range appGateway.Properties.HTTPListeners {
+		if httpListener == nil {
+			continue
+		}
+		if httpListener.Name != nil && isOrphanAgHttpListener(*httpListener.Name, desired, used, dropped) {
+			continue
+		}
+		httpListeners = append(httpListeners, httpListener)
+	}
+
+	appGateway.Properties.HTTPListeners = httpListeners
+}
+
+func isOrphanAgHttpListener(name string, desired *agDesiredRoutes, used mapset.Set,
+	dropped mapset.Set) bool {
+	return dropped.Contains(name) && !desired.listenerNames.Contains(name) && !used.Contains(name) &&
+		isGeneratedHttpListenerName(name, desired.ports)
+}
+
 func (a *Alb) deleteApplicationGatewayListener(region string, listeners []*networkextensionv1.Listener) error {
 	if len(listeners) == 0 {
 		return nil
@@ -851,6 +1133,23 @@ func (a *Alb) deleteApplicationGatewayListener(region string, listeners []*netwo
 	// listener
 	appGateway = a.deleteHttpListenerForAg(appGateway, listeners)
 
+	// a routing rule shared with another listener survives the steps above, repair its rule level
+	// backend so it no longer points at the pool/setting just deleted
+	appGateway = a.repairAgDanglingRefs(appGateway, listeners)
+
+	if err = backfillRoutingRulePriorities(appGateway); err != nil {
+		return err
+	}
+	if err = validateAgChildNamesUnique(appGateway); err != nil {
+		return err
+	}
+	if err = validateAgNoDanglingRefs(appGateway, listeners); err != nil {
+		return err
+	}
+	if err = validateAgRulePriorityUnique(appGateway, listeners); err != nil {
+		return err
+	}
+
 	_, err = a.sdkWrapper.CreateOrUpdateApplicationGateway(listeners[0].Spec.LoadbalancerID, *appGateway)
 	if err != nil {
 		return err
@@ -863,10 +1162,11 @@ func (a *Alb) deleteAddrPoolForAg(appGateway *armnetwork.ApplicationGateway,
 	listeners []*networkextensionv1.Listener) *armnetwork.ApplicationGateway {
 	list := make([]*armnetwork.ApplicationGatewayBackendAddressPool, 0)
 	for _, obj := range appGateway.Properties.BackendAddressPools {
-		for _, listener := range listeners {
-			if obj.Name != nil && strings.HasPrefix(*obj.Name, listener.Name) {
-				continue
-			}
+		if obj == nil {
+			continue
+		}
+		if obj.Name != nil && isAgResourceOwnedByListener(*obj.Name, listeners) {
+			continue
 		}
 		list = append(list, obj)
 	}
@@ -880,10 +1180,11 @@ func (a *Alb) deleteProbeForAg(appGateway *armnetwork.ApplicationGateway,
 	listeners []*networkextensionv1.Listener) *armnetwork.ApplicationGateway {
 	list := make([]*armnetwork.ApplicationGatewayProbe, 0)
 	for _, obj := range appGateway.Properties.Probes {
-		for _, listener := range listeners {
-			if obj.Name != nil && strings.HasPrefix(*obj.Name, listener.Name) {
-				continue
-			}
+		if obj == nil {
+			continue
+		}
+		if obj.Name != nil && isAgResourceOwnedByListener(*obj.Name, listeners) {
+			continue
 		}
 		list = append(list, obj)
 	}
@@ -897,10 +1198,11 @@ func (a *Alb) deleteBackendSettingsForAg(appGateway *armnetwork.ApplicationGatew
 	listeners []*networkextensionv1.Listener) *armnetwork.ApplicationGateway {
 	list := make([]*armnetwork.ApplicationGatewayBackendHTTPSettings, 0)
 	for _, obj := range appGateway.Properties.BackendHTTPSettingsCollection {
-		for _, listener := range listeners {
-			if obj.Name != nil && strings.HasPrefix(*obj.Name, listener.Name) {
-				continue
-			}
+		if obj == nil {
+			continue
+		}
+		if obj.Name != nil && isAgResourceOwnedByListener(*obj.Name, listeners) {
+			continue
 		}
 		list = append(list, obj)
 	}
@@ -915,6 +1217,10 @@ func (a *Alb) deleteHttpListenerForAg(appGateway *armnetwork.ApplicationGateway,
 	usedHttpListenerMap := make(map[string]struct{})
 	toDeleteHttpListenerMap := make(map[string]struct{})
 	for _, routingRule := range appGateway.Properties.RequestRoutingRules {
+		if routingRule == nil || routingRule.Properties == nil ||
+			routingRule.Properties.HTTPListener == nil || routingRule.Properties.HTTPListener.ID == nil {
+			continue
+		}
 		usedHttpListenerMap[*routingRule.Properties.HTTPListener.ID] = struct{}{}
 	}
 
@@ -933,8 +1239,13 @@ func (a *Alb) deleteHttpListenerForAg(appGateway *armnetwork.ApplicationGateway,
 
 	httpListenerList := make([]*armnetwork.ApplicationGatewayHTTPListener, 0)
 	for _, httpListener := range appGateway.Properties.HTTPListeners {
-		if _, ok := toDeleteHttpListenerMap[*httpListener.ID]; ok {
+		if httpListener == nil {
 			continue
+		}
+		if httpListener.ID != nil {
+			if _, ok := toDeleteHttpListenerMap[*httpListener.ID]; ok {
+				continue
+			}
 		}
 		httpListenerList = append(httpListenerList, httpListener)
 	}
@@ -948,6 +1259,9 @@ func (a *Alb) deleteURLPathMapForAg(appGateway *armnetwork.ApplicationGateway,
 	listeners []*networkextensionv1.Listener) *armnetwork.ApplicationGateway {
 	urlPathMapsMap := make(map[string]*armnetwork.ApplicationGatewayURLPathMap)
 	for _, obj := range appGateway.Properties.URLPathMaps {
+		if obj == nil || obj.Name == nil {
+			continue
+		}
 		urlPathMapsMap[*obj.Name] = obj
 	}
 
@@ -995,11 +1309,17 @@ func (a *Alb) deleteRoutingRuleForAg(appGateway *armnetwork.ApplicationGateway,
 	listeners []*networkextensionv1.Listener) *armnetwork.ApplicationGateway {
 	urlPathMapsMap := make(map[string]*armnetwork.ApplicationGatewayURLPathMap)
 	for _, obj := range appGateway.Properties.URLPathMaps {
+		if obj == nil || obj.Name == nil {
+			continue
+		}
 		urlPathMapsMap[*obj.Name] = obj
 	}
 
 	routingRuleMap := make(map[string]*armnetwork.ApplicationGatewayRequestRoutingRule)
 	for _, obj := range appGateway.Properties.RequestRoutingRules {
+		if obj == nil || obj.Name == nil {
+			continue
+		}
 		routingRuleMap[*obj.Name] = obj
 	}
 
