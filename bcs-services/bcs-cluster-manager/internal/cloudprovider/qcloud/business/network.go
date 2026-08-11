@@ -209,18 +209,18 @@ func GetVpcCIDRBlocks(opt *cloudprovider.CommonOption, vpcId string, assistantTy
 
 	cidrs := make([]string, 0)
 	if assistantType < 0 || assistantType == 0 {
-		cidrs = append(cidrs, *vpcSet[0].CidrBlock)
+		cidrs = append(cidrs, utils.StringPtrToString(vpcSet[0].CidrBlock))
 	}
 
 	for _, v := range vpcSet[0].AssistantCidrSet {
 		// 获取所有辅助cidr, 不区分是 普通辅助cidr/容器辅助cidr
 		if assistantType < 0 && v.AssistantType != nil && v.CidrBlock != nil {
-			cidrs = append(cidrs, *v.CidrBlock)
+			cidrs = append(cidrs, utils.StringPtrToString(v.CidrBlock))
 			continue
 		}
 
 		if v.AssistantType != nil && int(*v.AssistantType) == assistantType && v.CidrBlock != nil {
-			cidrs = append(cidrs, *v.CidrBlock)
+			cidrs = append(cidrs, utils.StringPtrToString(v.CidrBlock))
 		}
 	}
 
@@ -316,16 +316,16 @@ func subnetFromVpcSubnet(info *vpc.Subnet) (n *cidrtree.Subnet) {
 	if info == nil {
 		return s
 	}
-	s.ID = *info.SubnetId
+	s.ID = utils.StringPtrToString(info.SubnetId)
 	if info.CidrBlock != nil {
 		_, s.IPNet, _ = net.ParseCIDR(*info.CidrBlock)
 	}
-	s.Name = *info.SubnetName
-	s.VpcID = *info.VpcId
-	s.Zone = *info.Zone
-	s.CreatedTime = *info.CreatedTime
-	s.AvailableIps = *info.AvailableIpAddressCount
-	s.TotalIps = *info.TotalIpAddressCount
+	s.Name = utils.StringPtrToString(info.SubnetName)
+	s.VpcID = utils.StringPtrToString(info.VpcId)
+	s.Zone = utils.StringPtrToString(info.Zone)
+	s.CreatedTime = utils.StringPtrToString(info.CreatedTime)
+	s.AvailableIps = utils.Uint64PtrToUint64(info.AvailableIpAddressCount)
+	s.TotalIps = utils.Uint64PtrToUint64(info.TotalIpAddressCount)
 	return s
 }
 
@@ -414,8 +414,8 @@ func GetZoneAvailableSubnetsByVpc(opt *cloudprovider.CommonOption, vpcId string)
 	)
 	for i := range subnets {
 		// subnet is available when default subnet available ipNum eq 10
-		if *subnets[i].AvailableIpAddressCount >= 10 {
-			availableSubnets[*subnets[i].Zone]++
+		if utils.Uint64PtrToUint64(subnets[i].AvailableIpAddressCount) >= 10 {
+			availableSubnets[utils.StringPtrToString(subnets[i].Zone)]++
 		}
 	}
 
@@ -459,7 +459,7 @@ func GetDrSubnetInfo(opt *cloudprovider.CommonOption, subnetIds []string) ([]*ci
 
 	zoneNameMap := make(map[string]string)
 	for _, zoneInfo := range zoneInfos {
-		zoneNameMap[*zoneInfo.Zone] = *zoneInfo.ZoneName
+		zoneNameMap[utils.StringPtrToString(zoneInfo.Zone)] = utils.StringPtrToString(zoneInfo.ZoneName)
 	}
 
 	for i := range subnetInfos {
@@ -501,7 +501,7 @@ func ListSubnets(opt *cloudprovider.CommonOption, vpcId string) ([]*cidrtree.Sub
 
 	zoneNameMap := make(map[string]string)
 	for _, zoneInfo := range zoneInfos {
-		zoneNameMap[*zoneInfo.Zone] = *zoneInfo.ZoneName
+		zoneNameMap[utils.StringPtrToString(zoneInfo.Zone)] = utils.StringPtrToString(zoneInfo.ZoneName)
 	}
 
 	for _, subnet := range subnets {
@@ -735,7 +735,11 @@ func GetClusterGrCidrs(opt *cloudprovider.CommonOption, clusterId string) ([]*ci
 func GetCidrsFromCluster(cluster *tke.Cluster) ([]*cidrtree.Cidr, error) {
 	cidrs := make([]*cidrtree.Cidr, 0)
 
-	clusterCidr := *cluster.ClusterNetworkSettings.ClusterCIDR
+	if cluster == nil || cluster.ClusterNetworkSettings == nil {
+		return cidrs, fmt.Errorf("GetCidrsFromCluster cluster or ClusterNetworkSettings is nil")
+	}
+
+	clusterCidr := utils.StringPtrToString(cluster.ClusterNetworkSettings.ClusterCIDR)
 	clsCidr, err := cidrtree.StringToCidr(clusterCidr)
 	if err != nil {
 		return nil, err
@@ -744,7 +748,7 @@ func GetCidrsFromCluster(cluster *tke.Cluster) ([]*cidrtree.Cidr, error) {
 	clsCidr.Type = utils.ClusterCIDR
 	cidrs = append(cidrs, clsCidr)
 
-	serviceCidr := *cluster.ClusterNetworkSettings.ServiceCIDR
+	serviceCidr := utils.StringPtrToString(cluster.ClusterNetworkSettings.ServiceCIDR)
 	serCidr, err := cidrtree.StringToCidr(serviceCidr)
 	if err != nil {
 		return nil, err
@@ -754,7 +758,7 @@ func GetCidrsFromCluster(cluster *tke.Cluster) ([]*cidrtree.Cidr, error) {
 
 	clusterPropertyMap := make(map[string]interface{})
 	// 将Cluster的property信息转换为map格式
-	err = json.Unmarshal([]byte(*cluster.Property), &clusterPropertyMap)
+	err = json.Unmarshal([]byte(utils.StringPtrToString(cluster.Property)), &clusterPropertyMap)
 	if err != nil {
 		return nil, err
 	}
@@ -783,7 +787,7 @@ func GetClusterGrIPSurplus(opt *cloudprovider.CommonOption, clusterId, tkeId str
 		return 0, 0, err
 	}
 
-	clusterNodeNum := *cluster.ClusterNodeNum
+	clusterNodeNum := utils.Uint64PtrToUint64(cluster.ClusterNodeNum)
 	if len(clusterId) > 0 {
 		nodes, errLocal := cloudprovider.ListClusterNodes(clusterId)
 		if errLocal != nil {
@@ -795,10 +799,10 @@ func GetClusterGrIPSurplus(opt *cloudprovider.CommonOption, clusterId, tkeId str
 		}
 	}
 
-	nodeNum := (uint32)(clusterNodeNum + *cluster.ClusterMaterNodeNum)
+	nodeNum := (uint32)(clusterNodeNum + utils.Uint64PtrToUint64(cluster.ClusterMaterNodeNum))
 
-	maxNodePodNum := (uint32)(*cluster.ClusterNetworkSettings.MaxNodePodNum)
-	maxClusterServiceNum := (uint32)(*cluster.ClusterNetworkSettings.MaxClusterServiceNum)
+	maxNodePodNum := (uint32)(utils.Uint64PtrToUint64(cluster.ClusterNetworkSettings.MaxNodePodNum))
+	maxClusterServiceNum := (uint32)(utils.Uint64PtrToUint64(cluster.ClusterNetworkSettings.MaxClusterServiceNum))
 
 	var (
 		clusterTotalIpNum, clusterSurplusIpNum uint32

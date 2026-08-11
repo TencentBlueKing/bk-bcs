@@ -29,10 +29,10 @@ func TestModifyInstancesVpcAttribute(t *testing.T) {
 	defaultCommon.Region = regions.Nanjing
 
 	var (
-		vpcId       = ""
-		instanceIds = []string{""}
+		vpcID        = ""
+		instanceIDs = []string{""}
 	)
-	err := ModifyInstancesVpcAttribute(context.Background(), vpcId, instanceIds, defaultCommon)
+	err := ModifyInstancesVpcAttribute(context.Background(), vpcID, instanceIDs, defaultCommon)
 	if err != nil {
 		t.Fatal(err)
 	}

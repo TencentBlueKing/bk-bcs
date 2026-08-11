@@ -330,17 +330,17 @@ func checkIfWhiteImageOsNames(opt *cloudprovider.ClusterGroupOption) bool {
 		return utils.StringInSlice(osName, cloud.ConfInfo.WhiteImageOsName)
 	}
 
-	if cls.ImageId != nil && *cls.ImageId != "" {
+	if utils.StringPtrToString(cls.ImageId) != "" {
 		nodeMgr := &NodeManager{}
-		image, errGet := nodeMgr.GetImageInfoByImageID(*cls.ImageId, &opt.CommonOption)
+		image, errGet := nodeMgr.GetImageInfoByImageID(utils.StringPtrToString(cls.ImageId), &opt.CommonOption)
 		if errGet != nil {
 			blog.Errorf("%s checkIfWhiteImageOsNames GetImageInfoByImageID failed: %v", cloudName, errGet)
-			osName = *cls.ClusterOs
+			osName = utils.StringPtrToString(cls.ClusterOs)
 		} else {
 			osName = image.OsName
 		}
 	} else {
-		osName = *cls.ClusterOs
+		osName = utils.StringPtrToString(cls.ClusterOs)
 	}
 
 	blog.Infof("checkIfWhiteImageOsNames[%s] osName[%s]", opt.Cluster.ClusterID, osName)
@@ -367,20 +367,20 @@ func clusterSupportNodeNum(tkeCls *tke.Cluster, cluster *proto.Cluster) (uint32,
 	}
 
 	// 已经存在的节点数量
-	clusterNodeNum := *tkeCls.ClusterNodeNum
-	if *tkeCls.ClusterType == icommon.ClusterManageTypeIndependent {
-		clusterNodeNum += *tkeCls.ClusterMaterNodeNum
+	clusterNodeNum := utils.Uint64PtrToUint64(tkeCls.ClusterNodeNum)
+	if utils.StringPtrToString(tkeCls.ClusterType) == icommon.ClusterManageTypeIndependent {
+		clusterNodeNum += utils.Uint64PtrToUint64(tkeCls.ClusterMaterNodeNum)
 	}
 
 	// 集群可添加节点数
-	maxClusterNodeNum := float64(uint64(ipNum)-*tkeCls.ClusterNetworkSettings.MaxClusterServiceNum) /
-		float64(*tkeCls.ClusterNetworkSettings.MaxNodePodNum)
+	maxClusterNodeNum := float64(uint64(ipNum)-utils.Uint64PtrToUint64(tkeCls.ClusterNetworkSettings.MaxClusterServiceNum)) /
+		float64(utils.Uint64PtrToUint64(tkeCls.ClusterNetworkSettings.MaxNodePodNum))
 
 	// 剩余可支持的节点数量
 	step := getClusterCidrStep(cluster)
 
 	surplusNodeNum := float64((business.GrBcsMaxClusterCidrNum-clusterCidrNum)*step) /
-		float64(*tkeCls.ClusterNetworkSettings.MaxNodePodNum)
+		float64(utils.Uint64PtrToUint64(tkeCls.ClusterNetworkSettings.MaxNodePodNum))
 
 	return uint32(clusterNodeNum), uint32(maxClusterNodeNum) - uint32(clusterNodeNum), uint32(surplusNodeNum)
 }

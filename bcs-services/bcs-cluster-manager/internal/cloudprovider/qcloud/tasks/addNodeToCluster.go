@@ -272,7 +272,7 @@ func handleClusterMasterNodesData(ctx context.Context, clusterID string, nodes *
 
 	nodeIDToNode := make(map[string]business.InstanceInfo)
 	for _, n := range nodes.SuccessNodes {
-		nodeIDToNode[n.NodeId] = n
+		nodeIDToNode[n.NodeID] = n
 	}
 
 	// update master nodes ip
@@ -282,8 +282,8 @@ func handleClusterMasterNodesData(ctx context.Context, clusterID string, nodes *
 
 		ins, ok := nodeIDToNode[id]
 		if ok {
-			dbNode.InnerIP = ins.NodeIp
-			dbNode.VPC = ins.VpcId
+			dbNode.InnerIP = ins.NodeIP
+			dbNode.VPC = ins.VpcID
 		}
 		masterNodes[dbNode.InnerIP] = dbNode
 	}
@@ -307,19 +307,19 @@ func handleClusterWorkerNodesData(ctx context.Context, clusterID string,
 	for i := range nodes.SuccessNodes {
 		err := updateNodeIPByNodeID(ctx, clusterID, nodes.SuccessNodes[i])
 		if err != nil {
-			blog.Errorf("handleAddNodesData[%s] updateNodeIPByNodeID[%s][%s] failed: %v",
-				taskID, nodes.SuccessNodes[i].NodeId, nodes.SuccessNodes[i].NodeIp, err)
+		blog.Errorf("handleAddNodesData[%s] updateNodeIPByNodeID[%s][%s] failed: %v",
+				taskID, nodes.SuccessNodes[i].NodeID, nodes.SuccessNodes[i].NodeIP, err)
 			continue
 		}
-		successNodeIds = append(successNodeIds, nodes.SuccessNodes[i].NodeId)
+		successNodeIds = append(successNodeIds, nodes.SuccessNodes[i].NodeID)
 
 		blog.Infof("handleAddNodesData[%s] updateNodeIPByNodeID[%s][%s] successful",
-			taskID, nodes.SuccessNodes[i].NodeId, nodes.SuccessNodes[i].NodeIp)
+			taskID, nodes.SuccessNodes[i].NodeID, nodes.SuccessNodes[i].NodeIP)
 	}
 
 	// update failed nodes status
 	for i := range nodes.FailedNodes {
-		failedNodeIds = append(failedNodeIds, nodes.FailedNodes[i].NodeId)
+		failedNodeIds = append(failedNodeIds, nodes.FailedNodes[i].NodeID)
 	}
 	reason := "node trans vpc failed"
 	_ = updateNodeStatusByNodeID(failedNodeIds, common.StatusAddNodesFailed, reason)
@@ -454,10 +454,10 @@ func AddNodesToClusterTask(taskID string, stepName string) error { // nolint
 		}
 		// record success and failed nodes
 		for i := range result.SuccessNodeInfos {
-			successNodeIds = append(successNodeIds, result.SuccessNodeInfos[i].NodeId)
+			successNodeIds = append(successNodeIds, result.SuccessNodeInfos[i].NodeID)
 		}
 		for i := range result.FailedNodeInfos {
-			failedNodeIds = append(failedNodeIds, result.FailedNodeInfos[i].NodeId)
+			failedNodeIds = append(failedNodeIds, result.FailedNodeInfos[i].NodeID)
 		}
 	}
 
@@ -602,8 +602,8 @@ func CheckAddNodesStatusTask(taskID string, stepName string) error { // nolint
 		insIndex := 1
 		for nodeId, nodeInfo := range insInfos {
 			cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
-				fmt.Sprintf("failed node [%d/%d]: ID[%s] IP[%s] FailedReson[%s]",
-					insIndex, len(successNodes), nodeId, nodeInfo.NodeIp, nodeInfo.FailedReason))
+			fmt.Sprintf("failed node [%d/%d]: ID[%s] IP[%s] FailedReson[%s]",
+					insIndex, len(successNodes), nodeId, nodeInfo.NodeIP, nodeInfo.FailedReason))
 			insIndex++
 		}
 		blog.Errorf("CheckAddNodesStatusTask[%s] AddSuccessNodes empty", taskID)
@@ -636,8 +636,8 @@ func CheckAddNodesStatusTask(taskID string, stepName string) error { // nolint
 		insIndex := 1
 		for nodeId, nodeInfo := range insInfos {
 			cloudprovider.GetStorageModel().CreateTaskStepLogWarn(context.Background(), taskID, stepName,
-				fmt.Sprintf("failed node [%d/%d]: ID[%s] IP[%s] FailedReson[%s]",
-					insIndex, len(successNodes), nodeId, nodeInfo.NodeIp, nodeInfo.FailedReason))
+			fmt.Sprintf("failed node [%d/%d]: ID[%s] IP[%s] FailedReson[%s]",
+					insIndex, len(successNodes), nodeId, nodeInfo.NodeIP, nodeInfo.FailedReason))
 			insIndex++
 		}
 	}

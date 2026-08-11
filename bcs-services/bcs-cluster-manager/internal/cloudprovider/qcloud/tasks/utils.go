@@ -124,21 +124,21 @@ func updateNodeStatusByNodeID(idList []string, status, reason string) error { //
 func updateNodeIPByNodeID(ctx context.Context, clusterId string, n business.InstanceInfo) error { // nolint
 	taskId := cloudprovider.GetTaskIDFromContext(ctx)
 
-	if n.NodeId == "" || n.NodeIp == "" {
-		blog.Errorf("updateNodeIPByNodeID[%s] nodeId[%s] nodeIp[%s] empty", taskId, n.NodeId, n.NodeIp)
-		return fmt.Errorf("updateNodeIPByNodeID data[%s:%s] empty", n.NodeId, n.NodeIp)
+	if n.NodeID == "" || n.NodeIP == "" {
+		blog.Errorf("updateNodeIPByNodeID[%s] nodeId[%s] nodeIp[%s] empty", taskId, n.NodeID, n.NodeIP)
+		return fmt.Errorf("updateNodeIPByNodeID data[%s:%s] empty", n.NodeID, n.NodeIP)
 	}
 
 	blog.Infof("updateNodeIPByNodeID[%s] cluster[%s] nodeId[%s] nodeIp[%s] vpcId[%s]",
-		taskId, clusterId, n.NodeId, n.NodeIp, n.VpcId)
+	taskId, clusterId, n.NodeID, n.NodeIP, n.VpcID)
 
-	node, err := cloudprovider.GetStorageModel().GetClusterNode(context.Background(), clusterId, n.NodeId)
+	node, err := cloudprovider.GetStorageModel().GetClusterNode(context.Background(), clusterId, n.NodeID)
 	if err != nil {
 		blog.Errorf("updateNodeIPByNodeID[%s] failed: %v", taskId, err)
 		return err
 	}
-	node.InnerIP = n.NodeIp
-	node.VPC = n.VpcId
+	node.InnerIP = n.NodeIP
+	node.VPC = n.VpcID
 	err = cloudprovider.GetStorageModel().UpdateClusterNodeByNodeID(context.Background(), node)
 	if err != nil {
 		blog.Errorf("updateNodeIPByNodeID[%s] failed: %v", taskId, err)

@@ -126,7 +126,7 @@ func removeAsgInstances(ctx context.Context, info *cloudprovider.CloudDependBasi
 		return err
 	}
 	for _, ins := range asgInstances {
-		instanceIDList = append(instanceIDList, *ins.InstanceID)
+		instanceIDList = append(instanceIDList, utils.StringPtrToString(ins.InstanceID))
 	}
 	for _, id := range nodeIDs {
 		if utils.StringInSlice(id, instanceIDList) {
@@ -307,9 +307,11 @@ func CheckCleanNodeGroupNodesStatusTask(taskID string, stepName string) error {
 		if np.NodeCountSummary.ManuallyAdded == nil || np.NodeCountSummary.AutoscalingAdded == nil {
 			return nil
 		}
-		allNormalNodesCount := *np.NodeCountSummary.ManuallyAdded.Normal + *np.NodeCountSummary.AutoscalingAdded.Normal
+		allNormalNodesCount := utils.Int64PtrToInt64(np.NodeCountSummary.ManuallyAdded.Normal) +
+			utils.Int64PtrToInt64(np.NodeCountSummary.AutoscalingAdded.Normal)
+		desiredNodesNum := utils.Int64PtrToInt64(np.DesiredNodesNum)
 		switch {
-		case *np.DesiredNodesNum == allNormalNodesCount:
+		case desiredNodesNum == allNormalNodesCount:
 			return loop.EndLoop
 		default:
 			return nil
@@ -375,10 +377,11 @@ func UpdateCleanNodeGroupNodesDBInfoTask(taskID string, stepName string) error {
 	}
 
 	// will do update nodes info
-	err = updateNodeGroupDesiredSize(nodeGroupID, uint32(*np.DesiredNodesNum))
+	desiredNodesNum := utils.Int64PtrToInt64(np.DesiredNodesNum)
+	err = updateNodeGroupDesiredSize(nodeGroupID, uint32(desiredNodesNum))
 	if err != nil {
 		blog.Errorf("taskID[%s] updateNodeGroupDesiredSize[%s/%d] failed: %v", taskID, nodeGroupID,
-			*np.DesiredNodesNum, err)
+			desiredNodesNum, err)
 		retErr := fmt.Errorf("updateNodeGroupDesiredSize err, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return nil
