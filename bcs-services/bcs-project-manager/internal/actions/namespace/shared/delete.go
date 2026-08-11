@@ -43,7 +43,7 @@ func (a *SharedNamespaceAction) DeleteNamespace(ctx context.Context,
 		Name:        req.GetNamespace(),
 		Creator:     username,
 	}
-	itsmResp, err := itsm.SubmitDeleteNamespaceTicket(username,
+	itsmResp, err := itsm.SubmitDeleteNamespaceTicket(ctx, username,
 		req.GetProjectCode(), req.GetClusterID(), req.GetNamespace())
 	if err != nil {
 		logging.Error("itsm create ticket failed, err: %s", err.Error())

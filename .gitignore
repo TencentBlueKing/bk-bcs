@@ -150,5 +150,6 @@ git-sync.sh
 .cursor
 
 .project.json
+project.json
 
 .codebuddy
