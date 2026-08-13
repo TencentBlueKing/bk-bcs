@@ -56,7 +56,7 @@ func GetEntrypoints(c context.Context, req *GetEntrypointsReq) (*map[string]Entr
 	if err != nil {
 		return nil, err
 	}
-	return getContainerQueryLogLinks(req.ContainerIDs, rctx.TenantProjectCode, rctx.ClusterId), nil
+	return getContainerQueryLogLinks(req.ContainerIDs, rctx.ProjectCode, rctx.ClusterId), nil
 }
 
 // ListLogCollectors 获取日志采集规则列表
@@ -76,7 +76,7 @@ func ListLogCollectors(c context.Context, req *ListLogCollectorsReq) (*[]*GetLog
 	}
 
 	// 从 bk-log 获取规则数据
-	lcs, err := bklog.ListLogCollectors(c, req.ClusterId, GetSpaceID(rctx.TenantProjectCode))
+	lcs, err := bklog.ListLogCollectors(c, req.ClusterId, GetSpaceID(rctx.ProjectCode))
 	if err != nil {
 		return nil, err
 	}
@@ -123,7 +123,7 @@ func GetLogRule(c context.Context, req *GetLogRuleReq) (*GetLogRuleResp, error) 
 	store := storage.GlobalStorage
 
 	// 从 bk-log 获取规则数据
-	lcs, err := bklog.ListLogCollectors(c, req.ClusterId, GetSpaceID(rctx.TenantProjectCode))
+	lcs, err := bklog.ListLogCollectors(c, req.ClusterId, GetSpaceID(rctx.ProjectCode))
 	if err != nil {
 		return nil, err
 	}
@@ -460,11 +460,11 @@ func GetStorageClusters(
 	if err != nil {
 		return nil, err
 	}
-	data, err := bklog.GetStorageClusters(c, GetSpaceID(rctx.TenantProjectCode))
+	data, err := bklog.GetStorageClusters(c, GetSpaceID(rctx.ProjectCode))
 	if err != nil {
 		return nil, err
 	}
-	selectCluster, err := bklog.GetBcsCollectorStorage(c, GetSpaceID(rctx.TenantProjectCode), req.ClusterId)
+	selectCluster, err := bklog.GetBcsCollectorStorage(c, GetSpaceID(rctx.ProjectCode), req.ClusterId)
 	if err != nil {
 		return nil, err
 	}
@@ -497,7 +497,7 @@ func SwitchStorage(c context.Context, req *SwitchStorageReq) (*any, error) {
 	}
 
 	if err := bklog.SwitchStorage(c,
-		GetSpaceID(rctx.TenantProjectCode), rctx.ClusterId, req.StorageClusterID, rctx.Username); err != nil {
+		GetSpaceID(rctx.ProjectCode), rctx.ClusterId, req.StorageClusterID, rctx.Username); err != nil {
 		return nil, err
 	}
 
