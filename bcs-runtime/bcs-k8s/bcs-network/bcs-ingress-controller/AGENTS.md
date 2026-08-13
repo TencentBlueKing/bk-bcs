@@ -15,39 +15,30 @@
 bcs-ingress-controller/
 ├── main.go                     # 入口：注册 Controller / HTTP / Webhook
 ├── {name}controller/           # 每个 CRD 一个 Reconcile 控制器
-├── internal/
-│   ├── constant/               # Annotation Key 与共享常量
-│   ├── option/                 # CLI 参数
-│   ├── generator/              # Ingress → Listener 转换
-│   ├── cloud/                  # 多云 LB 适配（aws/azure/gcp/tencentcloud）
-│   ├── httpsvr/                # REST 管理 API
-│   ├── webhookserver/          # Admission Webhook
-│   ├── portpoolcache/          # PortPool 内存缓存
-│   ├── hostnetportpoolcache/   # HostNetPortPool 内存缓存
-│   ├── metrics/                # Prometheus 指标（namespace bkbcs_ingressctrl）
-│   └── check/                  # 周期性一致性检查
-├── docs/
-│   ├── harness/                # AI Agent 运行环境规范（五大组件）
-│   ├── standards/              # 技术开发规范（安全/质量/后端/接口）
-│   ├── dev-map/                # 开发地图（源文件/模块/依赖索引）
-│   ├── adr/                    # 架构决策记录（ADR）
-│   ├── reqs/                   # 需求文档（TAPD 澄清产出）
-│   └── glossary.md             # 词汇表
+├── internal/                   # constant/option/common/utils、cloud*、*cache、
+│                               # generator、apiclient/worker/conflict/eventer、
+│                               # httpsvr/webhook、metrics/check（详见 architectural-constraints）
+├── docs/                       # harness/ standards/ dev-map/ adr/ reqs/ workflow.md glossary.md
 ├── specs/                      # 功能设计文档
-├── cli-util/                   # 独立 CLI 工具（如 validate-listener-name）
-├── project.json                # TAPD workspace_id / owner 配置
-└── bcs-ingress-inspector/      # 独立诊断二进制（非主 Controller）
+├── scripts/                    # 运维/巡检脚本（含 gardening PR hook）
+├── cli-util/                   # 独立 CLI（如 validate-listener-name）
+├── project.json                # TAPD 配置（本地创建，gitignore）
+└── bcs-ingress-inspector/      # 独立诊断二进制
 ```
 
 ## 关键规范
 
 | 类型 | 入口 |
 |------|------|
-| Harness 规范（架构约束、工具能力、执行验证） | [docs/harness/README.md](docs/harness/README.md) |
-| 技术开发规范（安全红线、代码评审、后端/API） | [docs/standards/README.md](docs/standards/README.md) |
-| 开发地图（模块索引与依赖） | [docs/dev-map/README.md](docs/dev-map/README.md) |
-| 架构决策记录（ADR） | [docs/adr/README.md](docs/adr/README.md) |
+| Harness 规范 | [docs/harness/README.md](docs/harness/README.md) |
+| 技术开发规范 | [docs/standards/README.md](docs/standards/README.md) |
+| 开发地图 | [docs/dev-map/README.md](docs/dev-map/README.md) |
+| 架构决策（ADR） | [docs/adr/README.md](docs/adr/README.md) |
 | 词汇表 | [docs/glossary.md](docs/glossary.md) |
+
+## 开发工作流
+
+本项目使用 `workflow-agent` 按 [`docs/workflow.md`](docs/workflow.md) 定义的步骤推进迭代开发。workflow-agent 启动时主动感知当前状态（首次执行、崩溃恢复、错误暂停、重新开始），无需用户输入特定指令。不允许跳过工作流步骤或自行决定开发流程。
 
 ## 构建与测试
 
@@ -64,28 +55,29 @@ go test -v -run TestReconcile ./hostnetportcontroller/...  # 单包测试
 - 日志用 `bcs-common/common/blog`，禁止 log/klog
 - Annotation Key 放 `internal/constant/constant.go`，禁止硬编码
 - Controller Reconcile 必须幂等；新 Controller 须在 `main.go` 注册
-- 导出函数须有 GoDoc 注释（英文）
-- 函数名 ≤ 35 字符（含测试函数）；圈复杂度 > 10 须拆分
-- `initClient` 保持纯分发，云初始化放 `initXxxClient`
-- 测试：表驱动，colocated `*_test.go`，fake client
+- 导出函数须有 GoDoc 注释（英文）；函数名 ≤ 35 字符（含测试）；圈复杂度 > 10 须拆分
+- `initClient` 保持纯分发，云初始化放 `initXxxClient`；测试：表驱动 + fake client
+- 禁止将用户信息（域名、证书名称/ID 等）写入代码、注释或文档；示例用占位符
 
 ## 全流程覆盖规划
 
 | 环节 | Skill / 入口 | 状态 |
 |------|-------------|------|
-| Harness 规范生成 | harness-engineering → harness-generating | ✅ 已建设 |
-| 文档一致性巡检 | harness-engineering → harness-gardening | ✅ 已建设 |
-| 需求澄清/评估 | tapd-story-clarification / tapd-story-evaluation | ✅ 已建设（TAPD workspace 70046748） |
-| 迭代研发 | tapd-iteration-runner / tapd-story-pipeline | ✅ 已建设（workspace 70046748，owner adelaidahe） |
-| Spec Kit TDD | speckit-specify → plan → tasks → implement | ✅ 已建设 |
-| 代码评审 | code-review | ✅ 已建设 |
-| 安全检查 | bk-security-redlines | ✅ 已建设 |
-| 工作汇总 | work-summary | ✅ 已建设 |
+| Harness 生成/巡检 | harness-engineering | ✅ |
+| 工作流驱动 | workflow-agent + docs/workflow.md | ✅ |
+| 产品前置/需求整理 | tapd-product-discovery / govern-pipeline | ✅ |
+| 澄清/评估/评审 | tapd-story-clarification / evaluation / review | ✅（ws 70046748） |
+| 缺陷澄清/评估 | tapd-bug-clarification / evaluation | ✅ |
+| 迭代研发 | tapd-iteration-runner / tapd-story-pipeline | ✅ |
+| Graph Engineering | flow-steward / graph-engineering | ✅ |
+| 工蜂 Issue 前置 | issue-feasibility / issue-batch-analysis | ✅ |
+| Spec Kit TDD | speckit-specify → plan → tasks → implement | ✅ |
+| 评审/安全/汇总 | code-review、bk-security-redlines、work-summary | ✅ |
 
-> Skill 清单、MCP 配置、环境检查结果详见 [docs/harness/tooling.md](docs/harness/tooling.md)。
+> 工具清单详见 [docs/harness/tooling.md](docs/harness/tooling.md)。
 
 ## 已完成特性
 
 - HostNetPortPool hostNetwork 端口动态分配（`specs/001-hostnet-port-allocation/`）
-- Namespace Scope Exemption：白名单 NS 可跨 NS 引用 Service 并使用全局云凭证（详见 harness 架构约束文档）
-- SSL 证书过期 Prometheus 指标：CertificateChecker 周期性查询腾讯云证书剩余天数（`specs/stories/1070046748135050873/`，默认关闭，需 CLI 开关启用）
+- Namespace Scope Exemption：白名单 NS 跨 NS 引用 Service + 全局云凭证
+- SSL 证书过期 Prometheus 指标（CertificateChecker，默认关闭，需 CLI 开关）

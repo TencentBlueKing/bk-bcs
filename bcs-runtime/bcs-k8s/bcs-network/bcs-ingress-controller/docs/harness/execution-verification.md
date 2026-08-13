@@ -88,6 +88,8 @@ go test -count=1 -run 'TestParseExemptNamespaces|TestRuleConverter|TestMappingCo
 | Listener | `internal/metrics/listener_controller.go` | 同上 |
 | Webhook | `internal/metrics/webhook.go` | 同上 |
 | Check | `internal/metrics/check.go` | 同上 |
+| Certificate | `internal/metrics/certificate.go` | 同上 |
+| NodeInfo | `internal/metrics/nodeinfoexporter.go` | 同上 |
 
 ### 4.3 关键指标
 

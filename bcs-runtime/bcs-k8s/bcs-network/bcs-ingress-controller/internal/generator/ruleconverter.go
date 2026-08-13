@@ -439,32 +439,42 @@ func (rc *RuleConverter) isPortMatch(port federationv1.EndpointPort, svcPort *k8
 
 func (rc *RuleConverter) generateBackends(matchedEps []federationv1.MultiClusterEndpointSlice, svcPort *k8scorev1.ServicePort, svcRoute *networkextensionv1.ServiceRoute) []networkextensionv1.ListenerBackend {
 	var backends []networkextensionv1.ListenerBackend
+	// Deduplicate by IP+Port across MultiClusterEndpointSlices from different sub-clusters.
+	backendMap := make(map[string]struct{})
 	for _, mEps := range matchedEps {
 		for _, ep := range mEps.Spec.Endpoints {
 			for _, port := range ep.Ports {
-				if rc.isPortMatch(port, svcPort) {
-					if svcRoute.HostPort {
-						if port.HostPort == nil {
-							blog.Warnf("hostPort is true, but not found related definition in port [%s]",
-								*port.Name)
-							rc.eventf(rc.ingress, k8scorev1.EventTypeWarning, constant.EventIngressBindFailed,
-								fmt.Sprintf("hostPort is true, but not found related definition in port [%s]",
-									*port.Name))
-							continue
-						}
-						backends = append(backends, networkextensionv1.ListenerBackend{
-							IP:     ep.NodeAddresses[0],
-							Port:   int(*port.HostPort),
-							Weight: svcRoute.GetWeight(),
-						})
-					} else {
-						backends = append(backends, networkextensionv1.ListenerBackend{
-							IP:     ep.Addresses[0],
-							Port:   int(*port.Port),
-							Weight: svcRoute.GetWeight(),
-						})
+				if !rc.isPortMatch(port, svcPort) {
+					continue
+				}
+				var newBackend networkextensionv1.ListenerBackend
+				if svcRoute.HostPort {
+					if port.HostPort == nil {
+						blog.Warnf("hostPort is true, but not found related definition in port [%s]",
+							*port.Name)
+						rc.eventf(rc.ingress, k8scorev1.EventTypeWarning, constant.EventIngressBindFailed,
+							fmt.Sprintf("hostPort is true, but not found related definition in port [%s]",
+								*port.Name))
+						continue
+					}
+					newBackend = networkextensionv1.ListenerBackend{
+						IP:     ep.NodeAddresses[0],
+						Port:   int(*port.HostPort),
+						Weight: svcRoute.GetWeight(),
+					}
+				} else {
+					newBackend = networkextensionv1.ListenerBackend{
+						IP:     ep.Addresses[0],
+						Port:   int(*port.Port),
+						Weight: svcRoute.GetWeight(),
 					}
 				}
+				key := newBackend.IP + strconv.Itoa(newBackend.Port)
+				if _, ok := backendMap[key]; ok {
+					continue
+				}
+				backendMap[key] = struct{}{}
+				backends = append(backends, newBackend)
 			}
 		}
 	}

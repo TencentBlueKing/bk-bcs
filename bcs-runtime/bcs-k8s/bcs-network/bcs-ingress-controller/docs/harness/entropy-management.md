@@ -8,7 +8,7 @@
 
 | 检测项 | 频率 | 方式 | 责任人 |
 |-------|------|------|-------|
-| 文档引用路径是否存在 | 每次 PR / 按需 | harness-gardening 八维度扫描 | 自动化 |
+| 文档引用路径是否存在 | 每次 PR / 按需 | harness-gardening 九维度扫描 | 自动化 |
 | dev-map 与代码结构匹配 | 代码变更后 | harness-gardening 维度 8 | 自动化 |
 | AGENTS.md 行数 ≤ 100 | 每次 harness 生成后 | 行数检查 | 自动化 |
 | tooling.md 与 tool-dependencies 对齐 | 每次 harness 生成后 | 交叉验证 | 自动化 |
@@ -64,7 +64,7 @@
 
 | 指标 | 计算方式 | 阈值 | 超标动作 |
 |------|---------|------|---------|
-| 文档一致性率 | harness-gardening 通过维度 / 8 | ≥ 87.5%（7/8） | 触发集中修复 |
+| 文档一致性率 | harness-gardening 通过维度 / 9 | ≥ 88.9%（8/9） | 触发集中修复 |
 | 测试通过率 | `make test-ingress-controller` | 100% | 阻断合并 |
 | dev-map 覆盖率 | 源文件索引条目 / 实际 .go 文件数 | ≥ 90% | 更新 dev-map |
 | 规范骨架比 | Level 2 规范数 / 总规范数 | ≤ 50% | 完善或贡献预设库 |

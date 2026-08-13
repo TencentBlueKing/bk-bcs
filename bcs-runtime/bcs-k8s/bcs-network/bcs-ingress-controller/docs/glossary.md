@@ -50,7 +50,8 @@
 
 | 术语 | 英文 | 定义 |
 |------|------|------|
-| 文档园艺 | Harness Gardening | harness-gardening skill 执行的八维度文档一致性巡检 |
+| 文档园艺 | Harness Gardening | harness-gardening skill 执行的九维度文档一致性巡检 |
+| 唯一知识来源 | Single Source of Truth | 每类知识仅维护一处权威文档，避免多源冲突 |
 | 技术债预算 | Technical Debt Budget | 控制 TODO/FIXME 和架构违规增速的量化阈值 |
 | 表驱动测试 | Table-Driven Test | Go 单元测试标准模式，测试用例以结构体切片组织 |
 | 幂等性 | Idempotency | Reconcile 多次执行产生相同结果，不产生副作用 |
