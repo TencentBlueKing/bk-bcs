@@ -432,6 +432,69 @@ func (ins InstanceInfo) GetNodeFailedReason() string {
 	return fmt.Sprintf("node[%s:%s]: %s", ins.NodeIP, ins.NodeID, ins.FailedReason)
 }
 
+// logInstanceInfo logs key instance fields for debugging
+func logInstanceInfo(taskID string, ins *cvm.Instance) {
+	instanceID := utils.StringPtrToString(ins.InstanceId)
+	instanceState := utils.StringPtrToString(ins.InstanceState)
+	latestOp := utils.StringPtrToString(ins.LatestOperation)
+	latestOpState := utils.StringPtrToString(ins.LatestOperationState)
+	vpcID := func() string {
+		if ins.VirtualPrivateCloud != nil {
+			return utils.StringPtrToString(ins.VirtualPrivateCloud.VpcId)
+		}
+		return ""
+	}()
+	privateIP := func() string {
+		if len(ins.PrivateIpAddresses) > 0 {
+			return utils.StringPtrToString(ins.PrivateIpAddresses[0])
+		}
+		return ""
+	}()
+	zone := func() string {
+		if ins.Placement != nil {
+			return utils.StringPtrToString(ins.Placement.Zone)
+		}
+		return ""
+	}()
+	instanceType := utils.StringPtrToString(ins.InstanceType)
+	osName := utils.StringPtrToString(ins.OsName)
+	createdTime := utils.StringPtrToString(ins.CreatedTime)
+	blog.Infof("CheckCvmInstanceState[%s] instance[%s] InstanceState[%s] LatestOperation[%s] "+
+		"LatestOperationState[%s] VpcID[%s] PrivateIP[%s] Zone[%s] "+
+		"InstanceType[%s] OsName[%s] CreatedTime[%s]",
+		taskID, instanceID, instanceState, latestOp, latestOpState,
+		vpcID, privateIP, zone, instanceType, osName, createdTime)
+}
+
+// waitAndLogInstanceInit waits for instance initialization, polls instance info every 5s for 40s
+func waitAndLogInstanceInit(timeContext context.Context, client *api.NodeClient, ids []string, taskID string) {
+	initWaitTicker := time.NewTicker(5 * time.Second)
+	defer initWaitTicker.Stop()
+	initWaitTimer := time.NewTimer(40 * time.Second)
+	defer initWaitTimer.Stop()
+initWaitLoop:
+	for {
+		select {
+		case <-initWaitTimer.C:
+			break initWaitLoop
+		case <-initWaitTicker.C:
+			initInstances, errInit := client.GetInstancesByID(ids)
+			if errInit != nil {
+				blog.Errorf("CheckCvmInstanceState[%s] GetInstancesByID during initial wait failed, %s",
+					taskID, errInit.Error())
+				continue
+			}
+			for _, ins := range initInstances {
+				logInstanceInfo(taskID, ins)
+			}
+		case <-timeContext.Done():
+			blog.Warnf("CheckCvmInstanceState[%s] context done during initial wait: %v",
+				taskID, timeContext.Err())
+			break initWaitLoop
+		}
+	}
+}
+
 // CheckCvmInstanceState check cvm nodes state
 // nolint
 func CheckCvmInstanceState(ctx context.Context, ids []string,
@@ -455,11 +518,14 @@ func CheckCvmInstanceState(ctx context.Context, ids []string,
 	timeContext, cancel := context.WithTimeout(ctx, time.Minute*10)
 	defer cancel()
 
+	// wait for instance initialization before polling status
+	waitAndLogInstanceInit(timeContext, client, ids, taskID)
+
 	// wait all nodes to be ready
 	err = loop.LoopDoFunc(timeContext, func() error {
 		cloudInstances, errLocal := client.GetInstancesByID(ids)
 		if errLocal != nil {
-			blog.Errorf("cvm client GetInstancesById len(%d) failed, %s", len(ids), err.Error())
+			blog.Errorf("cvm client GetInstancesById len(%d) failed, %s", len(ids), errLocal.Error())
 			return nil
 		}
 		index := 0
@@ -526,7 +592,7 @@ func CheckCvmInstanceState(ctx context.Context, ids []string,
 
 		cloudInstances, errLocal := client.GetInstancesByID(ids)
 		if errLocal != nil {
-			blog.Errorf("cvm client GetInstancesByID len(%d) failed, %s", len(ids), err.Error())
+			blog.Errorf("cvm client GetInstancesByID len(%d) failed, %s", len(ids), errLocal.Error())
 			return nil, errLocal
 		}
 
