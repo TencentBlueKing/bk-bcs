@@ -225,6 +225,7 @@ units:
   cores: '{0} Cores'
 metrics:
   cpuUsage: CPU usage
+  cpuPeakUsage: CPU peak usage
   cpuLimitUsage: CPU limit usage
   cpuResUsage: CPU request usage
   diskUsage: Disk usage
@@ -234,6 +235,10 @@ metrics:
   cpuUsageDesc: >-
     CPU usage percentage per core. 100% means one core is fully utilized, 200%
     means two cores are fully utilized
+  cpuPeakUsageDesc: >-
+    CPU peak usage percentage per core. 100% means one core is fully utilized,
+    200% means two cores are fully utilized. metrics:
+    max_over_time(rate(container_cpu_usage_seconds_total[2m])[5m:])
   cpuLimitUsageDesc: >-
     Percentage of actual CPU cores consumed relative to the Limit. May exceed
     the limit, but typically stays within 100%
