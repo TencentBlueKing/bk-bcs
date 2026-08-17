@@ -329,7 +329,7 @@ properties:
             visible: true
         else:
           state:
-            value: 0
+            value: "80"
             visible: false
       - target: "{{`{{`}} $widgetNode?.getSibling('path')?.id {{`}}`}}"
         if: "{{`{{`}} $self.value && $widgetNode?.getSibling('type')?.instance?.value == 'httpGet' {{`}}`}}"
@@ -409,7 +409,7 @@ properties:
         if: "{{`{{`}} !$widgetNode?.getSibling('enabled')?.instance?.value || $self.value === 'exec' {{`}}`}}"
         then:
           state:
-            value: 0
+            value: "80"
             visible: false
         else:
           state:
@@ -434,13 +434,13 @@ properties:
             visible: false
   port:
     title: {{ i18n "端口" .lang }}
-    type: integer
-    ui:component:
-      props:
-        max: 65535
+    type: string
+    default: "80"
     ui:rules:
-      - validator: "{{`{{`}} !$widgetNode?.getSibling('enabled')?.instance?.value || ($widgetNode?.getSibling('type')?.instance?.value !== 'httpGet' && $widgetNode?.getSibling('type')?.instance?.value !== 'tcpSocket') || ($self.value !== '' && $self.value !== 0) {{`}}`}}"
-        message: {{ i18n "值不能为零" .lang }}
+      - maxLength16
+      - rfc1123LabelRegex
+      - validator: "{{`{{`}} !$widgetNode?.getSibling('enabled')?.instance?.value || ($widgetNode?.getSibling('type')?.instance?.value !== 'httpGet' && $widgetNode?.getSibling('type')?.instance?.value !== 'tcpSocket') || $self.value !== '' {{`}}`}}"
+        message: {{ i18n "值不能为空" .lang }}
   path:
     title: {{ i18n "请求路径" .lang }}
     type: string
