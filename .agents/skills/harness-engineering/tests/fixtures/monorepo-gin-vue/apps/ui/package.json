@@ -1,0 +1,5 @@
+{
+  "name": "ui",
+  "dependencies": { "vue": "^3.5.0", "pinia": "^3.0.0" },
+  "devDependencies": { "vite": "^6.0.0", "typescript": "^5.0.0" }
+}

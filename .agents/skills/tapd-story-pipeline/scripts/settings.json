@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(go build:*)",
+      "Bash(go test:*)",
+      "Bash(go vet:*)",
+      "Bash(echo:*)",
+      "Bash(gofmt:*)",
+      "Bash(ls:*)",
+      "Bash(go env:*)",
+      "Bash(go mod download:*)",
+      "Bash(make test:*)",
+      "Bash(make:*)",
+      "Bash(export:*)",
+      "Bash(go version:*)",
+      "Bash(env -i HOME=$HOME PATH=/usr/local/go/bin:/usr/bin:/bin bash:*)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Task|Agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ${CLAUDE_PROJECT_DIR}/.agents/skills/tapd-story-pipeline/scripts/subagent_usage.py",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}

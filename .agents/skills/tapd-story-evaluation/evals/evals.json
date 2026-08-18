@@ -1,0 +1,26 @@
+{
+  "skill_name": "tapd-story-evaluation",
+  "evals": [
+    {
+      "id": 1,
+      "name": "partial-score-reassessment",
+      "prompt": "不调用 TAPD MCP。根据当前 Skill 的规则评估一份本地子需求文档：文档已有‘预估工时：12h’和‘规模（size）：3’，但没有‘业务价值（RICE）’及任何 RICE 明细。用户未要求重新评估。说明本轮应跳过还是重新评分，并列出必须补齐的评分产物。",
+      "expected_output": "只在 PERT、size 和 RICE 业务价值均完整时跳过；本例必须重新评分并补齐完整评分证据。",
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "high-size-rebreak",
+      "prompt": "不调用 TAPD MCP。某已拆分子需求的五个规模维度评分为：实现范围=5、技术复杂度=5、依赖=5、风险=4、验证成本=4；PERT 预估 E=20h。根据当前 Skill 的规则，计算应得到的 size，并说明主流程是否必须回拨重拆、原因是什么。",
+      "expected_output": "size=13；即使 E 不超过 24h，也必须触发重拆，以避免 size 13 的工作项直接建单。",
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "bug-size-source-of-truth",
+      "prompt": "不调用 TAPD MCP。解释缺陷评估在为五个规模维度打分时，应分别从哪个文档获得统一分值标尺、从哪个文档获得 ODC 缺陷专有证据；说明为什么不能由缺陷补充文档另行定义 Fibonacci 映射。",
+      "expected_output": "共用 size 标准是唯一标尺和映射来源；缺陷补充仅提供 ODC 证据采集指南，避免与 story 规则漂移。",
+      "files": []
+    }
+  ]
+}

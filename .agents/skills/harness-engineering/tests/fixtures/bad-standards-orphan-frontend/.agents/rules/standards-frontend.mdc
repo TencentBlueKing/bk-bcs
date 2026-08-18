@@ -1,0 +1,7 @@
+---
+description: orphan frontend rule
+alwaysApply: false
+globs: "**/*.vue"
+---
+
+# should fail verify — frontend not selected

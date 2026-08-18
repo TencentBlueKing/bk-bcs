@@ -1,0 +1,186 @@
+# 技术规范预设索引
+# harness-engineering 根据此文件匹配目标项目的技术栈
+#
+# detect 语义（必须遵守）：
+# - 每个 preset 的 detect 为对象：match（默认 all=AND）+ rules 列表
+# - 单条 rule：
+#   - file: 路径（相对仓库根）
+#   - any_of_files: 文件列表，存在任一即可
+#   - contains_dep: 仅检查 package.json 的 dependencies/devDependencies 的 key（禁止全文 grep）
+#   - version_gte / version_lt: 针对 contains_dep 中主包（如 vue）的版本约束；无法解析则不 Level-1
+#   - contains_require: 仅检查 go.mod 的 require 块直接依赖行（禁止匹配 indirect 注释行外的间接噪声时，仍要求 require 出现；另须 require_dirs）
+#     同一 rule 内数组多项为 OR（任一 require 命中即可）；不同 rule 之间仍由 match 决定 AND/OR
+#   - require_dirs: 目录必须全部存在，否则不 Level-1
+# - status: planned → 命中信号时不部署规范，仅总结报告提示（与未匹配同属 skip_unmatched）
+
+categories:
+  frontend:
+    description: "前端开发规范"
+    presets:
+      - id: vue3
+        name: "Vue 3 + TypeScript + Vite"
+        file: frontend-vue3.md
+        detect:
+          match: all
+          rules:
+            - file: "package.json"
+              contains_dep: ["vue"]
+              version_gte: "3.0.0"
+            - any_of_files: ["vite.config.ts", "vite.config.js", "vite.config.mts", "vite.config.mjs"]
+        tags: [vue, typescript, vite, pinia]
+
+      - id: vue3-webpack
+        name: "Vue 3 + TypeScript + webpack"
+        file: frontend-vue3-webpack.md
+        detect:
+          match: all
+          rules:
+            - file: "package.json"
+              contains_dep: ["vue"]
+              version_gte: "3.0.0"
+            - any_of_files:
+                - "vue.config.js"
+                - "vue.config.ts"
+                - "webpack.config.js"
+                - "webpack.config.ts"
+        tags: [vue, typescript, webpack]
+
+      - id: vue2
+        name: "Vue 2 + webpack"
+        file: frontend-vue2.md
+        detect:
+          match: all
+          rules:
+            - file: "package.json"
+              contains_dep: ["vue"]
+              version_lt: "3.0.0"
+        tags: [vue, webpack, options-api]
+
+      - id: react
+        name: "React + TypeScript"
+        file: frontend-react.md
+        status: planned
+        detect:
+          match: all
+          rules:
+            - file: "package.json"
+              contains_dep: ["react"]
+        tags: [react, typescript]
+
+  api:
+    description: "前后端接口规范"
+    presets:
+      - id: grpc-gateway
+        name: "Protobuf + gRPC-Gateway"
+        file: api-grpc-gateway.md  # 分册: api-grpc-gateway/
+        detect:
+          match: all
+          rules:
+            - any_of_files: ["**/*.proto"]
+            - file: "go.mod"
+              contains_require: ["github.com/grpc-ecosystem/grpc-gateway", "github.com/grpc-ecosystem/grpc-gateway/v2"]
+        tags: [protobuf, grpc, grpc-gateway]
+
+      - id: swagger
+        name: "Gin + Swagger/OpenAPI"
+        file: api-swagger.md
+        detect:
+          match: all
+          rules:
+            - file: "go.mod"
+              contains_require: ["github.com/gin-gonic/gin"]
+            - file: "go.mod"
+              contains_require: ["github.com/swaggo/swag", "github.com/swaggo/gin-swagger"]
+        tags: [gin, swagger, openapi, rest]
+
+      - id: trpc
+        name: "tRPC 协议"
+        file: api-trpc.md
+        status: planned
+        detect:
+          match: all
+          rules:
+            - file: "go.mod"
+              contains_require: ["trpc.group/trpc-go"]
+            - require_dirs: ["proto", "stub"]
+        tags: [trpc, protobuf]
+
+  backend:
+    description: "后端开发规范"
+    presets:
+      - id: go-micro
+        name: "Go + gRPC + go-micro"
+        file: backend-go-micro.md  # 分册: backend-go-micro/
+        detect:
+          match: all
+          rules:
+            - file: "go.mod"
+              contains_require: ["go-micro.dev"]
+        tags: [go, grpc, go-micro, etcd]
+
+      - id: gin
+        name: "Go + Gin REST"
+        file: backend-gin.md
+        detect:
+          match: all
+          rules:
+            - file: "go.mod"
+              contains_require: ["github.com/gin-gonic/gin"]
+        tags: [go, gin, rest]
+
+      - id: trpc-go
+        name: "Go + tRPC-Go"
+        file: backend-trpc-go.md  # 分册: backend-trpc-go/
+        detect:
+          match: all
+          rules:
+            - file: "go.mod"
+              contains_require: ["trpc.group/trpc-go"]
+            - require_dirs: ["proto", "stub"]
+        tags: [go, trpc-go]
+
+      - id: trpc-agent-go
+        name: "Go + tRPC-Agent-Go（AI Agent）"
+        file: backend-trpc-agent-go.md  # 分册: backend-trpc-agent-go/
+        detect:
+          match: all
+          rules:
+            - file: "go.mod"
+              contains_require: ["trpc-agent-go"]
+        tags: [go, trpc-go, trpc-agent-go, ai-agent, llm]
+
+  security:
+    description: "代码安全规范（横切关注点，code-project / mixed 项目必选）"
+    presets:
+      - id: bk-redlines
+        name: "蓝鲸代码安全三大红线"
+        file: security-bk-redlines.md
+        detect: code-project
+        tags: [security, input-validation, auth, encryption]
+
+  quality:
+    description: "代码质量规范（code-project / mixed 仍部署文件；加载为按需/opt-in，见 standards README 加载预算，非凡改代码必读）"
+    presets:
+      - id: code-review
+        name: "代码评审规范（Google Code Review 指南）"
+        file: quality-code-review.md  # 分册: quality-code-review/
+        detect: code-project
+        tags: [code-review, quality, security, performance, git]
+
+  skill-tooling:
+    description: "Skill 工具类项目规范（skill-tooling 项目必选）"
+    presets:
+      - id: skill-spec
+        name: "Agent Skill 编写规范"
+        file: skill-spec.md
+        detect: skill-tooling
+        tags: [skill, agent, ai, markdown]
+
+fallback:
+  # 未匹配 / planned：不向接入仓写入该分类的技术栈规范（无 *-generic 骨架）。
+  # 横切必选（security/quality/skill-spec）仍按 $PROJECT_DOMAIN 部署。
+  strategy: skip_unmatched
+  contribute_hint: |
+    当前预设库未覆盖该技术栈，未生成 frontend/api/backend 规范文件。
+    如需完整规范：编写后放入 skills/harness-engineering/assets/standards/，
+    并在 index.yaml 中注册，贡献回预设库后再重新运行 harness-generating。

@@ -146,10 +146,21 @@ git-sync.sh
 ### PreCI ###
 .codecc
 
-# Cursor
-.cursor
 
 .project.json
 project.json
+docs/reqs/
 
-.codebuddy
+# AI Agent
+.cursor
+.codebuddy/*
+!.codebuddy/skills/
+!.codebuddy/skills/**
+apm.yml
+apm.lock.yml
+apm.yaml
+apm.lock.yaml
+
+
+# APM dependencies
+apm_modules/
