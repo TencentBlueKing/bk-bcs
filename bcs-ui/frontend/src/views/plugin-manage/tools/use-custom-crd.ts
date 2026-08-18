@@ -54,6 +54,8 @@ T extends { metadata: { name: string, namespace: string } }
   // 获取表格数据
   const tableLoading = ref(false);
   const handleGetCrdList = async () => {
+    // 命名空间空值守卫
+    if (!ns.value) return;
     tableLoading.value = true;
     const { manifest, manifestExt } = await customResourceList({
       $crd,
