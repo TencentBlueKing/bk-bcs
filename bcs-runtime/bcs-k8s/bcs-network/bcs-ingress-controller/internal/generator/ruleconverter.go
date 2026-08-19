@@ -210,7 +210,6 @@ func (rc *RuleConverter) generateListenerRule(l7Routes []networkextensionv1.Laye
 		liRule.TargetGroup = targetGroup
 		retListenerRules = append(retListenerRules, liRule)
 	}
-	sort.Sort(networkextensionv1.ListenerRuleList(retListenerRules))
 	return retListenerRules, nil
 }
 

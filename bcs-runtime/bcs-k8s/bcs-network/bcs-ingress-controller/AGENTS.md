@@ -18,7 +18,7 @@ bcs-ingress-controller/
 ├── internal/                   # constant/option/common/utils、cloud*、*cache、
 │                               # generator、apiclient/worker/conflict/eventer、
 │                               # httpsvr/webhook、metrics/check（详见 architectural-constraints）
-├── docs/                       # harness/ standards/ dev-map/ adr/ reqs/ workflow.md glossary.md
+├── docs/                       # harness/ standards/ dev-map/ adr/ reqs/ glossary.md
 ├── specs/                      # 功能设计文档
 ├── scripts/                    # 运维/巡检脚本（含 gardening PR hook）
 ├── cli-util/                   # 独立 CLI（如 validate-listener-name）
@@ -36,9 +36,14 @@ bcs-ingress-controller/
 | 架构决策（ADR） | [docs/adr/README.md](docs/adr/README.md) |
 | 词汇表 | [docs/glossary.md](docs/glossary.md) |
 
-## 开发工作流
+## 编码前必读（门闩）
 
-本项目使用 `workflow-agent` 按 [`docs/workflow.md`](docs/workflow.md) 定义的步骤推进迭代开发。workflow-agent 启动时主动感知当前状态（首次执行、崩溃恢复、错误暂停、重新开始），无需用户输入特定指令。不允许跳过工作流步骤或自行决定开发流程。
+写或改**业务代码**前（非纯文档/纯问答）：
+1. 打开 `docs/standards/README.md`，确认「当前项目选用的规范」与「加载预算」。
+2. 按预算表与「章节快速索引」**只 Read 本任务相关章节**（可用行号/偏移；**禁止**无差别灌入整份长规范）。
+3. 若存在 `docs/business-standards/README.md`：读「规范索引」，按任务 tags/scenarios **只 Read 命中的业务规范**（无匹配则不加载；未在索引登记的文件视为未生效）。
+4. 未选用的端：不得假装存在规范；按 README「未覆盖的技术栈」处理或向用户确认。
+5. 提交/宣称完成前：按相关节的检查清单自检，并运行本组件已有的构建/测试（`cd .. && make ingress-controller` / `make test-ingress-controller`）。
 
 ## 构建与测试
 
@@ -64,12 +69,11 @@ go test -v -run TestReconcile ./hostnetportcontroller/...  # 单包测试
 | 环节 | Skill / 入口 | 状态 |
 |------|-------------|------|
 | Harness 生成/巡检 | harness-engineering | ✅ |
-| 工作流驱动 | workflow-agent + docs/workflow.md | ✅ |
 | 产品前置/需求整理 | tapd-product-discovery / govern-pipeline | ✅ |
 | 澄清/评估/评审 | tapd-story-clarification / evaluation / review | ✅（ws 70046748） |
 | 缺陷澄清/评估 | tapd-bug-clarification / evaluation | ✅ |
 | 迭代研发 | tapd-iteration-runner / tapd-story-pipeline | ✅ |
-| Graph Engineering | flow-steward / graph-engineering | ✅ |
+| Graph Engineering | flow-steward / graph-engineering（可选） | ✅ |
 | 工蜂 Issue 前置 | issue-feasibility / issue-batch-analysis | ✅ |
 | Spec Kit TDD | speckit-specify → plan → tasks → implement | ✅ |
 | 评审/安全/汇总 | code-review、bk-security-redlines、work-summary | ✅ |

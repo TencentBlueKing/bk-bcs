@@ -48,7 +48,7 @@ func newEmptyAppGateway() *armnetwork.ApplicationGateway {
 
 func dualPathListener(name, domain string, port int) *networkextensionv1.Listener {
 	return &networkextensionv1.Listener{
-		ObjectMeta: metav1.ObjectMeta{Namespace: "gst-prod", Name: name},
+		ObjectMeta: metav1.ObjectMeta{Namespace: "test-ns", Name: name},
 		Spec: networkextensionv1.ListenerSpec{
 			LoadbalancerID: testAppGatewayName,
 			Port:           port,
@@ -59,7 +59,7 @@ func dualPathListener(name, domain string, port int) *networkextensionv1.Listene
 			Rules: []networkextensionv1.ListenerRule{
 				{
 					Domain: domain,
-					Path:   "/tencent/midas/*",
+					Path:   "/api/specific/*",
 					TargetGroup: &networkextensionv1.ListenerTargetGroup{
 						TargetGroupProtocol: AzureProtocolHTTP,
 						Backends: []networkextensionv1.ListenerBackend{
@@ -160,6 +160,13 @@ func TestAgResourcesUniqueMultiPath(t *testing.T) {
 	pathRules := appGateway.Properties.URLPathMaps[0].Properties.PathRules
 	if len(pathRules) != 2 {
 		t.Fatalf("expect 2 path rules under same domain, got %d", len(pathRules))
+	}
+	wantPaths := []string{"/api/specific/*", "/*"}
+	for i, want := range wantPaths {
+		if pathRules[i].Properties == nil || len(pathRules[i].Properties.Paths) != 1 ||
+			pathRules[i].Properties.Paths[0] == nil || *pathRules[i].Properties.Paths[0] != want {
+			t.Errorf("path rule %d changed configured order, want %q", i, want)
+		}
 	}
 	// 2 rule pools + 1 default
 	if len(appGateway.Properties.BackendAddressPools) != 3 {
@@ -968,7 +975,7 @@ func TestCleanupStaleRoutesOnShrink(t *testing.T) {
 	if got := len(appGateway.Properties.URLPathMaps[0].Properties.PathRules); got != 2 {
 		t.Fatalf("test setup failed: expect 2 path rules, got %d", got)
 	}
-	staleTgName := getRuleTgName(full.Name, domain, "/tencent/midas/*", 443)
+	staleTgName := getRuleTgName(full.Name, domain, "/api/specific/*", 443)
 
 	// spec shrinks to a single path, reconciled against the gateway state built above
 	shrunk := full.DeepCopy()
@@ -1001,7 +1008,7 @@ func TestCleanupKeepsSharedRouteOfPeer(t *testing.T) {
 	domain := "shared.example.com"
 
 	liA := dualPathListener("agw-a-443", domain, 443)
-	liA.Spec.Rules = liA.Spec.Rules[:1] // only /tencent/midas/*
+	liA.Spec.Rules = liA.Spec.Rules[:1] // only /api/specific/*
 	liB := dualPathListener("agw-b-443", domain, 443)
 	liB.Spec.Rules = liB.Spec.Rules[1:] // only /*
 
@@ -1342,7 +1349,7 @@ func TestValidateAgNameLength(t *testing.T) {
 	appGateway := newEmptyAppGateway()
 	appGateway = alb.ensureAddrPoolForAg(appGateway, listeners)
 
-	tgName := getRuleTgName(listener.Name, "a.example.com", "/tencent/midas/*", 443)
+	tgName := getRuleTgName(listener.Name, "a.example.com", "/api/specific/*", 443)
 	if len(tgName) <= MaxAzureResourceNameLen {
 		t.Fatalf("test setup failed: generated name is only %d characters", len(tgName))
 	}

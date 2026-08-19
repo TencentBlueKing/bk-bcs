@@ -1,37 +1,45 @@
 # 开发地图（Dev Map）
 
-> 本目录提供 BCS Ingress Controller 代码结构的导航索引，帮助 Agent 和开发者评估变更影响范围、定位具体实现文件。
-
-## 文件说明
-
-<!-- dev-map:auto -->
-| 文件 | 用途 |
-|------|------|
-| [source-index.md](source-index.md) | 源文件目录——按目录分组列出所有 .go 文件的路径和职责描述 |
-| [module-index.md](module-index.md) | 模块索引——每个模块的职责和关联文件，用于评估模块内部影响 |
-| [module-dependencies.md](module-dependencies.md) | 模块依赖索引——模块间 import 依赖关系与 mermaid 图 |
-<!-- /dev-map:auto -->
+> 基于 graphify 知识图谱，帮助 Agent 和开发者理解项目结构与概念关联。
+> 相比旧式 Markdown 索引，token 消耗降低约 70x。
 
 ## 使用方式
 
-评估某次变更的影响时，按以下顺序查阅：
+调用 graphify skill 查询图谱（无需指定 `--graph` 路径参数，skill 已配置图谱位于 `docs/dev-map/graph.json`）：
 
-1. **module-index** — 找到所属模块，确认模块内所有关联文件
-2. **module-dependencies** — 查该模块被哪些模块依赖，评估跨模块影响
-3. **source-index** — 查看具体文件的职责描述，确定修改点
+| 调用方式 | 用途 |
+|---------|------|
+| `/graphify query "<问题>"` | 自然语言查询 |
+| `/graphify path "<A>" "<B>"` | 路径查询——找两个概念之间的最短连接路径 |
+| `/graphify explain "<概念>"` | 概念解释——展开某节点的定义、关联节点和所在 community |
 
-## 维护规则
+本组件为 monorepo 子树。查询前将 `GRAPHIFY_OUT` 设为**本目录的绝对路径**（`bcs-ingress-controller/docs/dev-map`），不要用 git 仓库根下的 `docs/dev-map`。
 
-<!-- dev-map:auto -->
-| 变更类型 | 应更新的文档 | 优先级 |
-|---------|------------|-------|
-| 新增源文件 | source-index.md、module-index.md | 建议 |
-| 删除源文件 | source-index.md、module-index.md | 必须 |
-| 文件移动/重命名 | source-index.md、module-index.md | 必须 |
-| 新增模块间 import | module-dependencies.md | 建议 |
-| 新增 Controller/子系统 | module-index.md、module-dependencies.md | 必须 |
-<!-- /dev-map:auto -->
+## 仓库中提交什么
 
-**自动维护**：对我说「文档巡检」触发 harness-gardening 维度 8 检测偏差。
+原则：**提交让 graphify 跑起来的配置与说明，不提交跑出来的结果。**
 
-**手动更新**：触发词「更新 dev map」或「生成开发地图」可全量更新。
+| 入库 | 不入库（见本目录 `.gitignore` 白名单） |
+|------|----------------------------------------|
+| 本 `README.md`（用法与约定） | **除下列白名单外的全部文件**（含 `graph.json`、`GRAPH_REPORT.md`、`cache/`、`wiki/`、可视化导出等） |
+| 本目录 `.gitignore` | （策略：`*` + `!README.md` + `!.gitignore`） |
+
+**禁止**在仓库根（或其它路径）把整个 `docs/dev-map/` 写进 gitignore——会丢掉约定落点与本说明。本目录内用白名单忽略即可。  
+IDE Rules（`graphify.mdc` / `graphify.md`）由 harness 同步，属于「让图跑起来」的规则侧配置。
+
+## 维护
+
+由 harness-gardening 在代码变更后**本地**增量更新图谱（AST，无 API 费用）；**不**把 `graph.json` 纳入提交。  
+图谱文件不存在时自动全量生成到本地。  
+手动触发词："更新 dev map" 或 "生成开发地图"。
+
+## 首次生成（克隆后）
+
+若本地尚无 `graph.json`：
+
+```bash
+export GRAPHIFY_OUT="$(pwd)/docs/dev-map" GRAPHIFY_NO_BACKUP=1
+graphify update . --no-cluster   # AST-only，无 LLM；或按 skill 跑全量 /graphify .
+```
+
+亦可触发 harness：「更新开发地图」/「生成开发地图」。
