@@ -1894,7 +1894,9 @@ deploy:
     skipCrds: Ignore the CRD
     waitforJobs: Wait for all the Jobs to complete
     wait: Wait for all Pod and PVC to be ready
-    timeout: Timeout
+    timeout:
+      label: Timeout
+      desc: 'This is equivalent to the `--timeout` parameter, and will take effect after selecting the option to wait for all Pods. Examples: 30s, 5m, 10s, 10m'
     hisotryMax:
       label: Keep the maximum historical version
       desc: '--history-max, the number of historical versions available for rollback'
