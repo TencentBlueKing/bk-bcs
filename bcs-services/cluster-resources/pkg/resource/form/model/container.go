@@ -83,7 +83,7 @@ type Probe struct {
 	FailureThreshold int64    `structs:"failureThreshold"` // 失败阈值
 	Type             string   `structs:"type"`
 	Path             string   `structs:"path"`
-	Port             int64    `structs:"port"`
+	Port             string   `structs:"port"` // 端口号（1-65535）或符合 DNS_LABEL 规范的端口名称
 	Command          []string `structs:"command"`
 }
 
