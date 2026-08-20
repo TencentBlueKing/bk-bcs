@@ -179,7 +179,9 @@ failureThreshold: {{ .failureThreshold }}
 {{- if eq .type "httpGet" }}
 httpGet:
   scheme: HTTP
+  {{- if .path }}
   path: {{ .path }}
+  {{- end }}
   port: {{ .port }}
 {{- else if eq .type "tcpSocket" }}
 tcpSocket:
@@ -206,7 +208,9 @@ resources:
     {{- end }}
     {{- if .requests.extra }}
     {{- range .requests.extra }}
+    {{- if .key}}
     {{ .key }}: {{ .value | quote }}
+    {{- end }}
     {{- end }}
     {{- end }}
   {{- end }}
@@ -223,7 +227,9 @@ resources:
     {{- end }}
     {{- if .limits.extra }}
     {{- range .limits.extra }}
+    {{- if .key}}
     {{ .key }}: {{ .value | quote }}
+    {{- end }}
     {{- end }}
     {{- end }}
   {{- end }}

@@ -181,9 +181,11 @@ service:
           containerPort:
             title: {{ i18n "容器端口" .lang }}
             type: integer
+            default: 80
             ui:component:
               props:
                 max: 65535
+                min: 1
           protocol:
             title: {{ i18n "协议" .lang }}
             type: string
@@ -206,6 +208,7 @@ service:
         name: bfArray
       ui:props:
         showTitle: false
+        showTableHead: true
 {{- end }}
 
 {{- define "container.envs" }}

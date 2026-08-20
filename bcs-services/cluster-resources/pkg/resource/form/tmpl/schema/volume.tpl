@@ -69,11 +69,11 @@ hostPath:
       type:
         title: {{ i18n "类型" .lang }}
         type: string
-        default: Directory
+        default: ""
         ui:component:
           name: select
           props:
-            clearable: false
+            clearable: true
             datasource:
               - label: DirectoryOrCreate
                 value: DirectoryOrCreate
