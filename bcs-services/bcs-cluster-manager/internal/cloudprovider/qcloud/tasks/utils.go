@@ -130,7 +130,7 @@ func updateNodeIPByNodeID(ctx context.Context, clusterId string, n business.Inst
 	}
 
 	blog.Infof("updateNodeIPByNodeID[%s] cluster[%s] nodeId[%s] nodeIp[%s] vpcId[%s]",
-	taskId, clusterId, n.NodeID, n.NodeIP, n.VpcID)
+		taskId, clusterId, n.NodeID, n.NodeIP, n.VpcID)
 
 	node, err := cloudprovider.GetStorageModel().GetClusterNode(context.Background(), clusterId, n.NodeID)
 	if err != nil {
