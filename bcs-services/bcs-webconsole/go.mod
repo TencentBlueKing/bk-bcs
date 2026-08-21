@@ -121,6 +121,7 @@ require (
 	github.com/prometheus/common v0.48.0 // indirect
 	github.com/prometheus/procfs v0.12.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
+	github.com/samuel/go-zookeeper v0.0.0-20201211165307-7117e9ea2414 // indirect
 	github.com/sergi/go-diff v1.3.2-0.20230802210424-5b0b94c5c0d3 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/skeema/knownhosts v1.3.0 // indirect
