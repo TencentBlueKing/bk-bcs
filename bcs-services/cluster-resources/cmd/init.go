@@ -26,6 +26,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/discovery"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/header"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
 	microEtcd "github.com/go-micro/plugins/v4/registry/etcd"
@@ -245,6 +246,12 @@ func (crSvc *clusterResourcesService) initHandler() error { // nolint:cyclop
 
 // initRegistry 注册服务到 Etcd
 func (crSvc *clusterResourcesService) initRegistry() error {
+	if discovery.UseServiceDiscovery() {
+		log.Info(crSvc.ctx, "ENV_USE_SERVICE_DISCOVERY=true, skip etcd registry")
+		crSvc.microRtr = registry.NewMemoryRegistry()
+		return nil
+	}
+
 	etcdEndpoints := stringx.Split(crSvc.conf.Etcd.EtcdEndpoints)
 	etcdSecure := false
 

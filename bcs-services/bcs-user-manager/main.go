@@ -31,6 +31,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/discovery"
 	registry "github.com/Tencent/bk-bcs/bcs-common/pkg/registry"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app"
@@ -113,6 +114,11 @@ func main() {
 // turnOnEtcdRegistry xxx
 // register user-manager service to etcd
 func turnOnEtcdRegistry(opt *options.UserManagerOptions) (registry.Registry, error) {
+	if discovery.UseServiceDiscovery() {
+		blog.Infof("ENV_USE_SERVICE_DISCOVERY=true, skip etcd registry")
+		return nil, nil
+	}
+
 	if !opt.Etcd.Feature {
 		return nil, nil
 	}

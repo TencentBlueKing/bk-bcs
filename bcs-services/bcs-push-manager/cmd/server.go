@@ -136,6 +136,12 @@ func (s *Server) initTLSConfig() error {
 
 // initRegistry initializes the service registry.
 func (s *Server) initRegistry() error {
+	if discovery.UseServiceDiscovery() {
+		blog.Infof("ENV_USE_SERVICE_DISCOVERY=true, skip etcd registry")
+		s.microRegistry = registry.NewMemoryRegistry()
+		return nil
+	}
+
 	address := strings.ReplaceAll(s.opt.Etcd.EtcdEndpoints, ";", ",")
 	address = strings.ReplaceAll(address, " ", ",")
 	etcdEndpoints := strings.Split(address, ",")

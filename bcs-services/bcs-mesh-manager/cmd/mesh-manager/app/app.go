@@ -167,6 +167,12 @@ func (s *Server) initTLSConfig() error {
 
 // initRegistry init micro service registry
 func (s *Server) initRegistry() error {
+	if discovery.UseServiceDiscovery() {
+		blog.Infof("ENV_USE_SERVICE_DISCOVERY=true, skip etcd registry")
+		s.microRegistry = registry.NewMemoryRegistry()
+		return nil
+	}
+
 	if s.opt.Etcd.EtcdEndpoints == "" {
 		blog.Warnf("etcd endpoints is empty, use default endpoints")
 		return nil

@@ -18,8 +18,10 @@ import (
 	"crypto/tls"
 	"strings"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
+	bcsdiscovery "github.com/Tencent/bk-bcs/bcs-common/pkg/discovery"
 	etcd "github.com/go-micro/plugins/v4/registry/etcd"
 	"go-micro.dev/v4"
 	"go-micro.dev/v4/registry"
@@ -68,25 +70,27 @@ func NewServiceDiscovery(ctx context.Context, name, version, bindaddr, bindPort,
 
 // Run xxx
 func (s *ServiceDiscovery) Run() error {
+	if bcsdiscovery.UseServiceDiscovery() {
+		<-s.ctx.Done()
+		return s.ctx.Err()
+	}
 	return s.srv.Run()
 }
 
 func (s *ServiceDiscovery) init() error {
-	// etcd 服务发现注册
-	etcdRegistry, err := s.initEtcdRegistry()
-	if err != nil {
-		return err
+	if !bcsdiscovery.UseServiceDiscovery() {
+		etcdRegistry, err := s.initEtcdRegistry()
+		if err != nil {
+			return err
+		}
+		if etcdRegistry != nil {
+			s.srv.Init(micro.Registry(etcdRegistry))
+		}
+	} else {
+		blog.Info("ENV_USE_SERVICE_DISCOVERY=true, skip etcd registry")
 	}
 
-	err = s.InitComponentConfig()
-	if err != nil {
-		return err
-	}
-
-	if etcdRegistry != nil {
-		s.srv.Init(micro.Registry(etcdRegistry))
-	}
-	return nil
+	return s.InitComponentConfig()
 }
 
 // initEtcdRegistry etcd 服务注册
