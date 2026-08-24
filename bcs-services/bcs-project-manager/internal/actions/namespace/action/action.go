@@ -31,6 +31,12 @@ type NamespaceAction interface {
 		req *proto.NamespaceCallbackRequest, resp *proto.NamespaceCallbackResponse) error
 	UpdateNamespace(ctx context.Context,
 		req *proto.UpdateNamespaceRequest, resp *proto.UpdateNamespaceResponse) error
+	CreateOtherQuota(ctx context.Context,
+		req *proto.CreateOtherQuotaRequest, resp *proto.OtherQuotaResponse) error
+	UpdateOtherQuota(ctx context.Context,
+		req *proto.UpdateOtherQuotaRequest, resp *proto.OtherQuotaResponse) error
+	DeleteOtherQuota(ctx context.Context,
+		req *proto.DeleteOtherQuotaRequest, resp *proto.OtherQuotaResponse) error
 	UpdateNamespaceCallback(ctx context.Context,
 		req *proto.NamespaceCallbackRequest, resp *proto.NamespaceCallbackResponse) error
 	GetNamespace(ctx context.Context, req *proto.GetNamespaceRequest, resp *proto.GetNamespaceResponse) error

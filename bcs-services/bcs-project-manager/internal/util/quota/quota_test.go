@@ -17,7 +17,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
 )
@@ -34,6 +36,35 @@ func TestQuota(t *testing.T) {
 		t.Fatal(err)
 	}
 	fmt.Println(q2.AsApproximateFloat64())
+}
+
+func TestTransferToProtoOtherQuota(t *testing.T) {
+	quota := &corev1.ResourceQuota{
+		ObjectMeta: metav1.ObjectMeta{Name: "extra-quota"},
+		Status: corev1.ResourceQuotaStatus{
+			Hard: corev1.ResourceList{
+				corev1.ResourceRequestsCPU:    resource.MustParse("2"),
+				corev1.ResourceLimitsCPU:      resource.MustParse("4"),
+				corev1.ResourceRequestsMemory: resource.MustParse("4Gi"),
+				corev1.ResourceLimitsMemory:   resource.MustParse("8Gi"),
+			},
+			Used: corev1.ResourceList{
+				corev1.ResourceRequestsCPU:    resource.MustParse("1"),
+				corev1.ResourceLimitsCPU:      resource.MustParse("3"),
+				corev1.ResourceRequestsMemory: resource.MustParse("1Gi"),
+				corev1.ResourceLimitsMemory:   resource.MustParse("6Gi"),
+			},
+		},
+	}
+
+	got := TransferToProtoOtherQuota(quota)
+	assert.Equal(t, "extra-quota", got.GetName())
+	assert.Equal(t, "2", got.GetQuota().GetCpuRequests())
+	assert.Equal(t, "3", got.GetUsed().GetCpuLimits())
+	assert.InDelta(t, 0.5, got.GetUsageRate().GetCpuRequests(), 0.0001)
+	assert.InDelta(t, 0.75, got.GetUsageRate().GetCpuLimits(), 0.0001)
+	assert.InDelta(t, 0.25, got.GetUsageRate().GetMemoryRequests(), 0.0001)
+	assert.InDelta(t, 0.75, got.GetUsageRate().GetMemoryLimits(), 0.0001)
 }
 
 func TestValidateQuotaEquality(t *testing.T) {

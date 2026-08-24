@@ -892,6 +892,35 @@ service Namespace {
       summary : "更新命名空间"
     };
   }
+  rpc CreateOtherQuota(CreateOtherQuotaRequest) returns (OtherQuotaResponse) {
+    option (google.api.http) = {
+      post : "/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/otherQuotas"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "创建命名空间其他配额"
+      summary : "创建其他配额"
+    };
+  }
+  rpc UpdateOtherQuota(UpdateOtherQuotaRequest) returns (OtherQuotaResponse) {
+    option (google.api.http) = {
+      put : "/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/otherQuotas/{quotaName}"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "更新命名空间其他配额"
+      summary : "更新其他配额"
+    };
+  }
+  rpc DeleteOtherQuota(DeleteOtherQuotaRequest) returns (OtherQuotaResponse) {
+    option (google.api.http) = {
+      delete : "/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/otherQuotas/{quotaName}"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "删除命名空间其他配额"
+      summary : "删除其他配额"
+    };
+  }
   rpc UpdateNamespaceCallback(NamespaceCallbackRequest) returns (NamespaceCallbackResponse) {
     option (google.api.http) = {
       post : "/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/callback/update"
@@ -1563,6 +1592,14 @@ message OtherQuota {
   ResourceQuota quota = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "quota",
     description: "配额总量"
+  }];
+  ResourceQuota used = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "used",
+    description: "配额已占用量"
+  }];
+  ResourceQuotaUsageRate usageRate = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "usageRate",
+    description: "各资源项的配额占用率"
   }];
 }
 
@@ -3849,4 +3886,78 @@ message ProjectQuotasStatisticsData {
     title: "gpu",
     description: "GPU资源"
   }];
+}
+
+message ResourceQuotaUsageRate {
+  float cpuRequests = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "requests.cpu",
+    description: "CPU Request 配额占用率"
+  }];
+  float memoryRequests = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "requests.memory",
+    description: "Memory Request 配额占用率"
+  }];
+  float cpuLimits = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "limits.cpu",
+    description: "CPU Limit 配额占用率"
+  }];
+  float memoryLimits = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "limits.memory",
+    description: "Memory Limit 配额占用率"
+  }];
+}
+
+message CreateOtherQuotaRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "CreateOtherQuotaRequest"
+      description : "创建命名空间其他配额请求"
+      required : ["projectCode", "clusterID", "namespace", "quotaName", "quota"]
+    }
+  };
+
+  string projectCode = 1;
+  string clusterID = 2;
+  string namespace = 3[(validate.rules).string = {max_len: 63, pattern: "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"}];
+  string quotaName = 4[(validate.rules).string = {min_len: 1, max_len: 63, pattern: "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"}];
+  ResourceQuota quota = 5;
+}
+
+message UpdateOtherQuotaRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "UpdateOtherQuotaRequest"
+      description : "更新命名空间其他配额请求"
+      required : ["projectCode", "clusterID", "namespace", "quotaName", "quota"]
+    }
+  };
+
+  string projectCode = 1;
+  string clusterID = 2;
+  string namespace = 3[(validate.rules).string = {max_len: 63, pattern: "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"}];
+  string quotaName = 4[(validate.rules).string = {min_len: 1, max_len: 63, pattern: "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"}];
+  ResourceQuota quota = 5;
+}
+
+message DeleteOtherQuotaRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "DeleteOtherQuotaRequest"
+      description : "删除命名空间其他配额请求"
+      required : ["projectCode", "clusterID", "namespace", "quotaName"]
+    }
+  };
+
+  string projectCode = 1;
+  string clusterID = 2;
+  string namespace = 3[(validate.rules).string = {max_len: 63, pattern: "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"}];
+  string quotaName = 4[(validate.rules).string = {min_len: 1, max_len: 63, pattern: "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"}];
+}
+
+message OtherQuotaResponse {
+  uint32 code = 1;
+  string message = 2;
+  OtherQuota data = 3;
+  string requestID = 4;
+  Perms web_annotations = 5[json_name = "web_annotations"];
 }
