@@ -826,7 +826,7 @@ export default defineComponent({
 </script>
 <style lang="postcss" scoped>
 .add-node-template {
-    padding: 24px 0 24px 24px;
+    padding: 24px 0 84px 24px;
     height: 100%;
     overflow: auto;
     >>> .mw524 {
@@ -854,7 +854,7 @@ export default defineComponent({
     .node-template-aside {
         border: 1px solid #dcdee5;
         border-left: none;
-        height: calc(100% - 60px);
+        height: 100%;
         overflow: auto;
         background: #fff;
     }
@@ -983,7 +983,6 @@ export default defineComponent({
         margin: 0 24px;
     }
     .bk-resize-layout-main {
-        height: calc(100% - 60px);
         overflow: auto;
     }
     &.bk-resize-layout-collapsed {
