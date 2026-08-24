@@ -360,3 +360,45 @@ type SubnetSource struct {
 type ExistedSubnetIDs struct {
 	Ids []string `json:"ids"`
 }
+
+// Cluster 集群信息
+type Cluster struct {
+	ProjectID       string           `json:"projectID"`
+	ClusterID       string           `json:"clusterID"`
+	ClusterName     string           `json:"clusterName"`
+	Provider        string           `json:"provider"`
+	Region          string           `json:"region"`
+	BKBizID         string           `json:"businessID"`
+	Status          string           `json:"status"`
+	IsShared        bool             `json:"is_shared"`
+	ClusterType     string           `json:"clusterType"`
+	VpcID           string           `json:"vpcID"`
+	NetworkSettings *NetworkSettings `json:"networkSettings"`
+	ExtraInfo       *ExtraInfo       `json:"extraInfo"`
+}
+
+// NetworkSettings 网络设置
+type NetworkSettings struct {
+	MaxNodePodNum int           `json:"maxNodePodNum"`
+	MaxServiceNum int           `json:"maxServiceNum"`
+	EnableVPCCni  bool          `json:"enableVPCCni"`
+	EniSubnetIDs  []string      `json:"eniSubnetIDs"`
+	SubnetSource  *SubnetSource `json:"subnetSource"`
+}
+
+// ExtraInfo 额外信息
+type ExtraInfo struct {
+	NamespaceInfo   string `json:"namespaceInfo"`
+	Provider        string `json:"provider"`
+	VclusterNetwork string `json:"vclusterNetwork"`
+}
+
+const (
+	// VirtualClusterType vcluster
+	VirtualClusterType = "virtual"
+)
+
+// IsVirtual check cluster is vcluster
+func (c *Cluster) IsVirtual() bool {
+	return c.ClusterType == VirtualClusterType
+}

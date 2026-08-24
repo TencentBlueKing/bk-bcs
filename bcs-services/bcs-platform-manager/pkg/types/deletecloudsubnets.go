@@ -10,18 +10,26 @@
  * limitations under the License.
  */
 
-package bcs
+// Package types pod types
+package types
 
-import (
-	"testing"
+// DeleteCloudSubnetsRequest delete cloud subnets cluster request
+type DeleteCloudSubnetsRequest struct {
+	// CloudID 云信息
+	// 最小长度：2
+	CloudID string `json:"cloudID" in:"path=cloudID" validate:"min=2"`
 
-	"github.com/stretchr/testify/assert"
+	// Region 云地域信息
+	Region string `json:"region" in:"query=region" validate:"omitempty"`
 
-	bcstesting "github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/testing"
-)
+	// AccountID 云凭证ID
+	AccountID string `json:"accountID" in:"query=accountID" validate:"omitempty"`
 
-func TestGetCluster(t *testing.T) {
-	cluster, err := GetCluster(bcstesting.GetTestClusterId())
-	assert.NoError(t, err)
-	assert.Equal(t, cluster.ProjectID, bcstesting.GetTestProjectId())
+	// SubnetID 子网ID
+	// 最小长度：1（必填且非空）
+	SubnetID string `json:"subnetID" in:"path=subnetID" validate:"min=1"`
+}
+
+// DeleteCloudSubnetsResponse delete cloud subnets cluster response
+type DeleteCloudSubnetsResponse struct {
 }

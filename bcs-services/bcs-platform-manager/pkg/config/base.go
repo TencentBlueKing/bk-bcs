@@ -21,7 +21,7 @@ const (
 	// ProdEnv xxx
 	ProdEnv = "prod"
 	// ServiceDomain domain name for service
-	ServiceDomain = "bcsplatformmanager.bkbcs.tencent.com"
+	ServiceDomain = "platformmanager.bkbcs.tencent.com"
 )
 
 // BaseConf :

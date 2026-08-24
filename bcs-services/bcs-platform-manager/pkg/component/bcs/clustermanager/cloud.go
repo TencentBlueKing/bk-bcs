@@ -10,22 +10,36 @@
  * limitations under the License.
  */
 
-package bcs
+// Package clustermanager xxx
+package clustermanager
 
 import (
 	"context"
-	"testing"
+	"fmt"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/config"
-	bcstesting "github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/testing"
 )
 
-func TestGetProject(t *testing.T) {
-	ctx := context.Background()
-
-	project, err := GetProject(ctx, config.G.BCS, bcstesting.GetTestProjectId())
-	assert.NoError(t, err)
-	assert.Equal(t, project.ProjectId, bcstesting.GetTestProjectId())
+// GetCloud get cloud from cluster manager
+func GetCloud(ctx context.Context,
+	req *clustermanager.GetCloudRequest) (*clustermanager.Cloud, error) {
+	cli, close, err := clustermanager.GetClient(config.ServiceDomain)
+	defer func() {
+		if close != nil {
+			close()
+		}
+	}()
+	if err != nil {
+		return nil, err
+	}
+	p, err := cli.GetCloud(ctx, req)
+	if err != nil {
+		return nil, fmt.Errorf("GetCloud error: %s", err)
+	}
+	if p.Code != 0 || p.Data == nil {
+		return nil, fmt.Errorf("GetCloud error, code: %d, message: %s", p.Code, p.GetMessage())
+	}
+	return p.Data, nil
 }

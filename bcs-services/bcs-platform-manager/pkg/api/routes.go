@@ -15,14 +15,15 @@ package api
 
 import (
 	"context"
+	"crypto/tls"
 	"net/http"
-	"path"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
 	"github.com/go-chi/chi/v5"
 	httpSwagger "github.com/swaggo/http-swagger"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/api/cloud"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/api/cloudvpc"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/api/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/api/cmdb"
@@ -49,7 +50,7 @@ type APIServer struct { // nolint
 }
 
 // NewAPIServer :
-func NewAPIServer(ctx context.Context, addr, port, addrIPv6 string) (*APIServer, error) {
+func NewAPIServer(ctx context.Context, addr, port, addrIPv6 string, tlsConfig *tls.Config) (*APIServer, error) {
 
 	s := &APIServer{
 		ctx:      ctx,
@@ -58,6 +59,9 @@ func NewAPIServer(ctx context.Context, addr, port, addrIPv6 string) (*APIServer,
 		addrIPv6: addrIPv6,
 	}
 	srv := &http.Server{Addr: addr, Handler: s.newRoutes()}
+	if tlsConfig != nil {
+		srv.TLSConfig = tlsConfig
+	}
 	s.srv = srv
 	return s, nil
 }
@@ -77,6 +81,10 @@ func (a *APIServer) Run() error {
 			return err
 		}
 		blog.Infof("api serve dualStackListener with ipv6: %s", v6Addr)
+	}
+
+	if a.srv.TLSConfig != nil {
+		return a.srv.ServeTLS(dualStackListener, config.G.TLSConf.ServerCert, config.G.TLSConf.ServerKey)
 	}
 
 	return a.srv.Serve(dualStackListener)
@@ -104,14 +112,13 @@ func (a *APIServer) newRoutes() http.Handler {
 
 	// 注册 HTTP 请求
 	r.Mount("/", registerRoutes())
+	r.Mount("/clouds", registerCloudRoutes())
 
 	// 注册到网关的地址
 	routePrefix := config.G.Web.RoutePrefix
 	if routePrefix != "" && routePrefix != "/" {
 		r.Mount(routePrefix+"/", http.StripPrefix(routePrefix, registerRoutes()))
 	}
-	webApiPrefix := path.Join(config.G.Web.RoutePrefix, config.APIServicePrefix)
-	r.Mount(webApiPrefix+"/", http.StripPrefix(webApiPrefix, registerRoutes()))
 	return r
 }
 
@@ -186,6 +193,25 @@ func registerRoutes() http.Handler {
 		route.Get("/quota/statistics", rest.Handle(quota.GetProjectQuotasStatistics))
 	})
 
+	return r
+}
+
+func registerCloudRoutes() http.Handler {
+	r := chi.NewRouter()
+	// 日志相关接口
+
+	r.Route("/{cloudID}", func(route chi.Router) {
+		route.Use(middleware.AuthenticationRequired)
+		route.Use(middleware.VisitorsRequired, middleware.Tracing, middleware.Audit)
+
+		route.Get("/vpcs/page", rest.Handle(cloud.ListCloudVpcsPage))
+		route.Get("/vpc/{vpcID}/cluster", rest.Handle(cloud.ListCloudVpcCluster))
+		route.Put("/vpcs/{vpcID}", rest.Handle(cloud.UpdateCloudVpcs))
+		route.Get("/subnets", rest.Handle(cloud.ListCloudSubnets))
+		route.Post("/subnets", rest.Handle(cloud.CreateCloudSubnets))
+		route.Put("/subnets/{subnetID}", rest.Handle(cloud.UpdateCloudSubnets))
+		route.Delete("/subnets/{subnetID}", rest.Handle(cloud.DeleteCloudSubnets))
+	})
 	return r
 }
 
