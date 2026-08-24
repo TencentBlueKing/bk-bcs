@@ -373,6 +373,7 @@ func clusterSupportNodeNum(tkeCls *tke.Cluster, cluster *proto.Cluster) (uint32,
 	}
 
 	// 集群可添加节点数
+	// nolint: lll
 	maxClusterNodeNum := float64(uint64(ipNum)-utils.Uint64PtrToUint64(tkeCls.ClusterNetworkSettings.MaxClusterServiceNum)) /
 		float64(utils.Uint64PtrToUint64(tkeCls.ClusterNetworkSettings.MaxNodePodNum))
 
