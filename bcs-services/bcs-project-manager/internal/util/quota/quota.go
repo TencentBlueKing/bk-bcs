@@ -135,6 +135,10 @@ func TransferToProtoOtherQuota(q *corev1.ResourceQuota) *proto.OtherQuota {
 	cpuRequestQuota := q.Status.Hard[corev1.ResourceRequestsCPU]
 	memoryLimitsQuota := q.Status.Hard[corev1.ResourceLimitsMemory]
 	memoryRequestsQuota := q.Status.Hard[corev1.ResourceRequestsMemory]
+	cpuLimitsUsed := q.Status.Used[corev1.ResourceLimitsCPU]
+	cpuRequestsUsed := q.Status.Used[corev1.ResourceRequestsCPU]
+	memoryLimitsUsed := q.Status.Used[corev1.ResourceLimitsMemory]
+	memoryRequestsUsed := q.Status.Used[corev1.ResourceRequestsMemory]
 	return &proto.OtherQuota{
 		Name: q.GetName(),
 		Quota: &proto.ResourceQuota{
@@ -143,7 +147,26 @@ func TransferToProtoOtherQuota(q *corev1.ResourceQuota) *proto.OtherQuota {
 			MemoryLimits:   memoryLimitsQuota.String(),
 			MemoryRequests: memoryRequestsQuota.String(),
 		},
+		Used: &proto.ResourceQuota{
+			CpuLimits:      cpuLimitsUsed.String(),
+			CpuRequests:    cpuRequestsUsed.String(),
+			MemoryLimits:   memoryLimitsUsed.String(),
+			MemoryRequests: memoryRequestsUsed.String(),
+		},
+		UsageRate: &proto.ResourceQuotaUsageRate{
+			CpuLimits:      calculateUsageRate(cpuLimitsUsed, cpuLimitsQuota),
+			CpuRequests:    calculateUsageRate(cpuRequestsUsed, cpuRequestQuota),
+			MemoryLimits:   calculateUsageRate(memoryLimitsUsed, memoryLimitsQuota),
+			MemoryRequests: calculateUsageRate(memoryRequestsUsed, memoryRequestsQuota),
+		},
 	}
+}
+
+func calculateUsageRate(used, hard resource.Quantity) float32 {
+	if hard.IsZero() {
+		return 0
+	}
+	return float32(used.AsApproximateFloat64() / hard.AsApproximateFloat64())
 }
 
 // LoadFromProto load k8s ResourceQuota from proto ResourceQuota
