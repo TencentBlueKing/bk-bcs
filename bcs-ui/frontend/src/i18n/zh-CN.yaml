@@ -2369,6 +2369,11 @@ dashboard:
       projectNS: '项目命名空间{0}'
       systemNS: '系统命名空间{0}'
       otherQuotas: 其他配额
+      quotaName: 配额名称
+      cpuRequests: CPU Request
+      cpuLimits: CPU Limit
+      memoryRequests: 内存 Request
+      memoryLimits: 内存 Limit
     msg:
       undoSuccess: 撤回成功
     quota:
@@ -2379,11 +2384,14 @@ dashboard:
       notEnabledNamespace: 未开启命名空间
       totalCpuLimitsQuota: 所有容器CPU limits总和 / CPU配额
       totalMemoryLimitsQuota: 所有容器内存 limits总和 / 内存配额
+      deleteOtherQuotaWarning: 删除后该配额限制将立即失效，且无法恢复，请谨慎操作。
     validate:
       emptyNs: 请选择命名空间
       name: 命名空间名称只能包含小写字母、数字以及连字符(-)，连字符（-）后面必须接英文或者数字
       sharedClusterNs: '命名规则：{prefix}自定义名称'
       setValidQuota: 请设置合法的 CPU、内存配额，且 Limit 需大于等于 Request（共享集群最小值不小于1）
+      otherQuotaName: 配额名称不能与命名空间同名，只能包含小写字母、数字及连字符（-），并以字母或数字开头和结尾，最长63个字符
+      otherQuotaResource: 请设置合法的 CPU、内存配额，所有值均不能为空且不小于0
     status:
       waitingApproval: 待审批
       createNamespace: 创建命名空间
@@ -2397,9 +2405,12 @@ dashboard:
       setEnv: 设置变量值
       setAnnotation: 设置注解
       undo: 撤回
+      createOtherQuota: 新增配额
     title:
       quotaManagement: '配额管理：{nsName}'
       deleteNamespaceWarning: 删除Namespace将销毁Namespace下的所有资源，销毁后所有数据将被清除且不可恢复，请提前备份好数据。
+      createOtherQuota: 新增其他配额
+      editOtherQuota: 编辑其他配额
   network:
     portmapping: 端口映射
     config: 配置

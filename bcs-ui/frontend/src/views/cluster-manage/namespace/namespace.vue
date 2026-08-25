@@ -399,7 +399,10 @@
       quick-close>
       <div slot="content">
         <Detail
-          :data="namespaceInfo">
+          :data="namespaceInfo"
+          :cluster-id="clusterId"
+          :editable="detailQuotaEditable"
+          @refresh="refreshNamespaceDetail">
         </Detail>
       </div>
     </bk-sideslider>
@@ -854,9 +857,20 @@ export default defineComponent({
     };
     const showNamespaceDetail = ref(false);
     const namespaceInfo = ref<any>({});
+    const detailQuotaEditable = computed(() => curCluster.value?.clusterType !== 'federation'
+      && !!webAnnotations.value.perms?.[namespaceInfo.value.name]?.namespace_update);
     const showDetail = (row) => {
       showNamespaceDetail.value = true;
       namespaceInfo.value = row;
+    };
+    const refreshNamespaceDetail = async () => {
+      namespaceInfo.value = await getNamespaceInfo({
+        $clusterId: props.clusterId,
+        $name: namespaceInfo.value.name,
+      });
+      getNamespaceData({
+        $clusterId: props.clusterId,
+      });
     };
 
     // 设置标签
@@ -991,6 +1005,7 @@ export default defineComponent({
       variableLoading,
       itsmTicketTypeMap,
       namespaceInfo,
+      detailQuotaEditable,
       showNamespaceDetail,
       showSetLabel,
       showSetAnnotations,
@@ -1018,6 +1033,7 @@ export default defineComponent({
       timeZoneTransForm,
       handleGoVar,
       showDetail,
+      refreshNamespaceDetail,
       renderHeader,
       handleSetLabel,
       handleSetAnnotations,
