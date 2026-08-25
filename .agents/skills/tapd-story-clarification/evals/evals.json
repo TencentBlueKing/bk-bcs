@@ -1,0 +1,27 @@
+{
+  "skill_name": "tapd-story-clarification",
+  "version": "1.0.0",
+  "evals": [
+    {
+      "id": 1,
+      "name": "single-story-clarification-happy-path",
+      "prompt": "帮我澄清需求 1001234，workspace_id 是 20000001",
+      "expected_output": "从 TAPD 提取需求详情，按多维度进行澄清对话，生成规范化需求文档，回写 TAPD 并将状态改为'已澄清'",
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "skip-clarification-simple-requirement",
+      "prompt": "澄清需求 1005678，workspace 20000001。这个需求很简单就是改一个配置项，不需要详细澄清",
+      "expected_output": "识别为简单需求，跳过交互式澄清，在文档中标注'用户确认需求描述充分'，生成简化文档并回写",
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "batch-stories-with-failure",
+      "prompt": "需求澄清 1001111 1002222 1003333，workspace 20000001",
+      "expected_output": "批量处理三个需求，逐一澄清。若某个需求不存在或状态不匹配则跳过并在汇总中标注，最终输出处理汇总表",
+      "files": []
+    }
+  ]
+}

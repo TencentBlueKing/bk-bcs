@@ -93,49 +93,45 @@
         <AiEditor :value="valuesData.valueFileContent" :multi-document="false" :height="'h-[600px]'" ref="AiEditorRef" />
       </bcs-tab-panel>
       <bcs-tab-panel name="params" :label="$t('deploy.helm.helmFlags')">
-        <div class="flex flex-col">
-          <bcs-checkbox false-value="false" true-value="true" v-model="args['--skip-crds']">
+        <div class="flex flex-col gap-[10px]">
+          <bcs-checkbox false-value="false" true-value="true" class="w-fit" v-model="args['--skip-crds']">
             {{ $t('deploy.helm.skipCrds') }}
             <span class="bcs-icon-btn" v-bk-tooltips="'--skip-crds'">
               <i class="bcs-icon bcs-icon-info-circle"></i>
             </span>
           </bcs-checkbox>
-          <bcs-checkbox false-value="false" true-value="true" class="mt-[10px]" v-model="args['--wait-for-jobs']">
+          <bcs-checkbox false-value="false" true-value="true" class="w-fit" v-model="args['--wait-for-jobs']">
             {{ $t('deploy.helm.waitforJobs') }}
             <span class="bcs-icon-btn" v-bk-tooltips="'--wait-for-jobs'">
               <i class="bcs-icon bcs-icon-info-circle"></i>
             </span>
           </bcs-checkbox>
-          <bcs-checkbox false-value="false" true-value="true" class="mt-[10px]" v-model="args['--wait']">
+          <bcs-checkbox false-value="false" true-value="true" class="w-fit" v-model="args['--wait']">
             {{ $t('deploy.helm.wait') }}
             <span class="bcs-icon-btn" v-bk-tooltips="'--wait'">
               <i class="bcs-icon bcs-icon-info-circle"></i>
             </span>
           </bcs-checkbox>
-          <div class="flex items-center text-[14px] mt-[10px]">
-            {{ $t('deploy.helm.timeout') }}
-            <bcs-input type="number" class="w-[200px] ml-[5px]" v-model="args['--timeout']">
-              <template #append>
-                <div class="group-text">{{ $t('units.suffix.seconds') }}</div>
-              </template>
-            </bcs-input>
-            <span class="bcs-icon-btn ml-[5px]" v-bk-tooltips="'--timeout'">
+          <div class="flex items-center text-[14px] gap-[5px]">
+            {{ $t('deploy.helm.timeout.label') }}
+            <bcs-input class="w-[200px]" v-model="args['--timeout']"></bcs-input>
+            <span class="bcs-icon-btn" v-bk-tooltips="$t('deploy.helm.timeout.desc')">
               <i class="bcs-icon bcs-icon-info-circle"></i>
             </span>
           </div>
-          <div v-if="isEdit" class="flex items-center text-[14px] mt-[10px]">
+          <div v-if="isEdit" class="flex items-center text-[14px] gap-[5px]">
             {{ $t('deploy.helm.hisotryMax.label') }}
-            <bcs-input type="number" :min="1" :max="100" class="w-[150px] ml-[5px]" v-model="args['--history-max']">
+            <bcs-input type="number" :min="1" :max="100" class="w-[150px]" v-model="args['--history-max']">
               <template #append>
                 <div class="group-text">{{ $t('units.suffix.units') }}</div>
               </template>
             </bcs-input>
-            <span class="bcs-icon-btn ml-[5px]" v-bk-tooltips="$t('deploy.helm.hisotryMax.desc')">
+            <span class="bcs-icon-btn" v-bk-tooltips="$t('deploy.helm.hisotryMax.desc')">
               <i class="bcs-icon bcs-icon-info-circle"></i>
             </span>
           </div>
           <!-- 自定义参数 -->
-          <div class="mt-[10px]">
+          <div>
             <bcs-button text size="small" class="!pl-[0px]" @click="showCustomArgs = !showCustomArgs">
               {{ $t('deploy.helm.flags.label') }}
               <i :class="['bcs-icon', showCustomArgs ? 'bcs-icon-angle-double-up' : 'bcs-icon-angle-double-down']"></i>
@@ -347,7 +343,7 @@ export default defineComponent({
     const activeTab = ref('values');
     // 表单化参数
     const args = ref({
-      '--timeout': 300,
+      '--timeout': '300s',
     });
     // 自定义参数
     const customArgs = ref<IData[]>([]);
@@ -512,7 +508,7 @@ export default defineComponent({
         .concat(keyValueRef.value?.keyValueData || []);
       const commands = data.map((item) => {
         if (item.key === '--timeout') {
-          return `${item.key}=${item.value}s`;
+          return `${item.key}=${item.value}`;
         }
         if (item.key === '--description') {
           const result = filterPlainText(item.value);
@@ -629,8 +625,7 @@ export default defineComponent({
         const value = index > -1 ? item.slice(index + 1, item.length) : '';
         if (formArgsKey.includes(key)) {
           if (key === '--timeout') {
-            // 去除单位
-            args.value[key] = parseInt(value, 10);
+            args.value[key] = value;
           } else if (key !== '--description') {
             // 描述字段每次都需要更新
             args.value[key] = value;

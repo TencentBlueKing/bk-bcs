@@ -36,6 +36,7 @@ type ListOption struct {
 	Sort          map[string]int // Sort map for sort list results
 	Offset        int64          // Offset offset for list results
 	Limit         int64          // Limit limit for list results
+	TaskIDs       []string       // TaskIDs task ids for list results
 }
 
 // Pagination generic pagination for list results

@@ -32,6 +32,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/discovery"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/i18n"
 	restful "github.com/emicklei/go-restful/v3"
 	"github.com/go-micro/plugins/v4/registry/etcd"
@@ -184,6 +185,11 @@ func (u *UserManager) initIamPermClient() error {
 }
 
 func (u *UserManager) initEtcdRegistry() error {
+	if discovery.UseServiceDiscovery() {
+		blog.Infof("ENV_USE_SERVICE_DISCOVERY=true, skip etcd registry")
+		return nil
+	}
+
 	if !u.config.EtcdConfig.Feature {
 		return fmt.Errorf("etcd feature is off")
 	}

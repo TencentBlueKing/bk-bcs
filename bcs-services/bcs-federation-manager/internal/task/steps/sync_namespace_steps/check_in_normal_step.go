@@ -65,6 +65,8 @@ func (s CheckInNormalStep) DoWork(t *types.Task) error {
 		return fedsteps.ParamsNotFoundError(t.TaskID, fedsteps.NamespaceKey)
 	}
 
+	obsProductID, _ := t.GetCommonParams(fedsteps.OBSProductIDKey)
+
 	subClusterID, ok := t.GetCommonParams(fedsteps.SubClusterIdKey)
 	if !ok {
 		return fedsteps.ParamsNotFoundError(t.TaskID, fedsteps.SubClusterIdKey)
@@ -109,6 +111,14 @@ func (s CheckInNormalStep) DoWork(t *types.Task) error {
 		return fmt.Errorf("GetNamespace(%s, %s) failed, err: %s", subClusterID, nsName, err.Error())
 	}
 
+	if obsProductID != "" {
+		if fedNamespace.Annotations == nil {
+			fedNamespace.Annotations = make(map[string]string)
+		}
+		fedNamespace.Annotations[cluster.ObsProductID] = obsProductID
+	}
+
+	// 当subClusterNamespace未注册时，才去新增
 	if subClusterNamespace == nil {
 		cerr := createNormalNamespaceQuota(nsName, subClusterID, fedNamespace)
 		if cerr != nil {

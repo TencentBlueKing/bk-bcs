@@ -178,6 +178,10 @@ func genSchemaRules(ctx context.Context) map[string]interface{} {
 			"validator": "/^[0-9]+(\\.[0-9])?[0-9]*$/",
 			"message":   i18n.GetMsg(ctx, "仅可包含数字字符与小数点"),
 		},
+		"maxLength16": map[string]interface{}{
+			"validator": "{{ $self.value.length < 16 }}",
+			"message":   i18n.GetMsg(ctx, "超过长度限制（16）"),
+		},
 		"maxLength64": map[string]interface{}{
 			"validator": "{{ $self.value.length < 64 }}",
 			"message":   i18n.GetMsg(ctx, "超过长度限制（64）"),

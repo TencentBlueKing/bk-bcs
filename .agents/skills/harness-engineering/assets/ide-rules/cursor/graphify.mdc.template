@@ -1,0 +1,41 @@
+---
+description: graphify knowledge graph context
+alwaysApply: true
+---
+
+This project has a graphify knowledge graph at docs/dev-map/.
+
+**ENV (hard requirement — ABSOLUTE path under repo root, same shell, every time):**
+```bash
+_root="$(git rev-parse --show-toplevel 2>/dev/null)" || true
+if [ -z "$_root" ]; then
+  _d="$PWD"
+  while [ "$_d" != "/" ]; do
+    [ -f "$_d/docs/dev-map/graph.json" ] && _root="$_d" && break
+    _d="$(dirname "$_d")"
+  done
+fi
+[ -n "$_root" ] || { echo "error: cannot resolve repo root for GRAPHIFY_OUT" >&2; exit 1; }
+export GRAPHIFY_OUT="$_root/docs/dev-map"
+export GRAPHIFY_NO_BACKUP=1
+```
+
+**FORBIDDEN:** relative `GRAPHIFY_OUT=docs/dev-map` (creates `docs/dev-map` under cwd). Bare `graphify` without `GRAPHIFY_OUT` (defaults to `graphify-out/`). If a command fails looking for `graphify-out/graph.json`, re-resolve the absolute `GRAPHIFY_OUT` and retry.
+
+**MANDATORY: Before using Read, Grep, Glob, or Bash to explore the codebase, you MUST run graphify first:**
+- `GRAPHIFY_OUT="$GRAPHIFY_OUT" graphify query "<question>"` — scoped subgraph
+- `GRAPHIFY_OUT="$GRAPHIFY_OUT" graphify path "<A>" "<B>"` — dependency path
+- `GRAPHIFY_OUT="$GRAPHIFY_OUT" graphify explain "<concept>"` — related nodes
+
+This applies to YOU and to every subagent you spawn. Include this rule explicitly in every subagent prompt that involves code exploration. Do not skip graphify because files are "already known" or because you are executing a plan — the graph surfaces cross-file dependencies and INFERRED edges that grep and Read cannot find.
+
+Only use Read/Grep/Glob directly when:
+1. graphify has already oriented you and you need to modify or debug specific lines
+2. `$GRAPHIFY_OUT/graph.json` does not exist yet
+
+**Artifacts vs config:** Commit `docs/dev-map/README.md` + `docs/dev-map/.gitignore` (and these IDE rules). Do **not** commit `graph.json` / `GRAPH_REPORT.md` / other graphify outputs. Never gitignore the whole `docs/dev-map/` directory. If `graph.json` is missing after clone, use the ENV block above then:
+`GRAPHIFY_NO_BACKUP=1 GRAPHIFY_OUT="$GRAPHIFY_OUT" graphify update "$_root"` (AST-only, no API cost).
+
+- If `$GRAPHIFY_OUT/wiki/index.md` exists, navigate it instead of reading raw files
+- Read `$GRAPHIFY_OUT/GRAPH_REPORT.md` only for broad architecture review when query/path/explain do not surface enough context
+- After modifying code files, run `GRAPHIFY_NO_BACKUP=1 GRAPHIFY_OUT="$GRAPHIFY_OUT" graphify update "$_root"` (AST-only, no API cost)

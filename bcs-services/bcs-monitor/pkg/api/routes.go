@@ -193,6 +193,7 @@ func registerMetricsRoutes() http.Handler {
 		route.Get("/nodes/{node}/diskio_usage", rest.Handle(metrics.GetNodeDiskioUsage))
 		route.Post("/namespaces/{namespace}/pods/cpu_usage", rest.Handle(
 			metrics.PodCPUUsage)) // 多个Pod场景, 可能有几十，上百Pod场景, 需要使用 Post 传递参数
+		route.Post("/namespaces/{namespace}/pods/cpu_peak_usage", rest.Handle(metrics.PodCPUPeakUsage))
 		route.Post("/namespaces/{namespace}/pods/cpu_limit_usage", rest.Handle(metrics.PodCPULimitUsage))
 		route.Post("/namespaces/{namespace}/pods/cpu_request_usage", rest.Handle(metrics.PodCPURequestUsage))
 		route.Post("/namespaces/{namespace}/pods/memory_used", rest.Handle(metrics.PodMemoryUsed))

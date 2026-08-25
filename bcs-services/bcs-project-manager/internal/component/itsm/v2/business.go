@@ -143,8 +143,8 @@ func SubmitUpdateNamespaceTicket(ctx context.Context, username, projectCode, clu
 }
 
 // SubmitDeleteNamespaceTicket create new itsm delete namespace ticket
-func SubmitDeleteNamespaceTicket(ctx context.Context, username,
-	projectCode, clusterID, namespace string) (*CreateTicketData, error) {
+func SubmitDeleteNamespaceTicket(ctx context.Context, username, projectCode, clusterID,
+	namespace string) (*CreateTicketData, error) {
 	var serviceID int
 	itsmConf := config.GlobalConf.ITSM
 	if itsmConf.AutoRegister {
@@ -160,6 +160,9 @@ func SubmitDeleteNamespaceTicket(ctx context.Context, username,
 	} else {
 		serviceID = itsmConf.DeleteNamespaceServiceID
 	}
+
+	approvers := getItsmApprover(ctx, clusterID)
+
 	fields := []map[string]interface{}{
 		{
 			"key":   "title",
@@ -176,6 +179,10 @@ func SubmitDeleteNamespaceTicket(ctx context.Context, username,
 		{
 			"key":   "NAMESPACE",
 			"value": namespace,
+		},
+		{
+			"key":   "APPROVER",
+			"value": approvers,
 		},
 	}
 	return CreateTicket(ctx, username, serviceID, fields)

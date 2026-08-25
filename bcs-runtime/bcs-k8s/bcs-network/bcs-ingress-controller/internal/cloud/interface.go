@@ -122,11 +122,34 @@ type BackendHealthStatus struct {
 	Status       string
 }
 
+const (
+	// MsgSniDisableUnsupported is returned when the cloud listener has SNI enabled
+	// but the desired spec disables it. Tencent Cloud CLB cannot disable SNI online.
+	MsgSniDisableUnsupported = "SNI is enabled on the CLB listener but sniSwitch is off in spec; " +
+		"Tencent Cloud CLB does not support disabling SNI online; " +
+		"delete the rule/listener and recreate with sniSwitch:0"
+)
+
+// ListenerEnsureWarning indicates EnsureListener succeeded but a non-fatal
+// configuration drift should be surfaced via warning event and listener status.
+type ListenerEnsureWarning struct {
+	ListenerID string
+	Message    string
+}
+
+func (e *ListenerEnsureWarning) Error() string {
+	return e.Message
+}
+
 // Result work failed if isError == true
 type Result struct {
 	IsError bool
 	Err     error
 	Res     string
+	// Warning carries a non-fatal message (e.g. an SNI change that cannot be applied
+	// online). The listener is still considered synced; the message is surfaced to the
+	// user via a warning event and the listener status.
+	Warning string
 }
 
 // LoadBalance interface for clb loadbalancer

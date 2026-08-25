@@ -155,7 +155,7 @@ type IngressListenerAttribute struct {
 	AWSAttributes []AWSAttribute       `json:"awsAttributes,omitempty"`
 	HealthCheck   *ListenerHealthCheck `json:"healthCheck,omitempty"`
 	UptimeCheck   *UptimeCheckConfig   `json:"uptimeCheck,omitempty"`
-	// 声明7层监听器中，rule的优先级(目前只在aws中使用)
+	// 声明7层监听器中，rule的优先级(aws、azure)，不填则由controller自动分配
 	Priority int `json:"priority,omitempty"`
 }
 

@@ -37,6 +37,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/utils"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/listenercontroller"
 )
 
@@ -404,7 +405,7 @@ func (g *IngressConverter) ProcessDeleteIngress(ingressName, ingressNamespace st
 func (g *IngressConverter) deleteListeners(ingressName, ingressNamespace string) error {
 	listener := &networkextensionv1.Listener{}
 	selector, err := k8smetav1.LabelSelectorAsSelector(k8smetav1.SetAsLabelSelector(k8slabels.Set(map[string]string{
-		ingressName: networkextensionv1.LabelValueForIngressName,
+		utils.GenIngressLabelKey(ingressName): networkextensionv1.LabelValueForIngressName,
 	})))
 	if err != nil {
 		blog.Errorf("get selector for deleted ingress %s/%s failed, err %s",

@@ -315,6 +315,12 @@ func (hm *HelmManager) initReleaseHandler() error {
 
 // initRegistry int micro registry
 func (hm *HelmManager) initRegistry() error {
+	if discovery.UseServiceDiscovery() {
+		blog.Info("ENV_USE_SERVICE_DISCOVERY=true, skip etcd registry")
+		hm.microRgt = microRgt.NewMemoryRegistry()
+		return nil
+	}
+
 	etcdEndpoints := common.SplitAddrString(hm.opt.Etcd.EtcdEndpoints)
 	etcdSecure := false
 
@@ -344,6 +350,9 @@ func (hm *HelmManager) initRegistry() error {
 
 // initDiscovery init svc discovery
 func (hm *HelmManager) initDiscovery() error {
+	if discovery.UseServiceDiscovery() {
+		return nil
+	}
 	hm.discovery = discovery.NewModuleDiscovery(common.ServiceDomain, hm.microRgt)
 	blog.Info("init discovery for helm manager successfully")
 	return nil
@@ -391,9 +400,15 @@ func (hm *HelmManager) initMicro() error { // nolint
 			return nil
 		}),
 		microSvc.AfterStart(func() error {
+			if discovery.UseServiceDiscovery() {
+				return nil
+			}
 			return hm.discovery.Start()
 		}),
 		microSvc.BeforeStop(func() error {
+			if discovery.UseServiceDiscovery() {
+				return nil
+			}
 			hm.discovery.Stop()
 			return nil
 		}),

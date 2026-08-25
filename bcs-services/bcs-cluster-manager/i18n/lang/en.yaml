@@ -183,5 +183,6 @@ root-dir: "Directory path for managing kubelet files (volume mounts, etc)."
 v: "Number for the log level verbosity"
 
 # error message
-ClusterUnderlayUsageRatioLimitErrMessage: "Current cluster subnet IP usage ratio is %.2f%%,
- which is below the standard %.2f%%, unable to expand, please contact BCS assistant for expansion"
+ClusterUnderlayUsageLimitErrMessage: "Current cluster subnet available IP count is %d (standard %d), 
+and usage ratio is %.2f%% (standard %.2f%%), resources are sufficient, unable to expand, 
+please contact BCS assistant for expansion"

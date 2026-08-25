@@ -37,6 +37,8 @@ const (
 const (
 	// ProjectQuotaHostType host type
 	ProjectQuotaHostType = "host"
+	// ProjectQuotaSelfHostType self host type
+	ProjectQuotaSelfHostType = "self_host"
 	// ProjectQuotaProvider storage type
 	ProjectQuotaProvider = "selfProvisionCloud"
 	// ProjectQuotaProviderInternal internal provider

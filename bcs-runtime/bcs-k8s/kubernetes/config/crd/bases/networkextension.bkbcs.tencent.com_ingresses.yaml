@@ -121,7 +121,7 @@ spec:
                             per second allowed for every target instance.
                           type: integer
                         priority:
-                          description: 声明7层监听器中，rule的优先级(目前只在aws中使用)
+                          description: 声明7层监听器中，rule的优先级(aws、azure)，不填则由controller自动分配
                           type: integer
                         sessionTime:
                           type: integer
@@ -344,7 +344,7 @@ spec:
                                   instance.
                                 type: integer
                               priority:
-                                description: 声明7层监听器中，rule的优先级(目前只在aws中使用)
+                                description: 声明7层监听器中，rule的优先级(aws、azure)，不填则由controller自动分配
                                 type: integer
                               sessionTime:
                                 type: integer
@@ -624,7 +624,7 @@ spec:
                                   instance.
                                 type: integer
                               priority:
-                                description: 声明7层监听器中，rule的优先级(目前只在aws中使用)
+                                description: 声明7层监听器中，rule的优先级(aws、azure)，不填则由controller自动分配
                                 type: integer
                               sessionTime:
                                 type: integer
@@ -894,7 +894,7 @@ spec:
                             per second allowed for every target instance.
                           type: integer
                         priority:
-                          description: 声明7层监听器中，rule的优先级(目前只在aws中使用)
+                          description: 声明7层监听器中，rule的优先级(aws、azure)，不填则由controller自动分配
                           type: integer
                         sessionTime:
                           type: integer
@@ -1271,7 +1271,7 @@ spec:
                           per second allowed for every target instance.
                         type: integer
                       priority:
-                        description: 声明7层监听器中，rule的优先级(目前只在aws中使用)
+                        description: 声明7层监听器中，rule的优先级(aws、azure)，不填则由controller自动分配
                         type: integer
                       sessionTime:
                         type: integer
@@ -1493,7 +1493,7 @@ spec:
                                 connections per second allowed for every target instance.
                               type: integer
                             priority:
-                              description: 声明7层监听器中，rule的优先级(目前只在aws中使用)
+                              description: 声明7层监听器中，rule的优先级(aws、azure)，不填则由controller自动分配
                               type: integer
                             sessionTime:
                               type: integer
@@ -1772,7 +1772,7 @@ spec:
                                 connections per second allowed for every target instance.
                               type: integer
                             priority:
-                              description: 声明7层监听器中，rule的优先级(目前只在aws中使用)
+                              description: 声明7层监听器中，rule的优先级(aws、azure)，不填则由controller自动分配
                               type: integer
                             sessionTime:
                               type: integer
@@ -2041,7 +2041,7 @@ spec:
                           per second allowed for every target instance.
                         type: integer
                       priority:
-                        description: 声明7层监听器中，rule的优先级(目前只在aws中使用)
+                        description: 声明7层监听器中，rule的优先级(aws、azure)，不填则由controller自动分配
                         type: integer
                       sessionTime:
                         type: integer

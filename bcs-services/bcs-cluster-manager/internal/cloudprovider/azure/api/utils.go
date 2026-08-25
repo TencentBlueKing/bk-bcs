@@ -370,6 +370,9 @@ func (c *poolToNodeGroup) convert() {
 	// 设置labels
 	c.setLabels()
 
+	// 设置Pod子网(Azure CNI Pod Subnet模式生效)
+	c.setPodSubnetID()
+
 	if c.opts != nil && c.opts.SetTaint {
 		// 设置taints
 		c.setTaints()
@@ -454,6 +457,22 @@ func (c *poolToNodeGroup) setNodeImageVersion() {
 	//	lc.ImageInfo = new(proto.ImageInfo)
 	// }
 	// lc.ImageInfo.ImageName = *imageVersion
+}
+
+// setPodSubnetID 设置Pod子网(Azure CNI Pod Subnet模式生效)
+// 注: AKS 返回的是完整 arm-id, 仅回填子网名称, 与 vmSubnetID 的处理保持一致
+func (c *poolToNodeGroup) setPodSubnetID() {
+	asg := c.group.AutoScaling
+	if asg == nil {
+		return
+	}
+	podSubnetID := c.properties.PodSubnetID
+	if podSubnetID == nil || *podSubnetID == "" {
+		return
+	}
+	// /subscriptions/{..}/../virtualNetworks/{vnet}/subnets/{subnetName} => subnetName
+	id := *podSubnetID
+	asg.PodSubnetID = id[strings.LastIndexByte(id, '/')+1:]
 }
 
 // setLabels 设置labels
@@ -985,7 +1004,6 @@ func SetVmSetNetWork(ctx context.Context, client AksService, group *proto.NodeGr
 	}
 	set.Properties.VirtualMachineProfile.NetworkProfile.NetworkInterfaceConfigurations[0].Properties.
 		NetworkSecurityGroup = &armcompute.SubResource{ID: sg.ID}
-
 	return nil
 }
 

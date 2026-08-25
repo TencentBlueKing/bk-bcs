@@ -150,6 +150,8 @@ type MetricHandler interface {
 		step time.Duration) ([]*prompb.TimeSeries, error)
 	GetPodCPUUsage(ctx context.Context, projectId, clusterId, namespace string, podNameList []string, start,
 		end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
+	GetPodCPUPeakUsage(ctx context.Context, projectId, clusterId, namespace string, podNameList []string, start,
+		end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
 	GetPodCPULimitUsage(ctx context.Context, projectId, clusterId, namespace string, podNameList []string, start,
 		end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
 	GetPodCPURequestUsage(ctx context.Context, projectId, clusterId, namespace string, podNameList []string, start,

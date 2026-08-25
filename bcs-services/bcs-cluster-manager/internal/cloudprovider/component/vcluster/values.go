@@ -32,6 +32,17 @@ type ValuesTemplates struct {
 	TkeEtcd     TkeEtcd    `yaml:"tkeEtcd"`
 	ServiceCIDR string     `yaml:"serviceCIDR"`
 	KubeAgent   KubeAgent  `yaml:"kubeAgent"`
+	Sync        Sync       `yaml:"sync"`
+}
+
+// Sync vcluster resource sync config
+type Sync struct {
+	Ingresses SyncResource `yaml:"ingresses"`
+}
+
+// SyncResource enable/disable a synced resource
+type SyncResource struct {
+	Enabled bool `yaml:"enabled"`
 }
 
 // Service devnet:false ; idc:true
@@ -116,6 +127,10 @@ func (vc *Vcluster) GetValues() (string, error) {
 				BcsClientCert: clientCert,
 				BcsClientKey:  clientKey,
 			},
+		},
+		// 默认开启 ingress 同步，使 vcluster 内 Ingress 同步到 host 集群
+		Sync: Sync{
+			Ingresses: SyncResource{Enabled: true},
 		},
 	}
 

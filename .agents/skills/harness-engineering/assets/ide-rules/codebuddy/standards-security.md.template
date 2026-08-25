@@ -1,0 +1,10 @@
+---
+enabled: true
+alwaysApply: false
+paths:
+  - "**/*.{go,py,ts,tsx,js,jsx,vue,java}"
+---
+
+# 安全规范加载
+
+凡改业务代码：按 `docs/standards/README.md`「加载预算」**按节 Read** `${STANDARD_PATH}`（输入校验 / 鉴权 / 加密等与本任务相关的红线节）。新建敏感接口时读对应整节 + 检查清单；禁止无差别全文灌入。

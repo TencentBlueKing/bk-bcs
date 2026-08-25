@@ -50,6 +50,67 @@ func (a *AlbValidater) IsIngressValid(ingress *networkextensionv1.Ingress) (bool
 			return false, msg
 		}
 	}
+
+	// priority 在整个 application gateway 上必须唯一，所以要跨 rule 一起校验
+	if ok, msg := a.validateIngressPriorities(ingress); !ok {
+		return false, msg
+	}
+	return true, ""
+}
+
+// validateIngressPriorities checks the routing rule priorities declared across the whole ingress.
+// Azure keeps one routing rule per port+domain and requires the priority to be unique on the whole
+// gateway, so all paths of a domain must agree and no two domains may claim the same value, even
+// when they sit on different ports.
+func (a *AlbValidater) validateIngressPriorities(ingress *networkextensionv1.Ingress) (bool, string) {
+	byRule := make(map[string]int)
+	owner := make(map[int]string)
+
+	for _, rule := range ingress.Spec.Rules {
+		if rule.Protocol != AzureProtocolHTTP && rule.Protocol != AzureProtocolHTTPS {
+			continue
+		}
+		for _, route := range rule.Routes {
+			if route.ListenerAttribute == nil || route.ListenerAttribute.Priority == 0 {
+				continue
+			}
+			if ok, msg := recordRoutePriority(rule.Port, route, byRule, owner); !ok {
+				return false, msg
+			}
+		}
+	}
+	return true, ""
+}
+
+// validateAgPriorityRange checks a declared routing rule priority. 0 means "let the controller pick".
+func validateAgPriorityRange(priority int) (bool, string) {
+	if priority == 0 {
+		return true, ""
+	}
+	if priority < 1 || priority > int(MaxRoutingRulePriority) {
+		return false, fmt.Sprintf("invalid priority %d, available [1, %d], 1 is evaluated first",
+			priority, MaxRoutingRulePriority)
+	}
+	return true, ""
+}
+
+func recordRoutePriority(port int, route networkextensionv1.Layer7Route,
+	byRule map[string]int, owner map[int]string) (bool, string) {
+	key := fmt.Sprintf("%d/%s", port, route.Domain)
+	label := fmt.Sprintf("port %d domain '%s'", port, route.Domain)
+	priority := route.ListenerAttribute.Priority
+
+	if exist, ok := byRule[key]; ok && exist != priority {
+		return false, fmt.Sprintf("%s declares conflicting priorities %d and %d, all paths of one "+
+			"domain share a single routing rule and must agree", label, exist, priority)
+	}
+	if other, ok := owner[priority]; ok && other != label {
+		return false, fmt.Sprintf("priority %d is declared by both %s and %s, each routing rule "+
+			"needs a unique priority on the gateway", priority, other, label)
+	}
+
+	byRule[key] = priority
+	owner[priority] = label
 	return true, ""
 }
 
@@ -116,6 +177,11 @@ func (a *AlbValidater) validatePortMappingRoute(r *networkextensionv1.IngressPor
 		if ok, msg := a.validateAgListenerAttribute(r.ListenerAttribute); !ok {
 			return false, msg
 		}
+		// 一个portMapping会展开成多个端口的监听器，共用一个priority必然互相冲突
+		if r.ListenerAttribute.Priority != 0 {
+			return false, fmt.Sprintf("priority is not supported in portMappings, it would be " +
+				"duplicated across every mapped port. declare it under spec.rules instead")
+		}
 	}
 	return true, ""
 }
@@ -163,6 +229,9 @@ func (a *AlbValidater) validateLBListenerAttribute(attr *networkextensionv1.Ingr
 
 // validateListenerAttribute check listener attribute
 func (a *AlbValidater) validateAgListenerAttribute(attr *networkextensionv1.IngressListenerAttribute) (bool, string) {
+	if ok, msg := validateAgPriorityRange(attr.Priority); !ok {
+		return false, msg
+	}
 	if attr.HealthCheck != nil && attr.HealthCheck.Enabled {
 		healthCheck := attr.HealthCheck
 		if healthCheck.HealthCheckProtocol != "" && healthCheck.

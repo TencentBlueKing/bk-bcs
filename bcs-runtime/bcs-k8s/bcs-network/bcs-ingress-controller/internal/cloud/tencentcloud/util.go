@@ -322,6 +322,24 @@ func getDomainPathKey(domain, path string) string {
 	return domain + path
 }
 
+// needEnableSni returns true only when SNI is disabled on the cloud listener
+// but expected to be enabled. Tencent Cloud CLB does not support disabling SNI
+// once it is enabled, so the reverse (1->0) is never handled here.
+func needEnableSni(cloudAttr, newAttr *networkextensionv1.IngressListenerAttribute) bool {
+	newSni := newAttr != nil && newAttr.SniSwitch == 1
+	oldSni := cloudAttr != nil && cloudAttr.SniSwitch == 1
+	return !oldSni && newSni
+}
+
+// sniDisableRequested returns true when the cloud listener has SNI enabled but
+// the desired spec wants it disabled. Tencent Cloud CLB cannot disable SNI
+// online, so such a change can only be surfaced as a warning.
+func sniDisableRequested(cloudAttr, newAttr *networkextensionv1.IngressListenerAttribute) bool {
+	oldSni := cloudAttr != nil && cloudAttr.SniSwitch == 1
+	newSni := newAttr != nil && newAttr.SniSwitch == 1
+	return oldSni && !newSni
+}
+
 // to see if the attribute should be update
 func needUpdateAttribute(oldAttr, newAttr *networkextensionv1.IngressListenerAttribute) bool {
 	if newAttr == nil {

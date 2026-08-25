@@ -1,0 +1,215 @@
+{
+  "skill_name": "tapd-iteration-runner",
+  "version": "2.0.0",
+  "notes": [
+    "本 eval 集对应 tapd-iteration-runner（迭代调度器）的端到端行为验证。",
+    "所有 eval 仅列 prompt 与 expectations（人类评审锚点），暂不编写 assertions。",
+    "Assertions 将在 iteration-1 跑完基线后由人工评审结果决定，遵循 skill-creator 的 'draft assertions while runs are in progress' 约定。",
+    "运行时建议 model ID 与主会话一致，workspace 为 <skill-path>/../<skill-name>-workspace/iteration-1/。",
+    "eval #5/#11/#12/#13/#14（旧编号）已迁移至 skills/tapd-story-pipeline/evals/evals.json（2026-05-17），这些用例涉及 pipeline 内部行为（specify/plan/validate/implement 子 skill 细节），不属于 runner 职责边界。"
+  ],
+  "evals": [
+    {
+      "id": 1,
+      "name": "full-iteration-happy-path",
+      "prompt": "帮我开发 TAPD 迭代 #1001234 里我负责的所有需求，workspace_id 是 20000001",
+      "expected_output": "迭代级 4 段编排（init → analysis → loop → report）端到端跑通；loop 中每个需求由 runner 内联执行 tapd-story-pipeline 推进至 phase=committed",
+      "files": [],
+      "expectations": [
+        "按顺序执行 4 段：tapd-iteration-init → tapd-iteration-analysis → loop → tapd-iteration-report",
+        "创建 specs/${VERSION}/ 目录与 iteration-state.json（名称必须是 iteration-state.json）",
+        "agent_tool 字段默认为 agent；loop 内联执行 tapd-story-pipeline，传入 ${ID} / ${WORKDIR} / ${AGENT_TOOL} / ${ITER_BRANCH}",
+        "runner 仅读取 ${WORKDIR}/meta.yaml 与 ${WORKDIR}/questions.md 做决策；不读 spec.md / plan.md / tasks.md / process.log 等 pipeline 内部产物",
+        "派生缓存正确同步：iteration-state.json.stories.*.children.*.phase 与 stats 由 runner 在 loop 中从 meta.yaml 派生",
+        "所有需求 phase 推进到 committed 后自动触发 tapd-iteration-report，最终 status=reported",
+        "runner 在 loop 中记录每个需求的 started_at 与 stats.duration_sec（壁钟耗时）；report 成本仅聚合 per_stage（执行层）"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "resume-with-meta-and-questions",
+      "prompt": "上次迭代 #1001234 开发到一半断了，帮我继续",
+      "expected_output": "恢复流程读取 meta.yaml / questions.md / iteration-patches，识别遗留状态后恢复",
+      "files": [],
+      "expectations": [
+        "读取 references/recovery.md 执行恢复流程",
+        "展示进度摘要时包含：已完成 / 进行中 / 未开始 / 阻塞计数（questions.md 有 [open] 条目的需求数）/ 未解失败计数（meta.yaml.last_failure 非空的需求数）",
+        "对每个非 committed 需求读取 meta.yaml 获取 attempts / context_revision / last_failure",
+        "若 questions.md 存在 [open] 条目，优先进入代问循环而非重新跑技术澄清",
+        "若 iteration-patches/attempt-${meta.yaml.attempts}.md 存在，作为附加输入加载到 SUBAGENT_PROMPT",
+        "不重新计算 attempt/round，沿用 meta.yaml 游标；不覆盖任何历史轨迹"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "skip-clarification-with-audit-trail",
+      "prompt": "帮我开发迭代 #5005678 的需求，workspace 20000001。需求已经拆好了不需要澄清了，使用 cursor 作为 agent 工具",
+      "expected_output": "agent_tool 设为 cursor，跳过澄清但保留审计条目",
+      "files": [],
+      "expectations": [
+        "iteration-state.json.agent_tool 字段设为 cursor",
+        "内联执行入参中 agent 工具字段为 cursor",
+        "在 pipeline 指定阶段尊重用户'不需要澄清'的意图",
+        "runner 层正确传递 agent_tool 参数到每次内联执行"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "technical-clarification-via-questions",
+      "prompt": "帮我分析迭代 #7007890 的需求，workspace 20000001。有些需求描述写得比较模糊，帮我过一遍看看有没有需要确认的地方",
+      "expected_output": "runner 在 loop 中遇到 questions.md [open] 卡点时正确与用户对话",
+      "files": [],
+      "expectations": [
+        "runner 在 loop 中读取 questions.md 检测到 [open] 条目",
+        "runner 进入 ask_user_about_questions 分支",
+        "一次性向用户展示所有 [open] 条目",
+        "用户答复后 runner 将对应条目 open → answered 写回 questions.md",
+        "写回后重新调度 pipeline（回到 while 顶部）"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "validate-three-parallel-plus-in-place-fix",
+      "prompt": "帮我开发迭代 #9009012 的需求，workspace 20000001。实现完先帮我审查一下代码，注意架构合规和安全规范",
+      "expected_output": "runner 在 loop 中正确处理 pipeline 的 validate 阶段卡点（pending_review / last_failure）",
+      "files": [],
+      "expectations": [
+        "pipeline 退出后 runner 读取 meta.yaml 判断卡点类型",
+        "若 pending_review 非空，runner 进入 ask_user_about_review 分支展示 artifacts",
+        "用户选择'通过'时 runner 设置 phase=confirmed 并重新调度",
+        "用户选择'回退'时 runner 设置 phase=目标节点, attempts++ 并写 attempt-md",
+        "runner 不读取 pipeline 内部的 arch-review.md / security-review.md / code-review.md"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "branch-and-directory-layout",
+      "prompt": "帮我开发迭代 #1001123 的需求，workspace 20000001。这个迭代名称是 iteration-v0.9.x",
+      "expected_output": "基于迭代名称创建 v0.9.x 分支和 specs/v0.9.x/ 目录",
+      "files": [],
+      "expectations": [
+        "创建 git 分支 v0.9.x 并推送到远程仓库",
+        "创建目录 specs/v0.9.x/",
+        "iteration-state.json 保存在 specs/v0.9.x/ 下",
+        "后续所有需求产出在 specs/v0.9.x/${ID}/ 下",
+        "子 skill 严禁创建/切换分支；所有代码变更在 v0.9.x 分支累积"
+      ]
+    },
+    {
+      "id": 7,
+      "name": "dependency-analysis-with-context-seed",
+      "prompt": "帮我开发迭代 #2002234 的需求，workspace 20000001，需求之间有依赖关系需要先分析清楚再开始",
+      "expected_output": "tapd-iteration-analysis 执行依赖分析，sequence 正确填充",
+      "files": [],
+      "expectations": [
+        "tapd-iteration-analysis 从 TAPD 拉取所有需求详细信息",
+        "分析需求间依赖关系，构建 DAG 并拓扑排序",
+        "sequence 字段填充排序后的需求 ID 列表",
+        "向用户展示分析结果（顺序和依赖关系）",
+        "迭代 status 更新为 analyzed"
+      ]
+    },
+    {
+      "id": 8,
+      "name": "commit-and-cleanup-snapshots",
+      "prompt": "迭代 #3003345 实现完了，帮我提交代码。每个需求要统计变更行数",
+      "expected_output": "runner 在 loop 中检测到所有需求 committed 后触发 report",
+      "files": [],
+      "expectations": [
+        "统计 total / add_code / delete_code / logic_code / test_code / docs / files 同步到 iteration-state.json",
+        "所有需求 phase=committed 后 runner 自动设置 status=completed",
+        "runner 加载 tapd-iteration-report 执行汇总",
+        "report 完成后 status=reported（终态）"
+      ]
+    },
+    {
+      "id": 9,
+      "name": "bugfix-with-fresh-baseline",
+      "prompt": "迭代 #4004456 发布后出了 bug，需要回到迭代修复。workspace 20000001",
+      "expected_output": "bugfix 模式恢复，patch 自增，status=bugfix",
+      "files": [],
+      "expectations": [
+        "检测到需要进入 bugfix 模式",
+        "iteration-state.json.patch 字段自增，status 更新为 bugfix",
+        "runner 交互询问用户哪些需求需要修复",
+        "仅对指定需求重置 meta.yaml.phase 到 confirmed",
+        "完成后 status 恢复为 implementing（部分完成）或 completed（全部完成）"
+      ]
+    },
+    {
+      "id": 10,
+      "name": "context-whitelist-enforcement",
+      "prompt": "帮我开发迭代 #9009005 的需求，workspace 20000001。这是涉及订单域的需求，不要动支付域的代码",
+      "expected_output": "runner 正确传递用户约束到 pipeline，pipeline 自行执行白名单校验",
+      "files": [],
+      "expectations": [
+        "runner 将用户的约束（不动支付域）通过内联入参或 req.md 传递给 pipeline",
+        "runner 不直接读取 context.md 或验证白名单——这是 pipeline 的职责",
+        "若 pipeline 因越界返回 last_failure，runner 按标准 fail 卡点流程处理"
+      ]
+    },
+    {
+      "id": 11,
+      "name": "pipeline-exit-abnormal-no-checkpoint",
+      "prompt": "帮我开发迭代 #1101001 的需求，workspace 20000001",
+      "expected_output": "pipeline 退出但 meta.yaml 无卡点信号时，runner 识别异常并提示用户检查 process.log",
+      "files": [],
+      "expectations": [
+        "pipeline 退出后 runner 读取 meta.yaml，发现 phase 未推进且 last_failure/pending_review/questions.md 均无卡点标记",
+        "runner 进入 pipeline_exit_abnormal 分支，通知用户检查 process.log",
+        "runner 不自动重试，等待用户决策（重试 / 跳过）",
+        "iteration-state.json 保留现场（selected_story 指向当前需求）"
+      ]
+    },
+    {
+      "id": 12,
+      "name": "recovery-sequence-empty-implementing",
+      "prompt": "上次迭代 #1101002 开发到一半断了，帮我继续",
+      "expected_output": "恢复时检测到 status=implementing 但 sequence 为空，回退到 analysis 重新生成",
+      "files": [],
+      "expectations": [
+        "tapd-iteration-init 阶段 2 检测到 iteration-state.json 存在，进入恢复流程",
+        "recovery.md §4 一致性检查发现 status=implementing 且 sequence 为空",
+        "runner 回退到 tapd-iteration-analysis 重新生成 sequence",
+        "不丢失已有的 stories 数据，仅重新填充 sequence"
+      ]
+    },
+    {
+      "id": 13,
+      "name": "tmp-file-missing-fallback-to-mcp",
+      "prompt": "帮我开发迭代 #1101003 的需求，workspace 20000001。之前分析过但临时文件被清了",
+      "expected_output": "loop 中 req.md 注入时发现 .tmp 文件缺失，通过 TAPD MCP 重新拉取",
+      "files": [],
+      "expectations": [
+        "loop 进入某需求时发现 req.md 不存在，尝试从 .tmp 复制",
+        ".tmp/{ID}.md 文件不存在，触发兜底逻辑",
+        "runner 通过 TAPD MCP stories_get 重新拉取该需求的 description",
+        "将 description 写入 req.md，pipeline 正常启动"
+      ]
+    },
+    {
+      "id": 14,
+      "name": "negative-single-story-trigger-pipeline",
+      "prompt": "帮我实现需求 #1234567890，workspace 20000001",
+      "expected_output": "单个需求应触发 tapd-story-pipeline 而非 tapd-iteration-runner",
+      "files": [],
+      "expectations": [
+        "runner 不应被触发——用户只提到了单个需求 ID，没有提到迭代",
+        "正确的触发目标是 tapd-story-pipeline",
+        "如果 runner 被误触发，说明 description 的触发词过于宽泛"
+      ]
+    },
+    {
+      "id": 15,
+      "name": "negative-hotfix-single-bug",
+      "prompt": "线上有个紧急 bug 需要修复，需求 #9876543210，workspace 20000001",
+      "expected_output": "单个紧急 bug 修复应触发 tapd-story-pipeline 而非 tapd-iteration-runner",
+      "files": [],
+      "expectations": [
+        "runner 不应被触发——紧急 bug 是单需求场景",
+        "正确的触发目标是 tapd-story-pipeline（hotfix 模式）",
+        "runner 仅在用户明确提及迭代级批量操作时触发"
+      ]
+    }
+  ]
+}

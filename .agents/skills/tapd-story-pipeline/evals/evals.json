@@ -1,0 +1,204 @@
+{
+  "skill_name": "tapd-story-pipeline",
+  "version": "1.1.0",
+  "notes": [
+    "本 eval 集对应 tapd-story-pipeline（单需求实现流水线）的端到端行为验证。",
+    "所有 eval 仅列 prompt 与 expectations（人类评审锚点），暂不编写 assertions。",
+    "Assertions 将在 iteration-1 跑完基线后由人工评审结果决定。",
+    "eval #10~#11 接收自 tapd-iteration-runner evals 迁移（2026-05-17），涉及 pipeline 内部行为。"
+  ],
+  "evals": [
+    {
+      "id": 1,
+      "name": "happy-path-initialized-to-committed",
+      "prompt": "帮我实现需求 #1234567890，workspace 20000001",
+      "expected_output": "单需求从 initialized 推进到 committed，经过 specify → plan → tasks → confirm → implement → validate → commit 全阶段",
+      "files": [],
+      "expectations": [
+        "pipeline 按状态机顺序推进：initialized → tech-clarified → researched → tasks-generated → (confirm 卡点退出)",
+        "外部通过 confirm 后再次调起：confirmed → implemented → validated → committed",
+        "meta.yaml 记录完整 history（每个阶段一条成功记录）",
+        "stats 字段在 commit 阶段写入（total / add_code / delete_code / logic_code / test_code / docs / files）",
+        "退出报告格式符合 §8.1（Pipeline 已退出 + 5 项信息）"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "confirm-checkpoint-exit-and-resume",
+      "prompt": "继续实现需求 #1234567890，之前已经到 tasks-generated 等我确认",
+      "expected_output": "pipeline 在 tasks-generated 写入 pending_review 后退出，外部通过后从 confirmed 继续",
+      "files": [],
+      "expectations": [
+        "tasks-generated 阶段写入 meta.yaml.pending_review.artifacts = [spec.md, plan.md, tasks.md]",
+        "pipeline 退出报告标注卡点类型为 confirm",
+        "外部设置 phase=confirmed + pending_review=null 后再次调起",
+        "pipeline 从 confirmed 继续推进到 implement",
+        "pipeline 不跳过 confirm（即使需求简单）"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "blocked-on-questions-specify",
+      "prompt": "帮我实现需求 #2345678901，workspace 20000001。这个需求涉及外部支付接口对接",
+      "expected_output": "specify 阶段 subagent 遇无法自答问题，追加 questions.md [open] 后退出",
+      "files": [],
+      "expectations": [
+        "specify 阶段 subagent 遇到无法基于 context.md 白名单自答的问题",
+        "subagent 追加 questions.md 新条目（status=open），返回 status=blocked_on_questions",
+        "pipeline 退出报告标注卡点类型为 blocked",
+        "外部将 [open] → [answered] 后再次调起",
+        "pipeline 重入后 round +1（attempts 不变），继续 specify"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "system-failure-auto-retry",
+      "prompt": "帮我实现需求 #3456789012，workspace 20000001",
+      "expected_output": "implement 阶段遇系统类失败，pipeline 自动清空 last_failure 重试一次",
+      "files": [],
+      "expectations": [
+        "subagent 返回 status=fail，pipeline 写入 last_failure.type=system",
+        "pipeline 检测到 attempts==1 且 type==system → 自动清空 last_failure",
+        "attempts +1 后重新调度 implement subagent",
+        "若重试成功 → 推进 phase；若再次失败 → 退出等待外部处理"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "rollback-reentry-spec-insufficient",
+      "prompt": "帮我实现需求 #4567890123，workspace 20000001。需求涉及订单创建流程",
+      "expected_output": "plan 阶段 verdict=spec_insufficient → 回退到 specify 重做",
+      "files": [],
+      "expectations": [
+        "plan subagent 完成后合规自检产出 plan-report.md",
+        "plan-report.md 中 Findings 存在 HIGH/CRITICAL 归因 spec-insufficient",
+        "pipeline 写入 last_failure.type=semantic，退出",
+        "外部生成 iteration-patches/attempt-2.md（target_phase_to_re_enter=specify）",
+        "再次调起后 pipeline 从 specify 重新执行（attempts=2）",
+        "context.md 按 patch_to_context 重写，context_revision +1"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "validate-three-parallel-plus-fix",
+      "prompt": "帮我实现需求 #5678901234，workspace 20000001。代码写完了帮我做校验",
+      "expected_output": "validate 三段并行校验 + 原地修复循环",
+      "files": [],
+      "expectations": [
+        "validate-arch / validate-security / validate-codereview 三个 subagent 在同一个 tool call batch 中并行发起",
+        "validate-codereview 段以 subagent_name=code-reviewer 发起，validate-arch 段以 subagent_name=tech-lead 发起，validate-security 段以 subagent_name=code-reviewer 发起",
+        "code-reviewer 自写 validate-codereview-report.md（report-template 格式），verdict ∈ {LGTM, needs_fix}，每条 finding 带根因标注",
+        "三份报告分别写入独立文件和独立日志",
+        "汇总决策：全 LGTM → 推进；任一 needs_fix 且全归因 code-self → 原地修复",
+        "原地修复后重新三段并行校验（round +1）",
+        "同 attempt 内最多 3 个 round"
+      ]
+    },
+    {
+      "id": 7,
+      "name": "validate-code-preserved-rollback",
+      "prompt": "继续处理需求 #6789012345，validate 多轮修复后仍有 finding 归因 spec-insufficient",
+      "expected_output": "validate 回退但保留代码，携带 unresolved_findings 回上游",
+      "files": [],
+      "expectations": [
+        "iteration-patches/attempt-${N+1}.md 中 code_preserved=true",
+        "不执行任何 git checkout / reset / stash",
+        "三份评审报告保留作为回退证据",
+        "meta.yaml.history 追加 code_preserved_rollback 记录",
+        "下游 implement 重入时识别 code_preserved=true，做差量修复"
+      ]
+    },
+    {
+      "id": 8,
+      "name": "standalone-mode-no-runner",
+      "prompt": "帮我实现需求 #7890123456，这是个紧急 bug，不走迭代流程。workspace 20000001",
+      "expected_output": "pipeline 以独立模式执行（非 runner 调度），WORKDIR 默认为 specs/stories/${ID}/",
+      "files": [],
+      "expectations": [
+        "pipeline 不读 iteration-state.json",
+        "WORKDIR 默认为 specs/stories/${ID}/（独立模式），目录不存在时自动创建",
+        "workspace_id 按入参回退优先级解析",
+        "退出后用户按 state-mutation-guide.md §8 用户独立模式速查表处理"
+      ]
+    },
+    {
+      "id": 9,
+      "name": "mutation-invalid-detection",
+      "prompt": "继续实现需求 #8901234567，之前我手动改了 meta.yaml 的 phase",
+      "expected_output": "pipeline 启动校验检测到非法 phase 跳跃，写 mutation_invalid 退出",
+      "files": [],
+      "expectations": [
+        "pipeline 步骤 2 校验外部修改合法性",
+        "检测到 phase 跨链跳跃或前置产物缺失",
+        "写入 last_failure.type=mutation_invalid",
+        "退出报告包含具体非法点和修复建议"
+      ]
+    },
+    {
+      "id": 10,
+      "name": "from-runner-subagent-orchestration",
+      "prompt": "帮我开发迭代 #8008901 的三个需求，workspace 20000001，需求确认好了直接分析和实现",
+      "expected_output": "pipeline 被 runner 通过 Task 调度时，各阶段产物与回传 JSON 符合契约",
+      "files": [],
+      "expectations": [
+        "specify 阶段通过 subagent 调用生成 spec.md",
+        "plan 阶段 subagent 产出 plan.md + plan-report.md（含 verdict）",
+        "tasks 阶段两段 subagent：tasks.md + tasks-report.md",
+        "implement 阶段 subagent 完成代码实现 + 测试",
+        "validate 阶段三段并行 subagent 产出三份评审报告",
+        "各 subagent 回传 JSON 符合 subagent-prompt-template §1.3 schema"
+      ]
+    },
+    {
+      "id": 11,
+      "name": "negative-iteration-should-not-trigger",
+      "prompt": "帮我开发 TAPD 迭代 #1001234 里的所有需求，workspace_id 是 20000001",
+      "expected_output": "迭代级批量请求不应触发 pipeline，应触发 tapd-iteration-runner",
+      "files": [],
+      "expectations": [
+        "pipeline 不应被触发——用户提到了'迭代'和'所有需求'",
+        "正确的触发目标是 tapd-iteration-runner",
+        "如果 pipeline 被误触发，说明 description 触发词过于宽泛"
+      ]
+    },
+    {
+      "id": 12,
+      "name": "hook-miss-cost-graceful-degrade",
+      "prompt": "实现需求 #1234567，但本机未配置 PostToolUse hook（settings.json 未合并到 .claude/settings.json）",
+      "expected_output": "pipeline 正常推进各阶段，stats.cost 各 total_* 字段保持为 0，subagent_calls 正常累加，process.log 含 warning 提示 hook 未触发",
+      "files": [],
+      "expectations": [
+        "meta.yaml.stats.cost.per_call[] 为空（因 cost-events.jsonl 不存在或为空）",
+        "meta.yaml.stats.cost.subagent_calls 与实际 subagent 调用次数一致",
+        "meta.yaml.stats.cost.total_input_tokens / total_output_tokens / total_credit / total_duration_sec 全部为 0",
+        "process.log 至少有一条 'cost-event not found for ...' warning",
+        "phase 推进不受 hook 缺失影响"
+      ]
+    },
+    {
+      "id": 13,
+      "name": "use-skill-speckit-call-path",
+      "prompt": "实现需求 #1234568，验证 specify 阶段通过 use_skill 调用而非 CLI",
+      "expected_output": "subagent 通过 use_skill(command='speckit-specify') 加载 skill；spec.md 正确生成；hook 采集到本次 Task 的真实 usage",
+      "files": [],
+      "expectations": [
+        "subagent 不再启动 ${AGENT_TOOL} -p 子进程（execute_command 不含 'agent -p'）",
+        ".agents/skills/speckit-specify/SKILL.md 被 subagent 通过 use_skill 加载",
+        "${WORK_DIR}/cost-events.jsonl 含本次 specify 阶段的事件行",
+        "meta.yaml.stats.cost.per_call[] 含一条 stage=specify 记录，total_input_tokens > 0"
+      ]
+    },
+    {
+      "id": 14,
+      "name": "tech-lead-skill-whitelist",
+      "prompt": "在 specify 阶段尝试让 tech-lead 加载非白名单 skill（如 brainstorming）",
+      "expected_output": "agent 拒绝加载非白名单 skill，按硬约束返回；不污染 specify 产物",
+      "files": [],
+      "expectations": [
+        "tech-lead 不调用 use_skill(command='brainstorming') 或类似与技术澄清/规范生成无关的 skill",
+        "若调用方 prompt 中误带非白名单 skill 名，tech-lead 按 fail 返回并在 issue 中说明白名单约束",
+        "tech-lead 在 specify 阶段仅应加载 speckit-specify 及其配套 tech-lead skill 套件"
+      ]
+    }
+  ]
+}

@@ -1061,13 +1061,14 @@ func checkClusterStatus(ctx context.Context, info *cloudprovider.CloudDependBasi
 			return nil
 		}
 
+		clusterStatus := utils.StringPtrToString(cluster.ClusterStatus)
 		blog.Infof("checkClusterStatus[%s] cluster[%s] current status[%s]", taskID,
-			info.Cluster.ClusterID, *cluster.ClusterStatus)
+			info.Cluster.ClusterID, clusterStatus)
 
 		cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
-			fmt.Sprintf("cluster current status [%s]", *cluster.ClusterStatus))
+			fmt.Sprintf("cluster current status [%s]", clusterStatus))
 
-		switch *cluster.ClusterStatus {
+		switch clusterStatus {
 		case api.ClusterStatusRunning:
 			return loop.EndLoop
 		case api.ClusterStatusAbnormal:
@@ -1489,7 +1490,7 @@ func getRandomSubnetByVpcID(ctx context.Context, info *cloudprovider.CloudDepend
 	// pick available subnet
 	availableSubnet := make([]*vpc.Subnet, 0)
 	for i := range subnets {
-		match := utils.MatchPatternSubnet(*subnets[i].SubnetName, info.Cluster.Region)
+		match := utils.MatchPatternSubnet(utils.StringPtrToString(subnets[i].SubnetName), info.Cluster.Region)
 		if match && *subnets[i].AvailableIpAddressCount > 0 {
 			availableSubnet = append(availableSubnet, subnets[i])
 		}

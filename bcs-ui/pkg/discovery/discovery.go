@@ -22,6 +22,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
+	bcsdiscovery "github.com/Tencent/bk-bcs/bcs-common/pkg/discovery"
 	etcd "github.com/go-micro/plugins/v4/registry/etcd"
 	"github.com/urfave/cli/v2"
 	"go-micro.dev/v4"
@@ -81,20 +82,32 @@ func NewServiceDiscovery(ctx context.Context, name, version, bindaddr, advertise
 
 // Run xxx
 func (s *ServiceDiscovery) Run() error {
+	// 直连 service 时没有注册逻辑，仅等待退出信号
+	if bcsdiscovery.UseServiceDiscovery() {
+		<-s.ctx.Done()
+		return s.ctx.Err()
+	}
 	return s.srv.Run()
 }
 
 func (s *ServiceDiscovery) init() error {
-	// etcd 服务发现注册
-	etcdRegistry, err := s.initEtcdRegistry()
-	if err != nil {
-		return err
+	var etcdRegistry registry.Registry
+	// 直连 service 时不需要注册到 etcd
+	if !bcsdiscovery.UseServiceDiscovery() {
+		var err error
+		etcdRegistry, err = s.initEtcdRegistry()
+		if err != nil {
+			return err
+		}
+
+		if etcdRegistry != nil {
+			s.srv.Init(micro.Registry(etcdRegistry))
+		}
+	} else {
+		blog.Info("ENV_USE_SERVICE_DISCOVERY=true, skip etcd registry")
 	}
 
-	if etcdRegistry != nil {
-		s.srv.Init(micro.Registry(etcdRegistry))
-	}
-	err = s.initTLSConfig()
+	err := s.initTLSConfig()
 	if err != nil {
 		return err
 	}

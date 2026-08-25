@@ -121,6 +121,7 @@ export default defineComponent({
 
     const metricMap = {
       cpu_usage: $i18n.t('metrics.cpuUsage'),
+      cpu_peak_usage: $i18n.t('metrics.cpuPeakUsage'),
       disk_usage: $i18n.t('metrics.diskUsage'),
       memory_usage: $i18n.t('metrics.memUsage'),
       cpu_request_usage: $i18n.t('metrics.cpuRequestUsage.text'),

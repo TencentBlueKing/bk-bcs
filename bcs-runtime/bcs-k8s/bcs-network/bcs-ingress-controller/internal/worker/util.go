@@ -39,6 +39,8 @@ const (
 	ReasonEnsureListenerDeleteFailed = "delete fail"
 	// ReasonBackendUnhealthy event reason for listener unhealthy backends
 	ReasonBackendUnhealthy = "unhealthy listener backends"
+	// ReasonSniDisableUnsupported event reason when cloud SNI is on but spec disables it
+	ReasonSniDisableUnsupported = "sni disable unsupported"
 	// MsgEnsureListenerSuccess msg ensure listener successfully
 	MsgEnsureListenerSuccess = "ensured success, listener id %s"
 	// MsgEnsureListenerFailed msg ensure listener failed
@@ -70,10 +72,16 @@ func (h *EventHandler) recordListenerOwnerEvent(lis *networkextensionv1.Listener
 
 	switch ownerKind {
 	case constant.KindIngress:
-		ownerName, lok := lis.Labels[networkextensionv1.LabelKeyForOwnerName]
-		if !lok {
-			// 注解上没有记录所属资源,不记录事件
-			return
+		// Prefer Status.Ingress (full name). LabelKeyForOwnerName may be truncated
+		// when the Ingress name exceeds the k8s 63-char label limit.
+		ownerName := lis.Status.Ingress
+		if ownerName == "" {
+			var lok bool
+			ownerName, lok = lis.Labels[networkextensionv1.LabelKeyForOwnerName]
+			if !lok {
+				// 注解上没有记录所属资源,不记录事件
+				return
+			}
 		}
 		ingress := &networkextensionv1.Ingress{}
 		if err := h.k8sCli.Get(context.Background(), k8stypes.NamespacedName{
@@ -119,6 +127,22 @@ func (h *EventHandler) recordListenerFailedEvent(lis *networkextensionv1.Listene
 
 	h.recordListenerOwnerEvent(lis, k8scorev1.EventTypeWarning, ReasonEnsureListenerFailed, err.Error())
 
+}
+
+func (h *EventHandler) recordListenerWarningEvent(lis *networkextensionv1.Listener, reason, msg string) {
+	h.recordListenerEvent(lis, k8scorev1.EventTypeWarning, reason, msg)
+	h.recordListenerOwnerEvent(lis, k8scorev1.EventTypeWarning, reason, msg)
+}
+
+// handleListenerEnsureWarning patches synced status with a warning message and
+// emits a warning event on the Listener CR and its owner Ingress when the message
+// changes, so repeated reconciles do not flood events.
+func (h *EventHandler) handleListenerEnsureWarning(
+	li *networkextensionv1.Listener, listenerID, msg string) error {
+	if li.Status.Msg != msg {
+		h.recordListenerWarningEvent(li, ReasonSniDisableUnsupported, msg)
+	}
+	return h.patchListenerStatus(li, listenerID, networkextensionv1.ListenerStatusSynced, msg)
 }
 
 func (h *EventHandler) recordListenerDeleteSuccessEvent(lis *networkextensionv1.Listener, lid string) {

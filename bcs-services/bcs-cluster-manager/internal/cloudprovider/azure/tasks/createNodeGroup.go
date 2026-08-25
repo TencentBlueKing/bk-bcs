@@ -307,6 +307,16 @@ func createAgentPool(rootCtx context.Context, info *cloudprovider.CloudDependBas
 	if err = client.NodeGroupToAgentPool(group, pool); err != nil {
 		return errors.Wrapf(err, "createAgentPool[%s]: call NodeGroupToAgentPool failed", taskID)
 	}
+	// 设置Pod子网
+	// 仅需填写Pod子网名称, 此处拼接完整arm-id
+	if group.AutoScaling != nil && group.AutoScaling.GetPodSubnetID() != "" {
+		podSubnetName := group.AutoScaling.GetPodSubnetID()
+		podSubnetID := fmt.Sprintf(
+			"/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Network/virtualNetworks/%s/subnets/%s",
+			info.CmOption.Account.SubscriptionID, cloudprovider.GetClusterResourceGroup(info.Cluster),
+			group.AutoScaling.VpcID, podSubnetName)
+		pool.Properties.PodSubnetID = &podSubnetID
+	}
 	_, err = client.CreatePoolAndReturn(ctx, pool, cloudprovider.GetClusterResourceGroup(info.Cluster),
 		cluster.SystemID, group.CloudNodeGroupID)
 	if err != nil {

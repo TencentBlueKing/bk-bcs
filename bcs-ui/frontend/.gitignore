@@ -6,6 +6,7 @@ output/
 test/unit/coverage
 *.bak*
 package-lock.json
+.codebuddy*
 
 # Editor directories and files
 .idea

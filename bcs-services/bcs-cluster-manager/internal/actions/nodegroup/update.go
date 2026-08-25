@@ -168,6 +168,9 @@ func (ua *UpdateAction) modifyNodeGroupAutoScaling(group *cmproto.NodeGroup) {
 		if len(ua.req.AutoScaling.TimeRanges) > 0 {
 			group.AutoScaling.TimeRanges = ua.req.AutoScaling.TimeRanges
 		}
+		if len(ua.req.AutoScaling.PodSubnetID) > 0 {
+			group.AutoScaling.PodSubnetID = ua.req.AutoScaling.PodSubnetID
+		}
 	}
 }
 

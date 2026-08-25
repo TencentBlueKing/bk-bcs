@@ -437,6 +437,33 @@ func Int64PtrToInt64(num *int64) int64 {
 	return *num
 }
 
+// Float64PtrToFloat64 convert float64 pointer to float64
+func Float64PtrToFloat64(num *float64) float64 {
+	if num == nil {
+		return 0
+	}
+
+	return *num
+}
+
+// Uint64PtrToUint64 convert uint64 pointer to uint64
+func Uint64PtrToUint64(num *uint64) uint64 {
+	if num == nil {
+		return 0
+	}
+
+	return *num
+}
+
+// BoolPtrToBool convert bool pointer to bool
+func BoolPtrToBool(b *bool) bool {
+	if b == nil {
+		return false
+	}
+
+	return *b
+}
+
 // MatchPatternSubnet inner match inner subnet,
 // if str == region, match node subnet; if str == region-clusterId, match cluster subnet
 func MatchPatternSubnet(subnetName, str string) bool {

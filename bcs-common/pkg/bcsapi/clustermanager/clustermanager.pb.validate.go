@@ -10496,6 +10496,8 @@ func (m *CloudNetworkInfo) validate(all bool) error {
 
 	// no validation rules for ClusterUnderlayUsageRatioLimit
 
+	// no validation rules for ClusterUnderlayUsageIPNumLimit
+
 	if len(errors) > 0 {
 		return CloudNetworkInfoMultiError(errors)
 	}
@@ -11268,6 +11270,8 @@ func (m *AutoScalingGroup) validate(all bool) error {
 	// no validation rules for AutoUpgrade
 
 	// no validation rules for ServiceRole
+
+	// no validation rules for PodSubnetID
 
 	if len(errors) > 0 {
 		return AutoScalingGroupMultiError(errors)

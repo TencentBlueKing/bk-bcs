@@ -164,6 +164,10 @@
               {{ $t('metrics.cpuUsage') }}: {{ $t('metrics.cpuUsageDesc') }}
               <span class="block opacity-70">metrics: rate(container_cpu_usage_seconds_total[2m])</span>
             </div>
+            <div class="mb-[4px]">
+              {{ $t('metrics.cpuPeakUsage') }}: {{ $t('metrics.cpuPeakUsageDesc') }}
+              <span class="block opacity-70">metrics: max_over_time(rate(container_cpu_usage_seconds_total[2m])[5m:])</span>
+            </div>
             <div>
               {{ $t('metrics.cpuResUsage') }}: {{ $t('metrics.cpuResUsageDesc') }}
               <span class="block opacity-70">
@@ -720,6 +724,7 @@ export default defineComponent({
     const activeCpuMetric = ref('cpu_usage');
     const cpuMetricObj = computed(() => ({
       cpu_usage: $i18n.t('metrics.cpuUsage'),
+      cpu_peak_usage: $i18n.t('metrics.cpuPeakUsage'),
       cpu_request_usage: $i18n.t('metrics.cpuResUsage'),
       cpu_limit_usage: $i18n.t('metrics.cpuLimitUsage'),
     }));

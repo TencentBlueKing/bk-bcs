@@ -678,6 +678,12 @@ func (cm *ClusterManager) initDaemon() {
 
 // initRegistry etcd registry
 func (cm *ClusterManager) initRegistry() error {
+	if discovery.UseServiceDiscovery() {
+		blog.Infof("ENV_USE_SERVICE_DISCOVERY=true, skip etcd registry")
+		cm.microRegistry = registry.NewMemoryRegistry()
+		return nil
+	}
+
 	etcdEndpoints := utils.SplitAddrString(cm.opt.Etcd.EtcdEndpoints)
 	etcdSecure := false
 	var etcdTLS *tls.Config
@@ -702,8 +708,12 @@ func (cm *ClusterManager) initRegistry() error {
 
 // initDiscovery discovery client
 func (cm *ClusterManager) initDiscovery() {
-	cm.disc = discovery.NewModuleDiscovery(cmcommon.ClusterManagerServiceDomain, cm.microRegistry)
-	blog.Infof("init discovery for cluster manager successfully")
+	if !discovery.UseServiceDiscovery() {
+		cm.disc = discovery.NewModuleDiscovery(cmcommon.ClusterManagerServiceDomain, cm.microRegistry)
+		blog.Infof("init discovery for cluster manager successfully")
+	} else {
+		blog.Infof("ENV_USE_SERVICE_DISCOVERY=true, skip etcd module discovery for cluster manager")
+	}
 
 	// enable discovery resource module
 	if cm.opt.ResourceManager.Enable {
@@ -1002,6 +1012,9 @@ func (cm *ClusterManager) initMicro() error { // nolint
 			return nil
 		}),
 		microsvc.AfterStart(func() error {
+			if discovery.UseServiceDiscovery() {
+				return nil
+			}
 			if cm.resourceDisc != nil {
 				cm.resourceDisc.Start() // nolint
 			}
@@ -1014,16 +1027,20 @@ func (cm *ClusterManager) initMicro() error { // nolint
 			return cm.disc.Start()
 		}),
 		microsvc.BeforeStop(func() error {
-			if cm.resourceDisc != nil {
-				cm.resourceDisc.Stop()
+			if !discovery.UseServiceDiscovery() {
+				if cm.resourceDisc != nil {
+					cm.resourceDisc.Stop()
+				}
+				if cm.projectDisc != nil {
+					cm.projectDisc.Stop()
+				}
+				if cm.cidrDisc != nil {
+					cm.cidrDisc.Stop()
+				}
+				if cm.disc != nil {
+					cm.disc.Stop()
+				}
 			}
-			if cm.projectDisc != nil {
-				cm.projectDisc.Stop()
-			}
-			if cm.cidrDisc != nil {
-				cm.cidrDisc.Stop()
-			}
-			cm.disc.Stop()
 			waitTime := 10 * time.Second
 			time.Sleep(waitTime)
 			cm.microsvcShutdownCh <- struct{}{}

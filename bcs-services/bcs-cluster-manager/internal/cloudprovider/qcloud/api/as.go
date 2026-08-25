@@ -188,7 +188,8 @@ func (c *ASClient) ModifyLaunchConfigurationAttributes(req *as.ModifyLaunchConfi
 // https://cloud.tencent.com/document/api/377/35199
 func (c *ASClient) UpgradeLaunchConfiguration(req *as.UpgradeLaunchConfigurationRequest) error {
 	blog.Infof("UpgradeLaunchConfiguration input: %v", utils.ToJSONString(req))
-	if *req.InternetAccessible.InternetChargeType == InternetChargeTypeBandwidthPrepaid {
+	if req.InternetAccessible != nil && req.InternetAccessible.InternetChargeType != nil &&
+		*req.InternetAccessible.InternetChargeType == InternetChargeTypeBandwidthPrepaid {
 		req.InternetAccessible.InternetChargeType = common.StringPtr(InternetChargeTypeBandwidthPostpaidByHour)
 	}
 	resp, err := c.as.UpgradeLaunchConfiguration(req)

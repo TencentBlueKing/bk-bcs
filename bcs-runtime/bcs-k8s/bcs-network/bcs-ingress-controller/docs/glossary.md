@@ -39,7 +39,7 @@
 |------|----------|------|
 | project.json | project.json | 项目根目录 TAPD 配置文件，含 workspace_id 和 owner，供迭代流水线读取 |
 | tapd-story-agent | tapd-story-agent | 单需求实现流水线调度 Agent，定义于 `.cursor/agents/tapd-story-agent.md` |
-| speckit-executor-agent | speckit-executor-agent | 隔离的 Spec Kit 命令执行 Agent，定义于 `.cursor/agents/speckit-executor-agent.md` |
+| speckit-execution-agent | speckit-execution-agent | 隔离的 Spec Kit 命令执行 Agent，定义于 `.cursor/agents/speckit-execution-agent.md` |
 | controller-runtime | controller-runtime | K8s Operator 框架，提供 Manager、Client、Reconcile 基础设施 |
 | go-restful | go-restful | HTTP WebService 框架，用于管理 API |
 | blog | bcs-common/blog | BCS 统一日志库，本项目禁止使用 stdlib log 或 klog |
@@ -50,7 +50,8 @@
 
 | 术语 | 英文 | 定义 |
 |------|------|------|
-| 文档园艺 | Harness Gardening | harness-gardening skill 执行的八维度文档一致性巡检 |
+| 文档园艺 | Harness Gardening | harness-gardening skill 执行的十二维度文档一致性巡检 |
+| 唯一知识来源 | Single Source of Truth | 每类知识仅维护一处权威文档，避免多源冲突 |
 | 技术债预算 | Technical Debt Budget | 控制 TODO/FIXME 和架构违规增速的量化阈值 |
 | 表驱动测试 | Table-Driven Test | Go 单元测试标准模式，测试用例以结构体切片组织 |
 | 幂等性 | Idempotency | Reconcile 多次执行产生相同结果，不产生副作用 |
@@ -59,8 +60,7 @@
 
 | 术语 | 格式 | 定义 |
 |------|------|------|
-| 待补充标记 | `<!-- TODO: 待补充 -->` | Harness 文档中信息不足处的标准占位 |
-| 自动生成段落 | `<!-- dev-map:auto -->` | dev map 中由工具自动维护的段落边界 |
+| 自动生成段落 | `<!-- dev-map:auto -->` | 历史 Markdown 索引中由工具自动维护的段落边界；当前 dev-map 以 graphify 图谱为准 |
 
 ## 业务领域术语
 

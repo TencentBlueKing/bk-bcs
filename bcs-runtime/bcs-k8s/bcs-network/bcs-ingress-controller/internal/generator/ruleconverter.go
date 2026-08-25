@@ -35,6 +35,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/metrics"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/utils"
 )
 
 // RuleConverter rule converter
@@ -144,13 +145,15 @@ func (rc *RuleConverter) generate7LayerListener(region, lbID string) (*networkex
 	li.SetNamespace(rc.ingressNamespace)
 	// set ingress name in labels
 	// the ingress name in labels is used for checking conficts
+	// GenIngressLabelKey keeps key/value within k8s 63-char limit
+	ingressLabelKey := utils.GenIngressLabelKey(rc.ingressName)
 	li.SetLabels(map[string]string{
-		rc.ingressName: networkextensionv1.LabelValueForIngressName,
+		ingressLabelKey: networkextensionv1.LabelValueForIngressName,
 		networkextensionv1.LabelKeyForIsSegmentListener: networkextensionv1.LabelValueFalse,
 		networkextensionv1.LabelKeyForLoadbalanceID:     GetLabelLBId(lbID),
 		networkextensionv1.LabelKeyForLoadbalanceRegion: region,
 		networkextensionv1.LabelKeyForOwnerKind:         constant.KindIngress,
-		networkextensionv1.LabelKeyForOwnerName:         rc.ingressName,
+		networkextensionv1.LabelKeyForOwnerName:         ingressLabelKey,
 	})
 	li.Status.Ingress = rc.ingressName
 	li.Finalizers = append(li.Finalizers, constant.FinalizerNameBcsIngressController)
@@ -207,7 +210,6 @@ func (rc *RuleConverter) generateListenerRule(l7Routes []networkextensionv1.Laye
 		liRule.TargetGroup = targetGroup
 		retListenerRules = append(retListenerRules, liRule)
 	}
-	sort.Sort(networkextensionv1.ListenerRuleList(retListenerRules))
 	return retListenerRules, nil
 }
 
@@ -223,13 +225,15 @@ func (rc *RuleConverter) generate4LayerListener(region, lbID string) (*networkex
 	li.SetNamespace(rc.ingressNamespace)
 	// set ingress name in labels
 	// the ingress name in labels is used for checking conficts
+	// GenIngressLabelKey keeps key/value within k8s 63-char limit
+	ingressLabelKey := utils.GenIngressLabelKey(rc.ingressName)
 	li.SetLabels(map[string]string{
-		rc.ingressName: networkextensionv1.LabelValueForIngressName,
+		ingressLabelKey: networkextensionv1.LabelValueForIngressName,
 		networkextensionv1.LabelKeyForIsSegmentListener: networkextensionv1.LabelValueFalse,
 		networkextensionv1.LabelKeyForLoadbalanceID:     GetLabelLBId(lbID),
 		networkextensionv1.LabelKeyForLoadbalanceRegion: region,
 		networkextensionv1.LabelKeyForOwnerKind:         constant.KindIngress,
-		networkextensionv1.LabelKeyForOwnerName:         rc.ingressName,
+		networkextensionv1.LabelKeyForOwnerName:         ingressLabelKey,
 	})
 	li.Status.Ingress = rc.ingressName
 	li.Finalizers = append(li.Finalizers, constant.FinalizerNameBcsIngressController)
@@ -434,32 +438,42 @@ func (rc *RuleConverter) isPortMatch(port federationv1.EndpointPort, svcPort *k8
 
 func (rc *RuleConverter) generateBackends(matchedEps []federationv1.MultiClusterEndpointSlice, svcPort *k8scorev1.ServicePort, svcRoute *networkextensionv1.ServiceRoute) []networkextensionv1.ListenerBackend {
 	var backends []networkextensionv1.ListenerBackend
+	// Deduplicate by IP+Port across MultiClusterEndpointSlices from different sub-clusters.
+	backendMap := make(map[string]struct{})
 	for _, mEps := range matchedEps {
 		for _, ep := range mEps.Spec.Endpoints {
 			for _, port := range ep.Ports {
-				if rc.isPortMatch(port, svcPort) {
-					if svcRoute.HostPort {
-						if port.HostPort == nil {
-							blog.Warnf("hostPort is true, but not found related definition in port [%s]",
-								*port.Name)
-							rc.eventf(rc.ingress, k8scorev1.EventTypeWarning, constant.EventIngressBindFailed,
-								fmt.Sprintf("hostPort is true, but not found related definition in port [%s]",
-									*port.Name))
-							continue
-						}
-						backends = append(backends, networkextensionv1.ListenerBackend{
-							IP:     ep.NodeAddresses[0],
-							Port:   int(*port.HostPort),
-							Weight: svcRoute.GetWeight(),
-						})
-					} else {
-						backends = append(backends, networkextensionv1.ListenerBackend{
-							IP:     ep.Addresses[0],
-							Port:   int(*port.Port),
-							Weight: svcRoute.GetWeight(),
-						})
+				if !rc.isPortMatch(port, svcPort) {
+					continue
+				}
+				var newBackend networkextensionv1.ListenerBackend
+				if svcRoute.HostPort {
+					if port.HostPort == nil {
+						blog.Warnf("hostPort is true, but not found related definition in port [%s]",
+							*port.Name)
+						rc.eventf(rc.ingress, k8scorev1.EventTypeWarning, constant.EventIngressBindFailed,
+							fmt.Sprintf("hostPort is true, but not found related definition in port [%s]",
+								*port.Name))
+						continue
+					}
+					newBackend = networkextensionv1.ListenerBackend{
+						IP:     ep.NodeAddresses[0],
+						Port:   int(*port.HostPort),
+						Weight: svcRoute.GetWeight(),
+					}
+				} else {
+					newBackend = networkextensionv1.ListenerBackend{
+						IP:     ep.Addresses[0],
+						Port:   int(*port.Port),
+						Weight: svcRoute.GetWeight(),
 					}
 				}
+				key := newBackend.IP + strconv.Itoa(newBackend.Port)
+				if _, ok := backendMap[key]; ok {
+					continue
+				}
+				backendMap[key] = struct{}{}
+				backends = append(backends, newBackend)
 			}
 		}
 	}

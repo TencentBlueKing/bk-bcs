@@ -1,0 +1,48 @@
+{
+  "skill_name": "tapd-product-discovery",
+  "version": "1.0.0",
+  "evals": [
+    {
+      "id": 1,
+      "name": "idea-starts-product-parent-story",
+      "prompt": "老板提了一个想法：希望在集群巡检里加一个风险趋势视图，先帮我把这个需求跑起来",
+      "expected_output": "识别为产品前置流程，要求先建立或定位产品父单，从需求来源、目标用户、业务价值、调研计划和 PRD 产物开始推进，而不是直接进入研发实现",
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "research-before-prd",
+      "prompt": "这个功能还没有 PRD，我想先做用户调研和竞品分析，再整理成正式需求",
+      "expected_output": "识别为产品调研阶段，使用产品父单承载调研、分析、原型和 PRD，状态从 backlog 推进到 doing，不创建研发子单",
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "split-role-child-stories-after-product-approval",
+      "prompt": "产品方案已经评审通过，需要按设计、前端、后端拆 TAPD 子需求",
+      "expected_output": "从产品父单 approved 后开始拆单，按是否需要交互/视觉、页面/组件、接口/数据/权限判断是否创建设计、前端、后端子单，不强制三个角色都创建",
+      "files": []
+    },
+    {
+      "id": 4,
+      "name": "do-not-steal-engineering-implementation",
+      "prompt": "开发 TAPD 需求 114514，PRD 和接口文档都已经确认",
+      "expected_output": "不触发产品前置流程，应交给 tapd-story-pipeline 或现有研发流程处理",
+      "files": []
+    },
+    {
+      "id": 5,
+      "name": "generate-prototype-spec-and-bkui-html-before-splitting",
+      "prompt": "PRD 已经整理好了，这个需求有列表页、筛选条件和新建弹窗，先生成页面原型给产品、设计、前端评审",
+      "expected_output": "识别为产品前置中的原型阶段，先基于 PRD 生成页面原型 Spec，再按本仓 BKUI HTML 原型规范生成可评审 HTML 原型，原型评审通过后再进入产品评审和角色拆单",
+      "files": []
+    },
+    {
+      "id": 6,
+      "name": "skip-prototype-for-backend-only-change",
+      "prompt": "这个需求只是补一个后台定时任务，没有页面和交互变化",
+      "expected_output": "识别为可跳过页面原型的产品前置场景，在产品父单中记录跳过页面原型 Spec 和 HTML 原型的原因，再继续产品评审和后端子单判断",
+      "files": []
+    }
+  ]
+}

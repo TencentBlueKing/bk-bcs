@@ -379,6 +379,12 @@
             vertical-align: middle;
         }
     }
+
+    .bk-form-content {
+        .bk-form-control {
+            vertical-align: top;
+        }
+    }
 }
 
 .bk-form-inline-item {

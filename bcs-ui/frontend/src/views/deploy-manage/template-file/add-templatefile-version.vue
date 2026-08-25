@@ -154,6 +154,7 @@ import FileMetadataDialog from './file-metadata.vue';
 import FormMode from './form-mode.vue';
 import VersionDialog from './version.vue';
 import YamlMode from './yaml-mode.vue';
+import { updateTemplateMetadataList } from './use-store';
 
 import { IListTemplateMetadataItem, ITemplateVersionItem } from '@/@types/cluster-resource-patch';
 import { ResourceService, TemplateSetService } from '@/api/modules/new-cluster-resource';
@@ -343,6 +344,10 @@ async function createTemplateVersion(versionData: { version: string; versionDesc
   creating.value = false;
   if (result) {
     showVersionDialog.value = false;
+    // 刷新空间下文件列表，使左侧树中文件的版本信息更新为最新
+    if (fileMetadata.value?.templateSpaceID) {
+      await updateTemplateMetadataList(fileMetadata.value.templateSpaceID);
+    }
     $router.replace({
       name: 'templateFileDetail',
       params: {

@@ -3834,6 +3834,11 @@ message CloudNetworkInfo {
       title: "clusterUnderlayUsageRatioLimit",
       description: "集群子网使用率比率限制，集群使用率比率未达标不可继续添加子网"
     }];
+  uint32 clusterUnderlayUsageIPNumLimit = 10 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title: "clusterUnderlayUsageIPNumLimit",
+      description: "集群子网IP使用量限制，集群子网IP比率低于该值不可继续添加子网"
+    }];
 }
 
 message EnvCidrStep {
@@ -4023,6 +4028,10 @@ message AutoScalingGroup {
   string serviceRole = 16[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "serviceRole",
     description: "创建eks节点池时指定的iam角色名称"
+  }];
+  string podSubnetID = 17[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "podSubnetID",
+    description: "创建azure节点池时Pod 启动时将加入的子网ID，如果省略，将不会添加该字段"
   }];
 }
 

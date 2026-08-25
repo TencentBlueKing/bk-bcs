@@ -53,6 +53,17 @@ func (m *ComputeV2) GetPodCPUUsage(ctx context.Context, projectID, clusterID, na
 	return m.handlePodMetric(ctx, projectID, clusterID, namespace, podNameList, promql, start, end, step)
 }
 
+// GetPodCPUPeakUsage POD CPU 峰值使用率
+func (m *ComputeV2) GetPodCPUPeakUsage(ctx context.Context, projectID, clusterID, namespace string,
+	podNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
+	promql :=
+		`sum by (pod_name) (max_over_time(rate(%<prefix>scontainer_cpu_usage_seconds_total{cluster_id="%<clusterID>s", ` +
+			`namespace="%<namespace>s", pod_name=~"%<podNameList>s", container_name!="", container_name!="POD", ` +
+			`%<provider>s}[2m])[5m:])) * 100`
+
+	return m.handlePodMetric(ctx, projectID, clusterID, namespace, podNameList, promql, start, end, step)
+}
+
 // GetPodCPULimitUsage POD CPU Limit 使用率
 func (m *ComputeV2) GetPodCPULimitUsage(ctx context.Context, projectID, clusterID, namespace string,
 	podNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {

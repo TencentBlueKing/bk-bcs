@@ -154,7 +154,16 @@ func (m *ModelTask) GetTask(ctx context.Context, taskID string) (*types.Task, er
 // ListTask list clusters
 func (m *ModelTask) ListTask(ctx context.Context, opt *iface.ListOption) (*iface.Pagination[types.Task], error) {
 	taskList := make([]*types.Task, 0)
-	finder := m.db.Table(m.tableName).Find(operator.EmptyCondition)
+
+	cond := operator.EmptyCondition
+	// 若传入 TaskIDs，直接按 TaskIDs 查询，忽略其他过滤条件
+	if len(opt.TaskIDs) > 0 {
+		cond = operator.NewLeafCondition(operator.In, operator.M{
+			TableUniqueKey: opt.TaskIDs,
+		})
+	}
+
+	finder := m.db.Table(m.tableName).Find(cond)
 	if len(opt.Sort) != 0 {
 		finder = finder.WithSort(MapInt2MapIf(opt.Sort))
 	}

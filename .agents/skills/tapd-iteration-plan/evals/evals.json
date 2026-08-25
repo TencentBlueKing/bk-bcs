@@ -1,0 +1,27 @@
+{
+  "skill_name": "tapd-iteration-plan",
+  "version": "1.0.0",
+  "evals": [
+    {
+      "id": 1,
+      "name": "new-iteration-auto-planning",
+      "prompt": "规划迭代 iteration-v0.2.x",
+      "expected_output": "创建新迭代，自动筛选approved需求池，构建 DAG 拓扑排序，逐个入迭代直到规模上限，输出规划汇总",
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "existing-iteration-reentry",
+      "prompt": "把需求 12345, 67890 规划进 iteration-v0.1.x，workspace 20000001",
+      "expected_output": "查询到已有迭代，统计已用规模，计算剩余容量，将用户指定需求按依赖排序后入迭代",
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "iteration-full-capacity",
+      "prompt": "规划迭代 iteration-v0.3.x，workspace 20000001",
+      "expected_output": "自动筛选需求后发现规模超限，部分需求因迭代已满未入迭代，汇总中列出未规划需求及原因",
+      "files": []
+    }
+  ]
+}

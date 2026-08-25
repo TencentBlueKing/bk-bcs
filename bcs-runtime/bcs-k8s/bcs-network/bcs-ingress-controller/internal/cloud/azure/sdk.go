@@ -95,41 +95,8 @@ func NewSdkWrapper() (*SdkWrapper, error) {
 	sw := &SdkWrapper{}
 	sw.loadEnv()
 
-	credList := make([]*azidentity.ClientSecretCredential, 0)
-	for i := range sw.clientIDList {
-		clientID := sw.clientIDList[i]
-		clientSecret := sw.clientSecretList[i]
-
-		cred, err := azidentity.NewClientSecretCredential(sw.tenantID, clientID, clientSecret, &azidentity.ClientSecretCredentialOptions{})
-		if err != nil {
-			return nil, errors.Wrapf(err, "create azure cred[%d] failed", i)
-		}
-		credList = append(credList, cred)
-	}
-
-	sw.credList = credList
-	sw.credNum = len(credList)
-
-	for i := range sw.credList {
-		cred := sw.credList[i]
-		lbCli, err := armnetwork.NewLoadBalancersClient(sw.subscriptionID, cred, nil)
-		if err != nil {
-			return nil, errors.Wrapf(err, "create azure lb client[%d] failed", i)
-		}
-		sw.lbCliList = append(sw.lbCliList, lbCli)
-
-		lbAddrPoolCli, err := armnetwork.NewLoadBalancerBackendAddressPoolsClient(sw.subscriptionID, cred, nil)
-		if err != nil {
-			return nil, errors.Wrapf(err, "create azure lb address pool client[%d] failed", i)
-		}
-		sw.lbAddrPoolCliList = append(sw.lbAddrPoolCliList, lbAddrPoolCli)
-
-		appGatewayCli, err := armnetwork.NewApplicationGatewaysClient(sw.subscriptionID, cred, nil)
-		if err != nil {
-			return nil, errors.Wrapf(err, "create azure application gateway client[%d] failed", i)
-		}
-		sw.appGatewayCliList = append(sw.appGatewayCliList, appGatewayCli)
-
+	if err := sw.buildClients(); err != nil {
+		return nil, err
 	}
 
 	rand.Seed(time.Now().UnixNano())
@@ -137,15 +104,78 @@ func NewSdkWrapper() (*SdkWrapper, error) {
 	return sw, nil
 }
 
-// NewSdkWrapperWithSecretIDKey create a new aws sdk wrapper with secret id and key
+// NewSdkWrapperWithSecretIDKey create a new azure sdk wrapper with the given client id and secret.
+// The credentials and all clients are rebuilt so that requests really use the given secret instead
+// of the process level credentials loaded from env.
 func NewSdkWrapperWithSecretIDKey(secretID, secretKey string) (*SdkWrapper, error) {
-	sw, err := NewSdkWrapper()
-	if err != nil {
-		return nil, err
-	}
+	sw := &SdkWrapper{}
+	sw.loadEnv()
+
 	sw.clientID = secretID
 	sw.clientSecret = secretKey
+	sw.clientIDList = strings.Split(secretID, osEnvSep)
+	sw.clientSecretList = strings.Split(secretKey, osEnvSep)
+
+	if err := sw.buildClients(); err != nil {
+		return nil, err
+	}
+
+	rand.Seed(time.Now().UnixNano())
+	sw.throttler = throttle.NewTokenBucket(sw.ratelimitqps, sw.ratelimitbucketSize)
 	return sw, nil
+}
+
+// buildClients build azure credentials and network clients from clientIDList/clientSecretList
+func (sw *SdkWrapper) buildClients() error {
+	if len(sw.clientIDList) != len(sw.clientSecretList) {
+		return fmt.Errorf("azure client id count %d not match client secret count %d",
+			len(sw.clientIDList), len(sw.clientSecretList))
+	}
+
+	credList := make([]*azidentity.ClientSecretCredential, 0, len(sw.clientIDList))
+	for i := range sw.clientIDList {
+		clientID := sw.clientIDList[i]
+		clientSecret := sw.clientSecretList[i]
+
+		cred, err := azidentity.NewClientSecretCredential(sw.tenantID, clientID, clientSecret,
+			&azidentity.ClientSecretCredentialOptions{})
+		if err != nil {
+			return errors.Wrapf(err, "create azure cred[%d] failed", i)
+		}
+		credList = append(credList, cred)
+	}
+
+	lbCliList := make([]*armnetwork.LoadBalancersClient, 0, len(credList))
+	lbAddrPoolCliList := make([]*armnetwork.LoadBalancerBackendAddressPoolsClient, 0, len(credList))
+	appGatewayCliList := make([]*armnetwork.ApplicationGatewaysClient, 0, len(credList))
+	for i := range credList {
+		cred := credList[i]
+		lbCli, err := armnetwork.NewLoadBalancersClient(sw.subscriptionID, cred, nil)
+		if err != nil {
+			return errors.Wrapf(err, "create azure lb client[%d] failed", i)
+		}
+		lbCliList = append(lbCliList, lbCli)
+
+		lbAddrPoolCli, err := armnetwork.NewLoadBalancerBackendAddressPoolsClient(sw.subscriptionID, cred, nil)
+		if err != nil {
+			return errors.Wrapf(err, "create azure lb address pool client[%d] failed", i)
+		}
+		lbAddrPoolCliList = append(lbAddrPoolCliList, lbAddrPoolCli)
+
+		appGatewayCli, err := armnetwork.NewApplicationGatewaysClient(sw.subscriptionID, cred, nil)
+		if err != nil {
+			return errors.Wrapf(err, "create azure application gateway client[%d] failed", i)
+		}
+		appGatewayCliList = append(appGatewayCliList, appGatewayCli)
+	}
+
+	sw.credList = credList
+	sw.credNum = len(credList)
+	sw.lbCliList = lbCliList
+	sw.lbAddrPoolCliList = lbAddrPoolCliList
+	sw.appGatewayCliList = appGatewayCliList
+
+	return nil
 }
 
 // loadEnv load env parameters

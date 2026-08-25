@@ -230,6 +230,12 @@ func (p *ProjectService) initEtcd() error {
 }
 
 func (p *ProjectService) initRegistry() error {
+	if discovery.UseServiceDiscovery() {
+		logging.Info("ENV_USE_SERVICE_DISCOVERY=true, skip etcd registry")
+		p.microRgt = microRgt.NewMemoryRegistry()
+		return nil
+	}
+
 	etcdEndpoints := stringx.SplitString(p.opt.Etcd.EtcdEndpoints)
 	etcdSecure := false
 

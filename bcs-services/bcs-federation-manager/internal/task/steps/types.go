@@ -114,6 +114,8 @@ const (
 
 	// NamespaceKey namespace
 	NamespaceKey = "namespace"
+	// OBSProductIDKey obs product id
+	OBSProductIDKey = "obsproductid"
 	// ParameterKey parameter
 	ParameterKey = "parameter"
 	// HandleTypeKey handle type

@@ -90,7 +90,7 @@
 
 1. 变更方在 PR 中同步更新 `AGENTS.md`、`docs/dev-map/` 或 `docs/harness/` 相关章节
 2. Code Review 时检查文档是否同步（参考 `docs/standards/quality-code-review.md`）
-3. 对我说「文档巡检」触发 harness-gardening 八维度扫描
+3. 对我说「文档巡检」触发 harness-gardening 十二维度扫描
 4. 新增功能设计文档放入 `specs/{feature-id}/`
 
 ## 检查清单

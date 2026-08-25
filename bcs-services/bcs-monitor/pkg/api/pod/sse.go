@@ -20,7 +20,6 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/gin-contrib/sse"
-	"github.com/go-chi/render"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/k8sclient"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest"
@@ -92,7 +91,7 @@ func PodLogStream(req *k8sclient.LogQuery, ss rest.StreamingServer) error { // n
 
 			// id 是最后一个日志时间
 			id := base64.StdEncoding.EncodeToString([]byte(lastLogTime))
-			_ = render.Render(ss, rctx.Request, &rest.Event{
+			event := &rest.Event{
 				HTTPCode: -1,
 				Event: sse.Event{
 					Event: "message",
@@ -100,7 +99,8 @@ func PodLogStream(req *k8sclient.LogQuery, ss rest.StreamingServer) error { // n
 					Id:    id,
 					Retry: 5000, // 5 秒重试
 				},
-			})
+			}
+			_ = event.Render(ss, rctx.Request)
 
 			err := ss.Flush()
 			if err != nil {

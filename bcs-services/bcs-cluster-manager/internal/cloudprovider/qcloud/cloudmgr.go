@@ -106,10 +106,10 @@ func (c *CloudInfoManager) SyncClusterCloudInfo(cls *cmproto.Cluster,
 		return fmt.Errorf("SyncClusterCloudInfo failed: %v", err)
 	}
 
-	cls.SystemID = *tkeCluster.ClusterId
-	cls.VpcID = *tkeCluster.ClusterNetworkSettings.VpcId
+	cls.SystemID = utils.StringPtrToString(tkeCluster.ClusterId)
+	cls.VpcID = utils.StringPtrToString(tkeCluster.ClusterNetworkSettings.VpcId)
 	cls.Master = masterNodes
-	cls.ManageType = *tkeCluster.ClusterType
+	cls.ManageType = utils.StringPtrToString(tkeCluster.ClusterType)
 
 	// cluster cloud basic setting
 	clusterBasicSettingByQCloud(cls, tkeCluster)
@@ -154,7 +154,7 @@ func getCloudClusterInfo(opt *cloudprovider.SyncClusterCloudInfoOption) (
 		return nil, nil, err
 	}
 
-	switch *tkeCluster.ClusterType {
+	switch utils.StringPtrToString(tkeCluster.ClusterType) {
 	case common.ClusterManageTypeManaged:
 		return tkeCluster, nil, nil
 	default:
@@ -184,7 +184,7 @@ func getClusterMasterNodes(opt *cloudprovider.SyncClusterCloudInfoOption,
 		return nil, err
 	}
 
-	instancesList, err := tkeCli.QueryTkeClusterAllInstances(context.Background(), *cluster.ClusterId, nil)
+	instancesList, err := tkeCli.QueryTkeClusterAllInstances(context.Background(), utils.StringPtrToString(cluster.ClusterId), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -204,7 +204,7 @@ func getClusterMasterNodes(opt *cloudprovider.SyncClusterCloudInfoOption,
 	masterNodes := make(map[string]*cmproto.Node)
 	nodes, err := transInstanceIPToNodes(masterIPs, &cloudprovider.ListNodesOption{
 		Common:       opt.Common,
-		ClusterVPCID: *cluster.ClusterNetworkSettings.VpcId,
+		ClusterVPCID: utils.StringPtrToString(cluster.ClusterNetworkSettings.VpcId),
 	})
 	if err != nil {
 		return nil, err
@@ -244,8 +244,8 @@ func getCloudIDByKubeConfig(opt *cloudprovider.SyncClusterCloudInfoOption) (stri
 
 func clusterAdvancedSettingByQCloud(cls *cmproto.Cluster, cluster *tke.Cluster) {
 	cls.ClusterAdvanceSettings = &cmproto.ClusterAdvanceSetting{
-		IPVS:             *cluster.ClusterNetworkSettings.Ipvs,
-		ContainerRuntime: *cluster.ContainerRuntime,
+		IPVS:             utils.BoolPtrToBool(cluster.ClusterNetworkSettings.Ipvs),
+		ContainerRuntime: utils.StringPtrToString(cluster.ContainerRuntime),
 		RuntimeVersion: func() string {
 			if cluster != nil && cluster.RuntimeVersion != nil {
 				return *cluster.RuntimeVersion
@@ -258,16 +258,16 @@ func clusterAdvancedSettingByQCloud(cls *cmproto.Cluster, cluster *tke.Cluster) 
 
 func clusterBasicSettingByQCloud(cls *cmproto.Cluster, cluster *tke.Cluster) {
 	cls.ClusterBasicSettings = &cmproto.ClusterBasicSetting{
-		OS:                        *cluster.ClusterOs,
-		Version:                   *cluster.ClusterVersion,
-		VersionName:               *cluster.ClusterVersion,
-		ClusterLevel:              *cluster.ClusterLevel,
-		IsAutoUpgradeClusterLevel: *cluster.AutoUpgradeClusterLevel,
+		OS:                        utils.StringPtrToString(cluster.ClusterOs),
+		Version:                   utils.StringPtrToString(cluster.ClusterVersion),
+		VersionName:               utils.StringPtrToString(cluster.ClusterVersion),
+		ClusterLevel:              utils.StringPtrToString(cluster.ClusterLevel),
+		IsAutoUpgradeClusterLevel: utils.BoolPtrToBool(cluster.AutoUpgradeClusterLevel),
 	}
 }
 
 func clusterNetworkSettingByQCloud(cls *cmproto.Cluster, cluster *tke.Cluster) error {
-	property := *cluster.Property
+	property := utils.StringPtrToString(cluster.Property)
 	propertyInfo := make(map[string]interface{})
 	err := json.Unmarshal([]byte(property), &propertyInfo)
 	if err != nil {
@@ -280,7 +280,7 @@ func clusterNetworkSettingByQCloud(cls *cmproto.Cluster, cluster *tke.Cluster) e
 		multiCIDRList = strings.Split(multiCIDRs.(string), ",")
 	}
 
-	masterCIDR := *cluster.ClusterNetworkSettings.ClusterCIDR
+	masterCIDR := utils.StringPtrToString(cluster.ClusterNetworkSettings.ClusterCIDR)
 	step, err := utils.ConvertCIDRToStep(masterCIDR)
 	if err != nil {
 		return err
@@ -288,8 +288,8 @@ func clusterNetworkSettingByQCloud(cls *cmproto.Cluster, cluster *tke.Cluster) e
 
 	cls.NetworkSettings = &cmproto.NetworkSetting{
 		ClusterIPv4CIDR:  masterCIDR,
-		MaxNodePodNum:    uint32(*cluster.ClusterNetworkSettings.MaxNodePodNum),
-		MaxServiceNum:    uint32(*cluster.ClusterNetworkSettings.MaxClusterServiceNum),
+		MaxNodePodNum:    uint32(utils.Uint64PtrToUint64(cluster.ClusterNetworkSettings.MaxNodePodNum)),
+		MaxServiceNum:    uint32(utils.Uint64PtrToUint64(cluster.ClusterNetworkSettings.MaxClusterServiceNum)),
 		MultiClusterCIDR: multiCIDRList,
 		CidrStep:         step,
 	}

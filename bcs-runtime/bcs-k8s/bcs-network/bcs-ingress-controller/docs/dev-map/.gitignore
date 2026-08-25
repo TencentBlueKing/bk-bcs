@@ -1,0 +1,7 @@
+# graphify / harness 运行产物——默认不入库（白名单）
+# 原则：只提交 README.md 与本 .gitignore；其余一律忽略。
+# 禁止在仓库根（或其它 .gitignore）忽略整个 docs/dev-map/——会丢掉约定落点。
+
+*
+!README.md
+!.gitignore

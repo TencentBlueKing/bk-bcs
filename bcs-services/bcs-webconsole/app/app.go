@@ -29,6 +29,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/common/util"
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/discovery"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	yaml "github.com/go-micro/plugins/v4/config/encoder/yaml"
@@ -275,6 +276,13 @@ func (c *WebConsoleManager) initHTTPService() *gin.Engine {
 
 // initEtcdRegistry etcd 服务注册
 func (c *WebConsoleManager) initEtcdRegistry() (registry.Registry, error) {
+	// 直连 K8s Service 时不连 etcd、不自注册；HTTP 仍由 go-micro 提供，
+	// 用 memory registry 避免默认回落到 mdns。
+	if discovery.UseServiceDiscovery() {
+		logger.Info("ENV_USE_SERVICE_DISCOVERY=true, skip etcd registry")
+		return registry.NewMemoryRegistry(), nil
+	}
+
 	endpoints := c.microConfig.Get("etcd", "endpoints").String("")
 
 	// 添加环境变量

@@ -7,9 +7,11 @@
 ### 1.1 层次定义
 
 ```
-internal/constant + internal/option（配置与常量层，无业务依赖）
+internal/constant + internal/option + internal/common + internal/utils（配置/常量/通用工具层）
   ↓
-internal/cloud + internal/*cache + internal/generator（领域与适配层）
+internal/cloud + internal/*cache + internal/generator + internal/cloudcollector + internal/cloudnode（领域与适配层）
+  ↓
+internal/apiclient + internal/worker + internal/conflicthandler + internal/eventer（支撑服务层）
   ↓
 {name}controller/（Reconcile 控制器层）
   ↓
@@ -21,7 +23,7 @@ main.go（编排层，注册所有组件）
 ### 1.2 依赖规则
 
 - 依赖只能**向下**流动：Controller 可依赖 internal/，internal/ 不得依赖 Controller
-- `internal/constant` 和 `internal/option` 为**最底层**，不得 import 其他 internal 包
+- `internal/constant`、`internal/option`、`internal/common`、`internal/utils` 为**最底层**，不得 import 其他业务 internal 包
 - 云适配器（`internal/cloud/*`）通过 `internal/cloud/interface.go` 抽象，Controller 不直接引用具体云 SDK
 - SSL 证书 API（`internal/cloud/tencentcloud/sslclient.go`）通过 `internal/cloud/namespacedssl/` 按 Namespace 隔离，模式对齐 NamespacedLB
 - 同层 cloud 子包（aws/azure/gcp/tencentcloud）之间**不得**互相引用
@@ -31,9 +33,10 @@ main.go（编排层，注册所有组件）
 
 | 层 | 目录 | 职责 | 允许的依赖 |
 |----|------|------|-----------|
-| 常量/配置 | `internal/constant/`, `internal/option/` | Annotation Key、CLI 参数 | 仅标准库和外部配置库 |
-| 领域逻辑 | `internal/generator/`, `internal/*cache/` | Ingress 转换、端口缓存 | constant, option, CRD types |
-| 云适配 | `internal/cloud/` | 多云 LB SDK 封装 | constant, interface |
+| 常量/配置/工具 | `internal/constant/`, `internal/option/`, `internal/common/`, `internal/utils/` | Annotation Key、CLI 参数、通用工具 | 仅标准库和外部配置库 |
+| 领域逻辑 | `internal/generator/`, `internal/portpoolcache/`, `internal/hostnetportpoolcache/`, `internal/ingresscache/`, `internal/nodecache/` | Ingress 转换、端口/关联缓存 | constant, option, CRD types |
+| 云适配/采集 | `internal/cloud/`, `internal/cloudcollector/`, `internal/cloudnode/` | 多云 LB SDK、健康状态采集、节点客户端 | constant, interface |
+| 支撑服务 | `internal/apiclient/`, `internal/worker/`, `internal/conflicthandler/`, `internal/eventer/` | 外部 API、同步 Worker、冲突检测、事件 | constant, cloud, cache |
 | 控制器 | `{name}controller/` | CRD Reconcile | internal/*, controller-runtime |
 | 接入 | `internal/httpsvr/`, `internal/webhookserver/` | HTTP API、Admission | internal/*, go-restful |
 | 编排 | `main.go` | 注册、初始化、启动 | 所有层 |
@@ -84,7 +87,7 @@ main.go（编排层，注册所有组件）
 
 ## 4. Controller 开发模式
 
-新增 Controller 必须遵循以下模式（参考 `portpoolcontroller/portpool_controller.go`）：
+新增 Controller 必须遵循以下模式（参考 `portpoolcontroller/portpoolcontroller.go`）：
 
 1. Struct 包含：`ctx`, `client.Client`, 领域 cache, `record.EventRecorder`
 2. 构造函数：`NewXxxReconciler(ctx, cli, cache, eventer)`

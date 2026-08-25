@@ -1,0 +1,9 @@
+---
+description: 改业务代码前按任务加载安全红线相关节
+alwaysApply: false
+globs: "**/*.{go,py,ts,tsx,js,jsx,vue,java}"
+---
+
+# 安全规范加载
+
+凡改业务代码：按 `docs/standards/README.md`「加载预算」**按节 Read** `docs/standards/security-bk-redlines.md` 相关红线节；禁止无差别全文灌入。

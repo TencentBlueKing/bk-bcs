@@ -330,17 +330,17 @@ func checkIfWhiteImageOsNames(opt *cloudprovider.ClusterGroupOption) bool {
 		return utils.StringInSlice(osName, cloud.ConfInfo.WhiteImageOsName)
 	}
 
-	if cls.ImageId != nil && *cls.ImageId != "" {
+	if utils.StringPtrToString(cls.ImageId) != "" {
 		nodeMgr := &NodeManager{}
-		image, errGet := nodeMgr.GetImageInfoByImageID(*cls.ImageId, &opt.CommonOption)
+		image, errGet := nodeMgr.GetImageInfoByImageID(utils.StringPtrToString(cls.ImageId), &opt.CommonOption)
 		if errGet != nil {
 			blog.Errorf("%s checkIfWhiteImageOsNames GetImageInfoByImageID failed: %v", cloudName, errGet)
-			osName = *cls.ClusterOs
+			osName = utils.StringPtrToString(cls.ClusterOs)
 		} else {
 			osName = image.OsName
 		}
 	} else {
-		osName = *cls.ClusterOs
+		osName = utils.StringPtrToString(cls.ClusterOs)
 	}
 
 	blog.Infof("checkIfWhiteImageOsNames[%s] osName[%s]", opt.Cluster.ClusterID, osName)
@@ -367,20 +367,20 @@ func clusterSupportNodeNum(tkeCls *tke.Cluster, cluster *proto.Cluster) (uint32,
 	}
 
 	// 已经存在的节点数量
-	clusterNodeNum := *tkeCls.ClusterNodeNum
-	if *tkeCls.ClusterType == icommon.ClusterManageTypeIndependent {
-		clusterNodeNum += *tkeCls.ClusterMaterNodeNum
+	clusterNodeNum := utils.Uint64PtrToUint64(tkeCls.ClusterNodeNum)
+	if utils.StringPtrToString(tkeCls.ClusterType) == icommon.ClusterManageTypeIndependent {
+		clusterNodeNum += utils.Uint64PtrToUint64(tkeCls.ClusterMaterNodeNum)
 	}
 
 	// 集群可添加节点数
-	maxClusterNodeNum := float64(uint64(ipNum)-*tkeCls.ClusterNetworkSettings.MaxClusterServiceNum) /
-		float64(*tkeCls.ClusterNetworkSettings.MaxNodePodNum)
+	maxClusterNodeNum := float64(uint64(ipNum)-utils.Uint64PtrToUint64(tkeCls.ClusterNetworkSettings.MaxClusterServiceNum)) /
+		float64(utils.Uint64PtrToUint64(tkeCls.ClusterNetworkSettings.MaxNodePodNum))
 
 	// 剩余可支持的节点数量
 	step := getClusterCidrStep(cluster)
 
 	surplusNodeNum := float64((business.GrBcsMaxClusterCidrNum-clusterCidrNum)*step) /
-		float64(*tkeCls.ClusterNetworkSettings.MaxNodePodNum)
+		float64(utils.Uint64PtrToUint64(tkeCls.ClusterNetworkSettings.MaxNodePodNum))
 
 	return uint32(clusterNodeNum), uint32(maxClusterNodeNum) - uint32(clusterNodeNum), uint32(surplusNodeNum)
 }
@@ -845,28 +845,42 @@ func (c *Cluster) AddSubnetsToCluster(ctx context.Context, subnet *proto.SubnetS
 	}
 
 	// 检测当前集群子网资源使用率, 如果使用率达标则继续扩容, 不达标则拒绝扩容
-	_, totalRatio, _, err := business.GetClusterCurrentVpcCniSubnets(opt.Cluster, false)
+	zoneSubnetNum, totalRatio, _, err := business.GetClusterCurrentVpcCniSubnets(opt.Cluster, false)
 	if err != nil {
 		return fmt.Errorf("AddSubnetsToCluster failed: %v", err)
 	}
 
 	// 检查各区子网使用率
-	//goalRatio := opt.Cloud.GetNetworkInfo().GetUnderlayRatio()
-	//for i := range subnet.GetNew() {
+	// goalRatio := opt.Cloud.GetNetworkInfo().GetUnderlayRatio()
+	// for i := range subnet.GetNew() {
 	//	zoneRatio, ok := zoneSubnetRatio[subnet.GetNew()[i].GetZone()]
 	//	if ok && zoneRatio.Ratio < float64(goalRatio) {
 	//		return fmt.Errorf("zone[%s] usage lt goalRatio %+v", subnet.GetNew()[i].GetZone(), goalRatio)
 	//	}
 	//}
 
+	// 检查集群子网可用IP数量, 计算总的可用数量
+	underlayUsageIPNumLimit := opt.Cloud.GetNetworkInfo().GetClusterUnderlayUsageIPNumLimit()
+	var totalAvailableIPs uint64
+	for _, zoneRatio := range zoneSubnetNum {
+		totalAvailableIPs += zoneRatio.AvailableIps
+	}
+	// underlayUsageIPNumLimit 为 0 相当于关闭; 按 IP 个数计
+	ipNumLimitHit := underlayUsageIPNumLimit > 0 && totalAvailableIPs > uint64(underlayUsageIPNumLimit)
+
 	// 检查集群子网整体使用率
 	underlayUsageRatioLimit := opt.Cloud.GetNetworkInfo().GetClusterUnderlayUsageRatioLimit()
-	// subnetUsageRatioLimit 为 0 相当于关闭
-	if underlayUsageRatioLimit > 0 && totalRatio < float64(underlayUsageRatioLimit) {
-		errMsg := fmt.Sprintf("cluster[%s] underlayIP currentUsageRatio %+v lt UsageRatioLimit %+v",
-			opt.Cluster.ClusterID, totalRatio, underlayUsageRatioLimit)
+	// underlayUsageRatioLimit 为 0 相当于关闭
+	ratioLimitHit := underlayUsageRatioLimit > 0 && totalRatio < float64(underlayUsageRatioLimit)
+
+	// 仅当 IP 个数限制与整体使用率限制同时触发时才禁止扩容(各自为 0 表示关闭该限制)
+	if ipNumLimitHit && ratioLimitHit {
+		// nolint: lll
+		errMsg := fmt.Sprintf("cluster[%s] underlayIP availableNum %d gt UsageIPNumLimit %d and currentUsageRatio %+v lt UsageRatioLimit %+v",
+			opt.Cluster.ClusterID, totalAvailableIPs, underlayUsageIPNumLimit, totalRatio, underlayUsageRatioLimit)
 		blog.Errorf(errMsg)
-		i18nMsg := i18n.Tf(ctx, "ClusterUnderlayUsageRatioLimitErrMessage", totalRatio, underlayUsageRatioLimit)
+		i18nMsg := i18n.Tf(ctx, "ClusterUnderlayUsageLimitErrMessage",
+			totalAvailableIPs, underlayUsageIPNumLimit, totalRatio, underlayUsageRatioLimit)
 		return fmt.Errorf("%s", i18nMsg)
 	}
 

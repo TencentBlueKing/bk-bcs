@@ -142,6 +142,9 @@ const (
 	TaijiGPUNameKey = "GPUName"
 	// ResultSuccessKey SUCCESS
 	ResultSuccessKey = "SUCCESS"
+
+	// ObsProductID obs product id OBS 运营产品 ID
+	ObsProductID = "io.tencent.bcs.obsproductid"
 )
 
 var clusterCli Client

@@ -15,7 +15,7 @@
 | 上下文工程 | [context-engineering.md](context-engineering.md) | 知识来源、渐进式披露、动态数据接入 |
 | 架构约束 | [architectural-constraints.md](architectural-constraints.md) | 分层模型、依赖规则、Controller 模式 |
 | 熵管理 | [entropy-management.md](entropy-management.md) | 文档园艺、技术债追踪、一致性检测 |
-| 工具能力 | [tooling.md](tooling.md) | Skill/MCP/CLI 清单、环境状态、稳定性策略 |
+| 工具能力 | [tooling.md](tooling.md) | Skill/MCP/CLI 清单、检测方式、稳定性策略 |
 | 执行与验证 | [execution-verification.md](execution-verification.md) | Agent Loop、预完成检查、可观测性 |
 
 ## 关联文档
@@ -39,4 +39,6 @@
 
 | 版本 | 日期 | 变更说明 |
 |------|------|---------|
+| 1.2.0 | 2026-08-19 | harness-gardening 全量巡检：十二维度对齐、workflow 残留清理、dev-map 图谱重建 |
+| 1.1.0 | 2026-08-11 | harness-gardening 全量巡检：九维度对齐、工具清单/架构/工作流同步 |
 | 1.0.0 | 2026-06-08 | 初始版本，覆盖五大组件 + dev map + standards |

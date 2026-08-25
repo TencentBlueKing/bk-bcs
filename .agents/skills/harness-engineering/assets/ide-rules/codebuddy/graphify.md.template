@@ -1,0 +1,43 @@
+---
+enabled: true
+alwaysApply: true
+---
+
+# graphify knowledge graph
+
+本项目知识图谱：`docs/dev-map/`（可用 `@docs/dev-map/README.md`）。
+
+**ENV（硬性要求——仓库根下的绝对路径，每次与 graphify 同一条 shell）：**
+```bash
+_root="$(git rev-parse --show-toplevel 2>/dev/null)" || true
+if [ -z "$_root" ]; then
+  _d="$PWD"
+  while [ "$_d" != "/" ]; do
+    [ -f "$_d/docs/dev-map/graph.json" ] && _root="$_d" && break
+    _d="$(dirname "$_d")"
+  done
+fi
+[ -n "$_root" ] || { echo "error: cannot resolve repo root for GRAPHIFY_OUT" >&2; exit 1; }
+export GRAPHIFY_OUT="$_root/docs/dev-map"
+export GRAPHIFY_NO_BACKUP=1
+```
+
+**禁止**相对路径 `GRAPHIFY_OUT=docs/dev-map`（会在 cwd 下另建目录）。禁止裸跑 `graphify ...`（默认写入 `graphify-out/graph.json`）。若报找不到 `graphify-out/graph.json`，按上面 ENV 重新解析绝对路径后重试。
+
+**探索代码前必须先跑 graphify**（再 Read / Grep / Glob / Bash）：
+- `GRAPHIFY_OUT="$GRAPHIFY_OUT" graphify query "<question>"`
+- `GRAPHIFY_OUT="$GRAPHIFY_OUT" graphify path "<A>" "<B>"`
+- `GRAPHIFY_OUT="$GRAPHIFY_OUT" graphify explain "<concept>"`
+
+对本 Agent 与所有涉及代码探索的 subagent 均适用；勿因「已熟悉文件」跳过——图谱含跨文件与 INFERRED 边。
+
+仅在以下情况可直接 Read/Grep/Glob：
+1. 已用 graphify 定向，只需改/调试具体行
+2. `$GRAPHIFY_OUT/graph.json` 尚不存在
+
+**产物 vs 配置：** 入库 `docs/dev-map/README.md` + `docs/dev-map/.gitignore`（以及本 IDE Rules）。**不要**提交 `graph.json` / `GRAPH_REPORT.md` 等图谱结果；**禁止** ignore 整个 `docs/dev-map/`。克隆后若无 `graph.json`，先走上面 ENV，再：
+`GRAPHIFY_NO_BACKUP=1 GRAPHIFY_OUT="$GRAPHIFY_OUT" graphify update "$_root"`（AST-only，无 API 费用）。
+
+- 若存在 `$GRAPHIFY_OUT/wiki/index.md`，优先导航 wiki
+- 仅当 query/path/explain 不够时再读 `$GRAPHIFY_OUT/GRAPH_REPORT.md`
+- 改代码后：`GRAPHIFY_NO_BACKUP=1 GRAPHIFY_OUT="$GRAPHIFY_OUT" graphify update "$_root"`

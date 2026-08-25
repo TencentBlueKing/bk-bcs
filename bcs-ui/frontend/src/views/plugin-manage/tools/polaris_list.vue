@@ -11,6 +11,7 @@
           :cluster-id="curClusterID"
           class="w-[250px] mr-[5px]"
           :clearable="true"
+          :required="true"
           v-model="ns"
           @change="handleGetCrdList">
         </NamespaceSelect>

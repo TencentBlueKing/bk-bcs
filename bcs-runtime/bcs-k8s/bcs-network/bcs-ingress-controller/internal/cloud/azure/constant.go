@@ -40,6 +40,35 @@ const (
 	//	the typical times used in Azure.
 	DefaultLoadBalancerProbeNumberOfProbes = 1
 
+	// MaxRoutingRulePriority max priority allowed by azure application gateway request routing rule
+	MaxRoutingRulePriority int32 = 20000
+
+	// Azure itself never assigns a priority to a new rule, the field is mandatory since
+	// api-version 2021-08-01. These starting points mirror AGIC, microsoft's own application
+	// gateway ingress controller, whose code states the scheme follows how the gateway populates
+	// priorities internally: a multi site rule is evaluated before a basic one, and the low
+	// numbers stay free for the values users declare themselves.
+	// https://github.com/Azure/application-gateway-kubernetes-ingress/blob/master/pkg/appgw/requestroutingrules.go
+
+	// MultiSiteRulePriorityStart first auto assigned priority of a rule carrying a domain
+	MultiSiteRulePriorityStart int32 = 19000
+	// BasicRulePriorityStart first auto assigned priority of a rule without domain
+	BasicRulePriorityStart int32 = 19500
+	// RulePriorityJump step between two auto assigned priorities
+	RulePriorityJump int32 = 5
+
+	// MaxAzureResourceNameLen max length azure allows for a network child resource name, the limit
+	// is the same for application gateway and load balancer children
+	MaxAzureResourceNameLen = 80
+
+	// DefaultProbeUnhealthyThreshold default retry count of application gateway probe.
+	// Azure only accepts 1~20, so an unset value cannot be sent as is.
+	DefaultProbeUnhealthyThreshold = 3
+
+	// agResourceNameSep separator between the listener name and the rest of a generated
+	// child resource name. It makes listener ownership checks unambiguous.
+	agResourceNameSep = "."
+
 	// DefaultBackendPoolName name for default backend address pool
 	DefaultBackendPoolName = "bkbcs-default-backendaddresspool"
 	// DefaultBackendSettingName name for default backend setting

@@ -72,6 +72,10 @@ func NewPeerManager(
 // Start start peer manager
 func (pm *PeerManager) Start() error {
 	if pm.discovery == nil {
+		if discovery.UseServiceDiscovery() {
+			blog.Infof("ENV_USE_SERVICE_DISCOVERY=true, skip etcd-based tunnel peer discovery")
+			return nil
+		}
 		return fmt.Errorf("discovery is empty")
 	}
 	pm.discovery.RegisterEventHandler(pm.discoveryEventHandler)

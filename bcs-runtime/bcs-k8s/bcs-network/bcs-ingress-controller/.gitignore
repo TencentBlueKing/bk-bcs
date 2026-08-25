@@ -1,0 +1,18 @@
+# ai-practice skill/agent 安装产物（由 install-to-target.sh 自动维护，勿手动编辑本段）
+.cursor/
+.codebuddy/
+.claude/
+.codex/
+.agents/
+project.json
+.graph-engineering/
+.advance.lock
+execution-log.jsonl
+**/.graphify_root
+**/.graphify_python
+docs/dev-map/cache/
+docs/dev-map/cost.json
+graphify-out/
+GRAPH_REPORT.md
+graph.json
+manifest.json

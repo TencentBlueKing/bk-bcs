@@ -279,10 +279,10 @@ func AddNodesToClusterTask(taskID, stepName string) error { // nolint
 		successNodeIds, failedNodeIds []string
 	)
 	for i := range result.SuccessNodeInfos {
-		successNodeIds = append(successNodeIds, result.SuccessNodeInfos[i].NodeId)
+		successNodeIds = append(successNodeIds, result.SuccessNodeInfos[i].NodeID)
 	}
 	for i := range result.FailedNodeInfos {
-		failedNodeIds = append(failedNodeIds, result.FailedNodeInfos[i].NodeId)
+		failedNodeIds = append(failedNodeIds, result.FailedNodeInfos[i].NodeID)
 	}
 
 	// rollback failed nodes

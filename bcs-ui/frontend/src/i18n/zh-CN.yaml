@@ -205,6 +205,7 @@ units:
 metrics:
   usage: '使用率 {0}'
   cpuUsage: CPU 使用率
+  cpuPeakUsage: CPU 峰值使用率
   cpuLimitUsage: CPU limit 使用率
   cpuResUsage: CPU request 使用率
   diskUsage: 磁盘使用率
@@ -212,6 +213,7 @@ metrics:
   memUsage1: 内存使用量
   podUsage: Pod使用率
   cpuUsageDesc: CPU 单核使用百分比，1个核用满则是 100%，2个核用满则是 200%
+  cpuPeakUsageDesc: CPU 峰值单核使用百分比，1个核用满则是 100%，2个核用满则是 200%
   cpuLimitUsageDesc: CPU 实际消耗核数占用 limit 核数百分比，有可能会被超额使用，一般在100%之内
   cpuResUsageDesc: CPU 实际消耗核数占用 request 核数百分比，该指标可能超过 100%，表示实际 CPU 使用量超过了申请的 CPU 资源
   cpuRequestUsage:
@@ -1514,7 +1516,9 @@ deploy:
     skipCrds: 忽略CRD
     waitforJobs: 等待所有Jobs完成
     wait: 等待所有Pod，PVC处于ready状态
-    timeout: 超时时间
+    timeout:
+      label: 超时时间
+      desc: '等同于参数 --timeout，勾选等待所有 Pod 后会生效，示例: 30s、5m10s、10m'
     hisotryMax:
       label: 保留最大历史版本
       desc: '--history-max，可用于回滚的历史版本个数'

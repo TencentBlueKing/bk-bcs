@@ -8532,6 +8532,11 @@
           "type": "string",
           "description": "创建eks节点池时指定的iam角色名称",
           "title": "serviceRole"
+        },
+        "podSubnetID": {
+          "type": "string",
+          "description": "创建azure节点池时Pod 启动时将加入的子网ID，如果省略，将不会添加该字段",
+          "title": "podSubnetID"
         }
       },
       "title": "AutoScalingGroup define auto scaling information"
@@ -9620,11 +9625,17 @@
           "description": "vpc-cni插件下支持的网络模式",
           "title": "vpcCniModes"
         },
-        "clusterSubnetUsageRatioLimit": {
+        "clusterUnderlayUsageRatioLimit": {
           "type": "number",
           "format": "float",
           "description": "集群子网使用率比率限制，集群使用率比率未达标不可继续添加子网",
-          "title": "clusterSubnetUsageRatioLimit"
+          "title": "clusterUnderlayUsageRatioLimit"
+        },
+        "clusterUnderlayUsageIPNumLimit": {
+          "type": "integer",
+          "format": "int64",
+          "description": "集群子网IP使用量限制，集群子网IP比率低于该值不可继续添加子网",
+          "title": "clusterUnderlayUsageIPNumLimit"
         }
       },
       "description": "用于记录公共网络配置信息",
