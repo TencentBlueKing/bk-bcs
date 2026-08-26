@@ -113,7 +113,6 @@ const emits = defineEmits(['cancel', 'confirm']);
 
 const formKey = ref(0);
 const versionFormRef = ref();
-const versionType = ref('major');
 const formData = ref({
   versionDescription: '',
   version: '',
@@ -171,6 +170,7 @@ function parseSemverVersion(version: string) {
     patch: 0,
     preReleaseTag: 'alpha',
     preRelease: 1,
+    hasPreRelease: false,
   };
 
   return {
@@ -179,6 +179,7 @@ function parseSemverVersion(version: string) {
     patch: parseInt(match[3], 10),
     preReleaseTag: match[4] || 'alpha',
     preRelease: parseInt(match[5], 10) || 1,
+    hasPreRelease: !!match[4],
   };
 }
 
@@ -205,18 +206,30 @@ watch(() => props.value, () => {
   };
   formData.value.version = props.version;
   formData.value.versionDescription = '';
-  semverData.value = parseSemverVersion(props.version);
-  if (props.autoUpdate && versionType.value) {
-    semverData.value[versionType.value] += 1;
+  const parsed = parseSemverVersion(props.version);
+
+  if (props.autoUpdate) {
+    // 编辑场景：根据当前版本是否含预发布部分决定自增策略
+    if (parsed.hasPreRelease) {
+      // 预发布版本：preRelease 自增1
+      parsed.preRelease += 1;
+      isPreRelease.value = true;
+    } else {
+      // 正式版本：patch 自增1
+      parsed.patch += 1;
+      isPreRelease.value = false;
+    }
+  } else {
+    // 创建场景：使用默认值，isPreRelease 保持 false
+    isPreRelease.value = false;
   }
+
+  semverData.value = {
+    major: parsed.major,
+    minor: parsed.minor,
+    patch: parsed.patch,
+    preReleaseTag: parsed.preReleaseTag,
+    preRelease: parsed.preRelease,
+  };
 }, { immediate: true });
-
-watch(versionType, () => {
-  if (!versionType.value || !props.autoUpdate) return;
-
-  const data = parseSemverVersion(props.version);
-
-  data[versionType.value] += 1;
-  semverData.value = data;
-});
 </script>
