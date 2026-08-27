@@ -1220,7 +1220,7 @@ func (c *Client) AddHostFromCmpy(ctx context.Context, svrIds []string, ips []str
 
 	// add_host_from_cmpy
 	var (
-		reqURL  = fmt.Sprintf("%s/api/c/compapi/v2/cc/add_host_from_cmpy/", c.server)
+		reqURL  = fmt.Sprintf("%s/api/v3/shipper/sync/cmdb/add_host_from_cmpy", c.server)
 		request = &AddHostFromCmpyReq{
 			SvrIds:   svrIds,
 			AssetIds: assetIds,
@@ -1276,7 +1276,7 @@ func (c *Client) SyncHostInfoFromCmpy(ctx context.Context, bkCloudId int, bkHost
 
 	// sync_host_info_from_cmpy
 	var (
-		reqURL  = fmt.Sprintf("%s/api/c/compapi/v2/cc/sync_host_info_from_cmpy/", c.server)
+		reqURL  = fmt.Sprintf("%s/api/v3/shipper/sync/cmdb/sync_host_info_from_cmpy", c.server)
 		request = &SyncHostInfoFromCmpyReq{
 			BkHostIds: bkHostIds,
 			BkCloudId: bkCloudId,

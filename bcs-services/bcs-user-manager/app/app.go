@@ -24,7 +24,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/util"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/component"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/esb/cmdb"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/jwt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/metrics"
 	usermanager "github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager"
@@ -62,12 +61,6 @@ func Run(op *options.UserManagerOptions) {
 	err = jwt.InitJWTClient(op)
 	if err != nil {
 		blog.Errorf("init jwt client error: %s", err.Error())
-		os.Exit(1)
-	}
-
-	// init cmdb client
-	if err = cmdb.InitCMDBClient(op); err != nil {
-		blog.Errorf("init cmdb client error: %s", err.Error())
 		os.Exit(1)
 	}
 
@@ -183,8 +176,25 @@ func parseConfig(op *options.UserManagerOptions) (*config.UserMgrConfig, error) 
 
 	userMgrConfig.EtcdConfig = op.Etcd
 	userMgrConfig.IAMConfig = op.IAMConfig
+	if err = parseCmdbConfig(op, userMgrConfig); err != nil {
+		return nil, err
+	}
 
 	return userMgrConfig, nil
+}
+
+// parseCmdbConfig decrypt cmdb secret and copy config for API gateway calls
+func parseCmdbConfig(op *options.UserManagerOptions, userMgrConfig *config.UserMgrConfig) error {
+	cmdbCfg := op.Cmdb
+	if cmdbCfg.Enable && cmdbCfg.AppSecret != "" {
+		appSecret, err := encrypt.DesDecryptFromBase([]byte(cmdbCfg.AppSecret))
+		if err != nil {
+			return fmt.Errorf("error decrypting cmdb app secret, %s", err.Error())
+		}
+		cmdbCfg.AppSecret = string(appSecret)
+	}
+	userMgrConfig.Cmdb = cmdbCfg
+	return nil
 }
 
 // parseRedisConfig parse redis option when redisDsn is empty

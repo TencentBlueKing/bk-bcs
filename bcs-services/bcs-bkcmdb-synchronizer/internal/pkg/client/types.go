@@ -32,15 +32,7 @@ var (
 	DefaultTimeOut = time.Second * 60
 )
 
-// field result
 const (
-	FieldBS2NameID = "bs2_name_id"
-)
-
-// condition result
-const (
-	ConditionBkBizID = "bk_biz_id"
-
 	// BkTenantIdHeaderKey is the header name of X-Bk-Tenant-Id.
 	BkTenantIdHeaderKey = "X-Bk-Tenant-Id"
 )
@@ -50,39 +42,6 @@ type Page struct {
 	Start int    `json:"start"`
 	Limit int    `json:"limit"`
 	Sort  string `json:"sort"`
-}
-
-// SearchBusinessRequest search business request
-type SearchBusinessRequest struct {
-	Fields    []string               `json:"fields"`
-	Condition map[string]interface{} `json:"condition"`
-	Page      Page                   `json:"page"`
-	UserName  string                 `json:"bk_username"`
-	Operator  string                 `json:"operator"`
-}
-
-// SearchBusinessResponse search business resp
-type SearchBusinessResponse struct {
-	Code      int          `json:"code"`
-	Result    bool         `json:"result"`
-	Message   string       `json:"message"`
-	RequestID string       `json:"request_id"`
-	Data      BusinessResp `json:"data"`
-}
-
-// BusinessResp resp
-type BusinessResp struct {
-	Count int            `json:"count"`
-	Info  []BusinessData `json:"info"`
-}
-
-// BusinessData data
-type BusinessData struct {
-	BS2NameID       int    `json:"bs2_name_id"`
-	Default         int    `json:"default"`
-	BKBizID         int64  `json:"bk_biz_id"`
-	BKBizName       string `json:"bk_biz_name"`
-	BKBizMaintainer string `json:"bk_biz_maintainer"`
 }
 
 // ListBizHostRequest list biz host request
@@ -119,57 +78,6 @@ type HostData struct {
 	IdcCityId          string `json:"idc_city_id"`
 	IdcCityName        string `json:"idc_city_name"`
 	BkHostId           int64  `json:"bk_host_id"`
-}
-
-const (
-	// KeyBizID xxx
-	KeyBizID       = "BsiId"
-	methodBusiness = "Business"
-	methodServer   = "Server"
-	// MethodBusinessRaw xxx
-	MethodBusinessRaw = "BusinessRaw"
-)
-
-var (
-	// ReqColumns xxx
-	ReqColumns = []string{"BsiId", "BsipId", "BsiProductName", "BsiProductId", "BsiName", "BsiL1", "BsiL2"}
-)
-
-// QueryBusinessInfoReq query business request
-type QueryBusinessInfoReq struct {
-	Method    string                 `json:"method"`
-	ReqColumn []string               `json:"req_column"`
-	KeyValues map[string]interface{} `json:"key_values"`
-}
-
-// QueryBusinessInfoResp query business resp
-type QueryBusinessInfoResp struct {
-	Code      string       `json:"code"`
-	Message   string       `json:"message"`
-	Result    bool         `json:"result"`
-	RequestID string       `json:"request_id"`
-	Data      BusinessInfo `json:"data"`
-}
-
-// BusinessInfo business resp
-type BusinessInfo struct {
-	Data []Business `json:"data"`
-}
-
-// Business business info
-type Business struct {
-	BsiID          int    `json:"BsiId"`
-	BsiProductName string `json:"BsiProductName"`
-	BsipID         int    `json:"BsipId"`
-	BsiName        string `json:"BsiName"`
-	BsiProductId   int    `json:"BsiProductId"`
-	BsiL1          int    `json:"BsiL1"`
-	BsiL2          int    `json:"BsiL2"`
-}
-
-// BizInfo business id info
-type BizInfo struct {
-	BizID int64 `json:"bizID"`
 }
 
 // ClusterManagerClientWithHeader client for cluster manager

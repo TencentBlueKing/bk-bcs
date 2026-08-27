@@ -22,7 +22,6 @@ func getNewClient() *Client {
 		Enable:        true,
 		AppCode:       "xx",
 		AppSecret:     "xxx",
-		EsbServer:     "xxx",
 		GatewayServer: "xxx",
 		BKUserName:    "xxx",
 		Debug:         true,
@@ -54,17 +53,6 @@ func TestGetAgentStatus(t *testing.T) {
 			},
 		},
 	)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	t.Logf("%+v", resp)
-}
-
-func TestGetAgentStatusV1(t *testing.T) {
-	cli := getNewClient()
-
-	resp, err := cli.GetAgentStatusV1(context.Background(), &GetAgentStatusReq{})
 	if err != nil {
 		t.Fatal(err)
 	}

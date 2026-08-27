@@ -279,7 +279,6 @@ type GseConfig struct {
 	AppCode       string `json:"appCode"`
 	AppSecret     string `json:"appSecret"`
 	BkUserName    string `json:"bkUserName"`
-	EsbServer     string `json:"server"`
 	GatewayServer string `json:"gatewayServer"`
 	Debug         bool   `json:"debug"`
 }

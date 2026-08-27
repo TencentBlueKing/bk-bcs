@@ -41,7 +41,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cmdb"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/gse"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
@@ -880,33 +879,7 @@ func (la *ListMastersInClusterAction) listNodes() error {
 
 	// append cmdb host info
 	la.appendHostInfo()
-	// la.appendNodeAgent()
 	return nil
-}
-
-// appendNodeAgent appedn node agentInfo
-func (la *ListMastersInClusterAction) appendNodeAgent() { // nolint
-	gseClient := gse.GetGseClient()
-	hosts := make([]gse.Host, 0)
-	for _, v := range la.nodes {
-		hosts = append(hosts, gse.Host{IP: v.InnerIP, BKCloudID: int(v.BkCloudID)})
-	}
-	if len(hosts) == 0 {
-		return
-	}
-	_, err := gseClient.GetAgentStatusV1(la.ctx, &gse.GetAgentStatusReq{
-		Hosts: hosts,
-	})
-	if err != nil {
-		blog.Warnf("GetAgentStatus for %s failed, %s", utils.ToJSONString(hosts), err.Error())
-		return
-	}
-	/*
-		for i := range la.nodes {
-			la.nodes[i].Agent = uint32(resp.Data[gse.BKAgentKey(gse.DefaultBKCloudID,
-				la.nodes[i].InnerIP)].BKAgentAlive)
-		}
-	*/
 }
 
 // appendHostInfo host info

@@ -32,8 +32,6 @@ import (
 
 // Interface for gse api
 type Interface interface {
-	// GetAgentStatusV1 get agent status for version 1
-	GetAgentStatusV1(ctx context.Context, req *GetAgentStatusReq) (*GetAgentStatusResp, error)
 	// GetAgentStatusV2 get agent status for version 2
 	GetAgentStatusV2(ctx context.Context, req *GetAgentStatusReqV2) (*GetAgentStatusRespV2, error)
 	// GetHostsGseAgentStatus get hosts agent status
@@ -65,7 +63,6 @@ func NewGseClient(options Options) (*Client, error) {
 		appCode:       options.AppCode,
 		appSecret:     options.AppSecret,
 		bkUserName:    options.BKUserName,
-		EsbServer:     options.EsbServer,
 		GatewayServer: options.GatewayServer,
 		serverDebug:   options.Debug,
 	}
@@ -94,7 +91,6 @@ type Options struct {
 	AppCode       string
 	AppSecret     string
 	BKUserName    string
-	EsbServer     string
 	GatewayServer string
 	Debug         bool
 }
@@ -111,7 +107,6 @@ type Client struct {
 	appCode       string
 	appSecret     string
 	bkUserName    string
-	EsbServer     string
 	GatewayServer string
 	serverDebug   bool
 	userAuth      string
@@ -272,56 +267,6 @@ func (c *Client) GetAgentStatusV2(ctx context.Context, req *GetAgentStatusReqV2)
 		blog.Errorf("call api GetAgentStatus failed: %s, request_id: %s", respData.Message,
 			respData.RequestID)
 		return nil, fmt.Errorf("%s", respData.Message)
-	}
-
-	if len(respData.Data) == 0 {
-		blog.Errorf("call api GetAgentStatus failed: %v, request_id: %s", respData.Message,
-			respData.RequestID)
-		return nil, fmt.Errorf("no agent found")
-	}
-
-	blog.Infof("call api GetAgentStatus with url(%s) successfully", reqURL)
-	return respData, nil
-}
-
-// GetAgentStatusV1 get host agent status by cloud:ip
-func (c *Client) GetAgentStatusV1(ctx context.Context, req *GetAgentStatusReq) (*GetAgentStatusResp, error) {
-	if c == nil {
-		return nil, ErrServerNotInit
-	}
-
-	var (
-		reqURL   = fmt.Sprintf("%s/gse/get_agent_status", c.EsbServer)
-		respData = &GetAgentStatusResp{}
-	)
-
-	start := time.Now()
-	_, _, errs := gorequest.New().
-		Timeout(defaultTimeOut).
-		Post(reqURL).
-		Set("Content-Type", "application/json").
-		Set("Accept", "application/json").
-		Set("X-Bkapi-Authorization", c.userAuth).
-		SetDebug(c.serverDebug).
-		Send(req).
-		EndStruct(&respData)
-	if len(errs) > 0 {
-		metrics.ReportLibRequestMetric("gse", "GetAgentStatusV1", "http", metrics.LibCallStatusErr, start)
-		blog.Errorf("call api GetAgentStatus failed: %v", errs[0])
-		return nil, errs[0]
-	}
-	metrics.ReportLibRequestMetric("gse", "GetAgentStatusV1", "http", metrics.LibCallStatusOK, start)
-
-	if respData.Code != 0 {
-		blog.Errorf("call api GetAgentStatus failed: %s, request_id: %s", respData.Message,
-			respData.RequestID)
-		return nil, fmt.Errorf("%s", respData.Message)
-	}
-
-	if !respData.Result {
-		blog.Errorf("call api GetAgentStatus failed: %v, request_id: %s", respData.Message,
-			respData.RequestID)
-		return nil, errors.New(respData.Message)
 	}
 
 	if len(respData.Data) == 0 {

@@ -232,103 +232,6 @@ func (c *cmdbClient) generateGateWayAuth() (string, error) {
 	return string(userAuth), nil
 }
 
-// GetBS2IDByBizID get bs2ID by bizID
-func (c *cmdbClient) GetBS2IDByBizID(bizID int64) (int, error) {
-	if c == nil {
-		return 0, ErrServerNotInit
-	}
-
-	var (
-		reqURL  = fmt.Sprintf("%s/api/c/compapi/v2/cc/search_business/", c.config.Server)
-		request = &client.SearchBusinessRequest{
-			Fields: []string{client.FieldBS2NameID},
-			Condition: map[string]interface{}{
-				client.ConditionBkBizID: bizID,
-			},
-		}
-		respData = &client.SearchBusinessResponse{}
-	)
-
-	_, _, errs := c.instrumentRequest("POST", "get_bs2id_by_bizid", func() (gorequest.Response, []byte, []error) {
-		return gorequest.New().
-			Timeout(defaultTimeOut).
-			Post(reqURL).
-			Set("Content-Type", "application/json").
-			Set("Accept", "application/json").
-			Set("X-Bkapi-Authorization", c.userAuth).
-			SetDebug(c.config.Debug).
-			Send(request).
-			Retry(3, 3*time.Second, 429).
-			EndStruct(&respData)
-	})
-	if len(errs) > 0 {
-		blog.Errorf("call api GetBS2IDByBizID failed: %v", errs[0])
-		return 0, errs[0]
-	}
-
-	if !respData.Result {
-		blog.Errorf("call api GetBS2IDByBizID failed: %v, rid: %s", respData.Message, respData.RequestID)
-		return 0, fmt.Errorf(respData.Message)
-	}
-	// successfully request
-	blog.Infof("call api GetBS2IDByBizID with url(%s) successfully", reqURL)
-
-	if len(respData.Data.Info) > 0 {
-		return respData.Data.Info[0].BS2NameID, nil
-	}
-
-	return 0, fmt.Errorf("call api GetBS2IDByBizID failed")
-}
-
-// GetBizInfo get biz Info
-func (c *cmdbClient) GetBizInfo(bizID int64) (*client.Business, error) {
-	if c == nil {
-		return nil, ErrServerNotInit
-	}
-
-	var (
-		reqURL  = fmt.Sprintf("%s/component/compapi/cmdb/get_query_info/", c.config.Server)
-		request = &client.QueryBusinessInfoReq{
-			Method:    client.MethodBusinessRaw,
-			ReqColumn: client.ReqColumns,
-			KeyValues: map[string]interface{}{
-				client.KeyBizID: bizID,
-			},
-		}
-		respData = &client.QueryBusinessInfoResp{}
-	)
-
-	_, _, errs := c.instrumentRequest("POST", "get_biz_info", func() (gorequest.Response, []byte, []error) {
-		return gorequest.New().
-			Timeout(defaultTimeOut).
-			Post(reqURL).
-			Set("Content-Type", "application/json").
-			Set("Accept", "application/json").
-			Set("X-Bkapi-Authorization", c.userAuth).
-			SetDebug(c.config.Debug).
-			Send(request).
-			Retry(3, 3*time.Second, 429).
-			EndStruct(&respData)
-	})
-	if len(errs) > 0 {
-		blog.Errorf("call api GetBizInfo failed: %v", errs[0])
-		return nil, errs[0]
-	}
-
-	if !respData.Result {
-		blog.Errorf("call api GetBizInfo failed: %v, rid: %s", respData.Message, respData.RequestID)
-		return nil, fmt.Errorf(respData.Message)
-	}
-	// successfully request
-	blog.Infof("call api GetBizInfo with url(%s) successfully", reqURL)
-
-	if len(respData.Data.Data) > 0 {
-		return &respData.Data.Data[0], nil
-	}
-
-	return nil, fmt.Errorf("call api GetBizInfo failed")
-}
-
 // GetHostInfo 根据提供的IP地址列表获取主机信息
 // nolint
 func (c *cmdbClient) GetHostInfo(hostIP []string) (*[]client.HostData, error) {
@@ -541,8 +444,7 @@ func (c *cmdbClient) GetHostsByBiz(ctx context.Context, bkBizID int64, hostIP []
 }
 
 // GetBcsCluster 根据请求获取BCS集群信息，可以选择是否通过数据库进行查询和处理
-// /api/v3/kube/findmany/cluster/bk_biz_id/{bk_biz_id}
-// /v2/cc/list_kube_cluster/
+// /api/v3/findmany/kube/cluster
 // nolint
 // NOCC:CCN_threshold(工具误报:)
 func (c *cmdbClient) GetBcsCluster(ctx context.Context, request *client.GetBcsClusterRequest,
@@ -668,8 +570,7 @@ func (c *cmdbClient) GetBcsCluster(ctx context.Context, request *client.GetBcsCl
 }
 
 // CreateBcsCluster create bcs cluster
-// /api/v3/kube/create/cluster/bk_biz_id/{bk_biz_id}
-// /v2/cc/create_kube_cluster/
+// /api/v3/create/kube/cluster
 // CreateBcsCluster 创建BCS集群
 func (c *cmdbClient) CreateBcsCluster(
 	ctx context.Context, request *client.CreateBcsClusterRequest, db *gorm.DB) (bkClusterID int64, err error) {
@@ -765,8 +666,7 @@ func (c *cmdbClient) CreateBcsCluster(
 }
 
 // UpdateBcsCluster update bcs cluster
-// /api/v3/kube/updatemany/cluster/bk_biz_id/{bk_biz_id}
-// /v2/cc/batch_update_kube_cluster/
+// /api/v3/updatemany/kube/cluster
 // UpdateBcsCluster 更新BCS集群信息
 func (c *cmdbClient) UpdateBcsCluster(ctx context.Context, request *client.UpdateBcsClusterRequest, db *gorm.DB) error {
 	// 检查客户端是否初始化，未初始化则返回错误
@@ -859,7 +759,6 @@ func (c *cmdbClient) UpdateBcsCluster(ctx context.Context, request *client.Updat
 
 // UpdateBcsClusterType update bcs cluster type
 // /api/v3/update/kube/cluster/type
-// /v2/cc/update_kube_cluster_type/
 // UpdateBcsClusterType 更新BCS集群类型的函数
 func (c *cmdbClient) UpdateBcsClusterType(ctx context.Context,
 	request *client.UpdateBcsClusterTypeRequest, db *gorm.DB) error {
@@ -954,8 +853,7 @@ func (c *cmdbClient) UpdateBcsClusterType(ctx context.Context,
 }
 
 // DeleteBcsCluster delete bcs cluster
-// /api/v3/kube/delete/cluster/bk_biz_id/{bk_biz_id}
-// /v2/cc/batch_delete_kube_cluster/
+// /api/v3/delete/kube/cluster
 // DeleteBcsCluster 方法用于删除指定的 Kubernetes 集群。
 // 它首先检查客户端是否已初始化，然后构造请求 URL 并发送 HTTP DELETE 请求到该 URL。
 // 如果请求成功，它还会尝试从数据库中删除对应的集群记录。
@@ -1030,8 +928,7 @@ func (c *cmdbClient) DeleteBcsCluster(ctx context.Context, request *client.Delet
 }
 
 // GetBcsNamespace get bcs namespace
-// /api/v3/kube/findmany/namespace/bk_biz_id/{bk_biz_id}
-// /v2/cc/list_namespace/
+// /api/v3/findmany/kube/namespace
 // nolint
 // NOCC:CCN_threshold(工具误报:)
 func (c *cmdbClient) GetBcsNamespace(ctx context.Context,
@@ -1139,8 +1036,7 @@ func (c *cmdbClient) GetBcsNamespace(ctx context.Context,
 }
 
 // CreateBcsNamespace create bcs namespace
-// /api/v3/kube/createmany/namespace/bk_biz_id/{bk_biz_id}
-// /v2/cc/batch_create_namespace/
+// /api/v3/createmany/kube/namespace
 // nolint
 // NOCC:CCN_threshold(工具误报:)
 func (c *cmdbClient) CreateBcsNamespace(ctx context.Context,
@@ -1246,8 +1142,7 @@ func (c *cmdbClient) CreateBcsNamespace(ctx context.Context,
 }
 
 // UpdateBcsNamespace update bcs namespace
-// /api/v3/kube/updatemany/namespace/bk_biz_id/{bk_biz_id}
-// /v2/cc/batch_update_namespace/
+// /api/v3/updatemany/kube/namespace
 func (c *cmdbClient) UpdateBcsNamespace(ctx context.Context,
 	request *client.UpdateBcsNamespaceRequest, db *gorm.DB) error {
 	if c == nil {
@@ -1321,8 +1216,7 @@ func (c *cmdbClient) UpdateBcsNamespace(ctx context.Context,
 }
 
 // DeleteBcsNamespace delete bcs namespace
-// /api/v3/kube/deletemany/namespace/bk_biz_id/{bk_biz_id}
-// /v2/cc/batch_delete_namespace/
+// /api/v3/deletemany/kube/namespace
 func (c *cmdbClient) DeleteBcsNamespace(ctx context.Context,
 	request *client.DeleteBcsNamespaceRequest, db *gorm.DB) error {
 	if c == nil {
@@ -1383,8 +1277,7 @@ func (c *cmdbClient) DeleteBcsNamespace(ctx context.Context,
 }
 
 // GetBcsWorkload get bcs workload
-// /api/v3/kube/findmany/workload/{kind}/{bk_biz_id}
-// /v2/cc/list_workload/
+// /api/v3/findmany/kube/workload/{kind}
 // nolint funlen
 func (c *cmdbClient) GetBcsWorkload(ctx context.Context,
 	request *client.GetBcsWorkloadRequest, db *gorm.DB, withDB bool) (*[]interface{}, error) {
@@ -1775,8 +1668,7 @@ func (c *cmdbClient) GetBcsWorkload(ctx context.Context,
 }
 
 // CreateBcsWorkload create bcs workload
-// /api/v3/kube/createmany/workload/{kind}/{bk_biz_id}
-// /v2/cc/batch_create_workload/
+// /api/v3/createmany/kube/workload/{kind}
 // nolint
 // NOCC:CCN_threshold(工具误报:)
 func (c *cmdbClient) CreateBcsWorkload(ctx context.Context,
@@ -1884,8 +1776,7 @@ func (c *cmdbClient) CreateBcsWorkload(ctx context.Context,
 }
 
 // UpdateBcsWorkload update bcs workload
-// /api/v3/kube/updatemany/workload/{kind}/{bk_biz_id}
-// /v2/cc/batch_update_workload/
+// /api/v3/updatemany/kube/workload/{kind}
 func (c *cmdbClient) UpdateBcsWorkload(ctx context.Context,
 	request *client.UpdateBcsWorkloadRequest, db *gorm.DB) error {
 	if c == nil {
@@ -1960,8 +1851,7 @@ func (c *cmdbClient) UpdateBcsWorkload(ctx context.Context,
 }
 
 // DeleteBcsWorkload delete bcs workload
-// /api/v3/kube/deletemany/workload/{kind}/{bk_biz_id}
-// /v2/cc/batch_delete_workload/
+// /api/v3/deletemany/kube/workload/{kind}
 func (c *cmdbClient) DeleteBcsWorkload(ctx context.Context,
 	request *client.DeleteBcsWorkloadRequest, db *gorm.DB) error { // nolint: cyclop
 	if c == nil {
@@ -2084,8 +1974,7 @@ func deleteBcsWorkloadDB(request *client.DeleteBcsWorkloadRequest, db *gorm.DB) 
 }
 
 // GetBcsNode get bcs node
-// /api/v3/kube/findmany/node/bk_biz_id/{bk_biz_id}
-// /v2/cc/list_kube_node/
+// /api/v3/findmany/kube/node
 // nolint
 // NOCC:CCN_threshold(工具误报:)
 func (c *cmdbClient) GetBcsNode(ctx context.Context,
@@ -2193,8 +2082,7 @@ func (c *cmdbClient) GetBcsNode(ctx context.Context,
 }
 
 // CreateBcsNode create bcs node
-// /api/v3/kube/createmany/node/bk_biz_id/{bk_biz_id}
-// /v2/cc/batch_create_kube_node/
+// /api/v3/createmany/kube/node
 // nolint
 // NOCC:CCN_threshold(工具误报:)
 func (c *cmdbClient) CreateBcsNode(ctx context.Context,
@@ -2304,8 +2192,7 @@ func (c *cmdbClient) CreateBcsNode(ctx context.Context,
 }
 
 // UpdateBcsNode update bcs node
-// /api/v3/kube/updatemany/node/bk_biz_id/{bk_biz_id}
-// /v2/cc/batch_update_kube_node/
+// /api/v3/updatemany/kube/node
 func (c *cmdbClient) UpdateBcsNode(ctx context.Context, request *client.UpdateBcsNodeRequest, db *gorm.DB) error {
 	if c == nil {
 		return ErrServerNotInit
@@ -2380,8 +2267,7 @@ func (c *cmdbClient) UpdateBcsNode(ctx context.Context, request *client.UpdateBc
 }
 
 // DeleteBcsNode delete bcs node
-// /api/v3/kube/deletemany/node/bk_biz_id/{bk_biz_id}
-// /v2/cc/batch_delete_kube_node/
+// /api/v3/deletemany/kube/node
 func (c *cmdbClient) DeleteBcsNode(ctx context.Context, request *client.DeleteBcsNodeRequest, db *gorm.DB) error {
 	if c == nil {
 		return ErrServerNotInit
@@ -2441,8 +2327,7 @@ func (c *cmdbClient) DeleteBcsNode(ctx context.Context, request *client.DeleteBc
 }
 
 // GetBcsPod get bcs pod
-// /api/v3/kube/findmany/pod/bk_biz_id/{bk_biz_id}
-// /v2/cc/list_pod/
+// /api/v3/findmany/kube/pod
 // nolint
 // NOCC:CCN_threshold(工具误报:)
 func (c *cmdbClient) GetBcsPod(ctx context.Context,
@@ -2554,7 +2439,7 @@ func (c *cmdbClient) GetBcsPod(ctx context.Context,
 }
 
 // GetBcsContainer get bcs container
-// /v2/cc/list_kube_container/
+// /api/v3/findmany/kube/container
 // nolint
 // NOCC:CCN_threshold(工具误报:)
 func (c *cmdbClient) GetBcsContainer(ctx context.Context,
@@ -2666,8 +2551,7 @@ func (c *cmdbClient) GetBcsContainer(ctx context.Context,
 }
 
 // CreateBcsPod create bcs pod
-// /api/v3/kube/createmany/pod/
-// /v2/cc/batch_create_kube_pod/
+// /api/v3/createmany/kube/pod
 // nolint funlen
 func (c *cmdbClient) CreateBcsPod(ctx context.Context,
 	request *client.CreateBcsPodRequest, db *gorm.DB) (*[]int64, error) {
@@ -2808,8 +2692,7 @@ func (c *cmdbClient) CreateBcsPod(ctx context.Context,
 }
 
 // DeleteBcsPod delete bcs pod
-// /api/v3/kube/deletemany/pod/
-// /v2/cc/batch_delete_kube_pod/
+// /api/v3/deletemany/kube/pod
 func (c *cmdbClient) DeleteBcsPod(ctx context.Context, request *client.DeleteBcsPodRequest, db *gorm.DB) error {
 	if c == nil {
 		return ErrServerNotInit
@@ -2881,8 +2764,7 @@ func (c *cmdbClient) GetCMDBClient() (client.CMDBClient, error) {
 }
 
 // DeleteBcsClusterAll delete bcs cluster
-// /api/v3/kube/delete/cluster/bk_biz_id/{bk_biz_id}
-// /v2/cc/batch_delete_kube_cluster/
+// /api/v3/delete/kube/cluster
 func (c *cmdbClient) DeleteBcsClusterAll(request *client.DeleteBcsClusterAllRequest, db *gorm.DB) error {
 	if c == nil {
 		return ErrServerNotInit

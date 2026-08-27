@@ -150,6 +150,7 @@ git-sync.sh
 .project.json
 project.json
 docs/reqs/
+specs/
 
 # AI Agent
 .cursor

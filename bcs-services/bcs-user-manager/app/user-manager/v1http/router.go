@@ -16,7 +16,6 @@ package v1http
 import (
 	restful "github.com/emicklei/go-restful/v3"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/esb/cmdb"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/jwt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/middleware"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/cache"
@@ -106,7 +105,7 @@ func initTokenRouters(ws *restful.WebService) {
 // initExtraTokenRouters init bcs extra token for third-party system
 func initExtraTokenRouters(ws *restful.WebService) {
 	tokenHandler := token.NewExtraTokenHandler(sqlstore.NewTokenStore(sqlstore.GCoreDB, config.GlobalCryptor),
-		sqlstore.NewTokenNotifyStore(sqlstore.GCoreDB), cache.RDB, jwt.JWTClient, cmdb.CMDBClient)
+		sqlstore.NewTokenNotifyStore(sqlstore.GCoreDB), cache.RDB, jwt.JWTClient)
 	ws.Route(ws.GET("/v1/tokens/extra/getClusterUserToken").To(tokenHandler.GetTokenByUserAndClusterID))
 }
 

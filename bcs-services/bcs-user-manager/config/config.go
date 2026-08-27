@@ -109,6 +109,7 @@ type UserMgrConfig struct {
 
 	IAMConfig  options.IAMConfig
 	EtcdConfig registry.CMDOptions
+	Cmdb       options.CmdbConfig
 
 	PermissionSwitch bool
 	CommunityEdition bool

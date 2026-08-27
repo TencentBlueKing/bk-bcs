@@ -55,10 +55,6 @@ type Client interface {
 
 // CMDBClient is an interface that defines methods for interacting with the CMDB.
 type CMDBClient interface {
-	// GetBS2IDByBizID returns the BS2 ID for the given Biz ID.
-	GetBS2IDByBizID(int64) (int, error)
-	// GetBizInfo returns the Business information for the given Biz ID.
-	GetBizInfo(int64) (*Business, error)
 	// GetHostInfo returns the Host information for the given list of host IPs.
 	GetHostInfo([]string) (*[]HostData, error)
 	// GetHostsByBiz returns the Host information for the given list of host IPs

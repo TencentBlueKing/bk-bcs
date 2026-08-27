@@ -39,18 +39,6 @@ type Host struct {
 	AgentID   string `json:"agentID,omitempty"`
 }
 
-// BKAgent agent info
-type BKAgent struct {
-	IP           string `json:"ip"`
-	BKCloudID    int    `json:"bk_cloud_id"`    // 云区域ID
-	BKAgentAlive int    `json:"bk_agent_alive"` // agent在线状态，0为不在线，1为在线
-}
-
-// Alive return bk_agent_alive
-func (agent *BKAgent) Alive() bool {
-	return agent.BKAgentAlive == 1
-}
-
 // BKAgentV2 agent info
 type BKAgentV2 struct {
 	BkAgentID    string `json:"bk_agent_id"` // 格式: '{cloud_id}:{ip}' 或 '{agent_id}'
@@ -73,21 +61,9 @@ type BaseResp struct {
 	RequestID string `json:"request_id"`
 }
 
-// GetAgentStatusReq get agent status req
-type GetAgentStatusReq struct {
-	BKSupplierAccount string `json:"bk_supplier_account,omitempty"` // 开发商账号
-	Hosts             []Host `json:"hosts"`                         // 主机列表
-}
-
 // GetAgentStatusReqV2 get agent status req
 type GetAgentStatusReqV2 struct {
 	AgentIDList []string `json:"agent_id_list"` // 主机列表
-}
-
-// GetAgentStatusResp get agent status resp
-type GetAgentStatusResp struct {
-	BaseResp
-	Data map[string]BKAgent `json:"data"` // key 格式: bk_cloud_id:ip
 }
 
 // GetAgentStatusRespV2 get agent status resp

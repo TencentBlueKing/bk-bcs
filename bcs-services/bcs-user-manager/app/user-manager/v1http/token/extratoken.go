@@ -15,14 +15,12 @@ package token
 import (
 	"fmt"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
-	cmdb "github.com/Tencent/bk-bcs/bcs-common/pkg/esb/cmdbv3"
 	restful "github.com/emicklei/go-restful/v3"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/component"
@@ -40,19 +38,17 @@ type ExtraTokenHandler struct {
 	notifyStore   sqlstore.TokenNotifyStore
 	cache         cache.Cache
 	jwtClient     jwt.BCSJWTAuthentication
-	cmdbClient    *cmdb.Client
 	encryptPriKey string
 }
 
 // NewExtraTokenHandler creates a new ExtraTokenHandler
 func NewExtraTokenHandler(tokenStore sqlstore.TokenStore, notifyStore sqlstore.TokenNotifyStore, cache cache.Cache,
-	jwtClient jwt.BCSJWTAuthentication, cmdbClient *cmdb.Client) *ExtraTokenHandler {
+	jwtClient jwt.BCSJWTAuthentication) *ExtraTokenHandler {
 	return &ExtraTokenHandler{
 		tokenStore:    tokenStore,
 		notifyStore:   notifyStore,
 		cache:         cache,
 		jwtClient:     jwtClient,
-		cmdbClient:    cmdbClient,
 		encryptPriKey: os.Getenv("ENCRYPT_PRI_KEY"),
 	}
 }
@@ -103,19 +99,15 @@ func (t *ExtraTokenHandler) GetTokenByUserAndClusterID(request *restful.Request,
 		return
 	}
 	// check user is maintainer
-	intBizID, _ := strconv.Atoi(businessID)
-	// nolint
-	bizResult, err := t.cmdbClient.ESBSearchBusiness("", map[string]interface{}{
-		"bk_biz_id": intBizID,
-	})
-	if bizResult == nil || bizResult.Data == nil || len(bizResult.Data.Info) == 0 || err != nil {
+	biz, err := component.GetBusinessByID(request.Request.Context(), businessID)
+	if err != nil {
 		message := fmt.Sprintf("business %s is not found", businessID)
-		blog.Errorf("message: %s, err: %v, result: %v", message, err, bizResult)
+		blog.Errorf("message: %s, err: %v", message, err)
 		metrics.ReportRequestAPIMetrics("GetTokenByUserAndClusterID", request.Request.Method, metrics.ErrStatus, start)
 		utils.WriteForbiddenError(response, 400, message)
 		return
 	}
-	if !utils.StringInSlice(username, strings.Split(bizResult.Data.Info[0].BkBizMaintainer, ",")) {
+	if !utils.StringInSlice(username, strings.Split(biz.BKBizMaintainer, ",")) {
 		message := fmt.Sprintf("user %s is not maintainer in business %s", username, businessID)
 		blog.Error(message)
 		metrics.ReportRequestAPIMetrics("GetTokenByUserAndClusterID", request.Request.Method, metrics.ErrStatus, start)

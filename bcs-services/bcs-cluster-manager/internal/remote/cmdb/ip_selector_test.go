@@ -24,7 +24,6 @@ func GetGseTestClient() *gse.Client {
 		Enable:        true,
 		AppCode:       "xxx",
 		AppSecret:     "xxx",
-		EsbServer:     "xxx",
 		GatewayServer: "xxx",
 		BKUserName:    "xxx",
 		Debug:         true,

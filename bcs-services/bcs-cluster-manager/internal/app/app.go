@@ -384,7 +384,6 @@ func (cm *ClusterManager) initRemoteClient() error { // nolint
 		AppCode:       cm.opt.Gse.AppCode,
 		AppSecret:     cm.opt.Gse.AppSecret,
 		BKUserName:    cm.opt.Gse.BkUserName,
-		EsbServer:     cm.opt.Gse.EsbServer,
 		GatewayServer: cm.opt.Gse.GatewayServer,
 		Debug:         cm.opt.Gse.Debug,
 	}); err != nil {
