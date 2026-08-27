@@ -78,6 +78,8 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 
+import { ITemplateVersionItem } from '@/@types/cluster-resource-patch';
+import { TemplateSetService } from '@/api/modules/new-cluster-resource';
 import $i18n from '@/i18n/i18n-setup';
 
 const props = defineProps({
@@ -106,6 +108,11 @@ const props = defineProps({
   autoUpdate: {
     type: Boolean,
     default: false,
+  },
+  // 模板ID
+  templateID: {
+    type: String,
+    default: '',
   },
 });
 
@@ -160,6 +167,9 @@ const semverList = computed(() => {
   return data;
 });
 
+// 版本列表
+const versionList = ref<ITemplateVersionItem[]>([]);
+
 function parseSemverVersion(version: string) {
   const regex = /^(\d+)\.(\d+)\.(\d+)(?:-([A-Za-z]+)\.?([0-9A-Za-z-.]*))?$/;
   const match = version.match(regex);
@@ -183,6 +193,28 @@ function parseSemverVersion(version: string) {
   };
 }
 
+interface ISemverData {
+  major: number;
+  minor: number;
+  patch: number;
+  preReleaseTag: string;
+  preRelease: number;
+}
+
+// 统一版本号拼接
+function formatVersion(data: ISemverData, withPreRelease: boolean) {
+  return withPreRelease
+    ? `${data.major}.${data.minor}.${data.patch}-${data.preReleaseTag}.${data.preRelease}`
+    : `${data.major}.${data.minor}.${data.patch}`;
+}
+
+// 获取版本列表
+async function listTemplateVersion(templateID: string) {
+  versionList.value = await TemplateSetService.ListTemplateVersion({
+    $templateID: templateID,
+  }).catch(() => []);
+}
+
 function cancel() {
   emits('cancel');
 }
@@ -191,10 +223,7 @@ async function confirm() {
   const result = await versionFormRef.value?.validate().catch(() => false);
   if (!result) return;
 
-  const { major, minor, patch, preRelease, preReleaseTag } = semverData.value;
-  formData.value.version = isPreRelease.value
-    ? `${major}.${minor}.${patch}-${preReleaseTag}.${preRelease}`
-    : `${major}.${minor}.${patch}`;
+  formData.value.version = formatVersion(semverData.value, isPreRelease.value);
   emits('confirm', formData.value);
 }
 
@@ -209,15 +238,23 @@ watch(() => props.value, () => {
   const parsed = parseSemverVersion(props.version);
 
   if (props.autoUpdate) {
+    // 已存在的版本集合，用于跳过冲突版本
+    const versionSet = new Set(versionList.value.map(item => item.version));
     // 编辑场景：根据当前版本是否含预发布部分决定自增策略
     if (parsed.hasPreRelease) {
-      // 预发布版本：preRelease 自增1
+      // 预发布版本：preRelease 自增1，并跳过已存在版本
       parsed.preRelease += 1;
       isPreRelease.value = true;
+      while (versionSet.has(formatVersion(parsed, true))) {
+        parsed.preRelease += 1;
+      }
     } else {
-      // 正式版本：patch 自增1
+      // 正式版本：patch 自增1，并跳过已存在版本
       parsed.patch += 1;
       isPreRelease.value = false;
+      while (versionSet.has(formatVersion(parsed, false))) {
+        parsed.patch += 1;
+      }
     }
   } else {
     // 创建场景：使用默认值，isPreRelease 保持 false
@@ -231,5 +268,10 @@ watch(() => props.value, () => {
     preReleaseTag: parsed.preReleaseTag,
     preRelease: parsed.preRelease,
   };
+}, { immediate: true });
+
+watch(() => props.templateID, async (newValue) => {
+  if (!newValue) return;
+  await listTemplateVersion(newValue);
 }, { immediate: true });
 </script>

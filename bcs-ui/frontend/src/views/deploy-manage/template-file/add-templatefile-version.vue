@@ -141,6 +141,7 @@
       :sub-title="fileMetadata?.name"
       :version="versionDetail?.version"
       :loading="creating"
+      :template-i-d="id"
       auto-update
       @cancel="showVersionDialog = false"
       @confirm="createTemplateVersion" />
