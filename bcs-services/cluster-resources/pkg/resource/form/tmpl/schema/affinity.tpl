@@ -61,9 +61,11 @@ podAffinity:
                 op:
                   title: op
                   type: string
+                  default: Exists
                   ui:component:
                     name: select
                     props:
+                      clearable: false  
                       datasource:
                         - label: Exists
                           value: Exists
@@ -82,7 +84,7 @@ podAffinity:
                           value: ""
                       else:
                         state:
-                          disabled: false
+                          disabled: false                            
                 values:
                   title: values
                   type: string
@@ -195,9 +197,11 @@ nodeAffinity:
                 op:
                   title: op
                   type: string
+                  default: Exists
                   ui:component:
                     name: select
                     props:
+                      clearable: false
                       datasource:
                         - label: Lt
                           value: Lt
@@ -245,9 +249,11 @@ nodeAffinity:
                 op:
                   title: op
                   type: string
+                  default: Exists
                   ui:component:
                     name: select
                     props:
+                      clearable: false
                       datasource:
                         - label: Lt
                           value: Lt
