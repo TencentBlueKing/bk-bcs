@@ -21,8 +21,8 @@
         <label>{{ $t('metrics.cpuUsage') }}</label>
         <span class="bcs-ellipsis" v-if="data.quota">
           {{ data.cpuUseRate.toFixed(2) * 100 }}%
-          （{{ `${unitConvert(data.used ? data.used.cpuLimits : '0', '', 'cpu')}${$t('units.suffix.cores')}` }}
-          / {{ `${unitConvert(data.quota ? data.quota.cpuLimits : '0', '', 'cpu')}${$t('units.suffix.cores')}` }}）
+          （{{ `${formatQuotaQuantity(data.used ? data.used.cpuLimits : '0', 'cpu')}${$t('units.suffix.cores')}` }}
+          / {{ `${formatQuotaQuantity(data.quota ? data.quota.cpuLimits : '0', 'cpu')}${$t('units.suffix.cores')}` }}）
         </span>
         <span class="bcs-ellipsis" v-else>{{ $t('dashboard.ns.tips.notEnabledNamespaceQuota') }}</span>
       </div>
@@ -30,8 +30,8 @@
         <label>{{ $t('metrics.memUsage') }}</label>
         <span class="bcs-ellipsis" v-if="data.quota">
           {{ data.memoryUseRate.toFixed(2) * 100 }}%
-          （{{ `${unitConvert(data.used ? data.used.memoryLimits : '0', 'Gi', 'mem')}Gi` }}
-          / {{ `${unitConvert(data.quota ? data.quota.memoryLimits : '0', 'Gi', 'mem')}Gi` }}）
+          （{{ `${formatQuotaQuantity(data.used ? data.used.memoryLimits : '0', 'mem')}Gi` }}
+          / {{ `${formatQuotaQuantity(data.quota ? data.quota.memoryLimits : '0', 'mem')}Gi` }}）
         </span>
         <span class="bcs-ellipsis" v-else>{{ $t('dashboard.ns.tips.notEnabledNamespaceQuota') }}</span>
       </div>
@@ -154,20 +154,14 @@
             <bcs-input
               v-model="quotaDialog.form.quota.cpuRequests"
               class="w-[150px] mr-[20px]"
-              type="number"
-              :min="0"
-              :max="512000"
-              :precision="3">
+              type="text">
               <div class="group-text" slot="append">{{ $t('units.suffix.cores') }}</div>
             </bcs-input>
             <span class="mr-[10px] text-[12px] text-[#979ba5]">Limit</span>
             <bcs-input
               v-model="quotaDialog.form.quota.cpuLimits"
               class="w-[150px]"
-              type="number"
-              :min="0"
-              :max="512000"
-              :precision="3">
+              type="text">
               <div class="group-text" slot="append">{{ $t('units.suffix.cores') }}</div>
             </bcs-input>
           </div>
@@ -181,20 +175,14 @@
             <bcs-input
               v-model="quotaDialog.form.quota.memoryRequests"
               class="w-[150px] mr-[20px]"
-              type="number"
-              :min="0"
-              :max="1024000"
-              :precision="2">
+              type="text">
               <div class="group-text" slot="append">GiB</div>
             </bcs-input>
             <span class="mr-[10px] text-[12px] text-[#979ba5]">Limit</span>
             <bcs-input
               v-model="quotaDialog.form.quota.memoryLimits"
               class="w-[150px]"
-              type="number"
-              :min="0"
-              :max="1024000"
-              :precision="2">
+              type="text">
               <div class="group-text" slot="append">GiB</div>
             </bcs-input>
           </div>
@@ -219,21 +207,28 @@
 /* eslint-disable camelcase */
 import { defineComponent, ref } from 'vue';
 
+import {
+  formatQuotaQuantity,
+  isQuotaFormValueValid,
+  QuotaField,
+  quotaToFormValues,
+  QuotaValues,
+  serializeQuotaFormValues,
+} from './other-quota';
+
 import { createOtherQuota, deleteOtherQuota, updateOtherQuota } from '@/api/modules/project';
 import $bkMessage from '@/common/bkmagic';
 import { timeZoneTransForm } from '@/common/util';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import $i18n from '@/i18n/i18n-setup';
 
-type QuotaField = 'cpuRequests' | 'cpuLimits' | 'memoryRequests' | 'memoryLimits';
-
 const createQuotaForm = () => ({
   name: '',
   quota: {
-    cpuRequests: 0,
-    cpuLimits: 0,
-    memoryRequests: 0,
-    memoryLimits: 0,
+    cpuRequests: '0',
+    cpuLimits: '0',
+    memoryRequests: '0',
+    memoryLimits: '0',
   },
 });
 
@@ -255,41 +250,13 @@ export default defineComponent({
   },
   emits: ['refresh'],
   setup(props, { emit }) {
-    const unitMap = {
-      cpu: {
-        list: ['m', '', 'k', 'M', 'G', 'T', 'P', 'E'],
-        digit: 3,
-        base: 10,
-      },
-      mem: {
-        list: ['Ki', 'Mi', 'Gi', 'Ti', 'Pi', 'Ei'],
-        digit: 10,
-        base: 2,
-      },
-    };
-    const unitConvert = (val, toUnit = '', type: 'cpu' | 'mem') => {
-      const value = String(val ?? '0');
-      const matched = value.match(/^([+-]?(?:\d+\.?\d*|\.\d+))([a-zA-Z]+)?$/);
-      if (!matched) return value;
-
-      const { list, digit, base } = unitMap[type];
-      const num = Number(matched[1]);
-      const unit = matched[2] || '';
-      const index = list.indexOf(unit);
-      const toUnitIndex = list.indexOf(toUnit);
-      if (index === -1 || toUnitIndex === -1) return value;
-
-      const converted = num * (base ** (digit * (index - toUnitIndex)));
-      return converted.toFixed(2);
-    };
     const formatQuotaUsage = (row, field: QuotaField, type: 'cpu' | 'mem') => {
       const hard = row.quota?.[field];
       if (!hard) return '--';
 
-      const toUnit = type === 'cpu' ? '' : 'Gi';
       const unit = type === 'cpu' ? $i18n.t('units.suffix.cores') : 'Gi';
-      const used = unitConvert(row.used?.[field] || '0', toUnit, type);
-      const total = unitConvert(hard, toUnit, type);
+      const used = formatQuotaQuantity(row.used?.[field] || '0', type);
+      const total = formatQuotaQuantity(hard, type);
       return `${used}/${total} ${unit}`;
     };
     const formatUsageRate = (row, field: QuotaField) => {
@@ -298,6 +265,7 @@ export default defineComponent({
       return `${rate.toFixed(2)}%`;
     };
 
+    const originalQuota = ref<Partial<QuotaValues>>();
     const quotaDialog = ref({
       isShow: false,
       isEdit: false,
@@ -311,8 +279,7 @@ export default defineComponent({
     const validateQuotaResource = () => {
       const { quota } = quotaDialog.value.form;
       const values = Object.values(quota);
-      return values.every(value => String(value).trim() !== ''
-        && Number.isFinite(Number(value)) && Number(value) >= 0);
+      return values.every(isQuotaFormValueValid);
     };
     const nameRules = [{
       validator: validateQuotaName,
@@ -325,6 +292,7 @@ export default defineComponent({
       trigger: 'blur',
     }];
     const handleCreateQuota = () => {
+      originalQuota.value = undefined;
       quotaDialog.value = {
         isShow: true,
         isEdit: false,
@@ -333,18 +301,14 @@ export default defineComponent({
       };
     };
     const handleEditQuota = (row) => {
+      originalQuota.value = { ...row.quota };
       quotaDialog.value = {
         isShow: true,
         isEdit: true,
         loading: false,
         form: {
           name: row.name,
-          quota: {
-            cpuRequests: Number(unitConvert(row.quota?.cpuRequests || '0', '', 'cpu')),
-            cpuLimits: Number(unitConvert(row.quota?.cpuLimits || '0', '', 'cpu')),
-            memoryRequests: Number(unitConvert(row.quota?.memoryRequests || '0', 'Gi', 'mem')),
-            memoryLimits: Number(unitConvert(row.quota?.memoryLimits || '0', 'Gi', 'mem')),
-          },
+          quota: quotaToFormValues(row.quota || {}),
         },
       };
     };
@@ -369,12 +333,7 @@ export default defineComponent({
       }
 
       const { form, isEdit } = quotaDialog.value;
-      const quota = {
-        cpuRequests: String(form.quota.cpuRequests),
-        cpuLimits: String(form.quota.cpuLimits),
-        memoryRequests: `${form.quota.memoryRequests}Gi`,
-        memoryLimits: `${form.quota.memoryLimits}Gi`,
-      };
+      const quota = serializeQuotaFormValues(form.quota, originalQuota.value);
       quotaDialog.value.loading = true;
       const request = isEdit ? updateOtherQuota : createOtherQuota;
       const result = await request({
@@ -420,6 +379,7 @@ export default defineComponent({
     };
 
     return {
+      formatQuotaQuantity,
       formatQuotaUsage,
       formatUsageRate,
       handleCancelQuota,
@@ -431,7 +391,6 @@ export default defineComponent({
       quotaDialog,
       quotaRules,
       timeZoneTransForm,
-      unitConvert,
     };
   },
 });

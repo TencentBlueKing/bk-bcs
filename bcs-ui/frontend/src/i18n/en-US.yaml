@@ -2817,7 +2817,7 @@ dashboard:
       notEnabledNamespace: ResourceQuota not enabled
       totalCpuLimitsQuota: All container CPU LIMITs total / CPU quotas
       totalMemoryLimitsQuota: All container memory Limits total / memory quota
-      deleteOtherQuotaWarning: The quota limit takes effect immediately after deletion and cannot be restored.
+      deleteOtherQuotaWarning: Deleting this quota immediately removes its limits. This action cannot be undone.
     validate:
       emptyNs: Please select namespace
       name: >-

@@ -864,12 +864,20 @@ export default defineComponent({
       namespaceInfo.value = row;
     };
     const refreshNamespaceDetail = async () => {
-      namespaceInfo.value = await getNamespaceInfo({
-        $clusterId: props.clusterId,
-        $name: namespaceInfo.value.name,
+      const namespaceName = namespaceInfo.value.name;
+      const { clusterId } = props;
+      const detail = await getNamespaceInfo({
+        $clusterId: clusterId,
+        $name: namespaceName,
       });
+      // Keep the previous detail on failure, and ignore responses for a different selection.
+      if (detail?.name === namespaceName && namespaceInfo.value.name === namespaceName
+        && props.clusterId === clusterId) {
+        namespaceInfo.value = detail;
+      }
+      if (props.clusterId !== clusterId) return;
       getNamespaceData({
-        $clusterId: props.clusterId,
+        $clusterId: clusterId,
       });
     };
 
