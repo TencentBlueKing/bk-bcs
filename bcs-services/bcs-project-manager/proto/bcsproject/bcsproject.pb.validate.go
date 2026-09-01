@@ -6489,6 +6489,64 @@ func (m *OtherQuota) validate(all bool) error {
 		}
 	}
 
+	if all {
+		switch v := interface{}(m.GetUsed()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, OtherQuotaValidationError{
+					field:  "Used",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, OtherQuotaValidationError{
+					field:  "Used",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetUsed()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return OtherQuotaValidationError{
+				field:  "Used",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetUsageRate()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, OtherQuotaValidationError{
+					field:  "UsageRate",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, OtherQuotaValidationError{
+					field:  "UsageRate",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetUsageRate()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return OtherQuotaValidationError{
+				field:  "UsageRate",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
 	if len(errors) > 0 {
 		return OtherQuotaMultiError(errors)
 	}
@@ -15774,6 +15832,802 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ScaleDownProjectQuotaResponseValidationError{}
+
+// Validate checks the field values on ResourceQuotaUsageRate with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ResourceQuotaUsageRate) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ResourceQuotaUsageRate with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ResourceQuotaUsageRateMultiError, or nil if none found.
+func (m *ResourceQuotaUsageRate) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ResourceQuotaUsageRate) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for CpuRequests
+
+	// no validation rules for MemoryRequests
+
+	// no validation rules for CpuLimits
+
+	// no validation rules for MemoryLimits
+
+	if len(errors) > 0 {
+		return ResourceQuotaUsageRateMultiError(errors)
+	}
+
+	return nil
+}
+
+// ResourceQuotaUsageRateMultiError is an error wrapping multiple validation
+// errors returned by ResourceQuotaUsageRate.ValidateAll() if the designated
+// constraints aren't met.
+type ResourceQuotaUsageRateMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ResourceQuotaUsageRateMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ResourceQuotaUsageRateMultiError) AllErrors() []error { return m }
+
+// ResourceQuotaUsageRateValidationError is the validation error returned by
+// ResourceQuotaUsageRate.Validate if the designated constraints aren't met.
+type ResourceQuotaUsageRateValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ResourceQuotaUsageRateValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ResourceQuotaUsageRateValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ResourceQuotaUsageRateValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ResourceQuotaUsageRateValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ResourceQuotaUsageRateValidationError) ErrorName() string {
+	return "ResourceQuotaUsageRateValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ResourceQuotaUsageRateValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sResourceQuotaUsageRate.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ResourceQuotaUsageRateValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ResourceQuotaUsageRateValidationError{}
+
+// Validate checks the field values on CreateOtherQuotaRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *CreateOtherQuotaRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on CreateOtherQuotaRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// CreateOtherQuotaRequestMultiError, or nil if none found.
+func (m *CreateOtherQuotaRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *CreateOtherQuotaRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for ProjectCode
+
+	// no validation rules for ClusterID
+
+	if utf8.RuneCountInString(m.GetNamespace()) > 63 {
+		err := CreateOtherQuotaRequestValidationError{
+			field:  "Namespace",
+			reason: "value length must be at most 63 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_CreateOtherQuotaRequest_Namespace_Pattern.MatchString(m.GetNamespace()) {
+		err := CreateOtherQuotaRequestValidationError{
+			field:  "Namespace",
+			reason: "value does not match regex pattern \"^[a-z0-9]([-a-z0-9]*[a-z0-9])?$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetQuotaName()); l < 1 || l > 63 {
+		err := CreateOtherQuotaRequestValidationError{
+			field:  "QuotaName",
+			reason: "value length must be between 1 and 63 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_CreateOtherQuotaRequest_QuotaName_Pattern.MatchString(m.GetQuotaName()) {
+		err := CreateOtherQuotaRequestValidationError{
+			field:  "QuotaName",
+			reason: "value does not match regex pattern \"^[a-z0-9]([-a-z0-9]*[a-z0-9])?$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if all {
+		switch v := interface{}(m.GetQuota()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, CreateOtherQuotaRequestValidationError{
+					field:  "Quota",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, CreateOtherQuotaRequestValidationError{
+					field:  "Quota",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetQuota()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateOtherQuotaRequestValidationError{
+				field:  "Quota",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return CreateOtherQuotaRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// CreateOtherQuotaRequestMultiError is an error wrapping multiple validation
+// errors returned by CreateOtherQuotaRequest.ValidateAll() if the designated
+// constraints aren't met.
+type CreateOtherQuotaRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m CreateOtherQuotaRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m CreateOtherQuotaRequestMultiError) AllErrors() []error { return m }
+
+// CreateOtherQuotaRequestValidationError is the validation error returned by
+// CreateOtherQuotaRequest.Validate if the designated constraints aren't met.
+type CreateOtherQuotaRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CreateOtherQuotaRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CreateOtherQuotaRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CreateOtherQuotaRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CreateOtherQuotaRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CreateOtherQuotaRequestValidationError) ErrorName() string {
+	return "CreateOtherQuotaRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e CreateOtherQuotaRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCreateOtherQuotaRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CreateOtherQuotaRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CreateOtherQuotaRequestValidationError{}
+
+var _CreateOtherQuotaRequest_Namespace_Pattern = regexp.MustCompile("^[a-z0-9]([-a-z0-9]*[a-z0-9])?$")
+
+var _CreateOtherQuotaRequest_QuotaName_Pattern = regexp.MustCompile("^[a-z0-9]([-a-z0-9]*[a-z0-9])?$")
+
+// Validate checks the field values on UpdateOtherQuotaRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *UpdateOtherQuotaRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on UpdateOtherQuotaRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// UpdateOtherQuotaRequestMultiError, or nil if none found.
+func (m *UpdateOtherQuotaRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *UpdateOtherQuotaRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for ProjectCode
+
+	// no validation rules for ClusterID
+
+	if utf8.RuneCountInString(m.GetNamespace()) > 63 {
+		err := UpdateOtherQuotaRequestValidationError{
+			field:  "Namespace",
+			reason: "value length must be at most 63 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_UpdateOtherQuotaRequest_Namespace_Pattern.MatchString(m.GetNamespace()) {
+		err := UpdateOtherQuotaRequestValidationError{
+			field:  "Namespace",
+			reason: "value does not match regex pattern \"^[a-z0-9]([-a-z0-9]*[a-z0-9])?$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetQuotaName()); l < 1 || l > 63 {
+		err := UpdateOtherQuotaRequestValidationError{
+			field:  "QuotaName",
+			reason: "value length must be between 1 and 63 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_UpdateOtherQuotaRequest_QuotaName_Pattern.MatchString(m.GetQuotaName()) {
+		err := UpdateOtherQuotaRequestValidationError{
+			field:  "QuotaName",
+			reason: "value does not match regex pattern \"^[a-z0-9]([-a-z0-9]*[a-z0-9])?$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if all {
+		switch v := interface{}(m.GetQuota()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, UpdateOtherQuotaRequestValidationError{
+					field:  "Quota",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, UpdateOtherQuotaRequestValidationError{
+					field:  "Quota",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetQuota()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateOtherQuotaRequestValidationError{
+				field:  "Quota",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return UpdateOtherQuotaRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// UpdateOtherQuotaRequestMultiError is an error wrapping multiple validation
+// errors returned by UpdateOtherQuotaRequest.ValidateAll() if the designated
+// constraints aren't met.
+type UpdateOtherQuotaRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m UpdateOtherQuotaRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m UpdateOtherQuotaRequestMultiError) AllErrors() []error { return m }
+
+// UpdateOtherQuotaRequestValidationError is the validation error returned by
+// UpdateOtherQuotaRequest.Validate if the designated constraints aren't met.
+type UpdateOtherQuotaRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpdateOtherQuotaRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpdateOtherQuotaRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpdateOtherQuotaRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpdateOtherQuotaRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpdateOtherQuotaRequestValidationError) ErrorName() string {
+	return "UpdateOtherQuotaRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpdateOtherQuotaRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpdateOtherQuotaRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpdateOtherQuotaRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpdateOtherQuotaRequestValidationError{}
+
+var _UpdateOtherQuotaRequest_Namespace_Pattern = regexp.MustCompile("^[a-z0-9]([-a-z0-9]*[a-z0-9])?$")
+
+var _UpdateOtherQuotaRequest_QuotaName_Pattern = regexp.MustCompile("^[a-z0-9]([-a-z0-9]*[a-z0-9])?$")
+
+// Validate checks the field values on DeleteOtherQuotaRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *DeleteOtherQuotaRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on DeleteOtherQuotaRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// DeleteOtherQuotaRequestMultiError, or nil if none found.
+func (m *DeleteOtherQuotaRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *DeleteOtherQuotaRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for ProjectCode
+
+	// no validation rules for ClusterID
+
+	if utf8.RuneCountInString(m.GetNamespace()) > 63 {
+		err := DeleteOtherQuotaRequestValidationError{
+			field:  "Namespace",
+			reason: "value length must be at most 63 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_DeleteOtherQuotaRequest_Namespace_Pattern.MatchString(m.GetNamespace()) {
+		err := DeleteOtherQuotaRequestValidationError{
+			field:  "Namespace",
+			reason: "value does not match regex pattern \"^[a-z0-9]([-a-z0-9]*[a-z0-9])?$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetQuotaName()); l < 1 || l > 63 {
+		err := DeleteOtherQuotaRequestValidationError{
+			field:  "QuotaName",
+			reason: "value length must be between 1 and 63 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_DeleteOtherQuotaRequest_QuotaName_Pattern.MatchString(m.GetQuotaName()) {
+		err := DeleteOtherQuotaRequestValidationError{
+			field:  "QuotaName",
+			reason: "value does not match regex pattern \"^[a-z0-9]([-a-z0-9]*[a-z0-9])?$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return DeleteOtherQuotaRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// DeleteOtherQuotaRequestMultiError is an error wrapping multiple validation
+// errors returned by DeleteOtherQuotaRequest.ValidateAll() if the designated
+// constraints aren't met.
+type DeleteOtherQuotaRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m DeleteOtherQuotaRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m DeleteOtherQuotaRequestMultiError) AllErrors() []error { return m }
+
+// DeleteOtherQuotaRequestValidationError is the validation error returned by
+// DeleteOtherQuotaRequest.Validate if the designated constraints aren't met.
+type DeleteOtherQuotaRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DeleteOtherQuotaRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DeleteOtherQuotaRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DeleteOtherQuotaRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DeleteOtherQuotaRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DeleteOtherQuotaRequestValidationError) ErrorName() string {
+	return "DeleteOtherQuotaRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DeleteOtherQuotaRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDeleteOtherQuotaRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DeleteOtherQuotaRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DeleteOtherQuotaRequestValidationError{}
+
+var _DeleteOtherQuotaRequest_Namespace_Pattern = regexp.MustCompile("^[a-z0-9]([-a-z0-9]*[a-z0-9])?$")
+
+var _DeleteOtherQuotaRequest_QuotaName_Pattern = regexp.MustCompile("^[a-z0-9]([-a-z0-9]*[a-z0-9])?$")
+
+// Validate checks the field values on OtherQuotaResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *OtherQuotaResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on OtherQuotaResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// OtherQuotaResponseMultiError, or nil if none found.
+func (m *OtherQuotaResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *OtherQuotaResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	if all {
+		switch v := interface{}(m.GetData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, OtherQuotaResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, OtherQuotaResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return OtherQuotaResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for RequestID
+
+	if all {
+		switch v := interface{}(m.GetWebAnnotations()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, OtherQuotaResponseValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, OtherQuotaResponseValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetWebAnnotations()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return OtherQuotaResponseValidationError{
+				field:  "WebAnnotations",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return OtherQuotaResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// OtherQuotaResponseMultiError is an error wrapping multiple validation errors
+// returned by OtherQuotaResponse.ValidateAll() if the designated constraints
+// aren't met.
+type OtherQuotaResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m OtherQuotaResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m OtherQuotaResponseMultiError) AllErrors() []error { return m }
+
+// OtherQuotaResponseValidationError is the validation error returned by
+// OtherQuotaResponse.Validate if the designated constraints aren't met.
+type OtherQuotaResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e OtherQuotaResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e OtherQuotaResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e OtherQuotaResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e OtherQuotaResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e OtherQuotaResponseValidationError) ErrorName() string {
+	return "OtherQuotaResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e OtherQuotaResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sOtherQuotaResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = OtherQuotaResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = OtherQuotaResponseValidationError{}
 
 // Validate checks the field values on ListProjectsForIAMResp_Project with the
 // rules defined in the proto definition for this message. If any rules are
