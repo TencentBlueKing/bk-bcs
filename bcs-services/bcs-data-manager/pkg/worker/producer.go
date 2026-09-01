@@ -27,7 +27,6 @@ import (
 	"go-micro.dev/v4/broker"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/bcsmonitor"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/cmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/datajob"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/kafka"
@@ -40,7 +39,6 @@ import (
 type Producer struct {
 	msgQueue        msgqueue.MessageQueue
 	cron            *cron.Cron
-	CMClient        cmanager.ClusterManagerClient
 	k8sStorageCli   bcsapi.Storage
 	mesosStorageCli bcsapi.Storage
 	ctx             context.Context
@@ -54,13 +52,12 @@ type Producer struct {
 
 // NewProducer new producer
 func NewProducer(rootCtx context.Context, msgQueue msgqueue.MessageQueue, cron *cron.Cron,
-	cmClient cmanager.ClusterManagerClient, k8sStorageCli, mesosStorageCli bcsapi.Storage,
+	k8sStorageCli, mesosStorageCli bcsapi.Storage,
 	getter common.GetterInterface, concurrency int, needSendKafka bool) *Producer {
 	ctx, cancel := context.WithCancel(rootCtx)
 	return &Producer{
 		msgQueue:        msgQueue,
 		cron:            cron,
-		CMClient:        cmClient,
 		k8sStorageCli:   k8sStorageCli,
 		mesosStorageCli: mesosStorageCli,
 		ctx:             ctx,
@@ -205,14 +202,7 @@ func (p *Producer) ProjectProducer(dimension string) {
 		prom.ReportProduceJobLatencyMetric(types.ProjectType, dimension, err, startTime)
 	}()
 	jobTime := utils.FormatTime(time.Now(), dimension)
-	cmConn, err := p.CMClient.GetClusterManagerConn()
-	if err != nil {
-		blog.Errorf("get cm conn error:%v", err)
-		return
-	}
-	defer cmConn.Close() // nolint
-	cliWithHeader := p.CMClient.NewGrpcClientWithHeader(p.ctx, cmConn)
-	projectList, err := p.resourceGetter.GetProjectIDList(cliWithHeader.Ctx, cliWithHeader.Cli)
+	projectList, err := p.resourceGetter.GetProjectIDList(p.ctx)
 	if err != nil || projectList == nil {
 		blog.Errorf("get projectIDList error: %v", err)
 		return
@@ -246,14 +236,8 @@ func (p *Producer) ClusterProducer(dimension string) {
 	defer func() {
 		prom.ReportProduceJobLatencyMetric(types.ClusterType, dimension, err, startTime)
 	}()
-	cmConn, err := p.CMClient.GetClusterManagerConn()
-	if err != nil {
-		blog.Errorf("get cm conn error:%v", err)
-		return
-	}
-	defer cmConn.Close() // nolint
-	cliWithHeader := p.CMClient.NewGrpcClientWithHeader(p.ctx, cmConn)
-	clusterList, err := p.resourceGetter.GetClusterIDList(cliWithHeader.Ctx, cliWithHeader.Cli)
+
+	clusterList, err := p.resourceGetter.GetClusterIDList(p.ctx)
 	if err != nil || clusterList == nil {
 		blog.Errorf("get clusterList error: %v", err)
 		return
@@ -289,15 +273,8 @@ func (p *Producer) NamespaceProducer(dimension string) {
 	defer func() {
 		prom.ReportProduceJobLatencyMetric(types.NamespaceType, dimension, err, startTime)
 	}()
-	cmConn, err := p.CMClient.GetClusterManagerConn()
-	if err != nil {
-		blog.Errorf("get cm conn error:%v", err)
-		return
-	}
-	defer cmConn.Close() // nolint
-	cliWithHeader := p.CMClient.NewGrpcClientWithHeader(p.ctx, cmConn)
-	namespaceList, err := p.resourceGetter.GetNamespaceList(cliWithHeader.Ctx, cliWithHeader.Cli,
-		p.k8sStorageCli, p.mesosStorageCli)
+
+	namespaceList, err := p.resourceGetter.GetNamespaceList(p.ctx, p.k8sStorageCli, p.mesosStorageCli)
 	if err != nil || namespaceList == nil {
 		blog.Errorf("get namespace list error: %v", err)
 		return
@@ -339,16 +316,8 @@ func (p *Producer) WorkloadProducer(dimension string) {
 	defer func() {
 		prom.ReportProduceJobLatencyMetric(types.WorkloadType, dimension, err, startTime)
 	}()
-	// Get the connection to the Cluster Manager.
-	cmConn, err := p.CMClient.GetClusterManagerConn()
-	if err != nil {
-		blog.Errorf("get cm conn error:%v", err)
-		return
-	}
-	defer cmConn.Close() // nolint
-	// Create a gRPC client with header and retrieve the list of clusters.
-	cliWithHeader := p.CMClient.NewGrpcClientWithHeader(p.ctx, cmConn)
-	clusterList, err := p.resourceGetter.GetClusterIDList(cliWithHeader.Ctx, cliWithHeader.Cli)
+
+	clusterList, err := p.resourceGetter.GetClusterIDList(p.ctx)
 	if err != nil || clusterList == nil {
 		blog.Errorf("get clusterList error: %v", err)
 		return
@@ -448,14 +417,8 @@ func (p *Producer) PodAutoscalerProducer(dimension string) {
 	defer func() {
 		prom.ReportProduceJobLatencyMetric(types.PodAutoscalerType, dimension, err, startTime)
 	}()
-	cmConn, err := p.CMClient.GetClusterManagerConn()
-	if err != nil {
-		blog.Errorf("get cm conn error:%v", err)
-		return
-	}
-	defer cmConn.Close() // nolint
-	cliWithHeader := p.CMClient.NewGrpcClientWithHeader(p.ctx, cmConn)
-	clusterList, err := p.resourceGetter.GetClusterIDList(cliWithHeader.Ctx, cliWithHeader.Cli)
+
+	clusterList, err := p.resourceGetter.GetClusterIDList(p.ctx)
 	if err != nil || clusterList == nil {
 		blog.Errorf("get clusterList error: %v", err)
 		return

@@ -32,8 +32,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/util"
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
-	cm "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
 	restclient "github.com/Tencent/bk-bcs/bcs-common/pkg/esb/client"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/header"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/msgqueue"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
 	"github.com/go-micro/plugins/v4/registry/etcd"
@@ -290,6 +290,7 @@ func (s *Server) initRegistry() error {
 // init http grpc gateway
 func (s *Server) initHTTPGateway(router *mux.Router) error {
 	gwmux := runtime.NewServeMux(
+		runtime.WithIncomingHeaderMatcher(header.CustomHeaderMatcher),
 		runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{
 			OrigName:     true,
 			EmitDefaults: true,
@@ -428,7 +429,7 @@ func (s *Server) initWorker() error {
 		blog.Errorf("init storage cli err:%v", err)
 		return err
 	}
-	cmCli, err := s.initClusterManager()
+	err = s.initClusterManager()
 	if err != nil {
 		blog.Errorf("init cmCli err:%v", err)
 		return err
@@ -438,17 +439,17 @@ func (s *Server) initWorker() error {
 	blog.Infof("selected cluster: %v", selectClusters)
 	blog.Infof("cluster env: %s", s.opt.FilterRules.Env)
 
-	pmClient := s.initProjectManager()
-	if pmClient == nil {
+	err = s.initProjectManager()
+	if err != nil {
 		blog.Errorf("init project manager cli error, client is nil")
 		return fmt.Errorf("init project manager cli error, client is nil")
 	}
 	// init resourceGetter
 	s.resourceGetter = common.NewGetter(s.opt.FilterRules.NeedFilter, selectClusters, s.opt.FilterRules.Env,
-		pmClient, bcsMonitorCli)
+		bcsMonitorCli)
 	// init producer
 	producerCron := cron.New()
-	s.producer = worker.NewProducer(s.ctx, msgQueue, producerCron, cmCli, k8sStorageCli, mesosStorageCli,
+	s.producer = worker.NewProducer(s.ctx, msgQueue, producerCron, k8sStorageCli, mesosStorageCli,
 		s.resourceGetter, s.opt.ProducerConfig.Concurrency, s.opt.NeedSendKafka)
 	if err = s.producer.InitCronList(); err != nil {
 		blog.Errorf("init producer cron list error: %v", err)
@@ -466,7 +467,6 @@ func (s *Server) initWorker() error {
 		BcsMonitorClient: bcsMonitorCli,
 		K8sStorageCli:    k8sStorageCli,
 		MesosStorageCli:  mesosStorageCli,
-		CmCli:            cmCli,
 	}
 	consumers := make([]worker.Consumer, 0)
 	dataJobHandler := worker.NewDataJobHandler(handlerOpts, handlerClients, s.opt.HandleConfig.Concurrency)
@@ -559,7 +559,7 @@ func initQueue(opts QueueConfig) (msgqueue.MessageQueue, error) {
 
 // initClusterManager xxx
 // init cluster manager cli
-func (s *Server) initClusterManager() (cmanager.ClusterManagerClient, error) {
+func (s *Server) initClusterManager() error {
 	realAuthToken, _ := encrypt.DesDecryptFromBase([]byte(s.opt.BcsAPIConf.AdminToken))
 	opts := &cmanager.Options{
 		Module:          cmanager.ModuleClusterManager,
@@ -569,21 +569,11 @@ func (s *Server) initClusterManager() (cmanager.ClusterManagerClient, error) {
 		AuthToken:       string(realAuthToken),
 	}
 
-	cli := cmanager.NewClusterManagerClient(opts)
-	if cli == nil {
-		errMsg := fmt.Errorf("initClusterManager failed")
-		return nil, errMsg
-	}
-	cmConn, err := cli.GetClusterManagerConn()
-	if err != nil || cmConn == nil {
-		return nil, fmt.Errorf("get cluster manager client error:%v", err)
-	}
-	cmCli := cli.NewGrpcClientWithHeader(s.ctx, cmConn)
-	_, err = cmCli.Cli.ListCluster(cmCli.Ctx, &cm.ListClusterReq{})
+	err := cmanager.InitClusterManagerDiscovery(opts)
 	if err != nil {
-		return nil, fmt.Errorf("dial cm failed:%v", err)
+		return err
 	}
-	return cli, nil
+	return nil
 }
 
 // initBcsMonitorCli xxx
@@ -702,7 +692,7 @@ func (s *Server) initMetric(mux *http.ServeMux) {
 }
 
 // initProjectManager init project manager client
-func (s *Server) initProjectManager() bcsproject.BcsProjectManagerClient {
+func (s *Server) initProjectManager() error {
 	realAuthToken, _ := encrypt.DesDecryptFromBase([]byte(s.opt.BcsAPIConf.AdminToken))
 	opts := &bcsproject.Options{
 		Module:          bcsproject.ModuleProjectManager,
@@ -712,7 +702,7 @@ func (s *Server) initProjectManager() bcsproject.BcsProjectManagerClient {
 		AuthToken:       string(realAuthToken),
 		UserName:        s.opt.BcsAPIConf.UserName,
 	}
-	return bcsproject.NewBcsProjectManagerClient(opts)
+	return bcsproject.InitProjectManagerDiscovery(opts)
 }
 
 // initKafkaConn init kafka connection cli
