@@ -20,6 +20,7 @@
         "is-external": ${kubeWatchExternal},
         "netservice-zookeepers": "${customNetServiceZK}",
         "custom-storage-endpoints": "${customStorage}",
+        "custom-storage-endpoints-token": "${customStorageToken}",
         "custom-netservice-endpoints": "${customNetService}",
         "writerQueueLen": ${writerQueueLen},
         "podQueueNum": ${podQueueNum}
