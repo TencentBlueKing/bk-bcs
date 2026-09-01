@@ -125,7 +125,7 @@ func (b *BcsBkcmdbSynchronizerHandler) HandleMsg(
 
 	path := "/data/bcs/bcs-bkcmdb-synchronizer/db/" + clusterId + ".db"
 
-	db := sqlite.Open(path)
+	db := sqlite.Open(path, b.Syncer.BkcmdbSynchronizerOption.Synchronizer.SqlLogLevel)
 	if db == nil {
 		blog.Errorf("open db failed, path: %s", path)
 		return
@@ -196,7 +196,7 @@ func (b *BcsBkcmdbSynchronizerHandler) HandleMsg(
 
 			if v, ok := header["resourceType"]; ok {
 				var errH error
-				blog.Infof("resourceType: %v", v)
+				blog.Infof("resourceType: %v, clusterUid: %s, bkBizID: %d", v, bkCluster.Uid, bkCluster.BizID)
 				switch v.(string) {
 				case "Pod":
 					m := podMsg.M
@@ -291,8 +291,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleCluster(
 	}
 
 	// 打印白名单和黑名单信息
-	blog.Infof("whiteList: %v, len: %d", whiteList, len(whiteList))
-	blog.Infof("blackList: %v, len: %d", blackList, len(blackList))
+	blog.Infof("whiteList: %v, len: %d; blackList: %v, len: %d", whiteList, len(whiteList), blackList, len(blackList))
 
 	// 遍历所有集群
 	for _, cluster := range clusters {
@@ -414,7 +413,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handlePods(podMsg *msgBuffer, bkCluster *
 	//	blog.Errorf("handlePod: Unable to unmarshal")
 	//	return fmt.Errorf("handlePod: Unable to unmarshal")
 	// }
-	blog.Infof("podMsg: %d", len(podMsg.M))
+	blog.Infof("podMsg: %d, clusterUid: %s, bkBizID: %d", len(podMsg.M), bkCluster.Uid, bkCluster.BizID)
 	if time.Since(podMsg.T) < 10*time.Second {
 		// blog.Infof("podMsg.T: %s, %s", podMsg.T, time.Now().Sub(podMsg.T))
 		if len(podMsg.M) < 100 {
@@ -816,7 +815,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handlePodsDelete(
 	}
 
 	// 打印日志，显示将要处理的Pod名称
-	blog.Infof("handlePodsDelete podNames: %v", nsPod)
+	blog.Infof("handlePodsDelete podNames: %v, clusterUid: %s, bkBizID: %d", nsPod, bkCluster.Uid, bkCluster.BizID)
 
 	// 创建一个切片，用于存储要删除的BkPod的ID
 	bkPodIDs := make([]int64, 0)
@@ -1402,7 +1401,8 @@ func (b *BcsBkcmdbSynchronizerHandler) handlePodCreate(pod *corev1.Pod, bkCluste
 		},
 	}, nil)
 
-	blog.Infof("podToAdd: %s+%s+%s", bkCluster.Uid, &pod.Namespace, &pod.Name)
+	blog.Infof("podToAdd, clusterUid: %s, bizID: %d, clusterID: %d, namespaceID: %d, namespace: %s, workloadKind: %s, workloadName: %s, workloadID: %d, podName: %s, podIP: %s",
+		bkCluster.Uid, bkNamespace.BizID, bkCluster.ID, bkNamespace.ID, pod.Namespace, workloadKind, workloadName, workloadID, pod.Name, pod.Status.PodIP)
 
 	return nil
 }
@@ -1417,7 +1417,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handlePodsCreate(podsCreate map[string]*c
 	for _, v := range podsCreate {
 		podNames = append(podNames, v.Name)
 	}
-	blog.Infof("handlePodsCreate podNames: %v", podNames)
+	blog.Infof("handlePodsCreate podNames: %v, clusterUid: %s, bkBizID: %d", podNames, bkCluster.Uid, bkCluster.BizID)
 
 	lcReq := cmp.ListClusterReq{
 		ClusterID: bkCluster.Uid,
@@ -1822,7 +1822,8 @@ func (b *BcsBkcmdbSynchronizerHandler) handlePodsCreate(podsCreate map[string]*c
 				},
 			},
 		}, db)
-		blog.Infof("podToAdd: %s+%s+%s", bkCluster.Uid, pod.Namespace, pod.Name)
+		blog.Infof("podToAdd, clusterUid: %s, bizID: %d, clusterID: %d, namespaceID: %d, namespace: %s, workloadKind: %s, workloadName: %s, workloadID: %d, podName: %s, podIP: %s",
+			bkCluster.Uid, bkNamespace.BizID, bkCluster.ID, bkNamespace.ID, pod.Namespace, workloadKind, workloadName, workloadID, pod.Name, pod.Status.PodIP)
 	}
 
 	return nil
@@ -1832,7 +1833,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handlePodsCreate(podsCreate map[string]*c
 func (b *BcsBkcmdbSynchronizerHandler) handleDeployment(
 	msg amqp.Delivery, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
 	// 记录接收到的消息头信息
-	blog.Infof("handleDeployment Message: %v", msg.Headers)
+	blog.Infof("handleDeployment Message: %v, clusterUid: %s, bkBizID: %d", msg.Headers, bkCluster.Uid, bkCluster.BizID)
 
 	// 尝试获取消息头信息
 	msgHeader, err := getMsgHeader(&msg.Headers)
@@ -2101,7 +2102,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleDeploymentCreate(
 
 func (b *BcsBkcmdbSynchronizerHandler) handleStatefulSet(
 	msg amqp.Delivery, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
-	blog.Infof("handleStatefulSet Message: %v", msg.Headers)
+	blog.Infof("handleStatefulSet Message: %v, clusterUid: %s, bkBizID: %d", msg.Headers, bkCluster.Uid, bkCluster.BizID)
 	msgHeader, err := getMsgHeader(&msg.Headers)
 	if err != nil {
 		blog.Errorf("handleStatefulSet unable to get headers, err: %s", err.Error())
@@ -2329,7 +2330,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleStatefulSetCreate(
 
 func (b *BcsBkcmdbSynchronizerHandler) handleDaemonSet(
 	msg amqp.Delivery, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
-	blog.Infof("handleDaemonSet Message: %v", msg.Headers)
+	blog.Infof("handleDaemonSet Message: %v, clusterUid: %s, bkBizID: %d", msg.Headers, bkCluster.Uid, bkCluster.BizID)
 	msgHeader, err := getMsgHeader(&msg.Headers)
 	if err != nil {
 		blog.Errorf("handleDaemonSet unable to get headers, err: %s", err.Error())
@@ -2520,7 +2521,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleDaemonSetCreate(
 
 func (b *BcsBkcmdbSynchronizerHandler) handleGameDeployment(msg amqp.Delivery,
 	bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
-	blog.Infof("handleGameDeployment Message: %v", msg.Headers)
+	blog.Infof("handleGameDeployment Message: %v, clusterUid: %s, bkBizID: %d", msg.Headers, bkCluster.Uid, bkCluster.BizID)
 	msgHeader, err := getMsgHeader(&msg.Headers)
 	if err != nil {
 		blog.Errorf("handleGameDeployment unable to get headers, err: %s", err.Error())
@@ -2718,7 +2719,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleGameDeploymentCreate(
 // handle GameStateful Set
 func (b *BcsBkcmdbSynchronizerHandler) handleGameStatefulSet(
 	msg amqp.Delivery, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
-	blog.Infof("handleGameStatefulSet Message: %v", msg.Headers)
+	blog.Infof("handleGameStatefulSet Message: %v, clusterUid: %s, bkBizID: %d", msg.Headers, bkCluster.Uid, bkCluster.BizID)
 	msgHeader, err := getMsgHeader(&msg.Headers)
 	if err != nil {
 		blog.Errorf("handleGameStatefulSet unable to get headers, err: %s", err.Error())
@@ -2915,7 +2916,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleGameStatefulSetCreate(
 
 func (b *BcsBkcmdbSynchronizerHandler) handleNamespace(
 	msg amqp.Delivery, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
-	blog.Infof("handleNamespace Message: %v", msg.Headers)
+	blog.Infof("handleNamespace Message: %v, clusterUid: %s, bkBizID: %d", msg.Headers, bkCluster.Uid, bkCluster.BizID)
 	msgHeader, err := getMsgHeader(&msg.Headers)
 	if err != nil {
 		blog.Errorf("handleNamespace unable to get headers, err: %s", err.Error())
@@ -3150,7 +3151,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleEvent(msg amqp.Delivery, bkCluster 
 
 // Node handle
 func (b *BcsBkcmdbSynchronizerHandler) handleNode(msg amqp.Delivery, bkCluster *bkcmdbkube.Cluster) error { // nolint
-	blog.Infof("handleNode Message: %v", msg.Headers)
+	blog.Infof("handleNode Message: %v, clusterUid: %s, bkBizID: %d", msg.Headers, bkCluster.Uid, bkCluster.BizID)
 	msgHeader, err := getMsgHeader(&msg.Headers)
 	if err != nil {
 		blog.Errorf("handleNode unable to get headers, err: %s", err.Error())
@@ -3201,7 +3202,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleNodes(
 	//	return fmt.Errorf("handleNode: Unable to unmarshal")
 	// }
 
-	blog.Infof("nodeMsg: %d", len(nodeMsg.M))
+	blog.Infof("nodeMsg: %d, clusterUid: %s, bkBizID: %d", len(nodeMsg.M), bkCluster.Uid, bkCluster.BizID)
 	if time.Since(nodeMsg.T) < 10*time.Second {
 		// blog.Infof("podMsg.T: %s, %s", podMsg.T, time.Now().Sub(podMsg.T))
 		if len(nodeMsg.M) < 100 {
@@ -3582,7 +3583,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleCustomResource(
 	clusterID := msgHeader.ClusterId
 	crKinds, ok := b.Syncer.BkcmdbSynchronizerOption.Synchronizer.CustomResourceTypes[clusterID]
 	if !ok || len(crKinds) == 0 {
-		blog.Infof("cluster %s not configured for custom resource sync, skip", clusterID)
+		blog.Infof("cluster %s not configured for custom resource sync, bkBizID: %d, skip", clusterID, bkCluster.BizID)
 		return nil
 	}
 

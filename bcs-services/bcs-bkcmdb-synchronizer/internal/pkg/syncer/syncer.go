@@ -83,6 +83,9 @@ func (s *Syncer) Init() {
 	}
 	bkBizID = s.BkcmdbSynchronizerOption.Synchronizer.BkBizID
 	hostID = s.BkcmdbSynchronizerOption.Synchronizer.HostID
+	if s.BkcmdbSynchronizerOption.Synchronizer.SqlLogLevel == 0 {
+		s.BkcmdbSynchronizerOption.Synchronizer.SqlLogLevel = 2
+	}
 }
 
 // init Tls Config
@@ -144,7 +147,7 @@ func (s *Syncer) SyncCluster(cluster *cmp.Cluster) error {
 		clusterType = "SHARE_CLUSTER"
 	}
 	path := "/data/bcs/bcs-bkcmdb-synchronizer/db/" + cluster.ClusterID + ".db"
-	db := sqlite.Open(path)
+	db := sqlite.Open(path, s.BkcmdbSynchronizerOption.Synchronizer.SqlLogLevel)
 	if db == nil {
 		blog.Errorf("open db failed, path: %s", path)
 		return fmt.Errorf("open db failed, path: %s", path)
@@ -157,8 +160,6 @@ func (s *Syncer) SyncCluster(cluster *cmp.Cluster) error {
 				clusterBkBizID, err = strconv.ParseInt(cluster.BusinessID, 10, 64)
 				if err != nil {
 					blog.Errorf("An error occurred: %s\n", err)
-				} else {
-					blog.Infof("Successfully converted string to int64: %d\n", clusterBkBizID)
 				}
 			} else {
 				clusterBkBizID = bkBizID
@@ -2055,7 +2056,8 @@ func (s *Syncer) syncPodsCheck(podMap map[string]*storage.Pod, bkPodMap map[stri
 						Containers: &containers,
 						Operator:   &operator,
 					})
-				blog.Infof("podToAdd: %s+%s+%s", bkCluster.Uid, v.Data.Namespace, v.Data.Name)
+				blog.Infof("podToAdd, clusterUid: %s, bizID: %d, clusterID: %d, namespaceID: %d, namespace: %s, workloadKind: %s, workloadName: %s, workloadID: %d, podName: %s, podIP: %s",
+					bkCluster.Uid, bkNsMap[v.Data.Namespace].BizID, bkCluster.ID, bkNsMap[v.Data.Namespace].ID, v.Data.Namespace, workloadKind, workloadName, workloadID, v.Data.Name, v.Data.Status.PodIP)
 			} else {
 				podToAdd[bkNsMap[v.Data.Namespace].BizID] = []client.CreateBcsPodRequestDataPod{
 					client.CreateBcsPodRequestDataPod{
@@ -2082,7 +2084,8 @@ func (s *Syncer) syncPodsCheck(podMap map[string]*storage.Pod, bkPodMap map[stri
 						Operator:   &operator,
 					},
 				}
-				blog.Infof("podToAdd: %s+%s+%s", bkCluster.Uid, v.Data.Namespace, v.Data.Name)
+				blog.Infof("podToAdd, clusterUid: %s, bizID: %d, clusterID: %d, namespaceID: %d, namespace: %s, workloadKind: %s, workloadName: %s, workloadID: %d, podName: %s, podIP: %s",
+					bkCluster.Uid, bkNsMap[v.Data.Namespace].BizID, bkCluster.ID, bkNsMap[v.Data.Namespace].ID, v.Data.Namespace, workloadKind, workloadName, workloadID, v.Data.Name, v.Data.Status.PodIP)
 			}
 
 		} else {
@@ -2098,7 +2101,7 @@ func (s *Syncer) syncPodsCheck(podMap map[string]*storage.Pod, bkPodMap map[stri
 func (s *Syncer) SyncStore(bkCluster *bkcmdbkube.Cluster, force bool) error {
 	path := "/data/bcs/bcs-bkcmdb-synchronizer/db/" + bkCluster.Uid + ".db"
 
-	db := sqlite.Open(path)
+	db := sqlite.Open(path, s.BkcmdbSynchronizerOption.Synchronizer.SqlLogLevel)
 	if db == nil {
 		blog.Errorf("open db failed, path: %s", path)
 		return fmt.Errorf("open db failed, path: %s", path)
@@ -3016,8 +3019,6 @@ func (s *Syncer) GetBkCluster(cluster *cmp.Cluster, db *gorm.DB, withDB bool) (*
 		bizid, err := strconv.ParseInt(cluster.BusinessID, 10, 64)
 		if err != nil {
 			blog.Errorf("An error occurred: %s\n", err)
-		} else {
-			blog.Infof("Successfully converted string to int64: %d\n", bizid)
 		}
 		clusterBkBizID = bizid
 	} else {
