@@ -50,19 +50,21 @@ func GenerateModifyClusterNodePoolInput(group *proto.NodeGroup, clusterID string
 	oldNodePool *model.NodePool) *model.UpdateNodePoolRequest {
 	// cce nodePool名称以小写字母开头，由小写字母、数字、中划线(-)组成，长度范围1-50位，且不能以中划线(-)结尾
 	name := strings.ToLower(group.NodeGroupID)
+	taints := make([]model.Taint, 0)
+	userTags := make([]model.UserTag, 0)
 
 	req := &model.UpdateNodePoolRequest{
 		NodepoolId: group.CloudNodeGroupID,
 		ClusterId:  clusterID,
 		Body: &model.NodePoolUpdate{
 			Metadata: &model.NodePoolMetadataUpdate{
-				Name: name,
+				Name: &name,
 			},
 			Spec: &model.NodePoolSpecUpdate{
 				NodeTemplate: &model.NodeSpecUpdate{
-					Taints:   make([]model.Taint, 0),
+					Taints:   &taints,
 					K8sTags:  map[string]string{},
-					UserTags: make([]model.UserTag, 0),
+					UserTags: &userTags,
 				},
 				//更新节点池不能更新节点数量,只能通过UpdateDesiredNodes方法更新,会影响互斥性
 				InitialNodeCount: *oldNodePool.Spec.InitialNodeCount,
@@ -80,7 +82,7 @@ func GenerateModifyClusterNodePoolInput(group *proto.NodeGroup, clusterID string
 				effect = model.GetTaintEffectEnum().NO_EXECUTE
 			}
 			value := v.Value
-			req.Body.Spec.NodeTemplate.Taints = append(req.Body.Spec.NodeTemplate.Taints, model.Taint{
+			*req.Body.Spec.NodeTemplate.Taints = append(*req.Body.Spec.NodeTemplate.Taints, model.Taint{
 				Key:    v.Key,
 				Value:  &value,
 				Effect: effect,
@@ -90,16 +92,16 @@ func GenerateModifyClusterNodePoolInput(group *proto.NodeGroup, clusterID string
 
 	req.Body.Spec.NodeTemplate.K8sTags = group.NodeTemplate.Labels
 
-	if len(req.Body.Spec.NodeTemplate.Taints) == 0 && oldNodePool.Spec.NodeTemplate.Taints != nil {
-		req.Body.Spec.NodeTemplate.Taints = *oldNodePool.Spec.NodeTemplate.Taints
+	if len(*req.Body.Spec.NodeTemplate.Taints) == 0 && oldNodePool.Spec.NodeTemplate.Taints != nil {
+		req.Body.Spec.NodeTemplate.Taints = oldNodePool.Spec.NodeTemplate.Taints
 	}
 
 	if len(req.Body.Spec.NodeTemplate.K8sTags) == 0 && oldNodePool.Spec.NodeTemplate.K8sTags != nil {
 		req.Body.Spec.NodeTemplate.K8sTags = oldNodePool.Spec.NodeTemplate.K8sTags
 	}
 
-	if len(req.Body.Spec.NodeTemplate.UserTags) == 0 && oldNodePool.Spec.NodeTemplate.UserTags != nil {
-		req.Body.Spec.NodeTemplate.UserTags = *oldNodePool.Spec.NodeTemplate.UserTags
+	if len(*req.Body.Spec.NodeTemplate.UserTags) == 0 && oldNodePool.Spec.NodeTemplate.UserTags != nil {
+		req.Body.Spec.NodeTemplate.UserTags = oldNodePool.Spec.NodeTemplate.UserTags
 	}
 
 	return req
