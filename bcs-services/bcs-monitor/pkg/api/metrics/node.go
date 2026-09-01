@@ -438,3 +438,33 @@ func GetNodeDiskioUsage(c context.Context, req *UsageQuery) (*promclient.ResultD
 
 	return handleNodeMetric(rctx, promql, req)
 }
+
+// GetNodeCPURequestWithInitUsage 查询含 InitContainer 的 CPU 装箱率
+// @Summary 查询含 InitContainer 的 CPU 装箱率
+// @Tags    Metrics
+// @Success 200 {string} string
+// @Router  /nodes/:node/cpu_request_with_init_usage [get]
+func GetNodeCPURequestWithInitUsage(c context.Context, req *UsageQuery) (*promclient.ResultData, error) {
+	rctx, err := rest.GetRestContext(c)
+	if err != nil {
+		return nil, err
+	}
+	promql := `bcs:node:cpu_request_with_init:usage{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`
+
+	return handleNodeMetric(rctx, promql, req)
+}
+
+// GetNodeMemoryRequestWithInitUsage 查询含 InitContainer 的内存装箱率
+// @Summary 查询含 InitContainer 的内存装箱率
+// @Tags    Metrics
+// @Success 200 {string} string
+// @Router  /nodes/:node/memory_request_with_init_usage [get]
+func GetNodeMemoryRequestWithInitUsage(c context.Context, req *UsageQuery) (*promclient.ResultData, error) {
+	rctx, err := rest.GetRestContext(c)
+	if err != nil {
+		return nil, err
+	}
+	promql := `bcs:node:memory_request_with_init:usage{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`
+
+	return handleNodeMetric(rctx, promql, req)
+}

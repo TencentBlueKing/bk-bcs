@@ -163,6 +163,23 @@ func (m *Prometheus) GetClusterCPURequestUsage(ctx context.Context, projectID, c
 	return m.handleClusterMetric(ctx, projectID, clusterID, promql, start, end, step)
 }
 
+// GetClusterCPURequestWithInitUsage 获取含 InitContainer 的 CPU 核心装箱率
+// nolint
+func (m *Prometheus) GetClusterCPURequestWithInitUsage(ctx context.Context, projectID, clusterID string,
+	start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
+	promql :=
+		`(sum(kube_pod_container_resource_requests{cluster_id="%<clusterID>s", job="kube-state-metrics", ` +
+			`resource="cpu", node=~"%<node>s", %<provider>s}) + ` +
+			`sum(kube_pod_init_container_resource_requests{cluster_id="%<clusterID>s", job="kube-state-metrics", ` +
+			`resource="cpu", node=~"%<node>s", %<provider>s} * ` +
+			`on (namespace,pod,container) (kube_pod_init_container_status_running{cluster_id="%<clusterID>s", ` +
+			`job="kube-state-metrics", %<provider>s}))) / ` +
+			`sum(count without(cpu, mode) (node_cpu_seconds_total{cluster_id="%<clusterID>s", job="node-exporter", ` +
+			`mode="idle", instance=~"%<instance>s", %<provider>s})) * 100`
+
+	return m.handleClusterMetric(ctx, projectID, clusterID, promql, start, end, step)
+}
+
 // GetClusterMemoryTotal 获取集群内存总量
 func (m *Prometheus) GetClusterMemoryTotal(ctx context.Context, projectID, clusterID string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
@@ -227,6 +244,22 @@ func (m *Prometheus) GetClusterMemoryRequestUsage(ctx context.Context, projectID
 	promql :=
 		`sum(kube_pod_container_resource_requests_memory_bytes{cluster_id="%<clusterID>s", ` +
 			`job="kube-state-metrics", node=~"%<node>s", %<provider>s}) / ` +
+			`sum(node_memory_MemTotal_bytes{cluster_id="%<clusterID>s", job="node-exporter", ` +
+			`instance=~"%<instance>s", %<provider>s}) * 100`
+
+	return m.handleClusterMetric(ctx, projectID, clusterID, promql, start, end, step)
+}
+
+// GetClusterMemoryRequestWithInitUsage 获取含 InitContainer 的内存装箱率
+func (m *Prometheus) GetClusterMemoryRequestWithInitUsage(ctx context.Context, projectID, clusterID string,
+	start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
+	promql :=
+		`(sum(kube_pod_container_resource_requests{cluster_id="%<clusterID>s", resource="memory", ` +
+			`job="kube-state-metrics", node=~"%<node>s", %<provider>s}) + ` +
+			`sum(kube_pod_init_container_resource_requests{cluster_id="%<clusterID>s", resource="memory", ` +
+			`job="kube-state-metrics", node=~"%<node>s", %<provider>s} * ` +
+			`on (namespace,pod,container) (kube_pod_init_container_status_running{cluster_id="%<clusterID>s", ` +
+			`job="kube-state-metrics", %<provider>s}))) / ` +
 			`sum(node_memory_MemTotal_bytes{cluster_id="%<clusterID>s", job="node-exporter", ` +
 			`instance=~"%<instance>s", %<provider>s}) * 100`
 

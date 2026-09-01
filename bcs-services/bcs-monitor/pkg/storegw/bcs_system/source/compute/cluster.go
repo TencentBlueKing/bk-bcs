@@ -142,3 +142,15 @@ func (p *Compute) GetClusterPodUsage(ctx context.Context, projectID, clusterID s
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	return nil, nil
 }
+
+// GetClusterCPURequestWithInitUsage 获取含 InitContainer 的 CPU 核心装箱率
+func (p *Compute) GetClusterCPURequestWithInitUsage(ctx context.Context, projectId, clusterId string,
+	start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
+	return nil, nil
+}
+
+// GetClusterMemoryRequestWithInitUsage 获取含 InitContainer 的内存装箱率
+func (p *Compute) GetClusterMemoryRequestWithInitUsage(ctx context.Context, projectId, clusterId string,
+	start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
+	return nil, nil
+}
