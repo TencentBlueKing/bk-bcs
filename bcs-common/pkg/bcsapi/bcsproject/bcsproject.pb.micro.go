@@ -489,6 +489,24 @@ func NewNamespaceEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		{
+			Name:    "Namespace.CreateOtherQuota",
+			Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/otherQuotas"},
+			Method:  []string{"POST"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "Namespace.UpdateOtherQuota",
+			Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/otherQuotas/{quotaName}"},
+			Method:  []string{"PUT"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "Namespace.DeleteOtherQuota",
+			Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/otherQuotas/{quotaName}"},
+			Method:  []string{"DELETE"},
+			Handler: "rpc",
+		},
+		{
 			Name:    "Namespace.UpdateNamespaceCallback",
 			Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/callback/update"},
 			Method:  []string{"POST"},
@@ -551,6 +569,9 @@ type NamespaceService interface {
 	CreateNamespace(ctx context.Context, in *CreateNamespaceRequest, opts ...client.CallOption) (*CreateNamespaceResponse, error)
 	CreateNamespaceCallback(ctx context.Context, in *NamespaceCallbackRequest, opts ...client.CallOption) (*NamespaceCallbackResponse, error)
 	UpdateNamespace(ctx context.Context, in *UpdateNamespaceRequest, opts ...client.CallOption) (*UpdateNamespaceResponse, error)
+	CreateOtherQuota(ctx context.Context, in *CreateOtherQuotaRequest, opts ...client.CallOption) (*OtherQuotaResponse, error)
+	UpdateOtherQuota(ctx context.Context, in *UpdateOtherQuotaRequest, opts ...client.CallOption) (*OtherQuotaResponse, error)
+	DeleteOtherQuota(ctx context.Context, in *DeleteOtherQuotaRequest, opts ...client.CallOption) (*OtherQuotaResponse, error)
 	UpdateNamespaceCallback(ctx context.Context, in *NamespaceCallbackRequest, opts ...client.CallOption) (*NamespaceCallbackResponse, error)
 	GetNamespace(ctx context.Context, in *GetNamespaceRequest, opts ...client.CallOption) (*GetNamespaceResponse, error)
 	ListNamespaces(ctx context.Context, in *ListNamespacesRequest, opts ...client.CallOption) (*ListNamespacesResponse, error)
@@ -597,6 +618,36 @@ func (c *namespaceService) CreateNamespaceCallback(ctx context.Context, in *Name
 func (c *namespaceService) UpdateNamespace(ctx context.Context, in *UpdateNamespaceRequest, opts ...client.CallOption) (*UpdateNamespaceResponse, error) {
 	req := c.c.NewRequest(c.name, "Namespace.UpdateNamespace", in)
 	out := new(UpdateNamespaceResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *namespaceService) CreateOtherQuota(ctx context.Context, in *CreateOtherQuotaRequest, opts ...client.CallOption) (*OtherQuotaResponse, error) {
+	req := c.c.NewRequest(c.name, "Namespace.CreateOtherQuota", in)
+	out := new(OtherQuotaResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *namespaceService) UpdateOtherQuota(ctx context.Context, in *UpdateOtherQuotaRequest, opts ...client.CallOption) (*OtherQuotaResponse, error) {
+	req := c.c.NewRequest(c.name, "Namespace.UpdateOtherQuota", in)
+	out := new(OtherQuotaResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *namespaceService) DeleteOtherQuota(ctx context.Context, in *DeleteOtherQuotaRequest, opts ...client.CallOption) (*OtherQuotaResponse, error) {
+	req := c.c.NewRequest(c.name, "Namespace.DeleteOtherQuota", in)
+	out := new(OtherQuotaResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -700,6 +751,9 @@ type NamespaceHandler interface {
 	CreateNamespace(context.Context, *CreateNamespaceRequest, *CreateNamespaceResponse) error
 	CreateNamespaceCallback(context.Context, *NamespaceCallbackRequest, *NamespaceCallbackResponse) error
 	UpdateNamespace(context.Context, *UpdateNamespaceRequest, *UpdateNamespaceResponse) error
+	CreateOtherQuota(context.Context, *CreateOtherQuotaRequest, *OtherQuotaResponse) error
+	UpdateOtherQuota(context.Context, *UpdateOtherQuotaRequest, *OtherQuotaResponse) error
+	DeleteOtherQuota(context.Context, *DeleteOtherQuotaRequest, *OtherQuotaResponse) error
 	UpdateNamespaceCallback(context.Context, *NamespaceCallbackRequest, *NamespaceCallbackResponse) error
 	GetNamespace(context.Context, *GetNamespaceRequest, *GetNamespaceResponse) error
 	ListNamespaces(context.Context, *ListNamespacesRequest, *ListNamespacesResponse) error
@@ -716,6 +770,9 @@ func RegisterNamespaceHandler(s server.Server, hdlr NamespaceHandler, opts ...se
 		CreateNamespace(ctx context.Context, in *CreateNamespaceRequest, out *CreateNamespaceResponse) error
 		CreateNamespaceCallback(ctx context.Context, in *NamespaceCallbackRequest, out *NamespaceCallbackResponse) error
 		UpdateNamespace(ctx context.Context, in *UpdateNamespaceRequest, out *UpdateNamespaceResponse) error
+		CreateOtherQuota(ctx context.Context, in *CreateOtherQuotaRequest, out *OtherQuotaResponse) error
+		UpdateOtherQuota(ctx context.Context, in *UpdateOtherQuotaRequest, out *OtherQuotaResponse) error
+		DeleteOtherQuota(ctx context.Context, in *DeleteOtherQuotaRequest, out *OtherQuotaResponse) error
 		UpdateNamespaceCallback(ctx context.Context, in *NamespaceCallbackRequest, out *NamespaceCallbackResponse) error
 		GetNamespace(ctx context.Context, in *GetNamespaceRequest, out *GetNamespaceResponse) error
 		ListNamespaces(ctx context.Context, in *ListNamespacesRequest, out *ListNamespacesResponse) error
@@ -746,6 +803,24 @@ func RegisterNamespaceHandler(s server.Server, hdlr NamespaceHandler, opts ...se
 		Name:    "Namespace.UpdateNamespace",
 		Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}"},
 		Method:  []string{"PUT"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Namespace.CreateOtherQuota",
+		Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/otherQuotas"},
+		Method:  []string{"POST"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Namespace.UpdateOtherQuota",
+		Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/otherQuotas/{quotaName}"},
+		Method:  []string{"PUT"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Namespace.DeleteOtherQuota",
+		Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/otherQuotas/{quotaName}"},
+		Method:  []string{"DELETE"},
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -819,6 +894,18 @@ func (h *namespaceHandler) CreateNamespaceCallback(ctx context.Context, in *Name
 
 func (h *namespaceHandler) UpdateNamespace(ctx context.Context, in *UpdateNamespaceRequest, out *UpdateNamespaceResponse) error {
 	return h.NamespaceHandler.UpdateNamespace(ctx, in, out)
+}
+
+func (h *namespaceHandler) CreateOtherQuota(ctx context.Context, in *CreateOtherQuotaRequest, out *OtherQuotaResponse) error {
+	return h.NamespaceHandler.CreateOtherQuota(ctx, in, out)
+}
+
+func (h *namespaceHandler) UpdateOtherQuota(ctx context.Context, in *UpdateOtherQuotaRequest, out *OtherQuotaResponse) error {
+	return h.NamespaceHandler.UpdateOtherQuota(ctx, in, out)
+}
+
+func (h *namespaceHandler) DeleteOtherQuota(ctx context.Context, in *DeleteOtherQuotaRequest, out *OtherQuotaResponse) error {
+	return h.NamespaceHandler.DeleteOtherQuota(ctx, in, out)
 }
 
 func (h *namespaceHandler) UpdateNamespaceCallback(ctx context.Context, in *NamespaceCallbackRequest, out *NamespaceCallbackResponse) error {
