@@ -386,6 +386,15 @@ portConf:
                   state:
                     visible: false
                     value: "80"
+              - source: "spec.selector.associate"
+                if: "{{`{{`}} !$self.getValue('spec.selector.associate') {{`}}`}}"
+                then:
+                  state:
+                    visible: true
+                else:
+                  state:
+                    visible: false
+                    value: "80"              
             ui:props:
               showTitle: false                  
           targetSelectPort:
@@ -408,6 +417,16 @@ portConf:
                 else:
                   state:
                     visible: false
+                    value: "80"    
+              - source: "spec.selector.associate"
+                if: "{{`{{`}} $self.getValue('spec.selector.associate') {{`}}`}}"
+                then:
+                  state:
+                    visible: true
+                    value: ""
+                else:
+                  state:
+                    visible: false
                     value: "80"
               - lifetime: init
                 then:
@@ -415,8 +434,6 @@ portConf:
                     - "{{`{{`}} $loadDataSource {{`}}`}}"
               - source: "spec.selector.workloadName"
                 then:
-                  state:
-                    value: ""
                   actions:
                     - "{{`{{`}} $loadDataSource {{`}}`}}"
             ui:props:
