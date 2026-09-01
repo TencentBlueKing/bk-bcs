@@ -37,6 +37,11 @@ const (
 	resourceID   = "resourceid"
 	taskID       = "taskid"
 	createTime   = "createtime"
+	clusterID    = "clusterid"
+
+	// 索引名称常量
+	indexNameMainQuery   = "idx_main_query"
+	indexNameClusterTime = "idx_cluster_time"
 )
 
 // ModelOperationLog database operation for operation_log
@@ -51,11 +56,20 @@ type ModelOperationLog struct {
 var (
 	operationLogIndexes = []drivers.Index{
 		{
-			Name: tableName + "_idx",
+			Name: indexNameMainQuery,
 			Key: bson.D{
+				bson.E{Key: clusterID, Value: 1},
 				bson.E{Key: resourceType, Value: 1},
 				bson.E{Key: resourceID, Value: 1},
-				bson.E{Key: taskID, Value: 1},
+				bson.E{Key: createTime, Value: -1},
+			},
+			Unique: false,
+		},
+		{
+			Name: indexNameClusterTime,
+			Key: bson.D{
+				bson.E{Key: clusterID, Value: 1},
+				bson.E{Key: createTime, Value: -1},
 			},
 			Unique: false,
 		},
@@ -208,6 +222,13 @@ func (m *ModelOperationLog) ListAggreOperationLog(ctx context.Context, condSrc, 
 	)
 
 	pipeline := make([]map[string]interface{}, 0)
+	aggreOptions := make(map[string]interface{})
+
+	// 根据查询条件自动选择合适的索引
+	indexHint := m.selectIndexHint(condSrc)
+	if indexHint != "" {
+		aggreOptions["hint"] = indexHint
+	}
 
 	// from src table filter
 	if len(condSrc) > 0 {
@@ -236,7 +257,7 @@ func (m *ModelOperationLog) ListAggreOperationLog(ctx context.Context, condSrc, 
 
 	// count logs for conds
 	if opt.Count {
-		if err := m.db.Table(m.tableName).Aggregation(ctx, pipeline, &retTaskOpLogs); err != nil {
+		if err := m.db.Table(m.tableName).AggregationWithOptions(ctx, pipeline, aggreOptions, &retTaskOpLogs); err != nil {
 			return nil, err
 		}
 
@@ -258,8 +279,37 @@ func (m *ModelOperationLog) ListAggreOperationLog(ctx context.Context, condSrc, 
 			"$limit": opt.Limit,
 		})
 	}
-	if err := m.db.Table(m.tableName).Aggregation(ctx, pipeline, &retTaskOpLogs); err != nil {
+	if err := m.db.Table(m.tableName).AggregationWithOptions(ctx, pipeline, aggreOptions, &retTaskOpLogs); err != nil {
 		return nil, err
 	}
 	return retTaskOpLogs, nil
+}
+
+// selectIndexHint 根据查询条件选择合适的索引hint
+func (m *ModelOperationLog) selectIndexHint(condSrc []bson.E) string {
+	// 分析查询条件，选择最优索引
+	hasResourceType := false
+	hasClusterID := false
+
+	for _, cond := range condSrc {
+		switch cond.Key {
+		case resourceType:
+			hasResourceType = true
+		case clusterID:
+			hasClusterID = true
+		}
+	}
+
+	// 索引选择策略：
+	// 1. 如果有clusterID + resourceType，使用主索引
+	// 2. 如果只有clusterID，使用clusterID索引
+	// 3. 其他情况使用默认索引（让MongoDB自动选择）
+
+	if hasClusterID && hasResourceType {
+		return indexNameMainQuery
+	} else if hasClusterID {
+		return indexNameClusterTime
+	}
+
+	return ""
 }

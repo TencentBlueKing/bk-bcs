@@ -165,6 +165,8 @@ type Table interface {
 	// Aggregation aggregation operation
 	Aggregation(ctx context.Context, pipeline interface{}, result interface{}) error
 
+	AggregationWithOptions(ctx context.Context, pipeline interface{}, options map[string]interface{}, result interface{}) error
+
 	// Insert insert many data
 	Insert(ctx context.Context, docs []interface{}) (int, error)
 
