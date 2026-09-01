@@ -28,7 +28,7 @@ import (
 // GetTenantAPIAuthorization generate bk user api auth header, X-Bkapi-Authorization
 func GetTenantAPIAuthorization(ctx context.Context, username string) (string, error) {
 	if username == "" {
-		username = config.G.Base.BKUsername
+		username = config.G.Base.BKUsername // nolint: ineffassign,staticcheck
 	}
 
 	// get bk_username from bk user api
