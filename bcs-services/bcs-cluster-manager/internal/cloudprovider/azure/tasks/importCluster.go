@@ -194,10 +194,13 @@ func importClusterInstances(data *cloudprovider.CloudDependBasicInfo) error {
 	if len(nodes.Items) > 0 {
 		crv := strings.Split(nodes.Items[0].Status.NodeInfo.ContainerRuntimeVersion, "://")
 		if len(crv) == 2 {
-			data.Cluster.ClusterAdvanceSettings = &proto.ClusterAdvanceSetting{
-				ContainerRuntime: crv[0],
-				RuntimeVersion:   crv[1],
+			if data.Cluster.ClusterAdvanceSettings == nil {
+				data.Cluster.ClusterAdvanceSettings = &proto.ClusterAdvanceSetting{}
 			}
+
+			data.Cluster.ClusterAdvanceSettings.ContainerRuntime = crv[0]
+			data.Cluster.ClusterAdvanceSettings.RuntimeVersion = crv[1]
+
 			err = cloudprovider.GetStorageModel().UpdateCluster(context.Background(), data.Cluster)
 			if err != nil {
 				blog.Errorf("importClusterInstances update cluster[%s] failed: %v", data.Cluster.ClusterName, err)
@@ -241,6 +244,11 @@ func importNodeResourceGroup(info *cloudprovider.CloudDependBasicInfo) error {
 	for _, pool := range managedCluster.Properties.AgentPoolProfiles {
 		if *pool.Mode == common.CloudClusterNodeGroupTypeSystem {
 			sysPoolName = *pool.Name
+
+			// 获取节点池maxpods
+			if pool.MaxPods != nil && *pool.MaxPods > 0 {
+				cluster.NetworkSettings.MaxNodePodNum = uint32(*pool.MaxPods)
+			}
 		}
 	}
 	set, err := client.MatchNodeGroup(ctx, cluster.ExtraInfo[common.NodeResourceGroup], sysPoolName)
