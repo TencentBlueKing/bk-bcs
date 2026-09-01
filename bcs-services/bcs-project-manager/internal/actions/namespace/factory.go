@@ -58,6 +58,13 @@ func (f *NamespaceFactory) Action(ctx context.Context, clusterID, projectIDOrCod
 		logging.Error("get project from db failed, err: %s", err.Error())
 		return nil, err
 	}
+	// 若缓存信息校验失败，则绕过缓存重新拉取一次，防止集群状态刚切换时产生误判
+	if cluster.GetProjectID() != project.ProjectID && !cluster.GetIsShared() {
+		if freshCluster, err := clustermanager.GetCluster(ctx, clusterID, false); err == nil && freshCluster != nil {
+			cluster = freshCluster
+		}
+	}
+
 	if cluster.GetProjectID() != project.ProjectID {
 		if cluster.GetIsShared() {
 			return shared.NewSharedNamespaceAction(f.model), nil
