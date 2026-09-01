@@ -105,7 +105,7 @@ func (p *NamespaceHandler) UpdateNamespace(ctx context.Context,
 // CreateOtherQuota creates an additional ResourceQuota in a namespace.
 func (p *NamespaceHandler) CreateOtherQuota(ctx context.Context,
 	req *proto.CreateOtherQuotaRequest, resp *proto.OtherQuotaResponse) error {
-	action, err := na.NewNamespaceFactory(p.model).Action(req.GetClusterID(), req.GetProjectCode())
+	action, err := na.NewNamespaceFactory(p.model).Action(ctx, req.GetClusterID(), req.GetProjectCode())
 	if err != nil {
 		logging.Error("get namespace client for cluster %s from client factory failed, err: %s",
 			req.GetClusterID(), err.Error())
@@ -117,7 +117,7 @@ func (p *NamespaceHandler) CreateOtherQuota(ctx context.Context,
 // UpdateOtherQuota updates an additional ResourceQuota in a namespace.
 func (p *NamespaceHandler) UpdateOtherQuota(ctx context.Context,
 	req *proto.UpdateOtherQuotaRequest, resp *proto.OtherQuotaResponse) error {
-	action, err := na.NewNamespaceFactory(p.model).Action(req.GetClusterID(), req.GetProjectCode())
+	action, err := na.NewNamespaceFactory(p.model).Action(ctx, req.GetClusterID(), req.GetProjectCode())
 	if err != nil {
 		logging.Error("get namespace client for cluster %s from client factory failed, err: %s",
 			req.GetClusterID(), err.Error())
@@ -129,7 +129,7 @@ func (p *NamespaceHandler) UpdateOtherQuota(ctx context.Context,
 // DeleteOtherQuota deletes an additional ResourceQuota in a namespace.
 func (p *NamespaceHandler) DeleteOtherQuota(ctx context.Context,
 	req *proto.DeleteOtherQuotaRequest, resp *proto.OtherQuotaResponse) error {
-	action, err := na.NewNamespaceFactory(p.model).Action(req.GetClusterID(), req.GetProjectCode())
+	action, err := na.NewNamespaceFactory(p.model).Action(ctx, req.GetClusterID(), req.GetProjectCode())
 	if err != nil {
 		logging.Error("get namespace client for cluster %s from client factory failed, err: %s",
 			req.GetClusterID(), err.Error())
