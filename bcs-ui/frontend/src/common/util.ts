@@ -390,7 +390,8 @@ export const getObjectProps = (obj, key) => {
 export const sort = (arr, key, order = 'ascending', extraDataFn?): any[] => {
   if (!Array.isArray(arr)) return arr;
   const reg = /^[0-9a-zA-Z]/;
-  const data = arr.sort((pre, next) => {
+  // 浅拷贝，避免 sort/reverse 原地修改源数据（会导致取消排序后无法恢复原始顺序）
+  const data = [...arr].sort((pre, next) => {
     if (isObject(pre) && isObject(next) && key) {
       // 合并extdata数据
       const preData = {

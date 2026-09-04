@@ -1445,6 +1445,10 @@ cluster:
       termination: 终止宽限时间
       drainRisk: 驱逐风险
       isDrainOnly: 仅展示可驱逐的 Pod
+      disableEviction: 禁用驱逐（DisableEviction）
+      disableEvictionTips: >-
+        勾选后直接删除 Pod，不再通过 Eviction API 驱逐，不受
+        PodDisruptionBudget(PDB) 策略限制；默认不勾选，走驱逐路径
       nodeType: 节点类型
       cvmNode: 普通 CVM 节点
       gpuNode: GPU 节点

@@ -88,7 +88,12 @@
           @page-change="pageChange"
           @page-limit-change="pageSizeChange"
           @sort-change="handleSortChange">
-          <bk-table-column :label="$t('generic.label.name')" min-width="130" sortable fixed="left">
+          <bk-table-column
+            :label="$t('generic.label.name')"
+            prop="name"
+            min-width="130"
+            sortable="custom"
+            fixed="left">
             <template #default="{ row }">
               <bk-button
                 class="bcs-button-ellipsis"
@@ -109,7 +114,11 @@
               </bk-button>
             </template>
           </bk-table-column>
-          <bk-table-column :label="$t('k8s.namespace')" min-width="100" sortable>
+          <bk-table-column
+            :label="$t('k8s.namespace')"
+            prop="namespace"
+            min-width="100"
+            sortable="custom">
             <template #default="{ row }">
               <span>{{ row.namespace }}</span>
             </template>
@@ -148,7 +157,7 @@
           <bk-table-column label="Node">
             <template #default="{ row }">{{row.node || '--'}}</template>
           </bk-table-column>
-          <bk-table-column label="Age" sortable prop="createTime">
+          <bk-table-column label="Age" prop="createTime" sortable="custom">
             <template #default="{ row }">
               <span>{{row.age || '--'}}</span>
             </template>
@@ -237,7 +246,7 @@
   </BcsContent>
 </template>
 <script lang="ts">
-import { computed, defineComponent, onMounted, ref, toRefs } from 'vue';
+import { computed, defineComponent, onMounted, ref, toRefs, watch } from 'vue';
 
 import { fetchNodePodsData } from '@/api/modules/cluster-resource';
 import { clusterNodeInfo } from '@/api/modules/monitor';
@@ -339,8 +348,19 @@ export default defineComponent({
     const namespaceValue = ref('');
     const { namespaceLoading, namespaceList, getNamespaceData } = useSelectItemsNamespace();
 
-    // 排序
-    const { handleSortChange, sortTableData: podsData } = useTableSort(allPodsData);
+    // 排序（扁平数据里不一定有 createTime，统一换算成「存活秒数」的定长字符串，保证排序结果正确）
+    const ageUnitSeconds: Record<string, number> = { s: 1, m: 60, h: 3600, d: 86400 };
+    const parseAgeToSeconds = (age?: string) => (`${age}`.match(/\d+[smhd]?/g) || []).reduce((total, part) => {
+      const value = parseInt(part, 10);
+      return total + value * (ageUnitSeconds[part.replace(/\d/g, '')] || 1);
+    }, 0);
+    const { handleSortChange, sortData, sortTableData: podsData } = useTableSort(allPodsData, (item: any) => {
+      const createTime = item.createTime || podsWebAnnotations.value?.manifestExt?.[item.uid]?.createTime;
+      const seconds = createTime
+        ? Math.floor((Date.now() - new Date(createTime).getTime()) / 1000)
+        : parseAgeToSeconds(item.age);
+      return { createTime: `${Math.max(seconds, 0)}`.padStart(12, '0') };
+    });
     // 搜索
     const keys = ref(['name', 'hostIP', 'podIP', 'podIPv4', 'podIPv6']);
     const { searchValue, tableDataMatchSearch } = useSearch(podsData, keys);
@@ -352,6 +372,8 @@ export default defineComponent({
       pageChange,
       pageSizeChange,
     } = usePage(curSearchTableData);
+    // 排序变化后回到第一页，否则会停留在重排后的旧页码
+    watch(sortData, () => pageChange(1));
 
     // 跳转Pods详情
     const gotoPodDetail = (row) => {

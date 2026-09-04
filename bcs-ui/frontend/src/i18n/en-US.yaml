@@ -1805,6 +1805,11 @@ cluster:
       termination: Termination grace period
       drainRisk: Drain Risk
       isDrainOnly: Only show will be evicted Pods
+      disableEviction: Disable Eviction (DisableEviction)
+      disableEvictionTips: >-
+        When checked, Pods are deleted directly instead of being evicted through
+        the Eviction API, ignoring PodDisruptionBudget(PDB); unchecked by
+        default, using the eviction path
       nodeType: Node Type
       cvmNode: CVM
       gpuNode: GPU
