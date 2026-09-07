@@ -51,11 +51,14 @@ type TaskManager struct { // nolint
 	server     *machinery.Server
 	worker     *machinery.Worker
 
-	workerNum         int
-	stepExecutors     map[istep.StepName]istep.StepExecutor
-	callbackExecutors map[istep.CallbackName]istep.CallbackExecutor
-	cfg               *ManagerConfig
-	store             istore.Store
+	workerNum              int
+	stepExecutors          map[istep.StepName]istep.StepExecutor
+	callbackExecutors      map[istep.CallbackName]istep.CallbackExecutor
+	groupCallbackExecutors map[istep.GroupCallbackName]istep.GroupCallbackExecutor
+	cfg                    *ManagerConfig
+	store                  istore.Store
+	// groupStore 为 Store 实现了 GroupStore 时的任务组编排能力, 未实现则为 nil
+	groupStore istore.GroupStore
 
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -110,6 +113,12 @@ func (m *TaskManager) Init(cfg *ManagerConfig) error {
 	}
 
 	m.callbackExecutors = istep.GetCallbackRegisters()
+	m.groupCallbackExecutors = istep.GetGroupCallbackRegisters()
+
+	// Store 实现了任务组能力才开启编排相关 API
+	if groupStore, ok := cfg.Store.(istore.GroupStore); ok {
+		m.groupStore = groupStore
+	}
 
 	m.moduleName = cfg.ModuleName
 	if cfg.WorkerNum != 0 {
@@ -415,6 +424,7 @@ func (m *TaskManager) doWork(taskID string, stepName string) error { // nolint
 				log.INFO.Println(msg)
 				return tasks.NewErrRetryTaskLater(msg, DefaultMaxRetryDuration)
 			}
+			m.tryAdvanceGroup(state.task)
 			return nil
 		}
 		return m.dealWithStepFailure(state, start, taskID, stepName, stepErr)
@@ -463,6 +473,7 @@ func (m *TaskManager) dealWithStepFailure(
 		log.INFO.Println(msg)
 		return tasks.NewErrRetryTaskLater(msg, DefaultMaxRetryDuration)
 	}
+	m.tryAdvanceGroup(state.task)
 
 	// 单步骤不是主动revoke，且在重试次数内, 则重试
 	if !errors.Is(stepErr, istep.ErrRevoked) && step.GetRetryCount() < step.MaxRetries {
@@ -489,6 +500,7 @@ func (m *TaskManager) dealWithTaskRevoke(
 		log.INFO.Println(msg)
 		return tasks.NewErrRetryTaskLater(msg, DefaultMaxRetryDuration)
 	}
+	m.tryAdvanceGroup(state.task)
 	// 取消指令, 不再重试
 	retErr := fmt.Errorf("task %s step %s running failed, err=%w", taskID, stepName, stepErr)
 	return retErr
@@ -503,6 +515,7 @@ func (m *TaskManager) dealWithTaskTimeout(
 		log.INFO.Println(msg)
 		return tasks.NewErrRetryTaskLater(msg, DefaultMaxRetryDuration)
 	}
+	m.tryAdvanceGroup(state.task)
 	// 整个任务结束
 	retErr := fmt.Errorf("task %s step %s running failed, err=%w", taskID, stepName, stepErr)
 	return retErr

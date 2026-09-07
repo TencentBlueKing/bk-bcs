@@ -17,6 +17,7 @@ import (
 	"context"
 	"fmt"
 	"slices"
+	"time"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -25,6 +26,22 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/task/stores/iface"
 	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
 )
+
+// batchSize 批量写入与 IN 条件的分片大小
+const batchSize = 500
+
+// chunkSlice 把切片按 size 分片
+func chunkSlice[T any](items []T, size int) [][]T {
+	if size <= 0 || len(items) <= size {
+		return [][]T{items}
+	}
+	chunks := make([][]T, 0, (len(items)+size-1)/size)
+	for start := 0; start < len(items); start += size {
+		end := min(start+size, len(items))
+		chunks = append(chunks, items[start:end])
+	}
+	return chunks
+}
 
 type mysqlStore struct {
 	dsn   string
@@ -89,6 +106,60 @@ func (s *mysqlStore) CreateTask(ctx context.Context, task *types.Task) error {
 
 		return nil
 	})
+}
+
+// BatchCreateTask implement istore BatchCreateTask interface
+func (s *mysqlStore) BatchCreateTask(ctx context.Context, tasks []*types.Task) error {
+	if len(tasks) == 0 {
+		return nil
+	}
+
+	taskRecords := make([]*TaskRecord, 0, len(tasks))
+	stepRecords := make([]*StepRecord, 0, len(tasks))
+	for _, task := range tasks {
+		taskRecords = append(taskRecords, getTaskRecord(task))
+		stepRecords = append(stepRecords, getStepRecord(task)...)
+	}
+
+	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := tx.CreateInBatches(taskRecords, batchSize).Error; err != nil {
+			return err
+		}
+		return tx.CreateInBatches(stepRecords, batchSize).Error
+	})
+}
+
+// BatchUpdateTaskStatus implement istore BatchUpdateTaskStatus interface
+func (s *mysqlStore) BatchUpdateTaskStatus(ctx context.Context, taskIDs []string, fromStatus []string,
+	toStatus string, message string) (int64, error) {
+	if len(taskIDs) == 0 {
+		return 0, nil
+	}
+
+	var affected int64
+	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		// 大批量 ID 分片, 避免单条 SQL 过长被服务端拒绝
+		for _, chunk := range chunkSlice(taskIDs, batchSize) {
+			db := tx.Model(&TaskRecord{}).Where("task_id IN ?", chunk)
+			if len(fromStatus) > 0 {
+				db = db.Where("status IN ?", fromStatus)
+			}
+			result := db.Updates(map[string]any{
+				"status":  toStatus,
+				"message": message,
+				"end":     time.Now(),
+			})
+			if result.Error != nil {
+				return result.Error
+			}
+			affected += result.RowsAffected
+		}
+		return nil
+	})
+	if err != nil {
+		return 0, err
+	}
+	return affected, nil
 }
 
 // ListStepRecordByTaskIDs implement istore ListStepRecordByTaskIDs interface

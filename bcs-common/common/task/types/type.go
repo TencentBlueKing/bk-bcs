@@ -15,6 +15,7 @@ package types
 
 import (
 	"errors"
+	"slices"
 	"sync"
 	"time"
 )
@@ -56,7 +57,26 @@ const (
 var (
 	// ErrNotImplemented not implemented error
 	ErrNotImplemented = errors.New("not implemented")
+
+	// TerminalTaskStatus 任务终态
+	TerminalTaskStatus = []string{
+		TaskStatusSuccess,
+		TaskStatusFailure,
+		TaskStatusTimeout,
+		TaskStatusRevoked,
+	}
+
+	// PendingTaskStatus 已落库但尚未开始执行的任务状态
+	PendingTaskStatus = []string{
+		TaskStatusInit,
+		TaskStatusNotStarted,
+	}
 )
+
+// IsTaskTerminal 任务是否已达终态
+func IsTaskTerminal(status string) bool {
+	return slices.Contains(TerminalTaskStatus, status)
+}
 
 // Task task definition
 type Task struct {
@@ -65,6 +85,8 @@ type Task struct {
 	TaskID              string            `json:"taskID"`
 	TaskType            string            `json:"taskType"`
 	TaskName            string            `json:"taskName"`
+	GroupID             string            `json:"groupID"`  // GroupID 所属任务组, 为空表示不参与任务组编排
+	StageSeq            int               `json:"stageSeq"` // StageSeq 在任务组内所属的阶段序号
 	CurrentStep         string            `json:"currentStep"`
 	Steps               []*Step           `json:"steps"`
 	CallbackName        string            `json:"callbackName"`

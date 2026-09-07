@@ -13,6 +13,8 @@
 package mysql
 
 import (
+	"time"
+
 	"gorm.io/gorm"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
@@ -56,6 +58,8 @@ func getTaskRecord(t *types.Task) *TaskRecord {
 		TaskIndex:           t.TaskIndex,
 		TaskIndexType:       t.TaskIndexType,
 		TaskName:            t.TaskName,
+		GroupID:             t.GroupID,
+		StageSeq:            t.StageSeq,
 		CurrentStep:         t.CurrentStep,
 		StepSequence:        stepSequence,
 		CallbackName:        t.CallbackName,
@@ -80,6 +84,8 @@ func toTask(task *TaskRecord, steps []*StepRecord) *types.Task {
 		TaskIndex:           task.TaskIndex,
 		TaskIndexType:       task.TaskIndexType,
 		TaskName:            task.TaskName,
+		GroupID:             task.GroupID,
+		StageSeq:            task.StageSeq,
 		CurrentStep:         task.CurrentStep,
 		CallbackName:        task.CallbackName,
 		CallbackResult:      task.CallbackResult,
@@ -143,6 +149,16 @@ var (
 	}
 )
 
+// normalizeTime 把零值时间换成 unix 0 时。
+// Updates 传入的是构造出来的记录, BeforeUpdate 钩子只作用于 Model 上的空实例,
+// 拿不到这里的值, 因此零值时间必须在构造时就处理, 否则会写出 '0000-00-00' 被数据库拒绝。
+func normalizeTime(t time.Time) time.Time {
+	if t.IsZero() {
+		return UnixZeroTime
+	}
+	return t
+}
+
 func getUpdateTaskRecord(t *types.Task) *TaskRecord {
 	record := &TaskRecord{
 		CurrentStep:   t.CurrentStep,
@@ -150,8 +166,8 @@ func getUpdateTaskRecord(t *types.Task) *TaskRecord {
 		CommonPayload: t.CommonPayload,
 		Status:        t.Status,
 		Message:       t.Message,
-		Start:         t.Start,
-		End:           t.End,
+		Start:         normalizeTime(t.Start),
+		End:           normalizeTime(t.End),
 		ExecutionTime: t.ExecutionTime,
 		Updater:       t.Updater,
 	}
@@ -164,8 +180,8 @@ func getUpdateStepRecord(t *types.Step) *StepRecord {
 		Payload:       t.Payload,
 		Status:        t.Status,
 		Message:       t.Message,
-		Start:         t.Start,
-		End:           t.End,
+		Start:         normalizeTime(t.Start),
+		End:           normalizeTime(t.End),
 		ExecutionTime: t.ExecutionTime,
 		RetryCount:    t.RetryCount,
 	}
@@ -173,17 +189,17 @@ func getUpdateStepRecord(t *types.Step) *StepRecord {
 }
 
 // FindByPage 分页查询
-func FindByPage[T any](db *gorm.DB, offset int, limit int) (result []*T, count int64, err error) {
-	err = db.Offset(offset).Limit(limit).Find(&result).Error
-	if err != nil {
-		return
+func FindByPage[T any](db *gorm.DB, offset int, limit int) ([]*T, int64, error) {
+	var result []*T
+	if err := db.Offset(offset).Limit(limit).Find(&result).Error; err != nil {
+		return result, 0, err
 	}
 
 	if size := len(result); 0 < limit && 0 < size && size < limit {
-		count = int64(size + offset)
-		return
+		return result, int64(size + offset), nil
 	}
 
-	err = db.Offset(-1).Limit(-1).Count(&count).Error
-	return
+	var count int64
+	err := db.Offset(-1).Limit(-1).Count(&count).Error
+	return result, count, err
 }
