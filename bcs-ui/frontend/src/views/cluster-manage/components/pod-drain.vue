@@ -79,7 +79,7 @@
               <span class="text-[12px] text-[#979BA5]">( {{ $t('cluster.nodeList.tips.filterTip') }} )</span>
             </span>
           </div>
-          <div class="flex justify-between">
+          <div class="flex justify-between gap-[20px]">
             <i18n class="leading-[24px]" path="cluster.nodeList.label.drainNum">
               <template #podNum>
                 <span class="font-bold">{{ podList.length }}</span>
@@ -88,7 +88,10 @@
                 <span class="font-bold">{{ drainNum }}</span>
               </template>
               <template #notDrainNum>
-                <span class="font-bold">{{ podList.length - drainNum }}</span>
+                <span class="font-bold">{{ manageByDaemonSet }}</span>
+              </template>
+              <template #notDrainOfPDBNum>
+                <span class="font-bold">{{ podList.length - drainNum - manageByDaemonSet }}</span>
               </template>
             </i18n>
             <bk-checkbox
@@ -309,6 +312,7 @@ export default defineComponent({
     // Pod 列表
     const podList = ref<IPod[]>([]);
     const drainNum = computed(() => podList.value.filter(v => v.willBeEvicted).length);
+    const manageByDaemonSet = computed(() => podList.value.filter(v => !v.willBeEvicted && v.evictionRisk?.some(e => e.riskParameter === '--ignore-daemonsets')).length);
     const isShowDrainOnly = ref(false);
     const podLoading = ref(false);
     async function getPodList(params = {}) {
@@ -474,6 +478,7 @@ export default defineComponent({
       paramsData,
       podLabels,
       drainNum,
+      manageByDaemonSet,
       isShowDrainOnly,
       clusterNamespaces,
       pageChange,

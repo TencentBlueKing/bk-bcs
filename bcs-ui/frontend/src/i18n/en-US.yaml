@@ -1798,8 +1798,9 @@ cluster:
       preview: Preview
       drainNum: >-
         There are {podNum} Pods in total, {drainNum} of which can be evicted, 
-        and the other {notDrainNum} Pods managed by DaemonSet will not be
-        evicted
+        the other {notDrainNum} Pods managed by DaemonSet will not be evicted,
+        and the other {notDrainOfPDBNum} Pods managed by PDB strategy will not
+        be evicted
       namespace: Namespace
       node: Node
       termination: Termination grace period
@@ -1901,7 +1902,10 @@ deploy:
     wait: Wait for all Pod and PVC to be ready
     timeout:
       label: Timeout
-      desc: 'This is equivalent to the `--timeout` parameter, and will take effect after selecting the option to wait for all Pods. Examples: 30s, 5m, 10s, 10m'
+      desc: >-
+        This is equivalent to the `--timeout` parameter, and will take effect
+        after selecting the option to wait for all Pods. Examples: 30s, 5m, 10s,
+        10m
     hisotryMax:
       label: Keep the maximum historical version
       desc: '--history-max, the number of historical versions available for rollback'
