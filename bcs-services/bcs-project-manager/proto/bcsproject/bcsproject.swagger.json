@@ -1182,6 +1182,164 @@
         ]
       }
     },
+    "/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/otherQuotas": {
+      "post": {
+        "summary": "创建其他配额",
+        "description": "创建命名空间其他配额",
+        "operationId": "Namespace_CreateOtherQuota",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bcsprojectOtherQuotaResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/bcsprojectCreateOtherQuotaRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Namespace"
+        ]
+      }
+    },
+    "/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/otherQuotas/{quotaName}": {
+      "delete": {
+        "summary": "删除其他配额",
+        "description": "删除命名空间其他配额",
+        "operationId": "Namespace_DeleteOtherQuota",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bcsprojectOtherQuotaResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "quotaName",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Namespace"
+        ]
+      },
+      "put": {
+        "summary": "更新其他配额",
+        "description": "更新命名空间其他配额",
+        "operationId": "Namespace_UpdateOtherQuota",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bcsprojectOtherQuotaResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "quotaName",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/bcsprojectUpdateOtherQuotaRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Namespace"
+        ]
+      }
+    },
     "/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/variables": {
       "get": {
         "summary": "获取命名空间的所有变量值",
@@ -2378,6 +2536,35 @@
           "title": "web_annotations"
         }
       }
+    },
+    "bcsprojectCreateOtherQuotaRequest": {
+      "type": "object",
+      "properties": {
+        "projectCode": {
+          "type": "string"
+        },
+        "clusterID": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "quotaName": {
+          "type": "string"
+        },
+        "quota": {
+          "$ref": "#/definitions/bcsprojectResourceQuota"
+        }
+      },
+      "description": "创建命名空间其他配额请求",
+      "title": "CreateOtherQuotaRequest",
+      "required": [
+        "projectCode",
+        "clusterID",
+        "namespace",
+        "quotaName",
+        "quota"
+      ]
     },
     "bcsprojectCreateProjectQuotaRequest": {
       "type": "object",
@@ -4053,6 +4240,37 @@
           "$ref": "#/definitions/bcsprojectResourceQuota",
           "description": "配额总量",
           "title": "quota"
+        },
+        "used": {
+          "$ref": "#/definitions/bcsprojectResourceQuota",
+          "description": "配额已占用量",
+          "title": "used"
+        },
+        "usageRate": {
+          "$ref": "#/definitions/bcsprojectResourceQuotaUsageRate",
+          "description": "各资源项的配额占用率",
+          "title": "usageRate"
+        }
+      }
+    },
+    "bcsprojectOtherQuotaResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "message": {
+          "type": "string"
+        },
+        "data": {
+          "$ref": "#/definitions/bcsprojectOtherQuota"
+        },
+        "requestID": {
+          "type": "string"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/bcsprojectPerms"
         }
       }
     },
@@ -4657,6 +4875,35 @@
         }
       }
     },
+    "bcsprojectResourceQuotaUsageRate": {
+      "type": "object",
+      "properties": {
+        "cpuRequests": {
+          "type": "number",
+          "format": "float",
+          "description": "CPU Request 配额占用率",
+          "title": "requests.cpu"
+        },
+        "memoryRequests": {
+          "type": "number",
+          "format": "float",
+          "description": "Memory Request 配额占用率",
+          "title": "requests.memory"
+        },
+        "cpuLimits": {
+          "type": "number",
+          "format": "float",
+          "description": "CPU Limit 配额占用率",
+          "title": "limits.cpu"
+        },
+        "memoryLimits": {
+          "type": "number",
+          "format": "float",
+          "description": "Memory Limit 配额占用率",
+          "title": "limits.memory"
+        }
+      }
+    },
     "bcsprojectScaleDownProjectQuotaRequest": {
       "type": "object",
       "properties": {
@@ -5140,6 +5387,35 @@
           "title": "request id"
         }
       }
+    },
+    "bcsprojectUpdateOtherQuotaRequest": {
+      "type": "object",
+      "properties": {
+        "projectCode": {
+          "type": "string"
+        },
+        "clusterID": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "quotaName": {
+          "type": "string"
+        },
+        "quota": {
+          "$ref": "#/definitions/bcsprojectResourceQuota"
+        }
+      },
+      "description": "更新命名空间其他配额请求",
+      "title": "UpdateOtherQuotaRequest",
+      "required": [
+        "projectCode",
+        "clusterID",
+        "namespace",
+        "quotaName",
+        "quota"
+      ]
     },
     "bcsprojectUpdateProjectQuotaRequest": {
       "type": "object",
