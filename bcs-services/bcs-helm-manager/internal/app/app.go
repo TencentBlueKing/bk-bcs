@@ -603,7 +603,7 @@ func (hm *HelmManager) initJWTClient() error {
 // initIAMClient xxx
 // init iam client for perm
 func (hm *HelmManager) initIAMClient() error {
-	auth.IAMClient = func(tenantID string) iam.PermClient {
+	auth.SetIAMClientFactory(func(tenantID string) iam.PermClient {
 		iamClient, err := iam.NewIamClient(&iam.Options{
 			SystemID:    hm.opt.IAM.SystemID,
 			AppCode:     hm.opt.IAM.AppCode,
@@ -621,7 +621,7 @@ func (hm *HelmManager) initIAMClient() error {
 			panic(err)
 		}
 		return iamClient
-	}
+	})
 	auth.InitPermClient()
 	blog.Info("init iam client successfully")
 	return nil

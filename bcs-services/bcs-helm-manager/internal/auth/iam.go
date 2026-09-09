@@ -15,6 +15,7 @@ package auth
 import (
 	"context"
 	"fmt"
+	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cluster"
@@ -30,8 +31,10 @@ import (
 )
 
 var (
-	// IAMClient iam client
-	IAMClient func(tenantID string) iam.PermClient
+	iamClientMu      sync.Mutex
+	iamClients       = make(map[string]iam.PermClient)
+	iamClientFactory func(tenantID string) iam.PermClient
+
 	// ProjectIamClient project iam client
 	ProjectIamClient func(tenantID string) *project.BCSProjectPerm
 	// ClusterIamClient cluster iam client
@@ -39,6 +42,37 @@ var (
 	// NamespaceIamClient namespace iam client
 	NamespaceIamClient func(tenantID string) *namespace.BCSNamespacePerm
 )
+
+// SetIAMClientFactory registers the factory used to create tenant-scoped IAM clients.
+func SetIAMClientFactory(factory func(tenantID string) iam.PermClient) {
+	iamClientMu.Lock()
+	defer iamClientMu.Unlock()
+	iamClientFactory = factory
+	iamClients = make(map[string]iam.PermClient)
+}
+
+func resetIAMClientCache() {
+	SetIAMClientFactory(nil)
+}
+
+// IAMClient returns a cached IAM client for the tenant. Empty tenantID uses the default tenant.
+func IAMClient(tenantID string) iam.PermClient {
+	if tenantID == "" {
+		tenantID = iam.DefaultTenantId
+	}
+
+	iamClientMu.Lock()
+	defer iamClientMu.Unlock()
+	if cli, ok := iamClients[tenantID]; ok {
+		return cli
+	}
+	if iamClientFactory == nil {
+		panic("iam client factory is not initialized")
+	}
+	cli := iamClientFactory(tenantID)
+	iamClients[tenantID] = cli
+	return cli
+}
 
 // InitPermClient new a perm client
 func InitPermClient() {

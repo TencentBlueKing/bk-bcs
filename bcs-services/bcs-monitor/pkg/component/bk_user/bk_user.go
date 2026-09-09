@@ -27,31 +27,22 @@ import (
 
 // GetTenantAPIAuthorization generate bk user api auth header, X-Bkapi-Authorization
 func GetTenantAPIAuthorization(ctx context.Context, username string) (string, error) {
-	if username == "" {
-		username = config.G.Base.BKUsername // nolint: ineffassign,staticcheck
+	// 未开多租户时直接拼网关鉴权头，不查 bk-user 虚拟用户
+	if !config.G.Base.EnableMultiTenant {
+		return component.GetBKAPIAuthorization(username)
 	}
 
 	// get bk_username from bk user api
 	username = "bk_admin"
-	user, err := LookupVirtualUsers(ctx, username)
+
+	users, err := LookupVirtualUsers(ctx, username)
 	if err != nil {
 		return "", err
 	}
-	if len(user) != 1 {
+	if len(users) != 1 {
 		return "", errors.New("user not found")
 	}
-	auth := &component.AuthInfo{
-		BkAppCode:   config.G.Base.AppCode,
-		BkAppSecret: config.G.Base.AppSecret,
-		BkUserName:  user[0].BKUsername,
-	}
-
-	userAuth, err := json.Marshal(auth)
-	if err != nil {
-		return "", err
-	}
-
-	return string(userAuth), nil
+	return component.GetBKAPIAuthorization(users[0].BKUsername)
 }
 
 // LookupVirtualUsersResp lookup virtual users response

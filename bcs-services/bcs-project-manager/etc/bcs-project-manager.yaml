@@ -83,7 +83,8 @@ clientActionExemptTenant:
     all: true
 cmdb:
   bkSupplierAccount: "tencent"
-  host: "http://localhost:80"
+  # cmdb apigw host, e.g. https://bkapi.example.com/prod
+  host: ""
   timeout: 10
   proxy: ""
   debug: false

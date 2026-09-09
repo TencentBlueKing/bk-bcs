@@ -152,7 +152,7 @@ type ClientActionExemptTenantConfig struct {
 // CMDBConfig 请求的 CMDB 服务配置
 type CMDBConfig struct {
 	BKSupplierAccount string `yaml:"bkSupplierAccount" usage:"developer account"`
-	Host              string `yaml:"host" usage:"access cmdb api host"`
+	Host              string `yaml:"host" usage:"cmdb apigw host, e.g. https://bk-cmdb.example.com/prod"`
 	Timeout           int    `yaml:"timeout" usage:"request cmdb api timeout"`
 	Proxy             string `yaml:"proxy" usage:"proxy"`
 	BKUsername        string `yaml:"bkUsername" usage:"username to operate"`

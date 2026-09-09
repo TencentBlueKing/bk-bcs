@@ -157,7 +157,7 @@ export function useCluster() {
 export function useAppData() {
   // 用户信息
   const user = computed(() => $store.state.user);
-  const apiBaseUrl = window.RUN_ENV === 'dev' ? '/api/bk-user-web/prod' : `${window.BK_USER_HOST}/api/bk-user-web/prod`;
+  const apiBaseUrl = window.RUN_ENV === 'dev' ? '/prod' : `${window.BK_USER_HOST}/prod`;
   async function getUserInfo() {
     const data = await userInfo().catch(() => ({}));
     // 多租户用户名展示组件配置

@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/parnurzeal/gorequest"
@@ -36,8 +37,8 @@ var (
 	searchBusinessBatchSize = 200
 	defaultTimeout          = 10
 	defaultSupplierAccount  = "tencent"
-	searchBizPath           = "/api/bk-cmdb/prod/api/v3/biz/search/default"
-	getBizTopoPath          = "/api/bk-cmdb/prod/api/v3/find/topoinst/biz/%v"
+	searchBizPath           = "/api/v3/biz/search/%s"
+	getBizTopoPath          = "/api/v3/find/topoinst/biz/%v"
 	// CacheKeyBusinessPrefix cache key business prefix
 	CacheKeyBusinessPrefix = "BUSINESS_%s"
 )
@@ -143,11 +144,7 @@ func SearchBusiness(ctx context.Context, username string, bizID string) (*Search
 	if config.GlobalConf.CMDB.Timeout != 0 {
 		timeout = config.GlobalConf.CMDB.Timeout
 	}
-	// 获取开发商账户
-	supplierAccount := defaultSupplierAccount
-	if config.GlobalConf.CMDB.BKSupplierAccount != "" {
-		supplierAccount = config.GlobalConf.CMDB.BKSupplierAccount
-	}
+	supplierAccount := getSupplierAccount()
 	// 组装请求参数
 	condition := map[string]interface{}{}
 	if username != "" {
@@ -158,7 +155,7 @@ func SearchBusiness(ctx context.Context, username string, bizID string) (*Search
 		condition["bk_biz_id"] = bizIDInt
 	}
 	req := gorequest.SuperAgent{
-		Url:    fmt.Sprintf("%s%s", config.GlobalConf.CMDB.Host, searchBizPath),
+		Url:    buildSearchBizURL(supplierAccount),
 		Method: "POST",
 		Data: map[string]interface{}{
 			"condition":           condition,
@@ -273,14 +270,10 @@ func GetBusinessTopology(ctx context.Context, bizID string) ([]BusinessTopologyD
 	if config.GlobalConf.CMDB.Timeout != 0 {
 		timeout = config.GlobalConf.CMDB.Timeout
 	}
-	// 获取开发商账户
-	supplierAccount := defaultSupplierAccount
-	if config.GlobalConf.CMDB.BKSupplierAccount != "" {
-		supplierAccount = config.GlobalConf.CMDB.BKSupplierAccount
-	}
+	supplierAccount := getSupplierAccount()
 	// 组装请求参数
 	req := gorequest.SuperAgent{
-		Url:    fmt.Sprintf("%s%s", config.GlobalConf.CMDB.Host, fmt.Sprintf(getBizTopoPath, bizID)),
+		Url:    buildGetBizTopoURL(bizID),
 		Method: "POST",
 		Data: map[string]interface{}{
 			"bk_biz_id":           bizID,
@@ -318,13 +311,10 @@ func searchBusinessByIds(ctx context.Context, condition string,
 	if config.GlobalConf.CMDB.Timeout != 0 {
 		timeout = config.GlobalConf.CMDB.Timeout
 	}
-	supplierAccount := defaultSupplierAccount
-	if config.GlobalConf.CMDB.BKSupplierAccount != "" {
-		supplierAccount = config.GlobalConf.CMDB.BKSupplierAccount
-	}
+	supplierAccount := getSupplierAccount()
 	// 组装请求参数
 	req := gorequest.SuperAgent{
-		Url:    fmt.Sprintf("%s%s", config.GlobalConf.CMDB.Host, searchBizPath),
+		Url:    buildSearchBizURL(supplierAccount),
 		Method: "POST",
 		Data: map[string]interface{}{
 			"biz_property_filter": map[string]interface{}{
@@ -357,4 +347,23 @@ func searchBusinessByIds(ctx context.Context, condition string,
 		return nil, fmt.Errorf("search business failed, code: %d, message: %s", resp.Code, resp.Message)
 	}
 	return resp.Data.Info, nil
+}
+
+func getSupplierAccount() string {
+	if config.GlobalConf.CMDB.BKSupplierAccount != "" {
+		return config.GlobalConf.CMDB.BKSupplierAccount
+	}
+	return defaultSupplierAccount
+}
+
+func cmdbHost() string {
+	return strings.TrimRight(config.GlobalConf.CMDB.Host, "/")
+}
+
+func buildSearchBizURL(supplierAccount string) string {
+	return cmdbHost() + fmt.Sprintf(searchBizPath, supplierAccount)
+}
+
+func buildGetBizTopoURL(bizID string) string {
+	return cmdbHost() + fmt.Sprintf(getBizTopoPath, bizID)
 }

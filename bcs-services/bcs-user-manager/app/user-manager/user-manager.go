@@ -40,6 +40,7 @@ import (
 	"go-micro.dev/v4/registry"
 
 	i18n2 "github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/i18n"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/iamclient"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/job/activity"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/cache"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/sqlstore"
@@ -157,8 +158,7 @@ func (u *UserManager) initPermService() error {
 }
 
 func (u *UserManager) initIamPermClient() error {
-
-	opt := &iam.Options{
+	opt := iam.Options{
 		SystemID:    u.config.IAMConfig.SystemID,
 		AppCode:     u.config.IAMConfig.AppCode,
 		AppSecret:   u.config.IAMConfig.AppSecret,
@@ -170,14 +170,7 @@ func (u *UserManager) initIamPermClient() error {
 		Debug:       u.config.IAMConfig.ServerDebug,
 	}
 
-	config.GloablIAMClient = func(tenantID string) iam.PermMigrateClient {
-		opt.TenantId = tenantID
-		iamCli, err := iam.NewIamMigrateClient(opt)
-		if err != nil {
-			panic(err)
-		}
-		return iamCli
-	}
+	config.GloablIAMClient = iamclient.NewFactory(opt)
 
 	// validate iam client
 	_ = config.GloablIAMClient("")

@@ -13,6 +13,8 @@
 package auth
 
 import (
+	"sync"
+
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cloudaccount"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cluster"
@@ -20,6 +22,42 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 )
+
+var (
+	iamClientMu      sync.Mutex
+	iamClients       = make(map[string]iam.PermClient)
+	iamClientFactory = defaultIAMClientFactory
+)
+
+func defaultIAMClientFactory(tenantID string) (iam.PermClient, error) {
+	return iam.NewIamClient(&iam.Options{
+		SystemID:    options.GetGlobalCMOptions().IAM.SystemID,
+		AppCode:     options.GetGlobalCMOptions().IAM.AppCode,
+		AppSecret:   options.GetGlobalCMOptions().IAM.AppSecret,
+		External:    options.GetGlobalCMOptions().IAM.External,
+		GateWayHost: options.GetGlobalCMOptions().IAM.GatewayServer,
+		IAMHost:     options.GetGlobalCMOptions().IAM.IAMServer,
+		BkiIAMHost:  options.GetGlobalCMOptions().IAM.BkiIAMServer,
+		Metric:      options.GetGlobalCMOptions().IAM.Metric,
+		Debug:       options.GetGlobalCMOptions().IAM.Debug,
+		TenantId:    tenantID,
+	})
+}
+
+func setIAMClientFactory(factory func(tenantID string) (iam.PermClient, error)) {
+	iamClientMu.Lock()
+	defer iamClientMu.Unlock()
+	if factory == nil {
+		iamClientFactory = defaultIAMClientFactory
+	} else {
+		iamClientFactory = factory
+	}
+	iamClients = make(map[string]iam.PermClient)
+}
+
+func resetIAMClientCache() {
+	setIAMClientFactory(nil)
+}
 
 // GetProjectIamClient project iam client
 func GetProjectIamClient(tenantId string) (*project.BCSProjectPerm, error) {
@@ -51,25 +89,22 @@ func GetCloudAccountIamClient(tenantId string) (*cloudaccount.BCSCloudAccountPer
 	return cloudaccount.NewBCSAccountPermClient(iamClient), nil
 }
 
-// InitPermClient init perm client
+// InitPermClient returns a cached IAM client for the tenant. Empty tenantID uses the default tenant.
 func InitPermClient(tenantId string) (iam.PermClient, error) {
-	var err error
-	iamClient, err := iam.NewIamClient(&iam.Options{
-		SystemID:    options.GetGlobalCMOptions().IAM.SystemID,
-		AppCode:     options.GetGlobalCMOptions().IAM.AppCode,
-		AppSecret:   options.GetGlobalCMOptions().IAM.AppSecret,
-		External:    options.GetGlobalCMOptions().IAM.External,
-		GateWayHost: options.GetGlobalCMOptions().IAM.GatewayServer,
-		IAMHost:     options.GetGlobalCMOptions().IAM.IAMServer,
-		BkiIAMHost:  options.GetGlobalCMOptions().IAM.BkiIAMServer,
-		Metric:      options.GetGlobalCMOptions().IAM.Metric,
-		Debug:       options.GetGlobalCMOptions().IAM.Debug,
-		TenantId:    tenantId,
-	})
+	if tenantId == "" {
+		tenantId = iam.DefaultTenantId
+	}
 
+	iamClientMu.Lock()
+	defer iamClientMu.Unlock()
+	if cli, ok := iamClients[tenantId]; ok {
+		return cli, nil
+	}
+
+	iamClient, err := iamClientFactory(tenantId)
 	if err != nil {
 		return nil, err
 	}
-
+	iamClients[tenantId] = iamClient
 	return iamClient, nil
 }
