@@ -80,40 +80,39 @@ var messageKeyToIndex = map[string]int{
 
 var enIndex = []uint32{ // 38 elements
 	// Entry 0 - 1F
-	0x00000000, 0x00000023, 0x0000007f, 0x0000009f,
-	0x000000bd, 0x000000db, 0x000000fc, 0x0000010f,
-	0x00000126, 0x00000141, 0x0000015c, 0x00000180,
-	0x0000019c, 0x000001b1, 0x000001b7, 0x000001cf,
-	0x000001e9, 0x00000200, 0x00000227, 0x00000243,
-	0x00000272, 0x00000290, 0x000002ab, 0x000002ca,
-	0x000002dc, 0x000002ec, 0x00000300, 0x0000033b,
-	0x000003c1, 0x00000428, 0x00000457, 0x0000049f,
+	0x00000000, 0x00000023, 0x00000050, 0x00000070,
+	0x0000008e, 0x000000ac, 0x000000cd, 0x000000e0,
+	0x000000f7, 0x00000112, 0x0000012d, 0x00000151,
+	0x0000016d, 0x00000182, 0x00000188, 0x000001a0,
+	0x000001ba, 0x000001d1, 0x000001f8, 0x00000214,
+	0x00000243, 0x00000261, 0x0000027c, 0x0000029b,
+	0x000002ad, 0x000002bd, 0x000002d1, 0x0000030c,
+	0x00000392, 0x000003f9, 0x00000428, 0x00000470,
 	// Entry 20 - 3F
-	0x000004a2, 0x000004ab, 0x000004c2, 0x000004e3,
-	0x000004f1, 0x000004f1,
+	0x00000473, 0x0000047c, 0x00000493, 0x000004b4,
+	0x000004c2, 0x000004c2,
 } // Size: 176 bytes
 
-const enData string = "" + // Size: 1265 bytes
-	"\x02Please enter the upload path first\x02The target container does not " +
-	"have tar installed, so files cannot be uploaded or downloaded\x02Destina" +
-	"tion path does not exist\x02Failed to parse uploaded file\x02Failed to g" +
-	"et pod information\x02Failed to execute upload command\x02File upload fa" +
-	"iled\x02File upload successful\x02Failed to copy file stream\x02Target f" +
-	"ile does not exist\x02Download directory is not supported\x02Files canno" +
-	"t exceed %[1]dMB\x02Project_id Incorrect\x02%[1]s\x02Get Clusters succes" +
-	"sful\x02Get session failed: %[1]s\x02Get session successful\x02session_i" +
-	"d is incorrect or has expired\x02Request Params Error: %[1]s\x02Request " +
-	"Params Error, command not valid: %[1]s\x02Service request failed: %[1]s" +
-	"\x02Service request successful\x02User did not set command delay\x02Inva" +
-	"lid parameter\x02Invalid session\x02Init session failed\x02The BCS Conso" +
-	"le server is disconnected, please login again\x02Support common Bash sho" +
-	"rtcuts; Ctrl-W in Windows is to close the window shortcut, please use Al" +
-	"t-W instead; use Alt-Num to switch Tab\x02Support common Bash shortcuts;" +
-	" Ctrl-W under Windows is the shortcut to close, please use Alt-W instead" +
-	"\x02BCS Console has no operation for %[1]d minutes\x02BCS console has be" +
-	"en used for more than %[1]d hours. Please login again\x02en\x02Download" +
-	"\x02project_id is required\x02ProjectId or ClusterId Incorrect\x02No per" +
-	"mission"
+const enData string = "" + // Size: 1218 bytes
+	"\x02Please enter the upload path first\x02tar is not installed in the ta" +
+	"rget container\x02Destination path does not exist\x02Failed to parse upl" +
+	"oaded file\x02Failed to get pod information\x02Failed to execute upload " +
+	"command\x02File upload failed\x02File upload successful\x02Failed to cop" +
+	"y file stream\x02Target file does not exist\x02Download directory is not" +
+	" supported\x02Files cannot exceed %[1]dMB\x02Project_id Incorrect\x02%[1" +
+	"]s\x02Get Clusters successful\x02Get session failed: %[1]s\x02Get sessio" +
+	"n successful\x02session_id is incorrect or has expired\x02Request Params" +
+	" Error: %[1]s\x02Request Params Error, command not valid: %[1]s\x02Servi" +
+	"ce request failed: %[1]s\x02Service request successful\x02User did not s" +
+	"et command delay\x02Invalid parameter\x02Invalid session\x02Init session" +
+	" failed\x02The BCS Console server is disconnected, please login again" +
+	"\x02Support common Bash shortcuts; Ctrl-W in Windows is to close the win" +
+	"dow shortcut, please use Alt-W instead; use Alt-Num to switch Tab\x02Sup" +
+	"port common Bash shortcuts; Ctrl-W under Windows is the shortcut to clos" +
+	"e, please use Alt-W instead\x02BCS Console has no operation for %[1]d mi" +
+	"nutes\x02BCS console has been used for more than %[1]d hours. Please log" +
+	"in again\x02en\x02Download\x02project_id is required\x02ProjectId or Clu" +
+	"sterId Incorrect\x02No permission"
 
 var zhIndex = []uint32{ // 38 elements
 	// Entry 0 - 1F
@@ -142,4 +141,4 @@ const zhData string = "" + // Size: 1087 bytes
 	"已经超过%[1]d小时，请重新登录\x02zh\x02下载\x02project_id is required\x02项目或者集群Id不正确" +
 	"\x02没有权限\x02文件名不合法"
 
-	// Total table size 2704 bytes (2KiB); checksum: 5474D964
+	// Total table size 2657 bytes (2KiB); checksum: 2C58DD7B

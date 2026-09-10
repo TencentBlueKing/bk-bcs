@@ -9,7 +9,7 @@
         {
             "id": "目标容器未安装 tar，无法上传或下载文件",
             "message": "目标容器未安装 tar，无法上传或下载文件",
-            "translation": "The target container does not have tar installed, so files cannot be uploaded or downloaded"
+            "translation": "tar is not installed in the target container"
         },
         {
             "id": "目标路径不存在",
