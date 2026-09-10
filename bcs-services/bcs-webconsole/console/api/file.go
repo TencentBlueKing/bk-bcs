@@ -56,6 +56,10 @@ func (s *service) UploadHandler(c *gin.Context) {
 		rest.APIError(c, i18n.T(c, "请先输入上传路径"))
 		return
 	}
+	if err := checkTarExists(sessionId); err != nil {
+		rest.APIError(c, i18n.T(c, "目标容器未安装 tar，无法上传或下载文件"))
+		return
+	}
 	err := checkFileExists(uploadPath, sessionId)
 	if err != nil {
 		rest.APIError(c, i18n.T(c, "目标路径不存在"))
@@ -234,6 +238,15 @@ func (s *service) CheckDownloadHandler(c *gin.Context) {
 	// 检查都返回200, 具体错误在 CheckPassed 中处理
 	msg := "check done"
 
+	if err := checkTarExists(sessionId); err != nil {
+		rest.APIOK(c, msg, types.CheckPassed{
+			Passed: false,
+			Detail: err.Error(),
+			Reason: i18n.T(c, "目标容器未安装 tar，无法上传或下载文件"),
+		})
+		return
+	}
+
 	if err := checkFileExists(downloadPath, sessionId); err != nil {
 		rest.APIOK(c, msg, types.CheckPassed{
 			Passed: false,
@@ -283,6 +296,23 @@ func validateUploadFileName(fileName string) (string, error) {
 		return "", errors.Errorf("invalid file name %s", fileName)
 	}
 	return baseName, nil
+}
+
+func checkTarExists(sessionID string) error {
+	podCtx, err := sessions.NewStore().WebSocketScope().Get(context.Background(), sessionID)
+	if err != nil {
+		return err
+	}
+
+	pe, err := podCtx.NewPodExec()
+	if err != nil {
+		return err
+	}
+	pe.Command = []string{"tar", "--help"}
+	pe.Stdout = &bytes.Buffer{}
+	pe.Stderr = &bytes.Buffer{}
+	pe.Tty = false
+	return pe.Exec()
 }
 
 func checkPathIsDir(path, sessionID string) error {
