@@ -15,9 +15,11 @@ package client
 
 import (
 	"context"
+	"encoding/json"
 	"strings"
 
 	"github.com/adevjoe/opentelemetry-go-contrib/instrumentation/k8s.io/client-go/transport"
+	jsonpatch "github.com/evanphx/json-patch"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -216,9 +218,12 @@ func (c *ResClient) ApplyWithoutPerm(
 			ctx, &unstructured.Unstructured{Object: manifest}, opts)
 		return ret, c.handleErr(ctx, errr)
 	}
-	_ = mapx.SetItems(manifest, "metadata.resourceVersion", old.GetResourceVersion())
+	merged, err := mergeManifest(old, manifest)
+	if err != nil {
+		return nil, errorx.New(errcode.General, "merge resource failed: %v", err)
+	}
 	ret, err := c.cli.Resource(c.res).Namespace(namespace).Update(
-		ctx, &unstructured.Unstructured{Object: manifest}, metav1.UpdateOptions{DryRun: opts.DryRun})
+		ctx, merged, metav1.UpdateOptions{DryRun: opts.DryRun})
 	return ret, c.handleErr(ctx, err)
 }
 
@@ -243,9 +248,12 @@ func (c *ResClient) Apply(
 			ctx, &unstructured.Unstructured{Object: manifest}, opts)
 		return ret, c.handleErr(ctx, errr)
 	}
-	_ = mapx.SetItems(manifest, "metadata.resourceVersion", old.GetResourceVersion())
+	merged, err := mergeManifest(old, manifest)
+	if err != nil {
+		return nil, errorx.New(errcode.General, "merge resource failed: %v", err)
+	}
 	ret, err := c.cli.Resource(c.res).Namespace(namespace).Update(
-		ctx, &unstructured.Unstructured{Object: manifest}, metav1.UpdateOptions{DryRun: opts.DryRun})
+		ctx, merged, metav1.UpdateOptions{DryRun: opts.DryRun})
 	return ret, c.handleErr(ctx, err)
 }
 
@@ -325,4 +333,29 @@ func (c *ResClient) handleErr(ctx context.Context, originErr error) error {
 		errcode.General,
 		i18n.GetMsg(ctx, "检测到集群资源变动，尝试同步资源信息中。若近期有升级集群行为，请稍后重试，若依旧失败，请联系容器助手"),
 	)
+}
+
+// mergeManifest 将新 manifest 以 JSON Merge Patch 语义叠加到线上对象。
+// 新字段覆盖旧字段，线上独有字段（uid / clusterIP / status / 已有 annotations 等）予以保留。
+func mergeManifest(
+	old *unstructured.Unstructured, manifest map[string]interface{},
+) (*unstructured.Unstructured, error) {
+	oldBytes, err := json.Marshal(old.Object)
+	if err != nil {
+		return nil, err
+	}
+	newBytes, err := json.Marshal(manifest)
+	if err != nil {
+		return nil, err
+	}
+	mergedBytes, err := jsonpatch.MergePatch(oldBytes, newBytes)
+	if err != nil {
+		return nil, err
+	}
+	merged := &unstructured.Unstructured{}
+	if err = merged.UnmarshalJSON(mergedBytes); err != nil {
+		return nil, err
+	}
+	merged.SetResourceVersion(old.GetResourceVersion())
+	return merged, nil
 }

@@ -224,6 +224,7 @@ require (
 
 require (
 	github.com/Tencent/bk-bcs/bcs-scenarios/kourse v0.0.0-20231011121510-d30829b961ad
+	github.com/evanphx/json-patch v5.7.0+incompatible
 	github.com/feiin/go-xss v1.3.0
 	github.com/go-redis/redis/extra/redisotel/v8 v8.11.5
 	github.com/googleapis/gnostic v0.5.5
@@ -244,7 +245,6 @@ require (
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
 	github.com/chai2010/gettext-go v1.0.2 // indirect
 	github.com/cyphar/filepath-securejoin v0.2.5 // indirect
-	github.com/evanphx/json-patch v5.7.0+incompatible // indirect
 	github.com/exponent-io/jsonpath v0.0.0-20151013193312-d6023ce2651d // indirect
 	github.com/fatih/camelcase v1.0.0 // indirect
 	github.com/feiin/pkg v0.2.1 // indirect
