@@ -19,6 +19,7 @@ import (
 	"hash/fnv"
 	"os"
 	"reflect"
+	"strconv"
 	"strings"
 	"time"
 
@@ -135,6 +136,36 @@ func SetCustomResourceTypesFromEnv(opt *option.BkcmdbSynchronizerOption) error {
 	return nil
 }
 
+// SetSqlLogLevelFromEnv parses synchronizer_sqlLogLevel environment variable
+// and sets it to the option.
+func SetSqlLogLevelFromEnv(opt *option.BkcmdbSynchronizerOption) error {
+	envValue := os.Getenv("synchronizer_sqlLogLevel")
+	if envValue == "" {
+		return nil
+	}
+	logLevel, err := strconv.Atoi(envValue)
+	if err != nil {
+		return fmt.Errorf("parse sql log level failed: %w", err)
+	}
+	opt.Synchronizer.SqlLogLevel = logLevel
+	return nil
+}
+
+// SetCleanLocalCacheFromEnv parses synchronizer_cleanLocalCache environment variable
+// and sets it to the option.
+func SetCleanLocalCacheFromEnv(opt *option.BkcmdbSynchronizerOption) error {
+	envValue := os.Getenv("synchronizer_cleanLocalCache")
+	if envValue == "" {
+		return nil
+	}
+	cleanLocalCache, err := strconv.ParseBool(envValue)
+	if err != nil {
+		return fmt.Errorf("parse clean local cache failed: %w", err)
+	}
+	opt.Synchronizer.CleanLocalCache = cleanLocalCache
+	return nil
+}
+
 // IsKindInSlice checks if a kind exists in the whitelist
 func IsKindInSlice(kind string, whitelist []string) bool {
 	for _, s := range whitelist {
@@ -143,4 +174,19 @@ func IsKindInSlice(kind string, whitelist []string) bool {
 		}
 	}
 	return false
+}
+
+// Deref dereferences a pointer and returns its value. If the pointer is nil, it returns the zero value of the type.
+// This is a generic tool to prevent panics when dereferencing nil pointers.
+func Deref[T any](p *T) T {
+	if p == nil {
+		var v T
+		return v
+	}
+	return *p
+}
+
+// Ptr returns a pointer to the given value.
+func Ptr[T any](v T) *T {
+	return &v
 }

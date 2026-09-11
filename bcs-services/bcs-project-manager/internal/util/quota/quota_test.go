@@ -17,7 +17,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
 )
@@ -34,6 +36,70 @@ func TestQuota(t *testing.T) {
 		t.Fatal(err)
 	}
 	fmt.Println(q2.AsApproximateFloat64())
+}
+
+func TestTransferToProtoOtherQuota(t *testing.T) {
+	quota := &corev1.ResourceQuota{
+		ObjectMeta: metav1.ObjectMeta{Name: "extra-quota"},
+		Spec: corev1.ResourceQuotaSpec{
+			Hard: corev1.ResourceList{
+				corev1.ResourceRequestsCPU:    resource.MustParse("2"),
+				corev1.ResourceLimitsCPU:      resource.MustParse("4"),
+				corev1.ResourceRequestsMemory: resource.MustParse("4Gi"),
+				corev1.ResourceLimitsMemory:   resource.MustParse("8Gi"),
+			},
+		},
+		Status: corev1.ResourceQuotaStatus{
+			// The controller has not observed the latest spec yet.
+			Hard: corev1.ResourceList{
+				corev1.ResourceRequestsCPU:    resource.MustParse("20"),
+				corev1.ResourceLimitsCPU:      resource.MustParse("40"),
+				corev1.ResourceRequestsMemory: resource.MustParse("40Gi"),
+				corev1.ResourceLimitsMemory:   resource.MustParse("80Gi"),
+			},
+			Used: corev1.ResourceList{
+				corev1.ResourceRequestsCPU:    resource.MustParse("1"),
+				corev1.ResourceLimitsCPU:      resource.MustParse("3"),
+				corev1.ResourceRequestsMemory: resource.MustParse("1Gi"),
+				corev1.ResourceLimitsMemory:   resource.MustParse("6Gi"),
+			},
+		},
+	}
+
+	got := TransferToProtoOtherQuota(quota)
+	assert.Equal(t, "extra-quota", got.GetName())
+	assert.Equal(t, "2", got.GetQuota().GetCpuRequests())
+	assert.Equal(t, "4", got.GetQuota().GetCpuLimits())
+	assert.Equal(t, "4Gi", got.GetQuota().GetMemoryRequests())
+	assert.Equal(t, "8Gi", got.GetQuota().GetMemoryLimits())
+	assert.Equal(t, "3", got.GetUsed().GetCpuLimits())
+	assert.InDelta(t, 0.5, got.GetUsageRate().GetCpuRequests(), 0.0001)
+	assert.InDelta(t, 0.75, got.GetUsageRate().GetCpuLimits(), 0.0001)
+	assert.InDelta(t, 0.25, got.GetUsageRate().GetMemoryRequests(), 0.0001)
+	assert.InDelta(t, 0.75, got.GetUsageRate().GetMemoryLimits(), 0.0001)
+
+	t.Run("create without status", func(t *testing.T) {
+		created := quota.DeepCopy()
+		created.Status = corev1.ResourceQuotaStatus{}
+		result := TransferToProtoOtherQuota(created)
+		assert.Equal(t, got.GetQuota(), result.GetQuota())
+		assert.Equal(t, "0", result.GetUsed().GetCpuRequests())
+		assert.Equal(t, "0", result.GetUsed().GetCpuLimits())
+		assert.Equal(t, "0", result.GetUsed().GetMemoryRequests())
+		assert.Equal(t, "0", result.GetUsed().GetMemoryLimits())
+		assert.Zero(t, result.GetUsageRate().GetCpuRequests())
+		assert.Zero(t, result.GetUsageRate().GetCpuLimits())
+		assert.Zero(t, result.GetUsageRate().GetMemoryRequests())
+		assert.Zero(t, result.GetUsageRate().GetMemoryLimits())
+	})
+
+	t.Run("zero limit does not fall back to stale status", func(t *testing.T) {
+		updated := quota.DeepCopy()
+		updated.Spec.Hard[corev1.ResourceLimitsCPU] = resource.MustParse("0")
+		result := TransferToProtoOtherQuota(updated)
+		assert.Equal(t, "0", result.GetQuota().GetCpuLimits())
+		assert.Zero(t, result.GetUsageRate().GetCpuLimits())
+	})
 }
 
 func TestValidateQuotaEquality(t *testing.T) {

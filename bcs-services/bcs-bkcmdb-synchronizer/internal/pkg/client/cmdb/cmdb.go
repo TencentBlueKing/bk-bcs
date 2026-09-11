@@ -30,9 +30,9 @@ import (
 	"github.com/parnurzeal/gorequest"
 	"google.golang.org/grpc"
 	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/client"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/store/model"
 )
@@ -261,16 +261,16 @@ func (c *cmdbClient) GetBS2IDByBizID(bizID int64) (int, error) {
 			EndStruct(&respData)
 	})
 	if len(errs) > 0 {
-		blog.Errorf("call api GetBS2IDByBizID failed: %v", errs[0])
+		blog.Errorf("call api GetBS2IDByBizID failed: %v, BizID: %d", errs[0], bizID)
 		return 0, errs[0]
 	}
 
 	if !respData.Result {
-		blog.Errorf("call api GetBS2IDByBizID failed: %v, rid: %s", respData.Message, respData.RequestID)
+		blog.Errorf("call api GetBS2IDByBizID failed: %v, rid: %s, BizID: %d", respData.Message, respData.RequestID, bizID)
 		return 0, fmt.Errorf(respData.Message)
 	}
 	// successfully request
-	blog.Infof("call api GetBS2IDByBizID with url(%s) successfully", reqURL)
+	blog.Infof("call api GetBS2IDByBizID with url(%s) successfully, BizID: %d", reqURL, bizID)
 
 	if len(respData.Data.Info) > 0 {
 		return respData.Data.Info[0].BS2NameID, nil
@@ -310,16 +310,16 @@ func (c *cmdbClient) GetBizInfo(bizID int64) (*client.Business, error) {
 			EndStruct(&respData)
 	})
 	if len(errs) > 0 {
-		blog.Errorf("call api GetBizInfo failed: %v", errs[0])
+		blog.Errorf("call api GetBizInfo failed: %v, BizID: %d", errs[0], bizID)
 		return nil, errs[0]
 	}
 
 	if !respData.Result {
-		blog.Errorf("call api GetBizInfo failed: %v, rid: %s", respData.Message, respData.RequestID)
+		blog.Errorf("call api GetBizInfo failed: %v, rid: %s, BizID: %d", respData.Message, respData.RequestID, bizID)
 		return nil, fmt.Errorf(respData.Message)
 	}
 	// successfully request
-	blog.Infof("call api GetBizInfo with url(%s) successfully", reqURL)
+	blog.Infof("call api GetBizInfo with url(%s) successfully, BizID: %d", reqURL, bizID)
 
 	if len(respData.Data.Data) > 0 {
 		return &respData.Data.Data[0], nil
@@ -401,17 +401,17 @@ func (c *cmdbClient) GetHostInfo(hostIP []string) (*[]client.HostData, error) {
 		})
 		// 检查是否有错误发生
 		if len(errs) > 0 {
-			blog.Errorf("call api QueryHost failed: %v", errs[0])
+			blog.Errorf("call api QueryHost failed: %v, HostIP: %v", errs[0], hostIP[from:to])
 			return nil, errs[0]
 		}
 
 		// 检查API响应是否成功
 		if !respData.Result {
-			blog.Errorf("call api QueryHost failed: %v, rid: %s", respData.Message, resp.Header.Get("X-Request-Id"))
+			blog.Errorf("call api QueryHost failed: %v, rid: %s, HostIP: %v", respData.Message, resp.Header.Get("X-Request-Id"), hostIP[from:to])
 			return nil, fmt.Errorf(respData.Message)
 		}
 		// 请求成功，记录日志
-		blog.Infof("call api QueryHost with url(%s) successfully, X-Request-Id: %s", reqURL, resp.Header.Get("X-Request-Id"))
+		blog.Infof("call api QueryHost with url(%s) successfully, X-Request-Id: %s, HostIP: %v", reqURL, resp.Header.Get("X-Request-Id"), hostIP[from:to])
 
 		// 将响应数据添加到主机数据切片中
 		hostData = append(hostData, respData.Data.Info...)
@@ -506,13 +506,13 @@ func (c *cmdbClient) GetHostsByBiz(bkBizID int64, hostIP []string) (*[]client.Ho
 
 		// 检查响应结果是否成功
 		if !respData.Result {
-			blog.Errorf("call api QueryHost failed: %v, rid: %s",
-				respData.Message, resp.Header.Get("X-Request-Id"))
+			blog.Errorf("call api QueryHost failed: %v, rid: %s, BkBizID: %d, HostIP: %v",
+				respData.Message, resp.Header.Get("X-Request-Id"), bkBizID, hostIP[from:to])
 			return nil, fmt.Errorf(respData.Message)
 		}
 		// 成功获取数据，记录日志
-		blog.Infof("call api QueryHost with url(%s) successfully, X-Request-Id: %s",
-			reqURL, resp.Header.Get("X-Request-Id"))
+		blog.Infof("call api QueryHost with url(%s) successfully, X-Request-Id: %s, BkBizID: %d, HostIP: %v",
+			reqURL, resp.Header.Get("X-Request-Id"), bkBizID, hostIP[from:to])
 
 		// 将当前分页的数据添加到总数据列表中
 		hostData = append(hostData, respData.Data.Info...)
@@ -592,17 +592,17 @@ func (c *cmdbClient) GetBcsCluster(
 	})
 	// 检查是否有错误发生
 	if len(errs) > 0 {
-		blog.Errorf("call api list_kube_cluster failed: %v", errs[0])
+		blog.Errorf("call api list_kube_cluster failed: %v, bkBizID: %d", errs[0], request.BKBizID)
 		return nil, errs[0]
 	}
 	// 检查API响应是否成功
 	if !respData.Result {
-		blog.Errorf("call api list_kube_cluster failed: %v, rid: %s",
-			respData.Message, resp.Header.Get("X-Request-Id"))
+		blog.Errorf("call api list_kube_cluster failed: %v, rid: %s, bkBizID: %d",
+			respData.Message, resp.Header.Get("X-Request-Id"), request.BKBizID)
 		return nil, fmt.Errorf(respData.Message)
 	}
-	blog.Infof("call api list_kube_cluster with url(%s) (%v) successfully, X-Request-Id: %s",
-		reqURL, request, resp.Header.Get("X-Request-Id"))
+	blog.Infof("call api list_kube_cluster with url(%s) (%v) successfully, X-Request-Id: %s, bkBizID: %d",
+		reqURL, request, resp.Header.Get("X-Request-Id"), request.BKBizID)
 
 	// 如果db不为空，则将API获取的集群信息同步到数据库
 	if db != nil {
@@ -685,14 +685,14 @@ func (c *cmdbClient) CreateBcsCluster(
 
 	// 检查响应结果是否成功
 	if !respData.Result {
-		blog.Errorf("call api create_kube_cluster failed: %v, rid: %s",
-			respData.Message, resp.Header.Get("X-Request-Id"))
+		blog.Errorf("call api create_kube_cluster failed: %v, rid: %s, bkBizID: %d, name: %s",
+			respData.Message, resp.Header.Get("X-Request-Id"), common.Deref(request.BKBizID), common.Deref(request.Name))
 		return bkClusterID, fmt.Errorf(respData.Message)
 	}
 
 	// 记录成功的日志信息
-	blog.Infof("call api create_kube_cluster with url(%s) (%v)  successfully, X-Request-Id: %s",
-		reqURL, request, resp.Header.Get("X-Request-Id"))
+	blog.Infof("call api create_kube_cluster with url(%s) (%v)  successfully, X-Request-Id: %s, bkBizID: %d, name: %s",
+		reqURL, request, resp.Header.Get("X-Request-Id"), common.Deref(request.BKBizID), common.Deref(request.Name))
 
 	// 获取创建的集群ID
 	bkClusterID = respData.Data.ID
@@ -700,7 +700,7 @@ func (c *cmdbClient) CreateBcsCluster(
 	// 根据集群ID查询集群信息，验证创建是否成功
 	_, err = c.GetBcsCluster(&client.GetBcsClusterRequest{
 		CommonRequest: client.CommonRequest{
-			BKBizID: *request.BKBizID,
+			BKBizID: common.Deref(request.BKBizID),
 			Page: client.Page{
 				Limit: 100,
 				Start: 0,
@@ -769,19 +769,19 @@ func (c *cmdbClient) UpdateBcsCluster(request *client.UpdateBcsClusterRequest, d
 
 	// 如果响应结果为false，记录错误日志并返回错误信息
 	if !respData.Result {
-		blog.Errorf("call api batch_update_kube_cluster failed: %v, rid: %s",
-			respData.Message, resp.Header.Get("X-Request-Id"))
+		blog.Errorf("call api batch_update_kube_cluster failed: %v, rid: %s, bkBizID: %d, ids: %v",
+			respData.Message, resp.Header.Get("X-Request-Id"), common.Deref(request.BKBizID), common.Deref(request.IDs))
 		return fmt.Errorf(respData.Message)
 	}
 
 	// 记录成功调用API的日志信息
-	blog.Infof("call api batch_update_kube_cluster with url(%s) (%v) successfully, X-Request-Id: %s",
-		reqURL, request, resp.Header.Get("X-Request-Id"))
+	blog.Infof("call api batch_update_kube_cluster with url(%s) (%v) successfully, X-Request-Id: %s, bkBizID: %d, ids: %v",
+		reqURL, request, resp.Header.Get("X-Request-Id"), common.Deref(request.BKBizID), common.Deref(request.IDs))
 
 	// 调用GetBcsCluster方法获取更新后的集群信息
 	_, err := c.GetBcsCluster(&client.GetBcsClusterRequest{
 		CommonRequest: client.CommonRequest{
-			BKBizID: *request.BKBizID,
+			BKBizID: common.Deref(request.BKBizID),
 			Page: client.Page{
 				Limit: 100,
 				Start: 0,
@@ -852,14 +852,14 @@ func (c *cmdbClient) UpdateBcsClusterType(request *client.UpdateBcsClusterTypeRe
 
 	// 检查响应数据中的Result字段，如果不为true则表示API调用失败
 	if !respData.Result {
-		blog.Errorf("call api update_kube_cluster_type failed: %v, rid: %s",
-			respData.Message, resp.Header.Get("X-Request-Id"))
+		blog.Errorf("call api update_kube_cluster_type failed: %v, rid: %s, bkBizID: %d, id: %v, type: %v",
+			respData.Message, resp.Header.Get("X-Request-Id"), common.Deref(request.BKBizID), common.Deref(request.ID), common.Deref(request.Type))
 		return fmt.Errorf(respData.Message)
 	}
 
 	// 记录API调用成功的日志，包括请求URL、请求体和请求ID
-	blog.Infof("call api update_kube_cluster_type with url(%s) (%v) successfully, X-Request-Id: %s",
-		reqURL, request, resp.Header.Get("X-Request-Id"))
+	blog.Infof("call api update_kube_cluster_type with url(%s) (%v) successfully, X-Request-Id: %s, bkBizID: %d, id: %v, type: %v",
+		reqURL, request, resp.Header.Get("X-Request-Id"), common.Deref(request.BKBizID), common.Deref(request.ID), common.Deref(request.Type))
 
 	// 调用GetBcsCluster函数获取更新后的集群信息
 	_, err := c.GetBcsCluster(&client.GetBcsClusterRequest{
@@ -875,7 +875,7 @@ func (c *cmdbClient) UpdateBcsClusterType(request *client.UpdateBcsClusterTypeRe
 					{
 						Field:    "id",
 						Operator: "in",
-						Value:    []int64{*request.ID},
+						Value:    []int64{common.Deref(request.ID)},
 					},
 				},
 			},
@@ -929,14 +929,14 @@ func (c *cmdbClient) DeleteBcsCluster(request *client.DeleteBcsClusterRequest, d
 
 	// 如果响应结果指示操作失败，则记录错误信息并返回错误
 	if !respData.Result {
-		blog.Errorf("call api batch_delete_kube_cluster failed: %v, rid: %s",
-			respData.Message, resp.Header.Get("X-Request-Id"))
+		blog.Errorf("call api batch_delete_kube_cluster failed: %v, rid: %s, bkBizID: %d, ids: %v",
+			respData.Message, resp.Header.Get("X-Request-Id"), common.Deref(request.BKBizID), common.Deref(request.IDs))
 		return fmt.Errorf(respData.Message)
 	}
 
 	// 如果操作成功，则记录成功的日志信息
-	blog.Infof("call api batch_delete_kube_cluster with url(%s) (%v) successfully, X-Request-Id: %s",
-		reqURL, request, resp.Header.Get("X-Request-Id"))
+	blog.Infof("call api batch_delete_kube_cluster with url(%s) (%v) successfully, X-Request-Id: %s, bkBizID: %d, ids: %v",
+		reqURL, request, resp.Header.Get("X-Request-Id"), common.Deref(request.BKBizID), common.Deref(request.IDs))
 
 	// 如果提供了数据库连接，则尝试从数据库中删除对应的集群记录
 	if db != nil {
@@ -963,7 +963,7 @@ func (c *cmdbClient) GetBcsNamespace(
 		return nil, ErrServerNotInit
 	}
 	if withDB && db != nil {
-		query := db.Session(&gorm.Session{NewDB: true, Logger: db.Logger.LogMode(logger.Info)})
+		query := db.Session(&gorm.Session{NewDB: true})
 		for _, rule := range request.Filter.Rules {
 			if request.Filter.Condition == And {
 				query = query.Where(fmt.Sprintf("%s %s ?", rule.Field, rule.Operator), rule.Value)
@@ -973,7 +973,7 @@ func (c *cmdbClient) GetBcsNamespace(
 			}
 		}
 		var ns []model.Namespace
-		if err := query.Debug().Find(&ns).Error; err != nil {
+		if err := query.Find(&ns).Error; err != nil {
 			blog.Errorf("query namespace withDB failed: %v", err)
 		} else {
 			if namespaceMarshal, err := json.Marshal(ns); err != nil {
@@ -1008,12 +1008,12 @@ func (c *cmdbClient) GetBcsNamespace(
 		return nil, errs[0]
 	}
 	if !respData.Result {
-		blog.Errorf("call api list_namespace failed: %v, rid: %s",
-			respData.Message, resp.Header.Get("X-Request-Id"))
+		blog.Errorf("call api list_namespace failed: %v, rid: %s, bkBizID: %d",
+			respData.Message, resp.Header.Get("X-Request-Id"), request.BKBizID)
 		return nil, fmt.Errorf(respData.Message)
 	}
-	blog.Infof("call api list_namespace with url(%s) (%v) successfully, X-Request-Id: %s",
-		reqURL, request, resp.Header.Get("X-Request-Id"))
+	blog.Infof("call api list_namespace with url(%s) (%v) successfully, X-Request-Id: %s, bkBizID: %d",
+		reqURL, request, resp.Header.Get("X-Request-Id"), request.BKBizID)
 	if db != nil {
 		if namespaceMarshal, err := json.Marshal(respData.Data.Info); err != nil {
 			blog.Errorf("marshal namespace failed: %v", err)
@@ -1077,13 +1077,13 @@ func (c *cmdbClient) CreateBcsNamespace(request *client.CreateBcsNamespaceReques
 	}
 
 	if !respData.Result {
-		blog.Errorf("call api create_kube_namespace failed: %v, rid: %s",
-			respData.Message, resp.Header.Get("X-Request-Id"))
+		blog.Errorf("call api create_kube_namespace failed: %v, rid: %s, bkBizID: %d",
+			respData.Message, resp.Header.Get("X-Request-Id"), common.Deref(request.BKBizID))
 		if respData.Code == 1199014 && db != nil {
 			for _, d := range *(request.Data) {
 				if _, err := c.GetBcsNamespace(&client.GetBcsNamespaceRequest{
 					CommonRequest: client.CommonRequest{
-						BKBizID: *request.BKBizID,
+						BKBizID: common.Deref(request.BKBizID),
 						Page: client.Page{
 							Limit: 100,
 							Start: 0,
@@ -1112,12 +1112,12 @@ func (c *cmdbClient) CreateBcsNamespace(request *client.CreateBcsNamespaceReques
 		return nil, fmt.Errorf(respData.Message)
 	}
 
-	blog.Infof("call api create_kube_namespace with url(%s) (%v) successfully, X-Request-Id: %s",
-		reqURL, request, resp.Header.Get("X-Request-Id"))
+	blog.Infof("call api create_kube_namespace with url(%s) (%v) successfully, X-Request-Id: %s, bkBizID: %d",
+		reqURL, request, resp.Header.Get("X-Request-Id"), common.Deref(request.BKBizID))
 
 	if _, err := c.GetBcsNamespace(&client.GetBcsNamespaceRequest{
 		CommonRequest: client.CommonRequest{
-			BKBizID: *request.BKBizID,
+			BKBizID: common.Deref(request.BKBizID),
 			Page: client.Page{
 				Limit: 100,
 				Start: 0,
@@ -1169,17 +1169,17 @@ func (c *cmdbClient) UpdateBcsNamespace(request *client.UpdateBcsNamespaceReques
 	}
 
 	if !respData.Result {
-		blog.Errorf("call api batch_update_namespace failed: %v, rid: %s",
-			respData.Message, resp.Header.Get("X-Request-Id"))
+		blog.Errorf("call api batch_update_namespace failed: %v, rid: %s, bkBizID: %d, ids: %v",
+			respData.Message, resp.Header.Get("X-Request-Id"), common.Deref(request.BKBizID), common.Deref(request.IDs))
 		return fmt.Errorf(respData.Message)
 	}
 
-	blog.Infof("call api batch_update_namespace with url(%s) (%v) successfully, X-Request-Id: %s",
-		reqURL, request, resp.Header.Get("X-Request-Id"))
+	blog.Infof("call api batch_update_namespace with url(%s) (%v) successfully, X-Request-Id: %s, bkBizID: %d, ids: %v",
+		reqURL, request, resp.Header.Get("X-Request-Id"), common.Deref(request.BKBizID), common.Deref(request.IDs))
 
 	if _, err := c.GetBcsNamespace(&client.GetBcsNamespaceRequest{
 		CommonRequest: client.CommonRequest{
-			BKBizID: *request.BKBizID,
+			BKBizID: common.Deref(request.BKBizID),
 			Page: client.Page{
 				Limit: 100,
 				Start: 0,
@@ -1231,13 +1231,13 @@ func (c *cmdbClient) DeleteBcsNamespace(request *client.DeleteBcsNamespaceReques
 	}
 
 	if !respData.Result {
-		blog.Errorf("call api batch_delete_namespace failed: %v, rid: %s",
-			respData.Message, resp.Header.Get("X-Request-Id"))
+		blog.Errorf("call api batch_delete_namespace failed: %v, rid: %s, bkBizID: %d, ids: %v",
+			respData.Message, resp.Header.Get("X-Request-Id"), common.Deref(request.BKBizID), common.Deref(request.IDs))
 		return fmt.Errorf(respData.Message)
 	}
 
-	blog.Infof("call api batch_delete_namespace with url(%s) (%v) successfully, X-Request-Id: %s",
-		reqURL, request, resp.Header.Get("X-Request-Id"))
+	blog.Infof("call api batch_delete_namespace with url(%s) (%v) successfully, X-Request-Id: %s, bkBizID: %d, ids: %v",
+		reqURL, request, resp.Header.Get("X-Request-Id"), common.Deref(request.BKBizID), common.Deref(request.IDs))
 
 	if db != nil {
 		query := db.Session(&gorm.Session{NewDB: true})
@@ -1262,7 +1262,7 @@ func (c *cmdbClient) GetBcsWorkload(
 	}
 
 	if withDB && db != nil {
-		query := db.Session(&gorm.Session{NewDB: true, Logger: db.Logger.LogMode(logger.Info)})
+		query := db.Session(&gorm.Session{NewDB: true})
 		for _, rule := range request.Filter.Rules {
 			if request.Filter.Condition == And {
 				query = query.Where(fmt.Sprintf("%s %s ?", rule.Field, rule.Operator), rule.Value)
@@ -1275,7 +1275,7 @@ func (c *cmdbClient) GetBcsWorkload(
 		switch request.Kind {
 		case Deployment:
 			var deployment []model.Deployment
-			if err := query.Debug().Find(&deployment).Error; err != nil {
+			if err := query.Find(&deployment).Error; err != nil {
 				blog.Errorf("query deployment withDB failed: %v", err)
 			} else {
 				if deploymentMarshal, errM := json.Marshal(deployment); errM != nil {
@@ -1292,7 +1292,7 @@ func (c *cmdbClient) GetBcsWorkload(
 			}
 		case StatefulSet:
 			var statefulSet []model.StatefulSet
-			if err := query.Debug().Find(&statefulSet).Error; err != nil {
+			if err := query.Find(&statefulSet).Error; err != nil {
 				blog.Errorf("query statefulSet withDB failed: %v", err)
 			} else {
 				if statefulSetMarshal, errM := json.Marshal(statefulSet); errM != nil {
@@ -1309,7 +1309,7 @@ func (c *cmdbClient) GetBcsWorkload(
 			}
 		case DaemonSet:
 			var daemonSet []model.DaemonSet
-			if err := query.Debug().Find(&daemonSet).Error; err != nil {
+			if err := query.Find(&daemonSet).Error; err != nil {
 				blog.Errorf("query daemonSet withDB failed: %v", err)
 			} else {
 				if daemonSetMarshal, errM := json.Marshal(daemonSet); errM != nil {
@@ -1326,7 +1326,7 @@ func (c *cmdbClient) GetBcsWorkload(
 			}
 		case GameDeployment:
 			var gameDeployment []model.GameDeployment
-			if err := query.Debug().Find(&gameDeployment).Error; err != nil {
+			if err := query.Find(&gameDeployment).Error; err != nil {
 				blog.Errorf("query gameDeployment withDB failed: %v", err)
 			} else {
 				if gameDeploymentMarshal, errM := json.Marshal(gameDeployment); errM != nil {
@@ -1343,7 +1343,7 @@ func (c *cmdbClient) GetBcsWorkload(
 			}
 		case GameStatefulSet:
 			var gameStatefulSet []model.GameStatefulSet
-			if err := query.Debug().Find(&gameStatefulSet).Error; err != nil {
+			if err := query.Find(&gameStatefulSet).Error; err != nil {
 				blog.Errorf("query gameStatefulSet withDB failed: %v", err)
 			} else {
 				if gameStatefulSetMarshal, errM := json.Marshal(gameStatefulSet); errM != nil {
@@ -1360,7 +1360,7 @@ func (c *cmdbClient) GetBcsWorkload(
 			}
 		case Pods:
 			var podsWorkload []model.PodsWorkload
-			if err := query.Debug().Find(&podsWorkload).Error; err != nil {
+			if err := query.Find(&podsWorkload).Error; err != nil {
 				blog.Errorf("query podsWorkload withDB failed: %v", err)
 			} else {
 				if podsWorkloadMarshal, errM := json.Marshal(podsWorkload); errM != nil {
@@ -1377,7 +1377,7 @@ func (c *cmdbClient) GetBcsWorkload(
 			}
 		case CustomResource:
 			var customResource []model.CustomResource
-			if err := query.Debug().Find(&customResource).Error; err != nil {
+			if err := query.Find(&customResource).Error; err != nil {
 				blog.Errorf("query customResource withDB failed: %v", err)
 			} else {
 				if customResourceMarshal, errM := json.Marshal(customResource); errM != nil {
@@ -1416,13 +1416,13 @@ func (c *cmdbClient) GetBcsWorkload(
 	}
 
 	if !respData.Result {
-		blog.Errorf("call api list_workload failed: %v, rid: %s",
-			respData.Message, resp.Header.Get("X-Request-Id"))
+		blog.Errorf("call api list_workload failed: %v, rid: %s, bkBizID: %d, kind: %s",
+			respData.Message, resp.Header.Get("X-Request-Id"), request.BKBizID, request.Kind)
 		return nil, fmt.Errorf(respData.Message)
 	}
 
-	blog.Infof("call api list_workload with url(%s) (%v) successfully, X-Request-Id: %s",
-		reqURL, request, resp.Header.Get("X-Request-Id"))
+	blog.Infof("call api list_workload with url(%s) (%v) successfully, X-Request-Id: %s, bkBizID: %d, kind: %s",
+		reqURL, request, resp.Header.Get("X-Request-Id"), request.BKBizID, request.Kind)
 
 	if db != nil {
 		if workloadMarshal, err := json.Marshal(respData.Data.Info); err != nil {
@@ -1660,14 +1660,14 @@ func (c *cmdbClient) CreateBcsWorkload(request *client.CreateBcsWorkloadRequest,
 	}
 
 	if !respData.Result {
-		blog.Errorf("call api batch_create_workload failed: %v, rid: %s",
-			respData.Message, resp.Header.Get("X-Request-Id"))
+		blog.Errorf("call api batch_create_workload failed: %v, rid: %s, bkBizID: %d, kind: %s",
+			respData.Message, resp.Header.Get("X-Request-Id"), common.Deref(request.BKBizID), common.Deref(request.Kind))
 		if respData.Code == 1199014 && db != nil {
 			for _, d := range *(request.Data) {
 				if _, err := c.GetBcsWorkload(&client.GetBcsWorkloadRequest{
-					Kind: *(request.Kind),
+					Kind: common.Deref(request.Kind),
 					CommonRequest: client.CommonRequest{
-						BKBizID: *request.BKBizID,
+						BKBizID: common.Deref(request.BKBizID),
 						Page: client.Page{
 							Limit: 100,
 							Start: 0,
@@ -1696,13 +1696,13 @@ func (c *cmdbClient) CreateBcsWorkload(request *client.CreateBcsWorkloadRequest,
 		return nil, fmt.Errorf(respData.Message)
 	}
 
-	blog.Infof("call api batch_create_workload with url(%s) (%v) successfully, X-Request-Id: %s",
-		reqURL, request, resp.Header.Get("X-Request-Id"))
+	blog.Infof("call api batch_create_workload with url(%s) (%v) successfully, X-Request-Id: %s, bkBizID: %d, kind: %s",
+		reqURL, request, resp.Header.Get("X-Request-Id"), common.Deref(request.BKBizID), common.Deref(request.Kind))
 
 	if _, err := c.GetBcsWorkload(&client.GetBcsWorkloadRequest{
-		Kind: *(request.Kind),
+		Kind: common.Deref(request.Kind),
 		CommonRequest: client.CommonRequest{
-			BKBizID: *request.BKBizID,
+			BKBizID: common.Deref(request.BKBizID),
 			Page: client.Page{
 				Limit: 100,
 				Start: 0,
@@ -1754,18 +1754,18 @@ func (c *cmdbClient) UpdateBcsWorkload(request *client.UpdateBcsWorkloadRequest,
 	}
 
 	if !respData.Result {
-		blog.Errorf("call api batch_update_workload failed: %v, rid: %s",
-			respData.Message, resp.Header.Get("X-Request-Id"))
+		blog.Errorf("call api batch_update_workload failed: %v, rid: %s, bkBizID: %d, kind: %s, ids: %v",
+			respData.Message, resp.Header.Get("X-Request-Id"), common.Deref(request.BKBizID), common.Deref(request.Kind), common.Deref(request.IDs))
 		return fmt.Errorf(respData.Message)
 	}
 
-	blog.Infof("call api batch_update_workload with url(%s) (%v) successfully, X-Request-Id: %s",
-		reqURL, request, resp.Header.Get("X-Request-Id"))
+	blog.Infof("call api batch_update_workload with url(%s) (%v) successfully, X-Request-Id: %s, bkBizID: %d, kind: %s, ids: %v",
+		reqURL, request, resp.Header.Get("X-Request-Id"), common.Deref(request.BKBizID), common.Deref(request.Kind), common.Deref(request.IDs))
 
 	if _, err := c.GetBcsWorkload(&client.GetBcsWorkloadRequest{
-		Kind: *request.Kind,
+		Kind: common.Deref(request.Kind),
 		CommonRequest: client.CommonRequest{
-			BKBizID: *request.BKBizID,
+			BKBizID: common.Deref(request.BKBizID),
 			Page: client.Page{
 				Limit: 100,
 				Start: 0,
@@ -1819,12 +1819,12 @@ func (c *cmdbClient) DeleteBcsWorkload(request *client.DeleteBcsWorkloadRequest,
 	if !respData.Result {
 		blog.Errorf(
 			"call api batch_delete_workload failed: %v, rid: %s, request: bkbizid: %d, kind: %s, ids: %v",
-			respData.Message, resp.Header.Get("X-Request-Id"), *request.BKBizID, *request.Kind, *request.IDs)
+			respData.Message, resp.Header.Get("X-Request-Id"), common.Deref(request.BKBizID), common.Deref(request.Kind), common.Deref(request.IDs))
 		return fmt.Errorf(respData.Message)
 	}
 
-	blog.Infof("call api batch_delete_workload with url(%s) (%v) successfully, X-Request-Id: %s",
-		reqURL, request, resp.Header.Get("X-Request-Id"))
+	blog.Infof("call api batch_delete_workload with url(%s) (%v) successfully, X-Request-Id: %s, bkBizID: %d, kind: %s, ids: %v",
+		reqURL, request, resp.Header.Get("X-Request-Id"), common.Deref(request.BKBizID), common.Deref(request.Kind), common.Deref(request.IDs))
 
 	deleteBcsWorkloadDB(request, db)
 
@@ -1908,7 +1908,7 @@ func (c *cmdbClient) GetBcsNode(
 		return nil, ErrServerNotInit
 	}
 	if withDB && db != nil {
-		query := db.Session(&gorm.Session{NewDB: true, Logger: db.Logger.LogMode(logger.Info)})
+		query := db.Session(&gorm.Session{NewDB: true})
 		for _, rule := range request.Filter.Rules {
 			if request.Filter.Condition == And {
 				query = query.Where(fmt.Sprintf("%s %s ?", rule.Field, rule.Operator), rule.Value)
@@ -1918,7 +1918,7 @@ func (c *cmdbClient) GetBcsNode(
 			}
 		}
 		var node []model.Node
-		if err := query.Debug().Find(&node).Error; err != nil {
+		if err := query.Find(&node).Error; err != nil {
 			blog.Errorf("query node withDB failed: %v", err)
 		} else {
 			if nodeMarshal, errM := json.Marshal(node); errM != nil {
@@ -1953,12 +1953,12 @@ func (c *cmdbClient) GetBcsNode(
 		return nil, errs[0]
 	}
 	if !respData.Result {
-		blog.Errorf("call api list_kube_node failed: %v, rid: %s",
-			respData.Message, resp.Header.Get("X-Request-Id"))
+		blog.Errorf("call api list_kube_node failed: %v, rid: %s, bkBizID: %d",
+			respData.Message, resp.Header.Get("X-Request-Id"), request.BKBizID)
 		return nil, fmt.Errorf(respData.Message)
 	}
-	blog.Infof("call api list_kube_node with url(%s) (%v) successfully, X-Request-Id: %s",
-		reqURL, request, resp.Header.Get("X-Request-Id"))
+	blog.Infof("call api list_kube_node with url(%s) (%v) successfully, X-Request-Id: %s, bkBizID: %d",
+		reqURL, request, resp.Header.Get("X-Request-Id"), request.BKBizID)
 	if db != nil {
 		if nodeMarshal, err := json.Marshal(respData.Data.Info); err != nil {
 			blog.Errorf("marshal node failed: %v", err)
@@ -2117,13 +2117,13 @@ func (c *cmdbClient) UpdateBcsNode(request *client.UpdateBcsNodeRequest, db *gor
 	}
 
 	if !respData.Result {
-		blog.Errorf("call api batch_update_kube_node failed: %v, rid: %s",
-			respData.Message, resp.Header.Get("X-Request-Id"))
+		blog.Errorf("call api batch_update_kube_node failed: %v, rid: %s, bkBizID: %d, ids: %v",
+			respData.Message, resp.Header.Get("X-Request-Id"), common.Deref(request.BKBizID), common.Deref(request.IDs))
 		return fmt.Errorf(respData.Message)
 	}
 
-	blog.Infof("call api batch_update_kube_node with url(%s) (%v) successfully, X-Request-Id: %s",
-		reqURL, request, resp.Header.Get("X-Request-Id"))
+	blog.Infof("call api batch_update_kube_node with url(%s) (%v) successfully, X-Request-Id: %s, bkBizID: %d, ids: %v",
+		reqURL, request, resp.Header.Get("X-Request-Id"), common.Deref(request.BKBizID), common.Deref(request.IDs))
 
 	_, err := c.GetBcsNode(&client.GetBcsNodeRequest{
 		CommonRequest: client.CommonRequest{
@@ -2190,13 +2190,13 @@ func (c *cmdbClient) DeleteBcsNode(request *client.DeleteBcsNodeRequest, db *gor
 	}
 
 	if !respData.Result {
-		blog.Errorf("call api batch_delete_kube_node failed: %v, rid: %s",
-			respData.Message, resp.Header.Get("X-Request-Id"))
+		blog.Errorf("call api batch_delete_kube_node failed: %v, rid: %s, bkBizID: %d, ids: %v",
+			respData.Message, resp.Header.Get("X-Request-Id"), common.Deref(request.BKBizID), common.Deref(request.IDs))
 		return fmt.Errorf(respData.Message)
 	}
 
-	blog.Infof("call api batch_delete_kube_node with url(%s) (%v) successfully, X-Request-Id: %s",
-		reqURL, request, resp.Header.Get("X-Request-Id"))
+	blog.Infof("call api batch_delete_kube_node with url(%s) (%v) successfully, X-Request-Id: %s, bkBizID: %d, ids: %v",
+		reqURL, request, resp.Header.Get("X-Request-Id"), common.Deref(request.BKBizID), common.Deref(request.IDs))
 
 	return nil
 }
@@ -2211,7 +2211,7 @@ func (c *cmdbClient) GetBcsPod(request *client.GetBcsPodRequest, db *gorm.DB, wi
 	}
 
 	if withDB && db != nil {
-		query := db.Session(&gorm.Session{NewDB: true, Logger: db.Logger.LogMode(logger.Info)})
+		query := db.Session(&gorm.Session{NewDB: true})
 		for _, rule := range request.Filter.Rules {
 			if request.Filter.Condition == And {
 				query = query.Where(fmt.Sprintf("%s %s ?", rule.Field, rule.Operator), rule.Value)
@@ -2223,7 +2223,7 @@ func (c *cmdbClient) GetBcsPod(request *client.GetBcsPodRequest, db *gorm.DB, wi
 
 		var pod []model.Pod
 
-		if err := query.Debug().Find(&pod).Error; err != nil {
+		if err := query.Find(&pod).Error; err != nil {
 			blog.Errorf("query pod withDB failed: %v", err)
 		} else {
 			if podMarshal, errM := json.Marshal(pod); errM != nil {
@@ -2262,13 +2262,13 @@ func (c *cmdbClient) GetBcsPod(request *client.GetBcsPodRequest, db *gorm.DB, wi
 	}
 
 	if !respData.Result {
-		blog.Errorf("call api list_pod failed: %v, rid: %s",
-			respData.Message, resp.Header.Get("X-Request-Id"))
+		blog.Errorf("call api list_pod failed: %v, rid: %s, bkBizID: %d, filter: %v",
+			respData.Message, resp.Header.Get("X-Request-Id"), request.BKBizID, common.Deref(request.Filter))
 		return nil, fmt.Errorf(respData.Message)
 	}
 
-	blog.Infof("call api list_pod with url(%s) (%v) successfully, X-Request-Id: %s",
-		reqURL, request, resp.Header.Get("X-Request-Id"))
+	blog.Infof("call api list_pod with url(%s) (%v) successfully, X-Request-Id: %s, bkBizID: %d, filter: %v",
+		reqURL, request, resp.Header.Get("X-Request-Id"), request.BKBizID, common.Deref(request.Filter))
 
 	if db != nil {
 		if podMarshal, err := json.Marshal(respData.Data.Info); err != nil {
@@ -2310,7 +2310,7 @@ func (c *cmdbClient) GetBcsContainer(
 	}
 
 	if withDB && db != nil {
-		query := db.Session(&gorm.Session{NewDB: true, Logger: db.Logger.LogMode(logger.Info)})
+		query := db.Session(&gorm.Session{NewDB: true})
 		for _, rule := range request.Filter.Rules {
 			if request.Filter.Condition == And {
 				query = query.Where(fmt.Sprintf("%s %s ?", rule.Field, rule.Operator), rule.Value)
@@ -2322,7 +2322,7 @@ func (c *cmdbClient) GetBcsContainer(
 
 		var container []model.Container
 
-		if err := query.Debug().Find(&container).Error; err != nil {
+		if err := query.Find(&container).Error; err != nil {
 			blog.Errorf("query container withDB failed: %v", err)
 		} else {
 			if containerMarshal, errM := json.Marshal(container); errM != nil {
@@ -2361,13 +2361,13 @@ func (c *cmdbClient) GetBcsContainer(
 	}
 
 	if !respData.Result {
-		blog.Errorf("call api list_kube_container failed: %v, rid: %s",
-			respData.Message, resp.Header.Get("X-Request-Id"))
+		blog.Errorf("call api list_kube_container failed: %v, rid: %s, bkBizID: %d, filter: %v",
+			respData.Message, resp.Header.Get("X-Request-Id"), request.BKBizID, common.Deref(request.Filter))
 		return nil, fmt.Errorf(respData.Message)
 	}
 
-	blog.Infof("call api list_kube_container with url(%s) (%v) successfully, X-Request-Id: %s",
-		reqURL, request, resp.Header.Get("X-Request-Id"))
+	blog.Infof("call api list_kube_container with url(%s) (%v) successfully, X-Request-Id: %s, bkBizID: %d, filter: %v",
+		reqURL, request, resp.Header.Get("X-Request-Id"), request.BKBizID, common.Deref(request.Filter))
 
 	if db != nil {
 		if containerMarshal, err := json.Marshal(respData.Data.Info); err != nil {
@@ -2430,8 +2430,8 @@ func (c *cmdbClient) CreateBcsPod(request *client.CreateBcsPodRequest, db *gorm.
 	}
 
 	if !respData.Result {
-		blog.Errorf("call api batch_create_kube_pod failed: %v, rid: %s",
-			respData.Message, resp.Header.Get("X-Request-Id"))
+		blog.Errorf("call api batch_create_kube_pod failed: %v, rid: %s, pod_nums: %d",
+			respData.Message, resp.Header.Get("X-Request-Id"), len(common.Deref(request.Data)))
 		if respData.Code == 1199014 && db != nil {
 			data := (*(request.Data))[0]
 			for _, d := range *data.Pods {
@@ -2472,8 +2472,8 @@ func (c *cmdbClient) CreateBcsPod(request *client.CreateBcsPodRequest, db *gorm.
 		return nil, fmt.Errorf(respData.Message)
 	}
 
-	blog.Infof("call api batch_create_kube_pod with url(%s) (%v) successfully, X-Request-Id: %s",
-		reqURL, request, resp.Header.Get("X-Request-Id"))
+	blog.Infof("call api batch_create_kube_pod with url(%s) (%v) successfully, X-Request-Id: %s, pod_nums: %d",
+		reqURL, request, resp.Header.Get("X-Request-Id"), len(common.Deref(request.Data)))
 
 	if db != nil {
 		_, err := c.GetBcsPod(&client.GetBcsPodRequest{
@@ -2558,13 +2558,13 @@ func (c *cmdbClient) DeleteBcsPod(request *client.DeleteBcsPodRequest, db *gorm.
 	}
 
 	if !respData.Result {
-		blog.Errorf("call api batch_delete_kube_pod failed: %v, rid: %s",
-			respData.Message, resp.Header.Get("X-Request-Id"))
+		blog.Errorf("call api batch_delete_kube_pod failed: %v, rid: %s, data_nums: %d",
+			respData.Message, resp.Header.Get("X-Request-Id"), len(common.Deref(request.Data)))
 		return fmt.Errorf(respData.Message)
 	}
 
-	blog.Infof("call api batch_delete_kube_pod with url(%s) (%v) successfully, X-Request-Id: %s",
-		reqURL, request, resp.Header.Get("X-Request-Id"))
+	blog.Infof("call api batch_delete_kube_pod with url(%s) (%v) successfully, X-Request-Id: %s, data_nums: %d",
+		reqURL, request, resp.Header.Get("X-Request-Id"), len(common.Deref(request.Data)))
 
 	if db != nil {
 		query := db.Session(&gorm.Session{NewDB: true})
