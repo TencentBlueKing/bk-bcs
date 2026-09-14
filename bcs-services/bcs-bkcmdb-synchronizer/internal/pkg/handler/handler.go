@@ -52,6 +52,13 @@ const (
 	Deployment = "Deployment"
 	// StatefulSet 表示Kubernetes中的有状态副本集资源类型
 	StatefulSet = "StatefulSet"
+
+	// msgBufferFlushInterval 是非空缓冲区最长等待时间；超过后即使没有后续消息也应刷新。
+	msgBufferFlushInterval = 10 * time.Second
+	// msgBufferFlushSize 达到该条数则立即刷新，不等待时间窗口。
+	msgBufferFlushSize = 100
+	// msgBufferTickInterval 是消费循环检查空闲缓冲区的周期。
+	msgBufferTickInterval = 2 * time.Second
 )
 
 var workloadKindList = []string{"GameDeployment", "GameStatefulSet", "StatefulSet", "DaemonSet", "Deployment"}
@@ -117,6 +124,18 @@ type msgBuffer struct {
 	M []amqp.Delivery
 }
 
+// readyToFlush 判断缓冲区是否应写入 CMDB。
+// 空缓冲不刷新；满 100 条立即刷新；否则距上次刷新超过 10 秒才刷新。
+func (buf *msgBuffer) readyToFlush(now time.Time) bool {
+	if buf == nil || len(buf.M) == 0 {
+		return false
+	}
+	if len(buf.M) >= msgBufferFlushSize {
+		return true
+	}
+	return now.Sub(buf.T) >= msgBufferFlushInterval
+}
+
 // HandleMsg handle the message from rabbitmq
 // nolint funlen
 func (b *BcsBkcmdbSynchronizerHandler) HandleMsg(
@@ -179,11 +198,32 @@ func (b *BcsBkcmdbSynchronizerHandler) HandleMsg(
 		make([]amqp.Delivery, 0),
 	}
 
+	// Pod/Node 原先只在新消息到达时检查刷新条件，低流量集群会一直卡住。
+	// 独立 ticker 保证超过时间窗口后即使没有后续 Pod/Event 也会刷出。
+	ticker := time.NewTicker(msgBufferTickInterval)
+	defer ticker.Stop()
+
+	flushReadyBuffers := func() {
+		now := time.Now()
+		if podMsg.readyToFlush(now) {
+			if errH := b.handlePods(&podMsg, bkCluster, db); errH != nil {
+				blog.Errorf("errH: %s", errH.Error())
+			}
+		}
+		if nodeMsg.readyToFlush(now) {
+			if errH := b.handleNodes(&nodeMsg, bkCluster, db); errH != nil {
+				blog.Errorf("errH: %s", errH.Error())
+			}
+		}
+	}
+
 	for {
 		select {
 		case <-done:
 			blog.Infof("goroutine stop, stop handleMsg.")
 			return
+		case <-ticker.C:
+			flushReadyBuffers()
 		case msg, ok := <-messages:
 			if !ok {
 				blog.Infof("messages channel closed, stop handleMsg.")
@@ -414,11 +454,8 @@ func (b *BcsBkcmdbSynchronizerHandler) handlePods(podMsg *msgBuffer, bkCluster *
 	//	return fmt.Errorf("handlePod: Unable to unmarshal")
 	// }
 	blog.Infof("podMsg: %d, clusterUid: %s, bkBizID: %d", len(podMsg.M), bkCluster.Uid, bkCluster.BizID)
-	if time.Since(podMsg.T) < 10*time.Second {
-		// blog.Infof("podMsg.T: %s, %s", podMsg.T, time.Now().Sub(podMsg.T))
-		if len(podMsg.M) < 100 {
-			return nil
-		}
+	if !podMsg.readyToFlush(time.Now()) {
+		return nil
 	}
 
 	podsUpdate := make(map[string]*corev1.Pod)
@@ -2521,7 +2558,8 @@ func (b *BcsBkcmdbSynchronizerHandler) handleDaemonSetCreate(
 
 func (b *BcsBkcmdbSynchronizerHandler) handleGameDeployment(msg amqp.Delivery,
 	bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
-	blog.Infof("handleGameDeployment Message: %v, clusterUid: %s, bkBizID: %d", msg.Headers, bkCluster.Uid, bkCluster.BizID)
+	blog.Infof("handleGameDeployment Message: %v, clusterUid: %s, bkBizID: %d",
+		msg.Headers, bkCluster.Uid, bkCluster.BizID)
 	msgHeader, err := getMsgHeader(&msg.Headers)
 	if err != nil {
 		blog.Errorf("handleGameDeployment unable to get headers, err: %s", err.Error())
@@ -2719,7 +2757,8 @@ func (b *BcsBkcmdbSynchronizerHandler) handleGameDeploymentCreate(
 // handle GameStateful Set
 func (b *BcsBkcmdbSynchronizerHandler) handleGameStatefulSet(
 	msg amqp.Delivery, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
-	blog.Infof("handleGameStatefulSet Message: %v, clusterUid: %s, bkBizID: %d", msg.Headers, bkCluster.Uid, bkCluster.BizID)
+	blog.Infof("handleGameStatefulSet Message: %v, clusterUid: %s, bkBizID: %d",
+		msg.Headers, bkCluster.Uid, bkCluster.BizID)
 	msgHeader, err := getMsgHeader(&msg.Headers)
 	if err != nil {
 		blog.Errorf("handleGameStatefulSet unable to get headers, err: %s", err.Error())
@@ -3203,11 +3242,8 @@ func (b *BcsBkcmdbSynchronizerHandler) handleNodes(
 	// }
 
 	blog.Infof("nodeMsg: %d, clusterUid: %s, bkBizID: %d", len(nodeMsg.M), bkCluster.Uid, bkCluster.BizID)
-	if time.Since(nodeMsg.T) < 10*time.Second {
-		// blog.Infof("podMsg.T: %s, %s", podMsg.T, time.Now().Sub(podMsg.T))
-		if len(nodeMsg.M) < 100 {
-			return nil
-		}
+	if !nodeMsg.readyToFlush(time.Now()) {
+		return nil
 	}
 
 	nodesUpdate := make(map[string]*corev1.Node)

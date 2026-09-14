@@ -1039,7 +1039,7 @@ func (s *Synchronizer) cleanupOrphanedClustersInCMDB(clusterMapT map[string]*cmp
 // cleanupLocalCaches 清理本地不再负责的集群缓存文件
 func (s *Synchronizer) cleanupLocalCaches(currentWorkList ClusterList) {
 	dbDir := "/data/bcs/bcs-bkcmdb-synchronizer/db/"
-	files, err := ioutil.ReadDir(dbDir)
+	files, err := os.ReadDir(dbDir)
 	if err != nil {
 		blog.Errorf("read db dir %s failed: %v", dbDir, err)
 		return
