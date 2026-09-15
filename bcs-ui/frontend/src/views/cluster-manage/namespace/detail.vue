@@ -58,9 +58,12 @@
       <bcs-tab-panel
         name="otherQuotas"
         :label="$t('dashboard.ns.label.otherQuotas')"
-        v-if="editable || (data.otherQuotas && data.otherQuotas.length)">
-        <div class="other-quota-toolbar" v-if="editable">
-          <bcs-button theme="primary" icon="plus" @click="handleCreateQuota">
+        v-if="editable
+          || (data.otherQuotas && data.otherQuotas.length)
+          || (data.podLimitRanges && data.podLimitRanges.length)">
+        <div class="other-quota-toolbar">
+          <span class="other-quota-title">ResourceQuota</span>
+          <bcs-button v-if="editable" theme="primary" icon="plus" @click="handleCreateQuota">
             {{ $t('dashboard.ns.action.createOtherQuota') }}
           </bcs-button>
         </div>
@@ -117,13 +120,9 @@
             </template>
           </bk-table-column>
         </bk-table>
-      </bcs-tab-panel>
-      <bcs-tab-panel
-        name="podLimitRanges"
-        :label="$t('dashboard.ns.label.podLimitRanges')"
-        v-if="editable || (data.podLimitRanges && data.podLimitRanges.length)">
-        <div class="other-quota-toolbar" v-if="editable">
-          <bcs-button theme="primary" icon="plus" @click="handleCreatePodLimitRange">
+        <div class="other-quota-toolbar other-quota-toolbar--separated">
+          <span class="other-quota-title">{{ $t('dashboard.ns.label.podLimitRanges') }}</span>
+          <bcs-button v-if="editable" theme="primary" icon="plus" @click="handleCreatePodLimitRange">
             {{ $t('dashboard.ns.action.createPodLimitRange') }}
           </bcs-button>
         </div>
@@ -718,7 +717,17 @@ export default defineComponent({
   }
 }
 .other-quota-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   padding: 12px 0;
+  &--separated {
+    margin-top: 12px;
+  }
+}
+.other-quota-title {
+  color: #313238;
+  font-weight: 600;
 }
 .other-quota-table {
   /deep/ .cell {
