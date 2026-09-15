@@ -886,6 +886,35 @@ service Namespace {
       summary : "删除其他配额"
     };
   }
+  rpc CreatePodLimitRange(CreatePodLimitRangeRequest) returns (PodLimitRangeResponse) {
+    option (google.api.http) = {
+      post : "/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/podLimitRanges"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "创建命名空间 Pod LimitRange"
+      summary : "创建 Pod LimitRange"
+    };
+  }
+  rpc UpdatePodLimitRange(UpdatePodLimitRangeRequest) returns (PodLimitRangeResponse) {
+    option (google.api.http) = {
+      put : "/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/podLimitRanges/{limitRangeName}"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "更新命名空间 Pod LimitRange"
+      summary : "更新 Pod LimitRange"
+    };
+  }
+  rpc DeletePodLimitRange(DeletePodLimitRangeRequest) returns (PodLimitRangeResponse) {
+    option (google.api.http) = {
+      delete : "/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/podLimitRanges/{limitRangeName}"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "删除命名空间 Pod LimitRange"
+      summary : "删除 Pod LimitRange"
+    };
+  }
   rpc UpdateNamespaceCallback(NamespaceCallbackRequest) returns (NamespaceCallbackResponse) {
     option (google.api.http) = {
       post : "/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/callback/update"
@@ -1543,6 +1572,10 @@ message NamespaceData {
     title: "otherQuotas",
     description: "其他配额信息"
   }];
+  repeated PodLimitRange podLimitRanges = 18[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "podLimitRanges",
+    description: "Pod 级别 LimitRange 信息"
+  }];
 }
 
 message OtherQuota {
@@ -1561,6 +1594,32 @@ message OtherQuota {
   ResourceQuotaUsageRate usageRate = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "usageRate",
     description: "各资源项的配额占用率"
+  }];
+}
+
+message PodLimitRangeResource {
+  string cpu = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "cpu",
+    description: "CPU 资源量"
+  }];
+  string memory = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "memory",
+    description: "内存资源量"
+  }];
+}
+
+message PodLimitRange {
+  string name = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "name",
+    description: "LimitRange 名称"
+  }];
+  PodLimitRangeResource min = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "min",
+    description: "Pod 最小资源限制"
+  }];
+  PodLimitRangeResource max = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "max",
+    description: "Pod 最大资源限制"
   }];
 }
 
@@ -3498,6 +3557,63 @@ message OtherQuotaResponse {
   uint32 code = 1;
   string message = 2;
   OtherQuota data = 3;
+  string requestID = 4;
+  Perms web_annotations = 5[json_name = "web_annotations"];
+}
+
+message CreatePodLimitRangeRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "CreatePodLimitRangeRequest"
+      description : "创建命名空间 Pod LimitRange 请求"
+      required : ["projectCode", "clusterID", "namespace", "limitRangeName"]
+    }
+  };
+
+  string projectCode = 1;
+  string clusterID = 2;
+  string namespace = 3[(validate.rules).string = {max_len: 63, pattern: "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"}];
+  string limitRangeName = 4[(validate.rules).string = {min_len: 1, max_len: 63, pattern: "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"}];
+  PodLimitRangeResource min = 5;
+  PodLimitRangeResource max = 6;
+}
+
+message UpdatePodLimitRangeRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "UpdatePodLimitRangeRequest"
+      description : "更新命名空间 Pod LimitRange 请求"
+      required : ["projectCode", "clusterID", "namespace", "limitRangeName"]
+    }
+  };
+
+  string projectCode = 1;
+  string clusterID = 2;
+  string namespace = 3[(validate.rules).string = {max_len: 63, pattern: "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"}];
+  string limitRangeName = 4[(validate.rules).string = {min_len: 1, max_len: 63, pattern: "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"}];
+  PodLimitRangeResource min = 5;
+  PodLimitRangeResource max = 6;
+}
+
+message DeletePodLimitRangeRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "DeletePodLimitRangeRequest"
+      description : "删除命名空间 Pod LimitRange 请求"
+      required : ["projectCode", "clusterID", "namespace", "limitRangeName"]
+    }
+  };
+
+  string projectCode = 1;
+  string clusterID = 2;
+  string namespace = 3[(validate.rules).string = {max_len: 63, pattern: "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"}];
+  string limitRangeName = 4[(validate.rules).string = {min_len: 1, max_len: 63, pattern: "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"}];
+}
+
+message PodLimitRangeResponse {
+  uint32 code = 1;
+  string message = 2;
+  PodLimitRange data = 3;
   string requestID = 4;
   Perms web_annotations = 5[json_name = "web_annotations"];
 }
