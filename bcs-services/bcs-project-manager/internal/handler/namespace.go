@@ -138,6 +138,42 @@ func (p *NamespaceHandler) DeleteOtherQuota(ctx context.Context,
 	return action.DeleteOtherQuota(ctx, req, resp)
 }
 
+// CreatePodLimitRange creates a Pod LimitRange in a namespace.
+func (p *NamespaceHandler) CreatePodLimitRange(ctx context.Context,
+	req *proto.CreatePodLimitRangeRequest, resp *proto.PodLimitRangeResponse) error {
+	action, err := na.NewNamespaceFactory(p.model).Action(req.GetClusterID(), req.GetProjectCode())
+	if err != nil {
+		logging.Error("get namespace client for cluster %s from client factory failed, err: %s",
+			req.GetClusterID(), err.Error())
+		return err
+	}
+	return action.CreatePodLimitRange(ctx, req, resp)
+}
+
+// UpdatePodLimitRange updates a Pod LimitRange in a namespace.
+func (p *NamespaceHandler) UpdatePodLimitRange(ctx context.Context,
+	req *proto.UpdatePodLimitRangeRequest, resp *proto.PodLimitRangeResponse) error {
+	action, err := na.NewNamespaceFactory(p.model).Action(req.GetClusterID(), req.GetProjectCode())
+	if err != nil {
+		logging.Error("get namespace client for cluster %s from client factory failed, err: %s",
+			req.GetClusterID(), err.Error())
+		return err
+	}
+	return action.UpdatePodLimitRange(ctx, req, resp)
+}
+
+// DeletePodLimitRange deletes the Pod item from a LimitRange in a namespace.
+func (p *NamespaceHandler) DeletePodLimitRange(ctx context.Context,
+	req *proto.DeletePodLimitRangeRequest, resp *proto.PodLimitRangeResponse) error {
+	action, err := na.NewNamespaceFactory(p.model).Action(req.GetClusterID(), req.GetProjectCode())
+	if err != nil {
+		logging.Error("get namespace client for cluster %s from client factory failed, err: %s",
+			req.GetClusterID(), err.Error())
+		return err
+	}
+	return action.DeletePodLimitRange(ctx, req, resp)
+}
+
 // UpdateNamespaceCallback implement for UpdateNamespaceCallback interface
 func (p *NamespaceHandler) UpdateNamespaceCallback(ctx context.Context,
 	req *proto.NamespaceCallbackRequest, resp *proto.NamespaceCallbackResponse) error {

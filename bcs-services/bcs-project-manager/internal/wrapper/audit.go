@@ -43,6 +43,7 @@ type resource struct {
 	ClusterID       string `json:"clusterID" yaml:"clusterID"`
 	Namespace       string `json:"namespace" yaml:"namespace"`
 	QuotaName       string `json:"quotaName" yaml:"quotaName"`
+	LimitRangeName  string `json:"limitRangeName" yaml:"limitRangeName"`
 	Name            string `json:"name" yaml:"name"`
 	Key             string `json:"key" yaml:"key"`
 	IDs             string `json:"idList" yaml:"idList"`
@@ -63,6 +64,9 @@ func (r resource) toMap() map[string]interface{} {
 	}
 	if r.QuotaName != "" {
 		result["QuotaName"] = r.QuotaName
+	}
+	if r.LimitRangeName != "" {
+		result["LimitRangeName"] = r.LimitRangeName
 	}
 	if r.Name != "" {
 		result["Name"] = r.Name
@@ -166,6 +170,27 @@ var auditFuncMap = map[string]func(req server.Request) (audit.Resource, audit.Ac
 			ProjectCode:  res.ProjectCode,
 			ResourceType: audit.ResourceTypeNamespace, ResourceID: res.Namespace, ResourceName: res.QuotaName,
 			ResourceData: res.toMap(),
+		}, audit.Action{ActionID: "namespace_update", ActivityType: audit.ActivityTypeDelete}
+	},
+	"Namespace.CreatePodLimitRange": func(req server.Request) (audit.Resource, audit.Action) {
+		res := getResourceID(req)
+		return audit.Resource{
+			ProjectCode: res.ProjectCode, ResourceType: audit.ResourceTypeNamespace,
+			ResourceID: res.Namespace, ResourceName: res.LimitRangeName, ResourceData: res.toMap(),
+		}, audit.Action{ActionID: "namespace_update", ActivityType: audit.ActivityTypeCreate}
+	},
+	"Namespace.UpdatePodLimitRange": func(req server.Request) (audit.Resource, audit.Action) {
+		res := getResourceID(req)
+		return audit.Resource{
+			ProjectCode: res.ProjectCode, ResourceType: audit.ResourceTypeNamespace,
+			ResourceID: res.Namespace, ResourceName: res.LimitRangeName, ResourceData: res.toMap(),
+		}, audit.Action{ActionID: "namespace_update", ActivityType: audit.ActivityTypeUpdate}
+	},
+	"Namespace.DeletePodLimitRange": func(req server.Request) (audit.Resource, audit.Action) {
+		res := getResourceID(req)
+		return audit.Resource{
+			ProjectCode: res.ProjectCode, ResourceType: audit.ResourceTypeNamespace,
+			ResourceID: res.Namespace, ResourceName: res.LimitRangeName, ResourceData: res.toMap(),
 		}, audit.Action{ActionID: "namespace_update", ActivityType: audit.ActivityTypeDelete}
 	},
 	"Namespace.GetNamespace": func(req server.Request) (audit.Resource, audit.Action) {

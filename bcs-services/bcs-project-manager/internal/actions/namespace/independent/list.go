@@ -29,6 +29,7 @@ import (
 	vdm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/variabledefinition"
 	vvm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/variablevalue"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
+	limitrangeutils "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/limitrange"
 	quotautils "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/quota"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
 )
@@ -54,6 +55,16 @@ func (c *IndependentNamespaceAction) ListNamespaces(ctx context.Context,
 				quotaMap[nsName] = quota
 			} else {
 				otherQuotasMap[nsName] = append(otherQuotasMap[nsName], quotautils.TransferToProtoOtherQuota(&quota))
+			}
+		}
+	}
+	podLimitRangesMap := map[string][]*proto.PodLimitRange{}
+	if limitRangeList, e := client.CoreV1().LimitRanges("").List(ctx, metav1.ListOptions{}); e == nil {
+		for index := range limitRangeList.Items {
+			limitRange := &limitRangeList.Items[index]
+			if podLimitRange := limitrangeutils.TransferToProto(limitRange); podLimitRange != nil {
+				namespace := limitRange.GetNamespace()
+				podLimitRangesMap[namespace] = append(podLimitRangesMap[namespace], podLimitRange)
 			}
 		}
 	}
@@ -83,6 +94,9 @@ func (c *IndependentNamespaceAction) ListNamespaces(ctx context.Context,
 		}
 		if otherQuotas, ok := otherQuotasMap[ns.GetName()]; ok {
 			retData.OtherQuotas = otherQuotas
+		}
+		if podLimitRanges, ok := podLimitRangesMap[ns.GetName()]; ok {
+			retData.PodLimitRanges = podLimitRanges
 		}
 		// get variables
 		retData.Variables = variablesMap[ns.GetName()]

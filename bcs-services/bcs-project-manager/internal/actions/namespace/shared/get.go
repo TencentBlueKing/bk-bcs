@@ -29,6 +29,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	nsm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/namespace"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
+	limitrangeutils "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/limitrange"
 	quotautils "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/quota"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
 )
@@ -85,6 +86,19 @@ func (a *SharedNamespaceAction) GetNamespace(ctx context.Context,
 		}
 		for _, q := range otherQuotas {
 			retData.OtherQuotas = append(retData.OtherQuotas, quotautils.TransferToProtoOtherQuota(q))
+		}
+	}
+	limitRangeList, err := client.CoreV1().LimitRanges(namespace.GetName()).List(ctx, metav1.ListOptions{})
+	if err != nil && !errors.IsNotFound(err) {
+		logging.Error("list LimitRanges in namespace %s/%s failed, err: %s",
+			clusterID, namespace.GetName(), err.Error())
+		return errorx.NewClusterErr(err.Error())
+	}
+	if err == nil {
+		for index := range limitRangeList.Items {
+			if limitRange := limitrangeutils.TransferToProto(&limitRangeList.Items[index]); limitRange != nil {
+				retData.PodLimitRanges = append(retData.PodLimitRanges, limitRange)
+			}
 		}
 	}
 	// get variables

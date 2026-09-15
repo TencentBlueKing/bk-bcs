@@ -118,6 +118,57 @@
           </bk-table-column>
         </bk-table>
       </bcs-tab-panel>
+      <bcs-tab-panel
+        name="podLimitRanges"
+        :label="$t('dashboard.ns.label.podLimitRanges')"
+        v-if="editable || (data.podLimitRanges && data.podLimitRanges.length)">
+        <div class="other-quota-toolbar" v-if="editable">
+          <bcs-button theme="primary" icon="plus" @click="handleCreatePodLimitRange">
+            {{ $t('dashboard.ns.action.createPodLimitRange') }}
+          </bcs-button>
+        </div>
+        <bk-table class="other-quota-table" :data="data.podLimitRanges || []">
+          <bk-table-column
+            :label="$t('generic.label.name')"
+            prop="name"
+            min-width="130"
+            show-overflow-tooltip>
+          </bk-table-column>
+          <bk-table-column :label="$t('dashboard.ns.label.minCpu')" min-width="100">
+            <template #default="{ row }">
+              {{ formatLimitRangeResource(row, 'min', 'cpu') }}
+            </template>
+          </bk-table-column>
+          <bk-table-column :label="$t('dashboard.ns.label.maxCpu')" min-width="100">
+            <template #default="{ row }">
+              {{ formatLimitRangeResource(row, 'max', 'cpu') }}
+            </template>
+          </bk-table-column>
+          <bk-table-column :label="$t('dashboard.ns.label.minMemory')" min-width="110">
+            <template #default="{ row }">
+              {{ formatLimitRangeResource(row, 'min', 'memory') }}
+            </template>
+          </bk-table-column>
+          <bk-table-column :label="$t('dashboard.ns.label.maxMemory')" min-width="110">
+            <template #default="{ row }">
+              {{ formatLimitRangeResource(row, 'max', 'memory') }}
+            </template>
+          </bk-table-column>
+          <bk-table-column
+            :label="$t('generic.label.action')"
+            width="90"
+            v-if="editable">
+            <template #default="{ row }">
+              <bk-button text class="mr-[8px]" @click="handleEditPodLimitRange(row)">
+                {{ $t('generic.button.edit') }}
+              </bk-button>
+              <bk-button text @click="handleDeletePodLimitRange(row)">
+                {{ $t('generic.button.delete') }}
+              </bk-button>
+            </template>
+          </bk-table-column>
+        </bk-table>
+      </bcs-tab-panel>
     </bcs-tab>
 
     <bcs-dialog
@@ -201,6 +252,89 @@
         </bcs-button>
       </div>
     </bcs-dialog>
+    <bcs-dialog
+      v-model="limitRangeDialog.isShow"
+      :title="limitRangeDialog.isEdit
+        ? $t('dashboard.ns.title.editPodLimitRange')
+        : $t('dashboard.ns.title.createPodLimitRange')"
+      :width="650">
+      <bk-form
+        :label-width="120"
+        v-bkloading="{ isLoading: limitRangeDialog.loading }"
+        :model="limitRangeDialog.form">
+        <bk-form-item
+          :label="$t('dashboard.ns.label.limitRangeName')"
+          property="name"
+          :rules="limitRangeNameRules"
+          error-display-type="normal"
+          required>
+          <bcs-input
+            v-model="limitRangeDialog.form.name"
+            class="w-[410px]"
+            :disabled="limitRangeDialog.isEdit"
+            :maxlength="63">
+          </bcs-input>
+        </bk-form-item>
+        <bk-form-item
+          label="CPU"
+          property="min"
+          :rules="limitRangeRules"
+          error-display-type="normal">
+          <div class="flex items-center">
+            <span class="mr-[10px] text-[12px] text-[#979ba5]">Min</span>
+            <bcs-input
+              v-model="limitRangeDialog.form.min.cpu"
+              class="w-[150px] mr-[20px]"
+              type="text">
+              <div class="group-text" slot="append">{{ $t('units.suffix.cores') }}</div>
+            </bcs-input>
+            <span class="mr-[10px] text-[12px] text-[#979ba5]">Max</span>
+            <bcs-input
+              v-model="limitRangeDialog.form.max.cpu"
+              class="w-[150px]"
+              type="text">
+              <div class="group-text" slot="append">{{ $t('units.suffix.cores') }}</div>
+            </bcs-input>
+          </div>
+        </bk-form-item>
+        <bk-form-item
+          label="Memory"
+          property="max"
+          :rules="limitRangeRules"
+          error-display-type="normal">
+          <div class="flex items-center">
+            <span class="mr-[10px] text-[12px] text-[#979ba5]">Min</span>
+            <bcs-input
+              v-model="limitRangeDialog.form.min.memory"
+              class="w-[150px] mr-[20px]"
+              type="text">
+              <div class="group-text" slot="append">GiB</div>
+            </bcs-input>
+            <span class="mr-[10px] text-[12px] text-[#979ba5]">Max</span>
+            <bcs-input
+              v-model="limitRangeDialog.form.max.memory"
+              class="w-[150px]"
+              type="text">
+              <div class="group-text" slot="append">GiB</div>
+            </bcs-input>
+          </div>
+        </bk-form-item>
+      </bk-form>
+      <div slot="footer">
+        <bcs-button
+          theme="primary"
+          class="mr5"
+          :loading="limitRangeDialog.loading"
+          @click="handleSavePodLimitRange">
+          {{ $t('generic.button.confirm') }}
+        </bcs-button>
+        <bcs-button
+          :disabled="limitRangeDialog.loading"
+          @click="handleCancelPodLimitRange">
+          {{ $t('generic.button.cancel') }}
+        </bcs-button>
+      </div>
+    </bcs-dialog>
   </div>
 </template>
 <script lang="ts">
@@ -215,8 +349,22 @@ import {
   QuotaValues,
   serializeQuotaFormValues,
 } from './other-quota';
+import {
+  createPodLimitRangeForm,
+  isPodLimitRangeFormValid,
+  PodLimitRangeValue,
+  podLimitRangeToFormValues,
+  serializePodLimitRangeForm,
+} from './pod-limit-range';
 
-import { createOtherQuota, deleteOtherQuota, updateOtherQuota } from '@/api/modules/project';
+import {
+  createOtherQuota,
+  createPodLimitRange,
+  deleteOtherQuota,
+  deletePodLimitRange as deletePodLimitRangeAPI,
+  updateOtherQuota,
+  updatePodLimitRange,
+} from '@/api/modules/project';
 import $bkMessage from '@/common/bkmagic';
 import { timeZoneTransForm } from '@/common/util';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
@@ -263,6 +411,14 @@ export default defineComponent({
       if (!row.quota?.[field]) return '';
       const rate = Number(row.usageRate?.[field] || 0) * 100;
       return `${rate.toFixed(2)}%`;
+    };
+
+    const formatLimitRangeResource = (row, boundary: 'min' | 'max', field: 'cpu' | 'memory') => {
+      const value = row?.[boundary]?.[field];
+      if (!value) return '--';
+      const type = field === 'cpu' ? 'cpu' : 'mem';
+      const unit = field === 'cpu' ? $i18n.t('units.suffix.cores') : 'Gi';
+      return formatQuotaQuantity(value, type) + ' ' + unit;
     };
 
     const originalQuota = ref<Partial<QuotaValues>>();
@@ -378,15 +534,130 @@ export default defineComponent({
       });
     };
 
+    const originalLimitRange = ref<PodLimitRangeValue>();
+    const limitRangeDialog = ref({
+      isShow: false,
+      isEdit: false,
+      loading: false,
+      form: createPodLimitRangeForm(),
+    });
+    const validateLimitRangeName = () => (
+      limitRangeDialog.value.form.name.length <= 63
+      && /^[a-z0-9]([-a-z0-9]*[a-z0-9])?$/.test(limitRangeDialog.value.form.name)
+    );
+    const validateLimitRangeResource = () => isPodLimitRangeFormValid(limitRangeDialog.value.form);
+    const limitRangeNameRules = [{
+      validator: validateLimitRangeName,
+      message: $i18n.t('dashboard.ns.validate.limitRangeName'),
+      trigger: 'blur',
+    }];
+    const limitRangeRules = [{
+      validator: validateLimitRangeResource,
+      message: $i18n.t('dashboard.ns.validate.podLimitRangeResource'),
+      trigger: 'blur',
+    }];
+    const handleCreatePodLimitRange = () => {
+      originalLimitRange.value = undefined;
+      limitRangeDialog.value = {
+        isShow: true,
+        isEdit: false,
+        loading: false,
+        form: createPodLimitRangeForm(),
+      };
+    };
+    const handleEditPodLimitRange = (row: PodLimitRangeValue) => {
+      originalLimitRange.value = row;
+      limitRangeDialog.value = {
+        isShow: true,
+        isEdit: true,
+        loading: false,
+        form: podLimitRangeToFormValues(row),
+      };
+    };
+    const handleCancelPodLimitRange = () => {
+      if (limitRangeDialog.value.loading) return;
+      limitRangeDialog.value.isShow = false;
+    };
+    const handleSavePodLimitRange = async () => {
+      if (!validateLimitRangeName()) {
+        $bkMessage({
+          theme: 'error',
+          message: $i18n.t('dashboard.ns.validate.limitRangeName'),
+        });
+        return;
+      }
+      if (!validateLimitRangeResource()) {
+        $bkMessage({
+          theme: 'error',
+          message: $i18n.t('dashboard.ns.validate.podLimitRangeResource'),
+        });
+        return;
+      }
+
+      const { form, isEdit } = limitRangeDialog.value;
+      const range = serializePodLimitRangeForm(form, originalLimitRange.value);
+      limitRangeDialog.value.loading = true;
+      const request = isEdit ? updatePodLimitRange : createPodLimitRange;
+      const result = await request({
+        $clusterId: props.clusterId,
+        $namespace: props.data.name,
+        ...(isEdit ? { $limitRangeName: form.name } : { limitRangeName: form.name }),
+        ...range,
+      }).then(() => true)
+        .catch(() => false);
+      limitRangeDialog.value.loading = false;
+      if (!result) return;
+
+      $bkMessage({
+        theme: 'success',
+        message: $i18n.t(isEdit ? 'generic.msg.success.update' : 'generic.msg.success.create'),
+      });
+      limitRangeDialog.value.isShow = false;
+      emit('refresh');
+    };
+    const handleDeletePodLimitRange = (row: PodLimitRangeValue) => {
+      $bkInfo({
+        type: 'warning',
+        clsName: 'custom-info-confirm',
+        title: $i18n.t('generic.title.confirmDelete1', { name: row.name }),
+        subTitle: $i18n.t('dashboard.ns.tips.deletePodLimitRangeWarning'),
+        defaultInfo: true,
+        confirmFn: async () => {
+          const result = await deletePodLimitRangeAPI({
+            $clusterId: props.clusterId,
+            $namespace: props.data.name,
+            $limitRangeName: row.name,
+          }).then(() => true)
+            .catch(() => false);
+          if (!result) return;
+
+          $bkMessage({
+            theme: 'success',
+            message: $i18n.t('generic.msg.success.delete'),
+          });
+          emit('refresh');
+        },
+      });
+    };
+
     return {
       formatQuotaQuantity,
       formatQuotaUsage,
       formatUsageRate,
+      formatLimitRangeResource,
       handleCancelQuota,
       handleCreateQuota,
       handleDeleteQuota,
       handleEditQuota,
       handleSaveQuota,
+      handleCancelPodLimitRange,
+      handleCreatePodLimitRange,
+      handleDeletePodLimitRange,
+      handleEditPodLimitRange,
+      handleSavePodLimitRange,
+      limitRangeDialog,
+      limitRangeNameRules,
+      limitRangeRules,
       nameRules,
       quotaDialog,
       quotaRules,
