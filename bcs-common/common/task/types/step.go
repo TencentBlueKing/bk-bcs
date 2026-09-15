@@ -162,8 +162,8 @@ func (s *Step) GetStatus() string {
 
 // IsCompleted return step completed or not
 func (s *Step) IsCompleted() bool {
-	// 已经完成
-	if s.Status == TaskStatusSuccess {
+	// 已经完成, IGNORED 视同成功
+	if IsTaskSucceeded(s.Status) {
 		return true
 	}
 

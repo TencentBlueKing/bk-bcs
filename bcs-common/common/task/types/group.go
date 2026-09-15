@@ -95,6 +95,8 @@ type Stage struct {
 	Succeeded int `json:"succeeded"`
 	Failed    int `json:"failed"`
 	Skipped   int `json:"skipped"`
+	// Ignored 阶段内幂等忽略的任务数, 在阻断判定上等同成功, 仅计数上区分
+	Ignored int `json:"ignored"`
 }
 
 // IsTerminal 阶段是否已达终态
@@ -161,6 +163,8 @@ type TaskGroup struct {
 	SuccessCount int `json:"successCount"`
 	FailureCount int `json:"failureCount"`
 	SkippedCount int `json:"skippedCount"`
+	// IgnoredCount 组内幂等忽略的任务数, 不计入 SuccessCount, 也不会让任务组收敛为失败
+	IgnoredCount int `json:"ignoredCount"`
 
 	CallbackName    string            `json:"callbackName"`
 	CallbackResult  string            `json:"callbackResult"`
@@ -290,12 +294,7 @@ func (g *TaskGroup) GetStage(seq int) (*Stage, bool) {
 
 // IsTerminal 任务组是否已达终态
 func (g *TaskGroup) IsTerminal() bool {
-	switch g.Status {
-	case TaskStatusSuccess, TaskStatusFailure, TaskStatusRevoked, TaskStatusTimeout:
-		return true
-	default:
-		return false
-	}
+	return IsTaskTerminal(g.Status)
 }
 
 // Validate 校验任务组
@@ -396,10 +395,14 @@ func (g *TaskGroup) Advance(stageSeq int, taskStatus string) *AdvanceResult {
 	}
 
 	stage.Completed++
-	if taskStatus == TaskStatusSuccess {
+	switch taskStatus {
+	case TaskStatusIgnored:
+		stage.Ignored++
+		g.IgnoredCount++
+	case TaskStatusSuccess:
 		stage.Succeeded++
 		g.SuccessCount++
-	} else {
+	default:
 		stage.Failed++
 		g.FailureCount++
 	}
@@ -507,6 +510,7 @@ func (g *TaskGroup) settleIfCompleted(result *AdvanceResult) {
 	now := time.Now()
 	g.End = now
 	g.SetExecutionTime(g.Start, now)
+	// 任务组终态只有 SUCCESS/FAILURE: 幂等忽略视同成功, 数量由 IgnoredCount 单独暴露给调用方
 	if g.FailureCount > 0 {
 		g.SetStatus(TaskStatusFailure).SetMessage("task group finished with failures")
 	} else {
@@ -527,6 +531,7 @@ type StageCounter struct {
 	Succeeded int
 	Failed    int
 	Skipped   int
+	Ignored   int
 	Pending   int
 }
 
@@ -538,7 +543,7 @@ type StageCounter struct {
 func (g *TaskGroup) Reconcile(counters map[int]*StageCounter) *AdvanceResult {
 	result := &AdvanceResult{}
 
-	g.SuccessCount, g.FailureCount, g.SkippedCount = 0, 0, 0
+	g.SuccessCount, g.FailureCount, g.SkippedCount, g.IgnoredCount = 0, 0, 0, 0
 	for _, stage := range g.Stages {
 		counter, ok := counters[stage.Seq]
 		if !ok {
@@ -547,12 +552,14 @@ func (g *TaskGroup) Reconcile(counters map[int]*StageCounter) *AdvanceResult {
 		if counter.Total > 0 {
 			stage.Total = counter.Total
 		}
-		stage.Succeeded, stage.Failed, stage.Skipped = counter.Succeeded, counter.Failed, counter.Skipped
-		stage.Completed = counter.Succeeded + counter.Failed + counter.Skipped
+		stage.Succeeded, stage.Failed = counter.Succeeded, counter.Failed
+		stage.Skipped, stage.Ignored = counter.Skipped, counter.Ignored
+		stage.Completed = counter.Succeeded + counter.Failed + counter.Skipped + counter.Ignored
 
 		g.SuccessCount += stage.Succeeded
 		g.FailureCount += stage.Failed
 		g.SkippedCount += stage.Skipped
+		g.IgnoredCount += stage.Ignored
 
 		switch {
 		case !stage.Dispatched:
@@ -561,7 +568,7 @@ func (g *TaskGroup) Reconcile(counters map[int]*StageCounter) *AdvanceResult {
 			stage.Status = StageStatusRunning
 		case stage.Failed > 0:
 			stage.Status = StageStatusFailure
-		case stage.Skipped > 0 && stage.Succeeded == 0:
+		case stage.Skipped > 0 && stage.Succeeded == 0 && stage.Ignored == 0:
 			stage.Status = StageStatusSkipped
 		default:
 			stage.Status = StageStatusSuccess

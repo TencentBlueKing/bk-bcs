@@ -47,6 +47,9 @@ const (
 	TaskStatusRevoked = "REVOKED"
 	// TaskStatusNotStarted force task terminate
 	TaskStatusNotStarted = "NOTSTARTED"
+	// TaskStatusIgnored 幂等忽略: 步骤执行时发现目标态已满足, 由业务侧通过 Context.MarkIgnored 标记。
+	// 语义上是成功的子类: 属于终态, 任务组内不阻断后续阶段, 重试时不再重跑, 仅在计数上与成功区分。
+	TaskStatusIgnored = "IGNORED"
 
 	// CallbackResultSuccess callback success
 	CallbackResultSuccess = "SUCCESS"
@@ -64,6 +67,7 @@ var (
 		TaskStatusFailure,
 		TaskStatusTimeout,
 		TaskStatusRevoked,
+		TaskStatusIgnored,
 	}
 
 	// PendingTaskStatus 已落库但尚未开始执行的任务状态
@@ -71,11 +75,22 @@ var (
 		TaskStatusInit,
 		TaskStatusNotStarted,
 	}
+
+	// SucceededTaskStatus 视同成功的任务终态
+	SucceededTaskStatus = []string{
+		TaskStatusSuccess,
+		TaskStatusIgnored,
+	}
 )
 
 // IsTaskTerminal 任务是否已达终态
 func IsTaskTerminal(status string) bool {
 	return slices.Contains(TerminalTaskStatus, status)
+}
+
+// IsTaskSucceeded 任务是否视同成功, 即 SUCCESS 或 IGNORED
+func IsTaskSucceeded(status string) bool {
+	return slices.Contains(SucceededTaskStatus, status)
 }
 
 // Task task definition

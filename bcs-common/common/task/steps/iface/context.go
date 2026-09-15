@@ -15,6 +15,7 @@ package iface
 import (
 	"context"
 	"errors"
+	"sync"
 	"time"
 
 	istore "github.com/Tencent/bk-bcs/bcs-common/common/task/stores/iface"
@@ -32,6 +33,10 @@ type Context struct {
 	store       istore.Store
 	task        *types.Task
 	currentStep *types.Step
+
+	ignoreLock    sync.Mutex
+	ignored       bool
+	ignoreMessage string
 }
 
 // NewContext ...
@@ -117,6 +122,34 @@ func (c *Context) GetStatus() string {
 // GetRetryCount get current step retry count
 func (c *Context) GetRetryCount() uint32 {
 	return c.currentStep.GetRetryCount()
+}
+
+// MarkIgnored 标记当前步骤为幂等忽略, 即步骤开始执行后发现目标态已满足, 无需真正操作。
+//
+// 标记后步骤仍应返回 nil: 后续步骤照常执行, 所有步骤完成时任务终态收敛为 IGNORED 而非 SUCCESS。
+// 若步骤在标记后返回了 error, 则按失败处理, 标记不生效。
+func (c *Context) MarkIgnored(message string) {
+	c.ignoreLock.Lock()
+	defer c.ignoreLock.Unlock()
+
+	c.ignored = true
+	c.ignoreMessage = message
+}
+
+// IsIgnored 当前步骤是否已被标记为幂等忽略
+func (c *Context) IsIgnored() bool {
+	c.ignoreLock.Lock()
+	defer c.ignoreLock.Unlock()
+
+	return c.ignored
+}
+
+// IgnoreMessage 幂等忽略的原因
+func (c *Context) IgnoreMessage() string {
+	c.ignoreLock.Lock()
+	defer c.ignoreLock.Unlock()
+
+	return c.ignoreMessage
 }
 
 // GetParam get current step param by key

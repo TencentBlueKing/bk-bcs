@@ -389,6 +389,8 @@ func (m *TaskManager) doWork(taskID string, stepName string) error { // nolint
 	defer taskCancel()
 
 	tmpCh := make(chan error, 1)
+	// execCtx 在协程外创建, 便于步骤返回后读取业务侧写入的幂等忽略标记
+	execCtx := istep.NewContext(stepCtx, GetGlobalStorage(), state.GetTask(), step)
 	go func() {
 		defer func() {
 			if r := recover(); r != nil {
@@ -398,7 +400,6 @@ func (m *TaskManager) doWork(taskID string, stepName string) error { // nolint
 		}()
 
 		// call step worker
-		execCtx := istep.NewContext(stepCtx, GetGlobalStorage(), state.GetTask(), step)
 		tmpCh <- stepExecutor.Execute(execCtx)
 	}()
 
@@ -409,8 +410,12 @@ func (m *TaskManager) doWork(taskID string, stepName string) error { // nolint
 
 		if stepErr == nil {
 			// step成功处理流程
-			// 先更新state状态
-			state.updateStepSuccess(start)
+			// 先更新state状态, 业务侧标记了幂等忽略时按 IGNORED 收尾
+			if execCtx.IsIgnored() {
+				state.updateStepIgnored(start, execCtx.IgnoreMessage())
+			} else {
+				state.updateStepSuccess(start)
+			}
 			if state.isLastStep(step) {
 				state.tryCallback(nil)
 				// 在所有步骤都成功时，但是callback失败了，把callback失败信息作为task失败信息

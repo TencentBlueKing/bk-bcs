@@ -313,3 +313,67 @@ func TestGroupCommonPayload(t *testing.T) {
 	assert.NoError(t, g.GetCommonPayload(got))
 	assert.Equal(t, uint32(42), got.BatchID)
 }
+
+func TestAdvanceIgnoredNotBlocking(t *testing.T) {
+	g := newGroup(2, 1)
+
+	assert.Nil(t, g.Advance(0, TaskStatusIgnored).StageCompleted)
+	result := g.Advance(0, TaskStatusSuccess)
+
+	// 忽略不阻断后续阶段, 阶段按成功收尾
+	assert.Equal(t, StageStatusSuccess, g.Stages[0].Status)
+	assert.Equal(t, []int{1}, seqsOf(result.NextStages))
+	assert.Empty(t, result.BlockedStages)
+
+	// 忽略数独立计数, 既不混入成功数也不计入失败数
+	assert.Equal(t, 1, g.Stages[0].Ignored)
+	assert.Equal(t, 1, g.Stages[0].Succeeded)
+	assert.Equal(t, 0, g.Stages[0].Failed)
+	assert.Equal(t, 2, g.Stages[0].Completed)
+	assert.Equal(t, 1, g.IgnoredCount)
+	assert.Equal(t, 1, g.SuccessCount)
+	assert.Equal(t, 0, g.FailureCount)
+}
+
+func TestAdvanceAllIgnoredGroupSucceeds(t *testing.T) {
+	g := newGroup(2)
+
+	g.Advance(0, TaskStatusIgnored)
+	result := g.Advance(0, TaskStatusIgnored)
+
+	assert.True(t, result.GroupCompleted)
+	assert.Equal(t, StageStatusSuccess, g.Stages[0].Status)
+	// 任务组终态只有 SUCCESS/FAILURE, 全部忽略时收敛为成功
+	assert.Equal(t, TaskStatusSuccess, g.GetStatus())
+	assert.Equal(t, 2, g.IgnoredCount)
+	assert.Equal(t, 0, g.SuccessCount)
+}
+
+func TestReconcileIgnoredCompleted(t *testing.T) {
+	g := newGroup(2, 1)
+
+	result := g.Reconcile(map[int]*StageCounter{
+		0: {Total: 2, Succeeded: 1, Ignored: 1},
+	})
+
+	assert.Equal(t, StageStatusSuccess, g.Stages[0].Status)
+	assert.Equal(t, 2, g.Stages[0].Completed)
+	assert.Equal(t, 1, g.Stages[0].Ignored)
+	assert.Equal(t, 1, g.IgnoredCount)
+	assert.Equal(t, 1, g.SuccessCount)
+	// 阶段已完成且无失败, 继续下发下一栅栏
+	assert.Equal(t, []int{1}, seqsOf(result.NextStages))
+}
+
+func TestReconcileIgnoredNotSkipped(t *testing.T) {
+	g := newGroup(2)
+
+	// 一个任务被撤销、一个被忽略: 忽略的任务实际执行过, 阶段不应判为 SKIPPED
+	g.Reconcile(map[int]*StageCounter{
+		0: {Total: 2, Skipped: 1, Ignored: 1},
+	})
+
+	assert.Equal(t, StageStatusSuccess, g.Stages[0].Status)
+	assert.Equal(t, 1, g.IgnoredCount)
+	assert.Equal(t, 1, g.SkippedCount)
+}

@@ -88,14 +88,18 @@ func NewState(task *types.Task, stepName string) *State {
 
 // isTaskTerminated is terminated
 func (s *State) isTaskTerminated() bool {
-	status := s.task.GetStatus()
-	if status == types.TaskStatusFailure ||
-		status == types.TaskStatusSuccess ||
-		status == types.TaskStatusRevoked ||
-		status == types.TaskStatusTimeout {
-		return true
+	return types.IsTaskTerminal(s.task.GetStatus())
+}
+
+// succeededTerminal 返回任务成功收尾时应写入的终态与描述。
+// 任意步骤被标记为幂等忽略时, 任务终态收敛为 IGNORED 而非 SUCCESS。
+func (s *State) succeededTerminal() (string, string) {
+	for _, step := range s.task.Steps {
+		if step.GetStatus() == types.TaskStatusIgnored {
+			return types.TaskStatusIgnored, "task finished with ignored steps"
+		}
 	}
-	return false
+	return types.TaskStatusSuccess, "task finished successfully"
 }
 
 // isReadyToStep check if step is ready to step
@@ -129,12 +133,13 @@ func (s *State) isReadyToStep(stepName string) (*types.Step, error) {
 	if curStep.IsCompleted() {
 		// task success
 		taskStartTime := s.task.GetStartTime()
-		if curStep.GetStatus() == types.TaskStatusSuccess {
+		if types.IsTaskSucceeded(curStep.GetStatus()) {
 			if s.isLastStep(curStep) {
+				status, message := s.succeededTerminal()
 				s.task.SetEndTime(nowTime).
 					SetExecutionTime(taskStartTime, nowTime).
-					SetStatus(types.TaskStatusSuccess).
-					SetMessage("task finished successfully")
+					SetStatus(status).
+					SetMessage(message)
 			}
 			// step is success, skip
 			return nil, nil
@@ -144,10 +149,11 @@ func (s *State) isReadyToStep(stepName string) (*types.Step, error) {
 		failMsg := fmt.Sprintf("step %s running failed", curStep.Name)
 		if s.isLastStep(curStep) {
 			if curStep.GetSkipOnFailed() {
+				status, message := s.succeededTerminal()
 				s.task.SetEndTime(nowTime).
 					SetExecutionTime(taskStartTime, nowTime).
-					SetStatus(types.TaskStatusSuccess).
-					SetMessage("task finished successfully")
+					SetStatus(status).
+					SetMessage(message)
 				return nil, nil
 			}
 
@@ -203,23 +209,38 @@ func (s *State) tryCallback(stepErr error) {
 
 // updateStepSuccess update step status to success
 func (s *State) updateStepSuccess(start time.Time) {
+	s.settleStepSucceeded(start, types.TaskStatusSuccess,
+		fmt.Sprintf("step %s running successfully", s.step.Name))
+}
+
+// updateStepIgnored 步骤被业务侧标记为幂等忽略, 按成功收尾但状态记为 IGNORED
+func (s *State) updateStepIgnored(start time.Time, message string) {
+	if message == "" {
+		message = fmt.Sprintf("step %s ignored", s.step.Name)
+	}
+	s.settleStepSucceeded(start, types.TaskStatusIgnored, message)
+}
+
+// settleStepSucceeded 以视同成功的终态收尾当前步骤, 并在最后一步时收敛任务终态
+func (s *State) settleStepSucceeded(start time.Time, stepStatus, message string) {
 	endTime := time.Now()
 	s.step.SetEndTime(endTime).
 		SetExecutionTime(start, endTime).
-		SetStatus(types.TaskStatusSuccess).
-		SetMessage(fmt.Sprintf("step %s running successfully", s.step.Name)).
+		SetStatus(stepStatus).
+		SetMessage(message).
 		SetLastUpdate(endTime)
 
 	taskStartTime := s.task.GetStartTime()
 	s.task.SetStatus(types.TaskStatusRunning).
 		SetExecutionTime(taskStartTime, endTime).
-		SetMessage(fmt.Sprintf("step %s running successfully", s.step.Name)).
+		SetMessage(message).
 		SetLastUpdate(endTime)
 
 	if s.isLastStep(s.step) {
+		status, taskMsg := s.succeededTerminal()
 		s.task.SetEndTime(endTime).
-			SetStatus(types.TaskStatusSuccess).
-			SetMessage("task finished successfully")
+			SetStatus(status).
+			SetMessage(taskMsg)
 	}
 }
 
@@ -269,9 +290,10 @@ func (s *State) updateStepFailure(start time.Time, stepErr error, taskStatus *ta
 	// last step failed and skipOnFailed is true, update task status to success
 	if s.isLastStep(s.step) {
 		if s.step.GetSkipOnFailed() {
+			status, message := s.succeededTerminal()
 			s.task.SetEndTime(endTime).
-				SetStatus(types.TaskStatusSuccess).
-				SetMessage("task finished successfully")
+				SetStatus(status).
+				SetMessage(message)
 		} else {
 			s.task.SetEndTime(endTime).
 				SetStatus(types.TaskStatusFailure).

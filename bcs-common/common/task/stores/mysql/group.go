@@ -281,6 +281,7 @@ func (s *mysqlStore) ResetGroupStages(ctx context.Context, groupID string, fromS
 
 		// 阶段恢复为未下发, 由后续对账按实际任务状态重建计数并下发。
 		// 这里只改内存对象, 统一由 saveGroupTx 落库, 避免与其写回的阶段数据互相覆盖。
+		// IGNORED 不在 retryStatus 内, 这类任务视同成功不会被重置, 因此仍占用 Completed。
 		group.FailureCount, group.SkippedCount = 0, 0
 		for _, stage := range group.Stages {
 			if stage.Seq < fromSeq {
@@ -290,7 +291,7 @@ func (s *mysqlStore) ResetGroupStages(ctx context.Context, groupID string, fromS
 			stage.Message = ""
 			stage.Dispatched = false
 			stage.Failed, stage.Skipped = 0, 0
-			stage.Completed = stage.Succeeded
+			stage.Completed = stage.Succeeded + stage.Ignored
 		}
 
 		group.SetStatus(types.TaskStatusRunning).SetMessage("task group retrying")
@@ -413,6 +414,8 @@ func countStageTaskStatusTx(tx *gorm.DB, groupID string) (map[int]*types.StageCo
 		switch row.Status {
 		case types.TaskStatusSuccess:
 			counter.Succeeded += row.Total
+		case types.TaskStatusIgnored:
+			counter.Ignored += row.Total
 		case types.TaskStatusFailure, types.TaskStatusTimeout:
 			counter.Failed += row.Total
 		case types.TaskStatusRevoked:

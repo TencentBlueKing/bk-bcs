@@ -52,6 +52,7 @@ type TaskGroupRecord struct {
 	SuccessCount        int               `json:"successCount"`
 	FailureCount        int               `json:"failureCount"`
 	SkippedCount        int               `json:"skippedCount"`
+	IgnoredCount        int               `json:"ignoredCount"`
 	CallbackName        string            `json:"callbackName" gorm:"type:varchar(255)"`
 	CallbackResult      string            `json:"callbackResult" gorm:"type:varchar(191)"`
 	CallbackMessage     string            `json:"callbackMessage" gorm:"type:text"`
@@ -108,6 +109,7 @@ type StageRecord struct {
 	Succeeded         int    `json:"succeeded"`
 	Failed            int    `json:"failed"`
 	Skipped           int    `json:"skipped"`
+	Ignored           int    `json:"ignored"`
 }
 
 // TableName ..
@@ -131,6 +133,7 @@ func (s *StageRecord) ToStage() *types.Stage {
 		Succeeded:         s.Succeeded,
 		Failed:            s.Failed,
 		Skipped:           s.Skipped,
+		Ignored:           s.Ignored,
 	}
 }
 
@@ -148,6 +151,7 @@ func getGroupRecord(g *types.TaskGroup) *TaskGroupRecord {
 		SuccessCount:        g.SuccessCount,
 		FailureCount:        g.FailureCount,
 		SkippedCount:        g.SkippedCount,
+		IgnoredCount:        g.IgnoredCount,
 		CallbackName:        g.CallbackName,
 		CallbackResult:      g.CallbackResult,
 		CallbackMessage:     g.CallbackMessage,
@@ -180,6 +184,7 @@ func getStageRecords(g *types.TaskGroup) []*StageRecord {
 			Succeeded:         stage.Succeeded,
 			Failed:            stage.Failed,
 			Skipped:           stage.Skipped,
+			Ignored:           stage.Ignored,
 		})
 	}
 	return records
@@ -202,6 +207,7 @@ func toTaskGroup(record *TaskGroupRecord, stages []*StageRecord) *types.TaskGrou
 		SuccessCount:        record.SuccessCount,
 		FailureCount:        record.FailureCount,
 		SkippedCount:        record.SkippedCount,
+		IgnoredCount:        record.IgnoredCount,
 		CallbackName:        record.CallbackName,
 		CallbackResult:      record.CallbackResult,
 		CallbackMessage:     record.CallbackMessage,
@@ -237,6 +243,7 @@ var (
 		"SuccessCount",
 		"FailureCount",
 		"SkippedCount",
+		"IgnoredCount",
 		"CallbackResult",
 		"CallbackMessage",
 		"CommonParams",
@@ -257,6 +264,7 @@ var (
 		"Succeeded",
 		"Failed",
 		"Skipped",
+		"Ignored",
 	}
 )
 
@@ -269,6 +277,7 @@ func getUpdateGroupRecord(g *types.TaskGroup) *TaskGroupRecord {
 		SuccessCount:    g.SuccessCount,
 		FailureCount:    g.FailureCount,
 		SkippedCount:    g.SkippedCount,
+		IgnoredCount:    g.IgnoredCount,
 		CallbackResult:  g.CallbackResult,
 		CallbackMessage: g.CallbackMessage,
 		CommonParams:    g.CommonParams,
@@ -290,5 +299,6 @@ func getUpdateStageRecord(s *types.Stage) *StageRecord {
 		Succeeded:  s.Succeeded,
 		Failed:     s.Failed,
 		Skipped:    s.Skipped,
+		Ignored:    s.Ignored,
 	}
 }
