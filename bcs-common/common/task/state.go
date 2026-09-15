@@ -16,6 +16,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/RichardKnop/machinery/v2/log"
@@ -23,6 +24,9 @@ import (
 	istep "github.com/Tencent/bk-bcs/bcs-common/common/task/steps/iface"
 	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
 )
+
+// defaultIgnoredTaskMessage 被忽略的步骤兜底描述
+const defaultIgnoredTaskMessage = "task finished with ignored steps"
 
 // taskEndStatus task结束状态,处理超时和revoke
 type taskEndStatus struct {
@@ -92,14 +96,30 @@ func (s *State) isTaskTerminated() bool {
 }
 
 // succeededTerminal 返回任务成功收尾时应写入的终态与描述。
-// 任意步骤被标记为幂等忽略时, 任务终态收敛为 IGNORED 而非 SUCCESS。
+// 任意步骤被标记为幂等忽略时, 任务终态收敛为 IGNORED 而非 SUCCESS,
+// 描述取各被忽略步骤通过 istep.Context.MarkIgnored 传入的原因, 多个原因用 "; " 连接,
+// 调用方可直接把 task.Message 展示给用户。
 func (s *State) succeededTerminal() (string, string) {
+	ignored := false
+	reasons := make([]string, 0, len(s.task.Steps))
 	for _, step := range s.task.Steps {
-		if step.GetStatus() == types.TaskStatusIgnored {
-			return types.TaskStatusIgnored, "task finished with ignored steps"
+		if step.GetStatus() != types.TaskStatusIgnored {
+			continue
+		}
+		ignored = true
+		if message := step.GetMessage(); message != "" {
+			reasons = append(reasons, message)
 		}
 	}
-	return types.TaskStatusSuccess, "task finished successfully"
+
+	switch {
+	case !ignored:
+		return types.TaskStatusSuccess, "task finished successfully"
+	case len(reasons) == 0:
+		return types.TaskStatusIgnored, defaultIgnoredTaskMessage
+	default:
+		return types.TaskStatusIgnored, strings.Join(reasons, "; ")
+	}
 }
 
 // isReadyToStep check if step is ready to step

@@ -128,6 +128,9 @@ func (c *Context) GetRetryCount() uint32 {
 //
 // 标记后步骤仍应返回 nil: 后续步骤照常执行, 所有步骤完成时任务终态收敛为 IGNORED 而非 SUCCESS。
 // 若步骤在标记后返回了 error, 则按失败处理, 标记不生效。
+//
+// message 为业务侧自定义的忽略原因, 会写入 step.Message, 并作为任务终态描述写入 task.Message,
+// 调用方可直接展示给用户; 多个步骤被忽略时各原因以 "; " 连接。
 func (c *Context) MarkIgnored(message string) {
 	c.ignoreLock.Lock()
 	defer c.ignoreLock.Unlock()

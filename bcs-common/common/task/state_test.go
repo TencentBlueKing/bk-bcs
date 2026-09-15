@@ -97,6 +97,7 @@ func TestIgnoredStepSetsTaskIgnored(t *testing.T) {
 	settleStep(t, task, "step2", "")
 	assert.Equal(t, types.TaskStatusSuccess, task.Steps[1].Status)
 	assert.Equal(t, types.TaskStatusIgnored, task.GetStatus())
+	assert.Equal(t, "进程已在运行, 无需重复启动", task.GetMessage())
 	assert.True(t, types.IsTaskTerminal(task.GetStatus()))
 }
 
@@ -117,7 +118,49 @@ func TestIgnoredLastStepSetsTaskIgnored(t *testing.T) {
 	settleStep(t, task, "step1", "进程已停止")
 
 	assert.Equal(t, types.TaskStatusIgnored, task.GetStatus())
-	assert.Equal(t, "task finished with ignored steps", task.GetMessage())
+	assert.Equal(t, "进程已停止", task.GetMessage())
+}
+
+// 多个步骤被忽略时, 任务描述保留每个步骤给出的原因
+func TestIgnoredMessagesJoined(t *testing.T) {
+	globalStorage = mem.New()
+	task := newIgnoreTestTask("step1", "step2", "step3")
+
+	settleStep(t, task, "step1", "进程已停止, 无需重复停止")
+	settleStep(t, task, "step2", "")
+	settleStep(t, task, "step3", "进程已在运行, 无需重复启动")
+
+	assert.Equal(t, types.TaskStatusIgnored, task.GetStatus())
+	assert.Equal(t, "进程已停止, 无需重复停止; 进程已在运行, 无需重复启动", task.GetMessage())
+}
+
+// 业务侧没有给出原因时, 任务描述回落到步骤级兜底文案
+func TestIgnoredMessageFallback(t *testing.T) {
+	globalStorage = mem.New()
+	task := newIgnoreTestTask("step1")
+
+	state := NewState(task, "step1")
+	step, err := state.isReadyToStep("step1")
+	assert.NoError(t, err)
+	state.step = step
+	state.updateStepIgnored(time.Now(), "")
+
+	assert.Equal(t, types.TaskStatusIgnored, task.GetStatus())
+	assert.Equal(t, "step step1 ignored", task.GetMessage())
+}
+
+// 从存储恢复出的忽略步骤没有描述时, 任务描述使用框架兜底文案
+func TestIgnoredMessageDefault(t *testing.T) {
+	globalStorage = mem.New()
+	task := newIgnoreTestTask("step1")
+	task.Steps[0].SetStatus(types.TaskStatusIgnored).SetMessage("")
+	task.SetStatus(types.TaskStatusRunning)
+
+	_, err := NewState(task, "step1").isReadyToStep("step1")
+
+	assert.NoError(t, err)
+	assert.Equal(t, types.TaskStatusIgnored, task.GetStatus())
+	assert.Equal(t, defaultIgnoredTaskMessage, task.GetMessage())
 }
 
 // 任务被重复投递时, 已忽略的步骤必须视同完成, 否则会被当作失败步骤
