@@ -258,7 +258,7 @@
         : $t('dashboard.ns.title.createPodLimitRange')"
       :width="650">
       <bk-form
-        :label-width="120"
+        :label-width="140"
         v-bkloading="{ isLoading: limitRangeDialog.loading }"
         :model="limitRangeDialog.form">
         <bk-form-item
