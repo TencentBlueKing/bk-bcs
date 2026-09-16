@@ -39,6 +39,11 @@ const (
 	HeaderTenantId = "X-Bk-Tenant-Id"
 	// DefaultTenantId default tenant id
 	DefaultTenantId = "default"
+
+	// VersionV3 权限中心 V3（默认）
+	VersionV3 = "v3"
+	// VersionV4 权限中心 V4（bkiam 网关）
+	VersionV4 = "v4"
 )
 
 // BaseResponse base response

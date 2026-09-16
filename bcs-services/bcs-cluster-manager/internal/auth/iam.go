@@ -30,18 +30,21 @@ var (
 )
 
 func defaultIAMClientFactory(tenantID string) (iam.PermClient, error) {
-	return iam.NewIamClient(&iam.Options{
-		SystemID:    options.GetGlobalCMOptions().IAM.SystemID,
-		AppCode:     options.GetGlobalCMOptions().IAM.AppCode,
-		AppSecret:   options.GetGlobalCMOptions().IAM.AppSecret,
-		External:    options.GetGlobalCMOptions().IAM.External,
-		GateWayHost: options.GetGlobalCMOptions().IAM.GatewayServer,
-		IAMHost:     options.GetGlobalCMOptions().IAM.IAMServer,
-		BkiIAMHost:  options.GetGlobalCMOptions().IAM.BkiIAMServer,
-		Metric:      options.GetGlobalCMOptions().IAM.Metric,
-		Debug:       options.GetGlobalCMOptions().IAM.Debug,
+	iamOpt := options.GetGlobalCMOptions().IAM
+	opt := &iam.Options{
+		SystemID:    iamOpt.SystemID,
+		AppCode:     iamOpt.AppCode,
+		AppSecret:   iamOpt.AppSecret,
+		External:    iamOpt.External,
+		GateWayHost: iamOpt.GatewayServer,
+		IAMHost:     iamOpt.IAMServer,
+		BkiIAMHost:  iamOpt.BkiIAMServer,
+		Metric:      iamOpt.Metric,
+		Debug:       iamOpt.Debug,
 		TenantId:    tenantID,
-	})
+	}
+	iam.ApplyV4Config(opt, iamOpt.EnableV4, iamOpt.V4GateWayHost)
+	return iam.NewIamClient(opt)
 }
 
 func setIAMClientFactory(factory func(tenantID string) (iam.PermClient, error)) {

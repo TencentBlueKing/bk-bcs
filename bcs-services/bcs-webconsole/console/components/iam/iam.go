@@ -42,6 +42,7 @@ func newIAMClient(tenantID string) (iam.PermClient, error) {
 		TenantId:    tenantID,
 		GateWayHost: config.G.Auth.GatewayHost,
 	}
+	iam.ApplyV4Config(opts, config.G.Auth.EnableV4, config.G.Auth.V4GatewayHost)
 
 	client, err := iam.NewIamClient(opts)
 	return client, err

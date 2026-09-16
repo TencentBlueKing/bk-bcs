@@ -93,6 +93,7 @@ func initPermClient(tenantId string) (bcsIAM.PermClient, error) {
 		Debug:       config.GlobalConf.IAM.Debug,
 		TenantId:    tenantId,
 	}
+	bcsIAM.ApplyV4Config(opts, config.GlobalConf.IAM.EnableV4, config.GlobalConf.IAM.V4GatewayHost)
 	cli, err := bcsIAM.NewIamClient(opts)
 	if err != nil {
 		return nil, err
@@ -123,6 +124,7 @@ func InitPermClient() error {
 		Metric:      false,
 		Debug:       config.GlobalConf.IAM.Debug,
 	}
+	bcsIAM.ApplyV4Config(opts, config.GlobalConf.IAM.EnableV4, config.GlobalConf.IAM.V4GatewayHost)
 	cli, err := bcsIAM.NewIamClient(opts)
 	if err != nil {
 		return err

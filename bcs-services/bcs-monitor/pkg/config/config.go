@@ -181,6 +181,12 @@ func (c *Configuration) ReadFrom(content []byte) error {
 	if c.IAM.GatewayServer == "" {
 		c.IAM.GatewayServer = BKIAM_GATEWAY_SERVER
 	}
+	if c.IAM.EnableV4 == false {
+		c.IAM.EnableV4 = BKIAM_ENABLE_V4
+	}
+	if c.IAM.V4GateWayHost == "" {
+		c.IAM.V4GateWayHost = BKIAM_V4_GATEWAY_HOST
+	}
 
 	// mongo
 	if c.Mongo.Address == "" {

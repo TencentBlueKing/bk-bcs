@@ -45,3 +45,24 @@ func TestNewFactoryReuseAndMultiTenant(t *testing.T) {
 	assert.Same(t, systemCli, factory("system"))
 	assert.NotSame(t, defaultCli, systemCli)
 }
+
+func TestNewAuthFactoryV4(t *testing.T) {
+	factory := NewAuthFactory(testIAMFactoryOptions(), true, "http://127.0.0.1:8080")
+	cli := factory("")
+	require.NotNil(t, cli)
+	assert.Same(t, cli, factory(""))
+	assert.NotSame(t, cli, factory("system"))
+}
+
+func TestNewAuthFactoryV4RequiresHost(t *testing.T) {
+	factory := NewAuthFactory(testIAMFactoryOptions(), true, "")
+	assert.Panics(t, func() { _ = factory("") })
+}
+
+func TestNewV3MigrateClient(t *testing.T) {
+	opt := testIAMFactoryOptions()
+	iam.ApplyV4Config(&opt, true, "http://127.0.0.1:8080")
+	cli, err := NewV3MigrateClient(opt)
+	require.NoError(t, err)
+	require.NotNil(t, cli)
+}

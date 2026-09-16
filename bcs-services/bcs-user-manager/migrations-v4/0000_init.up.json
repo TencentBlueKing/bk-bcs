@@ -1,0 +1,22 @@
+{
+  "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+  "enabled": true,
+  "operations": [
+    {
+      "operation": "upsert_system",
+      "data": {
+        "id": "{{ .BK_IAM_SYSTEM_ID }}",
+        "name": "容器管理平台",
+        "description": "蓝鲸容器管理平台基于原生Kubernetes，提供给用户高度可扩展、灵活易用的容器管理服务",
+        "clients": [
+          "{{ .APP_CODE }}",
+          "bk_bcs_monitor",
+          "bk_bcs",
+          "bk_devops",
+          "bk_harbor"
+        ],
+        "callback_url": "{{ .BCS_HOST }}/bcsapi/v4/usermanager/v1/iamv4-provider/resources/"
+      }
+    }
+  ]
+}

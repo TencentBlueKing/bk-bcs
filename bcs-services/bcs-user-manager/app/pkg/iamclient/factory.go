@@ -21,30 +21,45 @@ import (
 
 var metricRegisterOnce sync.Once
 
+// NewAuthFactory 按 enable_v4 写入 Version 后创建鉴权 client。
+// enable_v4=true 时走 IAM V4（v4PermClient），否则走 V3 SDK。
+func NewAuthFactory(baseOpt iam.Options, enableV4 bool, v4Host string) func(tenantID string) iam.PermClient {
+	iam.ApplyV4Config(&baseOpt, enableV4, v4Host)
+	return NewFactory(baseOpt)
+}
+
 // NewFactory 按租户缓存 IAM client，进程内只注册一次 prometheus 指标。
-func NewFactory(baseOpt iam.Options) func(tenantID string) iam.PermMigrateClient {
+// 调用方应已通过 ApplyV4Config / NewAuthFactory 写好 Version。
+func NewFactory(baseOpt iam.Options) func(tenantID string) iam.PermClient {
 	var clients sync.Map
-	return func(tenantID string) iam.PermMigrateClient {
+	return func(tenantID string) iam.PermClient {
 		if tenantID == "" {
 			tenantID = iam.DefaultTenantId
 		}
 		if cached, ok := clients.Load(tenantID); ok {
-			return cached.(iam.PermMigrateClient)
+			return cached.(iam.PermClient)
 		}
 
 		opt := baseOpt
 		opt.TenantId = tenantID
-		// NewIamMigrateClient 在 Metric=true 时会 MustRegister，只允许第一次创建带上指标。
+		// NewIamClient 在 Metric=true 时会 MustRegister，只允许第一次创建带上指标。
 		opt.Metric = false
 		metricRegisterOnce.Do(func() {
 			opt.Metric = baseOpt.Metric
 		})
 
-		iamCli, err := iam.NewIamMigrateClient(&opt)
+		iamCli, err := iam.NewIamClient(&opt)
 		if err != nil {
 			panic(err)
 		}
 		actual, _ := clients.LoadOrStore(tenantID, iamCli)
-		return actual.(iam.PermMigrateClient)
+		return actual.(iam.PermClient)
 	}
+}
+
+// NewV3MigrateClient 始终走 V3 SDK，供权限模型 migration 与 V3 provider token。
+func NewV3MigrateClient(baseOpt iam.Options) (iam.PermMigrateClient, error) {
+	baseOpt.Version = ""
+	baseOpt.Metric = false
+	return iam.NewIamMigrateClient(&baseOpt)
 }

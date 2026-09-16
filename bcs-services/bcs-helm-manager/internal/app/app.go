@@ -604,7 +604,7 @@ func (hm *HelmManager) initJWTClient() error {
 // init iam client for perm
 func (hm *HelmManager) initIAMClient() error {
 	auth.SetIAMClientFactory(func(tenantID string) iam.PermClient {
-		iamClient, err := iam.NewIamClient(&iam.Options{
+		opt := &iam.Options{
 			SystemID:    hm.opt.IAM.SystemID,
 			AppCode:     hm.opt.IAM.AppCode,
 			AppSecret:   hm.opt.IAM.AppSecret,
@@ -615,7 +615,9 @@ func (hm *HelmManager) initIAMClient() error {
 			Metric:      hm.opt.IAM.Metric,
 			Debug:       hm.opt.IAM.Debug,
 			TenantId:    tenantID,
-		})
+		}
+		iam.ApplyV4Config(opt, hm.opt.IAM.EnableV4, hm.opt.IAM.V4GateWayHost)
+		iamClient, err := iam.NewIamClient(opt)
 		if err != nil {
 			blog.Errorf("init iam client failed, err %s", err.Error())
 			panic(err)

@@ -3,7 +3,7 @@ module github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager
 go 1.21
 
 replace (
-	github.com/Tencent/bk-bcs/bcs-common => github.com/Tencent/bk-bcs/bcs-common v0.0.0-20260514075415-73423f40290d
+	github.com/Tencent/bk-bcs/bcs-common => ../../bcs-common
 	github.com/Tencent/bk-bcs/bcs-services/pkg => github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20260514075415-73423f40290d
 	k8s.io/api => k8s.io/api v0.26.1
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.26.1

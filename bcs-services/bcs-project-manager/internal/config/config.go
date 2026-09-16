@@ -108,6 +108,10 @@ type IAMConfig struct {
 	IAMHost     string `yaml:"iamHost" usage:"iam host"`
 	BKPaaSHost  string `yaml:"bkPaaSHost" usage:"bk paas host"`
 	Debug       bool   `yaml:"debug" usage:"debug mode"`
+	// EnableV4 开启后走 IAM V4（bcs-common iam.Version=v4）
+	EnableV4 bool `yaml:"enableV4" usage:"enable iam v4 auth"`
+	// V4GatewayHost IAM V4 网关地址，与 GatewayHost 分离
+	V4GatewayHost string `yaml:"v4GatewayHost" usage:"iam v4 gateway host"`
 }
 
 // ITSMConfig itsm操作需要的配置

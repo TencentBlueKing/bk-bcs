@@ -15,16 +15,14 @@ package config
 
 import (
 	"crypto/rsa"
-	"fmt"
 	"net"
 	"os"
+	"strings"
+	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/util"
-	bkiam "github.com/TencentBlueKing/iam-go-sdk"
-	"github.com/TencentBlueKing/iam-go-sdk/logger"
-	"github.com/TencentBlueKing/iam-go-sdk/metric"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	jwtGo "github.com/golang-jwt/jwt/v4"
-	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 
 	constant "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/conf"
@@ -66,6 +64,13 @@ func LoadConf(filePath string) (*ClusterResourcesConf, error) {
 	}
 	if conf.Global.IAM.Host == "" {
 		conf.Global.IAM.Host = envs.BKIAMHost
+	}
+	if !conf.Global.IAM.EnableV4 {
+		v := strings.ToLower(strings.TrimSpace(envs.BKIAMEnableV4))
+		conf.Global.IAM.EnableV4 = v == "true" || v == "1"
+	}
+	if conf.Global.IAM.V4GateWayHost == "" {
+		conf.Global.IAM.V4GateWayHost = envs.BKIAMV4GatewayHost
 	}
 
 	if conf.Global.SharedCluster.AnnotationKeyProjectCode == "" {
@@ -204,29 +209,43 @@ func (c *ClusterResourcesConf) initIAM() error {
 	if systemID == "" || appCode == "" || appSecret == "" {
 		return errorx.New(errcode.ValidateErr, "SystemID/AppCode/AppSecret required")
 	}
-	c.Global.IAM.Cli = func(tenantID string) *bkiam.IAM {
-		fmt.Println("new iam client with tenantID", tenantID)
-		return bkiam.NewIAM(systemID, appCode, appSecret, c.Global.Basic.BKAPIGWHost, bkiam.WithBkTenantID(tenantID))
+	if c.Global.IAM.EnableV4 && strings.TrimSpace(c.Global.IAM.V4GateWayHost) == "" {
+		return errorx.New(errcode.ValidateErr, "V4GateWayHost required when enable_v4 is true")
 	}
-	// 指标相关
-	if c.Global.IAM.Metric {
-		metric.RegisterMetrics()
+	// 启动时先建一次客户端做配置校验
+	if _, err := c.newIAMPermClient(""); err != nil {
+		return err
 	}
-	// 调试模式
-	defaultLogLevel := logrus.ErrorLevel
-	if c.Global.IAM.Debug {
-		defaultLogLevel = logrus.DebugLevel
+	var clients sync.Map
+	c.Global.IAM.Cli = func(tenantID string) iam.PermClient {
+		if v, ok := clients.Load(tenantID); ok {
+			return v.(iam.PermClient)
+		}
+		cli, err := c.newIAMPermClient(tenantID)
+		if err != nil {
+			panic(err)
+		}
+		actual, _ := clients.LoadOrStore(tenantID, cli)
+		return actual.(iam.PermClient)
 	}
-	log := &logrus.Logger{
-		Out:          os.Stderr,
-		Formatter:    new(logrus.TextFormatter),
-		Hooks:        make(logrus.LevelHooks),
-		Level:        defaultLogLevel,
-		ExitFunc:     os.Exit,
-		ReportCaller: false,
-	}
-	logger.SetLogger(log)
 	return nil
+}
+
+func (c *ClusterResourcesConf) newIAMPermClient(tenantID string) (iam.PermClient, error) {
+	opt := &iam.Options{
+		SystemID:    c.Global.IAM.SystemID,
+		AppCode:     c.Global.Basic.AppCode,
+		AppSecret:   c.Global.Basic.AppSecret,
+		External:    true, // 保持现网 V3：NewIAM(system, app, secret, BKAPIGWHost)
+		GateWayHost: c.Global.Basic.BKAPIGWHost,
+		IAMHost:     c.Global.IAM.Host,
+		BkiIAMHost:  c.Global.Basic.BKPaaSHost,
+		Metric:      c.Global.IAM.Metric,
+		Debug:       c.Global.IAM.Debug,
+		TenantId:    tenantID,
+	}
+	iam.ApplyV4Config(opt, c.Global.IAM.EnableV4, c.Global.IAM.V4GateWayHost)
+	return iam.NewIamClient(opt)
 }
 
 // initCompoment 初始化 compoment
@@ -359,11 +378,15 @@ type BCSAPIGatewayConf struct {
 
 // IAMConf 权限中心相关配置
 type IAMConf struct {
-	Host     string                           `yaml:"host" usage:"权限中心 V3 Host"`
-	SystemID string                           `yaml:"systemID" usage:"接入系统的 ID"` // nolint:tagliatelle
-	Metric   bool                             `yaml:"metric" usage:"支持 prometheus metrics"`
-	Debug    bool                             `yaml:"debug" usage:"启用 iam 调试模式"`
-	Cli      func(tenantID string) *bkiam.IAM `yaml:"-" usage:"iam Client 对象（自动生成）"`
+	Host     string `yaml:"host" usage:"权限中心 V3 Host"`
+	SystemID string `yaml:"systemID" usage:"接入系统的 ID"` // nolint:tagliatelle
+	Metric   bool   `yaml:"metric" usage:"支持 prometheus metrics"`
+	Debug    bool   `yaml:"debug" usage:"启用 iam 调试模式"`
+	// EnableV4 开启后走 IAM V4（bcs-common iam.Version=v4）
+	EnableV4 bool `yaml:"enableV4" usage:"是否启用 IAM V4"`
+	// V4GateWayHost IAM V4 网关地址，与 V3 GateWayHost 分离
+	V4GateWayHost string                               `yaml:"v4GatewayHost" usage:"IAM V4 网关 Host"`
+	Cli           func(tenantID string) iam.PermClient `yaml:"-" usage:"iam Client 对象（自动生成）"`
 }
 
 // SharedClusterConf 共享集群相关配置

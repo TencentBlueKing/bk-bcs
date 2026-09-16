@@ -1,0 +1,126 @@
+{
+  "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+  "enabled": true,
+  "operations": [
+    {
+      "operation": "upsert_action",
+      "data": {"id": "project_create", "name": "项目创建"}
+    },
+    {
+      "operation": "upsert_action",
+      "data": {"id": "project_view", "name": "项目查看", "resource_type_id": "project"}
+    },
+    {
+      "operation": "upsert_action",
+      "data": {"id": "project_edit", "name": "项目编辑", "resource_type_id": "project"}
+    },
+    {
+      "operation": "upsert_action",
+      "data": {"id": "project_delete", "name": "项目删除", "resource_type_id": "project"}
+    },
+    {
+      "operation": "upsert_action",
+      "data": {"id": "cluster_create", "name": "集群创建", "resource_type_id": "project"}
+    },
+    {
+      "operation": "upsert_action",
+      "data": {"id": "cluster_view", "name": "集群查看", "resource_type_id": "cluster"}
+    },
+    {
+      "operation": "upsert_action",
+      "data": {"id": "cluster_manage", "name": "集群管理", "resource_type_id": "cluster"}
+    },
+    {
+      "operation": "upsert_action",
+      "data": {"id": "cluster_delete", "name": "集群删除", "resource_type_id": "cluster"}
+    },
+    {
+      "operation": "upsert_action",
+      "data": {"id": "cluster_scoped_create", "name": "资源创建(集群域)", "resource_type_id": "cluster"}
+    },
+    {
+      "operation": "upsert_action",
+      "data": {"id": "cluster_scoped_view", "name": "资源查看(集群域)", "resource_type_id": "cluster"}
+    },
+    {
+      "operation": "upsert_action",
+      "data": {"id": "cluster_scoped_update", "name": "资源更新(集群域)", "resource_type_id": "cluster"}
+    },
+    {
+      "operation": "upsert_action",
+      "data": {"id": "cluster_scoped_delete", "name": "资源删除(集群域)", "resource_type_id": "cluster"}
+    },
+    {
+      "operation": "upsert_action",
+      "data": {"id": "namespace_create", "name": "命名空间创建", "resource_type_id": "cluster"}
+    },
+    {
+      "operation": "upsert_action",
+      "data": {"id": "namespace_list", "name": "命名空间列举", "resource_type_id": "cluster"}
+    },
+    {
+      "operation": "upsert_action",
+      "data": {"id": "namespace_view", "name": "命名空间查看", "resource_type_id": "namespace"}
+    },
+    {
+      "operation": "upsert_action",
+      "data": {"id": "namespace_update", "name": "命名空间更新", "resource_type_id": "namespace"}
+    },
+    {
+      "operation": "upsert_action",
+      "data": {"id": "namespace_delete", "name": "命名空间删除", "resource_type_id": "namespace"}
+    },
+    {
+      "operation": "upsert_action",
+      "data": {"id": "namespace_scoped_create", "name": "资源创建(命名空间域)", "resource_type_id": "namespace"}
+    },
+    {
+      "operation": "upsert_action",
+      "data": {"id": "namespace_scoped_view", "name": "资源查看(命名空间域)", "resource_type_id": "namespace"}
+    },
+    {
+      "operation": "upsert_action",
+      "data": {"id": "namespace_scoped_update", "name": "资源更新(命名空间域)", "resource_type_id": "namespace"}
+    },
+    {
+      "operation": "upsert_action",
+      "data": {"id": "namespace_scoped_delete", "name": "资源删除(命名空间域)", "resource_type_id": "namespace"}
+    },
+    {
+      "operation": "upsert_action",
+      "data": {"id": "templateset_create", "name": "模板集创建", "resource_type_id": "project"}
+    },
+    {
+      "operation": "upsert_action",
+      "data": {"id": "templateset_view", "name": "模板集查看", "resource_type_id": "templateset"}
+    },
+    {
+      "operation": "upsert_action",
+      "data": {"id": "templateset_copy", "name": "模板集复制", "resource_type_id": "templateset"}
+    },
+    {
+      "operation": "upsert_action",
+      "data": {"id": "templateset_update", "name": "模板集更新", "resource_type_id": "templateset"}
+    },
+    {
+      "operation": "upsert_action",
+      "data": {"id": "templateset_delete", "name": "模板集删除", "resource_type_id": "templateset"}
+    },
+    {
+      "operation": "upsert_action",
+      "data": {"id": "templateset_instantiate", "name": "模板集实例化", "resource_type_id": "templateset"}
+    },
+    {
+      "operation": "upsert_action",
+      "data": {"id": "cloud_account_create", "name": "云账号创建", "resource_type_id": "project"}
+    },
+    {
+      "operation": "upsert_action",
+      "data": {"id": "cloud_account_manage", "name": "云账号管理", "resource_type_id": "cloud_account"}
+    },
+    {
+      "operation": "upsert_action",
+      "data": {"id": "cloud_account_use", "name": "云账号使用", "resource_type_id": "cloud_account"}
+    }
+  ]
+}

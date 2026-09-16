@@ -18,6 +18,10 @@ type AuthConf struct {
 	Host        string `yaml:"host"`         // bkiam 地址, 获取 global.bkIAM.iamHost
 	GatewayHost string `yaml:"gateway_host"` // 网关模式地址, 如果不为空，优先使用 gatway 模式; 获取 global.bkIAM.gateWayHost
 	UseGateway  bool   `yaml:"use_gw"`       // 是否启用网关
+	// EnableV4 开启后走 IAM V4（bcs-common iam.Version=v4）
+	EnableV4 bool `yaml:"enable_v4"`
+	// V4GatewayHost IAM V4 网关地址，与 GatewayHost 分离
+	V4GatewayHost string `yaml:"v4_gateway_host"`
 }
 
 // Init : init default auth config

@@ -67,6 +67,8 @@ iam:
   iamHost: ""
   bkPaaSHost: ""
   debug: false
+  enableV4: false
+  v4GatewayHost: ""
 itsm:
   gatewayHost: ""
   createNsSvcID: 0

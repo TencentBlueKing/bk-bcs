@@ -194,6 +194,12 @@ func (c *Configurations) ReadFrom(content []byte) error {
 	if c.Auth.GatewayHost == "" {
 		c.Auth.GatewayHost = BK_IAM_GATEWAY_HOST
 	}
+	if c.Auth.EnableV4 == false {
+		c.Auth.EnableV4 = BKIAM_ENABLE_V4
+	}
+	if c.Auth.V4GatewayHost == "" {
+		c.Auth.V4GatewayHost = BKIAM_V4_GATEWAY_HOST
+	}
 	// 为空以配置文件为准, 如果设置，以环境变量为准, false代表网关模式
 	if BK_IAM_EXTERNAL != "" {
 		if external, e := strconv.ParseBool(BK_IAM_EXTERNAL); e == nil {

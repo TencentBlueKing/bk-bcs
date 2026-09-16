@@ -32,8 +32,8 @@ import (
 	"k8s.io/klog/v2"
 )
 
-// PermClient interface for IAM backend client
-type PermClient interface {
+// PermAuthClient 鉴权 / 申请 URL / 回调 Token，V3 与 V4 共用同一套方法。
+type PermAuthClient interface {
 	IsAllowedWithoutResource(actionID string, request PermissionRequest, cache bool) (bool, error)
 	IsAllowedWithResource(actionID string, request PermissionRequest, nodes []ResourceNode, cache bool) (bool, error)
 	BatchResourceIsAllowed(actionID string, request PermissionRequest, nodes [][]ResourceNode) (map[string]bool, error)
@@ -44,6 +44,11 @@ type PermClient interface {
 	GetToken() (string, error)
 	IsBasicAuthAllowed(user BkUser) error
 	GetApplyURL(request ApplicationRequest, relatedResources []ApplicationAction, user BkUser) (string, error)
+}
+
+// PermClient interface for IAM backend client
+type PermClient interface {
+	PermAuthClient
 	// CreateGradeManagers xxx
 	// perm management API
 	CreateGradeManagers(ctx context.Context, request GradeManagerRequest) (uint64, error)
@@ -79,6 +84,8 @@ type Options struct {
 	External bool
 	// GateWay host
 	GateWayHost string
+	// V4GateWayHost IAM V4（bkiam）网关地址，与 V3 GateWayHost 分离
+	V4GateWayHost string
 	// IAM host
 	IAMHost string
 	// BkiIAM host
@@ -89,6 +96,20 @@ type Options struct {
 	Debug bool
 	// TenantId tenant id
 	TenantId string
+	// Version IAM 版本，空或 v3 走 V3 SDK；v4 走 iamv4 并实现同一套 PermAuthClient
+	Version string
+}
+
+// ApplyV4Config 按 enable_v4 开关写入 Version 与 V4GateWayHost。
+// enableV4 为 true 时 Version=v4，validate() 会要求 V4GateWayHost 非空。
+func ApplyV4Config(opt *Options, enableV4 bool, v4Host string) {
+	if opt == nil {
+		return
+	}
+	opt.V4GateWayHost = strings.TrimSpace(v4Host)
+	if enableV4 {
+		opt.Version = VersionV4
+	}
 }
 
 func (opt *Options) validate() error {
@@ -100,11 +121,17 @@ func (opt *Options) validate() error {
 		return fmt.Errorf("systemID/AppCode/AppSecret required")
 	}
 
-	if !opt.External && opt.GateWayHost == "" {
-		return fmt.Errorf("BKAPIGatewayHost required when UseGateway flag set to true")
-	}
-	if opt.External && (opt.BkiIAMHost == "" || opt.IAMHost == "") {
-		return fmt.Errorf("BKIAMHost and BKPAASHost required when UseGateway flag set to false")
+	if isIAMV4(opt.Version) {
+		if strings.TrimSpace(opt.V4GateWayHost) == "" {
+			return fmt.Errorf("V4GateWayHost required for IAM V4")
+		}
+	} else {
+		if !opt.External && opt.GateWayHost == "" {
+			return fmt.Errorf("BKAPIGatewayHost required when UseGateway flag set to true")
+		}
+		if opt.External && (opt.BkiIAMHost == "" || opt.IAMHost == "") {
+			return fmt.Errorf("BKIAMHost and BKPAASHost required when UseGateway flag set to false")
+		}
 	}
 	if opt.TenantId == "" {
 		opt.TenantId = DefaultTenantId
@@ -143,6 +170,10 @@ func NewIamClient(opt *Options) (PermClient, error) {
 		return nil, fmt.Errorf("NewIamClient options invalid: %v", err)
 	}
 
+	if isIAMV4(opt.Version) {
+		return newV4PermClient(opt)
+	}
+
 	// register interface metric
 	if opt.Metric {
 		metric.RegisterMetrics()
@@ -173,6 +204,9 @@ func NewIamMigrateClient(opt *Options) (PermMigrateClient, error) {
 	err := opt.validate()
 	if err != nil {
 		return nil, fmt.Errorf("NewIamMigrateClient options invalid: %v", err)
+	}
+	if isIAMV4(opt.Version) {
+		return nil, fmt.Errorf("IAM V4 model migrate uses iamv4.Client.Migrate, not NewIamMigrateClient")
 	}
 
 	// register interface metric

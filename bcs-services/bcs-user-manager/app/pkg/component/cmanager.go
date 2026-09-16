@@ -190,6 +190,7 @@ func GetClusterMap() (map[string]*Cluster, error) {
 type CloudAccount struct {
 	AccountID   string `json:"accountID"`
 	AccountName string `json:"accountName"`
+	ProjectID   string `json:"projectID"`
 	Creator     string `json:"creator"`
 	Updater     string `json:"updater"`
 }

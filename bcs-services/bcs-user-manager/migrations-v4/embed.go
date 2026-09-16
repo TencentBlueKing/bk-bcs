@@ -7,18 +7,15 @@
  * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
- * limitations under the License.
- */
+    10| * limitations under the License.
+*/
 
-package config
+// Package migrationsv4 提供 IAM V4 权限模型 migration 文件。
+package migrationsv4
 
-// IAMConf for BK-IAM
-type IAMConf struct {
-	Disable       bool   `yaml:"disable"`
-	External      bool   `yaml:"external"`
-	GatewayServer string `yaml:"gateway_server"`
-	IAMServer     string `yaml:"iam_server"`
-	BkIAMServer   string `yaml:"bk_iam_erver"`
-	Metric        bool   `yaml:"metric"`
-	Debug         bool   `yaml:"debug"`
-}
+import "embed"
+
+// MigrationFS 嵌入的 V4 权限模型文件
+//
+//go:embed *.json
+var MigrationFS embed.FS

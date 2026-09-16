@@ -72,13 +72,17 @@ type IAMConfig struct {
 	AppCode   string `json:"app_code"`
 	AppSecret string `json:"app_secret"`
 
-	External    bool   `json:"external"`
-	GateWayHost string `json:"gateWay_host"`
-	IAMHost     string `json:"iam_host"`
-	BkiIAMHost  string `json:"bki_iam_host"`
+	External      bool   `json:"external"`
+	GateWayHost   string `json:"gateWay_host"`
+	V4GateWayHost string `json:"v4_gateway_host"`
+	IAMHost       string `json:"iam_host"`
+	BkiIAMHost    string `json:"bki_iam_host"`
 
 	Metric      bool `json:"metric"`
 	ServerDebug bool `json:"server_debug"`
+
+	// EnableV4 开启后鉴权走 IAM V4，并初始化 V4 client / 权限模型 migration
+	EnableV4 bool `json:"enable_v4"`
 }
 
 // TKEOptions tke api option

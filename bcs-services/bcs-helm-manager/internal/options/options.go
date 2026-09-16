@@ -121,6 +121,10 @@ type IAMConfig struct {
 	BkiIAMServer  string `json:"bkiiamserver" yaml:"bkiiamserver"`
 	Metric        bool   `json:"metric" yaml:"metric"`
 	Debug         bool   `json:"debug" yaml:"debug"`
+	// EnableV4 开启后走 IAM V4（bcs-common iam.Version=v4）
+	EnableV4 bool `json:"enablev4" yaml:"enablev4"`
+	// V4GateWayHost IAM V4 网关地址，与 GatewayServer 分离
+	V4GateWayHost string `json:"v4gatewayhost" yaml:"v4gatewayhost"`
 }
 
 // TLS option for tls

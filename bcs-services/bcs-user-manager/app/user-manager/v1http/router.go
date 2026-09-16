@@ -24,6 +24,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http/credential"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http/iam"
+	iamv4provider "github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http/iamv4"
+	iamv4res "github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http/iamv4/resources"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http/permission"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http/tke"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http/token"
@@ -122,6 +124,8 @@ func initTkeRouters(ws *restful.WebService) {
 // initIAMProviderRouters init iam provider api routers
 func initIAMProviderRouters(ws *restful.WebService) {
 	ws.Route(auth.BKIAMAuthFunc(ws.POST("/v1/iam-provider/resources")).To(iam.ResourceDispatch))
+	iamv4provider.SetDefaultQuerier(iamv4res.NewQuerier())
+	ws.Route(auth.BKIAMV4AuthFunc(ws.POST("/v1/iamv4-provider/resources")).To(iamv4provider.ResourceDispatch))
 }
 
 // initUserPermsRouters init user perms api routers

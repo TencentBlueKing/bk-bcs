@@ -20,4 +20,8 @@ type IAMConfig struct {
 	BkIAMServer   string `yaml:"bk_iam_erver"`
 	Metric        bool   `yaml:"metric"`
 	Debug         bool   `yaml:"debug"`
+	// EnableV4 开启后走 IAM V4（bcs-common iam.Version=v4）
+	EnableV4 bool `yaml:"enable_v4"`
+	// V4GateWayHost IAM V4 网关地址，与 GatewayServer 分离
+	V4GateWayHost string `yaml:"v4_gateway_host"`
 }

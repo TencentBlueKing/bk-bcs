@@ -23,7 +23,7 @@ import (
 
 // GetIAMClient get iam client
 func GetIAMClient(tenantID string) (iam.PermClient, error) {
-	return iam.NewIamClient(&iam.Options{
+	opt := &iam.Options{
 		SystemID:    config.G.Base.SystemID,
 		AppCode:     config.G.Base.AppCode,
 		AppSecret:   config.G.Base.AppSecret,
@@ -34,7 +34,9 @@ func GetIAMClient(tenantID string) (iam.PermClient, error) {
 		Metric:      config.G.IAM.Metric,
 		Debug:       config.G.IAM.Debug,
 		TenantId:    tenantID,
-	})
+	}
+	iam.ApplyV4Config(opt, config.G.IAM.EnableV4, config.G.IAM.V4GateWayHost)
+	return iam.NewIamClient(opt)
 }
 
 // GetProjectPermClient get project perm iam client

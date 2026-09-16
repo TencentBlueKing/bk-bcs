@@ -14,14 +14,13 @@
 package perm
 
 import (
-	bkiam "github.com/TencentBlueKing/iam-go-sdk"
-
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	conf "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 )
 
 // ApplyURLGenerator 权限申请链接生成器
 type ApplyURLGenerator struct {
-	cli func(tenantID string) *bkiam.IAM
+	cli func(tenantID string) iam.PermClient
 }
 
 // NewApplyURLGenerator xxx
@@ -31,17 +30,9 @@ func NewApplyURLGenerator() *ApplyURLGenerator {
 
 // Gen 生成权限申请跳转链接
 func (g *ApplyURLGenerator) Gen(tenantID, username string, actionReqList []ActionResourcesRequest) (string, error) {
-	application := g.makeApplication(actionReqList)
-	return g.cli(tenantID).GetApplyURL(application)
-}
-
-func (g *ApplyURLGenerator) makeApplication(actionReqList []ActionResourcesRequest) bkiam.Application {
-	actions := []bkiam.ApplicationAction{}
-	for _, req := range actionReqList {
-		actions = append(actions, req.ToAction())
-	}
-	return bkiam.Application{
-		SystemID: conf.G.IAM.SystemID,
-		Actions:  actions,
-	}
+	return g.cli(tenantID).GetApplyURL(
+		iam.ApplicationRequest{SystemID: conf.G.IAM.SystemID},
+		convertApplicationActions(actionReqList),
+		iam.BkUser{BkUserName: username},
+	)
 }

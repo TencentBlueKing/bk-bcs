@@ -4,6 +4,7 @@ go 1.23.0
 
 replace (
 	configcenter => github.com/Tencent/bk-cmdb v0.0.0-20250710063351-e7cb8e8963fa
+	github.com/Tencent/bk-bcs/bcs-common => ../../bcs-common
 	k8s.io/client-go => k8s.io/client-go v0.32.2
 )
 
@@ -50,7 +51,7 @@ require (
 	github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common v0.0.0-20220330120237-0bbed74dcf6d // indirect
 	github.com/TencentBlueKing/bk-audit-go-sdk v0.0.6 // indirect
 	github.com/TencentBlueKing/gopkg v1.1.0 // indirect
-	github.com/TencentBlueKing/iam-go-sdk v0.1.6 // indirect
+	github.com/TencentBlueKing/iam-go-sdk v1.0.1 // indirect
 	github.com/ajg/form v1.5.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bitly/go-simplejson v0.5.0 // indirect

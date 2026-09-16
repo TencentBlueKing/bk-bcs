@@ -63,6 +63,8 @@
     "app_secret": "${appSecret}",
     "external": ${external},
     "gateWay_host": "${gateWayHost}",
+    "enable_v4": false,
+    "v4_gateway_host": "",
     "iam_host": "${iamHost}",
     "bki_iam_host": "${bkiHost}",
     "metric": ${iamMetric},

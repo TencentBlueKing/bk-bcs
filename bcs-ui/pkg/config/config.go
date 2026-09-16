@@ -23,7 +23,6 @@ import (
 type Configuration struct {
 	Base         *BaseConf                    `yaml:"base_conf"`
 	BCS          *BCSConf                     `yaml:"bcs_conf"`
-	IAM          *IAMConf                     `yaml:"iam_conf"`
 	BKNotice     *BKNoticeConf                `yaml:"bk_notice"`
 	BKAIAgent    *BKAIAgentConf               `yaml:"bk_ai_agent"`
 	Web          *WebConf                     `yaml:"web"`
@@ -65,7 +64,6 @@ func newConfiguration() (*Configuration, error) {
 	c.BCS = &BCSConf{}
 	_ = c.BCS.Init()
 
-	c.IAM = &IAMConf{}
 	c.FrontendConf = defaultFrontendConf()
 
 	// 链路追踪初始化
@@ -136,11 +134,6 @@ func (c *Configuration) ReadFrom(content []byte) error {
 	}
 	if c.BCS.NamespacePrefix == "" {
 		c.BCS.NamespacePrefix = BCS_NAMESPACE_PREFIX
-	}
-
-	// iam env
-	if c.IAM.GatewayServer == "" {
-		c.IAM.GatewayServer = BKIAM_GATEWAY_SERVER
 	}
 
 	// etcd env
