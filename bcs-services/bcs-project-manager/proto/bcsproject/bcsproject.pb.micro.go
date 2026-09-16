@@ -478,6 +478,12 @@ func NewNamespaceEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		{
+			Name:    "Namespace.ListPodLimitRanges",
+			Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/podLimitRanges"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
 			Name:    "Namespace.CreatePodLimitRange",
 			Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/podLimitRanges"},
 			Method:  []string{"POST"},
@@ -561,6 +567,7 @@ type NamespaceService interface {
 	CreateOtherQuota(ctx context.Context, in *CreateOtherQuotaRequest, opts ...client.CallOption) (*OtherQuotaResponse, error)
 	UpdateOtherQuota(ctx context.Context, in *UpdateOtherQuotaRequest, opts ...client.CallOption) (*OtherQuotaResponse, error)
 	DeleteOtherQuota(ctx context.Context, in *DeleteOtherQuotaRequest, opts ...client.CallOption) (*OtherQuotaResponse, error)
+	ListPodLimitRanges(ctx context.Context, in *ListPodLimitRangesRequest, opts ...client.CallOption) (*ListPodLimitRangesResponse, error)
 	CreatePodLimitRange(ctx context.Context, in *CreatePodLimitRangeRequest, opts ...client.CallOption) (*PodLimitRangeResponse, error)
 	UpdatePodLimitRange(ctx context.Context, in *UpdatePodLimitRangeRequest, opts ...client.CallOption) (*PodLimitRangeResponse, error)
 	DeletePodLimitRange(ctx context.Context, in *DeletePodLimitRangeRequest, opts ...client.CallOption) (*PodLimitRangeResponse, error)
@@ -640,6 +647,16 @@ func (c *namespaceService) UpdateOtherQuota(ctx context.Context, in *UpdateOther
 func (c *namespaceService) DeleteOtherQuota(ctx context.Context, in *DeleteOtherQuotaRequest, opts ...client.CallOption) (*OtherQuotaResponse, error) {
 	req := c.c.NewRequest(c.name, "Namespace.DeleteOtherQuota", in)
 	out := new(OtherQuotaResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *namespaceService) ListPodLimitRanges(ctx context.Context, in *ListPodLimitRangesRequest, opts ...client.CallOption) (*ListPodLimitRangesResponse, error) {
+	req := c.c.NewRequest(c.name, "Namespace.ListPodLimitRanges", in)
+	out := new(ListPodLimitRangesResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -776,6 +793,7 @@ type NamespaceHandler interface {
 	CreateOtherQuota(context.Context, *CreateOtherQuotaRequest, *OtherQuotaResponse) error
 	UpdateOtherQuota(context.Context, *UpdateOtherQuotaRequest, *OtherQuotaResponse) error
 	DeleteOtherQuota(context.Context, *DeleteOtherQuotaRequest, *OtherQuotaResponse) error
+	ListPodLimitRanges(context.Context, *ListPodLimitRangesRequest, *ListPodLimitRangesResponse) error
 	CreatePodLimitRange(context.Context, *CreatePodLimitRangeRequest, *PodLimitRangeResponse) error
 	UpdatePodLimitRange(context.Context, *UpdatePodLimitRangeRequest, *PodLimitRangeResponse) error
 	DeletePodLimitRange(context.Context, *DeletePodLimitRangeRequest, *PodLimitRangeResponse) error
@@ -798,6 +816,7 @@ func RegisterNamespaceHandler(s server.Server, hdlr NamespaceHandler, opts ...se
 		CreateOtherQuota(ctx context.Context, in *CreateOtherQuotaRequest, out *OtherQuotaResponse) error
 		UpdateOtherQuota(ctx context.Context, in *UpdateOtherQuotaRequest, out *OtherQuotaResponse) error
 		DeleteOtherQuota(ctx context.Context, in *DeleteOtherQuotaRequest, out *OtherQuotaResponse) error
+		ListPodLimitRanges(ctx context.Context, in *ListPodLimitRangesRequest, out *ListPodLimitRangesResponse) error
 		CreatePodLimitRange(ctx context.Context, in *CreatePodLimitRangeRequest, out *PodLimitRangeResponse) error
 		UpdatePodLimitRange(ctx context.Context, in *UpdatePodLimitRangeRequest, out *PodLimitRangeResponse) error
 		DeletePodLimitRange(ctx context.Context, in *DeletePodLimitRangeRequest, out *PodLimitRangeResponse) error
@@ -849,6 +868,12 @@ func RegisterNamespaceHandler(s server.Server, hdlr NamespaceHandler, opts ...se
 		Name:    "Namespace.DeleteOtherQuota",
 		Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/otherQuotas/{quotaName}"},
 		Method:  []string{"DELETE"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Namespace.ListPodLimitRanges",
+		Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/podLimitRanges"},
+		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -952,6 +977,10 @@ func (h *namespaceHandler) UpdateOtherQuota(ctx context.Context, in *UpdateOther
 
 func (h *namespaceHandler) DeleteOtherQuota(ctx context.Context, in *DeleteOtherQuotaRequest, out *OtherQuotaResponse) error {
 	return h.NamespaceHandler.DeleteOtherQuota(ctx, in, out)
+}
+
+func (h *namespaceHandler) ListPodLimitRanges(ctx context.Context, in *ListPodLimitRangesRequest, out *ListPodLimitRangesResponse) error {
+	return h.NamespaceHandler.ListPodLimitRanges(ctx, in, out)
 }
 
 func (h *namespaceHandler) CreatePodLimitRange(ctx context.Context, in *CreatePodLimitRangeRequest, out *PodLimitRangeResponse) error {

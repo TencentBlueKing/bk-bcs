@@ -1277,6 +1277,48 @@
       }
     },
     "/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/podLimitRanges": {
+      "get": {
+        "summary": "查询 Pod LimitRange",
+        "description": "查询命名空间 Pod LimitRange",
+        "operationId": "Namespace_ListPodLimitRanges",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bcsprojectListPodLimitRangesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Namespace"
+        ]
+      },
       "post": {
         "summary": "创建 Pod LimitRange",
         "description": "创建命名空间 Pod LimitRange",
@@ -3617,6 +3659,30 @@
         }
       }
     },
+    "bcsprojectListPodLimitRangesResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "message": {
+          "type": "string"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bcsprojectPodLimitRange"
+          }
+        },
+        "requestID": {
+          "type": "string"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/bcsprojectPerms"
+        }
+      }
+    },
     "bcsprojectListProjectData": {
       "type": "object",
       "properties": {
@@ -4054,14 +4120,6 @@
           },
           "description": "其他配额信息",
           "title": "otherQuotas"
-        },
-        "podLimitRanges": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/bcsprojectPodLimitRange"
-          },
-          "description": "Pod 级别 LimitRange 信息",
-          "title": "podLimitRanges"
         }
       }
     },
