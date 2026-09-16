@@ -19,6 +19,13 @@ import (
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
 )
 
+// ListPodLimitRanges lists Pod LimitRanges in a shared namespace.
+func (a *SharedNamespaceAction) ListPodLimitRanges(ctx context.Context,
+	req *proto.ListPodLimitRangesRequest, resp *proto.ListPodLimitRangesResponse) error {
+	ia := independent.NewIndependentNamespaceAction(a.model)
+	return ia.ListPodLimitRanges(ctx, req, resp)
+}
+
 // CreatePodLimitRange directly manages a Pod LimitRange in a shared namespace.
 func (a *SharedNamespaceAction) CreatePodLimitRange(ctx context.Context,
 	req *proto.CreatePodLimitRangeRequest, resp *proto.PodLimitRangeResponse) error {

@@ -30,6 +30,7 @@ export const updateNamespace = request('put', '/clusters/$clusterId/namespaces/$
 export const createOtherQuota = request('post', '/clusters/$clusterId/namespaces/$namespace/otherQuotas');
 export const updateOtherQuota = request('put', '/clusters/$clusterId/namespaces/$namespace/otherQuotas/$quotaName');
 export const deleteOtherQuota = request('delete', '/clusters/$clusterId/namespaces/$namespace/otherQuotas/$quotaName');
+export const listPodLimitRanges = request('get', '/clusters/$clusterId/namespaces/$namespace/podLimitRanges');
 export const createPodLimitRange = request('post', '/clusters/$clusterId/namespaces/$namespace/podLimitRanges');
 export const updatePodLimitRange = request(
   'put',

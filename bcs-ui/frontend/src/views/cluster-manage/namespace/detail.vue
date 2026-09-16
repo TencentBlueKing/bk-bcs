@@ -60,7 +60,7 @@
         :label="$t('dashboard.ns.label.otherQuotas')"
         v-if="editable
           || (data.otherQuotas && data.otherQuotas.length)
-          || (data.podLimitRanges && data.podLimitRanges.length)">
+          || podLimitRanges.length">
         <div class="other-quota-toolbar">
           <span class="other-quota-title">ResourceQuota</span>
           <bcs-button v-if="editable" theme="primary" icon="plus" @click="handleCreateQuota">
@@ -126,7 +126,10 @@
             {{ $t('dashboard.ns.action.createPodLimitRange') }}
           </bcs-button>
         </div>
-        <bk-table class="other-quota-table" :data="data.podLimitRanges || []">
+        <bk-table
+          class="other-quota-table"
+          v-bkloading="{ isLoading: podLimitRangesLoading }"
+          :data="podLimitRanges">
           <bk-table-column
             :label="$t('generic.label.name')"
             prop="name"
@@ -338,7 +341,7 @@
 </template>
 <script lang="ts">
 /* eslint-disable camelcase */
-import { defineComponent, ref } from 'vue';
+import { defineComponent, ref, watch } from 'vue';
 
 import {
   formatQuotaQuantity,
@@ -361,6 +364,7 @@ import {
   createPodLimitRange,
   deleteOtherQuota,
   deletePodLimitRange as deletePodLimitRangeAPI,
+  listPodLimitRanges,
   updateOtherQuota,
   updatePodLimitRange,
 } from '@/api/modules/project';
@@ -534,6 +538,30 @@ export default defineComponent({
     };
 
     const originalLimitRange = ref<PodLimitRangeValue>();
+    const podLimitRanges = ref<PodLimitRangeValue[]>([]);
+    const podLimitRangesLoading = ref(false);
+    const refreshPodLimitRanges = async () => {
+      const clusterId = props.clusterId;
+      const namespace = props.data.name;
+      if (!clusterId || !namespace) {
+        podLimitRanges.value = [];
+        return;
+      }
+      podLimitRangesLoading.value = true;
+      const result = await listPodLimitRanges({
+        $clusterId: clusterId,
+        $namespace: namespace,
+      }).catch(() => []);
+      if (props.clusterId === clusterId && props.data.name === namespace) {
+        podLimitRanges.value = result || [];
+        podLimitRangesLoading.value = false;
+      }
+    };
+    watch(
+      () => [props.clusterId, props.data.name],
+      refreshPodLimitRanges,
+      { immediate: true },
+    );
     const limitRangeDialog = ref({
       isShow: false,
       isEdit: false,
@@ -612,7 +640,7 @@ export default defineComponent({
         message: $i18n.t(isEdit ? 'generic.msg.success.update' : 'generic.msg.success.create'),
       });
       limitRangeDialog.value.isShow = false;
-      emit('refresh');
+      await refreshPodLimitRanges();
     };
     const handleDeletePodLimitRange = (row: PodLimitRangeValue) => {
       $bkInfo({
@@ -634,7 +662,7 @@ export default defineComponent({
             theme: 'success',
             message: $i18n.t('generic.msg.success.delete'),
           });
-          emit('refresh');
+          await refreshPodLimitRanges();
         },
       });
     };
@@ -657,6 +685,8 @@ export default defineComponent({
       limitRangeDialog,
       limitRangeNameRules,
       limitRangeRules,
+      podLimitRanges,
+      podLimitRangesLoading,
       nameRules,
       quotaDialog,
       quotaRules,

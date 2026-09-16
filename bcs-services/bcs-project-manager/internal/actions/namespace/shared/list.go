@@ -31,7 +31,6 @@ import (
 	vdm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/variabledefinition"
 	vvm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/variablevalue"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
-	limitrangeutils "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/limitrange"
 	nsutils "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/namespace"
 	quotautils "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/quota"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
@@ -92,16 +91,6 @@ func (a *SharedNamespaceAction) ListNamespaces(ctx context.Context,
 			}
 		}
 	}
-	podLimitRangesMap := map[string][]*proto.PodLimitRange{}
-	if limitRangeList, e := client.CoreV1().LimitRanges("").List(ctx, metav1.ListOptions{}); e == nil {
-		for index := range limitRangeList.Items {
-			limitRange := &limitRangeList.Items[index]
-			if podLimitRange := limitrangeutils.TransferToProto(limitRange); podLimitRange != nil {
-				namespace := limitRange.GetNamespace()
-				podLimitRangesMap[namespace] = append(podLimitRangesMap[namespace], podLimitRange)
-			}
-		}
-	}
 	// filter namespaces by project code
 	namespaces := nsutils.FilterNamespaces(nsList, true, req.GetProjectCode())
 	namespaces = nsutils.FilterOutVcluster(namespaces)
@@ -110,8 +99,7 @@ func (a *SharedNamespaceAction) ListNamespaces(ctx context.Context,
 		logging.Error("batch list variables failed, err: %s", err.Error())
 		return errorx.NewClusterErr(err.Error())
 	}
-	list, err := loadRetDatasFromCluster(req.ClusterID, namespaces, variablesMap, quotaMap, otherQuotasMap,
-		podLimitRangesMap, existns)
+	list, err := loadRetDatasFromCluster(req.ClusterID, namespaces, variablesMap, quotaMap, otherQuotasMap, existns)
 	if err != nil {
 		return err
 	}
@@ -241,8 +229,7 @@ func loadListRetDataFromDB(namespace nsm.Namespace) *proto.NamespaceData {
 
 func loadRetDatasFromCluster(clusterID string, namespaces []corev1.Namespace,
 	variablesMap map[string][]*proto.VariableValue, quotaMap map[string]corev1.ResourceQuota,
-	otherQuotasMap map[string][]*proto.OtherQuota, podLimitRangesMap map[string][]*proto.PodLimitRange,
-	existns map[string]nsm.Namespace) ([]*proto.NamespaceData, error) {
+	otherQuotasMap map[string][]*proto.OtherQuota, existns map[string]nsm.Namespace) ([]*proto.NamespaceData, error) {
 	retDatas := []*proto.NamespaceData{}
 	for _, namespace := range namespaces {
 		retData := &proto.NamespaceData{
@@ -258,9 +245,6 @@ func loadRetDatasFromCluster(clusterID string, namespaces []corev1.Namespace,
 		}
 		if otherQuotas, ok := otherQuotasMap[namespace.GetName()]; ok {
 			retData.OtherQuotas = otherQuotas
-		}
-		if podLimitRanges, ok := podLimitRangesMap[namespace.GetName()]; ok {
-			retData.PodLimitRanges = podLimitRanges
 		}
 		// get variables
 		retData.Variables = variablesMap[namespace.GetName()]

@@ -50,6 +50,7 @@ var ActionPermissions = map[string]string{
 	"Namespace.CreateOtherQuota":            namespace.CanUpdateNamespaceOperation,
 	"Namespace.UpdateOtherQuota":            namespace.CanUpdateNamespaceOperation,
 	"Namespace.DeleteOtherQuota":            namespace.CanUpdateNamespaceOperation,
+	"Namespace.ListPodLimitRanges":          namespace.CanViewNamespaceOperation,
 	"Namespace.CreatePodLimitRange":         namespace.CanUpdateNamespaceOperation,
 	"Namespace.UpdatePodLimitRange":         namespace.CanUpdateNamespaceOperation,
 	"Namespace.DeletePodLimitRange":         namespace.CanUpdateNamespaceOperation,

@@ -886,6 +886,15 @@ service Namespace {
       summary : "删除其他配额"
     };
   }
+  rpc ListPodLimitRanges(ListPodLimitRangesRequest) returns (ListPodLimitRangesResponse) {
+    option (google.api.http) = {
+      get : "/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/podLimitRanges"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "查询命名空间 Pod LimitRange"
+      summary : "查询 Pod LimitRange"
+    };
+  }
   rpc CreatePodLimitRange(CreatePodLimitRangeRequest) returns (PodLimitRangeResponse) {
     option (google.api.http) = {
       post : "/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/podLimitRanges"
@@ -1572,10 +1581,8 @@ message NamespaceData {
     title: "otherQuotas",
     description: "其他配额信息"
   }];
-  repeated PodLimitRange podLimitRanges = 18[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "podLimitRanges",
-    description: "Pod 级别 LimitRange 信息"
-  }];
+  reserved 18;
+  reserved "podLimitRanges";
 }
 
 message OtherQuota {
@@ -3557,6 +3564,28 @@ message OtherQuotaResponse {
   uint32 code = 1;
   string message = 2;
   OtherQuota data = 3;
+  string requestID = 4;
+  Perms web_annotations = 5[json_name = "web_annotations"];
+}
+
+message ListPodLimitRangesRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListPodLimitRangesRequest"
+      description : "查询命名空间 Pod LimitRange 请求"
+      required : ["projectCode", "clusterID", "namespace"]
+    }
+  };
+
+  string projectCode = 1;
+  string clusterID = 2;
+  string namespace = 3[(validate.rules).string = {max_len: 63, pattern: "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"}];
+}
+
+message ListPodLimitRangesResponse {
+  uint32 code = 1;
+  string message = 2;
+  repeated PodLimitRange data = 3;
   string requestID = 4;
   Perms web_annotations = 5[json_name = "web_annotations"];
 }

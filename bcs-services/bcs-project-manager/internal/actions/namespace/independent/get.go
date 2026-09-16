@@ -19,7 +19,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/constant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/page"
@@ -30,7 +29,6 @@ import (
 	vdm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/variabledefinition"
 	vvm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/variablevalue"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
-	limitrangeutils "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/limitrange"
 	quotautils "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/quota"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
 )
@@ -75,12 +73,6 @@ func (c *IndependentNamespaceAction) GetNamespace(ctx context.Context,
 	for _, q := range otherQuotas {
 		retData.OtherQuotas = append(retData.OtherQuotas, quotautils.TransferToProtoOtherQuota(q))
 	}
-	podLimitRanges, err := getNamespacePodLimitRanges(ctx, req.GetClusterID(), ns.GetName(), client)
-	if err != nil {
-		return err
-	}
-	retData.PodLimitRanges = podLimitRanges
-
 	// get variables
 	variables, err := listNamespaceVariables(ctx, req.GetProjectCode(), req.GetClusterID(), ns.GetName())
 	if err != nil {
@@ -102,25 +94,6 @@ func (c *IndependentNamespaceAction) GetNamespace(ctx context.Context,
 	retData.Variables = variables
 	resp.Data = retData
 	return nil
-}
-
-func getNamespacePodLimitRanges(ctx context.Context, clusterID, namespace string,
-	clientset *kubernetes.Clientset) ([]*proto.PodLimitRange, error) {
-	limitRangeList, err := clientset.CoreV1().LimitRanges(namespace).List(ctx, metav1.ListOptions{})
-	if err != nil && !errors.IsNotFound(err) {
-		logging.Error("list LimitRanges in namespace %s/%s failed, err: %s", clusterID, namespace, err.Error())
-		return nil, errorx.NewClusterErr(err.Error())
-	}
-	if errors.IsNotFound(err) {
-		return nil, nil
-	}
-	result := make([]*proto.PodLimitRange, 0, len(limitRangeList.Items))
-	for index := range limitRangeList.Items {
-		if limitRange := limitrangeutils.TransferToProto(&limitRangeList.Items[index]); limitRange != nil {
-			result = append(result, limitRange)
-		}
-	}
-	return result, nil
 }
 
 func getNamespaceQuota(ctx context.Context, clusterID, namespace string, clientset *kubernetes.Clientset) (

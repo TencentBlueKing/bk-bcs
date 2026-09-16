@@ -37,6 +37,8 @@ type NamespaceAction interface {
 		req *proto.UpdateOtherQuotaRequest, resp *proto.OtherQuotaResponse) error
 	DeleteOtherQuota(ctx context.Context,
 		req *proto.DeleteOtherQuotaRequest, resp *proto.OtherQuotaResponse) error
+	ListPodLimitRanges(ctx context.Context,
+		req *proto.ListPodLimitRangesRequest, resp *proto.ListPodLimitRangesResponse) error
 	CreatePodLimitRange(ctx context.Context,
 		req *proto.CreatePodLimitRangeRequest, resp *proto.PodLimitRangeResponse) error
 	UpdatePodLimitRange(ctx context.Context,

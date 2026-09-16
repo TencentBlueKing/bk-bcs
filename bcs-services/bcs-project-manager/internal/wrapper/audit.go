@@ -172,6 +172,13 @@ var auditFuncMap = map[string]func(req server.Request) (audit.Resource, audit.Ac
 			ResourceData: res.toMap(),
 		}, audit.Action{ActionID: "namespace_update", ActivityType: audit.ActivityTypeDelete}
 	},
+	"Namespace.ListPodLimitRanges": func(req server.Request) (audit.Resource, audit.Action) {
+		res := getResourceID(req)
+		return audit.Resource{
+			ProjectCode: res.ProjectCode, ResourceType: audit.ResourceTypeNamespace,
+			ResourceID: res.Namespace, ResourceName: res.Namespace, ResourceData: res.toMap(),
+		}, audit.Action{ActionID: "namespace_get", ActivityType: audit.ActivityTypeView}
+	},
 	"Namespace.CreatePodLimitRange": func(req server.Request) (audit.Resource, audit.Action) {
 		res := getResourceID(req)
 		return audit.Resource{

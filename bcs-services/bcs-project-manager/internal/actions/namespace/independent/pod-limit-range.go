@@ -27,6 +27,29 @@ import (
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
 )
 
+// ListPodLimitRanges lists LimitRanges containing a Pod item in a namespace.
+func (c *IndependentNamespaceAction) ListPodLimitRanges(ctx context.Context,
+	req *proto.ListPodLimitRangesRequest, resp *proto.ListPodLimitRangesResponse) error {
+	client, err := clientset.GetClientGroup().Client(req.GetClusterID())
+	if err != nil {
+		logging.Error("get clientset for cluster %s failed, err: %s", req.GetClusterID(), err.Error())
+		return err
+	}
+	limitRangeList, err := client.CoreV1().LimitRanges(req.GetNamespace()).List(ctx, metav1.ListOptions{})
+	if err != nil {
+		logging.Error("list Pod LimitRanges %s/%s failed, err: %s", req.GetClusterID(), req.GetNamespace(),
+			err.Error())
+		return errorx.NewClusterErr(err.Error())
+	}
+	resp.Data = make([]*proto.PodLimitRange, 0, len(limitRangeList.Items))
+	for index := range limitRangeList.Items {
+		if limitRange := limitrangeutils.TransferToProto(&limitRangeList.Items[index]); limitRange != nil {
+			resp.Data = append(resp.Data, limitRange)
+		}
+	}
+	return nil
+}
+
 // CreatePodLimitRange creates a LimitRange containing a Pod item.
 func (c *IndependentNamespaceAction) CreatePodLimitRange(ctx context.Context,
 	req *proto.CreatePodLimitRangeRequest, resp *proto.PodLimitRangeResponse) error {

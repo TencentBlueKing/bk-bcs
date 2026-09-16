@@ -138,6 +138,18 @@ func (p *NamespaceHandler) DeleteOtherQuota(ctx context.Context,
 	return action.DeleteOtherQuota(ctx, req, resp)
 }
 
+// ListPodLimitRanges lists Pod LimitRanges in a namespace.
+func (p *NamespaceHandler) ListPodLimitRanges(ctx context.Context,
+	req *proto.ListPodLimitRangesRequest, resp *proto.ListPodLimitRangesResponse) error {
+	action, err := na.NewNamespaceFactory(p.model).Action(req.GetClusterID(), req.GetProjectCode())
+	if err != nil {
+		logging.Error("get namespace client for cluster %s from client factory failed, err: %s",
+			req.GetClusterID(), err.Error())
+		return err
+	}
+	return action.ListPodLimitRanges(ctx, req, resp)
+}
+
 // CreatePodLimitRange creates a Pod LimitRange in a namespace.
 func (p *NamespaceHandler) CreatePodLimitRange(ctx context.Context,
 	req *proto.CreatePodLimitRangeRequest, resp *proto.PodLimitRangeResponse) error {
