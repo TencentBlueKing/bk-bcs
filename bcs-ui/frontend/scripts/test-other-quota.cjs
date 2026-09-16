@@ -39,6 +39,7 @@ const converted = {
 
 function createDetail() {
   const requests = [];
+  const listRequests = [];
   const messages = [];
   const events = [];
   const component = loadScript(path.join(namespaceDir, 'detail.vue'), {
@@ -47,6 +48,10 @@ function createDetail() {
     '@/api/modules/project': {
       createOtherQuota: async params => requests.push({ action: 'create', params }),
       updateOtherQuota: async params => requests.push({ action: 'update', params }),
+      listPodLimitRanges: async params => {
+        listRequests.push(params);
+        return [];
+      },
       createPodLimitRange: async params => requests.push({ action: 'create-limit-range', params }),
       updatePodLimitRange: async params => requests.push({ action: 'update-limit-range', params }),
     },
@@ -58,7 +63,7 @@ function createDetail() {
   const state = component.setup({ data: { name: 'test-ns' }, clusterId: 'BCS-K8S-1', editable: true }, {
     emit: event => events.push(event),
   });
-  return { state, requests, messages, events };
+  return { state, requests, listRequests, messages, events };
 }
 
 test('edit conversion is lossless and unchanged values preserve their original units', () => {
@@ -134,8 +139,8 @@ test('Pod LimitRange supports partial resources and validates min against max', 
   assert.equal(limitRangeHelpers.isPodLimitRangeFormValid(form), false);
 });
 
-test('editing a Pod LimitRange preserves unchanged Kubernetes quantities', async () => {
-  const { state, requests, events } = createDetail();
+test('editing a Pod LimitRange preserves quantities and refreshes only its own list', async () => {
+  const { state, requests, listRequests, events } = createDetail();
   const limitRange = {
     name: 'pod-resources',
     min: { cpu: '500m', memory: '1Gi' },
@@ -150,7 +155,11 @@ test('editing a Pod LimitRange preserves unchanged Kubernetes quantities', async
     min: limitRange.min,
     max: limitRange.max,
   } }]);
-  assert.deepEqual(events, ['refresh']);
+  assert.deepEqual(listRequests, [
+    { $clusterId: 'BCS-K8S-1', $namespace: 'test-ns' },
+    { $clusterId: 'BCS-K8S-1', $namespace: 'test-ns' },
+  ]);
+  assert.deepEqual(events, []);
 });
 
 test('creating a Pod LimitRange serializes memory values as Gi', async () => {

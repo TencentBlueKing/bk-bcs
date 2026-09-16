@@ -545,6 +545,7 @@ export default defineComponent({
       const namespace = props.data.name;
       if (!clusterId || !namespace) {
         podLimitRanges.value = [];
+        podLimitRangesLoading.value = false;
         return;
       }
       podLimitRangesLoading.value = true;
