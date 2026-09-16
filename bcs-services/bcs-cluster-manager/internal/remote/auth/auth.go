@@ -73,7 +73,7 @@ type ClientAuth struct {
 // GetAccessToken get application access token
 func (auth *ClientAuth) GetAccessToken(app types.BkAppUser) (string, error) {
 	if options.GetEditionInfo().IsCommunicationEdition() || options.GetEditionInfo().IsEnterpriseEdition() {
-		return auth.GetAccessTokenBySsm(app)
+		return "", nil
 	}
 
 	return auth.GetAccessTokenByGateWay(app)

@@ -141,16 +141,19 @@ func (c *Client) bkmonitorHostAlarmConfig(ctx context.Context, user string, conf
 	token, err := c.getAccessToken(nil)
 	if err != nil {
 		blog.Errorf("ShieldHostAlarmConfig getAccessToken failed: %v", err)
-		return err
 	}
 
-	userAuth, tanant, err := utils.GetGatewayAuthAndTenantInfo(ctx, &types.AuthInfo{
+	authInfo := &types.AuthInfo{
 		BkAppUser: types.BkAppUser{
 			BkAppCode:   c.appCode,
 			BkAppSecret: c.appSecret,
 		},
-		AccessToken: token,
-	}, "")
+	}
+	if token != "" {
+		authInfo.AccessToken = token
+	}
+
+	userAuth, tanant, err := utils.GetGatewayAuthAndTenantInfo(ctx, authInfo, "")
 	if err != nil {
 		blog.Errorf("call api ShieldHostAlarmConfig BuildGateWayAuth failed: %v", err)
 		return err
