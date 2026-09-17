@@ -227,7 +227,11 @@ func importClusterNodesToCM( // nolint
 
 		instance, err := gceCli.GetInstance(ctx, nodeZone, v.Name)
 		if err == nil {
-			node = api.InstanceToNode(gceCli, instance)
+			node, err = api.InstanceToNode(gceCli, instance)
+			if err != nil {
+				blog.Errorf("ImportClusterNodesToCM InstanceToNode[%s] failed: %v", v.Name, err)
+				continue
+			}
 		} else {
 			blog.Errorf("ImportClusterNodesToCM failed: %v", err)
 			node.Region = v.Labels[utils.RegionTopologyFlag]

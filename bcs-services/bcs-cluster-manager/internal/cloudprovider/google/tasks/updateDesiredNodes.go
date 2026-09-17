@@ -261,6 +261,7 @@ func recordClusterInstanceToDB(ctx context.Context, state *cloudprovider.TaskSta
 	nodeIPs, err := transInstancesToNode(ctx, instancesNames, info)
 	if err != nil {
 		blog.Errorf("recordClusterInstanceToDB[%s] failed: %v", taskID, err)
+		return err
 	}
 	if len(nodeIPs) > 0 {
 		state.Task.NodeIPList = nodeIPs
