@@ -167,6 +167,19 @@ func (h BKMonitorHandler) ClusterCPURequestUsage(c *rest.Context, query *UsageQu
 	return h.handleBKMonitorClusterMetric(c, promql, query)
 }
 
+// ClusterCPURequestWithInitUsage implements Handler.
+// nolint
+func (h BKMonitorHandler) ClusterCPURequestWithInitUsage(c *rest.Context, query *UsageQuery) (*promclient.ResultData, error) {
+	promql := `(sum(avg_over_time(bkmonitor:kube_pod_container_resource_requests{bcs_cluster_id="%<clusterID>s", ` +
+		`node!=""%<node>s, resource="cpu"}[2m])) + ` +
+		`sum(avg_over_time(bkmonitor:kube_pod_init_container_resource_requests{bcs_cluster_id="%<clusterID>s", ` +
+		`node!=""%<node>s, resource="cpu"}[2m]))) / ` +
+		`sum(avg_over_time(bkmonitor:kube_node_status_allocatable{bcs_cluster_id="%<clusterID>s", ` +
+		`node!=""%<node>s, resource="cpu"}[2m])) * 100`
+
+	return h.handleBKMonitorClusterMetric(c, promql, query)
+}
+
 // ClusterMemoryUsage implements Handler.
 // nolint
 func (h BKMonitorHandler) ClusterMemoryUsage(c *rest.Context, query *UsageQuery) (*promclient.ResultData, error) {
@@ -181,6 +194,19 @@ func (h BKMonitorHandler) ClusterMemoryUsage(c *rest.Context, query *UsageQuery)
 func (h BKMonitorHandler) ClusterMemoryRequestUsage(c *rest.Context, query *UsageQuery) (*promclient.ResultData, error) {
 	promql := `sum(avg_over_time(bkmonitor:kube_pod_container_resource_requests_memory_bytes{bcs_cluster_id="%<clusterID>s", node!=""%<node>s}[2m])) / ` +
 		`sum(avg_over_time(bkmonitor:kube_node_status_allocatable_memory_bytes{bcs_cluster_id="%<clusterID>s", node!=""%<node>s}[2m])) * 100`
+
+	return h.handleBKMonitorClusterMetric(c, promql, query)
+}
+
+// ClusterMemoryRequestWithInitUsage implements Handler.
+// nolint
+func (h BKMonitorHandler) ClusterMemoryRequestWithInitUsage(c *rest.Context, query *UsageQuery) (*promclient.ResultData, error) {
+	promql := `(sum(avg_over_time(bkmonitor:kube_pod_container_resource_requests{bcs_cluster_id="%<clusterID>s", ` +
+		`node!=""%<node>s, resource="memory"}[2m])) + ` +
+		`sum(avg_over_time(bkmonitor:kube_pod_init_container_resource_requests{bcs_cluster_id="%<clusterID>s", ` +
+		`node!=""%<node>s, resource="memory"}[2m]))) / ` +
+		`sum(avg_over_time(bkmonitor:kube_node_status_allocatable{bcs_cluster_id="%<clusterID>s", ` +
+		`node!=""%<node>s, resource="memory"}[2m])) * 100`
 
 	return h.handleBKMonitorClusterMetric(c, promql, query)
 }
