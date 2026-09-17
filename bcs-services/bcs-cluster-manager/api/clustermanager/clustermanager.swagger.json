@@ -771,40 +771,6 @@
         ]
       }
     },
-    "/clustermanager/v1/cloud/kubeConfig": {
-      "put": {
-        "summary": "kubeConfig可用性检测",
-        "description": "kubeConfig连接集群可用性检测",
-        "operationId": "ClusterManager_CheckCloudKubeConfig",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/clustermanagerKubeConfigResp"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/clustermanagerKubeConfigReq"
-            }
-          }
-        ],
-        "tags": [
-          "ClusterManager"
-        ]
-      }
-    },
     "/clustermanager/v1/cloud/{cloudID}": {
       "get": {
         "summary": "查询Cloud",
@@ -1406,75 +1372,6 @@
           {
             "name": "resourceGroupName",
             "description": "resourceGroupName. Azure Cloud中集群所属的resource group名称",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "ClusterManager"
-        ]
-      }
-    },
-    "/clustermanager/v1/clouds/{cloudID}/clusters/{clusterID}/connect": {
-      "get": {
-        "summary": "kubeConfig内/外网访问状态",
-        "description": "kubeConfig访问集群内/外网状态",
-        "operationId": "ClusterManager_CheckCloudKubeConfigConnect",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/clustermanagerKubeConfigConnectResp"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "cloudID",
-            "description": "云模版ID, 集群所属云进行流程管理",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "clusterID",
-            "description": "云集群ID(例如: 腾讯云: cls-xxx)",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "isExtranet",
-            "description": "isExtranet. 默认false 获取内网，是否获取外网访问的kubeconfig",
-            "in": "query",
-            "required": false,
-            "type": "boolean",
-            "format": "boolean"
-          },
-          {
-            "name": "accountID",
-            "description": "accountID. 导入集群关联的cloud凭证信息, 可以为空; 当为空时, 可以通过cloud获取cloud凭证信息",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "region",
-            "description": "region. 集群所在地域",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "resourceGroupName",
-            "description": "resourceGroupName. AKS集群所属resource group",
             "in": "query",
             "required": false,
             "type": "string"
@@ -5768,6 +5665,123 @@
             "schema": {
               "$ref": "#/definitions/clustermanagerQueryPermByActionIDRequest"
             }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
+    "/clustermanager/v1/projects/{projectID}/cloud/kubeConfig": {
+      "put": {
+        "summary": "kubeConfig可用性检测",
+        "description": "kubeConfig连接集群可用性检测",
+        "operationId": "ClusterManager_CheckCloudKubeConfig",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerKubeConfigResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "description": "集群所属项目",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerKubeConfigReq"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
+    "/clustermanager/v1/projects/{projectID}/clouds/{cloudID}/clusters/{clusterID}/connect": {
+      "get": {
+        "summary": "kubeConfig内/外网访问状态",
+        "description": "kubeConfig访问集群内/外网状态",
+        "operationId": "ClusterManager_CheckCloudKubeConfigConnect",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerKubeConfigConnectResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "description": "集群所属项目",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "cloudID",
+            "description": "云模版ID, 集群所属云进行流程管理",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "description": "云集群ID(例如: 腾讯云: cls-xxx)",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "isExtranet",
+            "description": "isExtranet. 默认false 获取内网，是否获取外网访问的kubeconfig",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          },
+          {
+            "name": "accountID",
+            "description": "accountID. 导入集群关联的cloud凭证信息, 可以为空; 当为空时, 可以通过cloud获取cloud凭证信息",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "region",
+            "description": "region. 集群所在地域",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "resourceGroupName",
+            "description": "resourceGroupName. AKS集群所属resource group",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -16046,6 +16060,11 @@
     "clustermanagerKubeConfigReq": {
       "type": "object",
       "properties": {
+        "projectID": {
+          "type": "string",
+          "description": "集群所属项目",
+          "title": "projectID"
+        },
         "kubeConfig": {
           "type": "string",
           "description": "集群kubeConfig文件",
@@ -16055,6 +16074,7 @@
       "description": "用户输入检测kubeConfig文件",
       "title": "KubeConfigReq",
       "required": [
+        "projectID",
         "kubeConfig"
       ]
     },

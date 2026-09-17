@@ -147,6 +147,24 @@ func request_ClusterManager_CheckCloudKubeConfig_0(ctx context.Context, marshale
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["projectID"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectID")
+	}
+
+	protoReq.ProjectID, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectID", err)
+	}
+
 	msg, err := client.CheckCloudKubeConfig(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
@@ -164,13 +182,31 @@ func local_request_ClusterManager_CheckCloudKubeConfig_0(ctx context.Context, ma
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["projectID"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectID")
+	}
+
+	protoReq.ProjectID, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectID", err)
+	}
+
 	msg, err := server.CheckCloudKubeConfig(ctx, &protoReq)
 	return msg, metadata, err
 
 }
 
 var (
-	filter_ClusterManager_CheckCloudKubeConfigConnect_0 = &utilities.DoubleArray{Encoding: map[string]int{"cloudID": 0, "clusterID": 1}, Base: []int{1, 1, 2, 0, 0}, Check: []int{0, 1, 1, 2, 3}}
+	filter_ClusterManager_CheckCloudKubeConfigConnect_0 = &utilities.DoubleArray{Encoding: map[string]int{"projectID": 0, "cloudID": 1, "clusterID": 2}, Base: []int{1, 1, 2, 3, 0, 0, 0}, Check: []int{0, 1, 1, 1, 2, 3, 4}}
 )
 
 func request_ClusterManager_CheckCloudKubeConfigConnect_0(ctx context.Context, marshaler runtime.Marshaler, client ClusterManagerClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
@@ -183,6 +219,17 @@ func request_ClusterManager_CheckCloudKubeConfigConnect_0(ctx context.Context, m
 		err error
 		_   = err
 	)
+
+	val, ok = pathParams["projectID"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectID")
+	}
+
+	protoReq.ProjectID, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectID", err)
+	}
 
 	val, ok = pathParams["cloudID"]
 	if !ok {
@@ -228,6 +275,17 @@ func local_request_ClusterManager_CheckCloudKubeConfigConnect_0(ctx context.Cont
 		err error
 		_   = err
 	)
+
+	val, ok = pathParams["projectID"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectID")
+	}
+
+	protoReq.ProjectID, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectID", err)
+	}
 
 	val, ok = pathParams["cloudID"]
 	if !ok {
@@ -16927,9 +16985,9 @@ var (
 
 	pattern_ClusterManager_RetryCreateClusterTask_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"clustermanager", "v1", "cluster", "clusterID", "retry"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_ClusterManager_CheckCloudKubeConfig_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"clustermanager", "v1", "cloud", "kubeConfig"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_ClusterManager_CheckCloudKubeConfig_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 2, 5}, []string{"clustermanager", "v1", "projects", "projectID", "cloud", "kubeConfig"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_ClusterManager_CheckCloudKubeConfigConnect_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6}, []string{"clustermanager", "v1", "clouds", "cloudID", "clusters", "clusterID", "connect"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_ClusterManager_CheckCloudKubeConfigConnect_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8}, []string{"clustermanager", "v1", "projects", "projectID", "clouds", "cloudID", "clusters", "clusterID", "connect"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_ClusterManager_ImportCluster_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"clustermanager", "v1", "cluster", "import"}, "", runtime.AssumeColonVerbOpt(true)))
 
