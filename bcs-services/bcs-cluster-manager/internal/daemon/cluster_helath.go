@@ -137,14 +137,21 @@ func ConnectToCluster(model store.ClusterManagerModel, clusterId string) bool {
 	return true
 }
 
+// caStat 按 provider 维度统计 CA 使用率/开启率
+type caStat struct {
+	used, total           int
+	debugUsed, debugTotal int
+	prodUsed, prodTotal   int
+
+	enabled, debugEnabled, prodEnabled int
+}
+
 func (d *Daemon) reportClusterCaUsageRatio(error chan<- error) {
 	statusCond := operator.NewLeafCondition(operator.In, operator.M{
 		"status": []string{common.StatusRunning, common.StatusConnectClusterFailed},
 	})
-	providerCond := operator.NewLeafCondition(operator.Eq, operator.M{"provider": tencentCloud})
-	cond := operator.NewBranchCondition(operator.And, statusCond, providerCond)
 
-	clusterList, err := d.model.ListCluster(d.ctx, cond, &storeopt.ListOption{All: true})
+	clusterList, err := d.model.ListCluster(d.ctx, statusCond, &storeopt.ListOption{All: true})
 	if err != nil {
 		blog.Errorf("reportClusterCaUsageRatio ListCluster failed: %v", err)
 		error <- err
@@ -157,6 +164,8 @@ func (d *Daemon) reportClusterCaUsageRatio(error chan<- error) {
 		prodUsed, prodTotal   int
 
 		enabled, debugEnabled, prodEnabled int
+
+		providerStats = make(map[string]*caStat)
 	)
 
 	for i := range clusterList {
@@ -172,12 +181,21 @@ func (d *Daemon) reportClusterCaUsageRatio(error chan<- error) {
 			continue
 		}
 
+		provider := clusterList[i].GetProvider()
+		if providerStats[provider] == nil {
+			providerStats[provider] = &caStat{}
+		}
+		stat := providerStats[provider]
+
 		total++
+		stat.total++
 		switch clusterList[i].Environment {
 		case common.Debug:
 			debugTotal++
+			stat.debugTotal++
 		case common.Prod:
 			prodTotal++
+			stat.prodTotal++
 		default:
 		}
 
@@ -193,11 +211,14 @@ func (d *Daemon) reportClusterCaUsageRatio(error chan<- error) {
 		// 接入节点池 & 开启弹性伸缩
 		if len(groupList) > 0 {
 			used++
+			stat.used++
 			switch clusterList[i].Environment {
 			case common.Debug:
 				debugUsed++
+				stat.debugUsed++
 			case common.Prod:
 				prodUsed++
+				stat.prodUsed++
 			default:
 			}
 
@@ -209,23 +230,36 @@ func (d *Daemon) reportClusterCaUsageRatio(error chan<- error) {
 			}
 			if asOption.GetEnableAutoscale() {
 				enabled++
+				stat.enabled++
 
 				switch clusterList[i].Environment {
 				case common.Debug:
 					debugEnabled++
+					stat.debugEnabled++
 				case common.Prod:
 					prodEnabled++
+					stat.prodEnabled++
 				default:
 				}
 			}
 		}
 	}
 
-	metrics.ReportCaUsageRatio(platform, float64(used)/float64(total))
-	metrics.ReportCaUsageRatio(common.Debug, float64(debugUsed)/float64(debugTotal))
-	metrics.ReportCaUsageRatio(common.Prod, float64(prodUsed)/float64(prodTotal))
+	metrics.ReportCaUsageRatio(platform, platform, float64(used)/float64(total))
+	metrics.ReportCaUsageRatio(common.Debug, platform, float64(debugUsed)/float64(debugTotal))
+	metrics.ReportCaUsageRatio(common.Prod, platform, float64(prodUsed)/float64(prodTotal))
 
-	metrics.ReportCaEnableRatio(platform, float64(enabled)/float64(used))
-	metrics.ReportCaEnableRatio(common.Debug, float64(debugEnabled)/float64(debugUsed))
-	metrics.ReportCaEnableRatio(common.Prod, float64(prodEnabled)/float64(prodUsed))
+	metrics.ReportCaEnableRatio(platform, platform, float64(enabled)/float64(used))
+	metrics.ReportCaEnableRatio(common.Debug, platform, float64(debugEnabled)/float64(debugUsed))
+	metrics.ReportCaEnableRatio(common.Prod, platform, float64(prodEnabled)/float64(prodUsed))
+
+	for provider, stat := range providerStats {
+		metrics.ReportCaUsageRatio(platform, provider, float64(stat.used)/float64(stat.total))
+		metrics.ReportCaUsageRatio(common.Debug, provider, float64(stat.debugUsed)/float64(stat.debugTotal))
+		metrics.ReportCaUsageRatio(common.Prod, provider, float64(stat.prodUsed)/float64(stat.prodTotal))
+
+		metrics.ReportCaEnableRatio(platform, provider, float64(stat.enabled)/float64(stat.used))
+		metrics.ReportCaEnableRatio(common.Debug, provider, float64(stat.debugEnabled)/float64(stat.debugUsed))
+		metrics.ReportCaEnableRatio(common.Prod, provider, float64(stat.prodEnabled)/float64(stat.prodUsed))
+	}
 }
