@@ -26,6 +26,9 @@ function loadScript(filename, mocks = {}) {
 }
 
 const helpers = loadScript(path.join(namespaceDir, 'other-quota.ts'));
+const limitRangeHelpers = loadScript(path.join(namespaceDir, 'pod-limit-range.ts'), {
+  './other-quota': helpers,
+});
 const original = { cpuRequests: '1m', cpuLimits: '15m', memoryRequests: '1Mi', memoryLimits: '400M' };
 const converted = {
   cpuRequests: '0.001',
@@ -36,13 +39,21 @@ const converted = {
 
 function createDetail() {
   const requests = [];
+  const listRequests = [];
   const messages = [];
   const events = [];
   const component = loadScript(path.join(namespaceDir, 'detail.vue'), {
     './other-quota': helpers,
+    './pod-limit-range': limitRangeHelpers,
     '@/api/modules/project': {
       createOtherQuota: async params => requests.push({ action: 'create', params }),
       updateOtherQuota: async params => requests.push({ action: 'update', params }),
+      listPodLimitRanges: async params => {
+        listRequests.push(params);
+        return [];
+      },
+      createPodLimitRange: async params => requests.push({ action: 'create-limit-range', params }),
+      updatePodLimitRange: async params => requests.push({ action: 'update-limit-range', params }),
     },
     '@/common/bkmagic': message => messages.push(message),
     '@/common/util': { timeZoneTransForm: value => value },
@@ -52,7 +63,7 @@ function createDetail() {
   const state = component.setup({ data: { name: 'test-ns' }, clusterId: 'BCS-K8S-1', editable: true }, {
     emit: event => events.push(event),
   });
-  return { state, requests, messages, events };
+  return { state, requests, listRequests, messages, events };
 }
 
 test('edit conversion is lossless and unchanged values preserve their original units', () => {
@@ -115,4 +126,54 @@ test('invalid input is rejected before making a request', async () => {
     assert.equal(messages[0].theme, 'error', value);
   }
   assert.ok(helpers.isQuotaFormValueValid('0'));
+});
+
+test('Pod LimitRange supports partial resources and validates min against max', () => {
+  const form = limitRangeHelpers.createPodLimitRangeForm();
+  form.max.cpu = '2';
+  assert.equal(limitRangeHelpers.isPodLimitRangeFormValid(form), true);
+  form.min.cpu = '3';
+  assert.equal(limitRangeHelpers.isPodLimitRangeFormValid(form), false);
+  form.min.cpu = '';
+  form.max.cpu = '';
+  assert.equal(limitRangeHelpers.isPodLimitRangeFormValid(form), false);
+});
+
+test('editing a Pod LimitRange preserves quantities and refreshes only its own list', async () => {
+  const { state, requests, listRequests, events } = createDetail();
+  const limitRange = {
+    name: 'pod-resources',
+    min: { cpu: '500m', memory: '1Gi' },
+    max: { cpu: '2', memory: '4Gi' },
+  };
+  state.handleEditPodLimitRange(limitRange);
+  await state.handleSavePodLimitRange();
+  assert.deepEqual(requests, [{ action: 'update-limit-range', params: {
+    $clusterId: 'BCS-K8S-1',
+    $namespace: 'test-ns',
+    $limitRangeName: 'pod-resources',
+    min: limitRange.min,
+    max: limitRange.max,
+  } }]);
+  assert.deepEqual(listRequests, [
+    { $clusterId: 'BCS-K8S-1', $namespace: 'test-ns' },
+    { $clusterId: 'BCS-K8S-1', $namespace: 'test-ns' },
+  ]);
+  assert.deepEqual(events, []);
+});
+
+test('creating a Pod LimitRange serializes memory values as Gi', async () => {
+  const { state, requests } = createDetail();
+  state.handleCreatePodLimitRange();
+  state.limitRangeDialog.value.form.name = 'pod-resources';
+  state.limitRangeDialog.value.form.min.cpu = '0.5';
+  state.limitRangeDialog.value.form.max.memory = '4';
+  await state.handleSavePodLimitRange();
+  assert.deepEqual(requests[0], { action: 'create-limit-range', params: {
+    $clusterId: 'BCS-K8S-1',
+    $namespace: 'test-ns',
+    limitRangeName: 'pod-resources',
+    min: { cpu: '0.5' },
+    max: { memory: '4Gi' },
+  } });
 });

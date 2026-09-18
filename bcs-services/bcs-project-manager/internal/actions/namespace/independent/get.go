@@ -74,7 +74,6 @@ func (c *IndependentNamespaceAction) GetNamespace(ctx context.Context,
 	for _, q := range otherQuotas {
 		retData.OtherQuotas = append(retData.OtherQuotas, quotautils.TransferToProtoOtherQuota(q))
 	}
-
 	// get variables
 	variables, err := listNamespaceVariables(ctx, req.GetProjectCode(), req.GetClusterID(), ns.GetName())
 	if err != nil {

@@ -6624,6 +6624,272 @@ var _ interface {
 	ErrorName() string
 } = OtherQuotaValidationError{}
 
+// Validate checks the field values on PodLimitRangeResource with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *PodLimitRangeResource) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on PodLimitRangeResource with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// PodLimitRangeResourceMultiError, or nil if none found.
+func (m *PodLimitRangeResource) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *PodLimitRangeResource) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Cpu
+
+	// no validation rules for Memory
+
+	if len(errors) > 0 {
+		return PodLimitRangeResourceMultiError(errors)
+	}
+
+	return nil
+}
+
+// PodLimitRangeResourceMultiError is an error wrapping multiple validation
+// errors returned by PodLimitRangeResource.ValidateAll() if the designated
+// constraints aren't met.
+type PodLimitRangeResourceMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m PodLimitRangeResourceMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m PodLimitRangeResourceMultiError) AllErrors() []error { return m }
+
+// PodLimitRangeResourceValidationError is the validation error returned by
+// PodLimitRangeResource.Validate if the designated constraints aren't met.
+type PodLimitRangeResourceValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e PodLimitRangeResourceValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e PodLimitRangeResourceValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e PodLimitRangeResourceValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e PodLimitRangeResourceValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e PodLimitRangeResourceValidationError) ErrorName() string {
+	return "PodLimitRangeResourceValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e PodLimitRangeResourceValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sPodLimitRangeResource.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = PodLimitRangeResourceValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = PodLimitRangeResourceValidationError{}
+
+// Validate checks the field values on PodLimitRange with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *PodLimitRange) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on PodLimitRange with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in PodLimitRangeMultiError, or
+// nil if none found.
+func (m *PodLimitRange) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *PodLimitRange) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Name
+
+	if all {
+		switch v := interface{}(m.GetMin()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, PodLimitRangeValidationError{
+					field:  "Min",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, PodLimitRangeValidationError{
+					field:  "Min",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetMin()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return PodLimitRangeValidationError{
+				field:  "Min",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetMax()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, PodLimitRangeValidationError{
+					field:  "Max",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, PodLimitRangeValidationError{
+					field:  "Max",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetMax()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return PodLimitRangeValidationError{
+				field:  "Max",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return PodLimitRangeMultiError(errors)
+	}
+
+	return nil
+}
+
+// PodLimitRangeMultiError is an error wrapping multiple validation errors
+// returned by PodLimitRange.ValidateAll() if the designated constraints
+// aren't met.
+type PodLimitRangeMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m PodLimitRangeMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m PodLimitRangeMultiError) AllErrors() []error { return m }
+
+// PodLimitRangeValidationError is the validation error returned by
+// PodLimitRange.Validate if the designated constraints aren't met.
+type PodLimitRangeValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e PodLimitRangeValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e PodLimitRangeValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e PodLimitRangeValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e PodLimitRangeValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e PodLimitRangeValidationError) ErrorName() string { return "PodLimitRangeValidationError" }
+
+// Error satisfies the builtin error interface
+func (e PodLimitRangeValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sPodLimitRange.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = PodLimitRangeValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = PodLimitRangeValidationError{}
+
 // Validate checks the field values on NativeNamespaceData with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
@@ -16628,6 +16894,1051 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = OtherQuotaResponseValidationError{}
+
+// Validate checks the field values on ListPodLimitRangesRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ListPodLimitRangesRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListPodLimitRangesRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListPodLimitRangesRequestMultiError, or nil if none found.
+func (m *ListPodLimitRangesRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListPodLimitRangesRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for ProjectCode
+
+	// no validation rules for ClusterID
+
+	if utf8.RuneCountInString(m.GetNamespace()) > 63 {
+		err := ListPodLimitRangesRequestValidationError{
+			field:  "Namespace",
+			reason: "value length must be at most 63 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_ListPodLimitRangesRequest_Namespace_Pattern.MatchString(m.GetNamespace()) {
+		err := ListPodLimitRangesRequestValidationError{
+			field:  "Namespace",
+			reason: "value does not match regex pattern \"^[a-z0-9]([-a-z0-9]*[a-z0-9])?$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return ListPodLimitRangesRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListPodLimitRangesRequestMultiError is an error wrapping multiple validation
+// errors returned by ListPodLimitRangesRequest.ValidateAll() if the
+// designated constraints aren't met.
+type ListPodLimitRangesRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListPodLimitRangesRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListPodLimitRangesRequestMultiError) AllErrors() []error { return m }
+
+// ListPodLimitRangesRequestValidationError is the validation error returned by
+// ListPodLimitRangesRequest.Validate if the designated constraints aren't met.
+type ListPodLimitRangesRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListPodLimitRangesRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListPodLimitRangesRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListPodLimitRangesRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListPodLimitRangesRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListPodLimitRangesRequestValidationError) ErrorName() string {
+	return "ListPodLimitRangesRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListPodLimitRangesRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListPodLimitRangesRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListPodLimitRangesRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListPodLimitRangesRequestValidationError{}
+
+var _ListPodLimitRangesRequest_Namespace_Pattern = regexp.MustCompile("^[a-z0-9]([-a-z0-9]*[a-z0-9])?$")
+
+// Validate checks the field values on ListPodLimitRangesResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ListPodLimitRangesResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListPodLimitRangesResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListPodLimitRangesResponseMultiError, or nil if none found.
+func (m *ListPodLimitRangesResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListPodLimitRangesResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, ListPodLimitRangesResponseValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, ListPodLimitRangesResponseValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ListPodLimitRangesResponseValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	// no validation rules for RequestID
+
+	if all {
+		switch v := interface{}(m.GetWebAnnotations()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ListPodLimitRangesResponseValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ListPodLimitRangesResponseValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetWebAnnotations()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ListPodLimitRangesResponseValidationError{
+				field:  "WebAnnotations",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return ListPodLimitRangesResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListPodLimitRangesResponseMultiError is an error wrapping multiple
+// validation errors returned by ListPodLimitRangesResponse.ValidateAll() if
+// the designated constraints aren't met.
+type ListPodLimitRangesResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListPodLimitRangesResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListPodLimitRangesResponseMultiError) AllErrors() []error { return m }
+
+// ListPodLimitRangesResponseValidationError is the validation error returned
+// by ListPodLimitRangesResponse.Validate if the designated constraints aren't met.
+type ListPodLimitRangesResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListPodLimitRangesResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListPodLimitRangesResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListPodLimitRangesResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListPodLimitRangesResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListPodLimitRangesResponseValidationError) ErrorName() string {
+	return "ListPodLimitRangesResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListPodLimitRangesResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListPodLimitRangesResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListPodLimitRangesResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListPodLimitRangesResponseValidationError{}
+
+// Validate checks the field values on CreatePodLimitRangeRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *CreatePodLimitRangeRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on CreatePodLimitRangeRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// CreatePodLimitRangeRequestMultiError, or nil if none found.
+func (m *CreatePodLimitRangeRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *CreatePodLimitRangeRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for ProjectCode
+
+	// no validation rules for ClusterID
+
+	if utf8.RuneCountInString(m.GetNamespace()) > 63 {
+		err := CreatePodLimitRangeRequestValidationError{
+			field:  "Namespace",
+			reason: "value length must be at most 63 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_CreatePodLimitRangeRequest_Namespace_Pattern.MatchString(m.GetNamespace()) {
+		err := CreatePodLimitRangeRequestValidationError{
+			field:  "Namespace",
+			reason: "value does not match regex pattern \"^[a-z0-9]([-a-z0-9]*[a-z0-9])?$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetLimitRangeName()); l < 1 || l > 63 {
+		err := CreatePodLimitRangeRequestValidationError{
+			field:  "LimitRangeName",
+			reason: "value length must be between 1 and 63 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_CreatePodLimitRangeRequest_LimitRangeName_Pattern.MatchString(m.GetLimitRangeName()) {
+		err := CreatePodLimitRangeRequestValidationError{
+			field:  "LimitRangeName",
+			reason: "value does not match regex pattern \"^[a-z0-9]([-a-z0-9]*[a-z0-9])?$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if all {
+		switch v := interface{}(m.GetMin()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, CreatePodLimitRangeRequestValidationError{
+					field:  "Min",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, CreatePodLimitRangeRequestValidationError{
+					field:  "Min",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetMin()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreatePodLimitRangeRequestValidationError{
+				field:  "Min",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetMax()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, CreatePodLimitRangeRequestValidationError{
+					field:  "Max",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, CreatePodLimitRangeRequestValidationError{
+					field:  "Max",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetMax()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreatePodLimitRangeRequestValidationError{
+				field:  "Max",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return CreatePodLimitRangeRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// CreatePodLimitRangeRequestMultiError is an error wrapping multiple
+// validation errors returned by CreatePodLimitRangeRequest.ValidateAll() if
+// the designated constraints aren't met.
+type CreatePodLimitRangeRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m CreatePodLimitRangeRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m CreatePodLimitRangeRequestMultiError) AllErrors() []error { return m }
+
+// CreatePodLimitRangeRequestValidationError is the validation error returned
+// by CreatePodLimitRangeRequest.Validate if the designated constraints aren't met.
+type CreatePodLimitRangeRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CreatePodLimitRangeRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CreatePodLimitRangeRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CreatePodLimitRangeRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CreatePodLimitRangeRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CreatePodLimitRangeRequestValidationError) ErrorName() string {
+	return "CreatePodLimitRangeRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e CreatePodLimitRangeRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCreatePodLimitRangeRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CreatePodLimitRangeRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CreatePodLimitRangeRequestValidationError{}
+
+var _CreatePodLimitRangeRequest_Namespace_Pattern = regexp.MustCompile("^[a-z0-9]([-a-z0-9]*[a-z0-9])?$")
+
+var _CreatePodLimitRangeRequest_LimitRangeName_Pattern = regexp.MustCompile("^[a-z0-9]([-a-z0-9]*[a-z0-9])?$")
+
+// Validate checks the field values on UpdatePodLimitRangeRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *UpdatePodLimitRangeRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on UpdatePodLimitRangeRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// UpdatePodLimitRangeRequestMultiError, or nil if none found.
+func (m *UpdatePodLimitRangeRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *UpdatePodLimitRangeRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for ProjectCode
+
+	// no validation rules for ClusterID
+
+	if utf8.RuneCountInString(m.GetNamespace()) > 63 {
+		err := UpdatePodLimitRangeRequestValidationError{
+			field:  "Namespace",
+			reason: "value length must be at most 63 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_UpdatePodLimitRangeRequest_Namespace_Pattern.MatchString(m.GetNamespace()) {
+		err := UpdatePodLimitRangeRequestValidationError{
+			field:  "Namespace",
+			reason: "value does not match regex pattern \"^[a-z0-9]([-a-z0-9]*[a-z0-9])?$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetLimitRangeName()); l < 1 || l > 63 {
+		err := UpdatePodLimitRangeRequestValidationError{
+			field:  "LimitRangeName",
+			reason: "value length must be between 1 and 63 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_UpdatePodLimitRangeRequest_LimitRangeName_Pattern.MatchString(m.GetLimitRangeName()) {
+		err := UpdatePodLimitRangeRequestValidationError{
+			field:  "LimitRangeName",
+			reason: "value does not match regex pattern \"^[a-z0-9]([-a-z0-9]*[a-z0-9])?$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if all {
+		switch v := interface{}(m.GetMin()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, UpdatePodLimitRangeRequestValidationError{
+					field:  "Min",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, UpdatePodLimitRangeRequestValidationError{
+					field:  "Min",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetMin()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdatePodLimitRangeRequestValidationError{
+				field:  "Min",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetMax()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, UpdatePodLimitRangeRequestValidationError{
+					field:  "Max",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, UpdatePodLimitRangeRequestValidationError{
+					field:  "Max",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetMax()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdatePodLimitRangeRequestValidationError{
+				field:  "Max",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return UpdatePodLimitRangeRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// UpdatePodLimitRangeRequestMultiError is an error wrapping multiple
+// validation errors returned by UpdatePodLimitRangeRequest.ValidateAll() if
+// the designated constraints aren't met.
+type UpdatePodLimitRangeRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m UpdatePodLimitRangeRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m UpdatePodLimitRangeRequestMultiError) AllErrors() []error { return m }
+
+// UpdatePodLimitRangeRequestValidationError is the validation error returned
+// by UpdatePodLimitRangeRequest.Validate if the designated constraints aren't met.
+type UpdatePodLimitRangeRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpdatePodLimitRangeRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpdatePodLimitRangeRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpdatePodLimitRangeRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpdatePodLimitRangeRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpdatePodLimitRangeRequestValidationError) ErrorName() string {
+	return "UpdatePodLimitRangeRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpdatePodLimitRangeRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpdatePodLimitRangeRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpdatePodLimitRangeRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpdatePodLimitRangeRequestValidationError{}
+
+var _UpdatePodLimitRangeRequest_Namespace_Pattern = regexp.MustCompile("^[a-z0-9]([-a-z0-9]*[a-z0-9])?$")
+
+var _UpdatePodLimitRangeRequest_LimitRangeName_Pattern = regexp.MustCompile("^[a-z0-9]([-a-z0-9]*[a-z0-9])?$")
+
+// Validate checks the field values on DeletePodLimitRangeRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *DeletePodLimitRangeRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on DeletePodLimitRangeRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// DeletePodLimitRangeRequestMultiError, or nil if none found.
+func (m *DeletePodLimitRangeRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *DeletePodLimitRangeRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for ProjectCode
+
+	// no validation rules for ClusterID
+
+	if utf8.RuneCountInString(m.GetNamespace()) > 63 {
+		err := DeletePodLimitRangeRequestValidationError{
+			field:  "Namespace",
+			reason: "value length must be at most 63 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_DeletePodLimitRangeRequest_Namespace_Pattern.MatchString(m.GetNamespace()) {
+		err := DeletePodLimitRangeRequestValidationError{
+			field:  "Namespace",
+			reason: "value does not match regex pattern \"^[a-z0-9]([-a-z0-9]*[a-z0-9])?$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetLimitRangeName()); l < 1 || l > 63 {
+		err := DeletePodLimitRangeRequestValidationError{
+			field:  "LimitRangeName",
+			reason: "value length must be between 1 and 63 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_DeletePodLimitRangeRequest_LimitRangeName_Pattern.MatchString(m.GetLimitRangeName()) {
+		err := DeletePodLimitRangeRequestValidationError{
+			field:  "LimitRangeName",
+			reason: "value does not match regex pattern \"^[a-z0-9]([-a-z0-9]*[a-z0-9])?$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return DeletePodLimitRangeRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// DeletePodLimitRangeRequestMultiError is an error wrapping multiple
+// validation errors returned by DeletePodLimitRangeRequest.ValidateAll() if
+// the designated constraints aren't met.
+type DeletePodLimitRangeRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m DeletePodLimitRangeRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m DeletePodLimitRangeRequestMultiError) AllErrors() []error { return m }
+
+// DeletePodLimitRangeRequestValidationError is the validation error returned
+// by DeletePodLimitRangeRequest.Validate if the designated constraints aren't met.
+type DeletePodLimitRangeRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DeletePodLimitRangeRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DeletePodLimitRangeRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DeletePodLimitRangeRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DeletePodLimitRangeRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DeletePodLimitRangeRequestValidationError) ErrorName() string {
+	return "DeletePodLimitRangeRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DeletePodLimitRangeRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDeletePodLimitRangeRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DeletePodLimitRangeRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DeletePodLimitRangeRequestValidationError{}
+
+var _DeletePodLimitRangeRequest_Namespace_Pattern = regexp.MustCompile("^[a-z0-9]([-a-z0-9]*[a-z0-9])?$")
+
+var _DeletePodLimitRangeRequest_LimitRangeName_Pattern = regexp.MustCompile("^[a-z0-9]([-a-z0-9]*[a-z0-9])?$")
+
+// Validate checks the field values on PodLimitRangeResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *PodLimitRangeResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on PodLimitRangeResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// PodLimitRangeResponseMultiError, or nil if none found.
+func (m *PodLimitRangeResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *PodLimitRangeResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	if all {
+		switch v := interface{}(m.GetData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, PodLimitRangeResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, PodLimitRangeResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return PodLimitRangeResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for RequestID
+
+	if all {
+		switch v := interface{}(m.GetWebAnnotations()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, PodLimitRangeResponseValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, PodLimitRangeResponseValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetWebAnnotations()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return PodLimitRangeResponseValidationError{
+				field:  "WebAnnotations",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return PodLimitRangeResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// PodLimitRangeResponseMultiError is an error wrapping multiple validation
+// errors returned by PodLimitRangeResponse.ValidateAll() if the designated
+// constraints aren't met.
+type PodLimitRangeResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m PodLimitRangeResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m PodLimitRangeResponseMultiError) AllErrors() []error { return m }
+
+// PodLimitRangeResponseValidationError is the validation error returned by
+// PodLimitRangeResponse.Validate if the designated constraints aren't met.
+type PodLimitRangeResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e PodLimitRangeResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e PodLimitRangeResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e PodLimitRangeResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e PodLimitRangeResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e PodLimitRangeResponseValidationError) ErrorName() string {
+	return "PodLimitRangeResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e PodLimitRangeResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sPodLimitRangeResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = PodLimitRangeResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = PodLimitRangeResponseValidationError{}
 
 // Validate checks the field values on ListProjectsForIAMResp_Project with the
 // rules defined in the proto definition for this message. If any rules are

@@ -2241,6 +2241,12 @@ dashboard:
       cpuLimits: CPU Limit
       memoryRequests: 内存 Request
       memoryLimits: 内存 Limit
+      podLimitRanges: Pod Limit Range
+      limitRangeName: LimitRange 名称
+      minCpu: 最小 CPU
+      maxCpu: 最大 CPU
+      minMemory: 最小内存
+      maxMemory: 最大内存
     msg:
       undoSuccess: 撤回成功
     quota:
@@ -2252,6 +2258,7 @@ dashboard:
       totalCpuLimitsQuota: 所有容器CPU limits总和 / CPU配额
       totalMemoryLimitsQuota: 所有容器内存 limits总和 / 内存配额
       deleteOtherQuotaWarning: 删除后该配额限制将立即失效，且无法恢复，请谨慎操作。
+      deletePodLimitRangeWarning: 删除后该 Pod 资源限制将立即失效，且无法恢复，请谨慎操作。
     validate:
       emptyNs: 请选择命名空间
       name: 命名空间名称只能包含小写字母、数字以及连字符(-)，连字符（-）后面必须接英文或者数字
@@ -2260,6 +2267,8 @@ dashboard:
       setValidQuota: 请设置合法的 CPU、内存配额，且 Limit 需大于等于 Request（共享集群最小值不小于1）
       otherQuotaName: 配额名称不能与命名空间同名，只能包含小写字母、数字及连字符（-），并以字母或数字开头和结尾，最长63个字符
       otherQuotaResource: 请设置合法的 CPU、内存配额，所有值均不能为空且不小于0
+      limitRangeName: LimitRange 名称只能包含小写字母、数字及连字符（-），并以字母或数字开头和结尾，最长63个字符
+      podLimitRangeResource: 请至少设置一项合法的 CPU 或内存限制；同时设置 Min 和 Max 时，Min 不能大于 Max
     status:
       waitingApproval: 待审批
       createNamespace: 创建命名空间
@@ -2274,11 +2283,14 @@ dashboard:
       setAnnotation: 设置注解
       undo: 撤回
       createOtherQuota: 新增配额
+      createPodLimitRange: 新增 Pod LimitRange
     title:
       quotaManagement: '配额管理：{nsName}'
       deleteNamespaceWarning: 删除Namespace将销毁Namespace下的所有资源，销毁后所有数据将被清除且不可恢复，请提前备份好数据。
       createOtherQuota: 新增其他配额
       editOtherQuota: 编辑其他配额
+      createPodLimitRange: 新增 Pod LimitRange
+      editPodLimitRange: 编辑 Pod LimitRange
   network:
     portmapping: 端口映射
     config: 配置
