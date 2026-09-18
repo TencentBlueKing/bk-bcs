@@ -147,6 +147,24 @@ func request_ClusterManager_CheckCloudKubeConfig_0(ctx context.Context, marshale
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["projectID"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectID")
+	}
+
+	protoReq.ProjectID, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectID", err)
+	}
+
 	msg, err := client.CheckCloudKubeConfig(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
@@ -162,6 +180,24 @@ func local_request_ClusterManager_CheckCloudKubeConfig_0(ctx context.Context, ma
 	}
 	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["projectID"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectID")
+	}
+
+	protoReq.ProjectID, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectID", err)
 	}
 
 	msg, err := server.CheckCloudKubeConfig(ctx, &protoReq)
@@ -9857,7 +9893,7 @@ var (
 
 	pattern_ClusterManager_RetryCreateClusterTask_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"clustermanager", "v1", "cluster", "clusterID", "retry"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_ClusterManager_CheckCloudKubeConfig_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"clustermanager", "v1", "cloud", "kubeConfig"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_ClusterManager_CheckCloudKubeConfig_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 2, 5}, []string{"clustermanager", "v1", "projects", "projectID", "cloud", "kubeConfig"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_ClusterManager_ImportCluster_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"clustermanager", "v1", "cluster", "import"}, "", runtime.AssumeColonVerbOpt(true)))
 

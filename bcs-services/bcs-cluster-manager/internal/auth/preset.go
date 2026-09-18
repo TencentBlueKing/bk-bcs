@@ -33,6 +33,7 @@ var ActionPermissions = map[string]string{
 	"ClusterManager.GetCluster":             cluster.CanViewClusterOperation,
 	"ClusterManager.ListCluster":            project.CanViewProjectOperation,
 	"ClusterManager.ListProjectCluster":     project.CanViewProjectOperation,
+	"ClusterManager.CheckCloudKubeConfig":   cluster.CanCreateClusterOperation,
 
 	// node
 	"ClusterManager.GetNode":          cluster.CanViewClusterOperation,

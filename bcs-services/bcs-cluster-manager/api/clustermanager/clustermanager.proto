@@ -43,7 +43,7 @@ service ClusterManager {
 
   rpc CheckCloudKubeConfig(KubeConfigReq) returns (KubeConfigResp) {
     option (google.api.http) = {
-      put : "/clustermanager/v1/cloud/kubeConfig"
+      put : "/clustermanager/v1/projects/{projectID}/cloud/kubeConfig"
       body : "*"
     };
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
@@ -3750,7 +3750,8 @@ message KubeConfigReq {
       title : "KubeConfigReq"
       description : "用户输入检测kubeConfig文件"
       required : [
-        "kubeConfig"
+        "kubeConfig",
+        "projectID"
       ]
     }
   };
@@ -3758,6 +3759,12 @@ message KubeConfigReq {
     title: "kubeConfig",
     description: "集群kubeConfig文件"
   },(validate.rules).string = {min_len :1}];
+  string projectID = 2 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "projectID",
+      description : "集群所属项目"
+    },(validate.rules).string = {min_len : 1, max_len : 100, pattern : "^[0-9a-zA-Z-]+$"}
+  ];
 }
 
 message KubeConfigResp {

@@ -445,40 +445,6 @@
         ]
       }
     },
-    "/clustermanager/v1/cloud/kubeConfig": {
-      "put": {
-        "summary": "kubeConfig可用性检测",
-        "description": "kubeConfig连接集群可用性检测",
-        "operationId": "ClusterManager_CheckCloudKubeConfig",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/clustermanagerKubeConfigResp"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/clustermanagerKubeConfigReq"
-            }
-          }
-        ],
-        "tags": [
-          "ClusterManager"
-        ]
-      }
-    },
     "/clustermanager/v1/cloud/{cloudID}": {
       "get": {
         "summary": "查询Cloud",
@@ -3994,6 +3960,47 @@
             "required": true,
             "schema": {
               "$ref": "#/definitions/clustermanagerUpdateProjectRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
+    "/clustermanager/v1/projects/{projectID}/cloud/kubeConfig": {
+      "put": {
+        "summary": "kubeConfig可用性检测",
+        "description": "kubeConfig连接集群可用性检测",
+        "operationId": "ClusterManager_CheckCloudKubeConfig",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerKubeConfigResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "description": "集群所属项目",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerKubeConfigReq"
             }
           }
         ],
@@ -9008,12 +9015,18 @@
           "type": "string",
           "description": "集群kubeConfig文件",
           "title": "kubeConfig"
+        },
+        "projectID": {
+          "type": "string",
+          "description": "集群所属项目",
+          "title": "projectID"
         }
       },
       "description": "用户输入检测kubeConfig文件",
       "title": "KubeConfigReq",
       "required": [
-        "kubeConfig"
+        "kubeConfig",
+        "projectID"
       ]
     },
     "clustermanagerKubeConfigResp": {

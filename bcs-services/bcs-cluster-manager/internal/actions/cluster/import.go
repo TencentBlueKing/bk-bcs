@@ -473,6 +473,12 @@ func (ka *CheckKubeAction) Handle(ctx context.Context, req *cmproto.KubeConfigRe
 		return
 	}
 
+	// 仅放通客户端证书 / token / basic auth 三类认证方式，拒绝 exec、auth-provider 及本地文件引用
+	if err := clusterops.ValidateKubeConfig([]byte(req.KubeConfig)); err != nil {
+		ka.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
+		return
+	}
+
 	err := checkKubeConfig(req.KubeConfig)
 	if err != nil {
 		ka.setResp(common.BcsErrClusterManagerCheckKubeErr, err.Error())
