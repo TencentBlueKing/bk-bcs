@@ -39,104 +39,106 @@ func init() {
 }
 
 var messageKeyToIndex = map[string]int{
-	"%s": 12,
+	"%s": 13,
 	"BCS Console 使用已经超过%d小时，请重新登录": 30,
 	"BCS Console 已经%d分钟无操作":        29,
-	"BCS Console 服务端连接断开，请重新登录":    25,
+	"BCS Console 服务端连接断开，请重新登录":    26,
 	"project_id is required":       33,
-	"session_id不合法或已经过期":           16,
-	"session不合法":                   23,
+	"session_id不合法或已经过期":           17,
+	"session不合法":                   24,
 	"zh":                           31,
 	"下载":                           32,
-	"初始化session失败":                 24,
-	"参数不合法":                        22,
-	"复制文件流失败":                      7,
-	"执行上传命令失败":                     4,
+	"初始化session失败":                 25,
+	"参数不合法":                        23,
+	"复制文件流失败":                      8,
+	"执行上传命令失败":                     5,
 	"支持常用Bash快捷键; Windows下Ctrl-W为关闭窗口快捷键, 请使用Alt-W代替":                 28,
 	"支持常用Bash快捷键; Windows下Ctrl-W为关闭窗口快捷键, 请使用Alt-W代替; 使用Alt-Num切换Tab": 27,
-	"文件上传失败":                        5,
-	"文件上传成功":                        6,
-	"文件不能超过%dMB":                    10,
-	"暂不支持文件夹下载":                     9,
-	"服务请求失败: %s":                    19,
-	"服务请求成功":                        20,
-	"没有权限":                          35,
-	"用户没有设置命令延时":                    21,
-	"目标文件不存在":                       8,
-	"目标路径不存在":                       1,
-	"获取pod信息失败":                     3,
-	"获取session失败: %s":               14,
-	"获取session成功":                   15,
-	"获取集群成功":                        13,
-	"解析上传文件失败":                      2,
+	"文件上传失败":     6,
+	"文件上传成功":     7,
+	"文件不能超过%dMB": 11,
+	"文件名不合法":     36,
+	"暂不支持文件夹下载":  10,
+	"服务请求失败: %s": 20,
+	"服务请求成功":     21,
+	"没有权限":       35,
+	"用户没有设置命令延时": 22,
+	"目标容器未安装 tar，无法上传或下载文件":         1,
+	"目标文件不存在":                       9,
+	"目标路径不存在":                       2,
+	"获取pod信息失败":                     4,
+	"获取session失败: %s":               15,
+	"获取session成功":                   16,
+	"获取集群成功":                        14,
+	"解析上传文件失败":                      3,
 	"请先输入上传路径":                      0,
-	"请求参数错误, command not valid: %s": 18,
-	"请求参数错误: %s":                    17,
-	"连接已断开":                         26,
-	"项目不正确":                         11,
+	"请求参数错误, command not valid: %s": 19,
+	"请求参数错误: %s":                    18,
+	"项目不正确":                         12,
 	"项目或者集群Id不正确":                   34,
 }
 
-var enIndex = []uint32{ // 37 elements
+var enIndex = []uint32{ // 38 elements
 	// Entry 0 - 1F
-	0x00000000, 0x00000023, 0x00000043, 0x00000061,
-	0x0000007f, 0x000000a0, 0x000000b3, 0x000000ca,
-	0x000000e5, 0x00000100, 0x00000124, 0x00000140,
-	0x00000155, 0x0000015b, 0x00000173, 0x0000018d,
-	0x000001a4, 0x000001cb, 0x000001e7, 0x00000216,
-	0x00000234, 0x0000024f, 0x0000026e, 0x00000280,
-	0x00000290, 0x000002a4, 0x000002df, 0x000002fe,
-	0x00000384, 0x000003eb, 0x0000041a, 0x00000462,
+	0x00000000, 0x00000023, 0x00000050, 0x00000070,
+	0x0000008e, 0x000000ac, 0x000000cd, 0x000000e0,
+	0x000000f7, 0x00000112, 0x0000012d, 0x00000151,
+	0x0000016d, 0x00000182, 0x00000188, 0x000001a0,
+	0x000001ba, 0x000001d1, 0x000001f8, 0x00000214,
+	0x00000243, 0x00000261, 0x0000027c, 0x0000029b,
+	0x000002ad, 0x000002bd, 0x000002d1, 0x0000030c,
+	0x00000392, 0x000003f9, 0x00000428, 0x00000470,
 	// Entry 20 - 3F
-	0x00000465, 0x0000046e, 0x00000485, 0x000004a6,
-	0x000004b4,
-} // Size: 172 bytes
+	0x00000473, 0x0000047c, 0x00000493, 0x000004b4,
+	0x000004c2, 0x000004c2,
+} // Size: 176 bytes
 
-const enData string = "" + // Size: 1204 bytes
-	"\x02Please enter the upload path first\x02Destination path does not exis" +
-	"t\x02Failed to parse uploaded file\x02Failed to get pod information\x02F" +
-	"ailed to execute upload command\x02File upload failed\x02File upload suc" +
-	"cessful\x02Failed to copy file stream\x02Target file does not exist\x02D" +
-	"ownload directory is not supported\x02Files cannot exceed %[1]dMB\x02Pro" +
-	"ject_id Incorrect\x02%[1]s\x02Get Clusters successful\x02Get session fai" +
-	"led: %[1]s\x02Get session successful\x02session_id is incorrect or has e" +
-	"xpired\x02Request Params Error: %[1]s\x02Request Params Error, command n" +
-	"ot valid: %[1]s\x02Service request failed: %[1]s\x02Service request succ" +
-	"essful\x02User did not set command delay\x02Invalid parameter\x02Invalid" +
-	" session\x02Init session failed\x02The BCS Console server is disconnecte" +
-	"d, please login again\x02The connection is disconnected\x02Support commo" +
-	"n Bash shortcuts; Ctrl-W in Windows is to close the window shortcut, ple" +
-	"ase use Alt-W instead; use Alt-Num to switch Tab\x02Support common Bash " +
-	"shortcuts; Ctrl-W under Windows is the shortcut to close, please use Alt" +
-	"-W instead\x02BCS Console has no operation for %[1]d minutes\x02BCS cons" +
-	"ole has been used for more than %[1]d hours. Please login again\x02en" +
-	"\x02Download\x02project_id is required\x02ProjectId or ClusterId Incorre" +
-	"ct\x02No permission"
+const enData string = "" + // Size: 1218 bytes
+	"\x02Please enter the upload path first\x02tar is not installed in the ta" +
+	"rget container\x02Destination path does not exist\x02Failed to parse upl" +
+	"oaded file\x02Failed to get pod information\x02Failed to execute upload " +
+	"command\x02File upload failed\x02File upload successful\x02Failed to cop" +
+	"y file stream\x02Target file does not exist\x02Download directory is not" +
+	" supported\x02Files cannot exceed %[1]dMB\x02Project_id Incorrect\x02%[1" +
+	"]s\x02Get Clusters successful\x02Get session failed: %[1]s\x02Get sessio" +
+	"n successful\x02session_id is incorrect or has expired\x02Request Params" +
+	" Error: %[1]s\x02Request Params Error, command not valid: %[1]s\x02Servi" +
+	"ce request failed: %[1]s\x02Service request successful\x02User did not s" +
+	"et command delay\x02Invalid parameter\x02Invalid session\x02Init session" +
+	" failed\x02The BCS Console server is disconnected, please login again" +
+	"\x02Support common Bash shortcuts; Ctrl-W in Windows is to close the win" +
+	"dow shortcut, please use Alt-W instead; use Alt-Num to switch Tab\x02Sup" +
+	"port common Bash shortcuts; Ctrl-W under Windows is the shortcut to clos" +
+	"e, please use Alt-W instead\x02BCS Console has no operation for %[1]d mi" +
+	"nutes\x02BCS console has been used for more than %[1]d hours. Please log" +
+	"in again\x02en\x02Download\x02project_id is required\x02ProjectId or Clu" +
+	"sterId Incorrect\x02No permission"
 
-var zhIndex = []uint32{ // 37 elements
+var zhIndex = []uint32{ // 38 elements
 	// Entry 0 - 1F
-	0x00000000, 0x00000019, 0x0000002f, 0x00000048,
-	0x0000005e, 0x00000077, 0x0000008a, 0x0000009d,
-	0x000000b3, 0x000000c9, 0x000000e5, 0x000000ff,
-	0x0000010f, 0x00000115, 0x00000128, 0x00000143,
-	0x00000157, 0x0000017a, 0x00000194, 0x000001c1,
-	0x000001db, 0x000001ee, 0x0000020d, 0x0000021d,
-	0x0000022e, 0x00000245, 0x00000279, 0x00000289,
-	0x000002fb, 0x00000355, 0x0000037c, 0x000003b8,
+	0x00000000, 0x00000019, 0x00000051, 0x00000067,
+	0x00000080, 0x00000096, 0x000000af, 0x000000c2,
+	0x000000d5, 0x000000eb, 0x00000101, 0x0000011d,
+	0x00000137, 0x00000147, 0x0000014d, 0x00000160,
+	0x0000017b, 0x0000018f, 0x000001b2, 0x000001cc,
+	0x000001f9, 0x00000213, 0x00000226, 0x00000245,
+	0x00000255, 0x00000266, 0x0000027d, 0x000002b1,
+	0x00000323, 0x0000037d, 0x000003a4, 0x000003e0,
 	// Entry 20 - 3F
-	0x000003bb, 0x000003c2, 0x000003d9, 0x000003f7,
-	0x00000404,
-} // Size: 172 bytes
+	0x000003e3, 0x000003ea, 0x00000401, 0x0000041f,
+	0x0000042c, 0x0000043f,
+} // Size: 176 bytes
 
-const zhData string = "" + // Size: 1028 bytes
-	"\x02请先输入上传路径\x02目标路径不存在\x02解析上传文件失败\x02获取pod信息失败\x02执行上传命令失败\x02文件上传失败" +
-	"\x02文件上传成功\x02复制文件流失败\x02目标文件不存在\x02暂不支持文件夹下载\x02文件不能超过%[1]dMB\x02项目不正确" +
-	"\x02%[1]s\x02获取集群成功\x02获取session失败: %[1]s\x02获取session成功\x02session_id不合" +
-	"法或已经过期\x02请求参数错误: %[1]s\x02请求参数错误, command not valid: %[1]s\x02服务请求失败:" +
-	" %[1]s\x02服务请求成功\x02用户没有设置命令延时\x02参数不合法\x02session不合法\x02初始化session失败" +
-	"\x02BCS Console 服务端连接断开，请重新登录\x02连接已断开\x02支持常用Bash快捷键; Windows下Ctrl-W为关闭" +
-	"窗口快捷键, 请使用Alt-W代替; 使用Alt-Num切换Tab\x02支持常用Bash快捷键; Windows下Ctrl-W为关闭窗口快" +
-	"捷键, 请使用Alt-W代替\x02BCS Console 已经%[1]d分钟无操作\x02BCS Console 使用已经超过%[1]d小" +
-	"时，请重新登录\x02zh\x02下载\x02project_id is required\x02项目或者集群Id不正确\x02没有权限"
+const zhData string = "" + // Size: 1087 bytes
+	"\x02请先输入上传路径\x02目标容器未安装 tar，无法上传或下载文件\x02目标路径不存在\x02解析上传文件失败\x02获取pod信息失" +
+	"败\x02执行上传命令失败\x02文件上传失败\x02文件上传成功\x02复制文件流失败\x02目标文件不存在\x02暂不支持文件夹下载" +
+	"\x02文件不能超过%[1]dMB\x02项目不正确\x02%[1]s\x02获取集群成功\x02获取session失败: %[1]s\x02获" +
+	"取session成功\x02session_id不合法或已经过期\x02请求参数错误: %[1]s\x02请求参数错误, command n" +
+	"ot valid: %[1]s\x02服务请求失败: %[1]s\x02服务请求成功\x02用户没有设置命令延时\x02参数不合法\x02ses" +
+	"sion不合法\x02初始化session失败\x02BCS Console 服务端连接断开，请重新登录\x02支持常用Bash快捷键; Win" +
+	"dows下Ctrl-W为关闭窗口快捷键, 请使用Alt-W代替; 使用Alt-Num切换Tab\x02支持常用Bash快捷键; Windows下" +
+	"Ctrl-W为关闭窗口快捷键, 请使用Alt-W代替\x02BCS Console 已经%[1]d分钟无操作\x02BCS Console 使用" +
+	"已经超过%[1]d小时，请重新登录\x02zh\x02下载\x02project_id is required\x02项目或者集群Id不正确" +
+	"\x02没有权限\x02文件名不合法"
 
-	// Total table size 2576 bytes (2KiB); checksum: FD111CD5
+	// Total table size 2657 bytes (2KiB); checksum: 2C58DD7B

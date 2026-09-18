@@ -7,6 +7,11 @@
             "translation": "Please enter the upload path first"
         },
         {
+            "id": "目标容器未安装 tar，无法上传或下载文件",
+            "message": "目标容器未安装 tar，无法上传或下载文件",
+            "translation": "tar is not installed in the target container"
+        },
+        {
             "id": "目标路径不存在",
             "message": "目标路径不存在",
             "translation": "Destination path does not exist"
@@ -15,6 +20,11 @@
             "id": "解析上传文件失败",
             "message": "解析上传文件失败",
             "translation": "Failed to parse uploaded file"
+        },
+        {
+            "id": "文件名不合法",
+            "message": "文件名不合法",
+            "translation": ""
         },
         {
             "id": "获取pod信息失败",
@@ -205,11 +215,6 @@
             "id": "支持常用Bash快捷键; Windows下Ctrl-W为关闭窗口快捷键, 请使用Alt-W代替; 使用Alt-Num切换Tab",
             "message": "支持常用Bash快捷键; Windows下Ctrl-W为关闭窗口快捷键, 请使用Alt-W代替; 使用Alt-Num切换Tab",
             "translation": "Support common Bash shortcuts; Ctrl-W in Windows is to close the window shortcut, please use Alt-W instead; use Alt-Num to switch Tab"
-        },
-        {
-            "id": "连接已断开",
-            "message": "连接已断开",
-            "translation": "The connection is disconnected"
         },
         {
             "id": "支持常用Bash快捷键; Windows下Ctrl-W为关闭窗口快捷键, 请使用Alt-W代替",
