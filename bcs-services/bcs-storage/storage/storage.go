@@ -288,7 +288,10 @@ func (s *StorageServer) close() {
 func runPrometheusMetrics(op *options.StorageOptions) {
 	http.Handle("/metrics", promhttp.Handler())
 	// ipv4 ipv6
-	ips := []string{op.Address, op.IPv6Address}
+	ips := []string{op.Address}
+	if op.IPv6Address != "" && op.IPv6Address != op.Address {
+		ips = append(ips, op.IPv6Address)
+	}
 	ipv6Server := ipv6server.NewIPv6Server(ips, strconv.Itoa(int(op.MetricPort)), "", nil)
 	// 启动server，同时监听v4、v6地址
 	// nolint
