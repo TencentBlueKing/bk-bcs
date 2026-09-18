@@ -36,6 +36,7 @@ type MongoConfig struct {
 	Address        string `yaml:"address"`
 	Replicaset     string `yaml:"replicaset"`
 	ConnectTimeout uint   `yaml:"connecttimeout"`
+	AuthDatabase   string `yaml:"authdatabase"`
 	Database       string `yaml:"database"`
 	Username       string `yaml:"username"`
 	Password       string `yaml:"password"`
@@ -183,7 +184,8 @@ type TaskConfig struct {
 
 // SharedClusterConfig 共享集群相关配置
 type SharedClusterConfig struct {
-	AnnoKeyProjCode string `yaml:"annoKeyProjCode"`
+	AnnoKeyProjCode  string `yaml:"annoKeyProjCode"`
+	AllowAdjustQuota bool   `yaml:"allowAdjustQuota"`
 }
 
 // ProjectConfig 项目的配置信息

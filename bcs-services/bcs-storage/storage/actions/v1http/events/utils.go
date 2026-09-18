@@ -162,8 +162,8 @@ func listEvent(req *restful.Request) ([]operator.M, int64, error) {
 
 	condition := getCondition(req)
 
-	// set read preference, read from secondary node
-	secondary := readpref.Secondary()
+	// set read preference, read from secondary node preferred
+	secondary := readpref.SecondaryPreferred()
 	dbOpts := mopt.Database().SetReadPreference(secondary)
 
 	// option
@@ -307,8 +307,8 @@ func postEvent(req *restful.Request) ([]operator.M, int64, error) {
 
 	condition := getJsonCondition(eventParams)
 
-	// set read preference, read from secondary node
-	secondary := readpref.Secondary()
+	// set read preference, read from secondary node preferred
+	secondary := readpref.SecondaryPreferred()
 	dbOpts := mopt.Database().SetReadPreference(secondary)
 
 	// option

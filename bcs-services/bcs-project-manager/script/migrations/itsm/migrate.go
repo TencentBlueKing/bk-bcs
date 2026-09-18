@@ -56,6 +56,7 @@ func InitServices() error {
 func initDB() error {
 	// mongo
 	store.InitMongo(&config.MongoConfig{
+		AuthDatabase:   config.GlobalConf.Mongo.AuthDatabase,
 		Address:        config.GlobalConf.Mongo.Address,
 		Replicaset:     config.GlobalConf.Mongo.Replicaset,
 		ConnectTimeout: config.GlobalConf.Mongo.ConnectTimeout,

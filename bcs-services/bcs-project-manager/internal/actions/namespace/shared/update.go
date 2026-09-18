@@ -34,13 +34,18 @@ import (
 // UpdateNamespace implement for UpdateNamespace interface
 func (a *SharedNamespaceAction) UpdateNamespace(ctx context.Context,
 	req *proto.UpdateNamespaceRequest, resp *proto.UpdateNamespaceResponse) error {
+	if err := quotautils.ValidateResourceQuota(req.Quota); err != nil {
+		return err
+	}
+	if !config.GlobalConf.SharedClusterConfig.AllowAdjustQuota {
+		if err := quotautils.ValidateQuotaEquality(req.Quota); err != nil {
+			return err
+		}
+	}
 	// if itsm is not enable, update namespace directly
 	if !config.GlobalConf.ITSM.Enable {
 		ia := independent.NewIndependentNamespaceAction(a.model)
 		return ia.UpdateNamespace(ctx, req, resp)
-	}
-	if err := quotautils.ValidateResourceQuota(req.Quota); err != nil {
-		return err
 	}
 	var username string
 	if authUser, err := middleware.GetUserFromContext(ctx); err == nil {

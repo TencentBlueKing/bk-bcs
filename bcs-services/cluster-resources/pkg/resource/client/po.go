@@ -253,8 +253,9 @@ func (c *PodClient) ExecCommand(
 		Stdout: &stdout,
 		Stderr: &stderr,
 	})
+
 	if err != nil {
-		return "", "", err
+		return "", "", errorx.New(errcode.General, i18n.GetMsg(ctx, "获取容器环境变量失败，请确认容器处于 Running 状态"))
 	}
 	return stdout.String(), stderr.String(), err
 }

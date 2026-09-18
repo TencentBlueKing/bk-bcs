@@ -126,6 +126,50 @@ func TransferToProto(q *corev1.ResourceQuota) (
 	return quota, used, cpuUseRate, memoryUseRate
 }
 
+// TransferToProtoOtherQuota transfer k8s ResourceQuota to proto OtherQuota
+func TransferToProtoOtherQuota(q *corev1.ResourceQuota) *proto.OtherQuota {
+	if q == nil {
+		return nil
+	}
+	// Desired limits are available immediately; status is reconciled asynchronously.
+	cpuLimitsQuota := q.Spec.Hard[corev1.ResourceLimitsCPU]
+	cpuRequestQuota := q.Spec.Hard[corev1.ResourceRequestsCPU]
+	memoryLimitsQuota := q.Spec.Hard[corev1.ResourceLimitsMemory]
+	memoryRequestsQuota := q.Spec.Hard[corev1.ResourceRequestsMemory]
+	cpuLimitsUsed := q.Status.Used[corev1.ResourceLimitsCPU]
+	cpuRequestsUsed := q.Status.Used[corev1.ResourceRequestsCPU]
+	memoryLimitsUsed := q.Status.Used[corev1.ResourceLimitsMemory]
+	memoryRequestsUsed := q.Status.Used[corev1.ResourceRequestsMemory]
+	return &proto.OtherQuota{
+		Name: q.GetName(),
+		Quota: &proto.ResourceQuota{
+			CpuLimits:      cpuLimitsQuota.String(),
+			CpuRequests:    cpuRequestQuota.String(),
+			MemoryLimits:   memoryLimitsQuota.String(),
+			MemoryRequests: memoryRequestsQuota.String(),
+		},
+		Used: &proto.ResourceQuota{
+			CpuLimits:      cpuLimitsUsed.String(),
+			CpuRequests:    cpuRequestsUsed.String(),
+			MemoryLimits:   memoryLimitsUsed.String(),
+			MemoryRequests: memoryRequestsUsed.String(),
+		},
+		UsageRate: &proto.ResourceQuotaUsageRate{
+			CpuLimits:      calculateUsageRate(cpuLimitsUsed, cpuLimitsQuota),
+			CpuRequests:    calculateUsageRate(cpuRequestsUsed, cpuRequestQuota),
+			MemoryLimits:   calculateUsageRate(memoryLimitsUsed, memoryLimitsQuota),
+			MemoryRequests: calculateUsageRate(memoryRequestsUsed, memoryRequestsQuota),
+		},
+	}
+}
+
+func calculateUsageRate(used, hard resource.Quantity) float32 {
+	if hard.IsZero() {
+		return 0
+	}
+	return float32(used.AsApproximateFloat64() / hard.AsApproximateFloat64())
+}
+
 // LoadFromProto load k8s ResourceQuota from proto ResourceQuota
 func LoadFromProto(k8sQuota *corev1.ResourceQuota, protoQuota *proto.ResourceQuota) error {
 	return load(k8sQuota, protoQuota.GetCpuLimits(), protoQuota.GetCpuRequests(),
@@ -172,6 +216,37 @@ func load(quota *corev1.ResourceQuota, cpuLimits, cpuRequests, memoryLimits, mem
 			return err
 		}
 		quota.Spec.Hard[corev1.ResourceRequestsMemory] = memoryRequests
+	}
+	return nil
+}
+
+// ValidateQuotaEquality checks if CPU/Memory request and limit are equal.
+func ValidateQuotaEquality(quota *proto.ResourceQuota) error {
+	if quota == nil {
+		return nil
+	}
+	cpuLimit, err := resource.ParseQuantity(quota.CpuLimits)
+	if err != nil {
+		return errorx.NewParamErr("invalid cpu limits")
+	}
+	cpuRequest, err := resource.ParseQuantity(quota.CpuRequests)
+	if err != nil {
+		return errorx.NewParamErr("invalid cpu requests")
+	}
+	if cpuLimit.Cmp(cpuRequest) != 0 {
+		return errorx.NewReadableErr(errorx.ParamErr, "cpu limits and requests must be consistent under shared cluster")
+	}
+
+	memLimit, err := resource.ParseQuantity(quota.MemoryLimits)
+	if err != nil {
+		return errorx.NewParamErr("invalid memory limits")
+	}
+	memRequest, err := resource.ParseQuantity(quota.MemoryRequests)
+	if err != nil {
+		return errorx.NewParamErr("invalid memory requests")
+	}
+	if memLimit.Cmp(memRequest) != 0 {
+		return errorx.NewReadableErr(errorx.ParamErr, "memory limits and requests must be consistent under shared cluster")
 	}
 	return nil
 }

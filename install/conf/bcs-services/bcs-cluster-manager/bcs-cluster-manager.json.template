@@ -4,6 +4,7 @@
         "replicaset": "${bcsClusterManagerMongoReplicaset}",
         "connecttimeout": ${bcsClusterManagerMongoConnectTimeout},
         "database": "${bcsClusterManagerMongoDatabase}",
+        "authdatabase": "${bcsClusterManagerMongoAuthDatabase}",
         "username": "${bcsClusterManagerMongoUsername}",
         "password": "${bcsClusterManagerMongoPassword}",
         "maxpoolsize": ${bcsClusterManagerMongoMaxPoolSize},

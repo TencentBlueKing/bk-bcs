@@ -87,6 +87,7 @@ func (m *Project) validate(all bool) error {
 	if len(errors) > 0 {
 		return ProjectMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -259,6 +260,7 @@ func (m *CreateProjectRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return CreateProjectRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -374,6 +376,7 @@ func (m *GetProjectRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return GetProjectRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -579,6 +582,7 @@ func (m *UpdateProjectRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return UpdateProjectRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -705,6 +709,7 @@ func (m *DeleteProjectRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return DeleteProjectRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -872,6 +877,7 @@ func (m *ProjectResponse) validate(all bool) error {
 	if len(errors) > 0 {
 		return ProjectResponseMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -989,6 +995,7 @@ func (m *ListProjectsRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return ListProjectsRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -1126,6 +1133,7 @@ func (m *ListProjectData) validate(all bool) error {
 	if len(errors) > 0 {
 		return ListProjectDataMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -1289,6 +1297,7 @@ func (m *ListProjectsResponse) validate(all bool) error {
 	if len(errors) > 0 {
 		return ListProjectsResponseMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -1418,6 +1427,7 @@ func (m *Perms) validate(all bool) error {
 	if len(errors) > 0 {
 		return PermsMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -1526,6 +1536,7 @@ func (m *ListAuthorizedProjReq) validate(all bool) error {
 	if len(errors) > 0 {
 		return ListAuthorizedProjReqMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -1691,6 +1702,7 @@ func (m *ListAuthorizedProjResp) validate(all bool) error {
 	if len(errors) > 0 {
 		return ListAuthorizedProjRespMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -1792,6 +1804,7 @@ func (m *ListProjectsForIAMReq) validate(all bool) error {
 	if len(errors) > 0 {
 		return ListProjectsForIAMReqMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -1933,6 +1946,7 @@ func (m *ListProjectsForIAMResp) validate(all bool) error {
 	if len(errors) > 0 {
 		return ListProjectsForIAMRespMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -2036,6 +2050,7 @@ func (m *GetProjectActiveRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return GetProjectActiveRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -2172,6 +2187,7 @@ func (m *GetProjectActiveResponse) validate(all bool) error {
 	if len(errors) > 0 {
 		return GetProjectActiveResponseMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -2275,6 +2291,7 @@ func (m *ProjectActiveData) validate(all bool) error {
 	if len(errors) > 0 {
 		return ProjectActiveDataMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -2378,6 +2395,7 @@ func (m *GetBusinessRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return GetBusinessRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -2543,6 +2561,7 @@ func (m *GetBusinessResponse) validate(all bool) error {
 	if len(errors) > 0 {
 		return GetBusinessResponseMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -2646,6 +2665,7 @@ func (m *ListBusinessRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return ListBusinessRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -2816,6 +2836,7 @@ func (m *ListBusinessResponse) validate(all bool) error {
 	if len(errors) > 0 {
 		return ListBusinessResponseMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -2919,6 +2940,7 @@ func (m *GetBusinessTopologyRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return GetBusinessTopologyRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -3089,6 +3111,7 @@ func (m *GetBusinessTopologyResponse) validate(all bool) error {
 	if len(errors) > 0 {
 		return GetBusinessTopologyResponseMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -3195,6 +3218,7 @@ func (m *BusinessData) validate(all bool) error {
 	if len(errors) > 0 {
 		return BusinessDataMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -3337,6 +3361,7 @@ func (m *TopologyData) validate(all bool) error {
 	if len(errors) > 0 {
 		return TopologyDataMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -3439,6 +3464,7 @@ func (m *SyncNamespaceRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return SyncNamespaceRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -3548,6 +3574,7 @@ func (m *SyncNamespaceResponse) validate(all bool) error {
 	if len(errors) > 0 {
 		return SyncNamespaceResponseMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -3655,6 +3682,7 @@ func (m *WithdrawNamespaceRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return WithdrawNamespaceRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -3764,6 +3792,7 @@ func (m *WithdrawNamespaceResponse) validate(all bool) error {
 	if len(errors) > 0 {
 		return WithdrawNamespaceResponseMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -4022,6 +4051,7 @@ func (m *CreateNamespaceRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return CreateNamespaceRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -4189,6 +4219,7 @@ func (m *CreateNamespaceResponse) validate(all bool) error {
 	if len(errors) > 0 {
 		return CreateNamespaceResponseMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -4328,6 +4359,7 @@ func (m *NamespaceCallbackRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return NamespaceCallbackRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -4441,6 +4473,7 @@ func (m *NamespaceCallbackResponse) validate(all bool) error {
 	if len(errors) > 0 {
 		return NamespaceCallbackResponseMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -4665,6 +4698,7 @@ func (m *UpdateNamespaceRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return UpdateNamespaceRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -4803,6 +4837,7 @@ func (m *UpdateNamespaceResponse) validate(all bool) error {
 	if len(errors) > 0 {
 		return UpdateNamespaceResponseMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -4910,6 +4945,7 @@ func (m *GetNamespaceRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return GetNamespaceRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -5075,6 +5111,7 @@ func (m *GetNamespaceResponse) validate(all bool) error {
 	if len(errors) > 0 {
 		return GetNamespaceResponseMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -5180,6 +5217,7 @@ func (m *ListNamespacesRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return ListNamespacesRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -5350,6 +5388,7 @@ func (m *ListNamespacesResponse) validate(all bool) error {
 	if len(errors) > 0 {
 		return ListNamespacesResponseMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -5455,6 +5494,7 @@ func (m *ListNativeNamespacesRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return ListNativeNamespacesRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -5626,6 +5666,7 @@ func (m *ListNativeNamespacesResponse) validate(all bool) error {
 	if len(errors) > 0 {
 		return ListNativeNamespacesResponseMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -5733,6 +5774,7 @@ func (m *ListNativeNamespacesContentRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return ListNativeNamespacesContentRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -5862,6 +5904,7 @@ func (m *DeleteNamespaceRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return DeleteNamespaceRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -6002,6 +6045,7 @@ func (m *DeleteNamespaceResponse) validate(all bool) error {
 	if len(errors) > 0 {
 		return DeleteNamespaceResponseMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -6280,9 +6324,44 @@ func (m *NamespaceData) validate(all bool) error {
 
 	// no validation rules for ItsmTicketType
 
+	for idx, item := range m.GetOtherQuotas() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, NamespaceDataValidationError{
+						field:  fmt.Sprintf("OtherQuotas[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, NamespaceDataValidationError{
+						field:  fmt.Sprintf("OtherQuotas[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return NamespaceDataValidationError{
+					field:  fmt.Sprintf("OtherQuotas[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
 	if len(errors) > 0 {
 		return NamespaceDataMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -6357,6 +6436,194 @@ var _ interface {
 	ErrorName() string
 } = NamespaceDataValidationError{}
 
+// Validate checks the field values on OtherQuota with the rules defined in the
+// proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *OtherQuota) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on OtherQuota with the rules defined in
+// the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in OtherQuotaMultiError, or
+// nil if none found.
+func (m *OtherQuota) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *OtherQuota) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Name
+
+	if all {
+		switch v := interface{}(m.GetQuota()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, OtherQuotaValidationError{
+					field:  "Quota",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, OtherQuotaValidationError{
+					field:  "Quota",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetQuota()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return OtherQuotaValidationError{
+				field:  "Quota",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetUsed()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, OtherQuotaValidationError{
+					field:  "Used",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, OtherQuotaValidationError{
+					field:  "Used",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetUsed()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return OtherQuotaValidationError{
+				field:  "Used",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetUsageRate()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, OtherQuotaValidationError{
+					field:  "UsageRate",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, OtherQuotaValidationError{
+					field:  "UsageRate",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetUsageRate()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return OtherQuotaValidationError{
+				field:  "UsageRate",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return OtherQuotaMultiError(errors)
+	}
+
+	return nil
+}
+
+// OtherQuotaMultiError is an error wrapping multiple validation errors
+// returned by OtherQuota.ValidateAll() if the designated constraints aren't met.
+type OtherQuotaMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m OtherQuotaMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m OtherQuotaMultiError) AllErrors() []error { return m }
+
+// OtherQuotaValidationError is the validation error returned by
+// OtherQuota.Validate if the designated constraints aren't met.
+type OtherQuotaValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e OtherQuotaValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e OtherQuotaValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e OtherQuotaValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e OtherQuotaValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e OtherQuotaValidationError) ErrorName() string { return "OtherQuotaValidationError" }
+
+// Error satisfies the builtin error interface
+func (e OtherQuotaValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sOtherQuota.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = OtherQuotaValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = OtherQuotaValidationError{}
+
 // Validate checks the field values on NativeNamespaceData with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
@@ -6394,6 +6661,7 @@ func (m *NativeNamespaceData) validate(all bool) error {
 	if len(errors) > 0 {
 		return NativeNamespaceDataMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -6498,6 +6766,7 @@ func (m *Label) validate(all bool) error {
 	if len(errors) > 0 {
 		return LabelMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -6600,6 +6869,7 @@ func (m *Annotation) validate(all bool) error {
 	if len(errors) > 0 {
 		return AnnotationMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -6706,6 +6976,7 @@ func (m *ResourceQuota) validate(all bool) error {
 	if len(errors) > 0 {
 		return ResourceQuotaMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -6855,6 +7126,7 @@ func (m *CreateVariableRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return CreateVariableRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -6999,6 +7271,7 @@ func (m *CreateVariableResponse) validate(all bool) error {
 	if len(errors) > 0 {
 		return CreateVariableResponseMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -7152,6 +7425,7 @@ func (m *UpdateVariableRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return UpdateVariableRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -7296,6 +7570,7 @@ func (m *UpdateVariableResponse) validate(all bool) error {
 	if len(errors) > 0 {
 		return UpdateVariableResponseMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -7409,6 +7684,7 @@ func (m *ListVariableDefinitionsRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return ListVariableDefinitionsRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -7546,6 +7822,7 @@ func (m *ListVariableDefinitionsResponse) validate(all bool) error {
 	if len(errors) > 0 {
 		return ListVariableDefinitionsResponseMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -7653,6 +7930,7 @@ func (m *DeleteVariableDefinitionsRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return DeleteVariableDefinitionsRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -7792,6 +8070,7 @@ func (m *DeleteVariableDefinitionsResponse) validate(all bool) error {
 	if len(errors) > 0 {
 		return DeleteVariableDefinitionsResponseMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -7928,6 +8207,7 @@ func (m *ListClustersVariablesRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return ListClustersVariablesRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -8067,6 +8347,7 @@ func (m *ListClustersVariablesResponse) validate(all bool) error {
 	if len(errors) > 0 {
 		return ListClustersVariablesResponseMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -8193,6 +8474,7 @@ func (m *ListNamespacesVariablesRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return ListNamespacesVariablesRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -8332,6 +8614,7 @@ func (m *ListNamespacesVariablesResponse) validate(all bool) error {
 	if len(errors) > 0 {
 		return ListNamespacesVariablesResponseMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -8492,6 +8775,7 @@ func (m *UpdateClustersVariablesRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return UpdateClustersVariablesRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -8602,6 +8886,7 @@ func (m *UpdateClustersVariablesResponse) validate(all bool) error {
 	if len(errors) > 0 {
 		return UpdateClustersVariablesResponseMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -8763,6 +9048,7 @@ func (m *UpdateNamespacesVariablesRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return UpdateNamespacesVariablesRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -8875,6 +9161,7 @@ func (m *UpdateNamespacesVariablesResponse) validate(all bool) error {
 	if len(errors) > 0 {
 		return UpdateNamespacesVariablesResponseMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -8991,6 +9278,7 @@ func (m *ListClusterVariablesRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return ListClusterVariablesRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -9128,6 +9416,7 @@ func (m *ListClusterVariablesResponse) validate(all bool) error {
 	if len(errors) > 0 {
 		return ListClusterVariablesResponseMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -9236,6 +9525,7 @@ func (m *ListNamespaceVariablesRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return ListNamespaceVariablesRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -9373,6 +9663,7 @@ func (m *ListNamespaceVariablesResponse) validate(all bool) error {
 	if len(errors) > 0 {
 		return ListNamespaceVariablesResponseMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -9533,6 +9824,7 @@ func (m *UpdateClusterVariablesRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return UpdateClusterVariablesRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -9643,6 +9935,7 @@ func (m *UpdateClusterVariablesResponse) validate(all bool) error {
 	if len(errors) > 0 {
 		return UpdateClusterVariablesResponseMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -9785,6 +10078,7 @@ func (m *UpdateNamespaceVariablesRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return UpdateNamespaceVariablesRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -9894,6 +10188,7 @@ func (m *UpdateNamespaceVariablesResponse) validate(all bool) error {
 	if len(errors) > 0 {
 		return UpdateNamespaceVariablesResponseMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -10033,6 +10328,7 @@ func (m *ImportVariablesRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return ImportVariablesRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -10140,6 +10436,7 @@ func (m *ImportVariablesResponse) validate(all bool) error {
 	if len(errors) > 0 {
 		return ImportVariablesResponseMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -10249,6 +10546,7 @@ func (m *RenderVariablesRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return RenderVariablesRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -10390,6 +10688,7 @@ func (m *RenderVariablesResponse) validate(all bool) error {
 	if len(errors) > 0 {
 		return RenderVariablesResponseMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -10519,6 +10818,7 @@ func (m *VariableDefinition) validate(all bool) error {
 	if len(errors) > 0 {
 		return VariableDefinitionMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -10636,6 +10936,7 @@ func (m *VariableValue) validate(all bool) error {
 	if len(errors) > 0 {
 		return VariableValueMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -10751,6 +11052,7 @@ func (m *CreateVariableData) validate(all bool) error {
 	if len(errors) > 0 {
 		return CreateVariableDataMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -10868,6 +11170,7 @@ func (m *UpdateVariableData) validate(all bool) error {
 	if len(errors) > 0 {
 		return UpdateVariableDataMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -11005,6 +11308,7 @@ func (m *ListVariableDefinitionData) validate(all bool) error {
 	if len(errors) > 0 {
 		return ListVariableDefinitionDataMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -11108,6 +11412,7 @@ func (m *DeleteVariableDefinitionsData) validate(all bool) error {
 	if len(errors) > 0 {
 		return DeleteVariableDefinitionsDataMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -11246,6 +11551,7 @@ func (m *ListVariableValuesData) validate(all bool) error {
 	if len(errors) > 0 {
 		return ListVariableValuesDataMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -11420,6 +11726,7 @@ func (m *ImportVariableData) validate(all bool) error {
 	if len(errors) > 0 {
 		return ImportVariableDataMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -11529,6 +11836,7 @@ func (m *ImportVariableVarData) validate(all bool) error {
 	if len(errors) > 0 {
 		return ImportVariableVarDataMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -11630,6 +11938,7 @@ func (m *HealthzRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return HealthzRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -11764,6 +12073,7 @@ func (m *HealthzResponse) validate(all bool) error {
 	if len(errors) > 0 {
 		return HealthzResponseMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -11867,6 +12177,7 @@ func (m *HealthzData) validate(all bool) error {
 	if len(errors) > 0 {
 		return HealthzDataMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -11965,6 +12276,7 @@ func (m *PingRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return PingRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -12071,6 +12383,7 @@ func (m *PingResponse) validate(all bool) error {
 	if len(errors) > 0 {
 		return PingResponseMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -12270,6 +12583,7 @@ func (m *ProjectQuota) validate(all bool) error {
 	if len(errors) > 0 {
 		return ProjectQuotaMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -12376,6 +12690,7 @@ func (m *NodeGroup) validate(all bool) error {
 	if len(errors) > 0 {
 		return NodeGroupMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -12590,6 +12905,7 @@ func (m *QuotaResource) validate(all bool) error {
 	if len(errors) > 0 {
 		return QuotaResourceMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -12720,6 +13036,7 @@ func (m *QuotaStrategy) validate(all bool) error {
 	if len(errors) > 0 {
 		return QuotaStrategyMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -12900,6 +13217,7 @@ func (m *InstanceTypeConfig) validate(all bool) error {
 	if len(errors) > 0 {
 		return InstanceTypeConfigMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -13005,6 +13323,7 @@ func (m *DataDisk) validate(all bool) error {
 	if len(errors) > 0 {
 		return DataDiskMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -13109,6 +13428,7 @@ func (m *DeviceInfo) validate(all bool) error {
 	if len(errors) > 0 {
 		return DeviceInfoMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -13269,6 +13589,7 @@ func (m *CreateProjectQuotaRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return CreateProjectQuotaRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -13372,6 +13693,7 @@ func (m *GetProjectQuotaRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return GetProjectQuotaRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -13538,6 +13860,7 @@ func (m *UpdateProjectQuotaRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return UpdateProjectQuotaRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -13663,6 +13986,7 @@ func (m *DeleteProjectQuotaRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return DeleteProjectQuotaRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -13859,6 +14183,7 @@ func (m *ProjectQuotaResponse) validate(all bool) error {
 	if len(errors) > 0 {
 		return ProjectQuotaResponseMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -13974,6 +14299,7 @@ func (m *ListProjectQuotasRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return ListProjectQuotasRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -14111,6 +14437,7 @@ func (m *ListProjectQuotasData) validate(all bool) error {
 	if len(errors) > 0 {
 		return ListProjectQuotasDataMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -14276,6 +14603,7 @@ func (m *ListProjectQuotasResponse) validate(all bool) error {
 	if len(errors) > 0 {
 		return ListProjectQuotasResponseMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -14379,6 +14707,7 @@ func (m *GetProjectQuotasUsageReq) validate(all bool) error {
 	if len(errors) > 0 {
 		return GetProjectQuotasUsageReqMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -14544,6 +14873,7 @@ func (m *GetProjectQuotasUsageResp) validate(all bool) error {
 	if len(errors) > 0 {
 		return GetProjectQuotasUsageRespMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -14651,6 +14981,7 @@ func (m *ZoneResourceUsage) validate(all bool) error {
 	if len(errors) > 0 {
 		return ZoneResourceUsageMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -14820,6 +15151,7 @@ func (m *GetProjectQuotasUsageData) validate(all bool) error {
 	if len(errors) > 0 {
 		return GetProjectQuotasUsageDataMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -14954,6 +15286,7 @@ func (m *ScaleUpProjectQuotaRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return ScaleUpProjectQuotaRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -15119,6 +15452,7 @@ func (m *ScaleUpProjectQuotaResponse) validate(all bool) error {
 	if len(errors) > 0 {
 		return ScaleUpProjectQuotaResponseMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -15254,6 +15588,7 @@ func (m *ScaleDownProjectQuotaRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return ScaleDownProjectQuotaRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -15420,6 +15755,7 @@ func (m *ScaleDownProjectQuotaResponse) validate(all bool) error {
 	if len(errors) > 0 {
 		return ScaleDownProjectQuotaResponseMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -15497,6 +15833,802 @@ var _ interface {
 	ErrorName() string
 } = ScaleDownProjectQuotaResponseValidationError{}
 
+// Validate checks the field values on ResourceQuotaUsageRate with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ResourceQuotaUsageRate) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ResourceQuotaUsageRate with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ResourceQuotaUsageRateMultiError, or nil if none found.
+func (m *ResourceQuotaUsageRate) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ResourceQuotaUsageRate) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for CpuRequests
+
+	// no validation rules for MemoryRequests
+
+	// no validation rules for CpuLimits
+
+	// no validation rules for MemoryLimits
+
+	if len(errors) > 0 {
+		return ResourceQuotaUsageRateMultiError(errors)
+	}
+
+	return nil
+}
+
+// ResourceQuotaUsageRateMultiError is an error wrapping multiple validation
+// errors returned by ResourceQuotaUsageRate.ValidateAll() if the designated
+// constraints aren't met.
+type ResourceQuotaUsageRateMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ResourceQuotaUsageRateMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ResourceQuotaUsageRateMultiError) AllErrors() []error { return m }
+
+// ResourceQuotaUsageRateValidationError is the validation error returned by
+// ResourceQuotaUsageRate.Validate if the designated constraints aren't met.
+type ResourceQuotaUsageRateValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ResourceQuotaUsageRateValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ResourceQuotaUsageRateValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ResourceQuotaUsageRateValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ResourceQuotaUsageRateValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ResourceQuotaUsageRateValidationError) ErrorName() string {
+	return "ResourceQuotaUsageRateValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ResourceQuotaUsageRateValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sResourceQuotaUsageRate.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ResourceQuotaUsageRateValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ResourceQuotaUsageRateValidationError{}
+
+// Validate checks the field values on CreateOtherQuotaRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *CreateOtherQuotaRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on CreateOtherQuotaRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// CreateOtherQuotaRequestMultiError, or nil if none found.
+func (m *CreateOtherQuotaRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *CreateOtherQuotaRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for ProjectCode
+
+	// no validation rules for ClusterID
+
+	if utf8.RuneCountInString(m.GetNamespace()) > 63 {
+		err := CreateOtherQuotaRequestValidationError{
+			field:  "Namespace",
+			reason: "value length must be at most 63 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_CreateOtherQuotaRequest_Namespace_Pattern.MatchString(m.GetNamespace()) {
+		err := CreateOtherQuotaRequestValidationError{
+			field:  "Namespace",
+			reason: "value does not match regex pattern \"^[a-z0-9]([-a-z0-9]*[a-z0-9])?$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetQuotaName()); l < 1 || l > 63 {
+		err := CreateOtherQuotaRequestValidationError{
+			field:  "QuotaName",
+			reason: "value length must be between 1 and 63 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_CreateOtherQuotaRequest_QuotaName_Pattern.MatchString(m.GetQuotaName()) {
+		err := CreateOtherQuotaRequestValidationError{
+			field:  "QuotaName",
+			reason: "value does not match regex pattern \"^[a-z0-9]([-a-z0-9]*[a-z0-9])?$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if all {
+		switch v := interface{}(m.GetQuota()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, CreateOtherQuotaRequestValidationError{
+					field:  "Quota",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, CreateOtherQuotaRequestValidationError{
+					field:  "Quota",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetQuota()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateOtherQuotaRequestValidationError{
+				field:  "Quota",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return CreateOtherQuotaRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// CreateOtherQuotaRequestMultiError is an error wrapping multiple validation
+// errors returned by CreateOtherQuotaRequest.ValidateAll() if the designated
+// constraints aren't met.
+type CreateOtherQuotaRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m CreateOtherQuotaRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m CreateOtherQuotaRequestMultiError) AllErrors() []error { return m }
+
+// CreateOtherQuotaRequestValidationError is the validation error returned by
+// CreateOtherQuotaRequest.Validate if the designated constraints aren't met.
+type CreateOtherQuotaRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CreateOtherQuotaRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CreateOtherQuotaRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CreateOtherQuotaRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CreateOtherQuotaRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CreateOtherQuotaRequestValidationError) ErrorName() string {
+	return "CreateOtherQuotaRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e CreateOtherQuotaRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCreateOtherQuotaRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CreateOtherQuotaRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CreateOtherQuotaRequestValidationError{}
+
+var _CreateOtherQuotaRequest_Namespace_Pattern = regexp.MustCompile("^[a-z0-9]([-a-z0-9]*[a-z0-9])?$")
+
+var _CreateOtherQuotaRequest_QuotaName_Pattern = regexp.MustCompile("^[a-z0-9]([-a-z0-9]*[a-z0-9])?$")
+
+// Validate checks the field values on UpdateOtherQuotaRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *UpdateOtherQuotaRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on UpdateOtherQuotaRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// UpdateOtherQuotaRequestMultiError, or nil if none found.
+func (m *UpdateOtherQuotaRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *UpdateOtherQuotaRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for ProjectCode
+
+	// no validation rules for ClusterID
+
+	if utf8.RuneCountInString(m.GetNamespace()) > 63 {
+		err := UpdateOtherQuotaRequestValidationError{
+			field:  "Namespace",
+			reason: "value length must be at most 63 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_UpdateOtherQuotaRequest_Namespace_Pattern.MatchString(m.GetNamespace()) {
+		err := UpdateOtherQuotaRequestValidationError{
+			field:  "Namespace",
+			reason: "value does not match regex pattern \"^[a-z0-9]([-a-z0-9]*[a-z0-9])?$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetQuotaName()); l < 1 || l > 63 {
+		err := UpdateOtherQuotaRequestValidationError{
+			field:  "QuotaName",
+			reason: "value length must be between 1 and 63 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_UpdateOtherQuotaRequest_QuotaName_Pattern.MatchString(m.GetQuotaName()) {
+		err := UpdateOtherQuotaRequestValidationError{
+			field:  "QuotaName",
+			reason: "value does not match regex pattern \"^[a-z0-9]([-a-z0-9]*[a-z0-9])?$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if all {
+		switch v := interface{}(m.GetQuota()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, UpdateOtherQuotaRequestValidationError{
+					field:  "Quota",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, UpdateOtherQuotaRequestValidationError{
+					field:  "Quota",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetQuota()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateOtherQuotaRequestValidationError{
+				field:  "Quota",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return UpdateOtherQuotaRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// UpdateOtherQuotaRequestMultiError is an error wrapping multiple validation
+// errors returned by UpdateOtherQuotaRequest.ValidateAll() if the designated
+// constraints aren't met.
+type UpdateOtherQuotaRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m UpdateOtherQuotaRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m UpdateOtherQuotaRequestMultiError) AllErrors() []error { return m }
+
+// UpdateOtherQuotaRequestValidationError is the validation error returned by
+// UpdateOtherQuotaRequest.Validate if the designated constraints aren't met.
+type UpdateOtherQuotaRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpdateOtherQuotaRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpdateOtherQuotaRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpdateOtherQuotaRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpdateOtherQuotaRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpdateOtherQuotaRequestValidationError) ErrorName() string {
+	return "UpdateOtherQuotaRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpdateOtherQuotaRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpdateOtherQuotaRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpdateOtherQuotaRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpdateOtherQuotaRequestValidationError{}
+
+var _UpdateOtherQuotaRequest_Namespace_Pattern = regexp.MustCompile("^[a-z0-9]([-a-z0-9]*[a-z0-9])?$")
+
+var _UpdateOtherQuotaRequest_QuotaName_Pattern = regexp.MustCompile("^[a-z0-9]([-a-z0-9]*[a-z0-9])?$")
+
+// Validate checks the field values on DeleteOtherQuotaRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *DeleteOtherQuotaRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on DeleteOtherQuotaRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// DeleteOtherQuotaRequestMultiError, or nil if none found.
+func (m *DeleteOtherQuotaRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *DeleteOtherQuotaRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for ProjectCode
+
+	// no validation rules for ClusterID
+
+	if utf8.RuneCountInString(m.GetNamespace()) > 63 {
+		err := DeleteOtherQuotaRequestValidationError{
+			field:  "Namespace",
+			reason: "value length must be at most 63 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_DeleteOtherQuotaRequest_Namespace_Pattern.MatchString(m.GetNamespace()) {
+		err := DeleteOtherQuotaRequestValidationError{
+			field:  "Namespace",
+			reason: "value does not match regex pattern \"^[a-z0-9]([-a-z0-9]*[a-z0-9])?$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetQuotaName()); l < 1 || l > 63 {
+		err := DeleteOtherQuotaRequestValidationError{
+			field:  "QuotaName",
+			reason: "value length must be between 1 and 63 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_DeleteOtherQuotaRequest_QuotaName_Pattern.MatchString(m.GetQuotaName()) {
+		err := DeleteOtherQuotaRequestValidationError{
+			field:  "QuotaName",
+			reason: "value does not match regex pattern \"^[a-z0-9]([-a-z0-9]*[a-z0-9])?$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return DeleteOtherQuotaRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// DeleteOtherQuotaRequestMultiError is an error wrapping multiple validation
+// errors returned by DeleteOtherQuotaRequest.ValidateAll() if the designated
+// constraints aren't met.
+type DeleteOtherQuotaRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m DeleteOtherQuotaRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m DeleteOtherQuotaRequestMultiError) AllErrors() []error { return m }
+
+// DeleteOtherQuotaRequestValidationError is the validation error returned by
+// DeleteOtherQuotaRequest.Validate if the designated constraints aren't met.
+type DeleteOtherQuotaRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DeleteOtherQuotaRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DeleteOtherQuotaRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DeleteOtherQuotaRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DeleteOtherQuotaRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DeleteOtherQuotaRequestValidationError) ErrorName() string {
+	return "DeleteOtherQuotaRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DeleteOtherQuotaRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDeleteOtherQuotaRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DeleteOtherQuotaRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DeleteOtherQuotaRequestValidationError{}
+
+var _DeleteOtherQuotaRequest_Namespace_Pattern = regexp.MustCompile("^[a-z0-9]([-a-z0-9]*[a-z0-9])?$")
+
+var _DeleteOtherQuotaRequest_QuotaName_Pattern = regexp.MustCompile("^[a-z0-9]([-a-z0-9]*[a-z0-9])?$")
+
+// Validate checks the field values on OtherQuotaResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *OtherQuotaResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on OtherQuotaResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// OtherQuotaResponseMultiError, or nil if none found.
+func (m *OtherQuotaResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *OtherQuotaResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	if all {
+		switch v := interface{}(m.GetData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, OtherQuotaResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, OtherQuotaResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return OtherQuotaResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for RequestID
+
+	if all {
+		switch v := interface{}(m.GetWebAnnotations()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, OtherQuotaResponseValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, OtherQuotaResponseValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetWebAnnotations()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return OtherQuotaResponseValidationError{
+				field:  "WebAnnotations",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return OtherQuotaResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// OtherQuotaResponseMultiError is an error wrapping multiple validation errors
+// returned by OtherQuotaResponse.ValidateAll() if the designated constraints
+// aren't met.
+type OtherQuotaResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m OtherQuotaResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m OtherQuotaResponseMultiError) AllErrors() []error { return m }
+
+// OtherQuotaResponseValidationError is the validation error returned by
+// OtherQuotaResponse.Validate if the designated constraints aren't met.
+type OtherQuotaResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e OtherQuotaResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e OtherQuotaResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e OtherQuotaResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e OtherQuotaResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e OtherQuotaResponseValidationError) ErrorName() string {
+	return "OtherQuotaResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e OtherQuotaResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sOtherQuotaResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = OtherQuotaResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = OtherQuotaResponseValidationError{}
+
 // Validate checks the field values on ListProjectsForIAMResp_Project with the
 // rules defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
@@ -15536,6 +16668,7 @@ func (m *ListProjectsForIAMResp_Project) validate(all bool) error {
 	if len(errors) > 0 {
 		return ListProjectsForIAMResp_ProjectMultiError(errors)
 	}
+
 	return nil
 }
 
