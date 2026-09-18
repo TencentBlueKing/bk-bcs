@@ -20220,6 +20220,28 @@ func (m *KubeConfigReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
+	if l := utf8.RuneCountInString(m.GetProjectID()); l < 1 || l > 100 {
+		err := KubeConfigReqValidationError{
+			field:  "ProjectID",
+			reason: "value length must be between 1 and 100 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_KubeConfigReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+		err := KubeConfigReqValidationError{
+			field:  "ProjectID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
 	if len(errors) > 0 {
 		return KubeConfigReqMultiError(errors)
 	}
@@ -20298,6 +20320,8 @@ var _ interface {
 	ErrorName() string
 } = KubeConfigReqValidationError{}
 
+var _KubeConfigReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
 // Validate checks the field values on KubeConfigConnectReq with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
@@ -20369,6 +20393,28 @@ func (m *KubeConfigConnectReq) validate(all bool) error {
 	}
 
 	// no validation rules for ResourceGroupName
+
+	if l := utf8.RuneCountInString(m.GetProjectID()); l < 1 || l > 100 {
+		err := KubeConfigConnectReqValidationError{
+			field:  "ProjectID",
+			reason: "value length must be between 1 and 100 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_KubeConfigConnectReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+		err := KubeConfigConnectReqValidationError{
+			field:  "ProjectID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
 
 	if len(errors) > 0 {
 		return KubeConfigConnectReqMultiError(errors)
@@ -20451,6 +20497,8 @@ var _ interface {
 } = KubeConfigConnectReqValidationError{}
 
 var _KubeConfigConnectReq_Region_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+var _KubeConfigConnectReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 
 // Validate checks the field values on KubeConfigResp with the rules defined in
 // the proto definition for this message. If any rules are violated, the first
