@@ -59,7 +59,7 @@ service ClusterManager {
   }
   rpc CheckCloudKubeConfig(KubeConfigReq) returns (KubeConfigResp) {
     option (google.api.http) = {
-      put : "/clustermanager/v1/cloud/kubeConfig"
+      put : "/clustermanager/v1/projects/{projectID}/cloud/kubeConfig"
       body : "*"
     };
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
@@ -69,7 +69,7 @@ service ClusterManager {
   }
   rpc CheckCloudKubeConfigConnect(KubeConfigConnectReq) returns (KubeConfigConnectResp) {
     option (google.api.http) = {
-      get : "/clustermanager/v1/clouds/{cloudID}/clusters/{clusterID}/connect"
+      get : "/clustermanager/v1/projects/{projectID}/clouds/{cloudID}/clusters/{clusterID}/connect"
     };
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
       description : "kubeConfig访问集群内/外网状态"
@@ -5271,6 +5271,7 @@ message KubeConfigReq {
       description : "用户输入检测kubeConfig文件"
       required : [
         "kubeConfig"
+        "projectID"
       ]
     }
   };
@@ -5278,6 +5279,12 @@ message KubeConfigReq {
     title: "kubeConfig",
     description: "集群kubeConfig文件"
   },(validate.rules).string = {min_len :1}];
+  string projectID = 2 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "projectID",
+      description : "集群所属项目"
+    },(validate.rules).string = {min_len : 1, max_len : 100, pattern : "^[0-9a-zA-Z-]+$"}
+  ];
 }
 
 message KubeConfigConnectReq {
@@ -5286,6 +5293,7 @@ message KubeConfigConnectReq {
       title : "KubeConfigConnectReq"
       description : "检测用户集群的kubeConfig访问集群内/外网是否正常"
       required : [
+        "projectID",
         "cloudID",
         "clusterID"
       ]
@@ -5313,6 +5321,12 @@ message KubeConfigConnectReq {
       title : "region",
       description : "集群所在地域"
     },(validate.rules).string = {max_len : 100, pattern : "^[0-9a-zA-Z-]+$"}];
+  string projectID = 7 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "projectID",
+      description : "集群所属项目"
+    },(validate.rules).string = {min_len : 1, max_len : 100, pattern : "^[0-9a-zA-Z-]+$"}
+  ];
 }
 
 message KubeConfigResp {
