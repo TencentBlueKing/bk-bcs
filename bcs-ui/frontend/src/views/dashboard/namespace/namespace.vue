@@ -333,7 +333,7 @@
               :precision="0">
               <div class="group-text" slot="append">{{ $t('核') }}</div>
             </bk-input>
-            <span class="mx-[10px]">MEN</span>
+            <span class="mx-[10px]">MEM</span>
             <bk-input
               v-model="setQuotaConf.quota.memoryRequests"
               class="w-[200px]"
@@ -492,7 +492,7 @@ export default defineComponent({
           return setQuotaConf.value.quota.cpuRequests && setQuotaConf.value.quota.memoryRequests
               && setQuotaConf.value.quota.cpuRequests !== 'NaN' && setQuotaConf.value.quota.memoryRequests !== 'NaN';
         },
-        message: $i18n.t('请设置MEN、CPU配额，且两者最小值不小于0'),
+        message: $i18n.t('请设置MEM、CPU配额，且两者最小值不小于0'),
         trigger: 'blur',
       },
     ];

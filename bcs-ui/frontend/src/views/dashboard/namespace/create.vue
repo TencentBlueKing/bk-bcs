@@ -91,7 +91,7 @@
                 </bk-input>
               </div>
               <div class="flex">
-                <span class="mr-[15px] text-[14px]">MEN</span>
+                <span class="mr-[15px] text-[14px]">MEM</span>
                 <bk-input
                   v-model="formData.quota.memoryRequests"
                   class="w-[250px]"
@@ -186,7 +186,7 @@ export default defineComponent({
           validator() {
             return Boolean(formData.value.quota.cpuRequests) >= 1 && Boolean(formData.value.quota.memoryRequests) >= 1;
           },
-          message: $i18n.t('共享集群需设置MEN、CPU配额，且两者最小值不小于0'),
+          message: $i18n.t('共享集群需设置MEM、CPU配额，且两者最小值不小于0'),
           trigger: 'blur',
         },
       ] : [],
