@@ -40,7 +40,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 	k8scorecliset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
@@ -72,9 +71,9 @@ func NewKubeClient(kubeConfig string) (k8scorecliset.Interface, error) {
 		return nil, fmt.Errorf("decode kube config failed: %v", err)
 	}
 
-	config, err := clientcmd.RESTConfigFromKubeConfig(data)
+	config, err := RESTConfigFromKubeConfig(data)
 	if err != nil {
-		return nil, fmt.Errorf("build rest config failed: %v", err)
+		return nil, err
 	}
 
 	config.Burst = 200
@@ -85,6 +84,11 @@ func NewKubeClient(kubeConfig string) (k8scorecliset.Interface, error) {
 
 // NewKubeClientByRestConfig get k8s client from rest config
 func NewKubeClientByRestConfig(config *rest.Config) (k8scorecliset.Interface, error) {
+	// 全局禁用 client-go exec credential plugin
+	if err := rejectExecProvider(config); err != nil {
+		return nil, err
+	}
+
 	return k8scorecliset.NewForConfig(config)
 }
 

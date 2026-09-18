@@ -50,13 +50,13 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 		},
 		{
 			Name:    "ClusterManager.CheckCloudKubeConfig",
-			Path:    []string{"/clustermanager/v1/cloud/kubeConfig"},
+			Path:    []string{"/clustermanager/v1/projects/{projectID}/cloud/kubeConfig"},
 			Method:  []string{"PUT"},
 			Handler: "rpc",
 		},
 		{
 			Name:    "ClusterManager.CheckCloudKubeConfigConnect",
-			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/clusters/{clusterID}/connect"},
+			Path:    []string{"/clustermanager/v1/projects/{projectID}/clouds/{cloudID}/clusters/{clusterID}/connect"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
@@ -2994,13 +2994,13 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.CheckCloudKubeConfig",
-		Path:    []string{"/clustermanager/v1/cloud/kubeConfig"},
+		Path:    []string{"/clustermanager/v1/projects/{projectID}/cloud/kubeConfig"},
 		Method:  []string{"PUT"},
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.CheckCloudKubeConfigConnect",
-		Path:    []string{"/clustermanager/v1/clouds/{cloudID}/clusters/{clusterID}/connect"},
+		Path:    []string{"/clustermanager/v1/projects/{projectID}/clouds/{cloudID}/clusters/{clusterID}/connect"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))

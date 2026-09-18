@@ -39,10 +39,6 @@ var NoAuthMethod = []string{
 	"ClusterManager.ListCloudVPC",
 	"ClusterManager.GetVPCCidr",
 
-	// kubeConfig
-	"ClusterManager.CheckCloudKubeConfig",
-	"ClusterManager.CheckCloudKubeConfigConnect",
-
 	// task resource
 
 	// cluster autoscaling
@@ -173,8 +169,8 @@ var ActionPermissions = map[string]string{
 	"ClusterManager.ListCloudVpcs":              cloudaccount.CanUseCloudAccountOperation,
 
 	// kubeconfig
-	"ClusterManager.CheckCloudKubeConfig":        "",
-	"ClusterManager.CheckCloudKubeConfigConnect": cluster.CanViewClusterOperation,
+	"ClusterManager.CheckCloudKubeConfig":        cluster.CanCreateClusterOperation,
+	"ClusterManager.CheckCloudKubeConfigConnect": project.CanViewProjectOperation,
 
 	// task
 	"ClusterManager.CreateTask": cluster.CanManageClusterOperation,
