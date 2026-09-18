@@ -353,23 +353,36 @@ local function periodly_sync_cluster_credentials_in_master()
         end
         local upstream_nodes = {}
         local addresses = stringx.split(cluster_credential["serverAddress"], ",")
+        local prefix = ""
         for i, address in ipairs(addresses) do
             local splited = stringx.split(address, "://")
             local scheme = "https"
-            if #splited ~= 2 then
-                upstream_nodes[i] = {
-                    host = address,
-                    weight = 100,
-                }
-            else
+            local host_and_path = address
+            if #splited == 2 then
                 scheme = splited[1]
-                upstream_nodes[i] = {
-                    host = splited[2],
-                    weight = 100,
-                }
+                host_and_path = splited[2]
             end
+
+            -- Split host:port and path prefix
+            local host_port, path = host_and_path:match("^([^/]+)(/.*)$")
+            if not host_port then
+                host_port = host_and_path
+                path = ""
+            end
+
+            -- Strip trailing slash
+            if path:sub(-1) == "/" then
+                path = path:sub(1, -2)
+            end
+            if prefix == "" then
+                prefix = path
+            end
+
+            upstream_nodes[i] = {
+                weight = 100,
+            }
             -- port is required, 443 as default port
-            local host, port = core.utils.parse_addr(upstream_nodes[i].host)
+            local host, port = core.utils.parse_addr(host_port)
             upstream_nodes[i].host = host
             if not port then
                 if scheme == "http" then
@@ -383,6 +396,7 @@ local function periodly_sync_cluster_credentials_in_master()
                 upstream_nodes[i].port = port
             end
         end
+        cluster_info["prefix"] = prefix
 
         -- 定义一个通用的节点健康检查函数
         local function check_nodes_health(upstream_nodes, check_func, cluster_credential)
@@ -506,7 +520,8 @@ end
 
 -- proxy to apiserver directly
 local function traffic_to_cluster_apiserver(conf, ctx, cluster_credential, upstream_uri)
-    ctx.var.upstream_uri = "/" .. upstream_uri
+    local prefix = cluster_credential["prefix"] or ""
+    ctx.var.upstream_uri = prefix .. "/" .. upstream_uri
     if cluster_credential["user_token"] then
         core.request.set_header(ctx, "Authorization", "Bearer " .. cluster_credential["user_token"])
     end
