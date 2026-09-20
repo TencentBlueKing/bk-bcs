@@ -308,7 +308,7 @@ func checkTarExists(sessionID string) error {
 	if err != nil {
 		return err
 	}
-	pe.Command = []string{"tar", "--help"}
+	pe.Command = []string{"/bin/sh", "-c", "command -v tar >/dev/null 2>&1"}
 	pe.Stdout = &bytes.Buffer{}
 	pe.Stderr = &bytes.Buffer{}
 	pe.Tty = false
