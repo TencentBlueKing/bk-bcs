@@ -308,7 +308,10 @@ func checkTarExists(sessionID string) error {
 	if err != nil {
 		return err
 	}
-	pe.Command = []string{"/bin/sh", "-c", "command -v tar >/dev/null 2>&1"}
+	if len(podCtx.Commands) == 0 || podCtx.Commands[0] == "" {
+		return errors.New("shell command is empty")
+	}
+	pe.Command = []string{podCtx.Commands[0], "-c", "command -v tar >/dev/null 2>&1"}
 	pe.Stdout = &bytes.Buffer{}
 	pe.Stderr = &bytes.Buffer{}
 	pe.Tty = false
