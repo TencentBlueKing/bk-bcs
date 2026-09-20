@@ -33,9 +33,18 @@ type ResourceMetaData struct {
 	TenantId    string
 }
 
+// IsMultiTenantEnabled 检查是否启用了多租户模式
+func IsMultiTenantEnabled() bool {
+	opt := options.GetGlobalCMOptions()
+	if opt == nil {
+		return false
+	}
+	return opt.TenantConfig.EnableMultiTenantMode
+}
+
 // WithTenantIdByResourceForContext set tenantID by resource to context
 func WithTenantIdByResourceForContext(ctx context.Context, resource ResourceMetaData) (context.Context, error) {
-	if !options.GetGlobalCMOptions().TenantConfig.EnableMultiTenantMode {
+	if !IsMultiTenantEnabled() {
 		// nolint:staticcheck
 		return context.WithValue(ctx, common.BkTenantIdHeaderKey, common.BkDefaultTenantId), nil
 	}

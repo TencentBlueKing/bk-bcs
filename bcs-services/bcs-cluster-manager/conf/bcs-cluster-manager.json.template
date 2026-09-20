@@ -204,8 +204,12 @@
     },
     "commonConfig": {
       "annoKeyProjCode": "${bcsSharedClusterAnnoKeyProjCode}",
-      "systemNameSpaces": "${systemNameSpaces}",
-      "enableMultiTenantMode": ${enableMultiTenantMode}
+      "systemNameSpaces": "${systemNameSpaces}"
+    },
+    "tenant": {
+      "enableMultiTenantMode": ${enableMultiTenantMode},
+      "noCheckTenantMethod": "${noCheckTenantMethod}",
+      "clientExemptTenant": "${clientExemptTenant}"
     },
     "bkUser": {
       "appCode": "${bcsAppCode}",

@@ -120,7 +120,7 @@ func (la *ListAction) getSharedCluster() error {
 
 	clusterIDs := make([]string, 0)
 	for i := range clusterList {
-		if clusterList[i].GetProjectID() == la.req.ProjectID || la.req.ProjectID == "" {
+		if clusterList[i].GetProjectID() == la.req.ProjectID {
 			continue
 		}
 		// 兼容旧数据

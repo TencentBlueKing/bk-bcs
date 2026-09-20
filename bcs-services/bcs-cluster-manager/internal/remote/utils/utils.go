@@ -31,10 +31,10 @@ import (
 func GetGatewayAuthAndTenantInfo(ctx context.Context, auth *types.AuthInfo, user string) (string, string, error) {
 	tenantId := tenant.GetTenantIdFromContext(ctx)
 
-	// 优先使用传入的user，否则根据租户获取用户名
+	// 优先使用传入的user；仅多租户模式下通过 loginName 获取租户下的 bkUserName
 	if user != "" {
 		auth.BkUserName = user
-	} else if auth.BkUserName != "" {
+	} else if tenant.IsMultiTenantEnabled() && auth.BkUserName != "" {
 		bkUserName, err := GetBkUserNameByTenantLoginName(ctx, tenantId, auth.BkUserName, true)
 		if err != nil {
 			return "", "", fmt.Errorf("get bkUserName by tenant failed: %v", err)
