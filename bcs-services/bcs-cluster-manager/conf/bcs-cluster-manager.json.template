@@ -178,6 +178,7 @@
         "appSecret": "${bcsAppSecret}",
         "bkUserName": "${bcsBkUserName}",
         "server": "${bcsNodeManServer}",
+        "v3Server": "${bcsNodeManV3Server}",
         "debug": ${bcsNodeManDebug}
     },
     "encrypt": {

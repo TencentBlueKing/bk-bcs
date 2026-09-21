@@ -41,6 +41,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/alarm/tmp"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cmdb"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/nodeman"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/nodemgr_v3"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/nodetemplate"
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/templateconfig"
@@ -1072,6 +1073,28 @@ func GetBusinessID(cls *proto.Cluster, asOption *proto.ClusterAutoScalingOption,
 
 // GetBKCloudName get bk cloud name by id
 func GetBKCloudName(ctx context.Context, bkCloudID int) string {
+	// v3 分支：根据版本开关决定是否走 v3 接口
+	if nodemgr_v3.IsEnabled() {
+		v3Cli := nodemgr_v3.GetNodeManV3Client()
+		if v3Cli == nil {
+			return ""
+		}
+		resp, err := v3Cli.NetworkAreaList(ctx, &nodemgr_v3.NetworkAreaListRequest{
+			Page: &nodemgr_v3.NetworkAreaPage{Limit: 1000},
+		})
+		if err != nil {
+			blog.Errorf("get network area list (v3) failed, err %s", err.Error())
+			return ""
+		}
+		for _, item := range resp.Items {
+			if item.BkNetworkareaID == bkCloudID {
+				return item.BkNetworkareaName
+			}
+		}
+		return ""
+	}
+
+	// v2 原逻辑
 	cli := nodeman.GetNodeManClient()
 	if cli == nil {
 		return ""

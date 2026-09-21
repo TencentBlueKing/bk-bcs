@@ -14,6 +14,7 @@ package thirdparty
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
@@ -21,6 +22,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/nodeman"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/nodemgr_v3"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tenant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
@@ -55,6 +57,38 @@ func (la *ListBKCloudAction) listBKCloud() error {
 	user := auth.GetAuthAndTenantInfoFromCtx(la.ctx)
 	ctx := tenant.WithTenantIdFromContext(la.ctx, user.ResourceTenantId)
 
+	// v3 分支：根据版本开关决定是否走 v3 接口
+	if nodemgr_v3.IsEnabled() {
+		v3Cli := nodemgr_v3.GetNodeManV3Client()
+		if v3Cli == nil {
+			return fmt.Errorf("nodeman v3 client is not init")
+		}
+		resp, err := v3Cli.NetworkAreaList(ctx, &nodemgr_v3.NetworkAreaListRequest{
+			Page: &nodemgr_v3.NetworkAreaPage{Limit: 1000},
+		})
+		if err != nil {
+			blog.Errorf("list bk cloud (v3) failed, err %s", err.Error())
+			return err
+		}
+		// 转换为 v2 格式以保持接口兼容
+		clouds := make([]nodeman.CloudListData, 0, len(resp.Items))
+		for _, item := range resp.Items {
+			clouds = append(clouds, nodeman.CloudListData{
+				BKCloudID:   item.BkNetworkareaID,
+				BKCloudName: item.BkNetworkareaName,
+			})
+		}
+		result, err := utils.MarshalInterfaceToListValue(clouds)
+		if err != nil {
+			blog.Errorf("marshal clouds err, %s", err.Error())
+			la.setResp(common.BcsErrClusterManagerCommonErr, err.Error())
+			return err
+		}
+		la.resp.Data = result
+		return nil
+	}
+
+	// v2 原逻辑
 	cli := nodeman.GetNodeManClient()
 	clouds, err := cli.CloudList(ctx)
 	if err != nil {

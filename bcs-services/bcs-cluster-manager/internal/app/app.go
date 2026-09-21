@@ -84,6 +84,7 @@ import (
 	installTypes "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/install/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/job"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/nodeman"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/nodemgr_v3"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/passcc"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/project"
 	resource "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/resource/tresource"
@@ -376,6 +377,34 @@ func (cm *ClusterManager) initRemoteClient() error { // nolint
 	})
 	if err != nil {
 		return err
+	}
+
+	// init nodeman v3 client
+	err = nodemgr_v3.SetNodeManV3Client(nodemgr_v3.Options{
+		Enable:     cm.opt.NodeMan.Enable,
+		AppCode:    cm.opt.NodeMan.AppCode,
+		BKUserName: cm.opt.NodeMan.BkUserName,
+		AppSecret:  cm.opt.NodeMan.AppSecret,
+		Server:     cm.opt.NodeMan.Server,
+		V3Server:   cm.opt.NodeMan.V3Server,
+		Debug:      cm.opt.NodeMan.Debug,
+	})
+	if err != nil {
+		return err
+	}
+
+	// 校验：server 和 v3Server 不能同时为空
+	if cm.opt.NodeMan.Server == "" && cm.opt.NodeMan.V3Server == "" {
+		return fmt.Errorf("nodeman server and v3Server are both empty, please configure at least one")
+	}
+
+	// V3Server 不为空则走 v3 接口，否则走 v2（默认）
+	if cm.opt.NodeMan.V3Server != "" {
+		nodemgr_v3.SetEnabled(true)
+		blog.Infof("nodeman v3 interface enabled (v3Server configured)")
+	} else {
+		nodemgr_v3.SetEnabled(false)
+		blog.Infof("nodeman v2 interface used (only server configured)")
 	}
 
 	// init gse client

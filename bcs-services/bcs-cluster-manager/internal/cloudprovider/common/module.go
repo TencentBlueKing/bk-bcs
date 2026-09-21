@@ -28,6 +28,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cmdb"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/nodeman"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/nodemgr_v3"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/resource"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tenant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
@@ -358,10 +359,29 @@ func RemoveHostFromCmdb(ctx context.Context, biz int, nodeIPs string) error {
 	ips := strings.Split(nodeIPs, ",")
 
 	// get host id from host list
-	hostIDs, err := nodeManClient.GetHostIDByIPs(ctx, biz, ips)
-	if err != nil {
-		blog.Errorf("RemoveHostFromCMDBTask %s failed, list nodeman hosts err %s", taskID, err.Error())
-		return fmt.Errorf("list nodeman hosts err %s", err.Error())
+	var (
+		hostIDs []int
+		err     error
+	)
+
+	if nodemgr_v3.IsEnabled() {
+		// v3 分支
+		v3Cli := nodemgr_v3.GetNodeManV3Client()
+		if v3Cli == nil {
+			return fmt.Errorf("nodeman v3 client is not init")
+		}
+		hostIDs, err = v3Cli.GetHostIDByIPs(ctx, biz, ips)
+		if err != nil {
+			blog.Errorf("RemoveHostFromCMDBTask %s failed, list nodeman hosts (v3) err %s", taskID, err.Error())
+			return fmt.Errorf("list nodeman hosts err %s", err.Error())
+		}
+	} else {
+		// v2 原逻辑
+		hostIDs, err = nodeManClient.GetHostIDByIPs(ctx, biz, ips)
+		if err != nil {
+			blog.Errorf("RemoveHostFromCMDBTask %s failed, list nodeman hosts err %s", taskID, err.Error())
+			return fmt.Errorf("list nodeman hosts err %s", err.Error())
+		}
 	}
 
 	if len(hostIDs) == 0 {

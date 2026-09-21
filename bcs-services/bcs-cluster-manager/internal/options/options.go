@@ -127,6 +127,7 @@ type NodeManConfig struct {
 	AppSecret  string `json:"appSecret"`
 	BkUserName string `json:"bkUserName"`
 	Server     string `json:"server"`
+	V3Server   string `json:"v3Server"`
 	Debug      bool   `json:"debug"`
 }
 
