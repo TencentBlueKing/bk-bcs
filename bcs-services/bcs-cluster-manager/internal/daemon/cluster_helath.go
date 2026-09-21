@@ -150,13 +150,14 @@ func (d *Daemon) reportClusterCaUsageRatio(error chan<- error) {
 	statusCond := operator.NewLeafCondition(operator.In, operator.M{
 		"status": []string{common.StatusRunning, common.StatusConnectClusterFailed},
 	})
-
+	blog.Info("reportClusterCaUsageRatio start")
 	clusterList, err := d.model.ListCluster(d.ctx, statusCond, &storeopt.ListOption{All: true})
 	if err != nil {
 		blog.Errorf("reportClusterCaUsageRatio ListCluster failed: %v", err)
 		error <- err
 		return
 	}
+	blog.Infof("reportClusterCaUsageRatio total %d clusters to check", len(clusterList))
 
 	var (
 		used, total           int
@@ -171,13 +172,18 @@ func (d *Daemon) reportClusterCaUsageRatio(error chan<- error) {
 	for i := range clusterList {
 		// filter cluster
 		if clusterList[i].ClusterType == common.ClusterTypeVirtual {
+			blog.Infof("reportClusterCaUsageRatio[%s] skip virtual cluster, provider %s",
+				clusterList[i].ClusterID, clusterList[i].Provider)
 			continue
 		}
 		if clusterList[i].SystemID == "" {
+			blog.Infof("reportClusterCaUsageRatio[%s] skip cluster with empty SystemID, provider %s",
+				clusterList[i].ClusterID, clusterList[i].Provider)
 			continue
 		}
 		if !ConnectToCluster(d.model, clusterList[i].ClusterID) {
-			blog.Errorf("reportClusterCaUsageRatio[%s] ConnectToCluster failed", clusterList[i].ClusterID)
+			blog.Errorf("reportClusterCaUsageRatio[%s] ConnectToCluster failed, provider %s",
+				clusterList[i].ClusterID, clusterList[i].Provider)
 			continue
 		}
 
@@ -204,7 +210,7 @@ func (d *Daemon) reportClusterCaUsageRatio(error chan<- error) {
 		})
 		groupList, errLocal := d.model.ListNodeGroup(d.ctx, condGroup, &storeopt.ListOption{All: true})
 		if errLocal != nil {
-			blog.Errorf("reportClusterCaUsageRatio[%s] ListNodeGroup failed: %v", clusterList[i].ClusterID, err)
+			blog.Errorf("reportClusterCaUsageRatio[%s] ListNodeGroup failed: %v", clusterList[i].ClusterID, errLocal)
 			continue
 		}
 
@@ -225,7 +231,7 @@ func (d *Daemon) reportClusterCaUsageRatio(error chan<- error) {
 			asOption, errLocal := d.model.GetAutoScalingOption(context.Background(), clusterList[i].ClusterID)
 			if errLocal != nil {
 				blog.Errorf("reportClusterCaUsageRatio[%s] GetAutoScalingOption failed: %v",
-					clusterList[i].ClusterID, err)
+					clusterList[i].ClusterID, errLocal)
 				continue
 			}
 			if asOption.GetEnableAutoscale() {
@@ -254,6 +260,10 @@ func (d *Daemon) reportClusterCaUsageRatio(error chan<- error) {
 	metrics.ReportCaEnableRatio(common.Prod, platform, float64(prodEnabled)/float64(prodUsed))
 
 	for provider, stat := range providerStats {
+		blog.Infof("reportClusterCaUsageRatio provider %s: used/total %d/%d, debugUsed/debugTotal %d/%d, "+
+			"prodUsed/prodTotal %d/%d, enabled/used %d/%d",
+			provider, stat.used, stat.total, stat.debugUsed, stat.debugTotal,
+			stat.prodUsed, stat.prodTotal, stat.enabled, stat.used)
 		metrics.ReportCaUsageRatio(platform, provider, float64(stat.used)/float64(stat.total))
 		metrics.ReportCaUsageRatio(common.Debug, provider, float64(stat.debugUsed)/float64(stat.debugTotal))
 		metrics.ReportCaUsageRatio(common.Prod, provider, float64(stat.prodUsed)/float64(stat.prodTotal))
