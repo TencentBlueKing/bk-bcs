@@ -150,7 +150,7 @@ func (d *Daemon) reportClusterCaUsageRatio(error chan<- error) {
 	statusCond := operator.NewLeafCondition(operator.In, operator.M{
 		"status": []string{common.StatusRunning, common.StatusConnectClusterFailed},
 	})
-	blog.Info("reportClusterCaUsageRatio start")
+	blog.Info("reportClusterCaUsageRatio starting ...")
 	clusterList, err := d.model.ListCluster(d.ctx, statusCond, &storeopt.ListOption{All: true})
 	if err != nil {
 		blog.Errorf("reportClusterCaUsageRatio ListCluster failed: %v", err)
