@@ -1276,6 +1276,206 @@
         ]
       }
     },
+    "/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/podLimitRanges": {
+      "get": {
+        "summary": "查询 Pod LimitRange",
+        "description": "查询命名空间 Pod LimitRange",
+        "operationId": "Namespace_ListPodLimitRanges",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bcsprojectListPodLimitRangesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Namespace"
+        ]
+      },
+      "post": {
+        "summary": "创建 Pod LimitRange",
+        "description": "创建命名空间 Pod LimitRange",
+        "operationId": "Namespace_CreatePodLimitRange",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bcsprojectPodLimitRangeResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/bcsprojectCreatePodLimitRangeRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Namespace"
+        ]
+      }
+    },
+    "/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/podLimitRanges/{limitRangeName}": {
+      "delete": {
+        "summary": "删除 Pod LimitRange",
+        "description": "删除命名空间 Pod LimitRange",
+        "operationId": "Namespace_DeletePodLimitRange",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bcsprojectPodLimitRangeResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "limitRangeName",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Namespace"
+        ]
+      },
+      "put": {
+        "summary": "更新 Pod LimitRange",
+        "description": "更新命名空间 Pod LimitRange",
+        "operationId": "Namespace_UpdatePodLimitRange",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bcsprojectPodLimitRangeResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "limitRangeName",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/bcsprojectUpdatePodLimitRangeRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Namespace"
+        ]
+      }
+    },
     "/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/variables": {
       "get": {
         "summary": "获取命名空间的所有变量值",
@@ -2377,6 +2577,37 @@
         "quota"
       ]
     },
+    "bcsprojectCreatePodLimitRangeRequest": {
+      "type": "object",
+      "properties": {
+        "projectCode": {
+          "type": "string"
+        },
+        "clusterID": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "limitRangeName": {
+          "type": "string"
+        },
+        "min": {
+          "$ref": "#/definitions/bcsprojectPodLimitRangeResource"
+        },
+        "max": {
+          "$ref": "#/definitions/bcsprojectPodLimitRangeResource"
+        }
+      },
+      "description": "创建命名空间 Pod LimitRange 请求",
+      "title": "CreatePodLimitRangeRequest",
+      "required": [
+        "projectCode",
+        "clusterID",
+        "namespace",
+        "limitRangeName"
+      ]
+    },
     "bcsprojectCreateProjectQuotaRequest": {
       "type": "object",
       "properties": {
@@ -3428,6 +3659,30 @@
         }
       }
     },
+    "bcsprojectListPodLimitRangesResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "message": {
+          "type": "string"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bcsprojectPodLimitRange"
+          }
+        },
+        "requestID": {
+          "type": "string"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/bcsprojectPerms"
+        }
+      }
+    },
     "bcsprojectListProjectData": {
       "type": "object",
       "properties": {
@@ -4013,6 +4268,62 @@
       },
       "description": "Ping API 响应",
       "title": "PingResp"
+    },
+    "bcsprojectPodLimitRange": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "LimitRange 名称",
+          "title": "name"
+        },
+        "min": {
+          "$ref": "#/definitions/bcsprojectPodLimitRangeResource",
+          "description": "Pod 最小资源限制",
+          "title": "min"
+        },
+        "max": {
+          "$ref": "#/definitions/bcsprojectPodLimitRangeResource",
+          "description": "Pod 最大资源限制",
+          "title": "max"
+        }
+      }
+    },
+    "bcsprojectPodLimitRangeResource": {
+      "type": "object",
+      "properties": {
+        "cpu": {
+          "type": "string",
+          "description": "CPU 资源量",
+          "title": "cpu"
+        },
+        "memory": {
+          "type": "string",
+          "description": "内存资源量",
+          "title": "memory"
+        }
+      }
+    },
+    "bcsprojectPodLimitRangeResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "message": {
+          "type": "string"
+        },
+        "data": {
+          "$ref": "#/definitions/bcsprojectPodLimitRange"
+        },
+        "requestID": {
+          "type": "string"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/bcsprojectPerms"
+        }
+      }
     },
     "bcsprojectProject": {
       "type": "object",
@@ -4894,6 +5205,37 @@
         "namespace",
         "quotaName",
         "quota"
+      ]
+    },
+    "bcsprojectUpdatePodLimitRangeRequest": {
+      "type": "object",
+      "properties": {
+        "projectCode": {
+          "type": "string"
+        },
+        "clusterID": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "limitRangeName": {
+          "type": "string"
+        },
+        "min": {
+          "$ref": "#/definitions/bcsprojectPodLimitRangeResource"
+        },
+        "max": {
+          "$ref": "#/definitions/bcsprojectPodLimitRangeResource"
+        }
+      },
+      "description": "更新命名空间 Pod LimitRange 请求",
+      "title": "UpdatePodLimitRangeRequest",
+      "required": [
+        "projectCode",
+        "clusterID",
+        "namespace",
+        "limitRangeName"
       ]
     },
     "bcsprojectUpdateProjectQuotaRequest": {
