@@ -200,6 +200,7 @@ func (u *UserManager) initIamPermClient() error {
 		AppCode:     u.config.IAMConfig.AppCode,
 		AppSecret:   u.config.IAMConfig.AppSecret,
 		GateWayHost: u.config.IAMConfig.V4GateWayHost,
+		TenantID:    iamv4.SystemTenantID,
 	})
 	if err != nil {
 		return fmt.Errorf("init iam v4 client: %w", err)

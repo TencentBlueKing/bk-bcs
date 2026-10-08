@@ -30,6 +30,8 @@ const (
 	HeaderIAMOperator = "X-Bkiam-Operator"
 	// DefaultTenantID 默认租户
 	DefaultTenantID = "default"
+	// SystemTenantID 系统租户 ID
+	SystemTenantID = "system"
 
 	// SubjectUser 授权对象：用户
 	SubjectUser = "user"
