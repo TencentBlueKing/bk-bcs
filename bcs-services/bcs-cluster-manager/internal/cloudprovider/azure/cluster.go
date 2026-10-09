@@ -151,16 +151,17 @@ func (c *Cluster) DeleteCluster(cls *proto.Cluster, opt *cloudprovider.DeleteClu
 
 // GetCluster get kubernetes cluster detail information according cloudprovider
 func (c *Cluster) GetCluster(cloudID string, opt *cloudprovider.GetClusterOption) (*proto.Cluster, error) {
+	err := business.SyncClusterInfo(opt)
+	if err != nil {
+		return nil, err
+	}
+
 	runtimeInfo, err := business.GetRuntimeInfo(opt.Cluster.ClusterID)
 	if err != nil {
 		return nil, err
 	}
 
-	if opt.Cluster.ClusterAdvanceSettings == nil {
-		opt.Cluster.ClusterAdvanceSettings = &proto.ClusterAdvanceSetting{}
-	}
 	if v, ok := runtimeInfo[common.ContainerdRuntime]; ok {
-
 		opt.Cluster.ClusterAdvanceSettings.ContainerRuntime = common.ContainerdRuntime
 		if len(v) > 0 {
 			opt.Cluster.ClusterAdvanceSettings.RuntimeVersion = v[0]

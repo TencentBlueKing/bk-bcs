@@ -387,7 +387,8 @@ func (ud *UpdateDesiredNodesTaskOption) BuildCheckClusterNodeStatusStep(task *pr
 
 // UpdateNodeGroupTaskOption 创建集群构建step子任务
 type UpdateNodeGroupTaskOption struct {
-	NodeGroup *proto.NodeGroup
+	NodeGroup     *proto.NodeGroup
+	NodeGroupInfo string
 }
 
 // BuildUpdateNodeGroupStep 更新节点池
@@ -395,6 +396,7 @@ func (cn *UpdateNodeGroupTaskOption) BuildUpdateNodeGroupStep(task *proto.Task) 
 	updateNodeGroupStep := cloudprovider.InitTaskStep(updateAKSNodeGroupStep)
 	updateNodeGroupStep.Params[cloudprovider.ClusterIDKey.String()] = cn.NodeGroup.ClusterID
 	updateNodeGroupStep.Params[cloudprovider.NodeGroupIDKey.String()] = cn.NodeGroup.NodeGroupID
+	updateNodeGroupStep.Params[cloudprovider.NodeGroupInfoKey.String()] = cn.NodeGroupInfo
 	updateNodeGroupStep.Params[cloudprovider.CloudIDKey.String()] = cn.NodeGroup.Provider
 
 	task.Steps[updateAKSNodeGroupStep.StepMethod] = updateNodeGroupStep
