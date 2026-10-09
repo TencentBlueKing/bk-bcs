@@ -198,8 +198,8 @@ func (cli *CceClient) CreateKubernetesClusterCert(clsId string, duration int32) 
 	request := &model.CreateKubernetesClusterCertRequest{
 		ClusterId: clsId,
 	}
-	request.Body = &model.CertDuration{
-		Duration: duration,
+	request.Body = &model.ClusterCertDuration{
+		Duration: &duration,
 	}
 
 	response, err := cli.cce.CreateKubernetesClusterCert(request)
@@ -606,11 +606,11 @@ func (cli *CceClient) UpdateNodePoolDesiredNodes(clusterId, nodePoolId string, d
 		NodepoolId: nodePoolId,
 		Body: &model.NodePoolUpdate{
 			Metadata: &model.NodePoolMetadataUpdate{
-				Name: nodePool.Metadata.Name,
+				Name: &nodePool.Metadata.Name,
 			},
 			Spec: &model.NodePoolSpecUpdate{
 				NodeTemplate: &model.NodeSpecUpdate{
-					Taints:  taints,
+					Taints:  &taints,
 					K8sTags: k8sTags,
 				},
 				InitialNodeCount: desiredSize,
