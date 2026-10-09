@@ -84,7 +84,7 @@ type ProjectModel interface {
 	ListProjectQuotasByBizId(ctx context.Context, bizId string) ([]quota.ProjectQuota, error)
 
 	UpsertBusiness(ctx context.Context, biz *business.Business) error
-	DeleteBusinessesNotIn(ctx context.Context, keepIDs []string) (int64, error)
+	DeleteBusinessesNotIn(ctx context.Context, tenantID string, keepIDs []string) (int64, error)
 }
 
 type modelSet struct {

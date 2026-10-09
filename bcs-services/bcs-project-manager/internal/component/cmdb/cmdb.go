@@ -314,12 +314,12 @@ func GetBusinessTopology(ctx context.Context, bizID string) ([]BusinessTopologyD
 	return resp.Data, nil
 }
 
-// ListAllBusinesses 分页拉取 CMDB 全部业务，拉取失败时返回 error，调用方不得据此删除本地数据
-func ListAllBusinesses() ([]BusinessData, error) {
+// ListAllBusinesses 分页拉取 ctx 所属租户在 CMDB 的全部业务，拉取失败时返回 error，调用方不得据此删除本地数据
+func ListAllBusinesses(ctx context.Context) ([]BusinessData, error) {
 	all := make([]BusinessData, 0)
 	start := 0
 	for page := 0; page < maxSearchBusinessPages; page++ {
-		data, err := searchBusinessPage(start, searchBusinessBatchSize)
+		data, err := searchBusinessPage(ctx, start, searchBusinessBatchSize)
 		if err != nil {
 			return nil, err
 		}
@@ -335,17 +335,14 @@ func ListAllBusinesses() ([]BusinessData, error) {
 	return nil, fmt.Errorf("list all businesses exceeded max pages %d", maxSearchBusinessPages)
 }
 
-func searchBusinessPage(start, limit int) (*SearchBusinessData, error) {
+func searchBusinessPage(ctx context.Context, start, limit int) (*SearchBusinessData, error) {
 	timeout := defaultTimeout
 	if config.GlobalConf.CMDB.Timeout != 0 {
 		timeout = config.GlobalConf.CMDB.Timeout
 	}
-	supplierAccount := defaultSupplierAccount
-	if config.GlobalConf.CMDB.BKSupplierAccount != "" {
-		supplierAccount = config.GlobalConf.CMDB.BKSupplierAccount
-	}
+	supplierAccount := getSupplierAccount()
 	req := gorequest.SuperAgent{
-		Url:    fmt.Sprintf("%s%s", config.GlobalConf.CMDB.Host, searchBizPath),
+		Url:    buildSearchBizURL(supplierAccount),
 		Method: "POST",
 		Data: map[string]interface{}{
 			"fields":              searchAllBusinessFields,
@@ -355,7 +352,12 @@ func searchBusinessPage(start, limit int) (*SearchBusinessData, error) {
 		},
 		Debug: config.GlobalConf.CMDB.Debug,
 	}
-	body, err := component.Request(req, timeout, config.GlobalConf.CMDB.Proxy, component.GetAuthHeader())
+	headers, err := bkuser.GetAuthHeader(ctx)
+	if err != nil {
+		logging.Error("searchBusinessPage get auth header failed, %s", err.Error())
+		return nil, errorx.NewRequestCMDBErr(err.Error())
+	}
+	body, err := component.Request(req, timeout, config.GlobalConf.CMDB.Proxy, headers)
 	if err != nil {
 		return nil, errorx.NewRequestCMDBErr(err.Error())
 	}

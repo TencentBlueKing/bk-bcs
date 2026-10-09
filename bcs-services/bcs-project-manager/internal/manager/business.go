@@ -17,11 +17,14 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/constant"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/bkuser"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/cmdb"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/business"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/tenant"
 )
 
 const (
@@ -30,7 +33,7 @@ const (
 
 type businessSyncStore interface {
 	UpsertBusiness(ctx context.Context, biz *business.Business) error
-	DeleteBusinessesNotIn(ctx context.Context, keepIDs []string) (int64, error)
+	DeleteBusinessesNotIn(ctx context.Context, tenantID string, keepIDs []string) (int64, error)
 }
 
 // BusinessManager 定时从 CMDB 全量同步业务到本地表
@@ -65,7 +68,7 @@ func (m *BusinessManager) Run() {
 	}
 }
 
-// SyncBusiness 全量同步一轮；CMDB 失败时只打日志，不删除本地数据
+// SyncBusiness 按租户全量同步一轮；单个租户 CMDB 失败时只打日志，不删除该租户本地数据
 func (m *BusinessManager) SyncBusiness() {
 	if config.GlobalConf == nil || !config.GlobalConf.BusinessSync.Enable {
 		logging.Warn("skip business sync, businessSync.enable is false")
@@ -75,17 +78,47 @@ func (m *BusinessManager) SyncBusiness() {
 		logging.Warn("skip business sync, cmdb host is empty")
 		return
 	}
-	businesses, err := cmdb.ListAllBusinesses()
+	tenantIDs, err := listSyncTenantIDs(m.ctx)
 	if err != nil {
-		logging.Error("list all businesses from cmdb failed: %s", err.Error())
+		logging.Error("list tenants for business sync failed: %s", err.Error())
 		return
 	}
-	upserted, deleted, err := applyBusinessSnapshot(m.ctx, m.model, businesses)
+	for _, tenantID := range tenantIDs {
+		m.syncTenantBusiness(tenantID)
+	}
+}
+
+func (m *BusinessManager) syncTenantBusiness(tenantID string) {
+	ctx := tenant.WithTenantIdFromContext(m.ctx, tenantID)
+	businesses, err := cmdb.ListAllBusinesses(ctx)
 	if err != nil {
-		logging.Error("apply business snapshot failed: %s", err.Error())
+		logging.Error("list all businesses from cmdb failed, tenant=%s: %s", tenantID, err.Error())
 		return
 	}
-	logging.Info("sync business from cmdb success, upsert=%d, deleted=%d", upserted, deleted)
+	upserted, deleted, err := applyBusinessSnapshot(ctx, m.model, tenantID, businesses)
+	if err != nil {
+		logging.Error("apply business snapshot failed, tenant=%s: %s", tenantID, err.Error())
+		return
+	}
+	logging.Info("sync business from cmdb success, tenant=%s, upsert=%d, deleted=%d", tenantID, upserted, deleted)
+}
+
+func listSyncTenantIDs(ctx context.Context) ([]string, error) {
+	if !tenant.IsMultiTenantEnabled() {
+		return []string{constant.DefaultTenantId}, nil
+	}
+	tenants, err := bkuser.ListTenants(ctx, constant.SystemTenantId)
+	if err != nil {
+		return nil, err
+	}
+	tenantIDs := make([]string, 0, len(tenants))
+	for _, t := range tenants {
+		if t.Id == "" {
+			continue
+		}
+		tenantIDs = append(tenantIDs, t.Id)
+	}
+	return tenantIDs, nil
 }
 
 func businessSyncInterval() time.Duration {
@@ -97,12 +130,12 @@ func businessSyncInterval() time.Duration {
 }
 
 func applyBusinessSnapshot(
-	ctx context.Context, model businessSyncStore, businesses []cmdb.BusinessData,
+	ctx context.Context, model businessSyncStore, tenantID string, businesses []cmdb.BusinessData,
 ) (int, int64, error) {
 	now := time.Now().UTC().Format(time.RFC3339)
 	keepIDs := make([]string, 0, len(businesses))
 	for _, src := range businesses {
-		biz := transferBusiness(src, now)
+		biz := transferBusiness(src, tenantID, now)
 		if biz == nil {
 			continue
 		}
@@ -111,16 +144,17 @@ func applyBusinessSnapshot(
 		}
 		keepIDs = append(keepIDs, biz.BusinessID)
 	}
-	deleted, err := model.DeleteBusinessesNotIn(ctx, keepIDs)
+	deleted, err := model.DeleteBusinessesNotIn(ctx, tenantID, keepIDs)
 	return len(keepIDs), deleted, err
 }
 
-func transferBusiness(src cmdb.BusinessData, syncTime string) *business.Business {
+func transferBusiness(src cmdb.BusinessData, tenantID, syncTime string) *business.Business {
 	if src.BKBizID <= 0 {
-		logging.Warn("skip invalid cmdb business, bk_biz_id=%d", src.BKBizID)
+		logging.Warn("skip invalid cmdb business, tenant=%s, bk_biz_id=%d", tenantID, src.BKBizID)
 		return nil
 	}
 	return &business.Business{
+		TenantID:   tenantID,
 		BusinessID: strconv.FormatInt(src.BKBizID, 10),
 		Name:       src.BKBizName,
 		Default:    src.Default,
