@@ -93,7 +93,7 @@ var (
 
 	// delete cluster task
 	deleteEKSClusterStep = cloudprovider.StepInfo{
-		StepMethod: fmt.Sprintf("%s-DeleteEKSClusterTask", cloudName),
+		StepMethod: fmt.Sprintf("%s-DeleteCloudClusterTask", cloudName),
 		StepName:   "删除集群",
 	}
 	cleanClusterDBInfoStep = cloudprovider.StepInfo{
