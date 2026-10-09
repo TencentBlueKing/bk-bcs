@@ -21,8 +21,8 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/asim/go-micro/plugins/client/grpc/v4"
-	"github.com/asim/go-micro/plugins/registry/etcd/v4"
+	"github.com/go-micro/plugins/v4/client/grpc"
+	"github.com/go-micro/plugins/v4/registry/etcd"
 	"go-micro.dev/v4/client"
 	"go-micro.dev/v4/metadata"
 	"go-micro.dev/v4/registry"
