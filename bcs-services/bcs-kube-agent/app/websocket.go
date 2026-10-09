@@ -17,6 +17,7 @@ import (
 	"crypto/tls"
 	"encoding/base64"
 	"fmt"
+	"net"
 	"os"
 	"time"
 
@@ -80,7 +81,7 @@ func buildWebsocketToBke(cfg *rest.Config) error {
 		return err
 	}
 	params := map[string]interface{}{
-		"address":   fmt.Sprintf("https://%s:%s", kubernetesServiceHost, kubernetesServicePort),
+		"address":   "https://" + net.JoinHostPort(kubernetesServiceHost, kubernetesServicePort),
 		"userToken": cfg.BearerToken,
 		"caCert":    base64.StdEncoding.EncodeToString(cfg.CAData),
 	}
