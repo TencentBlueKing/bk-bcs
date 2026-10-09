@@ -29,7 +29,7 @@
 
 - [Pod原地升级InplaceUpdate](./docs/features/bcs-gamestatefulset-operator/inPlaceUpdate.md)
 - [容器镜像热更新HotPatchUpdate](./docs/features/bcs-gamestatefulset-operator/hotPatchUpdate.md)
-- [基于Hook的应用交互式发布](./docs/features/bcs-hoo-operator/README.md)
+- [基于Hook的应用交互式发布](./docs/features/bcs-hook-operator/README.md)
 - [自动化分步骤灰度发布](./docs/features/bcs-gamedeployment-operator/features/canary/auto-canary-update.md)
 - [PreDeleteHook & PreInplaceHook优雅地删除和更新Pod](./docs/features/bcs-gamedeployment-operator/features/preDeleteHook/pre-delete-hook.md)
 - [镜像预热]()
