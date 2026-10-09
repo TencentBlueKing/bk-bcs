@@ -62,6 +62,10 @@ func getenv(env string) (string, error) {
 	return value, nil
 }
 
+func buildAPIServerAddress(host, port string) string {
+	return "https://" + net.JoinHostPort(host, port)
+}
+
 func buildWebsocketToBke(cfg *rest.Config) error {
 	bkeServerAddress := viper.GetString("bke.serverAddress")
 	bkeWsPath := viper.GetString("bke.websocket-path")
@@ -81,7 +85,7 @@ func buildWebsocketToBke(cfg *rest.Config) error {
 		return err
 	}
 	params := map[string]interface{}{
-		"address":   "https://" + net.JoinHostPort(kubernetesServiceHost, kubernetesServicePort),
+		"address":   buildAPIServerAddress(kubernetesServiceHost, kubernetesServicePort),
 		"userToken": cfg.BearerToken,
 		"caCert":    base64.StdEncoding.EncodeToString(cfg.CAData),
 	}
