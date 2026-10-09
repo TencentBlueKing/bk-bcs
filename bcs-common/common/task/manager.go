@@ -51,11 +51,14 @@ type TaskManager struct { // nolint
 	server     *machinery.Server
 	worker     *machinery.Worker
 
-	workerNum         int
-	stepExecutors     map[istep.StepName]istep.StepExecutor
-	callbackExecutors map[istep.CallbackName]istep.CallbackExecutor
-	cfg               *ManagerConfig
-	store             istore.Store
+	workerNum              int
+	stepExecutors          map[istep.StepName]istep.StepExecutor
+	callbackExecutors      map[istep.CallbackName]istep.CallbackExecutor
+	groupCallbackExecutors map[istep.GroupCallbackName]istep.GroupCallbackExecutor
+	cfg                    *ManagerConfig
+	store                  istore.Store
+	// groupStore 为 Store 实现了 GroupStore 时的任务组编排能力, 未实现则为 nil
+	groupStore istore.GroupStore
 
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -110,6 +113,12 @@ func (m *TaskManager) Init(cfg *ManagerConfig) error {
 	}
 
 	m.callbackExecutors = istep.GetCallbackRegisters()
+	m.groupCallbackExecutors = istep.GetGroupCallbackRegisters()
+
+	// Store 实现了任务组能力才开启编排相关 API
+	if groupStore, ok := cfg.Store.(istore.GroupStore); ok {
+		m.groupStore = groupStore
+	}
 
 	m.moduleName = cfg.ModuleName
 	if cfg.WorkerNum != 0 {
@@ -342,6 +351,12 @@ func (m *TaskManager) doWork(taskID string, stepName string) error { // nolint
 	if err != nil {
 		log.ERROR.Printf("task[%s] stepName[%s] getTaskState failed: %v",
 			taskID, stepName, err)
+		// 读不到任务数据时任务状态一个字段都没改过, 直接返回错误会让消息被 ack 掉:
+		// 任务永远停在下发态, 所属任务组的阶段计数也再凑不满, 后续阶段不会下发。
+		// 除非任务确实不存在, 否则一律延迟重投, 等存储恢复后接着跑。
+		if errors.Is(err, ErrLoadTask) && !errors.Is(err, istore.ErrTaskNotFound) {
+			return tasks.NewErrRetryTaskLater(err.Error(), DefaultMaxRetryDuration)
+		}
 		return err
 	}
 
@@ -380,6 +395,8 @@ func (m *TaskManager) doWork(taskID string, stepName string) error { // nolint
 	defer taskCancel()
 
 	tmpCh := make(chan error, 1)
+	// execCtx 在协程外创建, 便于步骤返回后读取业务侧写入的幂等忽略标记
+	execCtx := istep.NewContext(stepCtx, GetGlobalStorage(), state.GetTask(), step)
 	go func() {
 		defer func() {
 			if r := recover(); r != nil {
@@ -389,7 +406,6 @@ func (m *TaskManager) doWork(taskID string, stepName string) error { // nolint
 		}()
 
 		// call step worker
-		execCtx := istep.NewContext(stepCtx, GetGlobalStorage(), state.GetTask(), step)
 		tmpCh <- stepExecutor.Execute(execCtx)
 	}()
 
@@ -400,8 +416,12 @@ func (m *TaskManager) doWork(taskID string, stepName string) error { // nolint
 
 		if stepErr == nil {
 			// step成功处理流程
-			// 先更新state状态
-			state.updateStepSuccess(start)
+			// 先更新state状态, 业务侧标记了幂等忽略时按 IGNORED 收尾
+			if execCtx.IsIgnored() {
+				state.updateStepIgnored(start, execCtx.IgnoreMessage())
+			} else {
+				state.updateStepSuccess(start)
+			}
 			if state.isLastStep(step) {
 				state.tryCallback(nil)
 				// 在所有步骤都成功时，但是callback失败了，把callback失败信息作为task失败信息
@@ -415,6 +435,7 @@ func (m *TaskManager) doWork(taskID string, stepName string) error { // nolint
 				log.INFO.Println(msg)
 				return tasks.NewErrRetryTaskLater(msg, DefaultMaxRetryDuration)
 			}
+			m.tryAdvanceGroup(state.task)
 			return nil
 		}
 		return m.dealWithStepFailure(state, start, taskID, stepName, stepErr)
@@ -463,6 +484,7 @@ func (m *TaskManager) dealWithStepFailure(
 		log.INFO.Println(msg)
 		return tasks.NewErrRetryTaskLater(msg, DefaultMaxRetryDuration)
 	}
+	m.tryAdvanceGroup(state.task)
 
 	// 单步骤不是主动revoke，且在重试次数内, 则重试
 	if !errors.Is(stepErr, istep.ErrRevoked) && step.GetRetryCount() < step.MaxRetries {
@@ -489,6 +511,7 @@ func (m *TaskManager) dealWithTaskRevoke(
 		log.INFO.Println(msg)
 		return tasks.NewErrRetryTaskLater(msg, DefaultMaxRetryDuration)
 	}
+	m.tryAdvanceGroup(state.task)
 	// 取消指令, 不再重试
 	retErr := fmt.Errorf("task %s step %s running failed, err=%w", taskID, stepName, stepErr)
 	return retErr
@@ -503,6 +526,7 @@ func (m *TaskManager) dealWithTaskTimeout(
 		log.INFO.Println(msg)
 		return tasks.NewErrRetryTaskLater(msg, DefaultMaxRetryDuration)
 	}
+	m.tryAdvanceGroup(state.task)
 	// 整个任务结束
 	retErr := fmt.Errorf("task %s step %s running failed, err=%w", taskID, stepName, stepErr)
 	return retErr

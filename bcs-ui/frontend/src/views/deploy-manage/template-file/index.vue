@@ -91,6 +91,7 @@ function deployFile() {
 
 // 编辑文件
 const editFile = () => {
+  fileStore.editMode = 'yaml';
   $router.push({
     name: 'addTemplateFileVersion',
     params: {

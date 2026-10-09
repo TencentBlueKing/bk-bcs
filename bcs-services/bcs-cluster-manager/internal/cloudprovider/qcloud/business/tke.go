@@ -1147,7 +1147,7 @@ func AddNodesToCluster(ctx context.Context, info *cloudprovider.CloudDependBasic
 		if len(resp.SuccessInstanceIDs) > 0 {
 			for i := range resp.SuccessInstanceIDs {
 				nodeID := resp.SuccessInstanceIDs[i]
-			instanceInfo := InstanceInfo{
+				instanceInfo := InstanceInfo{
 					NodeID: nodeID,
 					NodeIP: idToIP[nodeID],
 				}
@@ -1341,7 +1341,7 @@ func CheckClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDe
 				utils.StringPtrToString(ins.InstanceState))
 			switch *ins.InstanceState {
 			case api.RunningInstanceTke.String():
-		running = append(running, InstanceInfo{
+				running = append(running, InstanceInfo{
 					NodeID: utils.StringPtrToString(ins.InstanceId),
 					NodeIP: utils.StringPtrToString(ins.LanIP),
 				})
@@ -1436,9 +1436,9 @@ func CheckClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDe
 	)
 	for i := range addSuccessNodes {
 		successNodeIds = append(successNodeIds, addSuccessNodes[i].NodeID)
-		}
-		for i := range addFailureNodes {
-			failedNodeIds = append(failedNodeIds, addFailureNodes[i].NodeID)
+	}
+	for i := range addFailureNodes {
+		failedNodeIds = append(failedNodeIds, addFailureNodes[i].NodeID)
 	}
 
 	return successNodeIds, failedNodeIds, nil

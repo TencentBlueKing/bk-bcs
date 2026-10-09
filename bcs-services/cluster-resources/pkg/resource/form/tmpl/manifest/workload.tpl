@@ -101,7 +101,9 @@ nodeAffinity:
 {{- define "workload.toleration" -}}
 {{- range .rules }}
 - key: {{ .key | quote }}
+  {{- if .op }} 
   operator: {{ .op }}
+  {{- end }}
   effect: {{ .effect }}
   {{- if .value }}
   value: {{ .value | quote }}
@@ -238,7 +240,9 @@ serviceAccountName: {{ .saName }}
 - name: {{ .name | quote }}
   hostPath:
     path: {{ .path | quote }}
+    {{- if .type }}
     type: {{ .type }}
+    {{- end }}
 {{- end }}
 {{- range .configMap }}
 - name: {{ .name | quote }}

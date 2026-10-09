@@ -113,3 +113,6 @@ systemConfig:
   - "bcs"
   gpuResourceKeys:
   - "kunlunxin.com/xpu"
+businessSync:
+  enable: false
+  interval: 600

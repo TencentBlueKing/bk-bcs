@@ -1488,3 +1488,7 @@
 .bk-resize-layout>.bk-resize-layout-aside .bk-resize-collapse {
     overflow: clip;
 }
+
+.ip-selector-agent-status {
+    display: flex;
+}

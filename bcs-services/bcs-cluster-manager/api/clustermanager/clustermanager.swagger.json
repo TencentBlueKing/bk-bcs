@@ -16069,6 +16069,11 @@
           "type": "string",
           "description": "集群kubeConfig文件",
           "title": "kubeConfig"
+        },
+        "projectID": {
+          "type": "string",
+          "description": "集群所属项目",
+          "title": "projectID"
         }
       },
       "description": "用户输入检测kubeConfig文件",

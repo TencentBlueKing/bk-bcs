@@ -1796,13 +1796,19 @@ cluster:
       preview: Preview
       drainNum: >-
         There are {podNum} Pods in total, {drainNum} of which can be evicted, 
-        and the other {notDrainNum} Pods managed by DaemonSet will not be
-        evicted
+        the other {notDrainNum} Pods managed by DaemonSet will not be evicted,
+        and the other {notDrainOfPDBNum} Pods managed by PDB strategy will not
+        be evicted
       namespace: Namespace
       node: Node
       termination: Termination grace period
       drainRisk: Drain Risk
       isDrainOnly: Only show will be evicted Pods
+      disableEviction: Disable Eviction (DisableEviction)
+      disableEvictionTips: >-
+        When checked, Pods are deleted directly instead of being evicted through
+        the Eviction API, ignoring PodDisruptionBudget(PDB); unchecked by
+        default, using the eviction path
       nodeType: Node Type
       cvmNode: CVM
       gpuNode: GPU
@@ -1894,7 +1900,10 @@ deploy:
     wait: Wait for all Pod and PVC to be ready
     timeout:
       label: Timeout
-      desc: 'This is equivalent to the `--timeout` parameter, and will take effect after selecting the option to wait for all Pods. Examples: 30s, 5m, 10s, 10m'
+      desc: >-
+        This is equivalent to the `--timeout` parameter, and will take effect
+        after selecting the option to wait for all Pods. Examples: 30s, 5m, 10s,
+        10m
     hisotryMax:
       label: Keep the maximum historical version
       desc: '--history-max, the number of historical versions available for rollback'
@@ -2953,6 +2962,11 @@ dashboard:
       projectNS: 'Project namespace {0}'
       systemNS: 'System namespace {0}'
       otherQuotas: Other Quotas
+      quotaName: Quota Name
+      cpuRequests: CPU Request
+      cpuLimits: CPU Limit
+      memoryRequests: Memory Request
+      memoryLimits: Memory Limit
     msg:
       undoSuccess: Undo success
     quota:
@@ -2963,6 +2977,7 @@ dashboard:
       notEnabledNamespace: ResourceQuota not enabled
       totalCpuLimitsQuota: All container CPU LIMITs total / CPU quotas
       totalMemoryLimitsQuota: All container memory Limits total / memory quota
+      deleteOtherQuotaWarning: Deleting this quota immediately removes its limits. This action cannot be undone.
     validate:
       emptyNs: Please select namespace
       name: >-
@@ -2973,6 +2988,11 @@ dashboard:
       setValidQuota: >-
         Please set valid CPU and Memory quotas (Limit >= Request >= 0 / 1 for
         shared cluster)
+      setMinMaxMemCpu: >-
+        Please set CPU and MEM quotas, and the minimum value must be greater
+        than 0.
+      otherQuotaName: The quota name must differ from the namespace, contain only lowercase letters, numbers, or hyphens, start and end with a letter or number, and be no longer than 63 characters
+      otherQuotaResource: Please set valid CPU and Memory quotas (all values are required and must be at least 0)
     status:
       waitingApproval: Pending
       createNamespace: Create naming space
@@ -2990,11 +3010,14 @@ dashboard:
       setEnv: Set variables
       setAnnotation: Set annotations
       undo: Undo
+      createOtherQuota: Add Quota
     title:
       quotaManagement: 'QuotaManage: {nsName}'
       deleteNamespaceWarning: >-
         Delete Namespace will destroy all resources under the Namespace. Then
         all data will be cleared and cannot be restored. Please backup the data.
+      createOtherQuota: Add Other Quota
+      editOtherQuota: Edit Other Quota
   network:
     portmapping: Port Mapping
     config: Configuration

@@ -57,6 +57,18 @@
             </bk-radio>
           </bk-radio-group>
         </div>
+        <div class="mt-[16px] flex items-center">
+          <bk-checkbox
+            v-model="disableEviction"
+            class="select-none"
+            @change="handleDisableEvictionChange">
+            <span
+              class="underline decoration-dashed underline-offset-[3px]"
+              v-bk-tooltips="{ content: $t('cluster.nodeList.label.disableEvictionTips') }">
+              {{ $t('cluster.nodeList.label.disableEviction') }}
+            </span>
+          </bk-checkbox>
+        </div>
       </div>
       <div class="px-[24px] py-[16px] bg-[#F5F7FA] flex-1">
         <div class="mb-[14px]">
@@ -67,7 +79,7 @@
               <span class="text-[12px] text-[#979BA5]">( {{ $t('cluster.nodeList.tips.filterTip') }} )</span>
             </span>
           </div>
-          <div class="flex justify-between">
+          <div class="flex justify-between gap-[20px]">
             <i18n class="leading-[24px]" path="cluster.nodeList.label.drainNum">
               <template #podNum>
                 <span class="font-bold">{{ podList.length }}</span>
@@ -76,7 +88,10 @@
                 <span class="font-bold">{{ drainNum }}</span>
               </template>
               <template #notDrainNum>
-                <span class="font-bold">{{ podList.length - drainNum }}</span>
+                <span class="font-bold">{{ manageByDaemonSet }}</span>
+              </template>
+              <template #notDrainOfPDBNum>
+                <span class="font-bold">{{ podList.length - drainNum - manageByDaemonSet }}</span>
               </template>
             </i18n>
             <bk-checkbox
@@ -287,9 +302,17 @@ export default defineComponent({
     const handleSecondsChange = debounce(secondsChange, 300);
 
 
+    // 禁用驱逐（DisableEviction）
+    const disableEviction = ref(false);
+    function handleDisableEvictionChange(val) {
+      paramsData.value.disableEviction = !!val;
+    }
+
+
     // Pod 列表
     const podList = ref<IPod[]>([]);
     const drainNum = computed(() => podList.value.filter(v => v.willBeEvicted).length);
+    const manageByDaemonSet = computed(() => podList.value.filter(v => !v.willBeEvicted && v.evictionRisk?.some(e => e.riskParameter === '--ignore-daemonsets')).length);
     const isShowDrainOnly = ref(false);
     const podLoading = ref(false);
     async function getPodList(params = {}) {
@@ -298,6 +321,7 @@ export default defineComponent({
         clusterID: props.clusterId,
         nodes: nodeNames.value,
         ignoreAllDaemonSets: false,
+        disableEviction: false,
         ...params,
       })
         .catch(() => [])
@@ -393,6 +417,7 @@ export default defineComponent({
       podSelector: '',
       operator: user.value.username,
       ignoreAllDaemonSets: false,
+      disableEviction: false,
     });
     const isSubmitting = ref(false);
     async function handleSubmit() {
@@ -424,6 +449,7 @@ export default defineComponent({
       getPodList({
         gracePeriodSeconds: Number(paramsData.value.gracePeriodSeconds),
         podSelector: paramsData.value.podSelector,
+        disableEviction: paramsData.value.disableEviction,
       });
     }, { deep: true });
 
@@ -440,6 +466,7 @@ export default defineComponent({
       nodeKey,
       seconds,
       grace,
+      disableEviction,
       podList,
       podLoading,
       isSubmitting,
@@ -451,6 +478,7 @@ export default defineComponent({
       paramsData,
       podLabels,
       drainNum,
+      manageByDaemonSet,
       isShowDrainOnly,
       clusterNamespaces,
       pageChange,
@@ -461,6 +489,7 @@ export default defineComponent({
       handleRadioChange,
       handleGraceChange,
       handleSecondsChange,
+      handleDisableEvictionChange,
       filterMethod,
       handleFilterChange,
       handleResetPage,

@@ -15,6 +15,7 @@ package mongo
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 
@@ -146,6 +147,9 @@ func (m *ModelTask) GetTask(ctx context.Context, taskID string) (*types.Task, er
 	})
 	task := &types.Task{}
 	if err := m.db.Table(m.tableName).Find(cond).One(ctx, task); err != nil {
+		if errors.Is(err, drivers.ErrTableRecordNotFound) {
+			return nil, fmt.Errorf("%w: %s, %w", iface.ErrTaskNotFound, taskID, err)
+		}
 		return nil, err
 	}
 	return task, nil

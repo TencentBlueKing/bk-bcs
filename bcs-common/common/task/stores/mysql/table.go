@@ -68,6 +68,9 @@ type TaskRecord struct {
 	TaskIndex           string            `json:"TaskIndex" gorm:"type:varchar(191);index:idx_task_index"`
 	TaskIndexType       string            `json:"TaskIndexType" gorm:"type:varchar(191);index:idx_task_index"`
 	TaskName            string            `json:"taskName" gorm:"type:varchar(255)"`
+	GroupID             string            `json:"groupID" gorm:"type:varchar(191);index:idx_group_stage"`
+	StageSeq            int               `json:"stageSeq" gorm:"index:idx_group_stage"`
+	GroupCounted        bool              `json:"groupCounted"` // 是否已计入所属任务组的进度, 保证同一任务只推进一次
 	CurrentStep         string            `json:"currentStep" gorm:"type:varchar(255)"`
 	StepSequence        []string          `json:"stepSequence" gorm:"type:text;serializer:json"`
 	CallbackName        string            `json:"callbackName" gorm:"type:varchar(255)"`

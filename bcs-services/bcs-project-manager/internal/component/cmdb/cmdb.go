@@ -35,6 +35,7 @@ import (
 
 var (
 	searchBusinessBatchSize = 200
+	maxSearchBusinessPages  = 500
 	defaultTimeout          = 10
 	defaultSupplierAccount  = "tencent"
 	searchBizPath           = "/api/v3/biz/search/%s"
@@ -42,6 +43,11 @@ var (
 	// CacheKeyBusinessPrefix cache key business prefix
 	CacheKeyBusinessPrefix = "BUSINESS_%s"
 )
+
+var searchAllBusinessFields = []string{
+	"bk_biz_id", "bk_biz_name", "default", "bk_biz_maintainer",
+	"bs2_name_id", "bk_biz_productor", "bk_biz_tester", "bk_biz_developer",
+}
 
 // SearchBusinessResp cmdb search business resp
 type SearchBusinessResp struct {
@@ -100,6 +106,9 @@ type BusinessData struct {
 	BKBizID         int64  `json:"bk_biz_id"`
 	BKBizName       string `json:"bk_biz_name"`
 	BKBizMaintainer string `json:"bk_biz_maintainer"`
+	BkBizProductor  string `json:"bk_biz_productor"`
+	BkBizTester     string `json:"bk_biz_tester"`
+	BkBizDeveloper  string `json:"bk_biz_developer"`
 }
 
 // IsMaintainer 校验用户是否为指定业务的运维
@@ -303,6 +312,62 @@ func GetBusinessTopology(ctx context.Context, bizID string) ([]BusinessTopologyD
 		return nil, errorx.NewRequestCMDBErr(resp.Message)
 	}
 	return resp.Data, nil
+}
+
+// ListAllBusinesses 分页拉取 CMDB 全部业务，拉取失败时返回 error，调用方不得据此删除本地数据
+func ListAllBusinesses() ([]BusinessData, error) {
+	all := make([]BusinessData, 0)
+	start := 0
+	for page := 0; page < maxSearchBusinessPages; page++ {
+		data, err := searchBusinessPage(start, searchBusinessBatchSize)
+		if err != nil {
+			return nil, err
+		}
+		if len(data.Info) == 0 {
+			return all, nil
+		}
+		all = append(all, data.Info...)
+		if len(data.Info) < searchBusinessBatchSize {
+			return all, nil
+		}
+		start += searchBusinessBatchSize
+	}
+	return nil, fmt.Errorf("list all businesses exceeded max pages %d", maxSearchBusinessPages)
+}
+
+func searchBusinessPage(start, limit int) (*SearchBusinessData, error) {
+	timeout := defaultTimeout
+	if config.GlobalConf.CMDB.Timeout != 0 {
+		timeout = config.GlobalConf.CMDB.Timeout
+	}
+	supplierAccount := defaultSupplierAccount
+	if config.GlobalConf.CMDB.BKSupplierAccount != "" {
+		supplierAccount = config.GlobalConf.CMDB.BKSupplierAccount
+	}
+	req := gorequest.SuperAgent{
+		Url:    fmt.Sprintf("%s%s", config.GlobalConf.CMDB.Host, searchBizPath),
+		Method: "POST",
+		Data: map[string]interface{}{
+			"fields":              searchAllBusinessFields,
+			"condition":           map[string]interface{}{},
+			"page":                map[string]interface{}{"start": start, "limit": limit, "sort": "bk_biz_id"},
+			"bk_supplier_account": supplierAccount,
+		},
+		Debug: config.GlobalConf.CMDB.Debug,
+	}
+	body, err := component.Request(req, timeout, config.GlobalConf.CMDB.Proxy, component.GetAuthHeader())
+	if err != nil {
+		return nil, errorx.NewRequestCMDBErr(err.Error())
+	}
+	var resp SearchBusinessResp
+	if err := json.Unmarshal([]byte(body), &resp); err != nil {
+		logging.Error("parse search biz body error, body: %v", body)
+		return nil, err
+	}
+	if resp.Code != errorx.Success {
+		return nil, errorx.NewRequestCMDBErr(resp.Message)
+	}
+	return &resp.Data, nil
 }
 
 func searchBusinessByIds(ctx context.Context, condition string,

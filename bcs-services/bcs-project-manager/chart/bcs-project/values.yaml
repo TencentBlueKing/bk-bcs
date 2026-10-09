@@ -187,3 +187,6 @@ svcConf:
       - update
   bcscc:
     host: ""
+  businessSync:
+    enable: false
+    interval: 600

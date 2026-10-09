@@ -20,6 +20,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/page"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/business"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/config"
 	nsm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/namespace"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/project"
@@ -81,6 +82,9 @@ type ProjectModel interface {
 	UpdateProjectQuotaByField(ctx context.Context, projectQuota entity.M) error
 	ListProjectQuotasByProjectId(ctx context.Context, projectId string) ([]quota.ProjectQuota, error)
 	ListProjectQuotasByBizId(ctx context.Context, bizId string) ([]quota.ProjectQuota, error)
+
+	UpsertBusiness(ctx context.Context, biz *business.Business) error
+	DeleteBusinessesNotIn(ctx context.Context, keepIDs []string) (int64, error)
 }
 
 type modelSet struct {
@@ -90,12 +94,22 @@ type modelSet struct {
 	*vvm.ModelVariableValue
 	*config.ModelConfig
 	*quota.ModelProjectQuota
+	*business.ModelBusiness
 }
 
 var model *modelSet
 
 // New new project model
 func New(db drivers.DB) ProjectModel {
+	return newModelSet(db)
+}
+
+// InitModel init model
+func InitModel(db drivers.DB) {
+	model = newModelSet(db)
+}
+
+func newModelSet(db drivers.DB) *modelSet {
 	return &modelSet{
 		ModelProject:            project.New(db),
 		ModelNamespace:          nsm.New(db),
@@ -103,18 +117,7 @@ func New(db drivers.DB) ProjectModel {
 		ModelVariableValue:      vvm.New(db),
 		ModelConfig:             config.New(db),
 		ModelProjectQuota:       quota.New(db),
-	}
-}
-
-// InitModel init model
-func InitModel(db drivers.DB) {
-	model = &modelSet{
-		ModelProject:            project.New(db),
-		ModelNamespace:          nsm.New(db),
-		ModelVariableDefinition: vdm.New(db),
-		ModelVariableValue:      vvm.New(db),
-		ModelConfig:             config.New(db),
-		ModelProjectQuota:       quota.New(db),
+		ModelBusiness:           business.New(db),
 	}
 }
 

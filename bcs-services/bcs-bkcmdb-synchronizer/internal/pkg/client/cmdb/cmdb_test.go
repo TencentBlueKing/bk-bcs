@@ -2444,7 +2444,7 @@ func Test_cmdbClient_GetHostsByBiz(t *testing.T) {
 }
 
 func Test_gorm_container(t *testing.T) {
-	sq := mySqlite.New("./test1.db")
+	sq := mySqlite.New("./test1.db", 2)
 	if sq == nil {
 		t.Fatal("failed to open database")
 	}
@@ -2500,7 +2500,7 @@ func Test_gorm_container(t *testing.T) {
 }
 
 func Test_gorm_pod(t *testing.T) {
-	sq := mySqlite.New("./test1.db")
+	sq := mySqlite.New("./test1.db", 2)
 	if sq == nil {
 		t.Fatal("failed to open database")
 	}
@@ -2565,7 +2565,7 @@ func Test_gorm_pod(t *testing.T) {
 }
 
 func Test_gorm_node(t *testing.T) {
-	sq := mySqlite.New("./test1.db")
+	sq := mySqlite.New("./test1.db", 2)
 	if sq == nil {
 		t.Fatal("failed to open database")
 	}
@@ -2643,7 +2643,7 @@ func Test_gorm_node(t *testing.T) {
 }
 
 func Test_gorm_deployment(t *testing.T) {
-	sq := mySqlite.New("./test1.db")
+	sq := mySqlite.New("./test1.db", 2)
 	if sq == nil {
 		t.Fatal("failed to open database")
 	}
@@ -2712,7 +2712,7 @@ func Test_gorm_deployment(t *testing.T) {
 }
 
 func Test_gorm_cluster(t *testing.T) {
-	sq := mySqlite.New("./test1.db")
+	sq := mySqlite.New("./test1.db", 2)
 	if sq == nil {
 		t.Fatal("failed to open database")
 	}
@@ -2779,7 +2779,7 @@ func Test_gorm_cluster(t *testing.T) {
 
 // nolint:golint
 func Test_cmdbClient_GetBcsCluster_withDB(t *testing.T) {
-	sq := mySqlite.New("./test1.db")
+	sq := mySqlite.New("./test1.db", 2)
 	if sq == nil {
 		t.Fatal("failed to open database")
 	}
@@ -2818,7 +2818,7 @@ func Test_cmdbClient_GetBcsCluster_withDB(t *testing.T) {
 }
 
 func Test_gorm_namespace(t *testing.T) {
-	sq := mySqlite.New("./test1.db")
+	sq := mySqlite.New("./test1.db", 2)
 	if sq == nil {
 		t.Fatal("failed to open database")
 	}

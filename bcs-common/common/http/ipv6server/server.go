@@ -121,8 +121,10 @@ func (s *IPv6Server) ListenAndServe() error {
 	if len(listeners) == 0 {
 		return ErrListenNull
 	}
-	errs := make(chan error, 1)
-	defer close(errs)
+
+	// 多个listener时，可能向已经关闭的channel send数据导致panic。
+	// defer close(errs)
+	errs := make(chan error, len(listeners))
 	for _, v := range listeners {
 		go func(listen net.Listener) {
 			errs <- s.Server.Serve(listen)
@@ -245,8 +247,8 @@ func (s *IPv6Server) ListenAndServeTLS(certFile, keyFile string) error {
 	if len(listeners) == 0 {
 		return ErrListenNull
 	}
-	errs := make(chan error, 1)
-	defer close(errs)
+	// 同 ListenAndServe：缓冲必须覆盖全部 listener，且不能提前 close。
+	errs := make(chan error, len(listeners))
 	for _, v := range listeners {
 		go func(listen net.Listener) {
 			defer func(listen net.Listener) {

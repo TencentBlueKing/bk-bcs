@@ -468,12 +468,14 @@ const handleCollapseChange = (value: boolean) => {
 };
 
 watch(() => props.value, async () => {
-  if (!props.value && props.isEdit) return;// 编辑态时不初始化表单
-  if (!props.value && props.isAdd) {
-    // 非编辑态时默认初始化一条数据
-    schemaFormData.value = [cloneDeep(initFormData)];
+  // 空内容时：新增态初始化一条默认数据，其余（编辑态等）不初始化
+  if (!props.value) {
+    if (props.isAdd) {
+      schemaFormData.value = [cloneDeep(initFormData)];
+    }
     return;
   }
+
   isLoading.value = true;
   const data = await ResourceService.YAMLToForm({
     yaml: props.value,
@@ -483,8 +485,8 @@ watch(() => props.value, async () => {
 }, { immediate: true });
 
 watch(curResourceType, (newValue, oldValue) => {
-  if (isEqual(newValue, oldValue)) return;
-  handleChangeSchema(curResourceType.value);
+  if (isEqual(newValue, oldValue) || !newValue?.length) return;
+  handleChangeSchema(newValue);
   getFormSupportedAPIVersions();
 }, { immediate: true });
 

@@ -112,6 +112,23 @@ func (t *Task) GetTaskIndexType() string {
 	return t.TaskIndexType
 }
 
+// GetGroupID get the task group this task belongs to
+func (t *Task) GetGroupID() string {
+	return t.GroupID
+}
+
+// GetStageSeq get the stage seq this task belongs to
+func (t *Task) GetStageSeq() int {
+	return t.StageSeq
+}
+
+// SetGroup 设置任务所属的任务组与阶段
+func (t *Task) SetGroup(groupID string, stageSeq int) *Task {
+	t.GroupID = groupID
+	t.StageSeq = stageSeq
+	return t
+}
+
 // GetStep get step by name
 func (t *Task) GetStep(stepName string) (*Step, bool) {
 	for _, step := range t.Steps {

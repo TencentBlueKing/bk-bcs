@@ -16,12 +16,10 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/constant"
 )
 
 func TestLoadConfig(t *testing.T) {
-	c, err := LoadConfig("../../" + constant.DefaultConfigPath)
+	c, err := LoadConfig("../../etc/bcs-project-manager.yaml")
 	if err != nil {
 		t.Errorf("Load default config error: %v", err)
 	}
@@ -53,4 +51,7 @@ func TestLoadConfig(t *testing.T) {
 		expectedClientIDs = append(expectedClientIDs, i.ClientID)
 	}
 	assert.Contains(t, expectedClientIDs, "test")
+
+	assert.False(t, c.BusinessSync.Enable)
+	assert.Equal(t, 600, c.BusinessSync.Interval)
 }

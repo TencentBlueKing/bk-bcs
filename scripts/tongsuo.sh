@@ -18,14 +18,25 @@ determine_package_manager() {
 }
 
 # install packages for different OS
+# Skip when the package is already present: installing it would also upgrade the C
+# toolchain to the newest version in the repo, and swapping gcc/glibc files mid-build
+# breaks the cgo compilations that other `make -j` targets run at the same time.
 install_package() {
     local package_manager=$(determine_package_manager)
 
     if [ "$package_manager" == "apt-get" ]; then
+        if command -v gcc >/dev/null 2>&1; then
+            echo "gcc already installed"
+            return 0
+        fi
         echo "Using apt-get to install gcc"
         apt-get update
         apt-get install -y gcc
     elif [ "$package_manager" == "yum" ]; then
+        if rpm -q glibc-static >/dev/null 2>&1; then
+            echo "glibc-static already installed"
+            return 0
+        fi
         echo "Using yum to install glibc-static"
         yum install -y glibc-static
     else

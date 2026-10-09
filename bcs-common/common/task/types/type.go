@@ -15,6 +15,7 @@ package types
 
 import (
 	"errors"
+	"slices"
 	"sync"
 	"time"
 )
@@ -46,6 +47,9 @@ const (
 	TaskStatusRevoked = "REVOKED"
 	// TaskStatusNotStarted force task terminate
 	TaskStatusNotStarted = "NOTSTARTED"
+	// TaskStatusIgnored 幂等忽略: 步骤执行时发现目标态已满足, 由业务侧通过 Context.MarkIgnored 标记。
+	// 语义上是成功的子类: 属于终态, 任务组内不阻断后续阶段, 重试时不再重跑, 仅在计数上与成功区分。
+	TaskStatusIgnored = "IGNORED"
 
 	// CallbackResultSuccess callback success
 	CallbackResultSuccess = "SUCCESS"
@@ -56,7 +60,38 @@ const (
 var (
 	// ErrNotImplemented not implemented error
 	ErrNotImplemented = errors.New("not implemented")
+
+	// TerminalTaskStatus 任务终态
+	TerminalTaskStatus = []string{
+		TaskStatusSuccess,
+		TaskStatusFailure,
+		TaskStatusTimeout,
+		TaskStatusRevoked,
+		TaskStatusIgnored,
+	}
+
+	// PendingTaskStatus 已落库但尚未开始执行的任务状态
+	PendingTaskStatus = []string{
+		TaskStatusInit,
+		TaskStatusNotStarted,
+	}
+
+	// SucceededTaskStatus 视同成功的任务终态
+	SucceededTaskStatus = []string{
+		TaskStatusSuccess,
+		TaskStatusIgnored,
+	}
 )
+
+// IsTaskTerminal 任务是否已达终态
+func IsTaskTerminal(status string) bool {
+	return slices.Contains(TerminalTaskStatus, status)
+}
+
+// IsTaskSucceeded 任务是否视同成功, 即 SUCCESS 或 IGNORED
+func IsTaskSucceeded(status string) bool {
+	return slices.Contains(SucceededTaskStatus, status)
+}
 
 // Task task definition
 type Task struct {
@@ -65,6 +100,8 @@ type Task struct {
 	TaskID              string            `json:"taskID"`
 	TaskType            string            `json:"taskType"`
 	TaskName            string            `json:"taskName"`
+	GroupID             string            `json:"groupID"`  // GroupID 所属任务组, 为空表示不参与任务组编排
+	StageSeq            int               `json:"stageSeq"` // StageSeq 在任务组内所属的阶段序号
 	CurrentStep         string            `json:"currentStep"`
 	Steps               []*Step           `json:"steps"`
 	CallbackName        string            `json:"callbackName"`

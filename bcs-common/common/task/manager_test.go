@@ -14,14 +14,18 @@ package task
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"os"
 	"testing"
 
+	"github.com/RichardKnop/machinery/v2/tasks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	hellostep "github.com/Tencent/bk-bcs/bcs-common/common/task/steps/hello"
 	istep "github.com/Tencent/bk-bcs/bcs-common/common/task/steps/iface"
+	istore "github.com/Tencent/bk-bcs/bcs-common/common/task/stores/iface"
 	"github.com/Tencent/bk-bcs/bcs-common/common/task/stores/mem"
 	mysqlstore "github.com/Tencent/bk-bcs/bcs-common/common/task/stores/mysql"
 	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
@@ -60,6 +64,53 @@ func TestDoWork(t *testing.T) {
 	for _, s := range steps {
 		err := mgr.doWork(task.TaskID, s.Name)
 		assert.NoError(t, err)
+	}
+}
+
+// failedGetTaskStore 只让 GetTask 返回指定错误, 其余方法在本用例中不会被调用
+type failedGetTaskStore struct {
+	istore.Store
+	err error
+}
+
+// GetTask implements istore.Store
+func (s *failedGetTaskStore) GetTask(context.Context, string) (*types.Task, error) {
+	return nil, s.err
+}
+
+func TestDoWorkGetTaskFailed(t *testing.T) {
+	cases := []struct {
+		name      string
+		err       error
+		wantRetry bool
+	}{
+		{
+			name:      "存储瞬时故障时重投消息",
+			err:       errors.New("invalid connection"),
+			wantRetry: true,
+		},
+		{
+			name:      "任务不存在时不再重投",
+			err:       fmt.Errorf("%w: not-exist", istore.ErrTaskNotFound),
+			wantRetry: false,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			mgr := TaskManager{
+				ctx:           context.Background(),
+				store:         &failedGetTaskStore{err: tc.err},
+				stepExecutors: istep.GetRegisters(),
+			}
+			mgr.initGlobalStorage()
+
+			err := mgr.doWork("not-exist-task", "test")
+			require.Error(t, err)
+
+			var retryErr tasks.ErrRetryTaskLater
+			assert.Equal(t, tc.wantRetry, errors.As(err, &retryErr))
+		})
 	}
 }
 

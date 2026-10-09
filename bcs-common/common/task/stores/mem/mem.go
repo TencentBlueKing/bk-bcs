@@ -69,7 +69,7 @@ func (s *memStore) GetTask(ctx context.Context, taskID string) (*types.Task, err
 	if ok {
 		return t, nil
 	}
-	return nil, fmt.Errorf("not found")
+	return nil, fmt.Errorf("%w: %s", iface.ErrTaskNotFound, taskID)
 }
 
 func (s *memStore) PatchTask(ctx context.Context, opt *iface.PatchOption) error {

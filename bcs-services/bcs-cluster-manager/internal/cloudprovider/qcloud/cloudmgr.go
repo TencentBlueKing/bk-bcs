@@ -184,7 +184,8 @@ func getClusterMasterNodes(opt *cloudprovider.SyncClusterCloudInfoOption,
 		return nil, err
 	}
 
-	instancesList, err := tkeCli.QueryTkeClusterAllInstances(context.Background(), utils.StringPtrToString(cluster.ClusterId), nil)
+	instancesList, err := tkeCli.QueryTkeClusterAllInstances(context.Background(),
+		utils.StringPtrToString(cluster.ClusterId), nil)
 	if err != nil {
 		return nil, err
 	}
