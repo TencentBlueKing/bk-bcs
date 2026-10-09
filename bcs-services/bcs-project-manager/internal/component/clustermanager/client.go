@@ -66,7 +66,7 @@ func GetCluster(ctx context.Context, clusterID string, isCache bool) (*clusterma
 		logging.Error("get cluster from cluster manager failed, msg: %s", resp.GetMessage())
 		return nil, errors.New(resp.GetMessage())
 	}
-	_ = c.Add(fmt.Sprintf(CacheKeyClusterPrefix, clusterID), resp.GetData(), 5*time.Minute)
+	c.Set(fmt.Sprintf(CacheKeyClusterPrefix, clusterID), resp.GetData(), 5*time.Minute)
 	return resp.GetData(), nil
 }
 
