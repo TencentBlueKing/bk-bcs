@@ -122,6 +122,16 @@ func (m *BKMonitor) GetClusterCPUTotal(ctx context.Context, projectID, clusterID
 	return m.handleClusterMetric(ctx, projectID, clusterID, promql, start, end, step)
 }
 
+// GetClusterCPUTotalV2 ksm v2 获取集群CPU核心总量
+func (m *BKMonitor) GetClusterCPUTotalV2(ctx context.Context, projectID, clusterID string, start, end time.Time,
+	step time.Duration) ([]*prompb.TimeSeries, error) {
+	promql :=
+		`sum(avg_over_time(kube_node_status_allocatable{%<cluster>s, ` +
+			`job="kube-state-metrics", node!="", node=~"%<node>s", resource="cpu", %<provider>s}[1m]))`
+	// NOCC:goconst/string(设计如此)
+	return m.handleClusterMetric(ctx, projectID, clusterID, promql, start, end, step)
+}
+
 // GetClusterCPUUsed 获取CPU核心使用量
 func (m *BKMonitor) GetClusterCPUUsed(ctx context.Context, projectID, clusterID string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
@@ -200,6 +210,16 @@ func (m *BKMonitor) GetClusterCPURequest(ctx context.Context, projectID, cluster
 	return m.handleClusterMetric(ctx, projectID, clusterID, promql, start, end, step)
 }
 
+// GetClusterCPURequestV2 ksm v2 获取CPU Rquest
+func (m *BKMonitor) GetClusterCPURequestV2(ctx context.Context, projectID, clusterID string, start, end time.Time,
+	step time.Duration) ([]*prompb.TimeSeries, error) {
+	promql := `
+		sum(avg_over_time(kube_pod_container_resource_requests{%<cluster>s, job="kube-state-metrics", ` +
+		`node!="", node=~"%<node>s", resource="cpu", %<provider>s}[1m]))`
+
+	return m.handleClusterMetric(ctx, projectID, clusterID, promql, start, end, step)
+}
+
 // GetClusterCPURequestUsage 获取CPU核心装箱率
 func (m *BKMonitor) GetClusterCPURequestUsage(ctx context.Context, projectID, clusterID string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
@@ -215,6 +235,25 @@ func (m *BKMonitor) GetClusterCPURequestUsage(ctx context.Context, projectID, cl
 	return base.DivideSeries(seriesA, seriesB), nil
 }
 
+// GetClusterCPURequestWithInitUsage 获取含 InitContainer 的 CPU 核心装箱率
+func (m *BKMonitor) GetClusterCPURequestWithInitUsage(ctx context.Context, projectID, clusterID string,
+	start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
+	containerReqs, err := m.GetClusterCPURequestV2(ctx, projectID, clusterID, start, end, step)
+	if err != nil {
+		return nil, err
+	}
+	initReqs, err := m.getClusterInitContainerCPURequest(ctx, projectID, clusterID, start, end, step)
+	if err != nil {
+		return nil, err
+	}
+	total, err := m.GetClusterCPUTotalV2(ctx, projectID, clusterID, start, end, step)
+	if err != nil {
+		return nil, err
+	}
+	combined := mergeSeriesPlus(containerReqs, initReqs)
+	return base.DivideSeries(combined, total), nil
+}
+
 // GetClusterMemoryTotal 获取集群CPU核心总量
 func (m *BKMonitor) GetClusterMemoryTotal(ctx context.Context, projectID, clusterID string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
@@ -222,6 +261,17 @@ func (m *BKMonitor) GetClusterMemoryTotal(ctx context.Context, projectID, cluste
 	promql :=
 		`sum(avg_over_time(kube_node_status_allocatable_memory_bytes{%<cluster>s, ` +
 			`job="kube-state-metrics", node!="", node=~"%<node>s", %<provider>s}[1m]))`
+
+	return m.handleClusterMetric(ctx, projectID, clusterID, promql, start, end, step)
+}
+
+// GetClusterMemoryTotalV2 ksm v2 获取集群内存总量
+func (m *BKMonitor) GetClusterMemoryTotalV2(ctx context.Context, projectID, clusterID string, start, end time.Time,
+	step time.Duration) ([]*prompb.TimeSeries, error) {
+	// NOCC:goconst/string(设计如此)
+	promql :=
+		`sum(avg_over_time(kube_node_status_allocatable{%<cluster>s, ` +
+			`job="kube-state-metrics", node!="", node=~"%<node>s", resource="memory", %<provider>s}[1m]))`
 
 	return m.handleClusterMetric(ctx, projectID, clusterID, promql, start, end, step)
 }
@@ -260,6 +310,16 @@ func (m *BKMonitor) GetClusterMemoryRequest(ctx context.Context, projectID, clus
 	promql := `
 		sum(avg_over_time(kube_pod_container_resource_requests_memory_bytes{%<cluster>s, job="kube-state-metrics", ` +
 		`node!="", node=~"%<node>s", %<provider>s}[1m]))`
+
+	return m.handleClusterMetric(ctx, projectID, clusterID, promql, start, end, step)
+}
+
+// GetClusterMemoryRequestV2 ksm v2 获取内存 Request
+func (m *BKMonitor) GetClusterMemoryRequestV2(ctx context.Context, projectID, clusterID string, start, end time.Time,
+	step time.Duration) ([]*prompb.TimeSeries, error) {
+	promql := `
+		sum(avg_over_time(kube_pod_container_resource_requests{%<cluster>s, job="kube-state-metrics", ` +
+		`node!="", node=~"%<node>s", resource="memory", %<provider>s}[1m]))`
 
 	return m.handleClusterMetric(ctx, projectID, clusterID, promql, start, end, step)
 }
@@ -365,4 +425,81 @@ func (m *BKMonitor) GetClusterDiskioTotal(ctx context.Context, projectID, cluste
 			`%<provider>s}[2m])))`
 
 	return m.handleClusterMetric(ctx, projectID, clusterID, promql, start, end, step)
+}
+
+// GetClusterMemoryRequestWithInitUsage 获取含 InitContainer 的内存装箱率
+func (m *BKMonitor) GetClusterMemoryRequestWithInitUsage(ctx context.Context, projectID, clusterID string,
+	start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
+	containerReqs, err := m.GetClusterMemoryRequestV2(ctx, projectID, clusterID, start, end, step)
+	if err != nil {
+		return nil, err
+	}
+	initReqs, err := m.getClusterInitContainerMemoryRequest(ctx, projectID, clusterID, start, end, step)
+	if err != nil {
+		return nil, err
+	}
+	total, err := m.GetClusterMemoryTotalV2(ctx, projectID, clusterID, start, end, step)
+	if err != nil {
+		return nil, err
+	}
+	combined := mergeSeriesPlus(containerReqs, initReqs)
+	return base.DivideSeries(combined, total), nil
+}
+
+// getClusterInitContainerCPURequest 获取集群中 initContainer 的 CPU request 总量
+func (m *BKMonitor) getClusterInitContainerCPURequest(ctx context.Context, projectID, clusterID string,
+	start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
+	promql := `sum(avg_over_time(kube_pod_init_container_resource_requests{%<cluster>s, job="kube-state-metrics", ` +
+		`resource="cpu", node!="", node=~"%<node>s", %<provider>s}[1m]) * ` +
+		`on (namespace,pod,container) (kube_pod_init_container_status_running{%<cluster>s, job="kube-state-metrics"}))`
+	return m.handleClusterMetric(ctx, projectID, clusterID, promql, start, end, step)
+}
+
+// getClusterInitContainerMemoryRequest 获取集群中 initContainer 的 Memory request 总量
+func (m *BKMonitor) getClusterInitContainerMemoryRequest(ctx context.Context, projectID, clusterID string,
+	start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
+	promql := `sum(avg_over_time(kube_pod_init_container_resource_requests{%<cluster>s, job="kube-state-metrics", ` +
+		`resource="memory", node!="", node=~"%<node>s", %<provider>s}[1m]) * ` +
+		`on (namespace,pod,container) (kube_pod_init_container_status_running{%<cluster>s, job="kube-state-metrics"}))`
+	return m.handleClusterMetric(ctx, projectID, clusterID, promql, start, end, step)
+}
+
+// mergeSeriesPlus 合并两组时序数据（对应时间点相加）
+func mergeSeriesPlus(a, b []*prompb.TimeSeries) []*prompb.TimeSeries {
+	if len(b) == 0 {
+		return a
+	}
+	if len(a) == 0 {
+		return b
+	}
+	result := make([]*prompb.TimeSeries, 0, len(a))
+	for i, sa := range a {
+		if i < len(b) {
+			merged := &prompb.TimeSeries{
+				Labels:  sa.Labels,
+				Samples: mergeSamplesPlus(sa.Samples, b[i].Samples),
+			}
+			result = append(result, merged)
+		} else {
+			result = append(result, sa)
+		}
+	}
+	return result
+}
+
+// mergeSamplesPlus 合并两组样本（按时间戳相加）
+func mergeSamplesPlus(a, b []prompb.Sample) []prompb.Sample {
+	result := make([]prompb.Sample, 0, len(a))
+	bMap := make(map[int64]float64, len(b))
+	for _, sb := range b {
+		bMap[sb.Timestamp] = sb.Value
+	}
+	for _, sa := range a {
+		val := sa.Value
+		if v, ok := bMap[sa.Timestamp]; ok {
+			val += v
+		}
+		result = append(result, prompb.Sample{Timestamp: sa.Timestamp, Value: val})
+	}
+	return result
 }

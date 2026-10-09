@@ -118,10 +118,28 @@ func (m *BKMonitor) GetNodeCPUTotal(ctx context.Context, projectID, clusterID, n
 	return m.handleNodeMetric(ctx, projectID, clusterID, node, promql, start, end, step)
 }
 
+// GetNodeCPUTotalV2 ksm v2 节点CPU总量
+func (m *BKMonitor) GetNodeCPUTotalV2(ctx context.Context, projectID, clusterID, node string, start, end time.Time,
+	step time.Duration) ([]*prompb.TimeSeries, error) {
+	promql := `sum(kube_node_status_allocatable{cluster_id="%<clusterID>s", node="%<node>s", resource="cpu", ` +
+		`%<provider>s})` // nolint
+
+	return m.handleNodeMetric(ctx, projectID, clusterID, node, promql, start, end, step)
+}
+
 // GetNodeCPURequest 节点CPU请求量
 func (m *BKMonitor) GetNodeCPURequest(ctx context.Context, projectID, clusterID, node string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	promql := `sum(kube_pod_container_resource_requests_cpu_cores{cluster_id="%<clusterID>s", node="%<node>s", ` +
+		`%<provider>s})` // nolint
+
+	return m.handleNodeMetric(ctx, projectID, clusterID, node, promql, start, end, step)
+}
+
+// GetNodeCPURequestV2 ksm v2 节点CPU请求量
+func (m *BKMonitor) GetNodeCPURequestV2(ctx context.Context, projectID, clusterID, node string, start, end time.Time,
+	step time.Duration) ([]*prompb.TimeSeries, error) {
+	promql := `sum(kube_pod_container_resource_requests{cluster_id="%<clusterID>s", node="%<node>s", resource="cpu", ` +
 		`%<provider>s})` // nolint
 
 	return m.handleNodeMetric(ctx, projectID, clusterID, node, promql, start, end, step)
@@ -175,11 +193,29 @@ func (m *BKMonitor) GetNodeMemoryTotal(ctx context.Context, projectID, clusterID
 	return m.handleNodeMetric(ctx, projectID, clusterID, node, promql, start, end, step)
 }
 
+// GetNodeMemoryTotalV2 ksm v2 节点Memory总量
+func (m *BKMonitor) GetNodeMemoryTotalV2(ctx context.Context, projectID, clusterID, node string, start, end time.Time,
+	step time.Duration) ([]*prompb.TimeSeries, error) {
+	promql := `sum(kube_node_status_allocatable{cluster_id="%<clusterID>s", node="%<node>s", resource="memory", ` +
+		`%<provider>s})`
+
+	return m.handleNodeMetric(ctx, projectID, clusterID, node, promql, start, end, step)
+}
+
 // GetNodeMemoryRequest 节点Memory请求量
 func (m *BKMonitor) GetNodeMemoryRequest(ctx context.Context, projectID, clusterID, node string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	promql := `sum(kube_pod_container_resource_requests_memory_bytes{cluster_id="%<clusterID>s", node="%<node>s", ` +
 		`%<provider>s})`
+
+	return m.handleNodeMetric(ctx, projectID, clusterID, node, promql, start, end, step)
+}
+
+// GetNodeMemoryRequestV2 ksm v2 节点Memory请求量
+func (m *BKMonitor) GetNodeMemoryRequestV2(ctx context.Context, projectID, clusterID, node string, start, end time.Time,
+	step time.Duration) ([]*prompb.TimeSeries, error) {
+	promql := `sum(kube_pod_container_resource_requests{cluster_id="%<clusterID>s", node="%<node>s", ` +
+		`resource="memory", %<provider>s})`
 
 	return m.handleNodeMetric(ctx, projectID, clusterID, node, promql, start, end, step)
 }
@@ -325,5 +361,61 @@ func (m *BKMonitor) GetNodeNetworkReceive(ctx context.Context, projectID, cluste
 		`max(rate(node_network_receive_bytes_total{cluster_id="%<clusterID>s", instance=~"%<ip>s", ` +
 			`%<provider>s}[5m]))`
 
+	return m.handleNodeMetric(ctx, projectID, clusterID, node, promql, start, end, step)
+}
+
+// GetNodeCPURequestWithInitUsage 节点含 InitContainer 的 CPU 装箱率
+func (m *BKMonitor) GetNodeCPURequestWithInitUsage(ctx context.Context, projectID, clusterID, node string,
+	start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
+	containerReqs, err := m.GetNodeCPURequestV2(ctx, projectID, clusterID, node, start, end, step)
+	if err != nil {
+		return nil, err
+	}
+	initReqs, err := m.getNodeInitContainerCPURequest(ctx, projectID, clusterID, node, start, end, step)
+	if err != nil {
+		return nil, err
+	}
+	total, err := m.GetNodeCPUTotalV2(ctx, projectID, clusterID, node, start, end, step)
+	if err != nil {
+		return nil, err
+	}
+	combined := mergeSeriesPlus(containerReqs, initReqs)
+	return base.DivideSeries(combined, total), nil
+}
+
+// GetNodeMemoryRequestWithInitUsage 节点含 InitContainer 的内存装箱率
+func (m *BKMonitor) GetNodeMemoryRequestWithInitUsage(ctx context.Context, projectID, clusterID, node string,
+	start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
+	containerReqs, err := m.GetNodeMemoryRequestV2(ctx, projectID, clusterID, node, start, end, step)
+	if err != nil {
+		return nil, err
+	}
+	initReqs, err := m.getNodeInitContainerMemoryRequest(ctx, projectID, clusterID, node, start, end, step)
+	if err != nil {
+		return nil, err
+	}
+	total, err := m.GetNodeMemoryTotalV2(ctx, projectID, clusterID, node, start, end, step)
+	if err != nil {
+		return nil, err
+	}
+	combined := mergeSeriesPlus(containerReqs, initReqs)
+	return base.DivideSeries(combined, total), nil
+}
+
+// getNodeInitContainerCPURequest 获取节点上 initContainer 的 CPU request 总量
+func (m *BKMonitor) getNodeInitContainerCPURequest(ctx context.Context, projectID, clusterID, node string,
+	start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
+	promql := `sum(kube_pod_init_container_resource_requests{cluster_id="%<clusterID>s", node="%<node>s", ` +
+		`resource="cpu", %<provider>s}) * ` +
+		`on (namespace,pod,container) (kube_pod_init_container_status_running{cluster_id="%<clusterID>s"})`
+	return m.handleNodeMetric(ctx, projectID, clusterID, node, promql, start, end, step)
+}
+
+// getNodeInitContainerMemoryRequest 获取节点上 initContainer 的 Memory request 总量
+func (m *BKMonitor) getNodeInitContainerMemoryRequest(ctx context.Context, projectID, clusterID, node string,
+	start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
+	promql := `sum(kube_pod_init_container_resource_requests{cluster_id="%<clusterID>s", node="%<node>s", ` +
+		`resource="memory", %<provider>s}) * ` +
+		`on (namespace,pod,container) (kube_pod_init_container_status_running{cluster_id="%<clusterID>s"})`
 	return m.handleNodeMetric(ctx, projectID, clusterID, node, promql, start, end, step)
 }
