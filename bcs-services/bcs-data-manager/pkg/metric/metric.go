@@ -14,6 +14,7 @@
 package metric
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"time"
@@ -33,7 +34,7 @@ type Server interface {
 	GetInstanceCount(opts *types.JobCommonOpts, clients *types.Clients) (int64, error)
 	GetClusterNodeMetrics(opts *types.JobCommonOpts,
 		clients *types.Clients) (string, []*bcsdatamanager.NodeQuantile, error)
-	GetClusterNodeCount(opts *types.JobCommonOpts, clients *types.Clients) (int64, int64, error)
+	GetClusterNodeCount(ctx context.Context, opts *types.JobCommonOpts, clients *types.Clients) (int64, int64, error)
 	GetPodAutoscalerCount(opts *types.JobCommonOpts, clients *types.Clients) (int64, error)
 	GetCACount(opts *types.JobCommonOpts, clients *types.Clients) (int64, error)
 }
@@ -127,13 +128,13 @@ func (g *MetricGetter) GetClusterNodeMetrics(opts *types.JobCommonOpts,
 }
 
 // GetClusterNodeCount get cluster node count
-func (g *MetricGetter) GetClusterNodeCount(opts *types.JobCommonOpts,
+func (g *MetricGetter) GetClusterNodeCount(ctx context.Context, opts *types.JobCommonOpts,
 	clients *types.Clients) (int64, int64, error) {
 	switch opts.ClusterType {
 	case types.Kubernetes:
 		return g.getK8sNodeCount(opts, clients)
 	case types.Mesos:
-		return g.getMesosNodeCount(opts, clients)
+		return g.getMesosNodeCount(ctx, opts)
 	default:
 		return 0, 0, fmt.Errorf("wrong clusterType:%s", opts.ClusterType)
 	}
