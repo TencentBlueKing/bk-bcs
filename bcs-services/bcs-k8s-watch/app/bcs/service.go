@@ -44,6 +44,8 @@ type HTTPClientConfig struct {
 
 	// Password is certificate authority file password.
 	Password string
+	// Token is authorization token
+	Token string
 }
 
 // InnerService is bcs inner service for discovery.
@@ -72,7 +74,7 @@ func NewInnerService(serviceName string, eventChan <-chan *RegisterDiscover.Disc
 }
 
 // Watch keeps watching service instance endpoints from ZK.
-func (s *InnerService) Watch(bcsTLSConfig bcsoptions.TLS) error {
+func (s *InnerService) Watch(bcsTLSConfig bcsoptions.TLS, token string) error {
 	glog.Infof("start to watch service[%s] from ZK", s.name)
 
 	if s.eventChan == nil {
@@ -85,7 +87,7 @@ func (s *InnerService) Watch(bcsTLSConfig bcsoptions.TLS) error {
 			glog.Errorf("%s service discover failed, %+v", s.name, data.Err)
 			continue
 		}
-		s.update(data.Server, bcsTLSConfig)
+		s.update(data.Server, bcsTLSConfig, token)
 	}
 
 	return nil
@@ -105,7 +107,7 @@ func (s *InnerService) Servers() []*HTTPClientConfig {
 	return cfgs
 }
 
-func (s *InnerService) update(servers []string, bcsTLSConfig bcsoptions.TLS) {
+func (s *InnerService) update(servers []string, bcsTLSConfig bcsoptions.TLS, token string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -128,6 +130,7 @@ func (s *InnerService) update(servers []string, bcsTLSConfig bcsoptions.TLS) {
 				config := HTTPClientConfig{
 					URL:    address,
 					Scheme: scheme,
+					Token:  token,
 				}
 
 				// support https.
@@ -166,6 +169,7 @@ func (s *InnerService) update(servers []string, bcsTLSConfig bcsoptions.TLS) {
 				config := HTTPClientConfig{
 					URL:    address,
 					Scheme: serverInfo.Scheme,
+					Token:  token,
 				}
 
 				// support https.

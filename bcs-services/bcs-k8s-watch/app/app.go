@@ -134,7 +134,7 @@ func RunAsLeader(stopChan <-chan struct{}, config *options.WatchConfig, clusterI
 
 	glog.Info("getting storage service now...")
 	storageService, _, err := bcs.GetStorageService(config.BCS.ZkHosts, bcsTLSConfig, config.BCS.CustomStorageEndpoints,
-		config.BCS.IsExternal)
+		config.BCS.IsExternal, config.BCS.CustomStorageEndpointToken)
 	if err != nil {
 		panic(err)
 	}

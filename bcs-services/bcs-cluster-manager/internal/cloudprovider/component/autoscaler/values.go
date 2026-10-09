@@ -19,6 +19,7 @@ import (
 	"time"
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/utils"
 	cmoptions "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 )
 
@@ -167,6 +168,12 @@ type AutoScaler struct {
 
 // GetValues get autoScaler values
 func (as *AutoScaler) GetValues() (string, error) {
+	// build cluster user token
+	token, err := utils.BuildBcsAgentToken(as.AutoScalingOption.ClusterID, false)
+	if err != nil {
+		return "", err
+	}
+
 	if len(as.NodeGroups) == 0 {
 		as.Replicas = 0
 	}
@@ -179,7 +186,7 @@ func (as *AutoScaler) GetValues() (string, error) {
 	values := AutoScalerValues{
 		Namespace:    op.ComponentDeploy.AutoScaler.ReleaseNamespace,
 		APIAddress:   op.ComponentDeploy.BCSAPIGateway,
-		Token:        op.ComponentDeploy.Token,
+		Token:        token,
 		ReplicaCount: as.Replicas,
 		Encryption:   encryptNo,
 		Registry: func() string {
