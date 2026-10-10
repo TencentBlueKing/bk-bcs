@@ -137,19 +137,27 @@ func ConnectToCluster(model store.ClusterManagerModel, clusterId string) bool {
 	return true
 }
 
+// caStat 按 provider 维度统计 CA 使用率/开启率
+type caStat struct {
+	used, total           int
+	debugUsed, debugTotal int
+	prodUsed, prodTotal   int
+
+	enabled, debugEnabled, prodEnabled int
+}
+
 func (d *Daemon) reportClusterCaUsageRatio(error chan<- error) {
 	statusCond := operator.NewLeafCondition(operator.In, operator.M{
 		"status": []string{common.StatusRunning, common.StatusConnectClusterFailed},
 	})
-	providerCond := operator.NewLeafCondition(operator.Eq, operator.M{"provider": tencentCloud})
-	cond := operator.NewBranchCondition(operator.And, statusCond, providerCond)
-
-	clusterList, err := d.model.ListCluster(d.ctx, cond, &storeopt.ListOption{All: true})
+	blog.Info("reportClusterCaUsageRatio starting ...")
+	clusterList, err := d.model.ListCluster(d.ctx, statusCond, &storeopt.ListOption{All: true})
 	if err != nil {
 		blog.Errorf("reportClusterCaUsageRatio ListCluster failed: %v", err)
 		error <- err
 		return
 	}
+	blog.Infof("reportClusterCaUsageRatio total %d clusters to check", len(clusterList))
 
 	var (
 		used, total           int
@@ -157,27 +165,43 @@ func (d *Daemon) reportClusterCaUsageRatio(error chan<- error) {
 		prodUsed, prodTotal   int
 
 		enabled, debugEnabled, prodEnabled int
+
+		providerStats = make(map[string]*caStat)
 	)
 
 	for i := range clusterList {
 		// filter cluster
 		if clusterList[i].ClusterType == common.ClusterTypeVirtual {
+			blog.Infof("reportClusterCaUsageRatio[%s] skip virtual cluster, provider %s",
+				clusterList[i].ClusterID, clusterList[i].Provider)
 			continue
 		}
 		if clusterList[i].SystemID == "" {
+			blog.Infof("reportClusterCaUsageRatio[%s] skip cluster with empty SystemID, provider %s",
+				clusterList[i].ClusterID, clusterList[i].Provider)
 			continue
 		}
 		if !ConnectToCluster(d.model, clusterList[i].ClusterID) {
-			blog.Errorf("reportClusterCaUsageRatio[%s] ConnectToCluster failed", clusterList[i].ClusterID)
+			blog.Errorf("reportClusterCaUsageRatio[%s] ConnectToCluster failed, provider %s",
+				clusterList[i].ClusterID, clusterList[i].Provider)
 			continue
 		}
 
+		provider := clusterList[i].GetProvider()
+		if providerStats[provider] == nil {
+			providerStats[provider] = &caStat{}
+		}
+		stat := providerStats[provider]
+
 		total++
+		stat.total++
 		switch clusterList[i].Environment {
 		case common.Debug:
 			debugTotal++
+			stat.debugTotal++
 		case common.Prod:
 			prodTotal++
+			stat.prodTotal++
 		default:
 		}
 
@@ -186,46 +210,66 @@ func (d *Daemon) reportClusterCaUsageRatio(error chan<- error) {
 		})
 		groupList, errLocal := d.model.ListNodeGroup(d.ctx, condGroup, &storeopt.ListOption{All: true})
 		if errLocal != nil {
-			blog.Errorf("reportClusterCaUsageRatio[%s] ListNodeGroup failed: %v", clusterList[i].ClusterID, err)
+			blog.Errorf("reportClusterCaUsageRatio[%s] ListNodeGroup failed: %v", clusterList[i].ClusterID, errLocal)
 			continue
 		}
 
 		// 接入节点池 & 开启弹性伸缩
 		if len(groupList) > 0 {
 			used++
+			stat.used++
 			switch clusterList[i].Environment {
 			case common.Debug:
 				debugUsed++
+				stat.debugUsed++
 			case common.Prod:
 				prodUsed++
+				stat.prodUsed++
 			default:
 			}
 
 			asOption, errLocal := d.model.GetAutoScalingOption(context.Background(), clusterList[i].ClusterID)
 			if errLocal != nil {
 				blog.Errorf("reportClusterCaUsageRatio[%s] GetAutoScalingOption failed: %v",
-					clusterList[i].ClusterID, err)
+					clusterList[i].ClusterID, errLocal)
 				continue
 			}
 			if asOption.GetEnableAutoscale() {
 				enabled++
+				stat.enabled++
 
 				switch clusterList[i].Environment {
 				case common.Debug:
 					debugEnabled++
+					stat.debugEnabled++
 				case common.Prod:
 					prodEnabled++
+					stat.prodEnabled++
 				default:
 				}
 			}
 		}
 	}
 
-	metrics.ReportCaUsageRatio(platform, float64(used)/float64(total))
-	metrics.ReportCaUsageRatio(common.Debug, float64(debugUsed)/float64(debugTotal))
-	metrics.ReportCaUsageRatio(common.Prod, float64(prodUsed)/float64(prodTotal))
+	metrics.ReportCaUsageRatio(platform, platform, float64(used)/float64(total))
+	metrics.ReportCaUsageRatio(common.Debug, platform, float64(debugUsed)/float64(debugTotal))
+	metrics.ReportCaUsageRatio(common.Prod, platform, float64(prodUsed)/float64(prodTotal))
 
-	metrics.ReportCaEnableRatio(platform, float64(enabled)/float64(used))
-	metrics.ReportCaEnableRatio(common.Debug, float64(debugEnabled)/float64(debugUsed))
-	metrics.ReportCaEnableRatio(common.Prod, float64(prodEnabled)/float64(prodUsed))
+	metrics.ReportCaEnableRatio(platform, platform, float64(enabled)/float64(used))
+	metrics.ReportCaEnableRatio(common.Debug, platform, float64(debugEnabled)/float64(debugUsed))
+	metrics.ReportCaEnableRatio(common.Prod, platform, float64(prodEnabled)/float64(prodUsed))
+
+	for provider, stat := range providerStats {
+		blog.Infof("reportClusterCaUsageRatio provider %s: used/total %d/%d, debugUsed/debugTotal %d/%d, "+
+			"prodUsed/prodTotal %d/%d, enabled/used %d/%d",
+			provider, stat.used, stat.total, stat.debugUsed, stat.debugTotal,
+			stat.prodUsed, stat.prodTotal, stat.enabled, stat.used)
+		metrics.ReportCaUsageRatio(platform, provider, float64(stat.used)/float64(stat.total))
+		metrics.ReportCaUsageRatio(common.Debug, provider, float64(stat.debugUsed)/float64(stat.debugTotal))
+		metrics.ReportCaUsageRatio(common.Prod, provider, float64(stat.prodUsed)/float64(stat.prodTotal))
+
+		metrics.ReportCaEnableRatio(platform, provider, float64(stat.enabled)/float64(stat.used))
+		metrics.ReportCaEnableRatio(common.Debug, provider, float64(stat.debugEnabled)/float64(stat.debugUsed))
+		metrics.ReportCaEnableRatio(common.Prod, provider, float64(stat.prodEnabled)/float64(stat.prodUsed))
+	}
 }

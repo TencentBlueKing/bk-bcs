@@ -121,9 +121,16 @@ func (r *ReleasePreviewAction) getReleasePreview() (*helmmanager.ReleasePreview,
 	if err != nil {
 		return nil, fmt.Errorf("reuse values failed, %s", err.Error())
 	}
+	/*预览必须与实际下发使用同一个开关值，否则会出现"预览有注解、实际没有"。预览接口没有带该开关，因此取 release 持久化的值。*/
+	skipPaasAnnotations := false
+	if old, gErr := r.model.GetRelease(r.ctx, r.req.GetClusterID(), r.req.GetNamespace(),
+		r.req.GetName()); gErr == nil {
+		skipPaasAnnotations = old.SkipPaasAnnotations
+	}
 	result, err := release.InstallRelease(r.releaseHandler, contextx.GetProjectIDFromCtx(r.ctx), projectCode,
 		r.req.GetClusterID(), r.req.GetName(), r.req.GetNamespace(), r.req.GetChart(), r.req.GetVersion(),
-		r.createBy, username, r.req.GetArgs(), nil, contents, r.req.GetValues(), true, true, true)
+		r.createBy, username, r.req.GetArgs(), nil, contents, r.req.GetValues(), true, true, true,
+		skipPaasAnnotations)
 	if err != nil {
 		return nil, fmt.Errorf("get release preview, get helm template failed, %s", err.Error())
 	}

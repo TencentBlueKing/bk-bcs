@@ -120,13 +120,13 @@ var (
 		Namespace: BkBcsClusterManager,
 		Name:      "ca_usage_ratio",
 		Help:      "cluster manager resource ca usage ratio",
-	}, []string{"env"})
+	}, []string{"env", "provider"})
 
 	reportCaEnableRatio = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: BkBcsClusterManager,
 		Name:      "ca_enable_ratio",
 		Help:      "cluster manager resource ca enable ratio",
-	}, []string{"env"})
+	}, []string{"env", "provider"})
 )
 
 func init() {
@@ -207,11 +207,11 @@ func ReportRegionInsTypeNum(region, zone, instancetype, pool, category string, n
 }
 
 // ReportCaUsageRatio report cluster-manager ca usage ratio
-func ReportCaUsageRatio(env string, num float64) {
-	reportCaUsageRatio.WithLabelValues(env).Set(num)
+func ReportCaUsageRatio(env, provider string, num float64) {
+	reportCaUsageRatio.WithLabelValues(env, provider).Set(num)
 }
 
 // ReportCaEnableRatio report cluster-manager ca enable ratio
-func ReportCaEnableRatio(env string, num float64) {
-	reportCaEnableRatio.WithLabelValues(env).Set(num)
+func ReportCaEnableRatio(env, provider string, num float64) {
+	reportCaEnableRatio.WithLabelValues(env, provider).Set(num)
 }
