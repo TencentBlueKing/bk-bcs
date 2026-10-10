@@ -1833,6 +1833,10 @@ message ReleaseDetail {
         title: "displayName",
         description: "release别名"
     }];
+    optional bool skipPaasAnnotations = 20[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "skipPaasAnnotations",
+        description: "是否不注入 BCS 的 io.tencent.paas 系列注解"
+    }];
 }
 
 message ListReleaseV1Req {
@@ -2019,6 +2023,10 @@ message InstallReleaseV1Req {
         title: "env",
         description: "环境"
     }];
+    optional bool skipPaasAnnotations = 13[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "skipPaasAnnotations",
+        description: "是否不注入 BCS 的 io.tencent.paas 系列注解，默认 false（注入）"
+    }];
 }
 
 message InstallReleaseV1Resp {
@@ -2162,6 +2170,10 @@ message UpgradeReleaseV1Req {
     optional string env = 12[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "env",
         description: "环境"
+    }];
+    optional bool skipPaasAnnotations = 13[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "skipPaasAnnotations",
+        description: "是否不注入 BCS 的 io.tencent.paas 系列注解，默认 false（注入）"
     }];
 }
 

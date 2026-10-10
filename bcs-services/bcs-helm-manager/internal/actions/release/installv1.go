@@ -105,22 +105,23 @@ func (i *InstallReleaseV1Action) install() error {
 
 	// dispatch release
 	options := &actions.ReleaseInstallActionOption{
-		Model:          i.model,
-		Platform:       i.platform,
-		ReleaseHandler: i.releaseHandler,
-		ProjectCode:    contextx.GetProjectCodeFromCtx(i.ctx),
-		ProjectID:      contextx.GetProjectIDFromCtx(i.ctx),
-		ClusterID:      i.req.GetClusterID(),
-		Name:           i.req.GetName(),
-		Namespace:      i.req.GetNamespace(),
-		RepoName:       i.req.GetRepository(),
-		ChartName:      i.req.GetChart(),
-		Version:        i.req.GetVersion(),
-		Values:         i.req.GetValues(),
-		Args:           i.req.GetArgs(),
-		Username:       auth.GetUserFromCtx(i.ctx),
-		AuthUser:       auth.GetRealUserFromCtx(i.ctx),
-		IsShardCluster: cls.IsShared,
+		Model:               i.model,
+		Platform:            i.platform,
+		ReleaseHandler:      i.releaseHandler,
+		ProjectCode:         contextx.GetProjectCodeFromCtx(i.ctx),
+		ProjectID:           contextx.GetProjectIDFromCtx(i.ctx),
+		ClusterID:           i.req.GetClusterID(),
+		Name:                i.req.GetName(),
+		Namespace:           i.req.GetNamespace(),
+		RepoName:            i.req.GetRepository(),
+		ChartName:           i.req.GetChart(),
+		Version:             i.req.GetVersion(),
+		Values:              i.req.GetValues(),
+		Args:                i.req.GetArgs(),
+		Username:            auth.GetUserFromCtx(i.ctx),
+		AuthUser:            auth.GetRealUserFromCtx(i.ctx),
+		IsShardCluster:      cls.IsShared,
+		SkipPaasAnnotations: i.req.GetSkipPaasAnnotations(),
 	}
 	action := actions.NewReleaseInstallAction(options)
 	_, err = operation.GlobalOperator.Dispatch(action, releaseDefaultTimeout)
@@ -139,19 +140,20 @@ func (i *InstallReleaseV1Action) saveDB() error {
 		createBy = i.req.GetOperator()
 	}
 	if err := i.model.CreateRelease(i.ctx, &entity.Release{
-		Name:         i.req.GetName(),
-		ProjectCode:  contextx.GetProjectCodeFromCtx(i.ctx),
-		Namespace:    i.req.GetNamespace(),
-		ClusterID:    i.req.GetClusterID(),
-		Repo:         i.req.GetRepository(),
-		ChartName:    i.req.GetChart(),
-		ChartVersion: i.req.GetVersion(),
-		ValueFile:    i.req.GetValueFile(),
-		Values:       i.req.GetValues(),
-		Args:         i.req.GetArgs(),
-		CreateBy:     createBy,
-		Status:       helmrelease.StatusPendingInstall.String(),
-		Env:          i.req.GetEnv(),
+		Name:                i.req.GetName(),
+		ProjectCode:         contextx.GetProjectCodeFromCtx(i.ctx),
+		Namespace:           i.req.GetNamespace(),
+		ClusterID:           i.req.GetClusterID(),
+		Repo:                i.req.GetRepository(),
+		ChartName:           i.req.GetChart(),
+		ChartVersion:        i.req.GetVersion(),
+		ValueFile:           i.req.GetValueFile(),
+		Values:              i.req.GetValues(),
+		Args:                i.req.GetArgs(),
+		CreateBy:            createBy,
+		Status:              helmrelease.StatusPendingInstall.String(),
+		Env:                 i.req.GetEnv(),
+		SkipPaasAnnotations: i.req.GetSkipPaasAnnotations(),
 	}); err != nil {
 		return err
 	}
