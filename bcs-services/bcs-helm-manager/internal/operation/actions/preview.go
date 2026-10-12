@@ -44,6 +44,9 @@ type ReleasePreviewAction struct {
 	AuthUser       string
 	IsShardCluster bool
 
+	// skipPaasAnnotations 为 true 时不注入 BCS 的 io.tencent.paas 系列注解
+	skipPaasAnnotations bool
+
 	contents []byte
 }
 
@@ -68,6 +71,9 @@ type ReleasePreviewActionOption struct {
 	AuthUser       string
 	IsShardCluster bool
 	Content        []byte
+
+	// SkipPaasAnnotations 是否不注入 BCS 的 io.tencent.paas 系列注解
+	SkipPaasAnnotations bool
 }
 
 // NewReleasePreviewAction new release preview action
@@ -91,6 +97,8 @@ func NewReleasePreviewAction(o *ReleasePreviewActionOption) *ReleasePreviewActio
 		AuthUser:       o.AuthUser,
 		IsShardCluster: o.IsShardCluster,
 		contents:       o.Content,
+
+		skipPaasAnnotations: o.SkipPaasAnnotations,
 	}
 }
 
@@ -107,7 +115,8 @@ func (r *ReleasePreviewAction) UpgradeRelease(ctx context.Context) (*pkgrelease.
 
 	// get release from helm dry run
 	result, err := release.UpgradeRelease(r.releaseHandler, r.projectID, r.projectCode, r.clusterID, r.name,
-		r.namespace, r.chartName, r.version, r.createBy, r.updateBy, r.args, nil, r.contents, r.values, true)
+		r.namespace, r.chartName, r.version, r.createBy, r.updateBy, r.args, nil, r.contents, r.values, true,
+		r.skipPaasAnnotations)
 	if err != nil {
 		return nil, err
 	}

@@ -96,23 +96,24 @@ func (u *UpgradeReleaseV1Action) upgrade() error {
 
 	// dispatch release
 	options := &actions.ReleaseUpgradeActionOption{
-		Model:          u.model,
-		Platform:       u.platform,
-		ReleaseHandler: u.releaseHandler,
-		ProjectCode:    contextx.GetProjectCodeFromCtx(u.ctx),
-		ProjectID:      contextx.GetProjectIDFromCtx(u.ctx),
-		ClusterID:      u.req.GetClusterID(),
-		Name:           u.req.GetName(),
-		Namespace:      u.req.GetNamespace(),
-		RepoName:       u.req.GetRepository(),
-		ChartName:      u.req.GetChart(),
-		Version:        u.req.GetVersion(),
-		Values:         u.req.GetValues(),
-		Args:           u.req.GetArgs(),
-		CreateBy:       u.createBy,
-		UpdateBy:       u.updateBy,
-		AuthUser:       auth.GetRealUserFromCtx(u.ctx),
-		IsShardCluster: cls.IsShared,
+		Model:               u.model,
+		Platform:            u.platform,
+		ReleaseHandler:      u.releaseHandler,
+		ProjectCode:         contextx.GetProjectCodeFromCtx(u.ctx),
+		ProjectID:           contextx.GetProjectIDFromCtx(u.ctx),
+		ClusterID:           u.req.GetClusterID(),
+		Name:                u.req.GetName(),
+		Namespace:           u.req.GetNamespace(),
+		RepoName:            u.req.GetRepository(),
+		ChartName:           u.req.GetChart(),
+		Version:             u.req.GetVersion(),
+		Values:              u.req.GetValues(),
+		Args:                u.req.GetArgs(),
+		CreateBy:            u.createBy,
+		UpdateBy:            u.updateBy,
+		AuthUser:            auth.GetRealUserFromCtx(u.ctx),
+		IsShardCluster:      cls.IsShared,
+		SkipPaasAnnotations: u.req.GetSkipPaasAnnotations(),
 	}
 	action := actions.NewReleaseUpgradeAction(options)
 	_, err = operation.GlobalOperator.Dispatch(action, releaseDefaultTimeout)
@@ -140,19 +141,20 @@ func (u *UpgradeReleaseV1Action) saveDB() error {
 		u.createBy = createBy
 		u.updateBy = createBy
 		if err = u.model.CreateRelease(u.ctx, &entity.Release{
-			Name:         u.req.GetName(),
-			ProjectCode:  contextx.GetProjectCodeFromCtx(u.ctx),
-			Namespace:    u.req.GetNamespace(),
-			ClusterID:    u.req.GetClusterID(),
-			Repo:         u.req.GetRepository(),
-			ChartName:    u.req.GetChart(),
-			ChartVersion: u.req.GetVersion(),
-			ValueFile:    u.req.GetValueFile(),
-			Values:       u.req.GetValues(),
-			Args:         u.req.GetArgs(),
-			CreateBy:     createBy,
-			Status:       helmrelease.StatusPendingUpgrade.String(),
-			Env:          u.req.GetEnv(),
+			Name:                u.req.GetName(),
+			ProjectCode:         contextx.GetProjectCodeFromCtx(u.ctx),
+			Namespace:           u.req.GetNamespace(),
+			ClusterID:           u.req.GetClusterID(),
+			Repo:                u.req.GetRepository(),
+			ChartName:           u.req.GetChart(),
+			ChartVersion:        u.req.GetVersion(),
+			ValueFile:           u.req.GetValueFile(),
+			Values:              u.req.GetValues(),
+			Args:                u.req.GetArgs(),
+			CreateBy:            createBy,
+			Status:              helmrelease.StatusPendingUpgrade.String(),
+			Env:                 u.req.GetEnv(),
+			SkipPaasAnnotations: u.req.GetSkipPaasAnnotations(),
 		}); err != nil {
 			return err
 		}
@@ -168,17 +170,21 @@ func (u *UpgradeReleaseV1Action) saveDB() error {
 		if u.req.GetVersion() == "" {
 			u.req.Version = &old.ChartVersion
 		}
+		if u.req.SkipPaasAnnotations == nil {
+			u.req.SkipPaasAnnotations = &old.SkipPaasAnnotations
+		}
 		rl := entity.M{
-			entity.FieldKeyRepoName:     u.req.GetRepository(),
-			entity.FieldKeyChartName:    u.req.GetChart(),
-			entity.FieldKeyChartVersion: u.req.GetVersion(),
-			entity.FieldKeyValues:       u.req.GetValues(),
-			entity.FieldKeyValueFile:    u.req.GetValueFile(),
-			entity.FieldKeyArgs:         u.req.Args,
-			entity.FieldKeyUpdateBy:     createBy,
-			entity.FieldKeyStatus:       helmrelease.StatusPendingUpgrade.String(),
-			entity.FieldKeyMessage:      "",
-			entity.FieldKeyEnv:          u.req.GetEnv(),
+			entity.FieldKeyRepoName:            u.req.GetRepository(),
+			entity.FieldKeyChartName:           u.req.GetChart(),
+			entity.FieldKeyChartVersion:        u.req.GetVersion(),
+			entity.FieldKeyValues:              u.req.GetValues(),
+			entity.FieldKeyValueFile:           u.req.GetValueFile(),
+			entity.FieldKeyArgs:                u.req.Args,
+			entity.FieldKeyUpdateBy:            createBy,
+			entity.FieldKeyStatus:              helmrelease.StatusPendingUpgrade.String(),
+			entity.FieldKeyMessage:             "",
+			entity.FieldKeyEnv:                 u.req.GetEnv(),
+			entity.FieldKeySkipPaasAnnotations: u.req.GetSkipPaasAnnotations(),
 		}
 		if err = u.model.UpdateRelease(u.ctx, u.req.GetClusterID(), u.req.GetNamespace(),
 			u.req.GetName(), rl); err != nil {

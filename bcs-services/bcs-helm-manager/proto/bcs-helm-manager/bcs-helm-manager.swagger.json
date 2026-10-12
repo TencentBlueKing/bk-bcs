@@ -3208,6 +3208,12 @@
           "type": "string",
           "description": "环境",
           "title": "env"
+        },
+        "skipPaasAnnotations": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "是否不注入 BCS 的 io.tencent.paas 系列注解，默认 false（注入）",
+          "title": "skipPaasAnnotations"
         }
       },
       "description": "安装 release 的参数",
@@ -3668,6 +3674,12 @@
           "type": "string",
           "description": "release别名",
           "title": "displayName"
+        },
+        "skipPaasAnnotations": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "是否不注入 BCS 的 io.tencent.paas 系列注解",
+          "title": "skipPaasAnnotations"
         }
       }
     },
@@ -4427,6 +4439,12 @@
           "type": "string",
           "description": "环境",
           "title": "env"
+        },
+        "skipPaasAnnotations": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "是否不注入 BCS 的 io.tencent.paas 系列注解，默认 false（注入）",
+          "title": "skipPaasAnnotations"
         }
       },
       "description": "升级 release 的参数",

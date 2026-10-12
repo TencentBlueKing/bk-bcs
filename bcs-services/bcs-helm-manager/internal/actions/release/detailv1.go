@@ -129,6 +129,7 @@ func (g *GetReleaseDetailV1Action) mergeRelease(detail *helmmanager.ReleaseDetai
 	detail.CreateBy = &rl.CreateBy
 	detail.UpdateBy = &rl.UpdateBy
 	detail.Repo = &rl.Repo
+	detail.SkipPaasAnnotations = common.GetBoolP(rl.SkipPaasAnnotations)
 	return detail
 }
 

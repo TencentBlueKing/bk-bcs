@@ -52,6 +52,9 @@ type ReleaseUpgradeAction struct {
 	AuthUser       string
 	IsShardCluster bool
 
+	// skipPaasAnnotations 为 true 时不注入 BCS 的 io.tencent.paas 系列注解
+	skipPaasAnnotations bool
+
 	contents []byte
 	result   *release.HelmUpgradeResult
 }
@@ -76,6 +79,10 @@ type ReleaseUpgradeActionOption struct {
 	UpdateBy       string
 	AuthUser       string
 	IsShardCluster bool
+
+	// SkipPaasAnnotations 是否不注入 BCS 的 io.tencent.paas 系列注解，
+	// 语义与 ReleaseUpgradeAction.skipPaasAnnotations 一致
+	SkipPaasAnnotations bool
 }
 
 // NewReleaseUpgradeAction new release upgrade action
@@ -98,6 +105,8 @@ func NewReleaseUpgradeAction(o *ReleaseUpgradeActionOption) *ReleaseUpgradeActio
 		updateBy:       o.UpdateBy,
 		AuthUser:       o.AuthUser,
 		IsShardCluster: o.IsShardCluster,
+
+		skipPaasAnnotations: o.SkipPaasAnnotations,
 	}
 }
 
@@ -161,7 +170,8 @@ func (r *ReleaseUpgradeAction) Validate(ctx context.Context) error {
 
 	// get manifest from helm dry run
 	result, err := release.UpgradeRelease(r.releaseHandler, r.projectID, r.projectCode, r.clusterID, r.name,
-		r.namespace, r.chartName, r.version, r.createBy, r.updateBy, r.args, nil, r.contents, r.values, true)
+		r.namespace, r.chartName, r.version, r.createBy, r.updateBy, r.args, nil, r.contents, r.values, true,
+		r.skipPaasAnnotations)
 	if err != nil {
 		return err
 	}
@@ -206,6 +216,22 @@ func (r *ReleaseUpgradeAction) Execute(ctx context.Context) error {
 			Content: []byte(v),
 		})
 	}
+	// 基础占位符始终注入
+	patchValues := map[string]string{
+		common.PTKProjectID: r.projectID,
+		common.PTKClusterID: r.clusterID,
+		common.PTKNamespace: r.namespace,
+		common.PTKName:      r.name,
+	}
+	// 用户选择不注入时才跳过 paas 系列占位符。
+	// 注意：仅跳过占位符是不够的 —— patch 模板中的注解行会变成空串而非消失，
+	// 还会把 creator 原有值覆盖为空。因此必须配合 patcher 里的 removePaasMetadata
+	// 把注解 key 整条删除。
+	if !r.skipPaasAnnotations {
+		patchValues[common.PTKCreator] = stringx.ReplaceIllegalChars(r.createBy)
+		patchValues[common.PTKUpdator] = stringx.ReplaceIllegalChars(r.updateBy)
+		patchValues[common.PTKVersion] = r.version
+	}
 	result, err := r.releaseHandler.Cluster(r.clusterID).Upgrade(
 		ctx, release.HelmUpgradeConfig{
 			ProjectCode: r.projectCode,
@@ -215,17 +241,11 @@ func (r *ReleaseUpgradeAction) Execute(ctx context.Context) error {
 				Name:    r.chartName + "-" + r.version + ".tgz",
 				Content: r.contents,
 			},
-			Args:   r.args,
-			Values: vls,
-			PatchTemplateValues: map[string]string{
-				common.PTKProjectID: r.projectID,
-				common.PTKClusterID: r.clusterID,
-				common.PTKNamespace: r.namespace,
-				common.PTKCreator:   stringx.ReplaceIllegalChars(r.createBy),
-				common.PTKUpdator:   stringx.ReplaceIllegalChars(r.updateBy),
-				common.PTKVersion:   r.version,
-				common.PTKName:      r.name,
-			},
+			Args:                r.args,
+			Values:              vls,
+			PatchTemplateValues: patchValues,
+			// 由 patcher 决定是否删除 paas 系列注解
+			SkipPaasAnnotations: r.skipPaasAnnotations,
 		})
 	r.result = result
 	if err != nil {

@@ -46,6 +46,19 @@ var (
 	patchTemplateKeyRegex = regexp.MustCompile(patchTemplateKeyPrefix + ".+" + patchTemplateKeySuffix)
 )
 
+// PaasMetadataKeys BCS 注入的 paas 系列元数据 key，与 internal/actions/release/utils.go 中的
+// shouldRemoveAnnotations 保持一致，修改时请同步。
+// 实测（2026-10-09，bcs-system/bcs-push-manager）这几个 key 的分布并不统一：
+//   - creator / updator：同时存在于 metadata.annotations 与 metadata.labels
+//   - version：只存在于 metadata.annotations
+//   - source_type / projectid：不属于本分组，是「来源 / 归属」元数据，不删除
+
+var PaasMetadataKeys = []string{
+	"io.tencent.paas.creator",
+	"io.tencent.paas.updator",
+	"io.tencent.paas.version",
+}
+
 // IsPatchTemplateKey check if the provided string is a patch template key
 func IsPatchTemplateKey(key string) bool {
 	return strings.HasPrefix(key, patchTemplateKeyPrefix) && strings.HasSuffix(key, patchTemplateKeySuffix)

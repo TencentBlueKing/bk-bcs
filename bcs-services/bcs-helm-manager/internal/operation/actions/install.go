@@ -38,19 +38,20 @@ type ReleaseInstallAction struct {
 	platform       repo.Platform
 	releaseHandler release.Handler
 
-	projectCode    string
-	projectID      string
-	clusterID      string
-	name           string
-	namespace      string
-	repoName       string
-	chartName      string
-	version        string
-	values         []string
-	args           []string
-	username       string
-	AuthUser       string
-	IsShardCluster bool
+	projectCode         string
+	projectID           string
+	clusterID           string
+	name                string
+	namespace           string
+	repoName            string
+	chartName           string
+	version             string
+	values              []string
+	args                []string
+	username            string
+	AuthUser            string
+	IsShardCluster      bool
+	skipPaasAnnotations bool
 
 	contents []byte
 	result   *release.HelmInstallResult
@@ -75,27 +76,31 @@ type ReleaseInstallActionOption struct {
 	Username       string
 	AuthUser       string
 	IsShardCluster bool
+
+	// SkipPaasAnnotations 是否不注入 BCS 的 io.tencent.paas 系列注解
+	SkipPaasAnnotations bool
 }
 
 // NewReleaseInstallAction new release install action
 func NewReleaseInstallAction(o *ReleaseInstallActionOption) *ReleaseInstallAction {
 	return &ReleaseInstallAction{
-		model:          o.Model,
-		platform:       o.Platform,
-		releaseHandler: o.ReleaseHandler,
-		projectCode:    o.ProjectCode,
-		projectID:      o.ProjectID,
-		clusterID:      o.ClusterID,
-		name:           o.Name,
-		namespace:      o.Namespace,
-		repoName:       o.RepoName,
-		chartName:      o.ChartName,
-		version:        o.Version,
-		values:         o.Values,
-		args:           o.Args,
-		username:       o.Username,
-		AuthUser:       o.AuthUser,
-		IsShardCluster: o.IsShardCluster,
+		model:               o.Model,
+		platform:            o.Platform,
+		releaseHandler:      o.ReleaseHandler,
+		projectCode:         o.ProjectCode,
+		projectID:           o.ProjectID,
+		clusterID:           o.ClusterID,
+		name:                o.Name,
+		namespace:           o.Namespace,
+		repoName:            o.RepoName,
+		chartName:           o.ChartName,
+		version:             o.Version,
+		values:              o.Values,
+		args:                o.Args,
+		username:            o.Username,
+		AuthUser:            o.AuthUser,
+		IsShardCluster:      o.IsShardCluster,
+		skipPaasAnnotations: o.SkipPaasAnnotations,
 	}
 }
 
@@ -160,7 +165,7 @@ func (r *ReleaseInstallAction) Validate(ctx context.Context) error {
 	// get manifest from helm dry run
 	result, err := release.InstallRelease(r.releaseHandler, r.projectID, r.projectCode, r.clusterID, r.name,
 		r.namespace, r.chartName, r.version, r.username, r.username, r.args, nil, r.contents, r.values,
-		true, true, false)
+		true, true, false, r.skipPaasAnnotations)
 	if err != nil {
 		return err
 	}
@@ -205,6 +210,21 @@ func (r *ReleaseInstallAction) Execute(ctx context.Context) error {
 			Content: []byte(v),
 		})
 	}
+	// 基础占位符始终注入
+	patchValues := map[string]string{
+		common.PTKProjectID: r.projectID,
+		common.PTKClusterID: r.clusterID,
+		common.PTKNamespace: r.namespace,
+		common.PTKName:      r.name,
+	}
+	// install 时 createBy 与 updateBy 都是 r.username。
+	// 注意：仅跳过占位符是不够的，必须配合 patcher 里的 removePaasMetadata 删除注解 key，
+	// 否则只会得到三个空串，且 creator 原有值会被覆盖。
+	if !r.skipPaasAnnotations {
+		patchValues[common.PTKCreator] = stringx.ReplaceIllegalChars(r.username)
+		patchValues[common.PTKUpdator] = stringx.ReplaceIllegalChars(r.username)
+		patchValues[common.PTKVersion] = r.version
+	}
 	result, err := r.releaseHandler.Cluster(r.clusterID).Install(
 		ctx, release.HelmInstallConfig{
 			ProjectCode: r.projectCode,
@@ -214,17 +234,11 @@ func (r *ReleaseInstallAction) Execute(ctx context.Context) error {
 				Name:    r.chartName + "-" + r.version + ".tgz",
 				Content: r.contents,
 			},
-			Args:   r.args,
-			Values: vls,
-			PatchTemplateValues: map[string]string{
-				common.PTKProjectID: r.projectID,
-				common.PTKClusterID: r.clusterID,
-				common.PTKNamespace: r.namespace,
-				common.PTKCreator:   stringx.ReplaceIllegalChars(r.username),
-				common.PTKUpdator:   stringx.ReplaceIllegalChars(r.username),
-				common.PTKVersion:   r.version,
-				common.PTKName:      r.name,
-			},
+			Args:                r.args,
+			Values:              vls,
+			PatchTemplateValues: patchValues,
+			// 由 patcher 决定是否删除 paas 系列注解
+			SkipPaasAnnotations: r.skipPaasAnnotations,
 		})
 	if err != nil {
 		return fmt.Errorf("install %s/%s in cluster %s error, %s",
