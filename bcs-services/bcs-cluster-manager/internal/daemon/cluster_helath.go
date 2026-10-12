@@ -146,6 +146,15 @@ type caStat struct {
 	enabled, debugEnabled, prodEnabled int
 }
 
+// caRatio 计算比率，分母为 0 时返回 0，避免向 Prometheus 上报 NaN。
+// NaN 会导致 avg()/sum() 等聚合结果失效。
+func caRatio(used, total int) float64 {
+	if total == 0 {
+		return 0
+	}
+	return float64(used) / float64(total)
+}
+
 func (d *Daemon) reportClusterCaUsageRatio(error chan<- error) {
 	statusCond := operator.NewLeafCondition(operator.In, operator.M{
 		"status": []string{common.StatusRunning, common.StatusConnectClusterFailed},
@@ -172,12 +181,12 @@ func (d *Daemon) reportClusterCaUsageRatio(error chan<- error) {
 	for i := range clusterList {
 		// filter cluster
 		if clusterList[i].ClusterType == common.ClusterTypeVirtual {
-			blog.Infof("reportClusterCaUsageRatio[%s] skip virtual cluster, provider %s",
+			blog.Debug("reportClusterCaUsageRatio[%s] skip virtual cluster, provider %s",
 				clusterList[i].ClusterID, clusterList[i].Provider)
 			continue
 		}
 		if clusterList[i].SystemID == "" {
-			blog.Infof("reportClusterCaUsageRatio[%s] skip cluster with empty SystemID, provider %s",
+			blog.Debug("reportClusterCaUsageRatio[%s] skip cluster with empty SystemID, provider %s",
 				clusterList[i].ClusterID, clusterList[i].Provider)
 			continue
 		}
@@ -251,25 +260,25 @@ func (d *Daemon) reportClusterCaUsageRatio(error chan<- error) {
 		}
 	}
 
-	metrics.ReportCaUsageRatio(platform, platform, float64(used)/float64(total))
-	metrics.ReportCaUsageRatio(common.Debug, platform, float64(debugUsed)/float64(debugTotal))
-	metrics.ReportCaUsageRatio(common.Prod, platform, float64(prodUsed)/float64(prodTotal))
+	metrics.ReportCaUsageRatio(platform, platform, caRatio(used, total))
+	metrics.ReportCaUsageRatio(common.Debug, platform, caRatio(debugUsed, debugTotal))
+	metrics.ReportCaUsageRatio(common.Prod, platform, caRatio(prodUsed, prodTotal))
 
-	metrics.ReportCaEnableRatio(platform, platform, float64(enabled)/float64(used))
-	metrics.ReportCaEnableRatio(common.Debug, platform, float64(debugEnabled)/float64(debugUsed))
-	metrics.ReportCaEnableRatio(common.Prod, platform, float64(prodEnabled)/float64(prodUsed))
+	metrics.ReportCaEnableRatio(platform, platform, caRatio(enabled, used))
+	metrics.ReportCaEnableRatio(common.Debug, platform, caRatio(debugEnabled, debugUsed))
+	metrics.ReportCaEnableRatio(common.Prod, platform, caRatio(prodEnabled, prodUsed))
 
 	for provider, stat := range providerStats {
 		blog.Infof("reportClusterCaUsageRatio provider %s: used/total %d/%d, debugUsed/debugTotal %d/%d, "+
 			"prodUsed/prodTotal %d/%d, enabled/used %d/%d",
 			provider, stat.used, stat.total, stat.debugUsed, stat.debugTotal,
 			stat.prodUsed, stat.prodTotal, stat.enabled, stat.used)
-		metrics.ReportCaUsageRatio(platform, provider, float64(stat.used)/float64(stat.total))
-		metrics.ReportCaUsageRatio(common.Debug, provider, float64(stat.debugUsed)/float64(stat.debugTotal))
-		metrics.ReportCaUsageRatio(common.Prod, provider, float64(stat.prodUsed)/float64(stat.prodTotal))
+		metrics.ReportCaUsageRatio(platform, provider, caRatio(stat.used, stat.total))
+		metrics.ReportCaUsageRatio(common.Debug, provider, caRatio(stat.debugUsed, stat.debugTotal))
+		metrics.ReportCaUsageRatio(common.Prod, provider, caRatio(stat.prodUsed, stat.prodTotal))
 
-		metrics.ReportCaEnableRatio(platform, provider, float64(stat.enabled)/float64(stat.used))
-		metrics.ReportCaEnableRatio(common.Debug, provider, float64(stat.debugEnabled)/float64(stat.debugUsed))
-		metrics.ReportCaEnableRatio(common.Prod, provider, float64(stat.prodEnabled)/float64(stat.prodUsed))
+		metrics.ReportCaEnableRatio(platform, provider, caRatio(stat.enabled, stat.used))
+		metrics.ReportCaEnableRatio(common.Debug, provider, caRatio(stat.debugEnabled, stat.debugUsed))
+		metrics.ReportCaEnableRatio(common.Prod, provider, caRatio(stat.prodEnabled, stat.prodUsed))
 	}
 }
