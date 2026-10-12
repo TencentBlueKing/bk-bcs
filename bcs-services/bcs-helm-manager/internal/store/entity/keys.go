@@ -49,4 +49,8 @@ const (
 	FieldKeyMessage = "message"
 
 	FieldKeyEnv = "env"
+
+	// FieldKeySkipPaasAnnotations 是否不注入 BCS 的 io.tencent.paas 系列注解
+	// （creator / updator / version）
+	FieldKeySkipPaasAnnotations = "skipPaasAnnotations"
 )

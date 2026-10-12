@@ -6471,6 +6471,8 @@ func (m *ReleaseDetail) validate(all bool) error {
 
 	// no validation rules for DisplayName
 
+	// no validation rules for SkipPaasAnnotations
+
 	if len(errors) > 0 {
 		return ReleaseDetailMultiError(errors)
 	}
@@ -7266,6 +7268,8 @@ func (m *InstallReleaseV1Req) validate(all bool) error {
 
 	// no validation rules for Env
 
+	// no validation rules for SkipPaasAnnotations
+
 	if len(errors) > 0 {
 		return InstallReleaseV1ReqMultiError(errors)
 	}
@@ -7847,6 +7851,8 @@ func (m *UpgradeReleaseV1Req) validate(all bool) error {
 	// no validation rules for Operator
 
 	// no validation rules for Env
+
+	// no validation rules for SkipPaasAnnotations
 
 	if len(errors) > 0 {
 		return UpgradeReleaseV1ReqMultiError(errors)
