@@ -214,7 +214,7 @@ type HelmInstallConfig struct {
 	Values              []*File
 	PatchTemplateValues map[string]string
 
-	// SkipPaasAnnotations 为 true 时不注入 BCS 的 io.tencent.paas 系列注解
+	// SkipPaasAnnotations 为 true 时不注入 BCS 的 io.tencent.paas.updator 元数据
 	SkipPaasAnnotations bool
 }
 
@@ -343,10 +343,11 @@ func InstallRelease(releaseHandler Handler, projectID, projectCode, clusterID, r
 		common.PTKNamespace: releaseNamespace,
 		common.PTKName:      releaseName,
 	}
+	patchValues[common.PTKCreator] = stringx.ReplaceIllegalChars(creator)
+	patchValues[common.PTKVersion] = version
+	// 开关只作用于 updator：开启后不再注入，避免每次更新把 updator 覆盖成当前操作人
 	if !skipPaasAnnotations {
-		patchValues[common.PTKCreator] = stringx.ReplaceIllegalChars(creator)
 		patchValues[common.PTKUpdator] = stringx.ReplaceIllegalChars(updator)
-		patchValues[common.PTKVersion] = version
 	}
 	return releaseHandler.Cluster(clusterID).Install(
 		context.Background(),
@@ -386,10 +387,11 @@ func UpgradeRelease(releaseHandler Handler, projectID, projectCode, clusterID, r
 		common.PTKNamespace: releaseNamespace,
 		common.PTKName:      releaseName,
 	}
+	patchValues[common.PTKCreator] = stringx.ReplaceIllegalChars(creator)
+	patchValues[common.PTKVersion] = version
+	// 开关只作用于 updator：开启后不再注入，避免每次更新把 updator 覆盖成当前操作人
 	if !skipPaasAnnotations {
-		patchValues[common.PTKCreator] = stringx.ReplaceIllegalChars(creator)
 		patchValues[common.PTKUpdator] = stringx.ReplaceIllegalChars(updator)
-		patchValues[common.PTKVersion] = version
 	}
 	return releaseHandler.Cluster(clusterID).Upgrade(
 		context.Background(),

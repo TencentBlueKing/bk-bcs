@@ -41,7 +41,7 @@ type Release struct {
 	Status              string   `json:"status" bson:"status"`
 	Message             string   `json:"message" bson:"message"`
 	Env                 string   `json:"env" bson:"env"`
-	SkipPaasAnnotations bool     `json:"skipPaasAnnotations" bson:"skipPaasAnnotations"` // SkipPaasAnnotations 默认false 选择勾选则为 true 时，部署/更新不在资源中注入 BCS 的 io.tencent.paas 系列注解
+	SkipPaasAnnotations bool     `json:"skipPaasAnnotations" bson:"skipPaasAnnotations"` // SkipPaasAnnotations 默认 false；为 true 时部署/更新不再注入 BCS 的 io.tencent.paas.updator 元数据
 }
 
 // Transfer2DetailProto transfer the data into detail protobuf struct

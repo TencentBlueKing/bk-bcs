@@ -121,9 +121,7 @@ func (r *ReleasePreviewAction) getReleasePreview() (*helmmanager.ReleasePreview,
 	if err != nil {
 		return nil, fmt.Errorf("reuse values failed, %s", err.Error())
 	}
-	// 开关由本次请求决定，不再读取 DB 里的历史值：
-	// 预览与实际下发使用同一份请求参数，才能保证「预览结果 == 实际部署结果」。
-	// 未传时默认 false（注入），与 install / upgrade 语义一致。
+	// 开关由本次请求决定，不再读取 DB 里的历史值： 未传时默认 false（注入），与 install / upgrade 语义一致。
 	skipPaasAnnotations := r.req.GetSkipPaasAnnotations()
 	result, err := release.InstallRelease(r.releaseHandler, contextx.GetProjectIDFromCtx(r.ctx), projectCode,
 		r.req.GetClusterID(), r.req.GetName(), r.req.GetNamespace(), r.req.GetChart(), r.req.GetVersion(),
