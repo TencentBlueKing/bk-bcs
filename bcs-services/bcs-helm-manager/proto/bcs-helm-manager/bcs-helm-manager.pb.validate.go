@@ -8434,6 +8434,8 @@ func (m *ReleasePreviewReq) validate(all bool) error {
 
 	// no validation rules for Revision
 
+	// no validation rules for SkipPaasAnnotations
+
 	if len(errors) > 0 {
 		return ReleasePreviewReqMultiError(errors)
 	}
