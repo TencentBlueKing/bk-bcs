@@ -220,14 +220,11 @@ func (r *ReleaseUpgradeAction) Execute(ctx context.Context) error {
 		common.PTKNamespace: r.namespace,
 		common.PTKName:      r.name,
 	}
-	// 用户选择不注入时才跳过 paas 系列占位符。
-	// 注意：仅跳过占位符是不够的 —— patch 模板中的注解行会变成空串而非消失，
-	// 还会把 creator 原有值覆盖为空。因此必须配合 patcher 里的 removePaasMetadata
-	// 把注解 key 整条删除。
+	// creator / version 始终注入；只有 updator 受开关控制。
+	patchValues[common.PTKCreator] = stringx.ReplaceIllegalChars(r.createBy)
+	patchValues[common.PTKVersion] = r.version
 	if !r.skipPaasAnnotations {
-		patchValues[common.PTKCreator] = stringx.ReplaceIllegalChars(r.createBy)
 		patchValues[common.PTKUpdator] = stringx.ReplaceIllegalChars(r.updateBy)
-		patchValues[common.PTKVersion] = r.version
 	}
 	result, err := r.releaseHandler.Cluster(r.clusterID).Upgrade(
 		ctx, release.HelmUpgradeConfig{

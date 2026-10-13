@@ -216,12 +216,11 @@ func (r *ReleaseInstallAction) Execute(ctx context.Context) error {
 		common.PTKName:      r.name,
 	}
 	// install 时 createBy 与 updateBy 都是 r.username。
-	// 注意：仅跳过占位符是不够的，必须配合 patcher 里的 removePaasMetadata 删除注解 key，
-	// 否则只会得到三个空串，且 creator 原有值会被覆盖。
+	// creator / version 始终注入；只有 updator 受开关控制。
+	patchValues[common.PTKCreator] = stringx.ReplaceIllegalChars(r.username)
+	patchValues[common.PTKVersion] = r.version
 	if !r.skipPaasAnnotations {
-		patchValues[common.PTKCreator] = stringx.ReplaceIllegalChars(r.username)
 		patchValues[common.PTKUpdator] = stringx.ReplaceIllegalChars(r.username)
-		patchValues[common.PTKVersion] = r.version
 	}
 	result, err := r.releaseHandler.Cluster(r.clusterID).Install(
 		ctx, release.HelmInstallConfig{
