@@ -63,21 +63,19 @@ type ReleaseInstallActionOption struct {
 	Platform       repo.Platform
 	ReleaseHandler release.Handler
 
-	ProjectCode    string
-	ProjectID      string
-	ClusterID      string
-	Name           string
-	Namespace      string
-	RepoName       string
-	ChartName      string
-	Version        string
-	Values         []string
-	Args           []string
-	Username       string
-	AuthUser       string
-	IsShardCluster bool
-
-	// SkipPaasAnnotations 是否不注入 BCS 的 io.tencent.paas 系列注解
+	ProjectCode         string
+	ProjectID           string
+	ClusterID           string
+	Name                string
+	Namespace           string
+	RepoName            string
+	ChartName           string
+	Version             string
+	Values              []string
+	Args                []string
+	Username            string
+	AuthUser            string
+	IsShardCluster      bool
 	SkipPaasAnnotations bool
 }
 
@@ -237,7 +235,7 @@ func (r *ReleaseInstallAction) Execute(ctx context.Context) error {
 			Args:                r.args,
 			Values:              vls,
 			PatchTemplateValues: patchValues,
-			// 由 patcher 决定是否删除 paas 系列注解
+			// 由 patcher 决定是否删除 io.tencent.paas.updator 元数据
 			SkipPaasAnnotations: r.skipPaasAnnotations,
 		})
 	if err != nil {

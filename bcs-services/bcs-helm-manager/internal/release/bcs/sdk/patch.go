@@ -48,7 +48,7 @@ func replacePatchTplKey(keys map[string]string, data []byte) []byte {
 }
 
 // newPatcher 构建 post-render patcher。
-// skipPaasAnnotations 为 true 时，会在渲染完成后删除 BCS 注入的 paas 系列元数据。
+// skipPaasAnnotations 为 true 时，会在渲染完成后删除 BCS 注入的 io.tencent.paas.updator 元数据。
 func newPatcher(templates []*release.File, keys map[string]string, skipPaasAnnotations bool) *patcher {
 	fs := make([]*files.File, 0, 5)
 	for _, f := range templates {
@@ -63,7 +63,7 @@ func newPatcher(templates []*release.File, keys map[string]string, skipPaasAnnot
 
 type patcher struct {
 	files []*files.File
-	// skipPaasAnnotations 为 true 时删除 BCS 注入的 io.tencent.paas 系列元数据
+	// skipPaasAnnotations 为 true 时删除 BCS 注入的 io.tencent.paas.updator 元数据
 	skipPaasAnnotations bool
 }
 
@@ -90,7 +90,7 @@ func (p *patcher) Run(renderedManifests *bytes.Buffer) (*bytes.Buffer, error) {
 			continue
 		}
 
-		// 用户选择不注入时，删除 BCS 注入的 io.tencent.paas 系列元数据（annotations + labels）
+		// 用户选择不注入时，删除 BCS 注入的 io.tencent.paas.updator 元数据（annotations + labels）
 		if p.skipPaasAnnotations {
 			j, err = removePaasMetadata(j)
 			if err != nil {
@@ -209,7 +209,7 @@ func inject4MetadataLabels(manifest string) (string, error) {
 }
 
 // paasMetaPaths 需要清理 paas 元数据的位置，元素为逐级的 key 路径。
-// annotations 与 labels 都要处理：creator / updator 两处都存在，只清 annotations 会漏。
+// annotations 与 labels 都要处理：updator 在 metadata 与 spec.template 两处都存在，只清一处会漏。
 // spec.template 下的两份是防御性覆盖，路径不存在时自动跳过，也不会触发 Pod 滚动。
 var paasMetaPaths = [][]string{
 	{"metadata", "annotations"},
@@ -218,8 +218,8 @@ var paasMetaPaths = [][]string{
 	{"spec", "template", "metadata", "labels"},
 }
 
-// removePaasMetadata 删除 BCS 注入的 io.tencent.paas 系列元数据（annotations 与 labels）。
-// 必须与"不放占位符"配合使用：仅不放占位符会让值变成空串而非消失，并覆盖 creator 原有值。
+// removePaasMetadata 删除 BCS 注入的 io.tencent.paas.updator 元数据（annotations 与 labels）。
+// 必须与"不放占位符"配合使用：仅不放占位符会让值变成空串而非消失，并覆盖 updator 原有值。
 // 未删到任何内容时原样返回 manifest，避免对无关资源（CRD / Secret 等）做无谓的重新格式化。
 func removePaasMetadata(manifest string) (string, error) {
 	var n yaml.MapSlice
@@ -248,7 +248,7 @@ func removePaasMetadata(manifest string) (string, error) {
 	return string(out), nil
 }
 
-// removePaasMetadataInPath 沿路径下钻，删除末端 map 中属于 paas 系列的 key，返回是否真的删到了。
+// removePaasMetadataInPath 沿路径下钻，删除末端 map 中属于 common.PaasMetadataKeys 的 key，返回是否真的删到了。
 // 只做结构化读写，不触碰 goccy/go-yaml 的 AST：ReplaceWithReader 之后 AST 的缩进信息会失真，
 // String() 内部 strings.Repeat 拿到负数会 panic（v1.9.6 已确认），进而让进程崩溃。
 func removePaasMetadataInPath(node interface{}, keys []string) (interface{}, bool) {
@@ -288,7 +288,7 @@ func removePaasMetadataInPath(node interface{}, keys []string) (interface{}, boo
 	return node, false
 }
 
-// removePaasMetadataInMap 删除同一层级 map 中属于 paas 系列的 key，返回是否真的删到了
+// removePaasMetadataInMap 删除同一层级 map 中属于 common.PaasMetadataKeys 的 key，返回是否真的删到了
 func removePaasMetadataInMap(node interface{}) (interface{}, bool) {
 	switch v := node.(type) {
 	case yaml.MapSlice:

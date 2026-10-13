@@ -170,8 +170,6 @@ func (u *UpgradeReleaseV1Action) saveDB() error {
 		if u.req.GetVersion() == "" {
 			u.req.Version = &old.ChartVersion
 		}
-		// 注意：skipPaasAnnotations 不做"未传则继承旧值"处理。
-		// 它是「本次部署」的即时选择：未传即视为 false（注入），与 install 语义保持一致。
 		// 仍会写入 DB，但仅用于详情页回显，不再参与渲染决策。
 		rl := entity.M{
 			entity.FieldKeyRepoName:            u.req.GetRepository(),
