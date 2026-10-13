@@ -3858,6 +3858,12 @@
           "format": "int64",
           "description": "release revision 版本, 如果revision为0, 则对比当前渲染结果和已部署的最新版本, 如果不为0, 则对比最新版本和指定版本",
           "title": "revision"
+        },
+        "skipPaasAnnotations": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "是否不注入 BCS 的 io.tencent.paas 系列注解",
+          "title": "skipPaasAnnotations"
         }
       },
       "description": "release 预览的参数",

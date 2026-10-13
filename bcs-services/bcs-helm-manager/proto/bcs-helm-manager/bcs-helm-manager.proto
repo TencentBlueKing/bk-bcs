@@ -1833,6 +1833,8 @@ message ReleaseDetail {
         title: "displayName",
         description: "release别名"
     }];
+    // 当前 release 的开关状态，供前端更新页回显上次的勾选。
+    // 不返回的话，用户每次打开更新页都会显示"未勾选"，会误以为上次的选择丢了。
     optional bool skipPaasAnnotations = 20[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "skipPaasAnnotations",
         description: "是否不注入 BCS 的 io.tencent.paas 系列注解"
@@ -2023,6 +2025,9 @@ message InstallReleaseV1Req {
         title: "env",
         description: "环境"
     }];
+    // 是否不注入 BCS 的 io.tencent.paas 系列注解（creator/updator/version）。
+    // 与 UpgradeReleaseV1Req.skipPaasAnnotations 语义一致，安装时也支持该开关。
+    // 反向命名 + optional，理由同 UpgradeReleaseV1Req。
     optional bool skipPaasAnnotations = 13[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "skipPaasAnnotations",
         description: "是否不注入 BCS 的 io.tencent.paas 系列注解，默认 false（注入）"
@@ -2171,6 +2176,10 @@ message UpgradeReleaseV1Req {
         title: "env",
         description: "环境"
     }];
+    // 是否不注入 BCS 的 io.tencent.paas 系列注解（creator/updator/version）。
+    // 注意命名必须是反向的 skip*：若正向命名 inject*，所有未传该字段的老客户端
+    // 会瞬间变成"不注入"，直接破坏兼容性。
+    // 必须用 optional，才能生成 *bool，用于区分"未传"与"显式传 false"。
     optional bool skipPaasAnnotations = 13[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "skipPaasAnnotations",
         description: "是否不注入 BCS 的 io.tencent.paas 系列注解，默认 false（注入）"
