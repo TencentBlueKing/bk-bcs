@@ -119,7 +119,6 @@ func (ca *ImportAction) createVariableDefinition(variable *proto.ImportVariableD
 	definition.Description = variable.Desc
 	definition.Default = variable.Value
 	definition.Creator = username
-	definition.CreateTime = time.Now().Format(time.RFC3339)
 	err := ca.tryGenerateIDAndDoCreate(definition)
 	if err != nil {
 		logging.Error("try generate id and insert variable definition projectCode [%s], key [%s] failed, err: %s",
@@ -146,7 +145,6 @@ func (ca *ImportAction) updateVariableDefinition(definition *vdm.VariableDefinit
 		vdm.FieldKeyName:        variable.Name,
 		vdm.FieldKeyDescription: variable.Desc,
 		vdm.FieldKeyDefault:     variable.Value,
-		vdm.FieldKeyUpdateTime:  time.Now().Format(time.RFC3339),
 		vdm.FieldKeyUpdater:     username,
 	}
 	definition, err := ca.model.UpdateVariableDefinition(ca.ctx, vd)

@@ -12,6 +12,7 @@
 package cmdb
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -21,7 +22,9 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/constant"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/headerkey"
 	svcConfig "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/tenant"
 )
 
 var (
@@ -39,7 +42,7 @@ func TestCheckMaintainer(t *testing.T) {
 		CMDB: svcConfig.CMDBConfig{Host: ts.URL, Timeout: 5, BKSupplierAccount: "tencent"},
 		App:  svcConfig.AppConfig{Code: "c", Secret: "s", BkUsername: "admin"},
 	}
-	isMaintainer, err := IsMaintainer(username, bizID)
+	isMaintainer, err := IsMaintainer(context.Background(), username, bizID)
 	assert.Nil(t, err)
 	assert.True(t, isMaintainer)
 }
@@ -49,7 +52,10 @@ func TestListAllBusinessesPaginated(t *testing.T) {
 	searchBusinessBatchSize = 1
 	defer func() { searchBusinessBatchSize = orig }()
 
+	var gotPath, gotTenant string
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotPath = r.URL.Path
+		gotTenant = r.Header.Get(string(headerkey.TenantIdKey))
 		var payload struct {
 			Page struct {
 				Start int `json:"start"`
@@ -72,8 +78,10 @@ func TestListAllBusinessesPaginated(t *testing.T) {
 		CMDB: svcConfig.CMDBConfig{Host: ts.URL, Timeout: 5, BKSupplierAccount: "tencent"},
 		App:  svcConfig.AppConfig{Code: "c", Secret: "s", BkUsername: "admin"},
 	}
-	list, err := ListAllBusinesses()
+	list, err := ListAllBusinesses(tenant.WithTenantIdFromContext(context.Background(), "t1"))
 	require.NoError(t, err)
+	assert.Equal(t, "/api/v3/biz/search/tencent", gotPath)
+	assert.Equal(t, "t1", gotTenant)
 	require.Len(t, list, 2)
 	assert.Equal(t, int64(1), list[0].BKBizID)
 	assert.Equal(t, "p", list[0].BkBizProductor)
@@ -89,6 +97,6 @@ func TestListAllBusinessesError(t *testing.T) {
 		CMDB: svcConfig.CMDBConfig{Host: ts.URL, Timeout: 5, BKSupplierAccount: "tencent"},
 		App:  svcConfig.AppConfig{},
 	}
-	_, err := ListAllBusinesses()
+	_, err := ListAllBusinesses(context.Background())
 	assert.Error(t, err)
 }

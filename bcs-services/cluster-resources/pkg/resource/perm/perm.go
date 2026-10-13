@@ -33,8 +33,9 @@ func Validate(ctx context.Context, res, action, projectID, clusterID, namespace 
 	if config.G.Auth.Disabled {
 		return nil
 	}
-	username := ctx.Value(ctxkey.UsernameKey).(string)
-	p, pCtx := genPermAndCtx(res, action, username, projectID, clusterID, namespace)
+	username := ctxkey.GetUsernameFromCtx(ctx)
+	tenantID := ctxkey.GetTenantIDFromCtx(ctx)
+	p, pCtx := genPermAndCtx(res, action, username, projectID, clusterID, namespace, tenantID)
 	if allow, err := canAction(p, pCtx, action); err != nil {
 		return err
 	} else if !allow {
@@ -44,7 +45,8 @@ func Validate(ctx context.Context, res, action, projectID, clusterID, namespace 
 }
 
 // genPermAndCtx 生成权限中心鉴权所需的 Perm && Ctx
-func genPermAndCtx(res, action, username, projectID, clusterID, namespace string) (iamPerm.Perm, iamPerm.Ctx) {
+func genPermAndCtx(res, action, username, projectID, clusterID, namespace, tenantID string) (iamPerm.Perm,
+	iamPerm.Ctx) {
 	// 上游逻辑中已经确保命名空间域的资源，传入的 Namespace 必定不为空，
 	// 因此这里直接根据命名空间是否为空判断权限类型即可（命名空间类型除外）
 	switch {
@@ -53,12 +55,13 @@ func genPermAndCtx(res, action, username, projectID, clusterID, namespace string
 		if action == crAction.List || action == crAction.Create {
 			namespace = ""
 		}
-		return criam.NewNSPerm(projectID, clusterID), nsAuth.NewPermCtx(username, projectID, clusterID, namespace)
+		return criam.NewNSPerm(projectID, clusterID),
+			nsAuth.NewPermCtx(username, projectID, clusterID, tenantID, namespace)
 	case namespace == "":
-		return criam.NewClusterScopedPerm(projectID), clusterAuth.NewPermCtx(username, projectID, clusterID)
+		return criam.NewClusterScopedPerm(projectID), clusterAuth.NewPermCtx(username, projectID, clusterID, tenantID)
 	default:
 		return criam.NewNSScopedPerm(projectID, clusterID, res), nsAuth.
-			NewPermCtx(username, projectID, clusterID, namespace)
+			NewPermCtx(username, projectID, clusterID, tenantID, namespace)
 	}
 }
 

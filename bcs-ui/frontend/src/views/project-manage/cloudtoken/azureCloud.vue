@@ -73,7 +73,7 @@
       </bcs-table-column>
       <bcs-table-column :label="$t('cluster.labels.createdAt')" show-overflow-tooltip>
         <template #default="{ row }">
-          {{ row.account.updateTime }}
+          {{ row.account.updateTime ? formatTimeWithTimezone(row.account.updateTime) : '--' }}
         </template>
       </bcs-table-column>
       <bcs-table-column :label="$t('generic.label.action')" width="100">
@@ -164,6 +164,7 @@ import { computed, onMounted, ref, watch } from 'vue';
 
 import $bkMessage from '@/common/bkmagic';
 import { NAME_REGEX } from '@/common/constant';
+import { formatTimeWithTimezone } from '@/common/util';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import usePage from '@/composables/use-page';
 import useTableSearch from '@/composables/use-search';

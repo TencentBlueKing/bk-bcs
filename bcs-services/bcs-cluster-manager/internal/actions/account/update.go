@@ -46,7 +46,7 @@ func NewUpdateAction(model store.ClusterManagerModel) *UpdateAction {
 }
 
 func (ua *UpdateAction) updateCloudAccount(destCloudAccount *cmproto.CloudAccount) error {
-	timeStr := time.Now().Format(time.RFC3339)
+	timeStr := time.Now().UTC().Format(time.RFC3339)
 	destCloudAccount.UpdateTime = timeStr
 	destCloudAccount.Updater = ua.req.Updater
 
@@ -238,7 +238,7 @@ func (ma *MigrateAction) Handle(
 		TaskID:       "",
 		Message:      fmt.Sprintf("迁移云[%s]账号[%s]", ma.req.CloudID, accountIDs),
 		OpUser:       auth.GetUserFromCtx(ctx),
-		CreateTime:   time.Now().Format(time.RFC3339),
+		CreateTime:   time.Now().UTC().Format(time.RFC3339),
 	})
 	if err != nil {
 		blog.Errorf("MigrateCloudAccount[%s] CreateOperationLog failed: %v", ma.req.CloudID, err)

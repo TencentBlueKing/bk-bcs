@@ -105,8 +105,8 @@ func (ua *ListOperationLogsAction) filterOperationLogs() ([]*cmproto.TaskOperati
 
 	if ua.req.StartTime > 0 && ua.req.EndTime > 0 {
 		// time range condition
-		start := time.Unix(int64(ua.req.StartTime), 0).Format(time.RFC3339)
-		end := time.Unix(int64(ua.req.EndTime), 0).Format(time.RFC3339)
+		start := time.Unix(int64(ua.req.StartTime), 0).UTC().Format(time.RFC3339)
+		end := time.Unix(int64(ua.req.EndTime), 0).UTC().Format(time.RFC3339)
 		conds = append(conds, util.Condition(util.Range, "createtime", []string{start, end}))
 	}
 
@@ -198,8 +198,8 @@ func (ua *ListOperationLogsAction) fetchV1OperationLogs() error {
 
 	resourceCond := operator.NewLeafCondition(operator.Eq, cond)
 	// time range condition
-	start := time.Unix(int64(ua.req.StartTime), 0).Format(time.RFC3339)
-	end := time.Unix(int64(ua.req.EndTime), 0).Format(time.RFC3339)
+	start := time.Unix(int64(ua.req.StartTime), 0).UTC().Format(time.RFC3339)
+	end := time.Unix(int64(ua.req.EndTime), 0).UTC().Format(time.RFC3339)
 
 	startTimeCond := operator.NewLeafCondition(operator.Gte, operator.M{"createtime": start})
 	endTimeCond := operator.NewLeafCondition(operator.Lte, operator.M{"createtime": end})

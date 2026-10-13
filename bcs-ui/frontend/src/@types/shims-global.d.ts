@@ -23,6 +23,7 @@ interface ILink {
   teaApply: string
   token: string // token配置文档
   uiPrefix: string // UI前缀，用于特性环境
+  subPath: string // 站点前缀，用于特性环境
   webConsole: string // web console文档
   backToLegacyButtonUrl: string // 回退到旧版link
   bkBcsEnvID: string // 客户端环境ID
@@ -33,6 +34,7 @@ interface Window {
   _project_id_: string
   bus: any
   mainComponent: any
+  timezone: string
   readonly BCS_API_HOST: string
   readonly DEVOPS_BCS_API_URL: string
   readonly i18n: {
@@ -56,6 +58,7 @@ interface Window {
   readonly BK_DOMAIN: string
   readonly BK_SHARED_RES_BASE_JS_URL: string
   readonly BK_CC_HOST: string
+  readonly BK_USER_UI_HOST: string
 }
 
 declare const BK_BCS_WELCOME: string;

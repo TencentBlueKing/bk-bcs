@@ -19,6 +19,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/encryptv2" // nolint
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iamv4"
 	registry "github.com/Tencent/bk-bcs/bcs-common/pkg/registry"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/options"
@@ -26,8 +27,14 @@ import (
 
 var userManagerConfig *UserMgrConfig
 
-// GloablIAMClient global iam client
-var GloablIAMClient iam.PermClient
+// GloablIAMClient 鉴权 client；enable_v4 时为 V4，否则为 V3。
+var GloablIAMClient func(tenantID string) iam.PermClient
+
+// GlobalIAMMigrateClient V3 权限模型 migration / V3 provider token，与鉴权版本无关。
+var GlobalIAMMigrateClient iam.PermMigrateClient
+
+// GlobalIAMV4Client IAM V4 客户端，仅在 iam_config.enable_v4 为 true 时初始化
+var GlobalIAMV4Client *iamv4.Client
 
 // GlobalCryptor global cryptor
 var GlobalCryptor encryptv2.Cryptor
@@ -109,6 +116,7 @@ type UserMgrConfig struct {
 
 	IAMConfig  options.IAMConfig
 	EtcdConfig registry.CMDOptions
+	Cmdb       options.CmdbConfig
 
 	PermissionSwitch bool
 	CommunityEdition bool
@@ -119,6 +127,9 @@ type UserMgrConfig struct {
 
 	// 操作记录清理
 	Activity options.Activity
+
+	// 多租户
+	Tenant options.Tenant
 	// 共享集群权限配置
 	SharedCluster options.SharedCluster
 }

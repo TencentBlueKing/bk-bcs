@@ -26,7 +26,6 @@ import (
 	helmtime "helm.sh/helm/v3/pkg/time"
 	v1 "k8s.io/api/core/v1"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/release"
@@ -71,7 +70,7 @@ func (c *cluster) list(ctx context.Context, option release.ListOption) (int, []*
 		if item.Info != nil {
 			rl.Status = item.Info.Status.String()
 			rl.Description = item.Info.Description
-			rl.UpdateTime = item.Info.LastDeployed.Local().Format(common.TimeFormat)
+			rl.UpdateTime = item.Info.LastDeployed.UTC().Format(time.RFC3339)
 		}
 		if item.Chart != nil {
 			rl.Chart = item.Chart.Name()
@@ -140,7 +139,7 @@ func (c *cluster) listV2(ctx context.Context, option release.ListOption) (int, [
 		if item.Info != nil {
 			rl.Status = item.Info.Status.String()
 			rl.Description = item.Info.Description
-			rl.UpdateTime = item.Info.LastDeployed.Local().Format(common.TimeFormat)
+			rl.UpdateTime = item.Info.LastDeployed.UTC().Format(time.RFC3339)
 		}
 		if item.Chart != nil {
 			rl.Chart = item.Chart.Name()

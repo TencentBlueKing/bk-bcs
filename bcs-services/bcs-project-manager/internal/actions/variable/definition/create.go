@@ -16,7 +16,6 @@ package definition
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
@@ -85,7 +84,6 @@ func (ca *CreateAction) createVariable() error {
 		ProjectCode: ca.req.GetProjectCode(),
 		Scope:       ca.req.GetScope(),
 		Category:    vdm.VariableCategoryCustom,
-		CreateTime:  time.Now().Format(time.RFC3339),
 	}
 	if authUser, e := middleware.GetUserFromContext(ca.ctx); e == nil {
 		vd.Creator = authUser.GetUsername()

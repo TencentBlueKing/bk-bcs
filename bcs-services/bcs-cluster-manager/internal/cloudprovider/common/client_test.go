@@ -13,6 +13,7 @@
 package common
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"strings"
@@ -42,7 +43,7 @@ func TestClient_CreateBkOpsTask(t *testing.T) {
 		t.Fatal("client nil")
 	}
 
-	response, err := cli.CreateBkOpsTask(&CreateTaskPathParas{
+	response, err := cli.CreateBkOpsTask(context.Background(), &CreateTaskPathParas{
 		BkBizID:    "3",
 		TemplateID: "19",
 		Operator:   "admin",
@@ -72,7 +73,7 @@ func TestClient_StartBkOpsTask(t *testing.T) {
 		TaskID:   "26",
 		Operator: "xxx",
 	}
-	result, err := cli.StartBkOpsTask(req, &StartTaskRequest{
+	result, err := cli.StartBkOpsTask(context.Background(), req, &StartTaskRequest{
 		Scope: "cmdb_biz",
 	})
 	if err != nil {
@@ -89,7 +90,7 @@ func TestClient_StartBkOpsTask(t *testing.T) {
 		case <-ticker.C:
 		}
 
-		data, err := cli.GetTaskStatus(req, &StartTaskRequest{
+		data, err := cli.GetTaskStatus(context.Background(), req, &StartTaskRequest{
 			Scope: "cmdb_biz",
 		})
 		if err != nil {
@@ -122,7 +123,7 @@ func TestClient_GetBusinessTemplateList(t *testing.T) {
 	}
 	req := &TemplateRequest{}
 
-	templateList, err := cli.GetBusinessTemplateList(path, req)
+	templateList, err := cli.GetBusinessTemplateList(context.Background(), path, req)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -139,7 +140,7 @@ func TestClient_GetUserProjectDetailInfo(t *testing.T) {
 		t.Fatal("client nil")
 	}
 
-	p, err := cli.GetUserProjectDetailInfo("106")
+	p, err := cli.GetUserProjectDetailInfo(context.Background(), "106")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -160,7 +161,7 @@ func TestClient_GetBusinessTemplateInfo(t *testing.T) {
 	}
 	req := &TemplateRequest{}
 
-	globalConstantValue, err := cli.GetBusinessTemplateInfo(path, req)
+	globalConstantValue, err := cli.GetBusinessTemplateInfo(context.Background(), path, req)
 	if err != nil {
 		t.Fatal(err)
 	}

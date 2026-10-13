@@ -84,7 +84,7 @@ func (ua *UpdateClusterModuleAction) updateClusterModuleInfo() error {
 				ua.req.GetClusterID(), worker, err)
 		}
 	}
-	ua.cluster.UpdateTime = time.Now().Format(time.RFC3339)
+	ua.cluster.UpdateTime = time.Now().UTC().Format(time.RFC3339)
 	err := ua.model.UpdateCluster(ua.ctx, ua.cluster)
 	if err != nil {
 		return err
@@ -105,7 +105,7 @@ func (ua *UpdateClusterModuleAction) updateClusterModuleInfo() error {
 		TaskID:       "",
 		Message:      fmt.Sprintf("集群%s更新节点模块[%s]", ua.req.ClusterID, ua.req.GetModule().GetWorkerModuleID()),
 		OpUser:       auth.GetUserFromCtx(ua.ctx),
-		CreateTime:   time.Now().Format(time.RFC3339),
+		CreateTime:   time.Now().UTC().Format(time.RFC3339),
 		ClusterID:    ua.req.ClusterID,
 		ProjectID:    ua.cluster.ProjectID,
 		ResourceName: ua.cluster.ClusterName,

@@ -66,6 +66,10 @@ func HandleBKMonitorClusterMetric(ctx context.Context, projectID, clusterID stri
 	if err != nil {
 		return nil, err
 	}
+	project, err := bcs.GetProject(ctx, config.G.BCS, cluster.ProjectID)
+	if err != nil {
+		return nil, err
+	}
 	provider := fmt.Sprintf(`bk_biz_id="%s"`, cluster.BKBizID)
 	clusterMatch := fmt.Sprintf(`bcs_cluster_id="%s"`, clusterID)
 
@@ -89,7 +93,7 @@ func HandleBKMonitorClusterMetric(ctx context.Context, projectID, clusterID stri
 			// 直接查询 bk_monitor，数据源进行聚合查询
 			rawQL := format.Sprintf(promql, params)
 			s, err := bkmonitor_client.QueryByPromQL(ctx, config.G.BKMonitor.URL, cluster.BKBizID,
-				start.Unix(), end.Unix(), step, nil, rawQL)
+				project.TenantId, start.Unix(), end.Unix(), step, nil, rawQL)
 			if err != nil {
 				return err
 			}

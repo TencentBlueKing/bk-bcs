@@ -17,6 +17,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
@@ -154,6 +155,9 @@ func (m *ModelNodeGroup) GetNodeGroup(ctx context.Context, nodeGroupID string) (
 	if err := m.db.Table(m.tableName).Find(cond).One(ctx, group); err != nil {
 		return nil, err
 	}
+	// 兼容旧数据
+	group.UpdateTime = util.TransStrToUTCStr(time.RFC3339Nano, group.UpdateTime)
+	group.CreateTime = util.TransStrToUTCStr(time.RFC3339Nano, group.CreateTime)
 	return group, nil
 }
 

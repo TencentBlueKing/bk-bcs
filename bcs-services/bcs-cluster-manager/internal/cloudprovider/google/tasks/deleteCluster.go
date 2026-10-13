@@ -10,6 +10,8 @@
  * limitations under the License.
  */
 
+// Package tasks define google tasks
+// NOCC:tosa/comment_ratio(ignore)
 package tasks
 
 import (

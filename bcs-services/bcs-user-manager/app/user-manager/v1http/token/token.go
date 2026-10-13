@@ -79,6 +79,7 @@ type CreateTokenForm struct {
 // nolint
 type TokenResp struct {
 	Token     string             `json:"token"`
+	TenantID  string             `json:"tenant_id,omitempty"`
 	JWT       string             `json:"jwt,omitempty"`
 	Status    *utils.TokenStatus `json:"status,omitempty"`
 	ExpiredAt *time.Time         `json:"expired_at"` // nil means never expired
@@ -167,6 +168,7 @@ func (t *TokenHandler) CreateToken(request *restful.Request, response *restful.R
 		UserName:    form.Username,
 		ExpiredTime: int64(form.Expiration),
 		Issuer:      jwt.JWTIssuer,
+		TenantId:    utils.GetTenantIDFromAttribute(request),
 	})
 	if err != nil {
 		blog.Errorf("create jwt token failed, %s", err.Error())
@@ -191,6 +193,7 @@ func (t *TokenHandler) CreateToken(request *restful.Request, response *restful.R
 		UserType:  models.PlainUser,
 		CreatedBy: createBy,
 		ExpiresAt: expiredAt,
+		TenantID:  utils.GetTenantIDFromAttribute(request),
 	}
 	err = t.tokenStore.CreateToken(userToken)
 	if err != nil {
@@ -204,7 +207,7 @@ func (t *TokenHandler) CreateToken(request *restful.Request, response *restful.R
 		return
 	}
 
-	resp := &TokenResp{Token: token, ExpiredAt: &userToken.ExpiresAt}
+	resp := &TokenResp{Token: token, TenantID: userToken.TenantID, ExpiredAt: &userToken.ExpiresAt}
 	// transfer never expired token
 	if resp.ExpiredAt.After(NeverExpired) {
 		resp.ExpiredAt = nil
@@ -241,7 +244,8 @@ func (t *TokenHandler) GetToken(request *restful.Request, response *restful.Resp
 		if v.ExpiresAt.After(NeverExpired) {
 			expiresAt = nil
 		}
-		tokens = append(tokens, TokenResp{Token: v.UserToken, Status: &status, ExpiredAt: expiresAt})
+		tokens = append(tokens, TokenResp{
+			Token: v.UserToken, TenantID: v.TenantID, Status: &status, ExpiredAt: expiresAt})
 	}
 	data := utils.CreateResponseData(nil, "success", tokens)
 	_, _ = response.Write([]byte(data))
@@ -355,6 +359,7 @@ func (t *TokenHandler) UpdateToken(request *restful.Request, response *restful.R
 	userInfo := &jwt.UserInfo{
 		ExpiredTime: int64(form.Expiration),
 		Issuer:      jwt.JWTIssuer,
+		TenantId:    tokenInDB.TenantID,
 	}
 	if tokenInDB.IsClient() {
 		userInfo.SubType = jwt.Client.String()
@@ -425,6 +430,7 @@ func (t *TokenHandler) CreateTempToken(request *restful.Request, response *restf
 		UserName:    form.Username,
 		ExpiredTime: int64(form.Expiration),
 		Issuer:      jwt.JWTIssuer,
+		TenantId:    utils.GetTenantIDFromAttribute(request),
 	})
 	if err != nil {
 		blog.Errorf("create jwt token failed, %s", err.Error())
@@ -450,6 +456,7 @@ func (t *TokenHandler) CreateTempToken(request *restful.Request, response *restf
 		UserType:  userType,
 		CreatedBy: createBy,
 		ExpiresAt: expiredAt,
+		TenantID:  utils.GetTenantIDFromAttribute(request),
 	}
 	err = t.tokenStore.CreateTemporaryToken(userToken)
 	if err != nil {
@@ -463,7 +470,7 @@ func (t *TokenHandler) CreateTempToken(request *restful.Request, response *restf
 		return
 	}
 
-	resp := &TokenResp{Token: token, ExpiredAt: &userToken.ExpiresAt}
+	resp := &TokenResp{Token: token, TenantID: userToken.TenantID, ExpiredAt: &userToken.ExpiresAt}
 	data := utils.CreateResponseData(nil, "success", *resp)
 	_, _ = response.Write([]byte(data))
 
@@ -546,6 +553,7 @@ func (t *TokenHandler) CreateClientToken(request *restful.Request, response *res
 		ClientSecret: form.ClientSecret,
 		ExpiredTime:  int64(form.Expiration),
 		Issuer:       jwt.JWTIssuer,
+		TenantId:     utils.GetTenantIDFromAttribute(request),
 	})
 	if err != nil {
 		blog.Errorf("create jwt token failed, %s", err.Error())
@@ -571,6 +579,7 @@ func (t *TokenHandler) CreateClientToken(request *restful.Request, response *res
 		UserType:  models.ClientUser,
 		CreatedBy: createBy,
 		ExpiresAt: expiredAt,
+		TenantID:  utils.GetTenantIDFromAttribute(request),
 	}
 	err = t.tokenStore.CreateToken(userToken)
 	if err != nil {

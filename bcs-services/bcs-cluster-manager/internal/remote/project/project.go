@@ -25,7 +25,6 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/metrics"
-	rutils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/utils"
 )
 
 const (
@@ -55,14 +54,18 @@ const (
 	QuotaGrayNormalMode = "normal"
 )
 
+var (
+	errServerNotInit = errors.New("project manager server not init")
+)
+
 // Options for rm client
 type Options struct {
 	// Module module name
 	Module string
 }
 
-// ProjectClient global project client
-var ProjectClient *ProManClient
+// projectClient global project client
+var projectClient *ProManClient
 
 // SetProjectClient set global project client
 func SetProjectClient(opts *Options) {
@@ -70,14 +73,14 @@ func SetProjectClient(opts *Options) {
 		opts.Module = projectManagerServiceName
 	}
 
-	ProjectClient = &ProManClient{
+	projectClient = &ProManClient{
 		cache: cache.New(5*time.Minute, 60*time.Minute),
 	}
 }
 
 // GetProjectManagerClient get project client
 func GetProjectManagerClient() *ProManClient {
-	return ProjectClient
+	return projectClient
 }
 
 // ProManClient project client
@@ -86,18 +89,19 @@ type ProManClient struct {
 }
 
 // getProjectManagerClient get project client by discovery
-func (pm *ProManClient) getProjectManagerClient() (*bcsproject.ProjectClient, func(), error) {
+func (pm *ProManClient) getProjectManagerClient() (*ProjectClient, func(), error) {
 	if pm == nil {
-		return nil, nil, rutils.ErrServerNotInit
+		return nil, nil, errServerNotInit
 	}
-	return bcsproject.GetClient(common.ClusterManager)
+
+	return GetClient(common.ClusterManager)
 }
 
 // GetProjectInfo get project detailed info
 func (pm *ProManClient) GetProjectInfo(
 	ctx context.Context, projectIdOrCode string, isCache bool) (*bcsproject.Project, error) {
 	if pm == nil {
-		return nil, rutils.ErrServerNotInit
+		return nil, errServerNotInit
 	}
 
 	// load project data from cache
@@ -123,7 +127,9 @@ func (pm *ProManClient) GetProjectInfo(
 	}()
 
 	start := time.Now()
-	resp, err := cli.Project.GetProject(ctx, &bcsproject.GetProjectRequest{ProjectIDOrCode: projectIdOrCode})
+
+	resp, err := cli.Project.GetProject(ctx,
+		&bcsproject.GetProjectRequest{ProjectIDOrCode: projectIdOrCode})
 	if err != nil {
 		metrics.ReportLibRequestMetric("project", "GetProject", "grpc", metrics.LibCallStatusErr, start)
 		blog.Errorf("GetProjectInfo[%s] GetProject failed: %v", projectIdOrCode, err)
@@ -147,7 +153,7 @@ func (pm *ProManClient) GetProjectInfo(
 func (pm *ProManClient) ListProjectQuotasV2(projectId, quotaType, provider string) (
 	*bcsproject.ListProjectQuotasData, error) {
 	if pm == nil {
-		return nil, rutils.ErrServerNotInit
+		return nil, errServerNotInit
 	}
 
 	cli, closeCon, errGet := pm.getProjectManagerClient()
@@ -230,7 +236,7 @@ func (pm *ProManClient) ListProjectQuotasV2(projectId, quotaType, provider strin
 
 // CheckProjectQuotaGrayLabel get project is has quota-gray label
 func (pm *ProManClient) CheckProjectQuotaGrayLabel(ctx context.Context, projectId string) (string, error) {
-	projInfo, err := ProjectClient.GetProjectInfo(ctx, projectId, true)
+	projInfo, err := projectClient.GetProjectInfo(ctx, projectId, true)
 	if err != nil {
 		blog.Errorf("CheckProjectQuotaGrayLabel GetProjectInfo[%s] failed: %v", projectId, err)
 		return "", err
@@ -246,7 +252,7 @@ func (pm *ProManClient) CheckProjectQuotaGrayLabel(ctx context.Context, projectI
 // CheckProjectQuotaAndLadderLabel get project is has quota-gray and ladder quota label
 func (pm *ProManClient) CheckProjectQuotaAndLadderLabel(
 	ctx context.Context, projectId string) (string, string, error) {
-	projInfo, err := ProjectClient.GetProjectInfo(ctx, projectId, true)
+	projInfo, err := projectClient.GetProjectInfo(ctx, projectId, true)
 	if err != nil {
 		blog.Errorf("CheckProjectQuotaAndLadderLabel GetProjectInfo[%s] failed: %v", projectId, err)
 		return "", "", err
@@ -271,7 +277,7 @@ func (pm *ProManClient) CheckProjectQuotaAndLadderLabel(
 // GetProjectQuota get project quota by project quota id
 func (pm *ProManClient) GetProjectQuota(ctx context.Context, projectQuotaID string) (*bcsproject.ProjectQuota, error) {
 	if pm == nil {
-		return nil, rutils.ErrServerNotInit
+		return nil, errServerNotInit
 	}
 
 	cli, closeCon, errGet := pm.getProjectManagerClient()

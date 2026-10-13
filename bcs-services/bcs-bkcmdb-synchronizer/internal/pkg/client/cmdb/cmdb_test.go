@@ -13,6 +13,7 @@
 package cmdb
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -100,7 +101,7 @@ func Test_cmdbClient_GetBcsCluster(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := getCli()
-			got, err := c.GetBcsCluster(tt.args.request, nil, false)
+			got, err := c.GetBcsCluster(context.Background(), tt.args.request, nil, false)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetBcsCluster() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -172,7 +173,7 @@ func Test_cmdbClient_CreateBcsCluster(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := getCli()
-			gotBkClusterID, err := c.CreateBcsCluster(tt.args.request, nil)
+			gotBkClusterID, err := c.CreateBcsCluster(context.Background(), tt.args.request, nil)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("CreateBcsCluster() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -224,7 +225,7 @@ func Test_cmdbClient_UpdateBcsCluster(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := getCli()
-			if err := c.UpdateBcsCluster(tt.args.request, nil); (err != nil) != tt.wantErr {
+			if err := c.UpdateBcsCluster(context.Background(), tt.args.request, nil); (err != nil) != tt.wantErr {
 				t.Errorf("UpdateBcsCluster() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -262,7 +263,7 @@ func Test_cmdbClient_DeleteBcsCluster(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := getCli()
-			if err := c.DeleteBcsCluster(tt.args.request, nil); (err != nil) != tt.wantErr {
+			if err := c.DeleteBcsCluster(context.Background(), tt.args.request, nil); (err != nil) != tt.wantErr {
 				t.Errorf("DeleteBcsCluster() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -315,7 +316,7 @@ func Test_cmdbClient_GetBcsNamespace(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := getCli()
-			got, err := c.GetBcsNamespace(tt.args.request, nil, false)
+			got, err := c.GetBcsNamespace(context.Background(), tt.args.request, nil, false)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetBcsNamespace() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -412,7 +413,7 @@ func Test_cmdbClient_CreateBcsNamespace(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := getCli()
-			got, err := c.CreateBcsNamespace(tt.args.request, nil)
+			got, err := c.CreateBcsNamespace(context.Background(), tt.args.request, nil)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("CreateBcsNamespace() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -472,7 +473,7 @@ func Test_cmdbClient_UpdateBcsNamespace(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := getCli()
-			if err := c.UpdateBcsNamespace(tt.args.request, nil); (err != nil) != tt.wantErr {
+			if err := c.UpdateBcsNamespace(context.Background(), tt.args.request, nil); (err != nil) != tt.wantErr {
 				t.Errorf("UpdateBcsNamespace() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -510,7 +511,7 @@ func Test_cmdbClient_DeleteBcsNamespace(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := getCli()
-			if err := c.DeleteBcsNamespace(tt.args.request, nil); (err != nil) != tt.wantErr {
+			if err := c.DeleteBcsNamespace(context.Background(), tt.args.request, nil); (err != nil) != tt.wantErr {
 				t.Errorf("DeleteBcsNamespace() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -751,7 +752,7 @@ func Test_cmdbClient_GetBcsWorkload(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := getCli()
-			got, err := c.GetBcsWorkload(tt.args.request, nil, false)
+			got, err := c.GetBcsWorkload(context.Background(), tt.args.request, nil, false)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetBcsWorkload() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -858,7 +859,7 @@ func Test_cmdbClient_CreateBcsWorkload(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := getCli()
-			got, err := c.CreateBcsWorkload(tt.args.request, nil)
+			got, err := c.CreateBcsWorkload(context.Background(), tt.args.request, nil)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("CreateBcsWorkload() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -868,8 +869,8 @@ func Test_cmdbClient_CreateBcsWorkload(t *testing.T) {
 	}
 }
 
-// Test_cmdbClient_CreateBcsCustomResource tests the CreateBcsWorkload method of the cmdbClient with customResource kind.
-func Test_cmdbClient_CreateBcsCustomResource(t *testing.T) {
+// Test_cmdbClient_CreateBcsCR tests the CreateBcsWorkload method of the cmdbClient with customResource kind.
+func Test_cmdbClient_CreateBcsCR(t *testing.T) {
 	bkBizID := int64(100148)
 	kind := "customResource"
 	nsid := int64(1156)
@@ -923,7 +924,7 @@ func Test_cmdbClient_CreateBcsCustomResource(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := getCli()
-			got, err := c.CreateBcsWorkload(tt.args.request, nil)
+			got, err := c.CreateBcsWorkload(context.Background(), tt.args.request, nil)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("CreateBcsCustomResource() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -984,7 +985,7 @@ func Test_cmdbClient_UpdateBcsWorkload(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := getCli()
-			if err := c.UpdateBcsWorkload(tt.args.request, nil); (err != nil) != tt.wantErr {
+			if err := c.UpdateBcsWorkload(context.Background(), tt.args.request, nil); (err != nil) != tt.wantErr {
 				t.Errorf("UpdateBcsWorkload() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -1026,7 +1027,7 @@ func Test_cmdbClient_DeleteBcsWorkload(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := getCli()
-			if err := c.DeleteBcsWorkload(tt.args.request, nil); (err != nil) != tt.wantErr {
+			if err := c.DeleteBcsWorkload(context.Background(), tt.args.request, nil); (err != nil) != tt.wantErr {
 				t.Errorf("DeleteBcsWorkload() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -1082,7 +1083,7 @@ func Test_cmdbClient_GetBcsNode(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := getCli()
-			got, err := c.GetBcsNode(tt.args.request, nil, false)
+			got, err := c.GetBcsNode(context.Background(), tt.args.request, nil, false)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetBcsNode() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -1165,7 +1166,7 @@ func Test_cmdbClient_CreateBcsNode(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := getCli()
-			got, err := c.CreateBcsNode(tt.args.request, nil)
+			got, err := c.CreateBcsNode(context.Background(), tt.args.request, nil)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("CreateBcsNode() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -1219,7 +1220,7 @@ func Test_cmdbClient_UpdateBcsNode(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := getCli()
-			if err := c.UpdateBcsNode(tt.args.request, nil); (err != nil) != tt.wantErr {
+			if err := c.UpdateBcsNode(context.Background(), tt.args.request, nil); (err != nil) != tt.wantErr {
 				t.Errorf("UpdateBcsNode() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -1259,7 +1260,7 @@ func Test_cmdbClient_DeleteBcsNode(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := getCli()
-			if err := c.DeleteBcsNode(tt.args.request, nil); (err != nil) != tt.wantErr {
+			if err := c.DeleteBcsNode(context.Background(), tt.args.request, nil); (err != nil) != tt.wantErr {
 				t.Errorf("DeleteBcsNode() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -1341,7 +1342,7 @@ func Test_cmdbClient_GetBcsPod(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := getCli()
-			got, err := c.GetBcsPod(tt.args.request, nil, false)
+			got, err := c.GetBcsPod(context.Background(), tt.args.request, nil, false)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetBcsPod() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -1437,7 +1438,7 @@ func Test_cmdbClient_CreateBcsPod(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := getCli()
-			got, err := c.CreateBcsPod(tt.args.request, nil)
+			got, err := c.CreateBcsPod(context.Background(), tt.args.request, nil)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("CreateBcsPod() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -1484,7 +1485,7 @@ func Test_cmdbClient_DeleteBcsPod(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := getCli()
-			if err := c.DeleteBcsPod(tt.args.request, nil); (err != nil) != tt.wantErr {
+			if err := c.DeleteBcsPod(context.Background(), tt.args.request, nil); (err != nil) != tt.wantErr {
 				t.Errorf("DeleteBcsPod() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -1498,7 +1499,7 @@ func Test_deleteAllByBkBizID(t *testing.T) {
 	t.Logf("start delete all")
 	t.Logf("start delete all pod")
 	for {
-		got, err := c.GetBcsPod(&client.GetBcsPodRequest{
+		got, err := c.GetBcsPod(context.Background(), &client.GetBcsPodRequest{
 			CommonRequest: client.CommonRequest{
 				BKBizID: bkBizID,
 				Fields:  []string{"id"},
@@ -1521,7 +1522,7 @@ func Test_deleteAllByBkBizID(t *testing.T) {
 			break
 		} else {
 			t.Logf("delete pod: %v", podToDelete)
-			err := c.DeleteBcsPod(&client.DeleteBcsPodRequest{
+			err := c.DeleteBcsPod(context.Background(), &client.DeleteBcsPodRequest{
 				Data: &[]client.DeleteBcsPodRequestData{
 					{
 						BKBizID: &bkBizID,
@@ -1542,7 +1543,7 @@ func Test_deleteAllByBkBizID(t *testing.T) {
 
 	for _, workloadType := range workloadTypes {
 		for {
-			got, err := c.GetBcsWorkload(&client.GetBcsWorkloadRequest{
+			got, err := c.GetBcsWorkload(context.Background(), &client.GetBcsWorkloadRequest{
 				CommonRequest: client.CommonRequest{
 					BKBizID: bkBizID,
 					Fields:  []string{"id"},
@@ -1566,7 +1567,7 @@ func Test_deleteAllByBkBizID(t *testing.T) {
 				break
 			} else {
 				t.Logf("delete workload: %v", workloadToDelete)
-				err := c.DeleteBcsWorkload(&client.DeleteBcsWorkloadRequest{
+				err := c.DeleteBcsWorkload(context.Background(), &client.DeleteBcsWorkloadRequest{
 					BKBizID: &bkBizID,
 					Kind:    &workloadType,
 					IDs:     &workloadToDelete,
@@ -1596,7 +1597,7 @@ func Test_deleteAllByBkBizID(t *testing.T) {
 
 func deleteAllIDCluster(bkBizID int64, c *cmdbClient, t *testing.T) {
 	for {
-		got, err := c.GetBcsCluster(&client.GetBcsClusterRequest{
+		got, err := c.GetBcsCluster(context.Background(), &client.GetBcsClusterRequest{
 			CommonRequest: client.CommonRequest{
 				BKBizID: bkBizID,
 				Fields:  []string{"id"},
@@ -1619,7 +1620,7 @@ func deleteAllIDCluster(bkBizID int64, c *cmdbClient, t *testing.T) {
 			break
 		} else {
 			t.Logf("delete cluster: %v", clusterToDelete)
-			err := c.DeleteBcsCluster(&client.DeleteBcsClusterRequest{
+			err := c.DeleteBcsCluster(context.Background(), &client.DeleteBcsClusterRequest{
 				BKBizID: &bkBizID,
 				IDs:     &clusterToDelete,
 			}, nil)
@@ -1633,7 +1634,7 @@ func deleteAllIDCluster(bkBizID int64, c *cmdbClient, t *testing.T) {
 
 func deleteAllIDNode(bkBizID int64, c *cmdbClient, t *testing.T) {
 	for {
-		got, err := c.GetBcsNode(&client.GetBcsNodeRequest{
+		got, err := c.GetBcsNode(context.Background(), &client.GetBcsNodeRequest{
 			CommonRequest: client.CommonRequest{
 				BKBizID: bkBizID,
 				Page: client.Page{
@@ -1655,7 +1656,7 @@ func deleteAllIDNode(bkBizID int64, c *cmdbClient, t *testing.T) {
 			break
 		} else {
 			t.Logf("delete node: %v", nodeToDelete)
-			err := c.DeleteBcsNode(&client.DeleteBcsNodeRequest{
+			err := c.DeleteBcsNode(context.Background(), &client.DeleteBcsNodeRequest{
 				BKBizID: &bkBizID,
 				IDs:     &nodeToDelete,
 			}, nil)
@@ -1669,7 +1670,7 @@ func deleteAllIDNode(bkBizID int64, c *cmdbClient, t *testing.T) {
 
 func deleteAllIDNamespace(bkBizID int64, c *cmdbClient, t *testing.T) {
 	for {
-		got, err := c.GetBcsNamespace(&client.GetBcsNamespaceRequest{
+		got, err := c.GetBcsNamespace(context.Background(), &client.GetBcsNamespaceRequest{
 			CommonRequest: client.CommonRequest{
 				BKBizID: bkBizID,
 				Fields:  []string{"id"},
@@ -1692,7 +1693,7 @@ func deleteAllIDNamespace(bkBizID int64, c *cmdbClient, t *testing.T) {
 			break
 		} else {
 			t.Logf("delete namespace: %v", namespaceToDelete)
-			err := c.DeleteBcsNamespace(&client.DeleteBcsNamespaceRequest{
+			err := c.DeleteBcsNamespace(context.Background(), &client.DeleteBcsNamespaceRequest{
 				BKBizID: &bkBizID,
 				IDs:     &namespaceToDelete,
 			}, nil)
@@ -1707,13 +1708,13 @@ func deleteAllIDNamespace(bkBizID int64, c *cmdbClient, t *testing.T) {
 // Test_deleteAllByBkBizIDAndBkClusterID tests delete all bcs resources by bizid
 // nolint:golint
 func Test_deleteAllByBkBizIDAndBkClusterID(t *testing.T) {
-	bkBizID = int64(110)
-	bkClusterID := []int64{76}
+	bkBizID = int64(101002)
+	bkClusterID := []int64{83868}
 	c := getCli()
 	t.Logf("start delete all")
 	t.Logf("start delete all pod")
 	for {
-		got, err := c.GetBcsPod(&client.GetBcsPodRequest{
+		got, err := c.GetBcsPod(context.Background(), &client.GetBcsPodRequest{
 			CommonRequest: client.CommonRequest{
 				BKBizID: bkBizID,
 				Fields:  []string{"id"},
@@ -1746,7 +1747,7 @@ func Test_deleteAllByBkBizIDAndBkClusterID(t *testing.T) {
 			break
 		} else {
 			t.Logf("delete pod: %v", podToDelete)
-			err := c.DeleteBcsPod(&client.DeleteBcsPodRequest{
+			err := c.DeleteBcsPod(context.Background(), &client.DeleteBcsPodRequest{
 				Data: &[]client.DeleteBcsPodRequestData{
 					{
 						BKBizID: &bkBizID,
@@ -1767,7 +1768,7 @@ func Test_deleteAllByBkBizIDAndBkClusterID(t *testing.T) {
 
 	for _, workloadType := range workloadTypes {
 		for {
-			got, err := c.GetBcsWorkload(&client.GetBcsWorkloadRequest{
+			got, err := c.GetBcsWorkload(context.Background(), &client.GetBcsWorkloadRequest{
 				CommonRequest: client.CommonRequest{
 					BKBizID: bkBizID,
 					Fields:  []string{"id"},
@@ -1801,7 +1802,7 @@ func Test_deleteAllByBkBizIDAndBkClusterID(t *testing.T) {
 				break
 			} else {
 				t.Logf("delete workload: %v", workloadToDelete)
-				err := c.DeleteBcsWorkload(&client.DeleteBcsWorkloadRequest{
+				err := c.DeleteBcsWorkload(context.Background(), &client.DeleteBcsWorkloadRequest{
 					BKBizID: &bkBizID,
 					Kind:    &workloadType,
 					IDs:     &workloadToDelete,
@@ -1831,7 +1832,7 @@ func Test_deleteAllByBkBizIDAndBkClusterID(t *testing.T) {
 
 func deleteAll2IDCluster(bkBizID int64, bkClusterID []int64, c *cmdbClient, t *testing.T) {
 	for {
-		got, err := c.GetBcsCluster(&client.GetBcsClusterRequest{
+		got, err := c.GetBcsCluster(context.Background(), &client.GetBcsClusterRequest{
 			CommonRequest: client.CommonRequest{
 				BKBizID: bkBizID,
 				Fields:  []string{"id"},
@@ -1864,7 +1865,7 @@ func deleteAll2IDCluster(bkBizID int64, bkClusterID []int64, c *cmdbClient, t *t
 			break
 		} else {
 			t.Logf("delete cluster: %v", clusterToDelete)
-			err := c.DeleteBcsCluster(&client.DeleteBcsClusterRequest{
+			err := c.DeleteBcsCluster(context.Background(), &client.DeleteBcsClusterRequest{
 				BKBizID: &bkBizID,
 				IDs:     &clusterToDelete,
 			}, nil)
@@ -1878,7 +1879,7 @@ func deleteAll2IDCluster(bkBizID int64, bkClusterID []int64, c *cmdbClient, t *t
 
 func deleteAll2IDIDNode(bkBizID int64, bkClusterID []int64, c *cmdbClient, t *testing.T) {
 	for {
-		got, err := c.GetBcsNode(&client.GetBcsNodeRequest{
+		got, err := c.GetBcsNode(context.Background(), &client.GetBcsNodeRequest{
 			CommonRequest: client.CommonRequest{
 				BKBizID: bkBizID,
 				Page: client.Page{
@@ -1910,7 +1911,7 @@ func deleteAll2IDIDNode(bkBizID int64, bkClusterID []int64, c *cmdbClient, t *te
 			break
 		} else {
 			t.Logf("delete node: %v", nodeToDelete)
-			err := c.DeleteBcsNode(&client.DeleteBcsNodeRequest{
+			err := c.DeleteBcsNode(context.Background(), &client.DeleteBcsNodeRequest{
 				BKBizID: &bkBizID,
 				IDs:     &nodeToDelete,
 			}, nil)
@@ -1924,7 +1925,7 @@ func deleteAll2IDIDNode(bkBizID int64, bkClusterID []int64, c *cmdbClient, t *te
 
 func deleteAll2IDNamespace(bkBizID int64, bkClusterID []int64, c *cmdbClient, t *testing.T) {
 	for {
-		got, err := c.GetBcsNamespace(&client.GetBcsNamespaceRequest{
+		got, err := c.GetBcsNamespace(context.Background(), &client.GetBcsNamespaceRequest{
 			CommonRequest: client.CommonRequest{
 				BKBizID: bkBizID,
 				Fields:  []string{"id"},
@@ -1957,7 +1958,7 @@ func deleteAll2IDNamespace(bkBizID int64, bkClusterID []int64, c *cmdbClient, t 
 			break
 		} else {
 			t.Logf("delete namespace: %v", namespaceToDelete)
-			err := c.DeleteBcsNamespace(&client.DeleteBcsNamespaceRequest{
+			err := c.DeleteBcsNamespace(context.Background(), &client.DeleteBcsNamespaceRequest{
 				BKBizID: &bkBizID,
 				IDs:     &namespaceToDelete,
 			}, nil)
@@ -1972,7 +1973,7 @@ func deleteAll2IDNamespace(bkBizID int64, bkClusterID []int64, c *cmdbClient, t 
 func getAllByBkBizIDClusters(clusters map[int64]string, c *cmdbClient, t *testing.T) {
 	clusterPage := 0
 	for {
-		clusterGot, err := c.GetBcsCluster(&client.GetBcsClusterRequest{
+		clusterGot, err := c.GetBcsCluster(context.Background(), &client.GetBcsClusterRequest{
 			CommonRequest: client.CommonRequest{
 				BKBizID: bkBizID,
 				Page: client.Page{
@@ -2000,7 +2001,7 @@ func getAllByBkBizIDClusters(clusters map[int64]string, c *cmdbClient, t *testin
 func getAllByBkBizIDNodes(nodes map[int64]string, clusterID int64, c *cmdbClient, t *testing.T) {
 	nodePage := 0
 	for {
-		nodeGot, err := c.GetBcsNode(&client.GetBcsNodeRequest{
+		nodeGot, err := c.GetBcsNode(context.Background(), &client.GetBcsNodeRequest{
 			CommonRequest: client.CommonRequest{
 				BKBizID: bkBizID,
 				Page: client.Page{
@@ -2039,7 +2040,7 @@ func getAllByBkBizIDNodes(nodes map[int64]string, clusterID int64, c *cmdbClient
 func getAllByBkBizIDNamespaces(namespaces map[int64]string, clusterUID string, c *cmdbClient, t *testing.T) {
 	namespacePage := 0
 	for {
-		namespaceGot, err := c.GetBcsNamespace(&client.GetBcsNamespaceRequest{
+		namespaceGot, err := c.GetBcsNamespace(context.Background(), &client.GetBcsNamespaceRequest{
 			CommonRequest: client.CommonRequest{
 				BKBizID: bkBizID,
 				Page: client.Page{
@@ -2117,7 +2118,7 @@ func Test_getAllByBkBizID(t *testing.T) { // nolint: cyclop
 				workloads := make(map[int64]string, 0)
 				workloadPage := 0
 				for {
-					workloadGot, err := c.GetBcsWorkload(&client.GetBcsWorkloadRequest{
+					workloadGot, err := c.GetBcsWorkload(context.Background(), &client.GetBcsWorkloadRequest{
 						CommonRequest: client.CommonRequest{
 							BKBizID: bkBizID,
 							Page: client.Page{
@@ -2173,7 +2174,7 @@ func Test_getAllByBkBizID(t *testing.T) { // nolint: cyclop
 					pods := make(map[int64]string, 0)
 					podPage := 0
 					for {
-						podGot, err := c.GetBcsPod(&client.GetBcsPodRequest{
+						podGot, err := c.GetBcsPod(context.Background(), &client.GetBcsPodRequest{
 							CommonRequest: client.CommonRequest{
 								BKBizID: bkBizID,
 								Page: client.Page{
@@ -2270,7 +2271,7 @@ func Test_cmdbClient_UpdateBcsClusterType(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := getCli()
-			if err := c.UpdateBcsClusterType(tt.args.request, nil); (err != nil) != tt.wantErr {
+			if err := c.UpdateBcsClusterType(context.Background(), tt.args.request, nil); (err != nil) != tt.wantErr {
 				t.Errorf("UpdateBcsClusterType() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -2390,7 +2391,7 @@ func Test_cmdbClient_GetBcsContainer(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := getCli()
-			got, err := c.GetBcsContainer(tt.args.request, nil, false)
+			got, err := c.GetBcsContainer(context.Background(), tt.args.request, nil, false)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetBcsContainer() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -2432,7 +2433,7 @@ func Test_cmdbClient_GetHostsByBiz(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := getCli()
-			got, err := c.GetHostsByBiz(tt.args.bkBizID, tt.args.hostIP)
+			got, err := c.GetHostsByBiz(context.Background(), tt.args.bkBizID, tt.args.hostIP)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetHostsByBiz() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -2455,7 +2456,7 @@ func Test_gorm_container(t *testing.T) {
 	}
 
 	c := getCli()
-	got, err := c.GetBcsContainer(&client.GetBcsContainerRequest{
+	got, err := c.GetBcsContainer(context.Background(), &client.GetBcsContainerRequest{
 		CommonRequest: client.CommonRequest{
 			BKBizID: 110,
 			Page: client.Page{
@@ -2511,7 +2512,7 @@ func Test_gorm_pod(t *testing.T) {
 	}
 
 	c := getCli()
-	got, err := c.GetBcsPod(&client.GetBcsPodRequest{
+	got, err := c.GetBcsPod(context.Background(), &client.GetBcsPodRequest{
 		CommonRequest: client.CommonRequest{
 			BKBizID: 110,
 			Page: client.Page{
@@ -2576,7 +2577,7 @@ func Test_gorm_node(t *testing.T) {
 	}
 
 	c := getCli()
-	got, err := c.GetBcsNode(&client.GetBcsNodeRequest{
+	got, err := c.GetBcsNode(context.Background(), &client.GetBcsNodeRequest{
 		CommonRequest: client.CommonRequest{
 			BKBizID: 110,
 			Page: client.Page{
@@ -2654,7 +2655,7 @@ func Test_gorm_deployment(t *testing.T) {
 	}
 
 	c := getCli()
-	got, err := c.GetBcsWorkload(&client.GetBcsWorkloadRequest{
+	got, err := c.GetBcsWorkload(context.Background(), &client.GetBcsWorkloadRequest{
 		CommonRequest: client.CommonRequest{
 			BKBizID: 110,
 			Page: client.Page{
@@ -2723,7 +2724,7 @@ func Test_gorm_cluster(t *testing.T) {
 	}
 
 	c := getCli()
-	got, err := c.GetBcsCluster(&client.GetBcsClusterRequest{
+	got, err := c.GetBcsCluster(context.Background(), &client.GetBcsClusterRequest{
 		CommonRequest: client.CommonRequest{
 			BKBizID: 110,
 			Page: client.Page{
@@ -2790,7 +2791,7 @@ func Test_cmdbClient_GetBcsCluster_withDB(t *testing.T) {
 	}
 
 	c := getCli()
-	got, err := c.GetBcsCluster(&client.GetBcsClusterRequest{
+	got, err := c.GetBcsCluster(context.Background(), &client.GetBcsClusterRequest{
 		CommonRequest: client.CommonRequest{
 			BKBizID: 100148,
 			Page: client.Page{
@@ -2829,7 +2830,7 @@ func Test_gorm_namespace(t *testing.T) {
 	}
 
 	c := getCli()
-	got, err := c.GetBcsNamespace(&client.GetBcsNamespaceRequest{
+	got, err := c.GetBcsNamespace(context.Background(), &client.GetBcsNamespaceRequest{
 		CommonRequest: client.CommonRequest{
 			BKBizID: 100148,
 			Page: client.Page{

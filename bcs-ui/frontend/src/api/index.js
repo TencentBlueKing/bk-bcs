@@ -38,6 +38,7 @@ import RequestQueue from './request-queue';
 
 import { VUEX_STROAGE_KEY } from '@/common/constant';
 import { random } from '@/common/util';
+import { useAppData } from '@/composables/use-app';
 
 // axios 实例
 const axiosInstance = axios.create({
@@ -46,12 +47,17 @@ const axiosInstance = axios.create({
   withCredentials: true,
 });
 
+const { user } = useAppData();
+
 /**
  * request interceptor
  */
 axiosInstance.interceptors.request.use((config) => {
   const storage = JSON.parse(localStorage.getItem(VUEX_STROAGE_KEY) || '{}');
   config.headers['X-BCS-Project-Code'] = storage?.curProject?.projectCode;
+  if (user.value.tenant_id) {
+    config.headers['X-Bk-Tenant-Id'] = user.value.tenant_id;
+  }
   const CSRFToken = cookie.parse(document.cookie).bcs_csrftoken;
   if (CSRFToken) {
     config.headers['X-CSRFToken'] = CSRFToken;
@@ -217,7 +223,7 @@ function handleReject(error, config) {
     if (status === 401) {
       // 登录弹窗
       const successUrl = `${location.origin}${window.BK_STATIC_URL}/login_success.html`;
-      const loginUrl = `${window.LOGIN_FULL}plain/?size=big&c_url=${encodeURIComponent(successUrl)}`;
+      const loginUrl = `${window.LOGIN_FULL}${window.LOGIN_FULL.endsWith('/') ? '' : '/'}plain/?size=big&c_url=${encodeURIComponent(successUrl)}`;
       // 传入最终的登录地址，弹出登录窗口，更多选项参考 Options
       showLoginModal({ loginUrl });
 

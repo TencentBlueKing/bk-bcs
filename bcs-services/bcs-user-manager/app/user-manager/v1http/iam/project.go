@@ -21,6 +21,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/component"
 	blog "github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/log"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/utils"
+	util "github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/utils"
 )
 
 // ProjectProvider is a project provider
@@ -50,7 +51,8 @@ func (p ProjectProvider) ListAttrValue(req resource.Request) resource.Response {
 // ListInstance implements the list_instance
 func (p ProjectProvider) ListInstance(req resource.Request) resource.Response {
 	offset := req.Page.Offset / req.Page.Limit
-	result, err := component.QueryProjects(req.Context, req.Page.Limit, offset, nil)
+	tenantID := req.Header.Get(util.HeaderTenantID)
+	result, err := component.QueryProjects(req.Context, tenantID, req.Page.Limit, offset, nil)
 	if err != nil {
 		return resource.Response{
 			Code:    SystemErrCode,
@@ -59,7 +61,7 @@ func (p ProjectProvider) ListInstance(req resource.Request) resource.Response {
 	}
 	results := make([]interface{}, 0)
 	for _, r := range result.Results {
-		ins := Instance{r.ProjectID, combineNameID(r.Name, r.ProjectCode), nil}
+		ins := Instance{r.ProjectID, combineNameID(r.Name, r.GetProjectCode()), nil}
 		results = append(results, ins)
 	}
 	return resource.Response{
@@ -93,7 +95,7 @@ func (p ProjectProvider) FetchInstanceInfo(req resource.Request) resource.Respon
 				blog.Log(ctx).Errorf("get project %s failed, err %s", id, err.Error())
 				return
 			}
-			nsChan <- Instance{p.ProjectID, combineNameID(p.Name, p.ProjectCode), SplitString(p.Managers)}
+			nsChan <- Instance{p.ProjectID, combineNameID(p.Name, p.GetProjectCode()), SplitString(p.Managers)}
 		}(v)
 	}
 	wg.Wait()
@@ -119,9 +121,10 @@ func (p ProjectProvider) ListInstanceByPolicy(req resource.Request) resource.Res
 // SearchInstance implements the search_instance
 func (p ProjectProvider) SearchInstance(req resource.Request) resource.Response {
 	filter := convertFilter(req.Filter)
+	tenantID := req.Header.Get(util.HeaderTenantID)
 	offset := req.Page.Offset / req.Page.Limit
 	params := map[string]string{"searchName": filter.Keyword}
-	result, err := component.QueryProjects(req.Context, req.Page.Limit, offset, params)
+	result, err := component.QueryProjects(req.Context, tenantID, req.Page.Limit, offset, params)
 	if err != nil {
 		return resource.Response{
 			Code:    SystemErrCode,
@@ -130,11 +133,27 @@ func (p ProjectProvider) SearchInstance(req resource.Request) resource.Response 
 	}
 	results := make([]interface{}, 0)
 	for _, r := range result.Results {
-		ins := Instance{r.ProjectID, combineNameID(r.Name, r.ProjectCode), nil}
+		ins := Instance{r.ProjectID, combineNameID(r.Name, r.GetProjectCode()), nil}
 		results = append(results, ins)
 	}
 	return resource.Response{
 		Code: 0,
 		Data: ListResult{Count: result.Total, Results: results},
+	}
+}
+
+// FetchInstanceList implements the fetch_instance_list
+func (p ProjectProvider) FetchInstanceList(req resource.Request) resource.Response {
+	return resource.Response{
+		Code:    -1,
+		Message: "not implemented",
+	}
+}
+
+// FetchResourceTypeSchema implements the fetch_resource_type_schema
+func (p ProjectProvider) FetchResourceTypeSchema(req resource.Request) resource.Response {
+	return resource.Response{
+		Code:    -1,
+		Message: "not implemented",
 	}
 }

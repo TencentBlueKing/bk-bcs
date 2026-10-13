@@ -1,3 +1,5 @@
+# 更新时间： 2025-08-15
+
 # BCS 网关资源同步镜像
 
 该镜像打包了 BCS 网关资源，并可以在部署时自动注册网关。
@@ -15,6 +17,7 @@
 | BKAPI_RELEASE_COMMENT         | 网关版本说明                    |                                         |
 | BKAPI_STAGE_HOST              | 网关部署环境地址                | http://bcs-app.svc                      |
 | BK_API_GRANT_PERMISSIONS_APPS | 主动授权应用                    | bk_apigateway                           |
+| BK_APP_TENANT_ID              | 【多租户】租户ID                 | system or ""                           |
 
 ## Helm chart 集成
 

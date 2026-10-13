@@ -54,6 +54,7 @@ type UserManagerOptions struct {
 	BcsAPI           BcsAPI        `json:"bcs_api"`
 	Encrypt          Encrypt       `json:"encrypt" yaml:"encrypt"`
 	Activity         Activity      `json:"activity" yaml:"activity"`
+	Tenant           Tenant        `json:"tenant" yaml:"tenant"`
 	SharedCluster    SharedCluster `json:"shared_cluster" yaml:"shared_cluster"`
 }
 
@@ -71,13 +72,17 @@ type IAMConfig struct {
 	AppCode   string `json:"app_code"`
 	AppSecret string `json:"app_secret"`
 
-	External    bool   `json:"external"`
-	GateWayHost string `json:"gateWay_host"`
-	IAMHost     string `json:"iam_host"`
-	BkiIAMHost  string `json:"bki_iam_host"`
+	External      bool   `json:"external"`
+	GateWayHost   string `json:"gateWay_host"`
+	V4GateWayHost string `json:"v4_gateway_host"`
+	IAMHost       string `json:"iam_host"`
+	BkiIAMHost    string `json:"bki_iam_host"`
 
 	Metric      bool `json:"metric"`
 	ServerDebug bool `json:"server_debug"`
+
+	// EnableV4 开启后鉴权走 IAM V4，并初始化 V4 client / 权限模型 migration
+	EnableV4 bool `json:"enable_v4"`
 }
 
 // TKEOptions tke api option
@@ -93,6 +98,7 @@ type BootStrapUser struct {
 	Name     string `json:"name"`
 	UserType string `json:"user_type" usage:"optional type: admin, saas, plain"`
 	Token    string `json:"token"`
+	TenantID string `json:"tenant_id" usage:"optional tenant id"`
 }
 
 // TokenNotifyOptions token notify option
@@ -176,6 +182,11 @@ type RedisConfig struct {
 	PoolSize     int    `json:"pool_size" usage:"Redis pool size" mapstructure:"pool_size" yaml:"pool_size"`
 	MinIdleConns int    `json:"min_idle_conns" usage:"Redis min connect" mapstructure:"min_idle_conns" yaml:"min_idle_conns"`
 	IdleTimeout  int    `json:"idle_timeout" usage:"Redis idle timeout" mapstructure:"idle_timeout" yaml:"idle_timeout"`
+}
+
+// Tenant 多租户
+type Tenant struct {
+	Enable bool `json:"enable" yaml:"enable"`
 }
 
 // SharedCluster 共享集群配置

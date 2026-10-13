@@ -154,12 +154,14 @@ func convertToInstanceType(info cloudprovider.InstanceInfo,
 }
 
 // GetExternalNodeByIP xxx
-func (nm *NodeManager) GetExternalNodeByIP(ip string, opt *cloudprovider.GetNodeOption) (*proto.Node, error) {
+func (nm *NodeManager) GetExternalNodeByIP(ip string,
+	opt *cloudprovider.GetNodeOption) (*proto.Node, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
 // ListExternalNodesByIP xxx
-func (nm *NodeManager) ListExternalNodesByIP(ips []string, opt *cloudprovider.ListNodesOption) ([]*proto.Node, error) {
+func (nm *NodeManager) ListExternalNodesByIP(ips []string,
+	opt *cloudprovider.ListNodesOption) ([]*proto.Node, error) {
 	if len(ips) == 0 {
 		return nil, nil
 	}

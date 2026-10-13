@@ -22,6 +22,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/utils"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tenant"
 )
 
 // CreateNodePoolTask create nodePool
@@ -63,6 +64,11 @@ func CreateNodePoolTask(taskID, stepName string) error {
 
 	// inject taskID
 	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
+	ctx, err = tenant.WithTenantIdByResourceForContext(ctx, tenant.ResourceMetaData{ClusterId: clusterID})
+	if err != nil {
+		blog.Errorf("CreateNodePoolTask[%s] WithTenantIdByResourceForContext failed: %v", taskID, err.Error())
+	}
+
 	err = utils.CreateResourcePoolAction(ctx, dependInfo, cloudprovider.ResourcePoolData{
 		Provider:       poolProvider,
 		ResourcePoolID: resourcePoolID,

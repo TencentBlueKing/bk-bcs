@@ -12,7 +12,7 @@
       </div>
       <div class="basic-info-item">
         <label>{{ $t('cluster.labels.createdAt') }}</label>
-        <span>{{ data.createTime ? timeZoneTransForm(data.createTime, false) : '--' }}</span>
+        <span>{{ data.createTime ? formatTimeWithTimezone(data.createTime) : '--' }}</span>
       </div>
     </div>
     <div class="detail-title mt-[20px]">{{ $t('logCollector.label.configInfo') }}</div>
@@ -207,6 +207,7 @@
 /* eslint-disable camelcase */
 import { defineComponent, ref } from 'vue';
 
+import { formatTimeWithTimezone } from '@/common/util';
 import {
   formatQuotaQuantity,
   isQuotaFormValueValid,
@@ -379,6 +380,8 @@ export default defineComponent({
     };
 
     return {
+      unitConvert,
+      formatTimeWithTimezone,
       formatQuotaQuantity,
       formatQuotaUsage,
       formatUsageRate,

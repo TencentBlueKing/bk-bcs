@@ -111,7 +111,7 @@ func (ua *UpdateAutoScalingStatusAction) updateAutoScalingStatus() error {
 	// set autoScalingOption to updating
 	ua.asOption.Status = common.StatusAutoScalingOptionUpdating
 	ua.asOption.EnableAutoscale = ua.req.Enable
-	ua.asOption.UpdateTime = time.Now().Format(time.RFC3339)
+	ua.asOption.UpdateTime = time.Now().UTC().Format(time.RFC3339)
 	ua.asOption.Updater = ua.req.Updater
 	if err = ua.model.UpdateAutoScalingOption(ua.ctx, ua.asOption); err != nil {
 		blog.Errorf("update asOption %s status to updating status failed, err %s", ua.req.ClusterID, err.Error())
@@ -150,7 +150,7 @@ func (ua *UpdateAutoScalingStatusAction) updateAutoScalingStatus() error {
 		TaskID:       taskID,
 		Message:      fmt.Sprintf("修改集群[%s]扩缩容开启状态为 %v", ua.req.ClusterID, ua.req.Enable),
 		OpUser:       ua.req.Updater,
-		CreateTime:   time.Now().Format(time.RFC3339),
+		CreateTime:   time.Now().UTC().Format(time.RFC3339),
 		ClusterID:    ua.req.ClusterID,
 		ProjectID:    ua.cluster.ProjectID,
 		ResourceName: ua.cluster.ClusterName,

@@ -140,6 +140,10 @@ type IAMConfig struct {
 	Metric           bool   `json:"metric"`
 	Debug            bool   `json:"debug"`
 	ApplyPermAddress string `json:"applyPermAddress"`
+	// EnableV4 开启后走 IAM V4（bcs-common iam.Version=v4）
+	EnableV4 bool `json:"enableV4"`
+	// V4GateWayHost IAM V4 网关地址，与 GatewayServer 分离
+	V4GateWayHost string `json:"v4GateWayHost"`
 }
 
 // AuthConfig config for auth

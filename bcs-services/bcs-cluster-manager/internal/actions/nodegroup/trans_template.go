@@ -65,7 +65,7 @@ func (ta *TransNgToNtAction) transNgToNt() error {
 		return err
 	}
 
-	timeStr := time.Now().Format(time.RFC3339)
+	timeStr := time.Now().UTC().Format(time.RFC3339)
 	nt := ng.NodeTemplate
 	nt.Name = ng.Name
 	nt.ProjectID = ng.ProjectID
@@ -88,7 +88,7 @@ func (ta *TransNgToNtAction) transNgToNt() error {
 		TaskID:       "",
 		Message:      fmt.Sprintf("节点池[%s]转换为节点模板", ta.req.GetNodeGroupID()),
 		OpUser:       auth.GetUserFromCtx(ta.ctx),
-		CreateTime:   time.Now().Format(time.RFC3339),
+		CreateTime:   time.Now().UTC().Format(time.RFC3339),
 		ResourceName: ng.GetName(),
 	})
 	if err != nil {

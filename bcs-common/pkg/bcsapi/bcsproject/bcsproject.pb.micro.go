@@ -483,6 +483,12 @@ func NewNamespaceEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		{
+			Name:    "Namespace.CreateNamespaceCallbackV4",
+			Path:    []string{"/bcsproject/v1/projects/sharedclusters/namespaces/callback/create"},
+			Method:  []string{"POST"},
+			Handler: "rpc",
+		},
+		{
 			Name:    "Namespace.UpdateNamespace",
 			Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}"},
 			Method:  []string{"PUT"},
@@ -513,6 +519,12 @@ func NewNamespaceEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		{
+			Name:    "Namespace.UpdateNamespaceCallbackV4",
+			Path:    []string{"/bcsproject/v1/projects/sharedclusters/namespaces/callback/update"},
+			Method:  []string{"POST"},
+			Handler: "rpc",
+		},
+		{
 			Name:    "Namespace.GetNamespace",
 			Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}"},
 			Method:  []string{"GET"},
@@ -533,6 +545,12 @@ func NewNamespaceEndpoints() []*api.Endpoint {
 		{
 			Name:    "Namespace.DeleteNamespaceCallback",
 			Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/callback/delete"},
+			Method:  []string{"POST"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "Namespace.DeleteNamespaceCallbackV4",
+			Path:    []string{"/bcsproject/v1/projects/sharedclusters/namespaces/callback/delete"},
 			Method:  []string{"POST"},
 			Handler: "rpc",
 		},
@@ -568,15 +586,18 @@ func NewNamespaceEndpoints() []*api.Endpoint {
 type NamespaceService interface {
 	CreateNamespace(ctx context.Context, in *CreateNamespaceRequest, opts ...client.CallOption) (*CreateNamespaceResponse, error)
 	CreateNamespaceCallback(ctx context.Context, in *NamespaceCallbackRequest, opts ...client.CallOption) (*NamespaceCallbackResponse, error)
+	CreateNamespaceCallbackV4(ctx context.Context, in *SharedClusterNamespaceCallbackRequest, opts ...client.CallOption) (*SharedClusterNamespaceCallbackResponse, error)
 	UpdateNamespace(ctx context.Context, in *UpdateNamespaceRequest, opts ...client.CallOption) (*UpdateNamespaceResponse, error)
 	CreateOtherQuota(ctx context.Context, in *CreateOtherQuotaRequest, opts ...client.CallOption) (*OtherQuotaResponse, error)
 	UpdateOtherQuota(ctx context.Context, in *UpdateOtherQuotaRequest, opts ...client.CallOption) (*OtherQuotaResponse, error)
 	DeleteOtherQuota(ctx context.Context, in *DeleteOtherQuotaRequest, opts ...client.CallOption) (*OtherQuotaResponse, error)
 	UpdateNamespaceCallback(ctx context.Context, in *NamespaceCallbackRequest, opts ...client.CallOption) (*NamespaceCallbackResponse, error)
+	UpdateNamespaceCallbackV4(ctx context.Context, in *SharedClusterNamespaceCallbackRequest, opts ...client.CallOption) (*SharedClusterNamespaceCallbackResponse, error)
 	GetNamespace(ctx context.Context, in *GetNamespaceRequest, opts ...client.CallOption) (*GetNamespaceResponse, error)
 	ListNamespaces(ctx context.Context, in *ListNamespacesRequest, opts ...client.CallOption) (*ListNamespacesResponse, error)
 	DeleteNamespace(ctx context.Context, in *DeleteNamespaceRequest, opts ...client.CallOption) (*DeleteNamespaceResponse, error)
 	DeleteNamespaceCallback(ctx context.Context, in *NamespaceCallbackRequest, opts ...client.CallOption) (*NamespaceCallbackResponse, error)
+	DeleteNamespaceCallbackV4(ctx context.Context, in *SharedClusterNamespaceCallbackRequest, opts ...client.CallOption) (*SharedClusterNamespaceCallbackResponse, error)
 	SyncNamespace(ctx context.Context, in *SyncNamespaceRequest, opts ...client.CallOption) (*SyncNamespaceResponse, error)
 	WithdrawNamespace(ctx context.Context, in *WithdrawNamespaceRequest, opts ...client.CallOption) (*WithdrawNamespaceResponse, error)
 	ListNativeNamespaces(ctx context.Context, in *ListNativeNamespacesRequest, opts ...client.CallOption) (*ListNativeNamespacesResponse, error)
@@ -608,6 +629,16 @@ func (c *namespaceService) CreateNamespace(ctx context.Context, in *CreateNamesp
 func (c *namespaceService) CreateNamespaceCallback(ctx context.Context, in *NamespaceCallbackRequest, opts ...client.CallOption) (*NamespaceCallbackResponse, error) {
 	req := c.c.NewRequest(c.name, "Namespace.CreateNamespaceCallback", in)
 	out := new(NamespaceCallbackResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *namespaceService) CreateNamespaceCallbackV4(ctx context.Context, in *SharedClusterNamespaceCallbackRequest, opts ...client.CallOption) (*SharedClusterNamespaceCallbackResponse, error) {
+	req := c.c.NewRequest(c.name, "Namespace.CreateNamespaceCallbackV4", in)
+	out := new(SharedClusterNamespaceCallbackResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -665,6 +696,16 @@ func (c *namespaceService) UpdateNamespaceCallback(ctx context.Context, in *Name
 	return out, nil
 }
 
+func (c *namespaceService) UpdateNamespaceCallbackV4(ctx context.Context, in *SharedClusterNamespaceCallbackRequest, opts ...client.CallOption) (*SharedClusterNamespaceCallbackResponse, error) {
+	req := c.c.NewRequest(c.name, "Namespace.UpdateNamespaceCallbackV4", in)
+	out := new(SharedClusterNamespaceCallbackResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *namespaceService) GetNamespace(ctx context.Context, in *GetNamespaceRequest, opts ...client.CallOption) (*GetNamespaceResponse, error) {
 	req := c.c.NewRequest(c.name, "Namespace.GetNamespace", in)
 	out := new(GetNamespaceResponse)
@@ -698,6 +739,16 @@ func (c *namespaceService) DeleteNamespace(ctx context.Context, in *DeleteNamesp
 func (c *namespaceService) DeleteNamespaceCallback(ctx context.Context, in *NamespaceCallbackRequest, opts ...client.CallOption) (*NamespaceCallbackResponse, error) {
 	req := c.c.NewRequest(c.name, "Namespace.DeleteNamespaceCallback", in)
 	out := new(NamespaceCallbackResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *namespaceService) DeleteNamespaceCallbackV4(ctx context.Context, in *SharedClusterNamespaceCallbackRequest, opts ...client.CallOption) (*SharedClusterNamespaceCallbackResponse, error) {
+	req := c.c.NewRequest(c.name, "Namespace.DeleteNamespaceCallbackV4", in)
+	out := new(SharedClusterNamespaceCallbackResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -750,15 +801,18 @@ func (c *namespaceService) ListNativeNamespacesContent(ctx context.Context, in *
 type NamespaceHandler interface {
 	CreateNamespace(context.Context, *CreateNamespaceRequest, *CreateNamespaceResponse) error
 	CreateNamespaceCallback(context.Context, *NamespaceCallbackRequest, *NamespaceCallbackResponse) error
+	CreateNamespaceCallbackV4(context.Context, *SharedClusterNamespaceCallbackRequest, *SharedClusterNamespaceCallbackResponse) error
 	UpdateNamespace(context.Context, *UpdateNamespaceRequest, *UpdateNamespaceResponse) error
 	CreateOtherQuota(context.Context, *CreateOtherQuotaRequest, *OtherQuotaResponse) error
 	UpdateOtherQuota(context.Context, *UpdateOtherQuotaRequest, *OtherQuotaResponse) error
 	DeleteOtherQuota(context.Context, *DeleteOtherQuotaRequest, *OtherQuotaResponse) error
 	UpdateNamespaceCallback(context.Context, *NamespaceCallbackRequest, *NamespaceCallbackResponse) error
+	UpdateNamespaceCallbackV4(context.Context, *SharedClusterNamespaceCallbackRequest, *SharedClusterNamespaceCallbackResponse) error
 	GetNamespace(context.Context, *GetNamespaceRequest, *GetNamespaceResponse) error
 	ListNamespaces(context.Context, *ListNamespacesRequest, *ListNamespacesResponse) error
 	DeleteNamespace(context.Context, *DeleteNamespaceRequest, *DeleteNamespaceResponse) error
 	DeleteNamespaceCallback(context.Context, *NamespaceCallbackRequest, *NamespaceCallbackResponse) error
+	DeleteNamespaceCallbackV4(context.Context, *SharedClusterNamespaceCallbackRequest, *SharedClusterNamespaceCallbackResponse) error
 	SyncNamespace(context.Context, *SyncNamespaceRequest, *SyncNamespaceResponse) error
 	WithdrawNamespace(context.Context, *WithdrawNamespaceRequest, *WithdrawNamespaceResponse) error
 	ListNativeNamespaces(context.Context, *ListNativeNamespacesRequest, *ListNativeNamespacesResponse) error
@@ -769,15 +823,18 @@ func RegisterNamespaceHandler(s server.Server, hdlr NamespaceHandler, opts ...se
 	type namespace interface {
 		CreateNamespace(ctx context.Context, in *CreateNamespaceRequest, out *CreateNamespaceResponse) error
 		CreateNamespaceCallback(ctx context.Context, in *NamespaceCallbackRequest, out *NamespaceCallbackResponse) error
+		CreateNamespaceCallbackV4(ctx context.Context, in *SharedClusterNamespaceCallbackRequest, out *SharedClusterNamespaceCallbackResponse) error
 		UpdateNamespace(ctx context.Context, in *UpdateNamespaceRequest, out *UpdateNamespaceResponse) error
 		CreateOtherQuota(ctx context.Context, in *CreateOtherQuotaRequest, out *OtherQuotaResponse) error
 		UpdateOtherQuota(ctx context.Context, in *UpdateOtherQuotaRequest, out *OtherQuotaResponse) error
 		DeleteOtherQuota(ctx context.Context, in *DeleteOtherQuotaRequest, out *OtherQuotaResponse) error
 		UpdateNamespaceCallback(ctx context.Context, in *NamespaceCallbackRequest, out *NamespaceCallbackResponse) error
+		UpdateNamespaceCallbackV4(ctx context.Context, in *SharedClusterNamespaceCallbackRequest, out *SharedClusterNamespaceCallbackResponse) error
 		GetNamespace(ctx context.Context, in *GetNamespaceRequest, out *GetNamespaceResponse) error
 		ListNamespaces(ctx context.Context, in *ListNamespacesRequest, out *ListNamespacesResponse) error
 		DeleteNamespace(ctx context.Context, in *DeleteNamespaceRequest, out *DeleteNamespaceResponse) error
 		DeleteNamespaceCallback(ctx context.Context, in *NamespaceCallbackRequest, out *NamespaceCallbackResponse) error
+		DeleteNamespaceCallbackV4(ctx context.Context, in *SharedClusterNamespaceCallbackRequest, out *SharedClusterNamespaceCallbackResponse) error
 		SyncNamespace(ctx context.Context, in *SyncNamespaceRequest, out *SyncNamespaceResponse) error
 		WithdrawNamespace(ctx context.Context, in *WithdrawNamespaceRequest, out *WithdrawNamespaceResponse) error
 		ListNativeNamespaces(ctx context.Context, in *ListNativeNamespacesRequest, out *ListNativeNamespacesResponse) error
@@ -796,6 +853,12 @@ func RegisterNamespaceHandler(s server.Server, hdlr NamespaceHandler, opts ...se
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Namespace.CreateNamespaceCallback",
 		Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/callback/create"},
+		Method:  []string{"POST"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Namespace.CreateNamespaceCallbackV4",
+		Path:    []string{"/bcsproject/v1/projects/sharedclusters/namespaces/callback/create"},
 		Method:  []string{"POST"},
 		Handler: "rpc",
 	}))
@@ -830,6 +893,12 @@ func RegisterNamespaceHandler(s server.Server, hdlr NamespaceHandler, opts ...se
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Namespace.UpdateNamespaceCallbackV4",
+		Path:    []string{"/bcsproject/v1/projects/sharedclusters/namespaces/callback/update"},
+		Method:  []string{"POST"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Namespace.GetNamespace",
 		Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}"},
 		Method:  []string{"GET"},
@@ -850,6 +919,12 @@ func RegisterNamespaceHandler(s server.Server, hdlr NamespaceHandler, opts ...se
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Namespace.DeleteNamespaceCallback",
 		Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/callback/delete"},
+		Method:  []string{"POST"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Namespace.DeleteNamespaceCallbackV4",
+		Path:    []string{"/bcsproject/v1/projects/sharedclusters/namespaces/callback/delete"},
 		Method:  []string{"POST"},
 		Handler: "rpc",
 	}))
@@ -892,6 +967,10 @@ func (h *namespaceHandler) CreateNamespaceCallback(ctx context.Context, in *Name
 	return h.NamespaceHandler.CreateNamespaceCallback(ctx, in, out)
 }
 
+func (h *namespaceHandler) CreateNamespaceCallbackV4(ctx context.Context, in *SharedClusterNamespaceCallbackRequest, out *SharedClusterNamespaceCallbackResponse) error {
+	return h.NamespaceHandler.CreateNamespaceCallbackV4(ctx, in, out)
+}
+
 func (h *namespaceHandler) UpdateNamespace(ctx context.Context, in *UpdateNamespaceRequest, out *UpdateNamespaceResponse) error {
 	return h.NamespaceHandler.UpdateNamespace(ctx, in, out)
 }
@@ -912,6 +991,10 @@ func (h *namespaceHandler) UpdateNamespaceCallback(ctx context.Context, in *Name
 	return h.NamespaceHandler.UpdateNamespaceCallback(ctx, in, out)
 }
 
+func (h *namespaceHandler) UpdateNamespaceCallbackV4(ctx context.Context, in *SharedClusterNamespaceCallbackRequest, out *SharedClusterNamespaceCallbackResponse) error {
+	return h.NamespaceHandler.UpdateNamespaceCallbackV4(ctx, in, out)
+}
+
 func (h *namespaceHandler) GetNamespace(ctx context.Context, in *GetNamespaceRequest, out *GetNamespaceResponse) error {
 	return h.NamespaceHandler.GetNamespace(ctx, in, out)
 }
@@ -926,6 +1009,10 @@ func (h *namespaceHandler) DeleteNamespace(ctx context.Context, in *DeleteNamesp
 
 func (h *namespaceHandler) DeleteNamespaceCallback(ctx context.Context, in *NamespaceCallbackRequest, out *NamespaceCallbackResponse) error {
 	return h.NamespaceHandler.DeleteNamespaceCallback(ctx, in, out)
+}
+
+func (h *namespaceHandler) DeleteNamespaceCallbackV4(ctx context.Context, in *SharedClusterNamespaceCallbackRequest, out *SharedClusterNamespaceCallbackResponse) error {
+	return h.NamespaceHandler.DeleteNamespaceCallbackV4(ctx, in, out)
 }
 
 func (h *namespaceHandler) SyncNamespace(ctx context.Context, in *SyncNamespaceRequest, out *SyncNamespaceResponse) error {

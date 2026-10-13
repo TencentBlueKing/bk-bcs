@@ -324,7 +324,7 @@
           </bk-table-column>
           <bk-table-column :label="$t('deploy.templateset.lastUpdatedBy')" :show-overflow-tooltip="true" min-width="150">
             <template slot-scope="props">
-              {{props.row.updator}}
+              <bk-user-display-name :user-id="props.row?.updator"></bk-user-display-name>
             </template>
           </bk-table-column>
           <bk-table-column :label="$t('generic.label.action')" :show-overflow-tooltip="true" min-width="200">

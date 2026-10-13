@@ -23,7 +23,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/actions/namespace/independent"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clientset"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/itsm"
+	v2 "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/itsm/v2"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	nsm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/namespace"
@@ -88,7 +88,7 @@ func (a *SharedNamespaceAction) UpdateNamespace(ctx context.Context,
 	oldCPULimits := oldQuota.Status.Hard[corev1.ResourceLimitsCPU]
 	oldMemoryLimits := oldQuota.Status.Hard[corev1.ResourceLimitsMemory]
 	// memoryLimits.Value() return unit is byte， needs to be converted to Gi (divide 2^30)
-	itsmResp, err := itsm.SubmitUpdateNamespaceTicket(ctx, username,
+	itsmResp, err := v2.SubmitUpdateNamespaceTicket(ctx, username,
 		req.GetProjectCode(), req.GetClusterID(), req.GetNamespace(),
 		int(cpuLimits.Value()), int(memoryLimits.Value()/int64(math.Pow(2, 30))),
 		int(oldCPULimits.Value()), int(oldMemoryLimits.Value()/int64(math.Pow(2, 30))))

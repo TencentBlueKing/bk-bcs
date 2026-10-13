@@ -22,11 +22,11 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/audit"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
+	middleauth "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 	"go-micro.dev/v4/metadata"
 	"go-micro.dev/v4/server"
 	grpcmeta "google.golang.org/grpc/metadata"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	raudit "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/audit"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
@@ -311,7 +311,7 @@ func addAudit(ctx context.Context, req server.Request, rsp interface{}, startTim
 	res, act := fn(req, rsp)
 
 	auditCtx := audit.RecorderContext{
-		Username:  auth.GetUserFromCtx(ctx),
+		Username:  getUserFromCtx(ctx),
 		SourceIP:  getSourceIPFromCtx(ctx),
 		UserAgent: GetUserAgentFromCtx(ctx),
 		RequestID: requestIDFromContext(ctx),
@@ -420,4 +420,10 @@ func getProjectIDByNodeGroup(nodeGroupID string) string {
 		return ""
 	}
 	return np.ProjectID
+}
+
+// getUserFromCtx 通过 ctx 获取当前用户
+func getUserFromCtx(ctx context.Context) string {
+	authUser, _ := middleauth.GetUserFromContext(ctx)
+	return authUser.GetUsername()
 }

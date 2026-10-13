@@ -49,7 +49,7 @@ func ProjectParse(next http.Handler) http.Handler {
 		}
 		restContext.ProjectId = project.ProjectId
 		restContext.ProjectCode = project.Code
-
+		restContext.TenantProjectCode = project.TenantProjectCode
 		// get cluster info
 		cls, err := bcs.GetCluster(restContext.ClusterId)
 		if err != nil {

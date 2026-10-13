@@ -18,7 +18,7 @@
     <slot></slot>
     <div class="flex items-center justify-center mt-[24px]">
       <bk-button
-        theme="primary"
+        theme="danger"
         class="min-w-[88px]"
         :loading="loading"
         @click="handleConfirm">

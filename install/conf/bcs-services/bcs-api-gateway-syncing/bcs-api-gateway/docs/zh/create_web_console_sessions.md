@@ -29,7 +29,7 @@ curl -X POST https://bcs-app.apigw.com/{stag|prod}/apis/projects/BCS项目Code�
 {
   "data": {
     "session_id": "5cf0c428ab4a43ecbc61f07595e4694e",
-    "web_console_url": "http://bcs.devops.com/backend/web_console/?session_id=5cf0c428ab4a43ecbc61f07595e4694e&container_name=prometheus"
+    "web_console_url": "http://bcs.devops.example.com/backend/web_console/?session_id=5cf0c428ab4a43ecbc61f07595e4694e&container_name=prometheus"
   },
   "code": 0,
   "message": "创建session成功",

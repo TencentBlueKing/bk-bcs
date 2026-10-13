@@ -14,15 +14,18 @@
 package cmdb
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/parnurzeal/gorequest"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/cache"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/bkuser"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
@@ -35,8 +38,8 @@ var (
 	maxSearchBusinessPages  = 500
 	defaultTimeout          = 10
 	defaultSupplierAccount  = "tencent"
-	searchBizPath           = "/api/c/compapi/v2/cc/search_business/"
-	getBizTopoPath          = "/api/c/compapi/v2/cc/search_biz_inst_topo/"
+	searchBizPath           = "/api/v3/biz/search/%s"
+	getBizTopoPath          = "/api/v3/find/topoinst/biz/%v"
 	// CacheKeyBusinessPrefix cache key business prefix
 	CacheKeyBusinessPrefix = "BUSINESS_%s"
 )
@@ -109,8 +112,8 @@ type BusinessData struct {
 }
 
 // IsMaintainer 校验用户是否为指定业务的运维
-func IsMaintainer(username string, bizID string) (bool, error) {
-	searchData, err := SearchBusiness(username, bizID)
+func IsMaintainer(ctx context.Context, username string, bizID string) (bool, error) {
+	searchData, err := SearchBusiness(ctx, username, bizID)
 	if err != nil {
 		return false, err
 	}
@@ -122,7 +125,7 @@ func IsMaintainer(username string, bizID string) (bool, error) {
 }
 
 // GetBusinessByID 通过业务ID获取业务信息
-func GetBusinessByID(bizID string, useCache bool) (BusinessData, error) {
+func GetBusinessByID(ctx context.Context, bizID string, useCache bool) (BusinessData, error) {
 	// 先尝试从缓存中获取
 	c := cache.GetCache()
 	if useCache {
@@ -132,7 +135,7 @@ func GetBusinessByID(bizID string, useCache bool) (BusinessData, error) {
 			return data, nil
 		}
 	}
-	data, err := SearchBusiness("", bizID)
+	data, err := SearchBusiness(ctx, "", bizID)
 	if err != nil {
 		return BusinessData{}, err
 	}
@@ -144,17 +147,13 @@ func GetBusinessByID(bizID string, useCache bool) (BusinessData, error) {
 }
 
 // SearchBusiness 通过用户和业务ID，查询业务
-func SearchBusiness(username string, bizID string) (*SearchBusinessData, error) {
+func SearchBusiness(ctx context.Context, username string, bizID string) (*SearchBusinessData, error) {
 	// 获取超时时间
 	timeout := defaultTimeout
 	if config.GlobalConf.CMDB.Timeout != 0 {
 		timeout = config.GlobalConf.CMDB.Timeout
 	}
-	// 获取开发商账户
-	supplierAccount := defaultSupplierAccount
-	if config.GlobalConf.CMDB.BKSupplierAccount != "" {
-		supplierAccount = config.GlobalConf.CMDB.BKSupplierAccount
-	}
+	supplierAccount := getSupplierAccount()
 	// 组装请求参数
 	condition := map[string]interface{}{}
 	if username != "" {
@@ -165,7 +164,7 @@ func SearchBusiness(username string, bizID string) (*SearchBusinessData, error) 
 		condition["bk_biz_id"] = bizIDInt
 	}
 	req := gorequest.SuperAgent{
-		Url:    fmt.Sprintf("%s%s", config.GlobalConf.CMDB.Host, searchBizPath),
+		Url:    buildSearchBizURL(supplierAccount),
 		Method: "POST",
 		Data: map[string]interface{}{
 			"condition":           condition,
@@ -173,8 +172,15 @@ func SearchBusiness(username string, bizID string) (*SearchBusinessData, error) 
 		},
 		Debug: config.GlobalConf.CMDB.Debug,
 	}
+
+	headers, err := bkuser.GetAuthHeader(ctx)
+	if err != nil {
+		logging.Error("SearchBusiness get auth header failed, %s", err.Error())
+		return nil, errorx.NewRequestCMDBErr(err.Error())
+	}
+
 	// 获取返回数据
-	body, err := component.Request(req, timeout, config.GlobalConf.CMDB.Proxy, component.GetAuthHeader())
+	body, err := component.Request(req, timeout, config.GlobalConf.CMDB.Proxy, headers)
 	if err != nil {
 		return nil, errorx.NewRequestCMDBErr(err.Error())
 	}
@@ -191,8 +197,8 @@ func SearchBusiness(username string, bizID string) (*SearchBusinessData, error) 
 }
 
 // GetBusinessMaintainers get maintainers by bizID
-func GetBusinessMaintainers(bizID string) ([]string, error) {
-	business, err := GetBusinessByID(bizID, false)
+func GetBusinessMaintainers(ctx context.Context, bizID string) ([]string, error) {
+	business, err := GetBusinessByID(ctx, bizID, false)
 	if err != nil {
 		return nil, err
 	}
@@ -203,7 +209,7 @@ func GetBusinessMaintainers(bizID string) ([]string, error) {
 
 // BatchSearchBusinessByBizIDs batch search business by bizIDs
 // if any bizID not exists or error, warning will be logged and continue
-func BatchSearchBusinessByBizIDs(bizIDs []string) map[string]BusinessData {
+func BatchSearchBusinessByBizIDs(ctx context.Context, bizIDs []string) map[string]BusinessData {
 	if len(bizIDs) == 0 {
 		return nil
 	}
@@ -252,7 +258,7 @@ func BatchSearchBusinessByBizIDs(bizIDs []string) map[string]BusinessData {
 			},
 		}
 
-		businesses, err := searchBusinessByIds(condition, rules)
+		businesses, err := searchBusinessByIds(ctx, condition, rules)
 		if err != nil {
 			logging.Error("batch search business failed, err: %s", err.Error())
 			continue
@@ -267,20 +273,16 @@ func BatchSearchBusinessByBizIDs(bizIDs []string) map[string]BusinessData {
 }
 
 // GetBusinessTopology get business topology by bizID
-func GetBusinessTopology(bizID string) ([]BusinessTopologyData, error) {
+func GetBusinessTopology(ctx context.Context, bizID string) ([]BusinessTopologyData, error) {
 	// 获取超时时间
 	timeout := defaultTimeout
 	if config.GlobalConf.CMDB.Timeout != 0 {
 		timeout = config.GlobalConf.CMDB.Timeout
 	}
-	// 获取开发商账户
-	supplierAccount := defaultSupplierAccount
-	if config.GlobalConf.CMDB.BKSupplierAccount != "" {
-		supplierAccount = config.GlobalConf.CMDB.BKSupplierAccount
-	}
+	supplierAccount := getSupplierAccount()
 	// 组装请求参数
 	req := gorequest.SuperAgent{
-		Url:    fmt.Sprintf("%s%s", config.GlobalConf.CMDB.Host, getBizTopoPath),
+		Url:    buildGetBizTopoURL(bizID),
 		Method: "POST",
 		Data: map[string]interface{}{
 			"bk_biz_id":           bizID,
@@ -288,8 +290,15 @@ func GetBusinessTopology(bizID string) ([]BusinessTopologyData, error) {
 		},
 		Debug: config.GlobalConf.CMDB.Debug,
 	}
+
+	headers, err := bkuser.GetAuthHeader(ctx)
+	if err != nil {
+		logging.Error("GetBusinessTopology get auth header failed, %s", err.Error())
+		return nil, errorx.NewRequestCMDBErr(err.Error())
+	}
+
 	// 获取返回数据
-	body, err := component.Request(req, timeout, config.GlobalConf.CMDB.Proxy, component.GetAuthHeader())
+	body, err := component.Request(req, timeout, config.GlobalConf.CMDB.Proxy, headers)
 	if err != nil {
 		return nil, errorx.NewRequestCMDBErr(err.Error())
 	}
@@ -305,12 +314,12 @@ func GetBusinessTopology(bizID string) ([]BusinessTopologyData, error) {
 	return resp.Data, nil
 }
 
-// ListAllBusinesses 分页拉取 CMDB 全部业务，拉取失败时返回 error，调用方不得据此删除本地数据
-func ListAllBusinesses() ([]BusinessData, error) {
+// ListAllBusinesses 分页拉取 ctx 所属租户在 CMDB 的全部业务，拉取失败时返回 error，调用方不得据此删除本地数据
+func ListAllBusinesses(ctx context.Context) ([]BusinessData, error) {
 	all := make([]BusinessData, 0)
 	start := 0
 	for page := 0; page < maxSearchBusinessPages; page++ {
-		data, err := searchBusinessPage(start, searchBusinessBatchSize)
+		data, err := searchBusinessPage(ctx, start, searchBusinessBatchSize)
 		if err != nil {
 			return nil, err
 		}
@@ -326,17 +335,14 @@ func ListAllBusinesses() ([]BusinessData, error) {
 	return nil, fmt.Errorf("list all businesses exceeded max pages %d", maxSearchBusinessPages)
 }
 
-func searchBusinessPage(start, limit int) (*SearchBusinessData, error) {
+func searchBusinessPage(ctx context.Context, start, limit int) (*SearchBusinessData, error) {
 	timeout := defaultTimeout
 	if config.GlobalConf.CMDB.Timeout != 0 {
 		timeout = config.GlobalConf.CMDB.Timeout
 	}
-	supplierAccount := defaultSupplierAccount
-	if config.GlobalConf.CMDB.BKSupplierAccount != "" {
-		supplierAccount = config.GlobalConf.CMDB.BKSupplierAccount
-	}
+	supplierAccount := getSupplierAccount()
 	req := gorequest.SuperAgent{
-		Url:    fmt.Sprintf("%s%s", config.GlobalConf.CMDB.Host, searchBizPath),
+		Url:    buildSearchBizURL(supplierAccount),
 		Method: "POST",
 		Data: map[string]interface{}{
 			"fields":              searchAllBusinessFields,
@@ -346,7 +352,12 @@ func searchBusinessPage(start, limit int) (*SearchBusinessData, error) {
 		},
 		Debug: config.GlobalConf.CMDB.Debug,
 	}
-	body, err := component.Request(req, timeout, config.GlobalConf.CMDB.Proxy, component.GetAuthHeader())
+	headers, err := bkuser.GetAuthHeader(ctx)
+	if err != nil {
+		logging.Error("searchBusinessPage get auth header failed, %s", err.Error())
+		return nil, errorx.NewRequestCMDBErr(err.Error())
+	}
+	body, err := component.Request(req, timeout, config.GlobalConf.CMDB.Proxy, headers)
 	if err != nil {
 		return nil, errorx.NewRequestCMDBErr(err.Error())
 	}
@@ -361,18 +372,16 @@ func searchBusinessPage(start, limit int) (*SearchBusinessData, error) {
 	return &resp.Data, nil
 }
 
-func searchBusinessByIds(condition string, rules []map[string]interface{}) ([]BusinessData, error) {
+func searchBusinessByIds(ctx context.Context, condition string,
+	rules []map[string]interface{}) ([]BusinessData, error) {
 	timeout := defaultTimeout
 	if config.GlobalConf.CMDB.Timeout != 0 {
 		timeout = config.GlobalConf.CMDB.Timeout
 	}
-	supplierAccount := defaultSupplierAccount
-	if config.GlobalConf.CMDB.BKSupplierAccount != "" {
-		supplierAccount = config.GlobalConf.CMDB.BKSupplierAccount
-	}
+	supplierAccount := getSupplierAccount()
 	// 组装请求参数
 	req := gorequest.SuperAgent{
-		Url:    fmt.Sprintf("%s%s", config.GlobalConf.CMDB.Host, searchBizPath),
+		Url:    buildSearchBizURL(supplierAccount),
 		Method: "POST",
 		Data: map[string]interface{}{
 			"biz_property_filter": map[string]interface{}{
@@ -383,8 +392,15 @@ func searchBusinessByIds(condition string, rules []map[string]interface{}) ([]Bu
 		},
 		Debug: config.GlobalConf.CMDB.Debug,
 	}
+
+	headers, err := bkuser.GetAuthHeader(ctx)
+	if err != nil {
+		logging.Error("GetBusinessTopology get auth header failed, %s", err.Error())
+		return nil, errorx.NewRequestCMDBErr(err.Error())
+	}
+
 	// 获取返回数据
-	body, err := component.Request(req, timeout, config.GlobalConf.CMDB.Proxy, component.GetAuthHeader())
+	body, err := component.Request(req, timeout, config.GlobalConf.CMDB.Proxy, headers)
 	if err != nil {
 		logging.Error("request search business failed, err: %s", err.Error())
 		return nil, fmt.Errorf("request search business failed, err: %s", err.Error())
@@ -398,4 +414,23 @@ func searchBusinessByIds(condition string, rules []map[string]interface{}) ([]Bu
 		return nil, fmt.Errorf("search business failed, code: %d, message: %s", resp.Code, resp.Message)
 	}
 	return resp.Data.Info, nil
+}
+
+func getSupplierAccount() string {
+	if config.GlobalConf.CMDB.BKSupplierAccount != "" {
+		return config.GlobalConf.CMDB.BKSupplierAccount
+	}
+	return defaultSupplierAccount
+}
+
+func cmdbHost() string {
+	return strings.TrimRight(config.GlobalConf.CMDB.Host, "/")
+}
+
+func buildSearchBizURL(supplierAccount string) string {
+	return cmdbHost() + fmt.Sprintf(searchBizPath, supplierAccount)
+}
+
+func buildGetBizTopoURL(bizID string) string {
+	return cmdbHost() + fmt.Sprintf(getBizTopoPath, bizID)
 }

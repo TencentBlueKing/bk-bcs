@@ -3,7 +3,7 @@ module github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch
 go 1.23.0
 
 replace (
-	github.com/Tencent/bk-bcs/bcs-common => ../../bcs-common
+	github.com/Tencent/bk-bcs/bcs-common => github.com/Tencent/bk-bcs/bcs-common v0.0.0-20260703073010-610df57086a6
 	github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4
 	github.com/googleapis/gnostic => github.com/googleapis/gnostic v0.4.0
 	go.etcd.io/bbolt v1.3.4 => github.com/coreos/bbolt v1.3.4

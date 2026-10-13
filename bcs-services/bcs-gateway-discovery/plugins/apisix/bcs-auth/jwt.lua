@@ -180,7 +180,7 @@ function _M:get_jwt_from_redis(credential, conf, ctx, key_prefix, create_if_null
         local userinfo
         if conf.bk_login_host_esb then
             local data = get_userinfo_handler(credential, conf)
-            if data["result"] then
+            if data and data["result"] then
                 userinfo = data["data"]["bk_username"]
             end
             if ctx ~= nil then
@@ -191,7 +191,7 @@ function _M:get_jwt_from_redis(credential, conf, ctx, key_prefix, create_if_null
             --core.log.warn("conf.bk_login_host_tenant: ", conf.bk_login_host_tenant)
             local data = get_userinfo_handler(credential, conf)
             --core.log.warn("data: ", core.json.encode(data))
-            if data["data"] then
+            if data and data["data"] then
                 userinfo = {
                     username = data["data"]["bk_username"],
                     tenant_id = data["data"]["tenant_id"]

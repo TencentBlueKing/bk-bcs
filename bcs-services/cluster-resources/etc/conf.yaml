@@ -113,6 +113,8 @@ crGlobal:
     useBKApiGW: false
     metric: false
     debug: false
+    enableV4: false
+    v4GatewayHost: ""
 
   # 共享集群相关配置
   sharedCluster:

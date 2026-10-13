@@ -488,18 +488,20 @@
             <div class="data-item" style="width: 260px;">
               <p class="key">{{$t('cluster.labels.createdAt')}}：</p>
               <p class="value">
-                {{curService.createTime ? formatDate(curService.createTime) : '--'}}
+                {{curService.createTime ? formatTimeWithTimezone(curService.createTime) : '--'}}
               </p>
             </div>
             <div class="data-item">
               <p class="key">{{$t('cluster.labels.updatedAt')}}：</p>
               <p class="value">
-                {{curService.updateTime ? formatDate(curService.updateTime) : '--'}}
+                {{curService.updateTime ? formatTimeWithTimezone(curService.updateTime) : '--'}}
               </p>
             </div>
             <div class="data-item">
               <p class="key">{{$t('generic.label.updator')}}：</p>
-              <p class="value">{{curService.updator ? curService.updator : '--'}}</p>
+              <p class="value">
+                <bk-user-display-name :user-id="curService?.updator"></bk-user-display-name>
+              </p>
             </div>
             <div class="data-item">
               <p class="key">{{$t('deploy.templateset.sources')}}：</p>
@@ -608,7 +610,7 @@
 <script>
 import mixin from './mixin';
 
-import { catchErrorHandler, formatDate } from '@/common/util';
+import { catchErrorHandler, formatTimeWithTimezone } from '@/common/util';
 import ClusterSelectComb from '@/components/cluster-selector/cluster-select-comb.vue';
 import BcsContent from '@/components/layout/Content.vue';
 import Row from '@/components/layout/Row.vue';
@@ -619,7 +621,7 @@ export default {
   mixins: [mixin],
   data() {
     return {
-      formatDate,
+      formatTimeWithTimezone,
       isInitLoading: true,
       isPageLoading: false,
       isEndpointLoading: true,

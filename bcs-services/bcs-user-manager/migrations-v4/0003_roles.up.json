@@ -1,0 +1,93 @@
+{
+  "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+  "enabled": true,
+  "operations": [
+    {
+      "operation": "upsert_role",
+      "data": {
+        "id": "read_only",
+        "name": "业务只读",
+        "description": "项目维度只读",
+        "actions": [
+          {"id": "project_view", "resource_type_id": "project"},
+          {"id": "cluster_view", "resource_type_id": "project"},
+          {"id": "cluster_scoped_view", "resource_type_id": "project"},
+          {"id": "namespace_view", "resource_type_id": "project"},
+          {"id": "namespace_list", "resource_type_id": "project"},
+          {"id": "namespace_scoped_view", "resource_type_id": "project"},
+          {"id": "templateset_view", "resource_type_id": "project"}
+        ]
+      }
+    },
+    {
+      "operation": "upsert_role",
+      "data": {
+        "id": "developer",
+        "name": "业务开发",
+        "description": "",
+        "actions": [
+          {"id": "project_view", "resource_type_id": "project"},
+          {"id": "cluster_view", "resource_type_id": "project"},
+          {"id": "cluster_scoped_view", "resource_type_id": "project"},
+          {"id": "cluster_scoped_create", "resource_type_id": "project"},
+          {"id": "cluster_scoped_update", "resource_type_id": "project"},
+          {"id": "cluster_scoped_delete", "resource_type_id": "project"},
+          {"id": "namespace_create", "resource_type_id": "project"},
+          {"id": "namespace_list", "resource_type_id": "project"},
+          {"id": "namespace_view", "resource_type_id": "project"},
+          {"id": "namespace_update", "resource_type_id": "project"},
+          {"id": "namespace_delete", "resource_type_id": "project"},
+          {"id": "namespace_scoped_create", "resource_type_id": "project"},
+          {"id": "namespace_scoped_view", "resource_type_id": "project"},
+          {"id": "namespace_scoped_update", "resource_type_id": "project"},
+          {"id": "namespace_scoped_delete", "resource_type_id": "project"},
+          {"id": "templateset_create", "resource_type_id": "project"},
+          {"id": "templateset_view", "resource_type_id": "project"},
+          {"id": "templateset_copy", "resource_type_id": "project"},
+          {"id": "templateset_update", "resource_type_id": "project"},
+          {"id": "templateset_delete", "resource_type_id": "project"},
+          {"id": "templateset_instantiate", "resource_type_id": "project"}
+        ]
+      }
+    },
+    {
+      "operation": "upsert_role",
+      "data": {
+        "id": "operator",
+        "name": "业务运维",
+        "description": "项目维度运维",
+        "actions": [
+          {"id": "project_create"},
+          {"id": "project_view", "resource_type_id": "project"},
+          {"id": "project_edit", "resource_type_id": "project"},
+          {"id": "cluster_create", "resource_type_id": "project"},
+          {"id": "cluster_view", "resource_type_id": "project"},
+          {"id": "cluster_manage", "resource_type_id": "project"},
+          {"id": "cluster_delete", "resource_type_id": "project"},
+          {"id": "cluster_scoped_view", "resource_type_id": "project"},
+          {"id": "cluster_scoped_create", "resource_type_id": "project"},
+          {"id": "cluster_scoped_update", "resource_type_id": "project"},
+          {"id": "cluster_scoped_delete", "resource_type_id": "project"},
+          {"id": "namespace_create", "resource_type_id": "project"},
+          {"id": "namespace_list", "resource_type_id": "project"},
+          {"id": "namespace_view", "resource_type_id": "project"},
+          {"id": "namespace_update", "resource_type_id": "project"},
+          {"id": "namespace_delete", "resource_type_id": "project"},
+          {"id": "namespace_scoped_create", "resource_type_id": "project"},
+          {"id": "namespace_scoped_view", "resource_type_id": "project"},
+          {"id": "namespace_scoped_update", "resource_type_id": "project"},
+          {"id": "namespace_scoped_delete", "resource_type_id": "project"},
+          {"id": "templateset_create", "resource_type_id": "project"},
+          {"id": "templateset_view", "resource_type_id": "project"},
+          {"id": "templateset_copy", "resource_type_id": "project"},
+          {"id": "templateset_update", "resource_type_id": "project"},
+          {"id": "templateset_delete", "resource_type_id": "project"},
+          {"id": "templateset_instantiate", "resource_type_id": "project"},
+          {"id": "cloud_account_create", "resource_type_id": "project"},
+          {"id": "cloud_account_manage", "resource_type_id": "project"},
+          {"id": "cloud_account_use", "resource_type_id": "project"}
+        ]
+      }
+    }
+  ]
+}

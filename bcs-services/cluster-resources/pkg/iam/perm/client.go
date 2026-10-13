@@ -13,6 +13,7 @@
 package perm
 
 import (
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	bkiam "github.com/TencentBlueKing/iam-go-sdk"
 
 	conf "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
@@ -23,7 +24,7 @@ const IAMCacheTTL = 10
 
 // IAMClient xxx
 type IAMClient struct {
-	cli *bkiam.IAM
+	cli func(tenantID string) iam.PermClient
 }
 
 // NewIAMClient xxx
@@ -31,31 +32,30 @@ func NewIAMClient() *IAMClient {
 	return &IAMClient{cli: conf.G.IAM.Cli}
 }
 
-// ResTypeAllowed 判断用户是否具备某个操作权限（资源实例无关）
-func (c *IAMClient) ResTypeAllowed(username, actionID string, useCache bool) (bool, error) {
-	req := c.makeRequest(username, actionID, []bkiam.ResourceNode{})
-	if useCache {
-		return c.cli.IsAllowedWithCache(req, IAMCacheTTL)
+func (c *IAMClient) permReq(username string) iam.PermissionRequest {
+	return iam.PermissionRequest{
+		SystemID: conf.G.IAM.SystemID,
+		UserName: username,
 	}
-	return c.cli.IsAllowed(req)
+}
+
+// ResTypeAllowed 判断用户是否具备某个操作权限（资源实例无关）
+func (c *IAMClient) ResTypeAllowed(tenantID, username, actionID string, useCache bool) (bool, error) {
+	return c.cli(tenantID).IsAllowedWithoutResource(actionID, c.permReq(username), useCache)
 }
 
 // ResInstAllowed 判断用户对某个资源实例是否具有指定操作的权限
 func (c *IAMClient) ResInstAllowed(
-	username, actionID string, resources []bkiam.ResourceNode, useCache bool,
+	tenantID, username, actionID string, resources []bkiam.ResourceNode, useCache bool,
 ) (bool, error) {
-	req := c.makeRequest(username, actionID, resources)
-	if useCache {
-		return c.cli.IsAllowedWithCache(req, IAMCacheTTL)
-	}
-	return c.cli.IsAllowed(req)
+	return c.cli(tenantID).IsAllowedWithResource(actionID, c.permReq(username), convertResourceNodes(resources), useCache)
 }
 
 // ResTypeMultiActionsAllowed 判断用户是否具备多个操作的权限
-func (c *IAMClient) ResTypeMultiActionsAllowed(username string, actionIDs []string) (map[string]bool, error) {
+func (c *IAMClient) ResTypeMultiActionsAllowed(tenantID, username string, actionIDs []string) (map[string]bool, error) {
 	ret := map[string]bool{}
 	for _, id := range actionIDs {
-		allow, err := c.ResTypeAllowed(username, id, false)
+		allow, err := c.ResTypeAllowed(tenantID, username, id, false)
 		if err != nil {
 			return ret, err
 		}
@@ -66,44 +66,18 @@ func (c *IAMClient) ResTypeMultiActionsAllowed(username string, actionIDs []stri
 
 // ResInstMultiActionsAllowed 判断用户对某个(单个)资源实例是否具有多个操作的权限.
 func (c *IAMClient) ResInstMultiActionsAllowed(
-	username string, actionIDs []string, resources []bkiam.ResourceNode,
+	tenantID, username string, actionIDs []string, resources []bkiam.ResourceNode,
 ) (map[string]bool, error) {
-	req := c.makeMultiActionRequest(username, actionIDs, resources)
-	return c.cli.ResourceMultiActionsAllowed(req)
+	return c.cli(tenantID).ResourceMultiActionsAllowed(actionIDs, c.permReq(username), convertResourceNodes(resources))
 }
 
 // BatchResMultiActionsAllowed 判断用户对某些资源是否具有多个指定操作的权限. 当前sdk仅支持同类型的资源
 func (c *IAMClient) BatchResMultiActionsAllowed(
-	username string, actionsIDs []string, resources []bkiam.ResourceNode,
+	tenantID, username string, actionsIDs []string, resources []bkiam.ResourceNode,
 ) (map[string]map[string]bool, error) {
-	req := c.makeMultiActionRequest(username, actionsIDs, []bkiam.ResourceNode{})
-	resourceList := []bkiam.Resources{}
+	nodes := make([][]iam.ResourceNode, 0, len(resources))
 	for _, res := range resources {
-		resourceList = append(resourceList, []bkiam.ResourceNode{res})
+		nodes = append(nodes, []iam.ResourceNode{convertResourceNode(res)})
 	}
-	return c.cli.BatchResourceMultiActionsAllowed(req, resourceList)
-}
-
-func (c *IAMClient) makeRequest(username, actionID string, resources []bkiam.ResourceNode) bkiam.Request {
-	return bkiam.Request{
-		System:    conf.G.IAM.SystemID,
-		Subject:   bkiam.Subject{Type: "user", ID: username},
-		Action:    bkiam.Action{ID: actionID},
-		Resources: resources,
-	}
-}
-
-func (c *IAMClient) makeMultiActionRequest(
-	username string, actionIDs []string, resources []bkiam.ResourceNode,
-) bkiam.MultiActionRequest {
-	actions := []bkiam.Action{}
-	for _, id := range actionIDs {
-		actions = append(actions, bkiam.Action{ID: id})
-	}
-	return bkiam.MultiActionRequest{
-		System:    conf.G.IAM.SystemID,
-		Subject:   bkiam.Subject{Type: "user", ID: username},
-		Actions:   actions,
-		Resources: resources,
-	}
+	return c.cli(tenantID).BatchResourceMultiActionsAllowed(actionsIDs, c.permReq(username), nodes)
 }

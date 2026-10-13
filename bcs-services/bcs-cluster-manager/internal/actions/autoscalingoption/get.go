@@ -74,8 +74,8 @@ func (ga *GetAction) setDefaultOption() error {
 		ClusterID:  cluster.ClusterID,
 		Creator:    "admin",
 		Updater:    "admin",
-		CreateTime: time.Now().Format(time.RFC3339),
-		UpdateTime: time.Now().Format(time.RFC3339),
+		CreateTime: time.Now().UTC().Format(time.RFC3339),
+		UpdateTime: time.Now().UTC().Format(time.RFC3339),
 		Provider:   provider,
 
 		EnableAutoscale:               false,

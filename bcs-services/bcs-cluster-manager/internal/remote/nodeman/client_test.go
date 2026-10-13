@@ -20,10 +20,10 @@ import (
 // NewClient xxx
 func NewClient() *Client {
 	cli, _ := NewNodeManClient(Options{
-		AppCode:    "bcs-xxx",
-		AppSecret:  "xxxx",
+		AppCode:    "xxx",
+		AppSecret:  "xxx",
 		BKUserName: "xxx",
-		Server:     "xxx",
+		Server:     "https://bkapi.example.com/api/bk-nodeman/prod",
 		Debug:      true,
 	})
 

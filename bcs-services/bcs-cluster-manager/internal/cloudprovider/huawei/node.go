@@ -83,7 +83,8 @@ func (nm *NodeManager) GetCloudRegions(opt *cloudprovider.CommonOption) ([]*prot
 }
 
 // ListExternalNodesByIP list node by IP set
-func (nm *NodeManager) ListExternalNodesByIP(ips []string, opt *cloudprovider.ListNodesOption) ([]*proto.Node, error) {
+func (nm *NodeManager) ListExternalNodesByIP(ips []string,
+	opt *cloudprovider.ListNodesOption) ([]*proto.Node, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
@@ -111,7 +112,8 @@ func (nm *NodeManager) ListKeyPairs(opt *cloudprovider.ListNetworksOption) ([]*p
 }
 
 // GetExternalNodeByIP get specified Node by innerIP address
-func (nm *NodeManager) GetExternalNodeByIP(ip string, opt *cloudprovider.GetNodeOption) (*proto.Node, error) {
+func (nm *NodeManager) GetExternalNodeByIP(ip string,
+	opt *cloudprovider.GetNodeOption) (*proto.Node, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 

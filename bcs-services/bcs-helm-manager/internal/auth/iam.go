@@ -15,6 +15,7 @@ package auth
 import (
 	"context"
 	"fmt"
+	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cluster"
@@ -30,25 +31,64 @@ import (
 )
 
 var (
-	// IAMClient iam client
-	IAMClient iam.PermClient
+	iamClientMu      sync.Mutex
+	iamClients       = make(map[string]iam.PermClient)
+	iamClientFactory func(tenantID string) iam.PermClient
+
 	// ProjectIamClient project iam client
-	ProjectIamClient *project.BCSProjectPerm
+	ProjectIamClient func(tenantID string) *project.BCSProjectPerm
 	// ClusterIamClient cluster iam client
-	ClusterIamClient *cluster.BCSClusterPerm
+	ClusterIamClient func(tenantID string) *cluster.BCSClusterPerm
 	// NamespaceIamClient namespace iam client
-	NamespaceIamClient *namespace.BCSNamespacePerm
+	NamespaceIamClient func(tenantID string) *namespace.BCSNamespacePerm
 )
 
+// SetIAMClientFactory registers the factory used to create tenant-scoped IAM clients.
+func SetIAMClientFactory(factory func(tenantID string) iam.PermClient) {
+	iamClientMu.Lock()
+	defer iamClientMu.Unlock()
+	iamClientFactory = factory
+	iamClients = make(map[string]iam.PermClient)
+}
+
+func resetIAMClientCache() {
+	SetIAMClientFactory(nil)
+}
+
+// IAMClient returns a cached IAM client for the tenant. Empty tenantID uses the default tenant.
+func IAMClient(tenantID string) iam.PermClient {
+	if tenantID == "" {
+		tenantID = iam.DefaultTenantId
+	}
+
+	iamClientMu.Lock()
+	defer iamClientMu.Unlock()
+	if cli, ok := iamClients[tenantID]; ok {
+		return cli
+	}
+	if iamClientFactory == nil {
+		panic("iam client factory is not initialized")
+	}
+	cli := iamClientFactory(tenantID)
+	iamClients[tenantID] = cli
+	return cli
+}
+
 // InitPermClient new a perm client
-func InitPermClient(iamClient iam.PermClient) {
-	ProjectIamClient = project.NewBCSProjectPermClient(iamClient)
-	ClusterIamClient = cluster.NewBCSClusterPermClient(iamClient)
-	NamespaceIamClient = namespace.NewBCSNamespacePermClient(iamClient)
+func InitPermClient() {
+	ProjectIamClient = func(tenantID string) *project.BCSProjectPerm {
+		return project.NewBCSProjectPermClient(IAMClient(tenantID))
+	}
+	ClusterIamClient = func(tenantID string) *cluster.BCSClusterPerm {
+		return cluster.NewBCSClusterPermClient(IAMClient(tenantID))
+	}
+	NamespaceIamClient = func(tenantID string) *namespace.BCSNamespacePerm {
+		return namespace.NewBCSNamespacePermClient(IAMClient(tenantID))
+	}
 }
 
 // GetUserNamespacePermList get user namespace perm
-func GetUserNamespacePermList(username, projectID, clusterID string, namespaces []string) (
+func GetUserNamespacePermList(username, projectID, clusterID string, namespaces []string, tenantID string) (
 	map[string]map[string]interface{}, error) {
 	permissions := make(map[string]map[string]interface{})
 
@@ -63,7 +103,18 @@ func GetUserNamespacePermList(username, projectID, clusterID string, namespaces 
 		resourceNodes = append(resourceNodes, nsNode)
 	}
 
-	perms, err := IAMClient.BatchResourceMultiActionsAllowed(actionIDs, iam.PermissionRequest{
+	if !options.GlobalOptions.JWT.Enable {
+		for _, v := range namespaces {
+			nsID := utils.CalcIAMNsID(clusterID, v)
+			permissions[nsID] = make(map[string]interface{})
+			permissions[nsID][namespace.NameSpaceScopedCreate.String()] = true
+			permissions[nsID][namespace.NameSpaceScopedView.String()] = true
+			permissions[nsID][namespace.NameSpaceScopedUpdate.String()] = true
+			permissions[nsID][namespace.NameSpaceScopedDelete.String()] = true
+		}
+		return permissions, nil
+	}
+	perms, err := IAMClient(tenantID).BatchResourceMultiActionsAllowed(actionIDs, iam.PermissionRequest{
 		SystemID: iam.SystemIDBKBCS,
 		UserName: username}, resourceNodes)
 	if err != nil {

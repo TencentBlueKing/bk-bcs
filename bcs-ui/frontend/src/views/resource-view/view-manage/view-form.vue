@@ -116,12 +116,21 @@
       class="mt-[24px]"
       @delete="handleDeleteField(item)">
       <template v-if="item.id === 'creator'">
-        <BkUserSelector
+        <TenantUserSelector
+          v-model="viewData.filter[item.id]"
+          multiple
+          class="w-full"
+          :api-base-url="tenantUserSelectorAPI"
+          :tenant-id="user.tenant_id"
+          :placeholder="$t('view.placeholder.creator')"
+          ref="inputRef" />
+        <!-- <BkUserSelector
+          v-else
           v-model="viewData.filter[item.id]"
           class="w-full"
           :api="userSelectorAPI"
           :placeholder="$t('view.placeholder.creator')"
-          ref="inputRef" />
+          ref="inputRef" /> -->
       </template>
       <template v-else-if="item.id === 'labelSelector'">
         <LabelSelector
@@ -194,15 +203,18 @@
 import { cloneDeep, get, isEqual, merge, set } from 'lodash';
 import { computed, PropType, ref, watch } from 'vue';
 
-import BkUserSelector from '@blueking/user-selector';
+import TenantUserSelector from '@blueking/bk-user-selector/vue2';
 
+// import BkUserSelector from '@blueking/user-selector';
 import BatchClusterSelect from './batch-cluster-select.vue';
 import LabelSelector from './label-selector.vue';
 import NSSelect from './ns-select-tree.vue';
 import Field from './view-field.vue';
 
+import '@blueking/bk-user-selector/vue2/vue2.css';
 import CollapseTitle from '@/components/cluster-selector/collapse-title.vue';
 import PopoverSelector from '@/components/popover-selector.vue';
+import { useAppData } from '@/composables/use-app';
 import useClusterGroup from '@/composables/use-cluster-group';
 import $i18n from '@/i18n/i18n-setup';
 
@@ -226,10 +238,14 @@ const props = defineProps({
 });
 const emits = defineEmits(['change', 'field-status-change']);
 
+const { user, flagsMap } = useAppData();
+
 const normalStatusList = ['RUNNING'];
 
 // 用户管理API
-const userSelectorAPI = `${window.BK_USER_HOST}/api/c/compapi/v2/usermanage/fs_list_users/?app_code=bk-magicbox&page_size=100&page=1&callback=USER_LIST_CALLBACK_0`;
+// const userSelectorAPI = `${window.BK_USER_HOST}/api/c/compapi/v2/usermanage/fs_list_users/?app_code=bk-magicbox&page_size=100&page=1&callback=USER_LIST_CALLBACK_0`;
+// 租户用户管理API
+const tenantUserSelectorAPI = window.RUN_ENV === 'dev' ? '/prod' : `${window.BK_USER_HOST}/prod`;
 // popoverRef
 const addFieldPopoverRef = ref();
 // 视图数据

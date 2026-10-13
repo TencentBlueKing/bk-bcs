@@ -16,6 +16,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
@@ -27,6 +28,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/util"
 )
 
 // ListBusinessClusterAction list action for business clusters
@@ -89,7 +91,7 @@ func (la *ListBusinessClusterAction) validate() error {
 	}
 
 	// check operator host permission
-	canUse := checkUserHasPerm(la.req.BusinessID, la.req.Operator)
+	canUse := checkUserHasPerm(la.ctx, la.req.BusinessID, la.req.Operator)
 	if !canUse {
 		errMsg := fmt.Errorf("list business cluster failed: user[%s] no perm in bizID[%s]",
 			la.req.Operator, la.req.BusinessID)
@@ -127,7 +129,9 @@ func (la *ListBusinessClusterAction) listBusinessCluster() error {
 		if clusterList[i].IsShared {
 			clusterList[i].IsShared = false
 		}
-
+		// 兼容旧数据
+		clusterList[i].CreateTime = util.TransStrToUTCStr(time.RFC3339Nano, clusterList[i].CreateTime)
+		clusterList[i].UpdateTime = util.TransStrToUTCStr(time.RFC3339Nano, clusterList[i].UpdateTime)
 		if clusterList[i].Status == common.StatusRunning {
 			runningCluster = append(runningCluster, clusterToClusterBasicInfo(clusterList[i]))
 		} else {

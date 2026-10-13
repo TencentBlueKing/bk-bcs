@@ -29,6 +29,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/resource"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/resource/tresource"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tenant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
@@ -236,8 +237,12 @@ func recordClusterExternalNodeToDB(
 	}
 
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
+	ctx, err = tenant.WithTenantIdByResourceForContext(ctx, tenant.ResourceMetaData{
+		ProjectId: info.Cluster.ProjectID,
+	})
+
 	err = retry.Do(func() error {
-		nodes, err = business.ListExternalNodesByIP(opt.InstanceIPs, &cloudprovider.ListNodesOption{
+		nodes, err = business.ListExternalNodesByIP(ctx, opt.InstanceIPs, &cloudprovider.ListNodesOption{
 			Common: info.CmOption,
 		})
 		if err != nil {

@@ -22,6 +22,7 @@ type UserClaimsInfo struct {
 	BKAppCode    string `json:"bk_app_code"`
 	ClientID     string `json:"client_id"`
 	ClientSecret string `json:"client_secret"`
+	TenantId     string `json:"tenant_id"`
 	// https://tools.ietf.org/html/rfc7519#section-4.1
 	// aud: 接收jwt一方; exp: jwt过期时间; jti: jwt唯一身份认证; IssuedAt: 签发时间; Issuer: jwt签发者
 	*jwt.StandardClaims

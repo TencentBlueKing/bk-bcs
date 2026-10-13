@@ -26,6 +26,12 @@ url("@/fonts/font-icon/fonts/iconcool.eot?#iefix") format("embedded-opentype");
 .bcs-icon-data:before {
 	content: "\e208";
 }
+.bcs-icon-export:before {
+	content: "\e252";
+}
+.bcs-icon-import:before {
+	content: "\e253";
+}
 .bcs-icon-alarm-error:before {
 	content: "\e101";
 }
@@ -755,6 +761,9 @@ url("@/fonts/font-icon/fonts/iconcool.eot?#iefix") format("embedded-opentype");
 .bcs-icon-pie-chart-fill:before {
 	content: "\e24a";
 }
+.bcs-icon-user:before {
+	content: "\e254";
+}
 .bcs-icon-crd:before {
 	content: "\e1f4";
 }
@@ -775,6 +784,12 @@ url("@/fonts/font-icon/fonts/iconcool.eot?#iefix") format("embedded-opentype");
 }
 .bcs-icon-half-success-line:before {
 	content: "\e24c";
+}
+.bcs-icon-authority-fill:before {
+	content: "\e255";
+}
+.bcs-icon-authority:before {
+	content: "\e256";
 }
 .bcs-icon-binding:before {
 	content: "\e1fa";

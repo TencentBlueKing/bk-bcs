@@ -14,6 +14,7 @@
 package tmp
 
 import (
+	"context"
 	"errors"
 	"strings"
 	"time"
@@ -22,6 +23,7 @@ import (
 	"github.com/parnurzeal/gorequest"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/alarm"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/utils"
 )
 
@@ -81,7 +83,7 @@ type Client struct {
 }
 
 // ShieldHostAlarmConfig shield host alarm, user biz managers
-func (c *Client) ShieldHostAlarmConfig(user string, config *alarm.ShieldHost) error {
+func (c *Client) ShieldHostAlarmConfig(ctx context.Context, bkUserName string, config *alarm.ShieldHost) error {
 	if c == nil {
 		return alarm.ErrServerNotInit
 	}
@@ -91,28 +93,28 @@ func (c *Client) ShieldHostAlarmConfig(user string, config *alarm.ShieldHost) er
 		respData = &ShieldHostAlarmResponse{}
 	)
 
-	userAuth, err := utils.BuildGateWayAuth(&utils.AuthInfo{
-		BkAppUser: utils.BkAppUser{
+	userAuth, tenant, err := utils.GetGatewayAuthAndTenantInfo(ctx, &types.AuthInfo{
+		BkAppUser: types.BkAppUser{
 			BkAppCode:   c.appCode,
 			BkAppSecret: c.appSecret,
 		},
 		BkUserName: "",
-	}, user)
+	}, bkUserName)
 	if err != nil {
 		blog.Errorf("call api ShieldHostAlarmConfig generateGateWayAuth failed: %v", err)
 		return err
 	}
 
-	IpList := make([]string, 0)
+	ipList := make([]string, 0)
 	for i := range config.HostList {
-		IpList = append(IpList, config.HostList[i].IP)
+		ipList = append(ipList, config.HostList[i].IP)
 	}
 	req := &ShieldHostAlarmRequest{
 		AppID:       config.BizID,
-		IPList:      strings.Join(IpList, ","),
+		IPList:      strings.Join(ipList, ","),
 		ShieldStart: time.Now().Format("2006-01-02 15:04"),
 		ShieldEnd:   time.Now().Add(time.Minute * 30).Format("2006-01-02 15:04"),
-		Operator:    user,
+		Operator:    bkUserName,
 	}
 	_, _, errs := gorequest.New().
 		Timeout(alarm.DefaultTimeOut).
@@ -120,6 +122,7 @@ func (c *Client) ShieldHostAlarmConfig(user string, config *alarm.ShieldHost) er
 		Set("Content-Type", "application/json").
 		Set("Accept", "application/json").
 		Set("X-Bkapi-Authorization", userAuth).
+		Set("X-Bk-Tenant-Id", tenant).
 		SetDebug(c.serverDebug).
 		Send(req).
 		EndStruct(&respData)

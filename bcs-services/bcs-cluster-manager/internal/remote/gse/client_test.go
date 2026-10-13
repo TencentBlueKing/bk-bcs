@@ -12,14 +12,16 @@
 
 package gse
 
-import "testing"
+import (
+	"context"
+	"testing"
+)
 
 func getNewClient() *Client {
 	cli, err := NewGseClient(Options{
 		Enable:        true,
 		AppCode:       "xx",
 		AppSecret:     "xxx",
-		EsbServer:     "xxx",
 		GatewayServer: "xxx",
 		BKUserName:    "xxx",
 		Debug:         true,
@@ -34,7 +36,7 @@ func getNewClient() *Client {
 func TestGetAgentStatus(t *testing.T) {
 	cli := getNewClient()
 
-	resp, err := cli.GetHostsGseAgentStatus(
+	resp, err := cli.GetHostsGseAgentStatus(context.Background(),
 		"0", []Host{
 			{
 				IP:        "xxx",
@@ -58,21 +60,10 @@ func TestGetAgentStatus(t *testing.T) {
 	t.Logf("%+v", resp)
 }
 
-func TestGetAgentStatusV1(t *testing.T) {
-	cli := getNewClient()
-
-	resp, err := cli.GetAgentStatusV1(&GetAgentStatusReq{})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	t.Logf("%+v", resp)
-}
-
 func TestGetAgentStatusV2(t *testing.T) {
 	cli := getNewClient()
 
-	resp, err := cli.GetAgentStatusV2(&GetAgentStatusReqV2{})
+	resp, err := cli.GetAgentStatusV2(context.Background(), &GetAgentStatusReqV2{})
 	if err != nil {
 		t.Fatal(err)
 	}

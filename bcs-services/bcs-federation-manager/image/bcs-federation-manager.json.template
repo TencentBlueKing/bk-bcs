@@ -43,6 +43,8 @@
         "appSecret": "${bcsIAMAppSecret}",
         "external": ${bcsIAMExternal},
         "gateWayServer": "${bcsIAMGateWayHost}",
+        "enableV4": ${bcsIAMEnableV4},
+        "v4GateWayHost": "${bcsIAMV4GatewayHost}",
         "iamServer": "${bcsIAMHost}",
         "bkiIamServer": "${bcsIAMbkiHost}",
         "metric": ${bcsIAMMetric},

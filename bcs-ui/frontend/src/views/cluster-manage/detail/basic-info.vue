@@ -34,6 +34,9 @@
         <bk-form-item :label="$t('cluster.create.label.clusterVersion')">
           {{ clusterVersion }}
         </bk-form-item>
+        <bk-form-item label="API Server">
+          {{ clusterData.extraInfo?.apiServer || '--' }}
+        </bk-form-item>
         <bk-form-item
           :label="$t('cluster.detail.label.tkeID')"
           v-if="clusterData.providerType === 'tke' && clusterData.clusterType !== 'virtual'">
@@ -193,13 +196,13 @@
           {{ getClusterImportCategory(clusterData) }}
         </bk-form-item>
         <bk-form-item :label="$t('generic.label.createdBy')">
-          {{ clusterData.creator || '--' }}
+          <bk-user-display-name :user-id="clusterData.creator"></bk-user-display-name>
         </bk-form-item>
         <bk-form-item :label="$t('cluster.labels.createdAt')">
-          {{ clusterData.createTime || '--' }}
+          {{ clusterData.createTime ? formatTimeWithTimezone(clusterData.createTime) : '--' }}
         </bk-form-item>
         <bk-form-item :label="$t('cluster.labels.updatedAt')">
-          {{ clusterData.updateTime || '--' }}
+          {{ clusterData.updateTime ? formatTimeWithTimezone(clusterData.updateTime) : '--' }}
         </bk-form-item>
       </DescList>
       <bk-sideslider
@@ -280,7 +283,7 @@ import { modifyCluster } from '@/api/modules/cluster-manager';
 import { getTokensByUsername } from '@/api/modules/user-manager';
 import $bkMessage from '@/common/bkmagic';
 import { CLUSTER_ENV, LABEL_KEY_REGEXP } from '@/common/constant';
-import { copyText, renderTemplate } from '@/common/util';
+import { formatTimeWithTimezone, copyText, renderTemplate } from '@/common/util';
 import DescList from '@/components/desc-list.vue';
 import KeyValue from '@/components/key-value.vue';
 import LoadingIcon from '@/components/loading-icon.vue';
@@ -606,6 +609,7 @@ export default defineComponent({
       rangeEdit,
       handleVisibleRangeChange,
       editable,
+      formatTimeWithTimezone,
     };
   },
 });

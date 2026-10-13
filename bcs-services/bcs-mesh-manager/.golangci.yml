@@ -1,5 +1,6 @@
 run:
   timeout: 10m
+
 issues:
   max-issues-per-linter: 0
   max-same-issues: 0
@@ -20,6 +21,7 @@ issues:
     - .*\.pb.micro\.go$
     - .*\.pb.validate\.go$
     - .*\_test\.go$
+
 linters:
   disable-all: true
   enable:
@@ -44,6 +46,7 @@ linters:
     - revive
     - unconvert
     - unparam
+
 linters-settings:
   staticcheck:
     checks: ["all", "-SA1006", "-SA1019"]

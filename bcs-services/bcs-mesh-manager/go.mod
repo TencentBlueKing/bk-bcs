@@ -2,6 +2,8 @@ module github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager
 
 go 1.23.0
 
+replace github.com/Tencent/bk-bcs/bcs-common => ../../bcs-common
+
 require (
 	github.com/Masterminds/semver/v3 v3.3.1
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20250603080618-3dfa31c8c64c
@@ -50,11 +52,9 @@ require (
 	github.com/Masterminds/squirrel v1.5.2 // indirect
 	github.com/Microsoft/go-winio v0.6.1 // indirect
 	github.com/ProtonMail/go-crypto v1.1.3 // indirect
-	github.com/PuerkitoBio/purell v1.1.1 // indirect
-	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
 	github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common v0.0.0-20220330120237-0bbed74dcf6d // indirect
 	github.com/TencentBlueKing/gopkg v1.1.0 // indirect
-	github.com/TencentBlueKing/iam-go-sdk v0.1.6 // indirect
+	github.com/TencentBlueKing/iam-go-sdk v1.0.1 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20200428143746-21a406dcc535 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bitly/go-simplejson v0.5.0 // indirect
@@ -92,11 +92,12 @@ require (
 	github.com/go-logr/logr v1.4.1 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
-	github.com/go-openapi/jsonreference v0.19.5 // indirect
-	github.com/go-openapi/swag v0.19.14 // indirect
+	github.com/go-openapi/jsonreference v0.20.0 // indirect
+	github.com/go-openapi/swag v0.19.15 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-playground/validator/v10 v10.19.0 // indirect
+	github.com/go-resty/resty/v2 v2.12.0 // indirect
 	github.com/go-sql-driver/mysql v1.7.1 // indirect
 	github.com/go-stack/stack v1.8.0 // indirect
 	github.com/gobwas/glob v0.2.3 // indirect

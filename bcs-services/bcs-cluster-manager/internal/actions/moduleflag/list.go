@@ -14,6 +14,7 @@ package moduleflag
 
 import (
 	"context"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/i18n"
@@ -23,6 +24,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/util"
 )
 
 // ListAction action for list cloud moduleFlagList
@@ -79,6 +81,8 @@ func (la *ListAction) listCloudModuleFlag() error {
 	cloudModuleFlags = append(cloudModuleFlags, flags...)
 
 	for i := range cloudModuleFlags {
+		cloudModuleFlags[i].CreatTime = util.TransStrToUTCStr(time.RFC3339Nano, cloudModuleFlags[i].CreatTime)
+		cloudModuleFlags[i].UpdateTime = util.TransStrToUTCStr(time.RFC3339Nano, cloudModuleFlags[i].UpdateTime)
 		cloudModuleFlags[i].FlagDesc = i18n.T(la.ctx, cloudModuleFlags[i].FlagDesc)
 		la.moduleFlagListList = append(la.moduleFlagListList, cloudModuleFlags[i])
 	}

@@ -59,6 +59,7 @@ blueking:
   features: 功能特性
   features1: 产品功能特性
   apiToken: 个人密钥
+  userCenter: 个人设置
   signOut: 退出登录
   desktop: 蓝鲸桌面
   help: 帮助
@@ -182,10 +183,7 @@ units:
   time:
     1h: 1小时
     24h: 24小时
-    today: 今天
     lastDays: 近7天
-    last15Days: 近15天
-    last30Days: 近30天
     nDays: '{num}天'
     nMonths: '{0} 月'
     nYears: '{0} 年'

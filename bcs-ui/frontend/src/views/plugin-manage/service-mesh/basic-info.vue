@@ -158,7 +158,7 @@
         <bcs-table-column width="160" :label="$t('serviceMesh.label.joinTime')" show-overflow-tooltip>
           <template #default="{ row }">
             {{ originSubClustersMap[row.clusterID]
-              ? timeFormat(Number(originSubClustersMap[row.clusterID]?.joinTime)) : '--' }}
+              ? formatTimeWithTimezone(Number(originSubClustersMap[row.clusterID]?.joinTime)) : '--' }}
           </template>
         </bcs-table-column>
         <bcs-table-column :resizable="false" width="50" fixed="right">
@@ -198,7 +198,7 @@ import ClusterSelector from './cluster-selector.vue';
 import ContentSwitcher from './content-switcher.vue';
 import useMesh, { IMesh, MeshCluster } from './use-mesh';
 
-import { timeFormat } from '@/common/util';
+import { formatTimeWithTimezone } from '@/common/util';
 import { useFocusOnErrorField } from '@/composables/use-focus-on-error-field';
 import $i18n from '@/i18n/i18n-setup';
 

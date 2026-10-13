@@ -75,7 +75,10 @@ const store = new Vuex.Store<{
   curNav: IMenu | Record<string, any>
   curNamespace: string
   user: {
-    username: string
+    username: string,
+    tenant_id: string,
+    language: 'zh-CN' | 'en-US'
+    time_zone: string,
   }
   openSideMenu: boolean
   isEn: boolean
@@ -200,6 +203,7 @@ const store = new Vuex.Store<{
      */
     updateUser(state, user) {
       state.user = Object.assign({}, user);
+      window.timezone = user.time_zone;
     },
 
     /**

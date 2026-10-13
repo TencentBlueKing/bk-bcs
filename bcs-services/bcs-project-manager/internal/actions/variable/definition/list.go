@@ -14,6 +14,7 @@ package definition
 
 import (
 	"context"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -22,6 +23,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
 	vdm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/variabledefinition"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
+	timeutil "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/time"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
 )
 
@@ -101,7 +103,10 @@ func (la *ListAction) listVariableDefinitions() ([]*vdm.VariableDefinition, int6
 	}
 	definitionList := []*vdm.VariableDefinition{}
 	for i := range definitions {
-		definitionList = append(definitionList, &definitions[i])
+		defi := definitions[i]
+		defi.CreateTime = timeutil.TransStrToUTCStr(time.RFC3339Nano, defi.CreateTime)
+		defi.UpdateTime = timeutil.TransStrToUTCStr(time.RFC3339Nano, defi.UpdateTime)
+		definitionList = append(definitionList, &defi)
 	}
 	return definitionList, total, nil
 }

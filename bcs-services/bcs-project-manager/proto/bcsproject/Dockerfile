@@ -1,4 +1,4 @@
-FROM golang:1.18 AS builder
+FROM golang:1.20 AS builder
 
 ARG PROTOC_GEN_GO_VERSION=1.3.2
 ARG PROTOC_GEN_MICRO_VERSION=1.0.0
@@ -21,7 +21,7 @@ RUN go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger@v${PROT
 # Install protoc-gen-validate
 RUN go install github.com/envoyproxy/protoc-gen-validate@v${PROTOC_GEN_VALIDATE_VERSION}
 
-FROM debian:bullseye-slim
+FROM ubuntu:24.04
 
 WORKDIR /proto
 

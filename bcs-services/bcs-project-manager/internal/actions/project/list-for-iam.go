@@ -14,6 +14,7 @@ package project
 
 import (
 	"context"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 
@@ -23,6 +24,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
 	pm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/tenant"
+	timeutil "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/time"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
 )
 
@@ -50,7 +53,8 @@ func (la *ListForIAMAction) Do(ctx context.Context, req *proto.ListProjectsForIA
 	if err != nil {
 		return nil, errorx.NewDBErr(err.Error())
 	}
-	spaces, err := bkmonitor.ListSpaces()
+
+	spaces, err := bkmonitor.ListSpaces(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -86,6 +90,11 @@ func (la *ListForIAMAction) listProjects() ([]*pm.Project, int64, error) {
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{
 		"kind": "k8s",
 	})
+	if tenant.IsMultiTenantEnabled() {
+		tenantCond := operator.NewLeafCondition(operator.Eq, operator.M{"tenantId": tenant.GetTenantIdFromContext(la.ctx)})
+		cond = operator.NewBranchCondition(operator.And, cond, tenantCond)
+	}
+
 	// 查询所有开启了容器服务的项目
 	projects, total, err := la.model.ListProjects(la.ctx, cond, &page.Pagination{All: true})
 	if err != nil {
@@ -93,7 +102,10 @@ func (la *ListForIAMAction) listProjects() ([]*pm.Project, int64, error) {
 	}
 	projectList := []*pm.Project{}
 	for i := range projects {
-		projectList = append(projectList, &projects[i])
+		projectEle := projects[i]
+		projectEle.CreateTime = timeutil.TransStrToUTCStr(time.RFC3339Nano, projectEle.CreateTime)
+		projectEle.UpdateTime = timeutil.TransStrToUTCStr(time.RFC3339Nano, projectEle.UpdateTime)
+		projectList = append(projectList, &projectEle)
 	}
 	return projectList, total, nil
 }

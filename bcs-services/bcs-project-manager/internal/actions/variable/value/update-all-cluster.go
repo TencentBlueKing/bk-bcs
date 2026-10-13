@@ -80,7 +80,7 @@ func (la *UpdateClustersVariablesAction) updateClusterVariables() error {
 			ClusterID:  entry.ClusterID,
 			Value:      entry.Value,
 			Scope:      vdm.VariableScopeCluster,
-			UpdateTime: time.Now().Format(time.RFC3339),
+			UpdateTime: time.Now().UTC().Format(time.RFC3339),
 			Updater:    username,
 		}); err != nil {
 			return err

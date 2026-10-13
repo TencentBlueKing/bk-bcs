@@ -44,7 +44,7 @@ func NewUpdateAction(model store.ClusterManagerModel) *UpdateAction {
 }
 
 func (ua *UpdateAction) updateTask(tsk *cmproto.Task) error {
-	timeStr := time.Now().Format(time.RFC3339)
+	timeStr := time.Now().UTC().Format(time.RFC3339)
 	// update field if required
 	tsk.LastUpdate = timeStr
 	tsk.Updater = ua.req.Updater

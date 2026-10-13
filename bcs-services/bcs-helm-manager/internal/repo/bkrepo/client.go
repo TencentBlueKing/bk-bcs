@@ -23,6 +23,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpclient"
 
 	bkRepoAuth "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/repo/bkrepo/auth"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/contextx"
 )
 
 const (
@@ -73,7 +74,7 @@ type client struct {
 }
 
 func (c *client) request(
-	_ context.Context, method, uri string, auth *bkRepoAuth.Auth, header http.Header, data []byte) (
+	ctx context.Context, method, uri string, auth *bkRepoAuth.Auth, header http.Header, data []byte) (
 	*httpclient.HttpResponse, error) {
 
 	// init header
@@ -81,6 +82,7 @@ func (c *client) request(
 		header = http.Header{}
 	}
 	header.Set("Content-Type", "application/json")
+	header.Set(contextx.TenantIDHeaderKey, contextx.GetTenantIDFromContext(ctx))
 	if auth != nil {
 		auth.SetHeader(header)
 	}

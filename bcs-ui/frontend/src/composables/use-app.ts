@@ -1,5 +1,7 @@
 import { computed, InjectionKey, ref } from 'vue';
 
+import BkUserDisplayName from '@blueking/bk-user-display-name';
+
 import { featureFlags as featureFlagsApi } from '@/api/modules/project';
 import { userInfo } from '@/api/modules/user-manager';
 import { Preset } from '@/components/assistant/use-assistant-store';
@@ -155,8 +157,14 @@ export function useCluster() {
 export function useAppData() {
   // 用户信息
   const user = computed(() => $store.state.user);
+  const apiBaseUrl = window.RUN_ENV === 'dev' ? '/prod' : `${window.BK_USER_HOST}/prod`;
   async function getUserInfo() {
     const data = await userInfo().catch(() => ({}));
+    // 多租户用户名展示组件配置
+    BkUserDisplayName.configure({
+      tenantId: data.tenant_id,
+      apiBaseUrl,
+    });
     $store.commit('updateUser', data);
     return data;
   }
@@ -168,6 +176,7 @@ export function useAppData() {
     PROJECT_LIST: false,
     AZURECLOUD: true,
     IMPORTSOPSCLUSTER: true,
+    PROJECTQUOTAS: false,
     PLATFORMMANAGE: false, // 平台管理默认不开启
     DEPLOYMENTMANAGEPULL: false,
     ENABLEPOPUP: false, // ai小鲸划词弹窗默认不开启

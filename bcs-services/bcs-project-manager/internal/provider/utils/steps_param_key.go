@@ -35,6 +35,9 @@ var (
 	// EndWaitTimeKey end wait time
 	EndWaitTimeKey task.ParamKey = "endWaitTime"
 
+	// TenantIdKey tenantId
+	TenantIdKey task.ParamKey = "tenantId"
+
 	// QuotaIdKey quotaId
 	QuotaIdKey task.ParamKey = "quotaId"
 	// FederationQuotaDataKey federationQuota

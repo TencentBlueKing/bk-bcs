@@ -83,7 +83,7 @@ func (ca *CreateAction) getRelativeResource() error {
 }
 
 func (ca *CreateAction) constructNodeGroup() *cmproto.NodeGroup {
-	timeStr := time.Now().Format(time.RFC3339)
+	timeStr := time.Now().UTC().Format(time.RFC3339)
 	group := &cmproto.NodeGroup{
 		NodeGroupID:     autils.GenerateTemplateID(autils.GroupTemplate),
 		Name:            ca.req.Name,
@@ -320,7 +320,7 @@ func (ca *CreateAction) createNodeGroup() error {
 		TaskID:       taskID,
 		Message:      fmt.Sprintf("集群%s创建节点池%s", ca.cluster.ClusterID, ca.group.NodeGroupID),
 		OpUser:       ca.req.Creator,
-		CreateTime:   time.Now().Format(time.RFC3339),
+		CreateTime:   time.Now().UTC().Format(time.RFC3339),
 		ClusterID:    ca.cluster.ClusterID,
 		ProjectID:    ca.cluster.ProjectID,
 		ResourceName: ca.group.Name,

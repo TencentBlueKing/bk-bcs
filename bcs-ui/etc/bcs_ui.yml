@@ -15,13 +15,6 @@ bcs_conf:
   verify: false
   namespace_prefix: ""
   jwt_public_key: ""
-iam_conf:
-  external: false
-  gateway_server: ""
-  iam_server: ""
-  bk_iam_erver: ""
-  metric: false
-  debug: false
 bk_notice:
   enable: false
   host: ""

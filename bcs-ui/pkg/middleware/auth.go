@@ -22,10 +22,7 @@ import (
 	"github.com/golang-jwt/jwt"
 
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/auth"
-	"github.com/Tencent/bk-bcs/bcs-ui/pkg/component/bcs"
-	"github.com/Tencent/bk-bcs/bcs-ui/pkg/component/iam"
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/config"
-	"github.com/Tencent/bk-bcs/bcs-ui/pkg/contextx"
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/rest"
 )
 
@@ -38,83 +35,6 @@ const (
 
 // ContextValueKey is the key for context value
 type ContextValueKey string
-
-// NeedProjectAuthorization middleware for project authorization
-func NeedProjectAuthorization(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
-		// 新增泳道特性
-		ctx = contextx.WithLaneIdCtx(ctx, r.Header)
-		ctx = contextx.WithGrpcLaneIdCtx(ctx, r.Header)
-		claims, err := decodeBCSJwtFromContext(ctx, r)
-		if err != nil {
-			rest.AbortWithUnauthorized(w, r, http.StatusUnauthorized, err.Error())
-			return
-		}
-		if claims.UserName == "" {
-			rest.AbortWithUnauthorized(w, r, http.StatusUnauthorized, "auth failed, username is empty")
-			return
-		}
-
-		projectCode := r.URL.Query().Get("projectCode")
-		if projectCode == "" {
-			rest.AbortWithBadRequest(w, r, http.StatusBadRequest, "projectCode is empty")
-			return
-		}
-		project, err := bcs.GetProject(ctx, projectCode)
-		if err != nil {
-			rest.AbortWithBadRequest(w, r, http.StatusBadRequest, err.Error())
-			return
-		}
-		// iam 鉴权，先校验 cluster_view 权限，因为 cluster_view 权限包含 project_view 权限，
-		// 避免用户申请 project_view 之后还要再单独申请 cluster_view 权限
-		// 如果有 clusterID 参数，先校验 cluster_view 权限
-		clusterID := r.URL.Query().Get("clusterID")
-		if clusterID != "" {
-			_, err = bcs.GetCluster(ctx, clusterID)
-			if err != nil {
-				rest.AbortWithInternalServerError(w, r, http.StatusInternalServerError, err.Error())
-				return
-			}
-			client, _ := iam.GetClusterPermClient()
-			allow, url, actionList, clusterErr := client.CanViewCluster(claims.UserName, project.ProjectID, clusterID)
-			if clusterErr != nil {
-				rest.AbortWithInternalServerError(w, r, http.StatusInternalServerError, clusterErr.Error())
-				return
-			}
-			if !allow {
-				rest.AbortWithForbidden(w, r, &rest.Perms{
-					ActionList: actionList,
-					ApplyURL:   url,
-				})
-				return
-			}
-		}
-		// 校验 project_view 权限
-		client, err := iam.GetProjectPermClient()
-		if err != nil {
-			rest.AbortWithBadRequest(w, r, http.StatusBadRequest, err.Error())
-			return
-		}
-		allow, url, actionList, err := client.CanViewProject(claims.UserName, project.ProjectID)
-		if err != nil {
-			rest.AbortWithInternalServerError(w, r, http.StatusInternalServerError, err.Error())
-			return
-		}
-		if !allow {
-			rest.AbortWithForbidden(w, r, &rest.Perms{
-				ActionList: actionList,
-				ApplyURL:   url,
-			})
-			return
-		}
-
-		// pass the span through the request context
-		r = r.WithContext(ctx)
-		next.ServeHTTP(w, r)
-
-	})
-}
 
 func decodeBCSJwtFromContext(_ context.Context, r *http.Request) (*auth.UserClaimsInfo, error) {
 	tokenString := r.Header.Get("Authorization")

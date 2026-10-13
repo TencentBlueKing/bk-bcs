@@ -17,6 +17,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
@@ -144,6 +145,9 @@ func (m *ModelCloudVPC) GetCloudVPC(ctx context.Context, cloudID, vpcID string) 
 	if err := m.db.Table(m.tableName).Find(cond).One(ctx, cloudVPC); err != nil {
 		return nil, err
 	}
+	// 兼容旧数据
+	cloudVPC.CreatTime = util.TransStrToUTCStr(time.RFC3339Nano, cloudVPC.CreatTime)
+	cloudVPC.UpdateTime = util.TransStrToUTCStr(time.RFC3339Nano, cloudVPC.UpdateTime)
 
 	return cloudVPC, nil
 }

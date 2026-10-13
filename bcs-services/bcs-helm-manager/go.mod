@@ -3,9 +3,10 @@ module github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager
 go 1.23.0
 
 replace (
-	// github.com/databus23/helm-diff/v3 limit by go 1.23
+	github.com/Tencent/bk-bcs/bcs-common => ../../bcs-common
+	github.com/Tencent/bk-bcs/bcs-services/pkg => github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20260703073010-610df57086a6
 	github.com/databus23/helm-diff/v3 => github.com/databus23/helm-diff/v3 v3.9.11
-	helm.sh/helm/v3 => github.com/adevjoe/helm/v3 v3.17.3-tx.3
+	helm.sh/helm/v3 => github.com/OvertimeDog/helm/v3 v3.17.3-tx.3
 	k8s.io/api => k8s.io/api v0.32.2
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.32.2
 	k8s.io/apimachinery => k8s.io/apimachinery v0.32.2
@@ -90,7 +91,7 @@ require (
 	github.com/TencentBlueKing/bk-audit-go-sdk v0.0.6 // indirect
 	github.com/TencentBlueKing/crypto-golang-sdk v1.0.0 // indirect
 	github.com/TencentBlueKing/gopkg v1.1.0 // indirect
-	github.com/TencentBlueKing/iam-go-sdk v0.1.6 // indirect
+	github.com/TencentBlueKing/iam-go-sdk v1.0.1 // indirect
 	github.com/aryann/difflib v0.0.0-20170710044230-e206f873d14a // indirect
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect

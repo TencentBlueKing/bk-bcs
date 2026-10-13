@@ -178,37 +178,7 @@ func (c *Configurations) ReadFrom(content []byte) error {
 		return err
 	}
 
-	// 添加环境变量
-	if c.Base.AppCode == "" {
-		c.Base.AppCode = BK_APP_CODE
-	}
-	if c.Base.AppSecret == "" {
-		c.Base.AppSecret = BK_APP_SECRET
-	}
-	if c.Base.BKPaaSHost == "" {
-		c.Base.BKPaaSHost = BK_PAAS_HOST
-	}
-	if c.Auth.Host == "" {
-		c.Auth.Host = BK_IAM_HOST
-	}
-	if c.Auth.GatewayHost == "" {
-		c.Auth.GatewayHost = BK_IAM_GATEWAY_HOST
-	}
-	// 为空以配置文件为准, 如果设置，以环境变量为准, false代表网关模式
-	if BK_IAM_EXTERNAL != "" {
-		if external, e := strconv.ParseBool(BK_IAM_EXTERNAL); e == nil {
-			c.Auth.UseGateway = !external
-		}
-	}
-	if c.Redis.Password == "" {
-		c.Redis.Password = REDIS_PASSWORD
-	}
-	if c.BCS.Token == "" {
-		c.BCS.Token = BCS_APIGW_TOKEN
-	}
-	if c.BCS.JWTPubKey == "" {
-		c.BCS.JWTPubKey = BCS_APIGW_PUBLIC_KEY
-	}
+	c.applyEnvDefaults()
 
 	if e := c.init(); e != nil {
 		return err
@@ -244,4 +214,44 @@ func (c *Configurations) ReadFrom(content []byte) error {
 	}
 
 	return nil
+}
+
+// applyEnvDefaults 配置文件未设置的字段使用环境变量填充
+func (c *Configurations) applyEnvDefaults() {
+	if c.Base.AppCode == "" {
+		c.Base.AppCode = BK_APP_CODE
+	}
+	if c.Base.AppSecret == "" {
+		c.Base.AppSecret = BK_APP_SECRET
+	}
+	if c.Base.BKPaaSHost == "" {
+		c.Base.BKPaaSHost = BK_PAAS_HOST
+	}
+	if c.Auth.Host == "" {
+		c.Auth.Host = BK_IAM_HOST
+	}
+	if c.Auth.GatewayHost == "" {
+		c.Auth.GatewayHost = BK_IAM_GATEWAY_HOST
+	}
+	if !c.Auth.EnableV4 {
+		c.Auth.EnableV4 = BKIAM_ENABLE_V4
+	}
+	if c.Auth.V4GatewayHost == "" {
+		c.Auth.V4GatewayHost = BKIAM_V4_GATEWAY_HOST
+	}
+	// 为空以配置文件为准, 如果设置，以环境变量为准, false代表网关模式
+	if BK_IAM_EXTERNAL != "" {
+		if external, e := strconv.ParseBool(BK_IAM_EXTERNAL); e == nil {
+			c.Auth.UseGateway = !external
+		}
+	}
+	if c.Redis.Password == "" {
+		c.Redis.Password = REDIS_PASSWORD
+	}
+	if c.BCS.Token == "" {
+		c.BCS.Token = BCS_APIGW_TOKEN
+	}
+	if c.BCS.JWTPubKey == "" {
+		c.BCS.JWTPubKey = BCS_APIGW_PUBLIC_KEY
+	}
 }

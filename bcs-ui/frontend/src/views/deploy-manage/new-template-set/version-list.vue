@@ -16,8 +16,16 @@
       <bcs-table-column :label="$t('templateSet.label.versionNo')" prop="version"></bcs-table-column>
       <!-- 被引用 -->
       <!-- <bcs-table-column></bcs-table-column> -->
-      <bcs-table-column :label="$t('generic.label.updator')" prop="updateBy"></bcs-table-column>
-      <bcs-table-column :label="$t('generic.label.updatedAt')" prop="updateTime"></bcs-table-column>
+      <bcs-table-column :label="$t('generic.label.updator')" prop="updateBy">
+        <template #default="{ row }">
+          <bk-user-display-name :user-id="row.updateBy"></bk-user-display-name>
+        </template>
+      </bcs-table-column>
+      <bcs-table-column :label="$t('generic.label.updatedAt')" prop="updateTime">
+        <template #default="{ row }">
+          {{ formatTimeWithTimezone(row.updateTime) }}
+        </template>
+      </bcs-table-column>
       <bcs-table-column :label="$t('generic.label.action')" width="120">
         <template #default="{ row }">
           <bcs-button text @click="cloneVersion(row)">{{ $t('generic.button.clone') }}</bcs-button>
@@ -32,6 +40,7 @@ import { ref, watch } from 'vue';
 
 import { HelmManagerService } from '@/api/modules/new-helm-manager';
 import $bkMessage from '@/common/bkmagic';
+import { formatTimeWithTimezone } from '@/common/util';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import usePage from '@/composables/use-page';
 import useSearch from '@/composables/use-search';

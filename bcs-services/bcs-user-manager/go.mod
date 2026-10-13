@@ -4,7 +4,7 @@ go 1.21
 
 replace (
 	github.com/Tencent/bk-bcs/bcs-common => ../../bcs-common
-	github.com/TencentBlueKing/iam-go-sdk => github.com/TencentBlueKing/iam-go-sdk v0.1.5
+	github.com/Tencent/bk-bcs/bcs-services/pkg => github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20260703073010-610df57086a6
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace => go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.17.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc => go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.17.0
 )
@@ -14,7 +14,7 @@ require (
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20250520122750-18307f64fb0c
 	github.com/Tencent/bk-bcs/bcs-common/common/encryptv2 v0.0.0-20230921064043-a8ed550f5a77
 	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20230921034852-f07df6e705c2
-	github.com/TencentBlueKing/iam-go-sdk v0.1.6
+	github.com/TencentBlueKing/iam-go-sdk v1.0.1
 	github.com/asaskevich/govalidator v0.0.0-20200907205600-7a23bdc65eef
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/dchest/uniuri v0.0.0-20200228104902-7aecb25e1fe5
@@ -86,7 +86,6 @@ require (
 	github.com/gomodule/redigo v1.9.2 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
-	github.com/gopherjs/gopherjs v1.17.2 // indirect
 	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.16.0 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
@@ -97,8 +96,6 @@ require (
 	github.com/jinzhu/now v1.1.1 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
-	github.com/jtolds/gls v4.20.0+incompatible // indirect
-	github.com/juju/ratelimit v1.0.1 // indirect
 	github.com/kevinburke/ssh_config v1.2.0 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
 	github.com/mailru/easyjson v0.7.6 // indirect
@@ -107,7 +104,6 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
-	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826 // indirect
 	github.com/nxadm/tail v1.4.8 // indirect
 	github.com/onsi/ginkgo/v2 v2.1.3 // indirect
 	github.com/openzipkin/zipkin-go v0.3.0 // indirect
