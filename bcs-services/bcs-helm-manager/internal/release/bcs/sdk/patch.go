@@ -219,8 +219,6 @@ var paasMetaPaths = [][]string{
 }
 
 // removePaasMetadata 删除 BCS 注入的 io.tencent.paas.updator 元数据（annotations 与 labels）。
-// 必须与"不放占位符"配合使用：仅不放占位符会让值变成空串而非消失，并覆盖 updator 原有值。
-// 未删到任何内容时原样返回 manifest，避免对无关资源（CRD / Secret 等）做无谓的重新格式化。
 func removePaasMetadata(manifest string) (string, error) {
 	var n yaml.MapSlice
 	if err := yaml.Unmarshal([]byte(manifest), &n); err != nil {
@@ -248,9 +246,7 @@ func removePaasMetadata(manifest string) (string, error) {
 	return string(out), nil
 }
 
-// removePaasMetadataInPath 沿路径下钻，删除末端 map 中属于 common.PaasMetadataKeys 的 key，返回是否真的删到了。
-// 只做结构化读写，不触碰 goccy/go-yaml 的 AST：ReplaceWithReader 之后 AST 的缩进信息会失真，
-// String() 内部 strings.Repeat 拿到负数会 panic（v1.9.6 已确认），进而让进程崩溃。
+// String() 内部 strings.Repeat 会panic进而让进程崩溃。
 func removePaasMetadataInPath(node interface{}, keys []string) (interface{}, bool) {
 	if len(keys) == 0 {
 		return removePaasMetadataInMap(node)
