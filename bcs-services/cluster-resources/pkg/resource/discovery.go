@@ -317,7 +317,7 @@ func GetServerVersion(ctx context.Context, clusterID string) (*version.Info, err
 	return cli.ServerVersion()
 }
 
-// GetGroupVersionResource 根据配置，名称等信息，获取指定资源对应的 GroupVersionResource
+// GetGroupVersionResource 根据配置，名称等信息，获取指定资源 对应的 GroupVersionResource
 // 若指定 GroupVersion，则在对应的 Group 中寻找资源信息，否则获取 preferred version
 // 包含刷新缓存逻辑，若首次从缓存中找不到对应资源，会刷新缓存再次查询，若还是找不到，则返回错误
 func GetGroupVersionResource(

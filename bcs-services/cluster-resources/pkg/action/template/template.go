@@ -657,6 +657,8 @@ func (t *TemplateAction) PreviewTemplateFile(ctx context.Context, req *clusterRe
 
 	// dry-run deploy templates
 	dryRunMsg := ""
+	// 记录各资源 dry-run 后的真实对象（等价于部署结果），用于生成与 previousContent 同构的预览内容
+	newObjects := make(map[string]map[string]interface{})
 	clusterConf := res.NewClusterConf(req.GetClusterID())
 	for _, v := range manifests {
 		kind := mapx.GetStr(v, "kind")
@@ -667,17 +669,21 @@ func (t *TemplateAction) PreviewTemplateFile(ctx context.Context, req *clusterRe
 		k8sRes, errr := res.GetGroupVersionResource(ctx, clusterConf, kind, groupVersion)
 		if errr != nil {
 			dryRunMsg = errr.Error()
-			break
+			continue
 		}
-		_, errr = cli.NewResClient(clusterConf, k8sRes).ApplyWithoutPerm(ctx, v,
+		ret, errr := cli.NewResClient(clusterConf, k8sRes).ApplyWithoutPerm(ctx, v,
 			metav1.CreateOptions{DryRun: []string{metav1.DryRunAll}})
 		if errr != nil {
 			dryRunMsg = errr.Error()
-			break
+			continue
+		}
+		if ret != nil {
+			newObjects[genResKey(kind, mapx.GetStr(v, "metadata.namespace"),
+				mapx.GetStr(v, "metadata.name"))] = ret.Object
 		}
 	}
 
-	items, err := convertManifestToString(ctx, manifests, req.GetClusterID())
+	items, err := convertManifestToString(ctx, manifests, req.GetClusterID(), newObjects)
 	if err != nil {
 		return nil, err
 	}
