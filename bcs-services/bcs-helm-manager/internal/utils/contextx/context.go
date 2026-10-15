@@ -19,6 +19,11 @@ import (
 	"go-micro.dev/v4/metadata"
 )
 
+const (
+	// DefaultTenantId 默认租户ID
+	DefaultTenantId = "default"
+)
+
 // GetRequestIDFromCtx 通过 ctx 获取 requestID
 func GetRequestIDFromCtx(ctx context.Context) string {
 	id, _ := ctx.Value(RequestIDContextKey).(string)
@@ -55,4 +60,38 @@ func GetUserAgentFromCtx(ctx context.Context) string {
 	}
 	userAgent, _ := md.Get(UserAgentHeaderKey)
 	return userAgent
+}
+
+// GetHeaderTenantIDFromCtx 通过 ctx 获取 header 中的 tenantId
+func GetHeaderTenantIDFromCtx(ctx context.Context) string {
+	md, ok := metadata.FromContext(ctx)
+	if !ok {
+		return ""
+	}
+	tenantID, _ := md.Get(TenantIDHeaderKey)
+	return tenantID
+}
+
+// GetTenantIDFromContext get tenantId from context
+func GetTenantIDFromContext(ctx context.Context) string {
+	tenantId := ""
+
+	if id, ok := ctx.Value(TenantIDContextKey).(string); ok {
+		tenantId = id
+	}
+
+	if tenantId == "" {
+		tenantId = DefaultTenantId
+	}
+
+	return tenantId
+}
+
+// GetTenantProjectCodeFromContext get tenant projectCode from context
+func GetTenantProjectCodeFromContext(ctx context.Context, projectCode string) string {
+	id, _ := ctx.Value(TenantProjectCodeContextKey).(string)
+	if id == "" {
+		return projectCode
+	}
+	return id
 }

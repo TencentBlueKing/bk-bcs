@@ -35,7 +35,7 @@ import '@/fonts/font-icon/iconcool';
 import '@blueking/bkui-library';
 import App from '@/App.vue';
 import { bus } from '@/common/bus';
-import { BCS_UI_PREFIX } from '@/common/constant';
+import { BCS_UI_PREFIX, BCS_SUB_PATH } from '@/common/constant';
 import { chainable } from '@/common/util';
 import bkCombox from '@/components/bk-input/combox.vue';
 import bkbcsInput from '@/components/bk-input/index.vue';

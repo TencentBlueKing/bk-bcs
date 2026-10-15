@@ -13,6 +13,7 @@
 package common
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -20,6 +21,10 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/parnurzeal/gorequest"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/utils"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tenant"
 )
 
 var (
@@ -115,7 +120,7 @@ func (c *Client) generateGateWayAuth(user string) (string, error) {
 }
 
 // CreateBkOpsTask create bkops task
-func (c *Client) CreateBkOpsTask(paras *CreateTaskPathParas,
+func (c *Client) CreateBkOpsTask(ctx context.Context, paras *CreateTaskPathParas,
 	request *CreateTaskRequest) (*CreateTaskResponse, error) {
 	if c == nil {
 		return nil, ErrServerNotInit
@@ -126,20 +131,16 @@ func (c *Client) CreateBkOpsTask(paras *CreateTaskPathParas,
 		respData = &CreateTaskResponse{}
 	)
 
-	// esbServer & apigw server
-	if len(c.esbServer) > 0 {
-		reqUrl = c.esbServer + "/api/c/compapi/v2/sops/create_task/"
-		request.BusinessID = paras.BkBizID
-		request.TemplateID = paras.TemplateID
-	} else {
-		reqUrl = c.server + fmt.Sprintf("/create_task/%s/%s/", paras.TemplateID, paras.BkBizID)
-	}
+	tenantId := tenant.GetTenantIdFromContext(ctx)
+	reqUrl = c.server + fmt.Sprintf("/create_task/%s/%s/", paras.TemplateID, paras.BkBizID)
 
 	userAuth, err := c.generateGateWayAuth(paras.Operator)
 	if err != nil {
 		return nil, fmt.Errorf("bksops CreateBkOpsTask generateGateWayAuth failed: %v", err)
 	}
 
+	request.BusinessID = paras.BkBizID
+	request.TemplateID = paras.TemplateID
 	request.FlowType = string(CommonFlow)
 	// TemplateSource 模版来源, 默认是业务流程; 可由用户自定义
 	if request.TemplateSource == "" {
@@ -152,6 +153,7 @@ func (c *Client) CreateBkOpsTask(paras *CreateTaskPathParas,
 		Set("Content-Type", "application/json").
 		Set("Accept", "application/json").
 		Set("X-Bkapi-Authorization", userAuth).
+		Set("X-Bk-Tenant-Id", tenantId).
 		SetDebug(c.serverDebug).
 		Send(request).
 		EndStruct(&respData)
@@ -170,29 +172,21 @@ func (c *Client) CreateBkOpsTask(paras *CreateTaskPathParas,
 }
 
 // StartBkOpsTask start bkops task
-func (c *Client) StartBkOpsTask(paras *TaskPathParas,
+func (c *Client) StartBkOpsTask(ctx context.Context, paras *TaskPathParas,
 	request *StartTaskRequest) (*StartTaskResponse, error) {
 	if c == nil {
 		return nil, ErrServerNotInit
 	}
 
+	tenantId := tenant.GetTenantIdFromContext(ctx)
+
 	var (
 		reqUrl   string
-		reqData  interface{}
 		respData = &StartTaskResponse{}
 	)
 
-	if len(c.esbServer) > 0 {
-		reqUrl = c.esbServer + "/api/c/compapi/v2/sops/start_task/"
-		reqData = &TaskReqParas{
-			BkBizID: paras.BkBizID,
-			TaskID:  paras.TaskID,
-		}
-	} else {
-		reqUrl = c.server + fmt.Sprintf("/start_task/%s/%s/", paras.TaskID, paras.BkBizID)
-		request.Scope = string(CmdbBizScope)
-		reqData = request
-	}
+	reqUrl = c.server + fmt.Sprintf("/start_task/%s/%s/", paras.TaskID, paras.BkBizID)
+	request.Scope = string(CmdbBizScope)
 
 	userAuth, err := c.generateGateWayAuth(paras.Operator)
 	if err != nil {
@@ -205,8 +199,9 @@ func (c *Client) StartBkOpsTask(paras *TaskPathParas,
 		Set("Content-Type", "application/json").
 		Set("Accept", "application/json").
 		Set("X-Bkapi-Authorization", userAuth).
+		Set("X-Bk-Tenant-Id", tenantId).
 		SetDebug(c.serverDebug).
-		Send(reqData).
+		Send(request).
 		EndStruct(&respData)
 	if len(errs) > 0 {
 		blog.Errorf("call api StartBkOpsTask failed: %v", errs[0])
@@ -224,11 +219,13 @@ func (c *Client) StartBkOpsTask(paras *TaskPathParas,
 }
 
 // GetTaskStatus get bkops task status
-func (c *Client) GetTaskStatus(paras *TaskPathParas,
+func (c *Client) GetTaskStatus(ctx context.Context, paras *TaskPathParas,
 	request *StartTaskRequest) (*TaskStatusResponse, error) {
 	if c == nil {
 		return nil, ErrServerNotInit
 	}
+
+	tenantId := tenant.GetTenantIdFromContext(ctx)
 
 	userAuth, err := c.generateGateWayAuth(paras.Operator)
 	if err != nil {
@@ -243,25 +240,16 @@ func (c *Client) GetTaskStatus(paras *TaskPathParas,
 	if request.Scope == "" {
 		request.Scope = string(CmdbBizScope)
 	}
+	reqUrl = c.server + fmt.Sprintf("/get_task_status/%s/%s/", paras.TaskID, paras.BkBizID)
 
-	if len(c.esbServer) > 0 {
-		reqUrl = c.esbServer + "/api/c/compapi/v2/sops/get_task_status/"
-	} else {
-		reqUrl = c.server + fmt.Sprintf("/get_task_status/%s/%s/", paras.TaskID, paras.BkBizID)
-	}
-
-	agent := gorequest.New().Timeout(defaultTimeOut).Get(reqUrl)
-	if len(c.esbServer) > 0 {
-		agent = agent.Query(fmt.Sprintf("bk_biz_id=%s&task_id=%s&scope=%s",
-			paras.BkBizID, paras.TaskID, request.Scope))
-	} else {
-		agent = agent.Query(fmt.Sprintf("scope=%s", request.Scope))
-	}
-
-	_, _, errs := agent.
+	_, _, errs := gorequest.New().
+		Timeout(defaultTimeOut).
+		Get(reqUrl).
+		Query(fmt.Sprintf("scope=%s", request.Scope)).
 		Set("Content-Type", "application/json").
 		Set("Accept", "application/json").
 		Set("X-Bkapi-Authorization", userAuth).
+		Set("X-Bk-Tenant-Id", tenantId).
 		SetDebug(c.serverDebug).
 		EndStruct(&respData)
 	if len(errs) > 0 {
@@ -280,7 +268,7 @@ func (c *Client) GetTaskStatus(paras *TaskPathParas,
 }
 
 // GetBusinessTemplateList 查询业务下的模板列表
-func (c *Client) GetBusinessTemplateList(path *TemplateListPathPara,
+func (c *Client) GetBusinessTemplateList(ctx context.Context, path *TemplateListPathPara,
 	templateReq *TemplateRequest) ([]*TemplateData, error) {
 	if c == nil {
 		return nil, ErrServerNotInit
@@ -292,31 +280,28 @@ func (c *Client) GetBusinessTemplateList(path *TemplateListPathPara,
 	)
 
 	templateReq.SetDefaultTemplateBody()
-	if len(c.esbServer) > 0 {
-		url = c.esbServer + "/api/c/compapi/v2/sops/get_template_list/"
-	} else {
-		url = c.server + fmt.Sprintf("/get_template_list/%s/", path.BkBizID)
-	}
+	url = c.server + fmt.Sprintf("/get_template_list/%s/", path.BkBizID)
 
-	agent := gorequest.New().Timeout(defaultTimeOut).Get(url)
-	if len(c.esbServer) > 0 {
-		agent = agent.Query(fmt.Sprintf("bk_biz_id=%s&template_source=%s&scope=%s",
-			path.BkBizID, templateReq.TemplateSource, string(templateReq.Scope)))
-	} else {
-		agent = agent.Query(fmt.Sprintf("template_source=%s&scope=%s",
-			templateReq.TemplateSource, string(templateReq.Scope)))
-	}
-
-	userAuth, err := c.generateGateWayAuth(c.bkUserName)
+	userAuth, tenantId, err := utils.GetGatewayAuthAndTenantInfo(ctx, &types.AuthInfo{
+		BkAppUser: types.BkAppUser{
+			BkAppCode:   c.appCode,
+			BkAppSecret: c.appSecret,
+		},
+		BkUserName: c.bkUserName,
+	}, "")
 	if err != nil {
-		return nil, fmt.Errorf("bksops GetBusinessTemplateList generateGateWayAuth failed: %v", err)
+		return nil, fmt.Errorf("bksops GetGatewayAuthAndTenantInfo failed: %v", err)
 	}
 
 	resp := &TemplateListResponse{}
-	_, _, errs := agent.
+	_, _, errs := gorequest.New().
+		Timeout(defaultTimeOut).
+		Get(url).
+		Query(fmt.Sprintf("template_source=%s&scope=%s", templateReq.TemplateSource, string(templateReq.Scope))).
 		Set("X-Bkapi-Authorization", userAuth).
 		Set("Content-Type", "application/json").
 		Set("Accept", "application/json").
+		Set("X-Bk-Tenant-Id", tenantId).
 		SetDebug(c.serverDebug).
 		EndStruct(&resp)
 	if len(errs) > 0 {
@@ -336,33 +321,32 @@ func (c *Client) GetBusinessTemplateList(path *TemplateListPathPara,
 }
 
 // GetUserProjectDetailInfo get user project detailed info
-func (c *Client) GetUserProjectDetailInfo(bizID string) (*ProjectInfo, error) {
+func (c *Client) GetUserProjectDetailInfo(ctx context.Context, bizID string) (*ProjectInfo, error) {
 	var (
 		_   = "GetUserProjectDetailInfo"
 		url string
 	)
+	url = c.server + fmt.Sprintf("/get_user_project_detail/%s/", bizID)
 
-	if len(c.esbServer) > 0 {
-		url = c.esbServer + "/api/c/compapi/v2/sops/get_user_project_detail/"
-	} else {
-		url = c.server + fmt.Sprintf("/get_user_project_detail/%s/", bizID)
-	}
-
-	userAuth, err := c.generateGateWayAuth(c.bkUserName)
+	userAuth, tenantId, err := utils.GetGatewayAuthAndTenantInfo(ctx, &types.AuthInfo{
+		BkAppUser: types.BkAppUser{
+			BkAppCode:   c.appCode,
+			BkAppSecret: c.appSecret,
+		},
+		BkUserName: c.bkUserName,
+	}, "")
 	if err != nil {
-		return nil, fmt.Errorf("bksops GetUserProjectDetailInfo generateGateWayAuth failed: %v", err)
-	}
-
-	agent := gorequest.New().Timeout(defaultTimeOut).Get(url)
-	if len(c.esbServer) > 0 {
-		agent = agent.Query(fmt.Sprintf("bk_biz_id=%s", bizID))
+		return nil, fmt.Errorf("bksops GetGatewayAuthAndTenantInfo failed: %v", err)
 	}
 
 	resp := &UserProjectResponse{}
-	_, _, errs := agent.
+	_, _, errs := gorequest.New().
+		Timeout(defaultTimeOut).
+		Get(url).
 		Set("X-Bkapi-Authorization", userAuth).
 		Set("Content-Type", "application/json").
 		Set("Accept", "application/json").
+		Set("X-Bk-Tenant-Id", tenantId).
 		SetDebug(c.serverDebug).
 		EndStruct(&resp)
 	if len(errs) > 0 {
@@ -382,7 +366,7 @@ func (c *Client) GetUserProjectDetailInfo(bizID string) (*ProjectInfo, error) {
 }
 
 // GetBusinessTemplateInfo 查询业务下的模板详情
-func (c *Client) GetBusinessTemplateInfo(path *TemplateDetailPathPara,
+func (c *Client) GetBusinessTemplateInfo(ctx context.Context, path *TemplateDetailPathPara,
 	templateReq *TemplateRequest) ([]ConstantValue, error) {
 	if c == nil {
 		return nil, ErrServerNotInit
@@ -394,27 +378,27 @@ func (c *Client) GetBusinessTemplateInfo(path *TemplateDetailPathPara,
 	)
 
 	templateReq.SetDefaultTemplateBody()
-	if len(c.esbServer) > 0 {
-		url = c.esbServer + "/api/c/compapi/v2/sops/get_template_info/"
-	} else {
-		url = c.server + fmt.Sprintf("/get_template_info/%s/%s/", path.TemplateID, path.BkBizID)
-	}
+	url = c.server + fmt.Sprintf("/get_template_info/%s/%s/", path.TemplateID, path.BkBizID)
 
-	userAuth, err := c.generateGateWayAuth(c.bkUserName)
+	userAuth, tenantId, err := utils.GetGatewayAuthAndTenantInfo(ctx, &types.AuthInfo{
+		BkAppUser: types.BkAppUser{
+			BkAppCode:   c.appCode,
+			BkAppSecret: c.appSecret,
+		},
+		BkUserName: c.bkUserName,
+	}, "")
 	if err != nil {
-		return nil, fmt.Errorf("bksops GetBusinessTemplateInfo generateGateWayAuth failed: %v", err)
-	}
-
-	agent := gorequest.New().Timeout(defaultTimeOut).Get(url)
-	if len(c.esbServer) > 0 {
-		agent = agent.Query(fmt.Sprintf("bk_biz_id=%s&template_id=%s", path.BkBizID, path.TemplateID))
+		return nil, fmt.Errorf("bksops GetGatewayAuthAndTenantInfo failed: %v", err)
 	}
 
 	resp := &TemplateDetailResponse{}
-	_, _, errs := agent.
+	_, _, errs := gorequest.New().
+		Timeout(defaultTimeOut).
+		Get(url).
 		Set("X-Bkapi-Authorization", userAuth).
 		Set("Content-Type", "application/json").
 		Set("Accept", "application/json").
+		Set("X-Bk-Tenant-Id", tenantId).
 		SetDebug(c.serverDebug).
 		EndStruct(&resp)
 	if len(errs) > 0 {
@@ -441,7 +425,7 @@ func (c *Client) GetBusinessTemplateInfo(path *TemplateDetailPathPara,
 }
 
 // OperateBkOpsTask operate bkops task
-func (c *Client) OperateBkOpsTask(paras *TaskPathParas, request *OperateTaskRequest) error {
+func (c *Client) OperateBkOpsTask(ctx context.Context, paras *TaskPathParas, request *OperateTaskRequest) error {
 	if c == nil {
 		return ErrServerNotInit
 	}
@@ -452,14 +436,9 @@ func (c *Client) OperateBkOpsTask(paras *TaskPathParas, request *OperateTaskRequ
 	)
 
 	request.Scope = CmdbBizScope
-	if len(c.esbServer) > 0 {
-		reqUrl = c.esbServer + "/api/c/compapi/v2/sops/operate_task/"
-		request.BizId = paras.BkBizID
-		request.TaskId = paras.TaskID
-	} else {
-		reqUrl = c.server + fmt.Sprintf("/operate_task/%s/%s/", paras.TaskID, paras.BkBizID)
-	}
+	reqUrl = c.server + fmt.Sprintf("/operate_task/%s/%s/", paras.TaskID, paras.BkBizID)
 
+	tenantId := tenant.GetTenantIdFromContext(ctx)
 	userAuth, err := c.generateGateWayAuth(paras.Operator)
 	if err != nil {
 		return fmt.Errorf("bksops OperateBkOpsTask generateGateWayAuth failed: %v", err)
@@ -471,6 +450,7 @@ func (c *Client) OperateBkOpsTask(paras *TaskPathParas, request *OperateTaskRequ
 		Set("Content-Type", "application/json").
 		Set("Accept", "application/json").
 		Set("X-Bkapi-Authorization", userAuth).
+		Set("X-Bk-Tenant-Id", tenantId).
 		SetDebug(c.serverDebug).
 		Send(request).
 		EndStruct(&respData)

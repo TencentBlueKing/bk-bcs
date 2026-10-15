@@ -16,6 +16,7 @@ package util
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
@@ -248,5 +249,25 @@ func BuildTaskOperationLogProject() map[string]interface{} {
 		"clusterid":    "$clusterid",
 		"projectid":    "$projectid",
 		"nodeiplist":   "$task.nodeiplist",
+	}
+}
+
+// TransStrToUTCStr trans time string to utc RFC3339 time string
+func TransStrToUTCStr(timeType, input string) string {
+	switch timeType {
+	case time.RFC3339Nano:
+		t, err := time.Parse(time.RFC3339Nano, input)
+		if err != nil {
+			return input
+		}
+		return t.UTC().Format(time.RFC3339)
+	case time.DateTime:
+		t, err := time.Parse(time.DateTime, input)
+		if err != nil {
+			return input
+		}
+		return t.UTC().Format(time.RFC3339)
+	default:
+		return input
 	}
 }

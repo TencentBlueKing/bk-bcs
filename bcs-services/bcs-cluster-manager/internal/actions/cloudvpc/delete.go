@@ -80,7 +80,7 @@ func (da *DeleteAction) Handle(
 		TaskID:       "",
 		Message:      fmt.Sprintf("删除云[%s]vpc网络[%s]", req.CloudID, req.VpcID),
 		OpUser:       deletedCloudVPC.Creator,
-		CreateTime:   time.Now().Format(time.RFC3339),
+		CreateTime:   time.Now().UTC().Format(time.RFC3339),
 		ResourceName: deletedCloudVPC.GetVpcName(),
 	})
 	if err != nil {

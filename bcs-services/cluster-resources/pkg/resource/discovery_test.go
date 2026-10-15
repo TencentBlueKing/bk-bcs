@@ -54,14 +54,14 @@ func TestFilterResByKind(t *testing.T) {
 	// groupVersion 特殊情况（只有 version，没有 group）
 	res, err := filterResByKind(ResKindPo, testClusterID, "", allRes)
 	assert.Nil(t, err)
-	assert.Equal(t, "", res.Group)
-	assert.Equal(t, "v1", res.Version)
+	assert.Equal(t, "", res.GVR.Group)
+	assert.Equal(t, "v1", res.GVR.Version)
 
 	// 普通情况
 	res, err = filterResByKind(ResKindDeploy, testClusterID, "", allRes)
 	assert.Nil(t, err)
-	assert.Equal(t, "apps", res.Group)
-	assert.Equal(t, "v1", res.Version)
+	assert.Equal(t, "apps", res.GVR.Group)
+	assert.Equal(t, "v1", res.GVR.Version)
 
 	// 找不到的情况
 	_, err = filterResByKind("NotExistsKind", testClusterID, "", allRes)
@@ -75,7 +75,7 @@ func getResByDiscovery(t *testing.T, rcc *RedisCacheClient) {
 	// preferred deployment
 	res, err := rcc.getPreferredResource(ResKindDeploy)
 	assert.Nil(t, err)
-	assert.Equal(t, "deployments", res.Resource)
+	assert.Equal(t, "deployments", res.GVR.Resource)
 
 	// not exists kind
 	_, err = rcc.getPreferredResource("NotExistsKind")
@@ -84,8 +84,8 @@ func getResByDiscovery(t *testing.T, rcc *RedisCacheClient) {
 	// v1 pod
 	res, err = rcc.getResWithGroupVersion(ResKindPo, "v1")
 	assert.Nil(t, err)
-	assert.Equal(t, "", res.Group)
-	assert.Equal(t, "v1", res.Version)
+	assert.Equal(t, "", res.GVR.Group)
+	assert.Equal(t, "v1", res.GVR.Version)
 
 	// v3 deployment (not exists)
 	_, err = rcc.getResWithGroupVersion(ResKindDeploy, "v3")

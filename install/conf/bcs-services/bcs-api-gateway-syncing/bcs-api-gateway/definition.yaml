@@ -7,7 +7,7 @@ release:
 
 apigateway:
   description: "{{ environ.BKAPI_DESCRIPTION }}"
-  is_public: false
+  is_public: true
   maintainers:
     - "admin"
   {% for user in settings.BK_APIGW_MANAGERS %}

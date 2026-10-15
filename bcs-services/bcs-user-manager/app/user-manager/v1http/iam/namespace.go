@@ -210,6 +210,22 @@ func (p NamespaceProvider) SearchInstance(req resource.Request) resource.Respons
 	}
 }
 
+// FetchInstanceList implements the fetch_instance_list
+func (p NamespaceProvider) FetchInstanceList(req resource.Request) resource.Response {
+	return resource.Response{
+		Code:    -1,
+		Message: "not implemented",
+	}
+}
+
+// FetchResourceTypeSchema implements the fetch_resource_type_schema
+func (p NamespaceProvider) FetchResourceTypeSchema(req resource.Request) resource.Response {
+	return resource.Response{
+		Code:    -1,
+		Message: "not implemented",
+	}
+}
+
 func parseNSID(nsID string) (string, error) {
 	s := strings.Split(nsID, ":")
 	if len(s) != 2 {

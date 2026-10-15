@@ -52,7 +52,7 @@ func (ga *GetAction) Do(ctx context.Context, req *proto.GetBusinessRequest) (*pr
 		return nil, errorx.NewReadableErr(errorx.ParamErr, "project businessID is empty")
 	}
 
-	businessInfo, err := cmdb.GetBusinessByID(p.BusinessID, false)
+	businessInfo, err := cmdb.GetBusinessByID(ctx, p.BusinessID, false)
 	if err != nil {
 		return nil, errorx.NewRequestCMDBErr(err.Error())
 	}

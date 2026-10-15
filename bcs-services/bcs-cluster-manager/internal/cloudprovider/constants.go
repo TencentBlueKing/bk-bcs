@@ -387,6 +387,9 @@ var (
 
 	// TransVPCIPsKey trans vpc nodes ip
 	TransVPCIPsKey ParamKey = "transVPCNodeIPs"
+
+	// TenantIdKey tenantId
+	TenantIdKey ParamKey = "tenantId"
 )
 
 const (

@@ -222,7 +222,7 @@ func (da *DeleteAction) Handle( // nolint
 		}(),
 		Message:      fmt.Sprintf("集群%s删除节点池%s", da.group.ClusterID, da.group.NodeGroupID),
 		OpUser:       req.Operator,
-		CreateTime:   time.Now().Format(time.RFC3339),
+		CreateTime:   time.Now().UTC().Format(time.RFC3339),
 		ClusterID:    da.group.ClusterID,
 		ProjectID:    da.group.ProjectID,
 		ResourceName: da.group.GetName(),
@@ -407,7 +407,7 @@ func (da *RemoveNodeAction) Handle(
 		TaskID:       "",
 		Message:      fmt.Sprintf("集群%s节点池%s移除节点", da.group.ClusterID, da.group.NodeGroupID),
 		OpUser:       da.group.Creator,
-		CreateTime:   time.Now().Format(time.RFC3339),
+		CreateTime:   time.Now().UTC().Format(time.RFC3339),
 		ResourceName: da.group.GetName(),
 	})
 	if err != nil {
@@ -688,7 +688,7 @@ func (da *CleanNodesAction) Handle(
 		TaskID:       da.task.TaskID,
 		Message:      fmt.Sprintf("集群%s节点池%s删除节点", da.group.ClusterID, da.group.NodeGroupID),
 		OpUser:       req.Operator,
-		CreateTime:   time.Now().Format(time.RFC3339),
+		CreateTime:   time.Now().UTC().Format(time.RFC3339),
 		ClusterID:    da.cluster.ClusterID,
 		ProjectID:    da.cluster.ProjectID,
 		ResourceName: da.group.GetName(),

@@ -75,12 +75,12 @@
       </bcs-table-column>
       <bcs-table-column :label="$t('generic.label.updator')" prop="updator">
         <template #default="{ row }">
-          {{ row.updator || '--' }}
+          <bk-user-display-name :user-id="row.updator"></bk-user-display-name>
         </template>
       </bcs-table-column>
-      <bcs-table-column :label="$t('generic.label.updatedAt')" prop="updateAt">
+      <bcs-table-column :label="$t('generic.label.updatedAt')" prop="updateAt" show-overflow-tooltip>
         <template #default="{ row }">
-          {{ formatTime(row.updateAt * 1000, 'yyyy-MM-dd hh:mm:ss') }}
+          {{ formatTimeWithTimezone(row.updateAt * 1000) }}
         </template>
       </bcs-table-column>
       <bcs-table-column :label="$t('generic.label.action')" width="180" fixed="right">
@@ -173,8 +173,8 @@ import VersionList from './version-list.vue';
 import { IListTemplateMetadataItem, ITemplateSpaceData } from '@/@types/cluster-resource-patch';
 import { TemplateSetService } from '@/api/modules/new-cluster-resource';
 import $bkMessage from '@/common/bkmagic';
+import { formatTimeWithTimezone } from '@/common/util';
 import { TEMPLATE_FOLDER_REGEX } from '@/common/constant';
-import { formatTime } from '@/common/util';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import Row from '@/components/layout/Row.vue';
 import PopoverSelector from '@/components/popover-selector.vue';

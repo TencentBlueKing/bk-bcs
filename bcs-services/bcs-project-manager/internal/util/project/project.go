@@ -14,12 +14,14 @@
 package project
 
 import (
+	"context"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/cmdb"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
 )
 
 // PatchBusinessName patch business name by business id for each project
-func PatchBusinessName(projects []*proto.Project) {
+func PatchBusinessName(ctx context.Context, projects []*proto.Project) {
 	bizIDs := []string{}
 	for _, project := range projects {
 		// 历史遗留原因，以前迁移的一部分项目未开启容器服务，但是却设置了业务ID为0
@@ -27,7 +29,7 @@ func PatchBusinessName(projects []*proto.Project) {
 			bizIDs = append(bizIDs, project.BusinessID)
 		}
 	}
-	businessMap := cmdb.BatchSearchBusinessByBizIDs(bizIDs)
+	businessMap := cmdb.BatchSearchBusinessByBizIDs(ctx, bizIDs)
 	for _, project := range projects {
 		if biz, ok := businessMap[project.BusinessID]; ok {
 			project.BusinessName = biz.BKBizName

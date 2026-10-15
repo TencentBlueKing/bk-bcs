@@ -24,6 +24,7 @@ import (
 type PermCtx struct {
 	Username   string
 	ProjectID  string
+	TenantID   string
 	forceRaise bool
 }
 
@@ -56,6 +57,11 @@ func (c *PermCtx) GetUsername() string {
 	return c.Username
 }
 
+// GetTenantID xxx
+func (c *PermCtx) GetTenantID() string {
+	return c.TenantID
+}
+
 // GetParentChain xxx
 func (c *PermCtx) GetParentChain() []perm.IAMRes {
 	return []perm.IAMRes{}
@@ -83,6 +89,9 @@ func (c *PermCtx) FromMap(m map[string]interface{}) perm.Ctx {
 	}
 	if projID, ok := m["ProjectID"]; ok {
 		c.ProjectID = projID.(string)
+	}
+	if tenantID, ok := m["TenantID"]; ok {
+		c.TenantID = tenantID.(string)
 	}
 	return c
 }

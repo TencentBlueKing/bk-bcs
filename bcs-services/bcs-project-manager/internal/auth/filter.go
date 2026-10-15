@@ -27,14 +27,14 @@ import (
 )
 
 // ListAuthorizedProjectIDs 过滤有权限的项目 ID，如果为 any，则返回 true
-func ListAuthorizedProjectIDs(username string) ([]string, bool, error) {
+func ListAuthorizedProjectIDs(username string, tenantId string) ([]string, bool, error) {
 	// 组装 iam request
 	iamReq := makeIAMRequest(username, ProjectView)
 	if err := iamReq.Validate(); err != nil {
 		return []string{}, false, err
 	}
 	// 获取 policy
-	policy, err := makeIAMPolicy(iamReq)
+	policy, err := makeIAMPolicy(tenantId, iamReq)
 	if err != nil || len(policy) == 0 {
 		return []string{}, false, err
 	}
@@ -64,22 +64,20 @@ func makeIAMRequest(username, actionID string) iam.Request {
 }
 
 // makeIAMPolicy 生成查询策略
-func makeIAMPolicy(iamReq iam.Request) (map[string]interface{}, error) {
+func makeIAMPolicy(tenantId string, iamReq iam.Request) (map[string]interface{}, error) {
 	var backendClient iamBackendClient.IAMBackendClient
 
 	if config.GlobalConf.IAM.UseGWHost { // 网关模式
 		backendClient = iamBackendClient.NewIAMBackendClient(
 			config.GlobalConf.IAM.GatewayHost,
-			true,
 			bcsIAM.SystemIDBKBCS,
-			config.GlobalConf.App.Code, config.GlobalConf.App.Secret,
+			config.GlobalConf.App.Code, config.GlobalConf.App.Secret, iamBackendClient.WithBkTenantID(tenantId),
 		)
 	} else { // 非网关模式, 兼容老版本&混合部署需要
 		backendClient = iamBackendClient.NewIAMBackendClient(
 			config.GlobalConf.IAM.IAMHost,
-			false,
 			bcsIAM.SystemIDBKBCS,
-			config.GlobalConf.App.Code, config.GlobalConf.App.Secret,
+			config.GlobalConf.App.Code, config.GlobalConf.App.Secret, iamBackendClient.WithBkTenantID(tenantId),
 		)
 	}
 

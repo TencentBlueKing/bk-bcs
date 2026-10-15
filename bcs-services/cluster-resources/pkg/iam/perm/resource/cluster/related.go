@@ -31,7 +31,7 @@ func RelatedClusterCanViewPerm(ctx perm.Ctx, subAllow bool, subErr error) (bool,
 				// NOCC:golint/gocritic(设计如此)
 				// nolint
 				actionReqList := append(se.ActionReqList, e.ActionReqList...)
-				return false, perm.NewIAMPermErr(ctx.GetUsername(), se.Msg+"; "+e.Msg, actionReqList)
+				return false, perm.NewIAMPermErr(ctx.GetUsername(), se.Msg+"; "+e.Msg, actionReqList, ctx.GetTenantID())
 			}
 			return false, err
 		}

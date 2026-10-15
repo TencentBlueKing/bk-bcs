@@ -24,11 +24,13 @@ import (
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/template"
 	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tenant"
 )
 
 // ListTemplateListAction action for list sops templates
@@ -65,7 +67,7 @@ func (la *ListTemplateListAction) getBusinessTemplateList() error {
 			TemplateSource: la.req.TemplateSource,
 			Scope:          common.Scope(la.req.Scope),
 		}
-		templateList, err = common.GetBKOpsClient().GetBusinessTemplateList(path, req)
+		templateList, err = common.GetBKOpsClient().GetBusinessTemplateList(la.ctx, path, req)
 		if err != nil {
 			return err
 		}
@@ -104,6 +106,9 @@ func (la *ListTemplateListAction) Handle(
 	la.ctx = ctx
 	la.req = req
 	la.resp = resp
+
+	user := auth.GetAuthAndTenantInfoFromCtx(la.ctx)
+	la.ctx = tenant.WithTenantIdFromContext(la.ctx, user.ResourceTenantId)
 
 	if err := req.Validate(); err != nil {
 		la.setResp(icommon.BcsErrClusterManagerInvalidParameter, err.Error())
@@ -153,7 +158,7 @@ func (la *GetTemplateInfoAction) getBusinessTemplateInfoValues() error {
 			TemplateSource: la.req.TemplateSource,
 			Scope:          common.Scope(la.req.Scope),
 		}
-		constantValues, err = common.GetBKOpsClient().GetBusinessTemplateInfo(path, req)
+		constantValues, err = common.GetBKOpsClient().GetBusinessTemplateInfo(la.ctx, path, req)
 		if err != nil {
 			return err
 		}
@@ -167,7 +172,7 @@ func (la *GetTemplateInfoAction) getBusinessTemplateInfoValues() error {
 
 	// get bksops project info by bizID
 	err = retry.Do(func() error {
-		project, err = common.GetBKOpsClient().GetUserProjectDetailInfo(la.req.BusinessID)
+		project, err = common.GetBKOpsClient().GetUserProjectDetailInfo(la.ctx, la.req.BusinessID)
 		if err != nil {
 			return err
 		}
@@ -215,6 +220,9 @@ func (la *GetTemplateInfoAction) Handle(
 	la.ctx = ctx
 	la.req = req
 	la.resp = resp
+
+	user := auth.GetAuthAndTenantInfoFromCtx(la.ctx)
+	la.ctx = tenant.WithTenantIdFromContext(la.ctx, user.ResourceTenantId)
 
 	if err := req.Validate(); err != nil {
 		la.setResp(icommon.BcsErrClusterManagerInvalidParameter, err.Error())

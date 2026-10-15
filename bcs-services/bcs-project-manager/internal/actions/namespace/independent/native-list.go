@@ -14,12 +14,12 @@ package independent
 
 import (
 	"context"
+	"time"
 
 	spb "google.golang.org/protobuf/types/known/structpb"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/actions/namespace/common"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/constant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clientset"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
@@ -55,7 +55,7 @@ func (c *IndependentNamespaceAction) ListNativeNamespaces(ctx context.Context,
 			Uid:         string(namespace.GetUID()),
 			Name:        namespace.GetName(),
 			Status:      string(namespace.Status.Phase),
-			CreateTime:  namespace.GetCreationTimestamp().Format(constant.TimeLayout),
+			CreateTime:  namespace.GetCreationTimestamp().UTC().Format(time.RFC3339),
 			ProjectID:   project.ProjectID,
 			ProjectCode: project.ProjectCode,
 		}

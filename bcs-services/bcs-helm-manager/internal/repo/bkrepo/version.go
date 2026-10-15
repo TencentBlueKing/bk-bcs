@@ -23,6 +23,7 @@ import (
 	"helm.sh/helm/v3/pkg/registry"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/repo"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/timex"
 )
 
 const (
@@ -178,8 +179,8 @@ func (pv *packVersion) convert2Chart() *repo.ChartVersion {
 		Description: pv.Metadata.Description,
 		CreateBy:    pv.CreatedBy,
 		UpdateBy:    pv.LastModifiedBy,
-		CreateTime:  pv.CreatedDate,
-		UpdateTime:  pv.LastModifiedDate,
+		CreateTime:  timex.TransStrToUTCStr(timex.BkrepoDateTime, pv.CreatedDate),
+		UpdateTime:  timex.TransStrToUTCStr(timex.BkrepoDateTime, pv.LastModifiedDate),
 	}
 }
 

@@ -13,7 +13,7 @@
 
 ### 调用示例
 ```sh
-curl -X GET -H 'x-bkapi-authorization: {"bk_ticket": "xxx", "bk_app_code": "xxx", "bk_app_secret": "***"}' --insecure https://bcs-api-gateway.apigw.com/uat/bcsproject/v1/projects/testproject/clusters/BCS-K8S-12345/native/namespaces
+curl -X GET -H 'x-bkapi-authorization: {"bk_ticket": "xxx", "bk_app_code": "xxx", "bk_app_secret": "***"}' --insecure https://bcs-api-gateway.apigw.com/prod/bcsproject/v1/projects/testproject/clusters/BCS-K8S-12345/native/namespaces
 ```
 
 ### 响应示例

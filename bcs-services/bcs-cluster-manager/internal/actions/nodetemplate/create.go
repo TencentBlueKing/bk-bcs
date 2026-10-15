@@ -55,7 +55,7 @@ func NewCreateAction(model store.ClusterManagerModel) *CreateAction {
 }
 
 func (ca *CreateAction) createNodeTemplate() error {
-	timeStr := time.Now().Format(time.RFC3339)
+	timeStr := time.Now().UTC().Format(time.RFC3339)
 	templateID := autils.GenerateTemplateID(autils.NodeTemplate)
 
 	// 扩容节点脚本 trans user to base64 encoding
@@ -156,7 +156,7 @@ func (ca *CreateAction) Handle(ctx context.Context,
 		TaskID:       "",
 		Message:      fmt.Sprintf("项目[%s]创建集群节点模版[%s]", ca.project.GetName(), req.Name),
 		OpUser:       auth.GetUserFromCtx(ctx),
-		CreateTime:   time.Now().Format(time.RFC3339),
+		CreateTime:   time.Now().UTC().Format(time.RFC3339),
 		ProjectID:    req.ProjectID,
 		ResourceName: ca.project.GetName(),
 	})

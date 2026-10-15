@@ -43,6 +43,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/passcc"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/util"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tenant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
@@ -255,18 +257,26 @@ type PermRequest struct {
 }
 
 // CheckUseNodesPermForUser check user use nodes permission
-func CheckUseNodesPermForUser(businessID string, user string, nodes []string) bool {
+func CheckUseNodesPermForUser(projectId, businessID string, user string, nodes []string) bool {
 	bizID, err := strconv.Atoi(businessID)
 	if err != nil {
 		errMsg := fmt.Errorf("strconv BusinessID to int failed: %v", err)
 		blog.Errorf(errMsg.Error())
 		return false
 	}
-	return canUseHosts(bizID, user, nodes)
+
+	ctx, err := tenant.WithTenantIdByResourceForContext(context.Background(),
+		tenant.ResourceMetaData{ProjectId: projectId})
+	if err != nil {
+		blog.Errorf("checkUseNodesPermForUser tenant.WithTenantIdByResourceForContext failed: %v", err)
+		return false
+	}
+
+	return canUseHosts(ctx, bizID, user, nodes)
 }
 
 // checkUserHasPerm check user has perm
-func checkUserHasPerm(businessID string, user string) bool {
+func checkUserHasPerm(ctx context.Context, businessID string, user string) bool {
 	bizID, err := strconv.Atoi(businessID)
 	if err != nil {
 		errMsg := fmt.Errorf("strconv BusinessID to int failed: %v", err)
@@ -275,7 +285,7 @@ func checkUserHasPerm(businessID string, user string) bool {
 	}
 
 	// query biz hosts
-	businessData, err := cmdb.GetCmdbClient().GetBusinessMaintainer(bizID)
+	businessData, err := cmdb.GetCmdbClient().GetBusinessMaintainer(ctx, bizID)
 	if err != nil {
 		blog.Errorf("getUserHasPermHosts GetBusinessMaintainer failed: %v", err)
 		return false
@@ -284,17 +294,17 @@ func checkUserHasPerm(businessID string, user string) bool {
 	return utils.StringInSlice(user, strings.Split(businessData.BKBizMaintainer, ","))
 }
 
-func canUseHosts(bizID int, user string, hostIPList []string) bool {
-	hasPermHosts := getUserHasPermHosts(bizID, user)
+func canUseHosts(ctx context.Context, bizID int, user string, hostIPList []string) bool {
+	hasPermHosts := getUserHasPermHosts(ctx, bizID, user)
 
 	hostAllString := sets.NewString(hasPermHosts...)
 	return hostAllString.HasAll(hostIPList...)
 }
 
-func getUserHasPermHosts(bizID int, user string) []string {
+func getUserHasPermHosts(ctx context.Context, bizID int, user string) []string {
 	hostIPs := make([]string, 0)
 	// query biz hosts
-	businessData, err := cmdb.GetCmdbClient().GetBusinessMaintainer(bizID)
+	businessData, err := cmdb.GetCmdbClient().GetBusinessMaintainer(ctx, bizID)
 	if err != nil {
 		blog.Errorf("getUserHasPermHosts GetBusinessMaintainer failed: %v", err)
 		return nil
@@ -304,7 +314,7 @@ func getUserHasPermHosts(bizID int, user string) []string {
 	// 如果是业务运维，查询全量主机
 	if utils.StringInSlice(user, maintainers) {
 		var hostList []cmdb.HostData
-		hostList, err = cmdb.GetCmdbClient().FetchAllHostsByBizID(bizID, false)
+		hostList, err = cmdb.GetCmdbClient().FetchAllHostsByBizID(ctx, bizID, false)
 		if err != nil {
 			blog.Errorf("getUserHasPermHosts FetchAllHostsByBizID failed: %v", err)
 			return nil
@@ -317,7 +327,7 @@ func getUserHasPermHosts(bizID int, user string) []string {
 	}
 
 	// 查询有主机负责人权限的主机
-	hostList, err := cmdb.GetCmdbClient().FetchAllHostsByBizID(bizID, false)
+	hostList, err := cmdb.GetCmdbClient().FetchAllHostsByBizID(ctx, bizID, false)
 	if err != nil {
 		blog.Errorf("getUserHasPermHosts FetchAllHostsByBizID failed: %v", err)
 		return nil
@@ -808,6 +818,13 @@ func updateClusterModule(cluster *proto.Cluster, category, moduleID, moduleName 
 		return
 	}
 
+	ctx, err := tenant.WithTenantIdByResourceForContext(context.Background(),
+		tenant.ResourceMetaData{ProjectId: cluster.ProjectID})
+	if err != nil {
+		blog.Errorf("updateClusterModule withTenantIdByResourceForContext failed: %s", err.Error())
+		return
+	}
+
 	bkBizID, _ := strconv.Atoi(cluster.GetBusinessID())
 	bkModuleID, _ := strconv.Atoi(moduleID)
 
@@ -819,14 +836,16 @@ func updateClusterModule(cluster *proto.Cluster, category, moduleID, moduleName 
 			break
 		}
 
-		cluster.GetClusterBasicSettings().GetModule().MasterModuleName = cloudprovider.GetModuleName(bkBizID, bkModuleID)
+		cluster.GetClusterBasicSettings().GetModule().MasterModuleName = cloudprovider.GetModuleName(ctx,
+			bkBizID, bkModuleID)
 	case worker:
 		cluster.GetClusterBasicSettings().GetModule().WorkerModuleID = moduleID
 		if moduleName != "" {
 			cluster.GetClusterBasicSettings().GetModule().WorkerModuleName = moduleName
 			break
 		}
-		cluster.GetClusterBasicSettings().GetModule().WorkerModuleName = cloudprovider.GetModuleName(bkBizID, bkModuleID)
+		cluster.GetClusterBasicSettings().GetModule().WorkerModuleName = cloudprovider.GetModuleName(ctx,
+			bkBizID, bkModuleID)
 	default:
 	}
 }
@@ -839,6 +858,14 @@ func updateAutoScalingModule(cluster *proto.Cluster, option *proto.ClusterAutoSc
 	if moduleID == "" {
 		return
 	}
+
+	ctx, err := tenant.WithTenantIdByResourceForContext(context.Background(),
+		tenant.ResourceMetaData{ProjectId: cluster.ProjectID})
+	if err != nil {
+		blog.Errorf("updateClusterModule withTenantIdByResourceForContext failed: %s", err.Error())
+		return
+	}
+
 	bkBizID, _ := strconv.Atoi(cluster.GetBusinessID())
 	bkModuleID, _ := strconv.Atoi(moduleID)
 	option.Module.ScaleOutBizID = cluster.GetBusinessID()
@@ -847,7 +874,7 @@ func updateAutoScalingModule(cluster *proto.Cluster, option *proto.ClusterAutoSc
 	if moduleName != "" {
 		option.Module.ScaleOutModuleName = moduleName
 	} else {
-		option.Module.ScaleOutModuleName = cloudprovider.GetModuleName(bkBizID, bkModuleID)
+		option.Module.ScaleOutModuleName = cloudprovider.GetModuleName(ctx, bkBizID, bkModuleID)
 	}
 }
 
@@ -963,8 +990,8 @@ func clusterToClusterBasicInfo(cluster *proto.Cluster) *proto.ClusterBasicInfo {
 		ClusterType:     cluster.ClusterType,
 		Labels:          cluster.Labels,
 		Creator:         cluster.Creator,
-		CreateTime:      cluster.CreateTime,
-		UpdateTime:      cluster.UpdateTime,
+		CreateTime:      util.TransStrToUTCStr(time.RFC3339Nano, cluster.CreateTime),
+		UpdateTime:      util.TransStrToUTCStr(time.RFC3339Nano, cluster.UpdateTime),
 		SystemID:        cluster.SystemID,
 		ManageType:      cluster.ManageType,
 		Status:          cluster.Status,

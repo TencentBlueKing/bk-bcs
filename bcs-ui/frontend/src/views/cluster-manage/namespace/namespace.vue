@@ -136,9 +136,9 @@
             v-bk-tooltips="{ content: $t('dashboard.ns.tips.notEnabledNamespace') }">--</span>
         </template>
       </bcs-table-column>
-      <bcs-table-column :label="$t('cluster.labels.createdAt')">
+      <bcs-table-column :label="$t('cluster.labels.createdAt')" min-width="200" show-overflow-tooltip>
         <template #default="{ row }">
-          {{ row.createTime ? timeZoneTransForm(row.createTime, false) : '--' }}
+          {{ row.createTime ? formatTimeWithTimezone(row.createTime) : '--' }}
         </template>
       </bcs-table-column>
       <bcs-table-column :label="$t('generic.label.action')" width="200">
@@ -483,7 +483,7 @@ import { useNamespace } from './use-namespace';
 
 import $bkMessage from '@/common/bkmagic';
 import { KEY_REGEXP, VALUE_REGEXP } from '@/common/constant';
-import { timeZoneTransForm } from '@/common/util';
+import { formatTimeWithTimezone } from '@/common/util';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import KeyValue from '@/components/key-value.vue';
 import Row from '@/components/layout/Row.vue';
@@ -1038,7 +1038,7 @@ export default defineComponent({
       cancelUpdateNamespace,
       handleToCreatedPage,
       handleToITSM,
-      timeZoneTransForm,
+      formatTimeWithTimezone,
       handleGoVar,
       showDetail,
       refreshNamespaceDetail,

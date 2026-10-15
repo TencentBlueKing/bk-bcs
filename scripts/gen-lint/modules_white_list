@@ -15,19 +15,14 @@ bcs-runtime/bcs-k8s/bcs-component/bcs-webhook-server
 # bcs-runtime/bcs-k8s/bcs-network
 # bcs-runtime/bcs-k8s/kubernetes
 bcs-runtime/bcs-k8s/kubernetes/common
-bcs-scenarios/bcs-gitops-manager
-bcs-scenarios/bcs-gitops-pre-check
-bcs-scenarios/bcs-gitops-vaultplugin-server
 bcs-scenarios/bcs-monitor-controller
 bcs-scenarios/bcs-powertrading
-bcs-scenarios/bcs-terraform-controller
 bcs-services/bcs-bkcmdb-synchronizer
 bcs-services/bcs-cli/bcs-cluster-manager
 bcs-services/bcs-cli/bcs-data-manager
 bcs-services/bcs-cli/bcs-project-manager
 bcs-services/bcs-cli/bcs-user-manager
 # bcs-services/bcs-cluster-manager
-bcs-services/bcs-cluster-reporter
 # bcs-services/bcs-data-manager
 bcs-services/bcs-gateway-discovery
 # bcs-services/bcs-helm-manager
@@ -43,5 +38,4 @@ bcs-services/bcs-webconsole
 bcs-services/cluster-resources
 bcs-services/bcs-mesh-manager
 bcs-services/pkg
-bcs-ui
 # install/cryptool

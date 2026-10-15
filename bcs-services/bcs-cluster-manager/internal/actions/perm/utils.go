@@ -20,6 +20,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cloudaccount"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/project"
+	authutils "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
 )
 
 const (
@@ -28,7 +29,7 @@ const (
 
 // UserActionPerm 用户权限上下文信息
 type UserActionPerm struct {
-	User     string
+	User     authutils.UserInfo
 	ActionID string
 	RelatedPermResource
 }
@@ -44,7 +45,7 @@ type RelatedPermResource struct {
 
 // CheckUserPermByActionID check user actionID perm and return apply permURL when no permission
 func CheckUserPermByActionID(ctx context.Context, iam iam.PermClient, permInfo UserActionPerm) (bool, string, error) {
-	if iam == nil || permInfo.User == "" || permInfo.ActionID == "" {
+	if iam == nil || permInfo.User.GetBKUserName() == "" || permInfo.ActionID == "" {
 		return false, "", fmt.Errorf("CheckUserPermByActionID parameter error")
 	}
 
@@ -57,16 +58,16 @@ func CheckUserPermByActionID(ctx context.Context, iam iam.PermClient, permInfo U
 		projectIAM := project.NewBCSProjectPermClient(iam)
 		switch permInfo.ActionID {
 		case project.ProjectCreate.String():
-			allow, url, _, err := projectIAM.CanCreateProject(permInfo.User)
+			allow, url, _, err := projectIAM.CanCreateProject(permInfo.User.GetBKUserName())
 			return allow, url, err
 		case project.ProjectView.String():
-			allow, url, _, err := projectIAM.CanViewProject(permInfo.User, permInfo.ProjectID)
+			allow, url, _, err := projectIAM.CanViewProject(permInfo.User.GetBKUserName(), permInfo.ProjectID)
 			return allow, url, err
 		case project.ProjectEdit.String():
-			allow, url, _, err := projectIAM.CanEditProject(permInfo.User, permInfo.ProjectID)
+			allow, url, _, err := projectIAM.CanEditProject(permInfo.User.GetBKUserName(), permInfo.ProjectID)
 			return allow, url, err
 		case project.ProjectDelete.String():
-			allow, url, _, err := projectIAM.CanDeleteProject(permInfo.User, permInfo.ProjectID)
+			allow, url, _, err := projectIAM.CanDeleteProject(permInfo.User.GetBKUserName(), permInfo.ProjectID)
 			return allow, url, err
 		default:
 			return false, "", errFunc(permInfo.ActionID)
@@ -75,11 +76,11 @@ func CheckUserPermByActionID(ctx context.Context, iam iam.PermClient, permInfo U
 		accountIAM := cloudaccount.NewBCSAccountPermClient(iam)
 		switch permInfo.ActionID {
 		case cloudaccount.AccountManage.String():
-			return accountIAM.CanManageCloudAccount(permInfo.User, permInfo.ProjectID, permInfo.CloudAccountID)
+			return accountIAM.CanManageCloudAccount(permInfo.User.GetBKUserName(), permInfo.ProjectID, permInfo.CloudAccountID)
 		case cloudaccount.AccountUse.String():
-			return accountIAM.CanUseCloudAccount(permInfo.User, permInfo.ProjectID, permInfo.CloudAccountID)
+			return accountIAM.CanUseCloudAccount(permInfo.User.GetBKUserName(), permInfo.ProjectID, permInfo.CloudAccountID)
 		case cloudaccount.AccountCreate.String():
-			return accountIAM.CanCreateCloudAccount(permInfo.User, permInfo.ProjectID)
+			return accountIAM.CanCreateCloudAccount(permInfo.User.GetBKUserName(), permInfo.ProjectID)
 		default:
 			return false, "", errFunc(permInfo.ActionID)
 		}

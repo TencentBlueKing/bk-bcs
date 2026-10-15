@@ -170,7 +170,7 @@ func (sa *SwitchClusterUnderlayNetworkAction) Handle(ctx context.Context,
 			return fmt.Sprintf("集群[%s]开启underlay网络模式", sa.cluster.ClusterID)
 		}(),
 		OpUser:       sa.req.GetOperator(),
-		CreateTime:   time.Now().Format(time.RFC3339),
+		CreateTime:   time.Now().UTC().Format(time.RFC3339),
 		ClusterID:    sa.cluster.ClusterID,
 		ProjectID:    sa.cluster.ProjectID,
 		ResourceName: sa.cluster.GetClusterName(),

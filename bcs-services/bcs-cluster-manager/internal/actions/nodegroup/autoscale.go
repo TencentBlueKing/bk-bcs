@@ -211,7 +211,7 @@ func (ua *EnableNodeGroupAutoScaleAction) enableNodeGroupAutoScale() error {
 		TaskID:       taskID,
 		Message:      fmt.Sprintf("%s 开启节点池", ua.group.NodeGroupID),
 		OpUser:       ua.group.Updater,
-		CreateTime:   time.Now().Format(time.RFC3339),
+		CreateTime:   time.Now().UTC().Format(time.RFC3339),
 		ClusterID:    ua.cluster.ClusterID,
 		ProjectID:    ua.cluster.ProjectID,
 		ResourceName: ua.group.GetName(),
@@ -388,7 +388,7 @@ func (ua *DisableNodeGroupAutoScaleAction) disableNodeGroupAutoScale() error {
 		TaskID:       taskID,
 		Message:      fmt.Sprintf("%s 关闭节点池", ua.group.NodeGroupID),
 		OpUser:       ua.group.Updater,
-		CreateTime:   time.Now().Format(time.RFC3339),
+		CreateTime:   time.Now().UTC().Format(time.RFC3339),
 		ClusterID:    ua.cluster.ClusterID,
 		ProjectID:    ua.cluster.ProjectID,
 	})

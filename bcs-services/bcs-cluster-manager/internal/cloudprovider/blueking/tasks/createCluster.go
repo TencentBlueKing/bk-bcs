@@ -14,6 +14,7 @@
 package tasks
 
 import (
+	"context"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -21,6 +22,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/utils"
 	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tenant"
 )
 
 // UpdateCreateClusterDBInfoTask update cluster DB info
@@ -57,6 +59,15 @@ func UpdateCreateClusterDBInfoTask(taskID string, stepName string) error {
 	// sync clusterData to pass-cc
 	if cluster != nil {
 		utils.SyncClusterInfoToPassCC(taskID, cluster)
+
+		// sync cluster perms
+		ctx, err := tenant.WithTenantIdByResourceForContext(context.Background(), tenant.ResourceMetaData{
+			ClusterId: clusterID,
+		})
+		if err != nil {
+			blog.Errorf("UpdateEKSNodesToDBTask WithTenantIdByResourceForContext failed: %v", err)
+		}
+		utils.AuthClusterResourceCreatorPerm(ctx, cluster.ClusterID, cluster.ClusterName, cluster.Creator)
 	}
 
 	// update step

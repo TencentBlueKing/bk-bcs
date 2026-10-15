@@ -132,11 +132,11 @@ func (w *WebServer) newRouter() http.Handler {
 func (w *WebServer) subRouter() http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.Tracing)
+	r.Use(middleware.TanantCheck)
 
 	r.Get("/favicon.ico", w.embedWebServer.FaviconHandler)
 
-	r.With(metrics.RequestCollect("FeatureFlagsHandler"), middleware.NeedProjectAuthorization).
-		Get("/feature_flags", w.FeatureFlagsHandler)
+	r.With(metrics.RequestCollect("FeatureFlagsHandler")).Get("/feature_flags", w.FeatureFlagsHandler)
 
 	r.With(metrics.RequestCollect("GetCurrentAnnouncements")).Get("/announcements", w.GetCurrentAnnouncements)
 

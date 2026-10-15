@@ -99,7 +99,7 @@ func (da *DeleteAction) Handle(
 		TaskID:       "",
 		Message:      fmt.Sprintf("删除集群[%s]扩缩容配置", da.req.ClusterID),
 		OpUser:       auth.GetUserFromCtx(ctx),
-		CreateTime:   time.Now().Format(time.RFC3339),
+		CreateTime:   time.Now().UTC().Format(time.RFC3339),
 		ClusterID:    da.req.ClusterID,
 		ProjectID:    da.cluster.ProjectID,
 		ResourceName: da.cluster.ClusterName,

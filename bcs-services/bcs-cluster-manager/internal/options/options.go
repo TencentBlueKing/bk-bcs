@@ -127,6 +127,7 @@ type NodeManConfig struct {
 	AppSecret  string `json:"appSecret"`
 	BkUserName string `json:"bkUserName"`
 	Server     string `json:"server"`
+	V3Server   string `json:"v3Server"`
 	Debug      bool   `json:"debug"`
 }
 
@@ -195,6 +196,10 @@ type IAMConfig struct {
 	Metric           bool   `json:"metric"`
 	Debug            bool   `json:"debug"`
 	ApplyPermAddress string `json:"applyPermAddress"`
+	// EnableV4 开启后走 IAM V4（bcs-common iam.Version=v4）
+	EnableV4 bool `json:"enableV4"`
+	// V4GateWayHost IAM V4 网关地址，与 GateWayServer 分离
+	V4GateWayHost string `json:"v4GateWayHost"`
 }
 
 // HelmConfig for helm
@@ -279,7 +284,6 @@ type GseConfig struct {
 	AppCode       string `json:"appCode"`
 	AppSecret     string `json:"appSecret"`
 	BkUserName    string `json:"bkUserName"`
-	EsbServer     string `json:"server"`
 	GatewayServer string `json:"gatewayServer"`
 	Debug         bool   `json:"debug"`
 }
@@ -306,6 +310,23 @@ type DaemonConfig struct {
 type CommonConfig struct {
 	AnnoKeyProjCode  string `json:"annoKeyProjCode"`
 	SystemNameSpaces string `json:"systemNameSpaces"`
+}
+
+// BkUserConfig for bk user config
+type BkUserConfig struct {
+	AppCode   string `json:"appCode"`
+	AppSecret string `json:"appSecret"`
+	Server    string `json:"server"`
+	Debug     bool   `json:"debug"`
+}
+
+// TenantConfig tenant config, default disable tenant mode
+type TenantConfig struct {
+	EnableMultiTenantMode bool `json:"enableMultiTenantMode"`
+	// NoCheckTenantMethod no check tenant method
+	NoCheckTenantMethod string `json:"noCheckTenantMethod"`
+	// ClientExemptTenant client用户豁免租户校验
+	ClientExemptTenant string `json:"clientExemptTenant"`
 }
 
 // ClusterManagerOptions options of cluster manager
@@ -343,6 +364,8 @@ type ClusterManagerOptions struct {
 	Encrypt            encryptv2.Config      `json:"encrypt"`
 	Daemon             DaemonConfig          `json:"daemon"`
 	CommonConfig       CommonConfig          `json:"commonConfig"`
+	BkUser             BkUserConfig          `json:"bkUser"`
+	TenantConfig       TenantConfig          `json:"tenant"`
 	ServerConfig
 	ClientConfig
 }

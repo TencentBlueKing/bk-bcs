@@ -27,9 +27,6 @@ const (
 	// MicroMetaKeyHTTPPort 初始化micro服务需要的httpport
 	MicroMetaKeyHTTPPort = "httpport"
 
-	// TimeLayout time layout
-	TimeLayout = "2006-01-02 15:04:05"
-
 	// AnnotationKeyProjectCode annotation key projectCode
 	AnnotationKeyProjectCode = "io.tencent.bcs.projectcode"
 
@@ -54,6 +51,14 @@ const (
 	MetadataCookiesKey = "Grpcgateway-Cookie"
 	// LangCookieName 语言版本 Cookie 名称
 	LangCookieName = "blueking_language"
+)
+
+// Tenant const value
+const (
+	// DefaultTenantId default tenant id
+	DefaultTenantId = "default"
+	// SystemTenantId system tenant id
+	SystemTenantId = "system"
 )
 
 const (

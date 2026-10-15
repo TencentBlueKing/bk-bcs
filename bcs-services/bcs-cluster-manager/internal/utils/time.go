@@ -19,7 +19,6 @@ import (
 )
 
 const (
-	format = "2006-01-02 15:04:05"
 	// DefaultTimeZone 默认时区
 	DefaultTimeZone = "Asia/Shanghai"
 )
@@ -31,7 +30,7 @@ func TransTimeFormat(input string) string {
 		return input
 	}
 
-	return formatTime.Format(format)
+	return formatTime.UTC().Format(time.RFC3339)
 }
 
 // TransTsToTime trans timestamp to time
@@ -42,7 +41,7 @@ func TransTsToTime(timestamp int64) time.Time {
 // TransTsToStr trans timestamp to time string
 func TransTsToStr(timestamp int64) string {
 	t := TransTsToTime(timestamp)
-	formattedTime := t.Format(time.RFC3339)
+	formattedTime := t.UTC().Format(time.RFC3339)
 	return formattedTime
 }
 

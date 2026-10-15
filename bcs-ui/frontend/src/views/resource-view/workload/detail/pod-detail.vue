@@ -63,7 +63,7 @@
         </div>
         <div class="info-item">
           <span class="label">{{ $t('cluster.labels.createdAt') }}</span>
-          <span class="value">{{ timeFormat(manifestExt.createTime) }}</span>
+          <span class="value">{{ formatTimeWithTimezone(manifestExt.createTime) }}</span>
         </div>
         <div class="info-item">
           <span class="label">{{ $t('k8s.age') }}</span>
@@ -169,7 +169,7 @@
             </bk-table-column>
             <bk-table-column :label="$t('container.label.startedAt')" prop="startedAt">
               <template #default="{ row }">
-                {{ timeFormat(row.startedAt) }}
+                {{ formatTimeWithTimezone(row.startedAt) }}
               </template>
             </bk-table-column>
             <bk-table-column :label="$t('container.label.restartCnt')" prop="restartCnt"></bk-table-column>
@@ -257,7 +257,7 @@
             </bk-table-column>
             <bk-table-column :label="$t('k8s.lastTransitionTime')" prop="lastTransitionTime">
               <template #default="{ row }">
-                {{ timeFormat(row.lastTransitionTime) }}
+                {{ formatTimeWithTimezone(row.lastTransitionTime) }}
               </template>
             </bk-table-column>
             <bk-table-column :label="$t('dashboard.workload.label.reason')">
@@ -423,7 +423,7 @@ import { addonsList } from '@/api/modules/helm';
 import { logCollectorEntrypoints } from '@/api/modules/monitor';
 import { ClusterAddonsService } from '@/api/modules/new-helm-manager';
 import { LOG_COLLECTOR } from '@/common/constant';
-import { timeFormat } from '@/common/util';
+import { formatTimeWithTimezone } from '@/common/util';
 import Metric from '@/components/metric.vue';
 import CodeEditor from '@/components/monaco-editor/new-editor.vue';
 import StatusIcon from '@/components/status-icon';
@@ -685,7 +685,7 @@ export default defineComponent({
       handleGetStorage,
       gotoContainerDetail,
       handleGetExtData,
-      timeFormat,
+      formatTimeWithTimezone,
       getImagesTips,
       handleUpdateResource,
       handleDeleteResource,

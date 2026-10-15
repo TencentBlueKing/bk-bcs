@@ -14199,6 +14199,16 @@
           },
           "description": "获取到的信息",
           "title": "data"
+        },
+        "requestId": {
+          "type": "string",
+          "description": "请求ID",
+          "title": "requestId"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/clustermanagerWebAnnotationsV2",
+          "description": "查看集群共享权限",
+          "title": "web_annotations"
         }
       },
       "description": "获取cloud 地域列表",
@@ -14343,6 +14353,16 @@
           },
           "description": "集群信息的SharedProject",
           "title": "data"
+        },
+        "requestId": {
+          "type": "string",
+          "description": "请求ID",
+          "title": "requestId"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/clustermanagerWebAnnotationsV2",
+          "description": "查看集群共享权限",
+          "title": "web_annotations"
         }
       },
       "description": "查询集群共享给其他项目情况返回",
@@ -16040,6 +16060,11 @@
     "clustermanagerKubeConfigReq": {
       "type": "object",
       "properties": {
+        "projectID": {
+          "type": "string",
+          "description": "集群所属项目",
+          "title": "projectID"
+        },
         "kubeConfig": {
           "type": "string",
           "description": "集群kubeConfig文件",
@@ -16869,6 +16894,16 @@
           },
           "description": "获取到的信息",
           "title": "data"
+        },
+        "requestId": {
+          "type": "string",
+          "description": "请求ID",
+          "title": "requestId"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/clustermanagerWebAnnotationsV2",
+          "description": "查看集群共享权限",
+          "title": "web_annotations"
         }
       },
       "description": "查询安全组列表返回",
@@ -16941,6 +16976,16 @@
           },
           "description": "获取到的信息",
           "title": "data"
+        },
+        "requestId": {
+          "type": "string",
+          "description": "请求ID",
+          "title": "requestId"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/clustermanagerWebAnnotationsV2",
+          "description": "查看集群共享权限",
+          "title": "web_annotations"
         }
       },
       "description": "查询云VPC返回",
@@ -17029,6 +17074,11 @@
           },
           "description": "获取到的信息",
           "title": "data"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/clustermanagerWebAnnotationsV2",
+          "description": "用户所属项目权限",
+          "title": "web_annotations"
         }
       },
       "description": "查询云所属地域的vpc列表",

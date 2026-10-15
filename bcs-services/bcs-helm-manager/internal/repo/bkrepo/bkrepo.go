@@ -71,10 +71,10 @@ type projectHandler struct {
 }
 
 // Ensure 针对给定的一个project name, 确保它存在于bk-repo中, 若不存在则创建
-func (ph *projectHandler) Ensure(ctx context.Context) error {
+func (ph *projectHandler) Ensure(ctx context.Context, projectID string) error {
 	return ph.ensureProject(ctx, &repo.Project{
-		Name:        ph.projectID,
-		DisplayName: ph.projectID,
+		Name:        projectID,
+		DisplayName: projectID,
 		Description: "created by bcs-helm-manager",
 	})
 }

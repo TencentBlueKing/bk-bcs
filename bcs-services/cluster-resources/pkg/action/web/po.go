@@ -25,9 +25,10 @@ import (
 func GenNodePodListWebAnnos(
 	ctx context.Context, podList []map[string]interface{}, projectID, clusterID string, namespaces []string,
 ) (*spb.Struct, error) {
-	username := ctx.Value(ctxkey.UsernameKey).(string)
+	username := ctxkey.GetUsernameFromCtx(ctx)
+	tenantID := ctxkey.GetTenantIDFromCtx(ctx)
 	scopePerms, err := nsAuth.FetchBatchNSScopedResMultiActPerm(
-		username, projectID, clusterID, namespaces, "pods",
+		tenantID, username, projectID, clusterID, namespaces, "pods",
 	)
 	if err != nil {
 		return nil, err

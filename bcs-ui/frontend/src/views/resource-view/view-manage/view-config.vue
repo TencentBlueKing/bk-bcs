@@ -101,7 +101,7 @@
                 v-for="(item, index) in originViewData?.filter.creator"
                 :key="index"
                 :class="['m-[0px] mr-[8px]', index > 0 ? 'mt-[6px]' : '']">
-                {{ item }}
+                <bk-user-display-name :user-id="item"></bk-user-display-name>
               </bcs-tag>
             </ViewField>
             <ViewField

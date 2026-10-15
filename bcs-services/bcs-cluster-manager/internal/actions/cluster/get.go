@@ -31,6 +31,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tenant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
@@ -60,8 +61,6 @@ func (ga *GetAction) getCluster() error {
 	if err != nil {
 		return err
 	}
-	cluster.CreateTime = utils.TransTimeFormat(cluster.CreateTime)
-	cluster.UpdateTime = utils.TransTimeFormat(cluster.UpdateTime)
 	ga.cluster = shieldClusterInfo(cluster)
 
 	if ga.cluster != nil && ga.cluster.NetworkSettings != nil {
@@ -132,16 +131,24 @@ func (ga *GetAction) appendModuleInfo() {
 		ga.cluster.GetClusterBasicSettings().Module = &cmproto.ClusterModule{}
 	}
 
+	ctx, err := tenant.WithTenantIdByResourceForContext(ga.ctx,
+		tenant.ResourceMetaData{ProjectId: ga.cluster.GetProjectID()})
+	if err != nil {
+		blog.Errorf("withTenantIdByResourceForContext failed: %s", err.Error())
+	}
+
 	// cluster business id
 	bkBizID, _ := strconv.Atoi(ga.cluster.GetBusinessID())
 	if ga.cluster.GetClusterBasicSettings().GetModule().GetMasterModuleID() != "" {
 		bkModuleID, _ := strconv.Atoi(ga.cluster.GetClusterBasicSettings().GetModule().GetMasterModuleID())
-		ga.cluster.GetClusterBasicSettings().Module.MasterModuleName = cloudprovider.GetModuleName(bkBizID, bkModuleID)
+		ga.cluster.GetClusterBasicSettings().Module.MasterModuleName = cloudprovider.GetModuleName(ctx,
+			bkBizID, bkModuleID)
 	}
 
 	if ga.cluster.GetClusterBasicSettings().GetModule().GetWorkerModuleID() != "" {
 		bkModuleID, _ := strconv.Atoi(ga.cluster.GetClusterBasicSettings().GetModule().GetWorkerModuleID())
-		ga.cluster.GetClusterBasicSettings().Module.WorkerModuleName = cloudprovider.GetModuleName(bkBizID, bkModuleID)
+		ga.cluster.GetClusterBasicSettings().Module.WorkerModuleName = cloudprovider.GetModuleName(ctx,
+			bkBizID, bkModuleID)
 
 		return
 	}

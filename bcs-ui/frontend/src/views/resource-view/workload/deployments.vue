@@ -6,7 +6,7 @@
         handleGetExtData, handleSortChange, gotoDetail, handleUpdateResource, handleDeleteResource,
         handleEnlargeCapacity, statusFilters, handleShowViewConfig, handleFilterChange,
         handleGotoUpdateRecord, handleRestart, handleRollback, clusterNameMap, goNamespace, isViewEditable,
-        isClusterMode, sourceTypeMap, resolveLink,
+        isClusterMode, sourceTypeMap, resolveLink
       }">
       <bk-table
         :data="curPageData"
@@ -121,7 +121,7 @@
         </bk-table-column>
         <bk-table-column :label="$t('generic.label.createdBy')">
           <template slot-scope="{ row }">
-            <span>{{handleGetExtData(row.metadata.uid, 'creator') || '--'}}</span>
+            <bk-user-display-name :user-id="handleGetExtData(row.metadata.uid, 'creator')"></bk-user-display-name>
           </template>
         </bk-table-column>
         <bk-table-column :label="$t('generic.label.source')" :show-overflow-tooltip="false">

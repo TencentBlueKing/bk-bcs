@@ -12,7 +12,7 @@
       </div>
       <div class="basic-info-item">
         <label>{{ $t('cluster.labels.createdAt') }}</label>
-        <span>{{ data.createTime ? timeZoneTransForm(data.createTime, false) : '--' }}</span>
+        <span>{{ data.createTime ? formatTimeWithTimezone(data.createTime) : '--' }}</span>
       </div>
     </div>
     <div class="detail-title mt-[20px]">{{ $t('logCollector.label.configInfo') }}</div>
@@ -354,8 +354,8 @@ import {
 import {
   createPodLimitRangeForm,
   isPodLimitRangeFormValid,
-  PodLimitRangeValue,
   podLimitRangeToFormValues,
+  PodLimitRangeValue,
   serializePodLimitRangeForm,
 } from './pod-limit-range';
 
@@ -369,7 +369,7 @@ import {
   updatePodLimitRange,
 } from '@/api/modules/project';
 import $bkMessage from '@/common/bkmagic';
-import { timeZoneTransForm } from '@/common/util';
+import { formatTimeWithTimezone, timeZoneTransForm } from '@/common/util';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import $i18n from '@/i18n/i18n-setup';
 
@@ -421,7 +421,7 @@ export default defineComponent({
       if (!value) return '--';
       const type = field === 'cpu' ? 'cpu' : 'mem';
       const unit = field === 'cpu' ? $i18n.t('units.suffix.cores') : 'Gi';
-      return formatQuotaQuantity(value, type) + ' ' + unit;
+      return `${formatQuotaQuantity(value, type)} ${unit}`;
     };
 
     const originalQuota = ref<Partial<QuotaValues>>();
@@ -541,7 +541,7 @@ export default defineComponent({
     const podLimitRanges = ref<PodLimitRangeValue[]>([]);
     const podLimitRangesLoading = ref(false);
     const refreshPodLimitRanges = async () => {
-      const clusterId = props.clusterId;
+      const { clusterId } = props;
       const namespace = props.data.name;
       if (!clusterId || !namespace) {
         podLimitRanges.value = [];
@@ -669,6 +669,7 @@ export default defineComponent({
     };
 
     return {
+      formatTimeWithTimezone,
       formatQuotaQuantity,
       formatQuotaUsage,
       formatUsageRate,

@@ -96,7 +96,7 @@ func (r *ReleaseUninstallAction) Execute(ctx context.Context) error {
 			return nil
 		}
 		blog.Warnf("get %s/%s in cluster %s error, %s", r.namespace, r.name, r.clusterID, err.Error())
-		return nil
+		return fmt.Errorf("get %s/%s in cluster %s error, %s", r.namespace, r.name, r.clusterID, err.Error())
 	}
 
 	_, err = r.releaseHandler.Cluster(r.clusterID).Uninstall(ctx, release.HelmUninstallConfig{

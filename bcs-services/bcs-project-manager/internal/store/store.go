@@ -38,7 +38,7 @@ type ProjectModel interface {
 	DeleteProject(ctx context.Context, projectID string) error
 	UpdateProject(ctx context.Context, project *project.Project) error
 	ListProjects(ctx context.Context, cond *operator.Condition, opt *page.Pagination) ([]project.Project, int64, error)
-	SearchProjects(ctx context.Context, ids, limitIDs []string, searchKey, kind string, opt *page.Pagination) (
+	SearchProjects(ctx context.Context, ids, limitIDs []string, searchKey, kind, tenantId string, opt *page.Pagination) (
 		[]project.Project, int64, error)
 
 	GetNamespace(ctx context.Context, projectCode, clusterID, name string) (*nsm.Namespace, error)
@@ -84,7 +84,7 @@ type ProjectModel interface {
 	ListProjectQuotasByBizId(ctx context.Context, bizId string) ([]quota.ProjectQuota, error)
 
 	UpsertBusiness(ctx context.Context, biz *business.Business) error
-	DeleteBusinessesNotIn(ctx context.Context, keepIDs []string) (int64, error)
+	DeleteBusinessesNotIn(ctx context.Context, tenantID string, keepIDs []string) (int64, error)
 }
 
 type modelSet struct {

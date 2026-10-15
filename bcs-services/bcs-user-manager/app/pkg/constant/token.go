@@ -16,6 +16,8 @@ package constant
 const (
 	// CurrentUserAttr user header
 	CurrentUserAttr = "current-user"
+	// CurrentTenantID user tenant id header
+	CurrentTenantID = "current-tenant-id"
 	// ProjectAttr project header
 	ProjectAttr = "project"
 

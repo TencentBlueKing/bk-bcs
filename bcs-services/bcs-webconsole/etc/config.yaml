@@ -11,6 +11,8 @@ auth_conf:
   host: ""
   gateway_host: ""
   use_gw: true
+  enable_v4: false
+  v4_gateway_host: ""
 logging:
   level: info
   file: ""

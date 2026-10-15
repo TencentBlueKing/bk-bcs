@@ -84,11 +84,17 @@
         :label="$t('googleCloud.label.createdAt')"
         prop="account.creatTime"
         show-overflow-tooltip>
+        <template #default="{ row }">
+          {{ row.account?.creatTime ? formatTimeWithTimezone(row.account?.creatTime) : '--' }}
+        </template>
       </bcs-table-column>
       <bcs-table-column
         :label="$t('googleCloud.label.createdBy')"
         prop="account.creator"
         show-overflow-tooltip>
+        <template #default="{ row }">
+          <bk-user-display-name :user-id="row.account?.creator"></bk-user-display-name>
+        </template>
       </bcs-table-column>
       <bcs-table-column :label="$t('googleCloud.label.operate')" width="100" show-overflow-tooltip>
         <template #default="{ row }">
@@ -219,6 +225,7 @@ import { onMounted, ref, watch } from 'vue';
 
 import $bkMessage from '@/common/bkmagic';
 // import { exitFullscreen, fullScreen } from '@/common/util';
+import { formatTimeWithTimezone } from '@/common/util';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import Row from '@/components/layout/Row.vue';
 import CodeEditor from '@/components/monaco-editor/new-editor.vue';

@@ -41,6 +41,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/alarm/tmp"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cmdb"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/nodeman"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/nodemgrv3"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/nodetemplate"
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/templateconfig"
@@ -409,7 +410,7 @@ func UpdateClusterCredentialByConfig(clusterID string, config *types.Config) err
 	}
 
 	// need to handle crypt
-	now := time.Now().Format(time.RFC3339)
+	now := time.Now().UTC().Format(time.RFC3339)
 	err := GetStorageModel().PutClusterCredential(context.Background(), &proto.ClusterCredential{
 		ServerKey:     clusterID,
 		ClusterID:     clusterID,
@@ -934,7 +935,7 @@ func InitTaskStep(stepInfo StepInfo, opts ...StepOption) *proto.Step {
 		opt(defaultOptions)
 	}
 
-	nowStr := time.Now().Format(time.RFC3339)
+	nowStr := time.Now().UTC().Format(time.RFC3339)
 	return &proto.Step{
 		Name:   stepInfo.StepMethod,
 		System: "api",
@@ -1071,12 +1072,34 @@ func GetBusinessID(cls *proto.Cluster, asOption *proto.ClusterAutoScalingOption,
 }
 
 // GetBKCloudName get bk cloud name by id
-func GetBKCloudName(bkCloudID int) string {
+func GetBKCloudName(ctx context.Context, bkCloudID int) string {
+	// v3 分支：根据版本开关决定是否走 v3 接口
+	if nodemgrv3.IsEnabled() {
+		v3Cli := nodemgrv3.GetNodeManV3Client()
+		if v3Cli == nil {
+			return ""
+		}
+		resp, err := v3Cli.NetworkAreaList(ctx, &nodemgrv3.NetworkAreaListRequest{
+			Page: &nodemgrv3.NetworkAreaPage{Limit: 1000},
+		})
+		if err != nil {
+			blog.Errorf("get network area list (v3) failed, err %s", err.Error())
+			return ""
+		}
+		for _, item := range resp.Items {
+			if item.BkNetworkareaID == bkCloudID {
+				return item.BkNetworkareaName
+			}
+		}
+		return ""
+	}
+
+	// v2 原逻辑
 	cli := nodeman.GetNodeManClient()
 	if cli == nil {
 		return ""
 	}
-	list, err := cli.CloudList(context.Background())
+	list, err := cli.CloudList(ctx)
 	if err != nil {
 		blog.Errorf("get cloud list failed, err %s", err.Error())
 		return ""
@@ -1090,12 +1113,12 @@ func GetBKCloudName(bkCloudID int) string {
 }
 
 // GetModuleName get module name
-func GetModuleName(bkBizID, bkModuleID int) string {
+func GetModuleName(ctx context.Context, bkBizID, bkModuleID int) string {
 	cli := cmdb.GetCmdbClient()
 	if cli == nil {
 		return ""
 	}
-	list, err := cli.ListTopology(context.Background(), bkBizID, false, false)
+	list, err := cli.ListTopology(ctx, bkBizID, false, false)
 	if err != nil {
 		blog.Errorf("list topology failed, err %s", err.Error())
 		return ""
@@ -1117,13 +1140,13 @@ func GetModuleName(bkBizID, bkModuleID int) string {
 }
 
 // GetBizMaintainers get biz maintainers
-func GetBizMaintainers(bkBizID int) string {
+func GetBizMaintainers(ctx context.Context, bkBizID int) string {
 	cli := cmdb.GetCmdbClient()
 	if cli == nil {
 		return ""
 	}
 
-	bizData, err := cli.GetBusinessMaintainer(bkBizID)
+	bizData, err := cli.GetBusinessMaintainer(ctx, bkBizID)
 	if err != nil {
 		blog.Errorf("GetBizMaintainers failed: %v", err.Error())
 		return ""
@@ -1143,7 +1166,7 @@ func IsMasterIp(ip string, cls *proto.Cluster) bool {
 }
 
 // UpdateNodeGroupCloudAndModuleInfo update cloudID && moduleInfo
-func UpdateNodeGroupCloudAndModuleInfo(nodeGroupID string, cloudGroupID string,
+func UpdateNodeGroupCloudAndModuleInfo(ctx context.Context, nodeGroupID string, cloudGroupID string,
 	consumer bool, clusterBiz string) error {
 	group, err := GetStorageModel().GetNodeGroup(context.Background(), nodeGroupID)
 	if err != nil {
@@ -1166,12 +1189,12 @@ func UpdateNodeGroupCloudAndModuleInfo(nodeGroupID string, cloudGroupID string,
 		if group.NodeTemplate.Module.ScaleOutModuleID != "" {
 			scaleOutBiz, _ := strconv.Atoi(group.NodeTemplate.Module.ScaleOutBizID)
 			scaleOutModule, _ := strconv.Atoi(group.NodeTemplate.Module.ScaleOutModuleID)
-			group.NodeTemplate.Module.ScaleOutModuleName = GetModuleName(scaleOutBiz, scaleOutModule)
+			group.NodeTemplate.Module.ScaleOutModuleName = GetModuleName(ctx, scaleOutBiz, scaleOutModule)
 		}
 		if group.NodeTemplate.Module.ScaleInModuleID != "" {
 			scaleInBiz, _ := strconv.Atoi(group.NodeTemplate.Module.ScaleInBizID)
 			scaleInModule, _ := strconv.Atoi(group.NodeTemplate.Module.ScaleInModuleID)
-			group.NodeTemplate.Module.ScaleInModuleName = GetModuleName(scaleInBiz, scaleInModule)
+			group.NodeTemplate.Module.ScaleInModuleName = GetModuleName(ctx, scaleInBiz, scaleInModule)
 		}
 	}
 	err = GetStorageModel().UpdateNodeGroup(context.Background(), group)
@@ -1190,7 +1213,7 @@ func ShieldHostAlarm(ctx context.Context, clusterId, bizID string, ips []string)
 	}
 
 	biz, _ := strconv.Atoi(bizID)
-	bizData, err := cmdb.GetCmdbClient().GetBusinessMaintainer(biz)
+	bizData, err := cmdb.GetCmdbClient().GetBusinessMaintainer(ctx, biz)
 	if err != nil {
 		blog.Errorf("ShieldHostAlarm[%s] GetBusinessMaintainer[%s] failed: %v", taskID, bizID, err)
 		return err
@@ -1200,7 +1223,7 @@ func ShieldHostAlarm(ctx context.Context, clusterId, bizID string, ips []string)
 		return fmt.Errorf("ShieldHostAlarm[%s] BKBizMaintainer[%s] empty", taskID, bizID)
 	}
 
-	hostData, err := cmdb.GetCmdbClient().QueryAllHostInfoWithoutBiz(ips)
+	hostData, err := cmdb.GetCmdbClient().QueryAllHostInfoWithoutBiz(ctx, ips)
 	if err != nil {
 		blog.Errorf("ShieldHostAlarm[%s] QueryAllHostInfoWithoutBiz[%+v] failed: %v", taskID, ips, err)
 		return err
@@ -1218,7 +1241,7 @@ func ShieldHostAlarm(ctx context.Context, clusterId, bizID string, ips []string)
 	var alarms = []alarm.AlarmInterface{tmp.GetBKAlarmClient(), bkmonitor.GetBkMonitorClient()}
 
 	for i := range alarms {
-		err = alarms[i].ShieldHostAlarmConfig(maintainers[0], &alarm.ShieldHost{
+		err = alarms[i].ShieldHostAlarmConfig(ctx, maintainers[0], &alarm.ShieldHost{
 			BizID:     bizID,
 			HostList:  hosts,
 			ClusterId: clusterId,
@@ -1238,13 +1261,13 @@ func ShieldHostAlarm(ctx context.Context, clusterId, bizID string, ips []string)
 }
 
 // UpdateAutoScalingOptionModuleInfo update cluster ca moduleInfo
-func UpdateAutoScalingOptionModuleInfo(clusterID string) error {
-	cls, err := GetStorageModel().GetCluster(context.Background(), clusterID)
+func UpdateAutoScalingOptionModuleInfo(ctx context.Context, clusterID string) error {
+	cls, err := GetStorageModel().GetCluster(ctx, clusterID)
 	if err != nil {
 		return err
 	}
 
-	asOption, err := GetStorageModel().GetAutoScalingOption(context.Background(), clusterID)
+	asOption, err := GetStorageModel().GetAutoScalingOption(ctx, clusterID)
 	if err != nil {
 		return err
 	}
@@ -1259,12 +1282,12 @@ func UpdateAutoScalingOptionModuleInfo(clusterID string) error {
 		if asOption.Module.ScaleOutModuleID != "" {
 			scaleOutBiz, _ := strconv.Atoi(asOption.Module.ScaleOutBizID)
 			scaleOutModule, _ := strconv.Atoi(asOption.Module.ScaleOutModuleID)
-			asOption.Module.ScaleOutModuleName = GetModuleName(scaleOutBiz, scaleOutModule)
+			asOption.Module.ScaleOutModuleName = GetModuleName(ctx, scaleOutBiz, scaleOutModule)
 		}
 		if asOption.Module.ScaleInModuleID != "" {
 			scaleInBiz, _ := strconv.Atoi(asOption.Module.ScaleInBizID)
 			scaleInModule, _ := strconv.Atoi(asOption.Module.ScaleInModuleID)
-			asOption.Module.ScaleInModuleName = GetModuleName(scaleInBiz, scaleInModule)
+			asOption.Module.ScaleInModuleName = GetModuleName(ctx, scaleInBiz, scaleInModule)
 		}
 	}
 	err = GetStorageModel().UpdateAutoScalingOption(context.Background(), asOption)
@@ -1552,9 +1575,9 @@ func GetCloudByProvider(provider string) (*proto.Cloud, error) {
 }
 
 // GetCloudBizTags get cloud tags
-func GetCloudBizTags(bizId int64, operator string) (map[string]string, error) {
+func GetCloudBizTags(ctx context.Context, bizId int64, operator string) (map[string]string, error) {
 	client := cmdb.GetCmdbClient()
-	bizID, err := client.GetBS2IDByBizID(bizId)
+	bizID, err := client.GetBS2IDByBizID(ctx, bizId)
 	if err != nil {
 		return nil, err
 	}

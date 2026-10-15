@@ -240,7 +240,7 @@ func GetEventList(ctx context.Context, clusterIDs []string, opt *lib.StoreGetOpt
 	} else if mListLength > opt.Limit {
 		mList = mList[:opt.Limit]
 	}
-	lib.FormatTime(mList, []string{eventTimeTag})
+	lib.FormatTimeUTCRFC339(mList, []string{eventTimeTag, createTimeTag})
 
 	return mList, count, nil
 }

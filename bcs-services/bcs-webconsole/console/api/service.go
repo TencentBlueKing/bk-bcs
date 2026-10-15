@@ -57,7 +57,7 @@ func NewRouteRegistrar(opts *route.Options) route.Registrar {
 
 // RegisterRoute xxx
 func (s service) RegisterRoute(router gin.IRoutes) {
-	api := router.Use(route.APIAuthRequired(), gintrace.Middleware(tracing.ServiceName))
+	api := router.Use(route.APIAuthRequired(), route.TenantCheck(), gintrace.Middleware(tracing.ServiceName))
 
 	// 用户登入态鉴权, session鉴权
 	api.GET("/api/projects/:projectId/clusters/:clusterId/session/",
@@ -112,7 +112,7 @@ func (s *service) ListClusters(c *gin.Context) {
 		return
 	}
 
-	clusters, err := bcs.ListClusters(c.Request.Context(), project.ProjectId)
+	clusters, err := bcs.ListClusters(c.Request.Context(), project.ProjectId, project.TenantID)
 	if err != nil {
 		rest.APIError(c, i18n.T(c, "%s", err))
 		return

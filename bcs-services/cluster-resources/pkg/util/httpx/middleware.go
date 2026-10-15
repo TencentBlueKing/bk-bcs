@@ -85,6 +85,7 @@ func AuthenticationMiddleware(next http.Handler) http.Handler {
 			if len(u.BKAppCode) != 0 {
 				authUser.ClientName = u.BKAppCode
 			}
+			authUser.TenantId = u.TenantId
 		}
 
 		// If and only if client name from jwt token is not empty, we will check username in header
@@ -212,6 +213,7 @@ func AuthorizationMiddleware(next http.Handler) http.Handler {
 		// 权限控制为项目查看
 		permCtx := &projectAuth.PermCtx{
 			Username:  authUser.Username,
+			TenantID:  authUser.TenantId,
 			ProjectID: projectID,
 		}
 		if allow, err := iam.NewProjectPerm().CanView(permCtx); err != nil {

@@ -25,17 +25,19 @@ type PermCtx struct {
 	Username    string
 	ProjectID   string
 	ClusterID   string
+	TenantID    string
 	Namespace   string
 	NamespaceID string
 	forceRaise  bool
 }
 
 // NewPermCtx xxx
-func NewPermCtx(username, projectID, clusterID, namespace string) *PermCtx {
+func NewPermCtx(username, projectID, clusterID, tenantID, namespace string) *PermCtx {
 	return &PermCtx{
 		Username:    username,
 		ProjectID:   projectID,
 		ClusterID:   clusterID,
+		TenantID:    tenantID,
 		Namespace:   namespace,
 		NamespaceID: calcNamespaceID(clusterID, namespace),
 	}
@@ -78,6 +80,11 @@ func (c *PermCtx) GetUsername() string {
 	return c.Username
 }
 
+// GetTenantID xxx
+func (c *PermCtx) GetTenantID() string {
+	return c.TenantID
+}
+
 // GetParentChain xxx
 func (c *PermCtx) GetParentChain() []perm.IAMRes {
 	return []perm.IAMRes{
@@ -117,6 +124,9 @@ func (c *PermCtx) FromMap(m map[string]interface{}) perm.Ctx {
 	if namespace, ok := m["Namespace"]; ok {
 		c.Namespace = namespace.(string)
 		c.NamespaceID = calcNamespaceID(c.ClusterID, c.Namespace)
+	}
+	if tenantID, ok := m["TenantID"]; ok {
+		c.TenantID = tenantID.(string)
 	}
 	return c
 }

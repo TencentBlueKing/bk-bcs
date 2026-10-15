@@ -19,7 +19,7 @@
       </div>
       <div class="basic-info-item">
         <label>{{ $t('cluster.labels.updatedAt') }}</label>
-        <span>{{ data.updateTime }}</span>
+        <span>{{ formatTimeWithTimezone(data.updateTime) }}</span>
       </div>
     </div>
     <template v-if="kubeletData.length">
@@ -85,6 +85,7 @@
 import { computed, defineComponent, onMounted, ref } from 'vue';
 
 import $bkMessage from '@/common/bkmagic';
+import { formatTimeWithTimezone } from '@/common/util';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
@@ -197,6 +198,7 @@ export default defineComponent({
       handleEditTemplate,
       handleDeleteTemplate,
       handleCancel,
+      formatTimeWithTimezone,
     };
   },
 });

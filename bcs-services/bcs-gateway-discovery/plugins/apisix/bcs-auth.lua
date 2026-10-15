@@ -37,7 +37,8 @@ local schema = {
         redis_database = {type = "integer", default = 0, description = "redis for bcs-auth plugin: database num"},
         run_env = {type = "string", default = "ce", description = "apisix on ce or cloud env"},
         bk_app_code = {type = "string", description = "bk_app_code"},
-        bk_app_secret = {type = "string", description = "bk_app_secret"}
+        bk_app_secret = {type = "string", description = "bk_app_secret"},
+        redirect_schema = {type = "string", default = "https", description = "redirect schema (http/https), if not set, use ctx.var.scheme"}
     },
     required = {"bk_login_host", "private_key", "redis_host", "redis_password"},
 }
@@ -66,17 +67,18 @@ end
 
 
 local function concat_login_uri(conf, ctx)
-    local c_url = tab_concat({ctx.var.scheme, "://", ctx.var.host, ngx_escape_uri(ctx.var.request_uri)})
+    local scheme = conf.redirect_schema
+    local c_url = tab_concat({scheme, "://", ctx.var.host, ngx_escape_uri(ctx.var.request_uri)})
     return tab_concat({conf.bk_login_host, "/plain/?size=big&c_url=", c_url})
 end
 
-local function is_ajax_request()
+local function is_ajax_request(ctx)
     local x_requested_with = core.request.header(ctx, "X-Requested-With") or ""
     return x_requested_with:lower() == "xmlhttprequest"
 end
 
 local function redirect_login(conf, ctx)
-    if is_ajax_request() then
+    if is_ajax_request(ctx) then
         return 401, {message = "bcs-auth plugin error: token is expired or is invalid"}
     end
     core.response.set_header("Location", concat_login_uri(conf, ctx))

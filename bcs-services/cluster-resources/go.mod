@@ -3,6 +3,8 @@ module github.com/Tencent/bk-bcs/bcs-services/cluster-resources
 go 1.23
 
 replace (
+	github.com/Tencent/bk-bcs/bcs-common => ../../bcs-common
+	github.com/Tencent/bk-bcs/bcs-services/pkg => github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20260703073010-610df57086a6
 	github.com/chai2010/gettext-go => github.com/chai2010/gettext-go v0.0.0-20160711120539-c6fed771bfd5
 	k8s.io/api => k8s.io/api v0.23.1
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.23.1
@@ -42,7 +44,7 @@ require (
 	github.com/Masterminds/sprig/v3 v3.2.3
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20250516061604-eeca82cb136b
 	github.com/TencentBlueKing/gopkg v1.1.0
-	github.com/TencentBlueKing/iam-go-sdk v0.1.6
+	github.com/TencentBlueKing/iam-go-sdk v1.0.1
 	// fork 自 https://github.com/signalfx/splunk-otel-go/tree/main/instrumentation/k8s.io/client-go/splunkclient-go
 	// 待升级到 go1.18 后，可直接引用社区的包
 	github.com/adevjoe/opentelemetry-go-contrib/instrumentation/k8s.io/client-go v1.0.2
@@ -67,7 +69,7 @@ require (
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.19.0
-	github.com/sirupsen/logrus v1.9.3
+	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/spf13/cast v1.5.0
 	github.com/stretchr/testify v1.10.0
 	github.com/tmc/grpc-websocket-proxy v0.0.0-20201229170055-e5319fda7802
@@ -128,7 +130,7 @@ require (
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-openapi/jsonpointer v0.20.0 // indirect
 	github.com/go-openapi/jsonreference v0.20.2 // indirect
-	github.com/go-openapi/spec v0.20.6 // indirect
+	github.com/go-openapi/spec v0.20.9 // indirect
 	github.com/go-openapi/swag v0.22.4 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
@@ -224,6 +226,7 @@ require (
 
 require (
 	github.com/Tencent/bk-bcs/bcs-scenarios/kourse v0.0.0-20231011121510-d30829b961ad
+	github.com/agiledragon/gomonkey/v2 v2.3.1
 	github.com/evanphx/json-patch v5.7.0+incompatible
 	github.com/feiin/go-xss v1.3.0
 	github.com/go-redis/redis/extra/redisotel/v8 v8.11.5

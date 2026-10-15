@@ -51,7 +51,7 @@ func NewCreateAction(model store.ClusterManagerModel) *CreateAction {
 }
 
 func (ca *CreateAction) generateClusterAutoScalingOption() *cmproto.ClusterAutoScalingOption {
-	timeStr := time.Now().Format(time.RFC3339)
+	timeStr := time.Now().UTC().Format(time.RFC3339)
 	return &cmproto.ClusterAutoScalingOption{
 		ClusterID:                     ca.req.ClusterID,
 		ProjectID:                     ca.cluster.ProjectID,
@@ -223,7 +223,7 @@ func (ca *CreateAction) Handle(ctx context.Context,
 		TaskID:       "",
 		Message:      fmt.Sprintf("创建集群[%s]扩缩容配置", ca.req.ClusterID),
 		OpUser:       auth.GetUserFromCtx(ctx),
-		CreateTime:   time.Now().Format(time.RFC3339),
+		CreateTime:   time.Now().UTC().Format(time.RFC3339),
 		ClusterID:    ca.req.ClusterID,
 		ProjectID:    ca.cluster.ProjectID,
 		ResourceName: ca.cluster.ClusterName,

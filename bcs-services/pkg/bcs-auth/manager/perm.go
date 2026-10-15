@@ -156,13 +156,16 @@ func (pm *PermManager) createUserGroup(ctx context.Context, gradeManagerID uint6
 	if pm == nil {
 		return 0, utils.ErrServerNotInited
 	}
+
 	// 用户组名称保持全局唯一
 	userGroups := make([]iam.UserGroup, 0)
 	userGroups = append(userGroups, iam.UserGroup{
 		Name:        info.Name,
 		Description: info.Desc,
 	})
-	groups, err := pm.iamClient.CreateUserGroup(ctx, gradeManagerID, iam.CreateUserGroupRequest{Groups: userGroups})
+	groups, err := pm.iamClient.CreateUserGroup(ctx, gradeManagerID, iam.CreateUserGroupRequest{
+		Groups: userGroups,
+	})
 	if err != nil {
 		blog.Errorf("createUserGroup gradeManager[%v] failed: %v", gradeManagerID, err)
 		return 0, err
@@ -178,6 +181,7 @@ func (pm *PermManager) addUserGroupMember(ctx context.Context, userGroupID uint6
 	if pm == nil {
 		return utils.ErrServerNotInited
 	}
+
 	subjects := make([]tiam.Subject, 0)
 	for i := range members {
 		subjects = append(subjects, tiam.Subject{Type: iam.User.String(), ID: members[i]})

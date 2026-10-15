@@ -446,7 +446,7 @@ func (s *Server) initJWTClient() error {
 
 // initIAMClient init iam client for perm
 func (s *Server) initIAMClient() error {
-	iamClient, err := iam.NewIamClient(&iam.Options{
+	opt := &iam.Options{
 		SystemID:    s.opt.IAM.SystemID,
 		AppCode:     s.opt.IAM.AppCode,
 		AppSecret:   s.opt.IAM.AppSecret,
@@ -456,7 +456,9 @@ func (s *Server) initIAMClient() error {
 		BkiIAMHost:  s.opt.IAM.BkiIAMServer,
 		Metric:      s.opt.IAM.Metric,
 		Debug:       s.opt.IAM.Debug,
-	})
+	}
+	iam.ApplyV4Config(opt, s.opt.IAM.EnableV4, s.opt.IAM.V4GateWayHost)
+	iamClient, err := iam.NewIamClient(opt)
 	if err != nil {
 		return err
 	}

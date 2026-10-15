@@ -74,7 +74,7 @@ func (r *Release) Transfer2Proto() *helmmanager.Release {
 		Chart:          common.GetStringP(r.ChartName),
 		ChartVersion:   common.GetStringP(r.ChartVersion),
 		AppVersion:     common.GetStringP(r.ChartVersion),
-		UpdateTime:     common.GetStringP(time.Unix(r.UpdateTime, 0).Format(common.TimeFormat)),
+		UpdateTime:     common.GetStringP(time.Unix(r.UpdateTime, 0).UTC().Format(time.RFC3339)),
 		CreateBy:       common.GetStringP(r.CreateBy),
 		UpdateBy:       common.GetStringP(r.UpdateBy),
 		Status:         common.GetStringP(r.Status),

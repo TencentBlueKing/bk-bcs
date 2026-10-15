@@ -14,6 +14,7 @@
 package template
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"strconv"
@@ -25,6 +26,7 @@ import (
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tenant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
@@ -169,7 +171,7 @@ func GetPluginByAction(action *proto.Action, actionName string) *proto.BKOpsPlug
 // GenerateBKopsStep generate common bk-sops step
 func GenerateBKopsStep(taskMethod, taskName, stepName string, cls *proto.Cluster, plugin *proto.BKOpsPlugin,
 	info ExtraInfo) (*proto.Step, error) {
-	now := time.Now().Format(time.RFC3339)
+	now := time.Now().UTC().Format(time.RFC3339)
 
 	if taskName == "" {
 		taskName = SystemInit
@@ -253,7 +255,12 @@ func getTemplateParameterByName(name string, cluster *proto.Cluster, extra Extra
 		return cluster.GetClusterID(), nil
 	case clusterBizOperator:
 		biz, _ := strconv.Atoi(cluster.GetBusinessID())
-		maintainers := cloudprovider.GetBizMaintainers(biz)
+		ctx, err := tenant.WithTenantIdByResourceForContext(context.Background(),
+			tenant.ResourceMetaData{ProjectId: cluster.GetProjectID()})
+		if err != nil {
+			return "", err
+		}
+		maintainers := cloudprovider.GetBizMaintainers(ctx, biz)
 		if len(maintainers) > 0 {
 			return maintainers, nil
 		}

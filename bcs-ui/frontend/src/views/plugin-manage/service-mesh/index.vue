@@ -81,7 +81,7 @@
         </bcs-table-column>
         <bcs-table-column :label="$t('serviceMesh.label.createTime')" prop="createTime" sortable show-overflow-tooltip>
           <template #default="{ row }">
-            {{ formatDate(Number(row.createTime || 0)) || '--' }}
+            {{ formatTimeWithTimezone(Number(row.createTime || 0)) || '--' }}
           </template>
         </bcs-table-column>
         <bcs-table-column fixed="right" :label="$t('generic.label.action')" width="280">
@@ -146,7 +146,7 @@ import DetailEdit from './detail-edit.vue';
 import useMesh from './use-mesh';
 
 import $bkMessage from '@/common/bkmagic';
-import { formatDate } from '@/common/util';
+import { formatTimeWithTimezone } from '@/common/util';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import BcsContent from '@/components/layout/Content.vue';
 import Row from '@/components/layout/Row.vue';

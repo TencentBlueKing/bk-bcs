@@ -94,6 +94,8 @@
         "appSecret": "${bcsIAMAppSecret}",
         "external": ${bcsIAMExternal},
         "gateWayServer": "${bcsIAMGateWayHost}",
+        "enableV4": ${bcsIAMEnableV4},
+        "v4GateWayHost": "${bcsIAMV4GatewayHost}",
         "iamServer": "${bcsIAMHost}",
         "bkiIamServer": "${bcsIAMbkiHost}",
         "metric": ${bcsIAMMetric},
@@ -159,7 +161,6 @@
         "appCode": "${bcsAppCode}",
         "appSecret": "${bcsAppSecret}",
         "bkUserName": "${bcsBkUserName}",
-        "server": "${bcsGseServer}",
         "gatewayServer": "${bcsGseGatewayServer}",
         "debug": ${bcsGseDebug}
     },
@@ -177,6 +178,7 @@
         "appSecret": "${bcsAppSecret}",
         "bkUserName": "${bcsBkUserName}",
         "server": "${bcsNodeManServer}",
+        "v3Server": "${bcsNodeManV3Server}",
         "debug": ${bcsNodeManDebug}
     },
     "encrypt": {
@@ -204,6 +206,17 @@
     "commonConfig": {
       "annoKeyProjCode": "${bcsSharedClusterAnnoKeyProjCode}",
       "systemNameSpaces": "${systemNameSpaces}"
+    },
+    "tenant": {
+      "enableMultiTenantMode": ${enableMultiTenantMode},
+      "noCheckTenantMethod": "${noCheckTenantMethod}",
+      "clientExemptTenant": "${clientExemptTenant}"
+    },
+    "bkUser": {
+      "appCode": "${bcsAppCode}",
+      "appSecret": "${bcsAppSecret}",
+      "server": "${bcsBkUserServer}",
+      "debug": ${bcsBkUserDebug}
     },
     "tagDepart": "${tagDepart}",
     "prefixVcluster": "${prefixVcluster}",

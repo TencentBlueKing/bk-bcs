@@ -14,6 +14,7 @@ package autoscalingoption
 
 import (
 	"context"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
@@ -22,6 +23,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/util"
 )
 
 // ListAction action for list online cluster credential
@@ -61,7 +63,12 @@ func (la *ListAction) listAutoScalingOption() error {
 	if err != nil {
 		return err
 	}
-	la.optionList = append(la.optionList, options...)
+	// format time
+	for i := range options {
+		options[i].CreateTime = util.TransStrToUTCStr(time.RFC3339Nano, options[i].CreateTime)
+		options[i].UpdateTime = util.TransStrToUTCStr(time.RFC3339Nano, options[i].UpdateTime)
+		la.optionList = append(la.optionList, options[i])
+	}
 	return nil
 }
 

@@ -52,7 +52,7 @@ func (ga *GetTopologyAction) Do(ctx context.Context,
 		return errorx.NewReadableErr(errorx.ParamErr, "project businessID is empty")
 	}
 
-	topologyDatas, err := cmdb.GetBusinessTopology(p.BusinessID)
+	topologyDatas, err := cmdb.GetBusinessTopology(ctx, p.BusinessID)
 	if err != nil {
 		return errorx.NewRequestCMDBErr(err.Error())
 	}

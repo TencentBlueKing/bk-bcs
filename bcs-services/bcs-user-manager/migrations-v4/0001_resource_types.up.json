@@ -1,0 +1,46 @@
+{
+  "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+  "enabled": true,
+  "operations": [
+    {
+      "operation": "upsert_resource_type",
+      "data": {
+        "id": "project",
+        "name": "项目",
+        "ancestors": []
+      }
+    },
+    {
+      "operation": "upsert_resource_type",
+      "data": {
+        "id": "cluster",
+        "name": "集群",
+        "ancestors": ["project"]
+      }
+    },
+    {
+      "operation": "upsert_resource_type",
+      "data": {
+        "id": "namespace",
+        "name": "命名空间",
+        "ancestors": ["project", "cluster"]
+      }
+    },
+    {
+      "operation": "upsert_resource_type",
+      "data": {
+        "id": "templateset",
+        "name": "模板集",
+        "ancestors": ["project"]
+      }
+    },
+    {
+      "operation": "upsert_resource_type",
+      "data": {
+        "id": "cloud_account",
+        "name": "云账号",
+        "ancestors": ["project"]
+      }
+    }
+  ]
+}

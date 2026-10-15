@@ -94,7 +94,9 @@ bcs-scenarios: kourse gitops
 
 kourse: gamedeployment gamestatefulset hook-operator
 
-gitops: gitops-proxy gitops-manager
+# bcs-gitops-manager 已移除，保留空目标以兼容现有构建流水线
+gitops:
+	@echo "skip gitops: bcs-gitops-manager has been removed"
 
 allpack: svcpack k8spack mmpack mnpack netpack
 	cd build && tar -czf bcs.${VERSION}.tgz bcs.${VERSION}
@@ -148,6 +150,7 @@ bk-apisix-gateway:
 api-gateway-syncing:
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-api-gateway-syncing
 	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-api-gateway-syncing/* ${PACKAGEPATH}/bcs-services/bcs-api-gateway-syncing/
+	cd bcs-services/bcs-api-gateway-syncing && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-api-gateway-syncing/bcs-api-gateway-syncing ./main.go
 
 storage:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services
@@ -188,7 +191,7 @@ tools:pre tongsuo
 ui:pre
 	mkdir -p ${PACKAGEPATH}/bcs-ui
 	cp -R ${BCS_CONF_UI_PATH} ${PACKAGEPATH}
-	cd ${BCS_UI_PATH} && ls -la && cd frontend && npm install && npm run build && cd ../ && go mod tidy && CGO_ENABLED=0 go build -trimpath ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-ui/bcs-ui ./cmd/bcs-ui
+	cd ${BCS_UI_PATH} && ls -la && cd frontend && npm install --legacy-peer-deps && npm run build && cd ../ && go mod tidy && CGO_ENABLED=0 go build -trimpath ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-ui/bcs-ui ./cmd/bcs-ui
 
 user-manager:pre tongsuo
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-user-manager
@@ -386,37 +389,13 @@ nodegroup-manager:pre
 	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-nodegroup-manager ${PACKAGEPATH}/bcs-services
 	cd bcs-services/bcs-nodegroup-manager/ && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-nodegroup-manager/bcs-nodegroup-manager ./main.go
 
-gitops-proxy:
-	mkdir -p ${SCENARIOSPACKAGE}/bcs-gitops-proxy
-	cd bcs-scenarios/bcs-gitops-manager && make proxy && cd -
-
-gitops-manager:
-	mkdir -p ${SCENARIOSPACKAGE}/bcs-gitops-manager
-	cd bcs-scenarios/bcs-gitops-manager && make manager && cd -
-
 gitops-analysis:
 	mkdir -p ${SCENARIOSPACKAGE}/bcs-gitops-analysis
 	cd bcs-scenarios/bcs-gitops-analysis && make analysis && cd -
 
-gitops-webhook:
-	mkdir -p ${SCENARIOSPACKAGE}/bcs-gitops-webhook
-	cd bcs-scenarios/bcs-gitops-manager && make webhook && cd -
-
-gitops-vaultplugin-server:
-	mkdir -p ${SCENARIOSPACKAGE}/bcs-gitops-vaultplugin-server
-	cd bcs-scenarios/bcs-gitops-vaultplugin-server && make vaultplugin && cd -
-
-gitops-gitgenerator-webhook:
-	mkdir -p ${SCENARIOSPACKAGE}/bcs-gitops-gitgenerator-webhook
-	cd bcs-scenarios/bcs-gitops-manager && make gitgenerator-webhook && cd -
-
 gitops-workflow:
 	mkdir -p ${SCENARIOSPACKAGE}/bcs-gitops-workflow
 	cd bcs-scenarios/bcs-gitops-workflow && make gitops-workflow && cd -
-
-terraform-controller:
-	mkdir -p ${SCENARIOSPACKAGE}/bcs-terraform-controller
-	cd bcs-scenarios/bcs-terraform-controller && make terraform-controller && cd -
 
 terraform-bkprovider:
 	mkdir -p ${SCENARIOSPACKAGE}/bcs-terraform-bkprovider

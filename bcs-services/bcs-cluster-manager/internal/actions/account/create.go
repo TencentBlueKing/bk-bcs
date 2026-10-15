@@ -38,7 +38,6 @@ import (
 type CreateAction struct {
 	ctx   context.Context
 	model store.ClusterManagerModel
-	iam   iam.PermClient
 
 	cloud *cmproto.Cloud
 	req   *cmproto.CreateCloudAccountRequest
@@ -49,12 +48,11 @@ type CreateAction struct {
 func NewCreateAction(model store.ClusterManagerModel, iam iam.PermClient) *CreateAction {
 	return &CreateAction{
 		model: model,
-		iam:   iam,
 	}
 }
 
 func (ca *CreateAction) createCloudAccount() error {
-	timeStr := time.Now().Format(time.RFC3339)
+	timeStr := time.Now().UTC().Format(time.RFC3339)
 	accountID := generateAccountID(ca.cloud)
 	cloudAccount := &cmproto.CloudAccount{
 		CloudID:     ca.req.CloudID,
@@ -74,7 +72,13 @@ func (ca *CreateAction) createCloudAccount() error {
 		return err
 	}
 
-	err = cloudaccount.NewBCSAccountPermClient(ca.iam).AuthorizeResourceCreatorPerm(ca.req.Creator, authutils.ResourceInfo{
+	user := auth.GetAuthAndTenantInfoFromCtx(ca.ctx)
+
+	accountIam, err := auth.GetCloudAccountIamClient(user.ResourceTenantId)
+	if err != nil {
+		return err
+	}
+	err = accountIam.AuthorizeResourceCreatorPerm(ca.req.Creator, authutils.ResourceInfo{
 		Type: string(cloudaccount.SysCloudAccount),
 		ID:   accountID,
 		Name: ca.req.AccountName,
@@ -128,7 +132,7 @@ func (ca *CreateAction) Handle(ctx context.Context,
 		TaskID:       "",
 		Message:      fmt.Sprintf("创建云账号信息[%s]", ca.resp.Data.AccountID),
 		OpUser:       auth.GetUserFromCtx(ctx),
-		CreateTime:   time.Now().Format(time.RFC3339),
+		CreateTime:   time.Now().UTC().Format(time.RFC3339),
 		ResourceName: ca.req.AccountName,
 	})
 	if err != nil {

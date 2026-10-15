@@ -455,7 +455,7 @@ func (s *Server) initProjectCli() error {
 // initIAMClient init iam client
 func (s *Server) initIAMClient() error {
 	var err error
-	s.iamCli, err = iam.NewIamClient(&iam.Options{
+	opt := &iam.Options{
 		SystemID:    s.opt.IAM.SystemID,
 		AppCode:     s.opt.IAM.AppCode,
 		AppSecret:   s.opt.IAM.AppSecret,
@@ -465,7 +465,9 @@ func (s *Server) initIAMClient() error {
 		BkiIAMHost:  s.opt.IAM.BkiIAMServer,
 		Metric:      s.opt.IAM.Metric,
 		Debug:       s.opt.IAM.Debug,
-	})
+	}
+	iam.ApplyV4Config(opt, s.opt.IAM.EnableV4, s.opt.IAM.V4GateWayHost)
+	s.iamCli, err = iam.NewIamClient(opt)
 	if err != nil {
 		return fmt.Errorf("init iamCli failed, error: %s", err.Error())
 	}

@@ -28,6 +28,15 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/stringx"
 )
 
+// GetAuthAppHeader 获取蓝鲸网关应用认证头
+func GetAuthAppHeader() map[string]string {
+	return map[string]string{
+		"Content-Type": "application/json",
+		"X-Bkapi-Authorization": fmt.Sprintf(`{"bk_app_code": "%s", "bk_app_secret": "%s"}`,
+			config.GlobalConf.App.Code, config.GlobalConf.App.Secret),
+	}
+}
+
 // CommonResp blueking common response
 type CommonResp struct {
 	Code    int    `json:"code"`
@@ -78,7 +87,7 @@ func Request(req goReq.SuperAgent, timeout int, proxy string, headers map[string
 
 	client = client.Send(req.Data)
 	client = client.SetDebug(req.Debug)
-	_, body, errs := client.End()
+	rsp, body, errs := client.End()
 
 	if len(errs) > 0 {
 		logging.Error(
@@ -87,6 +96,15 @@ func Request(req goReq.SuperAgent, timeout int, proxy string, headers map[string
 		)
 		return "", errors.New(stringx.Errs2String(errs))
 	}
+
+	if rsp.StatusCode < 200 || rsp.StatusCode >= 300 {
+		logging.Error(
+			"request api error, url: %s, method: %s, params: %s, data: %s, err with status: %v",
+			req.Url, req.Method, req.QueryData, req.Data, rsp.StatusCode,
+		)
+		return "", fmt.Errorf("api failed return statusCode: %d", rsp.StatusCode)
+	}
+
 	return body, nil
 }
 

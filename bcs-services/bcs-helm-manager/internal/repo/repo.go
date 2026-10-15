@@ -24,6 +24,7 @@ import (
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/options"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
 )
 
@@ -45,7 +46,7 @@ type Handler interface {
 
 // ProjectHandler 定义了 Handler 下的对每一个 Project 的操作能力
 type ProjectHandler interface {
-	Ensure(ctx context.Context) error
+	Ensure(ctx context.Context, projectID string) error
 
 	Repository(repoType RepositoryType, repository string) RepositoryHandler
 }
@@ -328,4 +329,12 @@ type UploadOption struct {
 	Content io.Reader
 	Version string
 	Force   bool
+}
+
+// GetBKRepoProjectID 根据租户ID和项目ID获取BKRepo的项目ID
+func GetBKRepoProjectID(tanantID, projectID string) string {
+	if !options.GlobalOptions.EnableMultiTenant || tanantID == "" {
+		return projectID
+	}
+	return fmt.Sprintf("%s.%s", tanantID, projectID)
 }

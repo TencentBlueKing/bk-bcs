@@ -672,6 +672,108 @@
         ]
       }
     },
+    "/bcsproject/v1/projects/sharedclusters/namespaces/callback/create": {
+      "post": {
+        "summary": "创建共享集群命名空间itsm回调",
+        "description": "创建共享集群命名空间itsm回调",
+        "operationId": "Namespace_CreateNamespaceCallbackV4",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bcsprojectSharedClusterNamespaceCallbackResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/bcsprojectSharedClusterNamespaceCallbackRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Namespace"
+        ]
+      }
+    },
+    "/bcsproject/v1/projects/sharedclusters/namespaces/callback/delete": {
+      "post": {
+        "summary": "删除共享集群命名空间itsm回调",
+        "description": "删除共享集群命名空间itsm回调",
+        "operationId": "Namespace_DeleteNamespaceCallbackV4",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bcsprojectSharedClusterNamespaceCallbackResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/bcsprojectSharedClusterNamespaceCallbackRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Namespace"
+        ]
+      }
+    },
+    "/bcsproject/v1/projects/sharedclusters/namespaces/callback/update": {
+      "post": {
+        "summary": "更新共享集群命名空间itsm回调",
+        "description": "更新共享集群命名空间itsm回调",
+        "operationId": "Namespace_UpdateNamespaceCallbackV4",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bcsprojectSharedClusterNamespaceCallbackResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/bcsprojectSharedClusterNamespaceCallbackRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Namespace"
+        ]
+      }
+    },
     "/bcsproject/v1/projects/{projectCode}/business": {
       "get": {
         "summary": "查询项目业务信息",
@@ -4421,6 +4523,31 @@
         }
       }
     },
+    "bcsprojectNamespaceFormData": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "ITSM 单据标题",
+          "title": "ticket__title"
+        },
+        "projectCode": {
+          "type": "string",
+          "description": "项目Code",
+          "title": "PROJECT_CODE"
+        },
+        "clusterId": {
+          "type": "string",
+          "description": "集群Id",
+          "title": "CLUSTER_ID"
+        },
+        "namespace": {
+          "type": "string",
+          "description": "命名空间",
+          "title": "NAMESPACE"
+        }
+      }
+    },
     "bcsprojectNativeNamespaceData": {
       "type": "object",
       "properties": {
@@ -4709,6 +4836,16 @@
           "additionalProperties": {
             "type": "string"
           }
+        },
+        "tenantID": {
+          "type": "string",
+          "description": "项目所属租户ID",
+          "title": "tenantID"
+        },
+        "tenantProjectCode": {
+          "type": "string",
+          "description": "项目english_name,单租户下tenantProjectCode=projectCode,多租户下tenantProjectCode=租户ID+projectCode",
+          "title": "tenantProjectCode"
         }
       },
       "description": "项目的基本信息",
@@ -5330,6 +5467,76 @@
           "$ref": "#/definitions/bcsprojectPerms",
           "description": "项目更多信息，主要是权限相关",
           "title": "web_annotations"
+        }
+      }
+    },
+    "bcsprojectSharedClusterNamespaceCallbackRequest": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "ITSM 单据标题",
+          "title": "title"
+        },
+        "id": {
+          "type": "string",
+          "description": "ITSM 单号ID",
+          "title": "id"
+        },
+        "status": {
+          "type": "string",
+          "description": "ITSM 单据状态",
+          "title": "status"
+        },
+        "approveResult": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "单据审批结果",
+          "title": "approve_result"
+        },
+        "ticketUrl": {
+          "type": "string",
+          "description": "ITSM 单据链接",
+          "title": "frontend_url"
+        },
+        "formData": {
+          "$ref": "#/definitions/bcsprojectNamespaceFormData",
+          "description": "ITSM 单据数据",
+          "title": "form_data"
+        }
+      },
+      "description": "共享集群命名空间itsm回调",
+      "title": "SharedClusterNamespaceCallbackRequest"
+    },
+    "bcsprojectSharedClusterNamespaceCallbackResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "data": {
+          "type": "string",
+          "description": "返回详细信息, 可以为空",
+          "title": "data"
+        },
+        "requestID": {
+          "type": "string",
+          "description": "请求 ID",
+          "title": "request id"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "回调结果",
+          "title": "result"
         }
       }
     },
