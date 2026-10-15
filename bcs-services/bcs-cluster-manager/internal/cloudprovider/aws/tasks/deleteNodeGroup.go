@@ -13,11 +13,14 @@
 package tasks
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/eks"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
@@ -84,6 +87,20 @@ func DeleteCloudNodeGroupTask(taskID string, stepName string) error {
 		}
 	}
 	if found && group.CloudNodeGroupID != "" {
+		// resume suspended ASG processes before deleting node group, otherwise
+		// deleting node group / scaling in nodes will fail because the processes
+		// (AZRebalance, HealthCheck, ReplaceUnhealthy) were suspended at creation time
+		if group.AutoScaling != nil && group.AutoScaling.AutoScalingName != "" {
+			if err = resumeAWSProcesses(context.Background(), dependInfo, &autoscaling.Group{
+				AutoScalingGroupName: aws.String(group.AutoScaling.AutoScalingName),
+			}); err != nil {
+				blog.Errorf("DeleteCloudNodeGroupTask[%s]: resumeAWSProcesses failed: %s", taskID, err.Error())
+				retErr := fmt.Errorf("resumeAWSProcesses failed, %s", err.Error())
+				_ = state.UpdateStepFailure(start, stepName, retErr)
+				return retErr
+			}
+		}
+
 		_, err = eksCli.DeleteNodegroup(&eks.DeleteNodegroupInput{
 			NodegroupName: &group.CloudNodeGroupID,
 			ClusterName:   &cluster.SystemID})
