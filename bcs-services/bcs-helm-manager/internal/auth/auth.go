@@ -87,6 +87,21 @@ func GetAuthUserFromCtx(ctx context.Context) *middleauth.AuthUser {
 	return &authUser
 }
 
+// TenantIDFromCtx 解析本次请求的租户。优先级：metadata 头、context、JWT。
+// 旧版 IAM 按租户建客户端，这里必须取到当次调用的租户，不能使用启动时的固定值。
+func TenantIDFromCtx(ctx context.Context) string {
+	if id := contextx.GetHeaderTenantIDFromCtx(ctx); id != "" {
+		return id
+	}
+	if id, ok := ctx.Value(contextx.TenantIDContextKey).(string); ok && id != "" {
+		return id
+	}
+	if user := GetAuthUserFromCtx(ctx); user != nil && user.TenantId != "" {
+		return user.TenantId
+	}
+	return contextx.DefaultTenantId
+}
+
 func getJWTOpt(c JWTClientConfig) (*jwt.JWTOptions, error) {
 	jwtOpt := &jwt.JWTOptions{
 		VerifyKeyFile: c.PublicKeyFile,
@@ -184,7 +199,7 @@ func CheckUserPerm(ctx context.Context, req server.Request, user middleauth.Auth
 
 	resourceID.ProjectID = contextx.GetProjectIDFromCtx(ctx)
 
-	tenantID := contextx.GetTenantIDFromContext(ctx)
+	tenantID := TenantIDFromCtx(ctx)
 	allow, url, resources, err := CallIAM(user.GetUsername(), action, *resourceID, tenantID)
 	if err != nil {
 		return false, err

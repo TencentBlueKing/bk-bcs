@@ -13,6 +13,9 @@
 package auth
 
 import (
+	"fmt"
+	"sync"
+
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cloudaccount"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cluster"
@@ -21,24 +24,78 @@ import (
 )
 
 var (
-	// IAMClient iam client
-	IAMClient iam.PermClient
+	iamClientMu      sync.Mutex
+	iamClients       = make(map[string]iam.PermClient)
+	iamClientFactory func(tenantID string) (iam.PermClient, error)
+
 	// ProjectIamClient project iam client
-	ProjectIamClient *project.BCSProjectPerm
+	ProjectIamClient func(tenantID string) (*project.BCSProjectPerm, error)
 	// ClusterIamClient cluster iam client
-	ClusterIamClient *cluster.BCSClusterPerm
+	ClusterIamClient func(tenantID string) (*cluster.BCSClusterPerm, error)
 	// NamespaceIamClient namespace iam client
-	NamespaceIamClient *namespace.BCSNamespacePerm
+	NamespaceIamClient func(tenantID string) (*namespace.BCSNamespacePerm, error)
 	// CloudAccountIamClient cloudaccount iam client
-	CloudAccountIamClient *cloudaccount.BCSCloudAccountPerm
+	CloudAccountIamClient func(tenantID string) (*cloudaccount.BCSCloudAccountPerm, error)
 )
 
-// InitPermClient new a perm client
-func InitPermClient(iamClient iam.PermClient) {
-	IAMClient = iamClient
+// SetIAMClientFactory registers the factory used to create tenant-scoped IAM clients.
+func SetIAMClientFactory(factory func(tenantID string) (iam.PermClient, error)) {
+	iamClientMu.Lock()
+	defer iamClientMu.Unlock()
+	iamClientFactory = factory
+	iamClients = make(map[string]iam.PermClient)
+}
 
-	ProjectIamClient = project.NewBCSProjectPermClient(iamClient)
-	ClusterIamClient = cluster.NewBCSClusterPermClient(iamClient)
-	NamespaceIamClient = namespace.NewBCSNamespacePermClient(iamClient)
-	CloudAccountIamClient = cloudaccount.NewBCSAccountPermClient(iamClient)
+// IAMClient returns a cached IAM client for the tenant. Empty tenantID uses the default tenant.
+func IAMClient(tenantID string) (iam.PermClient, error) {
+	if tenantID == "" {
+		tenantID = iam.DefaultTenantId
+	}
+
+	iamClientMu.Lock()
+	defer iamClientMu.Unlock()
+	if cli, ok := iamClients[tenantID]; ok {
+		return cli, nil
+	}
+	if iamClientFactory == nil {
+		return nil, fmt.Errorf("iam client factory is not initialized")
+	}
+	cli, err := iamClientFactory(tenantID)
+	if err != nil {
+		return nil, err
+	}
+	iamClients[tenantID] = cli
+	return cli, nil
+}
+
+// InitPermClient binds perm helpers to the tenant-scoped IAM client cache.
+func InitPermClient() {
+	ProjectIamClient = func(tenantID string) (*project.BCSProjectPerm, error) {
+		cli, err := IAMClient(tenantID)
+		if err != nil {
+			return nil, err
+		}
+		return project.NewBCSProjectPermClient(cli), nil
+	}
+	ClusterIamClient = func(tenantID string) (*cluster.BCSClusterPerm, error) {
+		cli, err := IAMClient(tenantID)
+		if err != nil {
+			return nil, err
+		}
+		return cluster.NewBCSClusterPermClient(cli), nil
+	}
+	NamespaceIamClient = func(tenantID string) (*namespace.BCSNamespacePerm, error) {
+		cli, err := IAMClient(tenantID)
+		if err != nil {
+			return nil, err
+		}
+		return namespace.NewBCSNamespacePermClient(cli), nil
+	}
+	CloudAccountIamClient = func(tenantID string) (*cloudaccount.BCSCloudAccountPerm, error) {
+		cli, err := IAMClient(tenantID)
+		if err != nil {
+			return nil, err
+		}
+		return cloudaccount.NewBCSAccountPermClient(cli), nil
+	}
 }

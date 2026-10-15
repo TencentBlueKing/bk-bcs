@@ -44,6 +44,8 @@ interface Window {
   readonly REGION: string
   readonly PAAS_HOST: string
   readonly BK_IAM_HOST: string
+  readonly BK_IAM_V4_HOST: string
+  readonly BK_IAM_ENABLE_V4: string
   readonly DEVOPS_HOST: string
   readonly LOGIN_FULL: string
   readonly BKMONITOR_HOST: string

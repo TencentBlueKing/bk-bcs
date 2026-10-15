@@ -14,6 +14,8 @@
 package iam
 
 import (
+	"sync"
+
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/namespace"
@@ -22,8 +24,23 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/config"
 )
 
-// GetIAMClient get iam client
-func GetIAMClient() (iam.PermClient, error) {
+var (
+	iamClientMu sync.Mutex
+	iamClients  = make(map[string]iam.PermClient)
+)
+
+// GetIAMClient returns a cached IAM client for the tenant. Empty tenantID uses the default tenant.
+func GetIAMClient(tenantID string) (iam.PermClient, error) {
+	if tenantID == "" {
+		tenantID = iam.DefaultTenantId
+	}
+
+	iamClientMu.Lock()
+	defer iamClientMu.Unlock()
+	if cli, ok := iamClients[tenantID]; ok {
+		return cli, nil
+	}
+
 	opt := &iam.Options{
 		SystemID:    config.G.Base.SystemID,
 		AppCode:     config.G.Base.AppCode,
@@ -34,14 +51,20 @@ func GetIAMClient() (iam.PermClient, error) {
 		BkiIAMHost:  config.G.IAM.BkIAMServer,
 		Metric:      config.G.IAM.Metric,
 		Debug:       config.G.IAM.Debug,
+		TenantId:    tenantID,
 	}
 	iam.ApplyV4Config(opt, config.G.IAM.EnableV4, config.G.IAM.V4GateWayHost)
-	return iam.NewIamClient(opt)
+	cli, err := iam.NewIamClient(opt)
+	if err != nil {
+		return nil, err
+	}
+	iamClients[tenantID] = cli
+	return cli, nil
 }
 
 // GetProjectPermClient get project perm iam client
-func GetProjectPermClient() (*project.BCSProjectPerm, error) {
-	iamClient, err := GetIAMClient()
+func GetProjectPermClient(tenantID string) (*project.BCSProjectPerm, error) {
+	iamClient, err := GetIAMClient(tenantID)
 	if err != nil {
 		return nil, err
 	}
@@ -49,17 +72,17 @@ func GetProjectPermClient() (*project.BCSProjectPerm, error) {
 }
 
 // GetClusterPermClient get cluster perm iam client
-func GetClusterPermClient() (*cluster.BCSClusterPerm, error) {
-	iamClient, err := GetIAMClient()
+func GetClusterPermClient(tenantID string) (*cluster.BCSClusterPerm, error) {
+	iamClient, err := GetIAMClient(tenantID)
 	if err != nil {
 		return nil, err
 	}
 	return cluster.NewBCSClusterPermClient(iamClient), nil
 }
 
-// GetNsScopePermClient get project perm iam client
-func GetNsScopePermClient() (*namespace.BCSNamespacePerm, error) {
-	iamClient, err := GetIAMClient()
+// GetNsScopePermClient get namespace scoped perm iam client
+func GetNsScopePermClient(tenantID string) (*namespace.BCSNamespacePerm, error) {
+	iamClient, err := GetIAMClient(tenantID)
 	if err != nil {
 		return nil, err
 	}

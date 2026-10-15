@@ -27,6 +27,9 @@ web:
   host: http://127.0.0.1:8083
   route_prefix: /bcsapi/v4/ui
   preferred_domains: ""
+iam_conf:
+  gateway_server: ""
+  enableV4: false
 tracing:
   enabled: false
   endpoint: ""
@@ -41,6 +44,7 @@ frontend_conf:
     devops_artifactory_host: ""
     bk_paas_host: ""
     bk_iam_host: ""
+    bk_iam_v4_host: ""
     bk_cc_host: ""
     bk_monitor_host: ""
     bk_sre_host: ""

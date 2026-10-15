@@ -78,7 +78,6 @@ type Server struct {
 	helmCli     helm.Client
 	userCli     user.Client
 	projectCli  project.Client
-	iamCli      iam.PermClient
 	thirdCli    thirdparty.Client
 	taskmanager *task.TaskManager
 
@@ -454,25 +453,26 @@ func (s *Server) initProjectCli() error {
 
 // initIAMClient init iam client
 func (s *Server) initIAMClient() error {
-	var err error
-	opt := &iam.Options{
-		SystemID:    s.opt.IAM.SystemID,
-		AppCode:     s.opt.IAM.AppCode,
-		AppSecret:   s.opt.IAM.AppSecret,
-		External:    s.opt.IAM.External,
-		GateWayHost: s.opt.IAM.GatewayServer,
-		IAMHost:     s.opt.IAM.IAMServer,
-		BkiIAMHost:  s.opt.IAM.BkiIAMServer,
-		Metric:      s.opt.IAM.Metric,
-		Debug:       s.opt.IAM.Debug,
-	}
-	iam.ApplyV4Config(opt, s.opt.IAM.EnableV4, s.opt.IAM.V4GateWayHost)
-	s.iamCli, err = iam.NewIamClient(opt)
-	if err != nil {
+	auth.SetIAMClientFactory(func(tenantID string) (iam.PermClient, error) {
+		opt := &iam.Options{
+			SystemID:    s.opt.IAM.SystemID,
+			AppCode:     s.opt.IAM.AppCode,
+			AppSecret:   s.opt.IAM.AppSecret,
+			External:    s.opt.IAM.External,
+			GateWayHost: s.opt.IAM.GatewayServer,
+			IAMHost:     s.opt.IAM.IAMServer,
+			BkiIAMHost:  s.opt.IAM.BkiIAMServer,
+			Metric:      s.opt.IAM.Metric,
+			Debug:       s.opt.IAM.Debug,
+			TenantId:    tenantID,
+		}
+		iam.ApplyV4Config(opt, s.opt.IAM.EnableV4, s.opt.IAM.V4GateWayHost)
+		return iam.NewIamClient(opt)
+	})
+	auth.InitPermClient()
+	if _, err := auth.IAMClient(iam.DefaultTenantId); err != nil {
 		return fmt.Errorf("init iamCli failed, error: %s", err.Error())
 	}
-	// init perm client
-	auth.InitPermClient(s.iamCli)
 
 	blog.Infof("init iam client successfully")
 	return nil

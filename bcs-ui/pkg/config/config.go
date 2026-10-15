@@ -25,6 +25,7 @@ type Configuration struct {
 	BCS          *BCSConf                     `yaml:"bcs_conf"`
 	BKNotice     *BKNoticeConf                `yaml:"bk_notice"`
 	BKAIAgent    *BKAIAgentConf               `yaml:"bk_ai_agent"`
+	IAM          *IAMConf                     `yaml:"iam_conf"`
 	Web          *WebConf                     `yaml:"web"`
 	Tracing      *TracingConf                 `yaml:"tracing"`
 	FrontendConf *FrontendConf                `yaml:"frontend_conf"`
@@ -78,6 +79,7 @@ func newConfiguration() (*Configuration, error) {
 
 	c.BKAIAgent = &BKAIAgentConf{}
 	c.BKNotice = &BKNoticeConf{}
+	c.IAM = &IAMConf{}
 	return c, nil
 }
 

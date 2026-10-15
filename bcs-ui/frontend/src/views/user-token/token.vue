@@ -229,7 +229,7 @@ import shareClusterDemoConfig from 'text-loader?modules!./share-cluster-demo.yam
 import { computed, defineComponent, onMounted, ref } from 'vue';
 
 import $bkMessage from '@/common/bkmagic';
-import { copyText, renderTemplate } from '@/common/util';
+import { copyText, getIAMHost, renderTemplate } from '@/common/util';
 import CodeEditor from '@/components/monaco-editor/new-editor.vue';
 import StatusIcon from '@/components/status-icon';
 import { useAppData, useCluster } from '@/composables/use-app';
@@ -472,7 +472,7 @@ export default defineComponent({
       shareKubeConfigExample,
       shareDemoConfigExample,
       shareBcsApiExample,
-      BK_IAM_HOST: window.BK_IAM_HOST,
+      BK_IAM_HOST: getIAMHost(),
       hasSharedCluster,
       flagsMap,
     };

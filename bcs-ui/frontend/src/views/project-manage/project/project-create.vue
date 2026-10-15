@@ -26,6 +26,9 @@
           :placeholder="$t('projects.validate.projectName1')"
           :disabled="isEdit"
           v-model="formData.projectCode">
+          <template slot="prepend" v-if="!isEdit && tenantPrefix">
+            <div class="group-text">{{ tenantPrefix }}</div>
+          </template>
         </bk-input>
       </bk-form-item>
       <bk-form-item :label="$t('projects.project.intro')" property="description" error-display-type="normal" required>
@@ -47,6 +50,7 @@ import { computed, defineComponent, ref, toRefs, watch } from 'vue';
 
 import $bkMessage from '@/common/bkmagic';
 import { SPECIAL_REGEXP } from '@/common/constant';
+import { useAppData } from '@/composables/use-app';
 import useFormLabel from '@/composables/use-form-label';
 import $i18n from '@/i18n/i18n-setup';
 import useProjects from '@/views/project-manage/project/use-project';
@@ -70,7 +74,9 @@ export default defineComponent({
   setup(props, ctx) {
     const { projectData, value } = toRefs(props);
     const { emit } = ctx;
+    const { user } = useAppData();
     const { updateProject, createProject } = useProjects();
+    const tenantPrefix = computed(() => (user.value?.tenant_id ? `${user.value.tenant_id}-` : ''));
     const bkFormRef = ref<any>(null);
     const formData = ref({
       name: projectData?.value?.name,
@@ -181,6 +187,7 @@ export default defineComponent({
       labelWidth,
       bkFormRef,
       isEdit,
+      tenantPrefix,
       loading,
       formData,
       rules,
@@ -195,5 +202,9 @@ export default defineComponent({
 <style lang="postcss" scoped>
 >>> .form-error-tip {
   text-align: left;
+}
+>>> .group-text {
+  line-height: 30px;
+  background-color: #fafbfd;
 }
 </style>

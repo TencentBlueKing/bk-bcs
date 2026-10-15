@@ -231,7 +231,7 @@ func (l *ListReleaseV1Action) getWebAnnotations() *helmmanager.WebAnnotations {
 
 	username := auth.GetUserFromCtx(l.ctx)
 	projectID := contextx.GetProjectIDFromCtx(l.ctx)
-	tenantID := contextx.GetTenantIDFromContext(l.ctx)
+	tenantID := auth.TenantIDFromCtx(l.ctx)
 	perms, err := auth.GetUserNamespacePermList(username, projectID, l.req.GetClusterID(), namespaces, tenantID)
 	if err != nil {
 		blog.Errorf("get user %s namespace perms failed, err: %s", username, err.Error())

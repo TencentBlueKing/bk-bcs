@@ -75,6 +75,9 @@ func AuthenticationMiddleware(next http.Handler) http.Handler {
 			if len(u.BKAppCode) != 0 {
 				authUser.ClientName = u.BKAppCode
 			}
+			if len(u.TenantId) != 0 {
+				authUser.TenantId = u.TenantId
+			}
 		}
 
 		// If and only if client name from jwt token is not empty, we will check username in header
@@ -85,8 +88,16 @@ func AuthenticationMiddleware(next http.Handler) http.Handler {
 			}
 		}
 
-		// set auth user to context
+		// set auth user to context。租户优先取请求头，其次 JWT，供后续 IAM 按租户选客户端。
+		tenantID := r.Header.Get(contextx.TenantIDHeaderKey)
+		if tenantID == "" {
+			tenantID = authUser.TenantId
+		}
+		if tenantID == "" {
+			tenantID = contextx.DefaultTenantId
+		}
 		ctx := context.WithValue(r.Context(), middleauth.AuthUserKey, authUser)
+		ctx = context.WithValue(ctx, contextx.TenantIDContextKey, tenantID)
 		r = r.WithContext(ctx)
 
 		next.ServeHTTP(w, r)
@@ -117,7 +128,6 @@ func ParseProjectIDMiddleware(next http.Handler) http.Handler {
 				strings.SplitN(pj.ProjectCode, "-", 2)[1])
 		}
 		ctx = context.WithValue(ctx, contextx.ProjectIDContextKey, pj.ProjectID)
-		ctx = context.WithValue(ctx, contextx.TenantIDContextKey, pj.ProjectCode)
 		r = r.WithContext(ctx)
 		next.ServeHTTP(w, r)
 	})
@@ -146,7 +156,7 @@ func AuthorizationMiddleware(next http.Handler) http.Handler {
 		resourceID := options.CredentialScope{}
 		resourceID.ProjectID = contextx.GetProjectIDFromCtx(r.Context())
 		resourceID.ProjectCode = contextx.GetProjectCodeFromCtx(r.Context())
-		tenantID := contextx.GetTenantIDFromContext(r.Context())
+		tenantID := auth.TenantIDFromCtx(r.Context())
 
 		// client 白名单
 		if skipClient(authUser.ClientName, resourceID) {

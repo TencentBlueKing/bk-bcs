@@ -125,26 +125,6 @@ const (
 	RoleDeveloper RoleID = "developer"
 	// RoleOperator 业务运维
 	RoleOperator RoleID = "operator"
-	// RoleProjectViewer 项目查看者
-	RoleProjectViewer RoleID = "project_viewer"
-	// RoleProjectManager 项目管理员
-	RoleProjectManager RoleID = "project_manager"
-	// RoleClusterViewer 集群资源查看
-	RoleClusterViewer RoleID = "cluster_viewer"
-	// RoleClusterManager 集群资源管理
-	RoleClusterManager RoleID = "cluster_manager"
-	// RoleNamespaceViewer 命名空间资源查看
-	RoleNamespaceViewer RoleID = "namespace_viewer"
-	// RoleNamespaceManager 命名空间资源管理
-	RoleNamespaceManager RoleID = "namespace_manager"
-	// RoleTemplateSetViewer 模板集查看
-	RoleTemplateSetViewer RoleID = "templateset_viewer"
-	// RoleTemplateSetManager 模板集管理
-	RoleTemplateSetManager RoleID = "templateset_manager"
-	// RoleCloudAccountViewer 云账号使用
-	RoleCloudAccountViewer RoleID = "cloud_account_viewer"
-	// RoleCloudAccountManager 云账号管理
-	RoleCloudAccountManager RoleID = "cloud_account_manager"
 )
 
 // ClusterIAMPath 集群实例的祖先路径（项目）

@@ -29,14 +29,6 @@
     {
       "operation": "upsert_resource_type",
       "data": {
-        "id": "templateset",
-        "name": "模板集",
-        "ancestors": ["project"]
-      }
-    },
-    {
-      "operation": "upsert_resource_type",
-      "data": {
         "id": "cloud_account",
         "name": "云账号",
         "ancestors": ["project"]

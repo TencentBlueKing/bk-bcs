@@ -234,14 +234,22 @@ func (m *ModelProject) GetProjectByField(ctx context.Context, pf *ProjectField) 
 		nameCond := operator.NewLeafCondition(operator.Eq, operator.M{FieldKeyName: pf.Name})
 		conds = append(conds, nameCond)
 	}
-	if pf.TenantID != "" {
-		tenantCond := operator.NewLeafCondition(operator.Eq, operator.M{FieldKeyTenantID: pf.TenantID})
+	if pf.TenantID != "" && pf.TenantProjectCode != "" {
+		tenantCond := operator.NewLeafCondition(operator.Eq, operator.M{
+			FieldKeyTenantID:          pf.TenantID,
+			FieldKeyTenantProjectCode: pf.TenantProjectCode,
+		})
 		conds = append(conds, tenantCond)
-	}
-	if pf.TenantProjectCode != "" {
-		tenantProjectCodeCond := operator.NewLeafCondition(operator.Eq,
-			operator.M{FieldKeyTenantID: pf.TenantProjectCode})
-		conds = append(conds, tenantProjectCodeCond)
+	} else {
+		if pf.TenantID != "" {
+			tenantCond := operator.NewLeafCondition(operator.Eq, operator.M{FieldKeyTenantID: pf.TenantID})
+			conds = append(conds, tenantCond)
+		}
+		if pf.TenantProjectCode != "" {
+			tenantProjectCodeCond := operator.NewLeafCondition(operator.Eq,
+				operator.M{FieldKeyTenantProjectCode: pf.TenantProjectCode})
+			conds = append(conds, tenantProjectCodeCond)
+		}
 	}
 
 	cond := operator.NewBranchCondition(operator.Or, conds...)

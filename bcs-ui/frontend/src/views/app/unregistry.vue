@@ -68,7 +68,7 @@
   </section>
 </template>
 <script>
-import { isEmpty } from '@/common/util';
+import { getIAMHost, isEmpty } from '@/common/util';
 import useProject from '@/views/project-manage/project/use-project';
 
 export default {
@@ -95,7 +95,7 @@ export default {
       return !isEmpty(this.ccKey);
     },
     iamDocLink() {
-      return `${window.BK_IAM_HOST}/apply-custom-perm?system_id=bk_cmdb`;
+      return `${getIAMHost()}/apply-custom-perm?system_id=bk_cmdb`;
     },
     ccDocLink() {
       return `${window.BK_CC_HOST}/#/resource/business`;

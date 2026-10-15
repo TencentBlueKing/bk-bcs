@@ -61,6 +61,7 @@
 <script lang="ts">
 import { computed, defineComponent, reactive, toRef } from 'vue';
 
+import { getIAMHost } from '@/common/util';
 import $router from '@/router';
 
 export default defineComponent({
@@ -69,7 +70,10 @@ export default defineComponent({
     const $route = computed(() => toRef(reactive($router), 'currentRoute').value);
 
     function handleGotoIAM() {
-      window.open(`${window.BK_IAM_HOST}/apply-join-user-group?system_id=bk_bcs_app`);
+      const path = window.BK_IAM_ENABLE_V4 === 'true' && window.BK_IAM_V4_HOST
+        ? '/permission/apply'
+        : '/apply-join-user-group?system_id=bk_bcs_app';
+      window.open(`${getIAMHost()}${path}`);
     }
     function handleGotoProjectManage() {
       if (window.REGION === 'ieod') {

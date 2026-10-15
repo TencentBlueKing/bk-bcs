@@ -24,6 +24,10 @@
     },
     {
       "operation": "upsert_action",
+      "data": {"id": "cloud_account_create", "name": "云账号创建", "resource_type_id": "project"}
+    },
+    {
+      "operation": "upsert_action",
       "data": {"id": "cluster_view", "name": "集群查看", "resource_type_id": "cluster"}
     },
     {
@@ -85,34 +89,6 @@
     {
       "operation": "upsert_action",
       "data": {"id": "namespace_scoped_delete", "name": "资源删除(命名空间域)", "resource_type_id": "namespace"}
-    },
-    {
-      "operation": "upsert_action",
-      "data": {"id": "templateset_create", "name": "模板集创建", "resource_type_id": "project"}
-    },
-    {
-      "operation": "upsert_action",
-      "data": {"id": "templateset_view", "name": "模板集查看", "resource_type_id": "templateset"}
-    },
-    {
-      "operation": "upsert_action",
-      "data": {"id": "templateset_copy", "name": "模板集复制", "resource_type_id": "templateset"}
-    },
-    {
-      "operation": "upsert_action",
-      "data": {"id": "templateset_update", "name": "模板集更新", "resource_type_id": "templateset"}
-    },
-    {
-      "operation": "upsert_action",
-      "data": {"id": "templateset_delete", "name": "模板集删除", "resource_type_id": "templateset"}
-    },
-    {
-      "operation": "upsert_action",
-      "data": {"id": "templateset_instantiate", "name": "模板集实例化", "resource_type_id": "templateset"}
-    },
-    {
-      "operation": "upsert_action",
-      "data": {"id": "cloud_account_create", "name": "云账号创建", "resource_type_id": "project"}
     },
     {
       "operation": "upsert_action",

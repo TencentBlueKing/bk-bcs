@@ -28,6 +28,7 @@ type HostConf struct {
 	DevOpsArtifactoryHost string `yaml:"devops_artifactory_host"` // 制品库地址
 	BKPaaSHost            string `yaml:"bk_paas_host"`            // PaaS 地址
 	BKIAMHost             string `yaml:"bk_iam_host"`             // 权限中心
+	BKIAMV4Host           string `yaml:"bk_iam_v4_host"`          // 权限中心 V4, iam_conf.enableV4 开启时使用
 	BKCCHost              string `yaml:"bk_cc_host"`              // cmdb
 	BKMonitorHost         string `yaml:"bk_monitor_host"`         // 蓝鲸监控
 	BKMonitorAddonName    string `yaml:"bk_monitor_addon_name"`   // 蓝鲸监控插件名称

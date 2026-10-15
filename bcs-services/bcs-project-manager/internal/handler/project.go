@@ -61,10 +61,10 @@ func (p *ProjectHandler) CreateProject(ctx context.Context,
 		return e
 	}
 	if authUser.Username != "" {
-		// 授权创建者项目编辑和查看权限
-		if errLocal := iam.GrantProjectCreatorActions(ctx, authUser.Username,
+		// 授权创建者为该项目的项目管理员
+		if errLocal := iam.GrantProjectManager(ctx, authUser.GetResourceTenantId(), authUser.Username,
 			projectInfo.ProjectID, projectInfo.Name); errLocal != nil {
-			logging.Error("grant project %s for creator %s permission failed, err: %s",
+			logging.Error("grant project %s manager for creator %s failed, err: %s",
 				projectInfo.ProjectID, authUser.Username, errLocal.Error())
 		}
 	}

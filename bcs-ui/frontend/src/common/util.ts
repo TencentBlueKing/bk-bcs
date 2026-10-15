@@ -1045,3 +1045,14 @@ export function timezoneToUTC(time: string | Date, sourceTimezone: string, milli
   const dayjsObj = dayjs.tz(time, sourceTimezone);
   return milliseconds ? dayjsObj.valueOf() : dayjsObj.unix();
 }
+
+/**
+ * 权限中心地址，开启 IAM V4 且配置了 V4 地址时使用 V4 地址
+ * @returns 权限中心地址
+ */
+export function getIAMHost(): string {
+  if (window.BK_IAM_ENABLE_V4 === 'true' && window.BK_IAM_V4_HOST) {
+    return window.BK_IAM_V4_HOST;
+  }
+  return window.BK_IAM_HOST;
+}

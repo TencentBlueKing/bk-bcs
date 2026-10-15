@@ -19,13 +19,14 @@ import (
 	"os"
 	"strings"
 
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/pkg/errors"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/component/bcs/clustermanager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/component/iam"
+	iamclient "github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/component/iam"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-platform-manager/pkg/rest"
 )
@@ -49,6 +50,12 @@ func AuthenticationRequired(next http.Handler) http.Handler {
 			_ = render.Render(w, r, rest.AbortWithUnauthorizedError(restContext, rest.ErrorUnauthorized))
 			return
 		}
+
+		tenantID := r.Header.Get(iam.HeaderTenantId)
+		if tenantID == "" && restContext.BindBCS != nil {
+			tenantID = restContext.BindBCS.TenantId
+		}
+		restContext.TenantId = tenantID
 
 		next.ServeHTTP(w, r)
 	})
@@ -79,7 +86,7 @@ func ProjectAuthorization(next http.Handler) http.Handler {
 		}
 
 		// call iam
-		client, err := iam.GetProjectPermClient()
+		client, err := iamclient.GetProjectPermClient(restContext.TenantId)
 		if err != nil {
 			_ = render.Render(w, r, rest.AbortWithWithForbiddenError(restContext, err))
 			return
@@ -124,7 +131,7 @@ func ClusterAuthorization(next http.Handler) http.Handler {
 		}
 
 		// call iam
-		client, err := iam.GetClusterPermClient()
+		client, err := iamclient.GetClusterPermClient(restContext.TenantId)
 		if err != nil {
 			_ = render.Render(w, r, rest.AbortWithWithForbiddenError(restContext, err))
 			return

@@ -14,9 +14,12 @@ package auth
 
 import (
 	"context"
+	"strings"
 
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
 	middleauth "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
+	"go-micro.dev/v4/metadata"
 )
 
 // jwtClient is the jwt client
@@ -56,4 +59,33 @@ func GetUserFromCtx(ctx context.Context) string {
 func GetRealUserFromCtx(ctx context.Context) string {
 	authUser, _ := middleauth.GetUserFromContext(ctx)
 	return authUser.Username
+}
+
+// TenantIDFromCtx 解析本次请求的租户。优先级：请求头、JWT，空则 default。
+// 依赖的 bcs-auth AuthUser 还没有 TenantId 字段，JWT 租户从 token 再解一次。
+func TenantIDFromCtx(ctx context.Context) string {
+	md, ok := metadata.FromContext(ctx)
+	if !ok {
+		return iam.DefaultTenantId
+	}
+	if id, _ := md.Get(iam.HeaderTenantId); id != "" {
+		return id
+	}
+	if token, _ := md.Get(middleauth.AuthorizationHeaderKey); token != "" {
+		if id := tenantIDFromJWT(token); id != "" {
+			return id
+		}
+	}
+	return iam.DefaultTenantId
+}
+
+func tenantIDFromJWT(jwtToken string) string {
+	if GetJWTClient() == nil || !strings.HasPrefix(jwtToken, "Bearer ") {
+		return ""
+	}
+	claims, err := GetJWTClient().JWTDecode(jwtToken[len("Bearer "):])
+	if err != nil || claims == nil {
+		return ""
+	}
+	return claims.TenantId
 }

@@ -45,6 +45,8 @@ type ContextValueKey string
 const (
 	// LaneKey is the key for lane
 	LaneKey ContextValueKey = "X-Lane"
+	// TenantIDKey is the key of tenant id in context.
+	TenantIDKey ContextValueKey = "current-tenant-id"
 	// LaneIDPrefix 染色的header前缀
 	LaneIDPrefix = "X-Lane-"
 )
@@ -263,6 +265,15 @@ func DefaultTerminalSize() *TerminalSize {
 		Rows: defaultTerminalRows,
 		Cols: defaultTerminalCols,
 	}
+}
+
+// GetTenantIDFromContext get tenant id from context
+func GetTenantIDFromContext(ctx context.Context) string {
+	tenantID, ok := ctx.Value(TenantIDKey).(string)
+	if !ok {
+		return ""
+	}
+	return tenantID
 }
 
 // GetLaneIDByCtx get lane id by ctx

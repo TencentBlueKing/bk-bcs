@@ -63,6 +63,10 @@ BK_SITE_URL = '/'
 # 权限中心地址
 BK_IAM_HOST = ''
 
+# 权限中心 V4 地址（BK_IAM_ENABLE_V4 为 true 时使用）
+BK_IAM_V4_HOST = ''
+BK_IAM_ENABLE_V4 = 'false'
+
 # PaaS平台地址
 BK_PAAS_HOST = ''
 

@@ -134,6 +134,7 @@ func CreateTempToken(ctx context.Context, username, clusterId string) (*Token, e
 	}
 	resp, err := components.GetClient().R().
 		SetContext(ctx).
+		SetHeader(HeaderTenantId, types.GetTenantIDFromContext(ctx)).
 		SetHeaders(types.GetLaneIDByCtx(ctx)).
 		SetAuthToken(config.G.BCS.Token).
 		SetBody(data).

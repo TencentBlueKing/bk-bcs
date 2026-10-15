@@ -187,7 +187,7 @@ func CheckUserPerm(ctx context.Context, req server.Request, username string) (bo
 		return false, fmt.Errorf("auth failed: err %s", err.Error())
 	}
 
-	allow, url, resources, err := callIAM(username, action, *resourceId)
+	allow, url, resources, err := callIAM(ctx, username, action, *resourceId)
 	if err != nil {
 		return false, fmt.Errorf("auth failed, resourceId: %v: err %s", resources, err.Error())
 	}
@@ -209,7 +209,7 @@ func CheckUserPerm(ctx context.Context, req server.Request, username string) (bo
 			ClusterId: resourceId.SubClusterId,
 			ProjectId: resourceId.SubClusterProjectId,
 		}
-		iAllow, iUrl, iResources, iErr := callIAM(username, action, *iResourceID)
+		iAllow, iUrl, iResources, iErr := callIAM(ctx, username, action, *iResourceID)
 		if iErr != nil {
 			return false, fmt.Errorf("auth failed, resourceId: %v: err %s", iResources, iErr.Error())
 		}
@@ -229,7 +229,9 @@ func CheckUserPerm(ctx context.Context, req server.Request, username string) (bo
 	return allow && subAllow, nil
 }
 
-func callIAM(username, action string, resourceID resourceID) (bool, string, []authutils.ResourceAction, error) {
+func callIAM(ctx context.Context, username, action string, resourceID resourceID) (bool, string,
+	[]authutils.ResourceAction, error) {
+	tenantID := TenantIDFromCtx(ctx)
 	var isSharedCluster bool
 	if resourceID.ClusterId != "" {
 		cls, err := cluster.GetClusterClient().GetCluster(context.TODO(), resourceID.ClusterId)
@@ -243,15 +245,35 @@ func callIAM(username, action string, resourceID resourceID) (bool, string, []au
 
 	switch action {
 	case projectauth.CanViewProjectOperation:
-		return ProjectIamClient.CanViewProject(username, resourceID.ProjectId)
+		cli, err := ProjectIamClient(tenantID)
+		if err != nil {
+			return false, "", nil, err
+		}
+		return cli.CanViewProject(username, resourceID.ProjectId)
 	case clusterauth.CanViewClusterOperation:
-		return ClusterIamClient.CanViewCluster(username, resourceID.ProjectId, resourceID.ClusterId)
+		cli, err := ClusterIamClient(tenantID)
+		if err != nil {
+			return false, "", nil, err
+		}
+		return cli.CanViewCluster(username, resourceID.ProjectId, resourceID.ClusterId)
 	case clusterauth.CanManageClusterOperation:
-		return ClusterIamClient.CanManageCluster(username, resourceID.ProjectId, resourceID.ClusterId)
+		cli, err := ClusterIamClient(tenantID)
+		if err != nil {
+			return false, "", nil, err
+		}
+		return cli.CanManageCluster(username, resourceID.ProjectId, resourceID.ClusterId)
 	case namespaceauth.CanViewNamespaceOperation:
-		return NamespaceIamClient.CanViewNamespace(username, resourceID.ProjectId, resourceID.ClusterId, resourceID.Namespace, isSharedCluster)
+		cli, err := NamespaceIamClient(tenantID)
+		if err != nil {
+			return false, "", nil, err
+		}
+		return cli.CanViewNamespace(username, resourceID.ProjectId, resourceID.ClusterId, resourceID.Namespace, isSharedCluster)
 	case namespaceauth.CanListNamespaceOperation:
-		return NamespaceIamClient.CanListNamespace(username, resourceID.ProjectId, resourceID.ClusterId, isSharedCluster)
+		cli, err := NamespaceIamClient(tenantID)
+		if err != nil {
+			return false, "", nil, err
+		}
+		return cli.CanListNamespace(username, resourceID.ProjectId, resourceID.ClusterId, isSharedCluster)
 	default:
 		return false, "", nil, fmt.Errorf("action %s not support", action)
 	}

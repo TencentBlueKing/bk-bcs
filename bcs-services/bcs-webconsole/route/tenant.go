@@ -14,6 +14,7 @@
 package route
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -69,6 +70,8 @@ func TenantCheck() gin.HandlerFunc {
 			}
 			return DefaultTenantId
 		}()
+
+		c.Request = c.Request.WithContext(context.WithValue(c.Request.Context(), types.TenantIDKey, tenantId))
 
 		// get tenant id
 		resourceTenantId, err := GetResourceTenantId(c)

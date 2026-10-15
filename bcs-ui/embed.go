@@ -178,6 +178,8 @@ func (e *EmbedWeb) IndexHandler() http.Handler {
 			"BKMONITOR_HOST":            config.G.FrontendConf.Host.BKMonitorHost,
 			"BK_MONITOR_ADDON_NAME":     config.G.FrontendConf.Host.BKMonitorAddonName,
 			"BK_IAM_HOST":               config.G.FrontendConf.Host.BKIAMHost,
+			"BK_IAM_V4_HOST":            config.G.FrontendConf.Host.BKIAMV4Host,
+			"BK_IAM_ENABLE_V4":          strconv.FormatBool(config.G.IAM.EnableV4),
 			"BK_CC_HOST":                config.G.FrontendConf.Host.BKCCHost,
 			"BK_SRE_HOST":               config.G.FrontendConf.Host.BKSREHOST,
 			"BK_USER_HOST":              config.G.FrontendConf.Host.BKUserHost,

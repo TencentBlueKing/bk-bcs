@@ -179,7 +179,7 @@ import useMenu, { IMenu } from './use-menu';
 
 import '@blueking/login-userinfo/vue2/vue2.css';
 import { releaseNote } from '@/api/modules/project';
-import { setCookie } from '@/common/util';
+import { getIAMHost, setCookie } from '@/common/util';
 import AiAssistantBtn from '@/components/assistant/ai-assistant-btn.vue';
 import BcsMd from '@/components/bcs-md/index.vue';
 import { useAppData } from '@/composables/use-app';
@@ -401,7 +401,7 @@ export default defineComponent({
     };
     // 跳转权限中心
     const handleGotoIAM = () => {
-      window.open(window.BK_IAM_HOST);
+      window.open(getIAMHost());
     };
     // 跳转个人中心
     const handleGotoUserCenter = () => {
