@@ -6471,7 +6471,7 @@ func (m *ReleaseDetail) validate(all bool) error {
 
 	// no validation rules for DisplayName
 
-	// no validation rules for SkipPaasAnnotations
+	// no validation rules for HelmNative
 
 	if len(errors) > 0 {
 		return ReleaseDetailMultiError(errors)
@@ -7268,7 +7268,7 @@ func (m *InstallReleaseV1Req) validate(all bool) error {
 
 	// no validation rules for Env
 
-	// no validation rules for SkipPaasAnnotations
+	// no validation rules for HelmNative
 
 	if len(errors) > 0 {
 		return InstallReleaseV1ReqMultiError(errors)
@@ -7852,7 +7852,7 @@ func (m *UpgradeReleaseV1Req) validate(all bool) error {
 
 	// no validation rules for Env
 
-	// no validation rules for SkipPaasAnnotations
+	// no validation rules for HelmNative
 
 	if len(errors) > 0 {
 		return UpgradeReleaseV1ReqMultiError(errors)
@@ -8434,7 +8434,7 @@ func (m *ReleasePreviewReq) validate(all bool) error {
 
 	// no validation rules for Revision
 
-	// no validation rules for SkipPaasAnnotations
+	// no validation rules for HelmNative
 
 	if len(errors) > 0 {
 		return ReleasePreviewReqMultiError(errors)

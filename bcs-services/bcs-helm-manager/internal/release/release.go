@@ -214,8 +214,8 @@ type HelmInstallConfig struct {
 	Values              []*File
 	PatchTemplateValues map[string]string
 
-	// SkipPaasAnnotations 为 true 时不注入 BCS 的 io.tencent.paas.updator 元数据
-	SkipPaasAnnotations bool
+	// helmNative 为 true 时不注入 BCS 的 io.tencent.paas.updator 元数据
+	HelmNative bool
 }
 
 // HelmInstallResult 定义了helm执行install的返回结果
@@ -269,7 +269,7 @@ type HelmUpgradeConfig struct {
 	Values              []*File
 	PatchTemplateValues map[string]string
 
-	SkipPaasAnnotations bool
+	HelmNative bool
 }
 
 // ToInstallConfig transfer to install config
@@ -283,8 +283,7 @@ func (h *HelmUpgradeConfig) ToInstallConfig() HelmInstallConfig {
 		Chart:               h.Chart,
 		Values:              h.Values,
 		PatchTemplateValues: h.PatchTemplateValues,
-		// upgrade 复用 install 链路，必须一并传递
-		SkipPaasAnnotations: h.SkipPaasAnnotations,
+		HelmNative:          h.HelmNative,
 	}
 }
 
@@ -328,7 +327,7 @@ type HelmHistoryOption struct {
 func InstallRelease(releaseHandler Handler, projectID, projectCode, clusterID, releaseName,
 	releaseNamespace, chartName, version, creator, updator string, args []string, bcsSysVar map[string]string,
 	contents []byte, values []string, dryRun, replace, clientOnly,
-	skipPaasAnnotations bool) (*HelmInstallResult, error) {
+	helmNative bool) (*HelmInstallResult, error) {
 	vls := make([]*File, 0, len(values))
 	for index, v := range values {
 		vls = append(vls, &File{
@@ -346,7 +345,7 @@ func InstallRelease(releaseHandler Handler, projectID, projectCode, clusterID, r
 	patchValues[common.PTKCreator] = stringx.ReplaceIllegalChars(creator)
 	patchValues[common.PTKVersion] = version
 	// 开关只作用于 updator：开启后不再注入，避免每次更新把 updator 覆盖成当前操作人
-	if !skipPaasAnnotations {
+	if !helmNative {
 		patchValues[common.PTKUpdator] = stringx.ReplaceIllegalChars(updator)
 	}
 	return releaseHandler.Cluster(clusterID).Install(
@@ -365,14 +364,14 @@ func InstallRelease(releaseHandler Handler, projectID, projectCode, clusterID, r
 			Args:                args,
 			Values:              vls,
 			PatchTemplateValues: patchValues,
-			SkipPaasAnnotations: skipPaasAnnotations,
+			HelmNative:          helmNative,
 		})
 }
 
 // UpgradeRelease upgrade release
 func UpgradeRelease(releaseHandler Handler, projectID, projectCode, clusterID, releaseName,
 	releaseNamespace, chartName, version, creator, updator string, args []string, bcsSysVar map[string]string,
-	contents []byte, values []string, dryRun, skipPaasAnnotations bool) (*HelmUpgradeResult, error) {
+	contents []byte, values []string, dryRun, helmNative bool) (*HelmUpgradeResult, error) {
 	vls := make([]*File, 0, len(values))
 	for index, v := range values {
 		vls = append(vls, &File{
@@ -390,7 +389,7 @@ func UpgradeRelease(releaseHandler Handler, projectID, projectCode, clusterID, r
 	patchValues[common.PTKCreator] = stringx.ReplaceIllegalChars(creator)
 	patchValues[common.PTKVersion] = version
 	// 开关只作用于 updator：开启后不再注入，避免每次更新把 updator 覆盖成当前操作人
-	if !skipPaasAnnotations {
+	if !helmNative {
 		patchValues[common.PTKUpdator] = stringx.ReplaceIllegalChars(updator)
 	}
 	return releaseHandler.Cluster(clusterID).Upgrade(
@@ -407,7 +406,7 @@ func UpgradeRelease(releaseHandler Handler, projectID, projectCode, clusterID, r
 			Args:                args,
 			Values:              vls,
 			PatchTemplateValues: patchValues,
-			SkipPaasAnnotations: skipPaasAnnotations,
+			HelmNative:          helmNative,
 		})
 }
 

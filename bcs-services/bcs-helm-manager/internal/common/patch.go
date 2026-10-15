@@ -46,7 +46,7 @@ var (
 	patchTemplateKeyRegex = regexp.MustCompile(patchTemplateKeyPrefix + ".+" + patchTemplateKeySuffix)
 )
 
-// PaasMetadataKeys 开关（skipPaasAnnotations）开启时，从资源中实际删除的 paas 系列元数据 key。
+// PaasMetadataKeys 开关（helmNative）开启时，从资源中实际删除的 paas 系列元数据 key。
 var PaasMetadataKeys = []string{
 	"io.tencent.paas.updator",
 }

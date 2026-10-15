@@ -52,8 +52,8 @@ type ReleaseUpgradeAction struct {
 	AuthUser       string
 	IsShardCluster bool
 
-	// skipPaasAnnotations 为 true 时不注入 BCS 的 io.tencent.paas.updator 元数据
-	skipPaasAnnotations bool
+	// helmNative 为 true 时不注入 BCS 的 io.tencent.paas.updator 元数据
+	helmNative bool
 
 	contents []byte
 	result   *release.HelmUpgradeResult
@@ -65,21 +65,21 @@ type ReleaseUpgradeActionOption struct {
 	Platform       repo.Platform
 	ReleaseHandler release.Handler
 
-	ProjectCode         string
-	ProjectID           string
-	ClusterID           string
-	Name                string
-	Namespace           string
-	RepoName            string
-	ChartName           string
-	Version             string
-	Values              []string
-	Args                []string
-	CreateBy            string
-	UpdateBy            string
-	AuthUser            string
-	IsShardCluster      bool
-	SkipPaasAnnotations bool
+	ProjectCode    string
+	ProjectID      string
+	ClusterID      string
+	Name           string
+	Namespace      string
+	RepoName       string
+	ChartName      string
+	Version        string
+	Values         []string
+	Args           []string
+	CreateBy       string
+	UpdateBy       string
+	AuthUser       string
+	IsShardCluster bool
+	HelmNative     bool
 }
 
 // NewReleaseUpgradeAction new release upgrade action
@@ -102,8 +102,7 @@ func NewReleaseUpgradeAction(o *ReleaseUpgradeActionOption) *ReleaseUpgradeActio
 		updateBy:       o.UpdateBy,
 		AuthUser:       o.AuthUser,
 		IsShardCluster: o.IsShardCluster,
-
-		skipPaasAnnotations: o.SkipPaasAnnotations,
+		helmNative:     o.HelmNative,
 	}
 }
 
@@ -168,7 +167,7 @@ func (r *ReleaseUpgradeAction) Validate(ctx context.Context) error {
 	// get manifest from helm dry run
 	result, err := release.UpgradeRelease(r.releaseHandler, r.projectID, r.projectCode, r.clusterID, r.name,
 		r.namespace, r.chartName, r.version, r.createBy, r.updateBy, r.args, nil, r.contents, r.values, true,
-		r.skipPaasAnnotations)
+		r.helmNative)
 	if err != nil {
 		return err
 	}
@@ -223,7 +222,7 @@ func (r *ReleaseUpgradeAction) Execute(ctx context.Context) error {
 	// creator / version 始终注入；只有 updator 受开关控制。
 	patchValues[common.PTKCreator] = stringx.ReplaceIllegalChars(r.createBy)
 	patchValues[common.PTKVersion] = r.version
-	if !r.skipPaasAnnotations {
+	if !r.helmNative {
 		patchValues[common.PTKUpdator] = stringx.ReplaceIllegalChars(r.updateBy)
 	}
 	result, err := r.releaseHandler.Cluster(r.clusterID).Upgrade(
@@ -238,8 +237,7 @@ func (r *ReleaseUpgradeAction) Execute(ctx context.Context) error {
 			Args:                r.args,
 			Values:              vls,
 			PatchTemplateValues: patchValues,
-			// 由 patcher 决定是否删除 io.tencent.paas.updator 元数据
-			SkipPaasAnnotations: r.skipPaasAnnotations,
+			HelmNative:          r.helmNative,
 		})
 	r.result = result
 	if err != nil {

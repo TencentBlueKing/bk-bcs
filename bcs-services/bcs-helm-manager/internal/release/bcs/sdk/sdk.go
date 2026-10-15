@@ -203,7 +203,7 @@ func (c *client) Install(ctx context.Context, config release.HelmInstallConfig) 
 	installer.ReleaseName = config.Name
 	installer.Namespace = config.Namespace
 	installer.PostRenderer = newPatcher(c.group.config.PatchTemplates, config.PatchTemplateValues,
-		config.SkipPaasAnnotations)
+		config.HelmNative)
 	valueOpts := &values.Options{}
 	if err := parseArgs4Install(installer, config.Args, valueOpts); err != nil {
 		blog.Errorf("sdk client install and parse from args failed, %s, args: %v", err.Error(), config.Args)
@@ -265,7 +265,7 @@ func (c *client) Upgrade(ctx context.Context, config release.HelmUpgradeConfig) 
 	upgrader.DryRun = config.DryRun
 	upgrader.Namespace = config.Namespace
 	upgrader.PostRenderer = newPatcher(c.group.config.PatchTemplates, config.PatchTemplateValues,
-		config.SkipPaasAnnotations)
+		config.HelmNative)
 	valueOpts := &values.Options{}
 	if err := parseArgs4Upgrade(upgrader, config.Args, valueOpts); err != nil {
 		blog.Errorf("sdk client upgrade and parse from args failed, %s, args: %v", err.Error(), config.Args)

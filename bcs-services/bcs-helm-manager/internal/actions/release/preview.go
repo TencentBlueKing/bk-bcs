@@ -122,11 +122,11 @@ func (r *ReleasePreviewAction) getReleasePreview() (*helmmanager.ReleasePreview,
 		return nil, fmt.Errorf("reuse values failed, %s", err.Error())
 	}
 	// 开关由本次请求决定，不再读取 DB 里的历史值： 未传时默认 false（注入），与 install / upgrade 语义一致。
-	skipPaasAnnotations := r.req.GetSkipPaasAnnotations()
+	helmNative := r.req.GetHelmNative()
 	result, err := release.InstallRelease(r.releaseHandler, contextx.GetProjectIDFromCtx(r.ctx), projectCode,
 		r.req.GetClusterID(), r.req.GetName(), r.req.GetNamespace(), r.req.GetChart(), r.req.GetVersion(),
 		r.createBy, username, r.req.GetArgs(), nil, contents, r.req.GetValues(), true, true, true,
-		skipPaasAnnotations)
+		helmNative)
 	if err != nil {
 		return nil, fmt.Errorf("get release preview, get helm template failed, %s", err.Error())
 	}
