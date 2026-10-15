@@ -1520,6 +1520,9 @@ deploy:
     skipCrds: 忽略CRD
     waitforJobs: 等待所有Jobs完成
     wait: 等待所有Pod，PVC处于ready状态
+    native:
+      label: 原生Helm模式
+      desc: 不注入任何 BCS 相关信息，如 annotations、values 等
     timeout:
       label: 超时时间
       desc: '等同于参数 --timeout，勾选等待所有 Pod 后会生效，示例: 30s、5m10s、10m'

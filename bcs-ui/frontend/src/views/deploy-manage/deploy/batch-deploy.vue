@@ -246,7 +246,9 @@
                     scrollBeyondLastLine: false,
                     renderLineHighlight: 'none',
                   }"
-                  :value="curPreviewItem?.content">
+                  diff-editor
+                  :value="curPreviewItem?.content"
+                  :original="curPreviewItem?.previousContent">
                 </CodeEditor>
               </template>
             </bcs-resize-layout>

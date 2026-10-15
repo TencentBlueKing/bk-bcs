@@ -1898,6 +1898,9 @@ deploy:
     skipCrds: Ignore the CRD
     waitforJobs: Wait for all the Jobs to complete
     wait: Wait for all Pod and PVC to be ready
+    native:
+      label: Native Helm
+      desc: No BCS-related information such as annotations or values is injected.
     timeout:
       label: Timeout
       desc: >-

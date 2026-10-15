@@ -112,6 +112,12 @@
               <i class="bcs-icon bcs-icon-info-circle"></i>
             </span>
           </bcs-checkbox>
+          <bcs-checkbox class="w-fit" v-model="isNativeHelm">
+            {{ $t('deploy.helm.native.label') }}
+            <span class="bcs-icon-btn" v-bk-tooltips="$t('deploy.helm.native.desc')">
+              <i class="bcs-icon bcs-icon-info-circle"></i>
+            </span>
+          </bcs-checkbox>
           <div class="flex items-center text-[14px] gap-[5px]">
             {{ $t('deploy.helm.timeout.label') }}
             <bcs-input class="w-[200px]" v-model="args['--timeout']"></bcs-input>
@@ -345,6 +351,8 @@ export default defineComponent({
     const args = ref({
       '--timeout': '300s',
     });
+    // 原生 Helm 模式
+    const isNativeHelm = ref(false);
     // 自定义参数
     const customArgs = ref<IData[]>([]);
     const valuesData = ref({
@@ -529,6 +537,7 @@ export default defineComponent({
         valueFile,
         values: [valueFileContent],
         args: commands,
+        helmNative: isNativeHelm.value,
       };
     };
     // 部署
@@ -618,6 +627,7 @@ export default defineComponent({
         chartVersion,
         namespace: ns,
       };
+      isNativeHelm.value = releaseDetail.value?.helmNative ?? false;
       // 参数信息
       commands.forEach((item: string) => {
         const index = item.indexOf('=');
@@ -677,6 +687,7 @@ export default defineComponent({
       args,
       customArgs,
       showCustomArgs,
+      isNativeHelm,
       formRef,
       keyValueRef,
       showTab,
