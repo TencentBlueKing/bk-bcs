@@ -29,21 +29,21 @@ type ReleasePreviewAction struct {
 	platform       repo.Platform
 	releaseHandler release.Handler
 
-	projectCode         string
-	projectID           string
-	clusterID           string
-	name                string
-	namespace           string
-	repoName            string
-	chartName           string
-	version             string
-	values              []string
-	args                []string
-	createBy            string
-	updateBy            string
-	AuthUser            string
-	IsShardCluster      bool
-	skipPaasAnnotations bool
+	projectCode    string
+	projectID      string
+	clusterID      string
+	name           string
+	namespace      string
+	repoName       string
+	chartName      string
+	version        string
+	values         []string
+	args           []string
+	createBy       string
+	updateBy       string
+	AuthUser       string
+	IsShardCluster bool
+	helmNative     bool
 
 	contents []byte
 }
@@ -54,22 +54,22 @@ type ReleasePreviewActionOption struct {
 	Platform       repo.Platform
 	ReleaseHandler release.Handler
 
-	ProjectCode         string
-	ProjectID           string
-	ClusterID           string
-	Name                string
-	Namespace           string
-	RepoName            string
-	ChartName           string
-	Version             string
-	Values              []string
-	Args                []string
-	CreateBy            string
-	UpdateBy            string
-	AuthUser            string
-	IsShardCluster      bool
-	Content             []byte
-	SkipPaasAnnotations bool
+	ProjectCode    string
+	ProjectID      string
+	ClusterID      string
+	Name           string
+	Namespace      string
+	RepoName       string
+	ChartName      string
+	Version        string
+	Values         []string
+	Args           []string
+	CreateBy       string
+	UpdateBy       string
+	AuthUser       string
+	IsShardCluster bool
+	Content        []byte
+	helmNative     bool
 }
 
 // NewReleasePreviewAction new release preview action
@@ -94,7 +94,7 @@ func NewReleasePreviewAction(o *ReleasePreviewActionOption) *ReleasePreviewActio
 		IsShardCluster: o.IsShardCluster,
 		contents:       o.Content,
 
-		skipPaasAnnotations: o.SkipPaasAnnotations,
+		helmNative: o.helmNative,
 	}
 }
 
@@ -112,7 +112,7 @@ func (r *ReleasePreviewAction) UpgradeRelease(ctx context.Context) (*pkgrelease.
 	// get release from helm dry run
 	result, err := release.UpgradeRelease(r.releaseHandler, r.projectID, r.projectCode, r.clusterID, r.name,
 		r.namespace, r.chartName, r.version, r.createBy, r.updateBy, r.args, nil, r.contents, r.values, true,
-		r.skipPaasAnnotations)
+		r.helmNative)
 	if err != nil {
 		return nil, err
 	}

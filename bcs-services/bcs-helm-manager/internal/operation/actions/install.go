@@ -38,20 +38,20 @@ type ReleaseInstallAction struct {
 	platform       repo.Platform
 	releaseHandler release.Handler
 
-	projectCode         string
-	projectID           string
-	clusterID           string
-	name                string
-	namespace           string
-	repoName            string
-	chartName           string
-	version             string
-	values              []string
-	args                []string
-	username            string
-	AuthUser            string
-	IsShardCluster      bool
-	skipPaasAnnotations bool
+	projectCode    string
+	projectID      string
+	clusterID      string
+	name           string
+	namespace      string
+	repoName       string
+	chartName      string
+	version        string
+	values         []string
+	args           []string
+	username       string
+	AuthUser       string
+	IsShardCluster bool
+	helmNative     bool
 
 	contents []byte
 	result   *release.HelmInstallResult
@@ -63,42 +63,42 @@ type ReleaseInstallActionOption struct {
 	Platform       repo.Platform
 	ReleaseHandler release.Handler
 
-	ProjectCode         string
-	ProjectID           string
-	ClusterID           string
-	Name                string
-	Namespace           string
-	RepoName            string
-	ChartName           string
-	Version             string
-	Values              []string
-	Args                []string
-	Username            string
-	AuthUser            string
-	IsShardCluster      bool
-	SkipPaasAnnotations bool
+	ProjectCode    string
+	ProjectID      string
+	ClusterID      string
+	Name           string
+	Namespace      string
+	RepoName       string
+	ChartName      string
+	Version        string
+	Values         []string
+	Args           []string
+	Username       string
+	AuthUser       string
+	IsShardCluster bool
+	HelmNative     bool
 }
 
 // NewReleaseInstallAction new release install action
 func NewReleaseInstallAction(o *ReleaseInstallActionOption) *ReleaseInstallAction {
 	return &ReleaseInstallAction{
-		model:               o.Model,
-		platform:            o.Platform,
-		releaseHandler:      o.ReleaseHandler,
-		projectCode:         o.ProjectCode,
-		projectID:           o.ProjectID,
-		clusterID:           o.ClusterID,
-		name:                o.Name,
-		namespace:           o.Namespace,
-		repoName:            o.RepoName,
-		chartName:           o.ChartName,
-		version:             o.Version,
-		values:              o.Values,
-		args:                o.Args,
-		username:            o.Username,
-		AuthUser:            o.AuthUser,
-		IsShardCluster:      o.IsShardCluster,
-		skipPaasAnnotations: o.SkipPaasAnnotations,
+		model:          o.Model,
+		platform:       o.Platform,
+		releaseHandler: o.ReleaseHandler,
+		projectCode:    o.ProjectCode,
+		projectID:      o.ProjectID,
+		clusterID:      o.ClusterID,
+		name:           o.Name,
+		namespace:      o.Namespace,
+		repoName:       o.RepoName,
+		chartName:      o.ChartName,
+		version:        o.Version,
+		values:         o.Values,
+		args:           o.Args,
+		username:       o.Username,
+		AuthUser:       o.AuthUser,
+		IsShardCluster: o.IsShardCluster,
+		helmNative:     o.HelmNative,
 	}
 }
 
@@ -163,7 +163,7 @@ func (r *ReleaseInstallAction) Validate(ctx context.Context) error {
 	// get manifest from helm dry run
 	result, err := release.InstallRelease(r.releaseHandler, r.projectID, r.projectCode, r.clusterID, r.name,
 		r.namespace, r.chartName, r.version, r.username, r.username, r.args, nil, r.contents, r.values,
-		true, true, false, r.skipPaasAnnotations)
+		true, true, false, r.helmNative)
 	if err != nil {
 		return err
 	}
@@ -219,7 +219,7 @@ func (r *ReleaseInstallAction) Execute(ctx context.Context) error {
 	// creator / version 始终注入；只有 updator 受开关控制。
 	patchValues[common.PTKCreator] = stringx.ReplaceIllegalChars(r.username)
 	patchValues[common.PTKVersion] = r.version
-	if !r.skipPaasAnnotations {
+	if !r.helmNative {
 		patchValues[common.PTKUpdator] = stringx.ReplaceIllegalChars(r.username)
 	}
 	result, err := r.releaseHandler.Cluster(r.clusterID).Install(
@@ -235,7 +235,7 @@ func (r *ReleaseInstallAction) Execute(ctx context.Context) error {
 			Values:              vls,
 			PatchTemplateValues: patchValues,
 			// 由 patcher 决定是否删除 io.tencent.paas.updator 元数据
-			SkipPaasAnnotations: r.skipPaasAnnotations,
+			HelmNative: r.helmNative,
 		})
 	if err != nil {
 		return fmt.Errorf("install %s/%s in cluster %s error, %s",

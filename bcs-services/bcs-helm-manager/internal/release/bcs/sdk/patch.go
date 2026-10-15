@@ -48,23 +48,23 @@ func replacePatchTplKey(keys map[string]string, data []byte) []byte {
 }
 
 // newPatcher 构建 post-render patcher。
-// skipPaasAnnotations 为 true 时，会在渲染完成后删除 BCS 注入的 io.tencent.paas.updator 元数据。
-func newPatcher(templates []*release.File, keys map[string]string, skipPaasAnnotations bool) *patcher {
+// helmNative 为 true 时，会在渲染完成后删除 BCS 注入的 io.tencent.paas.updator 元数据。
+func newPatcher(templates []*release.File, keys map[string]string, helmNative bool) *patcher {
 	fs := make([]*files.File, 0, 5)
 	for _, f := range templates {
 		fs = append(fs, files.MustNewFileFromSource(files.NewBytesSource(f.Name, replacePatchTplKey(keys, f.Content))))
 	}
 
 	return &patcher{
-		files:               fs,
-		skipPaasAnnotations: skipPaasAnnotations,
+		files:      fs,
+		helmNative: helmNative,
 	}
 }
 
 type patcher struct {
 	files []*files.File
-	// skipPaasAnnotations 为 true 时删除 BCS 注入的 io.tencent.paas.updator 元数据
-	skipPaasAnnotations bool
+	// helmNative 为 true 时删除 BCS 注入的 io.tencent.paas.updator 元数据
+	helmNative bool
 }
 
 // Run implements the post-render Run method, do the render
@@ -91,7 +91,7 @@ func (p *patcher) Run(renderedManifests *bytes.Buffer) (*bytes.Buffer, error) {
 		}
 
 		// 用户选择不注入时，删除 BCS 注入的 io.tencent.paas.updator 元数据（annotations + labels）
-		if p.skipPaasAnnotations {
+		if p.helmNative {
 			j, err = removePaasMetadata(j)
 			if err != nil {
 				blog.Errorf("removePaasMetadata error, %s", err.Error())
