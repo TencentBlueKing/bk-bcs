@@ -41,6 +41,7 @@ type Release struct {
 	Status       string   `json:"status" bson:"status"`
 	Message      string   `json:"message" bson:"message"`
 	Env          string   `json:"env" bson:"env"`
+	HelmNative   bool     `json:"helmNative" bson:"helmNative"` // helmNative 默认 false；为 true 时部署/更新不再注入 BCS 的 io.tencent.paas.updator 元数据
 }
 
 // Transfer2DetailProto transfer the data into detail protobuf struct
@@ -62,6 +63,7 @@ func (r *Release) Transfer2DetailProto() *helmmanager.ReleaseDetail {
 		Description:  common.GetStringP(""),
 		Repo:         common.GetStringP(r.Repo),
 		ValueFile:    common.GetStringP(r.ValueFile),
+		HelmNative:   common.GetBoolP(r.HelmNative),
 	}
 }
 
