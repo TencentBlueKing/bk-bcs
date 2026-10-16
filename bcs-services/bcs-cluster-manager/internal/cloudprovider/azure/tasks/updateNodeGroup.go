@@ -15,6 +15,7 @@ package tasks
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -57,6 +58,7 @@ func UpdateAKSNodeGroupTask(taskID string, stepName string) error {
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
 	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
 	nodeGroupID := step.Params[cloudprovider.NodeGroupIDKey.String()]
+	nodeGroupInfo := step.Params[cloudprovider.NodeGroupInfoKey.String()]
 
 	// get dependent basic info
 	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
@@ -73,7 +75,16 @@ func UpdateAKSNodeGroupTask(taskID string, stepName string) error {
 	}
 
 	cluster := dependInfo.Cluster
-	group := dependInfo.NodeGroup
+
+	group := &proto.NodeGroup{}
+	err = json.Unmarshal([]byte(nodeGroupInfo), group)
+	if err != nil {
+		blog.Errorf("UpdateAKSNodeGroupTask[%s]: Unmarshal[%s] in task %s step %s failed, %s",
+			taskID, nodeGroupID, taskID, stepName, err)
+		retErr := fmt.Errorf("nodegroup info unmarshal failed, err: %s", err)
+		_ = state.UpdateStepFailure(start, stepName, retErr)
+		return retErr
+	}
 
 	// create aks client
 	client, err := api.NewAksServiceImplWithCommonOption(dependInfo.CmOption)
