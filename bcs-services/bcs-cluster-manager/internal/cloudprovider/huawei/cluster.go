@@ -146,6 +146,16 @@ func (c *Cluster) GetCluster(cloudID string, opt *cloudprovider.GetClusterOption
 		return nil, err
 	}
 
+	if opt.Cluster.ClusterAdvanceSettings.NetworkType != api.ContainerNetworkModeVpcRouter ||
+		opt.Cluster.NetworkSettings.MaxNodePodNum == 0 {
+		maxNodePodNum, err := business.GetNodeGroupMaxPod(opt.CommonOption, opt.Cluster.SystemID)
+		if err != nil {
+			return nil, err
+		}
+
+		opt.Cluster.NetworkSettings.MaxNodePodNum = uint32(maxNodePodNum)
+	}
+
 	if v, ok := runtimeInfo[common.ContainerdRuntime]; ok {
 		opt.Cluster.ClusterAdvanceSettings.ContainerRuntime = common.ContainerdRuntime
 		if len(v) > 0 {
