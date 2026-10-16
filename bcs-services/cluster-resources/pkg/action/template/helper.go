@@ -170,17 +170,29 @@ func patchTemplateAnnotations(manifest map[string]interface{}, username, templat
 
 // convertManifestToString convert manifest to string
 func convertManifestToString(
-	ctx context.Context, manifests []map[string]interface{}, clusterID string) (interface{}, error) {
+	ctx context.Context, manifests []map[string]interface{}, clusterID string,
+	newObjects map[string]map[string]interface{}) (interface{}, error) {
 	result := make([]interface{}, 0)
 	for _, v := range manifests {
 		name := mapx.GetStr(v, "metadata.name")
 		kind := mapx.GetStr(v, "kind")
-		d, err := yaml.Marshal(v)
+		namespace := mapx.GetStr(v, "metadata.namespace")
+
+		// 获取集群中正在运行的资源内容，集群中不存在时为空
+		d2 := getK8sResource(ctx, kind, name, clusterID, v)
+
+		// 资源已存在时使用 dry-run 后的真实对象作为预览内容，保证与 previousContent 结构一致
+		newObj := v
+		if d2 != "" {
+			if o, ok := newObjects[genResKey(kind, namespace, name)]; ok && o != nil {
+				newObj = o
+			}
+			newObj = pruneResource(newObj)
+		}
+		d, err := yaml.Marshal(newObj)
 		if err != nil {
 			return nil, err
 		}
-		// 获取线上的版本
-		d2 := getK8sResource(ctx, kind, name, clusterID, v)
 		result = append(result, map[string]interface{}{
 			"name":            name,
 			"kind":            kind,
@@ -189,6 +201,11 @@ func convertManifestToString(
 		})
 	}
 	return result, nil
+}
+
+// genResKey 生成资源唯一标识，用于关联 dry-run 结果
+func genResKey(kind, namespace, name string) string {
+	return fmt.Sprintf("%s/%s/%s", kind, namespace, name)
 }
 
 func isNSRequired(kind string) bool {
@@ -239,6 +256,7 @@ func pruneResource(m map[string]interface{}) map[string]interface{} {
 		{"metadata", "resourceVersion"},
 		{"metadata", "uid"},
 		{"metadata", "managedFields"},
+		{"metadata", "selfLink"},
 		{"spec", "template", "metadata", "creationTimestamp"},
 		{"spec", "template", "spec", "schedulerName"},
 		{"spec", "template", "spec", "securityContext"},
