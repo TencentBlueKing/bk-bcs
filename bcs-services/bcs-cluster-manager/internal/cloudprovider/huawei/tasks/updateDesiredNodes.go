@@ -202,35 +202,66 @@ func rollbackNodePoolToDesiredSize(ctx context.Context, info *cloudprovider.Clou
 	blog.Infof("rollbackNodePoolToDesiredSize[%s] begin to rollback nodePool %s desiredSize: %d",
 		taskId, info.NodeGroup.CloudNodeGroupID, desired)
 
-	_, err = client.UpdateNodePoolDesiredNodes(info.Cluster.SystemID, info.NodeGroup.CloudNodeGroupID,
-		desired, false)
-	if err != nil {
-		return fmt.Errorf("UpdateNodePoolDesiredNodes failed: %v", err)
+	// 删除节点需要等待节点的状态为ACTIVE, ABNORMAL, ERROR才能删除，否则会报错
+	unDelStatus := map[string]struct{}{
+		model.GetNodeStatusPhaseEnum().ACTIVE.Value():   {},
+		model.GetNodeStatusPhaseEnum().ABNORMAL.Value(): {},
+		model.GetNodeStatusPhaseEnum().ERROR.Value():    {},
 	}
 
-	ctx, cancel := context.WithTimeout(ctx, 3*time.Minute)
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Minute)
 	defer cancel()
 
 	err = loop.LoopDoFunc(ctx, func() error {
-		nodePool, errLocal := client.GetClusterNodePool(info.Cluster.SystemID, info.NodeGroup.CloudNodeGroupID)
-		if errLocal != nil {
-			blog.Errorf("rollbackNodePoolToDesiredSize[%s] GetClusterNodePool failed: %v", taskId, errLocal)
-			return nil
+		// 获取成功扩容出来的节点
+		successInstance, retErr := differentInstance(ctx, info, client)
+		if retErr != nil {
+			return fmt.Errorf("rollbackNodePoolToDesiredSize[%s] differentInstance err: %s", taskId, retErr)
 		}
 
-		if nodePool.Status.Phase.Value() == "" {
+		// 如果没有成功扩容出来的节点或者成功扩容出来的节点都删除了则结束
+		if len(successInstance) == 0 {
 			return loop.EndLoop
-		} else if nodePool.Status.Phase.Value() == model.GetNodePoolStatusPhaseEnum().ERROR.Value() {
-			return fmt.Errorf("rollbackNodePoolToDesiredSize[%s] GetOperation failed: %v",
-				taskId, nodePool.Status.Phase.Value())
 		}
 
-		blog.Infof("rollbackNodePoolToDesiredSize[%s] operation %s still running", taskId,
-			nodePool.Status.Phase.Value())
+		for _, v := range successInstance {
+			// 频率过快会导致云端返回错误，等待一段时间再请求
+			time.Sleep(time.Second)
+
+			node, retErr := client.ShowNode(info.Cluster.SystemID, *v.Metadata.Uid)
+			if retErr != nil {
+				blog.Errorf("rollbackNodePoolToDesiredSize[%s] ShowNode[%s] failed: %v",
+					taskId, *v.Metadata.Uid, retErr)
+				continue
+			}
+
+			if _, ok := unDelStatus[node.Status.Phase.Value()]; !ok {
+				continue
+			}
+
+			// 频率过快会导致云端返回错误，等待一段时间再请求
+			time.Sleep(time.Second)
+
+			_, err := client.DeleteNode(info.Cluster.SystemID, *node.Metadata.Uid, true)
+			if err != nil {
+				fmt.Println("delete node failed: ", err)
+				continue
+			}
+
+			blog.Infof("rollbackNodePoolToDesiredSize[%s] delete node %s successful", taskId, *v.Status.PrivateIP)
+		}
+
 		return nil
 	}, loop.LoopInterval(5*time.Second))
 	if err != nil {
 		return fmt.Errorf("rollbackNodeGroupDesiredSize[%s] GetOperation failed: %v", taskId, err)
+	}
+
+	// 回滚节点池的期望数
+	_, err = client.UpdateNodePoolDesiredNodes(info.Cluster.SystemID, info.NodeGroup.CloudNodeGroupID,
+		desired, false)
+	if err != nil {
+		return fmt.Errorf("UpdateNodePoolDesiredNodes failed: %v", err)
 	}
 
 	blog.Infof("rollbackNodeGroupDesiredSize[%s] rollback nodePool[%s:%v] successful",
