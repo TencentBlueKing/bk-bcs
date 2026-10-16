@@ -105,6 +105,10 @@ type MetricHandler interface {
 		step time.Duration) ([]*prompb.TimeSeries, error)
 	GetClusterDiskioTotal(ctx context.Context, projectId, clusterId string, start, end time.Time,
 		step time.Duration) ([]*prompb.TimeSeries, error)
+	GetClusterCPURequestWithInitUsage(ctx context.Context, projectId, clusterId string, start, end time.Time,
+		step time.Duration) ([]*prompb.TimeSeries, error)
+	GetClusterMemoryRequestWithInitUsage(ctx context.Context, projectId, clusterId string, start, end time.Time,
+		step time.Duration) ([]*prompb.TimeSeries, error)
 	GetClusterGroupNodeNum(ctx context.Context, projectId, clusterId, group string, start, end time.Time,
 		step time.Duration) ([]*prompb.TimeSeries, error)
 	GetClusterGroupMaxNodeNum(ctx context.Context, projectId, clusterId, group string, start, end time.Time,
@@ -130,6 +134,10 @@ type MetricHandler interface {
 		step time.Duration) ([]*prompb.TimeSeries, error)
 	GetNodeMemoryRequestUsage(ctx context.Context, projectId, clusterId, nodeName string, start, end time.Time,
 		step time.Duration) ([]*prompb.TimeSeries, error)
+	GetNodeCPURequestWithInitUsage(ctx context.Context, projectId, clusterId, nodeName string, start,
+		end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
+	GetNodeMemoryRequestWithInitUsage(ctx context.Context, projectId, clusterId, nodeName string, start,
+		end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
 	GetNodeDiskUsed(ctx context.Context, projectId, clusterId, nodeName string, start, end time.Time,
 		step time.Duration) ([]*prompb.TimeSeries, error)
 	GetNodeDiskTotal(ctx context.Context, projectId, clusterId, nodeName string, start, end time.Time,
