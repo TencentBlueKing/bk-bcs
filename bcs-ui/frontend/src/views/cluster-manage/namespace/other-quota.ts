@@ -9,7 +9,7 @@ const QuantityDecimal = Decimal.clone({ precision: 80 });
 const decimalExponents: Record<string, number> = { n: -9, u: -6, m: -3, '': 0, k: 3, M: 6, G: 9, T: 12, P: 15, E: 18 };
 const binaryExponents: Record<string, number> = { Ki: 10, Mi: 20, Gi: 30, Ti: 40, Pi: 50, Ei: 60 };
 
-function quantityInFormUnit(value: string, memory: boolean): Decimal | undefined {
+export function quantityInFormUnit(value: string, memory: boolean): Decimal | undefined {
   const match = value.match(/^([+-]?(?:\d+\.?\d*|\.\d+))([eE][+-]?\d+|[numkMGTPE]|[KMGTPE]i)?$/);
   if (!match) return undefined;
 
