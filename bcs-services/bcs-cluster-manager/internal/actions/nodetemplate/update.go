@@ -54,15 +54,6 @@ func (ua *UpdateAction) updateNodeTemplate(destNodeTemplate *cmproto.NodeTemplat
 	if len(ua.req.Name) != 0 {
 		destNodeTemplate.Name = ua.req.Name
 	}
-	if len(ua.req.Desc) != 0 {
-		destNodeTemplate.Desc = ua.req.Desc
-	}
-	if len(ua.req.Labels) != 0 {
-		destNodeTemplate.Labels = ua.req.Labels
-	}
-	if len(ua.req.Taints) != 0 {
-		destNodeTemplate.Taints = ua.req.Taints
-	}
 	if len(ua.req.DockerGraphPath) != 0 {
 		destNodeTemplate.DockerGraphPath = ua.req.DockerGraphPath
 	}
@@ -74,9 +65,6 @@ func (ua *UpdateAction) updateNodeTemplate(destNodeTemplate *cmproto.NodeTemplat
 		destNodeTemplate.UserScript = afterScript
 	} else {
 		destNodeTemplate.UserScript = ua.req.UserScript
-	}
-	if ua.req.UnSchedulable != nil {
-		destNodeTemplate.UnSchedulable = ua.req.UnSchedulable.GetValue()
 	}
 	if len(ua.req.DataDisks) > 0 {
 		destNodeTemplate.DataDisks = ua.req.DataDisks
@@ -122,9 +110,6 @@ func (ua *UpdateAction) updateNodeTemplate(destNodeTemplate *cmproto.NodeTemplat
 	if ua.req.ScaleInPostScript != nil {
 		destNodeTemplate.ScaleInPostScript = ua.req.ScaleInPostScript.String()
 	}
-	if ua.req.Annotations != nil {
-		destNodeTemplate.Annotations = ua.req.Annotations.Values
-	}
 	if ua.req.GetImageInfo() != nil {
 		destNodeTemplate.Image = ua.req.GetImageInfo()
 	}
@@ -134,6 +119,11 @@ func (ua *UpdateAction) updateNodeTemplate(destNodeTemplate *cmproto.NodeTemplat
 	if ua.req.GetExtraInfo() != nil && ua.req.GetExtraInfo().GetValues() != nil {
 		destNodeTemplate.ExtraInfo = ua.req.GetExtraInfo().GetValues()
 	}
+	// attention: field will be full update
+	destNodeTemplate.UnSchedulable = ua.req.UnSchedulable.GetValue()
+	destNodeTemplate.Taints = ua.req.Taints
+	destNodeTemplate.Labels = ua.req.Labels
+	destNodeTemplate.Annotations = ua.req.Annotations.Values
 
 	return ua.model.UpdateNodeTemplate(ua.ctx, destNodeTemplate)
 }
