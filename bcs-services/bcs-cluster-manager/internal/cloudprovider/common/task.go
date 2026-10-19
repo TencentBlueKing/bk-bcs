@@ -171,9 +171,10 @@ func RunBKsopsJob(taskID string, stepName string) error {
 		Constants:      consMap,
 		StepName:       stepName,
 	})
+	urlMsg := fmt.Sprintf("url: <a href=\"%s\" target=\"_blank\">[%s]</a>", taskUrl, taskUrl)
 	if err != nil {
-		msg := fmt.Sprintf("run bksops job failed: [%v], url: [%s]", err, taskUrl)
-		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName, msg)
+		msg := fmt.Sprintf("run bksops job failed: [%v], ", err)
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName, msg+urlMsg)
 
 		state.TaskURL = taskUrl
 		if step.GetSkipOnFailed() {
@@ -185,7 +186,7 @@ func RunBKsopsJob(taskID string, stepName string) error {
 	}
 
 	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
-		fmt.Sprintf("run bksops job successful, url:[%s]", taskUrl))
+		fmt.Sprintf("run bksops job successful, "+urlMsg))
 
 	state.TaskURL = taskUrl
 	_ = state.UpdateStepSucc(start, stepName)
