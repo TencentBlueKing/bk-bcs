@@ -22,6 +22,7 @@ import (
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions/utils"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
@@ -255,6 +256,25 @@ func (ua *RetryAction) Handle(
 	// handle cluster data status and not block task, finally task will update data status
 	if !ua.isPartFailure {
 		_ = updateTaskDataStatus(ua.model, ua.task)
+	} else {
+		switch {
+		case strings.Contains(ua.task.TaskType, cloudprovider.AddNodesToCluster.String()):
+			err := ua.model.CreateOperationLog(ua.ctx, &cmproto.OperationLog{
+				ResourceType: common.Cluster.String(),
+				ResourceID:   ua.cluster.ClusterID,
+				TaskID:       ua.task.TaskID,
+				Message:      fmt.Sprintf("集群%s部分失败重试添加节点", ua.cluster.ClusterID),
+				OpUser:       auth.GetUserFromCtx(ua.ctx),
+				CreateTime:   time.Now().Format(time.RFC3339),
+				ClusterID:    ua.cluster.ClusterID,
+				ProjectID:    ua.cluster.ProjectID,
+				ResourceName: ua.cluster.ClusterName,
+			})
+			if err != nil {
+				blog.Errorf("Retry AddNodesToCluster[%s] CreateOperationLog failed: %v", ua.cluster.ClusterID, err)
+			}
+		default:
+		}
 	}
 
 	ua.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
