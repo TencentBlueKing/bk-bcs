@@ -44,6 +44,11 @@ const (
 )
 
 const (
+	// SubnetIDsPerRequestMaxLimit TKE AddVpcCniSubnets Max Limit
+	SubnetIDsPerRequestMaxLimit = 100
+)
+
+const (
 	// DiskCloudPremium 高性能云硬盘
 	DiskCloudPremium = "CLOUD_PREMIUM"
 	// DiskCloudSsd SSD云硬盘

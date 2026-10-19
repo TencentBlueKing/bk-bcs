@@ -149,29 +149,54 @@ func (v *VpcClient) DescribeVpcs(vpcIds []string, filters []*Filter) (
 }
 
 // DescribeSubnets describe subnets (https://cloud.tencent.com/document/api/215/15784)
+// 当通过 subnetIds 查询且数量超过接口上限时，按 SubnetIDsPerRequestMaxLimit 分片请求后合并，
 func (v *VpcClient) DescribeSubnets(subnetIds []string, filters []*Filter) (
 	[]*vpc.Subnet, error) {
 	blog.Infof("DescribeSubnets input: %s, %s", utils.ToJSONString(subnetIds),
 		utils.ToJSONString(filters))
 
-	req := vpc.NewDescribeSubnetsRequest()
-	req.Limit = common.StringPtr(strconv.Itoa(limit))
+	subnets := make([]*vpc.Subnet, 0)
 
+	// 通过 subnetIds 查询时，按接口上限分片，避免 SubnetIds 超过单次上限
+	// 文档约束: SubnetIds 和 Filters 不能同时指定，故分片分支仅用 SubnetIds
 	if len(subnetIds) > 0 {
-		req.SubnetIds = common.StringPtrs(subnetIds)
+		subnetIDChunks := utils.SplitStringsChunks(subnetIds, SubnetIDsPerRequestMaxLimit)
+		for _, chunk := range subnetIDChunks {
+			if len(chunk) == 0 {
+				continue
+			}
+
+			req := vpc.NewDescribeSubnetsRequest()
+			req.Limit = common.StringPtr(strconv.Itoa(limit))
+			req.SubnetIds = common.StringPtrs(chunk)
+
+			resp, err := v.client.DescribeSubnets(req)
+			if err != nil {
+				blog.Errorf("DescribeSubnets failed, err: %s", err.Error())
+				return nil, err
+			}
+			if resp == nil || resp.Response == nil {
+				blog.Errorf("DescribeSubnets resp is nil")
+				return nil, fmt.Errorf("DescribeSubnets resp is nil")
+			}
+			blog.Infof("DescribeSubnets success, requestID: %s", resp.Response.RequestId)
+			subnets = append(subnets, resp.Response.SubnetSet...)
+		}
+		return subnets, nil
 	}
 
+	req := vpc.NewDescribeSubnetsRequest()
+	req.Limit = common.StringPtr(strconv.Itoa(limit))
 	if len(filters) > 0 {
 		req.Filters = make([]*vpc.Filter, 0)
-		for _, v := range filters {
+		for _, f := range filters {
 			req.Filters = append(req.Filters, &vpc.Filter{
-				Name: common.StringPtr(v.Name), Values: common.StringPtrs(v.Values)})
+				Name: common.StringPtr(f.Name), Values: common.StringPtrs(f.Values)})
 		}
 	}
 
 	got, total := 0, 0
 	first := true
-	subnets := make([]*vpc.Subnet, 0)
 	for got < total || first {
 		first = false
 		req.Offset = common.StringPtr(strconv.Itoa(got))
@@ -185,7 +210,6 @@ func (v *VpcClient) DescribeSubnets(subnetIds []string, filters []*Filter) (
 			return nil, fmt.Errorf("DescribeSubnets resp is nil")
 		}
 		blog.Infof("DescribeSubnets success, requestID: %s", resp.Response.RequestId)
-		// convertSubnet(resp.Response.SubnetSet)...
 		subnets = append(subnets, resp.Response.SubnetSet...)
 		got += len(resp.Response.SubnetSet)
 		total = int(*resp.Response.TotalCount)
