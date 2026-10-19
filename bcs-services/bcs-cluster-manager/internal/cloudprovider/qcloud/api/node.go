@@ -544,8 +544,9 @@ func (nc *NodeClient) ListKeyPairs() ([]*cvm.KeyPair, error) {
 	return keyPairs, nil
 }
 
-// ModifyInstancesVpcAttribute 修改实例vpc属性(vpc必须存在对应可用区的子网)
-func (nc *NodeClient) ModifyInstancesVpcAttribute(vpcID string, subnet string, instanceIds []string) error {
+// ModifyInstancesVpcAttribute 修改实例vpc属性(vpc必须存在对应可用区的子网)，返回RequestId
+func (nc *NodeClient) ModifyInstancesVpcAttribute(vpcID string, subnet string, instanceIds []string) (
+	string, error) {
 	req := cvm.NewModifyInstancesVpcAttributeRequest()
 	if len(instanceIds) > 0 {
 		req.InstanceIds = common.StringPtrs(instanceIds)
@@ -559,13 +560,15 @@ func (nc *NodeClient) ModifyInstancesVpcAttribute(vpcID string, subnet string, i
 	resp, err := nc.client.ModifyInstancesVpcAttribute(req)
 	if err != nil {
 		blog.Errorf("ModifyInstancesVpcAttribute[%+v] failed: %v", instanceIds, err)
-		return err
+		return "", err
 	}
 
 	if resp.Response == nil {
-		return fmt.Errorf("ModifyInstancesVpcAttribute[%+v] lost validate response", instanceIds)
+		return "", fmt.Errorf("ModifyInstancesVpcAttribute[%+v] lost validate response", instanceIds)
 	}
 
-	blog.Infof("ModifyInstancesVpcAttribute[%+v] vpc[%s] subnet[%s] successful", instanceIds, vpcID, subnet)
-	return nil
+	requestID := utils.StringPtrToString(resp.Response.RequestId)
+	blog.Infof("ModifyInstancesVpcAttribute[%+v] vpc[%s] subnet[%s] requestId[%s] successful",
+		instanceIds, vpcID, subnet, requestID)
+	return requestID, nil
 }

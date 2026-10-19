@@ -84,7 +84,7 @@ func ModifyInstancesVpcTask(taskID string, stepName string) error {
 		// return retErr
 	}
 
-	err = business.ModifyInstancesVpcAttribute(ctx, vpcID, nodeIds, dependInfo.CmOption)
+	opRequestIDs, err := business.ModifyInstancesVpcAttribute(ctx, vpcID, nodeIds, dependInfo.CmOption)
 	if err != nil {
 		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
 			fmt.Sprintf("ModifyInstancesVpcTask modify nodes vpc failed, nodeIds:[%s], err:[%s]", nodeIds, err))
@@ -93,6 +93,13 @@ func ModifyInstancesVpcTask(taskID string, stepName string) error {
 		retErr := fmt.Errorf("ModifyInstancesVpcAttribute err, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
+	}
+
+	if len(opRequestIDs) > 0 {
+		if state.Task.CommonParams == nil {
+			state.Task.CommonParams = make(map[string]string)
+		}
+		state.Task.CommonParams[cloudprovider.LatestOpRequestIDsKey.String()] = utils.MapToStrings(opRequestIDs)
 	}
 
 	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
@@ -146,8 +153,12 @@ func CheckInstanceStateTask(taskID string, stepName string) error { // nolint
 	// inject taskID
 	ctx := cloudprovider.WithTaskIDAndStepNameForContext(context.Background(), taskID, stepName)
 
+	// 解析LatestOperationRequestId映射: instanceID -> requestID
+	opRequestIDs := cloudprovider.ParseMapFromStepParas(state.Task.CommonParams,
+		cloudprovider.LatestOpRequestIDsKey.String())
+
 	instanceList, err := business.CheckCvmInstanceState(ctx, nodeIds,
-		&cloudprovider.ListNodesOption{Common: dependInfo.CmOption})
+		opRequestIDs, &cloudprovider.ListNodesOption{Common: dependInfo.CmOption})
 	if err != nil {
 		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
 			fmt.Sprintf("CheckInstanceStateTask CheckCvmInstanceState failed, nodeIds:[%s], err:[%s]",

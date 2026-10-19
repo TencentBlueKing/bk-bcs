@@ -300,6 +300,9 @@ var (
 	// TimeoutNodeIDsKey xxx
 	TimeoutNodeIDsKey ParamKey = "timeoutNodeIDs"
 
+	// LatestOpRequestIDsKey 最新操作请求ID，用于校验LatestOperationState对应的操作是否为当前操作
+	LatestOpRequestIDsKey ParamKey = "latestOpRequestIDs"
+
 	// FailureReason xxx
 	FailureReason ParamKey = "failureReason"
 

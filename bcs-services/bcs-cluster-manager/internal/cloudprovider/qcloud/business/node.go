@@ -446,6 +446,7 @@ func logInstanceInfo(taskID string, ins *cvm.Instance) {
 	instanceState := utils.StringPtrToString(ins.InstanceState)
 	latestOp := utils.StringPtrToString(ins.LatestOperation)
 	latestOpState := utils.StringPtrToString(ins.LatestOperationState)
+	latestOpRequestID := utils.StringPtrToString(ins.LatestOperationRequestId)
 	vpcID := func() string {
 		if ins.VirtualPrivateCloud != nil {
 			return utils.StringPtrToString(ins.VirtualPrivateCloud.VpcId)
@@ -468,14 +469,15 @@ func logInstanceInfo(taskID string, ins *cvm.Instance) {
 	osName := utils.StringPtrToString(ins.OsName)
 	createdTime := utils.StringPtrToString(ins.CreatedTime)
 	blog.Infof("CheckCvmInstanceState[%s] instance[%s] InstanceState[%s] LatestOperation[%s] "+
-		"LatestOperationState[%s] VpcID[%s] PrivateIP[%s] Zone[%s] "+
+		"LatestOperationState[%s] LatestOperationRequestId[%s] VpcID[%s] PrivateIP[%s] Zone[%s] "+
 		"InstanceType[%s] OsName[%s] CreatedTime[%s]",
-		taskID, instanceID, instanceState, latestOp, latestOpState,
+		taskID, instanceID, instanceState, latestOp, latestOpState, latestOpRequestID,
 		vpcID, privateIP, zone, instanceType, osName, createdTime)
 }
 
 // waitAndLogInstanceInit waits for instance initialization, polls instance info every 5s for 40s
-func waitAndLogInstanceInit(timeContext context.Context, client *api.NodeClient, ids []string, taskID string) {
+func waitAndLogInstanceInit(timeContext context.Context, client *api.NodeClient, ids []string,
+	taskID string, opRequestIDs map[string]string) {
 	initWaitTicker := time.NewTicker(5 * time.Second)
 	defer initWaitTicker.Stop()
 	initWaitTimer := time.NewTimer(40 * time.Second)
@@ -494,6 +496,12 @@ initWaitLoop:
 			}
 			for _, ins := range initInstances {
 				logInstanceInfo(taskID, ins)
+				instanceID := utils.StringPtrToString(ins.InstanceId)
+				latestOpRequestID := utils.StringPtrToString(ins.LatestOperationRequestId)
+				if expectedReqID, ok := opRequestIDs[instanceID]; ok && expectedReqID != "" {
+					blog.Infof("CheckCvmInstanceState[%s] instance[%s] LatestOperationRequestId[%s] expected[%s] matched[%v]",
+						taskID, instanceID, latestOpRequestID, expectedReqID, latestOpRequestID == expectedReqID)
+				}
 			}
 		case <-timeContext.Done():
 			blog.Warnf("CheckCvmInstanceState[%s] context done during initial wait: %v",
@@ -504,9 +512,11 @@ initWaitLoop:
 }
 
 // CheckCvmInstanceState check cvm nodes state
+// opRequestIDs: instanceID -> LatestOperationRequestId 映射，用于校验LatestOperationState对应的操作是否为当前操作；
+// 如果opRequestIDs为空或某instanceID不在map中，则跳过RequestId校验
 // nolint
 func CheckCvmInstanceState(ctx context.Context, ids []string,
-	opt *cloudprovider.ListNodesOption) (*InstanceList, error) {
+	opRequestIDs map[string]string, opt *cloudprovider.ListNodesOption) (*InstanceList, error) {
 	taskID, stepName := cloudprovider.GetTaskIDAndStepNameFromContext(ctx)
 
 	client, err := api.GetCVMClient(opt.Common)
@@ -527,7 +537,7 @@ func CheckCvmInstanceState(ctx context.Context, ids []string,
 	defer cancel()
 
 	// wait for instance initialization before polling status
-	waitAndLogInstanceInit(timeContext, client, ids, taskID)
+	waitAndLogInstanceInit(timeContext, client, ids, taskID, opRequestIDs)
 
 	// wait all nodes to be ready
 	err = loop.LoopDoFunc(timeContext, func() error {
@@ -543,14 +553,27 @@ func CheckCvmInstanceState(ctx context.Context, ids []string,
 			instanceID := utils.StringPtrToString(ins.InstanceId)
 			instanceState := utils.StringPtrToString(ins.InstanceState)
 			latestOpState := utils.StringPtrToString(ins.LatestOperationState)
+			latestOpRequestID := utils.StringPtrToString(ins.LatestOperationRequestId)
 			vpcID := func() string {
 				if ins.VirtualPrivateCloud != nil {
 					return utils.StringPtrToString(ins.VirtualPrivateCloud.VpcId)
 				}
 				return ""
 			}()
-			blog.Infof("CheckCvmInstanceState[%s] instance[%s] status[%s:%s]", taskID,
-				instanceID, instanceState, latestOpState)
+			blog.Infof("CheckCvmInstanceState[%s] instance[%s] status[%s:%s] latestOpRequestID[%s]",
+				taskID, instanceID, instanceState, latestOpState, latestOpRequestID)
+
+			// 校验LatestOperationRequestId是否匹配当前操作
+			// 如果opRequestIDs不为空且instanceID在map中，则只有RequestId匹配时才判断latestOpState
+			if len(opRequestIDs) > 0 {
+				expectedRequestID, ok := opRequestIDs[instanceID]
+				if ok && expectedRequestID != "" && latestOpRequestID != expectedRequestID {
+					blog.Infof("CheckCvmInstanceState[%s] instance[%s] LatestOperationRequestId[%s] "+
+						"not match expected[%s], skip status judgment", taskID, instanceID,
+						latestOpRequestID, expectedRequestID)
+					continue
+				}
+			}
 
 			switch latestOpState {
 			case api.SUCCESS:
@@ -609,14 +632,27 @@ func CheckCvmInstanceState(ctx context.Context, ids []string,
 			instanceID := utils.StringPtrToString(ins.InstanceId)
 			instanceState := utils.StringPtrToString(ins.InstanceState)
 			latestOpState := utils.StringPtrToString(ins.LatestOperationState)
+			latestOpRequestID := utils.StringPtrToString(ins.LatestOperationRequestId)
 			vpcID := func() string {
 				if ins.VirtualPrivateCloud != nil {
 					return utils.StringPtrToString(ins.VirtualPrivateCloud.VpcId)
 				}
 				return ""
 			}()
-			blog.Infof("CheckCvmInstanceState[%s] instance[%s] status[%s:%s]", taskID,
-				instanceID, instanceState, latestOpState)
+			blog.Infof("CheckCvmInstanceState[%s] instance[%s] status[%s:%s] latestOpRequestID[%s]",
+				taskID, instanceID, instanceState, latestOpState, latestOpRequestID)
+
+			// 校验LatestOperationRequestId是否匹配当前操作
+			if len(opRequestIDs) > 0 {
+				expectedRequestID, ok := opRequestIDs[instanceID]
+				if ok && expectedRequestID != "" && latestOpRequestID != expectedRequestID {
+					blog.Infof("CheckCvmInstanceState[%s] instance[%s] LatestOperationRequestId[%s] "+
+						"not match expected[%s], skip status judgment", taskID, instanceID,
+						latestOpRequestID, expectedRequestID)
+					continue
+				}
+			}
+
 			switch latestOpState {
 			case api.SUCCESS:
 				running = append(running, InstanceInfo{
@@ -654,13 +690,14 @@ func CheckCvmInstanceState(ctx context.Context, ids []string,
 	return instances, nil
 }
 
-// ModifyInstancesVpcAttribute modify instance vpc attribute
+// ModifyInstancesVpcAttribute modify instance vpc attribute, 返回instanceID->requestID映射
 func ModifyInstancesVpcAttribute(ctx context.Context, vpcID string, ids []string,
-	opt *cloudprovider.CommonOption) error {
+	opt *cloudprovider.CommonOption) (map[string]string, error) {
 	taskID, stepName := cloudprovider.GetTaskIDAndStepNameFromContext(ctx)
+	opRequestIDs := make(map[string]string)
 
 	if vpcID == "" || len(ids) == 0 {
-		return fmt.Errorf("ModifyInstancesVpcAttribute[%s] vpcID/instanceIDs empty", taskID)
+		return nil, fmt.Errorf("ModifyInstancesVpcAttribute[%s] vpcID/instanceIDs empty", taskID)
 	}
 
 	// 转移vpc的节点按照可用区分类
@@ -668,7 +705,7 @@ func ModifyInstancesVpcAttribute(ctx context.Context, vpcID string, ids []string
 	if err != nil {
 		blog.Errorf("ModifyInstancesVpcAttribute[%s] sortInstancesByZone[%s][%v] failed: %v",
 			taskID, vpcID, ids, err)
-		return nil
+		return nil, err
 	}
 	blog.Infof("ModifyInstancesVpcAttribute[%s] selectZoneAvailableSubnet[%+v]", taskID, zoneNodes)
 
@@ -681,7 +718,7 @@ func ModifyInstancesVpcAttribute(ctx context.Context, vpcID string, ids []string
 	zoneSubnets, err := selectZoneAvailableSubnet(vpcID, zoneSubnetNum, opt)
 	if err != nil {
 		blog.Errorf("ModifyInstancesVpcAttribute[%s] selectZoneAvailableSubnet failed: %v", taskID, err)
-		return err
+		return nil, err
 	}
 
 	blog.Infof("ModifyInstancesVpcAttribute[%s] selectZoneAvailableSubnet[%+v]", taskID, zoneSubnets)
@@ -689,7 +726,7 @@ func ModifyInstancesVpcAttribute(ctx context.Context, vpcID string, ids []string
 	nodeClient, err := api.GetCVMClient(opt)
 	if err != nil {
 		blog.Errorf("ModifyInstancesVpcAttribute[%s] getCVMClient failed: %v", taskID, err)
-		return err
+		return nil, err
 	}
 
 	for zone := range zoneNodes {
@@ -708,11 +745,15 @@ func ModifyInstancesVpcAttribute(ctx context.Context, vpcID string, ids []string
 		instanceIDsSlice := utils.SplitStringsChunks(instanceIDs, 20)
 		for i := range instanceIDsSlice {
 			// modify instances vpc
-			err = nodeClient.ModifyInstancesVpcAttribute(vpcID, subnetID, instanceIDsSlice[i])
-			if err != nil {
+			requestID, errLocal := nodeClient.ModifyInstancesVpcAttribute(vpcID, subnetID, instanceIDsSlice[i])
+			if errLocal != nil {
 				blog.Errorf("ModifyInstancesVpcAttribute[%s][%s:%s] instances[%v] failed: %v",
-					taskID, vpcID, zone, instanceIDsSlice[i], err)
-				return err
+					taskID, vpcID, zone, instanceIDsSlice[i], errLocal)
+				return opRequestIDs, errLocal
+			}
+			// 记录每个实例对应的requestID
+			for _, insID := range instanceIDsSlice[i] {
+				opRequestIDs[insID] = requestID
 			}
 		}
 
@@ -724,7 +765,7 @@ func ModifyInstancesVpcAttribute(ctx context.Context, vpcID string, ids []string
 				vpcID, zone, instanceIDs))
 	}
 
-	return nil
+	return opRequestIDs, nil
 }
 
 func sortInstancesByZone(ids []string, opt *cloudprovider.CommonOption) (map[string][]*proto.Node, error) {

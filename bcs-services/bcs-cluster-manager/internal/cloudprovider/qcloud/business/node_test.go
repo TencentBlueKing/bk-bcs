@@ -32,7 +32,7 @@ func TestModifyInstancesVpcAttribute(t *testing.T) {
 		vpcID        = ""
 		instanceIDs = []string{""}
 	)
-	err := ModifyInstancesVpcAttribute(context.Background(), vpcID, instanceIDs, defaultCommon)
+	_, err := ModifyInstancesVpcAttribute(context.Background(), vpcID, instanceIDs, defaultCommon)
 	if err != nil {
 		t.Fatal(err)
 	}

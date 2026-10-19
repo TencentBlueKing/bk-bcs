@@ -824,7 +824,7 @@ func CreateModifyInstancesVpcTask(taskID string, stepName string) error {
 	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
 		fmt.Sprintf("nodes %+v start to trans vpc[%s]", nodeIDs, dependInfo.Cluster.GetVpcID()))
 
-	err = business.ModifyInstancesVpcAttribute(ctx, dependInfo.Cluster.GetVpcID(), nodeIDs, dependInfo.CmOption)
+	opRequestIDs, err := business.ModifyInstancesVpcAttribute(ctx, dependInfo.Cluster.GetVpcID(), nodeIDs, dependInfo.CmOption)
 	if err != nil {
 		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
 			fmt.Sprintf("modify nodes %+v vpc failed %s", nodeIDs, err.Error()))
@@ -833,6 +833,13 @@ func CreateModifyInstancesVpcTask(taskID string, stepName string) error {
 		retErr := fmt.Errorf("ModifyInstancesVpcAttribute err, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
+	}
+
+	if len(opRequestIDs) > 0 {
+		if state.Task.CommonParams == nil {
+			state.Task.CommonParams = make(map[string]string)
+		}
+		state.Task.CommonParams[cloudprovider.LatestOpRequestIDsKey.String()] = utils.MapToStrings(opRequestIDs)
 	}
 
 	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
@@ -894,8 +901,12 @@ func CreateCheckInstanceStateTask(taskID string, stepName string) error {
 		nodeIDs = append(nodeIDs, nodes[i].NodeID)
 	}
 
+	// 解析LatestOperationRequestId映射: instanceID -> requestID
+	opRequestIDs := cloudprovider.ParseMapFromStepParas(state.Task.CommonParams,
+		cloudprovider.LatestOpRequestIDsKey.String())
+
 	instanceList, err := business.CheckCvmInstanceState(ctx, nodeIDs,
-		&cloudprovider.ListNodesOption{Common: dependInfo.CmOption})
+		opRequestIDs, &cloudprovider.ListNodesOption{Common: dependInfo.CmOption})
 	if err != nil {
 		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
 			fmt.Sprintf("check cvm instance state failed [%s]", err))
