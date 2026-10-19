@@ -348,6 +348,8 @@ func checkIfWhiteImageOsNames(opt *cloudprovider.ClusterGroupOption) bool {
 }
 
 // clusterSupportNodeNum cluster support node num
+// Deprecated: surplusNodeNum is calculated based on GrBcsMaxClusterCidrNum count
+// TKE removed the CIDR count limit, Use clusterSupportNodeNumV2 instead
 func clusterSupportNodeNum(tkeCls *tke.Cluster, cluster *proto.Cluster) (uint32, uint32, uint32) {
 	var (
 		ipNum          uint32
@@ -382,6 +384,51 @@ func clusterSupportNodeNum(tkeCls *tke.Cluster, cluster *proto.Cluster) (uint32,
 
 	surplusNodeNum := float64((business.GrBcsMaxClusterCidrNum-clusterCidrNum)*step) /
 		float64(utils.Uint64PtrToUint64(tkeCls.ClusterNetworkSettings.MaxNodePodNum))
+
+	return uint32(clusterNodeNum), uint32(maxClusterNodeNum) - uint32(clusterNodeNum), uint32(surplusNodeNum)
+}
+
+// clusterSupportNodeNumV2 cluster support node num
+// calculates node count based on actual remaining VPC overlay IPs
+func clusterSupportNodeNumV2(tkeCls *tke.Cluster, cluster *proto.Cluster,
+	opt *cloudprovider.CommonOption) (uint32, uint32, uint32) {
+	var (
+		ipNum uint32
+	)
+	cidrs, err := business.GetCidrsFromCluster(tkeCls)
+	if err != nil {
+		blog.Errorf("clusterSupportNodeNumV2 failed: %v", err)
+		return 0, 0, 0
+	}
+	for i := range cidrs {
+		if utils.StringInSlice(cidrs[i].Type, []string{utils.ClusterCIDR, utils.MultiClusterCIDR}) {
+			num, _ := cidrs[i].GetIPNum()
+			ipNum += num
+		}
+	}
+
+	// 已经存在的节点数量
+	clusterNodeNum := *tkeCls.ClusterNodeNum
+	if *tkeCls.ClusterType == icommon.ClusterManageTypeIndependent {
+		clusterNodeNum += *tkeCls.ClusterMaterNodeNum
+	}
+
+	// 集群可添加节点数，基于当前已分配 CIDR 计算
+	maxClusterNodeNum := float64(uint64(ipNum)-*tkeCls.ClusterNetworkSettings.MaxClusterServiceNum) /
+		float64(*tkeCls.ClusterNetworkSettings.MaxNodePodNum)
+
+	// 剩余可支持的节点数量
+	// 先获取底层 VPC overlay 实际剩余 IP，最后基于该 IP 计算
+	step := getClusterCidrStep(cluster)
+	cloud, _ := cloudprovider.GetCloudByProvider(cloudName)
+	vpcSurplusIPNum, errVpc := business.GetGrVPCIPSurplus(opt, cloud.GetCloudID(), cluster.GetVpcID(), nil)
+	if errVpc != nil {
+		blog.Errorf("clusterSupportNodeNumV2[%s] GetGrVPCIPSurplus failed: %v", cluster.ClusterID, errVpc)
+		vpcSurplusIPNum = 0
+	}
+	// 按 step 向下取整，计算 VPC 还能扩容多少节点
+	surplusNodeNum := float64(vpcSurplusIPNum/step*step) /
+		float64(*tkeCls.ClusterNetworkSettings.MaxNodePodNum)
 
 	return uint32(clusterNodeNum), uint32(maxClusterNodeNum) - uint32(clusterNodeNum), uint32(surplusNodeNum)
 }
@@ -426,8 +473,8 @@ func updateClusterInfo(cloudID string, opt *cloudprovider.GetClusterOption) (*pr
 		opt.Cluster.ExtraInfo[icommon.ImageProvider] = icommon.PublicImageProvider
 	}
 
-	// 计算集群可支持节点容量
-	currentNodeNum, supNodeNum, maxNodeNum := clusterSupportNodeNum(cls, opt.Cluster)
+	// 计算集群可支持节点容量，使用 V2 版本，基于 VPC overlay 实际剩余 IP
+	currentNodeNum, supNodeNum, maxNodeNum := clusterSupportNodeNumV2(cls, opt.Cluster, &opt.CommonOption)
 	opt.Cluster.ExtraInfo[icommon.ClusterCurNodeNum] = fmt.Sprintf("%v", currentNodeNum)
 	opt.Cluster.ExtraInfo[icommon.ClusterSupNodeNum] = fmt.Sprintf("%v", supNodeNum)
 	opt.Cluster.ExtraInfo[icommon.ClusterMaxNodeNum] = fmt.Sprintf("%v", maxNodeNum)
@@ -1177,43 +1224,40 @@ func getClusterCidrAvailableIPNum(clusterID, tkeID string, option *cloudprovider
 	return business.GetClusterGrIPSurplus(option, clusterID, tkeID)
 }
 
+// autoScaleClusterCidr auto scale cluster cidr
 // TKE cluster exist master clusterCIDR and multiCIDRList, multiCIDRList add length 9 CIDRs at most.
 // when scale tke cluster CIDRs at present,
 // BCS use [step, ..., step, xxx, xxx] 7 step rules, xxx need to manually assign
+// now TKE removed the CIDR count limit, current logic dynamically scales based on
+// actual remaining VPC overlay IPs without any count restriction
 func autoScaleClusterCidr(option cloudprovider.CommonOption, cls *proto.Cluster, needIPNum uint32) ([]string, error) {
-	// not allow when assign full multiCIDR
-	if len(cls.NetworkSettings.MultiClusterCIDR) >= utils.MultiClusterCIDRCnt {
-		return nil, fmt.Errorf("cluster[%s] scaleNodes exceed max cdir number[%v]", cls.ClusterID,
-			utils.MultiClusterCIDRCnt)
-	}
-
 	// auto scale cidr resource when addNodes previous clusters may be not set cidrStep
 	defaultCidrStep := getClusterCidrStep(cls)
 
-	// surPlusIPNum if enough
-	surPlusIPNum := getSurplusCidrNum(cls.NetworkSettings.MultiClusterCIDR, defaultCidrStep)
-	blog.Infof("cluster[%s] cloud[%s] CheckClusterCidrAvailable surPlusIPCount[%v] needIPCount[%v]",
-		cls.ClusterID, cloudName, surPlusIPNum, needIPNum)
+	cloud, _ := cloudprovider.GetCloudByProvider(cloudName)
+	// 查询 VPC overlay 实际剩余 IP 数量，只要底层有就允许扩容
+	vpcSurplusIPNum, err := business.GetGrVPCIPSurplus(&option, cloud.GetCloudID(), cls.GetVpcID(), nil)
+	if err != nil {
+		return nil, fmt.Errorf("cluster[%s] GetGrVPCIPSurplus failed: %v", cls.ClusterID, err)
+	}
+	blog.Infof("cluster[%s] cloud[%s] autoScaleClusterCidr vpcSurplusIPCount[%v] needIPCount[%v]",
+		cls.ClusterID, cloudName, vpcSurplusIPNum, needIPNum)
 
-	if surPlusIPNum < needIPNum {
-		return nil, fmt.Errorf("cluster[%s] scaleNodes exceed max cdir number", cls.ClusterID)
+	if vpcSurplusIPNum < needIPNum {
+		return nil, fmt.Errorf("cluster[%s] vpc overlay surplus ip[%d] not enough for needIPNum[%d]",
+			cls.ClusterID, vpcSurplusIPNum, needIPNum)
 	}
 
-	// calculate mask
 	var (
 		maskIPNum = make([]uint32, 0)
 		sumIPSum  uint32
 	)
-	for _, segNum := range getSurplusCidrList(cls.NetworkSettings.MultiClusterCIDR, defaultCidrStep) {
-		sumIPSum += segNum
-		maskIPNum = append(maskIPNum, utils.CalMaskLen(float64(segNum)))
-
-		if sumIPSum >= needIPNum {
-			break
-		}
+	for sumIPSum < needIPNum {
+		sumIPSum += defaultCidrStep
+		maskIPNum = append(maskIPNum, utils.CalMaskLen(float64(defaultCidrStep)))
 	}
-	blog.Infof("cluster[%s] cloud[%s] CheckClusterCidrAvailable maskIPNum[%v]",
-		cls.ClusterID, cloudName, maskIPNum)
+	blog.Infof("cluster[%s] cloud[%s] autoScaleClusterCidr maskIPNum[%v] cidrCount[%v]",
+		cls.ClusterID, cloudName, maskIPNum, len(maskIPNum))
 
 	return business.AddGrCidrsToCluster(&option, cls.GetVpcID(), cls, maskIPNum, nil)
 }

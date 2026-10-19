@@ -622,22 +622,6 @@ func AddClusterGrCidr(opt *cloudprovider.CommonOption, clusterId string, cidrs [
 		return errors.New("cidrNum must be greater than 0")
 	}
 
-	clusterCidrs, err := GetClusterGrCidrs(opt, clusterId)
-	if err != nil {
-		return err
-	}
-
-	totalCidrNum := cidrNum
-	for _, cidr := range clusterCidrs {
-		if utils.StringInSlice(cidr.Type, []string{utils.ClusterCIDR, utils.MultiClusterCIDR}) {
-			totalCidrNum++
-		}
-	}
-
-	if totalCidrNum > GrMaxClusterCidrNum {
-		return fmt.Errorf("total cidr number must be less than or equal to %d", GrMaxClusterCidrNum)
-	}
-
 	// 调用tke接口添加集群的cidr
 	tkeCli, err := api.NewTkeClient(opt)
 	if err != nil {
