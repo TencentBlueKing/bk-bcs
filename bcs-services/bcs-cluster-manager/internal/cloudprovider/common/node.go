@@ -206,14 +206,34 @@ func ExecNodeDrainPodTask(ctx context.Context, paras CreateNodeDrainPodTaskParas
 			ctx, cancel := context.WithTimeout(context.Background(), time.Duration(paras.DrainHelper.Timeout)*time.Second)
 			defer cancel()
 
-			if err := k8sOperator.ClusterUpdateScheduleNode(ctx, clusterops.NodeInfo{
+		if err := k8sOperator.ClusterUpdateScheduleNode(ctx, clusterops.NodeInfo{
+			ClusterID: paras.ClusterID,
+			NodeName:  node,
+			Desired:   true,
+		}); err != nil {
+			blog.Errorf("drainClusterNodes[%s] ClusterUpdateScheduleNode failed in cluster %s, err %s",
+				node, paras.ClusterID, err.Error())
+
+			cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+				fmt.Sprintf("node[%s] drain pod task finished", node))
+			resultChan <- NodeDrainPodResult{
+				NodeName: node,
+				Result:   NodeDrainPodResultFailed,
+				Err:      err,
+			}
+			return
+		}
+
+		// 当未禁用驱逐时，提前检查节点上的Pod是否受PDB阻止驱逐，避免等待超时
+		skipPods := make(map[string]bool)
+		if !paras.DrainHelper.DisableEviction {
+			pods, err := k8sOperator.GetNodePods(ctx, clusterops.GetNodePodsOption{
 				ClusterID: paras.ClusterID,
 				NodeName:  node,
-				Desired:   true,
-			}); err != nil {
-				blog.Errorf("drainClusterNodes[%s] ClusterUpdateScheduleNode failed in cluster %s, err %s",
+			})
+			if err != nil {
+				blog.Errorf("drainClusterNodes[%s] GetNodePods failed in cluster %s, err %s",
 					node, paras.ClusterID, err.Error())
-
 				cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
 					fmt.Sprintf("node[%s] drain pod task finished", node))
 				resultChan <- NodeDrainPodResult{
@@ -224,7 +244,37 @@ func ExecNodeDrainPodTask(ctx context.Context, paras CreateNodeDrainPodTaskParas
 				return
 			}
 
-			if err := k8sOperator.DrainNode(ctx, paras.ClusterID, node, paras.DrainHelper); err != nil {
+			var pdbBlockedPods []string
+			for _, pod := range pods {
+				hasPDB, err := k8sOperator.CheckPodPDB(ctx, clusterops.CheckPodPDBOption{
+					ClusterID: paras.ClusterID,
+					Pod:       *pod,
+				})
+				if err != nil {
+					blog.Warnf("drainClusterNodes[%s] CheckPodPDB for pod[%s] failed, err %s",
+						node, pod.Name, err.Error())
+					continue
+				}
+				if hasPDB {
+					pdbBlockedPods = append(pdbBlockedPods, fmt.Sprintf("%s/%s", pod.Namespace, pod.Name))
+				}
+			}
+
+		if len(pdbBlockedPods) > 0 {
+				warnMsg := fmt.Sprintf("node[%s] has pods blocked by PDB and DisableEviction is false, "+
+					"these pods will be skipped during drain, blockedPods: [%s]",
+					node, strings.Join(pdbBlockedPods, ","))
+				blog.Warnf(warnMsg)
+				cloudprovider.GetStorageModel().CreateTaskStepLogWarn(context.Background(), taskID, stepName, warnMsg)
+			}
+
+			// 构建 skipPods map 传给 DrainNode 跳过PDB阻止的Pod
+			for _, p := range pdbBlockedPods {
+				skipPods[p] = true
+			}
+		}
+
+		if err := k8sOperator.DrainNode(ctx, paras.ClusterID, node, paras.DrainHelper, skipPods); err != nil {
 				blog.Errorf("drainClusterNodes[%s] failed in cluster %s, err %s",
 					node, paras.ClusterID, err.Error())
 

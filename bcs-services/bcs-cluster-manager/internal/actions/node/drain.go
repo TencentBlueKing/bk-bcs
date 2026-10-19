@@ -83,7 +83,7 @@ func (ua *DrainNodeAction) generateDrainHelper() error {
 		DeleteLocalData:                 true,
 		Selector:                        ua.req.Selector,
 		PodSelector:                     ua.req.PodSelector,
-		DisableEviction:                 true,
+		DisableEviction:                 ua.req.DisableEviction,
 		DryRun:                          ua.req.DryRun,
 		SkipWaitForDeleteTimeoutSeconds: int(ua.req.SkipWaitForDeleteTimeoutSeconds),
 	}
@@ -473,6 +473,25 @@ func (ua *CheckDrainNodeAction) getEvictionRisk(pod *corev1.Pod) ([]*cmproto.Evi
 		return evictionRisks, false, nil
 	}
 
+	// disable-eviction parameter
+	hasPDB, err := ua.hasPodPDB(context.Background(), ua.req.ClusterID, pod)
+	if err != nil {
+		blog.Warnf("CheckPodPDB[%s] failed in cluster %s, err %s", pod.Name, ua.req.ClusterID, err.Error())
+		return evictionRisks, false, nil
+	}
+
+	if hasPDB {
+		// 禁用驱逐时，绕过PDB策略强制删除Pod，记录风险
+		evictionRisks = append(evictionRisks, &cmproto.EvictionRisk{
+			RiskParameter:   DisableEvictionParameter,
+			RiskDescription: DisableEvictionDescription,
+		})
+		if !ua.req.DisableEviction {
+			// 未禁用驱逐时，PDB会阻止Pod被驱逐
+			return evictionRisks, false, nil
+		}
+	}
+
 	// delete-local-data parameter checks if the pod has emptydir volumes
 	if ua.hasEmptyDirVolume(pod) {
 		evictionRisks = append(evictionRisks, &cmproto.EvictionRisk{
@@ -489,20 +508,6 @@ func (ua *CheckDrainNodeAction) getEvictionRisk(pod *corev1.Pod) ([]*cmproto.Evi
 				RiskDescription: ForceRiskDescription,
 			})
 		}
-	}
-
-	// disable-eviction parameter
-	hasPDB, err := ua.hasPodPDB(context.Background(), ua.req.ClusterID, pod)
-	if err != nil {
-		blog.Warnf("CheckPodPDB[%s] failed in cluster %s, err %s", pod.Name, ua.req.ClusterID, err.Error())
-		return evictionRisks, true, nil
-	}
-
-	if hasPDB {
-		evictionRisks = append(evictionRisks, &cmproto.EvictionRisk{
-			RiskParameter:   DisableEvictionParameter,
-			RiskDescription: DisableEvictionDescription,
-		})
 	}
 
 	return evictionRisks, true, nil

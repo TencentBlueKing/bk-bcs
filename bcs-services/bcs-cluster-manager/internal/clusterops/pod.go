@@ -117,7 +117,7 @@ func (ko *K8SOperator) CheckPodPDB(ctx context.Context, option CheckPodPDBOption
 		return false, fmt.Errorf("CheckPodPDB Get PodDisruptionBudgets List failed: %v", err)
 	}
 
-	// check if any PDB selector matches the pod labels
+	// check if any PDB selector matches the pod labels and the PDB will block eviction
 	for _, pdb := range pdbs.Items {
 		selector, err := metav1.LabelSelectorAsSelector(pdb.Spec.Selector)
 		if err != nil {
@@ -126,7 +126,10 @@ func (ko *K8SOperator) CheckPodPDB(ctx context.Context, option CheckPodPDBOption
 		}
 
 		if selector.Matches(labels.Set(option.Pod.Labels)) {
-			return true, nil
+			// DisruptionsAllowed <= 0 表示当前PDB不允许更多中断，驱逐会被拒绝
+			if pdb.Status.DisruptionsAllowed <= 0 {
+				return true, nil
+			}
 		}
 	}
 

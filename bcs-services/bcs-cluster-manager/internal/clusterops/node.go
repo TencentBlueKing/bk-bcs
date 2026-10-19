@@ -258,7 +258,8 @@ type DrainHelper struct {
 }
 
 // DrainNode drain node
-func (ko *K8SOperator) DrainNode(ctx context.Context, clusterID, nodeName string, drainHelper DrainHelper) error {
+func (ko *K8SOperator) DrainNode(ctx context.Context, clusterID, nodeName string, drainHelper DrainHelper,
+	skipPods map[string]bool) error {
 	if ko == nil {
 		return ErrServerNotInit
 	}
@@ -283,6 +284,15 @@ func (ko *K8SOperator) DrainNode(ctx context.Context, clusterID, nodeName string
 	}
 	if drainHelper.DryRun {
 		drainer.DryRunStrategy = cmdutil.DryRunServer
+	}
+	// 跳过受PDB阻止驱逐的Pod，避免等待超时
+	if len(skipPods) > 0 {
+		drainer.AdditionalFilters = append(drainer.AdditionalFilters, func(pod v1.Pod) drain.PodDeleteStatus {
+			if skipPods[fmt.Sprintf("%s/%s", pod.Namespace, pod.Name)] {
+				return drain.MakePodDeleteStatusSkip()
+			}
+			return drain.MakePodDeleteStatusOkay()
+		})
 	}
 	return drain.RunNodeDrain(drainer, nodeName)
 }
