@@ -149,10 +149,13 @@ func (lap *ListAuthorizedProject) Do(ctx context.Context,
 	if tenant.IsMultiTenantEnabled() {
 		if err == nil && authUser.Username != "" {
 			// username 为空时，该接口请求没有意义, any 标识用户有无限制项目权限
-			ids, any, lerr := auth.ListAuthorizedProjectIDs(authUser.Username, tenant.GetTenantIdFromContext(ctx))
+			ids, any, lerr := auth.ListAuthorizedProjectIDs(ctx, authUser.Username, tenant.GetTenantIdFromContext(ctx))
 			if lerr != nil {
-				logging.Error("get user project permissions failed, err: %s", err.Error())
+				logging.Error("get user project permissions failed, err: %s", lerr.Error())
 				return nil, nil
+			}
+			if noneAuthorized(req.All, any, ids) {
+				return emptyAuthorizedProjects(), nil
 			}
 
 			logging.Info("list authorized projects: %+v %+v %v %v", ids, any, req.All,
@@ -201,10 +204,13 @@ func (lap *ListAuthorizedProject) Do(ctx context.Context,
 	} else {
 		if err == nil && authUser.Username != "" {
 			// username 为空时，该接口请求没有意义, any 标识用户有无限制项目权限
-			ids, any, err := auth.ListAuthorizedProjectIDs(authUser.Username, tenant.GetTenantIdFromContext(ctx))
+			ids, any, err := auth.ListAuthorizedProjectIDs(ctx, authUser.Username, tenant.GetTenantIdFromContext(ctx))
 			if err != nil {
 				logging.Error("get user project permissions failed, err: %s", err.Error())
 				return nil, nil
+			}
+			if noneAuthorized(req.All, any, ids) {
+				return emptyAuthorizedProjects(), nil
 			}
 			if req.All {
 				// true 表示限制看到有权限的项目
@@ -266,4 +272,24 @@ func (lap *ListAuthorizedProject) Do(ctx context.Context,
 		"results": projectList,
 	}
 	return &data, nil
+}
+
+// noneAuthorized 表示当前用户没有任何项目查看权限。
+// 空 ID 列表不能继续查库，否则 SearchProjects 会忽略空的 $in 条件，退化为返回全部项目。
+func noneAuthorized(all, any bool, ids []string) bool {
+	if any || len(ids) != 0 {
+		return false
+	}
+	if !all {
+		return true
+	}
+	return config.GlobalConf.RestrictAuthorizedProjects
+}
+
+func emptyAuthorizedProjects() *map[string]interface{} {
+	data := map[string]interface{}{
+		"total":   uint32(0),
+		"results": []*pm.Project{},
+	}
+	return &data
 }

@@ -5,6 +5,17 @@
     {
       "operation": "upsert_role",
       "data": {
+        "id": "project_creator",
+        "name": "项目创建者",
+        "description": "允许创建项目",
+        "actions": [
+          {"id": "project_create"}
+        ]
+      }
+    },
+    {
+      "operation": "upsert_role",
+      "data": {
         "id": "read_only",
         "name": "项目只读",
         "description": "项目维度只读",

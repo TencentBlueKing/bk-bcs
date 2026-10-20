@@ -13,6 +13,7 @@
 package auth
 
 import (
+	"context"
 	"fmt"
 
 	bcsIAM "github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
@@ -26,8 +27,12 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
 )
 
-// ListAuthorizedProjectIDs 过滤有权限的项目 ID，如果为 any，则返回 true
-func ListAuthorizedProjectIDs(username string, tenantId string) ([]string, bool, error) {
+// ListAuthorizedProjectIDs 过滤有权限的项目 ID，如果为 any，则返回 true。
+// EnableV4 时走 IAM V4 批量鉴权；否则走 V3 PolicyQuery。
+func ListAuthorizedProjectIDs(ctx context.Context, username string, tenantId string) ([]string, bool, error) {
+	if config.GlobalConf != nil && config.GlobalConf.IAM.EnableV4 {
+		return listAuthorizedProjectIDsV4(ctx, username, tenantId)
+	}
 	// 组装 iam request
 	iamReq := makeIAMRequest(username, ProjectView)
 	if err := iamReq.Validate(); err != nil {

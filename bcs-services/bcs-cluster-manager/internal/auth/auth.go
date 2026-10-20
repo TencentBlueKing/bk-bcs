@@ -204,8 +204,6 @@ func callIAM(
 		return clusterIam.CanViewCluster(user.GetUsername(), resourceID.ProjectID, resourceID.ClusterID)
 	case cluster.CanDeleteClusterOperation:
 		return clusterIam.CanDeleteCluster(user.GetUsername(), resourceID.ProjectID, resourceID.ClusterID)
-	case project.CanCreateProjectOperation:
-		return projectIam.CanCreateProject(user.GetUsername())
 	case project.CanEditProjectOperation:
 		return projectIam.CanEditProject(user.GetUsername(), resourceID.ProjectID)
 	case project.CanViewProjectOperation:
