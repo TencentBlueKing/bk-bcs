@@ -88,7 +88,7 @@ bcs-network:ingress-controller
 bcs-services:bkcmdb-synchronizer gateway \
 	storage user-manager cluster-manager cluster-reporter nodeagent tools k8s-watch kube-agent data-manager \
 	helm-manager project-manager nodegroup-manager federation-manager powertrading mesh-manager push-manager \
-	platform-manager api-gateway-syncing bk-apisix-gateway-syncing bk-apisix-gateway
+	platform-manager api-gateway-syncing bkai-syncing bk-apisix-gateway-syncing bk-apisix-gateway
 
 bcs-scenarios: kourse gitops
 
@@ -151,6 +151,10 @@ api-gateway-syncing:
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-api-gateway-syncing
 	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-api-gateway-syncing/* ${PACKAGEPATH}/bcs-services/bcs-api-gateway-syncing/
 	cd bcs-services/bcs-api-gateway-syncing && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-api-gateway-syncing/bcs-api-gateway-syncing ./main.go
+
+bkai-syncing:
+	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-bkai-syncing
+	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-bkai-syncing/* ${PACKAGEPATH}/bcs-services/bcs-bkai-syncing/
 
 storage:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services

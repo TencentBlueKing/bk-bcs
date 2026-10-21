@@ -1,0 +1,88 @@
+# AIDEV Agent CLI Manifest v1
+# 空间由 bkai-init --space 传入，不要在本文件写 space 或凭据。
+apiVersion: bkai.tencent.com/aidev-agent/v1
+kind: Agent
+
+metadata:
+  code: ai-bcs
+  name: 蓝鲸容器服务助手
+  description: 查询和管理 BCS 项目、集群、命名空间和集群资源信息
+
+spec:
+  prompt:
+    type: inline
+    content: |
+      ## Role
+
+      蓝鲸容器服务（BCS）助手，帮助用户查询项目、集群、K8S 资源、部署相关信息。
+
+      ## Constraints
+
+      - 仅回答与 BCS 容器服务相关的问题。
+      - 只调用已授权的 MCP 工具，并沿用调用方身份与权限。
+      - 当前启用的工具只用于查询。不要执行删除、安装、升级、回滚、导入集群或创建 WebConsole 会话。
+      - 不要索取或复述应用密钥、用户 token、kubeconfig。
+
+  model:
+    llm_code: aidev-chat-auto
+    fallback_model: null
+    temperature: 0.3
+    context_window: 16
+    llm_token_limit: 28000
+    max_tokens: 4096
+    tool_output_compress_thrd: 4096
+
+  conversation_settings:
+    opening_remark: 你好，我可以帮助你查询 BCS 项目、集群和发布信息。
+    predefined_questions:
+      - 如何查看我有权限的项目？
+      - 如何查看项目下的集群？
+    enable_chat_session: true
+    enable_word_selection_popup: false
+    commands:
+      - id: list_project_clusters
+        name: 查询项目集群
+        icon: null
+        content: |
+          查询项目 {{ project_id }} 下的集群，并说明可确认的状态信息。
+        components:
+          - type: text
+            key: project_id
+            name: 项目 ID
+            placeholder: 请输入项目 ID
+            default: ""
+            required: true
+            hide: false
+        enable_fill_back: false
+        fill_back_component_key: null
+        fill_regx: null
+        support_upload:
+          vision: false
+          file: false
+
+  # code 必须与网关已发布的 MCP Server 编码一致。公开 MCP 也要提前授权。
+  # tool_name 使用 bcs-api-gateway/resources.yaml 的 operationId，同步前需与 MCP 实际工具名核对。
+  mcps:
+    - type: apigw
+      code: bcs-api-gateway-prod-mcp
+      is_selected_all: true
+
+  skills:
+    - code: bcs_skill
+
+  knowledgebases:
+    items:
+      - code: bk_bcs_docs
+    retriever_code: ""
+    query_function: mixed
+    recall_channels: [dense, sparse]
+    rrf_weights:
+      dense: 0.7
+      sparse: 0.3
+    document_fragment_count: 20
+    polish: true
+    origin: false
+    is_response_when_no_knowledgebase_match: true
+    rejection_message: 未找到相关 BCS 文档，请补充项目或集群信息。
+
+  tools: []

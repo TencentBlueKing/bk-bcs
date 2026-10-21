@@ -1,0 +1,8 @@
+apiVersion: bkai.tencent.com/v1
+kind: Skill
+metadata:
+  code: bcs_skill
+  name: 蓝鲸容器平台使用指引
+  version: 1.0.0
+  description: 查询 BCS 项目、集群、K8S 资源、部署相关信息
+spec: {}

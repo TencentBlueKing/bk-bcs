@@ -317,7 +317,7 @@ func RetryLogRule(c context.Context, req *GetLogRuleReq) (*any, error) {
 		rule.Rule.LogRuleContainer.LabelSelector = bklog.LabelSelector{
 			MatchLabels: matchLabels, MatchExpressions: matchExpressions}
 		go createBKLog(utils.GetTenantIDFromContext(c), &bklog.CreateBCSCollectorReq{
-			SpaceUID:              GetSpaceID(rctx.TenantProjectCode),
+			SpaceUID:              GetSpaceID(rctx.ProjectCode),
 			ProjectID:             rctx.ProjectId,
 			CollectorConfigName:   rule.DisplayName,
 			CollectorConfigNameEN: ruleName,

@@ -1,3 +1,5 @@
+spec_version: 2
+
 release:
   # 发布版本号，
   # 资源配置更新，需更新此版本号才会发布资源版本，此版本号和 sdk 版本号一致，错误设置会影响调用方使用
@@ -14,25 +16,250 @@ apigateway:
     - "{{ user }}"
   {% endfor %}
 
-stage:
-  name: "prod"
-  # 环境变量
-  vars: {}
-  # 代理配置
-  proxy_http:
-    timeout: 60
-    # 负载均衡类型 + Hosts
-    upstreams:
-      loadbalance: "roundrobin"
-      hosts:
-        - host: "{{ environ.BKAPI_STAGE_HOST }}"
-          weight: 100
-  # 流量控制
-  rate_limit:
-    enabled: false
-    rate:
-      tokens: 5000
-      period: 60
+stages:
+  - name: "prod"
+    # 环境变量
+    vars: {}
+    # 保留原代理地址、超时和负载均衡配置
+    backends:
+      - name: "default"
+        config:
+          timeout: 60
+          loadbalance: "roundrobin"
+          hosts:
+            - host: "{{ environ.BKAPI_STAGE_HOST }}"
+              weight: 100
+    # 流量控制
+    rate_limit:
+      enabled: false
+      rate:
+        tokens: 5000
+        period: 60
+    # 工具名沿用 resources.yaml 中的 operationId
+    mcp_servers:
+      # 读写：resources.yaml 全部资源，最终名称 {BK_APIGW_NAME}-prod-mcp
+      - name: "mcp"
+        title: "蓝鲸容器服务"
+        description: "BCS 项目、命名空间、变量、集群、节点、节点池、模板、Helm、集群组件、监控、操作记录及 WebConsole 全部接口，包含写操作"
+        labels:
+          - "bcs"
+        resource_names:
+          - list_auth_projects
+          - create_namespace
+          - get_project
+          - list_native_namespaces
+          - get_cluster_detail
+          - get_node_info
+          - list_nodegroup
+          - list_shared_clusters
+          - deploy_template
+          - get_template_version
+          - get_template
+          - preview_deploy_template
+          - list_template_space
+          - list_template_vaiables
+          - list_template_versions
+          - list_template
+          - uninstall_release
+          - get_release_detail
+          - install_release
+          - upgrade_release
+          - get_release_history
+          - release_preview
+          - rollback_release
+          - list_releases
+          - list_repos
+          - get_repo
+          - list_charts
+          - delete_chart
+          - get_chart_detail
+          - get_chart_versions
+          - delete_chart_version
+          - get_chart_version_detail
+          - label_values
+          - labels
+          - labels_by_post
+          - query
+          - query_by_post
+          - query_range
+          - query_range_by_post
+          - series
+          - series_by_post
+          - get_activity_logs
+          - create_web_console_sessions
+          - list_project_clusters
+          - scale_down_project_quota
+          - scale_up_project_quota
+          - update_project_quota
+          - create_project
+          - update_project
+          - update_project_v2
+          - get_project_business
+          - get_addons_detail
+          - install_addons
+          - list_addons
+          - preview_addons
+          - stop_addons
+          - uninstall_addons
+          - upgrade_addons
+          - add_nodes_to_cluster_v2
+          - add_subnet_to_cluster
+          - batch_delete_nodes_from_cluster
+          - check_drain_node
+          - check_node_in_cluster
+          - clean_nodes_in_group
+          - clean_nodes_in_group_v2
+          - cordon_node
+          - create_cluster
+          - create_nodegroup
+          - create_node_template
+          - create_template_config
+          - delete_nodes_from_cluster
+          - delete_template_config
+          - disable_nodegroup_autoscale
+          - drain_node
+          - enable_nodegroup_autoscale
+          - get_cloud
+          - get_cloud_regions
+          - get_cluster_shared_projects
+          - get_nodegroup
+          - get_task
+          - import_cluster
+          - list_business_clusters
+          - list_clouds
+          - list_cloud_os_images
+          - list_managed_cloud_vpcs
+          - list_cloud_vpcs
+          - list_cluster_nodegroups
+          - list_cluster_nodes
+          - list_node_templates
+          - list_nodes_in_cluster
+          - list_nodes_in_group
+          - list_nodes_in_group_v2
+          - list_tasks
+          - retry_task
+          - skip_task
+          - uncordon_node
+          - update_cluster
+          - update_nodegroup_min_max_size
+          - update_node_annotations
+          - update_nodegroup
+          - update_node_labels
+          - update_node_taints
+          - update_node_template
+          - update_vcluster_quota
+          - get_chart_releases
+          - get_release_detail_extend
+          - get_release_pods
+          - get_release_status
+          - get_namespace
+          - list_namespaces
+          - sync_namespaces
+          - update_namespace
+          - create_variable
+          - delete_variables
+          - update_cluster_variables
+          - update_variable_cluster_values
+          - update_namespace_variables
+          - update_variable_namespace_values
+          - update_variable
+        is_public: true
+        protocol_type: "streamable_http"
+        status: 1
+        # MCP 授权与资源授权分别同步，复用现有应用白名单
+        target_app_codes:
+          - "{{ settings.BK_APP_CODE }}"
+        {% for app in settings.BK_API_GRANT_PERMISSIONS_APPS %}
+          - "{{ app }}"
+        {% endfor %}
+        oauth2_public_client_enabled: true
+        oauth2_personal_client_enabled: true
+        raw_response_enabled: false
+        category_names: ["Official"]
+      # 只读：GET 及不修改数据的查询/校验/预览 POST，最终名称 {BK_APIGW_NAME}-prod-mcp-readonly
+      - name: "mcp-readonly"
+        title: "蓝鲸容器服务（只读）"
+        description: "BCS 项目、命名空间、集群、节点、节点池、模板、Helm、集群组件、监控及操作记录的查询、校验与预览接口，不包含写操作"
+        labels:
+          - "bcs"
+        resource_names:
+          - list_auth_projects
+          - get_project
+          - list_native_namespaces
+          - get_cluster_detail
+          - get_node_info
+          - list_nodegroup
+          - list_shared_clusters
+          - get_template_version
+          - get_template
+          - preview_deploy_template
+          - list_template_space
+          - list_template_vaiables
+          - list_template_versions
+          - list_template
+          - get_release_detail
+          - get_release_history
+          - release_preview
+          - list_releases
+          - list_repos
+          - get_repo
+          - list_charts
+          - get_chart_detail
+          - get_chart_versions
+          - get_chart_version_detail
+          - label_values
+          - labels
+          - labels_by_post
+          - query
+          - query_by_post
+          - query_range
+          - query_range_by_post
+          - series
+          - series_by_post
+          - get_activity_logs
+          - list_project_clusters
+          - get_project_business
+          - get_addons_detail
+          - list_addons
+          - preview_addons
+          - check_drain_node
+          - check_node_in_cluster
+          - get_cloud
+          - get_cloud_regions
+          - get_cluster_shared_projects
+          - get_nodegroup
+          - get_task
+          - list_business_clusters
+          - list_clouds
+          - list_cloud_os_images
+          - list_managed_cloud_vpcs
+          - list_cloud_vpcs
+          - list_cluster_nodegroups
+          - list_cluster_nodes
+          - list_node_templates
+          - list_nodes_in_cluster
+          - list_nodes_in_group
+          - list_nodes_in_group_v2
+          - list_tasks
+          - get_chart_releases
+          - get_release_detail_extend
+          - get_release_pods
+          - get_release_status
+          - get_namespace
+          - list_namespaces
+        is_public: true
+        protocol_type: "streamable_http"
+        status: 1
+        # MCP 授权与资源授权分别同步，复用现有应用白名单
+        target_app_codes:
+          - "{{ settings.BK_APP_CODE }}"
+        {% for app in settings.BK_API_GRANT_PERMISSIONS_APPS %}
+          - "{{ app }}"
+        {% endfor %}
+        oauth2_public_client_enabled: true
+        oauth2_personal_client_enabled: true
+        raw_response_enabled: false
+        category_names: ["Official"]
 
 # 主动授权，网关主动给应用，添加访问网关所有资源的权限
 grant_permissions:

@@ -1,0 +1,9 @@
+apiVersion: bkai.tencent.com/v1
+kind: AgentPackage
+metadata:
+  name: bk-bcs
+  version: "1.0.0"
+resources:
+  - skills/bcs_skill
+  - knowledgebases/bk_bcs_docs
+  - agents/ai_bcs.yaml

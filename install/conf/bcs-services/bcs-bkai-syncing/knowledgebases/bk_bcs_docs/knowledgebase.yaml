@@ -1,0 +1,11 @@
+apiVersion: bkai.tencent.com/v1
+kind: KnowledgeBase
+metadata:
+  code: bk_bcs_docs
+  name: 蓝鲸容器平台知识库
+  description: 蓝鲸容器平台项目、集群、K8S 资源、部署相关知识
+spec:
+  generate_type: space
+  is_public: false
+  config: {}
+  tag_names: []
