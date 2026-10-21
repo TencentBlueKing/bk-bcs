@@ -75,7 +75,7 @@ func TestListClusters(t *testing.T) {
 	initConf()
 	ctx := context.Background()
 
-	clusters, err := ListClusters(ctx, getTestProjectId())
+	clusters, err := ListClusters(ctx, getTestProjectId(), "")
 	assert.NoError(t, err)
 	assert.Equal(t, len(clusters), 0)
 }

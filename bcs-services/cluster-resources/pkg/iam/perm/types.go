@@ -32,6 +32,8 @@ type Ctx interface {
 	GetResID() string
 	// GetUsername 获取用户名
 	GetUsername() string
+	// GetTenantID 获取租户 ID
+	GetTenantID() string
 	// GetParentChain 获取父节点信息
 	GetParentChain() []IAMRes
 	// SetForceRaise 标记强制无权限

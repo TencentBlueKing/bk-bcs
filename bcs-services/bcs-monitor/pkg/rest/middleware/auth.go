@@ -20,6 +20,7 @@ import (
 	"strings"
 
 	jwtauth "github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
+	authutils "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
 	"github.com/golang-jwt/jwt/v4"
@@ -75,7 +76,10 @@ func ProjectAuthorization(next http.Handler) http.Handler {
 
 		projectID := restContext.ProjectId
 		clusterID := restContext.ClusterId
-		username := restContext.Username
+		user := authutils.UserInfo{
+			TenantId:   restContext.TenantId,
+			BkUserName: restContext.Username,
+		}
 
 		// check cluster
 		cls, err := bcs.GetCluster(clusterID)
@@ -89,19 +93,20 @@ func ProjectAuthorization(next http.Handler) http.Handler {
 		}
 
 		// call iam
-		client, err := iam.GetProjectPermClient()
+		client, err := iam.GetProjectPermClient(restContext.TenantId)
 		if err != nil {
 			_ = render.Render(w, r, rest.AbortWithWithForbiddenError(restContext, err))
 			return
 		}
-		allow, url, _, err := client.CanViewProject(username, projectID)
+		allow, url, resources, err := client.CanViewProject(user.BkUserName, projectID)
 		if err != nil {
 			_ = render.Render(w, r, rest.AbortWithWithForbiddenError(restContext, err))
 			return
 		}
 		if !allow {
-			errMsg := fmt.Errorf("permission denied, please apply permission with %s", url)
-			_ = render.Render(w, r, rest.AbortWithWithForbiddenError(restContext, errMsg))
+			// 构建权限信息
+			perms := setResourceActions(resources, url)
+			_ = render.Render(w, r, rest.AbortWithForbiddenWithPerms(restContext, perms))
 			return
 		}
 
@@ -120,7 +125,10 @@ func ClusterAuthorization(next http.Handler) http.Handler {
 
 		projectID := restContext.ProjectId
 		clusterID := restContext.ClusterId
-		username := restContext.Username
+		user := authutils.UserInfo{
+			TenantId:   restContext.TenantId,
+			BkUserName: restContext.Username,
+		}
 
 		// check cluster
 		cls, err := bcs.GetCluster(clusterID)
@@ -134,24 +142,44 @@ func ClusterAuthorization(next http.Handler) http.Handler {
 		}
 
 		// call iam
-		client, err := iam.GetClusterPermClient()
+		client, err := iam.GetClusterPermClient(restContext.TenantId)
 		if err != nil {
 			_ = render.Render(w, r, rest.AbortWithWithForbiddenError(restContext, err))
 			return
 		}
-		allow, url, _, err := client.CanViewCluster(username, projectID, clusterID)
+		allow, url, resources, err := client.CanViewCluster(user.BkUserName, projectID, clusterID)
 		if err != nil {
 			_ = render.Render(w, r, rest.AbortWithWithForbiddenError(restContext, err))
 			return
 		}
 		if !allow {
-			errMsg := fmt.Errorf("permission denied, please apply permission with %s", url)
-			_ = render.Render(w, r, rest.AbortWithWithForbiddenError(restContext, errMsg))
+			perms := setResourceActions(resources, url)
+			_ = render.Render(w, r, rest.AbortWithForbiddenWithPerms(restContext, perms))
 			return
 		}
 
 		next.ServeHTTP(w, r)
 	})
+}
+
+// setResourceActions 设置需要申请的权限
+func setResourceActions(resources []authutils.ResourceAction, url string) *rest.Perms {
+	if len(resources) == 0 {
+		return nil
+	}
+	actionList := make([]rest.ResourceAction, len(resources))
+	for i, r := range resources {
+		actionList[i] = rest.ResourceAction{
+			Resource: r.Resource,
+			Type:     r.Type,
+			Action:   r.Action,
+		}
+	}
+	perms := &rest.Perms{
+		ActionList: actionList,
+		ApplyURL:   url,
+	}
+	return perms
 }
 
 // initContextWithDevEnv Dev环境, 可以设置环境变量
@@ -248,6 +276,7 @@ func initContextWithBCSJwt(r *http.Request, c *rest.Context) bool {
 
 	claims.UserName = username
 	c.BindBCS = claims
+	c.TenantId = claims.TenantId
 	c.Username = username
 	return true
 }
@@ -330,4 +359,16 @@ func GetSessionId(r *http.Request) string {
 		return chi.URLParam(r, "sessionId")
 	}
 	return ""
+}
+
+// ServiceEnable 服务是否可用，如果不可用则直接返回空数据
+func ServiceEnable(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if config.G.Base.ServiceEnable {
+			next.ServeHTTP(w, r)
+			return
+		}
+		w.Write([]byte(`{"code": 0, "data": {}, "message": "service is not available"}`))
+		w.WriteHeader(http.StatusOK)
+	})
 }

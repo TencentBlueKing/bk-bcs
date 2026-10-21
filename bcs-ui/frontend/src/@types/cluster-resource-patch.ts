@@ -74,4 +74,5 @@ export interface IPreviewItem {
   content: string
   kind: string
   name: string
+  previousContent: string
 }

@@ -17,6 +17,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
@@ -141,6 +142,8 @@ func (m *ModelAutoScalingOption) GetAutoScalingOption(
 	if err := m.db.Table(m.tableName).Find(cond).One(ctx, option); err != nil {
 		return nil, err
 	}
+	option.CreateTime = util.TransStrToUTCStr(time.RFC3339Nano, option.CreateTime)
+	option.UpdateTime = util.TransStrToUTCStr(time.RFC3339Nano, option.UpdateTime)
 	return option, nil
 }
 

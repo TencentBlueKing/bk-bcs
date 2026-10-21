@@ -19,19 +19,22 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/repo"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
 )
 
 // Repository 定义了仓库基础信息, 存储在helm-manager的数据库中, 是chart相关操作的基础
 type Repository struct {
 	// basic info
-	ProjectID   string `json:"projectID" bson:"projectID"`
-	Name        string `json:"name" bson:"name"`
-	DisplayName string `json:"displayName" bson:"displayName"`
-	Personal    bool   `json:"personal" bson:"personal"`
-	Public      bool   `json:"public" bson:"public"`
-	Type        string `json:"type" bson:"type"`
-	RepoURL     string `json:"repoURL" bson:"repoURL"`
+	TenantID          string `json:"tenantID" bson:"tenantID"`
+	TenantProjectCode string `json:"tenantProjectCode" bson:"tenantProjectCode"`
+	ProjectID         string `json:"projectID" bson:"projectID"`
+	Name              string `json:"name" bson:"name"`
+	DisplayName       string `json:"displayName" bson:"displayName"`
+	Personal          bool   `json:"personal" bson:"personal"`
+	Public            bool   `json:"public" bson:"public"`
+	Type              string `json:"type" bson:"type"`
+	RepoURL           string `json:"repoURL" bson:"repoURL"`
 
 	// remote repo settings
 	Remote         bool   `json:"remote" bson:"remote"`
@@ -52,9 +55,13 @@ type Repository struct {
 // GetRepoProjectID get repo project id
 func (r *Repository) GetRepoProjectID() string {
 	if r.Public {
-		return options.GlobalOptions.Repo.PublicRepoProject
+		return repo.GetBKRepoProjectID("system", options.GlobalOptions.Repo.PublicRepoProject)
 	}
-	return r.ProjectID
+	projectCode := r.ProjectID
+	if r.TenantProjectCode != "" {
+		projectCode = r.TenantProjectCode
+	}
+	return repo.GetBKRepoProjectID(r.TenantID, projectCode)
 }
 
 // GetRepoName get repo name
@@ -88,8 +95,8 @@ func (r *Repository) Transfer2Proto(ctx context.Context) *helmmanager.Repository
 		Password:    common.GetStringP(r.Password),
 		CreateBy:    common.GetStringP(r.CreateBy),
 		UpdateBy:    common.GetStringP(r.UpdateBy),
-		CreateTime:  common.GetStringP(time.Unix(r.CreateTime, 0).Local().String()),
-		UpdateTime:  common.GetStringP(time.Unix(r.UpdateTime, 0).Local().String()),
+		CreateTime:  common.GetStringP(time.Unix(r.CreateTime, 0).UTC().Format(time.RFC3339)),
+		UpdateTime:  common.GetStringP(time.Unix(r.UpdateTime, 0).UTC().Format(time.RFC3339)),
 	}
 }
 

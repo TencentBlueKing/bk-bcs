@@ -33,6 +33,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/resource"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/resource/tresource"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tenant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
@@ -651,11 +652,18 @@ func (nm *NodeManager) ListOsImage(provider string, opt *cloudprovider.CommonOpt
 }
 
 // GetExternalNodeByIP get specified Node by innerIP address
-func (nm *NodeManager) GetExternalNodeByIP(ip string, opt *cloudprovider.GetNodeOption) (*proto.Node, error) {
+func (nm *NodeManager) GetExternalNodeByIP(ip string,
+	opt *cloudprovider.GetNodeOption) (*proto.Node, error) {
 	node := &proto.Node{}
 
+	ctx, err := tenant.WithTenantIdByResourceForContext(context.Background(),
+		tenant.ResourceMetaData{ClusterId: opt.ClusterID})
+	if err != nil {
+		return nil, err
+	}
+
 	ips := []string{ip}
-	hostData, err := cmdb.GetCmdbClient().QueryHostInfoWithoutBiz(cmdb.FieldHostIP, ips, cmdb.Page{
+	hostData, err := cmdb.GetCmdbClient().QueryHostInfoWithoutBiz(ctx, cmdb.FieldHostIP, ips, cmdb.Page{
 		Start: 0,
 		Limit: len(ips),
 	})
@@ -675,10 +683,17 @@ func (nm *NodeManager) GetExternalNodeByIP(ip string, opt *cloudprovider.GetNode
 }
 
 // ListExternalNodesByIP list node by IP set
-func (nm *NodeManager) ListExternalNodesByIP(ips []string, opt *cloudprovider.ListNodesOption) ([]*proto.Node, error) {
+func (nm *NodeManager) ListExternalNodesByIP(ips []string,
+	opt *cloudprovider.ListNodesOption) ([]*proto.Node, error) {
 	var nodes []*proto.Node
 
-	hostDataList, err := cmdb.GetCmdbClient().QueryHostInfoWithoutBiz(cmdb.FieldHostIP, ips, cmdb.Page{
+	ctx, err := tenant.WithTenantIdByResourceForContext(context.Background(),
+		tenant.ResourceMetaData{ClusterId: opt.ClusterID})
+	if err != nil {
+		return nil, err
+	}
+
+	hostDataList, err := cmdb.GetCmdbClient().QueryHostInfoWithoutBiz(ctx, cmdb.FieldHostIP, ips, cmdb.Page{
 		Start: 0,
 		Limit: len(ips),
 	})

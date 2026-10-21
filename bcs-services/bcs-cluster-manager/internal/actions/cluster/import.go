@@ -59,7 +59,7 @@ func NewImportAction(model store.ClusterManagerModel, locker lock.DistributedLoc
 }
 
 func (ia *ImportAction) constructCluster() *cmproto.Cluster {
-	createTime := time.Now().Format(time.RFC3339)
+	createTime := time.Now().UTC().Format(time.RFC3339)
 	cls := &cmproto.Cluster{
 		ClusterID:   ia.req.ClusterID,
 		ClusterName: ia.req.ClusterName,
@@ -271,7 +271,7 @@ func (ia *ImportAction) Handle(ctx context.Context, req *cmproto.ImportClusterRe
 		TaskID:       ia.task.TaskID,
 		Message:      fmt.Sprintf("导入%s集群%s", cls.Provider, cls.ClusterID),
 		OpUser:       cls.Creator,
-		CreateTime:   time.Now().Format(time.RFC3339),
+		CreateTime:   time.Now().UTC().Format(time.RFC3339),
 		ClusterID:    ia.cluster.ClusterID,
 		ProjectID:    ia.cluster.ProjectID,
 		ResourceName: cls.GetClusterName(),

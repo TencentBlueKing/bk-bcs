@@ -16,7 +16,6 @@ import (
 	"context"
 	"sort"
 
-	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 	authnamespace "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/namespace"
 	authutils "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
 	spb "google.golang.org/protobuf/types/known/structpb"
@@ -27,6 +26,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
 	nsm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/namespace"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/convert"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/tenant"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
 )
 
@@ -69,6 +69,10 @@ func (p *NamespaceHandler) WithdrawNamespace(ctx context.Context,
 // CreateNamespace implement for CreateNamespace interface
 func (p *NamespaceHandler) CreateNamespace(ctx context.Context,
 	req *proto.CreateNamespaceRequest, resp *proto.CreateNamespaceResponse) error {
+
+	authUser := tenant.GetAuthAndTenantInfoFromCtx(ctx)
+	ctx = tenant.WithTenantIdFromContext(ctx, authUser.ResourceTenantId)
+
 	action, err := na.NewNamespaceFactory(p.model).Action(ctx, req.GetClusterID(), req.GetProjectCode())
 	if err != nil {
 		logging.Error("get namespace client for cluster %s from client factory failed, err: %s",
@@ -81,6 +85,10 @@ func (p *NamespaceHandler) CreateNamespace(ctx context.Context,
 // CreateNamespaceCallback implement for CreateNamespaceCallback interface
 func (p *NamespaceHandler) CreateNamespaceCallback(ctx context.Context,
 	req *proto.NamespaceCallbackRequest, resp *proto.NamespaceCallbackResponse) error {
+
+	authUser := tenant.GetAuthAndTenantInfoFromCtx(ctx)
+	ctx = tenant.WithTenantIdFromContext(ctx, authUser.ResourceTenantId)
+
 	action, err := na.NewNamespaceFactory(p.model).Action(ctx, req.GetClusterID(), req.GetProjectCode())
 	if err != nil {
 		logging.Error("get namespace client for cluster %s from client factory failed, err: %s",
@@ -90,9 +98,19 @@ func (p *NamespaceHandler) CreateNamespaceCallback(ctx context.Context,
 	return action.CreateNamespaceCallback(ctx, req, resp)
 }
 
+// CreateNamespaceCallbackV4 implement for CreateNamespaceCallbackV4 interface
+func (p *NamespaceHandler) CreateNamespaceCallbackV4(ctx context.Context,
+	in *proto.SharedClusterNamespaceCallbackRequest, out *proto.SharedClusterNamespaceCallbackResponse) error {
+	return nil
+}
+
 // UpdateNamespace implement for UpdateNamespace interface
 func (p *NamespaceHandler) UpdateNamespace(ctx context.Context,
 	req *proto.UpdateNamespaceRequest, resp *proto.UpdateNamespaceResponse) error {
+
+	authUser := tenant.GetAuthAndTenantInfoFromCtx(ctx)
+	ctx = tenant.WithTenantIdFromContext(ctx, authUser.ResourceTenantId)
+
 	action, err := na.NewNamespaceFactory(p.model).Action(ctx, req.GetClusterID(), req.GetProjectCode())
 	if err != nil {
 		logging.Error("get namespace client for cluster %s from client factory failed, err: %s",
@@ -138,9 +156,61 @@ func (p *NamespaceHandler) DeleteOtherQuota(ctx context.Context,
 	return action.DeleteOtherQuota(ctx, req, resp)
 }
 
+// ListPodLimitRanges lists Pod LimitRanges in a namespace.
+func (p *NamespaceHandler) ListPodLimitRanges(ctx context.Context,
+	req *proto.ListPodLimitRangesRequest, resp *proto.ListPodLimitRangesResponse) error {
+	action, err := na.NewNamespaceFactory(p.model).Action(ctx, req.GetClusterID(), req.GetProjectCode())
+	if err != nil {
+		logging.Error("get namespace client for cluster %s from client factory failed, err: %s",
+			req.GetClusterID(), err.Error())
+		return err
+	}
+	return action.ListPodLimitRanges(ctx, req, resp)
+}
+
+// CreatePodLimitRange creates a Pod LimitRange in a namespace.
+func (p *NamespaceHandler) CreatePodLimitRange(ctx context.Context,
+	req *proto.CreatePodLimitRangeRequest, resp *proto.PodLimitRangeResponse) error {
+	action, err := na.NewNamespaceFactory(p.model).Action(ctx, req.GetClusterID(), req.GetProjectCode())
+	if err != nil {
+		logging.Error("get namespace client for cluster %s from client factory failed, err: %s",
+			req.GetClusterID(), err.Error())
+		return err
+	}
+	return action.CreatePodLimitRange(ctx, req, resp)
+}
+
+// UpdatePodLimitRange updates a Pod LimitRange in a namespace.
+func (p *NamespaceHandler) UpdatePodLimitRange(ctx context.Context,
+	req *proto.UpdatePodLimitRangeRequest, resp *proto.PodLimitRangeResponse) error {
+	action, err := na.NewNamespaceFactory(p.model).Action(ctx, req.GetClusterID(), req.GetProjectCode())
+	if err != nil {
+		logging.Error("get namespace client for cluster %s from client factory failed, err: %s",
+			req.GetClusterID(), err.Error())
+		return err
+	}
+	return action.UpdatePodLimitRange(ctx, req, resp)
+}
+
+// DeletePodLimitRange deletes the Pod item from a LimitRange in a namespace.
+func (p *NamespaceHandler) DeletePodLimitRange(ctx context.Context,
+	req *proto.DeletePodLimitRangeRequest, resp *proto.PodLimitRangeResponse) error {
+	action, err := na.NewNamespaceFactory(p.model).Action(ctx, req.GetClusterID(), req.GetProjectCode())
+	if err != nil {
+		logging.Error("get namespace client for cluster %s from client factory failed, err: %s",
+			req.GetClusterID(), err.Error())
+		return err
+	}
+	return action.DeletePodLimitRange(ctx, req, resp)
+}
+
 // UpdateNamespaceCallback implement for UpdateNamespaceCallback interface
 func (p *NamespaceHandler) UpdateNamespaceCallback(ctx context.Context,
 	req *proto.NamespaceCallbackRequest, resp *proto.NamespaceCallbackResponse) error {
+
+	authUser := tenant.GetAuthAndTenantInfoFromCtx(ctx)
+	ctx = tenant.WithTenantIdFromContext(ctx, authUser.ResourceTenantId)
+
 	action, err := na.NewNamespaceFactory(p.model).Action(ctx, req.GetClusterID(), req.GetProjectCode())
 	if err != nil {
 		logging.Error("get namespace client for cluster %s from client factory failed, err: %s",
@@ -148,6 +218,12 @@ func (p *NamespaceHandler) UpdateNamespaceCallback(ctx context.Context,
 		return err
 	}
 	return action.UpdateNamespaceCallback(ctx, req, resp)
+}
+
+// UpdateNamespaceCallbackV4 implement for UpdateNamespaceCallbackV4 interface
+func (p *NamespaceHandler) UpdateNamespaceCallbackV4(ctx context.Context,
+	in *proto.SharedClusterNamespaceCallbackRequest, out *proto.SharedClusterNamespaceCallbackResponse) error {
+	return nil
 }
 
 // GetNamespace implement for GetNamespace interface
@@ -165,6 +241,10 @@ func (p *NamespaceHandler) GetNamespace(ctx context.Context,
 // ListNamespaces implement for ListNamespaces interface
 func (p *NamespaceHandler) ListNamespaces(ctx context.Context,
 	req *proto.ListNamespacesRequest, resp *proto.ListNamespacesResponse) error {
+
+	authUser := tenant.GetAuthAndTenantInfoFromCtx(ctx)
+	ctx = tenant.WithTenantIdFromContext(ctx, authUser.ResourceTenantId)
+
 	action, err := na.NewNamespaceFactory(p.model).Action(ctx, req.GetClusterID(), req.GetProjectCode())
 	if err != nil {
 		logging.Error("get namespace client for cluster %s from client factory failed, err: %s",
@@ -176,8 +256,8 @@ func (p *NamespaceHandler) ListNamespaces(ctx context.Context,
 		return err
 	}
 	retData := sortNamespaces(resp.GetData())
-	authUser, err := middleware.GetUserFromContext(ctx)
-	if err == nil && authUser.Username != "" {
+
+	if authUser.GetUsername() != "" {
 		p, err := p.model.GetProject(ctx, req.GetProjectCode())
 		if err != nil {
 			logging.Error("get project %s failed, err: %s", req.GetProjectCode(), err.Error())
@@ -192,8 +272,15 @@ func (p *NamespaceHandler) ListNamespaces(ctx context.Context,
 				Namespace: ns.GetName(),
 			})
 		}
-		perms, err := auth.NamespaceIamClient.GetMultiNamespaceMultiActionPerm(
-			authUser.Username, namespaces,
+
+		namespaceIam, err := auth.GetNamespaceIamClient(authUser.GetResourceTenantId())
+		if err != nil {
+			logging.Error("get namespace iam client %s failed, err: %s", req.GetProjectCode(), err.Error())
+			resp.Data = retData
+			return nil
+		}
+
+		perms, err := namespaceIam.GetMultiNamespaceMultiActionPerm(authUser.GetUsername(), namespaces,
 			[]string{auth.NamespaceCreate, auth.NamespaceView,
 				auth.NamespaceUpdate, auth.NamespaceDelete,
 				auth.NamespaceScopedCreate, auth.NamespaceScopedView,
@@ -282,6 +369,10 @@ func (p *NamespaceHandler) ListNativeNamespacesContent(ctx context.Context,
 // DeleteNamespace implement for DeleteNamespace interface
 func (p *NamespaceHandler) DeleteNamespace(ctx context.Context,
 	req *proto.DeleteNamespaceRequest, resp *proto.DeleteNamespaceResponse) error {
+
+	authUser := tenant.GetAuthAndTenantInfoFromCtx(ctx)
+	ctx = tenant.WithTenantIdFromContext(ctx, authUser.ResourceTenantId)
+
 	action, err := na.NewNamespaceFactory(p.model).Action(ctx, req.GetClusterID(), req.GetProjectCode())
 	if err != nil {
 		logging.Error("get namespace client for cluster %s from client factory failed, err: %s",
@@ -294,6 +385,10 @@ func (p *NamespaceHandler) DeleteNamespace(ctx context.Context,
 // DeleteNamespaceCallback implement for DeleteNamespaceCallback interface
 func (p *NamespaceHandler) DeleteNamespaceCallback(ctx context.Context,
 	req *proto.NamespaceCallbackRequest, resp *proto.NamespaceCallbackResponse) error {
+
+	authUser := tenant.GetAuthAndTenantInfoFromCtx(ctx)
+	ctx = tenant.WithTenantIdFromContext(ctx, authUser.ResourceTenantId)
+
 	action, err := na.NewNamespaceFactory(p.model).Action(ctx, req.GetClusterID(), req.GetProjectCode())
 	if err != nil {
 		logging.Error("get namespace client for cluster %s from client factory failed, err: %s",
@@ -301,4 +396,10 @@ func (p *NamespaceHandler) DeleteNamespaceCallback(ctx context.Context,
 		return err
 	}
 	return action.DeleteNamespaceCallback(ctx, req, resp)
+}
+
+// DeleteNamespaceCallbackV4 implement for DeleteNamespaceCallbackV4 interface
+func (p *NamespaceHandler) DeleteNamespaceCallbackV4(ctx context.Context,
+	in *proto.SharedClusterNamespaceCallbackRequest, out *proto.SharedClusterNamespaceCallbackResponse) error {
+	return nil
 }

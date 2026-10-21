@@ -17,6 +17,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
@@ -162,6 +163,8 @@ func (m *ModelCloudModuleFlag) GetCloudModuleFlag(ctx context.Context, cloudID, 
 	if err := m.db.Table(m.tableName).Find(cond).One(ctx, retFlag); err != nil {
 		return nil, err
 	}
+	retFlag.CreatTime = util.TransStrToUTCStr(time.RFC3339Nano, retFlag.CreatTime)
+	retFlag.UpdateTime = util.TransStrToUTCStr(time.RFC3339Nano, retFlag.UpdateTime)
 	return retFlag, nil
 }
 

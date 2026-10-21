@@ -138,3 +138,19 @@ func (p CloudAccountProvider) SearchInstance(req resource.Request) resource.Resp
 		Data: ListResult{Count: len(results), Results: results},
 	}
 }
+
+// FetchInstanceList implements the fetch_instance_list
+func (p CloudAccountProvider) FetchInstanceList(req resource.Request) resource.Response {
+	return resource.Response{
+		Code:    -1,
+		Message: "not implemented",
+	}
+}
+
+// FetchResourceTypeSchema implements the fetch_resource_type_schema
+func (p CloudAccountProvider) FetchResourceTypeSchema(req resource.Request) resource.Response {
+	return resource.Response{
+		Code:    -1,
+		Message: "not implemented",
+	}
+}

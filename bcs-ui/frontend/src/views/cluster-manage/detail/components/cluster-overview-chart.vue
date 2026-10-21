@@ -13,6 +13,7 @@ import { defineComponent, onMounted, PropType, ref, toRefs } from 'vue';
 import 'echarts/lib/chart/line';
 import 'echarts/lib/component/tooltip';
 import { clusterMetric } from '@/api/modules/monitor';
+import { formatTimeWithTimezone } from '@/common/util';
 import ECharts from '@/components/echarts.vue';
 import $i18n from '@/i18n/i18n-setup';
 export default defineComponent({
@@ -60,7 +61,7 @@ export default defineComponent({
             date = `${parseInt(date, 10)}000`;
           }
           return `
-              <div>${parseInt(date, 10) ? moment(parseInt(date, 10)).format('YYYY-MM-DD HH:mm:ss') : '--'}</div>
+              <div>${parseInt(date, 10) ? formatTimeWithTimezone(parseInt(date, 10)) : '--'}</div>
               <div>${params[0].seriesName}：${parseFloat(params[0].value[1]).toFixed(2)}%</div>
           `;
         },
@@ -97,7 +98,7 @@ export default defineComponent({
               if (String(parseInt(value, 10)).length === 10) {
                 value = `${parseInt(value, 10)}000`;
               }
-              return moment(parseInt(value, 10)).format('HH:mm');
+              return formatTimeWithTimezone(parseInt(value, 10), '', 'HH:mm');
             },
           },
           splitLine: {

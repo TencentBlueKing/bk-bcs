@@ -32,16 +32,17 @@ import (
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/constant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/page"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
 	pm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/stringx"
+	timeutil "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/time"
 )
 
 const (
 	mysqlTableName = "projects"
-	timeLayout     = "2006-01-02T15:04:05Z"
 )
 
 var (
@@ -190,6 +191,8 @@ func migrateCCData() {
 	projectsMap := map[string]pm.Project{}
 	fmt.Printf("total projects length in bcs: %d\n", len(projects))
 	for _, project := range projects {
+		project.CreateTime = timeutil.TransStrToUTCStr(time.RFC3339Nano, project.CreateTime)
+		project.UpdateTime = timeutil.TransStrToUTCStr(time.RFC3339Nano, project.UpdateTime)
 		projectsMap[project.ProjectID] = project
 	}
 	for _, ccProject := range ccProjects {
@@ -226,26 +229,45 @@ func initBuiltInProject() error {
 	if projectID == "" {
 		return errors.New("init projectID can not be empty")
 	}
+
+	var (
+		tenantID, businessID, tenantProjectCode, projectCode string
+	)
+
+	// check tenant switch
+	enableTenant := stringx.GetEnv("ENABLE_MULTI_TENANT", "false")
+	if enableTenant == "true" {
+		tenantID = constant.SystemTenantId
+		businessID = stringx.GetEnv("INIT_PROJECT_BUSINESS_ID", "1")
+		tenantProjectCode = stringx.GetEnv("INIT_PROJECT_CODE", "blueking")
+		projectCode = fmt.Sprintf("%s-%s", tenantID, tenantProjectCode)
+	} else {
+		tenantID = constant.DefaultTenantId
+		businessID = stringx.GetEnv("INIT_PROJECT_BUSINESS_ID", "2")
+		tenantProjectCode = stringx.GetEnv("INIT_PROJECT_CODE", "blueking")
+		projectCode = stringx.GetEnv("INIT_PROJECT_CODE", "blueking")
+	}
+
 	p := &pm.Project{
-		ProjectID:   projectID,
-		Name:        "蓝鲸",
-		ProjectCode: stringx.GetEnv("INIT_PROJECT_CODE", "blueking"),
-		Creator:     stringx.GetEnv("INIT_PROJECT_USER", "admin"),
-		Updater:     stringx.GetEnv("INIT_PROJECT_USER", "admin"),
-		Managers:    stringx.GetEnv("INIT_PROJECT_USER", "admin"),
-		ProjectType: 0,
-		UseBKRes:    false,
-		Description: "BCS built-in project",
-		IsOffline:   false,
-		Kind:        "k8s",
-		BusinessID:  stringx.GetEnv("INIT_PROJECT_BUSINESS_ID", "2"),
-		DeployType:  2,
-		BGID:        "0",
-		DeptID:      "0",
-		CenterID:    "0",
-		IsSecret:    false,
-		CreateTime:  time.Now().Format(timeLayout),
-		UpdateTime:  time.Now().Format(timeLayout),
+		ProjectID:         projectID,
+		Name:              "蓝鲸",
+		ProjectCode:       projectCode,
+		TenantID:          tenantID,
+		TenantProjectCode: tenantProjectCode,
+		Creator:           stringx.GetEnv("INIT_PROJECT_USER", "admin"),
+		Updater:           stringx.GetEnv("INIT_PROJECT_USER", "admin"),
+		Managers:          stringx.GetEnv("INIT_PROJECT_USER", "admin"),
+		ProjectType:       0,
+		UseBKRes:          false,
+		Description:       "BCS built-in project",
+		IsOffline:         false,
+		Kind:              "k8s",
+		BusinessID:        businessID,
+		DeployType:        2,
+		BGID:              "0",
+		DeptID:            "0",
+		CenterID:          "0",
+		IsSecret:          false,
 	}
 	_, err := model.GetProject(context.Background(), p.ProjectID)
 	if err == nil {
@@ -279,8 +301,6 @@ func insertProject(p BCSCCProjectData) error {
 		CenterID:    strconv.Itoa(int(p.CenterID)),
 		CenterName:  p.CenterName,
 		IsSecret:    p.IsSecrecy,
-		CreateTime:  p.CreatedAt.Format(timeLayout),
-		UpdateTime:  p.CreatedAt.Format(timeLayout),
 	}
 	return model.CreateProject(context.Background(), project)
 }
@@ -291,7 +311,6 @@ func updateProject(c BCSCCProjectData, p pm.Project) error {
 	p.Kind = getStrKind(c.Kind)
 	p.BusinessID = getBusinessID(c.CCAppID)
 	p.DeployType = getDeployType(c.DeployType)
-	p.UpdateTime = c.UpdatedAt.Format(timeLayout)
 	return model.UpdateProject(context.Background(), &p)
 }
 

@@ -117,9 +117,13 @@
           </template>
         </bcs-table-column>
         <bcs-table-column :label="$t('generic.label.version')" prop="latestVersion" width="160" show-overflow-tooltip></bcs-table-column>
-        <bcs-table-column :label="$t('deploy.helm.latestUpdate')" prop="updateTime" width="200"></bcs-table-column>
+        <bcs-table-column :label="$t('deploy.helm.latestUpdate')" prop="updateTime" width="200">
+          <template #default="{ row }">
+            {{ row.updateTime ? formatTimeWithTimezone(row.updateTime) : '--' }}
+          </template>
+        </bcs-table-column>
         <bcs-table-column :label="$t('cluster.create.label.desc')" prop="latestDescription" show-overflow-tooltip></bcs-table-column>
-        <bcs-table-column :label="$t('generic.label.action')" width="180">
+        <bcs-table-column :label="$t('generic.label.action')" width="200" fixed="right">
           <template #default="{ row }">
             <bcs-button text @click="handleReleaseChart(row)">{{ $t('deploy.helm.install') }}</bcs-button>
             <bcs-button
@@ -239,7 +243,7 @@ import ChartReleasesTable from './chart-releases-table.vue';
 import useHelm from './use-helm';
 
 import $bkMessage from '@/common/bkmagic';
-import { copyText } from '@/common/util';
+import { copyText, formatTimeWithTimezone } from '@/common/util';
 import BcsContent from '@/components/layout/Content.vue';
 import Row from '@/components/layout/Row.vue';
 import { useProject } from '@/composables/use-app';
@@ -502,6 +506,7 @@ export default defineComponent({
       handleConfirmDelete,
       handleCopyData,
       handleGetChartsTableData,
+      formatTimeWithTimezone,
     };
   },
 });

@@ -14,6 +14,7 @@
 package bkmonitor
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -22,6 +23,7 @@ import (
 	"github.com/parnurzeal/gorequest"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/bkuser"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/project"
@@ -72,7 +74,7 @@ type Space struct {
 }
 
 // CreateSpace create bkmonitor space for bcs project
-func CreateSpace(project *project.Project) error {
+func CreateSpace(ctx context.Context, project *project.Project) error {
 	bkmConf := config.GlobalConf.Bkmonitor
 	// 使用网关访问
 	reqURL := fmt.Sprintf("%s%s", bkmConf.GatewayHost, createSpacePath)
@@ -85,9 +87,16 @@ func CreateSpace(project *project.Project) error {
 		"space_code":    project.ProjectID,
 		"creator":       project.Creator,
 	}
+
+	headers, err := bkuser.GetAuthHeader(ctx)
+	if err != nil {
+		logging.Error("CreateSpace get auth header failed, %s", err.Error())
+		return errorx.NewRequestBkMonitorErr(err.Error())
+	}
+
 	// 请求API
 	proxy := ""
-	body, err := component.Request(*req, timeout, proxy, component.GetAuthHeader())
+	body, err := component.Request(*req, timeout, proxy, headers)
 	if err != nil {
 		logging.Error("request create bkmonitor space for project %s failed, %s", project.ProjectID, err.Error())
 		return errorx.NewRequestBkMonitorErr(err.Error())
@@ -106,10 +115,17 @@ func CreateSpace(project *project.Project) error {
 }
 
 // ListSpaces list bkmonitor spaces for bcs
-func ListSpaces() ([]*Space, error) {
+func ListSpaces(ctx context.Context) ([]*Space, error) {
 	bkmConf := config.GlobalConf.Bkmonitor
 	// 使用网关访问
 	reqURL := fmt.Sprintf("%s%s", bkmConf.GatewayHost, listSpacesPath)
+
+	headers, err := bkuser.GetAuthHeader(ctx)
+	if err != nil {
+		logging.Error("ListSpaces get auth header failed, %s", err.Error())
+		return nil, errorx.NewRequestBkMonitorErr(err.Error())
+	}
+
 	spaces := make([]*Space, 0)
 	var page, pageSize = 1, 1000
 	for {
@@ -119,7 +135,8 @@ func ListSpaces() ([]*Space, error) {
 		req.QueryData.Set("page_size", strconv.Itoa(pageSize))
 		// 请求API
 		proxy := ""
-		body, err := component.Request(*req, timeout, proxy, component.GetAuthHeader())
+		// component.GetAuthHeader())
+		body, err := component.Request(*req, timeout, proxy, headers)
 		if err != nil {
 			logging.Error("request list bkmonitor bcs spaces failed, %s", err.Error())
 			return nil, errorx.NewRequestBkMonitorErr(err.Error())

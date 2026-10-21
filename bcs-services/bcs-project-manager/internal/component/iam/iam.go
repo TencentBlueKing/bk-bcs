@@ -15,27 +15,87 @@ package iam
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"time"
 
 	bcsIAM "github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
+	iamv4 "github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iamv4"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/manager"
 	authutils "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
 	"github.com/parnurzeal/gorequest"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/bkuser"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
 )
+
+// projectManagerExpire 创建者作为项目管理员的授权有效期。
+// add_authorization 的 expired_at 最大为 365 天后，提前一分钟避免打到边界被拒绝。
+const projectManagerExpire = 365*24*time.Hour - time.Minute
 
 var (
 	grantActionPath = "/api/v1/open/authorization/resource_creator_action/"
 	timeout         = 10
 )
 
+// GrantProjectManager 创建项目后，把当前认证用户设为该项目的项目管理员。
+// V4 调用 add_authorization，把 project_manager 角色授到该项目实例；
+// V3 创建分级管理员与管理权限用户组，并保留资源创建者授权。
+func GrantProjectManager(ctx context.Context, tenantID, username, projectID, projectName string) error {
+	if username == "" || projectID == "" || projectName == "" {
+		return fmt.Errorf("grant project manager: username, projectID and projectName are required")
+	}
+	if config.GlobalConf != nil && config.GlobalConf.IAM.EnableV4 {
+		return grantProjectManagerV4(ctx, tenantID, username, projectID)
+	}
+
+	var grantErr error
+	if err := CreateProjectPermManager(tenantID, projectID, projectName, []string{username}); err != nil {
+		grantErr = err
+	}
+	if err := GrantProjectCreatorActions(ctx, username, projectID, projectName); err != nil {
+		grantErr = errors.Join(grantErr, err)
+	}
+	return grantErr
+}
+
+func grantProjectManagerV4(ctx context.Context, tenantID, username, projectID string) error {
+	iamConf := config.GlobalConf.IAM
+	cli, err := iamv4.NewClient(&iamv4.Options{
+		SystemID:    bcsIAM.SystemIDBKBCS,
+		AppCode:     config.GlobalConf.App.Code,
+		AppSecret:   config.GlobalConf.App.Secret,
+		GateWayHost: iamConf.V4GatewayHost,
+		TenantID:    tenantID,
+	})
+	if err != nil {
+		logging.Error("grant project manager get iam v4 client failed, project %s, err: %s", projectID, err.Error())
+		return errorx.NewRequestIAMErr(err.Error())
+	}
+
+	err = cli.AddAuthorization(ctx, bcsIAM.SystemIDBKBCS, username, []iamv4.AuthorizationItem{{
+		Subject:               iamv4.Subject{Type: iamv4.SubjectUser, ID: username},
+		RoleID:                iamv4.RoleOperator.String(),
+		RelatedResourceTypeID: iamv4.SysProject.String(),
+		Resources: []iamv4.ResourceRef{{
+			Type: iamv4.SysProject.String(),
+			ID:   projectID,
+		}},
+		ExpiredAt: time.Now().Add(projectManagerExpire).Unix(),
+	}})
+	if err != nil {
+		logging.Error("grant project %s manager for creator %s failed, err: %s", projectID, username, err.Error())
+		return errorx.NewRequestIAMErr(err.Error())
+	}
+	return nil
+}
+
 // GrantProjectCreatorActions grant create action perm for project
-func GrantProjectCreatorActions(username string, projectID string, projectName string) error {
+func GrantProjectCreatorActions(ctx context.Context, username string, projectID string, projectName string) error {
 	iamConf := config.GlobalConf.IAM
 	// 使用网关访问
 	reqURL := fmt.Sprintf("%s%s", iamConf.GatewayHost, grantActionPath)
@@ -50,9 +110,17 @@ func GrantProjectCreatorActions(username string, projectID string, projectName s
 			"name":    projectName,
 		},
 	}
+
+	// auth headers
+	headers, err := bkuser.GetAuthHeader(ctx)
+	if err != nil {
+		logging.Error("GrantProjectCreatorActions get auth header failed, %s", err.Error())
+		return errorx.NewRequestIAMErr(err.Error())
+	}
+
 	// 请求API
 	proxy := ""
-	_, err := component.Request(req, timeout, proxy, component.GetAuthHeader())
+	_, err = component.Request(req, timeout, proxy, headers)
 	if err != nil {
 		logging.Error("grant creator actions for project failed, %s", err.Error())
 		return errorx.NewRequestIAMErr(err.Error())
@@ -61,7 +129,7 @@ func GrantProjectCreatorActions(username string, projectID string, projectName s
 }
 
 // GrantNamespaceCreatorActions grant create action perm for namespace
-func GrantNamespaceCreatorActions(username, clusterID, namespace string) error {
+func GrantNamespaceCreatorActions(ctx context.Context, username, clusterID, namespace string) error {
 	iamConf := config.GlobalConf.IAM
 	// 使用网关访问
 	reqURL := fmt.Sprintf("%s%s", iamConf.GatewayHost, grantActionPath)
@@ -77,9 +145,17 @@ func GrantNamespaceCreatorActions(username, clusterID, namespace string) error {
 			"name":    namespace,
 		},
 	}
+
+	// auth headers
+	headers, err := bkuser.GetAuthHeader(ctx)
+	if err != nil {
+		logging.Error("GrantProjectCreatorActions get auth header failed, %s", err.Error())
+		return errorx.NewRequestIAMErr(err.Error())
+	}
+
 	// 请求API
 	proxy := ""
-	_, err := component.Request(req, timeout, proxy, component.GetAuthHeader())
+	_, err = component.Request(req, timeout, proxy, headers)
 	if err != nil {
 		logging.Error("grant creator actions for namespace failed, %s", err.Error())
 		return errorx.NewRequestIAMErr(err.Error())
@@ -112,8 +188,13 @@ func projectViewerUserGroupDesc(name string) string {
 }
 
 // CreateProjectPermManager create perm manager for project
-func CreateProjectPermManager(projectID, projectName string, users []string) error {
-	gradeID, err := auth.PermManagerClient.CreateProjectGradeManager(context.Background(), users,
+func CreateProjectPermManager(tenantID, projectID, projectName string, users []string) error {
+	permManager, err := auth.GetPermManagerIamClient(tenantID)
+	if err != nil {
+		logging.Error("CreateProjectPermManager get iam client failed: %v", err)
+		return err
+	}
+	gradeID, err := permManager.CreateProjectGradeManager(context.Background(), users,
 		&manager.GradeManagerInfo{
 			Name: projectGradeManageName(projectName),
 			Desc: projectGradeManageDesc(projectName),
@@ -128,7 +209,7 @@ func CreateProjectPermManager(projectID, projectName string, users []string) err
 		return err
 	}
 
-	err = auth.PermManagerClient.CreateProjectUserGroup(context.Background(), gradeID, manager.UserGroupInfo{
+	err = permManager.CreateProjectUserGroup(context.Background(), gradeID, manager.UserGroupInfo{
 		Name:  projectManagerUserGroupName(projectName),
 		Desc:  projectManagerUserGroupDesc(projectName),
 		Users: users,
@@ -144,7 +225,7 @@ func CreateProjectPermManager(projectID, projectName string, users []string) err
 		return err
 	}
 
-	err = auth.PermManagerClient.CreateProjectUserGroup(context.Background(), gradeID, manager.UserGroupInfo{
+	err = permManager.CreateProjectUserGroup(context.Background(), gradeID, manager.UserGroupInfo{
 		Name:  projectViewerUserGroupName(projectName),
 		Desc:  projectViewerUserGroupDesc(projectName),
 		Users: users,

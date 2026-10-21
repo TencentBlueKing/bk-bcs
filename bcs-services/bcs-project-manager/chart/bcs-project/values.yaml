@@ -173,7 +173,7 @@ svcConf:
     iamHost: ""
     bkPaaSHost: ""
     debug: false
-  # 访问 cmdb api 的配置
+  # 访问 cmdb api 的配置，host 为 cmdb apigw host，例如 https://bkapi.example.com/prod
   cmdb:
     enable: true
     bkSupplierAccount: ""

@@ -195,3 +195,24 @@ func FormatTime(data []operator.M, needTimeFormatList []string) {
 		}
 	}
 }
+
+// FormatTimeUTCRFC339 format time to UTC RFC3339 format
+func FormatTimeUTCRFC339(data []operator.M, needTimeFormatList []string) {
+	// Some time-field need to be format before return
+	for i := range data {
+		for _, t := range needTimeFormatList {
+			switch date := data[i][t].(type) {
+			case primitive.DateTime:
+				data[i][t] = date.Time()
+			case string:
+				parsedTime, err := time.Parse(time.RFC3339, date)
+				if err != nil {
+					continue
+				}
+				data[i][t] = parsedTime.UTC().Format(time.RFC3339)
+			default:
+				continue
+			}
+		}
+	}
+}

@@ -22,22 +22,28 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"go.mongodb.org/mongo-driver/bson"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/constant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/dbtable"
 )
 
 const (
 	tableName = "business"
+	// FieldKeyTenantID tenantID
+	FieldKeyTenantID = "tenantID"
 	// FieldKeyBusinessID businessID
 	FieldKeyBusinessID = "businessID"
 	// maxBusinessIDLen CMDB bk_biz_id 转十进制字符串的上限
 	maxBusinessIDLen = 20
+	// legacyBusinessIDIndex 早期仅按 businessID 建的唯一索引，会阻止不同租户写入相同 bk_biz_id
+	legacyBusinessIDIndex = tableName + "_businessID_idx"
 )
 
 var (
 	businessIndexes = []drivers.Index{
 		{
-			Name: tableName + "_businessID_idx",
+			Name: tableName + "_tenantID_businessID_idx",
 			Key: bson.D{
+				bson.E{Key: FieldKeyTenantID, Value: 1},
 				bson.E{Key: FieldKeyBusinessID, Value: 1},
 			},
 			Unique: true,
@@ -47,6 +53,7 @@ var (
 
 // Business CMDB 业务镜像，供其他程序直连 Mongo 消费
 type Business struct {
+	TenantID   string `json:"tenantID" bson:"tenantID"`
 	BusinessID string `json:"businessID" bson:"businessID"`
 	Name       string `json:"name" bson:"name"`
 	Default    int    `json:"default" bson:"default"`
@@ -83,22 +90,51 @@ func (m *ModelBusiness) ensureTable(ctx context.Context) error {
 		m.isTableEnsuredMutex.RUnlock()
 		return nil
 	}
-	if err := dbtable.EnsureTable(ctx, m.db, m.tableName, m.indexes); err != nil {
-		m.isTableEnsuredMutex.RUnlock()
-		return err
-	}
 	m.isTableEnsuredMutex.RUnlock()
 
 	m.isTableEnsuredMutex.Lock()
+	defer m.isTableEnsuredMutex.Unlock()
+	if m.isTableEnsured {
+		return nil
+	}
+	if err := m.migrateLegacy(ctx); err != nil {
+		return err
+	}
+	if err := dbtable.EnsureTable(ctx, m.db, m.tableName, m.indexes); err != nil {
+		return err
+	}
 	m.isTableEnsured = true
-	m.isTableEnsuredMutex.Unlock()
 	return nil
 }
 
-// UpsertBusiness upsert business by businessID
+// migrateLegacy 删除旧的 businessID 唯一索引，并为无 tenantID 的存量数据补默认租户
+func (m *ModelBusiness) migrateLegacy(ctx context.Context) error {
+	hasTable, err := m.db.HasTable(ctx, m.tableName)
+	if err != nil || !hasTable {
+		return err
+	}
+	hasLegacyIndex, err := m.db.Table(m.tableName).HasIndex(ctx, legacyBusinessIDIndex)
+	if err != nil {
+		return err
+	}
+	if hasLegacyIndex {
+		if err = m.db.Table(m.tableName).DropIndex(ctx, legacyBusinessIDIndex); err != nil {
+			return err
+		}
+	}
+	cond := operator.NewLeafCondition(operator.Ext, operator.M{FieldKeyTenantID: false})
+	_, err = m.db.Table(m.tableName).UpdateMany(ctx, cond,
+		operator.M{"$set": operator.M{FieldKeyTenantID: constant.DefaultTenantId}})
+	return err
+}
+
+// UpsertBusiness upsert business by tenantID and businessID
 func (m *ModelBusiness) UpsertBusiness(ctx context.Context, biz *Business) error {
 	if biz == nil {
 		return fmt.Errorf("business cannot be empty")
+	}
+	if biz.TenantID == "" {
+		return fmt.Errorf("tenantID cannot be empty")
 	}
 	if err := validateBusinessID(biz.BusinessID); err != nil {
 		return err
@@ -107,22 +143,27 @@ func (m *ModelBusiness) UpsertBusiness(ctx context.Context, biz *Business) error
 		return err
 	}
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{
+		FieldKeyTenantID:   biz.TenantID,
 		FieldKeyBusinessID: biz.BusinessID,
 	})
 	return m.db.Table(m.tableName).Upsert(ctx, cond, operator.M{"$set": biz})
 }
 
-// DeleteBusinessesNotIn hard-delete businesses whose businessID is not in keepIDs
-func (m *ModelBusiness) DeleteBusinessesNotIn(ctx context.Context, keepIDs []string) (int64, error) {
+// DeleteBusinessesNotIn hard-delete businesses of the tenant whose businessID is not in keepIDs
+func (m *ModelBusiness) DeleteBusinessesNotIn(ctx context.Context, tenantID string, keepIDs []string) (int64, error) {
+	if tenantID == "" {
+		return 0, fmt.Errorf("tenantID cannot be empty")
+	}
 	if err := m.ensureTable(ctx); err != nil {
 		return 0, err
 	}
 	if keepIDs == nil {
 		keepIDs = []string{}
 	}
-	cond := operator.NewLeafCondition(operator.Nin, operator.M{
-		FieldKeyBusinessID: keepIDs,
-	})
+	cond := operator.NewBranchCondition(operator.And,
+		operator.NewLeafCondition(operator.Eq, operator.M{FieldKeyTenantID: tenantID}),
+		operator.NewLeafCondition(operator.Nin, operator.M{FieldKeyBusinessID: keepIDs}),
+	)
 	return m.db.Table(m.tableName).Delete(ctx, cond)
 }
 

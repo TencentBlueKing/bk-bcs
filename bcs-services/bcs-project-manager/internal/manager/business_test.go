@@ -15,20 +15,26 @@ package manager
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/constant"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/headerkey"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/cmdb"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/business"
 )
 
 type fakeBusinessStore struct {
-	upserted     []*business.Business
-	deletedNotIn []string
-	upsertErr    error
-	deleteErr    error
+	upserted      []*business.Business
+	deletedTenant string
+	deletedNotIn  []string
+	upsertErr     error
+	deleteErr     error
 }
 
 func (f *fakeBusinessStore) UpsertBusiness(_ context.Context, biz *business.Business) error {
@@ -40,10 +46,11 @@ func (f *fakeBusinessStore) UpsertBusiness(_ context.Context, biz *business.Busi
 	return nil
 }
 
-func (f *fakeBusinessStore) DeleteBusinessesNotIn(_ context.Context, keepIDs []string) (int64, error) {
+func (f *fakeBusinessStore) DeleteBusinessesNotIn(_ context.Context, tenantID string, keepIDs []string) (int64, error) {
 	if f.deleteErr != nil {
 		return 0, f.deleteErr
 	}
+	f.deletedTenant = tenantID
 	f.deletedNotIn = append([]string{}, keepIDs...)
 	return int64(len(keepIDs)), nil
 }
@@ -58,8 +65,9 @@ func TestTransferBusiness(t *testing.T) {
 		BkBizProductor:  "p",
 		BkBizTester:     "t",
 		BkBizDeveloper:  "d",
-	}, "2026-01-02T03:04:05Z")
+	}, "t1", "2026-01-02T03:04:05Z")
 	require.NotNil(t, got)
+	assert.Equal(t, "t1", got.TenantID)
 	assert.Equal(t, "100", got.BusinessID)
 	assert.Equal(t, "demo", got.Name)
 	assert.Equal(t, 0, got.Default)
@@ -69,12 +77,12 @@ func TestTransferBusiness(t *testing.T) {
 	assert.Equal(t, "t", got.Tester)
 	assert.Equal(t, "d", got.Developer)
 	assert.Equal(t, "2026-01-02T03:04:05Z", got.SyncTime)
-	assert.Nil(t, transferBusiness(cmdb.BusinessData{BKBizID: 0}, "now"))
+	assert.Nil(t, transferBusiness(cmdb.BusinessData{BKBizID: 0}, "t1", "now"))
 }
 
 func TestApplyBusinessSnapshot(t *testing.T) {
 	fake := &fakeBusinessStore{}
-	upserted, deleted, err := applyBusinessSnapshot(context.Background(), fake, []cmdb.BusinessData{
+	upserted, deleted, err := applyBusinessSnapshot(context.Background(), fake, "t1", []cmdb.BusinessData{
 		{BKBizID: 1, BKBizName: "a"},
 		{BKBizID: 0, BKBizName: "invalid"},
 		{BKBizID: 2, BKBizName: "b"},
@@ -83,12 +91,16 @@ func TestApplyBusinessSnapshot(t *testing.T) {
 	assert.Equal(t, 2, upserted)
 	assert.Equal(t, int64(2), deleted)
 	require.Len(t, fake.upserted, 2)
+	for _, biz := range fake.upserted {
+		assert.Equal(t, "t1", biz.TenantID)
+	}
+	assert.Equal(t, "t1", fake.deletedTenant)
 	assert.Equal(t, []string{"1", "2"}, fake.deletedNotIn)
 }
 
 func TestApplySnapshotUpsertFail(t *testing.T) {
 	fake := &fakeBusinessStore{upsertErr: fmt.Errorf("mongo down")}
-	_, _, err := applyBusinessSnapshot(context.Background(), fake, []cmdb.BusinessData{
+	_, _, err := applyBusinessSnapshot(context.Background(), fake, "t1", []cmdb.BusinessData{
 		{BKBizID: 1, BKBizName: "a"},
 	})
 	require.Error(t, err)
@@ -97,9 +109,35 @@ func TestApplySnapshotUpsertFail(t *testing.T) {
 
 func TestApplySnapshotEmptyDel(t *testing.T) {
 	fake := &fakeBusinessStore{}
-	upserted, _, err := applyBusinessSnapshot(context.Background(), fake, nil)
+	upserted, _, err := applyBusinessSnapshot(context.Background(), fake, "t1", nil)
 	require.NoError(t, err)
 	assert.Equal(t, 0, upserted)
+	assert.Equal(t, "t1", fake.deletedTenant)
 	assert.NotNil(t, fake.deletedNotIn)
 	assert.Empty(t, fake.deletedNotIn)
+}
+
+func TestListSyncTenantIDsSingleTenant(t *testing.T) {
+	config.GlobalConf = &config.ProjectConfig{EnableMultiTenant: false}
+	ids, err := listSyncTenantIDs(context.Background())
+	require.NoError(t, err)
+	assert.Equal(t, []string{constant.DefaultTenantId}, ids)
+}
+
+func TestListSyncTenantIDsMultiTenant(t *testing.T) {
+	var gotTenant string
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotTenant = r.Header.Get(string(headerkey.TenantIdKey))
+		_, _ = w.Write([]byte(`{"data":[{"id":"t1"},{"id":""},{"id":"t2"}]}`))
+	}))
+	defer ts.Close()
+
+	config.GlobalConf = &config.ProjectConfig{
+		EnableMultiTenant: true,
+		BkUser:            config.BkUserConfig{Host: ts.URL},
+	}
+	ids, err := listSyncTenantIDs(context.Background())
+	require.NoError(t, err)
+	assert.Equal(t, constant.SystemTenantId, gotTenant)
+	assert.Equal(t, []string{"t1", "t2"}, ids)
 }

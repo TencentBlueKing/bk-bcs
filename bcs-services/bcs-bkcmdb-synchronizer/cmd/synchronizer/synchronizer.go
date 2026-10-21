@@ -12,11 +12,19 @@
 
 package main
 
-import "github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/synchronizer"
+import (
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/synchronizer"
+)
 
 // Synchronizerd the synchronizer daemon
 func Synchronizerd() {
-	s := synchronizer.NewSynchronizer(BkcmdbSynchronizerOption)
+	s, err := synchronizer.NewSynchronizer(BkcmdbSynchronizerOption)
+	if err != nil {
+		blog.Errorf("new synchronizer failed, err: %s", err.Error())
+		return
+	}
 	s.Init()
 	s.Run()
 }

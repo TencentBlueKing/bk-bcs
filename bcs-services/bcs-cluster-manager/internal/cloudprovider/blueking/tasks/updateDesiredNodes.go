@@ -30,6 +30,7 @@ import (
 	providerutils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/resource"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tenant"
 )
 
 // ApplyNodesFromResourcePoolTask apply instance from resource
@@ -183,8 +184,13 @@ func saveNodesToDB(ctx context.Context,
 	}
 
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
+	ctx, err = tenant.WithTenantIdByResourceForContext(ctx, tenant.ResourceMetaData{ProjectId: task.GetProjectID()})
+	if err != nil {
+		blog.Errorf("saveClusterNodesToDB[%s] WithTenantIdByResourceForContext failed: %v", taskID, err)
+	}
+
 	err = retry.Do(func() error {
-		nodes, err = business.ListNodesByInstanceIP(opt.InstanceIPs)
+		nodes, err = business.ListNodesByInstanceIP(ctx, opt.InstanceIPs)
 		if err != nil {
 			return err
 		}

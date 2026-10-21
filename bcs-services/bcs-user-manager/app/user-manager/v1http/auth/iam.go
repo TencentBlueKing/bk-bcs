@@ -122,8 +122,8 @@ func GetApplicationsFromPermCtx(permCtx *PermCtx, actionsID string) []iam.Applic
 }
 
 // GetApplyURL get apply url
-func GetApplyURL(applications []iam.ApplicationAction) (string, error) {
-	url, err := config.GloablIAMClient.GetApplyURL(iam.ApplicationRequest{
+func GetApplyURL(applications []iam.ApplicationAction, tenantID string) (string, error) {
+	url, err := config.GloablIAMClient(tenantID).GetApplyURL(iam.ApplicationRequest{
 		SystemID: config.GetGlobalConfig().IAMConfig.SystemID}, applications, iam.BkUser{
 		BkUserName: iam.SystemUser,
 	})

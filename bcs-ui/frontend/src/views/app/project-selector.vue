@@ -82,7 +82,7 @@ import useProjects, { IProjectPerm } from '../project-manage/project/use-project
 
 import { bus } from '@/common/bus';
 import cancelRequest from '@/common/cancel-request';
-import { setCookie } from '@/common/util';
+import { getIAMHost, setCookie } from '@/common/util';
 import { IProject } from '@/composables/use-app';
 import useDebouncedRef from '@/composables/use-debounce';
 import $router from '@/router';
@@ -169,7 +169,10 @@ export default defineComponent({
 
     // 申请项目权限
     const handleGotoIAM = () => {
-      window.open(`${window.BK_IAM_HOST}/apply-join-user-group?system_id=bk_bcs_app`);
+      const path = window.BK_IAM_ENABLE_V4 === 'true' && window.BK_IAM_V4_HOST
+        ? '/permission/apply'
+        : '/apply-join-user-group?system_id=bk_bcs_app';
+      window.open(`${getIAMHost()}${path}`);
     };
     // 创建项目
     const handleCreateProject = () => {

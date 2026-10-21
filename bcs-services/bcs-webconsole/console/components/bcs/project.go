@@ -32,6 +32,7 @@ type Project struct {
 	Creator       string `json:"creator"`
 	Kind          string `json:"kind"`
 	RawCreateTime string `json:"createTime"`
+	TenantID      string `json:"tenantID"`
 }
 
 // localProjectCache : project cache with generics

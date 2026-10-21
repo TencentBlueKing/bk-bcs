@@ -13,6 +13,7 @@
 package tmp
 
 import (
+	"context"
 	"testing"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/alarm"
@@ -37,7 +38,7 @@ func TestClient_ShieldHostAlarmConfig(t *testing.T) {
 	cli := getClient()
 
 	// user 必须是该业务的运维人员,通过该身份屏蔽主机告警
-	err := cli.ShieldHostAlarmConfig("xxx", &alarm.ShieldHost{
+	err := cli.ShieldHostAlarmConfig(context.Background(), "xxx", &alarm.ShieldHost{
 		BizID: "xxx",
 		HostList: []alarm.HostInfo{
 			{

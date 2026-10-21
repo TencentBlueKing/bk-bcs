@@ -46,3 +46,8 @@ func (c *BKAPIGWConf) InitJWTPubKey() error {
 	c.JWTPubKeyObj = pubKey
 	return nil
 }
+
+// BKUserConf bk user config
+type BKUserConf struct {
+	APIServer string `yaml:"api_server"`
+}

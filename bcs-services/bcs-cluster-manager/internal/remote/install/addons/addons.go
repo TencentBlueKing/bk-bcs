@@ -83,8 +83,8 @@ func (a *AddonsInstaller) IsInstalled(ctx context.Context, clusterID string) (bo
 		return false, err
 	}
 	// not found addon
-	if resp.Code != nil && *resp.Code != 0 {
-		blog.Errorf("[AddonsInstaller] GetAddonsDetail failed, code: %d, message: %s", *resp.Code, *resp.Message)
+	if *resp.Code != 0 {
+		blog.Errorf("[AddonsInstaller] GetAddonsDetail failed, code: %d, message: %s", resp.Code, resp.Message)
 		return false, nil
 	}
 	blog.Infof("[AddonsInstaller] [%s:%s] GetAddonsDetail success[%s:%s] status: %s",
@@ -100,6 +100,7 @@ func (a *AddonsInstaller) IsInstalled(ctx context.Context, clusterID string) (bo
 func (a *AddonsInstaller) getAddonDetail(
 	ctx context.Context, clusterId string) (*helmmanager.GetAddonsDetailResp, error) {
 	start := time.Now()
+
 	resp, err := a.client.GetAddonsDetail(ctx, &helmmanager.GetAddonsDetailReq{
 		ProjectCode: &a.projectID,
 		ClusterID:   &clusterId,

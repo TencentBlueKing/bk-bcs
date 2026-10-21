@@ -40,6 +40,8 @@ type Project struct {
 	ProjectCode string
 	// Name projectName
 	Name string
+	// TenantId tenantID
+	TenantId string
 }
 
 // BuildScopePerm build project level perm scope

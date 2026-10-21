@@ -17,7 +17,6 @@ import (
 	"fmt"
 	"net/http"
 	"sync"
-	"time"
 )
 
 // WorkerFunc woker function
@@ -69,30 +68,46 @@ func (gm *GoroutineManager) Start(id string, param interface{}) {
 func (gm *GoroutineManager) Restart(id string, param interface{}) {
 	gm.mu.Lock()
 	done, exists := gm.workers[id]
-	if exists {
-		done <- true           // 发送停止信号
-		delete(gm.workers, id) // 从map中移除
-		fmt.Printf("id: %s 已停止", id)
+	if !exists {
+		gm.mu.Unlock()
+		return
 	}
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		<-done // 等待旧 goroutine 收到信号并退出
+		wg.Done()
+	}()
+
+	done <- true // 发送停止信号给旧 goroutine
+	delete(gm.workers, id)
+	delete(gm.params, id)
+	fmt.Printf("id: %s 已停止", id)
 	gm.mu.Unlock()
 
-	if exists {
-		time.Sleep(100 * time.Millisecond) // 稍等goroutine优雅退出
-		gm.Start(id, param)                // 重新启动goroutine
-		fmt.Printf("id: %s 已重启", id)
-	}
+	wg.Wait() // 等待旧 goroutine 退出
+
+	gm.Start(id, param) // 重新启动goroutine
+	fmt.Printf("id: %s 已重启", id)
 }
 
 // Stop 重启一个指定ID的goroutine
-func (gm *GoroutineManager) Stop(id string, param interface{}) {
+func (gm *GoroutineManager) Stop(id string, param interface{}) error {
 	gm.mu.Lock()
+	defer gm.mu.Unlock()
+
 	done, exists := gm.workers[id]
-	if exists {
-		done <- true           // 发送停止信号
-		delete(gm.workers, id) // 从map中移除
-		fmt.Printf("id: %s 已停止", id)
+	if !exists {
+		return fmt.Errorf("goroutine %s 不存在", id)
 	}
-	gm.mu.Unlock()
+
+	done <- true           // 发送停止信号
+	delete(gm.workers, id) // 从map中移除
+	delete(gm.params, id)
+	fmt.Printf("id: %s 已停止", id)
+
+	return nil
 }
 
 // List 返回所有正在运行的goroutine的列表

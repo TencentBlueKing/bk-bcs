@@ -4,7 +4,7 @@
 
 ### 调用示例
 ```sh
-curl -X GET -H 'x-bkapi-authorization: {"bk_ticket": "xxx", "bk_app_code": "xxx", "bk_app_secret": "***"}' --insecure https://bcs-api-gateway.apigw.com/uat/bcsproject/v1/projects
+curl -X GET -H 'x-bkapi-authorization: {"bk_ticket": "xxx", "bk_app_code": "xxx", "bk_app_secret": "***"}' --insecure https://bcs-api-gateway.apigw.com/prod/bcsproject/v1/projects
 ```
 
 ### query 参数
@@ -42,15 +42,7 @@ curl -X GET -H 'x-bkapi-authorization: {"bk_ticket": "xxx", "bk_app_code": "xxx"
                 "isOffline": false,
                 "kind": "k8s",
                 "businessID": "100000",
-                "isSecret": false,
-                "projectType": 1,
-                "deployType": 1,
-                "BGID": "956",
-                "BGName": "IEG互动娱乐事业群",
-                "deptID": "25923",
-                "deptName": "技术运营部",
-                "centerID": "26050",
-                "centerName": "蓝鲸产品中心"
+                "businessName": "xxxxx"
             }
         ],
         "requestID": "894f7249f43c4e5xxxx9207058045e8e",

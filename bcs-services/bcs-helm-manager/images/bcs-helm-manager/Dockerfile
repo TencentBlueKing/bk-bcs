@@ -1,9 +1,6 @@
-FROM centos:8
+FROM tencentos/tencentos4-minimal
 
 ENV GODEBUG=x509sha1=1
-
-RUN ln -snf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
-    echo 'Asia/Shanghai' > /etc/timezone
 
 RUN mkdir -p /data/bcs/logs/bcs /data/bcs/cert /data/bcs/swagger
 RUN mkdir -p /data/bcs/bcs-helm-manager

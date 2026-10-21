@@ -31,6 +31,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cmdb"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tenant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
@@ -133,7 +134,14 @@ func ListNodesByIP(ips []string, opt *cloudprovider.ListNodesOption) ([]*proto.N
 func ListExternalNodesByIP(ips []string, opt *cloudprovider.ListNodesOption) ([]*proto.Node, error) {
 	var nodes []*proto.Node
 
-	hostDataList, err := cmdb.GetCmdbClient().QueryHostInfoWithoutBiz(cmdb.FieldHostIP, ips, cmdb.Page{
+	ctx, err := tenant.WithTenantIdByResourceForContext(context.Background(), tenant.ResourceMetaData{
+		ProjectId: opt.ProjectID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	hostDataList, err := cmdb.GetCmdbClient().QueryHostInfoWithoutBiz(ctx, cmdb.FieldHostIP, ips, cmdb.Page{
 		Start: 0,
 		Limit: len(ips),
 	})
@@ -761,7 +769,7 @@ func PreCheckModifyInstancesVpc(ctx context.Context, nodeIds []string, opt *clou
 	blog.Info("PreCheckModifyInstancesVpc[%s] ipToInstID: %s", taskID, ipToInstID)
 
 	// 查询 CMDB 获取 ip -> BkCloudInstID 的映射
-	cmdbIPToInstID, err := listCMDBInstIDByIps(ips)
+	cmdbIPToInstID, err := listCMDBInstIDByIps(ctx, ips)
 	if err != nil {
 		blog.Errorf("PreCheckModifyInstancesVpc[%s] listCMDBInstIDByIps failed: %v, ips: %v",
 			taskID, err, ips)
@@ -810,8 +818,8 @@ func PreCheckModifyInstancesVpc(ctx context.Context, nodeIds []string, opt *clou
 }
 
 // listCMDBInstIDByIps 通过 IP 列表查询 CMDB，返回 IP -> BkCloudInstID 的映射
-func listCMDBInstIDByIps(ips []string) (map[string]string, error) {
-	hostDataList, err := cmdb.GetCmdbClient().QueryHostInfoWithoutBiz(cmdb.FieldHostIP, ips, cmdb.Page{
+func listCMDBInstIDByIps(ctx context.Context, ips []string) (map[string]string, error) {
+	hostDataList, err := cmdb.GetCmdbClient().QueryHostInfoWithoutBiz(ctx, cmdb.FieldHostIP, ips, cmdb.Page{
 		Start: 0,
 		Limit: len(ips),
 	})

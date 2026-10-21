@@ -270,6 +270,15 @@ func buildLaunchTemplateData(group *proto.NodeGroup) (*ec2.RequestLaunchTemplate
 				Groups:                   aws.StringSlice(group.LaunchTemplate.SecurityGroupIDs),
 			},
 		},
+		// IMDSv2 metadata options. HttpPutResponseHopLimit=2 makes the metadata
+		// token response reachable by pods (e.g. aws-node CNI) behind one extra
+		// network hop. Required for newer AL2023 AMI that enforces IMDSv2.
+		// Backward compatible with older AMIs.
+		MetadataOptions: &ec2.LaunchTemplateInstanceMetadataOptionsRequest{
+			HttpTokens:              aws.String("required"),
+			HttpEndpoint:            aws.String("enabled"),
+			HttpPutResponseHopLimit: aws.Int64(2),
+		},
 	}
 
 	if len(group.LaunchTemplate.DataDisks) != 0 {
@@ -508,6 +517,66 @@ func suspendAWSProcesses(ctx context.Context, dependInfo *cloudprovider.CloudDep
 	if err != nil {
 		blog.Errorf("suspendAWSProcesses[%s]: failed: %v", taskID, err)
 		retErr := fmt.Errorf("suspendAWSProcesses failed, %s", err.Error())
+		return retErr
+	}
+
+	return nil
+}
+
+// resumeAWSProcesses resume the ASG processes previously suspended by suspendAWSProcesses.
+// Otherwise deleting node group / scaling in nodes will fail because the ASG
+// processes (e.g. AZRebalance, HealthCheck, ReplaceUnhealthy) are still suspended.
+func resumeAWSProcesses(ctx context.Context, dependInfo *cloudprovider.CloudDependBasicInfo,
+	asInfo *autoscaling.Group) error {
+	taskID := cloudprovider.GetTaskIDFromContext(ctx)
+
+	client, err := api.NewAutoScalingClient(dependInfo.CmOption)
+	if err != nil {
+		blog.Errorf("taskID[%s] resumeAWSProcesses get aws clientSet failed, %s", taskID, err.Error())
+		return err
+	}
+
+	pNames := []string{"AZRebalance", "HealthCheck", "ReplaceUnhealthy"}
+
+	err = client.ResumeProcesses(asInfo.AutoScalingGroupName, pNames)
+	if err != nil {
+		return err
+	}
+
+	ctx, cancel := context.WithTimeout(context.TODO(), 2*time.Minute)
+	defer cancel()
+	err = loop.LoopDoFunc(ctx, func() error {
+		asgs, dErr := client.DescribeAutoScalingGroups(&autoscaling.DescribeAutoScalingGroupsInput{
+			AutoScalingGroupNames: []*string{asInfo.AutoScalingGroupName},
+		})
+		if dErr != nil {
+			blog.Errorf("taskID[%s] DescribeAutoScalingGroups failed, %s", taskID, dErr.Error())
+			return nil
+		}
+
+		if len(asgs) == 0 {
+			blog.Errorf("taskID[%s] get autoscaling group info empty", taskID)
+			return nil
+		}
+		if len(asgs[0].SuspendedProcesses) == 0 {
+			blog.Infof("resume autoscaling group all processes successful")
+			return loop.EndLoop
+		}
+
+		// all target processes should be resumed, otherwise keep waiting
+		for _, p := range asgs[0].SuspendedProcesses {
+			if utils.StringInSlice(*p.ProcessName, pNames) {
+				blog.Infof("autoscaling group process %s still suspended, waiting", *p.ProcessName)
+				return nil
+			}
+		}
+
+		blog.Infof("resume autoscaling group all processes successful")
+		return loop.EndLoop
+	}, loop.LoopInterval(5*time.Second))
+	if err != nil {
+		blog.Errorf("resumeAWSProcesses[%s]: failed: %v", taskID, err)
+		retErr := fmt.Errorf("resumeAWSProcesses failed, %s", err.Error())
 		return retErr
 	}
 

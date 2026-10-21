@@ -143,7 +143,7 @@ func (ua *UpdateAction) updateAutoScaling() error {
 		TaskID:       taskID,
 		Message:      fmt.Sprintf("编辑集群[%s]扩缩容配置", ua.req.ClusterID),
 		OpUser:       ua.req.Updater,
-		CreateTime:   time.Now().Format(time.RFC3339),
+		CreateTime:   time.Now().UTC().Format(time.RFC3339),
 		ClusterID:    ua.req.ClusterID,
 		ProjectID:    ua.cluster.ProjectID,
 		ResourceName: ua.cluster.ClusterName,
@@ -155,7 +155,7 @@ func (ua *UpdateAction) updateAutoScaling() error {
 }
 
 func (ua *UpdateAction) saveAutoScalingOption(option *cmproto.ClusterAutoScalingOption) error {
-	timeStr := time.Now().Format(time.RFC3339)
+	timeStr := time.Now().UTC().Format(time.RFC3339)
 	// update field if required
 	option.Status = common.StatusAutoScalingOptionUpdating
 	if ua.req.OnlyUpdateInfo {
@@ -319,7 +319,7 @@ func (ua *SyncAction) getRelativeResource() error {
 }
 
 func (ua *SyncAction) syncClusterAutoScalingOption(option *cmproto.ClusterAutoScalingOption) error {
-	timeStr := time.Now().Format(time.RFC3339)
+	timeStr := time.Now().UTC().Format(time.RFC3339)
 	// update field if required
 	option.UpdateTime = timeStr
 	option.Updater = ua.req.Updater
@@ -431,7 +431,7 @@ func (ua *SyncAction) Handle(
 		TaskID:       "",
 		Message:      fmt.Sprintf("CA集群[%s]实际参数同步至管控端", ua.req.ClusterID),
 		OpUser:       auth.GetUserFromCtx(ctx),
-		CreateTime:   time.Now().Format(time.RFC3339),
+		CreateTime:   time.Now().UTC().Format(time.RFC3339),
 		ClusterID:    ua.req.ClusterID,
 		ProjectID:    ua.cluster.ProjectID,
 		ResourceName: ua.cluster.ClusterName,
@@ -481,7 +481,7 @@ func (ua *UpdateAsOptionDpAction) getRelativeResource() error {
 }
 
 func (ua *UpdateAsOptionDpAction) updateClusterAsOptionDeviceProvider(option *cmproto.ClusterAutoScalingOption) error {
-	timeStr := time.Now().Format(time.RFC3339)
+	timeStr := time.Now().UTC().Format(time.RFC3339)
 	option.UpdateTime = timeStr
 	option.DevicePoolProvider = ua.req.GetProvider()
 	ua.asOption = option
@@ -538,7 +538,7 @@ func (ua *UpdateAsOptionDpAction) Handle(ctx context.Context,
 		TaskID:       "",
 		Message:      fmt.Sprintf("更新集群[%s]扩缩容配置使用的资源池", ua.req.ClusterID),
 		OpUser:       auth.GetUserFromCtx(ctx),
-		CreateTime:   time.Now().Format(time.RFC3339),
+		CreateTime:   time.Now().UTC().Format(time.RFC3339),
 		ClusterID:    ua.req.ClusterID,
 		ProjectID:    ua.cluster.ProjectID,
 		ResourceName: ua.cluster.ClusterName,

@@ -66,17 +66,17 @@
           </bk-table-column>
           <bk-table-column :label="$t('cluster.labels.createdAt')" prop="createTime" min-width="150">
             <template slot-scope="{ row }">
-              {{ formatDate(row.createTime) || '--' }}
+              {{ formatTimeWithTimezone(row.createTime) || '--' }}
             </template>
           </bk-table-column>
           <bk-table-column :label="$t('cluster.labels.updatedAt')" prop="update_time" min-width="150">
             <template slot-scope="{ row }">
-              {{ formatDate(row.update_time) || '--' }}
+              {{ formatTimeWithTimezone(row.update_time) || '--' }}
             </template>
           </bk-table-column>
           <bk-table-column :label="$t('generic.label.updator')" prop="updator">
             <template slot-scope="{ row }">
-              {{row.updator || '--'}}
+              <bk-user-display-name :user-id="row.updator"></bk-user-display-name>
             </template>
           </bk-table-column>
           <bk-table-column :label="$t('generic.label.action')" prop="permissions" min-width="150">
@@ -279,7 +279,7 @@
 </template>
 
 <script>
-import { catchErrorHandler, formatDate } from '@/common/util';
+import { catchErrorHandler, formatTimeWithTimezone } from '@/common/util';
 import ClusterSelectComb from '@/components/cluster-selector/cluster-select-comb.vue';
 import BcsContent from '@/components/layout/Content.vue';
 import Row from '@/components/layout/Row.vue';
@@ -288,7 +288,7 @@ export default {
   components: { BcsContent, Row, ClusterSelectComb },
   data() {
     return {
-      formatDate,
+      formatTimeWithTimezone,
       isInitLoading: true,
       isPageLoading: false,
       searchKeyword: '',

@@ -14,6 +14,7 @@
 package utils
 
 import (
+	"context"
 	"net"
 	"os"
 	"strings"
@@ -28,6 +29,12 @@ const (
 
 	// QueryFallbackTime metrics 查询回退时间
 	QueryFallbackTime = time.Minute
+
+	// TenantIDHeaderKey is the header name of X-Bk-Tenant-Id.
+	TenantIDHeaderKey = "X-Bk-Tenant-Id"
+
+	// DefaultTenantID is the default tenant id.
+	DefaultTenantID = "default"
 )
 
 // GetIPv6AddrFromEnv 解析ipv6
@@ -104,4 +111,12 @@ func StringJoinIPWithRegex(list []string, sep, reg string) string {
 func GetNowQueryTime() time.Time {
 	// 往前退一分钟, 避免数据上报慢
 	return time.Now().Add(-QueryFallbackTime)
+}
+
+// GetTenantIDFromContext 从 context 中获取租户 ID
+func GetTenantIDFromContext(ctx context.Context) string {
+	if tenantID, ok := ctx.Value(ContextTenantKey).(string); ok {
+		return tenantID
+	}
+	return DefaultTenantID
 }

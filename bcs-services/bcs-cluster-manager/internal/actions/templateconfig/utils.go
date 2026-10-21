@@ -16,6 +16,7 @@ package templateconfig
 import (
 	"context"
 	"encoding/json"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
@@ -25,6 +26,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/templateconfig"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/util"
 )
 
 // ConfigType xxx
@@ -90,8 +92,8 @@ func getTemplateConfigInfos(ctx context.Context, model store.ClusterManagerModel
 			CloudTemplateConfig: cloudConfig,
 			Creator:             templateConfig.Creator,
 			Updater:             templateConfig.Updater,
-			CreateTime:          templateConfig.CreateTime,
-			UpdateTime:          templateConfig.UpdateTime,
+			CreateTime:          util.TransStrToUTCStr(time.RFC3339Nano, templateConfig.CreateTime),
+			UpdateTime:          util.TransStrToUTCStr(time.RFC3339Nano, templateConfig.UpdateTime),
 		})
 	}
 

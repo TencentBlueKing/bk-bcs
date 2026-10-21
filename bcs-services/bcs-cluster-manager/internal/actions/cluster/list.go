@@ -10,6 +10,8 @@
  * limitations under the License.
  */
 
+// Package cluster define cluster actions
+// NOCC:tosa/comment_ratio(ignore)
 package cluster
 
 import (
@@ -18,6 +20,7 @@ import (
 	"fmt"
 	"sort"
 	"strconv"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
@@ -35,11 +38,14 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cmdb"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/gse"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/util"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tenant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
@@ -47,7 +53,6 @@ import (
 type ListAction struct {
 	ctx         context.Context
 	model       store.ClusterManagerModel
-	iam         iam.PermClient
 	req         *cmproto.ListClusterReq
 	resp        *cmproto.ListClusterResp
 	clusterList []*cmproto.Cluster
@@ -57,7 +62,6 @@ type ListAction struct {
 func NewListAction(model store.ClusterManagerModel, iam iam.PermClient) *ListAction {
 	return &ListAction{
 		model: model,
-		iam:   iam,
 	}
 }
 
@@ -119,6 +123,9 @@ func (la *ListAction) getSharedCluster() error {
 		if clusterList[i].GetProjectID() == la.req.ProjectID {
 			continue
 		}
+		// 兼容旧数据
+		clusterList[i].CreateTime = util.TransStrToUTCStr(time.RFC3339Nano, clusterList[i].CreateTime)
+		clusterList[i].UpdateTime = util.TransStrToUTCStr(time.RFC3339Nano, clusterList[i].UpdateTime)
 		la.clusterList = append(la.clusterList, shieldClusterInfo(clusterList[i]))
 		clusterIDs = append(clusterIDs, clusterList[i].ClusterID)
 	}
@@ -145,6 +152,7 @@ func (la *ListAction) getSharedCluster() error {
 	return nil
 }
 
+// filterClusterList filter cluster list
 func (la *ListAction) filterClusterList() ([]*cmproto.Cluster, bool, error) {
 	var (
 		sharedCluster = true
@@ -208,6 +216,8 @@ func (la *ListAction) filterClusterList() ([]*cmproto.Cluster, bool, error) {
 
 // listCluster cluster list
 func (la *ListAction) listCluster() error {
+	user := iauth.GetAuthAndTenantInfoFromCtx(la.ctx)
+
 	clusterList, sharedCluster, err := la.filterClusterList()
 	if err != nil {
 		return err
@@ -218,18 +228,33 @@ func (la *ListAction) listCluster() error {
 		if clusterList[i].IsShared {
 			clusterList[i].IsShared = false
 		}
+		// filter project by tenant
+		if options.GetGlobalCMOptions().TenantConfig.EnableMultiTenantMode {
+			proInfo, perr := project.GetProjectManagerClient().
+				GetProjectInfo(la.ctx, clusterList[i].GetProjectID(), true)
+			if perr != nil {
+				blog.Errorf("listCluster GetProjectInfo failed: %v", perr)
+				return perr
+			}
+			if proInfo.TenantID != user.ResourceTenantId {
+				continue
+			}
+		}
+		clusterList[i].CreateTime = util.TransStrToUTCStr(time.RFC3339Nano, clusterList[i].CreateTime)
+		clusterList[i].UpdateTime = util.TransStrToUTCStr(time.RFC3339Nano, clusterList[i].UpdateTime)
 		la.clusterList = append(la.clusterList, shieldClusterInfo(clusterList[i]))
 		clusterIDList = append(clusterIDList, clusterList[i].ClusterID)
 	}
 
 	// return cluster extraInfo
-	la.resp.ClusterExtraInfo = returnClusterExtraInfo(la.model, clusterList)
+	la.resp.ClusterExtraInfo = returnClusterExtraInfo(la.model, la.clusterList)
 
 	// projectID / operator get user perm
 	if la.req.ProjectID != "" && la.req.Operator != "" {
 		v3Perm, err := la.GetProjectClustersV3Perm(actions.PermInfo{ // nolint
 			ProjectID: la.req.ProjectID,
 			UserID:    la.req.Operator,
+			TenantID:  user.ResourceTenantId,
 		}, clusterIDList)
 		if err != nil {
 			blog.Errorf("listCluster GetUserPermListByProjectAndCluster failed: %v", err.Error())
@@ -261,7 +286,7 @@ func (la *ListAction) GetProjectClustersV3Perm(user actions.PermInfo, clusterLis
 	)
 
 	// get user clusterList perms
-	v3Perm, err = getUserClusterPermList(la.iam, user, clusterList)
+	v3Perm, err = getUserClusterPermList(user, clusterList)
 	if err != nil {
 		blog.Errorf("listCluster GetUserClusterPermList failed: %v", err.Error())
 		return nil, err
@@ -314,7 +339,6 @@ func (la *ListAction) Handle(ctx context.Context, req *cmproto.ListClusterReq, r
 type ListProjectClusterAction struct {
 	ctx   context.Context
 	model store.ClusterManagerModel
-	iam   iam.PermClient
 
 	req         *cmproto.ListProjectClusterReq
 	resp        *cmproto.ListProjectClusterResp
@@ -325,10 +349,10 @@ type ListProjectClusterAction struct {
 func NewListProjectClusterAction(model store.ClusterManagerModel, iam iam.PermClient) *ListProjectClusterAction {
 	return &ListProjectClusterAction{
 		model: model,
-		iam:   iam,
 	}
 }
 
+// validate validate request
 func (la *ListProjectClusterAction) validate() error {
 	if err := la.req.Validate(); err != nil {
 		return err
@@ -372,6 +396,9 @@ func (la *ListProjectClusterAction) listProjectCluster() error {
 			clusterList[i].IsShared = false
 		}
 
+		// 兼容旧数据
+		clusterList[i].CreateTime = util.TransStrToUTCStr(time.RFC3339Nano, clusterList[i].CreateTime)
+		clusterList[i].UpdateTime = util.TransStrToUTCStr(time.RFC3339Nano, clusterList[i].UpdateTime)
 		if clusterList[i].Status == common.StatusRunning {
 			runningCluster = append(runningCluster, shieldClusterInfo(clusterList[i]))
 		} else {
@@ -430,9 +457,11 @@ func (la *ListProjectClusterAction) getWebAnnotations(projectID string, clusterI
 		}
 	}
 
-	signalPerms, err := getUserClusterPermList(la.iam, actions.PermInfo{
+	user := iauth.GetAuthAndTenantInfoFromCtx(la.ctx)
+	signalPerms, err := getUserClusterPermList(actions.PermInfo{
 		ProjectID: projectID,
 		UserID:    la.req.Operator,
+		TenantID:  user.ResourceTenantId,
 	}, clusterIDs)
 	if err != nil {
 		blog.Errorf("ListProjectClusterAction GetWebAnnotations user %s cluster perms failed, err: %s",
@@ -464,7 +493,7 @@ func (la *ListProjectClusterAction) GetProjectClustersV3Perm(user actions.PermIn
 	)
 
 	// get user perms
-	v3Perm, err = getUserClusterPermList(la.iam, user, clusterList)
+	v3Perm, err = getUserClusterPermList(user, clusterList)
 	if err != nil {
 		blog.Errorf("listCluster GetUserClusterPermList failed: %v", err.Error())
 		return nil, err
@@ -484,6 +513,7 @@ func (la *ListProjectClusterAction) GetProjectClustersV3Perm(user actions.PermIn
 	return v3ResultPerm, nil
 }
 
+// setResp set response
 func (la *ListProjectClusterAction) setResp(code uint32, msg string) {
 	la.resp.Code = code
 	la.resp.Message = msg
@@ -529,6 +559,7 @@ func NewListCommonClusterAction(model store.ClusterManagerModel) *ListCommonClus
 	}
 }
 
+// validate validate request
 func (la *ListCommonClusterAction) validate() error {
 	if err := la.req.Validate(); err != nil {
 		return err
@@ -567,6 +598,9 @@ func (la *ListCommonClusterAction) listCluster() error {
 				len(clusterList[i].GetSharedRanges().GetBizs()) > 0) {
 			continue
 		}
+		// 兼容旧数据
+		clusterList[i].CreateTime = util.TransStrToUTCStr(time.RFC3339Nano, clusterList[i].CreateTime)
+		clusterList[i].UpdateTime = util.TransStrToUTCStr(time.RFC3339Nano, clusterList[i].UpdateTime)
 
 		// 平台共享集群
 		la.clusterList = append(la.clusterList, shieldClusterInfo(clusterList[i]))
@@ -703,6 +737,7 @@ func (la *ListNodesInClusterAction) listNodes() error {
 	return nil
 }
 
+// getK8sNodes get k8s nodes
 func (la *ListNodesInClusterAction) getK8sNodes() []*corev1.Node {
 	k8sNodes, err := la.k8sOp.ListClusterNodes(la.ctx, la.req.ClusterID)
 	if err != nil {
@@ -745,6 +780,7 @@ func (la *ListNodesInClusterAction) Handle(ctx context.Context,
 	la.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 }
 
+// appendCloudNodeInfo append cloud node info
 func (la *ListNodesInClusterAction) appendCloudNodeInfo() {
 	clsMgr, err := cloudprovider.GetClusterMgr(la.cloud.CloudProvider)
 	if err != nil {
@@ -843,33 +879,7 @@ func (la *ListMastersInClusterAction) listNodes() error {
 
 	// append cmdb host info
 	la.appendHostInfo()
-	// la.appendNodeAgent()
 	return nil
-}
-
-// appendNodeAgent appedn node agentInfo
-func (la *ListMastersInClusterAction) appendNodeAgent() { // nolint
-	gseClient := gse.GetGseClient()
-	hosts := make([]gse.Host, 0)
-	for _, v := range la.nodes {
-		hosts = append(hosts, gse.Host{IP: v.InnerIP, BKCloudID: int(v.BkCloudID)})
-	}
-	if len(hosts) == 0 {
-		return
-	}
-	_, err := gseClient.GetAgentStatusV1(&gse.GetAgentStatusReq{
-		Hosts: hosts,
-	})
-	if err != nil {
-		blog.Warnf("GetAgentStatus for %s failed, %s", utils.ToJSONString(hosts), err.Error())
-		return
-	}
-	/*
-		for i := range la.nodes {
-			la.nodes[i].Agent = uint32(resp.Data[gse.BKAgentKey(gse.DefaultBKCloudID,
-				la.nodes[i].InnerIP)].BKAgentAlive)
-		}
-	*/
 }
 
 // appendHostInfo host info
@@ -882,8 +892,14 @@ func (la *ListMastersInClusterAction) appendHostInfo() {
 		return
 	}
 
+	ctx, err := tenant.WithTenantIdByResourceForContext(la.ctx, tenant.ResourceMetaData{ClusterId: la.req.ClusterID})
+	if err != nil {
+		blog.Errorf("withTenantIdByResourceForContext failed: %s", err.Error())
+		return
+	}
+
 	cmdbClient := cmdb.GetCmdbClient()
-	hosts, err := cmdbClient.QueryAllHostInfoWithoutBiz(ips)
+	hosts, err := cmdbClient.QueryAllHostInfoWithoutBiz(ctx, ips)
 	if err != nil {
 		blog.Warnf("GetHostInfo for %s failed, %s", la.req.ClusterID, err.Error())
 		return
@@ -932,13 +948,16 @@ func (la *ListMastersInClusterAction) Handle(ctx context.Context,
 }
 
 // getUserClusterPermList get user clusters perm
-func getUserClusterPermList(iam iam.PermClient, user actions.PermInfo,
-	clusterList []string) (map[string]map[string]interface{}, error) {
-
+func getUserClusterPermList(user actions.PermInfo, clusterList []string) (map[string]map[string]interface{}, error) {
 	permissions := make(map[string]map[string]interface{}, 0)
-	clusterPerm := cluster.NewBCSClusterPermClient(iam)
+
+	clusterPerm, err := iauth.GetClusterIamClient(user.TenantID)
+	if err != nil {
+		return nil, err
+	}
 
 	actionIDs := []string{cluster.ClusterView.String(), cluster.ClusterManage.String(), cluster.ClusterDelete.String()}
+
 	perms, err := clusterPerm.GetMultiClusterMultiActionPerm(user.UserID, user.ProjectID, clusterList, actionIDs)
 	if err != nil {
 		blog.Errorf("getUserClusterPermList GetMultiClusterMultiActionPermission failed: %v", err)
@@ -1007,6 +1026,9 @@ func getSharedCluster(projectId string, bizId string, model store.ClusterManager
 		if clusterList[i].ProjectID == projectId {
 			continue
 		}
+		// 兼容旧数据
+		clusterList[i].CreateTime = util.TransStrToUTCStr(time.RFC3339Nano, clusterList[i].CreateTime)
+		clusterList[i].UpdateTime = util.TransStrToUTCStr(time.RFC3339Nano, clusterList[i].UpdateTime)
 		// 是否共享给当前项目/业务
 		if clusterList[i].SharedRanges != nil && ((len(clusterList[i].SharedRanges.GetProjectIdOrCodes()) > 0 &&
 			utils.StringContainInSlice(projectId, clusterList[i].SharedRanges.ProjectIdOrCodes)) ||
@@ -1167,7 +1189,7 @@ func (la *ListBasicInfoAction) listClusterBasicInfo() error {
 				clusterList[i].BusinessID, err.Error())
 			return err
 		}
-		maintainers := cloudprovider.GetBizMaintainers(bkBizID)
+		maintainers := cloudprovider.GetBizMaintainers(la.ctx, bkBizID)
 		cbi := clusterToClusterBasicInfo(clusterList[i])
 		cbi.BizMaintainer = maintainers
 
@@ -1208,6 +1230,7 @@ func (la *ListBasicInfoAction) Handle(
 	la.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 }
 
+// listOpt list option
 func (la *ListBasicInfoAction) listOpt() *storeopt.ListOption {
 	listOpt := &storeopt.ListOption{
 		Offset: int64(la.req.Offset),

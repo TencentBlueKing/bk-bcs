@@ -39,6 +39,7 @@ type BaseConf struct {
 	Debug        bool                `yaml:"debug"`
 	RunEnv       string              `yaml:"run_env"`
 	Location     *time.Location      `yaml:"-"`
+	EnableTenant bool                `yaml:"enable_tenant"`
 }
 
 // Init xxx

@@ -14,6 +14,7 @@ package task
 
 import (
 	"context"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
@@ -23,6 +24,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/util"
 	iutils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
@@ -82,6 +84,8 @@ func (la *ListAction) listTask() error {
 		utils.HandleTaskStepData(la.ctx, tasks[i])
 		// actions.FormatTaskTime(&tasks[i])
 
+		tasks[i].Start = util.TransStrToUTCStr(time.RFC3339Nano, tasks[i].Start)
+		tasks[i].End = util.TransStrToUTCStr(time.RFC3339Nano, tasks[i].End)
 		if len(la.req.NodeIP) > 0 {
 			exist := iutils.StringContainInSlice(la.req.NodeIP, tasks[i].NodeIPList)
 			if exist {

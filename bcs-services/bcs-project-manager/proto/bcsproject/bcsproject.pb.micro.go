@@ -483,6 +483,12 @@ func NewNamespaceEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		{
+			Name:    "Namespace.CreateNamespaceCallbackV4",
+			Path:    []string{"/bcsproject/v1/projects/sharedclusters/namespaces/callback/create"},
+			Method:  []string{"POST"},
+			Handler: "rpc",
+		},
+		{
 			Name:    "Namespace.UpdateNamespace",
 			Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}"},
 			Method:  []string{"PUT"},
@@ -507,8 +513,38 @@ func NewNamespaceEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		{
+			Name:    "Namespace.ListPodLimitRanges",
+			Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/podLimitRanges"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "Namespace.CreatePodLimitRange",
+			Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/podLimitRanges"},
+			Method:  []string{"POST"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "Namespace.UpdatePodLimitRange",
+			Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/podLimitRanges/{limitRangeName}"},
+			Method:  []string{"PUT"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "Namespace.DeletePodLimitRange",
+			Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/podLimitRanges/{limitRangeName}"},
+			Method:  []string{"DELETE"},
+			Handler: "rpc",
+		},
+		{
 			Name:    "Namespace.UpdateNamespaceCallback",
 			Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/callback/update"},
+			Method:  []string{"POST"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "Namespace.UpdateNamespaceCallbackV4",
+			Path:    []string{"/bcsproject/v1/projects/sharedclusters/namespaces/callback/update"},
 			Method:  []string{"POST"},
 			Handler: "rpc",
 		},
@@ -533,6 +569,12 @@ func NewNamespaceEndpoints() []*api.Endpoint {
 		{
 			Name:    "Namespace.DeleteNamespaceCallback",
 			Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/callback/delete"},
+			Method:  []string{"POST"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "Namespace.DeleteNamespaceCallbackV4",
+			Path:    []string{"/bcsproject/v1/projects/sharedclusters/namespaces/callback/delete"},
 			Method:  []string{"POST"},
 			Handler: "rpc",
 		},
@@ -568,15 +610,22 @@ func NewNamespaceEndpoints() []*api.Endpoint {
 type NamespaceService interface {
 	CreateNamespace(ctx context.Context, in *CreateNamespaceRequest, opts ...client.CallOption) (*CreateNamespaceResponse, error)
 	CreateNamespaceCallback(ctx context.Context, in *NamespaceCallbackRequest, opts ...client.CallOption) (*NamespaceCallbackResponse, error)
+	CreateNamespaceCallbackV4(ctx context.Context, in *SharedClusterNamespaceCallbackRequest, opts ...client.CallOption) (*SharedClusterNamespaceCallbackResponse, error)
 	UpdateNamespace(ctx context.Context, in *UpdateNamespaceRequest, opts ...client.CallOption) (*UpdateNamespaceResponse, error)
 	CreateOtherQuota(ctx context.Context, in *CreateOtherQuotaRequest, opts ...client.CallOption) (*OtherQuotaResponse, error)
 	UpdateOtherQuota(ctx context.Context, in *UpdateOtherQuotaRequest, opts ...client.CallOption) (*OtherQuotaResponse, error)
 	DeleteOtherQuota(ctx context.Context, in *DeleteOtherQuotaRequest, opts ...client.CallOption) (*OtherQuotaResponse, error)
+	ListPodLimitRanges(ctx context.Context, in *ListPodLimitRangesRequest, opts ...client.CallOption) (*ListPodLimitRangesResponse, error)
+	CreatePodLimitRange(ctx context.Context, in *CreatePodLimitRangeRequest, opts ...client.CallOption) (*PodLimitRangeResponse, error)
+	UpdatePodLimitRange(ctx context.Context, in *UpdatePodLimitRangeRequest, opts ...client.CallOption) (*PodLimitRangeResponse, error)
+	DeletePodLimitRange(ctx context.Context, in *DeletePodLimitRangeRequest, opts ...client.CallOption) (*PodLimitRangeResponse, error)
 	UpdateNamespaceCallback(ctx context.Context, in *NamespaceCallbackRequest, opts ...client.CallOption) (*NamespaceCallbackResponse, error)
+	UpdateNamespaceCallbackV4(ctx context.Context, in *SharedClusterNamespaceCallbackRequest, opts ...client.CallOption) (*SharedClusterNamespaceCallbackResponse, error)
 	GetNamespace(ctx context.Context, in *GetNamespaceRequest, opts ...client.CallOption) (*GetNamespaceResponse, error)
 	ListNamespaces(ctx context.Context, in *ListNamespacesRequest, opts ...client.CallOption) (*ListNamespacesResponse, error)
 	DeleteNamespace(ctx context.Context, in *DeleteNamespaceRequest, opts ...client.CallOption) (*DeleteNamespaceResponse, error)
 	DeleteNamespaceCallback(ctx context.Context, in *NamespaceCallbackRequest, opts ...client.CallOption) (*NamespaceCallbackResponse, error)
+	DeleteNamespaceCallbackV4(ctx context.Context, in *SharedClusterNamespaceCallbackRequest, opts ...client.CallOption) (*SharedClusterNamespaceCallbackResponse, error)
 	SyncNamespace(ctx context.Context, in *SyncNamespaceRequest, opts ...client.CallOption) (*SyncNamespaceResponse, error)
 	WithdrawNamespace(ctx context.Context, in *WithdrawNamespaceRequest, opts ...client.CallOption) (*WithdrawNamespaceResponse, error)
 	ListNativeNamespaces(ctx context.Context, in *ListNativeNamespacesRequest, opts ...client.CallOption) (*ListNativeNamespacesResponse, error)
@@ -608,6 +657,16 @@ func (c *namespaceService) CreateNamespace(ctx context.Context, in *CreateNamesp
 func (c *namespaceService) CreateNamespaceCallback(ctx context.Context, in *NamespaceCallbackRequest, opts ...client.CallOption) (*NamespaceCallbackResponse, error) {
 	req := c.c.NewRequest(c.name, "Namespace.CreateNamespaceCallback", in)
 	out := new(NamespaceCallbackResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *namespaceService) CreateNamespaceCallbackV4(ctx context.Context, in *SharedClusterNamespaceCallbackRequest, opts ...client.CallOption) (*SharedClusterNamespaceCallbackResponse, error) {
+	req := c.c.NewRequest(c.name, "Namespace.CreateNamespaceCallbackV4", in)
+	out := new(SharedClusterNamespaceCallbackResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -655,9 +714,59 @@ func (c *namespaceService) DeleteOtherQuota(ctx context.Context, in *DeleteOther
 	return out, nil
 }
 
+func (c *namespaceService) ListPodLimitRanges(ctx context.Context, in *ListPodLimitRangesRequest, opts ...client.CallOption) (*ListPodLimitRangesResponse, error) {
+	req := c.c.NewRequest(c.name, "Namespace.ListPodLimitRanges", in)
+	out := new(ListPodLimitRangesResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *namespaceService) CreatePodLimitRange(ctx context.Context, in *CreatePodLimitRangeRequest, opts ...client.CallOption) (*PodLimitRangeResponse, error) {
+	req := c.c.NewRequest(c.name, "Namespace.CreatePodLimitRange", in)
+	out := new(PodLimitRangeResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *namespaceService) UpdatePodLimitRange(ctx context.Context, in *UpdatePodLimitRangeRequest, opts ...client.CallOption) (*PodLimitRangeResponse, error) {
+	req := c.c.NewRequest(c.name, "Namespace.UpdatePodLimitRange", in)
+	out := new(PodLimitRangeResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *namespaceService) DeletePodLimitRange(ctx context.Context, in *DeletePodLimitRangeRequest, opts ...client.CallOption) (*PodLimitRangeResponse, error) {
+	req := c.c.NewRequest(c.name, "Namespace.DeletePodLimitRange", in)
+	out := new(PodLimitRangeResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *namespaceService) UpdateNamespaceCallback(ctx context.Context, in *NamespaceCallbackRequest, opts ...client.CallOption) (*NamespaceCallbackResponse, error) {
 	req := c.c.NewRequest(c.name, "Namespace.UpdateNamespaceCallback", in)
 	out := new(NamespaceCallbackResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *namespaceService) UpdateNamespaceCallbackV4(ctx context.Context, in *SharedClusterNamespaceCallbackRequest, opts ...client.CallOption) (*SharedClusterNamespaceCallbackResponse, error) {
+	req := c.c.NewRequest(c.name, "Namespace.UpdateNamespaceCallbackV4", in)
+	out := new(SharedClusterNamespaceCallbackResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -698,6 +807,16 @@ func (c *namespaceService) DeleteNamespace(ctx context.Context, in *DeleteNamesp
 func (c *namespaceService) DeleteNamespaceCallback(ctx context.Context, in *NamespaceCallbackRequest, opts ...client.CallOption) (*NamespaceCallbackResponse, error) {
 	req := c.c.NewRequest(c.name, "Namespace.DeleteNamespaceCallback", in)
 	out := new(NamespaceCallbackResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *namespaceService) DeleteNamespaceCallbackV4(ctx context.Context, in *SharedClusterNamespaceCallbackRequest, opts ...client.CallOption) (*SharedClusterNamespaceCallbackResponse, error) {
+	req := c.c.NewRequest(c.name, "Namespace.DeleteNamespaceCallbackV4", in)
+	out := new(SharedClusterNamespaceCallbackResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -750,15 +869,22 @@ func (c *namespaceService) ListNativeNamespacesContent(ctx context.Context, in *
 type NamespaceHandler interface {
 	CreateNamespace(context.Context, *CreateNamespaceRequest, *CreateNamespaceResponse) error
 	CreateNamespaceCallback(context.Context, *NamespaceCallbackRequest, *NamespaceCallbackResponse) error
+	CreateNamespaceCallbackV4(context.Context, *SharedClusterNamespaceCallbackRequest, *SharedClusterNamespaceCallbackResponse) error
 	UpdateNamespace(context.Context, *UpdateNamespaceRequest, *UpdateNamespaceResponse) error
 	CreateOtherQuota(context.Context, *CreateOtherQuotaRequest, *OtherQuotaResponse) error
 	UpdateOtherQuota(context.Context, *UpdateOtherQuotaRequest, *OtherQuotaResponse) error
 	DeleteOtherQuota(context.Context, *DeleteOtherQuotaRequest, *OtherQuotaResponse) error
+	ListPodLimitRanges(context.Context, *ListPodLimitRangesRequest, *ListPodLimitRangesResponse) error
+	CreatePodLimitRange(context.Context, *CreatePodLimitRangeRequest, *PodLimitRangeResponse) error
+	UpdatePodLimitRange(context.Context, *UpdatePodLimitRangeRequest, *PodLimitRangeResponse) error
+	DeletePodLimitRange(context.Context, *DeletePodLimitRangeRequest, *PodLimitRangeResponse) error
 	UpdateNamespaceCallback(context.Context, *NamespaceCallbackRequest, *NamespaceCallbackResponse) error
+	UpdateNamespaceCallbackV4(context.Context, *SharedClusterNamespaceCallbackRequest, *SharedClusterNamespaceCallbackResponse) error
 	GetNamespace(context.Context, *GetNamespaceRequest, *GetNamespaceResponse) error
 	ListNamespaces(context.Context, *ListNamespacesRequest, *ListNamespacesResponse) error
 	DeleteNamespace(context.Context, *DeleteNamespaceRequest, *DeleteNamespaceResponse) error
 	DeleteNamespaceCallback(context.Context, *NamespaceCallbackRequest, *NamespaceCallbackResponse) error
+	DeleteNamespaceCallbackV4(context.Context, *SharedClusterNamespaceCallbackRequest, *SharedClusterNamespaceCallbackResponse) error
 	SyncNamespace(context.Context, *SyncNamespaceRequest, *SyncNamespaceResponse) error
 	WithdrawNamespace(context.Context, *WithdrawNamespaceRequest, *WithdrawNamespaceResponse) error
 	ListNativeNamespaces(context.Context, *ListNativeNamespacesRequest, *ListNativeNamespacesResponse) error
@@ -769,15 +895,22 @@ func RegisterNamespaceHandler(s server.Server, hdlr NamespaceHandler, opts ...se
 	type namespace interface {
 		CreateNamespace(ctx context.Context, in *CreateNamespaceRequest, out *CreateNamespaceResponse) error
 		CreateNamespaceCallback(ctx context.Context, in *NamespaceCallbackRequest, out *NamespaceCallbackResponse) error
+		CreateNamespaceCallbackV4(ctx context.Context, in *SharedClusterNamespaceCallbackRequest, out *SharedClusterNamespaceCallbackResponse) error
 		UpdateNamespace(ctx context.Context, in *UpdateNamespaceRequest, out *UpdateNamespaceResponse) error
 		CreateOtherQuota(ctx context.Context, in *CreateOtherQuotaRequest, out *OtherQuotaResponse) error
 		UpdateOtherQuota(ctx context.Context, in *UpdateOtherQuotaRequest, out *OtherQuotaResponse) error
 		DeleteOtherQuota(ctx context.Context, in *DeleteOtherQuotaRequest, out *OtherQuotaResponse) error
+		ListPodLimitRanges(ctx context.Context, in *ListPodLimitRangesRequest, out *ListPodLimitRangesResponse) error
+		CreatePodLimitRange(ctx context.Context, in *CreatePodLimitRangeRequest, out *PodLimitRangeResponse) error
+		UpdatePodLimitRange(ctx context.Context, in *UpdatePodLimitRangeRequest, out *PodLimitRangeResponse) error
+		DeletePodLimitRange(ctx context.Context, in *DeletePodLimitRangeRequest, out *PodLimitRangeResponse) error
 		UpdateNamespaceCallback(ctx context.Context, in *NamespaceCallbackRequest, out *NamespaceCallbackResponse) error
+		UpdateNamespaceCallbackV4(ctx context.Context, in *SharedClusterNamespaceCallbackRequest, out *SharedClusterNamespaceCallbackResponse) error
 		GetNamespace(ctx context.Context, in *GetNamespaceRequest, out *GetNamespaceResponse) error
 		ListNamespaces(ctx context.Context, in *ListNamespacesRequest, out *ListNamespacesResponse) error
 		DeleteNamespace(ctx context.Context, in *DeleteNamespaceRequest, out *DeleteNamespaceResponse) error
 		DeleteNamespaceCallback(ctx context.Context, in *NamespaceCallbackRequest, out *NamespaceCallbackResponse) error
+		DeleteNamespaceCallbackV4(ctx context.Context, in *SharedClusterNamespaceCallbackRequest, out *SharedClusterNamespaceCallbackResponse) error
 		SyncNamespace(ctx context.Context, in *SyncNamespaceRequest, out *SyncNamespaceResponse) error
 		WithdrawNamespace(ctx context.Context, in *WithdrawNamespaceRequest, out *WithdrawNamespaceResponse) error
 		ListNativeNamespaces(ctx context.Context, in *ListNativeNamespacesRequest, out *ListNativeNamespacesResponse) error
@@ -796,6 +929,12 @@ func RegisterNamespaceHandler(s server.Server, hdlr NamespaceHandler, opts ...se
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Namespace.CreateNamespaceCallback",
 		Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/callback/create"},
+		Method:  []string{"POST"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Namespace.CreateNamespaceCallbackV4",
+		Path:    []string{"/bcsproject/v1/projects/sharedclusters/namespaces/callback/create"},
 		Method:  []string{"POST"},
 		Handler: "rpc",
 	}))
@@ -824,8 +963,38 @@ func RegisterNamespaceHandler(s server.Server, hdlr NamespaceHandler, opts ...se
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Namespace.ListPodLimitRanges",
+		Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/podLimitRanges"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Namespace.CreatePodLimitRange",
+		Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/podLimitRanges"},
+		Method:  []string{"POST"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Namespace.UpdatePodLimitRange",
+		Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/podLimitRanges/{limitRangeName}"},
+		Method:  []string{"PUT"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Namespace.DeletePodLimitRange",
+		Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/podLimitRanges/{limitRangeName}"},
+		Method:  []string{"DELETE"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Namespace.UpdateNamespaceCallback",
 		Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/callback/update"},
+		Method:  []string{"POST"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Namespace.UpdateNamespaceCallbackV4",
+		Path:    []string{"/bcsproject/v1/projects/sharedclusters/namespaces/callback/update"},
 		Method:  []string{"POST"},
 		Handler: "rpc",
 	}))
@@ -850,6 +1019,12 @@ func RegisterNamespaceHandler(s server.Server, hdlr NamespaceHandler, opts ...se
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Namespace.DeleteNamespaceCallback",
 		Path:    []string{"/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/callback/delete"},
+		Method:  []string{"POST"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Namespace.DeleteNamespaceCallbackV4",
+		Path:    []string{"/bcsproject/v1/projects/sharedclusters/namespaces/callback/delete"},
 		Method:  []string{"POST"},
 		Handler: "rpc",
 	}))
@@ -892,6 +1067,10 @@ func (h *namespaceHandler) CreateNamespaceCallback(ctx context.Context, in *Name
 	return h.NamespaceHandler.CreateNamespaceCallback(ctx, in, out)
 }
 
+func (h *namespaceHandler) CreateNamespaceCallbackV4(ctx context.Context, in *SharedClusterNamespaceCallbackRequest, out *SharedClusterNamespaceCallbackResponse) error {
+	return h.NamespaceHandler.CreateNamespaceCallbackV4(ctx, in, out)
+}
+
 func (h *namespaceHandler) UpdateNamespace(ctx context.Context, in *UpdateNamespaceRequest, out *UpdateNamespaceResponse) error {
 	return h.NamespaceHandler.UpdateNamespace(ctx, in, out)
 }
@@ -908,8 +1087,28 @@ func (h *namespaceHandler) DeleteOtherQuota(ctx context.Context, in *DeleteOther
 	return h.NamespaceHandler.DeleteOtherQuota(ctx, in, out)
 }
 
+func (h *namespaceHandler) ListPodLimitRanges(ctx context.Context, in *ListPodLimitRangesRequest, out *ListPodLimitRangesResponse) error {
+	return h.NamespaceHandler.ListPodLimitRanges(ctx, in, out)
+}
+
+func (h *namespaceHandler) CreatePodLimitRange(ctx context.Context, in *CreatePodLimitRangeRequest, out *PodLimitRangeResponse) error {
+	return h.NamespaceHandler.CreatePodLimitRange(ctx, in, out)
+}
+
+func (h *namespaceHandler) UpdatePodLimitRange(ctx context.Context, in *UpdatePodLimitRangeRequest, out *PodLimitRangeResponse) error {
+	return h.NamespaceHandler.UpdatePodLimitRange(ctx, in, out)
+}
+
+func (h *namespaceHandler) DeletePodLimitRange(ctx context.Context, in *DeletePodLimitRangeRequest, out *PodLimitRangeResponse) error {
+	return h.NamespaceHandler.DeletePodLimitRange(ctx, in, out)
+}
+
 func (h *namespaceHandler) UpdateNamespaceCallback(ctx context.Context, in *NamespaceCallbackRequest, out *NamespaceCallbackResponse) error {
 	return h.NamespaceHandler.UpdateNamespaceCallback(ctx, in, out)
+}
+
+func (h *namespaceHandler) UpdateNamespaceCallbackV4(ctx context.Context, in *SharedClusterNamespaceCallbackRequest, out *SharedClusterNamespaceCallbackResponse) error {
+	return h.NamespaceHandler.UpdateNamespaceCallbackV4(ctx, in, out)
 }
 
 func (h *namespaceHandler) GetNamespace(ctx context.Context, in *GetNamespaceRequest, out *GetNamespaceResponse) error {
@@ -926,6 +1125,10 @@ func (h *namespaceHandler) DeleteNamespace(ctx context.Context, in *DeleteNamesp
 
 func (h *namespaceHandler) DeleteNamespaceCallback(ctx context.Context, in *NamespaceCallbackRequest, out *NamespaceCallbackResponse) error {
 	return h.NamespaceHandler.DeleteNamespaceCallback(ctx, in, out)
+}
+
+func (h *namespaceHandler) DeleteNamespaceCallbackV4(ctx context.Context, in *SharedClusterNamespaceCallbackRequest, out *SharedClusterNamespaceCallbackResponse) error {
+	return h.NamespaceHandler.DeleteNamespaceCallbackV4(ctx, in, out)
 }
 
 func (h *namespaceHandler) SyncNamespace(ctx context.Context, in *SyncNamespaceRequest, out *SyncNamespaceResponse) error {

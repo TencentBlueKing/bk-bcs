@@ -91,6 +91,11 @@ func NewRequestCMDBErr(msg string) *ProjectError {
 	return NewProjectError(RequestCMDBErr, RequestCMDBErrMsg, fmt.Sprint(msg))
 }
 
+// NewRequestBkUserErr xxx
+func NewRequestBkUserErr(msg string) *ProjectError {
+	return NewProjectError(RequestBkUserErr, RequestBkUserErrMsg, fmt.Sprint(msg))
+}
+
 // NewNoMaintainerRoleErr xxx
 func NewNoMaintainerRoleErr() *ProjectError {
 	return NewProjectError(NoMaintainerRoleErr, NoMaintainerRoleErrMsg, "")

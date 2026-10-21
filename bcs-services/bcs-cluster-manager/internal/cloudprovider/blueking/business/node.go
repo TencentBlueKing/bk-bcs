@@ -14,6 +14,7 @@
 package business
 
 import (
+	"context"
 	"math"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -24,10 +25,10 @@ import (
 )
 
 // ListNodesByInstanceIP list node by IP set
-func ListNodesByInstanceIP(ips []string) ([]*proto.Node, error) {
+func ListNodesByInstanceIP(ctx context.Context, ips []string) ([]*proto.Node, error) {
 	var nodes []*proto.Node
 
-	hostDataList, err := cmdb.GetCmdbClient().QueryAllHostInfoWithoutBiz(ips)
+	hostDataList, err := cmdb.GetCmdbClient().QueryAllHostInfoWithoutBiz(ctx, ips)
 	if err != nil {
 		blog.Errorf("ListExternalNodesByIP failed: %v", err)
 		return nil, err

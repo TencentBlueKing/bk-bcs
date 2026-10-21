@@ -14,6 +14,7 @@ package cloud
 
 import (
 	"context"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
@@ -22,6 +23,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/util"
 )
 
 // ListAction action for list online cluster credential
@@ -69,6 +71,8 @@ func (la *ListAction) listCloud() error {
 		if clouds[i].Enable == "false" {
 			continue
 		}
+		clouds[i].CreatTime = util.TransStrToUTCStr(time.RFC3339Nano, clouds[i].CreatTime)
+		clouds[i].UpdateTime = util.TransStrToUTCStr(time.RFC3339Nano, clouds[i].UpdateTime)
 
 		la.cloudList = append(la.cloudList, clouds[i])
 	}

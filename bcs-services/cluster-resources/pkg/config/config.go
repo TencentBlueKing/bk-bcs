@@ -17,13 +17,12 @@ import (
 	"crypto/rsa"
 	"net"
 	"os"
+	"strings"
+	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/util"
-	bkiam "github.com/TencentBlueKing/iam-go-sdk"
-	"github.com/TencentBlueKing/iam-go-sdk/logger"
-	"github.com/TencentBlueKing/iam-go-sdk/metric"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	jwtGo "github.com/golang-jwt/jwt/v4"
-	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 
 	constant "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/conf"
@@ -66,6 +65,13 @@ func LoadConf(filePath string) (*ClusterResourcesConf, error) {
 	if conf.Global.IAM.Host == "" {
 		conf.Global.IAM.Host = envs.BKIAMHost
 	}
+	if !conf.Global.IAM.EnableV4 {
+		v := strings.ToLower(strings.TrimSpace(envs.BKIAMEnableV4))
+		conf.Global.IAM.EnableV4 = v == "true" || v == "1"
+	}
+	if conf.Global.IAM.V4GateWayHost == "" {
+		conf.Global.IAM.V4GateWayHost = envs.BKIAMV4GatewayHost
+	}
 
 	if conf.Global.SharedCluster.AnnotationKeyProjectCode == "" {
 		conf.Global.SharedCluster.AnnotationKeyProjectCode = constant.ProjectCodeAnnoKey
@@ -89,21 +95,9 @@ func LoadConf(filePath string) (*ClusterResourcesConf, error) {
 		conf.Redis.Password = envs.RedisPassword
 	}
 
-	// mongo env
-	if conf.Mongo.Address == "" {
-		conf.Mongo.Address = envs.MongoAddress
-	}
-	if conf.Mongo.Replicaset == "" {
-		conf.Mongo.Replicaset = envs.MongoReplicaset
-	}
-	if conf.Mongo.Username == "" {
-		conf.Mongo.Username = envs.MongoUsername
-	}
-	if conf.Mongo.Password == "" {
-		conf.Mongo.Password = envs.MongoPassword
-	}
-
 	for _, f := range []func() error{
+		// 初始化 mongo
+		conf.initMongo,
 		// 初始化 Server.Address
 		conf.initServerAddress,
 		// 初始化 AuthToken
@@ -175,6 +169,23 @@ func (c *ClusterResourcesConf) initServerAddress() error {
 	return nil
 }
 
+// initMongo 初始化 mongo，配置文件未设置时从环境变量读取
+func (c *ClusterResourcesConf) initMongo() error {
+	if c.Mongo.Address == "" {
+		c.Mongo.Address = envs.MongoAddress
+	}
+	if c.Mongo.Replicaset == "" {
+		c.Mongo.Replicaset = envs.MongoReplicaset
+	}
+	if c.Mongo.Username == "" {
+		c.Mongo.Username = envs.MongoUsername
+	}
+	if c.Mongo.Password == "" {
+		c.Mongo.Password = envs.MongoPassword
+	}
+	return nil
+}
+
 // initAuthToken 初始化 BCS AuthToken
 func (c *ClusterResourcesConf) initAuthToken() error {
 	// 若指定从环境变量读取 BCS AuthToken，则丢弃配置文件中的值
@@ -203,39 +214,43 @@ func (c *ClusterResourcesConf) initIAM() error {
 	if systemID == "" || appCode == "" || appSecret == "" {
 		return errorx.New(errcode.ValidateErr, "SystemID/AppCode/AppSecret required")
 	}
-	// 支持蓝鲸 APIGW / 直连 IAMHost
-	if c.Global.IAM.UseBKAPIGW {
-		bkAPIGWHost := c.Global.Basic.BKAPIGWHost
-		if bkAPIGWHost == "" {
-			return errorx.New(errcode.ValidateErr, "BKAPIGWHost required")
+	if c.Global.IAM.EnableV4 && strings.TrimSpace(c.Global.IAM.V4GateWayHost) == "" {
+		return errorx.New(errcode.ValidateErr, "V4GateWayHost required when enable_v4 is true")
+	}
+	// 启动时先建一次客户端做配置校验
+	if _, err := c.newIAMPermClient(""); err != nil {
+		return err
+	}
+	var clients sync.Map
+	c.Global.IAM.Cli = func(tenantID string) iam.PermClient {
+		if v, ok := clients.Load(tenantID); ok {
+			return v.(iam.PermClient)
 		}
-		c.Global.IAM.Cli = bkiam.NewAPIGatewayIAM(systemID, appCode, appSecret, bkAPIGWHost)
-	} else {
-		bkIAMHost, bkPaaSHost := c.Global.IAM.Host, c.Global.Basic.BKPaaSHost
-		if bkIAMHost == "" || bkPaaSHost == "" {
-			return errorx.New(errcode.ValidateErr, "BKIAMHost/BKPaaSHost required")
+		cli, err := c.newIAMPermClient(tenantID)
+		if err != nil {
+			panic(err)
 		}
-		c.Global.IAM.Cli = bkiam.NewIAM(systemID, appCode, appSecret, bkIAMHost, bkPaaSHost)
+		actual, _ := clients.LoadOrStore(tenantID, cli)
+		return actual.(iam.PermClient)
 	}
-	// 指标相关
-	if c.Global.IAM.Metric {
-		metric.RegisterMetrics()
-	}
-	// 调试模式
-	defaultLogLevel := logrus.ErrorLevel
-	if c.Global.IAM.Debug {
-		defaultLogLevel = logrus.DebugLevel
-	}
-	log := &logrus.Logger{
-		Out:          os.Stderr,
-		Formatter:    new(logrus.TextFormatter),
-		Hooks:        make(logrus.LevelHooks),
-		Level:        defaultLogLevel,
-		ExitFunc:     os.Exit,
-		ReportCaller: false,
-	}
-	logger.SetLogger(log)
 	return nil
+}
+
+func (c *ClusterResourcesConf) newIAMPermClient(tenantID string) (iam.PermClient, error) {
+	opt := &iam.Options{
+		SystemID:    c.Global.IAM.SystemID,
+		AppCode:     c.Global.Basic.AppCode,
+		AppSecret:   c.Global.Basic.AppSecret,
+		External:    true, // 保持现网 V3：NewIAM(system, app, secret, BKAPIGWHost)
+		GateWayHost: c.Global.Basic.BKAPIGWHost,
+		IAMHost:     c.Global.IAM.Host,
+		BkiIAMHost:  c.Global.Basic.BKPaaSHost,
+		Metric:      c.Global.IAM.Metric,
+		Debug:       c.Global.IAM.Debug,
+		TenantId:    tenantID,
+	}
+	iam.ApplyV4Config(opt, c.Global.IAM.EnableV4, c.Global.IAM.V4GateWayHost)
+	return iam.NewIamClient(opt)
 }
 
 // initCompoment 初始化 compoment
@@ -360,19 +375,23 @@ type BasicConf struct {
 
 // BCSAPIGatewayConf 容器服务网关配置
 type BCSAPIGatewayConf struct {
-	Host                 string `yaml:"host" usage:"容器服务网关 Host"`
-	AuthToken            string `yaml:"authToken" usage:"网关 AuthToken"`
-	ReadAuthTokenFromEnv bool   `yaml:"readAuthTokenFromEnv" usage:"是否从环境变量获取 AuthToken（适用于同集群部署情况）"`
+	Host                  string `yaml:"host" usage:"容器服务网关 Host"`
+	AuthToken             string `yaml:"authToken" usage:"网关 AuthToken"`
+	EnableMultiTenantMode bool   `yaml:"enableMultiTenantMode" usage:"多租户模式"`
+	ReadAuthTokenFromEnv  bool   `yaml:"readAuthTokenFromEnv" usage:"是否从环境变量获取 AuthToken（适用于同集群部署情况）"`
 }
 
 // IAMConf 权限中心相关配置
 type IAMConf struct {
-	Host       string     `yaml:"host" usage:"权限中心 V3 Host"`
-	SystemID   string     `yaml:"systemID" usage:"接入系统的 ID"`                                  // nolint:tagliatelle
-	UseBKAPIGW bool       `yaml:"useBKApiGW" usage:"为真则使用蓝鲸 apigw，否则使用 iamHost + bkPaaSHost"` // nolint:tagliatelle
-	Metric     bool       `yaml:"metric" usage:"支持 prometheus metrics"`
-	Debug      bool       `yaml:"debug" usage:"启用 iam 调试模式"`
-	Cli        *bkiam.IAM `yaml:"-" usage:"iam Client 对象（自动生成）"`
+	Host     string `yaml:"host" usage:"权限中心 V3 Host"`
+	SystemID string `yaml:"systemID" usage:"接入系统的 ID"` // nolint:tagliatelle
+	Metric   bool   `yaml:"metric" usage:"支持 prometheus metrics"`
+	Debug    bool   `yaml:"debug" usage:"启用 iam 调试模式"`
+	// EnableV4 开启后走 IAM V4（bcs-common iam.Version=v4）
+	EnableV4 bool `yaml:"enableV4" usage:"是否启用 IAM V4"`
+	// V4GateWayHost IAM V4 网关地址，与 V3 GateWayHost 分离
+	V4GateWayHost string                               `yaml:"v4GatewayHost" usage:"IAM V4 网关 Host"`
+	Cli           func(tenantID string) iam.PermClient `yaml:"-" usage:"iam Client 对象（自动生成）"`
 }
 
 // SharedClusterConf 共享集群相关配置

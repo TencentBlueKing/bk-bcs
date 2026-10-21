@@ -130,7 +130,7 @@ func (l *ListIstioAction) getWebAnnotations(ctx context.Context) *meshmanager.We
 			}
 		}
 		allClusters := mergeClusters(item.PrimaryClusters, remoteClusters)
-		meshPerm := auth.GetMeshOpPerm(username, projectID, allClusters)
+		meshPerm := auth.GetMeshOpPerm(username, auth.TenantIDFromCtx(ctx), projectID, allClusters)
 
 		meshPerms[meshID] = meshPerm
 	}

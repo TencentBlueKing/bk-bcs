@@ -9,6 +9,13 @@
             "fuzzy": true
         },
         {
+            "id": "目标容器未安装 tar，无法上传或下载文件",
+            "message": "目标容器未安装 tar，无法上传或下载文件",
+            "translation": "目标容器未安装 tar，无法上传或下载文件",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
             "id": "目标路径不存在",
             "message": "目标路径不存在",
             "translation": "目标路径不存在",
@@ -19,6 +26,13 @@
             "id": "解析上传文件失败",
             "message": "解析上传文件失败",
             "translation": "解析上传文件失败",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "文件名不合法",
+            "message": "文件名不合法",
+            "translation": "文件名不合法",
             "translatorComment": "Copied from source.",
             "fuzzy": true
         },
@@ -250,13 +264,6 @@
             "id": "BCS Console 服务端连接断开，请重新登录",
             "message": "BCS Console 服务端连接断开，请重新登录",
             "translation": "BCS Console 服务端连接断开，请重新登录",
-            "translatorComment": "Copied from source.",
-            "fuzzy": true
-        },
-        {
-            "id": "连接已断开",
-            "message": "连接已断开",
-            "translation": "连接已断开",
             "translatorComment": "Copied from source.",
             "fuzzy": true
         },

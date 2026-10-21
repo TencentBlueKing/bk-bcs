@@ -23,6 +23,7 @@ import (
 	"github.com/dchest/uniuri"
 	restful "github.com/emicklei/go-restful/v3"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/component"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/constant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
@@ -38,6 +39,7 @@ func CreateAdminUser(request *restful.Request, response *restful.Response) {
 	user := &models.BcsUser{
 		Name:     userName,
 		UserType: models.AdminUser,
+		TenantID: utils.GetTenantIDFromAttribute(request),
 	}
 	// if this user already exist
 	userInDb := sqlstore.GetUserByCondition(user)
@@ -95,6 +97,7 @@ func CreateSaasUser(request *restful.Request, response *restful.Response) {
 	user := &models.BcsUser{
 		Name:     userName,
 		UserType: models.SaasUser,
+		TenantID: utils.GetTenantIDFromAttribute(request),
 	}
 	// if this user already exist
 	userInDb := sqlstore.GetUserByCondition(user)
@@ -153,6 +156,7 @@ func CreatePlainUser(request *restful.Request, response *restful.Response) {
 	user := &models.BcsUser{
 		Name:     userName,
 		UserType: models.PlainUser,
+		TenantID: utils.GetTenantIDFromAttribute(request),
 	}
 	// if this user already exist
 	userInDb := sqlstore.GetUserByCondition(user)
@@ -308,9 +312,27 @@ func GetCurrentUserInfo(request *restful.Request, response *restful.Response) {
 	userInfo := &models.Userinfo{
 		UserName:  "",
 		AvatarUrl: "",
+		Language:  "zh-CN",
+		TimeZone:  "Asia/Shanghai",
 	}
 	if user, ok := request.Attribute(constant.CurrentUserAttr).(*models.BcsUser); ok {
 		userInfo.UserName = user.Name
+		userInfo.TenantID = utils.GetTenantIDFromAttribute(request)
+	}
+
+	bkTokenCookie, err := request.Request.Cookie("bk_token")
+	if err != nil || bkTokenCookie == nil || bkTokenCookie.Value == "" {
+		blog.Infof("GetCurrentUserInfo request has no bk_token cookie")
+	} else {
+		bkUserInfo, getUserErr := component.GetBKUserInfo(request.Request.Context(), userInfo.TenantID, bkTokenCookie.Value)
+		if getUserErr != nil {
+			blog.Warnf("failed to get bk user info by bk_token: %s", getUserErr.Error())
+		}
+		if bkUserInfo != nil {
+			userInfo.Language = bkUserInfo.Language
+			userInfo.TimeZone = bkUserInfo.TimeZone
+			userInfo.DisplayName = bkUserInfo.DisplayName
+		}
 	}
 
 	data := utils.CreateResponseData(nil, "success", *userInfo)

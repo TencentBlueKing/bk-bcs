@@ -499,6 +499,7 @@ func getUserInfoByToken(ctx context.Context, s string) (*models.BcsUser, bool, b
 			Name:      tempToken.Username,
 			UserType:  tempToken.UserType,
 			UserToken: tempToken.Token,
+			TenantID:  tempToken.TenantID,
 			CreatedBy: tempToken.CreatedBy,
 			CreatedAt: tempToken.CreatedAt,
 			UpdatedAt: tempToken.UpdatedAt,

@@ -14,6 +14,7 @@
 package business
 
 import (
+	"context"
 	"fmt"
 	"math"
 	"strconv"
@@ -127,10 +128,11 @@ func ListNodesByIP(ips []string, opt *cloudprovider.ListNodesOption) ([]*proto.N
 }
 
 // ListExternalNodesByIP list node by IP set
-func ListExternalNodesByIP(ips []string, opt *cloudprovider.ListNodesOption) ([]*proto.Node, error) {
+func ListExternalNodesByIP(ctx context.Context, ips []string,
+	opt *cloudprovider.ListNodesOption) ([]*proto.Node, error) {
 	var nodes []*proto.Node
 
-	hostDataList, err := cmdb.GetCmdbClient().QueryHostInfoWithoutBiz(cmdb.FieldHostIP, ips, cmdb.Page{
+	hostDataList, err := cmdb.GetCmdbClient().QueryHostInfoWithoutBiz(ctx, cmdb.FieldHostIP, ips, cmdb.Page{
 		Start: 0,
 		Limit: len(ips),
 	})

@@ -18,7 +18,69 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/project"
 )
 
-// NoAuthMethod no auth method
+// NoCheckTenantMethod 租户无关的方法可跳过租户校验
+var NoCheckTenantMethod = []string{
+	// 集群相关
+	"ClusterManager.GetClustersMetaData",
+
+	// 节点相关
+	"ClusterManager.GetNodeInfo",
+	"ClusterManager.GetNodeInfo",
+	"ClusterManager.CheckNodeInCluster",
+
+	// cluster credential
+
+	// nodeGroup resource
+
+	// cloud template
+	"ClusterManager.GetCloud",
+	"ClusterManager.ListCloud",
+	"ClusterManager.ListCloudRegions",
+
+	// vpc control
+	"ClusterManager.ListCloudVPC",
+	"ClusterManager.GetVPCCidr",
+
+	// kubeConfig
+	"ClusterManager.CheckCloudKubeConfig",
+	"ClusterManager.CheckCloudKubeConfigConnect",
+
+	// task resource
+	"ClusterManager.RetryTask",
+	"ClusterManager.GetTask",
+	"ClusterManager.ListTask",
+	"ClusterManager.SkipTask",
+
+	// cluster autoscaling
+	"ClusterManager.GetAutoScalingOption",
+	"ClusterManager.ListAutoScalingOption",
+	"ClusterManager.SyncAutoScalingOption",
+	"ClusterManager.UpdateAsOptionDeviceProvider",
+
+	// cloud account
+	"ClusterManager.GetServiceRoles",
+	"ClusterManager.VerifyCloudAccount",
+
+	// cloud module flag
+	"ClusterManager.ListCloudModuleFlag",
+
+	// common interface && support interface
+
+	// Operator Biz
+	"ClusterManager.GetBizTopologyHost",
+	"ClusterManager.GetTopologyNodes",
+	"ClusterManager.GetTopologyHostIdsNodes",
+	"ClusterManager.GetHostsDetails",
+	"ClusterManager.GetBkSopsTemplateList",
+	"ClusterManager.GetBkSopsTemplateInfo",
+	"ClusterManager.GetInnerTemplateValues",
+	"ClusterManager.DebugBkSopsTask",
+	"ClusterManager.GetBatchCustomSetting",
+	"ClusterManager.GetProviderResourceUsage",
+	"ClusterManager.GetScopeHostCheck",
+}
+
+// NoAuthMethod 不需要用户身份认证的方法
 var NoAuthMethod = []string{
 	// 集群相关
 	"ClusterManager.ListCommonCluster",

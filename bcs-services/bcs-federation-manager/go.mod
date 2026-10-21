@@ -2,6 +2,8 @@ module github.com/Tencent/bk-bcs/bcs-services/bcs-federation-manager
 
 go 1.23.2
 
+replace github.com/Tencent/bk-bcs/bcs-common => ../../bcs-common
+
 require (
 	github.com/go-resty/resty/v2 v2.12.0
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.19.1
@@ -55,7 +57,7 @@ require (
 	github.com/ProtonMail/go-crypto v1.1.3 // indirect
 	github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common v0.0.0-20220330120237-0bbed74dcf6d // indirect
 	github.com/TencentBlueKing/gopkg v1.1.0 // indirect
-	github.com/TencentBlueKing/iam-go-sdk v0.1.6 // indirect
+	github.com/TencentBlueKing/iam-go-sdk v1.0.1 // indirect
 	github.com/aws/aws-sdk-go v1.49.6 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bitly/go-simplejson v0.5.1 // indirect

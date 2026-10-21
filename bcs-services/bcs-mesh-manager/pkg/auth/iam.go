@@ -16,6 +16,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
@@ -34,25 +35,75 @@ import (
 )
 
 var (
-	// IAMClient iam client
-	IAMClient iam.PermClient
+	iamClientMu      sync.Mutex
+	iamClients       = make(map[string]iam.PermClient)
+	iamClientFactory func(tenantID string) (iam.PermClient, error)
+
 	// ClusterIamClient cluster iam client
-	ClusterIamClient *cluster.BCSClusterPerm
+	ClusterIamClient func(tenantID string) (*cluster.BCSClusterPerm, error)
 	// NamespaceIamClient namespace iam client
-	NamespaceIamClient *namespace.BCSNamespacePerm
+	NamespaceIamClient func(tenantID string) (*namespace.BCSNamespacePerm, error)
 	// ProjectIamClient project iam client
-	ProjectIamClient *project.BCSProjectPerm
+	ProjectIamClient func(tenantID string) (*project.BCSProjectPerm, error)
 )
 
-// InitPermClient new a perm client
-func InitPermClient(iamClient iam.PermClient) {
-	ClusterIamClient = cluster.NewBCSClusterPermClient(iamClient)
-	NamespaceIamClient = namespace.NewBCSNamespacePermClient(iamClient)
-	ProjectIamClient = project.NewBCSProjectPermClient(iamClient)
+// SetIAMClientFactory registers the factory used to create tenant-scoped IAM clients.
+func SetIAMClientFactory(factory func(tenantID string) (iam.PermClient, error)) {
+	iamClientMu.Lock()
+	defer iamClientMu.Unlock()
+	iamClientFactory = factory
+	iamClients = make(map[string]iam.PermClient)
+}
+
+// IAMClient returns a cached IAM client for the tenant. Empty tenantID uses the default tenant.
+func IAMClient(tenantID string) (iam.PermClient, error) {
+	if tenantID == "" {
+		tenantID = iam.DefaultTenantId
+	}
+
+	iamClientMu.Lock()
+	defer iamClientMu.Unlock()
+	if cli, ok := iamClients[tenantID]; ok {
+		return cli, nil
+	}
+	if iamClientFactory == nil {
+		return nil, fmt.Errorf("iam client factory is not initialized")
+	}
+	cli, err := iamClientFactory(tenantID)
+	if err != nil {
+		return nil, err
+	}
+	iamClients[tenantID] = cli
+	return cli, nil
+}
+
+// InitPermClient binds perm helpers to the tenant-scoped IAM client cache.
+func InitPermClient() {
+	ClusterIamClient = func(tenantID string) (*cluster.BCSClusterPerm, error) {
+		cli, err := IAMClient(tenantID)
+		if err != nil {
+			return nil, err
+		}
+		return cluster.NewBCSClusterPermClient(cli), nil
+	}
+	NamespaceIamClient = func(tenantID string) (*namespace.BCSNamespacePerm, error) {
+		cli, err := IAMClient(tenantID)
+		if err != nil {
+			return nil, err
+		}
+		return namespace.NewBCSNamespacePermClient(cli), nil
+	}
+	ProjectIamClient = func(tenantID string) (*project.BCSProjectPerm, error) {
+		cli, err := IAMClient(tenantID)
+		if err != nil {
+			return nil, err
+		}
+		return project.NewBCSProjectPermClient(cli), nil
+	}
 }
 
 // GetMeshOpPerm 获取服务网格页面操作权限状态
-func GetMeshOpPerm(username, projectID string, allClusters []string) map[string]bool {
+func GetMeshOpPerm(username, tenantID, projectID string, allClusters []string) map[string]bool {
 	permissions := map[string]bool{
 		common.MeshManagerUpdateIstio:    false,
 		common.MeshManagerDeleteIstio:    false,
@@ -63,15 +114,15 @@ func GetMeshOpPerm(username, projectID string, allClusters []string) map[string]
 		return permissions
 	}
 
-	allow, _, _, err := CheckClustersPerm(username,
+	allow, _, _, err := CheckClustersPerm(username, tenantID,
 		projectID, namespace.CanUpdateNamespaceScopedResourceOperation, allClusters)
 	permissions[common.MeshManagerUpdateIstio] = err == nil && allow
 
-	allow, _, _, err = CheckClustersPerm(username,
+	allow, _, _, err = CheckClustersPerm(username, tenantID,
 		projectID, namespace.CanDeleteNamespaceScopedResourceOperation, allClusters)
 	permissions[common.MeshManagerDeleteIstio] = err == nil && allow
 
-	allow, _, _, err = CheckClustersPerm(username,
+	allow, _, _, err = CheckClustersPerm(username, tenantID,
 		projectID, namespace.CanViewNamespaceScopedResourceOperation, allClusters)
 	permissions[common.MeshManagerGetIstioDetail] = err == nil && allow
 
@@ -89,6 +140,7 @@ func CheckUserPerm(ctx context.Context, req server.Request, username string) (bo
 	if projectID == "" {
 		return false, fmt.Errorf("projectID not found in context")
 	}
+	tenantID := TenantIDFromCtx(ctx)
 
 	// 根据请求类型获取集群信息并检查权限
 	switch req.Method() {
@@ -100,9 +152,9 @@ func CheckUserPerm(ctx context.Context, req server.Request, username string) (bo
 		if err != nil {
 			return false, fmt.Errorf("failed to get clusters from request: %w", err)
 		}
-		return checkPermForMeshOp(username, projectID, action, clusters)
+		return checkPermForMeshOp(username, tenantID, projectID, action, clusters)
 	case common.MeshManagerListIstio, common.MeshManagerGetClusterInfo:
-		return checkPermForList(username, projectID, action)
+		return checkPermForList(username, tenantID, projectID, action)
 	default:
 		return false, fmt.Errorf("unsupported method: %s", req.Method())
 	}
@@ -146,15 +198,15 @@ func getClustersFromRequest(ctx context.Context, req server.Request) ([]string, 
 }
 
 // checkPermForMeshOp 检查网格操作权限
-func checkPermForMeshOp(username, projectID, action string, clusters []string) (bool, error) {
-	allow, actionList, resourceActionList, err := CheckClustersPerm(username, projectID, action, clusters)
+func checkPermForMeshOp(username, tenantID, projectID, action string, clusters []string) (bool, error) {
+	allow, actionList, resourceActionList, err := CheckClustersPerm(username, tenantID, projectID, action, clusters)
 	if err != nil {
 		return false, fmt.Errorf("failed to check clusters permission: %w", err)
 	}
 	if allow {
 		return true, nil
 	}
-	applyURL, err := BuildApplyURL(actionList)
+	applyURL, err := BuildApplyURL(tenantID, actionList)
 	if err != nil {
 		return false, fmt.Errorf("failed to build apply URL: %w", err)
 	}
@@ -167,8 +219,8 @@ func checkPermForMeshOp(username, projectID, action string, clusters []string) (
 }
 
 // checkPermissionForList 检查列表权限（只需要项目查看权限）
-func checkPermForList(username, projectID, action string) (bool, error) {
-	allow, url, resourceActions, err := CallIAM(username, action, options.CredentialScope{
+func checkPermForList(username, tenantID, projectID, action string) (bool, error) {
+	allow, url, resourceActions, err := CallIAM(username, tenantID, action, options.CredentialScope{
 		ProjectID: projectID,
 	})
 	if err != nil {
@@ -187,7 +239,7 @@ func checkPermForList(username, projectID, action string) (bool, error) {
 }
 
 // CheckClustersPerm 检查多个集群下istio-system命名空间的权限
-func CheckClustersPerm(username, projectID, action string, clusters []string) (
+func CheckClustersPerm(username, tenantID, projectID, action string, clusters []string) (
 	bool, []iam.ApplicationAction, []authutils.ResourceAction, error) {
 	// 权限申请构建列表 - 用于生成权限申请URL
 	actionList := make([]iam.ApplicationAction, 0)
@@ -199,7 +251,7 @@ func CheckClustersPerm(username, projectID, action string, clusters []string) (
 	projectBuilt := false
 
 	for _, clusterID := range clusters {
-		allow, _, resourceActions, err := CallIAM(username, action, options.CredentialScope{
+		allow, _, resourceActions, err := CallIAM(username, tenantID, action, options.CredentialScope{
 			ProjectID: projectID,
 			ClusterID: clusterID,
 			Namespace: common.IstioNamespace,
@@ -232,8 +284,12 @@ func CheckClustersPerm(username, projectID, action string, clusters []string) (
 }
 
 // BuildApplyURL 生成权限申请URL
-func BuildApplyURL(actionList []iam.ApplicationAction) (string, error) {
-	url, err := NamespaceIamClient.GenerateIAMApplicationURL(iam.SystemIDBKBCS, actionList)
+func BuildApplyURL(tenantID string, actionList []iam.ApplicationAction) (string, error) {
+	nsCli, err := NamespaceIamClient(tenantID)
+	if err != nil {
+		return "", err
+	}
+	url, err := nsCli.GenerateIAMApplicationURL(iam.SystemIDBKBCS, actionList)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate IAM application URL: %w", err)
 	}
@@ -371,23 +427,43 @@ func getClusters(req server.Request) ([]string, []string, error) {
 }
 
 // CallIAM call iam
-func CallIAM(username, action string, resourceID options.CredentialScope) (bool, string,
+func CallIAM(username, tenantID, action string, resourceID options.CredentialScope) (bool, string,
 	[]authutils.ResourceAction, error) {
 	// 根据操作类型返回不同的权限结果
 	switch action {
 	case project.CanViewProjectOperation:
-		return ProjectIamClient.CanViewProject(username, resourceID.ProjectID)
+		cli, err := ProjectIamClient(tenantID)
+		if err != nil {
+			return false, "", nil, err
+		}
+		return cli.CanViewProject(username, resourceID.ProjectID)
 	case namespace.CanCreateNamespaceScopedResourceOperation:
-		return NamespaceIamClient.CanCreateNamespaceScopedResource(username, resourceID.ProjectID,
+		cli, err := NamespaceIamClient(tenantID)
+		if err != nil {
+			return false, "", nil, err
+		}
+		return cli.CanCreateNamespaceScopedResource(username, resourceID.ProjectID,
 			resourceID.ClusterID, resourceID.Namespace)
 	case namespace.CanUpdateNamespaceScopedResourceOperation:
-		return NamespaceIamClient.CanUpdateNamespaceScopedResource(username, resourceID.ProjectID,
+		cli, err := NamespaceIamClient(tenantID)
+		if err != nil {
+			return false, "", nil, err
+		}
+		return cli.CanUpdateNamespaceScopedResource(username, resourceID.ProjectID,
 			resourceID.ClusterID, resourceID.Namespace)
 	case namespace.CanDeleteNamespaceScopedResourceOperation:
-		return NamespaceIamClient.CanDeleteNamespaceScopedResource(username, resourceID.ProjectID,
+		cli, err := NamespaceIamClient(tenantID)
+		if err != nil {
+			return false, "", nil, err
+		}
+		return cli.CanDeleteNamespaceScopedResource(username, resourceID.ProjectID,
 			resourceID.ClusterID, resourceID.Namespace)
 	case namespace.CanViewNamespaceScopedResourceOperation:
-		return NamespaceIamClient.CanViewNamespaceScopedResource(username, resourceID.ProjectID,
+		cli, err := NamespaceIamClient(tenantID)
+		if err != nil {
+			return false, "", nil, err
+		}
+		return cli.CanViewNamespaceScopedResource(username, resourceID.ProjectID,
 			resourceID.ClusterID, resourceID.Namespace)
 	default:
 		blog.Infof("Denying operation: %s", action)

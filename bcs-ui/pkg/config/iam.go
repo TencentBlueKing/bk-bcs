@@ -12,12 +12,9 @@
 
 package config
 
-// IAMConf for BK-IAM
+// IAMConf 权限中心配置
 type IAMConf struct {
-	External      bool   `yaml:"external"`
 	GatewayServer string `yaml:"gateway_server"`
-	IAMServer     string `yaml:"iam_server"`
-	BkIAMServer   string `yaml:"bk_iam_erver"`
-	Metric        bool   `yaml:"metric"`
-	Debug         bool   `yaml:"debug"`
+	// EnableV4 开启后前端权限中心地址使用 frontend_conf.hosts.bk_iam_v4_host
+	EnableV4 bool `yaml:"enableV4"`
 }

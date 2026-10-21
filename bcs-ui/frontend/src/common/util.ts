@@ -23,8 +23,17 @@
 * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 * IN THE SOFTWARE.
 */
+import dayjs from 'dayjs';
+import timezone from 'dayjs/plugin/timezone';
+import utc from 'dayjs/plugin/utc';
 import { every } from 'lodash';
 import moment from 'moment';
+
+
+// 初始化 dayjs 插件
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
 /**
  * 判断是否是对象
  *
@@ -899,4 +908,151 @@ export function registerEvent(target, eventType, cb) {
       target.detachEvent(eventType, cb);
     },
   };
+}
+
+/**
+ * 获取浏览器时区 ID
+ * @returns {string} 时区 ID，如 'Asia/Shanghai'、'America/New_York'
+ */
+export function getBrowserTimezoneId(): string {
+  try {
+    // 优先使用 window.timezone
+    if (window.timezone) return window.timezone;
+    // 使用 dayjs 的 tz.guess() 方法
+    if (dayjs?.tz?.guess) {
+      const timezone = dayjs.tz.guess();
+      if (timezone) return timezone;
+    }
+
+    // 降级方案1：使用 Intl API 获取时区 ID
+    if (Intl?.DateTimeFormat) {
+      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      if (timezone) return timezone;
+    }
+
+    // 降级方案2：根据时区偏移推测常见时区
+    const offset = -new Date().getTimezoneOffset() / 60;
+    const timezoneMap: Record<string, string> = {
+      '-12': 'Pacific/Baker_Island',
+      '-11': 'Pacific/Midway',
+      '-10': 'Pacific/Honolulu',
+      '-9': 'America/Anchorage',
+      '-8': 'America/Los_Angeles',
+      '-7': 'America/Denver',
+      '-6': 'America/Chicago',
+      '-5': 'America/New_York',
+      '-4': 'America/Halifax',
+      '-3': 'America/Sao_Paulo',
+      '-2': 'Atlantic/South_Georgia',
+      '-1': 'Atlantic/Azores',
+      0: 'Europe/London',
+      1: 'Europe/Paris',
+      2: 'Europe/Berlin',
+      3: 'Europe/Moscow',
+      4: 'Asia/Dubai',
+      5: 'Asia/Karachi',
+      5.5: 'Asia/Kolkata',
+      6: 'Asia/Dhaka',
+      7: 'Asia/Bangkok',
+      8: 'Asia/Shanghai',
+      9: 'Asia/Tokyo',
+      10: 'Australia/Sydney',
+      11: 'Pacific/Norfolk',
+      12: 'Pacific/Auckland',
+    };
+
+    return timezoneMap[String(offset)] || 'UTC';
+  } catch (error) {
+    console.warn('Failed to get browser timezone ID:', error);
+    return 'Asia/Shanghai'; // 默认返回中国时区
+  }
+}
+
+/**
+ * 智能检测时间戳类型（秒或毫秒）
+ * @param {number} timestamp - 时间戳
+ * @returns {number} 毫秒级时间戳
+ */
+function normalizeTimestamp(timestamp: number): number {
+  // 如果时间戳长度为10位，认为是秒级时间戳，转换为毫秒
+  // 如果时间戳长度为13位，认为是毫秒级时间戳，直接使用
+  const timestampStr = String(timestamp);
+
+  if (timestampStr.length === 10) {
+    // 秒级时间戳，转换为毫秒
+    return timestamp * 1000;
+  } if (timestampStr.length === 13) {
+    // 毫秒级时间戳，直接使用
+    return timestamp;
+  }
+  // 其他情况，尝试判断：如果小于某个阈值，认为是秒级
+  // 2000-01-01 的时间戳（秒）是 946684800
+  // 2100-01-01 的时间戳（秒）是 4102444800
+  if (timestamp < 4102444800) {
+    // 可能是秒级时间戳
+    return timestamp * 1000;
+  }
+  // 可能是毫秒级时间戳
+  return timestamp;
+}
+
+/**
+ * 根据时区ID格式化时间
+ * @param {string | number} time - 时间，可以是字符串、秒级时间戳或毫秒级时间戳
+ * @param {string} timezoneId - 时区ID，如 'Asia/Shanghai'、'America/New_York'
+ * @returns {string} 格式化后的时间字符串，如 '2025-12-12 12:12:12+0800'
+ */
+export function formatTimeWithTimezone(time: string | number, timezoneId?: string, formatStr = 'YYYY-MM-DD HH:mm:ssZ'): string {
+  try {
+    let processedTime = time;
+
+    // 如果是数字类型，进行时间戳标准化处理
+    if (typeof time === 'number') {
+      processedTime = normalizeTimestamp(time);
+    }
+
+    // 创建 dayjs 对象并转换到指定时区
+    const dayjsObj = dayjs(processedTime).tz(timezoneId ? timezoneId : getBrowserTimezoneId());
+
+    // 格式化为 YYYY-MM-DD HH:mm:ssZ 格式
+    return dayjsObj.format(formatStr);
+  } catch (error) {
+    console.warn('Failed to format time with timezone:', error);
+    // 降级处理：使用本地时间格式
+    return dayjs(time).format('YYYY-MM-DD HH:mm:ss');
+  }
+}
+
+/**
+ * 获取特定时区的当前日期对象
+ * @param {string} timezone - 时区ID，如 'Asia/Shanghai'、'America/New_York'。如果不传，使用浏览器时区
+ * @returns {Date} 当前日期
+ */
+export function getDateInTimezone(timezone?: string) {
+  const tz = timezone || getBrowserTimezoneId();
+  return dayjs().tz(tz)
+    .toDate();
+}
+
+/**
+   * 指定时区转 UTC 时间戳
+   * @param time 时间字符串或 Date 对象
+   * @param sourceTimezone 源时区 ID
+   * @param milliseconds 是否返回毫秒级时间戳，默认 false（秒级）
+   * @returns UTC 时间戳
+   */
+export function timezoneToUTC(time: string | Date, sourceTimezone: string, milliseconds = false): number {
+  const dayjsObj = dayjs.tz(time, sourceTimezone);
+  return milliseconds ? dayjsObj.valueOf() : dayjsObj.unix();
+}
+
+/**
+ * 权限中心地址，开启 IAM V4 且配置了 V4 地址时使用 V4 地址
+ * @returns 权限中心地址
+ */
+export function getIAMHost(): string {
+  if (window.BK_IAM_ENABLE_V4 === 'true' && window.BK_IAM_V4_HOST) {
+    return window.BK_IAM_V4_HOST;
+  }
+  return window.BK_IAM_HOST;
 }

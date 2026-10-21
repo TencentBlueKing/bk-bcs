@@ -32,6 +32,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iamv4"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/discovery"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/i18n"
 	restful "github.com/emicklei/go-restful/v3"
@@ -40,6 +41,7 @@ import (
 	"go-micro.dev/v4/registry"
 
 	i18n2 "github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/i18n"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/iamclient"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/job/activity"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/cache"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/sqlstore"
@@ -49,6 +51,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/migrations"
+	migrationsv4 "github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/migrations-v4"
 )
 
 var (
@@ -61,8 +64,7 @@ type UserManager struct {
 	config   *config.UserMgrConfig
 	httpServ *httpserver.HttpServer
 
-	IamPermClient iam.PermMigrateClient
-	EtcdRegistry  registry.Registry
+	EtcdRegistry registry.Registry
 
 	permService *permission.PermVerifyClient
 }
@@ -151,33 +153,60 @@ func Filter(req *restful.Request, resp *restful.Response, chain *restful.FilterC
 }
 
 func (u *UserManager) initPermService() error {
-	permService := permission.NewPermVerifyClient(u.config.PermissionSwitch, u.IamPermClient)
+	permService := permission.NewPermVerifyClient(u.config.PermissionSwitch)
 	u.permService = permService
 
 	return nil
 }
 
 func (u *UserManager) initIamPermClient() error {
+	enableV4 := u.config.IAMConfig.EnableV4
+	if enableV4 && strings.TrimSpace(u.config.IAMConfig.V4GateWayHost) == "" {
+		return fmt.Errorf("iam_config.v4_gateway_host is required when enable_v4 is true")
+	}
 
-	opt := &iam.Options{
+	opt := iam.Options{
+		SystemID:      u.config.IAMConfig.SystemID,
+		AppCode:       u.config.IAMConfig.AppCode,
+		AppSecret:     u.config.IAMConfig.AppSecret,
+		External:      u.config.IAMConfig.External,
+		GateWayHost:   u.config.IAMConfig.GateWayHost,
+		V4GateWayHost: u.config.IAMConfig.V4GateWayHost,
+		IAMHost:       u.config.IAMConfig.IAMHost,
+		BkiIAMHost:    u.config.IAMConfig.BkiIAMHost,
+		Metric:        u.config.IAMConfig.Metric,
+		Debug:         u.config.IAMConfig.ServerDebug,
+	}
+
+	config.GloablIAMClient = iamclient.NewAuthFactory(opt, enableV4, u.config.IAMConfig.V4GateWayHost)
+	_ = config.GloablIAMClient("")
+
+	migrateCli, err := iamclient.NewV3MigrateClient(opt)
+	if err != nil {
+		if !enableV4 {
+			return fmt.Errorf("init iam v3 migrate client: %w", err)
+		}
+		blog.Warnf("iam v3 migrate client skipped: %s", err.Error())
+	} else {
+		config.GlobalIAMMigrateClient = migrateCli
+	}
+
+	if !enableV4 {
+		blog.Infof("iam v4 disabled, skip init client")
+		return nil
+	}
+	v4cli, err := iamv4.NewClient(&iamv4.Options{
 		SystemID:    u.config.IAMConfig.SystemID,
 		AppCode:     u.config.IAMConfig.AppCode,
 		AppSecret:   u.config.IAMConfig.AppSecret,
-		External:    u.config.IAMConfig.External,
-		GateWayHost: u.config.IAMConfig.GateWayHost,
-		IAMHost:     u.config.IAMConfig.IAMHost,
-		BkiIAMHost:  u.config.IAMConfig.BkiIAMHost,
-		Metric:      u.config.IAMConfig.Metric,
-		Debug:       u.config.IAMConfig.ServerDebug,
-	}
-	iamCli, err := iam.NewIamMigrateClient(opt)
+		GateWayHost: u.config.IAMConfig.V4GateWayHost,
+		TenantID:    iamv4.SystemTenantID,
+	})
 	if err != nil {
-		blog.Errorf("initIamPermClient failed: %v", err)
-		return err
+		return fmt.Errorf("init iam v4 client: %w", err)
 	}
-
-	u.IamPermClient = iamCli
-	config.GloablIAMClient = iamCli
+	config.GlobalIAMV4Client = v4cli
+	blog.Infof("init iam v4 client successfully")
 	return nil
 }
 
@@ -276,7 +305,11 @@ func (u *UserManager) migrate() {
 			blog.Errorf("get migrations files error, %s", err.Error())
 			return
 		}
-		if err := u.IamPermClient.Migrate(sqlstore.GCoreDB.DB(), d, "bk_iam_migrations",
+		if config.GlobalIAMMigrateClient == nil {
+			blog.Infof("iam v3 migrate client not init, skip")
+			return
+		}
+		if err := config.GlobalIAMMigrateClient.Migrate(sqlstore.GCoreDB.DB(), d, "bk_iam_migrations",
 			5*time.Minute, tempVar); err != nil {
 			if strings.Contains(err.Error(), "no change") {
 				blog.Info("iam migration success")
@@ -286,6 +319,36 @@ func (u *UserManager) migrate() {
 			return
 		}
 		blog.Info("iam migration success")
+	}()
+}
+
+func (u *UserManager) migrateV4() {
+	if !u.config.IAMConfig.EnableV4 {
+		blog.Infof("iam v4 disabled, skip migration")
+		return
+	}
+	go func() {
+		blog.Info("start iam v4 migration")
+		if config.GlobalIAMV4Client == nil {
+			blog.Errorf("iam v4 client not init, skip migration")
+			return
+		}
+		bcsHost := ""
+		if u.config.BcsAPI != nil {
+			bcsHost = u.config.BcsAPI.Host
+		}
+		tempVar := map[string]string{
+			"BK_IAM_SYSTEM_ID": u.config.IAMConfig.SystemID,
+			"APP_CODE":         u.config.IAMConfig.AppCode,
+			"BCS_HOST":         bcsHost,
+		}
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+		defer cancel()
+		if err := config.GlobalIAMV4Client.Migrate(ctx, migrationsv4.MigrationFS, tempVar); err != nil {
+			blog.Errorf("migrate iam v4 failed, %s", err.Error())
+			return
+		}
+		blog.Info("iam v4 migration success")
 	}()
 }
 
@@ -322,6 +385,7 @@ func (u *UserManager) initUserManagerServer() error {
 	}
 
 	u.migrate()
+	u.migrateV4()
 	u.initI18n()
 
 	return nil

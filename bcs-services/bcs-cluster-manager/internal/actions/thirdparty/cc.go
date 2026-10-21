@@ -21,9 +21,11 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cmdb"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tenant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
@@ -76,13 +78,16 @@ func (la *ListCCTopologyAction) listTopology() error {
 		return fmt.Errorf("invalid bizID %s", bizID)
 	}
 
+	user := auth.GetAuthAndTenantInfoFromCtx(la.ctx)
+	ctx := tenant.WithTenantIdFromContext(la.ctx, user.ResourceTenantId)
+
 	bkBizID, err := strconv.Atoi(bizID)
 	if err != nil {
 		blog.Errorf("GetBizInternalModule get cluster bkBizID failed, err: %s", err.Error())
 		return fmt.Errorf("get cluster bkBizID failed, err: %s", err.Error())
 	}
 	cli := cmdb.GetCmdbClient()
-	internalModules, err := cli.ListTopology(la.ctx, bkBizID, la.filterInter(), false)
+	internalModules, err := cli.ListTopology(ctx, bkBizID, la.filterInter(), false)
 	if err != nil {
 		blog.Errorf("GetBizInternalModule failed, err %s", err.Error())
 		return err

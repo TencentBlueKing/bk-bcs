@@ -67,6 +67,8 @@ iam:
   iamHost: ""
   bkPaaSHost: ""
   debug: false
+  enableV4: false
+  v4GatewayHost: ""
 itsm:
   gatewayHost: ""
   createNsSvcID: 0
@@ -77,9 +79,14 @@ clientActionExemptPerm:
   clientActions:
   - clientID: test
     all: true
+clientActionExemptTenant:
+  clientActions:
+  - clientID: test
+    all: true
 cmdb:
   bkSupplierAccount: "tencent"
-  host: "http://localhost:80"
+  # cmdb apigw host, e.g. https://bkapi.example.com/prod
+  host: ""
   timeout: 10
   proxy: ""
   debug: false
@@ -95,6 +102,11 @@ taskConfig:
   workerCnt: 0
 sharedClusterConfig:
   annoKeyProjCode: ""
+enableMultiTenant: false
+bkUser:
+  host: ""
+  timeout: 10
+  debug: false
   allowAdjustQuota: false
 systemConfig:
   systemNameSpaces:

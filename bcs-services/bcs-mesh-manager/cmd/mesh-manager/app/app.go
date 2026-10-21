@@ -446,22 +446,26 @@ func (s *Server) initJWTClient() error {
 
 // initIAMClient init iam client for perm
 func (s *Server) initIAMClient() error {
-	iamClient, err := iam.NewIamClient(&iam.Options{
-		SystemID:    s.opt.IAM.SystemID,
-		AppCode:     s.opt.IAM.AppCode,
-		AppSecret:   s.opt.IAM.AppSecret,
-		External:    s.opt.IAM.External,
-		GateWayHost: s.opt.IAM.GatewayServer,
-		IAMHost:     s.opt.IAM.IAMServer,
-		BkiIAMHost:  s.opt.IAM.BkiIAMServer,
-		Metric:      s.opt.IAM.Metric,
-		Debug:       s.opt.IAM.Debug,
+	auth.SetIAMClientFactory(func(tenantID string) (iam.PermClient, error) {
+		clientOpt := &iam.Options{
+			SystemID:    s.opt.IAM.SystemID,
+			AppCode:     s.opt.IAM.AppCode,
+			AppSecret:   s.opt.IAM.AppSecret,
+			External:    s.opt.IAM.External,
+			GateWayHost: s.opt.IAM.GatewayServer,
+			IAMHost:     s.opt.IAM.IAMServer,
+			BkiIAMHost:  s.opt.IAM.BkiIAMServer,
+			Metric:      s.opt.IAM.Metric,
+			Debug:       s.opt.IAM.Debug,
+			TenantId:    tenantID,
+		}
+		iam.ApplyV4Config(clientOpt, s.opt.IAM.EnableV4, s.opt.IAM.V4GateWayHost)
+		return iam.NewIamClient(clientOpt)
 	})
-	if err != nil {
+	auth.InitPermClient()
+	if _, err := auth.IAMClient(iam.DefaultTenantId); err != nil {
 		return err
 	}
-	auth.IAMClient = iamClient
-	auth.InitPermClient(iamClient)
 	blog.Info("init iam client successfully")
 
 	// 初始化权限检查模块的 mesh model

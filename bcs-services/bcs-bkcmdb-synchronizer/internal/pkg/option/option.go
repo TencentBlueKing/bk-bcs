@@ -14,8 +14,24 @@
 package option
 
 import (
+	"crypto/tls"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
+	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 )
+
+var globalConfig *BkcmdbSynchronizerOption
+
+// GetGlobalConfig get global config
+func GetGlobalConfig() *BkcmdbSynchronizerOption {
+	return globalConfig
+}
+
+// SetGlobalConfig set global config
+func SetGlobalConfig(config *BkcmdbSynchronizerOption) {
+	globalConfig = config
+}
 
 // BkcmdbSynchronizerOption options for CostManager
 type BkcmdbSynchronizerOption struct {
@@ -26,17 +42,19 @@ type BkcmdbSynchronizerOption struct {
 	RabbitMQ      RabbitMQConfig      `json:"rabbitmq"`
 	CMDB          CMDBConfig          `json:"cmdb"`
 	SharedCluster SharedClusterConfig `json:"shared_cluster"`
+	BkUser        BkUserConfig        `json:"bkUser"`
 	Metrics       MetricsConfig       `json:"metrics"`
 }
 
 // SynchronizerConfig synchronizer config
 type SynchronizerConfig struct {
-	Env       string `json:"env"`
-	Replicas  int    `json:"replicas"`
-	BkBizID   int64  `json:"bkBizID"`
-	HostID    int64  `json:"hostID"`
-	WhiteList string `json:"whiteList"`
-	BlackList string `json:"blackList"`
+	Env                   string `json:"env"`
+	Replicas              int    `json:"replicas"`
+	BkBizID               int64  `json:"bkBizID"`
+	HostID                int64  `json:"hostID"`
+	WhiteList             string `json:"whiteList"`
+	BlackList             string `json:"blackList"`
+	EnableMultiTenantMode bool   `json:"enableMultiTenantMode"`
 	// CustomResourceTypes map from clusterID to custom resource kinds to sync
 	// Only clusters configured in this map will have custom resources synced
 	// Example: {"cluster-id-1": ["BkApp", "CronJob"], "cluster-id-2": ["BkApp"]}
@@ -109,6 +127,41 @@ type CMDBConfig struct {
 // SharedClusterConfig shared cluster config
 type SharedClusterConfig struct {
 	AnnotationKeyProjCode string `json:"annotation_key_proj_code"`
+}
+
+// BkUserConfig bkuser config
+type BkUserConfig struct {
+	AppCode   string `json:"appCode"`
+	AppSecret string `json:"appSecret"`
+	Server    string `json:"server"`
+	Debug     bool   `json:"debug"`
+}
+
+// InitTClientTlsConfig init client tls config
+func InitTClientTlsConfig() (*tls.Config, error) {
+	var (
+		err       error
+		tlsConfig *tls.Config
+	)
+
+	if len(globalConfig.Client.ClientCrt) != 0 &&
+		len(globalConfig.Client.ClientKey) != 0 &&
+		len(globalConfig.Client.ClientCa) != 0 {
+		tlsConfig, err = ssl.ClientTslConfVerity(
+			globalConfig.Client.ClientCa,
+			globalConfig.Client.ClientCrt,
+			globalConfig.Client.ClientKey,
+			globalConfig.Client.ClientCrtPwd,
+		)
+		// static.ClientCertPwd)
+		if err != nil {
+			blog.Errorf("init tls config failed, err: %s", err.Error())
+			return nil, err
+		}
+		blog.Infof("init tls config success")
+
+	}
+	return tlsConfig, nil
 }
 
 // MetricsConfig metrics config

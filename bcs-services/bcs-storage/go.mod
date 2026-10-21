@@ -3,7 +3,7 @@ module github.com/Tencent/bk-bcs/bcs-services/bcs-storage
 go 1.21
 
 replace (
-	github.com/Tencent/bk-bcs/bcs-common => ../../bcs-common
+	github.com/Tencent/bk-bcs/bcs-common => github.com/Tencent/bk-bcs/bcs-common v0.0.0-20260703073010-610df57086a6
 	github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2 => github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2 v0.0.0-20210517125505-0f40c4b365cb
 	github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4
 	github.com/haproxytech/client-native => github.com/abstractmj/client-native v1.2.8

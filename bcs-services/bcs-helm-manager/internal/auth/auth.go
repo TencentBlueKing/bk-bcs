@@ -81,6 +81,27 @@ func GetRealUserFromCtx(ctx context.Context) string {
 	return authUser.Username
 }
 
+// GetAuthUserFromCtx 通过 ctx 获取当前用户
+func GetAuthUserFromCtx(ctx context.Context) *middleauth.AuthUser {
+	authUser, _ := middleauth.GetUserFromContext(ctx)
+	return &authUser
+}
+
+// TenantIDFromCtx 解析本次请求的租户。优先级：metadata 头、context、JWT。
+// 旧版 IAM 按租户建客户端，这里必须取到当次调用的租户，不能使用启动时的固定值。
+func TenantIDFromCtx(ctx context.Context) string {
+	if id := contextx.GetHeaderTenantIDFromCtx(ctx); id != "" {
+		return id
+	}
+	if id, ok := ctx.Value(contextx.TenantIDContextKey).(string); ok && id != "" {
+		return id
+	}
+	if user := GetAuthUserFromCtx(ctx); user != nil && user.TenantId != "" {
+		return user.TenantId
+	}
+	return contextx.DefaultTenantId
+}
+
 func getJWTOpt(c JWTClientConfig) (*jwt.JWTOptions, error) {
 	jwtOpt := &jwt.JWTOptions{
 		VerifyKeyFile: c.PublicKeyFile,
@@ -163,8 +184,8 @@ func getResourceID(req server.Request) (*options.CredentialScope, error) {
 }
 
 // CheckUserPerm check user perm
-func CheckUserPerm(ctx context.Context, req server.Request, username string) (bool, error) {
-	blog.Infof("CheckUserPerm: method/%s, username: %s", req.Method(), username)
+func CheckUserPerm(ctx context.Context, req server.Request, user middleauth.AuthUser) (bool, error) {
+	blog.Infof("CheckUserPerm: method/%s, user: %s", req.Method(), user)
 
 	action, ok := ActionPermissions[req.Method()]
 	if !ok {
@@ -178,7 +199,8 @@ func CheckUserPerm(ctx context.Context, req server.Request, username string) (bo
 
 	resourceID.ProjectID = contextx.GetProjectIDFromCtx(ctx)
 
-	allow, url, resources, err := CallIAM(username, action, *resourceID)
+	tenantID := TenantIDFromCtx(ctx)
+	allow, url, resources, err := CallIAM(user.GetUsername(), action, *resourceID, tenantID)
 	if err != nil {
 		return false, err
 	}
@@ -194,29 +216,29 @@ func CheckUserPerm(ctx context.Context, req server.Request, username string) (bo
 }
 
 // CallIAM call iam
-func CallIAM(username, action string, resourceID options.CredentialScope) (bool, string,
+func CallIAM(username, action string, resourceID options.CredentialScope, tenantID string) (bool, string,
 	[]authutils.ResourceAction, error) {
 	// related actions
 	switch action {
 	case cluster.CanManageClusterOperation:
-		return ClusterIamClient.CanManageCluster(username, resourceID.ProjectID, resourceID.ClusterID)
+		return ClusterIamClient(tenantID).CanManageCluster(username, resourceID.ProjectID, resourceID.ClusterID)
 	case cluster.CanViewClusterOperation:
-		return ClusterIamClient.CanViewCluster(username, resourceID.ProjectID, resourceID.ClusterID)
+		return ClusterIamClient(tenantID).CanViewCluster(username, resourceID.ProjectID, resourceID.ClusterID)
 	case project.CanEditProjectOperation:
-		return ProjectIamClient.CanEditProject(username, resourceID.ProjectID)
+		return ProjectIamClient(tenantID).CanEditProject(username, resourceID.ProjectID)
 	case project.CanViewProjectOperation:
-		return ProjectIamClient.CanViewProject(username, resourceID.ProjectID)
+		return ProjectIamClient(tenantID).CanViewProject(username, resourceID.ProjectID)
 	case namespace.CanCreateNamespaceScopedResourceOperation:
-		return NamespaceIamClient.CanCreateNamespaceScopedResource(username, resourceID.ProjectID,
+		return NamespaceIamClient(tenantID).CanCreateNamespaceScopedResource(username, resourceID.ProjectID,
 			resourceID.ClusterID, resourceID.Namespace)
 	case namespace.CanViewNamespaceScopedResourceOperation:
-		return NamespaceIamClient.CanViewNamespaceScopedResource(username, resourceID.ProjectID,
+		return NamespaceIamClient(tenantID).CanViewNamespaceScopedResource(username, resourceID.ProjectID,
 			resourceID.ClusterID, resourceID.Namespace)
 	case namespace.CanUpdateNamespaceScopedResourceOperation:
-		return NamespaceIamClient.CanUpdateNamespaceScopedResource(username, resourceID.ProjectID,
+		return NamespaceIamClient(tenantID).CanUpdateNamespaceScopedResource(username, resourceID.ProjectID,
 			resourceID.ClusterID, resourceID.Namespace)
 	case namespace.CanDeleteNamespaceScopedResourceOperation:
-		return NamespaceIamClient.CanDeleteNamespaceScopedResource(username, resourceID.ProjectID,
+		return NamespaceIamClient(tenantID).CanDeleteNamespaceScopedResource(username, resourceID.ProjectID,
 			resourceID.ClusterID, resourceID.Namespace)
 	default:
 		return false, "", nil, errors.New("permission denied")

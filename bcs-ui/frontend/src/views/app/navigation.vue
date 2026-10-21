@@ -141,18 +141,11 @@
           </template>
         </PopoverSelector>
         <!-- 用户设置 -->
-        <PopoverSelector class="ml-[4px]">
-          <span class="flex items-center text-[#96A2B9] hover:text-[#d3d9e4]">
-            <span class="text-[14px]">{{user.username}}</span>
-            <i class="ml-[4px] text-[12px] bk-icon icon-down-shape"></i>
-          </span>
-          <template #content>
-            <ul>
-              <li class="bcs-dropdown-item" @click="handleGotoUserToken">{{ $t('blueking.apiToken') }}</li>
-              <li class="bcs-dropdown-item" @click="handleLogout">{{ $t('blueking.signOut') }}</li>
-            </ul>
-          </template>
-        </PopoverSelector>
+        <BkLoginUserinfo
+          :userinfo="userinfo"
+          :render-slot="renderSlot"
+          :action-list="actionList"
+        />
       </template>
       <!-- 左侧菜单 -->
       <template #menu>
@@ -176,17 +169,20 @@
   </div>
 </template>
 <script lang="ts">
-import jsonp from 'jsonp';
 import { computed, defineComponent, onBeforeUnmount, onMounted, reactive, ref, toRef, watch } from 'vue';
+
+import BkLoginUserinfo from '@blueking/login-userinfo/vue2/index.umd.min';
 
 import PopoverSelector from '../../components/popover-selector.vue';
 
 import useMenu, { IMenu } from './use-menu';
 
+import '@blueking/login-userinfo/vue2/vue2.css';
 import { releaseNote } from '@/api/modules/project';
-import { setCookie } from '@/common/util';
+import { getIAMHost, setCookie } from '@/common/util';
 import AiAssistantBtn from '@/components/assistant/ai-assistant-btn.vue';
 import BcsMd from '@/components/bcs-md/index.vue';
+import { useAppData } from '@/composables/use-app';
 import useCalcHeight from '@/composables/use-calc-height';
 import usePlatform from '@/composables/use-platform';
 import $i18n from '@/i18n/i18n-setup';
@@ -204,6 +200,7 @@ export default defineComponent({
     ProjectSelector,
     PopoverSelector,
     AiAssistantBtn,
+    BkLoginUserinfo,
   },
   setup() {
     const { init } = useCalcHeight([
@@ -219,6 +216,9 @@ export default defineComponent({
         init();
       });
     };
+
+    // 特性开关
+    const { flagsMap } = useAppData();
 
     // 支持下拉的一级菜单
     const pullMenus = ['DEPLOYMENTMANAGEPULL'];
@@ -245,6 +245,13 @@ export default defineComponent({
     const showSystemLog = ref(false);
     const showFeatures = ref(false);
     const user = computed(() => $store.state.user);
+    const userinfo = computed(() => ({
+      name: user.value.username,
+      organization: user.value.tenant_id,
+      timezone: user.value.time_zone,
+    }));
+    const renderSlot = (h: any) => h('bk-user-display-name', { 'user-id': user.value.username });
+
     const curProject = computed(() => $store.state.curProject);
     // 当前一级导航
     const activeNav = computed(() => $store.state.curNav?.root || {});
@@ -362,13 +369,23 @@ export default defineComponent({
       // 修改cookie
       setCookie('blueking_language', item.locale, window.BK_DOMAIN, expiresStr);
       // 修改用户管理语言
-      jsonp(
-        `${window.BK_USER_HOST}/api/c/compapi/v2/usermanage/fe_update_user_language/?language=${item.locale}`,
-        { param: 'callback', timeout: 100 },
-        () => {
-          $router.go(0);
-        },
-      );
+      try {
+        const url = `${window.BK_USER_HOST}/prod/api/v3/open-web/tenant/current-user/language/`;
+        await fetch(url, {
+          method: 'PUT',
+          headers: {
+            'X-Bk-Tenant-Id': user.value.tenant_id,
+            'Content-type': 'application/json',
+          },
+          body: JSON.stringify({
+            language: item.locale,
+          }),
+          credentials: 'include',
+        });
+        $router.go(0);
+      } catch (err) {
+        console.error(err);
+      }
     };
     // 帮助文档
     const handleGotoHelp  = () => {
@@ -382,9 +399,17 @@ export default defineComponent({
     const handleShowFeatures = () => {
       showFeatures.value = true;
     };
+    // 跳转权限中心
+    const handleGotoIAM = () => {
+      window.open(getIAMHost());
+    };
+    // 跳转个人中心
+    const handleGotoUserCenter = () => {
+      window.open(`${window.BK_USER_UI_HOST}${window.BK_USER_UI_HOST.endsWith('/') ? '' : '/'}personal-center`);
+    };
     // 跳转用户token
     const handleGotoUserToken = () => {
-      if (route.value.name === 'token') return;
+      if (route.value.name === 'token' || !curProject.value.projectID) return;
       $router.push({
         name: 'token',
       });
@@ -406,6 +431,34 @@ export default defineComponent({
     const backToPreVersion = () => {
       window.open(window.BCS_CONFIG.backToLegacyButtonUrl);
     };
+
+    const actionList = computed(() => [
+      {
+        text: $i18n.t('apiToken.action.link.iam'),
+        icon: 'bcs-icon bcs-icon-authority',
+        theme: 'primary' as const,
+        handle: handleGotoIAM,
+      },
+      {
+        text: $i18n.t('blueking.userCenter'),
+        icon: 'bcs-icon bcs-icon-user',
+        theme: 'primary' as const,
+        handle: handleGotoUserCenter,
+      },
+      {
+        text: $i18n.t('blueking.apiToken'),
+        icon: 'bcs-icon bcs-icon-key',
+        theme: 'primary' as const,
+        hidden: !curProject.value.projectID,
+        handle: handleGotoUserToken,
+      },
+      {
+        text: $i18n.t('blueking.signOut'),
+        icon: 'bcs-icon bcs-icon-export',
+        theme: 'danger' as const,
+        handle: handleLogout,
+      },
+    ].filter(item => !item.hidden));
 
     watch(route, () => {
       if (!route.value.name) return;
@@ -452,11 +505,16 @@ export default defineComponent({
       showFeatures,
       user,
       showPreVersionBtn,
+      flagsMap,
+      userinfo,
+      actionList,
+      renderSlot,
       handleGoHome,
       handleChangeLang,
       handleGotoHelp,
       handleShowSystemLog,
       handleShowFeatures,
+      handleGotoUserCenter,
       handleGotoUserToken,
       handleLogout,
       handleToggleClickNav,
@@ -493,5 +551,24 @@ export default defineComponent({
 }
 >>> .container-content {
   padding: 0!important;
+}
+
+:deep(.bk-login-userinfo) {
+  font-size: 14px;
+  color: #96A2B9;
+  &:hover {
+    color: #3A84FF;
+  }
+
+  .bk-login-userinfo-payload-item {
+    font-size: 14px;
+  }
+
+  .bk-login-userinfo-panel {
+    z-index: 9999;
+    position: fixed !important;
+    top: 52px !important;
+    right: 10px !important;
+  }
 }
 </style>

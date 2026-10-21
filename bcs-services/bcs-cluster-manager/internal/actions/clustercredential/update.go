@@ -48,7 +48,7 @@ func (ua *UpdateAction) validate() error {
 }
 
 func (ua *UpdateAction) updateCredential() error {
-	now := time.Now().Format(time.RFC3339)
+	now := time.Now().UTC().Format(time.RFC3339)
 	newCredential := &cmproto.ClusterCredential{
 		ServerKey:     ua.req.ServerKey,
 		ClusterID:     ua.req.ClusterID,

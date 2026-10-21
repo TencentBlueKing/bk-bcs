@@ -71,6 +71,12 @@ type RedisCacheClient struct {
 // GroupKindVersionResource api-resouces model
 type GroupKindVersionResource []map[string]interface{}
 
+// GroupVersionResource api-resouces model
+type GroupVersionResource struct {
+	GVR        schema.GroupVersionResource
+	Namespaced bool
+}
+
 // RESTClient xxx
 func (d *RedisCacheClient) RESTClient() rest.Interface {
 	return d.delegate.RESTClient()
@@ -216,19 +222,19 @@ func (d *RedisCacheClient) ServerResourcesForGroupVersion(groupVersion string) (
 }
 
 // getResWithGroupVersion 根据指定的 Group, Version 获取对应资源信息
-func (d *RedisCacheClient) getResWithGroupVersion(kind, groupVersion string) (schema.GroupVersionResource, error) {
+func (d *RedisCacheClient) getResWithGroupVersion(kind, groupVersion string) (GroupVersionResource, error) {
 	all, err := d.ServerResourcesForGroupVersion(groupVersion)
 	if err != nil {
-		return schema.GroupVersionResource{}, err
+		return GroupVersionResource{}, err
 	}
 	return filterResByKind(kind, d.clusterID, groupVersion, []*metav1.APIResourceList{all})
 }
 
 // getPreferredResource 获取指定资源当前集群 Preferred 版本
-func (d *RedisCacheClient) getPreferredResource(kind string) (schema.GroupVersionResource, error) {
+func (d *RedisCacheClient) getPreferredResource(kind string) (GroupVersionResource, error) {
 	all, err := d.ServerPreferredResources()
 	if err != nil {
-		return schema.GroupVersionResource{}, err
+		return GroupVersionResource{}, err
 	}
 	// 逐个检查出第一个同名资源，作为 Preferred 结果返回
 	return filterResByKind(kind, d.clusterID, "", all)
@@ -329,7 +335,43 @@ func GetGroupVersionResource(
 	}
 	// 按指定 groupVersion 查询（含刷新缓存重试）
 	if len(groupVersion) != 0 {
-		var res schema.GroupVersionResource
+		var res GroupVersionResource
+		res, err = cli.getResWithGroupVersion(kind, groupVersion)
+		if err != nil {
+			cli.Invalidate()
+			resC, errr := cli.getResWithGroupVersion(kind, groupVersion)
+			if errr != nil {
+				return res.GVR, errr
+			}
+			return resC.GVR, nil
+		}
+		return res.GVR, nil
+	}
+	// 查询 preferred version（含刷新缓存重试）
+	var res GroupVersionResource
+	res, err = cli.getPreferredResource(kind)
+	if err != nil {
+		cli.Invalidate()
+		resC, errr := cli.getPreferredResource(kind)
+		if errr != nil {
+			return res.GVR, errr
+		}
+		return resC.GVR, nil
+	}
+	return res.GVR, nil
+}
+
+// GetNsGroupVersionResource 获取命名空间资源
+func GetNsGroupVersionResource(
+	ctx context.Context, conf *ClusterConf, kind, groupVersion string,
+) (GroupVersionResource, error) {
+	cli, err := NewRedisCacheClient4Conf(ctx, conf)
+	if err != nil {
+		return GroupVersionResource{}, err
+	}
+	// 按指定 groupVersion 查询（含刷新缓存重试）
+	if len(groupVersion) != 0 {
+		var res GroupVersionResource
 		res, err = cli.getResWithGroupVersion(kind, groupVersion)
 		if err != nil {
 			cli.Invalidate()
@@ -338,7 +380,7 @@ func GetGroupVersionResource(
 		return res, nil
 	}
 	// 查询 preferred version（含刷新缓存重试）
-	var res schema.GroupVersionResource
+	var res GroupVersionResource
 	res, err = cli.getPreferredResource(kind)
 	if err != nil {
 		cli.Invalidate()
@@ -475,7 +517,7 @@ func filterApiResByName(resName string, allRes []*metav1.APIResourceList) []map[
 // filterResByKind 根据 kind 过滤出对应的资源信息
 func filterResByKind(
 	kind, clusterID, groupVersion string, allRes []*metav1.APIResourceList,
-) (schema.GroupVersionResource, error) {
+) (GroupVersionResource, error) {
 	for _, apiResList := range allRes {
 		for _, res := range apiResList.APIResources {
 			if res.Kind == kind {
@@ -484,7 +526,10 @@ func filterResByKind(
 				if strings.Contains(apiResList.GroupVersion, "/") {
 					group, ver = stringx.Partition(apiResList.GroupVersion, "/")
 				}
-				return schema.GroupVersionResource{Group: group, Version: ver, Resource: res.Name}, nil
+				return GroupVersionResource{
+					GVR:        schema.GroupVersionResource{Group: group, Version: ver, Resource: res.Name},
+					Namespaced: res.Namespaced,
+				}, nil
 			}
 		}
 	}
@@ -492,7 +537,7 @@ func filterResByKind(
 	if groupVersion != "" {
 		errMsg += ", groupVersion: " + groupVersion
 	}
-	return schema.GroupVersionResource{}, errorx.New(errcode.General, errMsg)
+	return GroupVersionResource{}, errorx.New(errcode.General, errMsg)
 }
 
 func genCacheKey(clusterID, groupVersion string) cache.StringKey {

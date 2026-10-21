@@ -20,6 +20,7 @@ import (
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tenant"
 )
 
 func init() {
@@ -95,7 +96,14 @@ func (ng *NodeGroup) UpdateNodeGroup(
 		return nil, fmt.Errorf("nodegroup id or cluster id is empty")
 	}
 
-	err := cloudprovider.UpdateNodeGroupCloudAndModuleInfo(group.NodeGroupID, group.ConsumerID,
+	ctx, err := tenant.WithTenantIdByResourceForContext(context.Background(), tenant.ResourceMetaData{
+		ProjectId: group.ProjectID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	err = cloudprovider.UpdateNodeGroupCloudAndModuleInfo(ctx, group.NodeGroupID, group.ConsumerID,
 		true, opt.Cluster.BusinessID)
 	if err != nil {
 		return nil, err
@@ -267,7 +275,14 @@ func (ng *NodeGroup) UpdateAutoScalingOption(scalingOption *proto.ClusterAutoSca
 		return nil, err
 	}
 
-	err = cloudprovider.UpdateAutoScalingOptionModuleInfo(scalingOption.ClusterID)
+	ctx, err := tenant.WithTenantIdByResourceForContext(context.Background(), tenant.ResourceMetaData{
+		ProjectId: scalingOption.ProjectID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	err = cloudprovider.UpdateAutoScalingOptionModuleInfo(ctx, scalingOption.ClusterID)
 	if err != nil {
 		return nil, err
 	}
