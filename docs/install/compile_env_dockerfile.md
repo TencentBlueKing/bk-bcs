@@ -1,4 +1,4 @@
-- [CentOS 8 + Golang 1.23.2](#centos-8--golang-1232)
+- [CentOS 8 + Golang 1.27.3](#centos-8--golang-1273)
   - [Dockerfile](#dockerfile)
   - [构建镜像命令](#构建镜像命令)
   - [测试镜像命令](#测试镜像命令)
@@ -11,7 +11,7 @@
   - [构建镜像命令](#构建镜像命令-2)
   - [测试镜像命令](#测试镜像命令-2)
 
-##### CentOS 8 + Golang 1.23.2
+##### CentOS 8 + Golang 1.27.3
 
 ###### Dockerfile
 ```shell
@@ -31,8 +31,8 @@ RUN sed -i s/mirror.centos.org/vault.centos.org/g /etc/yum.repos.d/*.repo && \
     rm -rf /var/cache/yum
 
 # 定义版本参数
-ARG GOLANG_VERSION=1.23.2
-ARG NODE_VERSION=20
+ARG GOLANG_VERSION=1.27.3
+ARG NODE_VERSION=24
 
 # 下载并安装 Golang
 RUN cd /tmp/ && \
@@ -50,16 +50,16 @@ RUN curl -sL https://rpm.nodesource.com/setup_${NODE_VERSION}.x | bash - && \
 # 设置环境变量
 ENV PATH=/usr/local/go/bin:/usr/bin:$PATH \
     GOLANG_VERSION=${GOLANG_VERSION} \
-    NODE_VERSION=v${NODE_VERSION}.18.0
+    NODE_VERSION=v${NODE_VERSION}
 ```
 
 ###### 构建镜像命令
 ```shell
-docker build --build-arg GOLANG_VERSION=1.23.2 --build-arg NODE_VERSION=20 -t centos:golang-1.23.2 -f Dockerfile .
+docker build --build-arg GOLANG_VERSION=1.27.3 --build-arg NODE_VERSION=24 -t centos:golang-1.27.3 -f Dockerfile .
 ```
 ###### 测试镜像命令
 ```shell
-docker run -it --rm centos:golang-1.23.2 /bin/bash -c "which go && go version && which node && node -v && which npm && npm -v"
+docker run -it --rm centos:golang-1.27.3 /bin/bash -c "which go && go version && which node && node -v && which npm && npm -v"
 ```
 
 ##### CentOS 7 + Golang 1.20.2
@@ -99,7 +99,7 @@ RUN curl -sL https://rpm.nodesource.com/setup_${NODE_VERSION}.x | bash - && \
 # 设置环境变量
 ENV PATH=/usr/local/go/bin/:/usr/bin:$PATH \
     GOLANG_VERSION=${GOLANG_VERSION} \
-    NODE_VERSION=v${NODE_VERSION}.18.0
+    NODE_VERSION=v${NODE_VERSION}
 ```
 
 ###### 构建镜像命令
@@ -140,7 +140,7 @@ RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash - && ap
 # 设置环境变量
 ENV PATH=/usr/local/go/bin/:/usr/bin:$PATH \
     GOLANG_VERSION=${GOLANG_VERSION} \
-    NODE_VERSION=v${NODE_VERSION}.18.0
+    NODE_VERSION=v${NODE_VERSION}
 ```
 
 ###### 构建镜像命令

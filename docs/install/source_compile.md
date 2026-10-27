@@ -19,7 +19,7 @@
 # bk-bcs 编译指南
 > 说明：
 > 1. 编译2024年10月23日之前的代码版本，建议使用 Golang 版本为 1.17～1.20.2。
-> 2. 编译2024年10月23日之后的代码版本，建议使用 Golang 版本为 1.23.2 及以上。
+> 2. 编译2024年10月23日之后的代码版本，建议使用 Golang 版本为 1.23.2 及以上；当前推荐 Golang 1.27.3 + Node.js 24。
 > 3. 当前本编译构建方式在纯净的 CentOS 7、CentOS 8、Ubuntu环境进行测试验证；若您的环境为其他操作系统或发行版或CPU架构，欢迎您积极贡献。
 
 ## 编译环境
@@ -28,6 +28,7 @@
 ### 容器镜像编译环境
 #### 官方编译镜像
 ```shell
+hub.bktencent.com/blueking/centos8:go1.27.3_node24.22.1
 hub.bktencent.com/blueking/centos8:go1.25.2_node20.18.2
 hub.bktencent.com/blueking/centos8:go1.23.2_node20.18.2
 hub.bktencent.com/blueking/centos7:go1.20.2_node16.20.2
@@ -36,7 +37,7 @@ hub.bktencent.com/blueking/centos7:go1.20.2_node16.20.2
 另外，以下提供了本项目官方镜像的 Dockefile，便于用户可据此自行调整自己的编译镜像。
 
 #### 通过官方编译镜像 Dockerfile 完善自己的编译环境
-- CentOS 8 + Golang 1.23.2 参见 [CentOS 8 + Golang 1.23.2](./compile_env_dockerfile.md)
+- CentOS 8 + Golang 1.27.3 参见 [CentOS 8 + Golang 1.27.3](./compile_env_dockerfile.md)
 - CentOS 7 + Golang 1.20.2 参见 [CentOS 7 + Golang 1.20.2](./compile_env_dockerfile.md)
 - Ubuntu + Golang 1.23.2 参见 [Ubuntu + Golang 1.23.2](./compile_env_dockerfile.md)
 
