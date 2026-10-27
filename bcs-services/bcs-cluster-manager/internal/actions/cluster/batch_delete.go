@@ -146,6 +146,12 @@ func (ba *BatchDeleteClusterNodesAction) getClusterAndNodes() error {
 		ba.req.ClusterID, inDbNodes, notInDbNodes)
 	// handle notInDbNodes
 	for i := range notInDbNodes {
+		checkNode, nodeErr := ba.model.GetNodeByIP(ba.ctx, notInDbNodes[i])
+		if nodeErr == nil && checkNode != nil && checkNode.ClusterID != ba.req.GetClusterID() {
+			blog.Warnf("BatchDeleteClusterNodesAction[%s] node[%s] belongs to cluster[%s], skip delete",
+				ba.req.ClusterID, notInDbNodes[i], checkNode.ClusterID)
+			continue
+		}
 		ba.nodes = append(ba.nodes, &cmproto.Node{
 			InnerIP:   notInDbNodes[i],
 			ClusterID: ba.req.ClusterID,

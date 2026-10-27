@@ -600,6 +600,12 @@ func (da *DeleteNodesAction) getClsNodesByClsIDAndIplist() ([]string, error) {
 
 	deleteNodeIPs := make([]string, 0)
 	for _, ip := range da.nodeIPList {
+		checkNode, nodeErr := da.model.GetNodeByIP(da.ctx, ip)
+		if nodeErr == nil && checkNode != nil && checkNode.ClusterID != da.cluster.ClusterID {
+			blog.Warnf("DeleteNodesAction[%s] node[%s] belongs to cluster[%s], skip delete",
+				da.req.ClusterID, ip, checkNode.ClusterID)
+			continue
+		}
 		if _, ok := filterNodes[ip]; !ok {
 			deleteNodeIPs = append(deleteNodeIPs, ip)
 		}
