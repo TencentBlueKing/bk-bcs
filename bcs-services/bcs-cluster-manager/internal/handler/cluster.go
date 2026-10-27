@@ -436,6 +436,21 @@ func (cm *ClusterManager) GetNodeInfo(ctx context.Context,
 	return nil
 }
 
+// GetClusterNodeInfo implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) GetClusterNodeInfo(ctx context.Context,
+	req *cmproto.GetClusterNodeInfoRequest, resp *cmproto.GetClusterNodeInfoResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	na := clusterac.NewGetClusterNodeInfoAction(cm.model)
+	na.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("GetClusterNodeInfo", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: GetClusterNodeInfo, req %v, resp %v", reqID, req, resp)
+	return nil
+}
+
 // UpdateNode implements interface cmproto.ClusterManagerServer
 func (cm *ClusterManager) UpdateNode(ctx context.Context,
 	req *cmproto.UpdateNodeRequest, resp *cmproto.UpdateNodeResponse) error {

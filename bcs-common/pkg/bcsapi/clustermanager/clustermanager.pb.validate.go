@@ -26071,6 +26071,258 @@ var _ interface {
 	ErrorName() string
 } = GetNodeInfoResponseValidationError{}
 
+// Validate checks the field values on GetClusterNodeInfoRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetClusterNodeInfoRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetClusterNodeInfoRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetClusterNodeInfoRequestMultiError, or nil if none found.
+func (m *GetClusterNodeInfoRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetClusterNodeInfoRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for ClusterID
+
+	if ip := net.ParseIP(m.GetInnerIP()); ip == nil || ip.To4() == nil {
+		err := GetClusterNodeInfoRequestValidationError{
+			field:  "InnerIP",
+			reason: "value must be a valid IPv4 address",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return GetClusterNodeInfoRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetClusterNodeInfoRequestMultiError is an error wrapping multiple validation
+// errors returned by GetClusterNodeInfoRequest.ValidateAll() if the
+// designated constraints aren't met.
+type GetClusterNodeInfoRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetClusterNodeInfoRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetClusterNodeInfoRequestMultiError) AllErrors() []error { return m }
+
+// GetClusterNodeInfoRequestValidationError is the validation error returned by
+// GetClusterNodeInfoRequest.Validate if the designated constraints aren't met.
+type GetClusterNodeInfoRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetClusterNodeInfoRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetClusterNodeInfoRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetClusterNodeInfoRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetClusterNodeInfoRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetClusterNodeInfoRequestValidationError) ErrorName() string {
+	return "GetClusterNodeInfoRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetClusterNodeInfoRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetClusterNodeInfoRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetClusterNodeInfoRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetClusterNodeInfoRequestValidationError{}
+
+// Validate checks the field values on GetClusterNodeInfoResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetClusterNodeInfoResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetClusterNodeInfoResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetClusterNodeInfoResponseMultiError, or nil if none found.
+func (m *GetClusterNodeInfoResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetClusterNodeInfoResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	if all {
+		switch v := interface{}(m.GetData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, GetClusterNodeInfoResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, GetClusterNodeInfoResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return GetClusterNodeInfoResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return GetClusterNodeInfoResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetClusterNodeInfoResponseMultiError is an error wrapping multiple
+// validation errors returned by GetClusterNodeInfoResponse.ValidateAll() if
+// the designated constraints aren't met.
+type GetClusterNodeInfoResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetClusterNodeInfoResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetClusterNodeInfoResponseMultiError) AllErrors() []error { return m }
+
+// GetClusterNodeInfoResponseValidationError is the validation error returned
+// by GetClusterNodeInfoResponse.Validate if the designated constraints aren't met.
+type GetClusterNodeInfoResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetClusterNodeInfoResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetClusterNodeInfoResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetClusterNodeInfoResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetClusterNodeInfoResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetClusterNodeInfoResponseValidationError) ErrorName() string {
+	return "GetClusterNodeInfoResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetClusterNodeInfoResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetClusterNodeInfoResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetClusterNodeInfoResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetClusterNodeInfoResponseValidationError{}
+
 // Validate checks the field values on ListClusterNodesRequest with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.

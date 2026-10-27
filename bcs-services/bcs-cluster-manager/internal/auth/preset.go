@@ -164,6 +164,7 @@ var ActionPermissions = map[string]string{
 	"ClusterManager.ListMastersInCluster":        cluster.CanViewClusterOperation,
 	"ClusterManager.GetNode":                     cluster.CanViewClusterOperation,
 	"ClusterManager.GetNodeInfo":                 cluster.CanViewClusterOperation,
+	"ClusterManager.GetClusterNodeInfo":          cluster.CanViewClusterOperation,
 	"ClusterManager.RecordNodeInfo":              "",
 	"ClusterManager.CheckNodeInCluster":          "",
 	"ClusterManager.UpdateNode":                  cluster.CanManageClusterOperation,

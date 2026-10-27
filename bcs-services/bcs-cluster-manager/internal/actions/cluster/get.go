@@ -787,3 +787,95 @@ func (ga *GetClusterSharedProjectAction) getSharedProject() error {
 
 	return nil
 }
+
+// GetClusterNodeInfoAction action for get cluster node info
+type GetClusterNodeInfoAction struct {
+	ctx   context.Context
+	model store.ClusterManagerModel
+
+	req  *cmproto.GetClusterNodeInfoRequest
+	resp *cmproto.GetClusterNodeInfoResponse
+}
+
+// NewGetClusterNodeInfoAction create get action
+func NewGetClusterNodeInfoAction(model store.ClusterManagerModel) *GetClusterNodeInfoAction {
+	return &GetClusterNodeInfoAction{
+		model: model,
+	}
+}
+
+func (ga *GetClusterNodeInfoAction) setResp(code uint32, msg string) {
+	ga.resp.Code = code
+	ga.resp.Message = msg
+	ga.resp.Result = (code == common.BcsErrClusterManagerSuccess)
+}
+
+// GetClusterNodeInfoByIP get node info by clusterID and node innerIP
+func (ga *GetClusterNodeInfoAction) GetClusterNodeInfoByIP() error {
+	node, err := ga.model.GetClusterNodeByIP(ga.ctx, ga.req.ClusterID, ga.req.InnerIP)
+	if err != nil {
+		return err
+	}
+
+	ga.resp.Data = &cmproto.NodeInfo{
+		NodeName:       node.NodeName,
+		NodeType:       node.NodeType,
+		NodeID:         node.NodeID,
+		InnerIP:        node.InnerIP,
+		ClusterID:      node.ClusterID,
+		VPC:            node.VPC,
+		Region:         node.Region,
+		DeviceID:       node.DeviceID,
+		Status:         node.Status,
+		InstanceConfig: nil,
+		ZoneInfo: &cmproto.ZoneInfo{
+			ZoneID: fmt.Sprintf("%d", node.Zone),
+			Zone:   node.ZoneID,
+		},
+	}
+
+	if len(node.NodeTemplateID) > 0 {
+		template, err := ga.model.GetNodeTemplateByID(ga.ctx, node.NodeTemplateID)
+		if err != nil {
+			blog.Errorf("GetClusterNodeInfoAction GetNodeTemplateByID[%s] failed: %v", node.NodeTemplateID, err)
+			return err
+		}
+
+		ga.resp.Data.NodeTemplate = template
+	}
+	if len(node.NodeGroupID) > 0 {
+		group, err := ga.model.GetNodeGroup(ga.ctx, node.NodeGroupID)
+		if err != nil {
+			blog.Errorf("GetClusterNodeInfoAction GetNodeGroup[%s] failed: %v", node.NodeGroupID, err)
+			return err
+		}
+
+		ga.resp.Data.Group = group
+	}
+
+	return nil
+}
+
+// Handle get nodeInfo request, attention innerIP same in different cluster
+func (ga *GetClusterNodeInfoAction) Handle(ctx context.Context, req *cmproto.GetClusterNodeInfoRequest,
+	resp *cmproto.GetClusterNodeInfoResponse) {
+	if req == nil || resp == nil {
+		blog.Errorf("get ClusterNodeInfo failed, req or resp is empty")
+		return
+	}
+	ga.req = req
+	ga.resp = resp
+
+	if err := req.Validate(); err != nil {
+		ga.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
+		return
+	}
+
+	err := ga.GetClusterNodeInfoByIP()
+	if err != nil {
+		ga.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
+		return
+	}
+
+	ga.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
+}

@@ -205,6 +205,12 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		{
+			Name:    "ClusterManager.GetClusterNodeInfo",
+			Path:    []string{"/clustermanager/v1/cluster/{clusterID}/node/{innerIP}"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
 			Name:    "ClusterManager.ListClusterNodes",
 			Path:    []string{"/clustermanager/v1/clusters/{clusterID}/nodes"},
 			Method:  []string{"GET"},
@@ -1050,6 +1056,7 @@ type ClusterManagerService interface {
 	// * node management
 	GetNode(ctx context.Context, in *GetNodeRequest, opts ...client.CallOption) (*GetNodeResponse, error)
 	GetNodeInfo(ctx context.Context, in *GetNodeInfoRequest, opts ...client.CallOption) (*GetNodeInfoResponse, error)
+	GetClusterNodeInfo(ctx context.Context, in *GetClusterNodeInfoRequest, opts ...client.CallOption) (*GetClusterNodeInfoResponse, error)
 	ListClusterNodes(ctx context.Context, in *ListClusterNodesRequest, opts ...client.CallOption) (*ListClusterNodesResponse, error)
 	RecordNodeInfo(ctx context.Context, in *RecordNodeInfoRequest, opts ...client.CallOption) (*CommonResp, error)
 	UpdateNode(ctx context.Context, in *UpdateNodeRequest, opts ...client.CallOption) (*UpdateNodeResponse, error)
@@ -1502,6 +1509,16 @@ func (c *clusterManagerService) GetNode(ctx context.Context, in *GetNodeRequest,
 func (c *clusterManagerService) GetNodeInfo(ctx context.Context, in *GetNodeInfoRequest, opts ...client.CallOption) (*GetNodeInfoResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.GetNodeInfo", in)
 	out := new(GetNodeInfoResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) GetClusterNodeInfo(ctx context.Context, in *GetClusterNodeInfoRequest, opts ...client.CallOption) (*GetClusterNodeInfoResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.GetClusterNodeInfo", in)
+	out := new(GetClusterNodeInfoResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -2892,6 +2909,7 @@ type ClusterManagerHandler interface {
 	// * node management
 	GetNode(context.Context, *GetNodeRequest, *GetNodeResponse) error
 	GetNodeInfo(context.Context, *GetNodeInfoRequest, *GetNodeInfoResponse) error
+	GetClusterNodeInfo(context.Context, *GetClusterNodeInfoRequest, *GetClusterNodeInfoResponse) error
 	ListClusterNodes(context.Context, *ListClusterNodesRequest, *ListClusterNodesResponse) error
 	RecordNodeInfo(context.Context, *RecordNodeInfoRequest, *CommonResp) error
 	UpdateNode(context.Context, *UpdateNodeRequest, *UpdateNodeResponse) error
@@ -3089,6 +3107,7 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		UpdateVirtualClusterQuota(ctx context.Context, in *UpdateVirtualClusterQuotaReq, out *UpdateVirtualClusterQuotaResp) error
 		GetNode(ctx context.Context, in *GetNodeRequest, out *GetNodeResponse) error
 		GetNodeInfo(ctx context.Context, in *GetNodeInfoRequest, out *GetNodeInfoResponse) error
+		GetClusterNodeInfo(ctx context.Context, in *GetClusterNodeInfoRequest, out *GetClusterNodeInfoResponse) error
 		ListClusterNodes(ctx context.Context, in *ListClusterNodesRequest, out *ListClusterNodesResponse) error
 		RecordNodeInfo(ctx context.Context, in *RecordNodeInfoRequest, out *CommonResp) error
 		UpdateNode(ctx context.Context, in *UpdateNodeRequest, out *UpdateNodeResponse) error
@@ -3394,6 +3413,12 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.GetNodeInfo",
 		Path:    []string{"/clustermanager/v1/node/{innerIP}/info"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.GetClusterNodeInfo",
+		Path:    []string{"/clustermanager/v1/cluster/{clusterID}/node/{innerIP}"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
@@ -4324,6 +4349,10 @@ func (h *clusterManagerHandler) GetNode(ctx context.Context, in *GetNodeRequest,
 
 func (h *clusterManagerHandler) GetNodeInfo(ctx context.Context, in *GetNodeInfoRequest, out *GetNodeInfoResponse) error {
 	return h.ClusterManagerHandler.GetNodeInfo(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) GetClusterNodeInfo(ctx context.Context, in *GetClusterNodeInfoRequest, out *GetClusterNodeInfoResponse) error {
+	return h.ClusterManagerHandler.GetClusterNodeInfo(ctx, in, out)
 }
 
 func (h *clusterManagerHandler) ListClusterNodes(ctx context.Context, in *ListClusterNodesRequest, out *ListClusterNodesResponse) error {

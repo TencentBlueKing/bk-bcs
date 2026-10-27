@@ -3568,6 +3568,46 @@
         ]
       }
     },
+    "/clustermanager/v1/cluster/{clusterID}/node/{innerIP}": {
+      "get": {
+        "summary": "查询指定集群下Node详情信息",
+        "description": "查询指定集群下的InnerIP的节点信息",
+        "operationId": "ClusterManager_GetClusterNodeInfo",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerGetClusterNodeInfoResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "clusterID",
+            "description": "集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "innerIP",
+            "description": "节点内网IP",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
     "/clustermanager/v1/cluster/{clusterID}/retry": {
       "post": {
         "summary": "重试创建Cluster任务",
@@ -14276,6 +14316,40 @@
       },
       "description": "查询集群Credential返回",
       "title": "GetClusterCredentialResp",
+      "required": [
+        "code",
+        "message",
+        "data"
+      ]
+    },
+    "clustermanagerGetClusterNodeInfoResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/clustermanagerNodeInfo",
+          "description": "获取的节点信息",
+          "title": "data"
+        }
+      },
+      "description": "查询指定集群下的InnerIP的节点信息返回结果",
+      "title": "GetClusterNodeInfoResponse",
       "required": [
         "code",
         "message",
