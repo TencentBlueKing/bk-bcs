@@ -291,3 +291,6 @@ export const BCS_SUB_PATH = `${window.BCS_CONFIG?.subPath || ''}`;
 
 // 表格列宽记忆
 export const TABLE_COLUMNS = '_TABLE_COLUMNS_';
+
+// 表格列显隐设置（按用户持久化）
+export const USER_TABLE_SETTING = '_USER_TABLE_SETTING_';

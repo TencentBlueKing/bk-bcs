@@ -21,6 +21,8 @@ import ContentHeader from '@/components/layout/Header.vue';
 import CodeEditor from '@/components/monaco-editor/new-editor.vue';
 import { useAppData, useCluster } from '@/composables/use-app';
 import useInterval from '@/composables/use-interval';
+import { IField } from '@/composables/use-table-setting';
+import useUserTableSetting from '@/composables/use-user-table-setting';
 import fullScreen from '@/directives/full-screen';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
@@ -95,6 +97,14 @@ export default defineComponent({
     isCommonCrd: {
       type: [Boolean, String],
       default: false,
+    },
+    // 表格列显隐设置字段（按用户持久化），不传则不开启列设置
+    tableSettingFields: {
+      type: Function as PropType<(ctx: {
+        additionalColumns: any[]
+        isClusterMode: boolean
+      }) => IField[]>,
+      default: null,
     },
   },
   setup(props) {
@@ -259,6 +269,16 @@ export default defineComponent({
     const curPageData = computed(() => data.value.manifest?.items || []);
     // 动态表格字段
     const additionalColumns = computed(() => webAnnotations.value.additionalColumns || []);
+    // 表格列显隐设置（按用户持久化）
+    const settingFields = computed<IField[]>(() => props.tableSettingFields?.({
+      additionalColumns: additionalColumns.value,
+      isClusterMode: isClusterMode.value,
+    }) || []);
+    const {
+      tableSetting,
+      isColumnRender,
+      handleSettingChange,
+    } = useUserTableSetting(settingFields, computed(() => `${type.value}_${kind.value}`));
     // 获取表格数据
     const handleGetTableData = async (loading = true) => {
       if (!curViewData.value) return;
@@ -851,6 +871,9 @@ export default defineComponent({
       applyURL,
       resolveLink,
       flagsMap,
+      tableSetting,
+      isColumnRender,
+      handleSettingChange,
     };
   },
   render() {
@@ -993,6 +1016,9 @@ export default defineComponent({
                 sourceTypeMap: this.sourceTypeMap,
                 resolveLink: this.resolveLink,
                 flagsMap: this.flagsMap,
+                tableSetting: this.tableSetting,
+                isColumnRender: this.isColumnRender,
+                handleSettingChange: this.handleSettingChange,
               })
           }
         </div>

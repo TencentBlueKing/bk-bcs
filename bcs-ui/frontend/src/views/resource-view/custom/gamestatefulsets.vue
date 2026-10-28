@@ -13,6 +13,7 @@
       resource: resource,
       namespaced: namespaced,
     }"
+    :table-setting-fields="getTableSettingFields"
     scope="Namespaced">
     <template
       #default="{
@@ -26,15 +27,22 @@
         handleEnlargeCapacity, handleShowViewConfig,
         handleRestart, handleGotoUpdateRecord, handleRollback,
         clusterNameMap, goNamespace, isViewEditable,isClusterMode,
-        sourceTypeMap, resolveLink
+        sourceTypeMap, resolveLink,
+        tableSetting, isColumnRender, handleSettingChange
       }">
       <bk-table
         :data="curPageData"
+        :size="tableSetting.size"
         :pagination="pageConf"
         @page-change="handlePageChange"
         @page-limit-change="handlePageSizeChange"
         @sort-change="handleSortChange">
-        <bk-table-column :label="$t('generic.label.name')" prop="metadata.name" sortable fixed="left">
+        <bk-table-column
+          :label="$t('generic.label.name')"
+          prop="metadata.name"
+          sortable
+          fixed="left"
+          key="name">
           <template #default="{ row }">
             <bk-button
               class="bcs-button-ellipsis"
@@ -46,7 +54,10 @@
             </bk-button>
           </template>
         </bk-table-column>
-        <bk-table-column :label="$t('cluster.labels.nameAndId')" v-if="!isClusterMode">
+        <bk-table-column
+          :label="$t('cluster.labels.nameAndId')"
+          key="cluster"
+          v-if="!isClusterMode && isColumnRender('cluster')">
           <template #default="{ row }">
             <div class="flex flex-col py-[6px] h-[50px]">
               <span class="bcs-ellipsis">{{ clusterNameMap[handleGetExtData(row.metadata.uid, 'clusterID')] }}</span>
@@ -54,7 +65,13 @@
             </div>
           </template>
         </bk-table-column>
-        <bk-table-column :label="$t('k8s.namespace')" prop="metadata.namespace" min-width="100" sortable>
+        <bk-table-column
+          :label="$t('k8s.namespace')"
+          prop="metadata.namespace"
+          min-width="100"
+          sortable
+          key="namespace"
+          v-if="isColumnRender('namespace')">
           <template #default="{ row }">
             <bk-button
               class="bcs-button-ellipsis"
@@ -65,7 +82,12 @@
             </bk-button>
           </template>
         </bk-table-column>
-        <bk-table-column :label="$t('k8s.updateStrategy.text')" width="150" :resizable="false">
+        <bk-table-column
+          :label="$t('k8s.updateStrategy.text')"
+          width="150"
+          :resizable="false"
+          key="updateStrategy"
+          v-if="isColumnRender('updateStrategy')">
           <template slot-scope="{ row }">
             <span v-if="row.spec.updateStrategy">
               {{ updateStrategyMap[row.spec.updateStrategy.type] || $t('k8s.updateStrategy.rollingUpdate') }}
@@ -73,12 +95,20 @@
             <span v-else>{{ $t('k8s.updateStrategy.rollingUpdate') }}</span>
           </template>
         </bk-table-column>
-        <bk-table-column :label="$t('k8s.statefulset.podManagementPolicy')" min-width="120">
+        <bk-table-column
+          :label="$t('k8s.statefulset.podManagementPolicy')"
+          min-width="120"
+          key="podManagementPolicy"
+          v-if="isColumnRender('podManagementPolicy')">
           <template slot-scope="{ row }">
             {{ row.spec.podManagementPolicy || '--' }}
           </template>
         </bk-table-column>
-        <bk-table-column :label="$t('generic.label.status')" min-width="100">
+        <bk-table-column
+          :label="$t('generic.label.status')"
+          min-width="100"
+          key="status"
+          v-if="isColumnRender('status')">
           <template slot-scope="{ row }">
             <StatusIcon status="running" v-if="handleGetExtData(row.metadata.uid, 'resStatus') === 'normal'">
               {{statusMap[handleGetExtData(row.metadata.uid, 'resStatus')] || '--'}}
@@ -88,37 +118,56 @@
             </LoadingIcon>
           </template>
         </bk-table-column>
+        <template v-for="item in additionalColumns">
+          <bk-table-column
+            v-if="isColumnRender(getAdditionalColumnId(item))"
+            :key="getAdditionalColumnId(item)"
+            :label="item.name"
+            :prop="item.jsonPath"
+            :render-header="renderCrdHeader">
+            <template #default="{ row }">
+              <span>
+                {{ getJsonPathValue(row, item.jsonPath) || '--' }}
+              </span>
+            </template>
+          </bk-table-column>
+        </template>
         <bk-table-column
-          v-for="item in additionalColumns"
-          :key="item.name"
-          :label="item.name"
-          :prop="item.jsonPath"
-          :render-header="renderCrdHeader">
-          <template #default="{ row }">
-            <span>
-              {{ getJsonPathValue(row, item.jsonPath) || '--' }}
-            </span>
-          </template>
-        </bk-table-column>
-        <bk-table-column label="Age" sortable="custom" prop="createTime" :show-overflow-tooltip="false">
+          label="Age"
+          sortable="custom"
+          prop="createTime"
+          :show-overflow-tooltip="false"
+          key="age"
+          v-if="isColumnRender('age')">
           <template #default="{ row }">
             <span v-bk-tooltips="{ content: handleGetExtData(row.metadata.uid, 'createTime') }">
               {{ handleGetExtData(row.metadata.uid, 'age') }}</span>
           </template>
         </bk-table-column>
-        <bk-table-column :label="$t('generic.label.createdBy')">
+        <bk-table-column
+          :label="$t('generic.label.createdBy')"
+          key="creator"
+          v-if="isColumnRender('creator')">
           <template slot-scope="{ row }">
             <bk-user-display-name :user-id="handleGetExtData(row.metadata.uid, 'creator')"></bk-user-display-name>
           </template>
         </bk-table-column>
-        <bk-table-column :label="$t('generic.label.source')" :show-overflow-tooltip="false">
+        <bk-table-column
+          :label="$t('generic.label.source')"
+          :show-overflow-tooltip="false"
+          key="source"
+          v-if="isColumnRender('source')">
           <template #default="{ row }">
             <sourceTableCell
               :row="row"
               :source-type-map="sourceTypeMap" />
           </template>
         </bk-table-column>
-        <bk-table-column :label="$t('generic.label.editMode.text')" width="100">
+        <bk-table-column
+          :label="$t('generic.label.editMode.text')"
+          width="100"
+          key="editMode"
+          v-if="isColumnRender('editMode')">
           <template #default="{ row }">
             <span>
               {{handleGetExtData(row.metadata.uid, 'editMode') === 'form'
@@ -131,6 +180,7 @@
           :resizable="false"
           width="240"
           fixed="right"
+          key="action"
           v-if="!isViewEditable">
           <template #default="{ row }">
             <bk-button
@@ -150,12 +200,12 @@
               class="ml10"
               text
               v-else
-              :disabled="row.spec.updateStrategy.type === 'InplaceUpdate'"
+              :disabled="$chainable(row.spec, 'updateStrategy.type') === 'InplaceUpdate'"
               @click="handleRestart(row)">
               <span
                 v-bk-tooltips="{
                   content: $t('dashboard.workload.tips.inplaceUpdateNotSupportRestart'),
-                  disabled: row.spec.updateStrategy.type !== 'InplaceUpdate'
+                  disabled: $chainable(row.spec, 'updateStrategy.type') !== 'InplaceUpdate'
                 }">
                 {{ $t('dashboard.workload.button.restart') }}
               </span>
@@ -194,6 +244,14 @@
             </bk-popover>
           </template>
         </bk-table-column>
+        <bk-table-column type="setting" :resizable="false" key="setting">
+          <bcs-table-setting-content
+            :fields="tableSetting.fields"
+            :selected="tableSetting.selectedFields"
+            :size="tableSetting.size"
+            @setting-change="handleSettingChange">
+          </bcs-table-setting-content>
+        </bk-table-column>
         <template #empty>
           <BcsEmptyTableStatus
             :button-text="$t('generic.button.resetSearch')"
@@ -211,6 +269,7 @@ import StatusIcon from '../../../components/status-icon';
 import sourceTableCell from '../common/source-table-cell.vue';
 
 import LoadingIcon from '@/components/loading-icon.vue';
+import $i18n from '@/i18n/i18n-setup';
 import BaseLayout from '@/views/resource-view/common/base-layout';
 
 export default defineComponent({
@@ -233,6 +292,29 @@ export default defineComponent({
       type: Boolean,
       default: true,
     },
+  },
+  setup() {
+    // CRD 动态列ID
+    const getAdditionalColumnId = item => `additional_${item.name}`;
+    // 列显隐设置字段
+    const getTableSettingFields = ({ additionalColumns = [], isClusterMode }) => [
+      { id: 'name', label: $i18n.t('generic.label.name'), disabled: true },
+      ...(!isClusterMode ? [{ id: 'cluster', label: $i18n.t('cluster.labels.nameAndId') }] : []),
+      { id: 'namespace', label: $i18n.t('k8s.namespace') },
+      { id: 'updateStrategy', label: $i18n.t('k8s.updateStrategy.text') },
+      { id: 'podManagementPolicy', label: $i18n.t('k8s.statefulset.podManagementPolicy') },
+      { id: 'status', label: $i18n.t('generic.label.status') },
+      ...additionalColumns.map(item => ({ id: getAdditionalColumnId(item), label: item.name })),
+      { id: 'age', label: 'Age' },
+      { id: 'creator', label: $i18n.t('generic.label.createdBy') },
+      { id: 'source', label: $i18n.t('generic.label.source') },
+      { id: 'editMode', label: $i18n.t('generic.label.editMode.text') },
+    ];
+
+    return {
+      getAdditionalColumnId,
+      getTableSettingFields,
+    };
   },
 });
 </script>

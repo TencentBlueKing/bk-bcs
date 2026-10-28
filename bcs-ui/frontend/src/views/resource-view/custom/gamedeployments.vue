@@ -145,7 +145,7 @@
             <bk-button
               class="ml10"
               text
-              :disabled="row.spec.updateStrategy.type === 'InplaceUpdate'"
+              :disabled="$chainable(row.spec, 'updateStrategy.type') === 'InplaceUpdate'"
               @click="handleRestart(
                 row,
                 $t('dashboard.workload.button.restart')
@@ -153,7 +153,7 @@
               <span
                 v-bk-tooltips="{
                   content: $t('dashboard.workload.tips.inplaceUpdateNotSupportRestart'),
-                  disabled: row.spec.updateStrategy.type !== 'InplaceUpdate'
+                  disabled: $chainable(row.spec, 'updateStrategy.type') !== 'InplaceUpdate'
                 }">
                 {{ $t('dashboard.workload.button.restart') }}
               </span>
