@@ -1,7 +1,5 @@
 FROM tencentos/tencentos4-minimal
 
-ENV GODEBUG=x509sha1=1
-
 RUN mkdir -p /data/bcs/logs/bcs /data/bcs/cert /data/bcs/swagger
 RUN mkdir -p /data/bcs/bcs-helm-manager
 RUN mkdir -p /data/bcs/bcs-helm-manager/runtime

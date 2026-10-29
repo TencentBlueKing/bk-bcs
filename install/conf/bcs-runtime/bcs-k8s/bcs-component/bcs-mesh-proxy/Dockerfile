@@ -11,6 +11,5 @@ RUN mkdir -p /data/bcs/logs/bcs
 
 ADD bcs-mesh-proxy /usr/local/bin/
 RUN chmod +x /usr/local/bin/bcs-mesh-proxy
-ENV GODEBUG=x509sha1=1
 WORKDIR /usr/local/bin/
 CMD [ "/usr/local/bin/bcs-mesh-proxy" ]

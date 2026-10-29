@@ -9,6 +9,5 @@ ENV LANG=en_US.UTF-8 \
 
 ADD bcs-bk-apisix-gateway-syncing /usr/local/bin/
 RUN chmod +x /usr/local/bin/bcs-bk-apisix-gateway-syncing
-ENV GODEBUG=x509sha1=1
 WORKDIR /usr/local/bin/
 CMD [ "/usr/local/bin/bcs-bk-apisix-gateway-syncing" ]

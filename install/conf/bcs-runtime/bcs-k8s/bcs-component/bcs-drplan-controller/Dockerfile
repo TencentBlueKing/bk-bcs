@@ -11,6 +11,5 @@ RUN mkdir -p /data/bcs/logs/bcs
 
 ADD bcs-drplan-controller /usr/local/bin/
 RUN chmod +x /usr/local/bin/bcs-drplan-controller
-ENV GODEBUG=x509sha1=1
 WORKDIR /usr/local/bin/
 CMD [ "/usr/local/bin/bcs-drplan-controller" ]

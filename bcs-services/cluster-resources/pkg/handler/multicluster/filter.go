@@ -18,6 +18,7 @@ import (
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
 
@@ -61,6 +62,11 @@ const (
 	// OrderAsc 升序
 	OrderAsc Order = "asc"
 )
+
+// podStatusGroups Pod 状态分组，筛选分组状态时同时命中其下归类的细分状态
+var podStatusGroups = map[string][]string{
+	string(v1.PodUnknown): {"ContainerStatusUnknown"},
+}
 
 // SortBy 排序字段
 type SortBy string
@@ -382,16 +388,29 @@ func (f *QueryFilter) StatusFilter(resources []*storage.Resource) []*storage.Res
 	apiVersion := mapx.GetStr(resources[0].Data, "apiVersion")
 	kind := resources[0].ResourceType
 	formatFunc := formatter.GetFormatFunc(kind, apiVersion)
+	statuses := f.Status
+	if kind == resCsts.Po {
+		statuses = expandPodStatus(f.Status)
+	}
 	for _, v := range resources {
 		ext := formatFunc(v.Data)
 		if ext == nil {
 			continue
 		}
 		if status, ok := ext["status"].(string); ok {
-			if slice.StringInSlice(status, f.Status) {
+			if slice.StringInSlice(status, statuses) {
 				result = append(result, v)
 			}
 		}
+	}
+	return result
+}
+
+// expandPodStatus 将筛选条件中的 Pod 状态分组展开为分组及其细分状态
+func expandPodStatus(statuses []string) []string {
+	result := append([]string{}, statuses...)
+	for _, s := range statuses {
+		result = append(result, podStatusGroups[s]...)
 	}
 	return result
 }

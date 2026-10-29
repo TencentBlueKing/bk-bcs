@@ -123,7 +123,11 @@
             :filters="podStatusFilters"
             filter-multiple>
             <template #default="{ row }">
-              <StatusIcon :status="handleGetExtData(row.metadata.uid, 'status')"></StatusIcon>
+              <StatusIcon :status="handleGetExtData(row.metadata.uid, 'status')">
+                <template #default="status">
+                  <span class="status-name bcs-ellipsis" v-bk-overflow-tips>{{ status || '--' }}</span>
+                </template>
+              </StatusIcon>
             </template>
           </bk-table-column>
           <bk-table-column label="Ready" width="100" :resizable="false">

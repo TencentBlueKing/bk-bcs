@@ -26,7 +26,6 @@ ARG LDFLAG
 RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -mod vendor -a -ldflags "${LDFLAG}" -o bcs-mesh-manager github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/cmd/mesh-manager
 
 FROM tencentos/tencentos4-minimal
-ENV GODEBUG=x509sha1=1
 WORKDIR /root
 # copy swagger
 COPY --from=builder /go/src/github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/third_party/swagger-ui/* /data/bcs/swagger/

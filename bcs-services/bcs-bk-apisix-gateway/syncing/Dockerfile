@@ -25,7 +25,6 @@ ARG LDFLAG
 RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -mod vendor -a -ldflags "${LDFLAG}" -o bcs-bk-apisix-gateway-syncing ./cmd/sync/main.go
 
 FROM tencentos/tencentos4-minimal
-ENV GODEBUG=x509sha1=1
 WORKDIR /root
 # copy swagger
 COPY --from=builder /go/src/github.com/Tencent/bk-bcs/bcs-services/bcs-bk-apisix-gateway/syncing/bcs-bk-apisix-gateway-syncing /usr/local/bin/bcs-bk-apisix-gateway-syncing

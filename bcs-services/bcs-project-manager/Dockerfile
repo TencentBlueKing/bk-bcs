@@ -15,7 +15,5 @@ ADD bin/bcs-variable-migration /usr/bin/bcs-variable-migration
 
 RUN chmod +x /usr/bin/bcs-project-manager
 
-ENV GODEBUG x509sha1=1
-
 ENTRYPOINT ["/usr/bin/bcs-project-manager"]
 CMD ["-c", "/data/bcs/bcs-project-manager/bcs-project-manager.yaml"]
