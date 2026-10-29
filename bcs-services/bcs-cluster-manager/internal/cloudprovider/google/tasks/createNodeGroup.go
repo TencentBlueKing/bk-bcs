@@ -150,9 +150,23 @@ func generateCreateNodePoolInput(group *proto.NodeGroup, cluster *proto.Cluster)
 	// 公网 IP 控制（迁移自原 newItFromBaseIt，GKE 已不支持通过 Compute API 修改实例模板）：
 	//   enablePrivateNodes=true  → 节点仅有内网 IP，不分配公网 IP
 	//   enablePrivateNodes=false → 节点分配公网 IP（默认继承集群配置）
+	// 节点池级 Pod 地址范围（仅当集群使用 IP aliases 时生效）：
+	//   nodepoolPodAddressRange → 节点池二级 Pod 地址范围 ID（podRange）
+	netCfg := &api.NodeNetworkConfig{}
 	if group.LaunchTemplate != nil && group.LaunchTemplate.InternetAccess != nil &&
 		!group.LaunchTemplate.InternetAccess.PublicIPAssigned {
-		nodePool.NetworkConfig = &api.NodeNetworkConfig{EnablePrivateNodes: true}
+		netCfg.EnablePrivateNodes = true
+	}
+	if group.NodeTemplate != nil && len(group.NodeTemplate.ExtraInfo) > 0 {
+		if pr, ok := group.NodeTemplate.ExtraInfo[api.GKENodePoolPodRange]; ok && pr != "" {
+			netCfg.PodRange = pr
+		}
+	}
+	// 没有任何 networkConfig 字段被设置时保持为 nil，避免向 GKE 发送空的 networkConfig
+	if !netCfg.EnablePrivateNodes && netCfg.PodRange == "" {
+		nodePool.NetworkConfig = nil
+	} else {
+		nodePool.NetworkConfig = netCfg
 	}
 
 	return &api.CreateNodePoolRequest{NodePool: nodePool}

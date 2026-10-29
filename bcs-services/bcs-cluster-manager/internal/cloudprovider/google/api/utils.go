@@ -257,10 +257,14 @@ func GenerateNodePool(input *CreateNodePoolRequest) *container.NodePool {
 		}
 	}
 
-	// NetworkConfig: controls public IP at node pool level via enablePrivateNodes
+	// NetworkConfig: controls public IP at node pool level via enablePrivateNodes,
+	// and node pool-level pod address range via podRange/createPodRange/podIpv4CidrBlock.
 	if input.NodePool.NetworkConfig != nil {
 		nodePool.NetworkConfig = &container.NodeNetworkConfig{
 			EnablePrivateNodes: input.NodePool.NetworkConfig.EnablePrivateNodes,
+			PodRange:           input.NodePool.NetworkConfig.PodRange,
+			CreatePodRange:     input.NodePool.NetworkConfig.CreatePodRange,
+			PodIpv4CidrBlock:   input.NodePool.NetworkConfig.PodIpv4CidrBlock,
 		}
 	}
 

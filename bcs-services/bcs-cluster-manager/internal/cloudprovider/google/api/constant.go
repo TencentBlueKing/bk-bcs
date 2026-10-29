@@ -94,6 +94,11 @@ const (
 
 	// GKEClusterType for GKE cluster type
 	GKEClusterType = "clusterType"
+
+	// GKENodePoolPodRange is the ExtraInfo key carrying the node pool-level pod address
+	// range secondary range ID (NodeNetworkConfig.podRange). Only applicable if the
+	// cluster uses IP aliases (ipAllocationPolicy.useIpAliases=true).
+	GKENodePoolPodRange = "nodepoolPodAddressRange"
 )
 
 // Google GKE k8s node label key 定义

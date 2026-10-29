@@ -97,6 +97,22 @@ type NodeNetworkConfig struct {
 	// true  → nodes get no external IP (private nodes)
 	// false → nodes get external IP (public IP assigned)
 	EnablePrivateNodes bool `json:"enablePrivateNodes,omitempty"`
+	// PodRange the ID of the secondary range for pod IPs. If CreatePodRange is true,
+	// this ID is used for the new range. If CreatePodRange is false, uses an existing
+	// secondary range with this ID. Only applicable if cluster ipAllocationPolicy.useIpAliases is true.
+	// This field cannot be changed after the node pool has been created.
+	PodRange string `json:"podRange,omitempty"`
+	// CreatePodRange whether to create a new range for pod IPs in this node pool.
+	// Defaults are provided for PodRange and PodIpv4CidrBlock if they are not specified.
+	// Only applicable if cluster ipAllocationPolicy.useIpAliases is true.
+	// This field cannot be changed after the node pool has been created.
+	CreatePodRange bool `json:"createPodRange,omitempty"`
+	// PodIpv4CidrBlock the IP address range for pod IPs in this node pool.
+	// Only applicable if CreatePodRange is true. Set to blank to have a range chosen
+	// with the default size; set to a CIDR notation (e.g. 10.96.0.0/14) to pick a
+	// specific range to use. Only applicable if cluster ipAllocationPolicy.useIpAliases is true.
+	// This field cannot be changed after the node pool has been created.
+	PodIpv4CidrBlock string `json:"podIpv4CidrBlock,omitempty"`
 }
 
 // NodePoolAutoscaling gke nodePool auto scaling
