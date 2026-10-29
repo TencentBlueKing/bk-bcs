@@ -274,14 +274,14 @@ func (s *Server) initMicro() error {
 	if err != nil {
 		return fmt.Errorf("init clusterCli failed, encrypt token error: %s", err.Error())
 	}
-
 	// register federationmanager handler
 	if err := federationmanager.RegisterFederationManagerHandler(
 		s.microService.Server(),
 		handler.NewFederationManager(&handler.FederationManagerOptions{
 			BcsGateway: &handler.GatewayConfig{
-				Endpoint: s.opt.Gateway.Endpoint,
-				Token:    string(realAuthToken),
+				Endpoint:        s.opt.Gateway.Endpoint,
+				Token:           string(realAuthToken),
+				ClusterEndpoint: s.resolveClusterEndpoint(),
 			},
 			Store:             s.store,
 			ClusterManagerCli: s.clusterCli,
@@ -356,6 +356,15 @@ func (s *Server) initHTTPService() error {
 	return nil
 }
 
+// resolveClusterEndpoint resolve the gateway address for accessing cluster apiserver,
+// fallback to the gateway used by bcs services when clusterEndpoint is not configured
+func (s *Server) resolveClusterEndpoint() string {
+	if s.opt.Gateway.ClusterEndpoint != "" {
+		return s.opt.Gateway.ClusterEndpoint
+	}
+	return s.opt.Gateway.Endpoint
+}
+
 // initClusterCli init k8s client by bcs gateway
 func (s *Server) initClusterCli() error {
 	realAuthToken, err := encrypt.DesDecryptFromBase([]byte(s.opt.Gateway.Token))
@@ -365,9 +374,10 @@ func (s *Server) initClusterCli() error {
 	opts := &cluster.ClientOptions{
 		ClientTLS: s.clientTLSConfig,
 		BaseOptions: requester.BaseOptions{
-			Endpoint: s.opt.Gateway.Endpoint,
-			Token:    string(realAuthToken),
-			Sender:   requester.NewRequester(),
+			Endpoint:        s.opt.Gateway.Endpoint,
+			Token:           string(realAuthToken),
+			ClusterEndpoint: s.resolveClusterEndpoint(),
+			Sender:          requester.NewRequester(),
 		},
 	}
 

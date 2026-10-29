@@ -42,6 +42,8 @@ type FederationManagerOptions struct {
 type GatewayConfig struct {
 	Endpoint string `json:"endpoint"`
 	Token    string `json:"token"`
+	// ClusterEndpoint gateway address for accessing cluster apiserver, already resolved with fallback
+	ClusterEndpoint string `json:"clusterEndpoint"`
 }
 
 // FederationManager defines federation manager handler

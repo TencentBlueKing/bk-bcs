@@ -252,7 +252,7 @@ func (f *FederationManager) RegisterSubcluster(ctx context.Context,
 		ClusterId:      req.GetClusterId(),
 		SubClusterId:   req.GetSubclusterId(),
 		UserToken:      userToken,
-		GatewayAddress: f.bcsGateWay.Endpoint,
+		GatewayAddress: f.bcsGateWay.ClusterEndpoint,
 	}).BuildTask(req.GetCreator())
 	if err != nil {
 		return ErrReturn(resp, fmt.Sprintf("BuildTask error when register subcluster, err: %s", err.Error()))

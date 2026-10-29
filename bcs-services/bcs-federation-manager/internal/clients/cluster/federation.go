@@ -25,7 +25,7 @@ import (
 
 // ListFederationNamespaces list federation namespaces from host federation cluster
 func (h *clusterClient) ListFederationNamespaces(hostClusterID string) ([]*FederationNamespace, error) {
-	url := fmt.Sprintf("%s%s", h.opt.Endpoint, fmt.Sprintf(ListK8SNamespacePath, hostClusterID))
+	url := fmt.Sprintf("%s%s", h.opt.ClusterEndpoint, fmt.Sprintf(ListK8SNamespacePath, hostClusterID))
 	blog.Infof("listing all Federation Namespaces for host cluster: %s, request url: %s", hostClusterID, url)
 
 	raw, err := h.opt.Sender.DoGetRequest(url, h.defaultHeader)

@@ -92,6 +92,8 @@ spec:
               value: "{{ .Values.env.BK_BCS_bcsApiGwUrl}}"
             - name: bcsGatewayToken
               value: "{{ .Values.env.BK_BCS_adminToken}}"
+            - name: bcsGatewayClusterEndpoint
+              value: "{{ .Values.env.BK_BCS_bcsApiGwClusterUrl}}"
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           volumeMounts:

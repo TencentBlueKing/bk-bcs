@@ -14,6 +14,7 @@
 package requester
 
 import (
+	"crypto/tls"
 	"fmt"
 
 	"github.com/go-resty/resty/v2"
@@ -37,7 +38,7 @@ type requester struct {
 // NewRequester return interface Requester
 func NewRequester() Requester {
 	return &requester{
-		httpCli: resty.New(),
+		httpCli: resty.New().SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true}),
 	}
 }
 

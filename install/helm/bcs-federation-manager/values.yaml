@@ -86,6 +86,8 @@ env:
   # bcs api conf
   BK_BCS_bcsApiGwUrl: ""
   BK_BCS_adminToken: ""
+  # gateway used for accessing cluster apiserver, fallback to BK_BCS_bcsApiGwUrl when empty
+  BK_BCS_bcsApiGwClusterUrl: ""
 
 secret:
   autoGenerate: true

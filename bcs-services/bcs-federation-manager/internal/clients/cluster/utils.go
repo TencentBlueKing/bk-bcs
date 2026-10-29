@@ -26,20 +26,22 @@ import (
 
 // get kube client for request user cluster by bcs gateway
 func (h *clusterClient) getKubeClientByClusterId(clusterId string) (*kubernetes.Clientset, error) {
-	host := fmt.Sprintf("%s/clusters/%s", h.opt.Endpoint, clusterId)
+	host := fmt.Sprintf("%s/clusters/%s", h.opt.ClusterEndpoint, clusterId)
 	config := &rest.Config{
-		Host:        host,
-		BearerToken: h.opt.Token,
+		Host:            host,
+		BearerToken:     h.opt.Token,
+		TLSClientConfig: rest.TLSClientConfig{Insecure: true},
 	}
 
 	return kubernetes.NewForConfig(config)
 }
 
 func (h *clusterClient) getClusternetClientByClusterId(clusterId string) (*clusternet.Clientset, error) {
-	host := fmt.Sprintf("%s/clusters/%s", h.opt.Endpoint, clusterId)
+	host := fmt.Sprintf("%s/clusters/%s", h.opt.ClusterEndpoint, clusterId)
 	config := &rest.Config{
-		Host:        host,
-		BearerToken: h.opt.Token,
+		Host:            host,
+		BearerToken:     h.opt.Token,
+		TLSClientConfig: rest.TLSClientConfig{Insecure: true},
 	}
 
 	return clusternet.NewForConfig(config)
@@ -47,7 +49,7 @@ func (h *clusterClient) getClusternetClientByClusterId(clusterId string) (*clust
 
 // getDynamicClientByClusterId 获取管理器 cli
 func (h *clusterClient) getDynamicClientByClusterId(clusterId string) (*dynamic.DynamicClient, error) {
-	host := fmt.Sprintf("%s/clusters/%s", h.opt.Endpoint, clusterId)
+	host := fmt.Sprintf("%s/clusters/%s", h.opt.ClusterEndpoint, clusterId)
 	config := &rest.Config{
 		Host:            host,
 		BearerToken:     h.opt.Token,

@@ -17,5 +17,7 @@ package requester
 type BaseOptions struct {
 	Endpoint string
 	Token    string
-	Sender   Requester
+	// ClusterEndpoint gateway address for accessing cluster apiserver
+	ClusterEndpoint string
+	Sender          Requester
 }

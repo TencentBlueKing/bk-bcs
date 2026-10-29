@@ -20,7 +20,8 @@
     },
     "gateway": {
       "endpoint": "${bcsGatewayEndpoint}",
-      "token": "${bcsGatewayToken}"
+      "token": "${bcsGatewayToken}",
+      "clusterEndpoint": "${bcsGatewayClusterEndpoint}"
     },
     "broker": {
       "address": "$queueAddress",

@@ -97,6 +97,8 @@ type ClientConfig struct {
 type GatewayConfig struct {
 	Endpoint string `json:"endpoint"`
 	Token    string `json:"token"`
+	// ClusterEndpoint gateway address for accessing cluster apiserver, fallback to Endpoint when empty
+	ClusterEndpoint string `json:"clusterEndpoint"`
 }
 
 // EtcdOption options for ectd to registry
