@@ -59,6 +59,22 @@ func Errs2String(errs []error) string {
 	return strings.Join(strList, ",")
 }
 
+// AddStringNumbers 将两个字符串数字相加 A+B
+func AddStringNumbers(num1, num2 string) string {
+	i1, _ := strconv.ParseInt(strings.TrimSpace(num1), 10, 64)
+	i2, _ := strconv.ParseInt(strings.TrimSpace(num2), 10, 64)
+	result := i1 + i2
+	return strconv.FormatInt(result, 10)
+}
+
+// SubStringNumbers 将两个字符串数字相减 A-B
+func SubStringNumbers(num1, num2 string) string {
+	i1, _ := strconv.ParseInt(strings.TrimSpace(num1), 10, 64)
+	i2, _ := strconv.ParseInt(strings.TrimSpace(num2), 10, 64)
+	result := i1 - i2
+	return strconv.FormatInt(result, 10)
+}
+
 // StringToUint32 字符串转换成 uint32，如果为空或者转换失败，返回 0
 func StringToUint32(str string) uint32 {
 	if str == "" {

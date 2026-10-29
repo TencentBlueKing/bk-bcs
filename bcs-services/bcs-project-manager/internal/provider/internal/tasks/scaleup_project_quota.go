@@ -26,6 +26,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/provider/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/quota"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/stringx"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
 )
 
@@ -122,7 +123,8 @@ func (cpq *scaleUpProjectQuota) buildScaleUpSharedQuotaSteps() []*types.Step {
 	content := fmt.Sprintf("user %s scale up shared cluster %s "+
 		"quota: cpu(%s) mem(%s) to cpu(%s) mem(%s)",
 		cpq.operator, cpq.projectQuota.ClusterId, cpuQuota, memQuota,
-		cpq.resource.GetCpu().GetDeviceQuota(), cpq.resource.GetMem().GetDeviceQuota())
+		stringx.AddStringNumbers(cpuQuota, cpq.resource.GetCpu().GetDeviceQuota()),
+		stringx.AddStringNumbers(memQuota, cpq.resource.GetMem().GetDeviceQuota()))
 
 	stepList = append(stepList, buildItsmQuotaSteps("", itsmData{
 		operator:    cpq.operator,
@@ -149,8 +151,9 @@ func (cpq *scaleUpProjectQuota) buildScaleUpFederationQuotaSteps() []*types.Step
 		"namespace(%s) quota: cpu(%s) mem(%s) gpu(%s) to cpu(%s) mem(%s) gpu(%s)",
 		cpq.operator, cpq.projectQuota.ClusterId, cpq.projectQuota.Namespace,
 		cpuQuota, memQuota, gpuQuota,
-		cpq.resource.GetCpu().GetDeviceQuota(), cpq.resource.GetMem().GetDeviceQuota(),
-		cpq.resource.GetGpu().GetDeviceQuota())
+		stringx.AddStringNumbers(cpuQuota, cpq.resource.GetCpu().GetDeviceQuota()),
+		stringx.AddStringNumbers(memQuota, cpq.resource.GetMem().GetDeviceQuota()),
+		stringx.AddStringNumbers(gpuQuota, cpq.resource.GetGpu().GetDeviceQuota()))
 	stepList = append(stepList, buildItsmQuotaSteps("", itsmData{
 		operator:    cpq.operator,
 		projectCode: cpq.projectQuota.ProjectCode,
