@@ -22,7 +22,8 @@ spec:
       {{- include "common.images.pullSecrets" ( dict "images" (list .Values) "global" .Values.global) | nindent 6  }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
-      terminationGracePeriodSeconds: 5
+      # 覆盖在途注册、注销失败后的 TTL 等待及 HTTP/gRPC 排空时间。
+      terminationGracePeriodSeconds: 90
       containers:
         - name: {{ .Chart.Name }}
           securityContext:

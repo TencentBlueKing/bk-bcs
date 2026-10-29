@@ -55,6 +55,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	microsvc "go-micro.dev/v4"
 	"go-micro.dev/v4/registry"
+	"go-micro.dev/v4/server"
 	"google.golang.org/grpc"
 	grpccred "google.golang.org/grpc/credentials"
 
@@ -100,6 +101,8 @@ import (
 	itypes "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
+
+const serviceRegisterTTL = 30 * time.Second
 
 // ClusterManager cluster manager
 type ClusterManager struct {
@@ -152,7 +155,9 @@ type ClusterManager struct {
 	microRegistry registry.Registry
 
 	// micro service
-	microService microsvc.Service
+	microService    microsvc.Service
+	serviceRegistry *shutdownRegistry
+	stopMicro       context.CancelFunc
 
 	// model store
 	model store.ClusterManagerModel
@@ -169,10 +174,9 @@ type ClusterManager struct {
 	// daemon process
 	daemon daemon.DaemonInterface
 
-	ctx                context.Context
-	ctxCancelFunc      context.CancelFunc
-	stopCh             chan struct{}
-	microsvcShutdownCh chan struct{}
+	ctx           context.Context
+	ctxCancelFunc context.CancelFunc
+	stopCh        chan struct{}
 }
 
 // NewClusterManager create cluster manager
@@ -180,11 +184,10 @@ func NewClusterManager(opt *options.ClusterManagerOptions) *ClusterManager {
 	ctx, cancel := context.WithCancel(context.Background())
 	options.SetGlobalCMOptions(opt)
 	return &ClusterManager{
-		opt:                opt,
-		ctx:                ctx,
-		ctxCancelFunc:      cancel,
-		stopCh:             make(chan struct{}),
-		microsvcShutdownCh: make(chan struct{}),
+		opt:           opt,
+		ctx:           ctx,
+		ctxCancelFunc: cancel,
+		stopCh:        make(chan struct{}, 1),
 	}
 }
 
@@ -940,9 +943,12 @@ func (cm *ClusterManager) initHTTPService() error {
 		} else {
 			err = cm.httpServer.ListenAndServe()
 		}
-		if err != nil {
+		if err != nil && !errors.Is(err, http.ErrServerClosed) {
 			blog.Errorf("start http gateway server failed, err %s", err.Error())
-			cm.stopCh <- struct{}{}
+			select {
+			case cm.stopCh <- struct{}{}:
+			default:
+			}
 		}
 	}()
 
@@ -994,9 +1000,12 @@ func (cm *ClusterManager) initExtraModules() {
 		var err error
 		blog.Infof("start extra modules [pprof, metric] server %+v", ips)
 		err = cm.extraServer.ListenAndServe()
-		if err != nil {
+		if err != nil && !errors.Is(err, http.ErrServerClosed) {
 			blog.Errorf("extra modules server listen failed, err %s", err.Error())
-			cm.stopCh <- struct{}{}
+			select {
+			case cm.stopCh <- struct{}{}:
+			default:
+			}
 		}
 	}()
 }
@@ -1024,6 +1033,11 @@ func (cm *ClusterManager) initMicro() error { // nolint
 	// with tls
 	grpcSvr := microgrpcserver.NewServer(microgrpcserver.AuthTLS(cm.tlsConfig))
 
+	// 退出信号仅触发 micro 的停止钩子；请求排空前不能取消业务依赖的 cm.ctx。
+	microCtx, stopMicro := context.WithCancel(context.Background())
+	cm.stopMicro = stopMicro
+	cm.serviceRegistry = &shutdownRegistry{Registry: cm.microRegistry}
+
 	// New Service
 	microService := microsvc.NewService(
 		microsvc.Server(grpcSvr),
@@ -1033,9 +1047,10 @@ func (cm *ClusterManager) initMicro() error { // nolint
 		microsvc.Address(net.JoinHostPort(ipv4, port)),
 		microsvc.Registry(cm.microRegistry),
 		microsvc.Version(version.BcsVersion),
-		microsvc.RegisterTTL(30*time.Second),
+		microsvc.RegisterTTL(serviceRegisterTTL),
 		microsvc.RegisterInterval(25*time.Second),
-		microsvc.Context(cm.ctx),
+		microsvc.Context(microCtx),
+		microsvc.HandleSignal(false),
 		utils.MaxMsgSize(utils.MaxBodySize),
 		microsvc.BeforeStart(func() error {
 			return nil
@@ -1055,27 +1070,9 @@ func (cm *ClusterManager) initMicro() error { // nolint
 			}
 			return cm.disc.Start()
 		}),
-		microsvc.BeforeStop(func() error {
-			if !discovery.UseServiceDiscovery() {
-				if cm.resourceDisc != nil {
-					cm.resourceDisc.Stop()
-				}
-				if cm.projectDisc != nil {
-					cm.projectDisc.Stop()
-				}
-				if cm.cidrDisc != nil {
-					cm.cidrDisc.Stop()
-				}
-				if cm.disc != nil {
-					cm.disc.Stop()
-				}
-			}
-			waitTime := 10 * time.Second
-			time.Sleep(waitTime)
-			cm.microsvcShutdownCh <- struct{}{}
-			return nil
-		}),
+		microsvc.BeforeStop(cm.beforeStop),
 		microsvc.AfterStop(func() error {
+			cm.close()
 			audit.GetAuditClient().Close()
 			return nil
 		}),
@@ -1113,7 +1110,10 @@ func (cm *ClusterManager) initMicro() error { // nolint
 
 	// grpc server
 	grpcServer := microService.Server()
-	if err := grpcServer.Init(microgrpcserver.Listener(dualStackListener)); err != nil {
+	// 必须在 microService.Init 之后覆盖服务端 registry，避免被原始 registry 覆盖。
+	// 客户端仍使用 cm.microRegistry；包装层只阻止本实例关闭期间重新注册。
+	if err := grpcServer.Init(microgrpcserver.Listener(dualStackListener),
+		server.Registry(cm.serviceRegistry)); err != nil {
 		return err
 	}
 	// Register handler
@@ -1123,35 +1123,68 @@ func (cm *ClusterManager) initMicro() error { // nolint
 }
 
 func (cm *ClusterManager) initSignalHandler() {
-	// listen system signal
-	// to run in the container, should not trap SIGTERM
-	interrupt := make(chan os.Signal, 10)
+	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
+		defer signal.Stop(interrupt)
 		select {
 		case e := <-interrupt:
-			blog.Infof("receive interrupt %s, do close", e.String())
-			cm.close(true)
+			blog.Infof("receive interrupt %s, begin shutdown", e.String())
 		case <-cm.stopCh:
-			blog.Infof("stop channel, do close")
-			cm.close(false)
+			blog.Infof("stop channel, begin shutdown")
+		case <-cm.ctx.Done():
+			return
 		}
+		// 不再等待 BeforeStop 回传通知，也不在这里提前关闭 HTTP 或业务依赖。
+		cm.stopMicro()
+		// 保留信号订阅直到清理完成，避免重复 SIGTERM 恢复默认动作而强行退出。
+		<-cm.ctx.Done()
 	}()
 }
 
-func (cm *ClusterManager) close(isImmediateShutdown bool) {
-	if isImmediateShutdown {
-		select {
-		case <-cm.microsvcShutdownCh:
-		case <-time.After(10 * time.Second):
+func (cm *ClusterManager) beforeStop() error {
+	// 先等待在途注册完成并禁止重注册，再摘除本实例；gRPC 此时仍保持服务。
+	err := cm.serviceRegistry.StopAndDeregister()
+	waitTime := 10 * time.Second
+	if err != nil {
+		blog.Errorf("deregister cluster manager failed: %v; wait for registration TTL", err)
+		// 注销失败时停止续租并等待当前 RegisterTTL 到期，不能仅等正常传播窗口。
+		waitTime += serviceRegisterTTL
+	}
+	time.Sleep(waitTime)
+
+	// HTTP gateway 依赖 gRPC，因此必须在框架调用 Server.Stop 之前排空。
+	closeCtx, closeCancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer closeCancel()
+	if err := cm.httpServer.Shutdown(closeCtx); err != nil {
+		blog.Errorf("shutdown http gateway failed: %v", err)
+		if err := cm.httpServer.Close(); err != nil {
+			blog.Errorf("close http gateway failed: %v", err)
 		}
 	}
+	return nil
+}
 
+func (cm *ClusterManager) close() {
+	// AfterStop 执行时 HTTP/gRPC 已停止，才释放请求可能用到的依赖。
+	if !discovery.UseServiceDiscovery() {
+		if cm.resourceDisc != nil {
+			cm.resourceDisc.Stop()
+		}
+		if cm.projectDisc != nil {
+			cm.projectDisc.Stop()
+		}
+		if cm.cidrDisc != nil {
+			cm.cidrDisc.Stop()
+		}
+		if cm.disc != nil {
+			cm.disc.Stop()
+		}
+	}
 	closeCtx, closeCancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer closeCancel()
 	helm.GetHelmManagerClient().Stop()
 	cm.extraServer.Shutdown(closeCtx) // nolint
-	cm.httpServer.Shutdown(closeCtx)  // nolint
 	cm.daemon.Stop()
 	cm.ctxCancelFunc()
 }
