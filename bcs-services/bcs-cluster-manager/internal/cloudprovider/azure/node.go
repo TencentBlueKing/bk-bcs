@@ -18,10 +18,14 @@ import (
 	"strconv"
 	"sync"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/azure/api"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 )
 
 var nodeMgr sync.Once
@@ -257,4 +261,37 @@ func (n *NodeManager) ListNodePublicPrefixs(opt *cloudprovider.ListNodePublicPre
 	}
 
 	return prefixes, nil
+}
+
+// ListImportClusterNodes 根据节点IP列表从k8s节点信息获取导入集群的节点信息
+// Azure 通过k8s node label获取zone/region/instance-type/nodeID等信息
+func (n *NodeManager) ListImportClusterNodes(ips []string, opt *cloudprovider.ListNodesOption) (
+	[]*proto.Node, error) {
+	if len(ips) == 0 {
+		return nil, nil
+	}
+
+	// 从k8s集群获取节点列表
+	clusterID := opt.ClusterID
+	k8sOperator := clusterops.NewK8SOperator(options.GetGlobalCMOptions(), cloudprovider.GetStorageModel())
+	k8sNodes, err := k8sOperator.ListClusterNodes(context.Background(), clusterID)
+	if err != nil {
+		return nil, fmt.Errorf("ListClusterNodes[%s] failed: %v", clusterID, err)
+	}
+
+	if len(k8sNodes) == 0 {
+		return nil, fmt.Errorf("no k8s nodes found in cluster[%s]", clusterID)
+	}
+
+	// 使用Azure AKS专属label配置（含GPU资源提取）
+	labelCfg := api.GetAKSLabelConfig()
+
+	// AKS providerID格式: azure:///subscriptions/{sub}/.../virtualMachines/{instance}，取最后一段
+	// Azure VMSS节点的providerID最后一段仅为数字序号(如0、1)，不唯一
+	// 通过GetAKSLabelConfig配置的NodeIDLabels(kubernetes.io/hostname)在K8sNodesToImportNodes内部覆盖NodeID
+	nodes := cloudprovider.K8sNodesToImportNodes(k8sNodes, ips, labelCfg,
+		api.ParseAKSInstanceID)
+
+	blog.Infof("ListImportClusterNodes from k8s labels, ips[%d] matched[%d]", len(ips), len(nodes))
+	return nodes, nil
 }

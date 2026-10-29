@@ -271,6 +271,8 @@ type NodeManager interface {
 	GetServiceRoles(opt *CommonOption, roleType string) ([]*proto.ServiceRoleInfo, error)
 	// ListNodePublicPrefixs list node public prefix
 	ListNodePublicPrefixs(opt *ListNodePublicPrefixesOption) ([]*proto.NodePublicPrefix, error)
+	// ListImportClusterNodes 根据节点IP列表从k8s节点信息获取导入集群的节点信息
+	ListImportClusterNodes(ips []string, opt *ListNodesOption) ([]*proto.Node, error)
 }
 
 // CloudValidateManager validate interface for check cloud resourceInfo

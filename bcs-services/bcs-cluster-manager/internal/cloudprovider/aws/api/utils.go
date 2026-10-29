@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -343,4 +344,37 @@ func generateAwsTagSpecs(tagSpecs []*TagSpecification) []*ec2.TagSpecification {
 		})
 	}
 	return awsTagSpecs
+}
+
+// getLabelConfig 返回AWS EKS的k8s node label配置
+// AWS EKS同时支持AWS专属label、新版标准label和旧版beta label，按优先级从高到低排列
+func getLabelConfig() *cloudprovider.K8sLabelConfig {
+	return &cloudprovider.K8sLabelConfig{
+		ZoneLabels: []string{
+			AWSEKSZoneIDLabel,       // topology.k8s.aws/zone-id (AWS专属，优先)
+			AWSEKSZoneTopologyLabel, // topology.kubernetes.io/zone
+			AWSEKSZoneBetaLabel,     // failure-domain.beta.kubernetes.io/zone
+		},
+		RegionLabels: []string{
+			AWSEKSRegionTopologyLabel, // topology.kubernetes.io/region
+			AWSEKSRegionBetaLabel,     // failure-domain.beta.kubernetes.io/region
+		},
+		InstanceTypeLabels: []string{
+			AWSEKSInstanceTypeLabel,     // node.kubernetes.io/instance-type
+			AWSEKSInstanceTypeBetaLabel, // beta.kubernetes.io/instance-type
+		},
+	}
+}
+
+// parseAWSInstanceID 从k8s node的spec.providerID中解析出AWS实例ID
+// EKS providerID格式: aws:///az/instance-id，取最后一段作为实例ID
+func parseAWSInstanceID(providerID string) string {
+	if providerID == "" {
+		return ""
+	}
+	parts := strings.Split(providerID, "/")
+	if len(parts) > 0 {
+		return parts[len(parts)-1]
+	}
+	return providerID
 }

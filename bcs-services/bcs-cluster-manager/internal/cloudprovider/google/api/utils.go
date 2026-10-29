@@ -499,3 +499,36 @@ func GenerateUpdatePolicy() *compute.InstanceGroupManagerUpdatePolicy {
 
 	return p
 }
+
+// getLabelConfig 返回Google GKE的k8s node label配置
+// GKE同时支持标准label、GKE专属label和旧版beta label，按优先级从高到低排列
+func getLabelConfig() *cloudprovider.K8sLabelConfig {
+	return &cloudprovider.K8sLabelConfig{
+		ZoneLabels: []string{
+			GKEZoneGKELabel,        // topology.gke.io/zone (GKE专属，优先)
+			GKEZoneTopologyLabel,   // topology.kubernetes.io/zone
+			GKEZoneBetaLabel,       // failure-domain.beta.kubernetes.io/zone
+		},
+		RegionLabels: []string{
+			GKERegionTopologyLabel, // topology.kubernetes.io/region
+			GKERegionBetaLabel,     // failure-domain.beta.kubernetes.io/region
+		},
+		InstanceTypeLabels: []string{
+			GKEInstanceTypeLabel,     // node.kubernetes.io/instance-type
+			GKEInstanceTypeBetaLabel, // beta.kubernetes.io/instance-type
+		},
+	}
+}
+
+// parseGKEInstanceID 从k8s node的spec.providerID中解析出GCP实例名称
+// GKE providerID格式: gce://project/zone/instance-name，取最后一段作为实例名称
+func parseGKEInstanceID(providerID string) string {
+	if providerID == "" {
+		return ""
+	}
+	parts := strings.Split(providerID, "/")
+	if len(parts) > 0 {
+		return parts[len(parts)-1]
+	}
+	return providerID
+}

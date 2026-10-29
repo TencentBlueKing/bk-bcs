@@ -37,6 +37,7 @@ type DaemonOptions struct { // nolint
 	EnableAllocateCidrDaemon bool
 	EnableInsTypeUsage       bool
 	EnableAzureTaint         bool
+	EnableCMDBSync           bool
 }
 
 // DoFunc func() type
@@ -127,6 +128,12 @@ func (d *Daemon) InitDaemon(ctx context.Context) {
 		go d.simpleDaemon(ctx, &wg, func() {
 			d.removeAzureClusterPlatformTaints(errChan)
 		}, 20)
+	}
+
+	if d.options.EnableCMDBSync {
+		go d.simpleDaemon(ctx, &wg, func() {
+			d.syncClusterNodeCMDBMeta(errChan)
+		}, 300)
 	}
 
 	wg.Wait()

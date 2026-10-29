@@ -1,0 +1,92 @@
+/*
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package ibm
+
+import (
+	"net"
+	"sync"
+
+	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+)
+
+var vpcMgr sync.Once
+
+func init() {
+	vpcMgr.Do(func() {
+		cloudprovider.InitVPCManager(cloudName, &VPCManager{})
+	})
+}
+
+// VPCManager is the manager for VPC
+type VPCManager struct{}
+
+// ListVpcs list cloud vpcs
+func (vm *VPCManager) ListVpcs(vpcID string, opt *cloudprovider.ListNetworksOption) (
+	[]*proto.CloudVpc, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
+// ListSubnets list vpc's subnets
+func (vm *VPCManager) ListSubnets(vpcID string, zone string,
+	opt *cloudprovider.ListNetworksOption) ([]*proto.Subnet, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
+// ListSecurityGroups list security groups
+func (vm *VPCManager) ListSecurityGroups(opt *cloudprovider.ListNetworksOption) (
+	[]*proto.SecurityGroup, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
+// GetCloudNetworkAccountType get cloud account type
+func (vm *VPCManager) GetCloudNetworkAccountType(opt *cloudprovider.CommonOption) (
+	*proto.CloudAccountType, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
+// ListBandwidthPacks list bandWidthPacks
+func (vm *VPCManager) ListBandwidthPacks(opt *cloudprovider.CommonOption) (
+	[]*proto.BandwidthPackageInfo, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
+// CheckConflictInVpcCidr check cidr if conflict with vpc cidrs
+func (vm *VPCManager) CheckConflictInVpcCidr(vpcID string, cidr string,
+	opt *cloudprovider.CheckConflictInVpcCidrOption) ([]string, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
+// AllocateOverlayCidr allocate overlay cidr
+func (vm *VPCManager) AllocateOverlayCidr(vpcId string, cluster *proto.Cluster, cidrLens []uint32,
+	reservedBlocks []*net.IPNet, opt *cloudprovider.CommonOption) ([]string, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
+// AddClusterOverlayCidr add overlay cidr to cluster
+func (vm *VPCManager) AddClusterOverlayCidr(clusterId string, cidrs []string,
+	opt *cloudprovider.CommonOption) error {
+	return cloudprovider.ErrCloudNotImplemented
+}
+
+// GetVpcIpUsage get VPC ip total / surplus
+func (vm *VPCManager) GetVpcIpUsage(vpcId string, ipType string, reservedBlocks []*net.IPNet,
+	opt *cloudprovider.CommonOption) (uint32, uint32, error) {
+	return 0, 0, cloudprovider.ErrCloudNotImplemented
+}
+
+// GetClusterIpUsage get cluster ip usage
+func (vm *VPCManager) GetClusterIpUsage(clusterId string, ipType string,
+	opt *cloudprovider.CommonOption) (uint32, uint32, error) {
+	return 0, 0, cloudprovider.ErrCloudNotImplemented
+}

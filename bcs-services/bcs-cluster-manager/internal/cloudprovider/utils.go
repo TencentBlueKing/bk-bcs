@@ -26,6 +26,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/modules"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -1702,4 +1703,122 @@ func GetTaskTimeout(
 // AllowCrossBizNodes check if allow cross biz nodes
 func AllowCrossBizNodes(cls *proto.Cluster) bool {
 	return cls.Labels[WhiteListLabelKey] == common.True
+}
+
+// K8sLabelConfig 云厂商k8s node label差异化配置
+// 各云厂商k8s集群的node label key存在差异，由各云厂商ListImportClusterNodes构造传入
+type K8sLabelConfig struct {
+	// ZoneLabels zone相关的label key列表，按优先级从高到低排列
+	ZoneLabels []string
+	// RegionLabels region相关的label key列表，按优先级从高到低排列
+	RegionLabels []string
+	// InstanceTypeLabels instance-type相关的label key列表，按优先级从高到低排列
+	InstanceTypeLabels []string
+	// NodeIDLabels nodeID相关的label key列表，按优先级从高到低排列
+	NodeIDLabels []string
+}
+
+// GetLabelValue 按优先级从label列表中获取第一个非空值
+func GetLabelValue(labels map[string]string, labelKeys []string) string {
+	for _, key := range labelKeys {
+		if v, ok := labels[key]; ok && v != "" {
+			return v
+		}
+	}
+	return ""
+}
+
+// K8sNodesToImportNodes 从k8s节点信息中根据node label获取导入集群的节点信息，label key差异化配置通过labelCfg传入，providerID解析通过parseProviderID传入，各云厂商在ListImportClusterNodes中构造对应配置和解析函数
+func K8sNodesToImportNodes(k8sNodes []*corev1.Node, ips []string, labelCfg *K8sLabelConfig,
+	parseProviderID func(string) string) []*proto.Node {
+	if len(k8sNodes) == 0 || len(ips) == 0 {
+		return nil
+	}
+
+	// 构建IP匹配集合
+	ipSet := make(map[string]struct{})
+	for _, ip := range ips {
+		ipSet[ip] = struct{}{}
+	}
+
+	nodes := make([]*proto.Node, 0)
+	for _, k8sNode := range k8sNodes {
+		ipv4s, _ := utils.GetNodeIPAddress(k8sNode)
+		if len(ipv4s) == 0 {
+			continue
+		}
+		ip := ipv4s[0]
+
+		// 仅处理在ips中存在的IP
+		if _, exists := ipSet[ip]; !exists {
+			continue
+		}
+
+		node := &proto.Node{
+			InnerIP:  ip,
+			NodeName: k8sNode.Name,
+		}
+
+		// 从labels中提取zone信息（优先新label，回退旧label）
+		zoneName := GetLabelValue(k8sNode.Labels, labelCfg.ZoneLabels)
+		if zoneName != "" {
+			node.ZoneID = zoneName
+			node.ZoneName = zoneName
+		}
+
+		// 从labels中提取region信息
+		region := GetLabelValue(k8sNode.Labels, labelCfg.RegionLabels)
+		if region != "" {
+			node.Region = region
+		}
+
+		// 从labels中提取instance-type信息
+		instanceType := GetLabelValue(k8sNode.Labels, labelCfg.InstanceTypeLabels)
+		if instanceType != "" {
+			node.InstanceType = instanceType
+		}
+
+		// 从Status.Allocatable中提取CPU核数
+		if qty, ok := k8sNode.Status.Allocatable[corev1.ResourceCPU]; ok {
+			val := qty.Value()
+			if val > 0 {
+				node.CPU = uint32(val / 1000)
+			}
+		}
+
+		// 从Status.Allocatable中提取内存(MB)
+		if qty, ok := k8sNode.Status.Allocatable[corev1.ResourceMemory]; ok {
+			val := qty.Value()
+			if val > 0 {
+				node.Mem = uint32(val / 1024 / 1024)
+			}
+		}
+
+		// 从Status.Allocatable中提取nvidia.com/gpu数量
+		if qty, ok := k8sNode.Status.Allocatable[corev1.ResourceName("nvidia.com/gpu")]; ok {
+			val := qty.Value()
+			if val > 0 {
+				node.GPU = uint32(val)
+				node.IsGpuNode = true
+			}
+		}
+
+		// 如果配置了NodeIDLabels，优先从label获取NodeID覆盖providerID解析结果
+		// 例如Azure VMSS节点providerID最后一段仅为数字序号(如0、1)，不唯一
+		if labelCfg.NodeIDLabels != nil {
+			if labelNodeID := GetLabelValue(k8sNode.Labels, labelCfg.NodeIDLabels); labelNodeID != "" {
+				node.NodeID = labelNodeID
+			}
+		} else {
+			// 解析providerID
+			nodeID := parseProviderID(k8sNode.Spec.ProviderID)
+			if nodeID != "" {
+				node.NodeID = nodeID
+			}
+		}
+
+		nodes = append(nodes, node)
+	}
+
+	return nodes
 }

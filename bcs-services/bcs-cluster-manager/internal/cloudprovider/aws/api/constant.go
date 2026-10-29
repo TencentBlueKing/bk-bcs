@@ -101,3 +101,17 @@ const (
 	// ClusterUpdatePolicyStandard xxx
 	ClusterUpdatePolicyStandard = "STANDARD"
 )
+
+// AWS EKS k8s node label key 定义
+const (
+	// zone相关label
+	AWSEKSZoneTopologyLabel = "topology.kubernetes.io/zone"
+	AWSEKSZoneIDLabel       = "topology.k8s.aws/zone-id"
+	AWSEKSZoneBetaLabel     = "failure-domain.beta.kubernetes.io/zone"
+	// region相关label
+	AWSEKSRegionTopologyLabel = "topology.kubernetes.io/region"
+	AWSEKSRegionBetaLabel     = "failure-domain.beta.kubernetes.io/region"
+	// instance-type相关label
+	AWSEKSInstanceTypeLabel     = "node.kubernetes.io/instance-type"
+	AWSEKSInstanceTypeBetaLabel = "beta.kubernetes.io/instance-type"
+)

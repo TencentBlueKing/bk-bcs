@@ -304,6 +304,7 @@ type DaemonConfig struct {
 	EnableInsTypeUsage bool `json:"enableInsTypeUsage"`
 	EnableAllocateCidr bool `json:"enableAllocateCidr"`
 	EnableAzureTaint   bool `json:"enableAzureTaint"`
+	EnableCMDBSync     bool `json:"enableCMDBSync"`
 }
 
 // CommonConfig for platform common config

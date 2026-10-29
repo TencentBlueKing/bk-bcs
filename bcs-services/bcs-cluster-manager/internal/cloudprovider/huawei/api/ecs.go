@@ -140,6 +140,25 @@ func (e *EcsClient) ShowServerBlockDevice(serverId string, volumeId string) (*mo
 	return resp.VolumeAttachment, nil
 }
 
+// ListServersDetails 查询云服务器详情列表，支持按 IP 过滤
+func (e *EcsClient) ListServersDetails(ip string) (*[]model.ServerDetail, error) {
+	request := &model.ListServersDetailsRequest{
+		Limit: func() *int32 {
+			limit := int32(100)
+			return &limit
+		}(),
+	}
+	if ip != "" {
+		request.Ip = &ip
+	}
+	resp, err := e.ecs.ListServersDetails(request)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.Servers, nil
+}
+
 // ConvertPerformanceType convert performance type
 func ConvertPerformanceType(source string) string {
 	if v, ok := performanceTypeMap[source]; ok {

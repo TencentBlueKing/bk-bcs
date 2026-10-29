@@ -56,3 +56,19 @@ const (
 	// BCSRegionStateAvailable xxx
 	BCSRegionStateAvailable = "AVAILABLE"
 )
+
+// Azure AKS k8s node label key 定义
+const (
+	// zone相关label
+	AKSZoneTopologyLabel   = "topology.kubernetes.io/zone"
+	AKSZoneCSILabel        = "topology.disk.csi.azure.com/zone"
+	AKSZoneBetaLabel       = "failure-domain.beta.kubernetes.io/zone"
+	// region相关label
+	AKSRegionTopologyLabel = "topology.kubernetes.io/region"
+	AKSRegionBetaLabel     = "failure-domain.beta.kubernetes.io/region"
+	// instance-type相关label
+	AKSInstanceTypeLabel     = "node.kubernetes.io/instance-type"
+	AKSInstanceTypeBetaLabel = "beta.kubernetes.io/instance-type"
+	// nodeID相关label (VMSS节点providerID最后一段仅为数字序号，使用hostname作为唯一标识)
+	AKSHostnameLabel = "kubernetes.io/hostname"
+)

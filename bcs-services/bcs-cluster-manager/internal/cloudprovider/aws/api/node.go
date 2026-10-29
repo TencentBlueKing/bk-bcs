@@ -15,6 +15,8 @@ package api
 import (
 	"context"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"math"
 	"strings"
 	"sync"
@@ -466,4 +468,80 @@ func (nm *NodeManager) ListDiskTypes(instanceTypes []string, zones []string, dis
 func (nm *NodeManager) ListNodePublicPrefixs(opt *cloudprovider.ListNodePublicPrefixesOption) (
 	[]*proto.NodePublicPrefix, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
+// ListImportClusterNodes 根据节点IP列表从k8s节点信息获取导入集群的节点信息
+// AWS 通过k8s node label获取zone/region/instance-type/nodeID等信息
+func (nm *NodeManager) ListImportClusterNodes(ips []string, opt *cloudprovider.ListNodesOption) (
+	[]*proto.Node, error) {
+	if len(ips) == 0 {
+		return nil, nil
+	}
+
+	// 从k8s集群获取节点列表，设置到opt.K8sNodes中
+	// 各云厂商的ListImportClusterNodes统一从k8s node labels获取信息
+	clusterID := opt.ClusterID
+	k8sOperator := clusterops.NewK8SOperator(options.GetGlobalCMOptions(), cloudprovider.GetStorageModel())
+	k8sNodes, err := k8sOperator.ListClusterNodes(context.Background(), clusterID)
+	if err != nil {
+		return nil, fmt.Errorf("ListClusterNodes[%s] failed: %v", clusterID, err)
+	}
+
+	if len(k8sNodes) == 0 {
+		return nil, fmt.Errorf("no k8s nodes found in cluster[%s]", clusterID)
+	}
+
+	// 使用AWS EKS专属label配置（含GPU资源提取）
+	labelCfg := getLabelConfig()
+
+	// AWS EKS providerID格式: aws:///az/instance-id
+	nodes := cloudprovider.K8sNodesToImportNodes(k8sNodes, ips, labelCfg,
+		parseAWSInstanceID)
+	blog.Infof("ListImportClusterNodes from k8s labels, ips[%d] matched[%d]", len(ips), len(nodes))
+	return nodes, nil
+}
+
+// listInstanceTypesByName 根据实例类型名称批量查询实例类型详情（含 CPU/Mem/GPU）
+func (nm *NodeManager) listInstanceTypesByName(typeNames []string,
+	opt *cloudprovider.ListNodesOption) ([]*proto.InstanceType, error) {
+	client, err := NewEC2Client(opt.Common)
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]*proto.InstanceType, 0)
+	err = client.ec2Client.DescribeInstanceTypesPages(
+		&ec2.DescribeInstanceTypesInput{
+			InstanceTypes: aws.StringSlice(typeNames),
+		}, func(page *ec2.DescribeInstanceTypesOutput, lastPage bool) bool {
+			for _, v := range page.InstanceTypes {
+				t := &proto.InstanceType{}
+				if v.InstanceType != nil {
+					t.NodeType = aws.StringValue(v.InstanceType)
+				}
+				if v.VCpuInfo != nil && v.VCpuInfo.DefaultVCpus != nil {
+					t.Cpu = uint32(aws.Int64Value(v.VCpuInfo.DefaultVCpus))
+				}
+				if v.MemoryInfo != nil && v.MemoryInfo.SizeInMiB != nil {
+					memGb := math.Ceil(float64(aws.Int64Value(v.MemoryInfo.SizeInMiB)) / 1024)
+					t.Memory = uint32(memGb)
+				}
+				if v.GpuInfo != nil && v.GpuInfo.Gpus != nil {
+					var gpuCount uint32
+					for _, g := range v.GpuInfo.Gpus {
+						if g.Count != nil {
+							gpuCount += uint32(aws.Int64Value(g.Count))
+						}
+					}
+					t.Gpu = gpuCount
+				}
+				result = append(result, t)
+			}
+			return !lastPage
+		})
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }

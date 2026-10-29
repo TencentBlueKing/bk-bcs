@@ -691,3 +691,9 @@ const (
 	CvmInstanceType = "CVM"
 	GpuInstanceType = "GPU"
 )
+
+// CMDBSync label/extraInfo keys
+const (
+	// SyncImportClusterLabel 导入集群开启CMDB同步标识，存于cluster.Labels
+	SyncImportClusterLabel = "syncImportCluster"
+)

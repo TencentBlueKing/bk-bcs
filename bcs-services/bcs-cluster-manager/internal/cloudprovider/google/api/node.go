@@ -15,6 +15,8 @@ package api
 import (
 	"context"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"math"
 	"strconv"
 	"strings"
@@ -297,4 +299,43 @@ func (nm *NodeManager) ListDiskTypes(instanceTypes []string, zones []string, dis
 func (nm *NodeManager) ListNodePublicPrefixs(opt *cloudprovider.ListNodePublicPrefixesOption) (
 	[]*proto.NodePublicPrefix, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
+// ListImportClusterNodes 根据节点IP列表从k8s节点信息获取导入集群的节点信息
+// GCP 通过k8s node label获取zone/region/instance-type/nodeID等信息
+func (n *NodeManager) ListImportClusterNodes(ips []string, opt *cloudprovider.ListNodesOption) (
+	[]*proto.Node, error) {
+	if len(ips) == 0 {
+		return nil, nil
+	}
+
+	clusterID := opt.ClusterID
+	k8sOperator := clusterops.NewK8SOperator(options.GetGlobalCMOptions(), cloudprovider.GetStorageModel())
+	k8sNodes, err := k8sOperator.ListClusterNodes(context.Background(), clusterID)
+	if err != nil {
+		return nil, fmt.Errorf("ListClusterNodes[%s] failed: %v", clusterID, err)
+	}
+
+	if len(k8sNodes) == 0 {
+		blog.Warnf("ListImportClusterNodes K8sNodes is empty, cannot get node info from k8s labels")
+		return nil, nil
+	}
+
+	// 使用Google GKE专属label配置（含GPU资源提取）
+	labelCfg := getLabelConfig()
+
+	// GKE providerID格式: gce://project/zone/instance-name
+	nodes := cloudprovider.K8sNodesToImportNodes(k8sNodes, ips, labelCfg,
+		parseGKEInstanceID)
+	blog.Infof("ListImportClusterNodes from k8s labels, ips[%d] matched[%d]", len(ips), len(nodes))
+	return nodes, nil
+}
+
+// NetworkIPFilter 构建 GCE 实例按 networkIP 过滤的 filter 字符串
+func NetworkIPFilter(ips []string) string {
+	var filters []string
+	for _, ip := range ips {
+		filters = append(filters, fmt.Sprintf("networkInterfaces.networkIP eq %s", ip))
+	}
+	return strings.Join(filters, " OR ")
 }

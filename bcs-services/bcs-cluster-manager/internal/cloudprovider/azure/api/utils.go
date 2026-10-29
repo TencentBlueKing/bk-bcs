@@ -28,6 +28,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	cutils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 )
@@ -1578,4 +1579,40 @@ func checkInstanceType(intce string) bool {
 		}
 	}
 	return false
+}
+
+// GetAKSLabelConfig 返回Azure AKS的k8s node label配置
+// AKS同时支持Azure CSI专属label、新版标准label和旧版beta label，按优先级从高到低排列
+func GetAKSLabelConfig() *cloudprovider.K8sLabelConfig {
+	return &cloudprovider.K8sLabelConfig{
+		ZoneLabels: []string{
+			AKSZoneCSILabel,      // topology.disk.csi.azure.com/zone (Azure CSI专属，优先)
+			AKSZoneTopologyLabel, // topology.kubernetes.io/zone
+			AKSZoneBetaLabel,     // failure-domain.beta.kubernetes.io/zone
+		},
+		RegionLabels: []string{
+			AKSRegionTopologyLabel, // topology.kubernetes.io/region
+			AKSRegionBetaLabel,     // failure-domain.beta.kubernetes.io/region
+		},
+		InstanceTypeLabels: []string{
+			AKSInstanceTypeLabel,     // node.kubernetes.io/instance-type
+			AKSInstanceTypeBetaLabel, // beta.kubernetes.io/instance-type
+		},
+		NodeIDLabels: []string{
+			AKSHostnameLabel, // kubernetes.io/hostname
+		},
+	}
+}
+
+// ParseAKSInstanceID 从k8s node的spec.providerID中解析出Azure实例名称
+// AKS providerID格式: azure:///subscriptions/{sub}/.../virtualMachines/{instance}，取最后一段作为实例名称
+func ParseAKSInstanceID(providerID string) string {
+	if providerID == "" {
+		return ""
+	}
+	parts := strings.Split(providerID, "/")
+	if len(parts) > 0 {
+		return parts[len(parts)-1]
+	}
+	return providerID
 }

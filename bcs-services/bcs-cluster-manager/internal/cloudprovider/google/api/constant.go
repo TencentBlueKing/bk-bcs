@@ -95,3 +95,17 @@ const (
 	// GKEClusterType for GKE cluster type
 	GKEClusterType = "clusterType"
 )
+
+// Google GKE k8s node label key 定义
+const (
+	// zone相关label
+	GKEZoneTopologyLabel   = "topology.kubernetes.io/zone"
+	GKEZoneGKELabel        = "topology.gke.io/zone"
+	GKEZoneBetaLabel       = "failure-domain.beta.kubernetes.io/zone"
+	// region相关label
+	GKERegionTopologyLabel = "topology.kubernetes.io/region"
+	GKERegionBetaLabel     = "failure-domain.beta.kubernetes.io/region"
+	// instance-type相关label
+	GKEInstanceTypeLabel     = "node.kubernetes.io/instance-type"
+	GKEInstanceTypeBetaLabel = "beta.kubernetes.io/instance-type"
+)

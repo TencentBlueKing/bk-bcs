@@ -741,6 +741,12 @@ func (nm *NodeManager) ListNodePublicPrefixs(opt *cloudprovider.ListNodePublicPr
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
+// ListImportClusterNodes 根据节点IP列表从k8s节点信息获取导入集群的节点信息
+func (nm *NodeManager) ListImportClusterNodes(ips []string, opt *cloudprovider.ListNodesOption) (
+	[]*proto.Node, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
 // ConvertDataDisk convert project pb data disk to resource pb data disk
 func (nm *NodeManager) ConvertDataDisk(srcDataDisks []*bcsproject.DataDisk) []*resource.DataDisk {
 	if srcDataDisks == nil {

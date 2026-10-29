@@ -200,7 +200,8 @@
         "enable": ${bcsDaemonEnable},
         "enableInsTypeUsage": ${enableInsTypeUsage},
         "enableAllocateCidr": ${enableAllocateCidr},
-        "enableAzureTaint": ${enableAzureTaint}
+        "enableAzureTaint": ${enableAzureTaint},
+        "enableCMDBSync": ${enableCMDBSync}
     },
     "commonConfig": {
         "annoKeyProjCode": "${bcsSharedClusterAnnoKeyProjCode}",

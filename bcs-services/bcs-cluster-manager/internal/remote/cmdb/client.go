@@ -1268,6 +1268,117 @@ func (c *Client) AddHostFromCmpy(ctx context.Context, svrIds []string, ips []str
 	return nil
 }
 
+// AddHostToBusinessIdle 添加主机到业务空闲机
+// AddHostToBusinessIdle adds the given hosts to the idle module of the business,
+// and returns the created hostIDs on success.
+func (c *Client) AddHostToBusinessIdle(ctx context.Context, bizID int, hostList []AddHostToBusinessIdleHostInfo) ([]int64, error) {
+	if c == nil {
+		return nil, ErrServerNotInit
+	}
+
+	// open_add_host_to_business_idle
+	var (
+		reqURL  = fmt.Sprintf("%s/api/c/compapi/v2/cc/add_host_to_business_idle/", c.server)
+		request = &AddHostToBusinessIdleReq{
+			BkBizID:    bizID,
+			BkHostList: hostList,
+		}
+		respData = &AddHostToBusinessIdleResp{}
+	)
+
+	userAuth, tenant, err := rutils.GetGatewayAuthAndTenantInfo(ctx, &types.AuthInfo{
+		BkAppUser: types.BkAppUser{
+			BkAppCode:   c.appCode,
+			BkAppSecret: c.appSecret,
+		},
+		BkUserName: c.bkUserName,
+	}, "")
+	if err != nil {
+		return nil, err
+	}
+
+	start := time.Now()
+	_, _, errs := gorequest.New().
+		Timeout(defaultTimeOut).
+		Post(reqURL).
+		Set("Content-Type", "application/json").
+		Set("Accept", "application/json").
+		Set("X-Bkapi-Authorization", userAuth).
+		Set("X-Bk-Tenant-Id", tenant).
+		SetDebug(c.serverDebug).
+		Send(request).
+		EndStruct(&respData)
+	if len(errs) > 0 {
+		metrics.ReportLibRequestMetric("cmdb", "AddHostToBusinessIdle", "http", metrics.LibCallStatusErr, start)
+		blog.Errorf("call api AddHostToBusinessIdle failed: %v", errs[0])
+		return nil, errs[0]
+	}
+	metrics.ReportLibRequestMetric("cmdb", "AddHostToBusinessIdle", "http", metrics.LibCallStatusOK, start)
+
+	if !respData.Result {
+		blog.Errorf("call api AddHostToBusinessIdle failed: %v", respData.Message)
+		return nil, errors.New(respData.Message)
+	}
+	blog.Infof("call api AddHostToBusinessIdle with url(%s) successfully", reqURL)
+
+	return respData.Data.BkHostIDs, nil
+}
+
+// UpdateHost 更新主机属性
+// UpdateHost updates the attributes of the specified host with the given data.
+func (c *Client) UpdateHost(ctx context.Context, hostID string, data *UpdateHostData) error {
+	if c == nil {
+		return ErrServerNotInit
+	}
+
+	// update_host
+	var (
+		reqURL  = fmt.Sprintf("%s/api/c/compapi/v2/cc/update_host/", c.server)
+		request = &UpdateHostReq{
+			BkHostID: hostID,
+			Data:     *data,
+		}
+		respData = &UpdateHostResp{}
+	)
+
+	userAuth, tenant, err := rutils.GetGatewayAuthAndTenantInfo(ctx, &types.AuthInfo{
+		BkAppUser: types.BkAppUser{
+			BkAppCode:   c.appCode,
+			BkAppSecret: c.appSecret,
+		},
+		BkUserName: c.bkUserName,
+	}, "")
+	if err != nil {
+		return err
+	}
+
+	start := time.Now()
+	_, _, errs := gorequest.New().
+		Timeout(defaultTimeOut).
+		Post(reqURL).
+		Set("Content-Type", "application/json").
+		Set("Accept", "application/json").
+		Set("X-Bkapi-Authorization", userAuth).
+		Set("X-Bk-Tenant-Id", tenant).
+		SetDebug(c.serverDebug).
+		Send(request).
+		EndStruct(&respData)
+	if len(errs) > 0 {
+		metrics.ReportLibRequestMetric("cmdb", "UpdateHost", "http", metrics.LibCallStatusErr, start)
+		blog.Errorf("call api UpdateHost failed: %v", errs[0])
+		return errs[0]
+	}
+	metrics.ReportLibRequestMetric("cmdb", "UpdateHost", "http", metrics.LibCallStatusOK, start)
+
+	if !respData.Result {
+		blog.Errorf("call api UpdateHost failed: %v", respData.Message)
+		return errors.New(respData.Message)
+	}
+	blog.Infof("call api UpdateHost with url(%s) successfully", reqURL)
+
+	return nil
+}
+
 // SyncHostInfoFromCmpy update host info from cmpy
 func (c *Client) SyncHostInfoFromCmpy(ctx context.Context, bkCloudId int, bkHostIds []int64) error {
 	if c == nil {

@@ -80,6 +80,8 @@ const (
 
 	fieldSvrTypeName = "svr_type_name" // 服务器型号
 
+	FieldIsGPU = "is_gpu"
+
 	// StartAt offset
 	StartAt = 0
 	// MaxLimits limit
@@ -91,7 +93,7 @@ var (
 		fieldHostOutIPV6, fieldHostID, fieldDeviceType, fieldIDCCityName, fieldIDCCityID, fieldDeviceClass,
 		fieldHostCPU, fieldCpuModule, fieldHostMem, fieldHostDisk, fieldOperator, fieldBakOperator, fieldRack,
 		fieldIDCName, fieldSubZoneID, fieldIDCAreaID, fieldIDCArea, fieldIspName, fieldAgentId,
-		FieldAssetId, fieldSvrTypeName, fieldCloudInstID}
+		FieldAssetId, fieldSvrTypeName, fieldCloudInstID, FieldIsGPU}
 
 	fieldHostIPSelectorInfo = []string{FieldHostIP, fieldHostIPv6, fieldCloudID, fieldHostName, fieldOsType,
 		fieldOsName, fieldHostID, fieldOperator, fieldBakOperator, fieldAgentId}
@@ -212,6 +214,7 @@ type HostData struct {
 	BKBakOperator   string `json:"bk_bak_operator"`
 	BkAgentID       string `json:"bk_agent_id"`
 	BkAssetID       string `json:"bk_asset_id"`
+	IsGPU           bool   `json:"is_gpu,omitempty"`
 }
 
 // HostTopoRelationReq request
@@ -534,5 +537,66 @@ type SyncHostInfoFromCmpyReq struct {
 
 // SyncHostInfoFromCmpyResp resp
 type SyncHostInfoFromCmpyResp struct {
+	BaseResponse
+}
+
+// AddHostToBusinessIdleHostInfo 主机信息
+type AddHostToBusinessIdleHostInfo struct {
+	BkHostInnerIP   string `json:"bk_host_innerip,omitempty"`
+	BkHostInnerIPV6 string `json:"bk_host_innerip_v6,omitempty"`
+	BkCloudID       int    `json:"bk_cloud_id"`
+	BkAddressing    string `json:"bk_addressing"`
+	Operator        string `json:"operator,omitempty"`
+
+	// 海外CMDB GPU机器录入属性
+	IsGPU         bool   `json:"is_gpu,omitempty"`           // 是否GPU机型
+	BkCloudVendor string `json:"bk_cloud_vendor,omitempty"`  // 云厂商
+	BkCloudInstID string `json:"bk_cloud_inst_id,omitempty"` // 云主机实例ID
+	BkCloudRegion string `json:"bk_cloud_region,omitempty"`  // 云地域（Region）
+	BkCloudZone   string `json:"bk_cloud_zone,omitempty"`    // 云可用区（Zone）
+	InstanceType  string `json:"instance_type,omitempty"`    // 机型
+	OnshelfDate   string `json:"onshelf_date,omitempty"`     // 上架日期
+	BkBakOperator string `json:"bk_bak_operator,omitempty"`  // 备份维护人
+}
+
+// AddHostToBusinessIdleReq 添加主机到业务空闲机请求
+type AddHostToBusinessIdleReq struct {
+	BkBizID    int                             `json:"bk_biz_id"`
+	BkHostList []AddHostToBusinessIdleHostInfo `json:"bk_host_list"`
+}
+
+// AddHostToBusinessIdleResp 添加主机到业务空闲机响应
+type AddHostToBusinessIdleResp struct {
+	BaseResponse
+	Data AddHostToBusinessIdleData `json:"data"`
+}
+
+// AddHostToBusinessIdleData 添加主机到业务空闲机响应数据
+type AddHostToBusinessIdleData struct {
+	BkHostIDs []int64 `json:"bk_host_ids"`
+}
+
+// UpdateHostReq 更新主机属性请求
+type UpdateHostReq struct {
+	BkHostID string         `json:"bk_host_id"`
+	Data     UpdateHostData `json:"data"`
+}
+
+// UpdateHostData 更新主机属性数据
+type UpdateHostData struct {
+	BkHostName    string `json:"bk_host_name,omitempty"`
+	IsGPU         bool   `json:"is_gpu,omitempty"`           // 是否GPU机型
+	BkCloudVendor string `json:"bk_cloud_vendor,omitempty"`  // 云厂商
+	BkCloudInstID string `json:"bk_cloud_inst_id,omitempty"` // 云主机实例ID
+	BkCloudRegion string `json:"bk_cloud_region,omitempty"`  // 云地域（Region）
+	BkCloudZone   string `json:"bk_cloud_zone,omitempty"`    // 云可用区（Zone）
+	InstanceType  string `json:"instance_type,omitempty"`    // 机型
+	OnshelfDate   string `json:"onshelf_date,omitempty"`     // 上架日期
+	Operator      string `json:"operator,omitempty"`         // 主要维护人
+	BkBakOperator string `json:"bk_bak_operator,omitempty"`  // 备份维护人
+}
+
+// UpdateHostResp 更新主机属性响应
+type UpdateHostResp struct {
 	BaseResponse
 }

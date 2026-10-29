@@ -154,3 +154,9 @@ func (n *NodeManager) ListNodePublicPrefixs(opt *cloudprovider.ListNodePublicPre
 	[]*proto.NodePublicPrefix, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
+
+// ListImportClusterNodes 根据节点IP列表从k8s节点信息获取导入集群的节点信息
+func (n *NodeManager) ListImportClusterNodes(ips []string, opt *cloudprovider.ListNodesOption) (
+	[]*proto.Node, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
