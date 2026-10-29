@@ -513,9 +513,9 @@ func (t *TokenHandler) CreateClientToken(request *restful.Request, response *res
 		return
 	}
 
-	// check token permission
-	allow, _, createBy := checkTokenCreateBy(request, form.ClientName)
-	if !allow {
+	// check token permission, only client user can create client token
+	allow, isClient, createBy := checkTokenCreateBy(request, form.ClientName)
+	if !allow || !isClient {
 		message := fmt.Sprintf("errcode: %d, not allow to create client token", common.BcsErrApiUnauthorized)
 		metrics.ReportRequestAPIMetrics("CreateClientToken", request.Request.Method, metrics.ErrStatus, start)
 		utils.WriteUnauthorizedError(response, common.BcsErrApiUnauthorized, message)

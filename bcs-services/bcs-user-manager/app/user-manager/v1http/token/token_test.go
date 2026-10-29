@@ -504,3 +504,96 @@ func TestCreateTempToken(t *testing.T) {
 	})
 
 }
+
+func newTestClientToken(form CreateClientTokenForm, currentUser *models.BcsUser) (*testToken, error) {
+	tt, err := newTestToken(CreateTokenForm{})
+	if err != nil {
+		return nil, err
+	}
+	formData, err := json.Marshal(form)
+	if err != nil {
+		return nil, err
+	}
+	r := httptest.NewRequest("POST", "/any", bytes.NewBuffer(formData))
+	r.Header.Add("Content-Type", "application/json")
+	tt.request = restful.NewRequest(r)
+	tt.request.SetAttribute(constant.CurrentUserAttr, currentUser)
+	return tt, nil
+}
+
+// NOCC:golint/fnsize(设计如此)
+// nolint
+func TestCreateClientToken(t *testing.T) {
+	t.Run("can't create by self with plain user", func(t *testing.T) {
+		form := CreateClientTokenForm{ClientName: "test", Expiration: 3600}
+		tt, err := newTestClientToken(form, &models.BcsUser{Name: "test", UserType: models.PlainUser})
+		require.NoError(t, err)
+
+		tt.tokenHandler.CreateClientToken(tt.request, tt.response)
+		res := &utils.ErrorResponse{}
+		err = json.Unmarshal(tt.recorder.Body.Bytes(), res)
+		require.NoError(t, err)
+
+		tt.mockTokenStore.AssertExpectations(t)
+		tt.mockCache.AssertExpectations(t)
+		tt.mockJWTClient.AssertExpectations(t)
+		assert.Equal(t, 401, tt.response.StatusCode())
+		assert.Equal(t, common.BcsErrApiUnauthorized, res.Code)
+	})
+
+	t.Run("can't get exist client token with plain user", func(t *testing.T) {
+		form := CreateClientTokenForm{ClientName: "test", Expiration: 3600}
+		tt, err := newTestClientToken(form, &models.BcsUser{Name: "test", UserType: models.PlainUser})
+		require.NoError(t, err)
+
+		tt.mockTokenStore.On("GetTokenByCondition", mock.Anything).
+			Return(&models.BcsUser{Name: "test", UserToken: "token", UserType: models.ClientUser})
+		tt.tokenHandler.CreateClientToken(tt.request, tt.response)
+		res := &utils.ErrorResponse{}
+		err = json.Unmarshal(tt.recorder.Body.Bytes(), res)
+		require.NoError(t, err)
+
+		tt.mockTokenStore.AssertNotCalled(t, "GetTokenByCondition", mock.Anything)
+		assert.Equal(t, 401, tt.response.StatusCode())
+		assert.Equal(t, common.BcsErrApiUnauthorized, res.Code)
+	})
+
+	t.Run("can't create for others with plain user", func(t *testing.T) {
+		form := CreateClientTokenForm{ClientName: "test", Expiration: 3600}
+		tt, err := newTestClientToken(form, &models.BcsUser{Name: "user1", UserType: models.PlainUser})
+		require.NoError(t, err)
+
+		tt.tokenHandler.CreateClientToken(tt.request, tt.response)
+		res := &utils.ErrorResponse{}
+		err = json.Unmarshal(tt.recorder.Body.Bytes(), res)
+		require.NoError(t, err)
+
+		assert.Equal(t, 401, tt.response.StatusCode())
+		assert.Equal(t, common.BcsErrApiUnauthorized, res.Code)
+	})
+
+	t.Run("client user create client token", func(t *testing.T) {
+		form := CreateClientTokenForm{ClientName: "test", Expiration: 3600}
+		tt, err := newTestClientToken(form, &models.BcsUser{Name: "client", UserType: models.ClientUser})
+		require.NoError(t, err)
+
+		tt.mockTokenStore.On("GetTokenByCondition", mock.Anything).Once().Return((*models.BcsUser)(nil))
+		tt.mockJWTClient.On("JWTSign", mock.Anything).Once().Return("", nil)
+		tt.mockCache.On("Set", mock.Anything, mock.Anything, time.Duration(form.Expiration)*time.Second).Once().
+			Return("", nil)
+		tt.mockTokenStore.On("CreateToken", mock.MatchedBy(func(u *models.BcsUser) bool {
+			return u.Name == form.ClientName && u.UserType == models.ClientUser && u.CreatedBy == "client"
+		})).Once().Return(nil)
+		tt.tokenHandler.CreateClientToken(tt.request, tt.response)
+		res := &utils.ErrorResponse{}
+		err = json.Unmarshal(tt.recorder.Body.Bytes(), res)
+		require.NoError(t, err)
+
+		tt.mockTokenStore.AssertExpectations(t)
+		tt.mockCache.AssertExpectations(t)
+		tt.mockJWTClient.AssertExpectations(t)
+		assert.Equal(t, 200, tt.response.StatusCode())
+		assert.Equal(t, 0, res.Code)
+		assert.Equal(t, "success", res.Message)
+	})
+}
