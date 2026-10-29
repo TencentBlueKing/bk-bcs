@@ -11138,6 +11138,16 @@
           "type": "string",
           "description": "上下架节点过程中失败原因",
           "title": "failedReason"
+        },
+        "nodeTemplateID": {
+          "type": "string",
+          "description": "节点模板ID",
+          "title": "nodeTemplateID"
+        },
+        "nodeTemplateName": {
+          "type": "string",
+          "description": "节点模板名称",
+          "title": "nodeTemplateName"
         }
       },
       "description": "记录节点信息，用于节点列表展示",
@@ -16143,11 +16153,6 @@
           "type": "string",
           "description": "集群kubeConfig文件",
           "title": "kubeConfig"
-        },
-        "projectID": {
-          "type": "string",
-          "description": "集群所属项目",
-          "title": "projectID"
         }
       },
       "description": "用户输入检测kubeConfig文件",

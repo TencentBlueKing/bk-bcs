@@ -8436,6 +8436,14 @@ message ClusterNode {
     title: "failedReason",
     description: "上下架节点过程中失败原因"
   }];
+  string nodeTemplateID = 31[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "nodeTemplateID",
+    description: "节点模板ID"
+  }];
+  string nodeTemplateName = 32[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "nodeTemplateName",
+    description: "节点模板名称"
+  }];
 }
 
 message GetClustersMetaDataRequest {

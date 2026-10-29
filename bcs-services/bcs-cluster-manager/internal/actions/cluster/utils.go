@@ -55,6 +55,7 @@ type ClusterInfo struct {
 	ClusterID   string
 }
 
+// generateClusterID generate a unique cluster ID for the given cluster
 func generateClusterID(cls *proto.Cluster, model store.ClusterManagerModel) (string, int, error) {
 	clusterEnv := cls.Environment
 	clusterEngine := cls.EngineType
@@ -70,6 +71,7 @@ func generateClusterID(cls *proto.Cluster, model store.ClusterManagerModel) (str
 	return clusterID, clusterNum, nil
 }
 
+// getClusterMaxNum return the next available cluster number for the given engine type and env
 func getClusterMaxNum(clusterType string, env string, model store.ClusterManagerModel) (int, error) {
 	_, ok := common.EngineTypeLookup[clusterType]
 	if !ok {
@@ -275,7 +277,7 @@ func CheckUseNodesPermForUser(projectId, businessID string, user string, nodes [
 	return canUseHosts(ctx, bizID, user, nodes)
 }
 
-// checkUserHasPerm check user has perm
+// checkUserHasPerm check whether the user is one of the business maintainers
 func checkUserHasPerm(ctx context.Context, businessID string, user string) bool {
 	bizID, err := strconv.Atoi(businessID)
 	if err != nil {
@@ -294,6 +296,7 @@ func checkUserHasPerm(ctx context.Context, businessID string, user string) bool 
 	return utils.StringInSlice(user, strings.Split(businessData.BKBizMaintainer, ","))
 }
 
+// canUseHosts check whether the user has permission to use all the given hosts
 func canUseHosts(ctx context.Context, bizID int, user string, hostIPList []string) bool {
 	hasPermHosts := getUserHasPermHosts(ctx, bizID, user)
 
@@ -301,6 +304,7 @@ func canUseHosts(ctx context.Context, bizID int, user string, hostIPList []strin
 	return hostAllString.HasAll(hostIPList...)
 }
 
+// getUserHasPermHosts return the list of host IPs that the user is allowed to use in the business
 func getUserHasPermHosts(ctx context.Context, bizID int, user string) []string {
 	hostIPs := make([]string, 0)
 	// query biz hosts
@@ -458,6 +462,7 @@ func deleteClusterCredentialInfo(store store.ClusterManagerModel, clusterID stri
 	blog.V(4).Infof("deleteClusterCredentialInfo[%s] successful", clusterID)
 }
 
+// removeNodeSensitiveInfo clear sensitive password info from nodes
 func removeNodeSensitiveInfo(nodes []*proto.Node) {
 	for i := range nodes {
 		nodes[i].Passwd = ""
@@ -476,29 +481,42 @@ func transNodeToClusterNode(model store.ClusterManagerModel, node *proto.Node) *
 			nodeGroupName = group.Name
 		}
 	}
+	var (
+		nodeTemplateName = ""
+	)
+	if node.NodeTemplateID != "" {
+		nodeTemplate, err := model.GetNodeTemplateByID(context.Background(), node.NodeTemplateID)
+		if err != nil {
+			blog.Warnf("transNodeToClusterNode GetNodeTemplateByID[%s] failed: %v", node.NodeTemplateID, err)
+		} else {
+			nodeTemplateName = nodeTemplate.Name
+		}
+	}
 
 	return &proto.ClusterNode{
-		NodeID:        node.NodeID,
-		InnerIP:       node.InnerIP,
-		InstanceType:  node.InstanceType,
-		CPU:           node.CPU,
-		Mem:           node.Mem,
-		GPU:           node.GPU,
-		Status:        node.Status,
-		ZoneID:        node.ZoneID,
-		NodeGroupID:   node.NodeGroupID,
-		ClusterID:     node.ClusterID,
-		VPC:           node.VPC,
-		Region:        node.Region,
-		Passwd:        node.Passwd,
-		Zone:          node.Zone,
-		DeviceID:      node.DeviceID,
-		NodeName:      node.NodeName,
-		NodeGroupName: nodeGroupName,
-		InnerIPv6:     node.InnerIPv6,
-		TaskID:        node.TaskID,
-		ZoneName:      node.ZoneName,
-		FailedReason:  node.FailedReason,
+		NodeID:           node.NodeID,
+		InnerIP:          node.InnerIP,
+		InstanceType:     node.InstanceType,
+		CPU:              node.CPU,
+		Mem:              node.Mem,
+		GPU:              node.GPU,
+		Status:           node.Status,
+		ZoneID:           node.ZoneID,
+		NodeGroupID:      node.NodeGroupID,
+		ClusterID:        node.ClusterID,
+		VPC:              node.VPC,
+		Region:           node.Region,
+		Passwd:           node.Passwd,
+		Zone:             node.Zone,
+		DeviceID:         node.DeviceID,
+		NodeName:         node.NodeName,
+		NodeGroupName:    nodeGroupName,
+		InnerIPv6:        node.InnerIPv6,
+		TaskID:           node.TaskID,
+		ZoneName:         node.ZoneName,
+		FailedReason:     node.FailedReason,
+		NodeTemplateID:   node.NodeTemplateID,
+		NodeTemplateName: nodeTemplateName,
 	}
 }
 
@@ -633,7 +651,9 @@ func mergeClusterNodes(cluster *proto.Cluster, cmNodes []*proto.ClusterNode, k8s
 					}
 					return ""
 				}(),
-				FailedReason: n.FailedReason,
+				FailedReason:     n.FailedReason,
+				NodeTemplateID:   n.NodeTemplateID,
+				NodeTemplateName: n.NodeTemplateName,
 			})
 		} else {
 			nodes2 = append(nodes2, &proto.ClusterNode{
@@ -713,6 +733,7 @@ func GetCmNodeNames(cmNodes []*proto.ClusterNode, k8sNodes []*corev1.Node) {
 	}
 }
 
+// getNodeDualAddress return the IPv4 and IPv6 address of a k8s node
 func getNodeDualAddress(node *corev1.Node) (string, string) {
 	ipv4s, ipv6s := utils.GetNodeIPAddress(node)
 	return utils.SliceToString(ipv4s), utils.SliceToString(ipv6s)
@@ -781,6 +802,7 @@ func IsSupportAutoScale(store store.ClusterManagerModel, cls *proto.Cluster) boo
 	return true
 }
 
+// shieldClusterInfo clear kubeconfig info before returning cluster to caller
 func shieldClusterInfo(cluster *proto.Cluster) *proto.Cluster {
 	if cluster != nil {
 		cluster.KubeConfig = ""
@@ -810,6 +832,7 @@ const (
 	worker = "worker"
 )
 
+// updateClusterModule update cluster master/worker module id and name by category
 func updateClusterModule(cluster *proto.Cluster, category, moduleID, moduleName string) {
 	if cluster.GetClusterBasicSettings().GetModule() == nil {
 		cluster.GetClusterBasicSettings().Module = &proto.ClusterModule{}
@@ -850,6 +873,7 @@ func updateClusterModule(cluster *proto.Cluster, category, moduleID, moduleName 
 	}
 }
 
+// updateAutoScalingModule update scale-out module info of the cluster auto scaling option
 func updateAutoScalingModule(cluster *proto.Cluster, option *proto.ClusterAutoScalingOption,
 	moduleID, moduleName string) {
 	if option.GetModule() == nil {
@@ -878,6 +902,7 @@ func updateAutoScalingModule(cluster *proto.Cluster, option *proto.ClusterAutoSc
 	}
 }
 
+// transClusterNodes transfer cluster master/worker nodes to the specified cmdb module
 func transClusterNodes(model store.ClusterManagerModel, cluster *proto.Cluster, category, moduleID string) error {
 	bkBizID, _ := strconv.Atoi(cluster.GetBusinessID())
 	bkModuleID, _ := strconv.Atoi(moduleID)

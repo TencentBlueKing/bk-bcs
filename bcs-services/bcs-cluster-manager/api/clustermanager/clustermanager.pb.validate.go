@@ -29547,6 +29547,10 @@ func (m *ClusterNode) validate(all bool) error {
 
 	// no validation rules for FailedReason
 
+	// no validation rules for NodeTemplateID
+
+	// no validation rules for NodeTemplateName
+
 	if len(errors) > 0 {
 		return ClusterNodeMultiError(errors)
 	}
