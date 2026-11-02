@@ -5,6 +5,7 @@
   "author": "bkfe",
   "scripts": {
     "dev": "npm run i18n && bk-cli-service-webpack dev",
+    "prebuild": "node ./scripts/ensure-swc-binding.js",
     "build": "node ./scripts/generate-version.js && bk-cli-service-webpack build && node ./scripts/post-build.js",
     "i18n": "node ./scripts/vue-i18n-extract.js",
     "lint": "eslint --fix --ext .js,.vue,.ts,.tsx src"
@@ -61,7 +62,7 @@
     "@blueking/babel-preset-bk": "2.1.0-beta.10",
     "@blueking/cli-service-webpack": "0.0.5-beta.4",
     "@blueking/eslint-config-bk": "2.1.0-beta.18",
-    "@swc/core": "^1.15.8",
+    "@swc/core": "1.16.20",
     "@types/lodash": "^4.14.195",
     "compression-webpack-plugin": "^10.0.0",
     "cross-env": "^7.0.3",
