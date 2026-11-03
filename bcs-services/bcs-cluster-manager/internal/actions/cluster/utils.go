@@ -848,8 +848,17 @@ func updateClusterModule(cluster *proto.Cluster, category, moduleID, moduleName 
 		return
 	}
 
-	bkBizID, _ := strconv.Atoi(cluster.GetBusinessID())
-	bkModuleID, _ := strconv.Atoi(moduleID)
+	bkBizID, err := strconv.Atoi(cluster.GetBusinessID())
+	if err != nil {
+		blog.Errorf("updateClusterModule parse businessID[%s] failed: %s", cluster.GetBusinessID(), err.Error())
+		return
+	}
+	bkModuleID, err := strconv.Atoi(moduleID)
+	if err != nil {
+		blog.Errorf("updateClusterModule parse moduleID[%s] failed, moduleID must be numeric: %s",
+			moduleID, err.Error())
+		return
+	}
 
 	switch category {
 	case master:
@@ -890,8 +899,17 @@ func updateAutoScalingModule(cluster *proto.Cluster, option *proto.ClusterAutoSc
 		return
 	}
 
-	bkBizID, _ := strconv.Atoi(cluster.GetBusinessID())
-	bkModuleID, _ := strconv.Atoi(moduleID)
+	bkBizID, err := strconv.Atoi(cluster.GetBusinessID())
+	if err != nil {
+		blog.Errorf("updateAutoScalingModule parse businessID[%s] failed: %s", cluster.GetBusinessID(), err.Error())
+		return
+	}
+	bkModuleID, err := strconv.Atoi(moduleID)
+	if err != nil {
+		blog.Errorf("updateAutoScalingModule parse moduleID[%s] failed, moduleID must be numeric: %s",
+			moduleID, err.Error())
+		return
+	}
 	option.Module.ScaleOutBizID = cluster.GetBusinessID()
 	option.Module.ScaleOutModuleID = moduleID
 
