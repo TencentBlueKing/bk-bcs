@@ -82,9 +82,9 @@ func (cli *TkeClient) CreateTKECluster(createReq *CreateClusterRequest) (*Create
 
 	resp, err := cli.tke.CreateCluster(req)
 	if err != nil {
-		blog.Errorf("create tke cluster failed, clusterName[%s] requestID[%s]: %s",
-			createReq.ClusterBasic.ClusterName, *resp.Response.RequestId, convertTkeErr(err))
-		return nil, fmt.Errorf("create tke cluster failed, clusterName[%s] requestID: %s, err: %s", createReq.ClusterBasic.ClusterName, *resp.Response.RequestId, convertTkeErr(err))
+		blog.Errorf("create tke cluster failed, clusterName[%s]: %s",
+			createReq.ClusterBasic.ClusterName, convertTkeErr(err))
+		return nil, fmt.Errorf("create tke cluster failed, clusterName[%s], err: %s", createReq.ClusterBasic.ClusterName, convertTkeErr(err))
 	}
 
 	// check response
@@ -97,9 +97,9 @@ func (cli *TkeClient) CreateTKECluster(createReq *CreateClusterRequest) (*Create
 
 	// check response data
 	blog.Infof("RequestId[%s] tke client DescribeClusters[%s] response successful",
-		*response.RequestId, createReq.ClusterBasic.ClusterName)
+		response.RequestId, createReq.ClusterBasic.ClusterName)
 
-	if *response.ClusterId == "" {
+	if response.ClusterId == nil || *response.ClusterId == "" {
 		return nil, fmt.Errorf("CreateTKECluster client CreateCluster[%s] failed: clusterID is empty",
 			createReq.ClusterBasic.ClusterName)
 	}
@@ -123,8 +123,8 @@ func (cli *TkeClient) GetTKECluster(clusterID string) (*tke.Cluster, error) {
 
 	resp, err := cli.tke.DescribeClusters(req)
 	if err != nil {
-		blog.Errorf("get tke cluster failed, clusterID[%s] requestID[%s]: %s", clusterID, *resp.Response.RequestId, convertTkeErr(err))
-		return nil, fmt.Errorf("get tke cluster failed, clusterID[%s] requestID: %s, err: %s", clusterID, *resp.Response.RequestId, convertTkeErr(err))
+		blog.Errorf("get tke cluster failed, clusterID[%s]: %s", clusterID, convertTkeErr(err))
+		return nil, fmt.Errorf("get tke cluster failed, clusterID[%s], err: %s", clusterID, convertTkeErr(err))
 	}
 
 	// check response
@@ -134,11 +134,11 @@ func (cli *TkeClient) GetTKECluster(clusterID string) (*tke.Cluster, error) {
 		return nil, cloudprovider.ErrCloudLostResponse
 	}
 	// check response data
-	blog.Infof("RequestId[%s] tke client DescribeClusters[%s] response num %d",
-		*response.RequestId, clusterID, *response.TotalCount,
+	blog.Infof("RequestId[%s] tke client DescribeClusters[%s] response num %v",
+		response.RequestId, clusterID, response.TotalCount,
 	)
 
-	if *response.TotalCount == 0 || len(response.Clusters) == 0 {
+	if response.TotalCount == nil || *response.TotalCount == 0 || len(response.Clusters) == 0 {
 		return nil, fmt.Errorf("GetTKECluster client DescribeClusters[%s] response data empty", clusterID)
 	}
 
@@ -167,15 +167,15 @@ func (cli *TkeClient) ListTKECluster() ([]*tke.Cluster, error) {
 
 		resp, err := cli.tke.DescribeClusters(req)
 		if err != nil {
-			blog.Errorf("list tke cluster failed, requestID[%s]: %s", *resp.Response.RequestId, convertTkeErr(err))
-			return nil, fmt.Errorf("list tke cluster failed, requestID: %s, err: %s", *resp.Response.RequestId, convertTkeErr(err))
+			blog.Errorf("list tke cluster failed,: %s", convertTkeErr(err))
+			return nil, fmt.Errorf("list tke cluster failed,, err: %s", convertTkeErr(err))
 		}
 		// check response
 		response := resp.Response
 		if response == nil {
 			return nil, cloudprovider.ErrCloudLostResponse
 		}
-		blog.Info("ListTKECluster %v DescribeClusters success", *response.RequestId, *response.TotalCount)
+		blog.Info("ListTKECluster %v DescribeClusters success", response.RequestId, response.TotalCount)
 
 		clusterList = append(clusterList, response.Clusters...)
 		clusterListLen = len(response.Clusters)
@@ -211,8 +211,8 @@ func (cli *TkeClient) DeleteTKECluster(clusterID string, deleteMode DeleteMode) 
 
 	resp, err := cli.tke.DeleteCluster(req)
 	if err != nil {
-		blog.Errorf("delete tke cluster failed, clusterID[%s] requestID[%s]: %s", clusterID, *resp.Response.RequestId, convertTkeErr(err))
-		return fmt.Errorf("delete tke cluster failed, clusterID[%s] requestID: %s, err: %s", clusterID, *resp.Response.RequestId, convertTkeErr(err))
+		blog.Errorf("delete tke cluster failed, clusterID[%s]: %s", clusterID, convertTkeErr(err))
+		return fmt.Errorf("delete tke cluster failed, clusterID[%s], err: %s", clusterID, convertTkeErr(err))
 	}
 
 	// check response
@@ -223,7 +223,7 @@ func (cli *TkeClient) DeleteTKECluster(clusterID string, deleteMode DeleteMode) 
 	}
 	// check response data
 	blog.Infof("RequestId[%s] tke client DescribeClusters[%s] response successful",
-		*response.RequestId, clusterID)
+		response.RequestId, clusterID)
 
 	return nil
 }
@@ -265,17 +265,17 @@ func (cli *TkeClient) QueryTkeClusterAllInstances(ctx context.Context, clusterID
 
 		resp, err := cli.tke.DescribeClusterInstances(req)
 		if err != nil {
-			blog.Errorf("query tke cluster instances failed, clusterID[%s] requestID[%s]: %s",
-				clusterID, *resp.Response.RequestId, convertTkeErr(err))
-			return nil, fmt.Errorf("query tke cluster instances failed, clusterID[%s] requestID: %s, err: %s", clusterID, *resp.Response.RequestId, convertTkeErr(err))
+			blog.Errorf("query tke cluster instances failed, clusterID[%s]: %s",
+				clusterID, convertTkeErr(err))
+			return nil, fmt.Errorf("query tke cluster instances failed, clusterID[%s], err: %s", clusterID, convertTkeErr(err))
 		}
 		// check response
 		response := resp.Response
 		if response == nil {
 			return nil, cloudprovider.ErrCloudLostResponse
 		}
-		blog.Infof("traceID[%s] RequestId[%s] tke client DescribeClusterInstances[%s:%d] response successful",
-			traceID, *response.RequestId, clusterID, *response.TotalCount)
+		blog.Infof("traceID[%s] RequestId[%s] tke client DescribeClusterInstances[%s:%v] response successful",
+			traceID, response.RequestId, clusterID, response.TotalCount)
 
 		for _, instance := range response.InstanceSet {
 			instanceList = append(instanceList, &InstanceInfo{
@@ -325,9 +325,9 @@ func (cli *TkeClient) QueryTkeClusterInstances(clusterReq *DescribeClusterInstan
 	// tke DescribeClusterInstances
 	resp, err := cli.tke.DescribeClusterInstances(req)
 	if err != nil {
-		blog.Errorf("query tke cluster instances failed, clusterID[%s] requestID[%s]: %s",
-			clusterReq.ClusterID, *resp.Response.RequestId, convertTkeErr(err))
-		return nil, fmt.Errorf("query tke cluster instances failed, clusterID[%s] requestID: %s, err: %s", clusterReq.ClusterID, *resp.Response.RequestId, convertTkeErr(err))
+		blog.Errorf("query tke cluster instances failed, clusterID[%s]: %s",
+			clusterReq.ClusterID, convertTkeErr(err))
+		return nil, fmt.Errorf("query tke cluster instances failed, clusterID[%s], err: %s", clusterReq.ClusterID, convertTkeErr(err))
 	}
 
 	// check response
@@ -338,11 +338,11 @@ func (cli *TkeClient) QueryTkeClusterInstances(clusterReq *DescribeClusterInstan
 		return nil, cloudprovider.ErrCloudLostResponse
 	}
 	// check response data
-	blog.Infof("RequestId[%s] tke client DescribeClusterInstances[%s] response num %d",
-		*response.RequestId, clusterReq.ClusterID, *response.TotalCount,
+	blog.Infof("RequestId[%s] tke client DescribeClusterInstances[%s] response num %v",
+		response.RequestId, clusterReq.ClusterID, response.TotalCount,
 	)
 
-	if *response.TotalCount == 0 || len(response.InstanceSet) == 0 {
+	if response.TotalCount == nil || *response.TotalCount == 0 || len(response.InstanceSet) == 0 {
 		return nil, fmt.Errorf("QueryTkeClusterInstances client DescribeClusterInstances[%s] response data empty",
 			clusterReq.ClusterID)
 	}
@@ -378,9 +378,9 @@ func (cli *TkeClient) DeleteTkeClusterInstance(deleteReq *DeleteInstancesRequest
 	// tke DeleteClusterInstances
 	resp, err := cli.tke.DeleteClusterInstances(req)
 	if err != nil {
-		blog.Errorf("delete tke cluster instance failed, clusterID[%s] requestID[%s]: %s",
-			deleteReq.ClusterID, *resp.Response.RequestId, convertTkeErr(err))
-		return nil, fmt.Errorf("delete tke cluster instance failed, clusterID[%s] requestID: %s, err: %s", deleteReq.ClusterID, *resp.Response.RequestId, convertTkeErr(err))
+		blog.Errorf("delete tke cluster instance failed, clusterID[%s]: %s",
+			deleteReq.ClusterID, convertTkeErr(err))
+		return nil, fmt.Errorf("delete tke cluster instance failed, clusterID[%s], err: %s", deleteReq.ClusterID, convertTkeErr(err))
 	}
 
 	// check response
@@ -392,7 +392,7 @@ func (cli *TkeClient) DeleteTkeClusterInstance(deleteReq *DeleteInstancesRequest
 	}
 	// check response data
 	blog.Infof("RequestId[%s] tke client DeleteTkeClusterInstance[%s] response successful",
-		*response.RequestId, deleteReq.ClusterID)
+		response.RequestId, deleteReq.ClusterID)
 
 	result := &DeleteInstancesResult{
 		Success:  common.StringValues(response.SuccInstanceIds),
@@ -421,9 +421,9 @@ func (cli *TkeClient) AddExistedInstancesToCluster(addReq *AddExistedInstanceReq
 	// tke AddExistedInstances
 	resp, err := cli.tke.AddExistedInstances(req)
 	if err != nil {
-		blog.Errorf("add existed instances to cluster failed, clusterID[%s] requestID[%s]: %s",
-			addReq.ClusterID, *resp.Response.RequestId, convertTkeErr(err))
-		return nil, fmt.Errorf("add existed instances to cluster failed, clusterID[%s] requestID: %s, err: %s", addReq.ClusterID, *resp.Response.RequestId, convertTkeErr(err))
+		blog.Errorf("add existed instances to cluster failed, clusterID[%s]: %s",
+			addReq.ClusterID, convertTkeErr(err))
+		return nil, fmt.Errorf("add existed instances to cluster failed, clusterID[%s], err: %s", addReq.ClusterID, convertTkeErr(err))
 	}
 
 	// check response
@@ -435,7 +435,7 @@ func (cli *TkeClient) AddExistedInstancesToCluster(addReq *AddExistedInstanceReq
 	}
 
 	blog.Infof("RequestId[%s] tke client AddExistedInstancesToCluster[%s] response successful",
-		*response.RequestId, addReq.ClusterID)
+		response.RequestId, addReq.ClusterID)
 
 	result := &AddExistedInstanceRsp{
 		FailedInstanceIDs: common.StringValues(response.FailedInstanceIds),
@@ -456,10 +456,10 @@ func (cli *TkeClient) DescribeInstanceCreateProgress(clusterId, instanceId strin
 
 	resp, err := cli.tkeCommon.DescribeInstanceCreateProgress(req)
 	if err != nil {
-		blog.Errorf("describe instance create progress failed, clusterID[%s] instanceID[%s] requestID[%s]: %s",
-			clusterId, instanceId, *resp.Response.RequestId, convertTkeErr(err))
-		return "", fmt.Errorf("describe instance create progress failed, clusterID[%s] instanceID[%s] "+
-			"requestID: %s, err: %s", clusterId, instanceId, *resp.Response.RequestId, convertTkeErr(err))
+		blog.Errorf("describe instance create progress failed, clusterID[%s] instanceID[%s]: %s",
+			clusterId, instanceId, convertTkeErr(err))
+		return "", fmt.Errorf("describe instance create progress failed, clusterID[%s] instanceID[%s], err: %s",
+			clusterId, instanceId, convertTkeErr(err))
 	}
 
 	if resp == nil || resp.Response == nil {
@@ -504,11 +504,15 @@ func (cli *TkeClient) EnableTKEVpcCniMode(input *EnableVpcCniInput) error {
 	// tke EnableVpcCniNetworkType
 	resp, err := cli.tke.EnableVpcCniNetworkType(req)
 	if err != nil {
-		blog.Errorf("enable vpc-cni mode failed, requestID[%s]: %s", *resp.Response.RequestId, convertTkeErr(err))
-		return fmt.Errorf("enable vpc-cni mode failed, requestID: %s, err: %s", *resp.Response.RequestId, convertTkeErr(err))
+		blog.Errorf("enable vpc-cni mode failed,: %s", convertTkeErr(err))
+		return fmt.Errorf("enable vpc-cni mode failed,, err: %s", convertTkeErr(err))
+	}
+	if resp == nil || resp.Response == nil {
+		blog.Errorf("EnableTKEVpcCniMode resp is nil")
+		return cloudprovider.ErrCloudLostResponse
 	}
 
-	blog.Infof("EnableTKEVpcCniMode successful, requestID[%s]", *resp.Response.RequestId)
+	blog.Infof("EnableTKEVpcCniMode successful, requestID[%v]", resp.Response.RequestId)
 	return nil
 }
 
@@ -520,16 +524,26 @@ func (cli *TkeClient) GetEnableVpcCniProgress(clusterID string) (*GetEnableVpcCn
 	// tke DescribeEnableVpcCniProgress
 	resp, err := cli.tke.DescribeEnableVpcCniProgress(req)
 	if err != nil {
-		blog.Errorf("query vpc-cni progress failed, requestID[%s]: %s", *resp.Response.RequestId, convertTkeErr(err))
-		return nil, fmt.Errorf("query vpc-cni progress failed, clusterID[%s] requestID: %s, err: %s", clusterID, *resp.Response.RequestId, convertTkeErr(err))
+		blog.Errorf("query vpc-cni progress failed,: %s", convertTkeErr(err))
+		return nil, fmt.Errorf("query vpc-cni progress failed, clusterID[%s], err: %s", clusterID, convertTkeErr(err))
+	}
+	if resp == nil || resp.Response == nil {
+		blog.Errorf("GetEnableVpcCniProgress resp is nil")
+		return nil, cloudprovider.ErrCloudLostResponse
 	}
 
 	// Status: Running/Succeed/Failed, return Message when task Failed
-	return &GetEnableVpcCniProgressOutput{
-		Status:    *resp.Response.Status,
-		Message:   *resp.Response.ErrorMessage,
-		RequestID: *resp.Response.RequestId,
-	}, nil
+	out := &GetEnableVpcCniProgressOutput{}
+	if resp.Response.Status != nil {
+		out.Status = *resp.Response.Status
+	}
+	if resp.Response.ErrorMessage != nil {
+		out.Message = *resp.Response.ErrorMessage
+	}
+	if resp.Response.RequestId != nil {
+		out.RequestID = *resp.Response.RequestId
+	}
+	return out, nil
 }
 
 // AddVpcCniSubnets add vpc-cni mode subnet
@@ -545,10 +559,14 @@ func (cli *TkeClient) AddVpcCniSubnets(input *AddVpcCniSubnetsInput) error {
 	resp, err := cli.tke.AddVpcCniSubnets(req)
 	if err != nil {
 		sdkErrMsg := convertTkeErr(err)
-		blog.Errorf("add vpc-cni subnets failed, clusterID[%s] vpcID[%s] subnets[%v] requestID[%s]: %s",
-			input.ClusterID, input.VpcID, input.SubnetIDs, *resp.Response.RequestId, sdkErrMsg)
-		return fmt.Errorf("add vpc-cni subnets failed, clusterID[%s] vpcID[%s] subnets[%v] requestID: %s, err: %s",
-			input.ClusterID, input.VpcID, input.SubnetIDs, *resp.Response.RequestId, sdkErrMsg)
+		blog.Errorf("add vpc-cni subnets failed, clusterID[%s] vpcID[%s] subnets[%v]: %s",
+			input.ClusterID, input.VpcID, input.SubnetIDs, sdkErrMsg)
+		return fmt.Errorf("add vpc-cni subnets failed, clusterID[%s] vpcID[%s] subnets[%v], err: %s",
+			input.ClusterID, input.VpcID, input.SubnetIDs, sdkErrMsg)
+	}
+	if resp == nil || resp.Response == nil {
+		blog.Errorf("AddVpcCniSubnets resp is nil")
+		return cloudprovider.ErrCloudLostResponse
 	}
 
 	return nil
@@ -562,8 +580,12 @@ func (cli *TkeClient) CloseVpcCniMode(clusterID string) error {
 	// tke DisableVpcCniNetworkType
 	resp, err := cli.tke.DisableVpcCniNetworkType(req)
 	if err != nil {
-		blog.Errorf("close vpc-cni mode failed, requestID[%s]: %s", *resp.Response.RequestId, convertTkeErr(err))
-		return fmt.Errorf("close vpc-cni mode failed, clusterID[%s] requestID: %s, err: %s", clusterID, *resp.Response.RequestId, convertTkeErr(err))
+		blog.Errorf("close vpc-cni mode failed,: %s", convertTkeErr(err))
+		return fmt.Errorf("close vpc-cni mode failed, clusterID[%s], err: %s", clusterID, convertTkeErr(err))
+	}
+	if resp == nil || resp.Response == nil {
+		blog.Errorf("CloseVpcCniMode resp is nil")
+		return cloudprovider.ErrCloudLostResponse
 	}
 
 	return nil
@@ -581,8 +603,12 @@ func (cli *TkeClient) AddClusterCIDR(clusterId string, cidrs []string, ignore bo
 
 	resp, err := cli.tke.AddClusterCIDR(req)
 	if err != nil {
-		blog.Errorf("add cluster cidr failed, clusterID[%s] requestID[%s]: %s", clusterId, *resp.Response.RequestId, convertTkeErr(err))
-		return fmt.Errorf("add cluster cidr failed, clusterID[%s] cidrs[%v] requestID: %s, err: %s", clusterId, cidrs, *resp.Response.RequestId, convertTkeErr(err))
+		blog.Errorf("add cluster cidr failed, clusterID[%s]: %s", clusterId, convertTkeErr(err))
+		return fmt.Errorf("add cluster cidr failed, clusterID[%s] cidrs[%v], err: %s", clusterId, cidrs, convertTkeErr(err))
+	}
+	if resp == nil || resp.Response == nil {
+		blog.Errorf("AddClusterCIDR resp is nil")
+		return cloudprovider.ErrCloudLostResponse
 	}
 
 	blog.Infof("cluster[%s] add cidrs[%v] success", clusterId, cidrs)
@@ -599,25 +625,40 @@ func (cli *TkeClient) DescribeVpcCniPodLimits(zone string, instanceType string) 
 
 	resp, err := cli.tke.DescribeVpcCniPodLimits(req)
 	if err != nil {
-		blog.Errorf("describe vpc-cni pod limits failed, zone[%s] instanceType[%s] requestID[%s]: %s",
-			zone, instanceType, *resp.Response.RequestId, convertTkeErr(err))
-		return nil, fmt.Errorf("describe vpc-cni pod limits failed, zone[%s] instanceType[%s] requestID: %s, err: %s", zone, instanceType, *resp.Response.RequestId, convertTkeErr(err))
+		blog.Errorf("describe vpc-cni pod limits failed, zone[%s] instanceType[%s]: %s",
+			zone, instanceType, convertTkeErr(err))
+		return nil, fmt.Errorf("describe vpc-cni pod limits failed, zone[%s] instanceType[%s], err: %s", zone, instanceType, convertTkeErr(err))
+	}
+	if resp == nil || resp.Response == nil {
+		blog.Errorf("DescribeVpcCniPodLimits resp is nil")
+		return nil, cloudprovider.ErrCloudLostResponse
 	}
 
-	if *resp.Response.TotalCount == 0 || len(resp.Response.PodLimitsInstanceSet) == 0 {
+	if resp.Response.TotalCount == nil || *resp.Response.TotalCount == 0 ||
+		len(resp.Response.PodLimitsInstanceSet) == 0 {
 		return nil, fmt.Errorf("DescribeVpcCniPodLimits[%s:%s] empty", zone, instanceType)
 	}
 
 	blog.Infof("DescribeVpcCniPodLimits[%s:%s] successful", zone, instanceType)
 
+	limits := PodLimits{}
+	if len(resp.Response.PodLimitsInstanceSet) > 0 && resp.Response.PodLimitsInstanceSet[0] != nil &&
+		resp.Response.PodLimitsInstanceSet[0].PodLimits != nil {
+		if resp.Response.PodLimitsInstanceSet[0].PodLimits.TKERouteENINonStaticIP != nil {
+			limits.RouterEniNonStaticIP = *resp.Response.PodLimitsInstanceSet[0].PodLimits.TKERouteENINonStaticIP
+		}
+		if resp.Response.PodLimitsInstanceSet[0].PodLimits.TKERouteENIStaticIP != nil {
+			limits.RouterEniStaticIP = *resp.Response.PodLimitsInstanceSet[0].PodLimits.TKERouteENIStaticIP
+		}
+		if resp.Response.PodLimitsInstanceSet[0].PodLimits.TKEDirectENI != nil {
+			limits.directEni = *resp.Response.PodLimitsInstanceSet[0].PodLimits.TKEDirectENI
+		}
+	}
+
 	return &DescribeVpcCniPodLimitsOut{
 		Zone:         zone,
 		InstanceType: instanceType,
-		Limits: PodLimits{
-			RouterEniNonStaticIP: *resp.Response.PodLimitsInstanceSet[0].PodLimits.TKERouteENINonStaticIP,
-			RouterEniStaticIP:    *resp.Response.PodLimitsInstanceSet[0].PodLimits.TKERouteENIStaticIP,
-			directEni:            *resp.Response.PodLimitsInstanceSet[0].PodLimits.TKEDirectENI,
-		},
+		Limits:       limits,
 	}, nil
 }
 
@@ -634,8 +675,8 @@ func (cli *TkeClient) GetTKEClusterVersions() ([]*Versions, error) {
 	// tke DescribeVersions
 	resp, err := cli.tke.DescribeVersions(req)
 	if err != nil {
-		blog.Errorf("get tke cluster versions failed, requestID[%s]: %s", *resp.Response.RequestId, convertTkeErr(err))
-		return nil, fmt.Errorf("get tke cluster versions failed, requestID: %s, err: %s", *resp.Response.RequestId, convertTkeErr(err))
+		blog.Errorf("get tke cluster versions failed,: %s", convertTkeErr(err))
+		return nil, fmt.Errorf("get tke cluster versions failed,, err: %s", convertTkeErr(err))
 	}
 
 	// check response
@@ -645,9 +686,9 @@ func (cli *TkeClient) GetTKEClusterVersions() ([]*Versions, error) {
 		return nil, cloudprovider.ErrCloudLostResponse
 	}
 	// check response data
-	blog.Infof("RequestId[%s] tke client DescribeVersions response successful", *response.RequestId)
+	blog.Infof("RequestId[%s] tke client DescribeVersions response successful", response.RequestId)
 
-	if *response.TotalCount == 0 || len(response.VersionInstanceSet) == 0 {
+	if response.TotalCount == nil || *response.TotalCount == 0 || len(response.VersionInstanceSet) == 0 {
 		return nil, fmt.Errorf("GetTKEClusterVersions client DescribeVersions response data empty")
 	}
 
@@ -679,16 +720,20 @@ func (cli *TkeClient) GetTKEClusterKubeConfig(clusterID string, isExtranet bool)
 	// tke DescribeClusterKubeconfig
 	resp, err := cli.tke.DescribeClusterKubeconfig(req)
 	if err != nil {
-		blog.Errorf("get tke cluster kubeconfig failed, clusterID[%s] requestID[%s]: %s", clusterID, *resp.Response.RequestId, convertTkeErr(err))
-		return "", fmt.Errorf("get tke cluster kubeconfig failed, clusterID[%s] requestID: %s, err: %s", clusterID, *resp.Response.RequestId, convertTkeErr(err))
+		blog.Errorf("get tke cluster kubeconfig failed, clusterID[%s]: %s", clusterID, convertTkeErr(err))
+		return "", fmt.Errorf("get tke cluster kubeconfig failed, clusterID[%s], err: %s", clusterID, convertTkeErr(err))
 	}
 
-	if resp.Response == nil {
+	if resp == nil || resp.Response == nil {
 		blog.Errorf("GetTKEClusterKubeConfig client DescribeClusterKubeconfig but lost response information")
 		return "", cloudprovider.ErrCloudLostResponse
 	}
 	// check response data
-	blog.Infof("RequestId[%s] tke client DescribeClusterKubeconfig response successful", *resp.Response.RequestId)
+	blog.Infof("RequestId[%v] tke client DescribeClusterKubeconfig response successful", resp.Response.RequestId)
+	if resp.Response.Kubeconfig == nil {
+		blog.Errorf("GetTKEClusterKubeConfig client DescribeClusterKubeconfig Kubeconfig is nil")
+		return "", cloudprovider.ErrCloudLostResponse
+	}
 	baseRet := base64.StdEncoding.EncodeToString([]byte(*resp.Response.Kubeconfig))
 
 	return baseRet, nil
@@ -710,16 +755,16 @@ func (cli *TkeClient) GetClusterEndpointStatus(clusterID string, isExtranet bool
 	// tke DescribeClusterEndpointStatus
 	resp, err := cli.tke.DescribeClusterEndpointStatus(req)
 	if err != nil {
-		blog.Errorf("get cluster endpoint status failed, clusterID[%s] requestID[%s]: %s", clusterID, *resp.Response.RequestId, convertTkeErr(err))
-		return "", fmt.Errorf("get cluster endpoint status failed, clusterID[%s] requestID: %s, err: %s", clusterID, *resp.Response.RequestId, convertTkeErr(err))
+		blog.Errorf("get cluster endpoint status failed, clusterID[%s]: %s", clusterID, convertTkeErr(err))
+		return "", fmt.Errorf("get cluster endpoint status failed, clusterID[%s], err: %s", clusterID, convertTkeErr(err))
 	}
 
-	if resp.Response == nil {
+	if resp == nil || resp.Response == nil {
 		blog.Errorf("GetClusterEndpointStatus client DescribeClusterEndpointStatus but lost response information")
 		return "", cloudprovider.ErrCloudLostResponse
 	}
 	// check response data
-	blog.Infof("RequestId[%s] tke client DescribeClusterEndpointStatus response successful", *resp.Response.RequestId)
+	blog.Infof("RequestId[%v] tke client DescribeClusterEndpointStatus response successful", resp.Response.RequestId)
 
 	if resp.Response.Status == nil {
 		blog.Errorf("GetClusterEndpointStatus client DescribeClusterEndpointStatus failed: %v", "status nil")
@@ -745,12 +790,16 @@ func (cli *TkeClient) CreateClusterEndpoint(clusterID string, config ClusterEndp
 	// tke CreateClusterEndpoint
 	resp, err := cli.tke.CreateClusterEndpoint(req)
 	if err != nil {
-		blog.Errorf("create cluster endpoint failed, clusterID[%s] requestID[%s]: %s", clusterID, *resp.Response.RequestId, convertTkeErr(err))
-		return fmt.Errorf("create cluster endpoint failed, clusterID[%s] requestID: %s, err: %s", clusterID, *resp.Response.RequestId, convertTkeErr(err))
+		blog.Errorf("create cluster endpoint failed, clusterID[%s]: %s", clusterID, convertTkeErr(err))
+		return fmt.Errorf("create cluster endpoint failed, clusterID[%s], err: %s", clusterID, convertTkeErr(err))
+	}
+	if resp == nil || resp.Response == nil {
+		blog.Errorf("CreateClusterEndpoint resp is nil")
+		return cloudprovider.ErrCloudLostResponse
 	}
 
 	// check response data
-	blog.Infof("RequestId[%s] tke client CreateClusterEndpoint response successful", *resp.Response.RequestId)
+	blog.Infof("RequestId[%v] tke client CreateClusterEndpoint response successful", resp.Response.RequestId)
 
 	return nil
 }
@@ -772,12 +821,16 @@ func (cli *TkeClient) DeleteClusterEndpoint(clusterID string, isExtranet bool) e
 	// tke DeleteClusterEndpoint
 	resp, err := cli.tke.DeleteClusterEndpoint(req)
 	if err != nil {
-		blog.Errorf("delete cluster endpoint failed, clusterID[%s] requestID[%s]: %s", clusterID, *resp.Response.RequestId, convertTkeErr(err))
-		return fmt.Errorf("delete cluster endpoint failed, clusterID[%s] requestID: %s, err: %s", clusterID, *resp.Response.RequestId, convertTkeErr(err))
+		blog.Errorf("delete cluster endpoint failed, clusterID[%s]: %s", clusterID, convertTkeErr(err))
+		return fmt.Errorf("delete cluster endpoint failed, clusterID[%s], err: %s", clusterID, convertTkeErr(err))
+	}
+	if resp == nil || resp.Response == nil {
+		blog.Errorf("DeleteClusterEndpoint resp is nil")
+		return cloudprovider.ErrCloudLostResponse
 	}
 
 	// check response data
-	blog.Infof("RequestId[%s] tke client DeleteClusterEndpoint response successful", *resp.Response.RequestId)
+	blog.Infof("RequestId[%v] tke client DeleteClusterEndpoint response successful", resp.Response.RequestId)
 
 	return nil
 }
@@ -793,8 +846,8 @@ func (cli *TkeClient) GetTKEClusterImages() ([]*Images, error) {
 	// tke DescribeImages
 	resp, err := cli.tke.DescribeImages(req)
 	if err != nil {
-		blog.Errorf("get tke cluster images failed, requestID[%s]: %s", *resp.Response.RequestId, convertTkeErr(err))
-		return nil, fmt.Errorf("get tke cluster images failed, requestID: %s, err: %s", *resp.Response.RequestId, convertTkeErr(err))
+		blog.Errorf("get tke cluster images failed,: %s", convertTkeErr(err))
+		return nil, fmt.Errorf("get tke cluster images failed,, err: %s", convertTkeErr(err))
 	}
 
 	// check response
@@ -804,9 +857,9 @@ func (cli *TkeClient) GetTKEClusterImages() ([]*Images, error) {
 		return nil, cloudprovider.ErrCloudLostResponse
 	}
 	// check response data
-	blog.Infof("RequestId[%s] tke client DescribeImages response successful", *response.RequestId)
+	blog.Infof("RequestId[%s] tke client DescribeImages response successful", response.RequestId)
 
-	if *response.TotalCount == 0 || len(response.ImageInstanceSet) == 0 {
+	if response.TotalCount == nil || *response.TotalCount == 0 || len(response.ImageInstanceSet) == 0 {
 		return nil, fmt.Errorf("GetTKEClusterImages client DescribeImages response data empty")
 	}
 
@@ -845,14 +898,18 @@ func (cli *TkeClient) CreateClusterNodePool(nodePool *CreateNodePoolInput) (stri
 	resp, err := cli.tke.CreateClusterNodePool(req)
 
 	if err != nil {
-		blog.Errorf("create cluster node pool failed, requestID[%s]: %s", *resp.Response.RequestId, convertTkeErr(err))
-		return "", fmt.Errorf("create cluster node pool failed, requestID: %s, err: %s", *resp.Response.RequestId, convertTkeErr(err))
+		blog.Errorf("create cluster node pool failed,: %s", convertTkeErr(err))
+		return "", fmt.Errorf("create cluster node pool failed,, err: %s", convertTkeErr(err))
 	}
 	if resp == nil || resp.Response == nil {
 		blog.Errorf("CreateClusterNodePool client CreateClusterNodePool but lost response information")
 		return "", cloudprovider.ErrCloudLostResponse
 	}
-	blog.Infof("RequestId[%s] tke client CreateClusterNodePool response successful", *resp.Response.RequestId)
+	blog.Infof("RequestId[%v] tke client CreateClusterNodePool response successful", resp.Response.RequestId)
+	if resp.Response.NodePoolId == nil {
+		blog.Errorf("CreateClusterNodePool client CreateClusterNodePool NodePoolId is nil")
+		return "", cloudprovider.ErrCloudLostResponse
+	}
 	return *resp.Response.NodePoolId, nil
 }
 
@@ -872,15 +929,19 @@ func (cli *TkeClient) DescribeClusterNodePools(clusterID string, filters []*Filt
 	// tke DescribeClusterNodePools
 	resp, err := cli.tke.DescribeClusterNodePools(req)
 	if err != nil {
-		blog.Errorf("describe cluster node pools failed, clusterID[%s] requestID[%s]: %s", clusterID, *resp.Response.RequestId, convertTkeErr(err))
-		return nil, 0, fmt.Errorf("describe cluster node pools failed, clusterID[%s] requestID: %s, err: %s", clusterID, *resp.Response.RequestId, convertTkeErr(err))
+		blog.Errorf("describe cluster node pools failed, clusterID[%s]: %s", clusterID, convertTkeErr(err))
+		return nil, 0, fmt.Errorf("describe cluster node pools failed, clusterID[%s], err: %s", clusterID, convertTkeErr(err))
 	}
 	if resp == nil || resp.Response == nil {
 		blog.Errorf("DescribeClusterNodePools client DescribeClusterNodePools but lost response information")
 		return nil, 0, cloudprovider.ErrCloudLostResponse
 	}
-	blog.Infof("RequestId[%s] tke client DescribeClusterNodePools response successful", *resp.Response.RequestId)
-	return resp.Response.NodePoolSet, int(*resp.Response.TotalCount), nil
+	blog.Infof("RequestId[%v] tke client DescribeClusterNodePools response successful", resp.Response.RequestId)
+	totalCount := 0
+	if resp.Response.TotalCount != nil {
+		totalCount = int(*resp.Response.TotalCount)
+	}
+	return resp.Response.NodePoolSet, totalCount, nil
 }
 
 // DescribeClusterNodePoolDetail describe cluster node pool detail
@@ -893,17 +954,16 @@ func (cli *TkeClient) DescribeClusterNodePoolDetail(clusterID string, nodePoolID
 	// tke DescribeClusterNodePoolDetail
 	resp, err := cli.tke.DescribeClusterNodePoolDetail(req)
 	if err != nil {
-		blog.Errorf("describe cluster node pool detail failed, clusterID[%s] nodePoolID[%s] requestID[%s]: %s",
-			clusterID, nodePoolID, *resp.Response.RequestId, convertTkeErr(err))
-		return nil, fmt.Errorf("describe cluster node pool detail failed, clusterID[%s] nodePoolID[%s] "+
-			"requestID: %s, err: %s", clusterID, nodePoolID, *resp.Response.RequestId, convertTkeErr(err))
+		blog.Errorf("describe cluster node pool detail failed, clusterID[%s] nodePoolID[%s]: %s",
+			clusterID, nodePoolID, convertTkeErr(err))
+		return nil, fmt.Errorf("describe cluster node pool detail failed, clusterID[%s] nodePoolID[%s], err: %s", clusterID, nodePoolID, convertTkeErr(err))
 	}
 	if resp == nil || resp.Response == nil {
 		blog.Errorf("DescribeClusterNodePoolDetail resp is nil")
 		return nil, cloudprovider.ErrCloudLostResponse
 	}
 
-	blog.Infof("RequestId[%s] tke client DescribeClusterNodePoolDetail response successful", *resp.Response.RequestId)
+	blog.Infof("RequestId[%s] tke client DescribeClusterNodePoolDetail response successful", resp.Response.RequestId)
 	return resp.Response.NodePool, nil
 }
 
@@ -914,14 +974,14 @@ func (cli *TkeClient) ModifyClusterNodePool(req *tke.ModifyClusterNodePoolReques
 	// tke ModifyClusterNodePool
 	resp, err := cli.tke.ModifyClusterNodePool(req)
 	if err != nil {
-		blog.Errorf("modify cluster node pool failed, requestID[%s]: %s", *resp.Response.RequestId, convertTkeErr(err))
-		return fmt.Errorf("modify cluster node pool failed, requestID: %s, err: %s", *resp.Response.RequestId, convertTkeErr(err))
+		blog.Errorf("modify cluster node pool failed,: %s", convertTkeErr(err))
+		return fmt.Errorf("modify cluster node pool failed,, err: %s", convertTkeErr(err))
 	}
 	if resp == nil || resp.Response == nil {
 		blog.Errorf("ModifyClusterNodePool resp is nil")
 		return fmt.Errorf("ModifyClusterNodePool resp is nil")
 	}
-	blog.Infof("RequestId[%s] tke client ModifyClusterNodePool response successful", *resp.Response.RequestId)
+	blog.Infof("RequestId[%s] tke client ModifyClusterNodePool response successful", resp.Response.RequestId)
 	return nil
 }
 
@@ -939,14 +999,14 @@ func (cli *TkeClient) DeleteClusterNodePool(clusterID string, nodePoolIDs []stri
 	// tke DeleteClusterNodePool
 	resp, err := cli.tke.DeleteClusterNodePool(req)
 	if err != nil {
-		blog.Errorf("delete cluster node pool failed, clusterID[%s] requestID[%s]: %s", clusterID, *resp.Response.RequestId, convertTkeErr(err))
-		return fmt.Errorf("delete cluster node pool failed, clusterID[%s] requestID: %s, err: %s", clusterID, *resp.Response.RequestId, convertTkeErr(err))
+		blog.Errorf("delete cluster node pool failed, clusterID[%s]: %s", clusterID, convertTkeErr(err))
+		return fmt.Errorf("delete cluster node pool failed, clusterID[%s], err: %s", clusterID, convertTkeErr(err))
 	}
 	if resp == nil || resp.Response == nil {
 		blog.Errorf("DeleteClusterNodePool resp is nil")
 		return fmt.Errorf("DeleteClusterNodePool resp is nil")
 	}
-	blog.Infof("RequestId[%s] tke client DeleteClusterNodePool response successful", *resp.Response.RequestId)
+	blog.Infof("RequestId[%s] tke client DeleteClusterNodePool response successful", resp.Response.RequestId)
 	return nil
 }
 
@@ -964,16 +1024,16 @@ func (cli *TkeClient) ModifyNodePoolCapacity(clusterID string, nodePoolID string
 	// tke ModifyNodePoolDesiredCapacityAboutAsg
 	resp, err := cli.tke.ModifyNodePoolDesiredCapacityAboutAsg(req)
 	if err != nil {
-		blog.Errorf("modify node pool capacity failed, clusterID[%s] nodePoolID[%s] requestID[%s]: %s",
-			clusterID, nodePoolID, *resp.Response.RequestId, convertTkeErr(err))
-		return fmt.Errorf("modify node pool capacity failed, clusterID[%s] nodePoolID[%s] requestID: %s, err: %s", clusterID, nodePoolID, *resp.Response.RequestId, convertTkeErr(err))
+		blog.Errorf("modify node pool capacity failed, clusterID[%s] nodePoolID[%s]: %s",
+			clusterID, nodePoolID, convertTkeErr(err))
+		return fmt.Errorf("modify node pool capacity failed, clusterID[%s] nodePoolID[%s], err: %s", clusterID, nodePoolID, convertTkeErr(err))
 	}
 	if resp == nil || resp.Response == nil {
 		blog.Errorf("ModifyNodePoolDesiredCapacityAboutAsg resp is nil")
 		return fmt.Errorf("ModifyNodePoolDesiredCapacityAboutAsg resp is nil")
 	}
 	blog.Infof("RequestId[%s] tke client ModifyNodePoolDesiredCapacityAboutAsg response successful",
-		*resp.Response.RequestId)
+		resp.Response.RequestId)
 	return nil
 }
 
@@ -991,17 +1051,16 @@ func (cli *TkeClient) ModifyNodePoolInstanceTypes(clusterID string, nodePoolID s
 	// tke ModifyNodePoolInstanceTypes
 	resp, err := cli.tke.ModifyNodePoolInstanceTypes(req)
 	if err != nil {
-		blog.Errorf("modify node pool instance types failed, clusterID[%s] nodePoolID[%s] requestID[%s]: %s",
-			clusterID, nodePoolID, *resp.Response.RequestId, convertTkeErr(err))
-		return fmt.Errorf("modify node pool instance types failed, clusterID[%s] nodePoolID[%s] "+
-			""+
-			"requestID: %s, err: %s", clusterID, nodePoolID, *resp.Response.RequestId, convertTkeErr(err))
+		blog.Errorf("modify node pool instance types failed, clusterID[%s] nodePoolID[%s]: %s",
+			clusterID, nodePoolID, convertTkeErr(err))
+		return fmt.Errorf("modify node pool instance types failed, clusterID[%s] nodePoolID[%s], err: %s",
+			clusterID, nodePoolID, convertTkeErr(err))
 	}
 	if resp == nil || resp.Response == nil {
 		blog.Errorf("ModifyNodePoolInstanceTypes resp is nil")
 		return fmt.Errorf("ModifyNodePoolInstanceTypes resp is nil")
 	}
-	blog.Infof("RequestId[%s] tke client ModifyNodePoolInstanceTypes response successful", *resp.Response.RequestId)
+	blog.Infof("RequestId[%s] tke client ModifyNodePoolInstanceTypes response successful", resp.Response.RequestId)
 	return nil
 }
 
@@ -1019,16 +1078,16 @@ func (cli *TkeClient) RemoveNodeFromNodePool(clusterID string, nodePoolID string
 			// tke RemoveNodeFromNodePool
 			resp, err := cli.tke.RemoveNodeFromNodePool(req)
 			if err != nil {
-				blog.Errorf("remove node from node pool failed, clusterID[%s] nodePoolID[%s] requestID[%s]: %s",
-					clusterID, nodePoolID, *resp.Response.RequestId, convertTkeErr(err))
-				return fmt.Errorf("remove node from node pool failed, clusterID[%s] nodePoolID[%s] "+
-					"requestID: %s, err: %s", clusterID, nodePoolID, *resp.Response.RequestId, convertTkeErr(err))
+				blog.Errorf("remove node from node pool failed, clusterID[%s] nodePoolID[%s]: %s",
+					clusterID, nodePoolID, convertTkeErr(err))
+			return fmt.Errorf("remove node from node pool failed, clusterID[%s] nodePoolID[%s], err: %s",
+				clusterID, nodePoolID, convertTkeErr(err))
 			}
 			if resp == nil || resp.Response == nil {
 				blog.Errorf("RemoveNodeFromNodePool resp is nil")
 				return fmt.Errorf("RemoveNodeFromNodePool resp is nil")
 			}
-			blog.Infof("RequestId[%s] tke client RemoveNodeFromNodePool response successful", *resp.Response.RequestId)
+			blog.Infof("RequestId[%s] tke client RemoveNodeFromNodePool response successful", resp.Response.RequestId)
 		}
 	}
 	return nil
@@ -1048,15 +1107,15 @@ func (cli *TkeClient) AddNodeToNodePool(clusterID string, nodePoolID string, nod
 			// tke AddNodeToNodePool
 			resp, err := cli.tke.AddNodeToNodePool(req)
 			if err != nil {
-				blog.Errorf("add node to node pool failed, clusterID[%s] nodePoolID[%s] requestID[%s]: %s",
-					clusterID, nodePoolID, *resp.Response.RequestId, convertTkeErr(err))
-				return fmt.Errorf("add node to node pool failed, clusterID[%s] nodePoolID[%s] requestID: %s, err: %s", clusterID, nodePoolID, *resp.Response.RequestId, convertTkeErr(err))
+				blog.Errorf("add node to node pool failed, clusterID[%s] nodePoolID[%s]: %s",
+					clusterID, nodePoolID, convertTkeErr(err))
+				return fmt.Errorf("add node to node pool failed, clusterID[%s] nodePoolID[%s], err: %s", clusterID, nodePoolID, convertTkeErr(err))
 			}
 			if resp == nil || resp.Response == nil {
 				blog.Errorf("AddNodeToNodePool resp is nil")
 				return fmt.Errorf("AddNodeToNodePool resp is nil")
 			}
-			blog.Infof("RequestId[%s] tke client AddNodeToNodePool response successful", *resp.Response.RequestId)
+			blog.Infof("RequestId[%s] tke client AddNodeToNodePool response successful", resp.Response.RequestId)
 		}
 	}
 	return nil
@@ -1083,19 +1142,21 @@ func (cli *TkeClient) GetNodeGroupInstances(clusterID, nodeGroupID string) ([]*t
 		// tke DescribeClusterInstances
 		resp, err := cli.tke.DescribeClusterInstances(req)
 		if err != nil {
-			blog.Errorf("get node group instances failed, clusterID[%s] nodeGroupID[%s] requestID[%s]: %s",
-				clusterID, nodeGroupID, *resp.Response.RequestId, convertTkeErr(err))
-			return nil, fmt.Errorf("get node group instances failed, clusterID[%s] nodeGroupID[%s] "+
-				"requestID: %s, err: %s", clusterID, nodeGroupID, *resp.Response.RequestId, convertTkeErr(err))
+			blog.Errorf("get node group instances failed, clusterID[%s] nodeGroupID[%s]: %s",
+				clusterID, nodeGroupID, convertTkeErr(err))
+		return nil, fmt.Errorf("get node group instances failed, clusterID[%s] nodeGroupID[%s], err: %s",
+			clusterID, nodeGroupID, convertTkeErr(err))
 		}
 		if resp == nil || resp.Response == nil {
 			blog.Errorf("DescribeClusterInstances resp is nil")
 			return nil, fmt.Errorf("DescribeClusterInstances resp is nil")
 		}
-		blog.Infof("DescribeClusterInstances success, requestID: %s", resp.Response.RequestId)
+		blog.Infof("DescribeClusterInstances success, requestID: %v", resp.Response.RequestId)
 		ins = append(ins, resp.Response.InstanceSet...)
 		got += len(resp.Response.InstanceSet)
-		total = int(*resp.Response.TotalCount)
+		if resp.Response.TotalCount != nil {
+			total = int(*resp.Response.TotalCount)
+		}
 	}
 	return ins, nil
 }
@@ -1127,13 +1188,16 @@ func (cli *TkeClient) EnableExternalNodeSupport(clusterID string, config EnableE
 
 	resp, err := cli.tkeCommon.EnableExternalNodeSupport(req)
 	if err != nil {
-		blog.Errorf("enable external node support failed, clusterID[%s] requestID[%s]: %s", clusterID, *resp.Response.RequestId, convertTkeErr(err))
-		return fmt.Errorf("enable external node support failed, clusterID[%s] "+
-			"requestID: %s, err: %s", clusterID, *resp.Response.RequestId, convertTkeErr(err))
+		blog.Errorf("enable external node support failed, clusterID[%s]: %s", clusterID, convertTkeErr(err))
+		return fmt.Errorf("enable external node support failed, clusterID[%s], err: %s", clusterID, convertTkeErr(err))
+	}
+	if resp == nil || resp.Response == nil {
+		blog.Errorf("EnableExternalNodeSupport resp is nil")
+		return cloudprovider.ErrCloudLostResponse
 	}
 	// check response data
-	blog.Infof("RequestId[%s] tke client EnableExternalNodeSupport[%s] success",
-		*resp.Response.RequestId, clusterID)
+	blog.Infof("RequestId[%v] tke client EnableExternalNodeSupport[%s] success",
+		resp.Response.RequestId, clusterID)
 
 	return nil
 }
@@ -1167,9 +1231,8 @@ func (cli *TkeClient) DescribeExternalNodeScript(clusterID string,
 
 	resp, err := cli.tkeCommon.DescribeExternalNodeScript(req)
 	if err != nil {
-		blog.Errorf("describe external node script failed, clusterID[%s] requestID[%s]: %s", clusterID, *resp.Response.RequestId, convertTkeErr(err))
-		return nil, fmt.Errorf("describe external node script failed, clusterID[%s] "+
-			"requestID: %s, err: %s", clusterID, *resp.Response.RequestId, convertTkeErr(err))
+		blog.Errorf("describe external node script failed, clusterID[%s]: %s", clusterID, convertTkeErr(err))
+		return nil, fmt.Errorf("describe external node script failed, clusterID[%s], err: %s", clusterID, convertTkeErr(err))
 	}
 
 	return resp.Response, nil
@@ -1198,11 +1261,14 @@ func (cli *TkeClient) DeleteExternalNode(clusterID string, config DeleteExternal
 
 	resp, err := cli.tkeCommon.DeleteExternalNode(req)
 	if err != nil {
-		blog.Errorf("delete external node failed, clusterID[%s] requestID[%s]: %s", clusterID, *resp.Response.RequestId, convertTkeErr(err))
-		return fmt.Errorf("delete external node failed, clusterID[%s] "+
-			"requestID: %s, err: %s", clusterID, *resp.Response.RequestId, convertTkeErr(err))
+		blog.Errorf("delete external node failed, clusterID[%s]: %s", clusterID, convertTkeErr(err))
+		return fmt.Errorf("delete external node failed, clusterID[%s], err: %s", clusterID, convertTkeErr(err))
 	}
-	blog.Infof("RequestId[%s] tke client DeleteExternalNode[%s] success", *resp.Response.RequestId, clusterID)
+	if resp == nil || resp.Response == nil {
+		blog.Errorf("DeleteExternalNode resp is nil")
+		return cloudprovider.ErrCloudLostResponse
+	}
+	blog.Infof("RequestId[%v] tke client DeleteExternalNode[%s] success", resp.Response.RequestId, clusterID)
 
 	return nil
 }
@@ -1230,11 +1296,14 @@ func (cli *TkeClient) DeleteExternalNodePool(clusterID string, config DeleteExte
 
 	resp, err := cli.tkeCommon.DeleteExternalNodePool(req)
 	if err != nil {
-		blog.Errorf("delete external node pool failed, clusterID[%s] requestID[%s]: %s", clusterID, *resp.Response.RequestId, convertTkeErr(err))
-		return fmt.Errorf("delete external node pool failed, clusterID[%s] "+
-			"requestID: %s, err: %s", clusterID, *resp.Response.RequestId, convertTkeErr(err))
+		blog.Errorf("delete external node pool failed, clusterID[%s]: %s", clusterID, convertTkeErr(err))
+		return fmt.Errorf("delete external node pool failed, clusterID[%s], err: %s", clusterID, convertTkeErr(err))
 	}
-	blog.Infof("RequestId[%s] tke client DeleteExternalNodePool[%s] success", *resp.Response.RequestId, clusterID)
+	if resp == nil || resp.Response == nil {
+		blog.Errorf("DeleteExternalNodePool resp is nil")
+		return cloudprovider.ErrCloudLostResponse
+	}
+	blog.Infof("RequestId[%v] tke client DeleteExternalNodePool[%s] success", resp.Response.RequestId, clusterID)
 
 	return nil
 }
@@ -1253,9 +1322,8 @@ func (cli *TkeClient) DescribeExternalNodePools(clusterID string) ([]*ExternalNo
 
 	resp, err := cli.tkeCommon.DescribeExternalNodePools(req)
 	if err != nil {
-		blog.Errorf("describe external node pools failed, clusterID[%s] requestID[%s]: %s", clusterID, *resp.Response.RequestId, convertTkeErr(err))
-		return nil, fmt.Errorf("describe external node pools failed, clusterID[%s] "+
-			"requestID: %s, err: %s", clusterID, *resp.Response.RequestId, convertTkeErr(err))
+		blog.Errorf("describe external node pools failed, clusterID[%s]: %s", clusterID, convertTkeErr(err))
+		return nil, fmt.Errorf("describe external node pools failed, clusterID[%s], err: %s", clusterID, convertTkeErr(err))
 	}
 
 	// check response
@@ -1265,8 +1333,8 @@ func (cli *TkeClient) DescribeExternalNodePools(clusterID string) ([]*ExternalNo
 		return nil, cloudprovider.ErrCloudLostResponse
 	}
 	// check response data
-	blog.Infof("RequestId[%s] tke client DescribeExternalNodePools[%s] response num %d",
-		*response.RequestId, clusterID, *response.TotalCount,
+	blog.Infof("RequestId[%s] tke client DescribeExternalNodePools[%s] response num %v",
+		response.RequestId, clusterID, response.TotalCount,
 	)
 
 	return response.NodePoolSet, nil
@@ -1287,10 +1355,9 @@ func (cli *TkeClient) DescribeExternalNodeSupportConfig(
 
 	resp, err := cli.tkeCommon.DescribeExternalNodeSupportConfig(req)
 	if err != nil {
-		blog.Errorf("describe external node support config failed, clusterID[%s] requestID[%s]: %s",
-			clusterID, *resp.Response.RequestId, convertTkeErr(err))
-		return nil, fmt.Errorf("describe external node support config failed, clusterID[%s] "+
-			"requestID: %s, err: %s", clusterID, *resp.Response.RequestId, convertTkeErr(err))
+		blog.Errorf("describe external node support config failed, clusterID[%s]: %s",
+			clusterID, convertTkeErr(err))
+		return nil, fmt.Errorf("describe external node support config failed, clusterID[%s], err: %s", clusterID, convertTkeErr(err))
 	}
 
 	// check response
@@ -1301,7 +1368,7 @@ func (cli *TkeClient) DescribeExternalNodeSupportConfig(
 	}
 	// check response data
 	blog.Infof("RequestId[%s] tke client DescribeExternalNodeSupportConfig[%s] success",
-		*response.RequestId, clusterID)
+		response.RequestId, clusterID)
 
 	externalNodeConfig := &DescribeExternalNodeConfigInfoResponse{
 		ClusterCIDR:  *response.ClusterCIDR,
@@ -1336,9 +1403,8 @@ func (cli *TkeClient) CreateExternalNodePool(clusterID string, config CreateExte
 
 	resp, err := cli.tkeCommon.CreateExternalNodePool(req)
 	if err != nil {
-		blog.Errorf("create external node pool failed, clusterID[%s] requestID[%s]: %s", clusterID, *resp.Response.RequestId, convertTkeErr(err))
-		return "", fmt.Errorf("create external node pool failed, clusterID[%s] "+
-			"requestID: %s, err: %s", clusterID, *resp.Response.RequestId, convertTkeErr(err))
+		blog.Errorf("create external node pool failed, clusterID[%s]: %s", clusterID, convertTkeErr(err))
+		return "", fmt.Errorf("create external node pool failed, clusterID[%s], err: %s", clusterID, convertTkeErr(err))
 	}
 	// check response
 	response := resp.Response
@@ -1348,7 +1414,7 @@ func (cli *TkeClient) CreateExternalNodePool(clusterID string, config CreateExte
 	}
 	// check response data
 	blog.Infof("RequestId[%s] tke client CreateExternalNodePool[%s] success",
-		*response.RequestId, clusterID)
+		response.RequestId, clusterID)
 
 	return *response.NodePoolId, nil
 }
@@ -1382,9 +1448,8 @@ func (cli *TkeClient) ModifyExternalNodePool(clusterID string, config ModifyExte
 
 	resp, err := cli.tkeCommon.ModifyExternalNodePool(req)
 	if err != nil {
-		blog.Errorf("modify external node pool failed, clusterID[%s] requestID[%s]: %s", clusterID, *resp.Response.RequestId, convertTkeErr(err))
-		return fmt.Errorf("modify external node pool failed, clusterID[%s] "+
-			"requestID: %s, err: %s", clusterID, *resp.Response.RequestId, convertTkeErr(err))
+		blog.Errorf("modify external node pool failed, clusterID[%s]: %s", clusterID, convertTkeErr(err))
+		return fmt.Errorf("modify external node pool failed, clusterID[%s], err: %s", clusterID, convertTkeErr(err))
 	}
 	// check response
 	response := resp.Response
@@ -1394,7 +1459,7 @@ func (cli *TkeClient) ModifyExternalNodePool(clusterID string, config ModifyExte
 	}
 	// check response data
 	blog.Infof("RequestId[%s] tke client ModifyExternalNodePool[%s] success",
-		*response.RequestId, clusterID)
+		response.RequestId, clusterID)
 
 	return nil
 }
@@ -1422,9 +1487,8 @@ func (cli *TkeClient) DescribeExternalNode(
 
 	resp, err := cli.tkeCommon.DescribeExternalNode(req)
 	if err != nil {
-		blog.Errorf("describe external node failed, clusterID[%s] requestID[%s]: %s", clusterID, *resp.Response.RequestId, convertTkeErr(err))
-		return nil, fmt.Errorf("describe external node failed, clusterID[%s] "+
-			"requestID: %s, err: %s", clusterID, *resp.Response.RequestId, convertTkeErr(err))
+		blog.Errorf("describe external node failed, clusterID[%s]: %s", clusterID, convertTkeErr(err))
+		return nil, fmt.Errorf("describe external node failed, clusterID[%s], err: %s", clusterID, convertTkeErr(err))
 	}
 	// check response
 	response := resp.Response
@@ -1434,7 +1498,7 @@ func (cli *TkeClient) DescribeExternalNode(
 	}
 	// check response data
 	blog.Infof("RequestId[%s] tke client DescribeExternalNode[%s] success: %v",
-		*response.RequestId, clusterID, *response.TotalCount)
+		response.RequestId, clusterID, response.TotalCount)
 
 	externalNodes := make([]ExternalNodeInfo, 0)
 	for i := range response.Nodes {
@@ -1460,9 +1524,8 @@ func (cli *TkeClient) getCommonImages() ([]*OSImage, error) {
 	// tke DescribeOSImages
 	resp, err := cli.tkeCommon.DescribeOSImages(req)
 	if err != nil {
-		blog.Errorf("describe os images failed, requestID[%s]: %s", *resp.Response.RequestId, convertTkeErr(err))
-		return nil, fmt.Errorf("describe os images failed, "+
-			"requestID: %s, err: %s", *resp.Response.RequestId, convertTkeErr(err))
+		blog.Errorf("describe os images failed,: %s", convertTkeErr(err))
+		return nil, fmt.Errorf("describe os images failed, err: %s", convertTkeErr(err))
 	}
 	// check response
 	response := resp.Response
@@ -1472,7 +1535,7 @@ func (cli *TkeClient) getCommonImages() ([]*OSImage, error) {
 	}
 	// check response data
 	blog.Infof("RequestId[%s] tke client DescribeOsImages success: %v",
-		*response.RequestId, *response.TotalCount)
+		response.RequestId, response.TotalCount)
 
 	return response.OSImageSeriesSet, nil
 }
@@ -1583,9 +1646,8 @@ func (cli *TkeClient) AcquireClusterAdminRole(clusterID string) error {
 
 	resp, err := cli.tke.AcquireClusterAdminRole(req)
 	if err != nil {
-		blog.Errorf("acquire cluster admin role failed, clusterID[%s] requestID[%s]: %s", clusterID, *resp.Response.RequestId, convertTkeErr(err))
-		return fmt.Errorf("acquire cluster admin role failed, clusterID[%s] "+
-			"requestID: %s, err: %s", clusterID, *resp.Response.RequestId, convertTkeErr(err))
+		blog.Errorf("acquire cluster admin role failed, clusterID[%s]: %s", clusterID, convertTkeErr(err))
+		return fmt.Errorf("acquire cluster admin role failed, clusterID[%s], err: %s", clusterID, convertTkeErr(err))
 	}
 
 	// check response
@@ -1593,7 +1655,7 @@ func (cli *TkeClient) AcquireClusterAdminRole(clusterID string) error {
 		blog.Errorf("AcquireClusterAdminRole[%s] but lost response information", clusterID)
 		return cloudprovider.ErrCloudLostResponse
 	}
-	blog.Infof("RequestId[%s] tke client AcquireClusterAdminRole response successful", *resp.Response.RequestId)
+	blog.Infof("RequestId[%s] tke client AcquireClusterAdminRole response successful", resp.Response.RequestId)
 
 	return nil
 }
@@ -1612,9 +1674,8 @@ func (cli *TkeClient) DescribeClusterEndpoints(clusterID string) (*ClusterEndpoi
 
 	resp, err := cli.tke.DescribeClusterEndpoints(req)
 	if err != nil {
-		blog.Errorf("describe cluster endpoints failed, clusterID[%s] requestID[%s]: %s", clusterID, *resp.Response.RequestId, convertTkeErr(err))
-		return nil, fmt.Errorf("describe cluster endpoints failed, clusterID[%s] "+
-			"requestID: %s, err: %s", clusterID, *resp.Response.RequestId, convertTkeErr(err))
+		blog.Errorf("describe cluster endpoints failed, clusterID[%s]: %s", clusterID, convertTkeErr(err))
+		return nil, fmt.Errorf("describe cluster endpoints failed, clusterID[%s], err: %s", clusterID, convertTkeErr(err))
 	}
 
 	// check response
@@ -1622,7 +1683,7 @@ func (cli *TkeClient) DescribeClusterEndpoints(clusterID string) (*ClusterEndpoi
 		blog.Errorf("DescribeClusterEndpoints[%s] but lost response information", clusterID)
 		return nil, cloudprovider.ErrCloudLostResponse
 	}
-	blog.Infof("RequestId[%s] tke client DescribeClusterEndpoints response successful", *resp.Response.RequestId)
+	blog.Infof("RequestId[%s] tke client DescribeClusterEndpoints response successful", resp.Response.RequestId)
 
 	endpointInfo := resp.Response
 
@@ -1653,9 +1714,9 @@ func (cli *TkeClient) GetTkeAppChartVersionByName(clusterType string, appName st
 
 	resp, err := cli.tke.GetTkeAppChartList(req)
 	if err != nil {
-		blog.Errorf("get tke app chart list failed, clusterType[%s] appName[%s] requestID[%s]: %s",
-			clusterType, appName, *resp.Response.RequestId, convertTkeErr(err))
-		return "", fmt.Errorf("get tke app chart list failed, clusterType[%s] appName[%s] requestID: %s, err: %s", clusterType, appName, *resp.Response.RequestId, convertTkeErr(err))
+		blog.Errorf("get tke app chart list failed, clusterType[%s] appName[%s]: %s",
+			clusterType, appName, convertTkeErr(err))
+		return "", fmt.Errorf("get tke app chart list failed, clusterType[%s] appName[%s], err: %s", clusterType, appName, convertTkeErr(err))
 	}
 
 	// check response
@@ -1663,7 +1724,7 @@ func (cli *TkeClient) GetTkeAppChartVersionByName(clusterType string, appName st
 		blog.Errorf("GetTkeAppChartList[%s:%s] but lost response information", clusterType, appName)
 		return "", cloudprovider.ErrCloudLostResponse
 	}
-	blog.Infof("RequestId[%s] tke client GetTkeAppChartList response successful", *resp.Response.RequestId)
+	blog.Infof("RequestId[%s] tke client GetTkeAppChartList response successful", resp.Response.RequestId)
 
 	appChart := resp.Response
 
@@ -1694,9 +1755,8 @@ func (cli *TkeClient) EnableClusterAudit(clusterID, logsetId, topicId, topicRegi
 
 	resp, err := cli.tkeCommon.EnableClusterAudit(req)
 	if err != nil {
-		blog.Errorf("enable cluster audit failed, clusterID[%s] requestID[%s]: %s", clusterID, *resp.Response.RequestId, convertTkeErr(err))
-		return fmt.Errorf("enable cluster audit failed, clusterID[%s] "+
-			"requestID: %s, err: %s", clusterID, *resp.Response.RequestId, convertTkeErr(err))
+		blog.Errorf("enable cluster audit failed, clusterID[%s]: %s", clusterID, convertTkeErr(err))
+		return fmt.Errorf("enable cluster audit failed, clusterID[%s], err: %s", clusterID, convertTkeErr(err))
 	}
 
 	// check response
@@ -1704,7 +1764,7 @@ func (cli *TkeClient) EnableClusterAudit(clusterID, logsetId, topicId, topicRegi
 		blog.Errorf("EnableClusterAudit[%s] but lost response information", clusterID)
 		return cloudprovider.ErrCloudLostResponse
 	}
-	blog.Infof("RequestId[%s] tke client EnableClusterAudit response successful", *resp.Response.RequestId)
+	blog.Infof("RequestId[%s] tke client EnableClusterAudit response successful", resp.Response.RequestId)
 
 	return nil
 }
