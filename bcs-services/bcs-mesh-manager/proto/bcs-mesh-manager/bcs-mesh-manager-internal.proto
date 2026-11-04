@@ -1,0 +1,50 @@
+syntax = "proto3";
+
+package meshmanager;
+
+option go_package = "./;meshmanager";
+
+// MeshManagerInternal 仅供集群内服务通过 gRPC 调用，不映射 HTTP。
+service MeshManagerInternal {
+  // 获取当前仍在使用的全部网格及其主从集群
+  rpc ListInstalledMeshes(ListInstalledMeshesRequest)
+      returns (ListInstalledMeshesResponse);
+}
+
+// 获取已安装网格请求
+message ListInstalledMeshesRequest {}
+
+// 获取已安装网格响应
+message ListInstalledMeshesResponse {
+  uint32 code = 1;
+  string message = 2;
+  string requestID = 3;
+  ListInstalledMeshesData data = 4;
+}
+
+// 已安装网格列表
+message ListInstalledMeshesData {
+  int32 total = 1;
+  repeated InstalledMeshItem items = 2;
+}
+
+// 已安装网格
+message InstalledMeshItem {
+  string meshID = 1;
+  string name = 2;
+  string projectCode = 3;
+  string version = 4;
+  string chartVersion = 5;
+  string status = 6;
+  string statusMessage = 7;
+  int64 createTime = 8;
+  repeated string primaryClusters = 9;
+  repeated InstalledRemoteCluster remoteClusters = 10;
+}
+
+// 已安装从集群
+message InstalledRemoteCluster {
+  string clusterID = 1;
+  int64 joinTime = 2;
+  string status = 3;
+}

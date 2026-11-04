@@ -125,14 +125,12 @@ func SkipClient(ctx context.Context, req server.Request, client string) bool {
 		return false
 	}
 
-	// 检查是否有所有权限
-	if slices.Contains(permissions, "*") {
-		return true
-	}
-
-	// 检查是否有特定方法的权限
+	// 显式授权优先。内部查询网格接口不接受 '*'，必须写出方法名。
 	method := req.Method()
 	if slices.Contains(permissions, method) {
+		return true
+	}
+	if method != common.MeshManagerListInstalledMeshes && slices.Contains(permissions, "*") {
 		return true
 	}
 

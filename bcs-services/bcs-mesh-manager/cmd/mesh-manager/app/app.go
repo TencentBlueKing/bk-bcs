@@ -298,11 +298,13 @@ func (s *Server) initMicro() error {
 	)
 	s.microService.Init()
 
-	if err := meshmanager.RegisterMeshManagerHandler(
-		s.microService.Server(),
-		handler.NewMeshManager(s.model, &handler.MeshManagerOptions{IstioConfig: s.opt.IstioConfig}),
-	); err != nil {
+	meshHandler := handler.NewMeshManager(s.model, &handler.MeshManagerOptions{IstioConfig: s.opt.IstioConfig})
+	if err := meshmanager.RegisterMeshManagerHandler(s.microService.Server(), meshHandler); err != nil {
 		blog.Errorf("failed to register mesh manager handler to micro, error: %s", err.Error())
+		return err
+	}
+	if err := meshmanager.RegisterMeshManagerInternalHandler(s.microService.Server(), meshHandler); err != nil {
+		blog.Errorf("failed to register mesh manager internal handler to micro, error: %s", err.Error())
 		return err
 	}
 

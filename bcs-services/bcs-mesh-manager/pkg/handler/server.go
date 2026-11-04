@@ -19,7 +19,10 @@ import (
 	meshmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/proto/bcs-mesh-manager"
 )
 
-var _ meshmanager.MeshManagerHandler = &MeshManager{}
+var (
+	_ meshmanager.MeshManagerHandler         = &MeshManager{}
+	_ meshmanager.MeshManagerInternalHandler = &MeshManager{}
+)
 
 // MeshManager provides a manager server for mesh resources
 type MeshManager struct {

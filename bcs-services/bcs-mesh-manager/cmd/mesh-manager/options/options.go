@@ -158,8 +158,9 @@ type AuthConfig struct {
 	PrivateKey     string `json:"privateKey"`
 	// 不鉴权接口，使用逗号分隔，格式 `MeshManager.Health,MeshManager.Health`
 	NoAuthMethod string `json:"noAuthMethod"`
-	// client 类型用户权限，使用 json 格式，key 为 client 名称，values 为拥有的权限，'*' 表示所有
-	// 如：`{"admin": ["*"], "client_a": ["MeshManager.ListTasks"]}`
+	// client 类型用户权限，使用 json 格式，key 为 client 名称，values 为拥有的权限。
+	// '*' 表示除 MeshManagerInternal.ListInstalledMeshes 以外的全部方法；该内部接口必须显式写出方法名。
+	// 如：`{"admin": ["*"], "billing": ["MeshManagerInternal.ListInstalledMeshes"]}`
 	ClientPermissions string `json:"clientPermissions"`
 }
 

@@ -79,6 +79,17 @@ func (m *MeshManager) GetIstioDetail(
 	return action.Handle(ctx, req, resp)
 }
 
+// ListInstalledMeshes implements meshmanager.MeshManagerInternalHandler.
+// 仅供集群内 gRPC 调用，不改变现有网格查询接口。
+func (m *MeshManager) ListInstalledMeshes(
+	ctx context.Context,
+	req *meshmanager.ListInstalledMeshesRequest,
+	resp *meshmanager.ListInstalledMeshesResponse,
+) error {
+	action := istioaction.NewListInstalledMeshesAction(m.model)
+	return action.Handle(ctx, req, resp)
+}
+
 // GetClusterInfo implements meshmanager.MeshManagerHandler
 func (m *MeshManager) GetClusterInfo(
 	ctx context.Context,

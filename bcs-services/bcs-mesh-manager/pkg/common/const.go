@@ -137,4 +137,6 @@ const (
 	MeshManagerListIstio = "MeshManager.ListIstio"
 	// MeshManagerGetClusterInfo 获取集群信息接口
 	MeshManagerGetClusterInfo = "MeshManager.GetClusterInfo"
+	// MeshManagerListInstalledMeshes 内部查询已安装网格接口
+	MeshManagerListInstalledMeshes = "MeshManagerInternal.ListInstalledMeshes"
 )
