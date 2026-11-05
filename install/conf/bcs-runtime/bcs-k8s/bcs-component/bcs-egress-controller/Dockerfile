@@ -1,5 +1,4 @@
-FROM centos:7 AS build
-RUN sed -i s/mirror.centos.org/vault.centos.org/g /etc/yum.repos.d/*.repo && sed -i s/^#.*baseurl=http/baseurl=http/g /etc/yum.repos.d/*.repo && sed -i s/^mirrorlist=http/#mirrorlist=http/g /etc/yum.repos.d/*.repo
+FROM tencentos/tencentos4-minimal AS build
 
 # install compilation tools
 RUN yum install -y make gcc perl pcre-devel zlib-devel wget readline-devel openssl-devel unzip net-tools less
@@ -53,8 +52,7 @@ RUN cd /home/nginx-1.16.1 && ./configure \
 RUN cd /home/nginx-1.16.1 && make && make install
 
 # STEP 2: build controller image
-FROM centos:7
-RUN sed -i s/mirror.centos.org/vault.centos.org/g /etc/yum.repos.d/*.repo && sed -i s/^#.*baseurl=http/baseurl=http/g /etc/yum.repos.d/*.repo && sed -i s/^mirrorlist=http/#mirrorlist=http/g /etc/yum.repos.d/*.repo
+FROM tencentos/tencentos4-minimal
 
 # copy nginx file
 COPY --from=build /usr/local/nginx /usr/local/nginx
