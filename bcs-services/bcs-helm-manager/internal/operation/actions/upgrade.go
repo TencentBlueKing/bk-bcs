@@ -52,6 +52,9 @@ type ReleaseUpgradeAction struct {
 	AuthUser       string
 	IsShardCluster bool
 
+	// helmNative 为 true 时不注入 BCS 的 io.tencent.paas.updator 元数据
+	helmNative bool
+
 	contents []byte
 	result   *release.HelmUpgradeResult
 }
@@ -76,6 +79,7 @@ type ReleaseUpgradeActionOption struct {
 	UpdateBy       string
 	AuthUser       string
 	IsShardCluster bool
+	HelmNative     bool
 }
 
 // NewReleaseUpgradeAction new release upgrade action
@@ -98,6 +102,7 @@ func NewReleaseUpgradeAction(o *ReleaseUpgradeActionOption) *ReleaseUpgradeActio
 		updateBy:       o.UpdateBy,
 		AuthUser:       o.AuthUser,
 		IsShardCluster: o.IsShardCluster,
+		helmNative:     o.HelmNative,
 	}
 }
 
@@ -161,7 +166,8 @@ func (r *ReleaseUpgradeAction) Validate(ctx context.Context) error {
 
 	// get manifest from helm dry run
 	result, err := release.UpgradeRelease(r.releaseHandler, r.projectID, r.projectCode, r.clusterID, r.name,
-		r.namespace, r.chartName, r.version, r.createBy, r.updateBy, r.args, nil, r.contents, r.values, true)
+		r.namespace, r.chartName, r.version, r.createBy, r.updateBy, r.args, nil, r.contents, r.values, true,
+		r.helmNative)
 	if err != nil {
 		return err
 	}
@@ -206,6 +212,19 @@ func (r *ReleaseUpgradeAction) Execute(ctx context.Context) error {
 			Content: []byte(v),
 		})
 	}
+	// 基础占位符始终注入
+	patchValues := map[string]string{
+		common.PTKProjectID: r.projectID,
+		common.PTKClusterID: r.clusterID,
+		common.PTKNamespace: r.namespace,
+		common.PTKName:      r.name,
+	}
+	// creator / version 始终注入；只有 updator 受开关控制。
+	patchValues[common.PTKCreator] = stringx.ReplaceIllegalChars(r.createBy)
+	patchValues[common.PTKVersion] = r.version
+	if !r.helmNative {
+		patchValues[common.PTKUpdator] = stringx.ReplaceIllegalChars(r.updateBy)
+	}
 	result, err := r.releaseHandler.Cluster(r.clusterID).Upgrade(
 		ctx, release.HelmUpgradeConfig{
 			ProjectCode: r.projectCode,
@@ -215,17 +234,10 @@ func (r *ReleaseUpgradeAction) Execute(ctx context.Context) error {
 				Name:    r.chartName + "-" + r.version + ".tgz",
 				Content: r.contents,
 			},
-			Args:   r.args,
-			Values: vls,
-			PatchTemplateValues: map[string]string{
-				common.PTKProjectID: r.projectID,
-				common.PTKClusterID: r.clusterID,
-				common.PTKNamespace: r.namespace,
-				common.PTKCreator:   stringx.ReplaceIllegalChars(r.createBy),
-				common.PTKUpdator:   stringx.ReplaceIllegalChars(r.updateBy),
-				common.PTKVersion:   r.version,
-				common.PTKName:      r.name,
-			},
+			Args:                r.args,
+			Values:              vls,
+			PatchTemplateValues: patchValues,
+			HelmNative:          r.helmNative,
 		})
 	r.result = result
 	if err != nil {

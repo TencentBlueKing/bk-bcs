@@ -49,4 +49,7 @@ const (
 	FieldKeyMessage = "message"
 
 	FieldKeyEnv = "env"
+
+	// FieldKeyhelmNative 是否不注入 BCS 的 io.tencent.paas.updator 元数据
+	FieldKeyhelmNative = "helmNative"
 )

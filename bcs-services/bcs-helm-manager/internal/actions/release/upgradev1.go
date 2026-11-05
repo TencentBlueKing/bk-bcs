@@ -113,6 +113,7 @@ func (u *UpgradeReleaseV1Action) upgrade() error {
 		UpdateBy:       u.updateBy,
 		AuthUser:       auth.GetRealUserFromCtx(u.ctx),
 		IsShardCluster: cls.IsShared,
+		HelmNative:     u.req.GetHelmNative(),
 	}
 	action := actions.NewReleaseUpgradeAction(options)
 	_, err = operation.GlobalOperator.Dispatch(action, releaseDefaultTimeout)
@@ -153,6 +154,7 @@ func (u *UpgradeReleaseV1Action) saveDB() error {
 			CreateBy:     createBy,
 			Status:       helmrelease.StatusPendingUpgrade.String(),
 			Env:          u.req.GetEnv(),
+			HelmNative:   u.req.GetHelmNative(),
 		}); err != nil {
 			return err
 		}
@@ -168,6 +170,7 @@ func (u *UpgradeReleaseV1Action) saveDB() error {
 		if u.req.GetVersion() == "" {
 			u.req.Version = &old.ChartVersion
 		}
+		// 仍会写入 DB，但仅用于详情页回显，不再参与渲染决策。
 		rl := entity.M{
 			entity.FieldKeyRepoName:     u.req.GetRepository(),
 			entity.FieldKeyChartName:    u.req.GetChart(),
@@ -179,6 +182,7 @@ func (u *UpgradeReleaseV1Action) saveDB() error {
 			entity.FieldKeyStatus:       helmrelease.StatusPendingUpgrade.String(),
 			entity.FieldKeyMessage:      "",
 			entity.FieldKeyEnv:          u.req.GetEnv(),
+			entity.FieldKeyhelmNative:   u.req.GetHelmNative(),
 		}
 		if err = u.model.UpdateRelease(u.ctx, u.req.GetClusterID(), u.req.GetNamespace(),
 			u.req.GetName(), rl); err != nil {

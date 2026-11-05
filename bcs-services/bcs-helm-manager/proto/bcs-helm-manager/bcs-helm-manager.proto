@@ -1833,6 +1833,12 @@ message ReleaseDetail {
         title: "displayName",
         description: "release别名"
     }];
+    // 当前 release 的开关状态，供前端更新页回显上次的勾选。
+    // 不返回的话，用户每次打开更新页都会显示"未勾选"，会误以为上次的选择丢了。
+    optional bool helmNative = 20[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "helmNative",
+        description: "是否不注入 BCS 的 io.tencent.paas 系列注解"
+    }];
 }
 
 message ListReleaseV1Req {
@@ -2019,6 +2025,10 @@ message InstallReleaseV1Req {
         title: "env",
         description: "环境"
     }];
+    optional bool helmNative = 13[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "helmNative",
+        description: "是否不注入 BCS 的 io.tencent.paas 系列注解，默认 false（注入）"
+    }];
 }
 
 message InstallReleaseV1Resp {
@@ -2163,6 +2173,10 @@ message UpgradeReleaseV1Req {
         title: "env",
         description: "环境"
     }];
+    optional bool helmNative = 13[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "helmNative",
+        description: "是否不注入 BCS 的 io.tencent.paas 系列注解，默认 false（注入）"
+    }];
 }
 
 message UpgradeReleaseV1Resp {
@@ -2302,6 +2316,10 @@ message ReleasePreviewReq {
     optional uint32 revision = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "revision",
         description: "release revision 版本, 如果revision为0, 则对比当前渲染结果和已部署的最新版本, 如果不为0, 则对比最新版本和指定版本"
+    }];
+    optional bool helmNative = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "helmNative",
+        description: "是否不注入 BCS 的 io.tencent.paas 系列注解"
     }];
 }
 

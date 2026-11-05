@@ -298,16 +298,22 @@ func addAudit(ctx context.Context, req server.Request, rsp interface{}, startTim
 	}
 
 	// get handle result
+	// handler 内部 panic 被 recover 时，响应里的 Code / Message 不会被赋值。
+	// 这里必须判空，否则解引用 nil 会让进程直接崩溃，而不是只记一次审计失败。
 	v := reflect.ValueOf(rsp)
-	codeField := v.Elem().FieldByName("Code")
-	messageField := v.Elem().FieldByName("Message")
-	if codeField.CanInterface() {
-		code := int(*codeField.Interface().(*uint32))
-		result.ResultCode = code
+	if v.Kind() != reflect.Ptr || v.IsNil() {
+		return
 	}
-	if messageField.CanInterface() {
-		message := *messageField.Interface().(*string)
-		result.ResultContent = message
+	elem := v.Elem()
+	if codeField := elem.FieldByName("Code"); codeField.CanInterface() {
+		if code, ok := codeField.Interface().(*uint32); ok && code != nil {
+			result.ResultCode = int(*code)
+		}
+	}
+	if messageField := elem.FieldByName("Message"); messageField.CanInterface() {
+		if message, ok := messageField.Interface().(*string); ok && message != nil {
+			result.ResultContent = *message
+		}
 	}
 	if result.ResultCode != int(common.ErrHelmManagerSuccess) {
 		result.Status = audit.ActivityStatusFailed

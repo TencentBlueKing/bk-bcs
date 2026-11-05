@@ -3208,6 +3208,12 @@
           "type": "string",
           "description": "环境",
           "title": "env"
+        },
+        "helmNative": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "是否不注入 BCS 的 io.tencent.paas 系列注解，默认 false（注入）",
+          "title": "helmNative"
         }
       },
       "description": "安装 release 的参数",
@@ -3668,6 +3674,12 @@
           "type": "string",
           "description": "release别名",
           "title": "displayName"
+        },
+        "helmNative": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "是否不注入 BCS 的 io.tencent.paas 系列注解",
+          "title": "helmNative"
         }
       }
     },
@@ -3846,6 +3858,12 @@
           "format": "int64",
           "description": "release revision 版本, 如果revision为0, 则对比当前渲染结果和已部署的最新版本, 如果不为0, 则对比最新版本和指定版本",
           "title": "revision"
+        },
+        "helmNative": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "是否不注入 BCS 的 io.tencent.paas 系列注解",
+          "title": "helmNative"
         }
       },
       "description": "release 预览的参数",
@@ -4427,6 +4445,12 @@
           "type": "string",
           "description": "环境",
           "title": "env"
+        },
+        "helmNative": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "是否不注入 BCS 的 io.tencent.paas 系列注解，默认 false（注入）",
+          "title": "helmNative"
         }
       },
       "description": "升级 release 的参数",

@@ -213,6 +213,9 @@ type HelmInstallConfig struct {
 	Chart               *File
 	Values              []*File
 	PatchTemplateValues map[string]string
+
+	// helmNative 为 true 时不注入 BCS 的 io.tencent.paas.updator 元数据
+	HelmNative bool
 }
 
 // HelmInstallResult 定义了helm执行install的返回结果
@@ -265,6 +268,8 @@ type HelmUpgradeConfig struct {
 	Chart               *File
 	Values              []*File
 	PatchTemplateValues map[string]string
+
+	HelmNative bool
 }
 
 // ToInstallConfig transfer to install config
@@ -278,6 +283,7 @@ func (h *HelmUpgradeConfig) ToInstallConfig() HelmInstallConfig {
 		Chart:               h.Chart,
 		Values:              h.Values,
 		PatchTemplateValues: h.PatchTemplateValues,
+		HelmNative:          h.HelmNative,
 	}
 }
 
@@ -320,13 +326,27 @@ type HelmHistoryOption struct {
 // InstallRelease install release
 func InstallRelease(releaseHandler Handler, projectID, projectCode, clusterID, releaseName,
 	releaseNamespace, chartName, version, creator, updator string, args []string, bcsSysVar map[string]string,
-	contents []byte, values []string, dryRun, replace, clientOnly bool) (*HelmInstallResult, error) {
+	contents []byte, values []string, dryRun, replace, clientOnly,
+	helmNative bool) (*HelmInstallResult, error) {
 	vls := make([]*File, 0, len(values))
 	for index, v := range values {
 		vls = append(vls, &File{
 			Name:    "values-" + strconv.Itoa(index) + ".yaml",
 			Content: []byte(v),
 		})
+	}
+	// 基础占位符始终注入
+	patchValues := map[string]string{
+		common.PTKProjectID: projectID,
+		common.PTKClusterID: clusterID,
+		common.PTKNamespace: releaseNamespace,
+		common.PTKName:      releaseName,
+	}
+	patchValues[common.PTKCreator] = stringx.ReplaceIllegalChars(creator)
+	patchValues[common.PTKVersion] = version
+	// 开关只作用于 updator：开启后不再注入，避免每次更新把 updator 覆盖成当前操作人
+	if !helmNative {
+		patchValues[common.PTKUpdator] = stringx.ReplaceIllegalChars(updator)
 	}
 	return releaseHandler.Cluster(clusterID).Install(
 		context.Background(),
@@ -341,30 +361,36 @@ func InstallRelease(releaseHandler Handler, projectID, projectCode, clusterID, r
 				Name:    chartName + "-" + version + ".tgz",
 				Content: contents,
 			},
-			Args:   args,
-			Values: vls,
-			PatchTemplateValues: map[string]string{
-				common.PTKProjectID: projectID,
-				common.PTKClusterID: clusterID,
-				common.PTKNamespace: releaseNamespace,
-				common.PTKCreator:   stringx.ReplaceIllegalChars(creator),
-				common.PTKUpdator:   stringx.ReplaceIllegalChars(updator),
-				common.PTKVersion:   version,
-				common.PTKName:      releaseName,
-			},
+			Args:                args,
+			Values:              vls,
+			PatchTemplateValues: patchValues,
+			HelmNative:          helmNative,
 		})
 }
 
 // UpgradeRelease upgrade release
 func UpgradeRelease(releaseHandler Handler, projectID, projectCode, clusterID, releaseName,
 	releaseNamespace, chartName, version, creator, updator string, args []string, bcsSysVar map[string]string,
-	contents []byte, values []string, dryRun bool) (*HelmUpgradeResult, error) {
+	contents []byte, values []string, dryRun, helmNative bool) (*HelmUpgradeResult, error) {
 	vls := make([]*File, 0, len(values))
 	for index, v := range values {
 		vls = append(vls, &File{
 			Name:    "values-" + strconv.Itoa(index) + ".yaml",
 			Content: []byte(v),
 		})
+	}
+	// 基础占位符始终注入
+	patchValues := map[string]string{
+		common.PTKProjectID: projectID,
+		common.PTKClusterID: clusterID,
+		common.PTKNamespace: releaseNamespace,
+		common.PTKName:      releaseName,
+	}
+	patchValues[common.PTKCreator] = stringx.ReplaceIllegalChars(creator)
+	patchValues[common.PTKVersion] = version
+	// 开关只作用于 updator：开启后不再注入，避免每次更新把 updator 覆盖成当前操作人
+	if !helmNative {
+		patchValues[common.PTKUpdator] = stringx.ReplaceIllegalChars(updator)
 	}
 	return releaseHandler.Cluster(clusterID).Upgrade(
 		context.Background(),
@@ -377,17 +403,10 @@ func UpgradeRelease(releaseHandler Handler, projectID, projectCode, clusterID, r
 				Name:    chartName + "-" + version + ".tgz",
 				Content: contents,
 			},
-			Args:   args,
-			Values: vls,
-			PatchTemplateValues: map[string]string{
-				common.PTKProjectID: projectID,
-				common.PTKClusterID: clusterID,
-				common.PTKNamespace: releaseNamespace,
-				common.PTKCreator:   stringx.ReplaceIllegalChars(creator),
-				common.PTKUpdator:   stringx.ReplaceIllegalChars(updator),
-				common.PTKVersion:   version,
-				common.PTKName:      releaseName,
-			},
+			Args:                args,
+			Values:              vls,
+			PatchTemplateValues: patchValues,
+			HelmNative:          helmNative,
 		})
 }
 

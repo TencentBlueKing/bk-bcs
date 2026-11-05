@@ -88,10 +88,9 @@ func filterIndex(offset, limit int, release []*helmmanager.Release) []*helmmanag
 	return release[offset : offset+limit]
 }
 
+// shouldRemoveAnnotations 预览展示时需要剥掉的注解 key。
 var shouldRemoveAnnotations = []string{
-	"io.tencent.paas.creator",
 	"io.tencent.paas.updator",
-	"io.tencent.paas.version",
 }
 
 func removeCustomAnnotations(manifest string) *string {
