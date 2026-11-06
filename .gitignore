@@ -139,3 +139,22 @@ scripts/Tongsuo-8.3.2/
 
 pre-*-bkcodeai
 git-sync.sh
+
+.project.json
+project.json
+docs/reqs/
+specs/
+
+# AI Agent
+.cursor
+.codebuddy/*
+!.codebuddy/skills/
+!.codebuddy/skills/**
+apm.yml
+apm.lock.yml
+apm.yaml
+apm.lock.yaml
+
+
+# APM dependencies
+apm_modules/

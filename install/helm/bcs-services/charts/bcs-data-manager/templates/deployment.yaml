@@ -120,8 +120,6 @@ spec:
               value: "{{ .Values.env.BK_BCS_bcsDataManagerNeedFilterCluster }}"
             - name: selectClusterID
               value: "{{ .Values.env.BK_BCS_bcsDataManagerSelectedCluster }}"
-            - name: GODEBUG
-              value: "x509sha1=1"
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           volumeMounts:
