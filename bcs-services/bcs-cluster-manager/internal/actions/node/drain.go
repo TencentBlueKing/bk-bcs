@@ -477,7 +477,7 @@ func (ua *CheckDrainNodeAction) getEvictionRisk(pod *corev1.Pod) ([]*cmproto.Evi
 	hasPDB, err := ua.hasPodPDB(context.Background(), ua.req.ClusterID, pod)
 	if err != nil {
 		blog.Warnf("CheckPodPDB[%s] failed in cluster %s, err %s", pod.Name, ua.req.ClusterID, err.Error())
-		return evictionRisks, false, nil
+		hasPDB = false
 	}
 
 	if hasPDB {
