@@ -28,16 +28,49 @@ const (
 
 // AnalyzeIntStr 分析可能是 int 或者 string 的字段，比如 spec.strategy.rollingUpdate.maxSurge，返回值与单位
 // 规则：以 % 为结尾的，单位是 %，否则单位为个数
+// 注意：不同来源的 manifest 数值类型不同（YAML 解析为 int，dynamicClient 返回 int64，JSON 解析为 float64），
+// 这里需要全部兼容，否则类似 `maxSurge: 2`（不带 %）会被当作无法识别的类型而返回 0
 func AnalyzeIntStr(raw interface{}) (int64, string) {
 	switch r := raw.(type) {
+	case int:
+		return int64(r), UnitCnt
+	case int8:
+		return int64(r), UnitCnt
+	case int16:
+		return int64(r), UnitCnt
+	case int32:
+		return int64(r), UnitCnt
 	case int64:
 		return r, UnitCnt
+	case uint:
+		return int64(r), UnitCnt
+	case uint8:
+		return int64(r), UnitCnt
+	case uint16:
+		return int64(r), UnitCnt
+	case uint32:
+		return int64(r), UnitCnt
+	case uint64:
+		return int64(r), UnitCnt
+	case float32:
+		return int64(r), UnitCnt
+	case float64:
+		return int64(r), UnitCnt
 	case string:
-		val, err := strconv.ParseInt(r[:len(r)-1], 10, 64)
-		if err != nil {
-			return 0, UnitPercent
+		s := strings.TrimSpace(r)
+		if strings.HasSuffix(s, "%") {
+			val, err := strconv.ParseInt(strings.TrimSpace(strings.TrimSuffix(s, "%")), 10, 64)
+			if err != nil {
+				return 0, UnitPercent
+			}
+			return val, UnitPercent
 		}
-		return val, UnitPercent
+		// 兼容 "2" 这类数字字符串
+		val, err := strconv.ParseInt(s, 10, 64)
+		if err != nil {
+			return 0, UnitCnt
+		}
+		return val, UnitCnt
 	}
 	return 0, UnitCnt
 }
