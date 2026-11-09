@@ -214,7 +214,7 @@ type HelmInstallConfig struct {
 	Values              []*File
 	PatchTemplateValues map[string]string
 
-	// helmNative 为 true 时不注入 BCS 的 io.tencent.paas.updator 元数据
+	// helmNative 为 true 时不挂 PostRenderer，不注入任何 BCS 元数据（chart 原样输出）
 	HelmNative bool
 }
 

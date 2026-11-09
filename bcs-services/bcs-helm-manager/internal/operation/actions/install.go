@@ -234,7 +234,7 @@ func (r *ReleaseInstallAction) Execute(ctx context.Context) error {
 			Args:                r.args,
 			Values:              vls,
 			PatchTemplateValues: patchValues,
-			// 由 patcher 决定是否删除 io.tencent.paas.updator 元数据
+			// 原生模式下 sdk 侧不挂 PostRenderer，不注入任何 BCS 元数据
 			HelmNative: r.helmNative,
 		})
 	if err != nil {

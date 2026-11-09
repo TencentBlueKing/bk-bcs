@@ -202,8 +202,10 @@ func (c *client) Install(ctx context.Context, config release.HelmInstallConfig) 
 	installer.ClientOnly = config.ClientOnly
 	installer.ReleaseName = config.Name
 	installer.Namespace = config.Namespace
-	installer.PostRenderer = newPatcher(c.group.config.PatchTemplates, config.PatchTemplateValues,
-		config.HelmNative)
+	// 原生模式不挂 PostRenderer：渲染结果保持 chart 原样，不注入任何BCS元数据
+	if !config.HelmNative {
+		installer.PostRenderer = newPatcher(c.group.config.PatchTemplates, config.PatchTemplateValues)
+	}
 	valueOpts := &values.Options{}
 	if err := parseArgs4Install(installer, config.Args, valueOpts); err != nil {
 		blog.Errorf("sdk client install and parse from args failed, %s, args: %v", err.Error(), config.Args)
@@ -264,8 +266,9 @@ func (c *client) Upgrade(ctx context.Context, config release.HelmUpgradeConfig) 
 	upgrader := action.NewUpgrade(conf)
 	upgrader.DryRun = config.DryRun
 	upgrader.Namespace = config.Namespace
-	upgrader.PostRenderer = newPatcher(c.group.config.PatchTemplates, config.PatchTemplateValues,
-		config.HelmNative)
+	if !config.HelmNative {
+		upgrader.PostRenderer = newPatcher(c.group.config.PatchTemplates, config.PatchTemplateValues)
+	}
 	valueOpts := &values.Options{}
 	if err := parseArgs4Upgrade(upgrader, config.Args, valueOpts); err != nil {
 		blog.Errorf("sdk client upgrade and parse from args failed, %s, args: %v", err.Error(), config.Args)

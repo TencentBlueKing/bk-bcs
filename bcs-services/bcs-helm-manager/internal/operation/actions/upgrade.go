@@ -52,7 +52,7 @@ type ReleaseUpgradeAction struct {
 	AuthUser       string
 	IsShardCluster bool
 
-	// helmNative 为 true 时不注入 BCS 的 io.tencent.paas.updator 元数据
+	// helmNative 为 true 时不挂 PostRenderer，不注入任何BCS元数据
 	helmNative bool
 
 	contents []byte
