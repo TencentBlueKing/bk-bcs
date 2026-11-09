@@ -221,13 +221,18 @@ func (c *client) Install(ctx context.Context, config release.HelmInstallConfig) 
 	}
 
 	// values数据, 增加Var values在最后
+	// 原生模式不注入 __BCS__ values，但保留用户 values 里的 {{ .BCS_XXX }} 占位符替换
 	varValues, vars, err := c.getVarValue(ctx, config.ProjectCode, config.Namespace)
 	if err != nil {
 		blog.Errorf("sdk client get vars failed, %s, "+
 			"namespace %s, name %s", err.Error(), config.Namespace, config.Name)
 		return nil, err
 	}
-	values, err := getValues(append(parseVarValue(config.Values, vars), varValues))
+	valueFiles := parseVarValue(config.Values, vars)
+	if !config.HelmNative {
+		valueFiles = append(valueFiles, varValues)
+	}
+	values, err := getValues(valueFiles)
 	if err != nil {
 		blog.Errorf("sdk client install and get values failed, %s, "+
 			"namespace %s, name %s", err.Error(), config.Namespace, config.Name)
@@ -284,13 +289,18 @@ func (c *client) Upgrade(ctx context.Context, config release.HelmUpgradeConfig) 
 	}
 
 	// values数据, 增加Var values在最后
+	// 原生模式不注入 __BCS__ values，但保留用户 values 里的 {{ .BCS_XXX }} 占位符替换
 	varValues, vars, err := c.getVarValue(ctx, config.ProjectCode, config.Namespace)
 	if err != nil {
 		blog.Errorf("sdk client get vars failed, %s, "+
 			"namespace %s, name %s", err.Error(), config.Namespace, config.Name)
 		return nil, err
 	}
-	values, err := getValues(append(parseVarValue(config.Values, vars), varValues))
+	valueFiles := parseVarValue(config.Values, vars)
+	if !config.HelmNative {
+		valueFiles = append(valueFiles, varValues)
+	}
+	values, err := getValues(valueFiles)
 	if err != nil {
 		blog.Errorf("sdk client upgrade and get values failed, %s, "+
 			"namespace %s, name %s", err.Error(), config.Namespace, config.Name)
