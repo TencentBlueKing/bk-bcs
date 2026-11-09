@@ -26,10 +26,8 @@ const (
 	UnitPercent = "percent"
 )
 
-// AnalyzeIntStr 分析可能是 int 或者 string 的字段，比如 spec.strategy.rollingUpdate.maxSurge，返回值与单位
-// 规则：以 % 为结尾的，单位是 %，否则单位为个数
-// 注意：不同来源的 manifest 数值类型不同（YAML 解析为 int，dynamicClient 返回 int64，JSON 解析为 float64），
-// 这里需要全部兼容，否则类似 `maxSurge: 2`（不带 %）会被当作无法识别的类型而返回 0
+// AnalyzeIntStr 分析可能是 int 或者 string 的字段 统一兼容 int / int64 / float64 / string 多种数值类型，
+// 按“是否以 % 结尾”区分百分比与绝对值， 返回归一化的数值与单位，避免因类型差异导致合法配置被误判为无法识别
 func AnalyzeIntStr(raw interface{}) (int64, string) {
 	switch r := raw.(type) {
 	case int:
