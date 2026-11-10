@@ -15,6 +15,8 @@ package bkmonitor
 import (
 	"context"
 	"encoding/json"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"testing"
 	"time"
@@ -50,4 +52,47 @@ func TestQueryByPromQL(t *testing.T) {
 	series, err := QueryByPromQL(ctx, rawURL, "2", "system", start, end, step, matchers, "")
 	assert.NoError(t, err)
 	assert.True(t, len(series) > 1)
+}
+
+func TestGetMetricsList(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "/app/metadata/query_bcs_metrics", r.URL.Path)
+		assert.Equal(t, "BCS-K8S-00001", r.URL.Query().Get("cluster_ids"))
+		assert.Equal(t, []string{"0", "2"}, r.URL.Query()["bk_biz_ids"])
+		_, _ = w.Write([]byte(`{"result":true,"code":200,"data":[{"field_name":"container_cpu_usage_seconds_total",` +
+			`"dimensions":[{"field_name":"pod_name","type":"string"}]}]}`))
+	}))
+	defer srv.Close()
+
+	metrics, err := GetMetricsList(context.Background(), srv.URL, "BCS-K8S-00001", "2", "system")
+	assert.NoError(t, err)
+	assert.Len(t, metrics, 1)
+	assert.Equal(t, "container_cpu_usage_seconds_total", metrics[0].Metric)
+}
+
+func TestGetClusterEventDataID(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "/app/metadata/query_bcs_related_data_link_info", r.URL.Path)
+		assert.Equal(t, "BCS-K8S-00000", r.URL.Query().Get("bcs_cluster_id"))
+		_, _ = w.Write([]byte(`{"result":true,"code":200,"data":{"K8SEvent":{"bk_data_id":1001}}}`))
+	}))
+	defer srv.Close()
+
+	dataID, err := GetClusterEventDataID(context.Background(), srv.URL, "BCS-K8S-00000")
+	assert.NoError(t, err)
+	assert.Equal(t, 1001, dataID.BkDataID)
+}
+
+func TestMetadataQueryDataSource(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "/app/metadata/query_data_source", r.URL.Path)
+		assert.Equal(t, "1001", r.URL.Query().Get("bk_data_id"))
+		_, _ = w.Write([]byte(`{"result":true,"code":200,"data":{"bk_data_id":1001,` +
+			`"mq_config":{"storage_config":{"topic":"audit","partition":1}}}}`))
+	}))
+	defer srv.Close()
+
+	ds, err := MetadataQueryDataSource(context.Background(), srv.URL, 1001)
+	assert.NoError(t, err)
+	assert.Equal(t, "audit", ds.MQConfig.StorageConfig.Topic)
 }

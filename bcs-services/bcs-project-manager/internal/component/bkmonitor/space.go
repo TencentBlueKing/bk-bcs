@@ -31,8 +31,8 @@ import (
 )
 
 var (
-	createSpacePath = "/metadata_create_space/"
-	listSpacesPath  = "/metadata_list_spaces/"
+	createSpacePath = "/app/metadata/create_space/"
+	listSpacesPath  = "/app/metadata/list_spaces/"
 	timeout         = 10
 )
 

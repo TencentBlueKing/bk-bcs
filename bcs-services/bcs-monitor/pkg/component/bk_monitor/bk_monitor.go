@@ -328,7 +328,7 @@ func GetMetricsList(ctx context.Context, host, clusterID, bizID, tenantID string
 		return nil, err
 	}
 
-	url := fmt.Sprintf("%s/query_bcs_metrics", host)
+	url := fmt.Sprintf("%s/app/metadata/query_bcs_metrics", host)
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
 		SetHeaders(utils.GetLaneIDByCtx(ctx)).
@@ -381,7 +381,7 @@ func GetClusterEventDataID(ctx context.Context, host, clusterID string) (*Cluste
 		return nil, err
 	}
 
-	url := fmt.Sprintf("%s/metadata_query_bcs_related_data_link_info", host)
+	url := fmt.Sprintf("%s/app/metadata/query_bcs_related_data_link_info", host)
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
 		SetHeader(utils.TenantIDHeaderKey, utils.GetTenantIDFromContext(ctx)).
@@ -430,7 +430,7 @@ func MetadataQueryDataSource(ctx context.Context, host string, dataID int) (*Dat
 		return nil, err
 	}
 
-	url := fmt.Sprintf("%s/metadata_query_data_source", host)
+	url := fmt.Sprintf("%s/app/metadata/query_data_source", host)
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
 		SetHeader(utils.TenantIDHeaderKey, utils.GetTenantIDFromContext(ctx)).

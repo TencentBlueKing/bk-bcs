@@ -134,7 +134,7 @@ func (c *Client) bkmonitorHostAlarmConfig(ctx context.Context, user string, conf
 	}
 
 	var (
-		reqURL   = "/add_shield"
+		reqURL   = "/app/shield/add/"
 		respData = &types.BaseResponse{}
 	)
 
