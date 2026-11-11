@@ -48,7 +48,7 @@ func replacePatchTplKey(keys map[string]string, data []byte) []byte {
 }
 
 // newPatcher 构建 post-render patcher。
-// 原生模式（helmNative）下不挂 PostRenderer，不会走到改函数。
+// 原生模式（helmNative）下不挂 PostRenderer，不会走到该函数。
 func newPatcher(templates []*release.File, keys map[string]string) *patcher {
 	fs := make([]*files.File, 0, 5)
 	for _, f := range templates {

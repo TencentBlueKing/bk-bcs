@@ -344,10 +344,7 @@ func InstallRelease(releaseHandler Handler, projectID, projectCode, clusterID, r
 	}
 	patchValues[common.PTKCreator] = stringx.ReplaceIllegalChars(creator)
 	patchValues[common.PTKVersion] = version
-	// 开关只作用于 updator：开启后不再注入，避免每次更新把 updator 覆盖成当前操作人
-	if !helmNative {
-		patchValues[common.PTKUpdator] = stringx.ReplaceIllegalChars(updator)
-	}
+	patchValues[common.PTKUpdator] = stringx.ReplaceIllegalChars(updator)
 	return releaseHandler.Cluster(clusterID).Install(
 		context.Background(),
 		HelmInstallConfig{
@@ -388,10 +385,7 @@ func UpgradeRelease(releaseHandler Handler, projectID, projectCode, clusterID, r
 	}
 	patchValues[common.PTKCreator] = stringx.ReplaceIllegalChars(creator)
 	patchValues[common.PTKVersion] = version
-	// 开关只作用于 updator：开启后不再注入，避免每次更新把 updator 覆盖成当前操作人
-	if !helmNative {
-		patchValues[common.PTKUpdator] = stringx.ReplaceIllegalChars(updator)
-	}
+	patchValues[common.PTKUpdator] = stringx.ReplaceIllegalChars(updator)
 	return releaseHandler.Cluster(clusterID).Upgrade(
 		context.Background(),
 		HelmUpgradeConfig{

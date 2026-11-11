@@ -182,7 +182,7 @@ func (u *UpgradeReleaseV1Action) saveDB() error {
 			entity.FieldKeyStatus:       helmrelease.StatusPendingUpgrade.String(),
 			entity.FieldKeyMessage:      "",
 			entity.FieldKeyEnv:          u.req.GetEnv(),
-			entity.FieldKeyhelmNative:   u.req.GetHelmNative(),
+			entity.FieldKeyHelmNative:   u.req.GetHelmNative(),
 		}
 		if err = u.model.UpdateRelease(u.ctx, u.req.GetClusterID(), u.req.GetNamespace(),
 			u.req.GetName(), rl); err != nil {

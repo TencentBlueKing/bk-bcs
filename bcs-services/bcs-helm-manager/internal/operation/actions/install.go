@@ -216,12 +216,10 @@ func (r *ReleaseInstallAction) Execute(ctx context.Context) error {
 		common.PTKName:      r.name,
 	}
 	// install 时 createBy 与 updateBy 都是 r.username。
-	// creator / version 始终注入；只有 updator 受开关控制。
+	// patchValues 供 patchDir 模板渲染占位符；原生模式下不挂 PostRenderer，本值不会被消费
 	patchValues[common.PTKCreator] = stringx.ReplaceIllegalChars(r.username)
 	patchValues[common.PTKVersion] = r.version
-	if !r.helmNative {
-		patchValues[common.PTKUpdator] = stringx.ReplaceIllegalChars(r.username)
-	}
+	patchValues[common.PTKUpdator] = stringx.ReplaceIllegalChars(r.username)
 	result, err := r.releaseHandler.Cluster(r.clusterID).Install(
 		ctx, release.HelmInstallConfig{
 			ProjectCode: r.projectCode,

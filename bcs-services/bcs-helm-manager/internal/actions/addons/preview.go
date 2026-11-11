@@ -146,7 +146,7 @@ func (u *PreviewAddonsAction) getReleasePreview(
 		return nil, fmt.Errorf("upgrade addons failed, %s", err.Error())
 	}
 	rp := actionsrelease.NewReleasePreviewAction(u.model, u.platform, u.releaseHandler)
-	preview, err := rp.GenerateReleasePreview(currentRelease.Transfer2Release(), newRelease)
+	preview, err := rp.GenerateReleasePreview(currentRelease.Transfer2Release(), newRelease, false)
 	if err != nil {
 		blog.Errorf("generate release preview failed, %s", err.Error())
 		u.setResp(common.ErrHelmManagerPreviewActionFailed, "addons preview failed", nil)

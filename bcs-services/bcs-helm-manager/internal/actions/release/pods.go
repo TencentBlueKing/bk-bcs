@@ -15,11 +15,14 @@ package release
 import (
 	"context"
 	"errors"
+	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	_struct "github.com/golang/protobuf/ptypes/struct"
 	"helm.sh/helm/v3/pkg/storage/driver"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/cli-runtime/pkg/resource"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
@@ -138,13 +141,45 @@ func (g *GetReleasePodsAction) podIsOwnRelease(pod *corev1.Pod, infos []*resourc
 				or.Name == info.Name {
 				return true
 			}
-			if pod.Labels[labelControllerType] == info.Object.GetObjectKind().GroupVersionKind().Kind &&
-				pod.Labels[labelControllerName] == info.Name {
-				return true
+		}
+		// 原生模式无 controller 标签兜底，补充 selector 匹配和 Deployment→ReplicaSet 间接归属
+		if podMatchWorkloadSelector(info.Object, pod) {
+			return true
+		}
+		if info.Object.GetObjectKind().GroupVersionKind().Kind == "Deployment" {
+			for _, or := range pod.OwnerReferences {
+				if or.Kind == "ReplicaSet" && strings.HasPrefix(or.Name, info.Name+"-") {
+					return true
+				}
 			}
+		}
+		if pod.Labels[labelControllerType] == info.Object.GetObjectKind().GroupVersionKind().Kind &&
+			pod.Labels[labelControllerName] == info.Name {
+			return true
 		}
 	}
 	return false
+}
+
+// podMatchWorkloadSelector 检查 workload 的 spec.selector.matchLabels 是否全部命中 Pod 标签
+func podMatchWorkloadSelector(obj runtime.Object, pod *corev1.Pod) bool {
+	if obj == nil {
+		return false
+	}
+	m, err := runtime.DefaultUnstructuredConverter.ToUnstructured(obj)
+	if err != nil {
+		return false
+	}
+	selector, found, err := unstructured.NestedStringMap(m, "spec", "selector", "matchLabels")
+	if err != nil || !found || len(selector) == 0 {
+		return false
+	}
+	for k, v := range selector {
+		if pod.Labels[k] != v {
+			return false
+		}
+	}
+	return true
 }
 
 var availableKind = []string{

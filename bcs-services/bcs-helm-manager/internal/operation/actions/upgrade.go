@@ -219,12 +219,10 @@ func (r *ReleaseUpgradeAction) Execute(ctx context.Context) error {
 		common.PTKNamespace: r.namespace,
 		common.PTKName:      r.name,
 	}
-	// creator / version 始终注入；只有 updator 受开关控制。
+	// patchValues 供 patchDir 模板渲染占位符；原生模式下不挂 PostRenderer，本值不会被消费
 	patchValues[common.PTKCreator] = stringx.ReplaceIllegalChars(r.createBy)
 	patchValues[common.PTKVersion] = r.version
-	if !r.helmNative {
-		patchValues[common.PTKUpdator] = stringx.ReplaceIllegalChars(r.updateBy)
-	}
+	patchValues[common.PTKUpdator] = stringx.ReplaceIllegalChars(r.updateBy)
 	result, err := r.releaseHandler.Cluster(r.clusterID).Upgrade(
 		ctx, release.HelmUpgradeConfig{
 			ProjectCode: r.projectCode,

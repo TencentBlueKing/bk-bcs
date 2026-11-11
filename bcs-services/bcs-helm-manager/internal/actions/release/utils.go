@@ -88,12 +88,22 @@ func filterIndex(offset, limit int, release []*helmmanager.Release) []*helmmanag
 	return release[offset : offset+limit]
 }
 
-// shouldRemoveAnnotations 预览展示时需要剥掉的注解 key。
 var shouldRemoveAnnotations = []string{
+	"io.tencent.paas.creator",
+	"io.tencent.paas.updator",
+	"io.tencent.paas.version",
+}
+
+var nativeShouldRemoveAnnotations = []string{
 	"io.tencent.paas.updator",
 }
 
-func removeCustomAnnotations(manifest string) *string {
+func removeCustomAnnotations(manifest string, native bool) *string {
+	annotationKeys := shouldRemoveAnnotations
+	if native {
+		annotationKeys = nativeShouldRemoveAnnotations
+	}
+
 	// Split the input string into lines
 	lines := strings.Split(manifest, "\n")
 
@@ -103,7 +113,7 @@ func removeCustomAnnotations(manifest string) *string {
 	// Loop through the lines and remove the specified lines
 	for _, line := range lines {
 		shouldRemove := false
-		for _, lineToRemove := range shouldRemoveAnnotations {
+		for _, lineToRemove := range annotationKeys {
 			if strings.Contains(line, lineToRemove) {
 				shouldRemove = true
 				break

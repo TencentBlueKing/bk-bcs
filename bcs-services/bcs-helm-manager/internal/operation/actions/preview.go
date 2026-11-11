@@ -43,7 +43,7 @@ type ReleasePreviewAction struct {
 	updateBy       string
 	AuthUser       string
 	IsShardCluster bool
-	helmNative     bool
+	HelmNative     bool
 
 	contents []byte
 }
@@ -69,7 +69,7 @@ type ReleasePreviewActionOption struct {
 	AuthUser       string
 	IsShardCluster bool
 	Content        []byte
-	helmNative     bool
+	HelmNative     bool
 }
 
 // NewReleasePreviewAction new release preview action
@@ -94,7 +94,7 @@ func NewReleasePreviewAction(o *ReleasePreviewActionOption) *ReleasePreviewActio
 		IsShardCluster: o.IsShardCluster,
 		contents:       o.Content,
 
-		helmNative: o.helmNative,
+		HelmNative: o.HelmNative,
 	}
 }
 
@@ -112,7 +112,7 @@ func (r *ReleasePreviewAction) UpgradeRelease(ctx context.Context) (*pkgrelease.
 	// get release from helm dry run
 	result, err := release.UpgradeRelease(r.releaseHandler, r.projectID, r.projectCode, r.clusterID, r.name,
 		r.namespace, r.chartName, r.version, r.createBy, r.updateBy, r.args, nil, r.contents, r.values, true,
-		r.helmNative)
+		r.HelmNative)
 	if err != nil {
 		return nil, err
 	}

@@ -50,6 +50,6 @@ const (
 
 	FieldKeyEnv = "env"
 
-	// FieldKeyhelmNative 是否不注入 BCS 的 io.tencent.paas.updator 元数据
-	FieldKeyhelmNative = "helmNative"
+	// FieldKeyHelmNative 是否启用原生 Helm 模式（不挂 PostRenderer，不注入任何 BCS 元数据）
+	FieldKeyHelmNative = "helmNative"
 )
