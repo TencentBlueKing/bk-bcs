@@ -102,7 +102,7 @@ func (r *ReleasePreviewAction) getReleasePreview() (*helmmanager.ReleasePreview,
 		if err != nil {
 			return nil, fmt.Errorf("get release revision %d failed, err %s", r.req.GetRevision(), err.Error())
 		}
-		return r.GenerateReleasePreview(currentRelease.Transfer2Release(), newRelease.Transfer2Release(), false)
+		return r.GenerateReleasePreview(currentRelease.Transfer2Release(), newRelease.Transfer2Release())
 	}
 
 	// helm template, get new manifest
@@ -132,7 +132,7 @@ func (r *ReleasePreviewAction) getReleasePreview() (*helmmanager.ReleasePreview,
 	}
 	newRelease := result.Release
 
-	return r.GenerateReleasePreview(currentRelease.Transfer2Release(), newRelease, helmNative)
+	return r.GenerateReleasePreview(currentRelease.Transfer2Release(), newRelease)
 }
 
 // 过滤掉不支持的参数并判断是否需要--reuse-values
@@ -160,9 +160,8 @@ func filtArgs(args []string) (bool, []string) {
 }
 
 // GenerateReleasePreview generate release preview
-// native 决定预览 diff 的注解剥离策略，见 removeCustomAnnotations
 func (r *ReleasePreviewAction) GenerateReleasePreview(oldRelease,
-	newRelease *helmrelease.Release, native bool) (*helmmanager.ReleasePreview, error) {
+	newRelease *helmrelease.Release) (*helmmanager.ReleasePreview, error) {
 	preview := &helmmanager.ReleasePreview{
 		NewContent: common.GetStringP(""),
 		OldContent: common.GetStringP(""),
@@ -175,13 +174,13 @@ func (r *ReleasePreviewAction) GenerateReleasePreview(oldRelease,
 	for _, v := range newRelease.Hooks {
 		manifest += "\n---\n" + v.Manifest
 	}
-	preview.NewContent = removeCustomAnnotations(manifest, native)
+	preview.NewContent = removeCustomAnnotations(manifest)
 	if oldRelease != nil {
 		oldManifest := oldRelease.Manifest
 		for _, v := range oldRelease.Hooks {
 			oldManifest += "\n---\n" + v.Manifest
 		}
-		preview.OldContent = removeCustomAnnotations(oldManifest, native)
+		preview.OldContent = removeCustomAnnotations(oldManifest)
 	}
 
 	// get contents

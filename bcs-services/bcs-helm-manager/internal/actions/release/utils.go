@@ -94,16 +94,7 @@ var shouldRemoveAnnotations = []string{
 	"io.tencent.paas.version",
 }
 
-var nativeShouldRemoveAnnotations = []string{
-	"io.tencent.paas.updator",
-}
-
-func removeCustomAnnotations(manifest string, native bool) *string {
-	annotationKeys := shouldRemoveAnnotations
-	if native {
-		annotationKeys = nativeShouldRemoveAnnotations
-	}
-
+func removeCustomAnnotations(manifest string) *string {
 	// Split the input string into lines
 	lines := strings.Split(manifest, "\n")
 
@@ -113,7 +104,7 @@ func removeCustomAnnotations(manifest string, native bool) *string {
 	// Loop through the lines and remove the specified lines
 	for _, line := range lines {
 		shouldRemove := false
-		for _, lineToRemove := range annotationKeys {
+		for _, lineToRemove := range shouldRemoveAnnotations {
 			if strings.Contains(line, lineToRemove) {
 				shouldRemove = true
 				break
