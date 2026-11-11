@@ -27,13 +27,15 @@
 ## MCP Server
 
 - `definition.yaml` 使用 `spec_version: 2`，在 `stages[].mcp_servers` 下声明 MCP。
-- `prod` 环境创建两个服务，最终名称为 `{BK_APIGW_NAME}-prod-{name}`，例如网关名为 `bcs-api-gateway` 时为 `bcs-api-gateway-prod-mcp`；在网关管理端获取实际访问地址：
-  - `mcp`（读写）：接入 `resources.yaml` 全部 **130 个工具**，名称与原服务一致。
-  - `mcp-readonly`（只读）：接入 **70 个工具**，即全部 GET 资源，以及只查询、校验或预览、不修改数据的 POST 资源（监控 `*_by_post`、模板详情/变量/预览、Release/组件预览、节点驱逐检查等，清单见测试中的 `READ_ONLY_POSTS`）。新增 POST 资源时需判断是否加入该清单。
-- 使用 `streamable_http` 协议，默认启用、**公开**（网关用户可在 MCP 市场看到并申请），分类为 `Official`；读写服务的写操作工具也会对外展示。
+- `prod` 环境按资源域创建三个服务，最终名称为 `{BK_APIGW_NAME}-prod-{name}`，例如网关名为 `bcs-api-gateway` 时为 `bcs-api-gateway-prod-project`；在网关管理端获取实际访问地址：
+  - `project`（`蓝鲸容器平台-项目查询`，**3 个工具**，只读）：有权限的项目列表、项目详情、项目关联业务。
+  - `cluster`（`蓝鲸容器平台-集群管理`，**26 个工具**）：项目集群与共享集群、命名空间查询、节点查询及上下架/驱逐/标签/污点/注解、节点池查询/创建及弹性伸缩开关、集群任务查询与重试/跳过。
+  - `deploy`（`蓝鲸容器平台-部署服务`，**26 个工具**）：Helm 仓库/Chart/Release 查询与安装/升级/回滚/卸载，模板文件查询、预览与部署。
+- `resources.yaml` 中的其余资源（创建/导入集群、节点增删、项目与变量管理、集群组件、监控、操作记录、WebConsole 等）不接入 MCP。新增资源时需判断归属哪个服务；测试按资源 `tags` 校验每个服务只包含本域资源（`MCP_SERVER_TAGS`）。
+- 使用 `streamable_http` 协议，默认启用、**公开**（网关用户可在 MCP 市场看到并申请），分类均含 `Official`（官方资源），另按资源域分别为 `ConfigManagement`（配置管理，项目查询）、`Automation`（运维自动化，集群管理）、`DevOps`（持续交付，部署服务）；中文名遵循 `{产品名称}-{资源名称}` 规范；写操作工具也会对外展示。
 - 开启 OAuth2 公开客户端（`bk_app_code=public`）和个人客户端（个人 token，`bk_app_code=personal`）授权，用户可直接以个人身份调用，需 API 网关 >= 1.23.2。后端仍需校验调用方身份与项目/集群权限。
 - 工具名与 `resources.yaml` 中的 `operationId` 一致，包括现有的 `list_template_vaiables` 拼写；新增或删除资源时需同步维护清单。
-- 工具包含创建/更新项目及配额、创建/更新命名空间与变量、创建/导入/更新集群、节点上下架/驱逐/调度设置、节点池与弹性伸缩配置、任务重试/跳过、安装/升级/停止/卸载集群组件、部署模板、安装/升级/回滚/卸载 Release、删除 Chart、创建 WebConsole 会话等**写操作**，只在读写服务中提供。只需查询的智能体应接入只读服务；读写服务仅向可信应用授权，智能体接入时应按需选择工具并为高风险操作设置人工确认，不能仅依赖提示词限制。
+- 集群管理包含节点上下架/驱逐/标签/污点/注解、创建节点池、弹性伸缩开关、任务重试/跳过等**写操作**；部署服务包含部署模板、安装/升级/回滚/卸载 Release 等**写操作**。智能体接入时应按需选择工具并为高风险操作设置人工确认，不能仅依赖提示词限制。
 - MCP 授权与 API 资源授权是两个独立步骤，配置为两者都授权给 `BK_APP_CODE` 和 `BK_API_GRANT_PERMISSIONS_APPS` 中的应用。原有资源鉴权配置不变，后端仍需校验调用方身份与项目/集群权限。
 - AIDEV 等调用方需使用上述最终 MCP 名称，并单独完成平台侧所需授权。本目录不会修改 `bcs-bkai-syncing` 的 MCP 引用或智能体工具选择。
 
@@ -42,7 +44,8 @@
 1. 目标 API 网关需支持 MCP Server 同步及 `streamable_http` 协议。
 2. **更新 `BKAPI_RELEASE_VERSION`**，使新增的请求 Schema 发布到 `prod` 生效版本。不要使用 `--no-pub` 跳过发布后仍开启 MCP 同步。
 3. 基础镜像固定为 `apigw-manager:4.2.4`，其默认脚本在 `create_version_and_release_apigw` 成功后执行 `sync_apigw_stage_mcp_servers`，无需自定义同步脚本。MCP 同步失败会使 Job 失败。
-4. 同步后在网关管理端确认读写、只读服务的工具数量分别为 130、70，授权应用列表正确，再使用已授权调用方进行联调。同步配置本身不保证目标部署中的每个后端接口可用。
+4. 同步后在网关管理端确认项目查询、集群管理、部署服务的工具数量分别为 3、26、26，授权应用列表正确，再使用已授权调用方进行联调。同步配置本身不保证目标部署中的每个后端接口可用。
+5. 同步只创建或更新 `definition.yaml` 中声明的服务，旧的 `{BK_APIGW_NAME}-prod-mcp`、`{BK_APIGW_NAME}-prod-mcp-readonly` 如已存在，需在网关管理端手动停用或删除，并通知调用方切换。
 
 ### 请求参数维护
 
@@ -69,7 +72,7 @@ PYTHONDONTWRITEBYTECODE=1 /tmp/bcs-apigw-check/bin/python -m unittest discover \
   -s install/conf/bcs-services/bcs-api-gateway-syncing/tests -v
 ```
 
-测试覆盖 OpenAPI 格式与引用、130 个资源及文档与 MCP 清单的一致性、路径参数、无参声明、监控参数、请求体及默认授权策略。
+测试覆盖 OpenAPI 格式与引用、资源与文档的一致性、MCP 按资源域拆分、路径参数、无参声明、监控参数、请求体及默认授权策略。
 
 ## 参考
 

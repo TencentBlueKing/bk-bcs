@@ -5,7 +5,7 @@ kind: Agent
 
 metadata:
   code: ai-bcs
-  name: 蓝鲸容器服务助手
+  name: 容器管理平台-助手
   description: 查询和管理 BCS 项目、集群、命名空间和集群资源信息
 
 spec:
@@ -64,7 +64,13 @@ spec:
   # tool_name 使用 bcs-api-gateway/resources.yaml 的 operationId，同步前需与 MCP 实际工具名核对。
   mcps:
     - type: apigw
-      code: bcs-api-gateway-prod-mcp
+      code: bcs-api-gateway-prod-project
+      is_selected_all: true
+    - type: apigw
+      code: bcs-api-gateway-prod-cluster
+      is_selected_all: true
+    - type: apigw
+      code: bcs-api-gateway-prod-deploy
       is_selected_all: true
 
   skills:

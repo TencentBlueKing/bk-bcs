@@ -13,11 +13,11 @@ from openapi_spec_validator import validate
 ROOT = Path(__file__).resolve().parents[1]
 GATEWAY = ROOT / "bcs-api-gateway"
 HTTP_METHODS = {"get", "post", "put", "patch", "delete", "head", "options", "trace"}
-# POST resources that only query, validate or preview and are safe for the read-only MCP.
-READ_ONLY_POSTS = {
-    "check_drain_node", "check_node_in_cluster", "get_chart_releases", "get_template_version",
-    "labels_by_post", "list_template_vaiables", "preview_addons", "preview_deploy_template",
-    "query_by_post", "query_range_by_post", "release_preview", "series_by_post",
+# MCP servers are split by resource domain; each may only expose resources with these tags.
+MCP_SERVER_TAGS = {
+    "project": {"Project"},
+    "cluster": {"Cluster", "Namespace"},
+    "deploy": {"Helm", "TemplateFile"},
 }
 
 
@@ -89,26 +89,28 @@ class MCPConfigTests(unittest.TestCase):
         validate(self.resources)
         self.resolve(self.resources)
 
-    def test_all_130_resources_and_docs_are_in_mcp(self):
-        self.assertEqual(len(self.operations), 130)
-        self.assertEqual(len(self.by_name), 130)
+    def test_resources_have_docs_and_mcp_servers_split_by_domain(self):
+        self.assertEqual(len(self.operations), len(self.by_name))
+        self.assertEqual(set(self.by_name), {p.stem for p in (GATEWAY / "docs/zh").glob("*.md")})
         definition = render_definition()
         self.assertEqual(definition["spec_version"], 2)
         self.assertNotIn("stage", definition)
         self.assertEqual(len(definition["stages"]), 1)
         servers = {server["name"]: server for server in definition["stages"][0]["mcp_servers"]}
-        self.assertEqual(set(servers), {"mcp", "mcp-readonly"})
-        for server in servers.values():
-            names = server["resource_names"]
-            self.assertEqual(len(names), len(set(names)))
-            self.assertNotIn("tool_names", server)
-        names = servers["mcp"]["resource_names"]
-        self.assertEqual(set(names), set(self.by_name))
-        self.assertEqual(set(names), {p.stem for p in (GATEWAY / "docs/zh").glob("*.md")})
-        self.assertTrue(READ_ONLY_POSTS <= self.by_name.keys())
-        read_only = {operation["operationId"] for _, method, operation in self.operations
-                     if method == "get" or operation["operationId"] in READ_ONLY_POSTS}
-        self.assertEqual(set(servers["mcp-readonly"]["resource_names"]), read_only)
+        self.assertEqual(set(servers), set(MCP_SERVER_TAGS))
+        exposed = []
+        for name, server in servers.items():
+            with self.subTest(server=name):
+                names = server["resource_names"]
+                self.assertEqual(len(names), len(set(names)))
+                self.assertNotIn("tool_names", server)
+                self.assertTrue(set(names) <= self.by_name.keys())
+                tags = {self.by_name[resource]["tags"][0] for resource in names}
+                self.assertTrue(tags <= MCP_SERVER_TAGS[name])
+                exposed.extend(names)
+        self.assertEqual(len(exposed), len(set(exposed)))
+        methods = {operation["operationId"]: method for _, method, operation in self.operations}
+        self.assertEqual({methods[name] for name in servers["project"]["resource_names"]}, {"get"})
 
     def test_stage_and_authorization(self):
         for apps in ((), ("bk_apigateway", "bcs-agent")):
@@ -126,18 +128,25 @@ class MCPConfigTests(unittest.TestCase):
                     },
                 }])
                 self.assertFalse(stage["rate_limit"]["enabled"])
-                self.assertEqual([server["name"] for server in stage["mcp_servers"]], ["mcp", "mcp-readonly"])
+                self.assertEqual([server["name"] for server in stage["mcp_servers"]],
+                                 ["project", "cluster", "deploy"])
+                # Chinese titles follow the BlueKing AI naming rule: {产品名称}-{资源名称}.
+                self.assertEqual([server["title"] for server in stage["mcp_servers"]],
+                                 ["蓝鲸容器平台-项目查询", "蓝鲸容器平台-集群管理", "蓝鲸容器平台-部署服务"])
+                self.assertEqual([server["category_names"] for server in stage["mcp_servers"]], [
+                    ["Official", "ConfigManagement"], ["Official", "Automation"], ["Official", "DevOps"],
+                ])
                 for server in stage["mcp_servers"]:
                     self.assertEqual(server["status"], 1)
                     self.assertEqual(server["protocol_type"], "streamable_http")
                     self.assertIs(server["is_public"], True)
                     self.assertIs(server["oauth2_public_client_enabled"], True)
                     self.assertIs(server["oauth2_personal_client_enabled"], True)
-                    self.assertEqual(server["category_names"], ["Official"])
                     self.assertEqual(server["target_app_codes"], ["bcs", *apps])
                     self.assertEqual(server["target_app_codes"], [
                         grant["bk_app_code"] for grant in definition["grant_permissions"]
                     ])
+                self.assertEqual(definition["apigateway"]["api_type"], 1)
                 self.assertEqual(definition["apigateway"]["maintainers"], ["admin", "maintainer"])
                 self.assertEqual(definition["apply_permissions"], [{"api_name": "bk-test"}])
 
