@@ -3212,7 +3212,7 @@
         "helmNative": {
           "type": "boolean",
           "format": "boolean",
-          "description": "是否不注入 BCS 的 io.tencent.paas 系列注解，默认 false（注入）",
+          "description": "是否启用原生 Helm 模式：不挂 PostRenderer、不注入 __BCS__ values，chart 原样输出；默认 false（注入）",
           "title": "helmNative"
         }
       },
@@ -3678,7 +3678,7 @@
         "helmNative": {
           "type": "boolean",
           "format": "boolean",
-          "description": "是否不注入 BCS 的 io.tencent.paas 系列注解",
+          "description": "是否启用原生 Helm 模式：不挂 PostRenderer、不注入 __BCS__ values，chart 原样输出",
           "title": "helmNative"
         }
       }
@@ -3862,7 +3862,7 @@
         "helmNative": {
           "type": "boolean",
           "format": "boolean",
-          "description": "是否不注入 BCS 的 io.tencent.paas 系列注解",
+          "description": "是否启用原生 Helm 模式：不挂 PostRenderer、不注入 __BCS__ values，chart 原样输出",
           "title": "helmNative"
         }
       },
@@ -4449,7 +4449,7 @@
         "helmNative": {
           "type": "boolean",
           "format": "boolean",
-          "description": "是否不注入 BCS 的 io.tencent.paas 系列注解，默认 false（注入）",
+          "description": "是否启用原生 Helm 模式：不挂 PostRenderer、不注入 __BCS__ values，chart 原样输出；默认 false（注入）",
           "title": "helmNative"
         }
       },

@@ -1837,7 +1837,7 @@ message ReleaseDetail {
     // 不返回的话，用户每次打开更新页都会显示"未勾选"，会误以为上次的选择丢了。
     optional bool helmNative = 20[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "helmNative",
-        description: "是否不注入 BCS 的 io.tencent.paas 系列注解"
+        description: "是否启用原生 Helm 模式：不挂 PostRenderer、不注入 __BCS__ values，chart 原样输出"
     }];
 }
 
@@ -2027,7 +2027,7 @@ message InstallReleaseV1Req {
     }];
     optional bool helmNative = 13[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "helmNative",
-        description: "是否不注入 BCS 的 io.tencent.paas 系列注解，默认 false（注入）"
+        description: "是否启用原生 Helm 模式：不挂 PostRenderer、不注入 __BCS__ values，chart 原样输出；默认 false（注入）"
     }];
 }
 
@@ -2175,7 +2175,7 @@ message UpgradeReleaseV1Req {
     }];
     optional bool helmNative = 13[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "helmNative",
-        description: "是否不注入 BCS 的 io.tencent.paas 系列注解，默认 false（注入）"
+        description: "是否启用原生 Helm 模式：不挂 PostRenderer、不注入 __BCS__ values，chart 原样输出；默认 false（注入）"
     }];
 }
 
@@ -2319,7 +2319,7 @@ message ReleasePreviewReq {
     }];
     optional bool helmNative = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "helmNative",
-        description: "是否不注入 BCS 的 io.tencent.paas 系列注解"
+        description: "是否启用原生 Helm 模式：不挂 PostRenderer、不注入 __BCS__ values，chart 原样输出"
     }];
 }
 
