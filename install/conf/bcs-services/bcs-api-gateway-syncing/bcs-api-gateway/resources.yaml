@@ -12167,3 +12167,144 @@ paths:
           appVerifiedRequired: true
           resourcePermissionRequired: true
         descriptionEn: None
+  /{version}/usermanager/v1/users/{username}/tokens:
+    get:
+      operationId: get_user_tokens
+      parameters:
+        - name: version
+          in: path
+          required: true
+          description: BCS API 版本，通常为 v4
+          schema:
+            type: string
+            default: v4
+        - name: username
+          in: path
+          required: true
+          description: 用户名，仅允许查询当前认证用户自己的 token
+          schema:
+            type: string
+      responses:
+        default:
+          $ref: '#/components/responses/BCSResponse'
+      description: 查询用户的 BCS API token 列表
+      tags:
+      - User
+      x-bk-apigateway-resource:
+        isPublic: false
+        allowApplyPermission: false
+        matchSubpath: false
+        enableWebsocket: false
+        backend:
+          name: default
+          method: get
+          path: /bcsapi/{version}/usermanager/v1/users/{username}/tokens
+          matchSubpath: false
+          timeout: 0
+        pluginConfigs: []
+        authConfig:
+          userVerifiedRequired: true
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+        descriptionEn: Get BCS API tokens of the user
+  /clusterresources/api/v1/projects/{project_code}/clusters/{cluster_id}/events:
+    get:
+      operationId: get_events
+      parameters:
+        - $ref: '#/components/parameters/ProjectCodeSnake'
+        - name: cluster_id
+          in: path
+          required: true
+          description: 集群 ID
+          schema:
+            type: string
+        - name: env
+          in: query
+          description: 事件环境，K8S 集群为 k8s
+          schema:
+            type: string
+        - name: kind
+          in: query
+          description: 资源类型过滤，如 Pod、Deployment，多个以英文逗号分隔
+          schema:
+            type: string
+        - name: level
+          in: query
+          description: 事件级别过滤，如 Normal、Warning，多个以英文逗号分隔
+          schema:
+            type: string
+        - name: component
+          in: query
+          description: 事件来源组件过滤，多个以英文逗号分隔
+          schema:
+            type: string
+        - name: type
+          in: query
+          description: 事件类型过滤，多个以英文逗号分隔
+          schema:
+            type: string
+        - name: extraInfo.namespace
+          in: query
+          description: 命名空间过滤，多个以英文逗号分隔；共享集群需指定
+          schema:
+            type: string
+        - name: extraInfo.name
+          in: query
+          description: 资源名称过滤，多个以英文逗号分隔
+          schema:
+            type: string
+        - name: extraInfo.kind
+          in: query
+          description: 资源类型过滤（extraInfo 中的 kind），多个以英文逗号分隔
+          schema:
+            type: string
+        - name: timeBegin
+          in: query
+          description: 开始时间，Unix 秒级时间戳
+          schema:
+            type: integer
+            format: int64
+        - name: timeEnd
+          in: query
+          description: 结束时间，Unix 秒级时间戳
+          schema:
+            type: integer
+            format: int64
+        - name: offset
+          in: query
+          description: 分页偏移量
+          schema:
+            type: integer
+        - name: length
+          in: query
+          description: 返回记录数量上限
+          schema:
+            type: integer
+        - name: field
+          in: query
+          description: 返回字段，多个以英文逗号分隔，不传返回全部字段
+          schema:
+            type: string
+      responses:
+        default:
+          $ref: '#/components/responses/BCSResponse'
+      description: 查询集群事件
+      tags:
+      - Cluster
+      x-bk-apigateway-resource:
+        isPublic: false
+        allowApplyPermission: false
+        matchSubpath: false
+        enableWebsocket: false
+        backend:
+          name: default
+          method: get
+          path: /bcsapi/v4/clusterresources/api/v1/projects/{project_code}/clusters/{cluster_id}/events
+          matchSubpath: false
+          timeout: 0
+        pluginConfigs: []
+        authConfig:
+          userVerifiedRequired: true
+          appVerifiedRequired: true
+          resourcePermissionRequired: true
+        descriptionEn: Get events of the cluster

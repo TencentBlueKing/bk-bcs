@@ -186,11 +186,22 @@ class MCPConfigTests(unittest.TestCase):
             self.assertTrue(match["explode"])
 
     def test_resource_tags(self):
-        allowed = {"Project", "Namespace", "Cluster", "Helm", "Addons", "TemplateFile", "Monitor", "Webconsole"}
+        allowed = {"Project", "Namespace", "Cluster", "Helm", "Addons", "TemplateFile", "Monitor", "Webconsole", "User"}
         for _, _, operation in self.operations:
             with self.subTest(operation=operation["operationId"]):
                 self.assertEqual(len(operation["tags"]), 1)
                 self.assertIn(operation["tags"][0], allowed)
+
+    def test_private_resources_require_user_verification(self):
+        exposed = {name for server in render_definition()["stages"][0]["mcp_servers"]
+                   for name in server["resource_names"]}
+        for name in ("get_user_tokens", "get_events"):
+            with self.subTest(operation=name):
+                config = self.by_name[name]["x-bk-apigateway-resource"]
+                self.assertIs(config["isPublic"], False)
+                self.assertIs(config["allowApplyPermission"], False)
+                self.assertIs(config["authConfig"]["userVerifiedRequired"], True)
+                self.assertNotIn(name, exposed)
 
     def test_activity_filters_match_handler(self):
         query_names = {p["name"] for p in self.parameters("get_activity_logs") if p["in"] == "query"}
