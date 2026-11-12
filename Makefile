@@ -155,6 +155,7 @@ api-gateway-syncing:
 bkai-syncing:
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-bkai-syncing
 	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-bkai-syncing/* ${PACKAGEPATH}/bcs-services/bcs-bkai-syncing/
+	cd bcs-services/bcs-bkai-syncing && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-bkai-syncing/bcs-bkai-syncing ./main.go
 
 storage:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services
