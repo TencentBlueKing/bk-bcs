@@ -27,6 +27,7 @@ import (
 	"k8s.io/cli-runtime/pkg/resource"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/stringx"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
 )
@@ -34,6 +35,14 @@ import (
 const (
 	defaultHelmUser = "admin"
 )
+
+// getDefaultHelmUser 获取集群中 release 缺省的创建人/更新人
+func getDefaultHelmUser() string {
+	if options.GlobalOptions != nil && options.GlobalOptions.Release.DefaultUser != "" {
+		return options.GlobalOptions.Release.DefaultUser
+	}
+	return defaultHelmUser
+}
 
 // Handler 定义了 helm release 的client集合
 type Handler interface {
@@ -104,8 +113,8 @@ func (r *Release) Transfer2Proto(projectCode, clusterID string) *helmmanager.Rel
 		ChartVersion: common.GetStringP(r.ChartVersion),
 		AppVersion:   common.GetStringP(r.AppVersion),
 		UpdateTime:   common.GetStringP(r.UpdateTime),
-		CreateBy:     common.GetStringP(defaultHelmUser),
-		UpdateBy:     common.GetStringP(defaultHelmUser),
+		CreateBy:     common.GetStringP(getDefaultHelmUser()),
+		UpdateBy:     common.GetStringP(getDefaultHelmUser()),
 		Message:      common.GetStringP(r.Description),
 		Repo:         common.GetStringP(""),
 		ProjectCode:  common.GetStringP(projectCode),
@@ -130,8 +139,8 @@ func (r *Release) Transfer2DetailProto() *helmmanager.ReleaseDetail {
 		Values:       []string{r.Values},
 		Description:  common.GetStringP(r.Description),
 		Notes:        common.GetStringP(r.Notes),
-		CreateBy:     common.GetStringP(defaultHelmUser),
-		UpdateBy:     common.GetStringP(defaultHelmUser),
+		CreateBy:     common.GetStringP(getDefaultHelmUser()),
+		UpdateBy:     common.GetStringP(getDefaultHelmUser()),
 		Message:      common.GetStringP(r.Description),
 		Repo:         common.GetStringP(""),
 	}

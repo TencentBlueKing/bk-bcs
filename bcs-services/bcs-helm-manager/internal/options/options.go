@@ -99,6 +99,8 @@ type ReleaseConfig struct {
 	Token            string `json:"token" yaml:"token"`
 	PatchDir         string `json:"patchdir" yaml:"patchdir"`
 	AddonsConfigFile string `json:"addonsConfigFile" yaml:"addonsConfigFile"`
+	// DefaultUser 非 BCS 平台部署的 release 无操作人记录，展示为该用户，为空时使用 admin
+	DefaultUser string `json:"defaultuser" yaml:"defaultuser"`
 }
 
 // JWTConfig option for jwt config
