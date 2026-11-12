@@ -121,6 +121,7 @@ func (i *InstallReleaseV1Action) install() error {
 		Username:       auth.GetUserFromCtx(i.ctx),
 		AuthUser:       auth.GetRealUserFromCtx(i.ctx),
 		IsShardCluster: cls.IsShared,
+		HelmNative:     i.req.GetHelmNative(),
 	}
 	action := actions.NewReleaseInstallAction(options)
 	_, err = operation.GlobalOperator.Dispatch(action, releaseDefaultTimeout)
@@ -152,6 +153,7 @@ func (i *InstallReleaseV1Action) saveDB() error {
 		CreateBy:     createBy,
 		Status:       helmrelease.StatusPendingInstall.String(),
 		Env:          i.req.GetEnv(),
+		HelmNative:   i.req.GetHelmNative(),
 	}); err != nil {
 		return err
 	}

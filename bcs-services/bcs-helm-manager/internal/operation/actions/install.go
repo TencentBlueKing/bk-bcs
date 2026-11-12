@@ -51,6 +51,7 @@ type ReleaseInstallAction struct {
 	username       string
 	AuthUser       string
 	IsShardCluster bool
+	helmNative     bool
 
 	contents []byte
 	result   *release.HelmInstallResult
@@ -75,6 +76,7 @@ type ReleaseInstallActionOption struct {
 	Username       string
 	AuthUser       string
 	IsShardCluster bool
+	HelmNative     bool
 }
 
 // NewReleaseInstallAction new release install action
@@ -96,6 +98,7 @@ func NewReleaseInstallAction(o *ReleaseInstallActionOption) *ReleaseInstallActio
 		username:       o.Username,
 		AuthUser:       o.AuthUser,
 		IsShardCluster: o.IsShardCluster,
+		helmNative:     o.HelmNative,
 	}
 }
 
@@ -160,7 +163,7 @@ func (r *ReleaseInstallAction) Validate(ctx context.Context) error {
 	// get manifest from helm dry run
 	result, err := release.InstallRelease(r.releaseHandler, r.projectID, r.projectCode, r.clusterID, r.name,
 		r.namespace, r.chartName, r.version, r.username, r.username, r.args, nil, r.contents, r.values,
-		true, true, false)
+		true, true, false, r.helmNative)
 	if err != nil {
 		return err
 	}
@@ -205,6 +208,18 @@ func (r *ReleaseInstallAction) Execute(ctx context.Context) error {
 			Content: []byte(v),
 		})
 	}
+	// 基础占位符始终注入
+	patchValues := map[string]string{
+		common.PTKProjectID: r.projectID,
+		common.PTKClusterID: r.clusterID,
+		common.PTKNamespace: r.namespace,
+		common.PTKName:      r.name,
+	}
+	// install 时 createBy 与 updateBy 都是 r.username。
+	// patchValues 供 patchDir 模板渲染占位符；原生模式下不挂 PostRenderer，本值不会被消费
+	patchValues[common.PTKCreator] = stringx.ReplaceIllegalChars(r.username)
+	patchValues[common.PTKVersion] = r.version
+	patchValues[common.PTKUpdator] = stringx.ReplaceIllegalChars(r.username)
 	result, err := r.releaseHandler.Cluster(r.clusterID).Install(
 		ctx, release.HelmInstallConfig{
 			ProjectCode: r.projectCode,
@@ -214,17 +229,11 @@ func (r *ReleaseInstallAction) Execute(ctx context.Context) error {
 				Name:    r.chartName + "-" + r.version + ".tgz",
 				Content: r.contents,
 			},
-			Args:   r.args,
-			Values: vls,
-			PatchTemplateValues: map[string]string{
-				common.PTKProjectID: r.projectID,
-				common.PTKClusterID: r.clusterID,
-				common.PTKNamespace: r.namespace,
-				common.PTKCreator:   stringx.ReplaceIllegalChars(r.username),
-				common.PTKUpdator:   stringx.ReplaceIllegalChars(r.username),
-				common.PTKVersion:   r.version,
-				common.PTKName:      r.name,
-			},
+			Args:                r.args,
+			Values:              vls,
+			PatchTemplateValues: patchValues,
+			// 原生模式下 sdk 侧不挂 PostRenderer，不注入任何 BCS 元数据
+			HelmNative: r.helmNative,
 		})
 	if err != nil {
 		return fmt.Errorf("install %s/%s in cluster %s error, %s",
