@@ -47,6 +47,8 @@ func replacePatchTplKey(keys map[string]string, data []byte) []byte {
 	return common.EmptyAllPatchTemplateKey(data)
 }
 
+// newPatcher 构建 post-render patcher。
+// 原生模式（helmNative）下不挂 PostRenderer，不会走到该函数。
 func newPatcher(templates []*release.File, keys map[string]string) *patcher {
 	fs := make([]*files.File, 0, 5)
 	for _, f := range templates {
@@ -70,9 +72,6 @@ func (p *patcher) Run(renderedManifests *bytes.Buffer) (*bytes.Buffer, error) {
 	}
 	// 注入指定的值
 	splitManifests := stringx.SplitManifests(manifest.String())
-	if err != nil {
-		return nil, fmt.Errorf("SplitYAML error, %s", err.Error())
-	}
 	var yList []string
 	for _, s := range splitManifests {
 		// 向 metadata.labels 中注入 `io.tencent.bcs.controller.name`
@@ -84,6 +83,7 @@ func (p *patcher) Run(renderedManifests *bytes.Buffer) (*bytes.Buffer, error) {
 			yList = append(yList, s)
 			continue
 		}
+
 		yList = append(yList, strings.TrimRight(j, "\n"))
 	}
 	yl := stringx.JoinStringBySeparator(yList, "", false)

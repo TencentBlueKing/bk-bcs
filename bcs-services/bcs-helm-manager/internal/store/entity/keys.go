@@ -49,4 +49,7 @@ const (
 	FieldKeyMessage = "message"
 
 	FieldKeyEnv = "env"
+
+	// FieldKeyHelmNative 是否启用原生 Helm 模式（不挂 PostRenderer，不注入任何 BCS 元数据）
+	FieldKeyHelmNative = "helmNative"
 )
