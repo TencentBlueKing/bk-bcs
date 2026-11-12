@@ -1,6 +1,24 @@
 {
   "cloudList": [
     {
+      "cloudID": "alicloud",
+      "name": "ACK",
+      "editable": true,
+      "engineType": "ack",
+      "networkInfo": {},
+      "osManagement": {},
+      "clusterManagement": {},
+      "enable": "true",
+      "confInfo": {
+        "cloudInternalEnable": false,
+        "disableCreateCluster": true,
+        "disableImportCluster": true,
+        "disableNodeGroup": true
+      },
+      "cloudProvider": "alicloud",
+      "description": "阿里云容器服务 ACK"
+    },
+    {
       "cloudID": "tencentCloud",
       "name": "TKE",
       "editable": true,
