@@ -462,7 +462,8 @@ func (f *QueryFilter) Sort(resources []*storage.Resource) {
 	default:
 		sortInterface = SortResourcesByName(resources)
 	}
-	// 多集群/多命名空间场景下资源由并发拉取后聚合，初始顺序不固定； 若排序键相等（如不同命名空间下的同名资源），非稳定排序会让最终顺序随请求变化，
+	// 多集群/多命名空间场景下资源由并发拉取后聚合，初始顺序不固定；
+	// 若排序键相等（如不同命名空间下的同名资源），非稳定排序会让最终顺序随请求变化，
 	// 导致列表刷新时顺序跳动，因此统一使用稳定排序，并由Less保证全序比较。
 	if f.Order == OrderDesc {
 		sort.Stable(sort.Reverse(sortInterface))
