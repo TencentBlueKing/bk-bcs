@@ -174,6 +174,10 @@ func (ua *RetryAction) validate() error {
 }
 
 func (ua *RetryAction) distributeTask() error {
+	// save current status
+	originStatus := ua.task.Status
+	originMessage := ua.task.Message
+
 	ua.task.Status = cloudprovider.TaskStatusRunning
 	ua.task.Message = "task retrying"
 
@@ -184,6 +188,11 @@ func (ua *RetryAction) distributeTask() error {
 	}
 	if err = taskserver.GetTaskServer().Dispatch(ua.task); err != nil {
 		blog.Errorf("dispatch retry task[%s] for cluster %s failed, %s", ua.req.TaskID, ua.task.ClusterID, err.Error())
+
+		ua.task.Status = originStatus
+		ua.task.Message = originMessage
+		_ = ua.model.UpdateTask(ua.ctx, ua.task)
+
 		return err
 	}
 	blog.Infof("retry cluster[%s] task[%s] type %s successfully", ua.task.ClusterID, ua.task.TaskID, ua.task.TaskType)

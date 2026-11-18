@@ -333,6 +333,25 @@ func (ia *ImportAction) importClusterTask(ctx context.Context, cls *cmproto.Clus
 		blog.Errorf("dispatch create cluster task for cluster %s failed, %s",
 			cls.ClusterName, err.Error(),
 		)
+
+		// update task status to failure when dispatch failed, avoid task stuck in INIT status
+		task.Status = cloudprovider.TaskStatusFailure
+		task.Message = fmt.Sprintf("dispatch task failed: %s", err.Error())
+		task.End = time.Now().Format(time.RFC3339)
+
+		if updateErr := ia.model.UpdateTask(ctx, task); updateErr != nil {
+			blog.Errorf("update task %s status to failure failed: %s",
+				task.TaskID, updateErr.Error())
+		}
+
+		// update cluster status to import-failure when dispatch failed, avoid cluster stuck in INITIALIZATION status
+		cls.Status = common.StatusImportClusterFailed
+		cls.Message = fmt.Sprintf("dispatch task failed: %s", err.Error())
+		if updateErr := ia.model.UpdateCluster(ctx, cls); updateErr != nil {
+			blog.Errorf("update cluster %s status to import-failure failed: %s",
+				cls.ClusterID, updateErr.Error())
+		}
+
 		ia.setResp(common.BcsErrClusterManagerTaskErr, err.Error())
 		return err
 	}
