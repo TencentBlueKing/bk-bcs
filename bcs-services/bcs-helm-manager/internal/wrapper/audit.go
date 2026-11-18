@@ -298,19 +298,29 @@ func addAudit(ctx context.Context, req server.Request, rsp interface{}, startTim
 	}
 
 	// get handle result
+	// handler 内部 panic 被 recover 时 rsp 可能为 nil，或 Code / Message 未赋值。
+	// 两种情况都记为失败审计，不能跳过（漏记）或因 0 值误判为成功。
 	v := reflect.ValueOf(rsp)
-	codeField := v.Elem().FieldByName("Code")
-	messageField := v.Elem().FieldByName("Message")
-	if codeField.CanInterface() {
-		code := int(*codeField.Interface().(*uint32))
-		result.ResultCode = code
-	}
-	if messageField.CanInterface() {
-		message := *messageField.Interface().(*string)
-		result.ResultContent = message
-	}
-	if result.ResultCode != int(common.ErrHelmManagerSuccess) {
+	if v.Kind() != reflect.Ptr || v.IsNil() {
 		result.Status = audit.ActivityStatusFailed
+		result.ResultContent = "handler panic: response is nil"
+	} else {
+		elem := v.Elem()
+		codeExtracted := false
+		if codeField := elem.FieldByName("Code"); codeField.CanInterface() {
+			if code, ok := codeField.Interface().(*uint32); ok && code != nil {
+				result.ResultCode = int(*code)
+				codeExtracted = true
+			}
+		}
+		if messageField := elem.FieldByName("Message"); messageField.CanInterface() {
+			if message, ok := messageField.Interface().(*string); ok && message != nil {
+				result.ResultContent = *message
+			}
+		}
+		if !codeExtracted || result.ResultCode != int(common.ErrHelmManagerSuccess) {
+			result.Status = audit.ActivityStatusFailed
+		}
 	}
 
 	// add audit
