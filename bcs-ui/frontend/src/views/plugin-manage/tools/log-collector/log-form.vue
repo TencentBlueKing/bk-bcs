@@ -239,15 +239,11 @@
               :clearable="false"
               :disabled="fromOldRule"
               v-model="formData.rule.config.conditions.match_type">
-              <bcs-option id="include" :name="$t('logCollector.label.matchContent.match.include')"></bcs-option>
               <bcs-option
-                v-bk-tooltips="{
-                  placement: 'left',
-                  content: $t('generic.msg.info.development1')
-                }"
-                id="exclude"
-                :name="$t('logCollector.label.matchContent.match.exclude')"
-                disabled>
+                v-for="item in matchTypeList"
+                :key="item.id"
+                :id="item.id"
+                :name="item.name">
               </bcs-option>
             </bcs-select>
             <bk-form-item
@@ -759,6 +755,34 @@ const handleDeletePath = (index: number) => {
   formData.value.rule.config.paths.splice(index, 1);
 };
 
+// 字符串过滤的匹配方式
+const matchTypeList = ref([
+  {
+    id: 'eq',
+    name: $i18n.t('logCollector.label.matchContent.match.eq'),
+  },
+  {
+    id: 'neq',
+    name: $i18n.t('logCollector.label.matchContent.match.neq'),
+  },
+  {
+    id: 'include',
+    name: $i18n.t('logCollector.label.matchContent.match.include'),
+  },
+  {
+    id: 'exclude',
+    name: $i18n.t('logCollector.label.matchContent.match.exclude'),
+  },
+  {
+    id: 'regex',
+    name: $i18n.t('logCollector.label.matchContent.match.regex'),
+  },
+  {
+    id: 'nregex',
+    name: $i18n.t('logCollector.label.matchContent.match.nregex'),
+  },
+]);
+
 // 分割符
 const separatorList = ref([
   {
@@ -774,8 +798,16 @@ const separatorList = ref([
     name: $i18n.t('logCollector.label.matchContent.separator.quote'),
   },
   {
+    id: ' ',
+    name: $i18n.t('logCollector.label.matchContent.separator.space'),
+  },
+  {
     id: ';',
     name: $i18n.t('logCollector.label.matchContent.separator.semicolon'),
+  },
+  {
+    id: '\t',
+    name: $i18n.t('logCollector.label.matchContent.separator.tab'),
   },
 ]);
 

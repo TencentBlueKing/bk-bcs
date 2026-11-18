@@ -2624,15 +2624,21 @@ logCollector:
       tips: 为减少传输和存储成本，可以过滤掉部分内容，默认不开启过滤
       match:
         text: 字符串过滤
-        include: include(保留匹配字符串)
-        exclude: exclude(过滤匹配字符串)
+        eq: 等于
+        neq: 不等于
+        include: 包含
+        exclude: 不包含
+        regex: 正则匹配
+        nregex: 正则不匹配
       separator:
         text: 分隔符过滤
         desc: 复杂的过滤条件（超过5个）会影响机器性能
         vertical: 竖线(|)
         comma: '逗号(,)'
         quote: 反引号(`)
+        space: 空格
         semicolon: 分号(;)
+        tab: 制表符(\t)
         conditions:
           text: 条件关系
           or: 或

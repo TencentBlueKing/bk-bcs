@@ -3267,8 +3267,12 @@ logCollector:
         out. Filtering is not enabled by default
       match:
         text: String filter
-        include: include (keep matching string)
-        exclude: exclude (filter matching string)
+        eq: Equal
+        neq: Not equal
+        include: Include
+        exclude: Exclude
+        regex: Regex match
+        nregex: Regex not match
       separator:
         text: Delimiter filter
         desc: >-
@@ -3277,7 +3281,9 @@ logCollector:
         vertical: Vertical bar (|)
         comma: 'Comma (,)'
         quote: Backtick (`)
+        space: Space
         semicolon: Semicolon (;)
+        tab: Tab (\t)
         conditions:
           text: Conditional relationship
           or: Or

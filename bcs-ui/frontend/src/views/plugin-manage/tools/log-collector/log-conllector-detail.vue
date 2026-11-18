@@ -111,7 +111,7 @@
               {{ $t('logCollector.label.matchContent.match.text') }}
             </span>
             <span class="flex items-center h-[22px] bg-[#F0F1F5] rounded-sm px-[8px] mr-[8px]">
-              {{data.rule.config.conditions.match_type }}
+              {{ matchTypeMap[data.rule.config.conditions.match_type] || data.rule.config.conditions.match_type }}
             </span>
             <span
               class="bcs-ellipsis flex-1 leading-[22px] h-[22px] bg-[#F0F1F5] rounded-sm px-[8px] mr-[8px]">
@@ -129,7 +129,7 @@
                 {{ $t('logCollector.label.matchContent.separator.text') }}
               </span>
               <span class="flex items-center h-[22px] bg-[#F0F1F5] rounded-sm px-[8px] mr-[8px]">
-                {{ data.rule.config.conditions.separator }}
+                {{ separatorMap[data.rule.config.conditions.separator] || data.rule.config.conditions.separator }}
               </span>
               <span class="flex items-center h-[22px] bg-[#F0F1F5] rounded-sm px-[8px] mr-[8px]">
                 {{ $t('logCollector.label.matchContent.separator.conditions.text') }}
@@ -212,6 +212,26 @@ const openLink = (link) => {
 };
 
 const filtersOp = computed(() => props.data.rule?.config?.conditions?.separator_filters?.[0]?.logic_op);
+
+// 字符串过滤的匹配方式
+const matchTypeMap = ref({
+  eq: $i18n.t('logCollector.label.matchContent.match.eq'),
+  neq: $i18n.t('logCollector.label.matchContent.match.neq'),
+  include: $i18n.t('logCollector.label.matchContent.match.include'),
+  exclude: $i18n.t('logCollector.label.matchContent.match.exclude'),
+  regex: $i18n.t('logCollector.label.matchContent.match.regex'),
+  nregex: $i18n.t('logCollector.label.matchContent.match.nregex'),
+});
+
+// 分隔符
+const separatorMap = ref({
+  '|': $i18n.t('logCollector.label.matchContent.separator.vertical'),
+  ',': $i18n.t('logCollector.label.matchContent.separator.comma'),
+  '`': $i18n.t('logCollector.label.matchContent.separator.quote'),
+  ' ': $i18n.t('logCollector.label.matchContent.separator.space'),
+  ';': $i18n.t('logCollector.label.matchContent.separator.semicolon'),
+  '\t': $i18n.t('logCollector.label.matchContent.separator.tab'),
+});
 
 const opMap = ref({
   and: $i18n.t('logCollector.label.matchContent.separator.conditions.and'),
