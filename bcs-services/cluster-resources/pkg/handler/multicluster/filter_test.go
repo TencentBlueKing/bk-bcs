@@ -13,12 +13,14 @@
 package multicluster
 
 import (
+	"math/rand"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 
 	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/storage"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 )
 
 func newPodResource(name, phase string, containerState map[string]interface{}) *storage.Resource {
@@ -81,4 +83,78 @@ func TestStatusFilterPodUnknownGroup(t *testing.T) {
 
 	f = &QueryFilter{Status: []string{"CrashLoopBackOff"}}
 	assert.ElementsMatch(t, []string{"crash"}, podNames(f.StatusFilter(resources)))
+}
+
+// mkSameNameRes 构造同名、不同命名空间/集群的资源，模拟多集群聚合场景
+func mkSameNameRes(clusterID, ns string) *storage.Resource {
+	return &storage.Resource{
+		ClusterID:    clusterID,
+		ResourceType: "Deployment",
+		Data: map[string]interface{}{
+			"metadata": map[string]interface{}{
+				"name":              "order-test",
+				"namespace":         ns,
+				"creationTimestamp": "2026-01-01T00:00:00Z",
+			},
+		},
+	}
+}
+
+func namespacesOf(res []*storage.Resource) []string {
+	out := make([]string, 0, len(res))
+	for _, r := range res {
+		out = append(out, mapx.GetStr(r.Data, "metadata.namespace"))
+	}
+	return out
+}
+
+func equalStrings(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
+}
+
+// TestQueryFilterSortStableWithSameName 同名资源（不同命名空间/集群）在任意输入顺序下，
+// 排序结果必须唯一且确定，不能随并发聚合的完成顺序变化。
+func TestQueryFilterSortStableWithSameName(t *testing.T) {
+	base := []*storage.Resource{
+		mkSameNameRes("BCS-K8S-00000", "restart-verify-ns"),
+		mkSameNameRes("BCS-K8S-00000", "default"),
+		mkSameNameRes("BCS-K8S-00000", "zz"),
+		mkSameNameRes("BCS-K8S-00000", "aa"),
+		mkSameNameRes("BCS-K8S-00001", "aa"), // 同名同命名空间、不同集群
+	}
+	wantAsc := []string{"aa", "aa", "default", "restart-verify-ns", "zz"}
+	wantDesc := []string{"zz", "restart-verify-ns", "default", "aa", "aa"}
+
+	cases := []struct {
+		name   string
+		filter QueryFilter
+		want   []string
+	}{
+		{"byName asc", QueryFilter{Limit: len(base)}, wantAsc},
+		{"byName desc", QueryFilter{Order: OrderDesc, Limit: len(base)}, wantDesc},
+		{"byNamespace asc", QueryFilter{SortBy: SortByNamespace, Limit: len(base)}, wantAsc},
+		{"byAge asc", QueryFilter{SortBy: SortByAge, Limit: len(base)}, wantAsc},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			for i := 0; i < 200; i++ {
+				res := append([]*storage.Resource{}, base...)
+				rand.Shuffle(len(res), func(a, b int) { res[a], res[b] = res[b], res[a] })
+
+				got := namespacesOf(c.filter.Page(res))
+				if !equalStrings(got, c.want) {
+					t.Fatalf("第 %d 次排序结果不稳定: got %v, want %v", i, got, c.want)
+				}
+			}
+		})
+	}
 }

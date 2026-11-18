@@ -462,11 +462,14 @@ func (f *QueryFilter) Sort(resources []*storage.Resource) {
 	default:
 		sortInterface = SortResourcesByName(resources)
 	}
+	// 多集群/多命名空间场景下资源由并发拉取后聚合，初始顺序不固定；
+	// 若排序键相等（如不同命名空间下的同名资源），非稳定排序会让最终顺序随请求变化，
+	// 导致列表刷新时顺序跳动，因此统一使用稳定排序，并由Less保证全序比较。
 	if f.Order == OrderDesc {
-		sort.Sort(sort.Reverse(sortInterface))
+		sort.Stable(sort.Reverse(sortInterface))
 		return
 	}
-	sort.Sort(sortInterface)
+	sort.Stable(sortInterface)
 }
 
 // SortResourcesByName 按照名称排序
@@ -477,7 +480,12 @@ func (s SortResourcesByName) Len() int {
 }
 
 func (s SortResourcesByName) Less(i, j int) bool {
-	return mapx.GetStr(s[i].Data, "metadata.name") < mapx.GetStr(s[j].Data, "metadata.name")
+	ni, nj := mapx.GetStr(s[i].Data, "metadata.name"), mapx.GetStr(s[j].Data, "metadata.name")
+	if ni != nj {
+		return ni < nj
+	}
+	// 名称相同时依次比较命名空间、集群ID，保证同名资源也有确定的先后关系
+	return lessByNamespaceAndCluster(s[i], s[j])
 }
 
 func (s SortResourcesByName) Swap(i, j int) {
@@ -492,7 +500,16 @@ func (s SortResourcesByNamespace) Len() int {
 }
 
 func (s SortResourcesByNamespace) Less(i, j int) bool {
-	return mapx.GetStr(s[i].Data, "metadata.namespace") < mapx.GetStr(s[j].Data, "metadata.namespace")
+	nsi, nsj := mapx.GetStr(s[i].Data, "metadata.namespace"), mapx.GetStr(s[j].Data, "metadata.namespace")
+	if nsi != nsj {
+		return nsi < nsj
+	}
+	// 同一命名空间下依次比较名称、集群 ID
+	ni, nj := mapx.GetStr(s[i].Data, "metadata.name"), mapx.GetStr(s[j].Data, "metadata.name")
+	if ni != nj {
+		return ni < nj
+	}
+	return s[i].ClusterID < s[j].ClusterID
 }
 
 func (s SortResourcesByNamespace) Swap(i, j int) {
@@ -507,11 +524,30 @@ func (s SortResourcesByAge) Len() int {
 }
 
 func (s SortResourcesByAge) Less(i, j int) bool {
-	return mapx.GetStr(s[i].Data, "metadata.creationTimestamp") < mapx.GetStr(s[j].Data, "metadata.creationTimestamp")
+	ti, tj := mapx.GetStr(s[i].Data, "metadata.creationTimestamp"),
+		mapx.GetStr(s[j].Data, "metadata.creationTimestamp")
+	if ti != tj {
+		return ti < tj
+	}
+	// 创建时间相同时（同一秒创建）依次比较名称、命名空间、集群 ID
+	ni, nj := mapx.GetStr(s[i].Data, "metadata.name"), mapx.GetStr(s[j].Data, "metadata.name")
+	if ni != nj {
+		return ni < nj
+	}
+	return lessByNamespaceAndCluster(s[i], s[j])
 }
 
 func (s SortResourcesByAge) Swap(i, j int) {
 	s[i], s[j] = s[j], s[i]
+}
+
+// lessByNamespaceAndCluster 依次比较命名空间、集群 ID，作为名称排序的二级键，保证不同命名空间/集群下的同名资源也能得到确定的先后关系。
+func lessByNamespaceAndCluster(a, b *storage.Resource) bool {
+	aNs, bNs := mapx.GetStr(a.Data, "metadata.namespace"), mapx.GetStr(b.Data, "metadata.namespace")
+	if aNs != bNs {
+		return aNs < bNs
+	}
+	return a.ClusterID < b.ClusterID
 }
 
 // Page 分页
