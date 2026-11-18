@@ -105,11 +105,29 @@ func FormatPo(manifest map[string]interface{}) map[string]interface{} {
 	ret["status"] = parser.Parse()
 	readyCnt, totalCnt, restartCnt := 0, 0, int64(0)
 	for _, s := range mapx.GetList(manifest, "status.containerStatuses") {
-		if s.(map[string]interface{})["ready"].(bool) {
+		status, ok := s.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		if ready, _ := status["ready"].(bool); ready {
 			readyCnt++
 		}
 		totalCnt++
-		restartCnt += mapx.GetInt64(s.(map[string]interface{}), "restartCount")
+		restartCnt += mapx.GetInt64(status, "restartCount")
+	}
+	// 原生sidecar（spec.initContainers中restartPolicy为Always）的状态记录在 status.initContainerStatuses
+	// 需一并统计才能与 kubectl的READY/RESTARTS保持一致。
+	restartableInit := parser.restartPolicyAlways()
+	for _, s := range mapx.GetList(manifest, "status.initContainerStatuses") {
+		status, ok := s.(map[string]interface{})
+		if !ok || !restartableInit[mapx.GetStr(status, "name")] {
+			continue
+		}
+		if ready, _ := status["ready"].(bool); ready {
+			readyCnt++
+		}
+		totalCnt++
+		restartCnt += mapx.GetInt64(status, "restartCount")
 	}
 	ret["readyCnt"], ret["totalCnt"], ret["restartCnt"] = readyCnt, totalCnt, restartCnt
 
