@@ -254,6 +254,7 @@ func (client *StorageClient) GET() (storageResp StorageResponse, err error) {
 	resp, _, errs := request.
 		Timeout(StorageRequestTimeoutSeconds*time.Second).
 		Get(url).
+		Set("Authorization", fmt.Sprintf("Bearer %s", client.HTTPClientConfig.Token)).
 		Retry(2, 2*time.Second, http.StatusBadRequest, http.StatusInternalServerError).
 		EndStruct(&storageResp)
 
@@ -291,6 +292,7 @@ func (client *StorageClient) DELETE() (storageResp StorageResponse, err error) {
 	resp, _, errs := request.
 		Timeout(StorageRequestTimeoutSeconds*time.Second).
 		Delete(url).
+		Set("Authorization", fmt.Sprintf("Bearer %s", client.HTTPClientConfig.Token)).
 		Retry(3, 1*time.Second, http.StatusBadRequest, http.StatusInternalServerError).
 		EndStruct(&storageResp)
 
@@ -334,6 +336,7 @@ func (client *StorageClient) PUT(data interface{}) (storageResp StorageResponse,
 		Timeout(StorageRequestTimeoutSeconds*time.Second).
 		Put(url).
 		Send(body).
+		Set("Authorization", fmt.Sprintf("Bearer %s", client.HTTPClientConfig.Token)).
 		Retry(3, 1*time.Second, http.StatusBadRequest, http.StatusInternalServerError).
 		EndStruct(&storageResp)
 
