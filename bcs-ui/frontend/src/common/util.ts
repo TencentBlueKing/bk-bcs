@@ -1056,3 +1056,16 @@ export function getIAMHost(): string {
   }
   return window.BK_IAM_HOST;
 }
+
+/**
+ * 节点管理管控区域页面地址，地址带路径（旧版）时拼接 hash 路由，否则（新版）直接使用该地址
+ * @param host 节点管理地址
+ * @returns 管控区域页面地址
+ */
+export function getNodemanCloudUrl(host?: string): string {
+  const url = (host || '').trim().replace(/\/+$/, '');
+  if (!url) return '';
+
+  const hasPath = url.replace(/^([a-z][a-z\d+.-]*:)?\/\//i, '').includes('/');
+  return hasPath ? `${url}/#/cloud-manager` : url;
+}

@@ -137,7 +137,7 @@ frontend_conf:
     k8sService: '' # service 文档
     k8sStatefulset: '' # Statefulset 文档
     nodeTemplate: '' # 节点模板文档
-    nodemanHost: '' # 节点管理文档
+    nodemanHost: '' # 节点管理地址，带路径（旧版，如 https://paas.example.com/o/bk_nodeman）时跳转 {nodemanHost}/#/cloud-manager，否则（新版）直接跳转该地址
     quickStart: '' # 入门文档
     rule: '' # 容器日志采集文档
     serviceAccess: ''

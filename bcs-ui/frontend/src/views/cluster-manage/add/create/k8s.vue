@@ -98,7 +98,7 @@
                     <template slot="extension">
                       <SelectExtension
                         :link-text="$t('tke.link.nodeman')"
-                        :link="`${PROJECT_CONFIG.nodemanHost}/#/cloud-manager`"
+                        :link="getNodemanCloudUrl(PROJECT_CONFIG.nodemanHost)"
                         @refresh="handleGetNodeManCloud" />
                     </template>
                   </bk-select>
@@ -402,7 +402,7 @@ import { ICloudRegion, INodeManCloud } from '../../types/types';
 import { cloudDetail, cloudRegionByAccount, cloudVersionModules, createCluster, nodemanCloud } from '@/api/modules/cluster-manager';
 import $bkMessage from '@/common/bkmagic';
 import { LABEL_KEY_REGEXP } from '@/common/constant';
-import { validateCIDR } from '@/common/util';
+import { getNodemanCloudUrl, validateCIDR } from '@/common/util';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import DescList from '@/components/desc-list.vue';
 import BcsContent from '@/components/layout/Content.vue';

@@ -164,7 +164,7 @@
             <template slot="extension">
               <SelectExtension
                 :link-text="$t('tke.link.nodeman')"
-                :link="`${PROJECT_CONFIG.nodemanHost}/#/cloud-manager`"
+                :link="getNodemanCloudUrl(PROJECT_CONFIG.nodemanHost)"
                 @refresh="handleGetNodeManCloud" />
             </template>
           </bk-select>
@@ -187,6 +187,7 @@ import {
   nodemanCloud,
 } from '@/api/modules/cluster-manager';
 import { GKE_LABEL_NAME_REGEX, LABEL_KEY_REGEXP } from '@/common/constant';
+import { getNodemanCloudUrl } from '@/common/util';
 import DescList from '@/components/desc-list.vue';
 import SelectExtension from '@/components/select-extension.vue';
 import $i18n from '@/i18n/i18n-setup';
