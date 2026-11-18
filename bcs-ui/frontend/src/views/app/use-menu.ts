@@ -79,6 +79,7 @@ export type MenuID =
   |'TENCENTPUBLICCLOUD'
   |'GOOGLECLOUD'
   |'AZURECLOUD'
+  |'ALICLOUD'
   |'HUAWEICLOUD'
   |'AMAZONCLOUD'
   |'PROJECT'
@@ -524,6 +525,11 @@ export default function useMenu() {
               title: 'Azure Cloud',
               id: 'AZURECLOUD',
               route: 'azureCloud',
+            },
+            {
+              title: 'Ali Cloud',
+              id: 'ALICLOUD',
+              route: 'alicloud',
             },
             {
               title: 'Huawei Cloud',
