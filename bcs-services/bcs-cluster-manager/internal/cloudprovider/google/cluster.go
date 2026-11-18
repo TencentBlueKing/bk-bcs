@@ -152,6 +152,26 @@ func (c *Cluster) GetCluster(cloudID string, opt *cloudprovider.GetClusterOption
 		return nil, err
 	}
 
+	cloudClusterVer, err := business.GetCloudClusterVer(context.Background(), opt)
+	if err != nil {
+		return nil, err
+	}
+
+	if cloudClusterVer != "" {
+		opt.Cluster.ClusterBasicSettings.Version = cloudClusterVer
+	}
+
+	// 获取集群当前版本终止服务日期
+	date, err := business.GetClusterTerminationDate(context.Background(), opt.Cluster.Provider,
+		opt.Cluster.ClusterBasicSettings.Version)
+	if err != nil {
+		return nil, err
+	}
+
+	if date != "" {
+		opt.Cluster.ExtraInfo["terminationDate"] = date
+	}
+
 	if opt.Cluster.ClusterAdvanceSettings == nil {
 		opt.Cluster.ClusterAdvanceSettings = &proto.ClusterAdvanceSetting{}
 	}
