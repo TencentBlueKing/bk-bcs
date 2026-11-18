@@ -140,3 +140,15 @@ func (m *Federation) GetNodeNetworkReceive(ctx context.Context, projectID, clust
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	return nil, nil
 }
+
+// GetNodeCPURequestWithInitUsage 节点含 InitContainer 的 CPU 装箱率
+func (m *Federation) GetNodeCPURequestWithInitUsage(ctx context.Context, projectID, clusterID, nodeName string,
+	start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
+	return nil, nil
+}
+
+// GetNodeMemoryRequestWithInitUsage 节点含 InitContainer 的内存装箱率
+func (m *Federation) GetNodeMemoryRequestWithInitUsage(ctx context.Context, projectID, clusterID, nodeName string,
+	start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
+	return nil, nil
+}
