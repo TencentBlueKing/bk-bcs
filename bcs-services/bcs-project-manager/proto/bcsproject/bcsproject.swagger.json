@@ -4726,6 +4726,16 @@
           "type": "string",
           "description": "不可操作原因, 悬停提示用, allocatable=true时为空",
           "title": "disableReason"
+        },
+        "projectCode": {
+          "type": "string",
+          "description": "归属项目编码(英文缩写), 未分配、系统命名空间或审批中的命名空间为空",
+          "title": "projectCode"
+        },
+        "projectID": {
+          "type": "string",
+          "description": "归属项目ID, 未分配、系统命名空间或审批中的命名空间为空",
+          "title": "projectID"
         }
       }
     },

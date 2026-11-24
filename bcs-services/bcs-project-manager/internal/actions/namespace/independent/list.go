@@ -98,6 +98,24 @@ func (c *IndependentNamespaceAction) ListNamespaces(ctx context.Context,
 			retDatas = append(retDatas, loadListRetDataFromDB(namespace))
 		}
 	}
+	// projectCode -> projectID 缓存查询
+	projectCache := map[string]string{}
+	getProjectID := func(code string) string {
+		if code == "" {
+			return ""
+		}
+		if id, ok := projectCache[code]; ok {
+			return id
+		}
+		p, err := c.model.GetProject(ctx, code)
+		if err != nil {
+			logging.Error("get project %s failed, err: %s", code, err.Error())
+			projectCache[code] = ""
+			return ""
+		}
+		projectCache[code] = p.ProjectID
+		return p.ProjectID
+	}
 	for _, ns := range nsList.Items {
 		retData := &proto.NamespaceData{
 			Name:        ns.GetName(),
@@ -135,6 +153,15 @@ func (c *IndependentNamespaceAction) ListNamespaces(ctx context.Context,
 		if hasRecord {
 			retData.Source = record.Source
 			retData.UpdateTime = record.UpdateTime
+		}
+		// 归属项目：优先取归属annotation，无则用DB归属记录兜底；未分配/审批中为空
+		code := ns.Annotations[config.GlobalConf.SharedClusterConfig.AnnoKeyProjCode]
+		if code == "" && hasRecord {
+			code = record.ProjectCode
+		}
+		if code != "" {
+			retData.ProjectCode = code
+			retData.ProjectID = getProjectID(code)
 		}
 		// 可操作判定：系统命名空间、审批中的命名空间不可操作
 		if retData.IsSystem {

@@ -1891,6 +1891,14 @@ message NamespaceData {
     title: "disableReason",
     description: "不可操作原因, 悬停提示用, allocatable=true时为空"
   }];
+  string projectCode = 23[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "projectCode",
+    description: "归属项目编码(英文缩写), 未分配、系统命名空间或审批中的命名空间为空"
+  }];
+  string projectID = 24[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "projectID",
+    description: "归属项目ID, 未分配、系统命名空间或审批中的命名空间为空"
+  }];
   reserved "podLimitRanges";
 }
 

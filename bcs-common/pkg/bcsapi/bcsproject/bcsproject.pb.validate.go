@@ -7381,6 +7381,10 @@ func (m *NamespaceData) validate(all bool) error {
 
 	// no validation rules for DisableReason
 
+	// no validation rules for ProjectCode
+
+	// no validation rules for ProjectID
+
 	if len(errors) > 0 {
 		return NamespaceDataMultiError(errors)
 	}

@@ -133,7 +133,25 @@ func (a *SharedNamespaceAction) ListNamespaces(ctx context.Context,
 			return errorx.NewClusterErr(err.Error())
 		}
 	}
-	list, err := loadRetDatasFromCluster(ctx, req.ClusterID, namespaces, variablesMap, quotaMap, otherQuotasMap, existns, dbRecords)
+	// projectCode -> projectID 缓存查询
+	projectCache := map[string]string{}
+	getProjectID := func(code string) string {
+		if code == "" {
+			return ""
+		}
+		if id, ok := projectCache[code]; ok {
+			return id
+		}
+		p, err := a.model.GetProject(ctx, code)
+		if err != nil {
+			logging.Error("get project %s failed, err: %s", code, err.Error())
+			projectCache[code] = ""
+			return ""
+		}
+		projectCache[code] = p.ProjectID
+		return p.ProjectID
+	}
+	list, err := loadRetDatasFromCluster(ctx, req.ClusterID, namespaces, variablesMap, quotaMap, otherQuotasMap, existns, dbRecords, getProjectID)
 	if err != nil {
 		return err
 	}
@@ -273,7 +291,7 @@ func loadListRetDataFromDB(namespace nsm.Namespace) *proto.NamespaceData {
 func loadRetDatasFromCluster(ctx context.Context, clusterID string, namespaces []corev1.Namespace,
 	variablesMap map[string][]*proto.VariableValue, quotaMap map[string]corev1.ResourceQuota,
 	otherQuotasMap map[string][]*proto.OtherQuota, existns map[string]nsm.Namespace,
-	dbRecords map[string]nsm.Namespace) ([]*proto.NamespaceData, error) {
+	dbRecords map[string]nsm.Namespace, getProjectID func(string) string) ([]*proto.NamespaceData, error) {
 	retDatas := []*proto.NamespaceData{}
 	for _, namespace := range namespaces {
 		retData := &proto.NamespaceData{
@@ -304,6 +322,15 @@ func loadRetDatasFromCluster(ctx context.Context, clusterID string, namespaces [
 		if hasRecord {
 			retData.Source = record.Source
 			retData.UpdateTime = record.UpdateTime
+		}
+		// 归属项目：优先取归属 annotation，无则用DB归属记录兜底；未分配/审批中为空
+		code := namespace.Annotations[config.GlobalConf.SharedClusterConfig.AnnoKeyProjCode]
+		if code == "" && hasRecord {
+			code = record.ProjectCode
+		}
+		if code != "" {
+			retData.ProjectCode = code
+			retData.ProjectID = getProjectID(code)
 		}
 		// 可操作判定：vcluster占用、系统命名空间、审批中的命名空间不可操作
 		if _, isVcluster := namespace.Annotations[constant.AnnotationKeyVcluster]; isVcluster {
