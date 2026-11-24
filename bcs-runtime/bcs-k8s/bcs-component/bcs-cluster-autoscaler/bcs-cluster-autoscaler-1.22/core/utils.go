@@ -58,6 +58,9 @@ const (
 	// nodeInstanceTypeEklet indicates the instance type of node is eklet
 	nodeInstanceTypeEklet = "eklet"
 
+	// bcsNodeGroupAnnoKey is the annotation key of node group
+	bcsNodeGroupAnnoKey = "bkbcs.tencent.com/nodegroup-id"
+
 	// How long should Cluster Autoscaler wait for nodes to become ready after start.
 	nodesNotReadyAfterStartTimeout = 10 * time.Minute
 
@@ -659,6 +662,8 @@ func getUpcomingNodeInfos(registry *clusterstate.ClusterStateRegistry,
 			nodeTemplate.Node().Annotations = make(map[string]string)
 		}
 		nodeTemplate.Node().Annotations[NodeUpcomingAnnotation] = valueTrue
+		// Add NodeGroup ID annotation for NodeGroupSet resource calculation
+		nodeTemplate.Node().Annotations[bcsNodeGroupAnnoKey] = nodeGroup
 
 		for i := 0; i < numberOfNodes; i++ {
 			// Ensure new nodes have different names because nodeName
@@ -798,6 +803,6 @@ func singleNodeResource(info *schedulerframework.NodeInfo) apiv1.ResourceList {
 			leftResource.ScalarResources[k] = allocatableEx - requestEx
 		}
 	}
-	klog.Infof("Node %v left resource %+v", info.Node().Name, leftResource)
+	klog.V(4).Infof("Node %v left resource %+v", info.Node().Name, leftResource)
 	return scheduler.ResourceToResourceList(leftResource)
 }

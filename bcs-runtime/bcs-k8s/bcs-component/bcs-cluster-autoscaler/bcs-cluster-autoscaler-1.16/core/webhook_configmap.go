@@ -42,21 +42,27 @@ type ConfigMapScaler struct {
 	name                string
 	configmapLister     v1lister.ConfigMapNamespaceLister
 	maxBulkScaleUpCount int
+	scaleDownEnable     bool
 }
 
 // NewConfigMapScaler initilizes a ConfigMapScaler
 func NewConfigMapScaler(kubeClient kubeclient.Interface, configNamespace, configmapName string,
-	maxBulkScaleUpCount int) Webhook {
+	maxBulkScaleUpCount int, scaleDownEnable bool,
+) Webhook {
 	stopChannel := make(chan struct{})
 	lister := kubernetes.NewConfigMapListerForNamespace(kubeClient, stopChannel, configNamespace)
-	return &ConfigMapScaler{client: kubeClient, namespace: configNamespace, name: configmapName,
-		configmapLister: lister.ConfigMaps(configNamespace), maxBulkScaleUpCount: maxBulkScaleUpCount}
+	return &ConfigMapScaler{
+		client: kubeClient, namespace: configNamespace, name: configmapName,
+		configmapLister:     lister.ConfigMaps(configNamespace),
+		maxBulkScaleUpCount: maxBulkScaleUpCount, scaleDownEnable: scaleDownEnable,
+	}
 }
 
 // DoWebhook get responses from webhook, then execute scale based on responses
 func (c *ConfigMapScaler) DoWebhook(context *contextinternal.Context,
 	clusterStateRegistry *clusterstate.ClusterStateRegistry, sd *ScaleDown,
-	nodes []*corev1.Node, pods []*corev1.Pod) errors.AutoscalerError {
+	nodes []*corev1.Node, pods []*corev1.Pod,
+) errors.AutoscalerError {
 	nodeNameToNodeInfo := scheduler_util.CreateNodeNameToInfoMap(pods, nodes)
 
 	options, candidates, err := c.GetResponses(context, clusterStateRegistry,
@@ -83,8 +89,8 @@ func (c *ConfigMapScaler) DoWebhook(context *contextinternal.Context,
 func (c *ConfigMapScaler) GetResponses(context *contextinternal.Context,
 	clusterStateRegistry *clusterstate.ClusterStateRegistry,
 	nodeNameToNodeInfo map[string]*schedulernodeinfo.NodeInfo,
-	nodes []*corev1.Node, sd *ScaleDown) (ScaleUpOptions, ScaleDownCandidates, error) {
-
+	nodes []*corev1.Node, sd *ScaleDown,
+) (ScaleUpOptions, ScaleDownCandidates, error) {
 	// get node group's priority
 	newPriorities, err := getPriority(c.configmapLister)
 	if err != nil {
@@ -170,8 +176,8 @@ func (c *ConfigMapScaler) ExecuteScale(context *contextinternal.Context,
 	clusterStateRegistry *clusterstate.ClusterStateRegistry,
 	sd *ScaleDown, nodes []*corev1.Node, options ScaleUpOptions,
 	candidates ScaleDownCandidates,
-	nodeNameToNodeInfo map[string]*schedulernodeinfo.NodeInfo) error {
-
+	nodeNameToNodeInfo map[string]*schedulernodeinfo.NodeInfo,
+) error {
 	err := ExecuteScaleUp(context, clusterStateRegistry, options, c.maxBulkScaleUpCount, c.maxBulkScaleUpCount)
 	if err != nil {
 		return err
@@ -181,6 +187,11 @@ func (c *ConfigMapScaler) ExecuteScale(context *contextinternal.Context,
 	// 	klog.Infof("Scaling up node groups now, skip scaling down progress")
 	// 	return nil
 	// }
+
+	if !c.scaleDownEnable {
+		klog.Infof("Scaling down node groups is disabled, skip scaling down progress")
+		return nil
+	}
 
 	err = ExecuteScaleDown(context, sd, nodes, candidates, nodeNameToNodeInfo)
 	if err != nil {

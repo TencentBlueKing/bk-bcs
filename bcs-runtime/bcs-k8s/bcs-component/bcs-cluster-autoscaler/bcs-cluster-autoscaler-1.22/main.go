@@ -282,6 +282,10 @@ var (
 		"The number of nodes to scale up at a batch in webhook mode.")
 
 	evictLatest = flag.Bool("should-evict-latest", true, "If true, get latest pod lists when scale down node")
+
+	// nodegroup set configuration
+	nodeGroupSetConfigFile = flag.String("nodegroup-set-config", "",
+		"Path to the NodeGroupSet configuration file (YAML format). Leave blank to disable NodeGroupSet feature.")
 )
 
 // createAutoscalingOptions TODO
@@ -379,6 +383,7 @@ func createAutoscalingOptions() scalingconfig.Options {
 		EvictLatest:               *evictLatest,
 		ScaleDownDelayAfterRemove: *scaleDownDelayAfterRemove,
 		BatchScaleUpCount:         *batchScaleUpCount,
+		NodeGroupSetConfigFile:    *nodeGroupSetConfigFile,
 	}
 }
 

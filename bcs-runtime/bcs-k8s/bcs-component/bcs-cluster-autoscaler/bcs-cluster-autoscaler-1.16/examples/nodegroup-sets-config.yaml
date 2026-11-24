@@ -1,0 +1,43 @@
+# NodeGroupSet 配置示例
+# 该配置文件定义了如何将不同的 NodeGroup 分组,并为每个组设置不同的缓冲资源比例
+
+# NodeGroupSet 列表
+sets:
+  # GPU 节点组 - 成本高,设置较低的缓冲比例
+  - setName: "gpu-nodes"
+    nodeGroupIDs:
+      - "BCS-K8S-12345-gpu-v100"
+      - "BCS-K8S-12345-gpu-t4"
+    bufferedRatios:
+      cpuRatio: 0.1      # 10% CPU 缓冲
+      memRatio: 0.1      # 10% 内存缓冲
+      resourceRatio: 0.05 # 5% GPU 缓冲
+  
+  # 高性能计算节点组
+  - setName: "high-performance"
+    nodeGroupIDs:
+      - "BCS-K8S-12345-compute-c6"
+      - "BCS-K8S-12345-compute-c7"
+    bufferedRatios:
+      cpuRatio: 0.25
+      memRatio: 0.15
+      resourceRatio: 0.2
+  
+  # 普通业务节点组
+  - setName: "general-purpose"
+    nodeGroupIDs:
+      - "BCS-K8S-12345-worker-m5"
+      - "BCS-K8S-12345-worker-m6"
+    bufferedRatios:
+      cpuRatio: 0.3
+      memRatio: 0.3
+      resourceRatio: 0.2
+  
+  # 内存密集型节点组
+  - setName: "memory-intensive"
+    nodeGroupIDs:
+      - "BCS-K8S-12345-mem-r5"
+    bufferedRatios:
+      cpuRatio: 0.15
+      memRatio: 0.35      # 更高的内存缓冲
+      resourceRatio: 0.2

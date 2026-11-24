@@ -34,6 +34,30 @@ const (
 	valueTrue = "true"
 )
 
+// ScopeMode defines the scope of resource calculation
+type ScopeMode int
+
+const (
+	// ClusterScoped means use all cluster nodes for calculation
+	ClusterScoped ScopeMode = iota
+	// SetScoped means use only nodes within the NodeGroupSet for calculation
+	SetScoped
+)
+
+// EstimatorSetScope defines the scope for Estimator resource calculation
+// nolint
+type EstimatorSetScope struct {
+	// Mode defines whether to use cluster-wide or Set-scoped calculation
+	Mode ScopeMode
+	// SetNodeGroups contains the list of NodeGroup IDs in this Set
+	SetNodeGroups []string
+	// SetName is the name of the NodeGroupSet
+	SetName string
+	// NodeToGroup maps node name to NodeGroup ID for fast lookup
+	// This avoids the unreliable node name prefix matching
+	NodeToGroup map[string]string
+}
+
 // podInfo contains Pod and score that corresponds to how important it is to handle the pod first.
 type podInfo struct {
 	score float64
@@ -47,18 +71,39 @@ type ClusterResourceEstimator struct {
 	cpuRatio         float64
 	memRatio         float64
 	resourceRatio    float64
+	// setScope defines the scope for resource calculation (nil means ClusterScoped)
+	setScope *EstimatorSetScope
 }
 
 // NewClusterResourceEstimator builds a new ClusterResourceEstimator.
 func NewClusterResourceEstimator(predicateChecker simulator.PredicateChecker,
 	clusterSnapshot simulator.ClusterSnapshot,
-	cpuRatio, memRatio, resourceRatio float64) *ClusterResourceEstimator {
+	cpuRatio, memRatio, resourceRatio float64,
+) *ClusterResourceEstimator {
 	return &ClusterResourceEstimator{
 		predicateChecker: predicateChecker,
 		clusterSnapshot:  clusterSnapshot,
 		cpuRatio:         cpuRatio,
 		memRatio:         memRatio,
 		resourceRatio:    resourceRatio,
+		setScope:         nil, // ClusterScoped by default
+	}
+}
+
+// NewClusterResourceEstimatorWithSetScope builds a new ClusterResourceEstimator with Set scope.
+// NOCC:tosa/fn_length(设计如此)
+func NewClusterResourceEstimatorWithSetScope(predicateChecker simulator.PredicateChecker,
+	clusterSnapshot simulator.ClusterSnapshot,
+	cpuRatio, memRatio, resourceRatio float64,
+	setScope *EstimatorSetScope,
+) *ClusterResourceEstimator {
+	return &ClusterResourceEstimator{
+		predicateChecker: predicateChecker,
+		clusterSnapshot:  clusterSnapshot,
+		cpuRatio:         cpuRatio,
+		memRatio:         memRatio,
+		resourceRatio:    resourceRatio,
+		setScope:         setScope,
 	}
 }
 
@@ -71,7 +116,8 @@ func NewClusterResourceEstimator(predicateChecker simulator.PredicateChecker,
 // Returns the number of nodes needed to accommodate all pods from the list.
 func (e *ClusterResourceEstimator) Estimate(
 	pods []*corev1.Pod,
-	nodeTemplate *schedulerframework.NodeInfo) int {
+	nodeTemplate *schedulerframework.NodeInfo,
+) int {
 	podInfos := calculatePodScore(pods, nodeTemplate)
 	sort.Slice(podInfos, func(i, j int) bool { return podInfos[i].score > podInfos[j].score })
 
@@ -137,7 +183,23 @@ func (e *ClusterResourceEstimator) estimateAccordingToLoad(nodeTemplate *schedul
 		klog.Errorf("Error list node infos from ClusterSnapshot; %v", err)
 		return 0
 	}
-	for _, nodeInfo := range nodes {
+
+	// Filter nodes by Set scope if applicable
+	filteredNodes := e.filterNodesByScope(nodes)
+
+	// If Set is empty (no nodes), return 1 to satisfy buffer requirement
+	// This ensures buffer-triggered scale-up works even when starting from 0 nodes
+	if len(filteredNodes) == 0 {
+		// Check if this is a Set-scoped estimator (not cluster-scoped)
+		if e.setScope != nil && e.setScope.Mode == SetScoped {
+			klog.V(2).Infof("Set %s has no nodes (cold start), estimating 1 node to meet buffer requirement",
+				e.setScope.SetName)
+			return 1.0
+		}
+		// Cluster-scoped with no nodes: fall through to normal calculation (will return 0)
+	}
+
+	for _, nodeInfo := range filteredNodes {
 		node := nodeInfo.Node()
 		if node == nil {
 			continue
@@ -146,9 +208,6 @@ func (e *ClusterResourceEstimator) estimateAccordingToLoad(nodeTemplate *schedul
 			continue
 		}
 		if node.Labels[corev1.LabelInstanceTypeStable] == "eklet" {
-			continue
-		}
-		if node.Annotations[filterNodeResourceAnnoKey] == valueTrue {
 			continue
 		}
 		if node.Annotations[filterNodeResourceAnnoKey] == valueTrue {
@@ -193,8 +252,85 @@ func (e *ClusterResourceEstimator) estimateAccordingToLoad(nodeTemplate *schedul
 	return nodeNum
 }
 
+// filterNodesByScope filters nodes based on the Estimator's scope configuration.
+// If setScope is nil or ClusterScoped, returns all nodes (after standard filtering).
+// If SetScoped, returns only nodes belonging to the specified NodeGroupSet.
+func (e *ClusterResourceEstimator) filterNodesByScope(
+	nodes []*schedulerframework.NodeInfo,
+) []*schedulerframework.NodeInfo {
+	if e.setScope == nil || e.setScope.Mode == ClusterScoped {
+		// ClusterScoped: use all nodes (standard filtering applies in caller)
+		return nodes
+	}
+
+	// SetScoped: filter nodes belonging to this Set's NodeGroups
+	return e.filterNodesInSet(nodes)
+}
+
+// filterNodesInSet filters nodes to only include those in the configured NodeGroupSet.
+// Matches nodes by comparing provider ID prefix with NodeGroup ID.
+func (e *ClusterResourceEstimator) filterNodesInSet(
+	nodes []*schedulerframework.NodeInfo,
+) []*schedulerframework.NodeInfo {
+	if e.setScope == nil || len(e.setScope.SetNodeGroups) == 0 {
+		return nodes
+	}
+
+	filtered := make([]*schedulerframework.NodeInfo, 0, len(nodes))
+	for _, nodeInfo := range nodes {
+		node := nodeInfo.Node()
+		if node == nil {
+			continue
+		}
+
+		// Check if this node belongs to any NodeGroup in the Set
+		// We identify nodes by matching their name prefix or labels
+		if e.nodeInSet(node) {
+			filtered = append(filtered, nodeInfo)
+		}
+	}
+
+	klog.V(4).Infof("Set %s: filtered %d nodes from %d total nodes",
+		e.setScope.SetName, len(filtered), len(nodes))
+	return filtered
+}
+
+// nodeInSet checks if a node belongs to any NodeGroup in the configured Set.
+// Uses pre-built NodeToGroup mapping for accurate and fast lookup.
+func (e *ClusterResourceEstimator) nodeInSet(node *corev1.Node) bool {
+	if e.setScope == nil || len(e.setScope.SetNodeGroups) == 0 {
+		return false
+	}
+
+	// Use pre-built mapping for accurate lookup
+	if e.setScope.NodeToGroup != nil {
+		nodeGroupID, exists := e.setScope.NodeToGroup[node.Name]
+		if !exists {
+			klog.V(5).Infof("Node %s not found in NodeToGroup mapping", node.Name)
+			return false
+		}
+
+		// Check if this NodeGroup is in the Set
+		for _, setNodeGroupID := range e.setScope.SetNodeGroups {
+			if nodeGroupID == setNodeGroupID {
+				klog.V(5).Infof("Node %s belongs to NodeGroup %s in Set %s",
+					node.Name, nodeGroupID, e.setScope.SetName)
+				return true
+			}
+		}
+		return false
+	}
+
+	// Fallback: No mapping available, cannot determine membership reliably
+	// This should not happen in normal operation
+	klog.Warningf("Set %s: NodeToGroup mapping not available, cannot filter node %s accurately",
+		e.setScope.SetName, node.Name)
+	return false
+}
+
 func computeNewNodeNumWithRatio(nodeTemplate *schedulerframework.NodeInfo, name corev1.ResourceName,
-	sum, left resource.Quantity, ratio float64) float64 {
+	sum, left resource.Quantity, ratio float64,
+) float64 {
 	if math.Abs(ratio) < 1e-9 {
 		klog.V(4).Infof("the ratio of %s is 0, cannot calculate desired node num", name)
 		return 0
@@ -222,8 +358,8 @@ func computeNewNodeNumWithRatio(nodeTemplate *schedulerframework.NodeInfo, name 
 
 func (e *ClusterResourceEstimator) addNewNodeToSnapshot(
 	template *schedulerframework.NodeInfo,
-	nameIndex int) (string, error) {
-
+	nameIndex int,
+) (string, error) {
 	newNodeInfo := scheduler.DeepCopyTemplateNode(template, fmt.Sprintf("estimator-%d", nameIndex))
 	var pods []*corev1.Pod
 	for _, podInfo := range newNodeInfo.Pods {

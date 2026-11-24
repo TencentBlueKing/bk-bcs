@@ -14,6 +14,7 @@ package bcs
 
 import (
 	"context"
+	"encoding/base64"
 	"io"
 	"os"
 	"reflect"
@@ -258,6 +259,36 @@ func Test_readConfig(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if err := readConfig(tt.args.cfg); (err != nil) != tt.wantErr {
 				t.Errorf("readConfig() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestAesEncrypt(t *testing.T) {
+	tests := []struct {
+		name string // description of this test case
+		// Named input parameters for target function.
+		plaintext string
+		key       string
+		want      string
+		wantErr   bool
+	}{}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, gotErr := AesEncrypt(tt.plaintext, tt.key)
+			if gotErr != nil {
+				if !tt.wantErr {
+					t.Errorf("AesEncrypt() failed: %v", gotErr)
+				}
+				return
+			}
+			if tt.wantErr {
+				t.Fatal("AesEncrypt() succeeded unexpectedly")
+			}
+			t.Logf("text: %s", base64.StdEncoding.EncodeToString([]byte(got)))
+			// TODO: update the condition below to compare got with tt.want.
+			if true {
+				t.Errorf("AesEncrypt() = %v, want %v", got, tt.want)
 			}
 		})
 	}

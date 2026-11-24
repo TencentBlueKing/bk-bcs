@@ -1,4 +1,4 @@
-ARG BASEIMAGE=centos:centos7
+ARG BASEIMAGE=mirrors.tencent.com/tencentos/tencentos4:4.2-v20250227
 FROM $BASEIMAGE
 
 COPY hyper/bcs-ca-1.16 /bcs-cluster-autoscaler-1.16

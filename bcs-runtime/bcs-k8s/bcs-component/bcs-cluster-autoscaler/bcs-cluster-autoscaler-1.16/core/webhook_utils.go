@@ -47,7 +47,8 @@ type priorities map[string]int
 // GenerateAutoscalerRequest generates requests based on current states of node groups
 func GenerateAutoscalerRequest(nodeGroups []cloudprovider.NodeGroup,
 	upcomingNodes map[string]int, newPriorities priorities,
-	nodeDeletionTracker *NodeDeletionTracker) (*AutoscalerRequest, error) {
+	nodeDeletionTracker *NodeDeletionTracker,
+) (*AutoscalerRequest, error) {
 	localNgs := make(map[string]*NodeGroup)
 	for _, ng := range nodeGroups {
 		localNg, err := generateNodeGroup(ng, upcomingNodes, newPriorities, nodeDeletionTracker)
@@ -66,7 +67,8 @@ func GenerateAutoscalerRequest(nodeGroups []cloudprovider.NodeGroup,
 // generateNodeGroup generates the information of node groups
 func generateNodeGroup(nodeGroup cloudprovider.NodeGroup,
 	upcomingNodes map[string]int, newPriorities priorities,
-	nodeDeletionTracker *NodeDeletionTracker) (*NodeGroup, error) {
+	nodeDeletionTracker *NodeDeletionTracker,
+) (*NodeGroup, error) {
 	targetSize, err := nodeGroup.TargetSize()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get target size of nodegroup %v: %v", nodeGroup.Id(), err)
@@ -115,7 +117,8 @@ func generateNodeGroup(nodeGroup cloudprovider.NodeGroup,
 func HandleResponse(review ClusterAutoscalerReview, nodes []*corev1.Node,
 	nodeNameToNodeInfo map[string]*schedulernodeinfo.NodeInfo,
 	sd *ScaleDown, newPriorities priorities,
-	scaleDownDelay time.Duration) (ScaleUpOptions, ScaleDownCandidates, error) {
+	scaleDownDelay time.Duration,
+) (ScaleUpOptions, ScaleDownCandidates, error) {
 	var options ScaleUpOptions
 	var candidates ScaleDownCandidates
 	var err error
@@ -165,7 +168,8 @@ func handleScaleUpResponse(req *AutoscalerRequest, policies []*ScaleUpPolicy) Sc
 // handleScaleDownResponse abstracts candidates of scale down from response
 func handleScaleDownResponse(req *AutoscalerRequest, policies []*ScaleDownPolicy, nodes []*corev1.Node,
 	nodeNameToNodeInfo map[string]*schedulernodeinfo.NodeInfo, sd *ScaleDown,
-	scaleDownDelay time.Duration) (ScaleDownCandidates, error) {
+	scaleDownDelay time.Duration,
+) (ScaleDownCandidates, error) {
 	candidates := make(ScaleDownCandidates, 0)
 	if len(policies) == 0 {
 		return candidates, nil
@@ -231,7 +235,6 @@ func handleScaleDownResponse(req *AutoscalerRequest, policies []*ScaleDownPolicy
 	}
 	klog.Infof("Scale-down candidates: %v", candidates)
 	return candidates, nil
-
 }
 
 // intersect iintersect two sets
@@ -253,7 +256,8 @@ func intersect(slice1, slice2 []string) []string {
 
 // sortNodesWithCostAndUtilization sorts nodes woth cost and utilization
 func sortNodesWithCostAndUtilization(nodes []*corev1.Node, candidates []string,
-	nodeNameToNodeInfo map[string]*schedulernodeinfo.NodeInfo, sd *ScaleDown) ([]string, error) {
+	nodeNameToNodeInfo map[string]*schedulernodeinfo.NodeInfo, sd *ScaleDown,
+) ([]string, error) {
 	nodeToUtilInfo := make(map[string]simulator.UtilizationInfo)
 	nodeToCost := make(map[string]float64)
 	for i := range nodes {
@@ -286,7 +290,8 @@ func sortNodesWithCostAndUtilization(nodes []*corev1.Node, candidates []string,
 
 // ExecuteScaleUp execute scale up with scale up options
 func ExecuteScaleUp(context *contextinternal.Context, clusterStateRegistry *clusterstate.ClusterStateRegistry,
-	options ScaleUpOptions, maxBulkScaleUpCount, batchScaleUpCount int) error {
+	options ScaleUpOptions, maxBulkScaleUpCount, batchScaleUpCount int,
+) error {
 	nodegroups := context.CloudProvider.NodeGroups()
 	for _, ng := range nodegroups {
 		desired, ok := options[ng.Id()]
@@ -304,7 +309,14 @@ func ExecuteScaleUp(context *contextinternal.Context, clusterStateRegistry *clus
 		}
 		ticker := time.NewTicker(time.Second * 1)
 		defer ticker.Stop()
+		timeCost := 0
 		for range ticker.C {
+			// 预防异常情况，一直卡在扩容逻辑
+			timeCost++
+			if timeCost > maxBulkScaleUpCount {
+				klog.Warningf("time cost %d seconds, stop scale up", timeCost)
+				break
+			}
 			current, err := ng.TargetSize()
 			if err != nil {
 				return fmt.Errorf("Cannot get target size of nodegroup %v, err: %v", ng.Id(), err)
@@ -340,8 +352,8 @@ func ExecuteScaleUp(context *contextinternal.Context, clusterStateRegistry *clus
 // ExecuteScaleDown execute scale down with scale down candidates
 func ExecuteScaleDown(context *contextinternal.Context, sd *ScaleDown,
 	nodes []*corev1.Node, candidates ScaleDownCandidates,
-	nodeNameToNodeInfo map[string]*schedulernodeinfo.NodeInfo) error {
-
+	nodeNameToNodeInfo map[string]*schedulernodeinfo.NodeInfo,
+) error {
 	scaleDownNodes := make([]string, 0)
 	defer func() {
 		if len(scaleDownNodes) > 0 {
@@ -412,7 +424,6 @@ func ExecuteScaleDown(context *contextinternal.Context, sd *ScaleDown,
 
 	}
 	return nil
-
 }
 
 // checkCandidates determinates whether the node is in candidates

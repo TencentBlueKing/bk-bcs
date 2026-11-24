@@ -28,6 +28,8 @@ import (
 
 const httpTimeOut = 5 * time.Second
 
+var clusterID = os.Getenv("BcsClusterID")
+
 // NodePoolClientInterface defines the interface of node pool client
 type NodePoolClientInterface interface {
 	GetPool(np string) (*NodeGroup, error)
@@ -163,6 +165,14 @@ func (npc *NodePoolClient) GetNode(ip string) (*Node, error) {
 	if res.Code != 0 {
 		return nil, fmt.Errorf("can not finish the request, err: %v, response message: %v", res.Message, string(contents))
 	}
+	if clusterID != "" {
+		for _, node := range res.Data {
+			if node.ClusterID == clusterID {
+				return node, nil
+			}
+		}
+		return nil, fmt.Errorf("node %s not found in cluster %s", ip, clusterID)
+	}
 	return res.Data[0], nil
 }
 
@@ -223,7 +233,6 @@ func (npc *NodePoolClient) RemoveNodes(np string, ips []string) (string, error) 
 	body := bytes.NewReader(byteReq)
 	contents, err := WithoutTLSClient(npc.header, npc.url).DELETE().WithContext(ctx).
 		Resource("nodegroup").Name(np).Body(body).Name("groupnode").Do()
-
 	if err != nil {
 		return "", fmt.Errorf("failed to finish http request, err: %v, body: %v", err, string(contents))
 	}

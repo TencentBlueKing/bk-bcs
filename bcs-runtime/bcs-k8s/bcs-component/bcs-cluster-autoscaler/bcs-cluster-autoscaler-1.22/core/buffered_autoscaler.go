@@ -89,6 +89,9 @@ type BufferedAutoscaler struct {
 	ratio               float64
 	webhook             Webhook
 	maxBulkScaleUpCount int
+
+	// NodeGroupSet 管理器
+	nodeGroupSetManager *NodeGroupSetManager
 }
 
 type bufferedAutoscalerProcessorCallbacks struct {
@@ -104,6 +107,7 @@ func (callbacks *bufferedAutoscalerProcessorCallbacks) ResetUnneededNodes() {
 
 // newBufferedAutoscalerProcessorCallbacks TODO
 // NOCC:tosa/fn_length(设计如此)
+// nolint
 func newBufferedAutoscalerProcessorCallbacks() *bufferedAutoscalerProcessorCallbacks {
 	callbacks := &bufferedAutoscalerProcessorCallbacks{}
 	callbacks.reset()
@@ -132,6 +136,7 @@ func (callbacks *bufferedAutoscalerProcessorCallbacks) reset() {
 }
 
 // NewBufferedAutoscaler creates an instance of Autoscaler filled with provided parameters
+// nolint
 func NewBufferedAutoscaler(
 	opts scalingconfig.Options,
 	predicateChecker simulator.PredicateChecker,
@@ -144,8 +149,31 @@ func NewBufferedAutoscaler(
 	backoff backoff.Backoff,
 ) core.Autoscaler {
 	processorCallbacks := newBufferedAutoscalerProcessorCallbacks()
+
+	// 初始化 NodeGroupSetManager(如果指定了配置文件)
+	var nodeGroupSetManager *NodeGroupSetManager
+	if opts.NodeGroupSetConfigFile != "" {
+		config, err := scalingconfig.LoadNodeGroupSetConfig(opts.NodeGroupSetConfigFile)
+		if err != nil {
+			klog.Fatalf("Failed to load NodeGroupSet config: %v", err)
+		}
+		if len(config.Sets) > 0 {
+			nodeGroupSetManager = NewNodeGroupSetManager(config)
+			klog.V(1).Infof("NodeGroupSetManager initialized with %d set(s)", len(config.Sets))
+		} else {
+			klog.V(1).Infof("NodeGroupSetManager not enabled, using global buffered ratio config")
+		}
+	}
+
+	// Wrap expander with Set-aware expander if NodeGroupSetManager is enabled
+	finalExpanderStrategy := expanderStrategy
+	if nodeGroupSetManager != nil {
+		finalExpanderStrategy = NewSetAwareExpander(expanderStrategy, nodeGroupSetManager)
+		klog.V(1).Info("Enabled Set-aware expander")
+	}
+
 	autoscalingContext := contextinternal.NewAutoscalingContext(opts, predicateChecker,
-		clusterSnapshot, autoscalingKubeClients, cloudProvider, expanderStrategy,
+		clusterSnapshot, autoscalingKubeClients, cloudProvider, finalExpanderStrategy,
 		estimatorBuilder, processorCallbacks)
 
 	clusterStateConfig := clusterstate.ClusterStateRegistryConfig{
@@ -165,20 +193,26 @@ func NewBufferedAutoscaler(
 	clusterStateRegistry := clusterstate.NewClusterStateRegistry(autoscalingContext.CloudProvider, clusterStateConfig,
 		autoscalingContext.LogRecorder, backoff)
 
+	// Add NodeGroupSetManager to context
+	if nodeGroupSetManager != nil {
+		autoscalingContext.NodeGroupSetManager = nodeGroupSetManager
+	}
+
 	scaleDown := NewScaleDown(autoscalingContext.AutoscalingContext, processors, clusterStateRegistry,
 		opts.ExpendablePodsPriorityCutoff, opts.BufferedCPURatio, opts.BufferedMemRatio, opts.BufferedResourceRatio,
-		opts.EvictLatest)
+		opts.EvictLatest, nodeGroupSetManager)
 	processorCallbacks.scaleDown = scaleDown
 
 	var webhook Webhook
 	switch opts.WebhookMode {
 	case WebMode:
 		webhook = NewWebScaler(autoscalingContext.ClientSet, opts.ConfigNamespace,
-			opts.WebhookModeConfig, opts.WebhookModeToken, opts.MaxBulkScaleUpCount, opts.BatchScaleUpCount)
+			opts.WebhookModeConfig, opts.WebhookModeToken, opts.MaxBulkScaleUpCount, opts.BatchScaleUpCount,
+			opts.AutoscalingOptions.ScaleDownEnabled)
 		metricsinternal.RegisterWebhookParams("Web", opts.WebhookModeConfig)
 	case ConfigMapMode:
 		webhook = NewConfigMapScaler(autoscalingContext.ClientSet, opts.ConfigNamespace,
-			opts.WebhookModeConfig, opts.MaxBulkScaleUpCount)
+			opts.WebhookModeConfig, opts.MaxBulkScaleUpCount, opts.AutoscalingOptions.ScaleDownEnabled)
 		metricsinternal.RegisterWebhookParams("ConfigMap", opts.WebhookModeConfig)
 	default:
 		webhook = nil
@@ -205,6 +239,7 @@ func NewBufferedAutoscaler(
 		ratio:                      opts.BufferedResourceRatio,
 		webhook:                    webhook,
 		maxBulkScaleUpCount:        opts.MaxBulkScaleUpCount,
+		nodeGroupSetManager:        nodeGroupSetManager,
 	}
 }
 
@@ -381,7 +416,7 @@ func (b *BufferedAutoscaler) preRun(currentTime time.Time) ([]*corev1.Node, []*c
 	b.clusterStateRegistry.PeriodicCleanup()
 
 	// Get nodes and pods currently living on cluster
-	allNodes, readyNodes, typedErr := b.obtainNodeLists(b.CloudProvider)
+	allNodes, readyNodes, typedErr := b.obtainNodeLists()
 	if typedErr != nil {
 		return nil, nil, typedErr
 	}
@@ -563,7 +598,124 @@ func (b *BufferedAutoscaler) doScaleUp(autoscalingContext *contextinternal.Conte
 		klog.Errorf("Unable to fetch ClusterNode List for Debugging Snapshot, %v", err)
 	}
 	nodesInfoWithoutMaster := filterOutMastersNodeInfo(allNodeInfos)
-	bufferNotEnough := checkResourceNotEnough(nodesInfoWithoutMaster, nil, b.CPURatio, b.MemRatio, b.ratio)
+
+	// 基于 NodeGroupSet 的 buffered ratio 检查
+	bufferNotEnough := false
+	if b.nodeGroupSetManager != nil {
+		// 刷新 NodeGroup 到 Set 的映射
+		allNodeGroups := autoscalingContext.CloudProvider.NodeGroups()
+		if err := b.nodeGroupSetManager.RefreshNodeGroups(allNodeGroups); err != nil {
+			klog.Errorf("Failed to refresh node groups: %v", err)
+		}
+
+		// 创建资源快照(一次性计算所有 Set 的资源状态)
+		// scaleUpResourceSnapshot 包含 upcoming nodes,避免重复扩容
+		// scaleDownResourceSnapshot 排除 upcoming nodes,避免缩容依赖虚拟容量
+		scaleUpResourceSnapshot, scaleDownResourceSnapshot, err := b.nodeGroupSetManager.TakeResourceSnapshot(
+			nodesInfoWithoutMaster, autoscalingContext.CloudProvider)
+		if err != nil {
+			klog.Errorf("Failed to take resource snapshot: %v", err)
+			// 降级到旧逻辑
+			bufferNotEnough = checkResourceNotEnough(nodesInfoWithoutMaster, nil, b.CPURatio, b.MemRatio, b.ratio)
+		} else {
+			// 将扩容快照存入 context,供 ScaleUp 使用
+			autoscalingContext.SetResourceSnapshot = scaleUpResourceSnapshot
+			autoscalingContext.NodeGroupSetManager = b.nodeGroupSetManager
+
+			// 将 Node→NodeGroup 映射缓存到 Context
+			// 这样 createEstimatorForNodeGroup 可以直接使用,不用重复构建
+			autoscalingContext.NodeToGroupCache = scaleUpResourceSnapshot.NodeToGroup
+			klog.V(4).Infof("[NodeToGroup] Cached %d node mappings in Context", len(scaleUpResourceSnapshot.NodeToGroup))
+
+			// 将全局 buffer ratio 传递到 Context
+			autoscalingContext.GlobalBufferedCPURatio = b.CPURatio
+			autoscalingContext.GlobalBufferedMemRatio = b.MemRatio
+			autoscalingContext.GlobalBufferedResourceRatio = b.ratio
+
+			// 将缩容快照缓存到 ScaleDown,避免重复创建
+			// ScaleDown 可以在 filterNode() 中直接使用这个快照
+			b.scaleDown.cachedResourceSnapshot = scaleDownResourceSnapshot
+			klog.V(4).Infof("[ResourceSnapshot] Cached scale-down snapshot for ScaleDown (timestamp: %v)",
+				scaleDownResourceSnapshot.Timestamp)
+
+			// 按优先级检查每个 Set 是否需要扩容
+			allSets := b.nodeGroupSetManager.GetAllSets()
+			triggeredSets := make([]string, 0)
+
+			for _, setName := range allSets {
+				// 从扩容快照中获取资源信息
+				resourceInfo, exists := scaleUpResourceSnapshot.Resources[setName]
+				if !exists {
+					klog.V(3).Infof("Set %s not found in resource snapshot", setName)
+					continue
+				}
+
+				// 检查是否触发扩容
+				if b.nodeGroupSetManager.CheckScaleUpNeeded(setName, resourceInfo) {
+					triggeredSets = append(triggeredSets, setName)
+					klog.V(2).Infof("[NodeGroupSet] Set %s triggered scale-up: "+
+						"CPU usage %.2f%% (available %.2f%%), Mem usage %.2f%% (available %.2f%%)",
+						setName,
+						resourceInfo.CPUUsageRatio*100, (1.0-resourceInfo.CPUUsageRatio)*100,
+						resourceInfo.MemUsageRatio*100, (1.0-resourceInfo.MemUsageRatio)*100)
+				}
+			}
+
+			// 如果有任何 Set 触发了扩容
+			if len(triggeredSets) > 0 {
+				bufferNotEnough = true
+				klog.V(1).Infof("[NodeGroupSet] Buffer not enough in %d set(s): %v", len(triggeredSets), triggeredSets)
+
+				// 将触发的 Set 信息传递给 ScaleUp 函数
+				autoscalingContext.TriggeredNodeGroupSets = triggeredSets
+			} else {
+				klog.V(3).Infof("[NodeGroupSet] All sets have sufficient buffer, no scale-up needed")
+				autoscalingContext.TriggeredNodeGroupSets = nil
+			}
+
+			// 是否有 NodeGroup 使用全局配置 (GlobalSetName)
+			// 这些 NodeGroup 不属于任何 Set，也没有 DefaultSet
+			// 需要使用全局集群级别的 buffer 检查
+			globalNodeGroupsExist := false
+			for _, ng := range allNodeGroups {
+				if b.nodeGroupSetManager.GetNodeGroupSet(ng.Id()) == GlobalSetName {
+					globalNodeGroupsExist = true
+					break
+				}
+			}
+
+			if globalNodeGroupsExist {
+				// 使用全局逻辑检查集群级别资源
+				globalBufferNotEnough := checkResourceNotEnough(
+					nodesInfoWithoutMaster,
+					nil,
+					b.CPURatio,
+					b.MemRatio,
+					b.ratio,
+				)
+
+				if globalBufferNotEnough {
+					bufferNotEnough = true
+					klog.V(1).Infof("[Global] Cluster-level buffer not enough for NodeGroups using global configuration")
+
+					// 将 GlobalSetName 添加到触发列表
+					if autoscalingContext.TriggeredNodeGroupSets == nil {
+						autoscalingContext.TriggeredNodeGroupSets = []string{GlobalSetName}
+					} else {
+						autoscalingContext.TriggeredNodeGroupSets = append(autoscalingContext.TriggeredNodeGroupSets, GlobalSetName)
+					}
+				}
+			}
+		}
+	} else {
+		// 兼容旧逻辑:使用全局的 buffered ratio
+		bufferNotEnough = checkResourceNotEnough(nodesInfoWithoutMaster, nil, b.CPURatio, b.MemRatio, b.ratio)
+
+		// 清空 NodeGroupSet 相关字段
+		autoscalingContext.TriggeredNodeGroupSets = nil
+		autoscalingContext.SetResourceSnapshot = nil
+	}
+
 	shouldScaleUp := false
 
 	// nolint
@@ -759,13 +911,13 @@ func (b *BufferedAutoscaler) deleteCreatedNodesWithErrors(allNodes []*apiv1.Node
 	nodesToBeDeletedByNodeGroupID := make(map[string][]*corev1.Node)
 
 	for _, node := range nodes {
+		if node == nil {
+			klog.Warningf("Node is nil, skipping deletion")
+			continue
+		}
 		nodeGroup, err := b.CloudProvider.NodeGroupForNode(node)
 		if err != nil {
-			id := "<nil>"
-			if node != nil {
-				id = node.Name
-			}
-			klog.Warningf("Cannot determine nodeGroup for node %v; %v", id, err)
+			klog.Warningf("Cannot determine nodeGroup for node %v; %v", node.Name, err)
 			continue
 		}
 		if nodeGroup == nil || reflect.ValueOf(nodeGroup).IsNil() {
@@ -788,6 +940,10 @@ func (b *BufferedAutoscaler) deleteCreatedNodesWithErrors(allNodes []*apiv1.Node
 			// 扩容失败节点的缩容也需走 Pod 驱逐流程，防止意外情况
 			for i := range nodesToBeDeleted {
 				go func(node *apiv1.Node) {
+					if node == nil {
+						klog.Warningf("Node is nil, skipping deletion")
+						return
+					}
 					var result status.NodeDeleteResult
 					defer func() { b.scaleDown.nodeDeletionTracker.AddNodeDeleteResult(node.Name, result) }()
 					defer b.scaleDown.nodeDeletionTracker.SetNonEmptyNodeDeleteInProgress(false)
@@ -896,7 +1052,7 @@ func (b *BufferedAutoscaler) ExitCleanUp() {
 
 // obtainNodeLists TODO
 // nolint
-func (b *BufferedAutoscaler) obtainNodeLists(cp cloudprovider.CloudProvider) ([]*corev1.Node, []*corev1.Node,
+func (b *BufferedAutoscaler) obtainNodeLists() ([]*corev1.Node, []*corev1.Node,
 	errors.AutoscalerError,
 ) {
 	allNodes, err := b.AllNodeLister().List()

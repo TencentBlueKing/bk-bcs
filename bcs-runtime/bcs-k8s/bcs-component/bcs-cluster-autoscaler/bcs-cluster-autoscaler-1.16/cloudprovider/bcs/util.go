@@ -13,6 +13,7 @@
 package bcs
 
 import (
+	"bytes"
 	"context"
 	"crypto/aes"
 	"crypto/cipher"
@@ -228,6 +229,26 @@ func convertResource(lc *clustermanager.LaunchConfiguration) map[apiv1.ResourceN
 	return resources
 }
 
+// AesEncrypt encrypt message with key
+func AesEncrypt(plaintext, key string) (string, error) {
+	k := []byte(key)
+
+	block, err := aes.NewCipher(k)
+	if err != nil {
+		return "", err
+	}
+
+	blockSize := block.BlockSize()
+	origData := []byte(plaintext)
+	origData = PKCS7Padding(origData, blockSize)
+
+	blockMode := cipher.NewCBCEncrypter(block, k[:blockSize])
+	encrypted := make([]byte, len(origData))
+	blockMode.CryptBlocks(encrypted, origData)
+
+	return base64.StdEncoding.EncodeToString(encrypted), nil
+}
+
 // AesDecrypt decrypt message with key
 func AesDecrypt(encrypted, key string) (string, error) {
 	encrytedByte, err := base64.StdEncoding.DecodeString(encrypted)
@@ -246,6 +267,13 @@ func AesDecrypt(encrypted, key string) (string, error) {
 	blockMode.CryptBlocks(orig, encrytedByte)
 	orig = PKCS7UnPadding(orig)
 	return string(orig), nil
+}
+
+// PKCS7Padding returns the padding text
+func PKCS7Padding(origData []byte, blockSize int) []byte {
+	padding := blockSize - len(origData)%blockSize
+	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
+	return append(origData, padtext...)
 }
 
 // PKCS7UnPadding returns the unpadding text

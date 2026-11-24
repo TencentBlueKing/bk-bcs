@@ -97,7 +97,7 @@ func (m *NodeGroupCache) GetRegisteredNodeGroups() []*NodeGroup {
 func (m *NodeGroupCache) FindForInstance(instance *InstanceRef) (*NodeGroup, error) {
 	m.cacheMutex.Lock()
 	defer m.cacheMutex.Unlock()
-	klog.V(5).Infof("instance :%v", instance)
+	klog.V(5).Infof("instance: %v", instance)
 	if config, found := m.instanceToGroup[*instance]; found {
 		return config, nil
 	}

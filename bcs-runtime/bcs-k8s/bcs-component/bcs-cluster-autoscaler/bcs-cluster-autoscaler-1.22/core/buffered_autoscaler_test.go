@@ -195,7 +195,7 @@ func TestBufferedAutoscalerRunOnce(t *testing.T) {
 
 	clusterState := clusterstate.NewClusterStateRegistry(provider, clusterStateConfig, context.LogRecorder, newBackoff())
 	processors := ca_processors.DefaultProcessors()
-	sd := NewScaleDown(context.AutoscalingContext, processors, clusterState, 0, 0, 0, 0, true)
+	sd := NewScaleDown(context.AutoscalingContext, processors, clusterState, 0, 0, 0, 0, true, nil)
 
 	autoscaler := &BufferedAutoscaler{
 		Context:               &context,
@@ -216,6 +216,7 @@ func TestBufferedAutoscalerRunOnce(t *testing.T) {
 	daemonSetListerMock.On("List", labels.Everything()).Return([]*appsv1.DaemonSet{}, nil).Twice()
 	podDisruptionBudgetListerMock.On("List").Return([]*policyv1.PodDisruptionBudget{}, nil).Once()
 
+	// onScaleUpMock.On("ScaleUp", "ng1", 1).Return(nil)
 	err := autoscaler.RunOnce(time.Now())
 	assert.NoError(t, err)
 	mock.AssertExpectationsForObjects(t, scheduledPodMock, unschedulablePodMock,
@@ -228,6 +229,7 @@ func TestBufferedAutoscalerRunOnce(t *testing.T) {
 	unschedulablePodMock.On("List").Return([]*apiv1.Pod{p2}, nil).Once()
 	daemonSetListerMock.On("List", labels.Everything()).Return([]*appsv1.DaemonSet{}, nil).Twice()
 	podDisruptionBudgetListerMock.On("List").Return([]*policyv1.PodDisruptionBudget{}, nil).Once()
+	onScaleUpMock.On("ScaleUp", "ng1", 1).Return(nil)
 
 	context.MaxNodesTotal = 10
 	err = autoscaler.RunOnce(time.Now().Add(time.Hour))
@@ -364,7 +366,6 @@ func TestBufferedAutoscalerRunOnceWithAutoprovisionedEnabled(t *testing.T) {
 
 	// Create context with mocked lister registry.
 	options := config.AutoscalingOptions{
-
 		NodeGroupDefaults: config.NodeGroupAutoscalingOptions{
 			ScaleDownUtilizationThreshold: 0.5,
 			ScaleDownUnreadyTime:          time.Minute,
@@ -391,7 +392,7 @@ func TestBufferedAutoscalerRunOnceWithAutoprovisionedEnabled(t *testing.T) {
 	}
 	clusterState := clusterstate.NewClusterStateRegistry(provider, clusterStateConfig, context.LogRecorder, newBackoff())
 
-	sd := NewScaleDown(context.AutoscalingContext, processors, clusterState, 0, 0, 0, 0, true)
+	sd := NewScaleDown(context.AutoscalingContext, processors, clusterState, 0, 0, 0, 0, true, nil)
 
 	autoscaler := &BufferedAutoscaler{
 		Context:               &context,
@@ -480,12 +481,18 @@ func TestBufferedAutoscalerRunOnceWithALongUnregisteredNode(t *testing.T) {
 	p1.Spec.NodeName = "n1"
 	p2 := BuildTestPod("p2", 600, 100)
 
-	provider := testprovider.NewTestCloudProvider(
+	tn := BuildTestNode("tn", 1000, 1000)
+	tni := schedulerframework.NewNodeInfo()
+	tni.SetNode(tn)
+
+	provider := testprovider.NewTestAutoprovisioningCloudProvider(
 		func(id string, delta int) error {
 			return onScaleUpMock.ScaleUp(id, delta)
 		}, func(id string, name string) error {
 			return onScaleDownMock.ScaleDown(id, name)
-		})
+		},
+		nil, nil,
+		nil, map[string]*schedulerframework.NodeInfo{"ng1": tni})
 	provider.AddNodeGroup("ng1", 2, 10, 2)
 	provider.AddNode("ng1", n1)
 
@@ -542,7 +549,7 @@ func TestBufferedAutoscalerRunOnceWithALongUnregisteredNode(t *testing.T) {
 	}
 
 	processors := ca_processors.DefaultProcessors()
-	sd := NewScaleDown(context.AutoscalingContext, processors, clusterState, 0, 0, 0, 0, true)
+	sd := NewScaleDown(context.AutoscalingContext, processors, clusterState, 0, 0, 0, 0, true, nil)
 
 	autoscaler := &BufferedAutoscaler{
 		Context:               &context,
@@ -552,14 +559,15 @@ func TestBufferedAutoscalerRunOnceWithALongUnregisteredNode(t *testing.T) {
 		scaleDown:             sd,
 		processors:            NewTestProcessors(),
 		processorCallbacks:    processorCallbacks,
+		initialized:           true,
 	}
 
 	// Scale up.
 	readyNodeLister.SetNodes([]*apiv1.Node{n1})
 	allNodeLister.SetNodes([]*apiv1.Node{n1})
-	scheduledPodMock.On("List").Return([]*apiv1.Pod{p1}, nil).Times(3)
+	scheduledPodMock.On("List").Return([]*apiv1.Pod{p1}, nil).Twice()
 	unschedulablePodMock.On("List").Return([]*apiv1.Pod{p2}, nil).Once()
-	daemonSetListerMock.On("List", labels.Everything()).Return([]*appsv1.DaemonSet{}, nil).Twice()
+	daemonSetListerMock.On("List", labels.Everything()).Return([]*appsv1.DaemonSet{}, nil).Once()
 	onScaleUpMock.On("ScaleUp", "ng1", 1).Return(nil).Once()
 
 	err = autoscaler.RunOnce(later.Add(time.Hour))
@@ -573,10 +581,10 @@ func TestBufferedAutoscalerRunOnceWithALongUnregisteredNode(t *testing.T) {
 
 	readyNodeLister.SetNodes([]*apiv1.Node{n1, n2})
 	allNodeLister.SetNodes([]*apiv1.Node{n1, n2})
-	scheduledPodMock.On("List").Return([]*apiv1.Pod{p1}, nil).Times(4)
+	scheduledPodMock.On("List").Return([]*apiv1.Pod{p1}, nil).Twice()
 	unschedulablePodMock.On("List").Return([]*apiv1.Pod{p2}, nil).Once()
-	onScaleDownMock.On("ScaleDown", "ng1", "n1").Return(nil).Once()
-	daemonSetListerMock.On("List", labels.Everything()).Return([]*appsv1.DaemonSet{}, nil).Twice()
+	onScaleDownMock.On("ScaleDown", "ng1", "broken").Return(nil).Once()
+	daemonSetListerMock.On("List", labels.Everything()).Return([]*appsv1.DaemonSet{}, nil).Once()
 	podDisruptionBudgetListerMock.On("List").Return([]*policyv1.PodDisruptionBudget{}, nil).Once()
 
 	err = autoscaler.RunOnce(later.Add(2 * time.Hour))
@@ -675,7 +683,7 @@ func TestBufferedAutoscalerRunOncePodsWithFilterOutSchedulablePodsUsesPackingFal
 
 	clusterState := clusterstate.NewClusterStateRegistry(provider, clusterStateConfig, context.LogRecorder, newBackoff())
 	processors := ca_processors.DefaultProcessors()
-	sd := NewScaleDown(context.AutoscalingContext, processors, clusterState, 0, 0, 0, 0, true)
+	sd := NewScaleDown(context.AutoscalingContext, processors, clusterState, 0, 0, 0, 0, true, nil)
 
 	autoscaler := &BufferedAutoscaler{
 		Context:               &context,
@@ -798,7 +806,7 @@ func TestBufferedAutoscalerRunOncePodsWithPriorities(t *testing.T) {
 
 	clusterState := clusterstate.NewClusterStateRegistry(provider, clusterStateConfig, context.LogRecorder, newBackoff())
 	processors := ca_processors.DefaultProcessors()
-	sd := NewScaleDown(context.AutoscalingContext, processors, clusterState, 0, 0, 0, 0, true)
+	sd := NewScaleDown(context.AutoscalingContext, processors, clusterState, 0, 0, 0, 0, true, nil)
 
 	autoscaler := &BufferedAutoscaler{
 		Context:               &context,
@@ -929,7 +937,7 @@ func TestBufferedAutoscalerRunOnceWithFilteringOnBinPackingEstimator(t *testing.
 
 	clusterState := clusterstate.NewClusterStateRegistry(provider, clusterStateConfig, context.LogRecorder, newBackoff())
 	processors := ca_processors.DefaultProcessors()
-	sd := NewScaleDown(context.AutoscalingContext, processors, clusterState, 0, 0, 0, 0, true)
+	sd := NewScaleDown(context.AutoscalingContext, processors, clusterState, 0, 0, 0, 0, true, nil)
 
 	autoscaler := &BufferedAutoscaler{
 		Context:               &context,
@@ -1025,7 +1033,7 @@ func TestBufferedAutoscalerRunOnceWithFilteringOnOldEstimator(t *testing.T) {
 
 	clusterState := clusterstate.NewClusterStateRegistry(provider, clusterStateConfig, context.LogRecorder, newBackoff())
 	processors := ca_processors.DefaultProcessors()
-	sd := NewScaleDown(context.AutoscalingContext, processors, clusterState, 0, 0, 0, 0, true)
+	sd := NewScaleDown(context.AutoscalingContext, processors, clusterState, 0, 0, 0, 0, true, nil)
 
 	autoscaler := &BufferedAutoscaler{
 		Context:               &context,
@@ -1121,7 +1129,7 @@ func TestBufferedAutoscalerRunOnceWithFilteringOnUpcomingNodesEnabledNoScaleUp(t
 
 	clusterState := clusterstate.NewClusterStateRegistry(provider, clusterStateConfig, context.LogRecorder, newBackoff())
 	processors := ca_processors.DefaultProcessors()
-	sd := NewScaleDown(context.AutoscalingContext, processors, clusterState, 0, 0, 0, 0, true)
+	sd := NewScaleDown(context.AutoscalingContext, processors, clusterState, 0, 0, 0, 0, true, nil)
 
 	autoscaler := &BufferedAutoscaler{
 		Context:               &context,
@@ -1149,7 +1157,6 @@ func TestBufferedAutoscalerRunOnceWithFilteringOnUpcomingNodesEnabledNoScaleUp(t
 
 // NOCC:tosa/fn_length(设计如此)
 func TestBufferedAutoscalerInstaceCreationErrors(t *testing.T) {
-
 	// setup
 	provider := &mockprovider.CloudProvider{}
 

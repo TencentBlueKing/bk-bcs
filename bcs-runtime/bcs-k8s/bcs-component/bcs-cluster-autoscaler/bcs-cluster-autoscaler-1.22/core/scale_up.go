@@ -25,6 +25,7 @@ import (
 	"k8s.io/autoscaler/cluster-autoscaler/clusterstate"
 	"k8s.io/autoscaler/cluster-autoscaler/context"
 	"k8s.io/autoscaler/cluster-autoscaler/core/utils"
+	"k8s.io/autoscaler/cluster-autoscaler/estimator"
 	"k8s.io/autoscaler/cluster-autoscaler/expander"
 	"k8s.io/autoscaler/cluster-autoscaler/metrics"
 	ca_processors "k8s.io/autoscaler/cluster-autoscaler/processors"
@@ -39,10 +40,13 @@ import (
 	schedulerframework "k8s.io/kubernetes/pkg/scheduler/framework"
 
 	contextinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/context"
+	estimatorinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/estimator"
 )
 
-type scaleUpResourcesLimits map[string]int64
-type scaleUpResourcesDelta map[string]int64
+type (
+	scaleUpResourcesLimits map[string]int64
+	scaleUpResourcesDelta  map[string]int64
+)
 
 // used as a value in scaleUpResourcesLimits if actual limit could not be obtained
 // due to errors talking to cloud provider
@@ -55,7 +59,8 @@ func computeScaleUpResourcesLeftLimits(
 	nodeGroups []cloudprovider.NodeGroup,
 	nodeInfos map[string]*schedulerframework.NodeInfo,
 	nodesFromNotAutoscaledGroups []*apiv1.Node,
-	resourceLimiter *cloudprovider.ResourceLimiter) (scaleUpResourcesLimits, errors.AutoscalerError) {
+	resourceLimiter *cloudprovider.ResourceLimiter,
+) (scaleUpResourcesLimits, errors.AutoscalerError) {
 	totalCores, totalMem, errCoresMem := calculateScaleUpCoresMemoryTotal(nodeGroups, nodeInfos,
 		nodesFromNotAutoscaledGroups)
 
@@ -112,7 +117,8 @@ func computeScaleUpResourcesLeftLimits(
 func calculateScaleUpCoresMemoryTotal(
 	nodeGroups []cloudprovider.NodeGroup,
 	nodeInfos map[string]*schedulerframework.NodeInfo,
-	nodesFromNotAutoscaledGroups []*apiv1.Node) (int64, int64, errors.AutoscalerError) {
+	nodesFromNotAutoscaledGroups []*apiv1.Node,
+) (int64, int64, errors.AutoscalerError) {
 	var coresTotal int64
 	var memoryTotal int64
 
@@ -150,8 +156,8 @@ func calculateScaleUpCustomResourcesTotal(
 	processors *ca_processors.AutoscalingProcessors,
 	nodeGroups []cloudprovider.NodeGroup,
 	nodeInfos map[string]*schedulerframework.NodeInfo,
-	nodesFromNotAutoscaledGroups []*apiv1.Node) (map[string]int64, errors.AutoscalerError) {
-
+	nodesFromNotAutoscaledGroups []*apiv1.Node,
+) (map[string]int64, errors.AutoscalerError) {
 	result := make(map[string]int64)
 	for _, nodeGroup := range nodeGroups {
 		currentSize, err := nodeGroup.TargetSize()
@@ -209,7 +215,8 @@ func computeBelowMax(total int64, max int64) int64 {
 func computeScaleUpResourcesDelta(context *context.AutoscalingContext,
 	processors *ca_processors.AutoscalingProcessors,
 	nodeInfo *schedulerframework.NodeInfo, nodeGroup cloudprovider.NodeGroup,
-	resourceLimiter *cloudprovider.ResourceLimiter) (scaleUpResourcesDelta, errors.AutoscalerError) {
+	resourceLimiter *cloudprovider.ResourceLimiter,
+) (scaleUpResourcesDelta, errors.AutoscalerError) {
 	resultScaleUpDelta := make(scaleUpResourcesDelta)
 
 	nodeCPU, nodeMemory := getNodeInfoCoresAndMemory(nodeInfo)
@@ -244,7 +251,8 @@ func scaleUpLimitsNotExceeded() scaleUpLimitsCheckResult {
 
 // checkScaleUpDeltaWithinLimits check whether the scale up delta is within limits
 func (limits *scaleUpResourcesLimits) checkScaleUpDeltaWithinLimits(
-	delta scaleUpResourcesDelta) scaleUpLimitsCheckResult {
+	delta scaleUpResourcesDelta,
+) scaleUpLimitsCheckResult {
 	exceededResources := sets.NewString()
 	for resource, resourceDelta := range delta {
 		resourceLeft, found := (*limits)[resource]
@@ -292,7 +300,8 @@ func maxResourceLimitReached(resources []string) *skippedReasons {
 // nolint
 func computeExpansionOption(context *contextinternal.Context, podEquivalenceGroups []*podEquivalenceGroup,
 	nodeGroup cloudprovider.NodeGroup, nodeInfo *schedulerframework.NodeInfo,
-	upcomingNodes []*schedulerframework.NodeInfo, bufferNotEnough bool) (expander.Option, error) {
+	bufferNotEnough bool,
+) (expander.Option, error) {
 	option := expander.Option{
 		NodeGroup: nodeGroup,
 		Pods:      make([]*apiv1.Pod, 0),
@@ -343,9 +352,32 @@ func computeExpansionOption(context *contextinternal.Context, podEquivalenceGrou
 	}
 
 	if len(option.Pods) > 0 || bufferNotEnough {
-		estimator := context.ExtendedEstimatorBuilder(context.AutoscalingContext.PredicateChecker,
-			context.AutoscalingContext.ClusterSnapshot)
-		option.NodeCount = estimator.Estimate(option.Pods, nodeInfo)
+		// Create dynamic Estimator with Set-specific ratios and scope
+		estimator := createEstimatorForNodeGroup(context, nodeGroup)
+
+		if bufferNotEnough {
+			// Buffer-triggered expansion: calculate based on buffer requirements
+			// Pass empty pods list to get pure buffer calculation
+			// The estimator will call estimateAccordingToLoad() which calculates buffer needs
+			option.NodeCount = estimator.Estimate([]*apiv1.Pod{}, nodeInfo)
+			klog.V(4).Infof("[Buffer] NodeGroup %s buffer expansion needs %d nodes",
+				nodeGroup.Id(), option.NodeCount)
+		} else {
+			// Pod-triggered expansion: calculate based on pods only
+			// We need to override the estimator to NOT calculate buffer
+			// Use a zero-ratio estimator for pod-only calculation
+			podOnlyEstimator := estimatorinternal.NewClusterResourceEstimatorWithSetScope(
+				context.AutoscalingContext.PredicateChecker,
+				context.AutoscalingContext.ClusterSnapshot,
+				0.0, // cpuRatio = 0 means no buffer
+				0.0, // memRatio = 0
+				0.0, // resourceRatio = 0
+				nil, // No Set scope needed for pod-only calculation
+			)
+			option.NodeCount = podOnlyEstimator.Estimate(option.Pods, nodeInfo)
+			klog.V(4).Infof("[Pod] NodeGroup %s pod expansion needs %d nodes for %d pods",
+				nodeGroup.Id(), option.NodeCount, len(option.Pods))
+		}
 	}
 
 	return option, nil
@@ -355,12 +387,13 @@ func computeExpansionOption(context *contextinternal.Context, podEquivalenceGrou
 // false if it didn't and error if an error occurred. Assumes that all nodes in the cluster are
 // ready and in sync with instance groups.
 // NOCC:golint/fnsize(设计如此)
-// nolint funlen
+// nolint
 func ScaleUp(context *contextinternal.Context, processors *ca_processors.AutoscalingProcessors,
 	clusterStateRegistry *clusterstate.ClusterStateRegistry, unschedulablePods []*apiv1.Pod, nodes []*apiv1.Node,
 	daemonSets []*appsv1.DaemonSet, nodeInfos map[string]*schedulerframework.NodeInfo,
 	ignoredTaints taints.TaintKeySet, bufferNotEnough bool,
-	maxBulkScaleUpCount int) (*status.ScaleUpStatus, errors.AutoscalerError) {
+	maxBulkScaleUpCount int,
+) (*status.ScaleUpStatus, errors.AutoscalerError) {
 	// From now on we only care about unschedulable pods that were marked after the newest
 	// node became available for the scheduler.
 	if len(unschedulablePods) == 0 && !bufferNotEnough {
@@ -430,31 +463,209 @@ func ScaleUp(context *contextinternal.Context, processors *ca_processors.Autosca
 
 	podEquivalenceGroups := buildPodEquivalenceGroups(unschedulablePods)
 
-	expansionOptions, skippedNodeGroups, scaleUpStatus, errCompute := computeExpansionOptionForNodeGroups(context,
-		podEquivalenceGroups, nodeGroups, nodeInfos, clusterStateRegistry, processors, resourceLimiter,
-		scaleUpResourcesLeft, now,
-		upcomingNodes, bufferNotEnough)
-	if errCompute != nil {
-		return scaleUpStatus, errCompute
+	// Separate Pod-Triggered and Buffer-Triggered Scale-Up Paths
+	// Priority: If pending pods have valid expansion options, handle pods first;
+	//           Otherwise fall back to buffer expansion if buffer shortage exists
+
+	var expansionOptions map[string]expander.Option
+	var skippedNodeGroups map[string]status.Reasons
+	var scaleUpStatus *status.ScaleUpStatus
+	var errCompute errors.AutoscalerError
+
+	// Determine trigger type with priority
+	hasPendingPods := len(unschedulablePods) > 0
+	hasBufferShortage := bufferNotEnough
+
+	if hasPendingPods {
+		// Pod-Triggered Expansion: Single NodeGroup selection via Expander
+		klog.V(1).Infof("[Pod-Triggered] Scale-up triggered by %d unschedulable pod(s)", len(unschedulablePods))
+
+		// Compute expansion options for ALL NodeGroups
+		expansionOptions, skippedNodeGroups, scaleUpStatus, errCompute = computeExpansionOptionForNodeGroups(context,
+			podEquivalenceGroups, nodeGroups, nodeInfos, clusterStateRegistry, processors, resourceLimiter,
+			scaleUpResourcesLeft, now, false) // bufferNotEnough=false for pod path
+		if errCompute != nil {
+			return scaleUpStatus, errCompute
+		}
+
+		if len(expansionOptions) == 0 {
+			// No expansion options for pending pods
+			if !hasBufferShortage {
+				klog.V(1).Info("[Pod-Triggered] No expansion options available for pending pods")
+				return &status.ScaleUpStatus{
+					Result:                  status.ScaleUpNoOptionsAvailable,
+					PodsRemainUnschedulable: getRemainingPods(podEquivalenceGroups, skippedNodeGroups),
+					ConsideredNodeGroups:    nodeGroups,
+				}, nil
+			}
+			// Fall back to buffer expansion since pods cannot be scheduled
+			klog.V(1).Infof("[Priority] Pending pods have no valid expansion options, falling back to buffer-triggered expansion")
+		} else {
+			// Has valid expansion options for pods - use pod path
+			if hasBufferShortage {
+				klog.V(1).Infof("[Priority] Both pending pods (%d) and buffer shortage detected - pods have valid options, buffer deferred to next cycle",
+					len(unschedulablePods))
+			}
+
+			// Select single best option using Expander strategy
+			options := make([]expander.Option, 0, len(expansionOptions))
+			for _, o := range expansionOptions {
+				options = append(options, o)
+			}
+			bestOption := context.ExpanderStrategy.BestOption(options, nodeInfos)
+			if bestOption != nil && bestOption.NodeCount > 0 {
+				klog.V(1).Infof("[Pod-Triggered] Selected NodeGroup %s for expansion (nodes: %d)",
+					bestOption.NodeGroup.Id(), bestOption.NodeCount)
+				return optimizeBestOption(context, processors, clusterStateRegistry, daemonSets, nodes,
+					upcomingNodes, nodeInfos, scaleUpResourcesLeft, resourceLimiter, ignoredTaints, expansionOptions,
+					podEquivalenceGroups, gpuLabel, availableGPUTypes, skippedNodeGroups, nodeGroups,
+					maxBulkScaleUpCount, false, now, bestOption)
+			}
+
+			// Expander didn't select a valid option (shouldn't happen, but handle gracefully)
+			if !hasBufferShortage {
+				klog.V(1).Info("[Pod-Triggered] No valid expansion option selected by Expander")
+				return &status.ScaleUpStatus{
+					Result:                  status.ScaleUpNoOptionsAvailable,
+					PodsRemainUnschedulable: getRemainingPods(podEquivalenceGroups, skippedNodeGroups),
+					ConsideredNodeGroups:    nodeGroups,
+				}, nil
+			}
+			klog.V(1).Info("[Priority] Expander didn't select valid option for pods, falling back to buffer expansion")
+		}
 	}
 
-	// Pick some expansion option.
-	options := make([]expander.Option, 0, len(expansionOptions))
-	for _, o := range expansionOptions {
-		options = append(options, o)
-	}
-	bestOption := context.ExpanderStrategy.BestOption(options, nodeInfos)
-	if bestOption != nil && bestOption.NodeCount > 0 {
-		return optimizeBestOption(context, processors, clusterStateRegistry, daemonSets, nodes,
-			upcomingNodes, nodeInfos, scaleUpResourcesLeft, resourceLimiter, ignoredTaints, expansionOptions,
-			podEquivalenceGroups, gpuLabel, availableGPUTypes, skippedNodeGroups, nodeGroups,
-			maxBulkScaleUpCount, bufferNotEnough, now, bestOption)
+	// Buffer-Triggered Expansion Path
+	// Executed when:
+	//   1. No pending pods, OR
+	//   2. Pending pods exist but have no valid expansion options (fallback)
+	if hasBufferShortage {
+		// Buffer-Triggered Expansion: Multi-Set expansion
+		klog.V(1).Infof("[Buffer-Triggered] Scale-up triggered by buffer shortage in %d Set(s)",
+			len(context.TriggeredNodeGroupSets))
+
+		// Filter NodeGroups to only those in triggered Sets
+		filteredNodeGroups := filterNodeGroupsByTriggeredSets(context, nodeGroups)
+		if len(filteredNodeGroups) == 0 {
+			klog.V(1).Info("[Buffer-Triggered] No NodeGroups in triggered Sets")
+			result := &status.ScaleUpStatus{
+				Result:               status.ScaleUpNotNeeded,
+				ConsideredNodeGroups: nodeGroups,
+			}
+			if hasPendingPods {
+				result.PodsRemainUnschedulable = getRemainingPods(podEquivalenceGroups, skippedNodeGroups)
+			}
+			return result, nil
+		}
+
+		// Compute expansion options for filtered NodeGroups
+		bufferExpansionOptions, bufferSkippedNodeGroups, scaleUpStatus, errCompute := computeExpansionOptionForNodeGroups(context,
+			podEquivalenceGroups, filteredNodeGroups, nodeInfos, clusterStateRegistry, processors, resourceLimiter,
+			scaleUpResourcesLeft, now, true) // bufferNotEnough=true for buffer path
+		if errCompute != nil {
+			return scaleUpStatus, errCompute
+		}
+
+		if len(bufferExpansionOptions) == 0 {
+			klog.V(1).Info("[Buffer-Triggered] No expansion options available")
+			result := &status.ScaleUpStatus{
+				Result:               status.ScaleUpNoOptionsAvailable,
+				ConsideredNodeGroups: nodeGroups,
+			}
+			if hasPendingPods {
+				// Merge skipped node groups from both pod and buffer paths
+				mergedSkipped := make(map[string]status.Reasons)
+				for ng, reason := range skippedNodeGroups {
+					mergedSkipped[ng] = reason
+				}
+				for ng, reason := range bufferSkippedNodeGroups {
+					if _, exists := mergedSkipped[ng]; !exists {
+						mergedSkipped[ng] = reason
+					}
+				}
+				result.PodsRemainUnschedulable = getRemainingPods(podEquivalenceGroups, mergedSkipped)
+			}
+			return result, nil
+		}
+
+		// Check if multi-Set expansion is enabled
+		useMultiSet := shouldUseMultiSetExpansion(context)
+
+		if !useMultiSet {
+			// Fallback: single NodeGroup selection if multi-Set disabled
+			klog.V(2).Info("[Buffer-Triggered] Multi-Set expansion disabled, using single NodeGroup selection")
+			options := make([]expander.Option, 0, len(bufferExpansionOptions))
+			for _, o := range bufferExpansionOptions {
+				options = append(options, o)
+			}
+			bestOption := context.ExpanderStrategy.BestOption(options, nodeInfos)
+			if bestOption != nil && bestOption.NodeCount > 0 {
+				return optimizeBestOption(context, processors, clusterStateRegistry, daemonSets, nodes,
+					upcomingNodes, nodeInfos, scaleUpResourcesLeft, resourceLimiter, ignoredTaints, bufferExpansionOptions,
+					podEquivalenceGroups, gpuLabel, availableGPUTypes, bufferSkippedNodeGroups, nodeGroups,
+					maxBulkScaleUpCount, true, now, bestOption)
+			}
+			result := &status.ScaleUpStatus{
+				Result:               status.ScaleUpNoOptionsAvailable,
+				ConsideredNodeGroups: nodeGroups,
+			}
+			if hasPendingPods {
+				result.PodsRemainUnschedulable = getRemainingPods(podEquivalenceGroups, bufferSkippedNodeGroups)
+			}
+			return result, nil
+		}
+
+		// Multi-Set expansion: select best option per Set
+		klog.V(1).Infof("[Buffer-Triggered] Using multi-Set expansion with %d expansion options", len(bufferExpansionOptions))
+
+		setPlans := selectBestOptionsPerSet(context, bufferExpansionOptions, nodeInfos)
+		klog.V(1).Infof("[Buffer-Triggered] Selected best options for %d Set(s)", len(setPlans))
+
+		if len(setPlans) == 0 {
+			klog.V(1).Info("[Buffer-Triggered] No Set plans available after selection")
+			result := &status.ScaleUpStatus{
+				Result:               status.ScaleUpNoOptionsAvailable,
+				ConsideredNodeGroups: nodeGroups,
+			}
+			if hasPendingPods {
+				result.PodsRemainUnschedulable = getRemainingPods(podEquivalenceGroups, bufferSkippedNodeGroups)
+			}
+			return result, nil
+		}
+
+		// Select which Sets to expand based on resource limits and priority
+		maxConcurrentSets := getMaxConcurrentSets(context)
+		selectedSets := selectSetsToExpand(setPlans, scaleUpResourcesLeft, maxConcurrentSets)
+		klog.V(1).Infof("[Buffer-Triggered] Selected %d Set(s) for concurrent expansion (from %d candidates)",
+			len(selectedSets), len(setPlans))
+
+		if len(selectedSets) == 0 {
+			klog.V(1).Info("[Buffer-Triggered] No Sets selected (resource limits exceeded)")
+			result := &status.ScaleUpStatus{
+				Result:               status.ScaleUpNoOptionsAvailable,
+				ConsideredNodeGroups: nodeGroups,
+			}
+			if hasPendingPods {
+				result.PodsRemainUnschedulable = getRemainingPods(podEquivalenceGroups, bufferSkippedNodeGroups)
+			}
+			return result, nil
+		}
+
+		// Execute multi-Set expansion
+		return executeMultiSetExpansion(context, processors, clusterStateRegistry, daemonSets, nodes,
+			upcomingNodes, nodeInfos, scaleUpResourcesLeft, resourceLimiter, ignoredTaints,
+			podEquivalenceGroups, gpuLabel, availableGPUTypes, bufferSkippedNodeGroups, nodeGroups,
+			maxBulkScaleUpCount, now, selectedSets)
 
 	}
-
-	return &status.ScaleUpStatus{Result: status.ScaleUpNoOptionsAvailable,
-		PodsRemainUnschedulable: getRemainingPods(podEquivalenceGroups, skippedNodeGroups),
-		ConsideredNodeGroups:    nodeGroups}, nil
+	// No trigger - should not happen as we checked at entry
+	klog.V(1).Info("No scale-up trigger detected")
+	result := &status.ScaleUpStatus{Result: status.ScaleUpNotNeeded}
+	if hasPendingPods {
+		result.PodsRemainUnschedulable = getRemainingPods(podEquivalenceGroups, skippedNodeGroups)
+		result.ConsideredNodeGroups = nodeGroups
+	}
+	return result, nil
 }
 
 // optimizeBestOption generates the best scale up options
@@ -495,7 +706,7 @@ func optimizeBestOption(context *contextinternal.Context, processors *ca_process
 	if !bestOption.NodeGroup.Exist() {
 		expansionOptions, createNodeGroupResults, _, _ = computeExpansionOptionForCreatedNodeGroups(
 			context, podEquivalenceGroups, nodeInfos, clusterStateRegistry, processors,
-			bestOption, expansionOptions, daemonSets, ignoredTaints, upcomingNodes, bufferNotEnough)
+			bestOption, expansionOptions, daemonSets, ignoredTaints, bufferNotEnough)
 	}
 
 	nodeInfo, found := nodeInfos[bestOption.NodeGroup.Id()]
@@ -512,8 +723,10 @@ func optimizeBestOption(context *contextinternal.Context, processors *ca_process
 	newNodes, err := applyScaleUpResourcesLimits(context.AutoscalingContext, processors, newNodes,
 		scaleUpResourcesLeft, nodeInfo, bestOption.NodeGroup, resourceLimiter)
 	if err != nil {
-		return &status.ScaleUpStatus{Result: status.ScaleUpError,
-			CreateNodeGroupResults: createNodeGroupResults}, err
+		return &status.ScaleUpStatus{
+			Result:                 status.ScaleUpError,
+			CreateNodeGroupResults: createNodeGroupResults,
+		}, err
 	}
 	// apply scale up limits for node
 	if maxBulkScaleUpCount > 0 && newNodes > maxBulkScaleUpCount {
@@ -527,8 +740,10 @@ func optimizeBestOption(context *contextinternal.Context, processors *ca_process
 		similarNodeGroups, typedErr := processors.NodeGroupSetProcessor.FindSimilarNodeGroups(context.AutoscalingContext,
 			bestOption.NodeGroup, nodeInfos)
 		if typedErr != nil {
-			return &status.ScaleUpStatus{Result: status.ScaleUpError,
-					CreateNodeGroupResults: createNodeGroupResults},
+			return &status.ScaleUpStatus{
+					Result:                 status.ScaleUpError,
+					CreateNodeGroupResults: createNodeGroupResults,
+				},
 				typedErr.AddPrefix("Failed to find matching node groups: ")
 		}
 		similarNodeGroups = filterNodeGroupsByPods(similarNodeGroups, bestOption.Pods, expansionOptions)
@@ -543,7 +758,7 @@ func optimizeBestOption(context *contextinternal.Context, processors *ca_process
 			}
 		}
 		if len(targetNodeGroups) > 1 {
-			var names = []string{}
+			names := []string{}
 			for _, ng := range targetNodeGroups {
 				names = append(names, ng.Id())
 			}
@@ -554,8 +769,10 @@ func optimizeBestOption(context *contextinternal.Context, processors *ca_process
 	scaleUpInfos, typedErr := processors.NodeGroupSetProcessor.BalanceScaleUpBetweenGroups(
 		context.AutoscalingContext, targetNodeGroups, newNodes)
 	if typedErr != nil {
-		return &status.ScaleUpStatus{Result: status.ScaleUpError,
-			CreateNodeGroupResults: createNodeGroupResults}, typedErr
+		return &status.ScaleUpStatus{
+			Result:                 status.ScaleUpError,
+			CreateNodeGroupResults: createNodeGroupResults,
+		}, typedErr
 	}
 	klog.V(1).Infof("Final scale-up plan: %v", scaleUpInfos)
 	for _, info := range scaleUpInfos {
@@ -583,8 +800,9 @@ func computeExpansionOptionForNodeGroups(context *contextinternal.Context, podEq
 	nodeGroups []cloudprovider.NodeGroup, nodeInfos map[string]*schedulerframework.NodeInfo,
 	clusterStateRegistry *clusterstate.ClusterStateRegistry, processors *ca_processors.AutoscalingProcessors,
 	resourceLimiter *cloudprovider.ResourceLimiter, scaleUpResourcesLeft scaleUpResourcesLimits, now time.Time,
-	upcomingNodes []*schedulerframework.NodeInfo, bufferNotEnough bool) (map[string]expander.Option,
-	map[string]status.Reasons, *status.ScaleUpStatus, errors.AutoscalerError) {
+	bufferNotEnough bool) (map[string]expander.Option,
+	map[string]status.Reasons, *status.ScaleUpStatus, errors.AutoscalerError,
+) {
 	expansionOptions := make(map[string]expander.Option, 0)
 	skippedNodeGroups := map[string]status.Reasons{}
 	for _, nodeGroup := range nodeGroups {
@@ -636,7 +854,7 @@ func computeExpansionOptionForNodeGroups(context *contextinternal.Context, podEq
 		}
 
 		option, err := computeExpansionOption(context, podEquivalenceGroups,
-			nodeGroup, nodeInfo, upcomingNodes, bufferNotEnough)
+			nodeGroup, nodeInfo, bufferNotEnough)
 		if err != nil {
 			return expansionOptions, skippedNodeGroups, &status.ScaleUpStatus{Result: status.ScaleUpError},
 				errors.ToAutoscalerError(errors.InternalError, err)
@@ -662,8 +880,9 @@ func computeExpansionOptionForCreatedNodeGroups(context *contextinternal.Context
 	clusterStateRegistry *clusterstate.ClusterStateRegistry, processors *ca_processors.AutoscalingProcessors,
 	bestOption *expander.Option, expansionOptions map[string]expander.Option,
 	daemonSets []*appsv1.DaemonSet, ignoredTaints taints.TaintKeySet,
-	upcomingNodes []*schedulerframework.NodeInfo, bufferNotEnough bool) (map[string]expander.Option,
-	[]nodegroups.CreateNodeGroupResult, *status.ScaleUpStatus, errors.AutoscalerError) {
+	bufferNotEnough bool) (map[string]expander.Option,
+	[]nodegroups.CreateNodeGroupResult, *status.ScaleUpStatus, errors.AutoscalerError,
+) {
 	createNodeGroupResults := make([]nodegroups.CreateNodeGroupResult, 0)
 
 	oldID := bestOption.NodeGroup.Id()
@@ -696,7 +915,6 @@ func computeExpansionOptionForCreatedNodeGroups(context *contextinternal.Context
 	for _, nodeGroup := range createNodeGroupResult.ExtraCreatedNodeGroups {
 		nodeInfo, err := utils.GetNodeInfoFromTemplate(nodeGroup, daemonSets,
 			context.PredicateChecker, ignoredTaints)
-
 		if err != nil {
 			klog.Warningf("Cannot build node info for newly created extra node group %v;"+
 				" balancing similar node groups will not work; err=%v", nodeGroup.Id(), asErr)
@@ -705,7 +923,7 @@ func computeExpansionOptionForCreatedNodeGroups(context *contextinternal.Context
 		nodeInfos[nodeGroup.Id()] = nodeInfo
 
 		option, err2 := computeExpansionOption(context, podEquivalenceGroups,
-			nodeGroup, nodeInfo, upcomingNodes, bufferNotEnough)
+			nodeGroup, nodeInfo, bufferNotEnough)
 		if err2 != nil {
 			return expansionOptions, createNodeGroupResults,
 				&status.ScaleUpStatus{Result: status.ScaleUpError},
@@ -726,7 +944,8 @@ func computeExpansionOptionForCreatedNodeGroups(context *contextinternal.Context
 
 // getRemainingPods return remaining pods
 func getRemainingPods(egs []*podEquivalenceGroup,
-	skipped map[string]status.Reasons) []status.NoScaleUpInfo {
+	skipped map[string]status.Reasons,
+) []status.NoScaleUpInfo {
 	remaining := []status.NoScaleUpInfo{}
 	for _, eg := range egs {
 		if eg.schedulable {
@@ -762,8 +981,8 @@ func getPodsAwaitingEvaluation(egs []*podEquivalenceGroup, bestOption string) []
 func filterNodeGroupsByPods(
 	groups []cloudprovider.NodeGroup,
 	podsRequiredToFit []*apiv1.Pod,
-	expansionOptions map[string]expander.Option) []cloudprovider.NodeGroup {
-
+	expansionOptions map[string]expander.Option,
+) []cloudprovider.NodeGroup {
 	result := make([]cloudprovider.NodeGroup, 0)
 
 groupsloop:
@@ -793,7 +1012,8 @@ groupsloop:
 
 // executeScaleUp execute scale up action with option
 func executeScaleUp(context *context.AutoscalingContext, clusterStateRegistry *clusterstate.ClusterStateRegistry,
-	info nodegroupset.ScaleUpInfo, gpuType string, now time.Time) errors.AutoscalerError {
+	info nodegroupset.ScaleUpInfo, gpuType string, now time.Time,
+) errors.AutoscalerError {
 	klog.V(0).Infof("Scale-up: setting group %s size to %d", info.Group.Id(), info.NewSize)
 	context.LogRecorder.Eventf(apiv1.EventTypeNormal, "ScaledUpGroup",
 		"Scale-up: setting group %s size to %d", info.Group.Id(), info.NewSize)
@@ -826,8 +1046,8 @@ func applyScaleUpResourcesLimits(
 	scaleUpResourcesLeft scaleUpResourcesLimits,
 	nodeInfo *schedulerframework.NodeInfo,
 	nodeGroup cloudprovider.NodeGroup,
-	resourceLimiter *cloudprovider.ResourceLimiter) (int, errors.AutoscalerError) {
-
+	resourceLimiter *cloudprovider.ResourceLimiter,
+) (int, errors.AutoscalerError) {
 	delta, err := computeScaleUpResourcesDelta(context, processors, nodeInfo,
 		nodeGroup, resourceLimiter)
 	if err != nil {
@@ -860,4 +1080,440 @@ func applyScaleUpResourcesLimits(
 		}
 	}
 	return newNodes, nil
+}
+
+// filterNodeGroupsByTriggeredSets filters NodeGroups to only those in triggered Sets
+// Used by buffer-triggered expansion to target specific Sets
+func filterNodeGroupsByTriggeredSets(
+	context *contextinternal.Context,
+	allNodeGroups []cloudprovider.NodeGroup,
+) []cloudprovider.NodeGroup {
+	if context.NodeGroupSetManager == nil || len(context.TriggeredNodeGroupSets) == 0 {
+		return allNodeGroups
+	}
+
+	nodeGroupSetManager, ok := context.NodeGroupSetManager.(*NodeGroupSetManager)
+	if !ok {
+		klog.Warning("[Buffer-Triggered] NodeGroupSetManager has invalid type, using all NodeGroups")
+		return allNodeGroups
+	}
+
+	// Build set of triggered Set names
+	triggeredSetMap := make(map[string]bool)
+	for _, setName := range context.TriggeredNodeGroupSets {
+		triggeredSetMap[setName] = true
+	}
+
+	// Filter NodeGroups
+	filteredNodeGroups := make([]cloudprovider.NodeGroup, 0)
+	for _, ng := range allNodeGroups {
+		setName := nodeGroupSetManager.GetNodeGroupSet(ng.Id())
+		if triggeredSetMap[setName] {
+			filteredNodeGroups = append(filteredNodeGroups, ng)
+			klog.V(4).Infof("[Buffer-Triggered] Including NodeGroup %s from triggered Set %s",
+				ng.Id(), setName)
+		}
+	}
+
+	klog.V(3).Infof("[Buffer-Triggered] Filtered %d/%d NodeGroups from %d triggered Set(s)",
+		len(filteredNodeGroups), len(allNodeGroups), len(context.TriggeredNodeGroupSets))
+
+	return filteredNodeGroups
+}
+
+// createEstimatorForNodeGroup creates a dynamic Estimator for the given NodeGroup
+// with Set-specific ratios and Set-scoped resource calculation
+// nolint
+func createEstimatorForNodeGroup(context *contextinternal.Context,
+	nodeGroup cloudprovider.NodeGroup,
+) estimator.Estimator {
+	// Check if NodeGroupSetManager is configured
+	if context.NodeGroupSetManager == nil {
+		// Fall back to global estimator (backward compatibility)
+		return context.ExtendedEstimatorBuilder(
+			context.AutoscalingContext.PredicateChecker,
+			context.AutoscalingContext.ClusterSnapshot)
+	}
+
+	manager, ok := context.NodeGroupSetManager.(*NodeGroupSetManager)
+	if !ok {
+		// Invalid type, fall back to global estimator
+		klog.Warning("NodeGroupSetManager has invalid type, using global estimator")
+		return context.ExtendedEstimatorBuilder(
+			context.AutoscalingContext.PredicateChecker,
+			context.AutoscalingContext.ClusterSnapshot)
+	}
+
+	// Get the Set this NodeGroup belongs to
+	setName := manager.GetNodeGroupSet(nodeGroup.Id())
+	if setName == "" {
+		// NodeGroup not in any Set, use global estimator
+		klog.V(4).Infof("NodeGroup %s not in any Set, using global estimator", nodeGroup.Id())
+		return context.ExtendedEstimatorBuilder(
+			context.AutoscalingContext.PredicateChecker,
+			context.AutoscalingContext.ClusterSnapshot)
+	}
+
+	// GlobalSetName 表示使用全局集群级别配置
+	if setName == GlobalSetName {
+		klog.V(2).Infof("NodeGroup %s uses global cluster-level configuration (not in any Set, no DefaultSet)",
+			nodeGroup.Id())
+
+		// 使用全局 buffer ratio (来自命令行参数)
+		cpuRatio := context.GlobalBufferedCPURatio
+		memRatio := context.GlobalBufferedMemRatio
+		resourceRatio := context.GlobalBufferedResourceRatio
+
+		klog.V(4).Infof(
+			"Creating cluster-scoped estimator for NodeGroup %s with global ratios: cpu=%.2f, mem=%.2f, resource=%.2f",
+			nodeGroup.Id(), cpuRatio, memRatio, resourceRatio)
+
+		// 创建 Cluster-scoped Estimator (不限制 Set 范围，使用全集群节点)
+		return estimatorinternal.NewClusterResourceEstimatorWithSetScope(
+			context.AutoscalingContext.PredicateChecker,
+			context.AutoscalingContext.ClusterSnapshot,
+			cpuRatio,
+			memRatio,
+			resourceRatio,
+			nil, // setScope=nil 表示 Cluster-scoped，使用全集群节点
+		)
+	}
+
+	// Get Set configuration
+	setConfig, err := manager.GetSetConfig(setName)
+	if err != nil {
+		klog.Warningf("Failed to get config for Set %s: %v, using global estimator", setName, err)
+		return context.ExtendedEstimatorBuilder(
+			context.AutoscalingContext.PredicateChecker,
+			context.AutoscalingContext.ClusterSnapshot)
+	}
+
+	// Get all NodeGroups in this Set for scope filtering
+	setNodeGroups := manager.GetNodeGroupsInSet(setName)
+	setNodeGroupIDs := make([]string, 0, len(setNodeGroups))
+	for _, ng := range setNodeGroups {
+		setNodeGroupIDs = append(setNodeGroupIDs, ng.Id())
+	}
+
+	// Use cached Node→NodeGroup mapping from Context if available
+	var nodeToGroup map[string]string
+	if len(context.NodeToGroupCache) > 0 {
+		nodeToGroup = context.NodeToGroupCache
+		klog.V(5).Infof("[NodeToGroup] Using cached mapping with %d nodes from Context", len(nodeToGroup))
+	} else {
+		// Fallback: Build mapping if cache not available
+		// This happens when NodeGroupSet is disabled or snapshot failed
+		klog.V(4).Info("[NodeToGroup] Cache not available, building mapping for estimator")
+		nodeToGroup = make(map[string]string)
+		allNodes, err := context.AutoscalingContext.ClusterSnapshot.NodeInfos().List()
+		if err == nil {
+			for _, nodeInfo := range allNodes {
+				node := nodeInfo.Node()
+				if node != nil {
+					if node.Annotations != nil &&
+						node.Annotations[NodeUpcomingAnnotation] == valueTrue {
+						nodeToGroup[node.Name] = node.Annotations[bcsNodeGroupAnnoKey]
+					} else {
+						tmpNodeGroup, getErr := context.CloudProvider.NodeGroupForNode(node)
+						if getErr == nil && tmpNodeGroup != nil {
+							nodeToGroup[node.Name] = tmpNodeGroup.Id()
+						}
+					}
+				}
+			}
+		} else {
+			klog.Warningf("Failed to list nodes for building NodeToGroup mapping: %v", err)
+		}
+	}
+
+	// Create SetScope with accurate node mapping
+	setScope := &estimatorinternal.EstimatorSetScope{
+		Mode:          estimatorinternal.SetScoped,
+		SetNodeGroups: setNodeGroupIDs,
+		SetName:       setName,
+		NodeToGroup:   nodeToGroup,
+	}
+
+	// Use Set-specific ratios
+	cpuRatio := setConfig.BufferedRatios.CPURatio
+	memRatio := setConfig.BufferedRatios.MemRatio
+	resourceRatio := setConfig.BufferedRatios.ResourceRatio
+
+	klog.V(4).Infof(
+		"Creating Set-scoped estimator for NodeGroup %s in Set %s with ratios: cpu=%.2f, mem=%.2f, resource=%.2f",
+		nodeGroup.Id(), setName, cpuRatio, memRatio, resourceRatio)
+
+	// Create Set-scoped estimator with Set-specific ratios
+	return estimatorinternal.NewClusterResourceEstimatorWithSetScope(
+		context.AutoscalingContext.PredicateChecker,
+		context.AutoscalingContext.ClusterSnapshot,
+		cpuRatio,
+		memRatio,
+		resourceRatio,
+		setScope,
+	)
+}
+
+// shouldUseMultiSetExpansion determines if multi-Set concurrent expansion should be used
+func shouldUseMultiSetExpansion(context *contextinternal.Context) bool {
+	// Enable multi-Set if NodeGroupSetManager is configured
+	if context.NodeGroupSetManager == nil {
+		return false
+	}
+
+	manager, ok := context.NodeGroupSetManager.(*NodeGroupSetManager)
+	if !ok {
+		return false
+	}
+
+	// Check if we have multiple Sets configured
+	allSets := manager.GetAllSets()
+	if len(allSets) <= 1 {
+		// Only one Set, no benefit from multi-Set logic
+		return false
+	}
+
+	klog.V(3).Infof("Multi-Set expansion enabled with %d Set(s)", len(allSets))
+	return true
+}
+
+// getMaxConcurrentSets returns the maximum number of Sets that can be scaled concurrently
+func getMaxConcurrentSets(context *contextinternal.Context) int {
+	// TODO: Make this configurable via command-line flag
+	// For now, return 0 which means unlimited
+	return 0
+}
+
+// executeMultiSetExpansion executes scale-up for multiple Sets concurrently
+func executeMultiSetExpansion(
+	context *contextinternal.Context,
+	processors *ca_processors.AutoscalingProcessors,
+	clusterStateRegistry *clusterstate.ClusterStateRegistry,
+	daemonSets []*appsv1.DaemonSet,
+	nodes []*apiv1.Node,
+	upcomingNodes []*schedulerframework.NodeInfo,
+	nodeInfos map[string]*schedulerframework.NodeInfo,
+	scaleUpResourcesLeft scaleUpResourcesLimits,
+	resourceLimiter *cloudprovider.ResourceLimiter,
+	ignoredTaints taints.TaintKeySet,
+	podEquivalenceGroups []*podEquivalenceGroup,
+	gpuLabel string,
+	availableGPUTypes map[string]struct{},
+	skippedNodeGroups map[string]status.Reasons,
+	nodeGroups []cloudprovider.NodeGroup,
+	maxBulkScaleUpCount int,
+	now time.Time,
+	selectedSets []*SetExpansionPlan,
+) (*status.ScaleUpStatus, errors.AutoscalerError) {
+	klog.V(1).Infof("Executing multi-Set expansion for %d Set(s)", len(selectedSets))
+
+	// Aggregate results
+	allScaleUpInfos := make([]nodegroupset.ScaleUpInfo, 0)
+	allCreateNodeGroupResults := make([]nodegroups.CreateNodeGroupResult, 0)
+	var firstError errors.AutoscalerError
+
+	// Execute scale-up for each selected Set
+	for i, setPlan := range selectedSets {
+		klog.V(1).Infof("Executing Set %d/%d: %s (NodeGroup: %s, nodes: %d)",
+			i+1, len(selectedSets), setPlan.SetName, setPlan.BestOption.NodeGroup.Id(), setPlan.BestOption.NodeCount)
+
+		// Execute scale-up for this Set's best option
+		// Re-use the existing optimizeBestOption logic
+		status, err := executeSingleSetExpansion(
+			context, processors, clusterStateRegistry, daemonSets, nodes,
+			upcomingNodes, nodeInfos, scaleUpResourcesLeft, resourceLimiter,
+			ignoredTaints, podEquivalenceGroups, gpuLabel, availableGPUTypes,
+			skippedNodeGroups, nodeGroups, maxBulkScaleUpCount,
+			now, setPlan)
+		if err != nil {
+			klog.Errorf("Failed to execute Set %s: %v", setPlan.SetName, err)
+			if firstError == nil {
+				firstError = err
+			}
+			// Continue with other Sets even if one fails
+			continue
+		}
+
+		// Collect results
+		if status != nil {
+			if status.ScaleUpInfos != nil {
+				allScaleUpInfos = append(allScaleUpInfos, status.ScaleUpInfos...)
+			}
+			if status.CreateNodeGroupResults != nil {
+				allCreateNodeGroupResults = append(allCreateNodeGroupResults, status.CreateNodeGroupResults...)
+			}
+		}
+	}
+
+	// Return aggregated results
+	if len(allScaleUpInfos) == 0 {
+		if firstError != nil {
+			return &status.ScaleUpStatus{
+				Result:                 status.ScaleUpError,
+				CreateNodeGroupResults: allCreateNodeGroupResults,
+			}, firstError
+		}
+		return &status.ScaleUpStatus{
+			Result:                  status.ScaleUpNoOptionsAvailable,
+			PodsRemainUnschedulable: getRemainingPods(podEquivalenceGroups, skippedNodeGroups),
+			ConsideredNodeGroups:    nodeGroups,
+		}, nil
+	}
+
+	klog.V(1).Infof("[Phase2] Multi-Set expansion completed: %d Set(s) scaled successfully", len(allScaleUpInfos))
+
+	return &status.ScaleUpStatus{
+		Result:                  status.ScaleUpSuccessful,
+		ScaleUpInfos:            allScaleUpInfos,
+		PodsRemainUnschedulable: getRemainingPods(podEquivalenceGroups, skippedNodeGroups),
+		ConsideredNodeGroups:    nodeGroups,
+		CreateNodeGroupResults:  allCreateNodeGroupResults,
+	}, nil
+}
+
+// executeSingleSetExpansion executes scale-up for a single Set
+// nolint
+func executeSingleSetExpansion(
+	context *contextinternal.Context,
+	processors *ca_processors.AutoscalingProcessors,
+	clusterStateRegistry *clusterstate.ClusterStateRegistry,
+	daemonSets []*appsv1.DaemonSet,
+	nodes []*apiv1.Node,
+	upcomingNodes []*schedulerframework.NodeInfo,
+	nodeInfos map[string]*schedulerframework.NodeInfo,
+	scaleUpResourcesLeft scaleUpResourcesLimits,
+	resourceLimiter *cloudprovider.ResourceLimiter,
+	ignoredTaints taints.TaintKeySet,
+	podEquivalenceGroups []*podEquivalenceGroup,
+	gpuLabel string,
+	availableGPUTypes map[string]struct{},
+	skippedNodeGroups map[string]status.Reasons,
+	nodeGroups []cloudprovider.NodeGroup,
+	maxBulkScaleUpCount int,
+	now time.Time,
+	setPlan *SetExpansionPlan,
+) (*status.ScaleUpStatus, errors.AutoscalerError) {
+	bestOption := setPlan.BestOption
+	nodeInfo := setPlan.NodeInfo
+
+	klog.V(2).Infof(" Set %s: scaling NodeGroup %s by %d nodes",
+		setPlan.SetName, bestOption.NodeGroup.Id(), bestOption.NodeCount)
+
+	newNodes := bestOption.NodeCount
+
+	// Apply max nodes total limit
+	if context.MaxNodesTotal > 0 && len(nodes)+newNodes+len(upcomingNodes) > context.MaxNodesTotal {
+		klog.V(2).Infof("Set %s: capping size to max cluster total size (%d)",
+			setPlan.SetName, context.MaxNodesTotal)
+		newNodes = context.MaxNodesTotal - len(nodes) - len(upcomingNodes)
+		if newNodes < 1 {
+			klog.Warningf(" Set %s: max node total count already reached", setPlan.SetName)
+			return nil, errors.NewAutoscalerError(
+				errors.TransientError,
+				"max node total count already reached")
+		}
+	}
+
+	// Handle NodeGroup creation if needed
+	createNodeGroupResults := make([]nodegroups.CreateNodeGroupResult, 0)
+	if !bestOption.NodeGroup.Exist() {
+		klog.V(2).Infof("Set %s: creating new NodeGroup %s",
+			setPlan.SetName, bestOption.NodeGroup.Id())
+
+		createNodeGroupResult, asErr := processors.NodeGroupManager.CreateNodeGroup(
+			context.AutoscalingContext, bestOption.NodeGroup)
+		if asErr != nil {
+			return &status.ScaleUpStatus{
+				Result:                 status.ScaleUpError,
+				CreateNodeGroupResults: createNodeGroupResults,
+			}, asErr
+		}
+		createNodeGroupResults = append(createNodeGroupResults, createNodeGroupResult)
+		bestOption.NodeGroup = createNodeGroupResult.MainCreatedNodeGroup
+
+		// Update nodeInfo
+		mainCreatedNodeInfo, err := utils.GetNodeInfoFromTemplate(
+			createNodeGroupResult.MainCreatedNodeGroup,
+			daemonSets, context.PredicateChecker, ignoredTaints)
+		if err == nil {
+			nodeInfo = mainCreatedNodeInfo
+		}
+	}
+
+	// Apply resource limits
+	newNodes, err := applyScaleUpResourcesLimits(context.AutoscalingContext, processors, newNodes,
+		scaleUpResourcesLeft, nodeInfo, bestOption.NodeGroup, resourceLimiter)
+	if err != nil {
+		return &status.ScaleUpStatus{
+			Result:                 status.ScaleUpError,
+			CreateNodeGroupResults: createNodeGroupResults,
+		}, err
+	}
+
+	// Apply bulk scale-up limit
+	if maxBulkScaleUpCount > 0 && newNodes > maxBulkScaleUpCount {
+		klog.V(2).Infof("Set %s: capping newNodes(%d) to maxBulkScaleUpCount(%d)",
+			setPlan.SetName, newNodes, maxBulkScaleUpCount)
+		newNodes = maxBulkScaleUpCount
+	}
+
+	// Prepare target NodeGroups (with similar node group balancing if enabled)
+	targetNodeGroups := []cloudprovider.NodeGroup{bestOption.NodeGroup}
+	if context.BalanceSimilarNodeGroups {
+		similarNodeGroups, typedErr := processors.NodeGroupSetProcessor.FindSimilarNodeGroups(
+			context.AutoscalingContext, bestOption.NodeGroup, nodeInfos)
+		if typedErr != nil {
+			return &status.ScaleUpStatus{
+				Result:                 status.ScaleUpError,
+				CreateNodeGroupResults: createNodeGroupResults,
+			}, typedErr.AddPrefix("Failed to find matching node groups: ")
+		}
+
+		// Filter by safety
+		for _, ng := range similarNodeGroups {
+			if clusterStateRegistry.IsNodeGroupSafeToScaleUp(ng, now) {
+				targetNodeGroups = append(targetNodeGroups, ng)
+			}
+		}
+
+		if len(targetNodeGroups) > 1 {
+			klog.V(2).Infof("Set %s: balancing scale-up between %d similar node groups",
+				setPlan.SetName, len(targetNodeGroups))
+		}
+	}
+
+	// Balance scale-up between target NodeGroups
+	scaleUpInfos, typedErr := processors.NodeGroupSetProcessor.BalanceScaleUpBetweenGroups(
+		context.AutoscalingContext, targetNodeGroups, newNodes)
+	if typedErr != nil {
+		return &status.ScaleUpStatus{
+			Result:                 status.ScaleUpError,
+			CreateNodeGroupResults: createNodeGroupResults,
+		}, typedErr
+	}
+
+	klog.V(1).Infof("Set %s: final scale-up plan: %v", setPlan.SetName, scaleUpInfos)
+
+	// Execute scale-up
+	for _, info := range scaleUpInfos {
+		typedErr := executeScaleUp(context.AutoscalingContext, clusterStateRegistry, info,
+			gpu.GetGpuTypeForMetrics(gpuLabel, availableGPUTypes, nodeInfo.Node(), nil), now)
+		if typedErr != nil {
+			return &status.ScaleUpStatus{
+				Result:                 status.ScaleUpError,
+				CreateNodeGroupResults: createNodeGroupResults,
+			}, typedErr
+		}
+	}
+
+	clusterStateRegistry.Recalculate()
+
+	return &status.ScaleUpStatus{
+		Result:                  status.ScaleUpSuccessful,
+		ScaleUpInfos:            scaleUpInfos,
+		PodsRemainUnschedulable: getRemainingPods(podEquivalenceGroups, skippedNodeGroups),
+		ConsideredNodeGroups:    nodeGroups,
+		CreateNodeGroupResults:  createNodeGroupResults,
+		PodsTriggeredScaleUp:    bestOption.Pods,
+	}, nil
 }

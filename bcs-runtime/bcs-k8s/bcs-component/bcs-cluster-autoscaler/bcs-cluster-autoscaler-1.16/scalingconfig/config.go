@@ -33,4 +33,7 @@ type Options struct {
 	EvictLatest               bool
 	ScaleDownDelayAfterRemove time.Duration
 	BatchScaleUpCount         int
+
+	// NodeGroupSet 配置文件路径(可选)
+	NodeGroupSetConfigFile string
 }

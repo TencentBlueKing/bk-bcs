@@ -45,29 +45,35 @@ type WebScaler struct {
 	configmapLister     v1lister.ConfigMapNamespaceLister
 	maxBulkScaleUpCount int
 	batchScaleUpCount   int
+	scaleDownEnable     bool
 }
 
 // NewWebScaler initializes a WebScaler
 func NewWebScaler(kubeClient kubeclient.Interface, configNamespace, url, token string,
-	maxBulkScaleUpCount, batchScaleUpCount int) Webhook {
+	maxBulkScaleUpCount, batchScaleUpCount int, scaleDownEnable bool,
+) Webhook {
 	// nolint
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: false},
 	}
 	client := &http.Client{
 		Transport: tr,
-		Timeout:   5 * time.Second,
+		Timeout:   20 * time.Second,
 	}
 	stopChannel := make(chan struct{})
 	lister := kubernetes.NewConfigMapListerForNamespace(kubeClient, stopChannel, configNamespace)
-	return &WebScaler{url: url, token: token, client: client, configmapLister: lister.ConfigMaps(configNamespace),
-		maxBulkScaleUpCount: maxBulkScaleUpCount, batchScaleUpCount: batchScaleUpCount}
+	return &WebScaler{
+		url: url, token: token, client: client, configmapLister: lister.ConfigMaps(configNamespace),
+		maxBulkScaleUpCount: maxBulkScaleUpCount, batchScaleUpCount: batchScaleUpCount,
+		scaleDownEnable: scaleDownEnable,
+	}
 }
 
 // DoWebhook get responses from webhook, then execute scale based on responses
 func (w *WebScaler) DoWebhook(context *contextinternal.Context,
 	clusterStateRegistry *clusterstate.ClusterStateRegistry, sd *ScaleDown,
-	nodes []*corev1.Node, pods []*corev1.Pod) errors.AutoscalerError {
+	nodes []*corev1.Node, pods []*corev1.Pod,
+) errors.AutoscalerError {
 	nodeNameToNodeInfo := scheduler_util.CreateNodeNameToInfoMap(pods, nodes)
 
 	options, candidates, err := w.GetResponses(context, clusterStateRegistry,
@@ -95,7 +101,8 @@ func (w *WebScaler) DoWebhook(context *contextinternal.Context,
 func (w *WebScaler) GetResponses(context *contextinternal.Context,
 	clusterStateRegistry *clusterstate.ClusterStateRegistry,
 	nodeNameToNodeInfo map[string]*schedulerframework.NodeInfo,
-	nodes []*corev1.Node, sd *ScaleDown) (ScaleUpOptions, ScaleDownCandidates, error) {
+	nodes []*corev1.Node, sd *ScaleDown,
+) (ScaleUpOptions, ScaleDownCandidates, error) {
 	// get node group's priority
 	newPriorities, err := getPriority(w.configmapLister)
 	if err != nil {
@@ -152,7 +159,8 @@ func (w *WebScaler) ExecuteScale(context *contextinternal.Context,
 	clusterStateRegistry *clusterstate.ClusterStateRegistry,
 	sd *ScaleDown, nodes []*corev1.Node, options ScaleUpOptions,
 	candidates ScaleDownCandidates,
-	nodeNameToNodeInfo map[string]*schedulerframework.NodeInfo) error {
+	nodeNameToNodeInfo map[string]*schedulerframework.NodeInfo,
+) error {
 	err := ExecuteScaleUp(context, clusterStateRegistry, options, w.maxBulkScaleUpCount, w.batchScaleUpCount)
 	if err != nil {
 		return err
@@ -162,6 +170,11 @@ func (w *WebScaler) ExecuteScale(context *contextinternal.Context,
 	// 	klog.Infof("Scaling up node groups now, skip scaling down progress")
 	// 	return nil
 	// }
+
+	if !w.scaleDownEnable {
+		klog.Infof("Scaling down node groups is disabled, skip scaling down progress")
+		return nil
+	}
 
 	err = ExecuteScaleDown(context, sd, nodes, candidates, nodeNameToNodeInfo)
 	if err != nil {

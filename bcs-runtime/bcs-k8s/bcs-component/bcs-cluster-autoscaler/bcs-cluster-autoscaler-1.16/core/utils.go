@@ -58,6 +58,9 @@ const (
 	// nodeInstanceTypeEklet indicates the instance type of node is eklet
 	nodeInstanceTypeEklet = "eklet"
 
+	// bcsNodeGroupAnnoKey is the annotation key of node group
+	bcsNodeGroupAnnoKey = "bkbcs.tencent.com/nodegroup-id"
+
 	// How old the oldest unschedulable pod should be before starting scale up.
 	unschedulablePodTimeBuffer = 2 * time.Second
 	// How old the oldest unschedulable pod with GPU should be before starting scale up.
@@ -798,6 +801,14 @@ func getUpcomingNodeInfos(registry *clusterstate.ClusterStateRegistry,
 			klog.Warningf("Couldn't find template for node group %s", nodeGroup)
 			continue
 		}
+		// Initialize annotations if nil
+		if nodeTemplate.Node().Annotations == nil {
+			nodeTemplate.Node().Annotations = make(map[string]string)
+		}
+		nodeTemplate.Node().Annotations[NodeUpcomingAnnotation] = valueTrue
+		// Add NodeGroup ID annotation for NodeGroupSet resource calculation
+		nodeTemplate.Node().Annotations[bcsNodeGroupAnnoKey] = nodeGroup
+
 		for i := 0; i < numberOfNodes; i++ {
 			// Ensure new nodes having different names because nodeName would used as a map key.
 			upcomingNodes = append(upcomingNodes, buildNodeForNodeTemplate(nodeTemplate, i))
@@ -924,7 +935,7 @@ func singleNodeResource(info *schedulernodeinfo.NodeInfo) *schedulernodeinfo.Res
 			leftResource.ScalarResources[k] = allocatableEx - requestEx
 		}
 	}
-	klog.Infof("Node %v left resource %+v", info.Node().Name, leftResource)
+	klog.V(4).Infof("Node %v left resource %+v", info.Node().Name, leftResource)
 	return &leftResource
 }
 
@@ -951,4 +962,133 @@ func buildNodeInfos(nodes []*apiv1.Node, podsForNodes map[string][]*apiv1.Pod) m
 		results[node.Name] = result
 	}
 	return results
+}
+
+// getNodeInfosWithUpcoming returns nodeInfos map that includes both existing nodes and upcoming nodes.
+// It also simulates scheduling unschedulable pods onto upcoming nodes to accurately reflect
+// the expected resource utilization after the upcoming nodes join the cluster.
+// This is used for TakeResourceSnapshot to properly account for the capacity of nodes that are being
+// provisioned, avoiding unnecessary scale-up decisions when capacity is already on the way.
+//
+// Parameters:
+//   - listers: ListerRegistry to get existing node infos
+//   - registry: ClusterStateRegistry to get upcoming nodes count
+//   - nodeInfosForGroups: Node templates for each node group
+//   - predicateChecker: Used to check if pods can be scheduled on upcoming nodes
+//   - unschedulablePods: List of pods that are currently unschedulable and may be scheduled on upcoming nodes
+func getNodeInfosWithUpcoming(
+	listers kube_util.ListerRegistry,
+	registry *clusterstate.ClusterStateRegistry,
+	nodeInfosForGroups map[string]*schedulernodeinfo.NodeInfo,
+	predicateChecker *simulator.PredicateChecker,
+	unschedulablePods []*apiv1.Pod,
+) (map[string]*schedulernodeinfo.NodeInfo, errors.AutoscalerError) {
+	// Get existing node infos
+	nodeInfos, err := getNodeInfos(listers)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get upcoming nodes count per node group
+	upcomingNodesMap := registry.GetUpcomingNodes()
+	if len(upcomingNodesMap) == 0 {
+		klog.V(4).Infof("[getNodeInfosWithUpcoming] No upcoming nodes, returning existing nodeInfos only")
+		return nodeInfos, nil
+	}
+
+	// Build upcoming nodes and their nodeInfos
+	upcomingCount := 0
+	upcomingNodeInfos := make(map[string]*schedulernodeinfo.NodeInfo)
+
+	for nodeGroupID, numberOfNodes := range upcomingNodesMap {
+		nodeTemplate, found := nodeInfosForGroups[nodeGroupID]
+		if !found {
+			klog.Warningf("[getNodeInfosWithUpcoming] Couldn't find template for node group %s", nodeGroupID)
+			continue
+		}
+
+		// Create a deep copy of the template node
+		templateNode := nodeTemplate.Node().DeepCopy()
+		if templateNode.Annotations == nil {
+			templateNode.Annotations = make(map[string]string)
+		}
+		// Mark as upcoming node
+		templateNode.Annotations[NodeUpcomingAnnotation] = valueTrue
+		// Add NodeGroup ID annotation for NodeGroupSet resource calculation
+		templateNode.Annotations[bcsNodeGroupAnnoKey] = nodeGroupID
+
+		for i := 0; i < numberOfNodes; i++ {
+			// Create unique node name for each upcoming node
+			upcomingNode := templateNode.DeepCopy()
+			upcomingNode.Name = fmt.Sprintf("%s-upcoming-%d", nodeGroupID, i)
+			upcomingNode.UID = uuid.NewUUID()
+
+			// Create NodeInfo for upcoming node (initially with no pods)
+			upcomingNodeInfo := schedulernodeinfo.NewNodeInfo()
+			if setErr := upcomingNodeInfo.SetNode(upcomingNode); setErr != nil {
+				klog.Warningf("[getNodeInfosWithUpcoming] Failed to set node for upcoming node %s: %v",
+					upcomingNode.Name, setErr)
+				continue
+			}
+
+			nodeInfos[upcomingNode.Name] = upcomingNodeInfo
+			upcomingNodeInfos[upcomingNode.Name] = upcomingNodeInfo
+			upcomingCount++
+			klog.V(4).Infof("[getNodeInfosWithUpcoming] Added upcoming node %s from node group %s",
+				upcomingNode.Name, nodeGroupID)
+		}
+	}
+
+	// Simulate scheduling unschedulable pods onto upcoming nodes
+	// This helps accurately predict resource utilization after nodes join the cluster
+	if predicateChecker != nil && len(unschedulablePods) > 0 && len(upcomingNodeInfos) > 0 {
+		scheduledCount := simulateSchedulingOnUpcomingNodes(
+			unschedulablePods,
+			upcomingNodeInfos,
+			predicateChecker,
+		)
+		klog.V(3).Infof("[getNodeInfosWithUpcoming] Simulated scheduling %d pods onto %d upcoming nodes",
+			scheduledCount, len(upcomingNodeInfos))
+	}
+
+	klog.V(3).Infof("[getNodeInfosWithUpcoming] Total nodeInfos: %d (existing: %d, upcoming: %d)",
+		len(nodeInfos), len(nodeInfos)-upcomingCount, upcomingCount)
+
+	return nodeInfos, nil
+}
+
+// simulateSchedulingOnUpcomingNodes tries to schedule unschedulable pods onto upcoming nodes.
+// It modifies the upcomingNodeInfos in place by adding pods that can be scheduled.
+// Returns the number of pods that were successfully scheduled.
+func simulateSchedulingOnUpcomingNodes(
+	unschedulablePods []*apiv1.Pod,
+	upcomingNodeInfos map[string]*schedulernodeinfo.NodeInfo,
+	predicateChecker *simulator.PredicateChecker,
+) int {
+	if len(unschedulablePods) == 0 || len(upcomingNodeInfos) == 0 {
+		return 0
+	}
+
+	scheduledCount := 0
+
+	// Try to schedule each unschedulable pod onto one of the upcoming nodes
+	for _, pod := range unschedulablePods {
+		// Try to find an upcoming node that can accommodate this pod
+		nodeName, err := predicateChecker.FitsAny(pod, upcomingNodeInfos)
+		if err != nil {
+			// Pod cannot be scheduled on any upcoming node
+			klog.V(5).Infof("[simulateSchedulingOnUpcomingNodes] Pod %s/%s cannot fit on any upcoming node: %v",
+				pod.Namespace, pod.Name, err)
+			continue
+		}
+
+		// Pod can be scheduled on this upcoming node
+		// Add the pod to the node's info to account for its resource usage
+		upcomingNodeInfos[nodeName].AddPod(pod)
+		scheduledCount++
+		klog.V(4).Infof("[simulateSchedulingOnUpcomingNodes] Simulated scheduling pod %s/%s on upcoming node %s",
+			pod.Namespace, pod.Name, nodeName)
+	}
+
+	return scheduledCount
 }

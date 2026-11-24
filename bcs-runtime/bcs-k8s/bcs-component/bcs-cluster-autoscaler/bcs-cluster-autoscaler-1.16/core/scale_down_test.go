@@ -19,7 +19,6 @@ import (
 	"testing"
 	"time"
 
-	simulatorinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/simulator"
 	"github.com/stretchr/testify/assert"
 	batchv1 "k8s.io/api/batch/v1"
 	apiv1 "k8s.io/api/core/v1"
@@ -96,12 +95,16 @@ func TestFindUnneededNodes(t *testing.T) {
 	n7 := BuildTestNode("n7", 0, 10)
 	// Node being deleted.
 	n8 := BuildTestNode("n8", 1000, 10)
-	n8.Spec.Taints = []apiv1.Taint{{Key: deletetaint.ToBeDeletedTaint,
-		Value: strconv.FormatInt(time.Now().Unix()-301, 10)}}
+	n8.Spec.Taints = []apiv1.Taint{{
+		Key:   deletetaint.ToBeDeletedTaint,
+		Value: strconv.FormatInt(time.Now().Unix()-301, 10),
+	}}
 	// Nod being deleted recently.
 	n9 := BuildTestNode("n9", 1000, 10)
-	n9.Spec.Taints = []apiv1.Taint{{Key: deletetaint.ToBeDeletedTaint,
-		Value: strconv.FormatInt(time.Now().Unix()-60, 10)}}
+	n9.Spec.Taints = []apiv1.Taint{{
+		Key:   deletetaint.ToBeDeletedTaint,
+		Value: strconv.FormatInt(time.Now().Unix()-60, 10),
+	}}
 
 	SetNodeReadyState(n1, true, time.Time{})
 	SetNodeReadyState(n2, true, time.Time{})
@@ -133,7 +136,7 @@ func TestFindUnneededNodes(t *testing.T) {
 
 	clusterStateRegistry := clusterstate.NewClusterStateRegistry(provider, clusterstate.ClusterStateRegistryConfig{},
 		context.LogRecorder, newBackoff())
-	sd := NewScaleDown(&context, clusterStateRegistry, 0, 0, 0, true)
+	sd := NewScaleDown(&context, clusterStateRegistry, 0, 0, 0, true, nil)
 	allNodes := []*apiv1.Node{n1, n2, n3, n4, n5, n7, n8, n9}
 	err := sd.UpdateUnneededNodes(allNodes, allNodes, allNodes,
 		[]*apiv1.Pod{p1, p2, p3, p4, p5, p6}, time.Now(), nil, nil)
@@ -245,7 +248,7 @@ func TestFindUnneededGPUNodes(t *testing.T) {
 
 	clusterStateRegistry := clusterstate.NewClusterStateRegistry(provider, clusterstate.ClusterStateRegistryConfig{},
 		context.LogRecorder, newBackoff())
-	sd := NewScaleDown(&context, clusterStateRegistry, 0, 0, 0, true)
+	sd := NewScaleDown(&context, clusterStateRegistry, 0, 0, 0, true, nil)
 	allNodes := []*apiv1.Node{n1, n2, n3}
 	err := sd.UpdateUnneededNodes(allNodes, allNodes, allNodes,
 		[]*apiv1.Pod{p1, p2, p3}, time.Now(), nil, nil)
@@ -332,7 +335,7 @@ func TestPodsWithPrioritiesFindUnneededNodes(t *testing.T) {
 
 	clusterStateRegistry := clusterstate.NewClusterStateRegistry(provider, clusterstate.ClusterStateRegistryConfig{},
 		context.LogRecorder, newBackoff())
-	sd := NewScaleDown(&context, clusterStateRegistry, 0, 0, 0, true)
+	sd := NewScaleDown(&context, clusterStateRegistry, 0, 0, 0, true, nil)
 
 	allNodes := []*apiv1.Node{n1, n2, n3, n4}
 	err := sd.UpdateUnneededNodes(allNodes, allNodes, allNodes,
@@ -387,7 +390,7 @@ func TestFindUnneededMaxCandidates(t *testing.T) {
 
 	clusterStateRegistry := clusterstate.NewClusterStateRegistry(provider, clusterstate.ClusterStateRegistryConfig{},
 		context.LogRecorder, newBackoff())
-	sd := NewScaleDown(&context, clusterStateRegistry, 0, 0, 0, true)
+	sd := NewScaleDown(&context, clusterStateRegistry, 0, 0, 0, true, nil)
 
 	err := sd.UpdateUnneededNodes(nodes, nodes, nodes, pods, time.Now(), nil, nil)
 	if err != nil {
@@ -460,7 +463,7 @@ func TestFindUnneededEmptyNodes(t *testing.T) {
 
 	clusterStateRegistry := clusterstate.NewClusterStateRegistry(provider, clusterstate.ClusterStateRegistryConfig{},
 		context.LogRecorder, newBackoff())
-	sd := NewScaleDown(&context, clusterStateRegistry, 0, 0, 0, true)
+	sd := NewScaleDown(&context, clusterStateRegistry, 0, 0, 0, true, nil)
 
 	err := sd.UpdateUnneededNodes(nodes, nodes, nodes, pods, time.Now(), nil, nil)
 	if err != nil {
@@ -508,7 +511,7 @@ func TestFindUnneededNodePool(t *testing.T) {
 
 	clusterStateRegistry := clusterstate.NewClusterStateRegistry(provider, clusterstate.ClusterStateRegistryConfig{},
 		context.LogRecorder, newBackoff())
-	sd := NewScaleDown(&context, clusterStateRegistry, 0, 0, 0, true)
+	sd := NewScaleDown(&context, clusterStateRegistry, 0, 0, 0, true, nil)
 
 	err := sd.UpdateUnneededNodes(nodes, nodes, nodes, pods, time.Now(), nil, nil)
 	if err != nil {
@@ -519,14 +522,12 @@ func TestFindUnneededNodePool(t *testing.T) {
 
 func TestDeleteNode(t *testing.T) {
 	// common parameters
-	nodeDeleteFailedFunc :=
-		func(string, string) error {
-			return fmt.Errorf("won't remove node")
-		}
-	podNotFoundFunc :=
-		func(action core.Action) (bool, runtime.Object, error) {
-			return true, nil, errors.NewNotFound(apiv1.Resource("pod"), "whatever")
-		}
+	nodeDeleteFailedFunc := func(string, string) error {
+		return fmt.Errorf("won't remove node")
+	}
+	podNotFoundFunc := func(action core.Action) (bool, runtime.Object, error) {
+		return true, nil, errors.NewNotFound(apiv1.Resource("pod"), "whatever")
+	}
 
 	// scenarios
 	testScenarios := []struct {
@@ -602,11 +603,10 @@ func TestDeleteNode(t *testing.T) {
 			// set up fake provider
 			deleteNodeHandler := nodeDeleteFailedFunc
 			if scenario.nodeDeleteSuccess {
-				deleteNodeHandler =
-					func(nodeGroup string, node string) error {
-						deletedNodes <- node
-						return nil
-					}
+				deleteNodeHandler = func(nodeGroup string, node string) error {
+					deletedNodes <- node
+					return nil
+				}
 			}
 			provider := testprovider.NewTestCloudProvider(nil, deleteNodeHandler)
 			provider.AddNodeGroup("ng1", 1, 100, 100)
@@ -666,7 +666,7 @@ func TestDeleteNode(t *testing.T) {
 
 			clusterStateRegistry := clusterstate.NewClusterStateRegistry(provider, clusterstate.ClusterStateRegistryConfig{},
 				context.LogRecorder, newBackoff())
-			sd := NewScaleDown(&context, clusterStateRegistry, 0, 0, 0, true)
+			sd := NewScaleDown(&context, clusterStateRegistry, 0, 0, 0, true, nil)
 
 			// attempt delete
 			result := sd.deleteNode(n1, pods, provider.GetNodeGroup("ng1"))
@@ -1065,7 +1065,7 @@ func TestScaleDown(t *testing.T) {
 
 	clusterStateRegistry := clusterstate.NewClusterStateRegistry(provider, clusterstate.ClusterStateRegistryConfig{},
 		context.LogRecorder, newBackoff())
-	scaleDown := NewScaleDown(&context, clusterStateRegistry, 0, 0, 0, true)
+	scaleDown := NewScaleDown(&context, clusterStateRegistry, 0, 0, 0, true, nil)
 	err = scaleDown.UpdateUnneededNodes(nodes, nodes, nodes, []*apiv1.Pod{p1, p2, p3},
 		time.Now().Add(-5*time.Minute), nil, nil)
 	if err != nil {
@@ -1356,7 +1356,6 @@ func simpleScaleDownEmpty(t *testing.T, config *scaleTestConfig) {
 			return true, node, nil
 		}
 		return true, nil, fmt.Errorf("wrong node: %v", getAction.GetName())
-
 	})
 	fakeClient.Fake.AddReactor("update", "nodes", func(action core.Action) (bool, runtime.Object, error) {
 		update, ok := action.(core.UpdateAction)
@@ -1388,7 +1387,7 @@ func simpleScaleDownEmpty(t *testing.T, config *scaleTestConfig) {
 
 	clusterStateRegistry := clusterstate.NewClusterStateRegistry(provider, clusterstate.ClusterStateRegistryConfig{},
 		context.LogRecorder, newBackoff())
-	scaleDown := NewScaleDown(&context, clusterStateRegistry, 0, 0, 0, true)
+	scaleDown := NewScaleDown(&context, clusterStateRegistry, 0, 0, 0, true, nil)
 	if config.nodeDeletionTracker != nil {
 		scaleDown.nodeDeletionTracker = config.nodeDeletionTracker
 	}
@@ -1475,7 +1474,7 @@ func TestNoScaleDownUnready(t *testing.T) {
 	// N1 is unready so it requires a bigger unneeded time.
 	clusterStateRegistry := clusterstate.NewClusterStateRegistry(provider, clusterstate.ClusterStateRegistryConfig{},
 		context.LogRecorder, newBackoff())
-	scaleDown := NewScaleDown(&context, clusterStateRegistry, 0, 0, 0, true)
+	scaleDown := NewScaleDown(&context, clusterStateRegistry, 0, 0, 0, true, nil)
 	err := scaleDown.UpdateUnneededNodes(nodes, nodes, nodes,
 		[]*apiv1.Pod{p2}, time.Now().Add(-5*time.Minute), nil, nil)
 	if err != nil {
@@ -1500,7 +1499,7 @@ func TestNoScaleDownUnready(t *testing.T) {
 
 	// N1 has been unready for 2 hours, ok to delete.
 	context.CloudProvider = provider
-	scaleDown = NewScaleDown(&context, clusterStateRegistry, 0, 0, 0, true)
+	scaleDown = NewScaleDown(&context, clusterStateRegistry, 0, 0, 0, true, nil)
 	err = scaleDown.UpdateUnneededNodes(nodes, nodes, nodes,
 		[]*apiv1.Pod{p2}, time.Now().Add(-2*time.Hour), nil, nil)
 	if err != nil {
@@ -1591,7 +1590,7 @@ func TestScaleDownNoMove(t *testing.T) {
 
 	clusterStateRegistry := clusterstate.NewClusterStateRegistry(provider, clusterstate.ClusterStateRegistryConfig{},
 		context.LogRecorder, newBackoff())
-	scaleDown := NewScaleDown(&context, clusterStateRegistry, 0, 0, 0, true)
+	scaleDown := NewScaleDown(&context, clusterStateRegistry, 0, 0, 0, true, nil)
 	err = scaleDown.UpdateUnneededNodes(nodes, nodes, nodes,
 		[]*apiv1.Pod{p1, p2}, time.Now().Add(5*time.Minute), nil, nil)
 	if err != nil {
@@ -1850,7 +1849,7 @@ func TestSoftTaint(t *testing.T) {
 
 	clusterStateRegistry := clusterstate.NewClusterStateRegistry(provider, clusterstate.ClusterStateRegistryConfig{},
 		context.LogRecorder, newBackoff())
-	scaleDown := NewScaleDown(&context, clusterStateRegistry, 0, 0, 0, true)
+	scaleDown := NewScaleDown(&context, clusterStateRegistry, 0, 0, 0, true, nil)
 
 	// Test no superfluous nodes
 	nodes := []*apiv1.Node{n1000, n2000}
@@ -1976,7 +1975,7 @@ func TestSoftTaintTimeLimit(t *testing.T) {
 
 	clusterStateRegistry := clusterstate.NewClusterStateRegistry(provider, clusterstate.ClusterStateRegistryConfig{},
 		context.LogRecorder, newBackoff())
-	scaleDown := NewScaleDown(&context, clusterStateRegistry, 0, 0, 0, true)
+	scaleDown := NewScaleDown(&context, clusterStateRegistry, 0, 0, 0, true, nil)
 
 	// Test bulk taint
 	nodes := []*apiv1.Node{n1, n2}
@@ -2094,57 +2093,50 @@ func TestWaitForDelayDeletion(t *testing.T) {
 }
 
 func Test_sortNodesByDeletionCost(t *testing.T) {
-	node1 := simulatorinternal.NodeToBeRemoved{
-		Node: &apiv1.Node{
-			ObjectMeta: metav1.ObjectMeta{
-				Annotations: map[string]string{
-					NodeDeletionCost: "100",
-				},
+	node1 := &apiv1.Node{
+		ObjectMeta: metav1.ObjectMeta{
+			Annotations: map[string]string{
+				NodeDeletionCost: "100",
 			},
 		},
 	}
-	node2 := simulatorinternal.NodeToBeRemoved{
-		Node: &apiv1.Node{
-			ObjectMeta: metav1.ObjectMeta{
-				Annotations: map[string]string{
-					NodeDeletionCost: "200",
-				},
+
+	node2 := &apiv1.Node{
+		ObjectMeta: metav1.ObjectMeta{
+			Annotations: map[string]string{
+				NodeDeletionCost: "200",
 			},
 		},
 	}
-	node3 := simulatorinternal.NodeToBeRemoved{
-		Node: &apiv1.Node{
-			ObjectMeta: metav1.ObjectMeta{
-				Annotations: map[string]string{
-					"xx": "200",
-				},
+	node3 := &apiv1.Node{
+		ObjectMeta: metav1.ObjectMeta{
+			Annotations: map[string]string{
+				"xx": "200",
 			},
 		},
 	}
-	node4 := simulatorinternal.NodeToBeRemoved{
-		Node: &apiv1.Node{
-			ObjectMeta: metav1.ObjectMeta{
-				Annotations: map[string]string{
-					NodeDeletionCost: "150.123",
-				},
+	node4 := &apiv1.Node{
+		ObjectMeta: metav1.ObjectMeta{
+			Annotations: map[string]string{
+				NodeDeletionCost: "150.123",
 			},
 		},
 	}
 	type args struct {
-		nodes []simulatorinternal.NodeToBeRemoved
+		nodes []*apiv1.Node
 	}
 	tests := []struct {
 		name string
 		args args
-		want []simulatorinternal.NodeToBeRemoved
+		want []*apiv1.Node
 	}{
 		// DOTO: Add test cases.
 		{
 			name: "sort nodes with cost",
 			args: args{
-				nodes: []simulatorinternal.NodeToBeRemoved{node1, node2, node3, node4},
+				nodes: []*apiv1.Node{node1, node2, node3, node4},
 			},
-			want: []simulatorinternal.NodeToBeRemoved{node3, node1, node4, node2},
+			want: []*apiv1.Node{node3, node1, node4, node2},
 		},
 	}
 	for _, tt := range tests {

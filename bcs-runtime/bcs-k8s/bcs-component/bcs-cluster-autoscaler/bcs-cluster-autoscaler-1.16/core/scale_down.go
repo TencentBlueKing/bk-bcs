@@ -64,6 +64,8 @@ const (
 	NodeDeleteErrorFailedToEvictPods = "FailedToEvictPods"
 	// NodeDeleteErrorFailedToMarkToBeDeleted indicates the reson is FailedToMarkToBeDeleted
 	NodeDeleteErrorFailedToMarkToBeDeleted = "FailedToMarkToBeDeleted"
+	// BufferNotEnough - node can't be removed because of buffer ratio
+	BufferNotEnough = "BufferNotEnough"
 )
 
 const (
@@ -181,15 +183,18 @@ func (n *NodeDeletionTracker) GetAndClearNodeDeleteResults() map[string]status.N
 	return results
 }
 
-type scaleDownResourcesLimits map[string]int64
-type scaleDownResourcesDelta map[string]int64
+type (
+	scaleDownResourcesLimits map[string]int64
+	scaleDownResourcesDelta  map[string]int64
+)
 
 // used as a value in scaleDownResourcesLimits if actual limit could not be obtained
 // due to errors talking to cloud provider
 const scaleDownLimitUnknown = math.MinInt64
 
 func computeScaleDownResourcesLeftLimits(nodes []*apiv1.Node, resourceLimiter *cloudprovider.ResourceLimiter,
-	cp cloudprovider.CloudProvider, timestamp time.Time) scaleDownResourcesLimits {
+	cp cloudprovider.CloudProvider, timestamp time.Time,
+) scaleDownResourcesLimits {
 	totalCores, totalMem := calculateScaleDownCoresMemoryTotal(nodes, timestamp)
 
 	var totalGpus map[string]int64
@@ -228,7 +233,6 @@ func computeAboveMin(total int64, min int64) int64 {
 		return total - min
 	}
 	return 0
-
 }
 
 func calculateScaleDownCoresMemoryTotal(nodes []*apiv1.Node, timestamp time.Time) (int64, int64) {
@@ -248,7 +252,8 @@ func calculateScaleDownCoresMemoryTotal(nodes []*apiv1.Node, timestamp time.Time
 }
 
 func calculateScaleDownGpusTotal(nodes []*apiv1.Node, cp cloudprovider.CloudProvider,
-	timestamp time.Time) (map[string]int64, error) {
+	timestamp time.Time,
+) (map[string]int64, error) {
 	type gpuInfo struct {
 		name  string
 		count int64
@@ -325,7 +330,8 @@ func copyScaleDownResourcesLimits(source scaleDownResourcesLimits) scaleDownReso
 }
 
 func computeScaleDownResourcesDelta(cp cloudprovider.CloudProvider, node *apiv1.Node, nodeGroup cloudprovider.NodeGroup,
-	resourcesWithLimits []string) (scaleDownResourcesDelta, errors.AutoscalerError) {
+	resourcesWithLimits []string,
+) (scaleDownResourcesDelta, errors.AutoscalerError) {
 	resultScaleDownDelta := make(scaleDownResourcesDelta)
 
 	nodeCPU, nodeMemory := getNodeCoresAndMemory(node)
@@ -353,7 +359,8 @@ func scaleDownLimitsNotExceeded() scaleDownLimitsCheckResult {
 }
 
 func (limits *scaleDownResourcesLimits) checkScaleDownDeltaWithinLimits(
-	delta scaleDownResourcesDelta) scaleDownLimitsCheckResult {
+	delta scaleDownResourcesDelta,
+) scaleDownLimitsCheckResult {
 	exceededResources := sets.NewString()
 	for resource, resourceDelta := range delta {
 		resourceLeft, found := (*limits)[resource]
@@ -371,7 +378,8 @@ func (limits *scaleDownResourcesLimits) checkScaleDownDeltaWithinLimits(
 }
 
 func (limits *scaleDownResourcesLimits) tryDecrementLimitsByDelta(
-	delta scaleDownResourcesDelta) scaleDownLimitsCheckResult {
+	delta scaleDownResourcesDelta,
+) scaleDownLimitsCheckResult {
 	result := limits.checkScaleDownDeltaWithinLimits(delta)
 	if result.exceeded {
 		return result
@@ -400,25 +408,37 @@ type ScaleDown struct {
 	memRatio             float64
 	ratio                float64
 	evictLatest          bool
+
+	// NodeGroupSet 管理器
+	nodeGroupSetManager *NodeGroupSetManager
+
+	// 资源快照缓存,用于 Scale-Down 时的性能优化
+	cachedSnapshot *SetResourceSnapshot
+
+	// podsToRescheduleCache 缓存每个 unneeded 节点需要重调度的 Pods
+	podsToRescheduleCache map[string][]*apiv1.Pod
 }
 
 // NewScaleDown builds new ScaleDown object.
 func NewScaleDown(context *context.Context, clusterStateRegistry *clusterstate.ClusterStateRegistry,
-	cpuRatio, memRatio, ratio float64, evictLatest bool) *ScaleDown {
+	cpuRatio, memRatio, ratio float64, evictLatest bool, nodeGroupSetManager *NodeGroupSetManager,
+) *ScaleDown {
 	return &ScaleDown{
-		context:              context,
-		clusterStateRegistry: clusterStateRegistry,
-		unneededNodes:        make(map[string]time.Time),
-		unremovableNodes:     make(map[string]time.Time),
-		podLocationHints:     make(map[string]string),
-		nodeUtilizationMap:   make(map[string]simulatorinternal.UtilizationInfo),
-		usageTracker:         simulatorinternal.NewUsageTracker(),
-		unneededNodesList:    make([]*apiv1.Node, 0),
-		nodeDeletionTracker:  NewNodeDeletionTracker(),
-		cpuRatio:             cpuRatio,
-		memRatio:             memRatio,
-		ratio:                ratio,
-		evictLatest:          evictLatest,
+		context:               context,
+		clusterStateRegistry:  clusterStateRegistry,
+		unneededNodes:         make(map[string]time.Time),
+		unremovableNodes:      make(map[string]time.Time),
+		podLocationHints:      make(map[string]string),
+		nodeUtilizationMap:    make(map[string]simulatorinternal.UtilizationInfo),
+		usageTracker:          simulatorinternal.NewUsageTracker(),
+		unneededNodesList:     make([]*apiv1.Node, 0),
+		nodeDeletionTracker:   NewNodeDeletionTracker(),
+		cpuRatio:              cpuRatio,
+		memRatio:              memRatio,
+		ratio:                 ratio,
+		evictLatest:           evictLatest,
+		nodeGroupSetManager:   nodeGroupSetManager,
+		podsToRescheduleCache: make(map[string][]*apiv1.Pod),
 	}
 }
 
@@ -448,6 +468,7 @@ func (sd *ScaleDown) CleanUpUnneededNodes() {
 // * timestamp is the current timestamp.
 // * pdbs is a list of pod disruption budgets.
 // * tempNodesPerNodeGroup is a map of node group id and the number of temporary nodes that node group contains.
+// NOCC:golint/fnsize(设计如此)
 // nolint
 func (sd *ScaleDown) UpdateUnneededNodes(
 	allNodes []*apiv1.Node,
@@ -456,8 +477,8 @@ func (sd *ScaleDown) UpdateUnneededNodes(
 	pods []*apiv1.Pod,
 	timestamp time.Time,
 	pdbs []*policyv1.PodDisruptionBudget,
-	tempNodesPerNodeGroup map[string]int) errors.AutoscalerError {
-
+	tempNodesPerNodeGroup map[string]int,
+) errors.AutoscalerError {
 	// currentlyUnneededNodes := make([]*apiv1.Node, 0)
 	// Only scheduled non expendable pods and pods waiting for lower priority pods preemption can prevent node delete.
 	nonExpendablePods := filterOutExpendablePods(pods, sd.context.ExpendablePodsPriorityCutoff)
@@ -515,7 +536,7 @@ func (sd *ScaleDown) UpdateUnneededNodes(
 	}
 
 	nodesToRemove, unremovable, newHints, simulatorErr = sd.findAdditionalCandidates(nodesToRemove,
-		unremovable, currentCandidates, currentNonCandidates, allNodes, destinationNodes, nonExpendablePods,
+		unremovable, currentNonCandidates, allNodes, destinationNodes, nonExpendablePods,
 		timestamp, pdbs, newHints)
 	if simulatorErr != nil {
 		return simulatorErr
@@ -565,6 +586,17 @@ func (sd *ScaleDown) UpdateUnneededNodes(
 			len(unremovable), unremovableTimeout)
 	}
 
+	// 缓存每个节点的 PodsToReschedule,避免在预过滤时重复计算
+	sd.podsToRescheduleCache = make(map[string][]*apiv1.Pod)
+	for _, nodeToRemove := range nodesToRemove {
+		sd.podsToRescheduleCache[nodeToRemove.Node.Name] = nodeToRemove.PodsToReschedule
+	}
+	for _, node := range emptyNodesList {
+		sd.podsToRescheduleCache[node.Name] = []*apiv1.Pod{}
+	}
+	klog.V(4).Infof("Cached PodsToReschedule for %d unneeded nodes (including %d empty nodes)",
+		len(sd.podsToRescheduleCache), len(emptyNodesList))
+
 	// Update state and metrics
 	sd.unneededNodesList = unneededNodesList
 	sd.unneededNodes = result
@@ -577,7 +609,8 @@ func (sd *ScaleDown) UpdateUnneededNodes(
 
 func (sd *ScaleDown) checkFilteredNodes(filteredNodesToCheck []*apiv1.Node, timestamp time.Time,
 	nodeNameToNodeInfo map[string]*nodeinfo.NodeInfo) (map[string]simulatorinternal.UtilizationInfo,
-	[]*apiv1.Node) {
+	[]*apiv1.Node,
+) {
 	utilizationMap := make(map[string]simulatorinternal.UtilizationInfo)
 	currentlyUnneededNodes := make([]*apiv1.Node, 0)
 
@@ -627,11 +660,12 @@ func (sd *ScaleDown) checkFilteredNodes(filteredNodesToCheck []*apiv1.Node, time
 
 // nolint `currentCandidates` is unused
 func (sd *ScaleDown) findAdditionalCandidates(nodesToRemove []simulator.NodeToBeRemoved,
-	unremovable []*simulator.UnremovableNode, currentCandidates []*apiv1.Node,
+	unremovable []*simulator.UnremovableNode,
 	currentNonCandidates []*apiv1.Node, allNodes []*apiv1.Node, destinationNodes []*apiv1.Node,
 	nonExpendablePods []*apiv1.Pod, timestamp time.Time, pdbs []*policyv1.PodDisruptionBudget,
 	newHints map[string]string) ([]simulator.NodeToBeRemoved, []*simulator.UnremovableNode,
-	map[string]string, errors.AutoscalerError) {
+	map[string]string, errors.AutoscalerError,
+) {
 	additionalCandidatesCount := sd.context.ScaleDownNonEmptyCandidatesCount - len(nodesToRemove)
 	if additionalCandidatesCount > len(currentNonCandidates) {
 		additionalCandidatesCount = len(currentNonCandidates)
@@ -647,10 +681,9 @@ func (sd *ScaleDown) findAdditionalCandidates(nodesToRemove []simulator.NodeToBe
 	if additionalCandidatesCount > 0 {
 		// Look for additional nodes to remove among the rest of nodes.
 		klog.V(3).Infof("Finding additional %v candidates for scale down.", additionalCandidatesCount)
-		additionalNodesToRemove, additionalUnremovable, additionalNewHints, simulatorErr :=
-			simulator.FindNodesToRemove(currentNonCandidates[:additionalCandidatesPoolSize], destinationNodes,
-				nonExpendablePods, nil, sd.context.PredicateChecker, additionalCandidatesCount, true,
-				sd.podLocationHints, sd.usageTracker, timestamp, pdbs)
+		additionalNodesToRemove, additionalUnremovable, additionalNewHints, simulatorErr := simulator.FindNodesToRemove(currentNonCandidates[:additionalCandidatesPoolSize], destinationNodes,
+			nonExpendablePods, nil, sd.context.PredicateChecker, additionalCandidatesCount, true,
+			sd.podLocationHints, sd.usageTracker, timestamp, pdbs)
 		if simulatorErr != nil {
 			return nodesToRemove, unremovable, newHints, sd.markSimulationError(simulatorErr, timestamp)
 		}
@@ -705,7 +738,8 @@ func (sd *ScaleDown) updateUnremovableNodes(nodes []*apiv1.Node) {
 // markSimulationError indicates a simulation error by clearing  relevant scale
 // down state and returning an appropriate error.
 func (sd *ScaleDown) markSimulationError(simulatorErr errors.AutoscalerError,
-	timestamp time.Time) errors.AutoscalerError {
+	timestamp time.Time,
+) errors.AutoscalerError {
 	klog.Errorf("Error while simulating node drains: %v", simulatorErr)
 	sd.unneededNodesList = make([]*apiv1.Node, 0)
 	sd.unneededNodes = make(map[string]time.Time)
@@ -736,7 +770,8 @@ func (sd *ScaleDown) chooseCandidates(nodes []*apiv1.Node) ([]*apiv1.Node, []*ap
 }
 
 func (sd *ScaleDown) mapNodesToStatusScaleDownNodes(nodes []*apiv1.Node, nodeGroups map[string]cloudprovider.NodeGroup,
-	evictedPodLists map[string][]*apiv1.Pod) []*status.ScaleDownNode {
+	evictedPodLists map[string][]*apiv1.Pod,
+) []*status.ScaleDownNode {
 	var result []*status.ScaleDownNode
 	for _, node := range nodes {
 		result = append(result, &status.ScaleDownNode{
@@ -795,10 +830,12 @@ func (sd *ScaleDown) SoftTaintUnneededNodes(allNodes []*apiv1.Node) (errors []er
 
 // TryToScaleDown tries to scale down the cluster. It returns a result inside a ScaleDownStatus indicating
 // if any node was removed and error if such occurred.
+// NOCC:golint/fnsize(设计如此)
 // nolint
 func (sd *ScaleDown) TryToScaleDown(allNodes []*apiv1.Node, pods []*apiv1.Pod,
 	pdbs []*policyv1.PodDisruptionBudget, currentTime time.Time, tempNodes []*apiv1.Node,
-	tempNodesPerNodeGroup map[string]int) (*status.ScaleDownStatus, errors.AutoscalerError) {
+	tempNodesPerNodeGroup map[string]int,
+) (*status.ScaleDownStatus, errors.AutoscalerError) {
 	scaleDownStatus := &status.ScaleDownStatus{NodeDeleteResults: sd.nodeDeletionTracker.GetAndClearNodeDeleteResults()}
 	nodeDeletionDuration := time.Duration(0)
 	findNodesToRemoveDuration := time.Duration(0)
@@ -831,7 +868,7 @@ func (sd *ScaleDown) TryToScaleDown(allNodes []*apiv1.Node, pods []*apiv1.Pod,
 			var checkErr error
 			var nodeGroup cloudprovider.NodeGroup
 			readinessMap, nodeGroup, checkErr = sd.checkNodeRemovable(node, val, currentTime,
-				nodeGroupSize, resourceLimiter, resourcesWithLimits, scaleDownResourcesLeft, readinessMap)
+				nodeGroupSize, resourcesWithLimits, scaleDownResourcesLeft, readinessMap)
 			if checkErr != nil {
 				klog.Warningf(checkErr.Error())
 				continue
@@ -860,7 +897,7 @@ func (sd *ScaleDown) TryToScaleDown(allNodes []*apiv1.Node, pods []*apiv1.Pod,
 	if len(emptyNodes) > 0 {
 		klog.Infof("%d empty node", len(emptyNodes))
 		// filter empty nodes with ratio
-		emptyNodesAfterFilter := sd.filterNodes(emptyNodes, nodesWithoutMaster, pods)
+		emptyNodesAfterFilter := sd.filterNodes(emptyNodes, nodesWithoutMaster, nil)
 		klog.Infof("%d empty node after filter", len(emptyNodesAfterFilter))
 		emptyNodes = emptyNodesAfterFilter
 		if len(emptyNodes) == 0 {
@@ -892,8 +929,43 @@ func (sd *ScaleDown) TryToScaleDown(allNodes []*apiv1.Node, pods []*apiv1.Pod,
 	// Only scheduled non expendable pods are taken into account and have to be moved.
 	nonExpendablePods := filterOutExpendablePods(pods, sd.context.ExpendablePodsPriorityCutoff)
 	klog.Infof("Call FindNodesToRemove to find removable nodes")
+
+	// 构建候选节点名称列表
+	candidateNames := make([]string, 0, len(candidates))
+	for _, c := range candidates {
+		candidateNames = append(candidateNames, c.Name)
+	}
+
+	// 预过滤: 按 Set 分组进行 buffer 检查,避免重复选择无法删除的 Set 的节点
+	podsToRescheduleMap := sd.podsToRescheduleCache
+	bufferValidCandidateNames := sd.preFilterCandidatesBySetBuffer(candidateNames, podsToRescheduleMap)
+
+	// 如果没有通过预过滤的候选节点,直接返回
+	if len(bufferValidCandidateNames) == 0 {
+		klog.V(1).Infof("No candidates passed buffer pre-filter")
+		scaleDownStatus.Result = status.ScaleDownNoNodeDeleted
+		return scaleDownStatus, nil
+	}
+
+	klog.V(2).Infof("Buffer pre-filter: %d candidates passed (from %d total)",
+		len(bufferValidCandidateNames), len(candidateNames))
+
+	// 根据预过滤结果过滤候选节点
+	bufferValidCandidates := make([]*apiv1.Node, 0, len(bufferValidCandidateNames))
+	validNameSet := make(map[string]bool)
+	for _, name := range bufferValidCandidateNames {
+		validNameSet[name] = true
+	}
+	for _, c := range candidates {
+		if validNameSet[c.Name] {
+			bufferValidCandidates = append(bufferValidCandidates, c)
+		}
+	}
+	// add sort based on NodeDeletionCost
+	bufferValidCandidates = sortNodesByDeletionCost(bufferValidCandidates)
 	// We look for only 1 node so new hints may be incomplete.
-	nodesToRemove, unremovable, _, err := simulator.FindNodesToRemove(candidates, nodesWithoutMaster, nonExpendablePods,
+	nodesToRemove, unremovable, _, err := simulator.FindNodesToRemove(
+		bufferValidCandidates, nodesWithoutMaster, nonExpendablePods,
 		sd.context.ListerRegistry, sd.context.PredicateChecker, 1, false,
 		sd.podLocationHints, sd.usageTracker, time.Now(), pdbs)
 	findNodesToRemoveDuration = time.Since(findNodesToRemoveStart)
@@ -905,7 +977,6 @@ func (sd *ScaleDown) TryToScaleDown(allNodes []*apiv1.Node, pods []*apiv1.Pod,
 		} else {
 			metrics.UpdateUnremovableNodes(un.Node.Name, string(un.Reason), "", "")
 		}
-
 	}
 	if err != nil {
 		scaleDownStatus.Result = status.ScaleDownError
@@ -916,11 +987,9 @@ func (sd *ScaleDown) TryToScaleDown(allNodes []*apiv1.Node, pods []*apiv1.Pod,
 		scaleDownStatus.Result = status.ScaleDownNoNodeDeleted
 		return scaleDownStatus, nil
 	}
-	// DOTO: add sort based on NodeDeletionCost
-	nodesToRemove = sortNodesByDeletionCost(nodesToRemove)
 
 	toRemove := nodesToRemove[0]
-	nodesAfterFilter := sd.filterNodes([]*apiv1.Node{toRemove.Node}, nodesWithoutMaster, pods)
+	nodesAfterFilter := sd.filterNodes([]*apiv1.Node{toRemove.Node}, nodesWithoutMaster, toRemove.PodsToReschedule)
 	if len(nodesAfterFilter) == 0 {
 		scaleDownStatus.Result = status.ScaleDownNoNodeDeleted
 		return scaleDownStatus, nil
@@ -975,9 +1044,21 @@ func (sd *ScaleDown) TryToScaleDown(allNodes []*apiv1.Node, pods []*apiv1.Pod,
 	return scaleDownStatus, nil
 }
 
+// nolint
 func (sd *ScaleDown) filterNodes(nodes, nodesWithoutMaster []*apiv1.Node, pods []*apiv1.Pod) []*apiv1.Node {
 	nodesAfterFilter := make([]*apiv1.Node, 0, len(nodes))
 	nodeInfos := buildNodeInfos(nodesWithoutMaster, getPodsInfos(pods))
+
+	// 如果启用了 NodeGroupSet 管理,需要深拷贝快照以支持累积模拟删除
+	var workingSnapshot *SetResourceSnapshot
+	if sd.nodeGroupSetManager != nil {
+		if sd.cachedSnapshot != nil {
+			workingSnapshot = sd.cachedSnapshot.DeepCopy()
+			klog.V(4).Infof("[ScaleDown] Using cached resource snapshot (timestamp: %v, %d nodes)",
+				workingSnapshot.Timestamp, len(workingSnapshot.NodeToGroup))
+		}
+	}
+
 	for _, node := range nodes {
 		// 被移除的节点需有 DeletionCandidateTaint 或 ToBeDeletedTaint 阻止新 Pod 调度，减少极端情况
 		// 否则移到下一轮循环再判断
@@ -985,18 +1066,113 @@ func (sd *ScaleDown) filterNodes(nodes, nodesWithoutMaster []*apiv1.Node, pods [
 			klog.Infof("empty node %s should be deleted after DeletionCandidateTaint or ToBeDeletedTaint", node.Name)
 			continue
 		}
-		// filter empty nodes with ratio
-		pods := nodeInfos[node.Name]
-		delete(nodeInfos, node.Name)
-		if checkResourceNotEnough(nodeInfos, nil, sd.cpuRatio, sd.memRatio, sd.ratio) {
-			nodeInfos[node.Name] = pods
-			klog.Infof("Skip node %v due to left resource ratio", node.Name)
-			metrics.UpdateUnremovableNodes(node.Name, string(simulator.BufferNotEnough), "", "")
-			continue
+
+		// 如果启用了 NodeGroupSet 管理
+		if sd.nodeGroupSetManager != nil && workingSnapshot != nil {
+			// 从 workingSnapshot 中获取该节点所属的 NodeGroup ID
+			nodeGroupID, exists := workingSnapshot.NodeToGroup[node.Name]
+			if !exists {
+				klog.V(4).Infof("Node %s not found in snapshot NodeToGroup mapping", node.Name)
+				continue
+			}
+
+			// 查找节点所属的 Set
+			setName := sd.nodeGroupSetManager.GetNodeGroupSet(nodeGroupID)
+			if setName == "" {
+				klog.Warningf("Node %s NodeGroup %s has no Set assignment", node.Name, nodeGroupID)
+				continue
+			}
+
+			// 模拟移除该节点后的资源状态
+			// 注意: GlobalSet 和具体 Set 统一使用 SimulateNodeRemoval
+			setResourceInfoAfterRemoval, err := sd.nodeGroupSetManager.SimulateNodeRemoval(
+				setName, workingSnapshot, node.Name, sd.podsToRescheduleCache[node.Name])
+			if err != nil {
+				klog.V(4).Infof("Failed to simulate node removal for %s: %v", node.Name, err)
+				continue
+			}
+
+			// 获取阈值
+			cpuThreshold, memThreshold, err := sd.getBufferThresholds(setName)
+			if err != nil {
+				klog.Errorf("Failed to get buffer thresholds for set %s: %v", setName, err)
+				continue
+			}
+
+			// 检查移除该节点后是否会导致资源缓冲不足
+			cpuAvailableRatio := 1.0 - setResourceInfoAfterRemoval.CPUUsageRatio
+			memAvailableRatio := 1.0 - setResourceInfoAfterRemoval.MemUsageRatio
+
+			bufferNotEnough := false
+			if cpuThreshold > 0 && cpuAvailableRatio < cpuThreshold {
+				klog.V(2).Infof("[NodeGroupSet] Cannot remove node %s from set %s: CPU buffer insufficient"+
+					" (available %.2f%% < threshold %.2f%%)",
+					node.Name, setName, cpuAvailableRatio*100, cpuThreshold*100)
+				bufferNotEnough = true
+			}
+			if memThreshold > 0 && memAvailableRatio < memThreshold {
+				klog.V(2).Infof("[NodeGroupSet] Cannot remove node %s from set %s: Memory buffer insufficient"+
+					" (available %.2f%% < threshold %.2f%%)",
+					node.Name, setName, memAvailableRatio*100, memThreshold*100)
+				bufferNotEnough = true
+			}
+
+			if bufferNotEnough {
+				currentTime := time.Now()
+				unremovableTimeout := currentTime.Add(sd.context.AutoscalingOptions.UnremovableNodeRecheckTimeout)
+				sd.unremovableNodes[node.Name] = unremovableTimeout
+				metrics.UpdateUnremovableNodes(node.Name, BufferNotEnough, setName, "")
+				continue
+			}
+
+			// 通过检查,可以移除该节点
+			klog.V(4).Infof("[NodeGroupSet] Node %s in set %s passed buffer check: CPU available %.2f%%, Mem available %.2f%%",
+				node.Name, setName, cpuAvailableRatio*100, memAvailableRatio*100)
+
+			// 更新 workingSnapshot,累积此节点删除的效果
+			workingSnapshot.UpdateSetResourceInfo(setName, setResourceInfoAfterRemoval)
+			// GlobalSet 也需要更新,因为 GlobalSet 包含所有节点
+			if setName != GlobalSetName {
+				// 同时更新 GlobalSet 的资源状态
+				globalInfoAfterRemoval, err := sd.nodeGroupSetManager.SimulateNodeRemoval(
+					GlobalSetName, workingSnapshot, node.Name, sd.podsToRescheduleCache[node.Name])
+				if err == nil {
+					workingSnapshot.UpdateSetResourceInfo(GlobalSetName, globalInfoAfterRemoval)
+				}
+			}
+			workingSnapshot.RemoveNodeFromSnapshot(node.Name)
+			klog.V(4).Infof("[NodeGroupSet] Updated working snapshot after simulating removal of %s", node.Name)
+
+		} else {
+			// 兼容旧逻辑:使用全局的 buffered ratio
+			nodePods := nodeInfos[node.Name]
+			delete(nodeInfos, node.Name)
+			if checkResourceNotEnough(nodeInfos, pods, sd.cpuRatio, sd.memRatio, sd.ratio) {
+				nodeInfos[node.Name] = nodePods
+				klog.Infof("Skip node %v due to left resource ratio", node.Name)
+				currentTime := time.Now()
+				unremovableTimeout := currentTime.Add(sd.context.AutoscalingOptions.UnremovableNodeRecheckTimeout)
+				sd.unremovableNodes[node.Name] = unremovableTimeout
+				metrics.UpdateUnremovableNodes(node.Name, string(simulator.BufferNotEnough), "", "")
+				continue
+			}
 		}
 		nodesAfterFilter = append(nodesAfterFilter, node)
 	}
 	return nodesAfterFilter
+}
+
+// getBufferThresholds 获取指定 Set 的 buffer threshold
+// 对于 GlobalSet 返回全局配置，对于具体 Set 返回 Set 配置
+func (sd *ScaleDown) getBufferThresholds(setName string) (cpuThreshold, memThreshold float64, err error) {
+	if setName == GlobalSetName {
+		return sd.cpuRatio, sd.memRatio, nil
+	}
+	setConfig, err := sd.nodeGroupSetManager.GetSetConfig(setName)
+	if err != nil {
+		return 0, 0, err
+	}
+	return setConfig.BufferedRatios.CPURatio, setConfig.BufferedRatios.MemRatio, nil
 }
 
 func getTempNodesPerNodeGroup(cp cloudprovider.CloudProvider, tempNodes []*apiv1.Node) map[string]int {
@@ -1014,10 +1190,11 @@ func getTempNodesPerNodeGroup(cp cloudprovider.CloudProvider, tempNodes []*apiv1
 // nolint `resourceLimiter` is unused
 func (sd *ScaleDown) checkNodeRemovable(node *apiv1.Node,
 	val time.Time, currentTime time.Time,
-	nodeGroupSize map[string]int, resourceLimiter *cloudprovider.ResourceLimiter,
+	nodeGroupSize map[string]int,
 	resourcesWithLimits []string,
 	scaleDownResourcesLeft scaleDownResourcesLimits,
-	readinessMap map[string]bool) (map[string]bool, cloudprovider.NodeGroup, error) {
+	readinessMap map[string]bool,
+) (map[string]bool, cloudprovider.NodeGroup, error) {
 	var checkErr error
 	var nodeGroup cloudprovider.NodeGroup
 
@@ -1101,7 +1278,8 @@ func (sd *ScaleDown) checkNodeRemovable(node *apiv1.Node,
 // updateScaleDownMetrics registers duration of different parts of scale down.
 // Separates time spent on finding nodes to remove, deleting nodes and other operations.
 func updateScaleDownMetrics(scaleDownStart time.Time, findNodesToRemoveDuration *time.Duration,
-	nodeDeletionDuration *time.Duration) {
+	nodeDeletionDuration *time.Duration,
+) {
 	stop := time.Now()
 	miscDuration := stop.Sub(scaleDownStart) - *nodeDeletionDuration - *findNodesToRemoveDuration
 	metrics.UpdateDuration(metrics.ScaleDownNodeDeletion, *nodeDeletionDuration)
@@ -1110,7 +1288,8 @@ func updateScaleDownMetrics(scaleDownStart time.Time, findNodesToRemoveDuration 
 }
 
 func (sd *ScaleDown) getEmptyNodesNoResourceLimits(candidates []*apiv1.Node, pods []*apiv1.Pod,
-	maxEmptyBulkDelete int, tempNodesPerNodeGroup map[string]int) []*apiv1.Node {
+	maxEmptyBulkDelete int, tempNodesPerNodeGroup map[string]int,
+) []*apiv1.Node {
 	return sd.getEmptyNodes(candidates, pods, maxEmptyBulkDelete, noScaleDownLimitsOnResources(), tempNodesPerNodeGroup)
 }
 
@@ -1118,8 +1297,8 @@ func (sd *ScaleDown) getEmptyNodesNoResourceLimits(candidates []*apiv1.Node, pod
 // This functions finds empty nodes among passed candidates and returns a list of empty nodes
 // that can be deleted at the same time.
 func (sd *ScaleDown) getEmptyNodes(candidates []*apiv1.Node, pods []*apiv1.Pod, maxEmptyBulkDelete int,
-	resourcesLimits scaleDownResourcesLimits, temporaryNodesPerNodeGroup map[string]int) []*apiv1.Node {
-
+	resourcesLimits scaleDownResourcesLimits, temporaryNodesPerNodeGroup map[string]int,
+) []*apiv1.Node {
 	emptyNodes := simulator.FindEmptyNodesToRemove(candidates, pods)
 	// 空节点列表排序，避免空节点过多时循环等待
 	sort.SliceStable(emptyNodes, func(i, j int) bool {
@@ -1180,7 +1359,8 @@ func (sd *ScaleDown) getEmptyNodes(candidates []*apiv1.Node, pods []*apiv1.Pod, 
 
 func (sd *ScaleDown) scheduleDeleteEmptyNodes(emptyNodes []*apiv1.Node, client kube_client.Interface,
 	recorder kube_record.EventRecorder, readinessMap map[string]bool,
-	candidateNodeGroups map[string]cloudprovider.NodeGroup) ([]*apiv1.Node, errors.AutoscalerError) {
+	candidateNodeGroups map[string]cloudprovider.NodeGroup,
+) ([]*apiv1.Node, errors.AutoscalerError) {
 	deletedNodes := []*apiv1.Node{}
 	for _, node := range emptyNodes {
 		klog.V(0).Infof("Scale-down: removing empty node %s", node.Name)
@@ -1249,14 +1429,17 @@ func (sd *ScaleDown) scheduleDeleteEmptyNodes(emptyNodes []*apiv1.Node, client k
 }
 
 func (sd *ScaleDown) deleteNode(node *apiv1.Node, pods []*apiv1.Pod,
-	nodeGroup cloudprovider.NodeGroup) status.NodeDeleteResult {
+	nodeGroup cloudprovider.NodeGroup,
+) status.NodeDeleteResult {
 	deleteSuccessful := false
 	drainSuccessful := false
 	if err := deletetaint.MarkToBeDeleted(node, sd.context.ClientSet); err != nil {
 		sd.context.Recorder.Eventf(node, apiv1.EventTypeWarning, "ScaleDownFailed",
 			"failed to mark the node as toBeDeleted/unschedulable: %v", err)
-		return status.NodeDeleteResult{ResultType: status.NodeDeleteErrorFailedToMarkToBeDeleted,
-			Err: errors.ToAutoscalerError(errors.ApiCallError, err)}
+		return status.NodeDeleteResult{
+			ResultType: status.NodeDeleteErrorFailedToMarkToBeDeleted,
+			Err:        errors.ToAutoscalerError(errors.ApiCallError, err),
+		}
 	}
 	var err error
 
@@ -1296,8 +1479,10 @@ func (sd *ScaleDown) deleteNode(node *apiv1.Node, pods []*apiv1.Pod,
 	evictionResults, err := drainNode(node, podsToDrain, sd.context.ClientSet, sd.context.Recorder,
 		sd.context.MaxGracefulTerminationSec, MaxPodEvictionTime, EvictionRetryTime, PodEvictionHeadroom)
 	if err != nil {
-		return status.NodeDeleteResult{ResultType: status.NodeDeleteErrorFailedToEvictPods,
-			Err: err, PodEvictionResults: evictionResults}
+		return status.NodeDeleteResult{
+			ResultType: status.NodeDeleteErrorFailedToEvictPods,
+			Err:        err, PodEvictionResults: evictionResults,
+		}
 	}
 	drainSuccessful = true
 
@@ -1340,7 +1525,8 @@ func getLatestPodsToDrain(sd *ScaleDown, node *apiv1.Node) ([]*apiv1.Pod, error)
 }
 
 func evictPod(podToEvict *apiv1.Pod, client kube_client.Interface, recorder kube_record.EventRecorder,
-	maxGracefulTerminationSec int, retryUntil time.Time, waitBetweenRetries time.Duration) status.PodEvictionResult {
+	maxGracefulTerminationSec int, retryUntil time.Time, waitBetweenRetries time.Duration,
+) status.PodEvictionResult {
 	recorder.Eventf(podToEvict, apiv1.EventTypeNormal, "ScaleDown", "deleting pod for node scale down")
 
 	maxTermination := int64(apiv1.DefaultTerminationGracePeriodSeconds)
@@ -1371,9 +1557,11 @@ func evictPod(podToEvict *apiv1.Pod, client kube_client.Interface, recorder kube
 	}
 	klog.Errorf("Failed to evict pod %s, error: %v", podToEvict.Name, lastError)
 	recorder.Eventf(podToEvict, apiv1.EventTypeWarning, "ScaleDownFailed", "failed to delete pod for ScaleDown")
-	return status.PodEvictionResult{Pod: podToEvict, TimedOut: true,
+	return status.PodEvictionResult{
+		Pod: podToEvict, TimedOut: true,
 		Err: fmt.Errorf("failed to evict pod %s/%s within allowed timeout (last error: %v)",
-			podToEvict.Namespace, podToEvict.Name, lastError)}
+			podToEvict.Namespace, podToEvict.Name, lastError),
+	}
 }
 
 // drainNode xxx
@@ -1381,8 +1569,8 @@ func evictPod(podToEvict *apiv1.Pod, client kube_client.Interface, recorder kube
 // them up to MaxGracefulTerminationTime to finish.
 func drainNode(node *apiv1.Node, pods []*apiv1.Pod, client kube_client.Interface, recorder kube_record.EventRecorder,
 	maxGracefulTerminationSec int, maxPodEvictionTime time.Duration, waitBetweenRetries time.Duration,
-	podEvictionHeadroom time.Duration) (evictionResults map[string]status.PodEvictionResult, err error) {
-
+	podEvictionHeadroom time.Duration,
+) (evictionResults map[string]status.PodEvictionResult, err error) {
 	evictionResults = make(map[string]status.PodEvictionResult)
 	toEvict := len(pods)
 	retryUntil := time.Now().Add(maxPodEvictionTime)
@@ -1464,7 +1652,8 @@ func drainNode(node *apiv1.Node, pods []*apiv1.Pod, client kube_client.Interface
 // Removes the given node from cloud provider. No extra pre-deletion actions are executed on
 // the Kubernetes side.
 func deleteNodeFromCloudProvider(node *apiv1.Node, cloudProvider cloudprovider.CloudProvider,
-	recorder kube_record.EventRecorder, registry *clusterstate.ClusterStateRegistry) errors.AutoscalerError {
+	recorder kube_record.EventRecorder, registry *clusterstate.ClusterStateRegistry,
+) errors.AutoscalerError {
 	nodeGroup, err := cloudProvider.NodeGroupForNode(node)
 	if err != nil {
 		return errors.NewAutoscalerError(
@@ -1488,7 +1677,8 @@ func deleteNodeFromCloudProvider(node *apiv1.Node, cloudProvider cloudprovider.C
 }
 
 func waitForDelayDeletion(node *apiv1.Node, nodeLister kubernetes.NodeLister,
-	timeout time.Duration) errors.AutoscalerError {
+	timeout time.Duration,
+) errors.AutoscalerError {
 	if timeout != 0 && hasDelayDeletionAnnotation(node) {
 		klog.V(1).Infof("Wait for removing %s annotations on node %v", DelayDeletionAnnotationPrefix, node.Name)
 		err := wait.Poll(5*time.Second, timeout, func() (bool, error) {
@@ -1549,13 +1739,13 @@ func filterOutMasters(nodes []*apiv1.Node, pods []*apiv1.Pod) []*apiv1.Node {
 	return others
 }
 
-func sortNodesByDeletionCost(nodes []simulator.NodeToBeRemoved) []simulator.NodeToBeRemoved {
+func sortNodesByDeletionCost(nodes []*apiv1.Node) []*apiv1.Node {
 	if len(nodes) <= 1 {
 		return nodes
 	}
 	sort.Slice(nodes, func(i, j int) bool {
-		costi := getCostFromNode(nodes[i].Node)
-		costj := getCostFromNode(nodes[j].Node)
+		costi := getCostFromNode(nodes[i])
+		costj := getCostFromNode(nodes[j])
 		return costi < costj
 	})
 	return nodes
@@ -1571,4 +1761,108 @@ func getCostFromNode(node *apiv1.Node) float64 {
 		return 0
 	}
 	return cost
+}
+
+// preFilterCandidatesBySetBuffer 基于 NodeGroupSet 的 buffer ratio 预过滤缩容候选节点
+// 该函数在详细检查之前快速过滤掉会导致 Set buffer 不足的候选节点
+// nolint
+func (sd *ScaleDown) preFilterCandidatesBySetBuffer(
+	candidates []string,
+	podsToReschedule map[string][]*apiv1.Pod,
+) []string {
+	// 如果未启用 NodeGroupSet 或无快照,跳过预过滤
+	if sd.nodeGroupSetManager == nil || sd.cachedSnapshot == nil {
+		klog.V(4).Infof("[PreFilter] NodeGroupSet not enabled or no snapshot, skipping pre-filter")
+		return candidates
+	}
+
+	snapshot := sd.cachedSnapshot
+
+	// 1. 按 Set 分组候选节点
+	setToCandidates := make(map[string][]string)
+	for _, nodeName := range candidates {
+		nodeGroupID, exists := snapshot.NodeToGroup[nodeName]
+		if !exists {
+			klog.V(4).Infof("[PreFilter] Node %s not found in snapshot NodeToGroup mapping", nodeName)
+			continue
+		}
+
+		setName := sd.nodeGroupSetManager.GetNodeGroupSet(nodeGroupID)
+		if setName == "" {
+			klog.Warningf("[PreFilter] Node %s NodeGroup %s has no Set assignment, skipping", nodeName, nodeGroupID)
+			continue
+		}
+
+		setToCandidates[setName] = append(setToCandidates[setName], nodeName)
+	}
+
+	klog.V(2).Infof("[PreFilter] Grouped %d candidates into %d sets", len(candidates), len(setToCandidates))
+
+	// 2. 对每个 Set 进行 buffer 检查（GlobalSet 和具体 Set 使用统一逻辑）
+	validCandidates := make([]string, 0, len(candidates))
+
+	for setName, setCandidates := range setToCandidates {
+		if len(setCandidates) == 0 {
+			continue
+		}
+
+		// 获取 buffer threshold
+		cpuThreshold, memThreshold, err := sd.getBufferThresholds(setName)
+		if err != nil {
+			klog.Errorf("Failed to get buffer thresholds for set %s: %v", setName, err)
+			continue
+		}
+
+		// 取第一个节点作为代表,检查该 Set 是否有删除预算
+		sampleNode := setCandidates[0]
+
+		// 模拟删除
+		newSetInfo, err := sd.nodeGroupSetManager.SimulateNodeRemoval(
+			setName, snapshot, sampleNode, podsToReschedule[sampleNode])
+		if err != nil {
+			klog.Warningf("[PreFilter] Failed to simulate removal of %s from set %s: %v",
+				sampleNode, setName, err)
+			// 模拟失败,保守起见,保留该 Set 的节点
+			validCandidates = append(validCandidates, setCandidates...)
+			continue
+		}
+
+		// 检查 buffer
+		cpuAvailableRatio := 1.0 - newSetInfo.CPUUsageRatio
+		memAvailableRatio := 1.0 - newSetInfo.MemUsageRatio
+
+		bufferOK := true
+		if cpuThreshold > 0 && cpuAvailableRatio < cpuThreshold {
+			bufferOK = false
+			klog.V(2).Infof("[PreFilter] Set %s: CPU buffer insufficient (available %.2f%% < threshold %.2f%%), "+
+				"filtering out %d candidates",
+				setName, cpuAvailableRatio*100, cpuThreshold*100, len(setCandidates))
+		}
+		if memThreshold > 0 && memAvailableRatio < memThreshold {
+			bufferOK = false
+			klog.V(2).Infof("[PreFilter] Set %s: Memory buffer insufficient (available %.2f%% < threshold %.2f%%), "+
+				"filtering out %d candidates",
+				setName, memAvailableRatio*100, memThreshold*100, len(setCandidates))
+		}
+
+		// 如果 buffer 充足,保留该 Set 的所有候选节点
+		if bufferOK {
+			validCandidates = append(validCandidates, setCandidates...)
+			klog.V(4).Infof("[PreFilter] Set %s passed buffer check, keeping %d candidates",
+				setName, len(setCandidates))
+		} else {
+			// 记录被过滤的节点
+			currentTime := time.Now()
+			unremovableTimeout := currentTime.Add(sd.context.AutoscalingOptions.UnremovableNodeRecheckTimeout)
+			for _, nodeName := range setCandidates {
+				sd.unremovableNodes[nodeName] = unremovableTimeout
+				metrics.UpdateUnremovableNodes(nodeName, BufferNotEnough, setName, "")
+			}
+		}
+	}
+
+	klog.V(2).Infof("[PreFilter] Filtered candidates: %d → %d (removed %d nodes from buffer-insufficient sets)",
+		len(candidates), len(validCandidates), len(candidates)-len(validCandidates))
+
+	return validCandidates
 }
