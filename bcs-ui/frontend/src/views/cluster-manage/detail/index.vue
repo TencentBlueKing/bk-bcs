@@ -74,13 +74,14 @@ import AutoScaler from '../autoscaler/autoscaler.vue';
 import Node from '../node-list/node.vue';
 
 import StatusIcon from '@/components/status-icon';
-import { ICluster, useCluster } from '@/composables/use-app';
+import { ICluster, useAppData, useCluster, useProject } from '@/composables/use-app';
 import $router from '@/router';
 import Info from '@/views/cluster-manage/detail/basic-info.vue';
 import TaskRecord from '@/views/cluster-manage/detail/cluster-record.vue';
 import Master from '@/views/cluster-manage/detail/master/index.vue';
 import Network from '@/views/cluster-manage/detail/network/index.vue';
 import Overview from '@/views/cluster-manage/detail/overview.vue';
+import SharedManage from '@/views/cluster-manage/detail/shared-manage/index.vue';
 import SubCluster from '@/views/cluster-manage/detail/sub-cluster/index.vue';
 import VClusterQuota from '@/views/cluster-manage/detail/vcluster-quota.vue';
 import Namespace from '@/views/cluster-manage/namespace/namespace.vue';
@@ -130,8 +131,15 @@ watch(activeTabName, () => {
   });
 });
 const { clusterList } = useCluster();
+const { curProject } = useProject();
+const { flagsMap } = useAppData();
 const curCluster = computed<Partial<ICluster>>(() => clusterList.value
   .find(item => item.clusterID === props.clusterId) || {});
+// 共享管理 tab 显隐条件（取交集）：
+// feature_flag 开启 且 当前项目与集群所属项目一致
+const showSharedManage = computed(() => !!flagsMap.value?.SHARED_CLUSTER_MANAGEMENT
+  && !!curProject.value?.projectID
+  && curProject.value.projectID === curCluster.value?.projectID);
 // kubeConfig导入集群
 const isKubeConfigImportCluster = computed(() => curCluster.value.clusterCategory === 'importer'
       && curCluster.value.importCategory === 'kubeConfig');
@@ -266,6 +274,19 @@ const tabs = computed(() => [
     },
     eventHandlers: {
       'active-row': clusterID => handleChangeActiveRow(clusterID),
+    },
+  },
+  {
+    // 共享管理
+    // 注意：label 在模板中通过 $t(tab.label) 动态翻译，vue-i18n-extract 词条收集脚本
+    // 无法识别这种用法，需保留一处显式 $t 引用，避免词条被当作未使用而自动清理：
+    // $t('cluster.detail.title.sharedManage')
+    name: 'sharedManage',
+    label: 'cluster.detail.title.sharedManage',
+    component: SharedManage,
+    isShow: showSharedManage.value,
+    componentConfig: {
+      clusterId: props.clusterId,
     },
   },
 ]);

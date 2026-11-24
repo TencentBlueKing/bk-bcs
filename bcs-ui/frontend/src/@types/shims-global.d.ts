@@ -38,7 +38,7 @@ interface Window {
   readonly BCS_API_HOST: string
   readonly DEVOPS_BCS_API_URL: string
   readonly i18n: {
-    t: (word: string) => string
+    t: (word: string, values?: Record<string, string | number>) => string
   }
   readonly BCS_CONFIG: ILink // 文档链接配置
   readonly REGION: string

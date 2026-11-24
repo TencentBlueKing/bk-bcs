@@ -218,14 +218,8 @@ metrics:
   cpuResUsageDesc: CPU 实际消耗核数占用 request 核数百分比，该指标可能超过 100%，表示实际 CPU 使用量超过了申请的 CPU 资源
   cpuRequestUsage:
     text: CPU装箱率
-    clusterDesc: >-
-      集群CPU装箱率 = 集群所有Pod CPU Request之和 /
-      集群所有节点CPU总核数（不包含Master节点），集群CPU装箱率越接近集群CPU使用率，集群CPU资源利用率越高 {0}
   memRequestUsage:
     text: 内存装箱率
-    clusterDesc: >-
-      集群内存装箱率 = 集群所有Pod 内存 Request之和 /
-      集群所有节点内存总大小（不包含Master节点），集群内存装箱率越接近集群内存使用率，集群内存资源利用率越高 {0}
   diskIOUsage: 磁盘IO
   diskIOUsage1: 磁盘IO总量
   diskIOUsage2: 磁盘IO使用率
@@ -276,13 +270,11 @@ generic:
       noMatchData: 无匹配数据
       searchEmpty:
         text: 搜索结果为空
-        subTitle: '可以尝试 调整关键词 或{action}'
       noMatchLabel: 暂无匹配标签
     info:
       tips: 提示
       refreshAuth: 当前操作有权限，请刷新界面
       development: 功能正在开发中
-      development1: 功能开发中，暂不开放
       exitTips:
         text: 确认离开当前页?
         subTitle: 离开将会导致未保存信息丢失
@@ -760,8 +752,6 @@ cluster:
         maxNodePodNum:
           text: 单节点Pod数量上限
           desc: 单节点Pod数量上限一旦分配后将无法调整，请谨慎评估后再填写
-        article1: '容器网络资源有限，请合理分配，当前容器网络配置下，集群最多可以添加 {count} 个节点'
-        article2: '当容器网络资源超额使用时，会触发容器网络自动扩容，扩容后集群最多可以添加 {count} 个节点'
         article3: 集群可添加节点数（包含Master节点与Node节点）= (IP数量 - Service的数量) / 单节点Pod数量上限
       networkMode:
         text: 网络模式
@@ -891,6 +881,7 @@ cluster:
       nodeList: 节点列表
       controlConfig: 控制面配置
       subCluster: 成员集群
+      sharedManage: 共享管理
       disableVpcCNI:
         text: 确定关闭VPC-CNI模式
         p1: 关闭后将不再支持创建固定 Pod IP 的 StatefulSet
@@ -898,6 +889,181 @@ cluster:
     label:
       tkeID: TKE集群ID
       goRecord: 查看执行记录
+  sharedManage:
+    tabs:
+      settings: 共享设置
+      assign: 命名空间分配
+      overview: 使用概览
+    summary:
+      sharedStatus: 共享状态
+      sharedOn: 共享中
+      sharedOff: 未共享
+      visibleRange: 可见范围
+      wholePlatform: 全平台
+      usingProjects: 使用项目
+      assignedToOthers: 已分配给其他项目
+      unassigned: 未分配
+      unit: 个
+      unitProject: 个项目
+      unitBiz: 个业务
+      unitNamespace: 个命名空间
+      goAssign: 去分配
+    settings:
+      enableShared: 开启共享
+      enableSharedTips: 开启后，可见范围内的项目能在集群列表里看到这个集群，并在其中申请或使用命名空间。
+      legacyAlert: '这个集群按旧规则共享给{range}。现在可见范围只支持指定项目：如需修改，必须改为指定项目，保存后按新范围生效；不修改则保持原范围。'
+      readonly: 只读
+      convert: 改为指定项目
+      bizRange: 业务
+      addProject: + 添加项目
+      projectNsCount: '{num} 个命名空间'
+      rangeTips: 只有列出的项目能在集群列表里看到这个集群，并在其中申请或使用命名空间。
+      legacyConvertTips: '原范围是{range}，保存后按上面列出的项目生效，未列入的项目将看不到这个集群。'
+      errNoProject: 请至少添加一个项目
+      unsaved: 有未保存的修改
+      closeSharedTitle: 确认关闭共享？
+      closeSharedBody: >-
+        仍有 {num}
+        个命名空间归属其他项目。关闭共享后，这些项目将看不到这个集群，也无法访问对应命名空间；命名空间和归属关系会保留，重新开启共享后恢复。
+      closeSharedSimpleBody: 关闭后，其他项目将看不到这个集群。
+      forceClose: 仍要关闭
+      goRecycle: 去回收
+      pendingReview: 创建审批中
+      removeTitle: '将「{name}」移出可见范围？'
+      removeBody: '该项目仍持有 {num} 个命名空间。移出后，它将看不到这个集群，也无法访问这些命名空间；命名空间归属会保留，重新加入范围后恢复访问。'
+      forceRemove: 仍要移出
+    assign:
+      alert: >-
+        可以给可见范围内的项目直接创建命名空间（名称自动带上「bcs-项目英文名-」前缀），也可以把集群里已有的命名空间分配给它们（已有命名空间不要求前缀）。分配只修改归属，不删除、不迁移命名空间里的资源。
+      toolbar:
+        create: 创建命名空间
+        assign: 分配到项目
+        recycle: 回收
+        selected: '已选 {num} 项'
+        clear: 清空
+      filter:
+        all: 全部
+        unassigned: 未分配
+        assigned: 已分配
+        locked: 不可操作
+      placeholder:
+        project: 全部归属项目
+        search: 搜索命名空间名称
+      table:
+        name: 命名空间
+        owner: 归属项目
+        quota: 配额（limit）
+        used: 使用量
+        source: 来源
+        updateTime: 更新时间
+        actions: 操作
+      tag:
+        unassigned: 未分配
+        ownerProject: 所属项目
+        pendingReview: 创建审批中
+      op:
+        assign: 分配
+        transfer: 变更归属
+        recycle: 回收
+        locked: 不可操作
+        ticket: 单据
+      quota:
+        unset: 未设置
+      unit:
+        cpu: 核
+        mem: 内存
+      msg:
+        selectFirst: 请先勾选命名空间
+        recycleMixed: 所选项中包含未分配的命名空间
+        assignSuccess: '已将 {num} 个命名空间分配到「{name}」'
+        recycleSuccess: '已回收 {num} 个命名空间'
+        recycleFailed: 回收失败，请稍后重试
+      recycle:
+        title: '回收 {num} 个命名空间？'
+        body: 回收后，这些命名空间不再归属任何项目，原项目将看不到、也无法操作其中的资源。命名空间和其中的工作负载
+        bodyKeep: 不会被删除
+        deleteQuota: 同时删除命名空间中的 ResourceQuota
+      slider:
+        assignTitle: 分配命名空间
+        transferTitle: 变更归属
+        namespaces: 命名空间
+        currentOwner: '当前归属：{name}'
+        mixedWarn: '其中 {num} 个已有归属，提交后会改为目标项目，原项目将无法再访问。'
+        target: 目标项目
+        selectProject: 请选择项目
+        onlyRange: 只能选择可见范围内的项目。
+        adjustRange: 调整可见范围
+        quota: 配额
+        quotaTips: request 与 limit 取相同值，CPU、内存最小为 1。命名空间里已有 ResourceQuota 时会覆盖。
+        quotaTipsBatch: >-
+          每个命名空间各自按这个值设置；request 与 limit 取相同值，CPU、内存最小为 1。命名空间里已有 ResourceQuota
+          时会覆盖。
+        info: 不需要审批，提交后立即生效；使用方最长 1 分钟后能看到（资源视图有 1 分钟缓存）。不会自动授予命名空间权限，使用方成员按现有方式申请。
+        errTarget: 请选择目标项目
+        errQuota: CPU、内存需为不小于 1 的数字
+        failed: 请求失败
+        resultTitle: '已分配到「{name}」：{ok} 个成功'
+        resultFail: '，{num} 个失败'
+        success: 成功
+        retry: 重试失败项
+        done: 完成
+        ok: 确定
+      create:
+        title: 创建命名空间
+        project: 归属项目
+        name: 名称
+        suffixPlaceholder: 例如 activity-prod
+        quotaTips: request 与 limit 取相同值；与使用方申请时一样，CPU、内存最小为 1。
+        info: >-
+          由所属项目直接创建，不需要审批。创建后命名空间直接归属所选项目，使用方最长 1
+          分钟后能看到。不会自动授予命名空间权限，使用方成员按现有方式申请。
+        errProject: 请选择归属项目
+        errSuffix: 请填写名称
+        errFormat: 只能包含小写字母、数字和「-」，且以字母或数字开头和结尾
+        errLength: '完整名称不能超过 63 个字符（当前 {len}）'
+        errExist: '命名空间 {name} 已存在'
+        errQuota: CPU、内存需为不小于 1 的数字
+        create: 创建
+        successMsg: '已为「{project}」创建命名空间 {name}'
+      status:
+        unallocatable: 系统 / vcluster 命名空间，不可分配
+        pendingReview: cluster.sharedManage.assign.status.pendingReview
+    overview:
+      noQuotaAlert: '{num} 个已分配的命名空间没有设置配额，实际用量可能超出预期。点击对应项目的「查看命名空间」可以看到是哪些。'
+      stat:
+        projects: 使用项目
+        ofRange: '/ 可见范围 {num} 个项目'
+        namespaces: 已分配命名空间
+        clusterTotal: '/ 集群共 {num} 个'
+        cpuQuota: 已分配 CPU 配额
+        memQuota: 已分配内存配额
+        cpuOf: '/ {num} 核（{pct}%）'
+        memOf: '/ {num} GiB（{pct}%）'
+      table:
+        project: 使用项目
+        namespaces: 命名空间
+        cpu: CPU 使用 / 配额
+        mem: 内存使用 / 配额
+        cpuRate: CPU 配额使用率
+        actions: 操作
+        viewNs: 查看命名空间
+        nsName: 命名空间
+      tag:
+        outOfRange: 不在可见范围
+        noQuota: 未设置配额
+      unit:
+        core: 核
+        nsCount: 个
+      unset: '-- / 未设置'
+      dialog:
+        title: '「{name}」的命名空间'
+        summary: >-
+          {cluster} · 共 {num} 个命名空间 · CPU 使用 {cpuText} 核 · 内存使用 {memText} GiB ·
+          使用量取 ResourceQuota 已用量，未设置配额的命名空间不统计
+        quota: 配额
+        unset: '-- / 未设置'
+      empty:
+        title: 还没有项目在使用这个集群
   ca:
     name: Cluster Autoscaler
     title:
@@ -940,7 +1106,6 @@ cluster:
       title: 扩缩容暂停配置
       desc: >-
         自动扩缩容保护机制，如果NotReady节点数量或比例过大，自动扩容上来的节点也有可能会是NotReady状态，导致业务成本增加，当NotReady节点数不符合暂停触发条件时自动恢复自动扩缩容
-      path: 扩缩容暂停配置路径
     autoScalerConfig:
       title: 自动扩容配置
       expander:
@@ -1433,7 +1598,6 @@ cluster:
       terminationGracePeriod:
         text: Pod 终止宽限时间
         default: 使用 Pod 定义的 terminationGracePeriodSeconds 值
-        seconds: '等待 {seconds} 后退出'
       preview: 结果预览
       drainNum: >-
         共 {podNum} 个 Pod，其中 {drainNum} 个可被驱逐，{notDrainNum} 个 DaemonSet 管理的 Pod

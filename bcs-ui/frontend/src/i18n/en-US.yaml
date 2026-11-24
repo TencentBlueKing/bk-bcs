@@ -246,18 +246,8 @@ metrics:
     higher than the requested CPU resources.
   cpuRequestUsage:
     text: CPU packing rate
-    clusterDesc: >-
-      Cluster CPU box installation rate = sum of all POD CPU REQUEST in the
-      cluster / cluster node CPU total number (excluding MASTER node), the
-      closer the cluster CPU packing rate is closer to the cluster CPU usage
-      rate, the higher the cluster CPU resource utilization rate {0}
   memRequestUsage:
     text: Memory box rate
-    clusterDesc: >-
-      Cluster memory installation box rate = The sum of all POD memory Request /
-      cluster all node memory (excluding Master nodes), the closer the cluster
-      memory box rate is closer to the cluster memory usage rate, the higher the
-      utilization rate of the cluster memory resources {0}
   diskIOUsage: Disk IO
   diskIOUsage1: DiskIO Total
   diskIOUsage2: Disk IO usage rate
@@ -309,13 +299,11 @@ generic:
       noMatchData: No matching data
       searchEmpty:
         text: The search result is empty
-        subTitle: 'You can try adjusting keywords or {action}'
       noMatchLabel: No matching Label
     info:
       tips: Tip
       refreshAuth: 'The current operation is permanent, please refresh the interface'
       development: Function is under development
-      development1: 'Function under development, not yet available'
       exitTips:
         text: Confirm leaving the current page?
         subTitle: Leaving will lead to information loss
@@ -869,14 +857,6 @@ cluster:
           desc: >-
             Node pod CIDR cannot be adjusted after allocation Please fill in
             after careful evaluation
-        article1: >-
-          The container network resources are limited, please allocate it
-          reasonably. Under the current container network configuration, the
-          cluster can be added at most {count} individual nodes.
-        article2: >-
-          When the container network resources are excessive, the container
-          network will be automatically scale-up. After the capacity is
-          expanded, the cluster can be added at most {count}.
         article3: >-
           The number of nodes can be added with clusters (including Master nodes
           and node nodes) = (Number of IP -quantity of service) / single node
@@ -1072,6 +1052,7 @@ cluster:
       nodeList: Nodes
       controlConfig: Control plane
       subCluster: Sub Cluster
+      sharedManage: Shared management
       disableVpcCNI:
         text: Confirm disable VPC-CNI
         p1: 'if it is disabled, you cannot create StatefulSet with fixed Pod IP.'
@@ -1081,6 +1062,224 @@ cluster:
     label:
       tkeID: TKE Cluster ID
       goRecord: View execution records
+  sharedManage:
+    tabs:
+      settings: Sharing settings
+      assign: Namespace assignment
+      overview: Usage overview
+    summary:
+      sharedStatus: Shared status
+      sharedOn: Shared
+      sharedOff: Not shared
+      visibleRange: Visible range
+      wholePlatform: All projects
+      usingProjects: Using projects
+      assignedToOthers: Assigned to other projects
+      unassigned: Unassigned
+      unit: ''
+      unitProject: projects
+      unitBiz: businesses
+      unitNamespace: namespaces
+      goAssign: Assign
+    settings:
+      enableShared: Enable sharing
+      enableSharedTips: >-
+        Once enabled, projects in the visible range can see this cluster in the
+        cluster list and request or use namespaces in it.
+      legacyAlert: >-
+        This cluster is shared to {range} under the legacy rule. The visible
+        range now only supports specified projects. To modify it, convert to
+        specified projects first; it takes effect after saving. If not modified,
+        the original range is kept.
+      readonly: Read-only
+      convert: Convert to specified projects
+      bizRange: Businesses
+      addProject: + Add project
+      projectNsCount: '{num} namespaces'
+      rangeTips: >-
+        Only listed projects can see this cluster in the cluster list and
+        request or use namespaces in it.
+      legacyConvertTips: >-
+        The original range is {range}. After saving, it takes effect for the
+        listed projects above, and unlisted projects will no longer see this
+        cluster.
+      errNoProject: Please add at least one project
+      unsaved: There are unsaved changes
+      closeSharedTitle: Confirm to disable sharing?
+      closeSharedBody: >-
+        There are still {num} namespaces assigned to other projects. After
+        sharing is disabled, these projects will not see this cluster or access
+        the corresponding namespaces. Namespaces and assignment relationships
+        are kept and restored after re-enabling sharing.
+      closeSharedSimpleBody: 'After sharing is disabled, other projects will not see this cluster.'
+      forceClose: Disable anyway
+      goRecycle: Recycle
+      pendingReview: Pending review
+      removeTitle: 'Remove "{name}" from the visible range?'
+      removeBody: >-
+        This project still holds {num} namespaces. After removal, it will not
+        see this cluster or access these namespaces. Namespace assignment is
+        kept and access is restored when it is added back to the range.
+      forceRemove: Remove anyway
+    assign:
+      alert: >-
+        You can create namespaces directly for projects in the visible range
+        (names are prefixed with "bcs-projectname-"), or assign existing
+        namespaces in the cluster to them (existing namespaces do not require
+        the prefix). Assignment only changes ownership; resources in namespaces
+        are not deleted or migrated.
+      toolbar:
+        create: Create namespace
+        assign: Assign to project
+        recycle: Recycle
+        selected: '{num} selected'
+        clear: Clear
+      filter:
+        all: All
+        unassigned: Unassigned
+        assigned: Assigned
+        locked: Unavailable
+      placeholder:
+        project: All assigned projects
+        search: Search by namespace name
+      table:
+        name: Namespace
+        owner: Assigned project
+        quota: Quota (limit)
+        used: Usage
+        source: Source
+        updateTime: Updated at
+        actions: Actions
+      tag:
+        unassigned: Unassigned
+        ownerProject: Owner project
+        pendingReview: Pending review
+      op:
+        assign: Assign
+        transfer: Change assignment
+        recycle: Recycle
+        locked: Unavailable
+        ticket: Ticket
+      quota:
+        unset: Not set
+      unit:
+        cpu: cores
+        mem: Memory
+      msg:
+        selectFirst: Select namespaces first
+        recycleMixed: The selection includes unassigned namespaces
+        assignSuccess: '{num} namespaces have been assigned to "{name}"'
+        recycleSuccess: '{num} namespaces have been recycled'
+        recycleFailed: 'Failed to recycle, please try again later'
+      recycle:
+        title: 'Recycle {num} namespaces?'
+        body: >-
+          After recycling, these namespaces no longer belong to any project, and
+          the original project cannot see or operate resources in them.
+          Namespaces and workloads
+        bodyKeep: are not deleted
+        deleteQuota: Also delete the ResourceQuota in the namespaces
+      slider:
+        assignTitle: Assign namespaces
+        transferTitle: Change assignment
+        namespaces: Namespaces
+        currentOwner: 'Current owner: {name}'
+        mixedWarn: >-
+          {num} of them already have owners. After submission, ownership will be
+          changed to the target project and the original project will lose
+          access.
+        target: Target project
+        selectProject: Select a project
+        onlyRange: Only projects in the visible range can be selected.
+        adjustRange: Adjust visible range
+        quota: Quota
+        quotaTips: >-
+          Requests and limits use the same value; CPU and memory are at least 1.
+          Existing ResourceQuota in the namespace will be overwritten.
+        quotaTipsBatch: >-
+          Each namespace is set to this value; requests and limits use the same
+          value, CPU and memory are at least 1. Existing ResourceQuota will be
+          overwritten.
+        info: >-
+          No approval is required. It takes effect immediately after submission
+          and becomes visible to consumers within 1 minute (the resource view
+          has a 1-minute cache). Namespace permissions are not granted
+          automatically; consumer members apply as usual.
+        errTarget: Please select a target project
+        errQuota: CPU and memory must be numbers no less than 1
+        failed: Request failed
+        resultTitle: 'Assigned to "{name}": {ok} succeeded'
+        resultFail: ', {num} failed'
+        success: Success
+        retry: Retry failed
+        done: Done
+        ok: OK
+      create:
+        title: Create namespace
+        project: Owner project
+        name: Name
+        suffixPlaceholder: e.g. activity-prod
+        quotaTips: >-
+          Requests and limits use the same value; same as consumer applications,
+          CPU and memory are at least 1.
+        info: >-
+          Created directly by the owner project, no approval needed. After
+          creation, the namespace belongs to the selected project and becomes
+          visible to consumers within 1 minute. Namespace permissions are not
+          granted automatically; consumer members apply as usual.
+        errProject: Please select an owner project
+        errSuffix: Please enter a name
+        errFormat: >-
+          Only lowercase letters, digits and "-" are allowed, and it must start
+          and end with a letter or digit
+        errLength: 'The full name cannot exceed 63 characters (currently {len})'
+        errExist: 'Namespace {name} already exists'
+        errQuota: CPU and memory must be numbers no less than 1
+        create: Create
+        successMsg: 'Namespace {name} has been created for "{project}"'
+      status:
+        unallocatable: 'System / vcluster namespace, cannot be assigned'
+        pendingReview: ''
+    overview:
+      noQuotaAlert: >-
+        {num} assigned namespaces have no quota set; actual usage may exceed
+        expectations. Click "View namespaces" of the corresponding project to
+        see which ones.
+      stat:
+        projects: Using projects
+        ofRange: '/ visible range: {num} projects'
+        namespaces: Assigned namespaces
+        clusterTotal: '/ cluster total: {num}'
+        cpuQuota: Assigned CPU quota
+        memQuota: Assigned memory quota
+        cpuOf: '/ {num} cores ({pct}%)'
+        memOf: '/ {num} GiB ({pct}%)'
+      table:
+        project: Using project
+        namespaces: Namespaces
+        cpu: CPU usage / quota
+        mem: Memory usage / quota
+        cpuRate: CPU quota usage
+        actions: Actions
+        viewNs: View namespaces
+        nsName: Namespace
+      tag:
+        outOfRange: Out of visible range
+        noQuota: No quota
+      unit:
+        core: cores
+        nsCount: ''
+      unset: '-- / Not set'
+      dialog:
+        title: 'Namespaces of "{name}"'
+        summary: >-
+          {cluster} · {num} namespaces in total · CPU usage {cpuText} cores ·
+          Memory usage {memText} GiB · Usage is taken from ResourceQuota;
+          namespaces without a quota are not counted
+        quota: quota
+        unset: '-- / Not set'
+      empty:
+        title: No project is using this cluster yet
   ca:
     name: Cluster autoscaler
     title:
@@ -1139,7 +1338,6 @@ cluster:
         NotReady, resulting  in increased business costs. When the number of
         NotReady nodes does not meet  the suspension triggering conditions,
         Autoscaler will be automatically restored
-      path: Scaling Pause Configuration Path
     autoScalerConfig:
       title: Autoscaler configuration
       expander:
@@ -1792,7 +1990,6 @@ cluster:
       terminationGracePeriod:
         text: Pod termination grace period
         default: Use the terminationGracePeriodSeconds value defined in the Pod
-        seconds: 'Exiting after waiting for {seconds}'
       preview: Preview
       drainNum: >-
         There are {podNum} Pods in total, {drainNum} of which can be evicted, 
@@ -2986,8 +3183,12 @@ dashboard:
       notEnabledNamespace: ResourceQuota not enabled
       totalCpuLimitsQuota: All container CPU LIMITs total / CPU quotas
       totalMemoryLimitsQuota: All container memory Limits total / memory quota
-      deleteOtherQuotaWarning: Deleting this quota immediately removes its limits. This action cannot be undone.
-      deletePodLimitRangeWarning: Deleting this Pod resource limit takes effect immediately and cannot be undone.
+      deleteOtherQuotaWarning: >-
+        Deleting this quota immediately removes its limits. This action cannot
+        be undone.
+      deletePodLimitRangeWarning: >-
+        Deleting this Pod resource limit takes effect immediately and cannot be
+        undone.
     validate:
       emptyNs: Please select namespace
       name: >-
@@ -2998,13 +3199,20 @@ dashboard:
       setValidQuota: >-
         Please set valid CPU and Memory quotas (Limit >= Request >= 0 / 1 for
         shared cluster)
-      setMinMaxMemCpu: >-
-        Please set CPU and MEM quotas, and the minimum value must be greater
-        than 0.
-      otherQuotaName: The quota name must differ from the namespace, contain only lowercase letters, numbers, or hyphens, start and end with a letter or number, and be no longer than 63 characters
-      otherQuotaResource: Please set valid CPU and Memory quotas (all values are required and must be at least 0)
-      limitRangeName: The LimitRange name may contain lowercase letters, numbers, and hyphens, must start and end with a letter or number, and must not exceed 63 characters
-      podLimitRangeResource: Set at least one valid CPU or memory limit. When both Min and Max are set, Min cannot exceed Max
+      otherQuotaName: >-
+        The quota name must differ from the namespace, contain only lowercase
+        letters, numbers, or hyphens, start and end with a letter or number, and
+        be no longer than 63 characters
+      otherQuotaResource: >-
+        Please set valid CPU and Memory quotas (all values are required and must
+        be at least 0)
+      limitRangeName: >-
+        The LimitRange name may contain lowercase letters, numbers, and hyphens,
+        must start and end with a letter or number, and must not exceed 63
+        characters
+      podLimitRangeResource: >-
+        Set at least one valid CPU or memory limit. When both Min and Max are
+        set, Min cannot exceed Max
     status:
       waitingApproval: Pending
       createNamespace: Create naming space
