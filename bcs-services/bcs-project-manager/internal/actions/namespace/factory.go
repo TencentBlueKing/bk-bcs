@@ -69,7 +69,6 @@ func (f *NamespaceFactory) Action(ctx context.Context, clusterID, projectIDOrCod
 
 // ActionForAllocate get action for allocate namespace
 // 分配/变更归属仅共享集群支持，只按集群是否共享分发，不按操作方项目分发：
-// 集群所属项目在共享集群中同样需要走共享逻辑（其具备分配权限），独立集群则直接返回不支持
 func (f *NamespaceFactory) ActionForAllocate(ctx context.Context, clusterID string) (
 	action.NamespaceAction, error) {
 	cluster, err := clustermanager.GetCluster(ctx, clusterID, true)

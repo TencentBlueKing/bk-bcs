@@ -7373,6 +7373,14 @@ func (m *NamespaceData) validate(all bool) error {
 
 	}
 
+	// no validation rules for Source
+
+	// no validation rules for UpdateTime
+
+	// no validation rules for Allocatable
+
+	// no validation rules for DisableReason
+
 	if len(errors) > 0 {
 		return NamespaceDataMultiError(errors)
 	}
@@ -7938,76 +7946,6 @@ func (m *NativeNamespaceData) validate(all bool) error {
 	// no validation rules for ProjectID
 
 	// no validation rules for ProjectCode
-
-	if all {
-		switch v := interface{}(m.GetQuota()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, NativeNamespaceDataValidationError{
-					field:  "Quota",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, NativeNamespaceDataValidationError{
-					field:  "Quota",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetQuota()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return NativeNamespaceDataValidationError{
-				field:  "Quota",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
-
-	if all {
-		switch v := interface{}(m.GetUsed()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, NativeNamespaceDataValidationError{
-					field:  "Used",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, NativeNamespaceDataValidationError{
-					field:  "Used",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetUsed()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return NativeNamespaceDataValidationError{
-				field:  "Used",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
-
-	// no validation rules for Source
-
-	// no validation rules for UpdateTime
-
-	// no validation rules for Allocatable
-
-	// no validation rules for DisableReason
-
-	// no validation rules for ItsmTicketType
-
-	// no validation rules for ItsmTicketStatus
 
 	if len(errors) > 0 {
 		return NativeNamespaceDataMultiError(errors)

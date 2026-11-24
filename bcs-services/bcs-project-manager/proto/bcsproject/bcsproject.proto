@@ -1875,6 +1875,22 @@ message NamespaceData {
     title: "otherQuotas",
     description: "其他配额信息"
   }];
+  string source = 19[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "source",
+    description: "来源"
+  }];
+  string updateTime = 20[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "updateTime",
+    description: "更新时间"
+  }];
+  bool allocatable = 21[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "allocatable",
+    description: "是否可操作: vcluster占用、系统命名空间或审批中的命名空间为false"
+  }];
+  string disableReason = 22[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "disableReason",
+    description: "不可操作原因, 悬停提示用, allocatable=true时为空"
+  }];
   reserved "podLimitRanges";
 }
 
@@ -1946,39 +1962,7 @@ message NativeNamespaceData {
   }];
   string projectCode = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "projectCode",
-    description: "项目英文名, 未分配的命名空间为空"
-  }];
-  ResourceQuota quota = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "quota",
-    description: "命名空间配额, 来自 ResourceQuota spec.hard, 没有则留空"
-  }];
-  ResourceQuota used = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "used",
-    description: "已用量, 只取 ResourceQuota status.used, 没有则留空"
-  }];
-  string source = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "source",
-    description: "来源: 所属方分配 / 使用方申请 / 所属项目自建, 无 DB 记录则留空"
-  }];
-  string updateTime = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "updateTime",
-    description: "更新时间, 无 DB 记录则留空"
-  }];
-  bool allocatable = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "allocatable",
-    description: "是否可操作: vcluster 占用或审批中的命名空间为 false"
-  }];
-  string disableReason = 12[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "disableReason",
-    description: "不可操作原因, 悬停提示用, allocatable=true 时为空"
-  }];
-  string itsmTicketType = 13[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "itsmTicketType",
-    description: "审批类型, 无进行中审批则留空"
-  }];
-  string itsmTicketStatus = 14[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "itsmTicketStatus",
-    description: "审批状态, 无进行中审批则留空"
+    description: "项目英文名"
   }];
 }
 

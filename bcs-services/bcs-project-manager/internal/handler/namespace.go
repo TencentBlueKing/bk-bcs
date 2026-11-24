@@ -289,7 +289,8 @@ func (p *NamespaceHandler) ListNamespaces(ctx context.Context,
 	}
 	retData := sortNamespaces(resp.GetData())
 
-	if authUser.GetUsername() != "" {
+	// 集群视角（projectCode = '-'）
+	if authUser.GetUsername() != "" && req.GetProjectCode() != "-" {
 		p, err := p.model.GetProject(ctx, req.GetProjectCode())
 		if err != nil {
 			logging.Error("get project %s failed, err: %s", req.GetProjectCode(), err.Error())

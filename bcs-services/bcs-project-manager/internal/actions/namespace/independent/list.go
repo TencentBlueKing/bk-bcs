@@ -28,6 +28,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
+	nsm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/namespace"
 	vdm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/variabledefinition"
 	vvm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/variablevalue"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
@@ -64,7 +65,39 @@ func (c *IndependentNamespaceAction) ListNamespaces(ctx context.Context,
 	if err != nil {
 		return errorx.NewDBErr(err.Error())
 	}
+	// 批量获取归属记录
+	dbRecords := map[string]nsm.Namespace{}
+	if dbList, e := c.model.ListNamespacesByCluster(ctx, req.GetClusterID()); e == nil {
+		for _, record := range dbList {
+			dbRecords[record.Name] = record
+		}
+	} else {
+		logging.Error("list namespace records of cluster %s from db failed, err: %s",
+			req.GetClusterID(), e.Error())
+	}
+	existns := map[string]nsm.Namespace{}
 	retDatas := []*proto.NamespaceData{}
+	// 审批中的单据：所属方视角展示集群全量，含使用方项目（如分享项目方）的单据
+	if config.GlobalConf.ITSM.Enable {
+		creatings := []nsm.Namespace{}
+		for _, record := range dbRecords {
+			if record.ItsmTicketType == "" {
+				continue
+			}
+			switch record.ItsmTicketType {
+			case nsm.ItsmTicketTypeCreate:
+				creatings = append(creatings, record)
+			case nsm.ItsmTicketTypeUpdate:
+				existns[record.Name] = record
+			case nsm.ItsmTicketTypeDelete:
+				existns[record.Name] = record
+			}
+		}
+		// create 类型（集群中尚不存在）作为独立条目插入结果
+		for _, namespace := range creatings {
+			retDatas = append(retDatas, loadListRetDataFromDB(namespace))
+		}
+	}
 	for _, ns := range nsList.Items {
 		retData := &proto.NamespaceData{
 			Name:        ns.GetName(),
@@ -91,6 +124,28 @@ func (c *IndependentNamespaceAction) ListNamespaces(ctx context.Context,
 		}
 		// get variables
 		retData.Variables = variablesMap[ns.GetName()]
+		// update/delete 审批中的单据：补充到集群已存在的同名 ns 上
+		if staging, ok := existns[ns.GetName()]; ok {
+			retData.ItsmTicketType = staging.ItsmTicketType
+			retData.ItsmTicketSN = staging.ItsmTicketSN
+			retData.ItsmTicketStatus = staging.ItsmTicketStatus
+			retData.ItsmTicketURL = staging.ItsmTicketURL
+		}
+		record, hasRecord := dbRecords[ns.GetName()]
+		if hasRecord {
+			retData.Source = record.Source
+			retData.UpdateTime = record.UpdateTime
+		}
+		// 可操作判定：系统命名空间、审批中的命名空间不可操作
+		if retData.IsSystem {
+			retData.Allocatable = false
+			retData.DisableReason = "系统命名空间，不可分配"
+		} else if hasRecord && record.ItsmTicketStatus == nsm.ItsmTicketStatusCreated {
+			retData.Allocatable = false
+			retData.DisableReason = "命名空间审批中，暂不可操作"
+		} else {
+			retData.Allocatable = true
+		}
 		// get managers
 		managers := []string{}
 		if creator, exists := ns.Annotations[constant.AnnotationKeyCreator]; exists {
@@ -157,4 +212,38 @@ func batchListNamespaceVariables(ctx context.Context,
 		}
 	}
 	return variablesMap, nil
+}
+
+func loadListRetDataFromDB(namespace nsm.Namespace) *proto.NamespaceData {
+	retData := &proto.NamespaceData{
+		Name:     namespace.Name,
+		IsSystem: stringx.StringInSlice(namespace.Name, config.GlobalConf.SystemConfig.SystemNameSpaces),
+	}
+	if namespace.ResourceQuota != nil {
+		retData.Quota = &proto.ResourceQuota{
+			CpuRequests:    namespace.ResourceQuota.CPURequests,
+			CpuLimits:      namespace.ResourceQuota.CPULimits,
+			MemoryRequests: namespace.ResourceQuota.MemoryRequests,
+			MemoryLimits:   namespace.ResourceQuota.MemoryLimits,
+		}
+	}
+	variables := []*proto.VariableValue{}
+	for _, variable := range namespace.Variables {
+		variables = append(variables, &proto.VariableValue{
+			Id:    variable.VariableID,
+			Key:   variable.Key,
+			Value: variable.Value,
+		})
+	}
+	retData.Variables = variables
+	retData.Managers = []string{namespace.Managers}
+	retData.ItsmTicketSN = namespace.ItsmTicketSN
+	retData.ItsmTicketStatus = namespace.ItsmTicketStatus
+	retData.ItsmTicketURL = namespace.ItsmTicketURL
+	retData.ItsmTicketType = namespace.ItsmTicketType
+	retData.Source = namespace.Source
+	retData.UpdateTime = namespace.UpdateTime
+	retData.Allocatable = false
+	retData.DisableReason = "命名空间审批中，暂不可操作"
+	return retData
 }
