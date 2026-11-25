@@ -25,10 +25,7 @@ const (
 	getAdminUserUrl    = "/v1/users/admin/%s"
 	createAdminUserUrl = "/v1/users/admin/%s"
 
-	getSaasUserUrl      = "/v1/users/saas/%s"
-	createSaasUserUrl   = "/v1/users/saas/%s"
-	refreshSaasTokenUrl = "/v1/users/saas/%s/refresh" // nolint
-	getUserInfo         = "/v1/users/info"
+	getUserInfo = "/v1/users/info"
 
 	getPlainUserUrl      = "/v1/users/plain/%s"
 	createPlainUserUrl   = "/v1/users/plain/%s"
@@ -98,69 +95,6 @@ func (c *UserManagerClient) CreateAdminUser(userName string) (*CreateAdminUserRe
 	// resp.Data.UserType = userManagerModels.AdminUser
 	if err := json.Unmarshal(bs, resp); err != nil {
 		return nil, errors.Wrapf(err, "create admin user unmarshal failed with response '%s'", string(bs))
-	}
-	return resp, nil
-}
-
-// GetSaasUserResponse defines the response of get saas user
-type GetSaasUserResponse struct {
-	Result  bool     `json:"result"`
-	Code    int      `json:"code"`
-	Message string   `json:"message"`
-	Data    *BcsUser `json:"data"`
-}
-
-// GetSaasUser request saas user from bcs-user-manager
-func (c *UserManagerClient) GetSaasUser(userName string) (*GetSaasUserResponse, error) {
-	bs, err := c.do(fmt.Sprintf(getSaasUserUrl, userName), http.MethodGet, nil, nil)
-	if err != nil {
-		return nil, errors.Wrapf(err, "get saas user with '%s' failed", userName)
-	}
-	resp := new(GetSaasUserResponse)
-	if err := json.Unmarshal(bs, resp); err != nil {
-		return nil, errors.Wrapf(err, "get saas user unmarshal failed with response '%s'", string(bs))
-	}
-	return resp, nil
-}
-
-// CreateSaasUserResponse defines the response of create saas user
-type CreateSaasUserResponse struct {
-	Result  bool     `json:"result"`
-	Code    int      `json:"code"`
-	Message string   `json:"message"`
-	Data    *BcsUser `json:"data"`
-}
-
-// CreateSaasUser request saas user from bcs-user-manager
-func (c *UserManagerClient) CreateSaasUser(userName string) (*CreateSaasUserResponse, error) {
-	bs, err := c.do(fmt.Sprintf(createSaasUserUrl, userName), http.MethodPost, nil, nil)
-	if err != nil {
-		return nil, errors.Wrapf(err, "create saas user with '%s' failed", userName)
-	}
-	resp := new(CreateSaasUserResponse)
-	if err := json.Unmarshal(bs, resp); err != nil {
-		return nil, errors.Wrapf(err, "create saas user unmarshal failed with response '%s'", string(bs))
-	}
-	return resp, nil
-}
-
-// RefreshSaasTokenResponse defines the response of refresh saas user token
-type RefreshSaasTokenResponse struct {
-	Result  bool     `json:"result"`
-	Code    int      `json:"code"`
-	Message string   `json:"message"`
-	Data    *BcsUser `json:"data"`
-}
-
-// RefreshSaasToken request refresh saas user token  from bcs-user-manager
-func (c *UserManagerClient) RefreshSaasToken(userName string) (*RefreshSaasTokenResponse, error) {
-	bs, err := c.do(fmt.Sprintf(refreshSaasTokenUrl, userName), http.MethodPut, nil, nil)
-	if err != nil {
-		return nil, errors.Wrapf(err, "refresh saas user token with '%s' failed", userName)
-	}
-	resp := new(RefreshSaasTokenResponse)
-	if err := json.Unmarshal(bs, resp); err != nil {
-		return nil, errors.Wrapf(err, "refresh saas user token unmarshal failed with response '%s'", string(bs))
 	}
 	return resp, nil
 }

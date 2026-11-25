@@ -30,10 +30,7 @@ func newGetCmd() *cobra.Command {
 		Long:  "get infos from bcs-user-manager",
 	}
 	getCmd.AddCommand(getAdminUserCmd())
-	getCmd.AddCommand(getSaasUserCmd())
 	getCmd.AddCommand(getPlainUserCmd())
-	getCmd.AddCommand(getRegisterTokenCmd())
-	getCmd.AddCommand(getCredentialsCmd())
 	getCmd.AddCommand(getPermissionCmd())
 	getCmd.AddCommand(getTokenCmd())
 	getCmd.AddCommand(getTokenByUserAndClusterIDCmd())
@@ -71,37 +68,6 @@ func getAdminUserCmd() *cobra.Command {
 	return subCmd
 }
 
-// getSaasUserCmd get saas user command. Return the command that get saas user
-func getSaasUserCmd() *cobra.Command {
-	var userName string
-	subCmd := &cobra.Command{
-		Use:     "saas-user",
-		Aliases: []string{"su"},
-		Short:   "get saas user from user manager",
-		Long:    "",
-		Example: "kubectl-bcs-user-manager get saas-user -u [username]",
-		Run: func(cmd *cobra.Command, args []string) {
-			cobra.OnInitialize(ensureConfig)
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
-			client := pkg.NewClientWithConfiguration(ctx)
-			// GetSaasUser
-			resp, err := client.GetSaasUser(userName)
-			if err != nil {
-				klog.Fatalf("get saas user failed: %v", err)
-			}
-			if resp != nil && resp.Code != 0 {
-				klog.Fatalf("get saas user response code not 0 but %d: %s", resp.Code, resp.Message)
-			}
-			printer.PrintGetSaasUserCmdResult(flagOutput, resp)
-		},
-	}
-
-	subCmd.Flags().StringVarP(&userName, "user_name", "u", "",
-		"the user name that query sass user")
-	return subCmd
-}
-
 // getPlainUserCmd get plain user command. Return the command that get plain user
 func getPlainUserCmd() *cobra.Command {
 	var userName string
@@ -130,68 +96,6 @@ func getPlainUserCmd() *cobra.Command {
 
 	subCmd.Flags().StringVarP(&userName, "user_name", "u", "",
 		"the user name that query plain user")
-	return subCmd
-}
-
-// getRegisterTokenCmd get register token command. Return the command the get register token
-func getRegisterTokenCmd() *cobra.Command {
-	var clusterId string
-	subCmd := &cobra.Command{
-		Use:     "register-token",
-		Aliases: []string{"rt"},
-		Short:   "register-token",
-		Long:    "register specified cluster token from user manager",
-		Example: "kubectl-bcs-user-manager get register-token --cluster_id [cluster_id]",
-		Run: func(cmd *cobra.Command, args []string) {
-			cobra.OnInitialize(ensureConfig)
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
-			client := pkg.NewClientWithConfiguration(ctx)
-			// GetRegisterToken
-			resp, err := client.GetRegisterToken(clusterId)
-			if err != nil {
-				klog.Fatalf("search specified cluster token failed: %v", err)
-			}
-			if resp != nil && resp.Code != 0 {
-				klog.Fatalf("search specified cluster token response code not 0 but %d: %s", resp.Code, resp.Message)
-			}
-			printer.PrintGetRegisterTokenCmdResult(flagOutput, resp)
-		},
-	}
-
-	subCmd.Flags().StringVarP(&clusterId, "cluster_id", "i", "",
-		"the cluster_id for search specified cluster token")
-	return subCmd
-}
-
-// getCredentialsCmd get credentials command. Return the command that get credentials
-func getCredentialsCmd() *cobra.Command {
-	var clusterId string
-	subCmd := &cobra.Command{
-		Use:     "credentials",
-		Aliases: []string{"c"},
-		Short:   "get credentials",
-		Long:    "get credential according cluster ID",
-		Example: "kubectl-bcs-user-manager get credentials --cluster_id [cluster_id]",
-		Run: func(cmd *cobra.Command, args []string) {
-			cobra.OnInitialize(ensureConfig)
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
-			client := pkg.NewClientWithConfiguration(ctx)
-			// GetCredentials
-			resp, err := client.GetCredentials(clusterId)
-			if err != nil {
-				klog.Fatalf("get credential according cluster ID failed: %v", err)
-			}
-			if resp != nil && resp.Code != 0 {
-				klog.Fatalf("get credential according cluster ID response code not 0 but %d: %s", resp.Code, resp.Message)
-			}
-			printer.PrintGetCredentialsCmdResult(flagOutput, resp)
-		},
-	}
-
-	subCmd.Flags().StringVarP(&clusterId, "cluster_id", "i", "",
-		"the cluster_id for get credential")
 	return subCmd
 }
 

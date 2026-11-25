@@ -16,10 +16,6 @@ env:
   BK_BCS_coreDatabaseDsn: ""
   BK_BCS_adminUser: admin
   BK_BCS_adminToken: ""
-  BK_BCS_tkeSecretId: ""
-  BK_BCS_tkeSecretKey: ""
-  BK_BCS_tkeCcsHost: "api.cloud.com"
-  BK_BCS_tkeCcsPath: "/v2/index.php"
   BK_BCS_bcsZkHost: "127.0.0.1:2181"
   #以下部分为环境运行关注事项，与bcs-init相关
   BK_BCS_log_dir: /data/bcs/logs/bcs

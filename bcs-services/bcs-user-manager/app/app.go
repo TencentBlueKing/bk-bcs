@@ -92,9 +92,9 @@ func parseConfig(op *options.UserManagerOptions) (*config.UserMgrConfig, error) 
 	userMgrConfig.LocalIp = op.LocalIP
 	userMgrConfig.MetricPort = op.MetricPort
 	userMgrConfig.BootStrapUsers = op.BootStrapUsers
-	userMgrConfig.TKE = op.TKE
 	userMgrConfig.PeerToken = op.PeerToken
 	userMgrConfig.PermissionSwitch = op.PermissionSwitch
+	userMgrConfig.EnableExtraToken = op.EnableExtraToken
 	userMgrConfig.CommunityEdition = op.CommunityEdition
 	userMgrConfig.BcsAPI = &op.BcsAPI
 	userMgrConfig.Encrypt = op.Encrypt
@@ -103,18 +103,6 @@ func parseConfig(op *options.UserManagerOptions) (*config.UserMgrConfig, error) 
 	userMgrConfig.EnableTokenSync = op.EnableTokenSync
 	userMgrConfig.SlowSQLLatency = op.SlowSQLLatency
 	userMgrConfig.Tenant = op.Tenant
-
-	config.Tke = op.TKE
-	secretID, err := encrypt.DesDecryptFromBase([]byte(config.Tke.SecretID))
-	if err != nil {
-		return nil, fmt.Errorf("error decrypting tke secretId and exit: %s", err.Error())
-	}
-	config.Tke.SecretID = string(secretID)
-	secretKey, err := encrypt.DesDecryptFromBase([]byte(config.Tke.SecretKey))
-	if err != nil {
-		return nil, fmt.Errorf("error decrypting tke secretKey and exit: %s", err.Error())
-	}
-	config.Tke.SecretKey = string(secretKey)
 
 	dsn, err := encrypt.DesDecryptFromBase([]byte(op.DSN))
 	if err != nil {

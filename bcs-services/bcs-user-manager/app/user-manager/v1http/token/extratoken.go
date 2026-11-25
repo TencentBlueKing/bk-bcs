@@ -76,12 +76,15 @@ func (t *ExtraTokenHandler) GetTokenByUserAndClusterID(request *restful.Request,
 	}
 
 	cluster, err := component.GetClusterByClusterID(request.Request.Context(), clusterID)
-	respBusinessID := cluster.BusinessID
 	if err != nil {
 		blog.Errorf("GetClusterByClusterID failed, err: %v", err.Error())
 		metrics.ReportRequestAPIMetrics("GetTokenByUserAndClusterID", request.Request.Method, metrics.ErrStatus, start)
 		utils.WriteServerError(response, common.BcsErrApiInternalDbError, err.Error())
 		return
+	}
+	var respBusinessID string
+	if cluster != nil {
+		respBusinessID = cluster.BusinessID
 	}
 	if len(respBusinessID) == 0 {
 		blog.Errorf("GetClusterByClusterID failed, cluster %s not found", clusterID)

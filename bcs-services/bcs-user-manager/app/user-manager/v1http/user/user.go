@@ -89,65 +89,6 @@ func GetAdminUser(request *restful.Request, response *restful.Response) {
 	metrics.ReportRequestAPIMetrics("GetAdminUser", request.Request.Method, metrics.SucStatus, start)
 }
 
-// CreateSaasUser create a saas user
-func CreateSaasUser(request *restful.Request, response *restful.Response) {
-	start := time.Now()
-
-	userName := request.PathParameter("user_name")
-	user := &models.BcsUser{
-		Name:     userName,
-		UserType: models.SaasUser,
-		TenantID: utils.GetTenantIDFromAttribute(request),
-	}
-	// if this user already exist
-	userInDb := sqlstore.GetUserByCondition(user)
-	if userInDb != nil {
-		metrics.ReportRequestAPIMetrics("CreateSaasUser", request.Request.Method, metrics.ErrStatus, start)
-		message := fmt.Sprintf("errcode: %d, user [%s] already exist", common.BcsErrApiBadRequest, userName)
-		utils.WriteClientError(response, common.BcsErrApiBadRequest, message)
-		return
-	}
-
-	user.UserToken = uniuri.NewLen(constant.DefaultTokenLength)
-	user.ExpiresAt = time.Now().Add(sqlstore.AdminSaasUserExpiredTime)
-
-	// create this user and save to db
-	err := sqlstore.CreateUser(user)
-	if err != nil {
-		metrics.ReportRequestAPIMetrics("CreateSaasUser", request.Request.Method, metrics.ErrStatus, start)
-		blog.Errorf("failed to create user [%s]: %s", user.Name, err.Error())
-		message := fmt.Sprintf("errcode: %d, creating user [%s] failed, error: %s", common.BcsErrApiInternalDbError,
-			user.Name, err)
-		utils.WriteServerError(response, common.BcsErrApiInternalDbError, message)
-		return
-	}
-
-	data := utils.CreateResponseData(nil, "success", *user)
-	_, _ = response.Write([]byte(data))
-
-	metrics.ReportRequestAPIMetrics("CreateSaasUser", request.Request.Method, metrics.SucStatus, start)
-}
-
-// GetSaasUser get an saas user and usertoken information
-func GetSaasUser(request *restful.Request, response *restful.Response) {
-	start := time.Now()
-
-	userName := request.PathParameter("user_name")
-	user := sqlstore.GetUserByCondition(&models.BcsUser{Name: userName, UserType: models.SaasUser})
-	if user == nil {
-		metrics.ReportRequestAPIMetrics("GetSaasUser", request.Request.Method, metrics.ErrStatus, start)
-		blog.Warnf("user [%s] not found in db", userName)
-		message := fmt.Sprintf("errcode: %d, user with user_name=%s not found", common.BcsErrApiBadRequest, userName)
-		utils.WriteNotFoundError(response, common.BcsErrApiBadRequest, message)
-		return
-	}
-
-	data := utils.CreateResponseData(nil, "success", *user)
-	_, _ = response.Write([]byte(data))
-
-	metrics.ReportRequestAPIMetrics("GetSaasUser", request.Request.Method, metrics.SucStatus, start)
-}
-
 // CreatePlainUser create a plain user
 func CreatePlainUser(request *restful.Request, response *restful.Response) {
 	start := time.Now()
@@ -266,43 +207,6 @@ func RefreshPlainToken(request *restful.Request, response *restful.Response) {
 	_, _ = response.Write([]byte(data))
 
 	metrics.ReportRequestAPIMetrics("RefreshPlainToken", request.Request.Method, metrics.SucStatus, start)
-}
-
-// RefreshSaasToken refresh usertoken for a saas user
-func RefreshSaasToken(request *restful.Request, response *restful.Response) {
-	start := time.Now()
-
-	userName := request.PathParameter("user_name")
-	user := sqlstore.GetUserByCondition(&models.BcsUser{Name: userName, UserType: models.SaasUser})
-	if user == nil {
-		metrics.ReportRequestAPIMetrics("RefreshSaasToken", request.Request.Method, metrics.ErrStatus, start)
-		blog.Warnf("failed to refresh token, user [%s] not found in db", userName)
-		message := fmt.Sprintf("errcode: %d, user with user_name=%s not found", common.BcsErrApiBadRequest, userName)
-		utils.WriteNotFoundError(response, common.BcsErrApiBadRequest, message)
-		return
-	}
-
-	// refresh the usertoken
-	updatedUser := user
-	updatedUser.UserToken = uniuri.NewLen(constant.DefaultTokenLength)
-	updatedUser.ExpiresAt = time.Now().Add(sqlstore.AdminSaasUserExpiredTime)
-
-	// update and save to db
-	// if update failed, it's better to refresh by client
-	err := sqlstore.UpdateUser(user, updatedUser)
-	if err != nil {
-		metrics.ReportRequestAPIMetrics("RefreshSaasToken", request.Request.Method, metrics.ErrStatus, start)
-		blog.Errorf("failed to refresh usertoken [%s]: %s", user.Name, err.Error())
-		message := fmt.Sprintf("errcode: %d, failed to refresh usertoken [%s], error: %s", common.BcsErrApiInternalDbError,
-			userName, err)
-		utils.WriteServerError(response, common.BcsErrApiInternalDbError, message)
-		return
-	}
-
-	data := utils.CreateResponseData(nil, "success", *user)
-	_, _ = response.Write([]byte(data))
-
-	metrics.ReportRequestAPIMetrics("RefreshSaasToken", request.Request.Method, metrics.SucStatus, start)
 }
 
 // GetCurrentUserInfo get the current login user information

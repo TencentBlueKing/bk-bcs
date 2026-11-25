@@ -42,14 +42,6 @@ spec:
               value: "{{ .Values.env.BK_BCS_adminUser }}"
             - name: adminToken
               value: "{{ .Values.env.BK_BCS_adminToken }}"
-            - name: tkeSecretId
-              value: "{{ .Values.env.BK_BCS_tkeSecretId }}"
-            - name: tkeSecretKey
-              value: "{{ .Values.env.BK_BCS_tkeSecretKey }}"
-            - name: tkeCcsHost
-              value: "{{ .Values.env.BK_BCS_tkeCcsHost }}"
-            - name: tkeCcsPath
-              value: "{{ .Values.env.BK_BCS_tkeCcsPath }}"
             - name: bcsZkHost
               value: "{{ .Values.global.env.BK_BCS_bcsZkHost | default .Values.env.BK_BCS_bcsZkHost }}"
             - name: localIp

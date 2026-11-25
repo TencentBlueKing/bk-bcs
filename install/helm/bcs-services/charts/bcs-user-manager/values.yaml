@@ -24,14 +24,6 @@ env:
   BK_BCS_adminToken: ""
   # bkiam authorization api host
   BK_BCS_bkiamAuthHost: ""
-  # tke cluster secret id
-  BK_BCS_tkeSecretId: ""
-  # tke cluster secret key
-  BK_BCS_tkeSecretKey: ""
-  # tke cluster ccs host
-  BK_BCS_tkeCcsHost: "api.cloud.com"
-  # tke cluster ccs path
-  BK_BCS_tkeCcsPath: "/v2/index.php"
   # zkHost for service discover, host:port string with comma speration
   # it's common env, global value comes first
   BK_BCS_bcsZkHost: "127.0.0.1:2181"

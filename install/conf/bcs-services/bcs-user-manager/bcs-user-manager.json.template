@@ -41,12 +41,6 @@
       "token": "${adminToken}"
     }
   ],
-  "tke": {
-    "secret_id": "${tkeSecretId}",
-    "secret_key": "${tkeSecretKey}",
-    "ccs_host": "${tkeCcsHost}",
-    "ccs_path": "${tkeCcsPath}"
-  },
   "etcdRegistry": {
     "etcd_feature": ${bcsEtcdFeature},
     "etcd_address": "${bcsEtcdHost}",

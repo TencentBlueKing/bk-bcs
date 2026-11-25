@@ -53,37 +53,6 @@ func PrintCreateAdminUserCmdResult(flagOutput string, resp *pkg.CreateAdminUserR
 	tw.Render()
 }
 
-// PrintCreateSaasUserCmdResult prints the response that create saas user
-func PrintCreateSaasUserCmdResult(flagOutput string, resp *pkg.CreateSaasUserResponse) {
-	if flagOutput == outputTypeJSON {
-		if err := encodeJSON(resp); err != nil {
-			klog.Fatalf("create saas user output json to stdout failed: %s", err.Error())
-		}
-	}
-	tw := tablewriter.NewWriter(os.Stdout)
-	tw.SetHeader(func() []string {
-		return []string{
-			"ID", "NAME", "USER_TYPE", "USER_TOKEN", "CREATED_BY", "CREATED_AT", "UPDATED_AT", "EXPIRES_AT", "DELETED_AT",
-		}
-	}())
-	tw.SetAutoMergeCells(true)
-	data := resp.Data
-	tw.Append(func() []string {
-		return []string{
-			strconv.Itoa(int(data.ID)),
-			data.Name,
-			strconv.Itoa(int(data.UserType)),
-			data.UserToken,
-			data.CreatedBy,
-			data.CreatedAt.Format(timeFormatter),
-			data.UpdatedAt.Format(timeFormatter),
-			data.ExpiresAt.Format(timeFormatter),
-			data.GetDeletedAtStr(),
-		}
-	}())
-	tw.Render()
-}
-
 // PrintCreatePlainUserCmdResult prints the response that create plain user
 func PrintCreatePlainUserCmdResult(flagOutput string, resp *pkg.CreatePlainUserResponse) {
 	if flagOutput == outputTypeJSON {
@@ -146,73 +115,11 @@ func PrintGetAdminUserCmdResult(flagOutput string, resp *pkg.GetAdminUserRespons
 	tw.Render()
 }
 
-// PrintGetSaasUserCmdResult prints the response that get saas user
-func PrintGetSaasUserCmdResult(flagOutput string, resp *pkg.GetSaasUserResponse) {
-	if flagOutput == outputTypeJSON {
-		if err := encodeJSON(resp); err != nil {
-			klog.Fatalf("get saas user output json to stdout failed: %s", err.Error())
-		}
-	}
-	tw := tablewriter.NewWriter(os.Stdout)
-	tw.SetHeader(func() []string {
-		return []string{
-			"ID", "NAME", "USER_TYPE", "USER_TOKEN", "CREATED_BY", "CREATED_AT", "UPDATED_AT", "EXPIRES_AT", "DELETED_AT",
-		}
-	}())
-	tw.SetAutoMergeCells(true)
-	data := resp.Data
-	tw.Append(func() []string {
-		return []string{
-			strconv.Itoa(int(data.ID)),
-			data.Name,
-			strconv.Itoa(int(data.UserType)),
-			data.UserToken,
-			data.CreatedBy,
-			data.CreatedAt.Format(timeFormatter),
-			data.UpdatedAt.Format(timeFormatter),
-			data.ExpiresAt.Format(timeFormatter),
-			data.GetDeletedAtStr(),
-		}
-	}())
-	tw.Render()
-}
-
 // PrintGetPlainUserCmdResult prints the response that get plain user
 func PrintGetPlainUserCmdResult(flagOutput string, resp *pkg.GetPlainUserResponse) {
 	if flagOutput == outputTypeJSON {
 		if err := encodeJSON(resp); err != nil {
 			klog.Fatalf("get plain user output json to stdout failed: %s", err.Error())
-		}
-	}
-	tw := tablewriter.NewWriter(os.Stdout)
-	tw.SetHeader(func() []string {
-		return []string{
-			"ID", "NAME", "USER_TYPE", "USER_TOKEN", "CREATED_BY", "CREATED_AT", "UPDATED_AT", "EXPIRES_AT", "DELETED_AT",
-		}
-	}())
-	tw.SetAutoMergeCells(true)
-	data := resp.Data
-	tw.Append(func() []string {
-		return []string{
-			strconv.Itoa(int(data.ID)),
-			data.Name,
-			strconv.Itoa(int(data.UserType)),
-			data.UserToken,
-			data.CreatedBy,
-			data.CreatedAt.Format(timeFormatter),
-			data.UpdatedAt.Format(timeFormatter),
-			data.ExpiresAt.Format(timeFormatter),
-			data.GetDeletedAtStr(),
-		}
-	}())
-	tw.Render()
-}
-
-// PrintRefreshSaasTokenCmdResult prints the response that refresh saas user token
-func PrintRefreshSaasTokenCmdResult(flagOutput string, resp *pkg.RefreshSaasTokenResponse) {
-	if flagOutput == outputTypeJSON {
-		if err := encodeJSON(resp); err != nil {
-			klog.Fatalf("refresh saas user token output json to stdout failed: %s", err.Error())
 		}
 	}
 	tw := tablewriter.NewWriter(os.Stdout)

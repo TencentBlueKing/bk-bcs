@@ -111,7 +111,6 @@ type UserMgrConfig struct {
 	RedisConfig     RedisConfig
 	EnableTokenSync bool
 	BootStrapUsers  []options.BootStrapUser
-	TKE             options.TKEOptions
 	PeerToken       string
 
 	IAMConfig  options.IAMConfig
@@ -119,6 +118,7 @@ type UserMgrConfig struct {
 	Cmdb       options.CmdbConfig
 
 	PermissionSwitch bool
+	EnableExtraToken bool
 	CommunityEdition bool
 	BcsAPI           *options.BcsAPI
 
@@ -135,8 +135,6 @@ type UserMgrConfig struct {
 }
 
 var (
-	// Tke option for sync tke cluster credentials
-	Tke options.TKEOptions
 	// CliTls for
 	CliTls *tls.Config
 )

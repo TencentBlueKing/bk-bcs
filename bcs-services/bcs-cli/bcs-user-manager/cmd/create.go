@@ -29,15 +29,11 @@ func newCreateCmd() *cobra.Command {
 		Short: "create resource",
 		Long:  "create resource from bcs-user-manager",
 	}
-	createCmd.AddCommand(createClusterCmd())
-	createCmd.AddCommand(createSaasUserCmd())
 	createCmd.AddCommand(createAdminUserCmd())
 	createCmd.AddCommand(createPlainUserCmd())
-	createCmd.AddCommand(createRegisterTokenCmd())
 	createCmd.AddCommand(createTokenCmd())
 	createCmd.AddCommand(createTempTokenCmd())
 	createCmd.AddCommand(createClientTokenCmd())
-	createCmd.AddCommand(addTkeCidrCmd())
 	return createCmd
 }
 
@@ -71,36 +67,6 @@ func createAdminUserCmd() *cobra.Command {
 	return subCmd
 }
 
-// createSaasUserCmd for saas user
-func createSaasUserCmd() *cobra.Command {
-	var userName string
-	subCmd := &cobra.Command{
-		Use:     "saas-user",
-		Aliases: []string{"su"},
-		Short:   "create saas user",
-		Long:    "create saas user from user manager",
-		Example: "kubectl-bcs-user-manager create su -u [user_name to create]",
-		Run: func(cmd *cobra.Command, args []string) {
-			cobra.OnInitialize(ensureConfig)
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
-			client := pkg.NewClientWithConfiguration(ctx)
-			resp, err := client.CreateSaasUser(userName)
-			if err != nil {
-				klog.Fatalf("create saas user failed: %v", err)
-			}
-			if resp != nil && resp.Code != 0 {
-				klog.Fatalf("create saas user response code not 0 but %d: %s", resp.Code, resp.Message)
-			}
-			printer.PrintCreateSaasUserCmdResult(flagOutput, resp)
-		},
-	}
-
-	subCmd.Flags().StringVarP(&userName, "user_name", "u", "",
-		"the user name that query saas user")
-	return subCmd
-}
-
 // createPlainUserCmd for plain user
 func createPlainUserCmd() *cobra.Command {
 	var userName string
@@ -128,68 +94,6 @@ func createPlainUserCmd() *cobra.Command {
 
 	subCmd.Flags().StringVarP(&userName, "user_name", "u", "",
 		"the user name that query plain user")
-	return subCmd
-}
-
-// createClusterCmd for create cluster
-func createClusterCmd() *cobra.Command {
-	var clusterCreateBody string
-	subCmd := &cobra.Command{
-		Use:     "cluster",
-		Aliases: []string{"c"},
-		Short:   "create cluster",
-		Long:    "create cluster from user manager",
-		Example: "kubectl-bcs-user-manager create cluster --cluster-body '{\"cluster_id\":\"\"," +
-			"\"cluster_type\":\"\", \"tke_cluster_id\":\"\",\"tke_cluster_region\":\"\"}' ",
-		Run: func(cmd *cobra.Command, args []string) {
-			cobra.OnInitialize(ensureConfig)
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
-			client := pkg.NewClientWithConfiguration(ctx)
-			resp, err := client.CreateCluster(clusterCreateBody)
-			if err != nil {
-				klog.Fatalf("create cluster failed: %v", err)
-			}
-			if resp != nil && resp.Code != 0 {
-				klog.Fatalf("create cluster response code not 0 but %d: %s", resp.Code, resp.Message)
-			}
-			printer.PrintCreateClusterCmdResult(flagOutput, resp)
-		},
-	}
-
-	subCmd.Flags().StringVarP(&clusterCreateBody, "cluster-body", "b", "",
-		"the cluster body that create cluster")
-	return subCmd
-}
-
-// createRegisterTokenCmd register token
-func createRegisterTokenCmd() *cobra.Command {
-	var clusterId string
-	subCmd := &cobra.Command{
-		Use:     "register-token",
-		Aliases: []string{"rt"},
-		Short:   "register-token",
-		Long:    "register specified cluster token from user manager",
-		Example: "kubectl-bcs-user-manager create register-token --cluster_id [string]",
-		Run: func(cmd *cobra.Command, args []string) {
-			cobra.OnInitialize(ensureConfig)
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
-			client := pkg.NewClientWithConfiguration(ctx)
-			resp, err := client.CreateRegisterToken(clusterId)
-			if err != nil {
-				klog.Fatalf("register specified cluster token failed: %v", err)
-			}
-			if resp != nil && resp.Code != 0 {
-				klog.Fatalf("register specified cluster token response code not 0 but %d: %s",
-					resp.Code, resp.Message)
-			}
-			printer.PrintCreateRegisterTokenCmdResult(flagOutput, resp)
-		},
-	}
-
-	subCmd.Flags().StringVarP(&clusterId, "cluster_id", "i", "",
-		"the id which cluster will register token ")
 	return subCmd
 }
 
@@ -283,36 +187,5 @@ func createClientTokenCmd() *cobra.Command {
 
 	subCmd.Flags().StringVarP(&tokenForm, "token_form", "f", "",
 		"the form used to create token ")
-	return subCmd
-}
-
-// addTkeCidrCmd add tke cidr block
-func addTkeCidrCmd() *cobra.Command {
-	var tkeCidrForm string
-	subCmd := &cobra.Command{
-		Use:     "tkecidrs",
-		Aliases: []string{"tkecidrs"},
-		Short:   "init tke cidrs",
-		Long:    "init tke cidrs from user manager",
-		Example: "kubectl-bcs-user-manager create tkecidrs --tkecidr_form '{\n  \"vpc\": \"\",\n  \"tke_cidrs\": " +
-			"[\n    {\n      \"cidr\": \"\",\n      \"ip_number\": \"\",\n      \"status\": \"\"\n    }\n  ]\n}' ",
-		Run: func(cmd *cobra.Command, args []string) {
-			cobra.OnInitialize(ensureConfig)
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
-			client := pkg.NewClientWithConfiguration(ctx)
-			resp, err := client.AddTkeCidr(tkeCidrForm)
-			if err != nil {
-				klog.Fatalf("init tke cidrs failed: %v", err)
-			}
-			if resp != nil && resp.Code != 0 {
-				klog.Fatalf("init tke cidrs response code not 0 but %d: %s", resp.Code, resp.Message)
-			}
-			printer.PrintAddTkeCidrCmdResult(flagOutput, resp)
-		},
-	}
-
-	subCmd.Flags().StringVarP(&tkeCidrForm, "tkecidr_form", "f", "",
-		"the form used to init tke cidrs")
 	return subCmd
 }

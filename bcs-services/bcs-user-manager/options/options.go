@@ -38,7 +38,6 @@ type UserManagerOptions struct {
 	DSN             string          `json:"mysql_dsn" value:"" usage:"dsn for connect to mysql"`
 	SlowSQLLatency  uint            `json:"slow_sql_latency" value:"" usage:"slow sql latency for log, unit:ms"`
 	BootStrapUsers  []BootStrapUser `json:"bootstrap_users"`
-	TKE             TKEOptions      `json:"tke"`
 	PeerToken       string          `json:"peer_token" value:"" usage:"peer token to authorize with each other, only used to websocket peer"`
 	// go-micro etcd registry feature support
 	Etcd         registry.CMDOptions `json:"etcdRegistry"`
@@ -48,6 +47,7 @@ type UserManagerOptions struct {
 
 	IAMConfig        IAMConfig     `json:"iam_config"`
 	PermissionSwitch bool          `json:"permission_switch"`
+	EnableExtraToken bool          `json:"enable_extra_token" usage:"enable /v1/tokens/extra/getClusterUserToken, which returns user token without authentication"`
 	Cmdb             CmdbConfig    `json:"cmdb"`
 	CommunityEdition bool          `json:"community_edition"`
 	TracingConf      TracingConf   `json:"tracing_conf"`
@@ -83,14 +83,6 @@ type IAMConfig struct {
 
 	// EnableV4 开启后鉴权走 IAM V4，并初始化 V4 client / 权限模型 migration
 	EnableV4 bool `json:"enable_v4"`
-}
-
-// TKEOptions tke api option
-type TKEOptions struct {
-	SecretID  string `json:"secret_id" value:"" usage:"tke user account secret id"`
-	SecretKey string `json:"secret_key" value:"" usage:"tke user account secret key"`
-	CcsHost   string `json:"ccs_host" value:"" usage:"tke ccs host domain"`
-	CcsPath   string `json:"ccs_path" value:"" usage:"tke ccs path"`
 }
 
 // BootStrapUser system admin user
