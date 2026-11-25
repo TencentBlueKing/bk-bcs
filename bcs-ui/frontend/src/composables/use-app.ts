@@ -2,10 +2,14 @@ import { computed, InjectionKey, ref } from 'vue';
 
 import BkUserDisplayName from '@blueking/bk-user-display-name';
 
+import featureFlagsUtils from './feature-flags-utils';
+
 import { featureFlags as featureFlagsApi } from '@/api/modules/project';
 import { userInfo } from '@/api/modules/user-manager';
 import { Preset } from '@/components/assistant/use-assistant-store';
 import $store from '@/store';
+
+let featureFlagsLoader: ReturnType<typeof featureFlagsUtils.createFeatureFlagsLoader> | undefined;
 
 // todo 完善类型
 export interface IProject {
@@ -151,6 +155,27 @@ export function useCluster() {
     handleGotoConsole,
   };
 }
+function getFeatureFlags(params: { projectCode: string }) {
+  if (!featureFlagsLoader) {
+    const defaultFlags = {
+      CLOUDTOKEN: false,
+      PROJECT_LIST: false,
+      AZURECLOUD: true,
+      IMPORTSOPSCLUSTER: true,
+      PROJECTQUOTAS: false,
+      PLATFORMMANAGE: false, // 平台管理默认不开启
+      DEPLOYMENTMANAGEPULL: false,
+      ENABLEPOPUP: false, // ai小鲸划词弹窗默认不开启
+    };
+    featureFlagsLoader = featureFlagsUtils.createFeatureFlagsLoader({
+      requestFlags: requestParams => featureFlagsApi(requestParams),
+      updateFeatureFlags: flags => $store.commit('updateFeatureFlags', flags),
+      defaultFlags,
+    });
+  }
+  return featureFlagsLoader(params);
+}
+
 /**
  * APP相关信息,eg: 用户, feature_flag, 文档配置等
  */
@@ -171,21 +196,6 @@ export function useAppData() {
 
   // 特性开关(菜单等)
   const flagsMap = computed(() => $store.state.featureFlags);
-  const defaultFlags = {
-    CLOUDTOKEN: false,
-    PROJECT_LIST: false,
-    AZURECLOUD: true,
-    IMPORTSOPSCLUSTER: true,
-    PROJECTQUOTAS: false,
-    PLATFORMMANAGE: false, // 平台管理默认不开启
-    DEPLOYMENTMANAGEPULL: false,
-    ENABLEPOPUP: false, // ai小鲸划词弹窗默认不开启
-  };
-  async function getFeatureFlags(params: { projectCode: string }) {
-    const data = await featureFlagsApi(params).catch(() => ({}));
-    $store.commit('updateFeatureFlags', Object.assign(defaultFlags, data));
-    return data;
-  }
 
   // 当前版本的文档链接信息
   const linksMap = ref(window.BCS_CONFIG);

@@ -2,6 +2,8 @@ import { has } from 'lodash';
 import { computed } from 'vue';
 import { Route } from 'vue-router';
 
+import menuUtils from './menu-utils';
+
 import { useAppData } from '@/composables/use-app';
 import $i18n from '@/i18n/i18n-setup';
 
@@ -644,19 +646,8 @@ export default function useMenu() {
 
   const { flagsMap, getFeatureFlags } = useAppData();
   // 过滤未开启feature_flag的菜单
-  const filterMenu = (featureFlags: Record<string, boolean>, data: IMenu[]) => data.reduce<IMenu[]>((pre, menu) => {
-    if (has(featureFlags, menu.id) && !featureFlags[menu.id]) return pre; // 未开启菜单项
-    pre.push(menu);
-    if (menu.children?.length) {
-      menu.children = filterMenu(featureFlags, menu.children);
-    }
-    return pre;
-  }, []);
-  const filteredMenus = computed<IMenu[]>(() => filterMenu(flagsMap.value, menusData.value));
-  const menus = computed<IMenu[]>(() => {
-    if (!flagsMap.value || !Object.keys(flagsMap.value).length) return [];
-    return filteredMenus.value;
-  });
+  const filteredMenus = computed<IMenu[]>(() => menuUtils.filterMenu(flagsMap.value, menusData.value));
+  const menus = computed<IMenu[]>(() => menuUtils.getVisibleMenus(flagsMap.value, filteredMenus.value));
   // 因为ref里面不能存有递归关闭的数据，这里缓存一份含有parent指向的map数据
   let menusDataMap = parseTreeMenuToMap(filteredMenus.value);
   // 扁平化子菜单
