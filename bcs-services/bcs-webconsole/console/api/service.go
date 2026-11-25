@@ -64,7 +64,7 @@ func (s service) RegisterRoute(router gin.IRoutes) {
 		metrics.RequestCollect("CreateWebConsoleSession"), route.PermissionRequired(),
 		route.AuditHandler(), s.CreateWebConsoleSession)
 	api.GET("/api/projects/:projectId/clusters/",
-		metrics.RequestCollect("ListClusters"), s.ListClusters)
+		metrics.RequestCollect("ListClusters"), route.ProjectViewRequired(), s.ListClusters)
 
 	// 蓝鲸API网关鉴权 & App鉴权
 	api.GET("/api/portal/sessions/:sessionId/",
@@ -103,16 +103,12 @@ func (s service) RegisterRoute(router gin.IRoutes) {
 // @Param        projectId  path      string              true  "项目ID"
 // @Success      200        {object}  types.APIResponse   "集群列表"
 // @Failure      400        {object}  types.APIResponse   "请求参数错误"
+// @Failure      403        {object}  types.APIResponse   "没有项目查看权限"
 // @Router       /api/projects/{projectId}/clusters/ [get]
 func (s *service) ListClusters(c *gin.Context) {
-	projectId := c.Param("projectId")
-	project, err := bcs.GetProject(c.Request.Context(), config.G.BCS, projectId)
-	if err != nil {
-		rest.APIError(c, i18n.T(c, "项目不正确"))
-		return
-	}
+	authCtx := route.MustGetAuthContext(c)
 
-	clusters, err := bcs.ListClusters(c.Request.Context(), project.ProjectId, project.TenantID)
+	clusters, err := bcs.ListClusters(c.Request.Context(), authCtx.ProjectId, authCtx.TenantId)
 	if err != nil {
 		rest.APIError(c, i18n.T(c, "%s", err))
 		return
@@ -176,6 +172,13 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 	if err != nil {
 		rest.APIError(c, i18n.T(c, "%s", err))
 		return
+	}
+
+	if podCtx.Mode == types.ContainerDirectMode {
+		if err = route.ValidateContainerNamespace(c, authCtx, podCtx.Namespace); err != nil {
+			rest.APIForbidden(c, err.Error())
+			return
+		}
 	}
 
 	podCtx.ProjectId = authCtx.ProjectId
@@ -277,6 +280,11 @@ func (s *service) CreateContainerPortalSession(c *gin.Context) {
 	podCtx, err := podmanager.QueryOpenPodCtx(c.Request.Context(), authCtx.ClusterId, consoleQuery)
 	if err != nil {
 		rest.APIError(c, i18n.T(c, "请求参数错误: %s", err))
+		return
+	}
+
+	if err = route.ValidateCredContainerNamespace(authCtx, podCtx.Namespace); err != nil {
+		rest.APIForbidden(c, err.Error())
 		return
 	}
 

@@ -33,6 +33,17 @@ func APIError(c *gin.Context, err string) {
 	c.AbortWithStatusJSON(http.StatusBadRequest, result)
 }
 
+// APIForbidden 无权限返回
+func APIForbidden(c *gin.Context, err string) {
+	requestId := route.MustGetAuthContext(c).RequestId
+	result := types.APIResponse{
+		Code:      types.ApiErrorCode,
+		Message:   err,
+		RequestID: requestId,
+	}
+	c.AbortWithStatusJSON(http.StatusForbidden, result)
+}
+
 // APIOK 正常返回
 func APIOK(c *gin.Context, message string, data interface{}) {
 	requestId := route.MustGetAuthContext(c).RequestId
