@@ -87,49 +87,129 @@ type resourceID struct {
 	ScopeId     string `json:"scopeId,omitempty"`    // 资源范围ID(业务ID/业务集ID)
 }
 
-func checkResourceID(resourceID *resourceID) error {
+// resolveResourceID fills the empty clusterID/projectID from store, values carried by the request are kept
+func resolveResourceID(ctx context.Context, model store.ClusterManagerModel, resourceID *resourceID) error {
 	if resourceID.ServerKey != "" && resourceID.ClusterID == "" {
 		resourceID.ClusterID = resourceID.ServerKey
 	}
 	if resourceID.InnerIP != "" && resourceID.ClusterID == "" {
-		node, err := store.GetStoreModel().GetNodeByIP(context.TODO(), resourceID.InnerIP)
+		node, err := model.GetNodeByIP(ctx, resourceID.InnerIP)
 		if err != nil {
 			return err
 		}
 		resourceID.ClusterID = node.ClusterID
 	}
-	if resourceID.ClusterID != "" && resourceID.ProjectID == "" {
-		cluster, err := store.GetStoreModel().GetCluster(context.TODO(), resourceID.ClusterID)
-		if err != nil {
-			return err
-		}
-		resourceID.ProjectID = cluster.ProjectID
-	}
 	if resourceID.NodeGroupID != "" && resourceID.ClusterID == "" {
-		np, err := store.GetStoreModel().GetNodeGroup(context.TODO(), resourceID.NodeGroupID)
+		np, err := model.GetNodeGroup(ctx, resourceID.NodeGroupID)
 		if err != nil {
 			return err
 		}
 		resourceID.ClusterID = np.ClusterID
-		resourceID.ProjectID = np.ProjectID
+		fillIfEmpty(&resourceID.ProjectID, np.ProjectID)
 	}
 	if resourceID.TaskID != "" && resourceID.ClusterID == "" {
-		task, err := store.GetStoreModel().GetTask(context.TODO(), resourceID.TaskID)
+		task, err := model.GetTask(ctx, resourceID.TaskID)
 		if err != nil {
 			return err
 		}
 		resourceID.ClusterID = task.ClusterID
-		resourceID.ProjectID = task.ProjectID
+		fillIfEmpty(&resourceID.ProjectID, task.ProjectID)
 	}
-	if resourceID.CloudID != "" && resourceID.AccountID != "" && resourceID.ProjectID == "" {
-		cloud, err := store.GetStoreModel().GetCloudAccount(context.TODO(),
-			resourceID.CloudID, resourceID.AccountID, false)
+	if resourceID.ClusterID != "" && resourceID.ProjectID == "" {
+		cls, err := model.GetCluster(ctx, resourceID.ClusterID)
 		if err != nil {
 			return err
 		}
-		resourceID.ProjectID = cloud.ProjectID
+		resourceID.ProjectID = cls.ProjectID
+	}
+	if resourceID.CloudID != "" && resourceID.AccountID != "" && resourceID.ProjectID == "" {
+		account, err := model.GetCloudAccount(ctx, resourceID.CloudID, resourceID.AccountID, true)
+		if err != nil {
+			return err
+		}
+		resourceID.ProjectID = account.ProjectID
 	}
 	return nil
+}
+
+// verifyResourceOwner checks that the clusterID/projectID match the stored owner of the resources in the request
+func verifyResourceOwner(ctx context.Context, model store.ClusterManagerModel, resourceID *resourceID,
+	action string) error {
+	switch action {
+	case cluster.CanViewClusterOperation, cluster.CanManageClusterOperation, cluster.CanDeleteClusterOperation:
+		if err := verifyClusterOwner(ctx, model, resourceID, action); err != nil {
+			return err
+		}
+	}
+	return verifyCloudAccountOwner(ctx, model, resourceID)
+}
+
+func verifyClusterOwner(ctx context.Context, model store.ClusterManagerModel, resourceID *resourceID,
+	action string) error {
+	if resourceID.NodeGroupID != "" {
+		np, err := model.GetNodeGroup(ctx, resourceID.NodeGroupID)
+		if err != nil {
+			return err
+		}
+		if err = matchOwner(resourceID.ClusterID, np.ClusterID, "cluster", "nodeGroup",
+			resourceID.NodeGroupID); err != nil {
+			return err
+		}
+		if err = matchOwner(resourceID.ProjectID, np.ProjectID, "project", "nodeGroup",
+			resourceID.NodeGroupID); err != nil {
+			return err
+		}
+	}
+	if resourceID.TaskID != "" {
+		task, err := model.GetTask(ctx, resourceID.TaskID)
+		if err != nil {
+			return err
+		}
+		if err = matchOwner(resourceID.ClusterID, task.ClusterID, "cluster", "task", resourceID.TaskID); err != nil {
+			return err
+		}
+		if err = matchOwner(resourceID.ProjectID, task.ProjectID, "project", "task", resourceID.TaskID); err != nil {
+			return err
+		}
+	}
+	if resourceID.ClusterID == "" {
+		return nil
+	}
+
+	cls, err := model.GetCluster(ctx, resourceID.ClusterID)
+	if err != nil {
+		return err
+	}
+	// shared cluster can be viewed by the projects it is shared with
+	if cls.IsShared && action == cluster.CanViewClusterOperation {
+		return nil
+	}
+	return matchOwner(resourceID.ProjectID, cls.ProjectID, "project", "cluster", resourceID.ClusterID)
+}
+
+func verifyCloudAccountOwner(ctx context.Context, model store.ClusterManagerModel, resourceID *resourceID) error {
+	if resourceID.CloudID == "" || resourceID.AccountID == "" {
+		return nil
+	}
+	account, err := model.GetCloudAccount(ctx, resourceID.CloudID, resourceID.AccountID, true)
+	if err != nil {
+		return err
+	}
+	return matchOwner(resourceID.ProjectID, account.ProjectID, "project", "cloudAccount", resourceID.AccountID)
+}
+
+func fillIfEmpty(target *string, value string) {
+	if *target == "" {
+		*target = value
+	}
+}
+
+// matchOwner rejects the value if it differs from the stored owner, an empty owner matches any value
+func matchOwner(value, owner, ownerKind, resourceKind, resourceName string) error {
+	if owner == "" || value == owner {
+		return nil
+	}
+	return fmt.Errorf("%s %s does not match %s %s", ownerKind, value, resourceKind, resourceName)
 }
 
 // CheckUserPerm check user perm
@@ -157,7 +237,11 @@ func CheckUserPerm(ctx context.Context, req server.Request, user middleware.Auth
 	}
 
 	// check resourceID
-	if err = checkResourceID(resource); err != nil {
+	model := store.GetStoreModel()
+	if err = resolveResourceID(ctx, model, resource); err != nil {
+		return false, fmt.Errorf("auth failed: err %s", err.Error())
+	}
+	if err = verifyResourceOwner(ctx, model, resource, action); err != nil {
 		return false, fmt.Errorf("auth failed: err %s", err.Error())
 	}
 
