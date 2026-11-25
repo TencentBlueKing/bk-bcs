@@ -652,9 +652,13 @@ export default function useMenu() {
     }
     return pre;
   }, []);
-  const menus = computed<IMenu[]>(() => filterMenu(flagsMap.value, menusData.value));
+  const filteredMenus = computed<IMenu[]>(() => filterMenu(flagsMap.value, menusData.value));
+  const menus = computed<IMenu[]>(() => {
+    if (!flagsMap.value || !Object.keys(flagsMap.value).length) return [];
+    return filteredMenus.value;
+  });
   // 因为ref里面不能存有递归关闭的数据，这里缓存一份含有parent指向的map数据
-  let menusDataMap = parseTreeMenuToMap(menus.value); // 这里使用 menus，一级菜单通过接口控制显示隐藏
+  let menusDataMap = parseTreeMenuToMap(filteredMenus.value);
   // 扁平化子菜单
   const flatLeafMenus = (menus: IMenu[], root?: IMenu) => {
     const data: IMenu[] = [];

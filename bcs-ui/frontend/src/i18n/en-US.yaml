@@ -136,7 +136,7 @@ nav:
   chartList: Charts
   templateSet: TemplateSets
   tagDeprecated: Deprecated Soon
-  templateSetDeprecatedTips: 'TemplateSets will be deprecated soon. Please use TemplateFile instead.'
+  templateSetDeprecatedTips: TemplateSets will be deprecated soon. Please use TemplateFile instead.
   variable: Variables
   project: Project
   event: Events
