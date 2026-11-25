@@ -24,7 +24,12 @@
         ]"
         :href="menu.children && !!menu.children.length ? 'javascript:void(0)' : resolveMenuLink(menu)">
         <span :title="menu.title">{{ menu.title }}</span>
-        <bcs-tag theme="danger" v-if="menu.tag">{{ menu.tag }}</bcs-tag>
+        <bcs-popover
+          v-if="menu.deprecation?.tag"
+          :content="menu.deprecation.tips"
+          placement="top">
+          <bcs-tag class="!m-[0px]" theme="danger">{{ menu.deprecation.tag }}</bcs-tag>
+        </bcs-popover>
       </a>
       <template #child>
         <bcs-navigation-menu-item
@@ -41,7 +46,12 @@
             ]"
             :href="resolveMenuLink(child)">
             <span :title="child.title">{{ child.title }}</span>
-            <bcs-tag theme="danger" v-if="child.tag">{{ child.tag }}</bcs-tag>
+            <bcs-popover
+              v-if="child.deprecation?.tag"
+              :content="child.deprecation.tips"
+              placement="top">
+              <bcs-tag theme="danger">{{ child.deprecation.tag }}</bcs-tag>
+            </bcs-popover>
           </a>
         </bcs-navigation-menu-item>
       </template>

@@ -117,6 +117,8 @@ nav:
   releaseList: Release列表
   chartList: Chart列表
   templateSet: 模板集
+  tagDeprecated: 即将下架
+  templateSetDeprecatedTips: 模板集功能即将下架，请改用「模板文件」替代
   variable: 变量管理
   project: 项目管理
   event: 事件查询

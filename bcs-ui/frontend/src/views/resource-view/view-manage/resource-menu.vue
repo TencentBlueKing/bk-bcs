@@ -79,7 +79,12 @@
               :href="menu.children && !!menu.children.length ? 'javascript:void(0)' : resolveMenuLink(menu)">
               <span class="flex items-center">
                 <span :title="menu.title" class="flex-1 bcs-ellipsis" v-bk-overflow-tips>{{ menu.title }}</span>
-                <bcs-tag theme="danger" v-if="menu.tag">{{ menu.tag }}</bcs-tag>
+                <bcs-popover
+                  v-if="menu.deprecation?.tag"
+                  :content="menu.deprecation.tips"
+                  placement="top">
+                  <bcs-tag class="!m-[0px]" theme="danger">{{ menu.deprecation.tag }}</bcs-tag>
+                </bcs-popover>
               </span>
               <span
                 :class="[
@@ -108,7 +113,12 @@
                   :href="resolveMenuLink(child)">
                   <span class="flex items-center">
                     <span :title="child.title" class="flex-1 bcs-ellipsis" v-bk-overflow-tips>{{ child.title }}</span>
-                    <bcs-tag theme="danger" v-if="child.tag" class="mr-[6px]">{{ child.tag }}</bcs-tag>
+                    <bcs-popover
+                      v-if="child.deprecation?.tag"
+                      :content="child.deprecation.tips"
+                      placement="top">
+                      <bcs-tag theme="danger" class="mr-[6px]">{{ child.deprecation.tag }}</bcs-tag>
+                    </bcs-popover>
                   </span>
                   <span
                     :class="[

@@ -5,6 +5,13 @@ import { Route } from 'vue-router';
 import { useAppData } from '@/composables/use-app';
 import $i18n from '@/i18n/i18n-setup';
 
+export interface IDeprecation {
+  // 标识文案，如「即将下架」
+  tag: string
+  // hover 标识时的提示内容
+  tips: string
+}
+
 export interface IMenu {
   title?: string
   id: string
@@ -12,6 +19,8 @@ export interface IMenu {
   icon?: string
   root?: IMenu
   tag?: string
+  // 即将下架标识配置（通用导航配置，配置后导航项展示标识，hover 提示替代方案）
+  deprecation?: IDeprecation
   children?: IMenu[]
   parent?: IMenu
   meta?: Record<string, any>
@@ -366,6 +375,10 @@ export default function useMenu() {
           title: $i18n.t('nav.templateSet'),
           id: 'TEMPLATESET_v1',
           icon: 'bcs-icon-templateset',
+          deprecation: {
+            tag: $i18n.t('nav.tagDeprecated'),
+            tips: $i18n.t('nav.templateSetDeprecatedTips'),
+          },
           children: [
             {
               title: $i18n.t('deploy.templateset.list'),
