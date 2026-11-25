@@ -545,7 +545,10 @@ func (cm *ClusterManager) initAuthConfig() error {
 
 // initTenantConfig init tenant config
 func (cm *ClusterManager) initTenantConfig() error {
-	if !cm.opt.TenantConfig.EnableMultiTenantMode {
+	if err := cm.opt.TenantConfig.Validate(); err != nil {
+		return err
+	}
+	if !cm.opt.TenantConfig.IsMultiTenantEnabled() {
 		return nil
 	}
 

@@ -28,7 +28,12 @@ import (
 
 // IsMultiTenantEnabled 检查是否启用了多租户模式
 func IsMultiTenantEnabled() bool {
-	return config.GlobalConf.EnableMultiTenant
+	return config.GlobalConf.IsMultiTenantEnabled()
+}
+
+// IsTenantEnabled 检查是否启用了租户功能（单租户或多租户），开启时 bk_username 需通过 bk-user 转换
+func IsTenantEnabled() bool {
+	return config.GlobalConf.IsTenantEnabled()
 }
 
 // ResourceMetaData xxx

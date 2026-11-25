@@ -14,6 +14,7 @@
 local core = require("apisix.core")
 local redis_new = require("resty.redis").new
 local jwt = require("resty.jwt")
+local bklogin = require("apisix.plugins.bcs-auth.bklogin")
 local error = error
 
 local pcall = pcall
@@ -178,7 +179,7 @@ function _M:get_jwt_from_redis(credential, conf, ctx, key_prefix, create_if_null
 
     if (jwt_token == ngx.null and create_if_null) then
         local userinfo
-        if conf.bk_login_host_esb then
+        if conf.bk_login_host_esb and conf.bk_login_host_esb ~= "" then
             local data = get_userinfo_handler(credential, conf)
             if data and data["result"] then
                 userinfo = data["data"]["bk_username"]
@@ -187,16 +188,20 @@ function _M:get_jwt_from_redis(credential, conf, ctx, key_prefix, create_if_null
                 ctx.var["bk_login_code"] = data["code"]
                 ctx.var["bk_login_message"] = data["message"]
             end
-        elseif conf.bk_login_host_tenant then
+        elseif bklogin.is_tenant_enabled(conf) then
             --core.log.warn("conf.bk_login_host_tenant: ", conf.bk_login_host_tenant)
             local data = get_userinfo_handler(credential, conf)
             --core.log.warn("data: ", core.json.encode(data))
             if data and data["data"] then
-                userinfo = {
-                    username = data["data"]["bk_username"],
-                    tenant_id = data["data"]["tenant_id"]
-                }
-            else
+                if data["data"]["bk_username"] and data["data"]["bk_username"] ~= "" then
+                    userinfo = {
+                        username = data["data"]["bk_username"],
+                    }
+                    if bklogin.is_multi_tenant_enabled(conf) then
+                        userinfo["tenant_id"] = data["data"]["tenant_id"]
+                    end
+                end
+            elseif data then
                 userinfo = data
             end
         else

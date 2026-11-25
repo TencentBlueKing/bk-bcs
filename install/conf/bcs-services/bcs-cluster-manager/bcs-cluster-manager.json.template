@@ -214,7 +214,7 @@
         "debug": ${bcsBkUserDebug}
     },
     "tenant": {
-        "enableMultiTenantMode": ${enableMultiTenantMode},
+        "mode": "${tenant}",
         "noCheckTenantMethod": "${noCheckTenantMethod}",
         "clientExemptTenant": "${clientExemptTenant}"
     },

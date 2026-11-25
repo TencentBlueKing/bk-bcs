@@ -118,7 +118,7 @@ func TestApplySnapshotEmptyDel(t *testing.T) {
 }
 
 func TestListSyncTenantIDsSingleTenant(t *testing.T) {
-	config.GlobalConf = &config.ProjectConfig{EnableMultiTenant: false}
+	config.GlobalConf = &config.ProjectConfig{Tenant: config.TenantModeSingle}
 	ids, err := listSyncTenantIDs(context.Background())
 	require.NoError(t, err)
 	assert.Equal(t, []string{constant.DefaultTenantId}, ids)
@@ -133,8 +133,8 @@ func TestListSyncTenantIDsMultiTenant(t *testing.T) {
 	defer ts.Close()
 
 	config.GlobalConf = &config.ProjectConfig{
-		EnableMultiTenant: true,
-		BkUser:            config.BkUserConfig{Host: ts.URL},
+		Tenant: config.TenantModeMulti,
+		BkUser: config.BkUserConfig{Host: ts.URL},
 	}
 	ids, err := listSyncTenantIDs(context.Background())
 	require.NoError(t, err)

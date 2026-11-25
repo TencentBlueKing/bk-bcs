@@ -102,7 +102,8 @@ taskConfig:
   workerCnt: 0
 sharedClusterConfig:
   annoKeyProjCode: ""
-enableMultiTenant: false
+# tenant mode: single / multi, off or empty to disable tenant
+tenant: ""
 bkUser:
   host: ""
   timeout: 10

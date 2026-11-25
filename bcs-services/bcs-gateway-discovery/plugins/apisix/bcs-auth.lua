@@ -23,6 +23,11 @@ local plugin_name = "bcs-auth"
 local schema = {
     type = "object",
     properties = {
+        tenant = {
+            type = "string",
+            enum = {"", "off", "single", "multi"},
+            description = "tenant mode: single / multi, off or empty to disable tenant",
+        },
         bk_login_host_tenant = {type = "string", description = "bk login host tenant"},
         bk_login_host_esb = {type = "string", description = "bk login host esb"},
         bk_login_host = {type = "string", description = "bk login host (with scheme prefix)"},

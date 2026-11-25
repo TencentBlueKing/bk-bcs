@@ -39,7 +39,16 @@ func IsMultiTenantEnabled() bool {
 	if opt == nil {
 		return false
 	}
-	return opt.TenantConfig.EnableMultiTenantMode
+	return opt.TenantConfig.IsMultiTenantEnabled()
+}
+
+// IsTenantEnabled 检查是否启用了租户功能（单租户或多租户），开启时 bk_username 需通过 bk-user 转换
+func IsTenantEnabled() bool {
+	opt := options.GetGlobalCMOptions()
+	if opt == nil {
+		return false
+	}
+	return opt.TenantConfig.IsTenantEnabled()
 }
 
 // WithTenantIdByResourceForContext set tenantID by resource to context

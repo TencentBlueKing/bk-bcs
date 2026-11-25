@@ -34,7 +34,7 @@ type ResourceMetaData struct {
 
 // WithTenantIdByResourceForContext set tenantID by resource to context
 func WithTenantIdByResourceForContext(ctx context.Context, resource ResourceMetaData) (context.Context, error) {
-	if !option.GetGlobalConfig().Synchronizer.EnableMultiTenantMode {
+	if option.GetGlobalConfig().Synchronizer.GetTenantMode() != option.TenantModeMulti {
 		return context.WithValue(ctx, constants.BkTenantIdHeaderKey, constants.DefaultTenantId), nil
 	}
 

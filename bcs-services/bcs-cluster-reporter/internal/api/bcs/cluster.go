@@ -37,7 +37,8 @@ func (cm *ClusterManager) GetClusters(clusterIds []string) ([]cmproto.Cluster, e
 	)
 
 	rt = &rest.BcsTransport{
-		Token: cm.token,
+		Token:    cm.token,
+		TenantID: cm.tenantID,
 	}
 	httpClient = &http.Client{Transport: rt}
 
@@ -102,7 +103,7 @@ func (cm *ClusterManager) GetNodesByClusterId(clusterId string) ([]cmproto.Node,
 		httpClient *http.Client
 	)
 
-	rt = &rest.BcsTransport{Token: cm.token}
+	rt = &rest.BcsTransport{Token: cm.token, TenantID: cm.tenantID}
 	httpClient = &http.Client{Transport: rt, Timeout: 10 * time.Second}
 
 	req := rest.NewRequest(httpClient, "GET", svcUrl, nil)
@@ -144,7 +145,7 @@ func (cm *ClusterManager) GetNode(ip string) (*cmproto.Node, error) {
 		httpClient *http.Client
 	)
 
-	rt = &rest.BcsTransport{Token: cm.token}
+	rt = &rest.BcsTransport{Token: cm.token, TenantID: cm.tenantID}
 	httpClient = &http.Client{Transport: rt}
 
 	req := rest.NewRequest(httpClient, "GET", svcUrl, nil)
@@ -196,6 +197,12 @@ func (cm *ClusterManager) GetKubeconfig(clusterID string) *k8srest.Config {
 		Timeout: time.Minute,
 		QPS:     30,
 		Burst:   60,
+	}
+	if cm.tenantID != "" {
+		tenantID := cm.tenantID
+		config.WrapTransport = func(rt http.RoundTripper) http.RoundTripper {
+			return &rest.TenantTransport{TenantID: tenantID, Base: rt}
+		}
 	}
 
 	return config

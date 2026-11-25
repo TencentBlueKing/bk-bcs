@@ -22,6 +22,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/client"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/client/cache"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/option"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/tenant/tenantutils"
 )
 
@@ -29,10 +30,10 @@ import (
 func GetGatewayAuthAndTenantInfo(ctx context.Context, auth *client.AuthInfo, user string) (string, string, error) {
 	tenantId := tenantutils.GetTenantIdFromContext(ctx)
 
-	// 优先使用传入的user，否则根据租户获取用户名
+	// 优先使用传入的user；开启租户功能（单租户或多租户）时根据租户获取用户名
 	if user != "" {
 		auth.BkUserName = user
-	} else if auth.BkUserName != "" {
+	} else if isTenantEnabled() && auth.BkUserName != "" {
 		bkUserName, err := GetBkUserNameByTenantLoginName(ctx, tenantId, auth.BkUserName, true)
 		if err != nil {
 			return "", "", fmt.Errorf("get bkUserName by tenant failed: %v", err)
@@ -45,6 +46,15 @@ func GetGatewayAuthAndTenantInfo(ctx context.Context, auth *client.AuthInfo, use
 		return "", "", err
 	}
 	return string(userAuth), tenantId, nil
+}
+
+// isTenantEnabled 是否启用了租户功能（单租户或多租户）
+func isTenantEnabled() bool {
+	opt := option.GetGlobalConfig()
+	if opt == nil {
+		return false
+	}
+	return opt.Synchronizer.GetTenantMode() != option.TenantModeOff
 }
 
 const (

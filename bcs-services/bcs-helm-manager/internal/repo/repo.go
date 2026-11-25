@@ -333,7 +333,7 @@ type UploadOption struct {
 
 // GetBKRepoProjectID 根据租户ID和项目ID获取BKRepo的项目ID
 func GetBKRepoProjectID(tanantID, projectID string) string {
-	if !options.GlobalOptions.EnableMultiTenant || tanantID == "" {
+	if !options.GlobalOptions.IsMultiTenantEnabled() || tanantID == "" {
 		return projectID
 	}
 	return fmt.Sprintf("%s.%s", tanantID, projectID)

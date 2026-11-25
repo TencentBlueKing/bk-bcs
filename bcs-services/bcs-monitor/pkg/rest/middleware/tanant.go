@@ -29,7 +29,7 @@ import (
 // TanantCheck 检查请求的租户是否与项目匹配
 func TanantCheck(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if !config.G.Base.EnableMultiTenant {
+		if !config.G.Base.IsMultiTenantEnabled() {
 			next.ServeHTTP(w, r)
 			return
 		}

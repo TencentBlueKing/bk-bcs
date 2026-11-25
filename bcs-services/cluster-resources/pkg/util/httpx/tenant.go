@@ -28,7 +28,7 @@ import (
 // TenantMiddleware 租户校验中间件
 func TenantMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if !config.G.BCSAPIGW.EnableMultiTenantMode {
+		if !config.G.BCSAPIGW.IsMultiTenantEnabled() {
 			next.ServeHTTP(w, r)
 			return
 		}

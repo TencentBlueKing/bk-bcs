@@ -14,6 +14,8 @@
 package options
 
 import (
+	"fmt"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-common/common/encryptv2" // nolint
 
@@ -321,13 +323,51 @@ type BkUserConfig struct {
 	Debug     bool   `json:"debug"`
 }
 
+const (
+	// TenantModeSingle 单租户模式，仅使用默认租户，但 bk_username 需通过 bk-user 转换
+	TenantModeSingle = "single"
+	// TenantModeMulti 多租户模式
+	TenantModeMulti = "multi"
+	// TenantModeOff 关闭租户
+	TenantModeOff = "off"
+)
+
 // TenantConfig tenant config, default disable tenant mode
 type TenantConfig struct {
-	EnableMultiTenantMode bool `json:"enableMultiTenantMode"`
+	// Mode 租户模式：single 单租户，multi 多租户，off 或为空关闭租户
+	Mode string `json:"mode"`
 	// NoCheckTenantMethod no check tenant method
 	NoCheckTenantMethod string `json:"noCheckTenantMethod"`
 	// ClientExemptTenant client用户豁免租户校验
 	ClientExemptTenant string `json:"clientExemptTenant"`
+}
+
+// GetMode 返回租户模式 single / multi，关闭租户时返回 off
+func (c TenantConfig) GetMode() string {
+	switch c.Mode {
+	case TenantModeSingle, TenantModeMulti:
+		return c.Mode
+	}
+	return TenantModeOff
+}
+
+// Validate 校验租户模式取值
+func (c TenantConfig) Validate() error {
+	switch c.Mode {
+	case "", TenantModeOff, TenantModeSingle, TenantModeMulti:
+		return nil
+	}
+	return fmt.Errorf("invalid tenant mode %q, must be one of: single, multi, off or empty", c.Mode)
+}
+
+// IsMultiTenantEnabled 是否开启多租户模式
+func (c TenantConfig) IsMultiTenantEnabled() bool {
+	return c.GetMode() == TenantModeMulti
+}
+
+// IsTenantEnabled 是否启用了租户功能（单租户或多租户）
+func (c TenantConfig) IsTenantEnabled() bool {
+	return c.GetMode() != TenantModeOff
 }
 
 // ClusterManagerOptions options of cluster manager

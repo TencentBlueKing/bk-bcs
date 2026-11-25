@@ -86,7 +86,7 @@ func GetAuthAndTenantInfoFromCtx(ctx context.Context) UserInfoCtx {
 	}
 
 	// 兼容跨租户场景，不在租户的人员可以获取其他租户的资源
-	if options.GetGlobalCMOptions().TenantConfig.EnableMultiTenantMode {
+	if options.GetGlobalCMOptions().TenantConfig.IsMultiTenantEnabled() {
 		headerTenantId := GetHeaderTenantIdFromCtx(ctx)
 		if headerTenantId != "" {
 			user.ResourceTenantId = headerTenantId

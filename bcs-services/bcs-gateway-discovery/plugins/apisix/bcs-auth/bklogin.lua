@@ -17,6 +17,33 @@ local http = require("resty.http")
 
 local _M = {}
 
+_M.TENANT_MODE_SINGLE = "single"
+_M.TENANT_MODE_MULTI = "multi"
+
+-- get_tenant_mode 返回租户模式 single / multi，tenant 为 off 或空字符串时返回 nil 表示关闭租户
+function _M.get_tenant_mode(conf)
+    local mode = conf.tenant
+    if mode == _M.TENANT_MODE_SINGLE or mode == _M.TENANT_MODE_MULTI then
+        return mode
+    end
+    return nil
+end
+
+-- is_multi_tenant_enabled 判断是否开启多租户模式
+function _M.is_multi_tenant_enabled(conf)
+    return _M.get_tenant_mode(conf) == _M.TENANT_MODE_MULTI
+end
+
+-- is_single_tenant_enabled 判断是否开启单租户模式
+function _M.is_single_tenant_enabled(conf)
+    return _M.get_tenant_mode(conf) == _M.TENANT_MODE_SINGLE
+end
+
+-- is_tenant_enabled 判断是否启用租户版登录校验（单租户或多租户）
+function _M.is_tenant_enabled(conf)
+    return _M.get_tenant_mode(conf) ~= nil
+end
+
 -- get_username_for_ticket used for LoginTicketAuthentication
 function _M.get_username_for_ticket(credential, bk_login_host)
     local httpc = http.new()
@@ -89,9 +116,14 @@ end
 
 -- get_username_and_tenant_for_token used for LoginTokenAuthentication
 function _M.get_username_and_tenant_for_token(credential, conf)
+    if not conf.bk_login_host_tenant or conf.bk_login_host_tenant == "" then
+        core.log.error("bk_login_host_tenant is empty when tenant mode is enabled")
+        return nil
+    end
     --core.log.warn("conf.bk_login_host_tenant: ", conf.bk_login_host_tenant)
     local httpc = http.new()
-    local authorization = string.format('{"bk_app_code": "%s", "bk_app_secret": "%s"}', conf.bk_app_code, conf.bk_app_secret)
+    local authorization = string.format('{"bk_app_code": "%s", "bk_app_secret": "%s"}',
+        conf.bk_app_code or "", conf.bk_app_secret or "")
     --core.log.warn("authorization: ", authorization)
     local res, err = httpc:request_uri(conf.bk_login_host_tenant .. "/bk-tokens/verify/", {
         method = "GET",

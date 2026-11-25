@@ -98,7 +98,7 @@ function LoginTokenAuthentication:fetch_credential(conf, ctx)
 end
 
 function LoginTokenAuthentication:injected_user_info(credential, jwt_str, conf, ctx)
-    if conf.bk_login_host_esb then
+    if conf.bk_login_host_esb and conf.bk_login_host_esb ~= "" then
         local data = bklogin.get_username_for_token_esb(credential, conf)
         local username
         if data["result"] then
@@ -112,13 +112,14 @@ function LoginTokenAuthentication:injected_user_info(credential, jwt_str, conf, 
         }
     end
 
-    if conf.bk_login_host_tenant then
+    if bklogin.is_tenant_enabled(conf) then
         --core.log.warn("conf.bk_login_host_tenant: ", conf.bk_login_host_tenant)
         local data = bklogin.get_username_and_tenant_for_token(credential, conf)
         local username, tenant_id
-        if data ~= nil then
-            if data["data"] ~= nil then
-                username, tenant_id = data["data"]["bk_username"], data["data"]["tenant_id"]
+        if data ~= nil and data["data"] ~= nil then
+            username = data["data"]["bk_username"]
+            if bklogin.is_multi_tenant_enabled(conf) then
+                tenant_id = data["data"]["tenant_id"]
             end
         end
         return {
@@ -135,10 +136,10 @@ function LoginTokenAuthentication:injected_user_info(credential, jwt_str, conf, 
 end
 
 function LoginTokenAuthentication:get_jwt(credential, conf, ctx)
-    if conf.bk_login_host_esb then
+    if conf.bk_login_host_esb and conf.bk_login_host_esb ~= "" then
         return jwt:get_jwt_from_redis(credential, conf, ctx,  "bcs_auth:session_id:", true, bklogin.get_username_for_token_esb)
     end
-    if conf.bk_login_host_tenant then
+    if bklogin.is_tenant_enabled(conf) then
         --core.log.warn("conf.bk_login_host_tenant: ", conf.bk_login_host_tenant)
         return jwt:get_jwt_from_redis(credential, conf, ctx,  "bcs_auth:session_id:", true, bklogin.get_username_and_tenant_for_token)
     end
@@ -267,7 +268,9 @@ function APIGWAuthentication:fetch_credential(conf, ctx)
     credential["user_token"]["bk_app_code"] = jwt_obj.payload.app.app_code
     if jwt_obj.payload.user and jwt_obj.payload.user.verified then
         credential["user_token"]["username"] = jwt_obj.payload.user.username
-        credential["user_token"]["tenant_id"] = jwt_obj.payload.user.tenant_id
+        if not bklogin.is_single_tenant_enabled(conf) then
+            credential["user_token"]["tenant_id"] = jwt_obj.payload.user.tenant_id
+        end
         redis_key = redis_key .. "," .. jwt_obj.payload.user.username
     end
     if credential.bcs_token then

@@ -102,6 +102,9 @@ func parseConfig(op *options.UserManagerOptions) (*config.UserMgrConfig, error) 
 	userMgrConfig.SharedCluster = op.SharedCluster
 	userMgrConfig.EnableTokenSync = op.EnableTokenSync
 	userMgrConfig.SlowSQLLatency = op.SlowSQLLatency
+	if err := op.Tenant.Validate(); err != nil {
+		return nil, err
+	}
 	userMgrConfig.Tenant = op.Tenant
 
 	dsn, err := encrypt.DesDecryptFromBase([]byte(op.DSN))

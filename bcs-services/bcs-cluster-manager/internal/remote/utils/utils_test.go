@@ -32,9 +32,9 @@ func ensureCMOptions() *options.ClusterManagerOptions {
 
 func TestGatewayAuthSkipWhenMTDisabled(t *testing.T) {
 	opt := ensureCMOptions()
-	opt.TenantConfig.EnableMultiTenantMode = false
+	opt.TenantConfig.Mode = ""
 	t.Cleanup(func() {
-		opt.TenantConfig.EnableMultiTenantMode = false
+		opt.TenantConfig.Mode = ""
 	})
 
 	auth := &types.AuthInfo{
@@ -67,9 +67,9 @@ func TestGatewayAuthSkipWhenMTDisabled(t *testing.T) {
 
 func TestGatewayAuthExplicitUser(t *testing.T) {
 	opt := ensureCMOptions()
-	opt.TenantConfig.EnableMultiTenantMode = true
+	opt.TenantConfig.Mode = options.TenantModeMulti
 	t.Cleanup(func() {
-		opt.TenantConfig.EnableMultiTenantMode = false
+		opt.TenantConfig.Mode = ""
 	})
 
 	auth := &types.AuthInfo{
@@ -92,9 +92,9 @@ func TestGatewayAuthExplicitUser(t *testing.T) {
 func TestGatewayAuthLookupWhenMTEnabled(t *testing.T) {
 	cache.InitCache()
 	opt := ensureCMOptions()
-	opt.TenantConfig.EnableMultiTenantMode = true
+	opt.TenantConfig.Mode = options.TenantModeMulti
 	t.Cleanup(func() {
-		opt.TenantConfig.EnableMultiTenantMode = false
+		opt.TenantConfig.Mode = ""
 	})
 
 	auth := &types.AuthInfo{
@@ -108,6 +108,31 @@ func TestGatewayAuthLookupWhenMTEnabled(t *testing.T) {
 	_, _, err := GetGatewayAuthAndTenantInfo(context.Background(), auth, "")
 	if err == nil {
 		t.Fatal("expected lookup error when multi-tenant enabled and bkUser client not init")
+	}
+	if !strings.Contains(err.Error(), "get bkUserName by tenant failed") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestGatewayAuthLookupWhenSTEnabled(t *testing.T) {
+	cache.InitCache()
+	opt := ensureCMOptions()
+	opt.TenantConfig.Mode = options.TenantModeSingle
+	t.Cleanup(func() {
+		opt.TenantConfig.Mode = ""
+	})
+
+	auth := &types.AuthInfo{
+		BkAppUser: types.BkAppUser{
+			BkAppCode:   "test-code",
+			BkAppSecret: "test-secret",
+		},
+		BkUserName: "bcs-cluster-manager",
+	}
+
+	_, _, err := GetGatewayAuthAndTenantInfo(context.Background(), auth, "")
+	if err == nil {
+		t.Fatal("expected lookup error when single-tenant enabled and bkUser client not init")
 	}
 	if !strings.Contains(err.Error(), "get bkUserName by tenant failed") {
 		t.Fatalf("unexpected error: %v", err)

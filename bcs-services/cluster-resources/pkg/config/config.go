@@ -44,6 +44,9 @@ func LoadConf(filePath string) (*ClusterResourcesConf, error) {
 	if err = yaml.Unmarshal(yamlFile, conf); err != nil {
 		return nil, err
 	}
+	if err = conf.Global.BCSAPIGW.ValidateTenant(); err != nil {
+		return nil, err
+	}
 
 	//  变量 fallback to env
 	if conf.Global.Basic.AppCode == "" {
@@ -375,10 +378,10 @@ type BasicConf struct {
 
 // BCSAPIGatewayConf 容器服务网关配置
 type BCSAPIGatewayConf struct {
-	Host                  string `yaml:"host" usage:"容器服务网关 Host"`
-	AuthToken             string `yaml:"authToken" usage:"网关 AuthToken"`
-	EnableMultiTenantMode bool   `yaml:"enableMultiTenantMode" usage:"多租户模式"`
-	ReadAuthTokenFromEnv  bool   `yaml:"readAuthTokenFromEnv" usage:"是否从环境变量获取 AuthToken（适用于同集群部署情况）"`
+	Host                 string `yaml:"host" usage:"容器服务网关 Host"`
+	AuthToken            string `yaml:"authToken" usage:"网关 AuthToken"`
+	Tenant               string `yaml:"tenant" usage:"租户模式：single 单租户，multi 多租户，off 或为空关闭租户"`
+	ReadAuthTokenFromEnv bool   `yaml:"readAuthTokenFromEnv" usage:"是否从环境变量获取 AuthToken（适用于同集群部署情况）"`
 }
 
 // IAMConf 权限中心相关配置

@@ -141,7 +141,7 @@ func ListTenantCluster() {
 
 // ListClusters 获取集群列表
 func ListClusters() {
-	if config.G.Base.EnableMultiTenant {
+	if config.G.Base.IsMultiTenantEnabled() {
 		ListTenantCluster()
 		return
 	}

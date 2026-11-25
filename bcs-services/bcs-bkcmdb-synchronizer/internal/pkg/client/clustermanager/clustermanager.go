@@ -51,12 +51,12 @@ var (
 
 // Options for init clusterManager
 type Options struct {
-	Module                string
-	Address               string
-	EtcdRegistry          registry.Registry
-	ClientTLSConfig       *tls.Config
-	AuthToken             string
-	EnableMultiTenantMode bool
+	Module          string
+	Address         string
+	EtcdRegistry    registry.Registry
+	ClientTLSConfig *tls.Config
+	AuthToken       string
+	Tenant          option.TenantMode
 }
 
 func (o *Options) validate() bool {
@@ -276,7 +276,7 @@ func (cm *clusterManagerClient) NewCMGrpcClientWithHeader(ctx context.Context,
 	if len(cm.opts.AuthToken) != 0 {
 		header["Authorization"] = fmt.Sprintf("Bearer %s", cm.opts.AuthToken)
 	}
-	if cm.opts.EnableMultiTenantMode {
+	if cm.opts.Tenant == option.TenantModeMulti {
 		header["X-Bk-Tenant-Id"] = tenantutils.GetTenantIdFromContext(ctx)
 	}
 	md := metadata.New(header)
@@ -364,7 +364,7 @@ func NewTenantClusterManagerGrpcGwClient(opts *Options) (cmClis []*client.Cluste
 	}
 
 	cmClis = make([]*client.ClusterManagerClientWithHeader, 0)
-	if opts.EnableMultiTenantMode {
+	if opts.Tenant == option.TenantModeMulti {
 		tenants, errT := bkuser.GetBkUserClient().ListTenant(context.Background())
 		if errT != nil {
 			blog.Errorf("ListTenant error, %s", errT.Error())
@@ -419,12 +419,12 @@ func GetTenantClusterManagerGrpcGwClient() (cmClis []*client.ClusterManagerClien
 	}
 
 	opts := &Options{
-		Module:                ModuleClusterManager,
-		Address:               option.GetGlobalConfig().Bcsapi.GrpcAddr,
-		EtcdRegistry:          nil,
-		ClientTLSConfig:       tlsConfig,
-		AuthToken:             option.GetGlobalConfig().Bcsapi.BearerToken,
-		EnableMultiTenantMode: option.GetGlobalConfig().Synchronizer.EnableMultiTenantMode,
+		Module:          ModuleClusterManager,
+		Address:         option.GetGlobalConfig().Bcsapi.GrpcAddr,
+		EtcdRegistry:    nil,
+		ClientTLSConfig: tlsConfig,
+		AuthToken:       option.GetGlobalConfig().Bcsapi.BearerToken,
+		Tenant:          option.GetGlobalConfig().Synchronizer.GetTenantMode(),
 	}
 
 	cmClis, err = NewTenantClusterManagerGrpcGwClient(opts)

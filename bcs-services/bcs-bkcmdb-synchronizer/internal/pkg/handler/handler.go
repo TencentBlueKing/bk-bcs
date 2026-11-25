@@ -43,6 +43,7 @@ import (
 	cm "github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/client/clustermanager"
 	pm "github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/client/projectmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/option"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/store/db/sqlite"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/syncer"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/tenant"
@@ -96,7 +97,7 @@ type MsgHeader struct {
 // NewBcsBkcmdbSynchronizerHandler create a new handler
 func NewBcsBkcmdbSynchronizerHandler(sync *syncer.Syncer) *BcsBkcmdbSynchronizerHandler {
 	cmClis := make([]*client.ClusterManagerClientWithHeader, 0)
-	if sync.BkcmdbSynchronizerOption.Synchronizer.EnableMultiTenantMode {
+	if sync.BkcmdbSynchronizerOption.Synchronizer.GetTenantMode() == option.TenantModeMulti {
 		cmClis, _ = cm.GetTenantClusterManagerGrpcGwClient()
 	} else {
 		cmCli, _ := cm.GetClusterManagerGrpcGwClient()

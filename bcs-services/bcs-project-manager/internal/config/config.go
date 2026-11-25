@@ -234,7 +234,7 @@ type ProjectConfig struct {
 	RestrictAuthorizedProjects bool                           `yaml:"restrictAuthorizedProjects"`
 	TaskConfig                 TaskConfig                     `yaml:"taskConfig"`
 	SharedClusterConfig        SharedClusterConfig            `yaml:"sharedClusterConfig"`
-	EnableMultiTenant          bool                           `yaml:"enableMultiTenant"`
+	Tenant                     string                         `yaml:"tenant"` // 租户模式：single / multi / off
 	SystemConfig               SystemCommonConfig             `yaml:"systemConfig"`
 	BusinessSync               BusinessSyncConfig             `yaml:"businessSync"`
 }
@@ -279,6 +279,9 @@ func LoadConfig(filePath string) (*ProjectConfig, error) {
 	}
 	confLocal := &ProjectConfig{}
 	if err = yaml.Unmarshal(yamlFile, confLocal); err != nil {
+		return nil, err
+	}
+	if err = confLocal.ValidateTenant(); err != nil {
 		return nil, err
 	}
 	// 初始化服务地址

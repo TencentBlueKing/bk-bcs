@@ -71,10 +71,14 @@ type Synchronizer struct {
 
 // NewSynchronizer create a new synchronizer
 func NewSynchronizer(bkcmdbSynchronizerOption *option.BkcmdbSynchronizerOption) (*Synchronizer, error) {
+	if err := bkcmdbSynchronizerOption.Synchronizer.ValidateTenant(); err != nil {
+		return nil, err
+	}
 	option.SetGlobalConfig(bkcmdbSynchronizerOption)
 	cache.InitCache()
 
-	if bkcmdbSynchronizerOption.Synchronizer.EnableMultiTenantMode {
+	// 单租户和多租户都需要通过 bk-user 转换 bk_username
+	if bkcmdbSynchronizerOption.Synchronizer.GetTenantMode() != option.TenantModeOff {
 		err := bkuser.SetBkUserClient(bkuser.Options{
 			AppCode:   bkcmdbSynchronizerOption.BkUser.AppCode,
 			AppSecret: bkcmdbSynchronizerOption.BkUser.AppSecret,
@@ -453,7 +457,7 @@ func (s *Synchronizer) getWorkList(podIndex int, whiteList, blackList []string) 
 	clusters := make([]*cmp.Cluster, 0)
 	cmClis := make([]*client.ClusterManagerClientWithHeader, 0)
 	lcReq := cmp.ListClusterReq{}
-	if s.BkcmdbSynchronizerOption.Synchronizer.EnableMultiTenantMode {
+	if s.BkcmdbSynchronizerOption.Synchronizer.GetTenantMode() == option.TenantModeMulti {
 		tenantCmClis, err := s.getTenantClusterManagerGrpcGwClient()
 		if err != nil {
 			blog.Errorf("get cluster manager grpc gw client failed, err: %s", err.Error())

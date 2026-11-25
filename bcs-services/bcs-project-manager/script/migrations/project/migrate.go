@@ -234,9 +234,8 @@ func initBuiltInProject() error {
 		tenantID, businessID, tenantProjectCode, projectCode string
 	)
 
-	// check tenant switch
-	enableTenant := stringx.GetEnv("ENABLE_MULTI_TENANT", "false")
-	if enableTenant == "true" {
+	// check tenant switch, TENANT: single / multi, off or empty to disable tenant
+	if stringx.GetEnv("TENANT", "") == "multi" {
 		tenantID = constant.SystemTenantId
 		businessID = stringx.GetEnv("INIT_PROJECT_BUSINESS_ID", "1")
 		tenantProjectCode = stringx.GetEnv("INIT_PROJECT_CODE", "blueking")

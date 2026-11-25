@@ -14,6 +14,7 @@
 package config
 
 import (
+	"fmt"
 	"time"
 	_ "time/tzdata" // tzdata xxx
 )
@@ -25,6 +26,15 @@ const (
 	StagEnv = "stag"
 	// ProdEnv xxx
 	ProdEnv = "prod"
+)
+
+const (
+	// TenantModeSingle 单租户模式
+	TenantModeSingle = "single"
+	// TenantModeMulti 多租户模式
+	TenantModeMulti = "multi"
+	// TenantModeOff 关闭租户
+	TenantModeOff = "off"
 )
 
 // BaseConf xxx
@@ -39,7 +49,30 @@ type BaseConf struct {
 	Debug        bool                `yaml:"debug"`
 	RunEnv       string              `yaml:"run_env"`
 	Location     *time.Location      `yaml:"-"`
-	EnableTenant bool                `yaml:"enable_tenant"`
+	Tenant       string              `yaml:"tenant"` // 租户模式：single / multi / off
+}
+
+// GetTenantMode 返回租户模式 single / multi，关闭租户时返回 off
+func (c *BaseConf) GetTenantMode() string {
+	switch c.Tenant {
+	case TenantModeSingle, TenantModeMulti:
+		return c.Tenant
+	}
+	return TenantModeOff
+}
+
+// ValidateTenant 校验租户模式取值
+func (c *BaseConf) ValidateTenant() error {
+	switch c.Tenant {
+	case "", TenantModeOff, TenantModeSingle, TenantModeMulti:
+		return nil
+	}
+	return fmt.Errorf("invalid tenant mode %q, must be one of: single, multi, off or empty", c.Tenant)
+}
+
+// IsMultiTenantEnabled 是否开启多租户模式
+func (c *BaseConf) IsMultiTenantEnabled() bool {
+	return c.GetTenantMode() == TenantModeMulti
 }
 
 // Init xxx

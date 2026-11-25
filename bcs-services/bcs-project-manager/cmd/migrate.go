@@ -67,7 +67,7 @@ var migrateInitTenantCmd = &cobra.Command{
 		}
 
 		// 内部环境 且 不开启多租户
-		if !config.GlobalConf.EnableMultiTenant {
+		if !config.GlobalConf.IsMultiTenantEnabled() {
 			fmt.Printf("multi tenant is disabled or auto register is disabled, skip migration")
 			return
 		}

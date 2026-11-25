@@ -123,7 +123,7 @@ func ParseProjectIDMiddleware(next http.Handler) http.Handler {
 		}
 
 		ctx := context.WithValue(r.Context(), contextx.ProjectCodeContextKey, pj.ProjectCode)
-		if options.GlobalOptions.EnableMultiTenant {
+		if options.GlobalOptions.IsMultiTenantEnabled() {
 			ctx = context.WithValue(ctx, contextx.TenantProjectCodeContextKey,
 				strings.SplitN(pj.ProjectCode, "-", 2)[1])
 		}
@@ -243,7 +243,7 @@ func GetResourceTenantId(ctx context.Context) (string, error) {
 // CheckUserResourceTenantMiddleware check user resource tenant
 func CheckUserResourceTenantMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if !options.GlobalOptions.EnableMultiTenant {
+		if !options.GlobalOptions.IsMultiTenantEnabled() {
 			next.ServeHTTP(w, r)
 			return
 		}

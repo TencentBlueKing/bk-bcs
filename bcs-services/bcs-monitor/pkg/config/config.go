@@ -52,6 +52,10 @@ type Configuration struct {
 
 // init 初始化
 func (c *Configuration) init() error {
+	if err := c.Base.ValidateTenant(); err != nil {
+		return err
+	}
+
 	if err := c.Web.init(); err != nil {
 		return err
 	}

@@ -27,14 +27,14 @@ func ensureCMOptions() *options.ClusterManagerOptions {
 
 func TestIsMultiTenantEnabled(t *testing.T) {
 	opt := ensureCMOptions()
-	opt.TenantConfig.EnableMultiTenantMode = false
+	opt.TenantConfig.Mode = ""
 	if IsMultiTenantEnabled() {
 		t.Fatal("IsMultiTenantEnabled should be false by default")
 	}
 
-	opt.TenantConfig.EnableMultiTenantMode = true
+	opt.TenantConfig.Mode = options.TenantModeMulti
 	t.Cleanup(func() {
-		opt.TenantConfig.EnableMultiTenantMode = false
+		opt.TenantConfig.Mode = ""
 	})
 	if !IsMultiTenantEnabled() {
 		t.Fatal("IsMultiTenantEnabled should be true when TenantConfig is enabled")

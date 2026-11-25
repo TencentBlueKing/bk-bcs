@@ -36,6 +36,13 @@ type BcsClusterReporterOptions struct {
 	BcsGatewayToken            string
 	BcsGatewayApiserver        string
 
+	// 租户模式：single 单租户，multi 多租户，off 或为空关闭租户
+	Tenant string
+	// 多租户模式下通过 bk-user 获取租户列表
+	BkUserServer string
+	BkAppCode    string
+	BkAppSecret  string
+
 	// 也可以单独配置kubeconfig
 	KubeConfigDir string
 	// 也可以配置incluster模式
@@ -65,6 +72,13 @@ func (bcro *BcsClusterReporterOptions) AddFlags(fs *pflag.FlagSet) {
 	fs.StringVarP(&bcro.BcsClusterManagerApiserver, "bcsClusterManagerApiserver", "", "", "Set the bcs clustermanager api")
 	fs.StringVarP(&bcro.BcsGatewayToken, "bcsGatewayToken", "", "", "Set the bcs apigateway token")
 	fs.StringVarP(&bcro.BcsGatewayApiserver, "bcsGatewayApiserver", "", "", "Set the bcs apigateway url")
+
+	// 租户配置
+	fs.StringVarP(&bcro.Tenant, "tenant", "", "", "Set the tenant mode: single, multi, off or empty to disable tenant")
+	fs.StringVarP(&bcro.BkUserServer, "bkUserServer", "", "", "Set the bk-user api server, required in multi tenant mode")
+	fs.StringVarP(&bcro.BkAppCode, "bkAppCode", "", "", "Set the blueking app code, required in multi tenant mode")
+	fs.StringVarP(&bcro.BkAppSecret, "bkAppSecret", "", "",
+		"Set the blueking app secret, required in multi tenant mode, env bkAppSecret is used when empty")
 
 	fs.StringVarP(&bcro.BcsClusterType, "bcsClusterType", "", "",
 		"Set the clusters type to check and report: debug, prod, all")

@@ -18,9 +18,14 @@ import (
 	"net/http"
 )
 
+// BkTenantIdHeaderKey 蓝鲸租户 ID 请求头
+const BkTenantIdHeaderKey = "X-Bk-Tenant-Id"
+
 // BcsTransport client
 type BcsTransport struct {
 	Token string
+	// TenantID 非空时通过 X-Bk-Tenant-Id 指定请求的租户
+	TenantID string
 }
 
 // RoundTrip xxx
@@ -29,6 +34,9 @@ func (t *BcsTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	header.Set("accept", "application/json")
 	header.Set("Content-Type", "application/json")
 	header.Set("Authorization", "Bearer "+t.Token)
+	if t.TenantID != "" {
+		header.Set(BkTenantIdHeaderKey, t.TenantID)
+	}
 	req.Header = header
 
 	tr := &http.Transport{
@@ -38,4 +46,17 @@ func (t *BcsTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	}
 
 	return tr.RoundTrip(req)
+}
+
+// TenantTransport 为请求添加 X-Bk-Tenant-Id 请求头
+type TenantTransport struct {
+	TenantID string
+	Base     http.RoundTripper
+}
+
+// RoundTrip xxx
+func (t *TenantTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	req = req.Clone(req.Context())
+	req.Header.Set(BkTenantIdHeaderKey, t.TenantID)
+	return t.Base.RoundTrip(req)
 }

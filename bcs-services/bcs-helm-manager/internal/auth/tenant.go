@@ -27,7 +27,7 @@ import (
 // CheckUserResourceTenantAttrFunc is the authorization function for go-micro
 func CheckUserResourceTenantAttrFunc(fn server.HandlerFunc) server.HandlerFunc {
 	return func(ctx context.Context, req server.Request, rsp interface{}) (err error) {
-		if !options.GlobalOptions.EnableMultiTenant {
+		if !options.GlobalOptions.IsMultiTenantEnabled() {
 			return fn(ctx, req, rsp)
 		}
 

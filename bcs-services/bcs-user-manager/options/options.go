@@ -176,9 +176,10 @@ type RedisConfig struct {
 	IdleTimeout  int    `json:"idle_timeout" usage:"Redis idle timeout" mapstructure:"idle_timeout" yaml:"idle_timeout"`
 }
 
-// Tenant 多租户
+// Tenant 租户配置
 type Tenant struct {
-	Enable bool `json:"enable" yaml:"enable"`
+	// Mode 租户模式：single 单租户，multi 多租户，off 或为空关闭租户
+	Mode string `json:"mode" yaml:"mode"`
 }
 
 // SharedCluster 共享集群配置

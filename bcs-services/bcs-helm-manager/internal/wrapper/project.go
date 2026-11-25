@@ -75,7 +75,7 @@ func ParseProjectIDWrapper(fn server.HandlerFunc) server.HandlerFunc {
 
 		ctx = context.WithValue(ctx, contextx.ProjectIDContextKey, pj.ProjectID)
 		ctx = context.WithValue(ctx, contextx.ProjectCodeContextKey, pj.ProjectCode)
-		if options.GlobalOptions.EnableMultiTenant {
+		if options.GlobalOptions.IsMultiTenantEnabled() {
 			ctx = context.WithValue(ctx, contextx.TenantProjectCodeContextKey,
 				strings.SplitN(pj.ProjectCode, "-", 2)[1])
 		}

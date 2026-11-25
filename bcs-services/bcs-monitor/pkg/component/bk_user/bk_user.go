@@ -27,8 +27,8 @@ import (
 
 // GetTenantAPIAuthorization generate bk user api auth header, X-Bkapi-Authorization
 func GetTenantAPIAuthorization(ctx context.Context, username string) (string, error) {
-	// 未开多租户时直接拼网关鉴权头，不查 bk-user 虚拟用户
-	if !config.G.Base.EnableMultiTenant {
+	// 未开启租户功能时直接拼网关鉴权头，不查 bk-user 虚拟用户
+	if !config.G.Base.IsTenantEnabled() {
 		return component.GetBKAPIAuthorization(username)
 	}
 

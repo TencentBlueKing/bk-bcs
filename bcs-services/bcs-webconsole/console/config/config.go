@@ -198,6 +198,9 @@ func (c *Configurations) ReadFrom(content []byte) error {
 	if err := c.Logging.InitBlog(); err != nil {
 		return err
 	}
+	if err := c.Base.ValidateTenant(); err != nil {
+		return err
+	}
 	c.Base.InitManagers()
 	c.BCS.initInnerHost()
 

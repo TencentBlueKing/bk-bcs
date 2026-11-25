@@ -209,7 +209,7 @@
       "systemNameSpaces": "${systemNameSpaces}"
     },
     "tenant": {
-      "enableMultiTenantMode": ${enableMultiTenantMode},
+      "mode": "${tenant}",
       "noCheckTenantMethod": "${noCheckTenantMethod}",
       "clientExemptTenant": "${clientExemptTenant}"
     },

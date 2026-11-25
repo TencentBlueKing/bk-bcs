@@ -73,7 +73,7 @@ func (n *NamespaceManager) SyncNamespaceItsmStatus() {
 	}
 
 	// 多租户暂时不处理itsm，待租户方案确认后续再处理
-	if config.GlobalConf.EnableMultiTenant {
+	if config.GlobalConf.IsMultiTenantEnabled() {
 		logging.Info("skip sync namespace itsm status for multi tenant mode")
 		return
 	}

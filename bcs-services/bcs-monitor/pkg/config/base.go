@@ -14,6 +14,7 @@
 package config
 
 import (
+	"fmt"
 	"time"
 	_ "time/tzdata" // tzdata xxx
 )
@@ -27,21 +28,58 @@ const (
 	ProdEnv = "prod"
 )
 
+const (
+	// TenantModeSingle 单租户模式，仅使用默认租户，但 bk_username 需通过 bk-user 转换
+	TenantModeSingle = "single"
+	// TenantModeMulti 多租户模式
+	TenantModeMulti = "multi"
+	// TenantModeOff 关闭租户
+	TenantModeOff = "off"
+)
+
 // BaseConf :
 type BaseConf struct {
-	AppCode           string              `yaml:"app_code"`
-	AppSecret         string              `yaml:"app_secret"`
-	SystemID          string              `yaml:"system_id"`
-	BKUsername        string              `yaml:"bk_username"`
-	TimeZone          string              `yaml:"time_zone"`
-	LanguageCode      string              `yaml:"language_code"`
-	Managers          []string            `yaml:"managers"`
-	ManagerMap        map[string]struct{} `yaml:"-"`
-	Debug             bool                `yaml:"debug"`
-	RunEnv            string              `yaml:"run_env"`
-	Location          *time.Location      `yaml:"-"`
-	EnableMultiTenant bool                `yaml:"enable_multi_tenant"`
-	ServiceEnable     bool                `yaml:"service_enable"`
+	AppCode       string              `yaml:"app_code"`
+	AppSecret     string              `yaml:"app_secret"`
+	SystemID      string              `yaml:"system_id"`
+	BKUsername    string              `yaml:"bk_username"`
+	TimeZone      string              `yaml:"time_zone"`
+	LanguageCode  string              `yaml:"language_code"`
+	Managers      []string            `yaml:"managers"`
+	ManagerMap    map[string]struct{} `yaml:"-"`
+	Debug         bool                `yaml:"debug"`
+	RunEnv        string              `yaml:"run_env"`
+	Location      *time.Location      `yaml:"-"`
+	Tenant        string              `yaml:"tenant"` // 租户模式：single / multi / off
+	ServiceEnable bool                `yaml:"service_enable"`
+}
+
+// GetTenantMode 返回租户模式 single / multi，关闭租户时返回 off
+func (c *BaseConf) GetTenantMode() string {
+	switch c.Tenant {
+	case TenantModeSingle, TenantModeMulti:
+		return c.Tenant
+	}
+	return TenantModeOff
+}
+
+// ValidateTenant 校验租户模式取值
+func (c *BaseConf) ValidateTenant() error {
+	switch c.Tenant {
+	case "", TenantModeOff, TenantModeSingle, TenantModeMulti:
+		return nil
+	}
+	return fmt.Errorf("invalid tenant mode %q, must be one of: single, multi, off or empty", c.Tenant)
+}
+
+// IsMultiTenantEnabled 是否开启多租户模式
+func (c *BaseConf) IsMultiTenantEnabled() bool {
+	return c.GetTenantMode() == TenantModeMulti
+}
+
+// IsTenantEnabled 是否启用了租户功能（单租户或多租户）
+func (c *BaseConf) IsTenantEnabled() bool {
+	return c.GetTenantMode() != TenantModeOff
 }
 
 // Init :

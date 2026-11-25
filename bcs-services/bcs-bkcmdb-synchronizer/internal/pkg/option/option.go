@@ -48,13 +48,13 @@ type BkcmdbSynchronizerOption struct {
 
 // SynchronizerConfig synchronizer config
 type SynchronizerConfig struct {
-	Env                   string `json:"env"`
-	Replicas              int    `json:"replicas"`
-	BkBizID               int64  `json:"bkBizID"`
-	HostID                int64  `json:"hostID"`
-	WhiteList             string `json:"whiteList"`
-	BlackList             string `json:"blackList"`
-	EnableMultiTenantMode bool   `json:"enableMultiTenantMode"`
+	Env       string     `json:"env"`
+	Replicas  int        `json:"replicas"`
+	BkBizID   int64      `json:"bkBizID"`
+	HostID    int64      `json:"hostID"`
+	WhiteList string     `json:"whiteList"`
+	BlackList string     `json:"blackList"`
+	Tenant    TenantMode `json:"tenant"` // 租户模式：single / multi / off
 	// CustomResourceTypes map from clusterID to custom resource kinds to sync
 	// Only clusters configured in this map will have custom resources synced
 	// Example: {"cluster-id-1": ["BkApp", "CronJob"], "cluster-id-2": ["BkApp"]}

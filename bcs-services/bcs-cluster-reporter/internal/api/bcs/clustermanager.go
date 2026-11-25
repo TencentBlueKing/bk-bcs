@@ -24,6 +24,7 @@ type ClusterManager struct {
 	url             string
 	apiGatewayUrl   string
 	apiGatewayToken string
+	tenantID        string
 }
 
 // NewClusterManager init clustermanager client
@@ -34,6 +35,13 @@ func NewClusterManager(token, apiserver, apiGatewayUrl, apiGatewayToken string) 
 		apiGatewayUrl:   apiGatewayUrl,
 		apiGatewayToken: apiGatewayToken,
 	}, nil
+}
+
+// WithTenant return a copy of the client which requests with the tenant
+func (cm *ClusterManager) WithTenant(tenantID string) *ClusterManager {
+	c := *cm
+	c.tenantID = tenantID
+	return &c
 }
 
 // BcsTransport client

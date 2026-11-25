@@ -127,8 +127,8 @@ func GetAuthHeader(ctx context.Context) (map[string]string, error) {
 		bkUserName = config.GlobalConf.App.BkUsername
 	)
 
-	// 仅多租户模式下通过 loginName 获取租户下的 bkUserName
-	if tenant.IsMultiTenantEnabled() && bkUserName != "" {
+	// 开启租户功能（单租户或多租户）时通过 loginName 获取租户下的 bkUserName
+	if tenant.IsTenantEnabled() && bkUserName != "" {
 		userName, err := GetBkUserNameByTenantLoginName(ctx, tenantId, bkUserName, true)
 		if err != nil {
 			return nil, fmt.Errorf("get bkUserName by tenant failed: %v", err)

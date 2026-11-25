@@ -38,7 +38,7 @@ const (
 // TenantCheck 租户校验中间件
 func TenantCheck() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if !config.G.Base.EnableTenant {
+		if !config.G.Base.IsMultiTenantEnabled() {
 			c.Next()
 			return
 		}

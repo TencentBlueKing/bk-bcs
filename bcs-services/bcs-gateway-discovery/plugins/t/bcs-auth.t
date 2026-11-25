@@ -243,3 +243,114 @@ GET /t
 done
 --- no_error_log
 [error]
+
+
+=== TEST 13: enable single tenant mode route and verify JWT has no tenant_id
+--- config
+    location /t {
+        content_by_lua_block {
+            local t = require("lib.test_admin").test
+            local code, body = t('/apisix/admin/routes/1',
+                ngx.HTTP_PUT,
+                [[{
+                    "plugins": {
+                        "bcs-auth": {
+                            "bk_login_host": "http://login.bk.com",
+                            "bk_login_host_tenant": "http://bkapi.bk.com/api/bk-login/prod/login/api/v3/open",
+                            "tenant": "single",
+                            "bk_app_code": "bk_bcs_app",
+                            "bk_app_secret": "test_secret",
+                            "private_key": "LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQpNSUlCT3dJQkFBSkJBTVg0UW9idVQvSzhWUzIyN3NYZEVKTThCSXJjNnVRU21HOHA0a2Z1S1lLKzJUNy9PaWRUCjRWQ1Y5TUpJdjdidG1BcmI2UFJsYURqdmZiVi9jV3FRQVRrQ0F3RUFBUUpCQUxLaVVXVnZwTFJqUEhrRG1IRHkKQ1FMU0pVY29FTXU3KzlCUyt0dnRDNGZ0RjhRSlMrejcrTXZiOGtyS0Mxb3dzTlFRR2hVR0ovanBoMG5JTXA4UgpBQUVDSVFEbEd5YTBPaWszbTAzcXhDNy96V0p3a0dmZ1pwNit0TStpQm93MTRYSnUrUUloQU4wMWJ5d3p5Q1QyCjJwd2NVTW02dlBvRlFTSGgzSkFIN1c3YTcxNk5RWFJCQWlCeUhpZ1ZOYk02STMyWUpzaFNXbmRpSWt2YmxzSVQKcy9TSWZFSnl4QzAvNFFJZ0R1M1hSZTFzdVlucmNSTzhKQkUxUmM1cStlVnJaRkVVcGlHaWZBZ2VmY0VDSVFEUgpvaU1FS3E3d1dIa1Y2WjRWMUllYnkrSS9UUmVhQmxaR2Q4d2NVTkgrVEE9PQotLS0tLUVORCBSU0EgUFJJVkFURSBLRVktLS0tLQ==",
+                            "redis_host": "127.0.0.1",
+                            "redis_password": ""
+                        }
+                    },
+                    "upstream": {
+                        "nodes": {
+                            "127.0.0.1:1980": 1
+                        },
+                        "type": "roundrobin"
+                    },
+                    "uri": "/hello"
+                }]]
+            )
+            if code >= 300 then
+                ngx.status = code
+            end
+            ngx.say(body)
+        }
+    }
+--- request
+GET /t
+--- response_body
+passed
+--- no_error_log
+[error]
+
+
+=== TEST 14: single tenant login token sets bk_username without tenant_id
+--- init_by_lua_block
+    apisix = require("apisix")
+    apisix.http_init()
+
+    package.loaded["apisix.plugins.bcs-auth.bklogin"]= require("apisix.plugins.bcs-auth.mock-bklogin")
+--- request
+GET /hello
+--- more_headers
+User-Agent: Mozilla
+Cookie: bk_token=2b0827e0-d932-4342-aa0c-cbaa409495a3
+--- error_code: 200
+--- response_body
+hello world
+--- no_error_log
+[error]
+
+
+=== TEST 15: verify single tenant JWT payload
+--- config
+    location /t {
+        content_by_lua_block {
+            local jwt = require("resty.jwt")
+            local red = require("resty.redis").new()
+            red:connect("127.0.0.1", "6379")
+            red:auth("")
+            red:select(0)
+
+            local jwt_token = red:get("bcs_auth:session_id:2b0827e0-d932-4342-aa0c-cbaa409495a3")
+            local jwt_obj = jwt:load_jwt(jwt_token)
+            local auth_secret = "-----BEGIN PUBLIC KEY-----\nMFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBAMX4QobuT/K8VS227sXdEJM8BIrc6uQS\nmG8p4kfuKYK+2T7/OidT4VCV9MJIv7btmArb6PRlaDjvfbV/cWqQATkCAwEAAQ==\n-----END PUBLIC KEY-----"
+            jwt_obj = jwt:verify_jwt_obj(auth_secret, jwt_obj)
+            ngx.say(jwt_obj.payload.username .. ":" .. tostring(jwt_obj.payload.tenant_id))
+            red:del("bcs_auth:session_id:2b0827e0-d932-4342-aa0c-cbaa409495a3")
+        }
+    }
+--- request
+GET /t
+--- response_body
+bcs_tenant_user:nil
+--- no_error_log
+[error]
+
+
+=== TEST 16: tenant only accepts off, empty, single or multi
+--- config
+    location /t {
+        content_by_lua_block {
+            local plugin = require("apisix.plugins.bcs-auth")
+            for _, mode in ipairs({"", "off", "single", "multi", "true"}) do
+                local ok, err = plugin.check_schema({bk_login_host = "http://login.bk.com", private_key = "LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLR...",
+                redis_host = "127.0.0.1", redis_password = "", tenant = mode})
+                ngx.say(mode, ":", ok and "ok" or "invalid")
+            end
+        }
+    }
+--- request
+GET /t
+--- response_body
+:ok
+off:ok
+single:ok
+multi:ok
+true:invalid
+--- no_error_log
+[error]

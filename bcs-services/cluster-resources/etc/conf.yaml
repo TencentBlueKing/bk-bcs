@@ -105,6 +105,8 @@ crGlobal:
     host: "http://bcs.apigw.com"
     authToken: ""
     readAuthTokenFromEnv: false
+    # 租户模式：single 单租户，multi 多租户，off 或为空关闭租户
+    tenant: ""
 
   # 权限中心相关配置
   iam:

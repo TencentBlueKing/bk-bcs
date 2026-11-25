@@ -122,6 +122,9 @@ func main() {
 	})
 
 	blog.Info(string(config.Bytes()))
+	if err := opt.ValidateTenant(); err != nil {
+		blog.Fatalf("invalid helm manager options, %s", err.Error())
+	}
 	options.GlobalOptions = opt
 	helmManager := app.NewHelmManager(opt, credConf, addonsConf)
 	if err := helmManager.Init(); err != nil {

@@ -153,7 +153,7 @@ func GetAllCluster() ([]*Cluster, error) {
 	if config.GetGlobalConfig() == nil || config.GetGlobalConfig().BcsAPI == nil {
 		return nil, fmt.Errorf("bcs-api config not found")
 	}
-	if config.GetGlobalConfig().Tenant.Enable {
+	if config.GetGlobalConfig().Tenant.IsMultiTenantEnabled() {
 		return GetAllTenantCluster()
 	}
 	url := fmt.Sprintf("%s/bcsapi/v4/clustermanager/v1/cluster", config.GetGlobalConfig().BcsAPI.InnerHost)

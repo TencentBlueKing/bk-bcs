@@ -189,7 +189,8 @@ type HelmManagerOptions struct {
 	TracingConfig conf.TracingConfig  `json:"tracingConfig" yaml:"tracingConfig"`
 	SharedCluster SharedClusterConfig `json:"sharedCluster" yaml:"sharedCluster"`
 	ServerConfig
-	EnableMultiTenant bool `json:"enableMultiTenant" yaml:"enableMultiTenant"`
+	// Tenant 租户模式：single 单租户，multi 多租户，off 或为空关闭租户
+	Tenant string `json:"tenant" yaml:"tenant"`
 }
 
 // GlobalOptions global helm manager options

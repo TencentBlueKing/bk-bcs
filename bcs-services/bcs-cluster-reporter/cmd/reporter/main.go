@@ -47,6 +47,7 @@ import (
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/cmd/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/api/bcs"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/api/bkuser"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/k8s"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/pluginmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/util"
@@ -75,6 +76,10 @@ Basic Commands (Beginner):
 
 			if bcro.BcsClusterManagerToken == "" {
 				bcro.BcsClusterManagerToken = os.Getenv("gatewayToken")
+			}
+
+			if bcro.BkAppSecret == "" {
+				bcro.BkAppSecret = os.Getenv("bkAppSecret")
 			}
 
 			CheckErr(Complete(cmd, args))
@@ -169,6 +174,10 @@ func CheckErr(err error) {
 
 // Complete check for cmd args
 func Complete(cmd *cobra.Command, args []string) error {
+	if err := bcro.ValidateTenant(); err != nil {
+		return err
+	}
+
 	if (bcro.BcsClusterManagerToken != "" || bcro.BcsClusterManagerApiserver != "" || bcro.BcsGatewayApiserver != "" ||
 		bcro.BcsGatewayToken != "") && (bcro.BcsClusterManagerToken == "" || bcro.BcsClusterManagerApiserver == "" || bcro.BcsGatewayApiserver == "" ||
 		bcro.BcsGatewayToken == "") {
@@ -270,6 +279,56 @@ func getClusters() {
 	}
 }
 
+// listBCSClusters list bcs clusters, and return the clustermanager client of each cluster's tenant
+func listBCSClusters(cm *bcs.ClusterManager) ([]cmproto.Cluster, map[string]*bcs.ClusterManager, error) {
+	clusterManagers := make(map[string]*bcs.ClusterManager)
+	if !bcro.IsMultiTenantEnabled() {
+		clusterList, err := cm.GetClusters([]string{})
+		if err != nil {
+			return nil, nil, err
+		}
+		for _, cluster := range clusterList {
+			clusterManagers[cluster.ClusterID] = cm
+		}
+		return clusterList, clusterManagers, nil
+	}
+
+	bkUserClient, err := bkuser.NewClient(bcro.BkUserServer, bcro.BkAppCode, bcro.BkAppSecret)
+	if err != nil {
+		return nil, nil, err
+	}
+	tenants, err := bkUserClient.ListTenant(context.Background())
+	if err != nil {
+		return nil, nil, err
+	}
+
+	clusterList := make([]cmproto.Cluster, 0)
+	var lastErr error
+	succeed := 0
+	for _, tenant := range tenants {
+		tenantCM := cm.WithTenant(tenant.ID)
+		tenantClusters, err := tenantCM.GetClusters([]string{})
+		if err != nil {
+			klog.Errorf("GetClusters of tenant %s failed: %s", tenant.ID, err.Error())
+			lastErr = err
+			continue
+		}
+		succeed++
+		for _, cluster := range tenantClusters {
+			if _, ok := clusterManagers[cluster.ClusterID]; ok {
+				continue
+			}
+			clusterManagers[cluster.ClusterID] = tenantCM
+			clusterList = append(clusterList, cluster)
+		}
+	}
+	if len(tenants) > 0 && succeed == 0 {
+		return nil, nil, fmt.Errorf("GetClusters of all tenants failed: %v", lastErr)
+	}
+	klog.Infof("get %d clusters from %d tenants", len(clusterList), succeed)
+	return clusterList, clusterManagers, nil
+}
+
 // GetClusterConfigFromBCS get clusterconfig from bcs api
 func GetClusterConfigFromBCS(bcsClusterManagerToken, bcsClusterManagerApiserver, bcsGatewayApiserver, bcsGatewayToken string, selectorMap map[string]string, excludeProjectIDs string, existClusterConfigList map[string]*pluginmanager.ClusterConfig) (map[string]*pluginmanager.ClusterConfig, error) {
 	clusterConfigList := make(map[string]*pluginmanager.ClusterConfig)
@@ -280,7 +339,7 @@ func GetClusterConfigFromBCS(bcsClusterManagerToken, bcsClusterManagerApiserver,
 		return nil, err
 	}
 
-	clusterList, err := bcsClusterManager.GetClusters([]string{})
+	clusterList, clusterManagers, err := listBCSClusters(bcsClusterManager)
 	if err != nil {
 		klog.Fatalf("GetClusters failed: %s", err.Error())
 		return nil, err
@@ -323,7 +382,7 @@ func GetClusterConfigFromBCS(bcsClusterManagerToken, bcsClusterManagerApiserver,
 				routinePool.Done()
 			}()
 
-			config := bcsClusterManager.GetKubeconfig(cluster.ClusterID)
+			config := clusterManagers[cluster.ClusterID].GetKubeconfig(cluster.ClusterID)
 			clusterConfig, err := GetClusterConfig(cluster.ClusterID, config)
 			if err != nil {
 				klog.Errorf("GetClusterConfig %s failed: %s", cluster.ClusterID, err.Error())

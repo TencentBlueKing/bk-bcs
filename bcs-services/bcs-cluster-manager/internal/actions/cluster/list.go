@@ -229,7 +229,7 @@ func (la *ListAction) listCluster() error {
 			clusterList[i].IsShared = false
 		}
 		// filter project by tenant
-		if options.GetGlobalCMOptions().TenantConfig.EnableMultiTenantMode {
+		if options.GetGlobalCMOptions().TenantConfig.IsMultiTenantEnabled() {
 			proInfo, perr := project.GetProjectManagerClient().
 				GetProjectInfo(la.ctx, clusterList[i].GetProjectID(), true)
 			if perr != nil {

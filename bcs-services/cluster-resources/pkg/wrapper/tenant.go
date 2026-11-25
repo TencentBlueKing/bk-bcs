@@ -32,7 +32,7 @@ import (
 func NewTenantWrapper() server.HandlerWrapper {
 	return func(fn server.HandlerFunc) server.HandlerFunc {
 		return func(ctx context.Context, req server.Request, rsp interface{}) error {
-			if !config.G.BCSAPIGW.EnableMultiTenantMode {
+			if !config.G.BCSAPIGW.IsMultiTenantEnabled() {
 				return fn(ctx, req, rsp)
 			}
 
