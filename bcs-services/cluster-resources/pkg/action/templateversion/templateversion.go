@@ -349,6 +349,11 @@ func (t *TemplateVersionAction) Create(ctx context.Context, req *clusterRes.Crea
 		return "", err
 	}
 
+	// 只能在当前项目的模板下创建版本
+	if tmp.ProjectCode != p.Code {
+		return "", errorx.New(errcode.NoPerm, i18n.GetMsg(ctx, "无权限访问"))
+	}
+
 	// 检测是否重复
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{
 		entity.FieldKeyProjectCode:   p.Code,
@@ -400,6 +405,15 @@ func (t *TemplateVersionAction) Create(ctx context.Context, req *clusterRes.Crea
 		return "", err
 	}
 
+	if err = t.updateTemplateAfterCreateVersion(ctx, tmp, req, userName); err != nil {
+		return "", err
+	}
+	return id, nil
+}
+
+// updateTemplateAfterCreateVersion 创建版本后更新模板的草稿态及最新版本信息
+func (t *TemplateVersionAction) updateTemplateAfterCreateVersion(
+	ctx context.Context, tmp *entity.Template, req *clusterRes.CreateTemplateVersionReq, userName string) error {
 	updateTemplate := make(entity.M, 0)
 	// 如果草稿态的情况下，创建版本解除草稿态
 	if tmp.IsDraft {
@@ -415,12 +429,10 @@ func (t *TemplateVersionAction) Create(ctx context.Context, req *clusterRes.Crea
 		updateTemplate["updator"] = userName
 	}
 
-	if len(updateTemplate) != 0 {
-		if err = t.model.UpdateTemplate(ctx, req.GetTemplateID(), updateTemplate); err != nil {
-			return "", err
-		}
+	if len(updateTemplate) == 0 {
+		return nil
 	}
-	return id, nil
+	return t.model.UpdateTemplate(ctx, req.GetTemplateID(), updateTemplate)
 }
 
 // Delete xxx

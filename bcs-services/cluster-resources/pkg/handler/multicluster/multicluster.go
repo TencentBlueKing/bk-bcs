@@ -313,6 +313,9 @@ func (h *Handler) GetApiResourcesObject(ctx context.Context,
 
 	manifest := resInfo.UnstructuredContent()
 	kind := mapx.GetStr(manifest, "kind")
+	if err = checkAccess(ctx, req.Namespace, req.ClusterID, kind, nil); err != nil {
+		return err
+	}
 	respDataBuilder, err := respUtil.NewRespDataBuilder(ctx, respUtil.DataBuilderParams{
 		Manifest: manifest, Kind: kind, Format: req.Format,
 	})
@@ -444,11 +447,6 @@ func checkAccess(ctx context.Context, namespace, clusterID, kind string, manifes
 		!slice.StringInSlice(kind, config.G.SharedCluster.EnabledCObjKinds) {
 		return errorx.New(errcode.NoPerm, i18n.GetMsg(ctx, "该请求资源类型 %s 在共享集群中不可用"), kind)
 	}
-	// 非namespace资源不判断命名空间
-	if namespace == "" {
-		return nil
-	}
-
 	// 对命名空间进行检查，确保是属于项目的，命名空间以 manifest 中的为准
 	if manifest != nil {
 		namespace = mapx.GetStr(manifest, "metadata.namespace")
