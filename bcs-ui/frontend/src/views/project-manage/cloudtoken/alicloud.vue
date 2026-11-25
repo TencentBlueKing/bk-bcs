@@ -96,7 +96,7 @@
       header-position="left"
       width="600"
       :title="$t('projects.cloudToken.add')">
-      <bk-form :label-width="100" :model="account" :rules="formRules" ref="formRef">
+      <bk-form :label-width="140" :model="account" :rules="formRules" ref="formRef">
         <bk-form-item :label="$t('generic.label.name')" property="accountName" error-display-type="normal" required>
           <bk-input :maxlength="64" v-model="account.accountName"></bk-input>
         </bk-form-item>
