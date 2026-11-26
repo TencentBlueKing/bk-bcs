@@ -152,6 +152,22 @@ func (BCSMonitorHandler) ClusterDiskioUsage(c *rest.Context, query *UsageQuery) 
 	return handleClusterMetric(c, promql, query)
 }
 
+// ClusterCPURequestWithInitUsage implements Handler.
+// nolint
+func (BCSMonitorHandler) ClusterCPURequestWithInitUsage(c *rest.Context, query *UsageQuery) (*promclient.ResultData, error) {
+	promql := `bcs:cluster:cpu_request_with_init:usage{cluster_id="%<clusterId>s", %<provider>s}`
+
+	return handleClusterMetric(c, promql, query)
+}
+
+// ClusterMemoryRequestWithInitUsage implements Handler.
+// nolint
+func (BCSMonitorHandler) ClusterMemoryRequestWithInitUsage(c *rest.Context, query *UsageQuery) (*promclient.ResultData, error) {
+	promql := `bcs:cluster:memory_request_with_init:usage{cluster_id="%<clusterId>s", %<provider>s}`
+
+	return handleClusterMetric(c, promql, query)
+}
+
 // NewBCSMonitorHandler new handler
 func NewBCSMonitorHandler() *BCSMonitorHandler {
 	return &BCSMonitorHandler{}
