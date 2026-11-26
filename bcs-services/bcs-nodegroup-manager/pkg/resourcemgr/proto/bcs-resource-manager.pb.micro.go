@@ -44,7 +44,6 @@ func NewResourceManagerEndpoints() []*api.Endpoint {
 			Name:    "ResourceManager.CreateDeviceConsumer",
 			Path:    []string{"/resourcemanager/v1/device/consumer"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
@@ -63,35 +62,30 @@ func NewResourceManagerEndpoints() []*api.Endpoint {
 			Name:    "ResourceManager.UpdateDeviceConsumer",
 			Path:    []string{"/resourcemanager/v1/device/consumer/{deviceConsumerID}"},
 			Method:  []string{"PUT"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
 			Name:    "ResourceManager.DeleteDeviceConsumer",
 			Path:    []string{"/resourcemanager/v1/device/consumer/{deviceConsumerID}"},
 			Method:  []string{"DELETE"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
 			Name:    "ResourceManager.ConsumeDevice",
 			Path:    []string{"/resourcemanager/v1/device/consumer/{deviceConsumerID}/consume"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
 			Name:    "ResourceManager.ReturnDevice",
 			Path:    []string{"/resourcemanager/v1/device/consumer/{deviceConsumerID}/return"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
 			Name:    "ResourceManager.CreateDevicePool",
 			Path:    []string{"/resourcemanager/v1/device/pool"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
@@ -116,35 +110,30 @@ func NewResourceManagerEndpoints() []*api.Endpoint {
 			Name:    "ResourceManager.UpdateDevicePool",
 			Path:    []string{"/resourcemanager/v1/device/pool/{devicePoolID}"},
 			Method:  []string{"PUT"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
 			Name:    "ResourceManager.DeleteDevicePool",
 			Path:    []string{"/resourcemanager/v1/device/pool/{devicePoolID}"},
 			Method:  []string{"DELETE"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
 			Name:    "ResourceManager.ImportDeviceToDevicePool",
 			Path:    []string{"/resourcemanager/v1/device/pool/{devicePoolID}/import"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
 			Name:    "ResourceManager.ImportDevicesToDevicePoolByBkAssetIDs",
 			Path:    []string{"/resourcemanager/v1/device/pool/{devicePoolID}/importByBkAssetIDs"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
 			Name:    "ResourceManager.ImportDeviceToDevicePoolByBkAssetID",
 			Path:    []string{"/resourcemanager/v1/device/pool/{devicePoolID}/importByBkAssetID"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
@@ -163,7 +152,6 @@ func NewResourceManagerEndpoints() []*api.Endpoint {
 			Name:    "ResourceManager.CreateDeviceRecord",
 			Path:    []string{"/resourcemanager/v1/device/record"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
@@ -176,14 +164,12 @@ func NewResourceManagerEndpoints() []*api.Endpoint {
 			Name:    "ResourceManager.UpdateDeviceRecord",
 			Path:    []string{"/resourcemanager/v1/device/record/{deviceRecordID}"},
 			Method:  []string{"PUT"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
 			Name:    "ResourceManager.CreateProvider",
 			Path:    []string{"/resourcemanager/v1/provider"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
@@ -202,14 +188,12 @@ func NewResourceManagerEndpoints() []*api.Endpoint {
 			Name:    "ResourceManager.UpdateProvider",
 			Path:    []string{"/resourcemanager/v1/provider/{name}"},
 			Method:  []string{"PUT"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
 			Name:    "ResourceManager.DeleteProvider",
 			Path:    []string{"/resourcemanager/v1/provider/{name}"},
 			Method:  []string{"DELETE"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
@@ -234,14 +218,12 @@ func NewResourceManagerEndpoints() []*api.Endpoint {
 			Name:    "ResourceManager.CreateObsCost",
 			Path:    []string{"/resourcemanager/v1/obs/cost"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
 			Name:    "ResourceManager.CreateResourcePool",
 			Path:    []string{"/resourcemanager/v1/resource_pools"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
@@ -254,7 +236,6 @@ func NewResourceManagerEndpoints() []*api.Endpoint {
 			Name:    "ResourceManager.ImportResource",
 			Path:    []string{"/resourcemanager/v1/resource_pools/{poolID}/import"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
@@ -273,7 +254,6 @@ func NewResourceManagerEndpoints() []*api.Endpoint {
 			Name:    "ResourceManager.CreateDeviceRecordByPool",
 			Path:    []string{"/resourcemanager/v1/resource_pools/{poolID}/device_records"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
@@ -286,28 +266,24 @@ func NewResourceManagerEndpoints() []*api.Endpoint {
 			Name:    "ResourceManager.CreateDeviceRecordByDevicePool",
 			Path:    []string{"/resourcemanager/v1/device/record/pool/{poolID}"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
 			Name:    "ResourceManager.CreateDeviceInstance",
 			Path:    []string{"/resourcemanager/v1/device/instance"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
 			Name:    "ResourceManager.UpdateDeviceInstance",
 			Path:    []string{"/resourcemanager/v1/device/instance/{deviceInstanceID}"},
 			Method:  []string{"PUT"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
 			Name:    "ResourceManager.DeleteDeviceInstance",
 			Path:    []string{"/resourcemanager/v1/device/instance/{deviceInstanceID}"},
 			Method:  []string{"DELETE"},
-			Body:    "",
 			Handler: "rpc",
 		},
 		{
@@ -320,7 +296,6 @@ func NewResourceManagerEndpoints() []*api.Endpoint {
 			Name:    "ResourceManager.EnableDeviceConsumer",
 			Path:    []string{"/resourcemanager/v1/device/consumer/enable"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
@@ -339,14 +314,12 @@ func NewResourceManagerEndpoints() []*api.Endpoint {
 			Name:    "ResourceManager.UpdateDevice",
 			Path:    []string{"/resourcemanager/v1/device/{deviceID}"},
 			Method:  []string{"PUT"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
 			Name:    "ResourceManager.DeleteDevices",
 			Path:    []string{"/resourcemanager/v1/devices"},
 			Method:  []string{"DELETE"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 	}
@@ -1053,7 +1026,6 @@ func RegisterResourceManagerHandler(s server.Server, hdlr ResourceManagerHandler
 		Name:    "ResourceManager.CreateDeviceConsumer",
 		Path:    []string{"/resourcemanager/v1/device/consumer"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -1072,35 +1044,30 @@ func RegisterResourceManagerHandler(s server.Server, hdlr ResourceManagerHandler
 		Name:    "ResourceManager.UpdateDeviceConsumer",
 		Path:    []string{"/resourcemanager/v1/device/consumer/{deviceConsumerID}"},
 		Method:  []string{"PUT"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ResourceManager.DeleteDeviceConsumer",
 		Path:    []string{"/resourcemanager/v1/device/consumer/{deviceConsumerID}"},
 		Method:  []string{"DELETE"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ResourceManager.ConsumeDevice",
 		Path:    []string{"/resourcemanager/v1/device/consumer/{deviceConsumerID}/consume"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ResourceManager.ReturnDevice",
 		Path:    []string{"/resourcemanager/v1/device/consumer/{deviceConsumerID}/return"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ResourceManager.CreateDevicePool",
 		Path:    []string{"/resourcemanager/v1/device/pool"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -1125,35 +1092,30 @@ func RegisterResourceManagerHandler(s server.Server, hdlr ResourceManagerHandler
 		Name:    "ResourceManager.UpdateDevicePool",
 		Path:    []string{"/resourcemanager/v1/device/pool/{devicePoolID}"},
 		Method:  []string{"PUT"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ResourceManager.DeleteDevicePool",
 		Path:    []string{"/resourcemanager/v1/device/pool/{devicePoolID}"},
 		Method:  []string{"DELETE"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ResourceManager.ImportDeviceToDevicePool",
 		Path:    []string{"/resourcemanager/v1/device/pool/{devicePoolID}/import"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ResourceManager.ImportDevicesToDevicePoolByBkAssetIDs",
 		Path:    []string{"/resourcemanager/v1/device/pool/{devicePoolID}/importByBkAssetIDs"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ResourceManager.ImportDeviceToDevicePoolByBkAssetID",
 		Path:    []string{"/resourcemanager/v1/device/pool/{devicePoolID}/importByBkAssetID"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -1172,7 +1134,6 @@ func RegisterResourceManagerHandler(s server.Server, hdlr ResourceManagerHandler
 		Name:    "ResourceManager.CreateDeviceRecord",
 		Path:    []string{"/resourcemanager/v1/device/record"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -1185,14 +1146,12 @@ func RegisterResourceManagerHandler(s server.Server, hdlr ResourceManagerHandler
 		Name:    "ResourceManager.UpdateDeviceRecord",
 		Path:    []string{"/resourcemanager/v1/device/record/{deviceRecordID}"},
 		Method:  []string{"PUT"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ResourceManager.CreateProvider",
 		Path:    []string{"/resourcemanager/v1/provider"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -1211,14 +1170,12 @@ func RegisterResourceManagerHandler(s server.Server, hdlr ResourceManagerHandler
 		Name:    "ResourceManager.UpdateProvider",
 		Path:    []string{"/resourcemanager/v1/provider/{name}"},
 		Method:  []string{"PUT"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ResourceManager.DeleteProvider",
 		Path:    []string{"/resourcemanager/v1/provider/{name}"},
 		Method:  []string{"DELETE"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -1243,14 +1200,12 @@ func RegisterResourceManagerHandler(s server.Server, hdlr ResourceManagerHandler
 		Name:    "ResourceManager.CreateObsCost",
 		Path:    []string{"/resourcemanager/v1/obs/cost"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ResourceManager.CreateResourcePool",
 		Path:    []string{"/resourcemanager/v1/resource_pools"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -1263,7 +1218,6 @@ func RegisterResourceManagerHandler(s server.Server, hdlr ResourceManagerHandler
 		Name:    "ResourceManager.ImportResource",
 		Path:    []string{"/resourcemanager/v1/resource_pools/{poolID}/import"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -1282,7 +1236,6 @@ func RegisterResourceManagerHandler(s server.Server, hdlr ResourceManagerHandler
 		Name:    "ResourceManager.CreateDeviceRecordByPool",
 		Path:    []string{"/resourcemanager/v1/resource_pools/{poolID}/device_records"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -1295,28 +1248,24 @@ func RegisterResourceManagerHandler(s server.Server, hdlr ResourceManagerHandler
 		Name:    "ResourceManager.CreateDeviceRecordByDevicePool",
 		Path:    []string{"/resourcemanager/v1/device/record/pool/{poolID}"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ResourceManager.CreateDeviceInstance",
 		Path:    []string{"/resourcemanager/v1/device/instance"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ResourceManager.UpdateDeviceInstance",
 		Path:    []string{"/resourcemanager/v1/device/instance/{deviceInstanceID}"},
 		Method:  []string{"PUT"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ResourceManager.DeleteDeviceInstance",
 		Path:    []string{"/resourcemanager/v1/device/instance/{deviceInstanceID}"},
 		Method:  []string{"DELETE"},
-		Body:    "",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -1329,7 +1278,6 @@ func RegisterResourceManagerHandler(s server.Server, hdlr ResourceManagerHandler
 		Name:    "ResourceManager.EnableDeviceConsumer",
 		Path:    []string{"/resourcemanager/v1/device/consumer/enable"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -1348,14 +1296,12 @@ func RegisterResourceManagerHandler(s server.Server, hdlr ResourceManagerHandler
 		Name:    "ResourceManager.UpdateDevice",
 		Path:    []string{"/resourcemanager/v1/device/{deviceID}"},
 		Method:  []string{"PUT"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ResourceManager.DeleteDevices",
 		Path:    []string{"/resourcemanager/v1/devices"},
 		Method:  []string{"DELETE"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	return s.Handle(s.NewHandler(&ResourceManager{h}, opts...))
