@@ -20,7 +20,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/bcsmonitor"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/cmanager"
 	bcsdatamanager "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/proto/bcs-data-manager"
 )
 
@@ -459,13 +458,11 @@ type Clients struct {
 	MonitorClient   bcsmonitor.ClientInterface
 	K8sStorageCli   bcsapi.Storage
 	MesosStorageCli bcsapi.Storage
-	CmCli           *cmanager.ClusterManagerClientWithHeader
 }
 
 // NewClients init dataJob clients
-func NewClients(monitorClient bcsmonitor.ClientInterface, k8sStorageCli, mesosStorageCli bcsapi.Storage,
-	cmCli *cmanager.ClusterManagerClientWithHeader) *Clients {
-	return &Clients{MonitorClient: monitorClient, CmCli: cmCli,
+func NewClients(monitorClient bcsmonitor.ClientInterface, k8sStorageCli, mesosStorageCli bcsapi.Storage) *Clients {
+	return &Clients{MonitorClient: monitorClient,
 		K8sStorageCli: k8sStorageCli, MesosStorageCli: mesosStorageCli}
 }
 
