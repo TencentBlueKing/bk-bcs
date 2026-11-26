@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: istio-policy-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "istio-policy-controller.labels" . | nindent 4 }}
+  annotations:
+    meta.helm.sh/release-name: {{ .Release.Name }}
+    meta.helm.sh/release-namespace: {{ .Release.Namespace }}
+data:
+  config.yaml: |
+        {{- .Values.istioPolicyConfig | nindent 4 }}
+
