@@ -1728,7 +1728,9 @@ func GetLabelValue(labels map[string]string, labelKeys []string) string {
 	return ""
 }
 
-// K8sNodesToImportNodes 从k8s节点信息中根据node label获取导入集群的节点信息，label key差异化配置通过labelCfg传入，providerID解析通过parseProviderID传入，各云厂商在ListImportClusterNodes中构造对应配置和解析函数
+// K8sNodesToImportNodes 从k8s节点信息中根据node label获取导入集群的节点信息，
+// label key差异化配置通过labelCfg传入，providerID解析通过parseProviderID传入，
+// 各云厂商在ListImportClusterNodes中构造对应配置和解析函数
 func K8sNodesToImportNodes(k8sNodes []*corev1.Node, ips []string, labelCfg *K8sLabelConfig,
 	parseProviderID func(string) string) []*proto.Node {
 	if len(k8sNodes) == 0 || len(ips) == 0 {
@@ -1819,6 +1821,5 @@ func K8sNodesToImportNodes(k8sNodes []*corev1.Node, ips []string, labelCfg *K8sL
 
 		nodes = append(nodes, node)
 	}
-
 	return nodes
 }

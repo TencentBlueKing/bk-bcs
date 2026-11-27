@@ -42,11 +42,10 @@ const (
 // 2. 集群中存在，CMDB存在 → 更新HOST元数据信息（暂不处理）
 // 3. 集群中不存在，CMDB存在 → 转移到空闲机池→资源池，删除主机
 // 4. 集群中不存在，CMDB不存在 → 无需处理
-func (d *Daemon) syncClusterNodeCMDBMeta(errChan chan<- error) {
+func (d *Daemon) syncClusterNodeCMDBMeta(errChan chan<- error) { //nolint:funlen
 	blog.Infof("syncClusterNodeCMDBMeta start")
-	d.lock.Lock(syncClusterNodeCMDBMetaLockKey,
-		[]lock.LockOption{lock.LockTTL(time.Second * 60)}...) // nolint
-	defer d.lock.Unlock(syncClusterNodeCMDBMetaLockKey)       // nolint
+	d.lock.Lock(syncClusterNodeCMDBMetaLockKey, []lock.LockOption{lock.LockTTL(time.Second * 60)}...) // nolint
+	defer d.lock.Unlock(syncClusterNodeCMDBMetaLockKey)                                               // nolint
 
 	defer utils.RecoverPrintStack("syncClusterNodeCMDBMeta")
 
@@ -219,7 +218,8 @@ func (d *Daemon) syncClusterNodeWithCMDB(cmdbClient *cmdb.Client,
 }
 
 // getClusterSyncNodesInfo 同步单个集群节点与CMDB数据
-func (d *Daemon) getClusterSyncNodesInfo(cluster *cmproto.Cluster) (map[string]*cmproto.Node, map[string]*cmdb.HostData, error) {
+func (d *Daemon) getClusterSyncNodesInfo(
+	cluster *cmproto.Cluster) (map[string]*cmproto.Node, map[string]*cmdb.HostData, error) {
 	clusterID := cluster.GetClusterID()
 	bizIDStr := cluster.GetBusinessID()
 	blog.Infof("syncClusterNodeWithCMDB cluster[%s] provider[%s] bizID[%s] start",
@@ -373,7 +373,7 @@ func buildCMDBHostIPMap(hosts []cmdb.HostData) map[string]*cmdb.HostData {
 	ipMap := make(map[string]*cmdb.HostData)
 	for i := range hosts {
 		if hosts[i].BKHostInnerIP != "" {
-			if hosts[i].IsGPU != true {
+			if !hosts[i].IsGPU {
 				continue
 			}
 			ipMap[hosts[i].BKHostInnerIP] = &hosts[i]
@@ -432,27 +432,6 @@ func buildAddHostInfo(cluster *cmproto.Cluster, node *cmproto.Node, ip string) c
 	return hostInfo
 }
 
-// buildUpdateHostData 根据集群和节点信息构建更新CMDB主机属性的数据
-func buildUpdateHostData(cluster *cmproto.Cluster, node *cmproto.Node) *cmdb.UpdateHostData {
-	isGPU := false
-	if node.GetGPU() > 0 {
-		isGPU = true
-	}
-
-	return &cmdb.UpdateHostData{
-		BkHostName:    node.GetNodeName(),
-		IsGPU:         isGPU,
-		BkCloudVendor: getCMDBCloudVendorCode(cluster.GetProvider()),
-		BkCloudInstID: node.GetNodeID(),
-		BkCloudRegion: cluster.GetRegion(),
-		BkCloudZone:   node.GetZoneName(),
-		InstanceType:  node.GetInstanceType(),
-		OnshelfDate:   cluster.GetCreateTime(),
-		Operator:      cluster.GetCreator(),
-		BkBakOperator: cluster.GetCreator(),
-	}
-}
-
 // handleNodesInClusterNotInCMDB 集群中存在，CMDB不存在 → 创建主机到业务空闲机
 // 若用户配置了特性模块（ExtraInfo中的cmdbFeatureModuleID），则进一步转移到特性模块
 func (d *Daemon) handleNodesInClusterNotInCMDB(cluster *cmproto.Cluster, bizID int,
@@ -475,13 +454,13 @@ func (d *Daemon) handleNodesInClusterNotInCMDB(cluster *cmproto.Cluster, bizID i
 		hostIDs, err := cmdbClient.AddHostToBusinessIdle(d.ctx, bizID,
 			[]cmdb.AddHostToBusinessIdleHostInfo{hostInfo})
 		if err != nil {
-			blog.Errorf("syncClusterNodeWithCMDB handleNodesInClusterNotInCMDB AddHostToBusinessIdle cluster[%s] node[%s] failed: %v",
-				clusterID, ip, err)
+			blog.Errorf("syncClusterNodeWithCMDB handleNodesInClusterNotInCMDB AddHostToBusinessIdle "+
+				"cluster[%s] node[%s] failed: %v", clusterID, ip, err)
 			continue
 		}
 
-		blog.Infof("syncClusterNodeWithCMDB handleNodesInClusterNotInCMDB AddHostToBusinessIdle cluster[%s] node[%s] success, "+
-			"hostIDs[%v]", clusterID, ip, hostIDs)
+		blog.Infof("syncClusterNodeWithCMDB handleNodesInClusterNotInCMDB AddHostToBusinessIdle "+
+			"cluster[%s] node[%s] success, hostIDs[%v]", clusterID, ip, hostIDs)
 
 		moduleIDStr := cluster.GetClusterBasicSettings().GetModule().WorkerModuleID
 		// 若用户配置了特性模块，则调用 TransferHostModule 将主机转移到特性模块
@@ -524,15 +503,15 @@ func (d *Daemon) handleNodesNotInClusterInCMDB(bizID int, cmdbClient *cmdb.Clien
 
 		// Step1: 转移到空闲机池
 		if err := cmdbClient.TransferHostToIdleModule(d.ctx, bizID, []int{int(cmdbHost.BKHostID)}); err != nil {
-			blog.Errorf("syncClusterNodeWithCMDB handleNodesNotInClusterInCMDB TransferHostToIdleModule bizID[%d] host[%s] failed: %v",
-				bizID, ip, err)
+			blog.Errorf("syncClusterNodeWithCMDB handleNodesNotInClusterInCMDB TransferHostToIdleModule "+
+				"bizID[%d] host[%s] failed: %v", bizID, ip, err)
 			continue
 		}
 
 		// Step2: 转移到资源池
 		if err := cmdbClient.TransferHostToResourceModule(d.ctx, bizID, []int{int(cmdbHost.BKHostID)}); err != nil {
-			blog.Errorf("syncClusterNodeWithCMDB handleNodesNotInClusterInCMDB TransferHostToResourceModule bizID[%d] host[%s] failed: %v",
-				bizID, ip, err)
+			blog.Errorf("syncClusterNodeWithCMDB handleNodesNotInClusterInCMDB TransferHostToResourceModule "+
+				"bizID[%d] host[%s] failed: %v", bizID, ip, err)
 			continue
 		}
 

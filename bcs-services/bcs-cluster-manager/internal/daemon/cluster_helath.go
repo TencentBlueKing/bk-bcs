@@ -155,7 +155,7 @@ func caRatio(used, total int) float64 {
 	return float64(used) / float64(total)
 }
 
-func (d *Daemon) reportClusterCaUsageRatio(error chan<- error) {
+func (d *Daemon) reportClusterCaUsageRatio(error chan<- error) { //nolint:funlen
 	statusCond := operator.NewLeafCondition(operator.In, operator.M{
 		"status": []string{common.StatusRunning, common.StatusConnectClusterFailed},
 	})
@@ -181,12 +181,12 @@ func (d *Daemon) reportClusterCaUsageRatio(error chan<- error) {
 	for i := range clusterList {
 		// filter cluster
 		if clusterList[i].ClusterType == common.ClusterTypeVirtual {
-			blog.Debug("reportClusterCaUsageRatio[%s] skip virtual cluster, provider %s",
+			blog.Debug("reportClusterCaUsageRatio[%s] skip virtual cluster, provider %s", //nolint:govet // 误报
 				clusterList[i].ClusterID, clusterList[i].Provider)
 			continue
 		}
 		if clusterList[i].SystemID == "" {
-			blog.Debug("reportClusterCaUsageRatio[%s] skip cluster with empty SystemID, provider %s",
+			blog.Debug("reportClusterCaUsageRatio[%s] skip cluster with empty SystemID, provider %s", //nolint:govet // 误报
 				clusterList[i].ClusterID, clusterList[i].Provider)
 			continue
 		}

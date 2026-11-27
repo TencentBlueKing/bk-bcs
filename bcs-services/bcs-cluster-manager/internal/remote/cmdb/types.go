@@ -80,7 +80,7 @@ const (
 
 	fieldSvrTypeName = "svr_type_name" // 服务器型号
 
-	FieldIsGPU = "is_gpu"
+	fieldIsGPU = "is_gpu"
 
 	// StartAt offset
 	StartAt = 0
@@ -93,7 +93,7 @@ var (
 		fieldHostOutIPV6, fieldHostID, fieldDeviceType, fieldIDCCityName, fieldIDCCityID, fieldDeviceClass,
 		fieldHostCPU, fieldCpuModule, fieldHostMem, fieldHostDisk, fieldOperator, fieldBakOperator, fieldRack,
 		fieldIDCName, fieldSubZoneID, fieldIDCAreaID, fieldIDCArea, fieldIspName, fieldAgentId,
-		FieldAssetId, fieldSvrTypeName, fieldCloudInstID, FieldIsGPU}
+		FieldAssetId, fieldSvrTypeName, fieldCloudInstID, fieldIsGPU}
 
 	fieldHostIPSelectorInfo = []string{FieldHostIP, fieldHostIPv6, fieldCloudID, fieldHostName, fieldOsType,
 		fieldOsName, fieldHostID, fieldOperator, fieldBakOperator, fieldAgentId}

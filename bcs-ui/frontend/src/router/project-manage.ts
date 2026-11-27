@@ -13,6 +13,8 @@ const huaweiCloud = () => import(/* webpackChunkName: 'project' */'@/views/proje
 // 亚马逊云
 const amazonCloud = () => import(/* webpackChunkName: 'project' */'@/views/project-manage/cloudtoken/amazonCloud.vue');
 
+const alicloud = () => import(/* webpackChunkName: 'project' */'@/views/project-manage/cloudtoken/alicloud.vue');
+
 // 项目配额
 const ProjectQuotas = () => import(/* webpackChunkName: 'project' */'@/views/project-manage/project/project-quotas.vue');
 
@@ -92,6 +94,15 @@ export default [
     component: huaweiCloud,
     meta: {
       title: 'Huawei Cloud',
+      hideBack: true,
+    },
+  },
+  {
+    path: 'alicloud',
+    name: 'alicloud',
+    component: alicloud,
+    meta: {
+      title: 'Ali Cloud',
       hideBack: true,
     },
   },
