@@ -30,6 +30,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	cmcommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/taskserver"
@@ -160,6 +161,130 @@ func (ua *UpdateAction) setSettingInfo() {
 	if ua.req.SharedRanges != nil {
 		ua.cluster.SharedRanges = ua.req.SharedRanges
 	}
+}
+
+func (ua *UpdateAction) validateSharedClusterSetting() error {
+	if ua.req.SharedRanges == nil && ua.req.IsShared == nil {
+		blog.V(4).Infof("validateSharedClusterSetting[%s] request not contain shared setting, skip",
+			ua.cluster.GetClusterID())
+		return nil
+	}
+
+	// 存量共享集群判定：已开启共享（is_shared=true）且当前可见范围为空（全平台共享）或包含业务共享（按业务共享）
+	// 注意：未开启共享的集群（is_shared=false）即使 sharedRanges 为空也允许首次设置范围，不能按存量拦截
+	currentRanges := ua.cluster.GetSharedRanges()
+	isLegacyShared := ua.cluster.GetIsShared() && (len(currentRanges.GetBizs()) > 0 ||
+		(len(currentRanges.GetBizs()) == 0 && len(currentRanges.GetProjectIdOrCodes()) == 0))
+	// 仅校验真实变更：调用方可能回传完整集群对象，值未变化时视为未变更，避免误拦基本信息编辑
+	isSharedChanged := ua.req.IsShared != nil && ua.req.IsShared.GetValue() != ua.cluster.GetIsShared()
+	rangesChanged := ua.req.SharedRanges != nil && !isSameSharedRanges(ua.req.SharedRanges, currentRanges)
+
+	reqIsShared := "unset"
+	if ua.req.IsShared != nil {
+		reqIsShared = fmt.Sprintf("%v", ua.req.IsShared.GetValue())
+	}
+	blog.V(4).Infof("validateSharedClusterSetting[%s] current(isShared: %v, bizs: %v, projects: %v, "+
+		"isLegacy: %v), request(isShared: %s, bizs: %v, projects: %v), changed(isShared: %v, ranges: %v)",
+		ua.cluster.GetClusterID(), ua.cluster.GetIsShared(), currentRanges.GetBizs(),
+		currentRanges.GetProjectIdOrCodes(), isLegacyShared, reqIsShared,
+		ua.req.GetSharedRanges().GetBizs(), ua.req.GetSharedRanges().GetProjectIdOrCodes(),
+		isSharedChanged, rangesChanged)
+
+	if !isSharedChanged && !rangesChanged {
+		blog.V(4).Infof("validateSharedClusterSetting[%s] shared setting not changed, skip",
+			ua.cluster.GetClusterID())
+		return nil
+	}
+
+	// 存量共享集群可见范围只读
+	if rangesChanged && isLegacyShared {
+		blog.Errorf("validateSharedClusterSetting[%s] rejected, legacy shared cluster shared ranges is readonly, "+
+			"current(isShared: %v, bizs: %v, projects: %v), request projects: %v",
+			ua.cluster.GetClusterID(), ua.cluster.GetIsShared(), currentRanges.GetBizs(),
+			currentRanges.GetProjectIdOrCodes(), ua.req.SharedRanges.GetProjectIdOrCodes())
+		return fmt.Errorf("cluster %s is legacy shared cluster(whole platform or by bizs), "+
+			"shared ranges is readonly", ua.cluster.ClusterID)
+	}
+
+	newShared := ua.cluster.GetIsShared()
+	if ua.req.IsShared != nil {
+		newShared = ua.req.IsShared.GetValue()
+	}
+
+	// 可见范围仅支持指定项目
+	if rangesChanged && len(ua.req.SharedRanges.GetBizs()) > 0 {
+		blog.Errorf("validateSharedClusterSetting[%s] rejected, bizs is not allowed, request bizs: %v",
+			ua.cluster.GetClusterID(), ua.req.SharedRanges.GetBizs())
+		return fmt.Errorf("shared ranges only support specified projects, bizs is not allowed")
+	}
+
+	// 共享状态下的可见范围必须至少指定一个项目，避免退化为全平台共享
+	if rangesChanged && newShared && len(ua.req.SharedRanges.GetProjectIdOrCodes()) == 0 {
+		blog.Errorf("validateSharedClusterSetting[%s] rejected, shared cluster need at least one project",
+			ua.cluster.GetClusterID())
+		return fmt.Errorf("shared ranges must contain at least one project when cluster is shared")
+	}
+
+	// 开启共享时必须有可用的可见范围（本次提供或存量已有指定项目）
+	if isSharedChanged && newShared && !rangesChanged && len(currentRanges.GetProjectIdOrCodes()) == 0 {
+		blog.Errorf("validateSharedClusterSetting[%s] rejected, shared ranges must be provided "+
+			"when enabling sharing", ua.cluster.GetClusterID())
+		return fmt.Errorf("shared ranges must be provided when enabling cluster sharing")
+	}
+
+	// 校验可见范围项目存在性（不能为空项、不允许重复）
+	if rangesChanged && len(ua.req.SharedRanges.GetProjectIdOrCodes()) > 0 {
+		projectClient := project.GetProjectManagerClient()
+		seenProjects := make(map[string]struct{})
+		for _, projectIdOrCode := range ua.req.SharedRanges.GetProjectIdOrCodes() {
+			if len(projectIdOrCode) == 0 {
+				blog.Errorf("validateSharedClusterSetting[%s] rejected, shared ranges contains empty project",
+					ua.cluster.GetClusterID())
+				return fmt.Errorf("shared ranges contains empty project id or code")
+			}
+			if _, exist := seenProjects[projectIdOrCode]; exist {
+				blog.Errorf("validateSharedClusterSetting[%s] rejected, duplicated project %s",
+					ua.cluster.GetClusterID(), projectIdOrCode)
+				return fmt.Errorf("shared ranges contains duplicated project %s", projectIdOrCode)
+			}
+			seenProjects[projectIdOrCode] = struct{}{}
+			projectInfo, err := projectClient.GetProjectInfo(ua.ctx, projectIdOrCode, true)
+			if err != nil {
+				blog.Errorf("validateSharedClusterSetting[%s] rejected, project %s is invalid, err: %v",
+					ua.cluster.GetClusterID(), projectIdOrCode, err)
+				return fmt.Errorf("shared range project %s is invalid, %v", projectIdOrCode, err)
+			}
+			blog.V(4).Infof("validateSharedClusterSetting[%s] project %s checked, projectID: %s",
+				ua.cluster.GetClusterID(), projectIdOrCode, projectInfo.GetProjectID())
+		}
+	}
+
+	blog.V(4).Infof("validateSharedClusterSetting[%s] passed", ua.cluster.GetClusterID())
+	return nil
+}
+
+// isSameSharedRanges 判断可见范围是否等价（忽略元素顺序）
+func isSameSharedRanges(a, b *cmproto.SharedClusterRanges) bool {
+	return isSameStringSet(a.GetBizs(), b.GetBizs()) &&
+		isSameStringSet(a.GetProjectIdOrCodes(), b.GetProjectIdOrCodes())
+}
+
+// isSameStringSet 判断两个字符串列表是否等价（忽略顺序，重复项计数需一致）
+func isSameStringSet(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	counter := make(map[string]int, len(a))
+	for _, v := range a {
+		counter[v]++
+	}
+	for _, v := range b {
+		if counter[v] == 0 {
+			return false
+		}
+		counter[v]--
+	}
+	return true
 }
 
 // setAdditionalInfo 检查附加信息
@@ -304,6 +429,11 @@ func (ua *UpdateAction) Handle(ctx context.Context, req *cmproto.UpdateClusterRe
 
 	if err := ua.getCluster(); err != nil {
 		ua.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
+		return
+	}
+
+	if err := ua.validateSharedClusterSetting(); err != nil {
+		ua.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
 		return
 	}
 

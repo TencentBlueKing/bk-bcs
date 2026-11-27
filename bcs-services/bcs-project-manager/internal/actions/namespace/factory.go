@@ -66,3 +66,18 @@ func (f *NamespaceFactory) Action(ctx context.Context, clusterID, projectIDOrCod
 	}
 	return independent.NewIndependentNamespaceAction(f.model), nil
 }
+
+// ActionForAllocate get action for allocate namespace
+// 分配/变更归属仅共享集群支持，只按集群是否共享分发，不按操作方项目分发：
+func (f *NamespaceFactory) ActionForAllocate(ctx context.Context, clusterID string) (
+	action.NamespaceAction, error) {
+	cluster, err := clustermanager.GetCluster(ctx, clusterID, true)
+	if err != nil {
+		logging.Error("get cluster %s from cluster-manager failed, err: %s", clusterID, err.Error())
+		return nil, errorx.NewClusterErr(err.Error())
+	}
+	if !cluster.GetIsShared() {
+		return independent.NewIndependentNamespaceAction(f.model), nil
+	}
+	return shared.NewSharedNamespaceAction(f.model), nil
+}

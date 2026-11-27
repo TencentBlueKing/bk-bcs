@@ -1086,6 +1086,26 @@ service Namespace {
       summary : "获取原生命名空间内容"
     };
   }
+  rpc AllocateNamespace(AllocateNamespaceRequest) returns (AllocateNamespaceResponse) {
+    option (google.api.http) = {
+      post : "/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/allocate"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "分配已有命名空间；若该命名空间已有归属项目，则变更归属到目标项目"
+      summary : "分配命名空间 / 变更归属"
+    };
+  }
+  rpc RecycleNamespace(RecycleNamespaceRequest) returns (RecycleNamespaceResponse) {
+    option (google.api.http) = {
+      post : "/bcsproject/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/recycle"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "回收已分配的命名空间：解除归属(命名空间与其中的工作负载不被删除), 仅集群所属项目可操作"
+      summary : "回收命名空间"
+    };
+  }
 }
 
 message SyncNamespaceRequest {
@@ -1217,9 +1237,130 @@ message CreateNamespaceRequest {
     title: "variables",
     description: "命名空间变量列表"
   }];
+  string targetProjectCode = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "targetProjectCode",
+    description: "目标归属项目编码, 共享集群由集群所属项目创建命名空间时必填, 须在集群可见范围内"
+  }];
 }
 
 message CreateNamespaceResponse {
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description: "返回错误码"
+  }];
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description: "返回错误信息"
+  }];
+  NamespaceData data = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "data",
+    description: "返回详细信息, 可以为空"
+  }];
+  string requestID = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "request id",
+    description: "请求 ID"
+  }];
+  Perms web_annotations = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "web_annotations",
+    description : "更多信息，主要是权限相关"
+  }, json_name = "web_annotations"];
+}
+
+message AllocateNamespaceRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "AllocateNamespaceRequest"
+      description : "分配命名空间请求(分配已有命名空间或变更归属)"
+      required : [
+        "projectCode",
+        "clusterID",
+        "namespace",
+        "targetProjectCode"
+      ]
+    }
+  };
+
+  string projectCode = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "projectCode",
+    description: "操作方项目编码(集群所属项目), 用于权限校验"
+  }];
+  string clusterID = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "clusterID",
+    description: "集群ID"
+  }];
+  string namespace = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "namespace",
+    description: "命名空间名称, 长度不能超过63字符,只能包含小写字母、数字，以及 '-',必须以字母开头，不能以 '-' 结尾"
+  }, (validate.rules).string = {max_len: 63, pattern: "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"}];
+  string targetProjectCode = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "targetProjectCode",
+    description: "目标归属项目编码(分配后的归属项目), 必须在集群可见范围内"
+  }];
+  ResourceQuota quota = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "quota",
+    description: "命名空间配额, 可选: 未指定时已有 ResourceQuota 的命名空间保留原配额不覆盖; 无配额的命名空间必须指定, CPU/内存必填, request 与 limit 取相同值"
+  }];
+  bool overwrite = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "overwrite",
+    description: "是否覆盖命名空间已有配额, 默认 false: quota 仅对无配额的命名空间生效"
+  }];
+}
+
+message AllocateNamespaceResponse {
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description: "返回错误码"
+  }];
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description: "返回错误信息"
+  }];
+  NamespaceData data = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "data",
+    description: "返回详细信息, 可以为空"
+  }];
+  string requestID = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "request id",
+    description: "请求 ID"
+  }];
+  Perms web_annotations = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "web_annotations",
+    description : "更多信息，主要是权限相关"
+  }, json_name = "web_annotations"];
+}
+
+message RecycleNamespaceRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "RecycleNamespaceRequest"
+      description : "回收命名空间请求(解除归属, 命名空间与其中的工作负载不被删除)"
+      required : [
+        "projectCode",
+        "clusterID",
+        "namespace"
+      ]
+    }
+  };
+
+  string projectCode = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "projectCode",
+    description: "操作方项目编码(集群所属项目), 用于权限校验"
+  }];
+  string clusterID = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "clusterID",
+    description: "集群 ID"
+  }];
+  string namespace = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "namespace",
+    description: "命名空间名称, 必须是已分配的命名空间"
+  }, (validate.rules).string = {max_len: 63, pattern: "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"}];
+  bool deleteQuota = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "deleteQuota",
+    description: "是否同时删除命名空间中的 ResourceQuota, 默认 true"
+  }];
+}
+
+message RecycleNamespaceResponse {
   uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "code",
     description: "返回错误码"
@@ -1737,6 +1878,30 @@ message NamespaceData {
   repeated OtherQuota otherQuotas = 18[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "otherQuotas",
     description: "其他配额信息"
+  }];
+  string source = 19[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "source",
+    description: "来源"
+  }];
+  string updateTime = 20[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "updateTime",
+    description: "更新时间"
+  }];
+  bool allocatable = 21[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "allocatable",
+    description: "是否可操作: vcluster占用、系统命名空间或审批中的命名空间为false"
+  }];
+  string disableReason = 22[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "disableReason",
+    description: "不可操作原因, 悬停提示用, allocatable=true时为空"
+  }];
+  string projectCode = 23[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "projectCode",
+    description: "归属项目编码(英文缩写), 未分配、系统命名空间或审批中的命名空间为空"
+  }];
+  string projectID = 24[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "projectID",
+    description: "归属项目ID, 未分配、系统命名空间或审批中的命名空间为空"
   }];
   reserved "podLimitRanges";
 }

@@ -40,6 +40,10 @@ const (
 	FieldKeyItsmTicketType = "itsmTicketType"
 	// FieldKeyIsDeleted isDeleted
 	FieldKeyIsDeleted = "isDeleted"
+	// FieldKeySource source
+	FieldKeySource = "source"
+	// FieldKeyUpdateTime updateTime
+	FieldKeyUpdateTime = "updateTime"
 )
 
 var (
@@ -86,6 +90,8 @@ type Namespace struct {
 	ItsmTicketURL    string      `json:"itsmTicketURL" bson:"itsmTicketURL"`
 	ItsmTicketSN     string      `json:"itsmTicketSN" bson:"itsmTicketSN"`
 	ItsmTicketStatus string      `json:"itsmTicketStatus" bson:"itsmTicketStatus"`
+	Source           string      `json:"source" bson:"source"`
+	UpdateTime       string      `json:"updateTime" bson:"updateTime"`
 }
 
 // Quota staging quota entity
@@ -206,6 +212,45 @@ func (m *ModelNamespace) DeleteNamespace(ctx context.Context, projectCode, clust
 	}})
 }
 
+// TransferNamespace transfer namespace to another project (变更归属), and update quota
+func (m *ModelNamespace) TransferNamespace(ctx context.Context,
+	oldProjectCode, newProjectCode, clusterID, name string, quota *Quota, updater string) (*Namespace, error) {
+	if oldProjectCode == "" || newProjectCode == "" || clusterID == "" || name == "" {
+		return nil, fmt.Errorf("can not transfer namespace, no enough arguments")
+	}
+	if err := m.ensureTable(ctx); err != nil {
+		return nil, err
+	}
+	cond := operator.NewLeafCondition(operator.Eq, operator.M{
+		FieldKeyProjectCode: oldProjectCode,
+		FieldKeyClusterID:   clusterID,
+		FieldKeyName:        name,
+		FieldKeyIsDeleted:   false,
+	})
+	updates := operator.M{
+		FieldKeyProjectCode: newProjectCode,
+		FieldKeyUpdateTime:  time.Now().UTC().Format(time.RFC3339),
+		"updater":           updater,
+	}
+	if quota != nil {
+		updates["resourceQuota"] = quota
+	}
+	if err := m.db.Table(m.tableName).Update(ctx, cond, operator.M{"$set": updates}); err != nil {
+		return nil, err
+	}
+	namespace := &Namespace{}
+	condNew := operator.NewLeafCondition(operator.Eq, operator.M{
+		FieldKeyProjectCode: newProjectCode,
+		FieldKeyClusterID:   clusterID,
+		FieldKeyName:        name,
+		FieldKeyIsDeleted:   false,
+	})
+	if err := m.db.Table(m.tableName).Find(condNew).One(ctx, namespace); err != nil {
+		return nil, err
+	}
+	return namespace, nil
+}
+
 // GetNamespace get namespace
 func (m *ModelNamespace) GetNamespace(ctx context.Context,
 	projectCode, clusterID, name string) (*Namespace, error) {
@@ -260,6 +305,23 @@ func (m *ModelNamespace) ListNamespaces(ctx context.Context) ([]Namespace, error
 	}
 	nsList := []Namespace{}
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{FieldKeyIsDeleted: false})
+	err := m.db.Table(m.tableName).Find(cond).All(ctx, &nsList)
+	return nsList, err
+}
+
+// ListNamespacesByCluster list active namespaces of a cluster
+func (m *ModelNamespace) ListNamespacesByCluster(ctx context.Context, clusterID string) ([]Namespace, error) {
+	if clusterID == "" {
+		return nil, fmt.Errorf("can not list namespaces, no enough arguments")
+	}
+	if err := m.ensureTable(ctx); err != nil {
+		return nil, err
+	}
+	nsList := []Namespace{}
+	cond := operator.NewLeafCondition(operator.Eq, operator.M{
+		FieldKeyClusterID: clusterID,
+		FieldKeyIsDeleted: false,
+	})
 	err := m.db.Table(m.tableName).Find(cond).All(ctx, &nsList)
 	return nsList, err
 }

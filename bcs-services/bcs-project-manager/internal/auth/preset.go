@@ -47,6 +47,8 @@ var ActionPermissions = map[string]string{
 	// Namespace
 	"Namespace.SyncNamespace":               namespace.CanCreateNamespaceOperation,
 	"Namespace.CreateNamespace":             namespace.CanCreateNamespaceOperation,
+	"Namespace.AllocateNamespace":           namespace.CanCreateNamespaceOperation,
+	"Namespace.RecycleNamespace":            namespace.CanDeleteNamespaceOperation,
 	"Namespace.UpdateNamespace":             namespace.CanUpdateNamespaceOperation,
 	"Namespace.CreateOtherQuota":            namespace.CanUpdateNamespaceOperation,
 	"Namespace.UpdateOtherQuota":            namespace.CanUpdateNamespaceOperation,

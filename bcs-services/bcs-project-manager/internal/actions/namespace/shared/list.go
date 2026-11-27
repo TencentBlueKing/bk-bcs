@@ -43,14 +43,38 @@ func (a *SharedNamespaceAction) ListNamespaces(ctx context.Context,
 	req *proto.ListNamespacesRequest, resp *proto.ListNamespacesResponse) error {
 	var retDatas []*proto.NamespaceData
 	existns := map[string]nsm.Namespace{}
+	projectCode := req.GetProjectCode()
+	// 集群视角projectCode = '-'：返回集群全量命名空间
+	isClusterView := projectCode == "-"
+	// 批量获取归属记录
+	dbRecords := map[string]nsm.Namespace{}
+	if dbList, e := a.model.ListNamespacesByCluster(ctx, req.GetClusterID()); e == nil {
+		for _, record := range dbList {
+			dbRecords[record.Name] = record
+		}
+	} else {
+		logging.Error("list namespace records of cluster %s from db failed, err: %s",
+			req.GetClusterID(), e.Error())
+	}
 	// if itsm is not enable, list namespaces directly
 	if config.GlobalConf.ITSM.Enable {
 		// list staging creating namespaces from db
-		stagings, err := a.model.ListNamespacesByItsmTicketType(ctx, req.GetProjectCode(), req.GetClusterID(),
-			[]string{nsm.ItsmTicketTypeCreate, nsm.ItsmTicketTypeUpdate, nsm.ItsmTicketTypeDelete})
-		if err != nil {
-			logging.Error("list staging namespaces failed, err: %s", err.Error())
-			return errorx.NewDBErr(err.Error())
+		var stagings []nsm.Namespace
+		if isClusterView {
+			// 集群视角无项目过滤，从集群全量归属记录中取审批中的单据
+			for _, record := range dbRecords {
+				if record.ItsmTicketType != "" {
+					stagings = append(stagings, record)
+				}
+			}
+		} else {
+			var err error
+			stagings, err = a.model.ListNamespacesByItsmTicketType(ctx, projectCode, req.GetClusterID(),
+				[]string{nsm.ItsmTicketTypeCreate, nsm.ItsmTicketTypeUpdate, nsm.ItsmTicketTypeDelete})
+			if err != nil {
+				logging.Error("list staging namespaces failed, err: %s", err.Error())
+				return errorx.NewDBErr(err.Error())
+			}
 		}
 		// filter staging namespaces by its type, create as creating, update and delete as existing in cluster
 		creatings := []nsm.Namespace{}
@@ -93,15 +117,41 @@ func (a *SharedNamespaceAction) ListNamespaces(ctx context.Context,
 			}
 		}
 	}
-	// filter namespaces by project code
-	namespaces := nsutils.FilterNamespaces(nsList, true, req.GetProjectCode())
-	namespaces = nsutils.FilterOutVcluster(namespaces)
-	variablesMap, err := batchListNamespaceVariables(ctx, req.GetProjectCode(), req.GetClusterID(), namespaces)
-	if err != nil {
-		logging.Error("batch list variables failed, err: %s", err.Error())
-		return errorx.NewClusterErr(err.Error())
+	// filter namespaces by project code, 集群视角不做项目过滤（含未分配的命名空间）
+	var namespaces []corev1.Namespace
+	if isClusterView {
+		namespaces = nsutils.FilterOutVcluster(nsList.Items)
+	} else {
+		namespaces = nsutils.FilterNamespaces(nsList, true, projectCode)
+		namespaces = nsutils.FilterOutVcluster(namespaces)
 	}
-	list, err := loadRetDatasFromCluster(ctx, req.ClusterID, namespaces, variablesMap, quotaMap, otherQuotasMap, existns)
+	variablesMap := map[string][]*proto.VariableValue{}
+	if !isClusterView {
+		variablesMap, err = batchListNamespaceVariables(ctx, projectCode, req.GetClusterID(), namespaces)
+		if err != nil {
+			logging.Error("batch list variables failed, err: %s", err.Error())
+			return errorx.NewClusterErr(err.Error())
+		}
+	}
+	// projectCode -> projectID 缓存查询
+	projectCache := map[string]string{}
+	getProjectID := func(code string) string {
+		if code == "" {
+			return ""
+		}
+		if id, ok := projectCache[code]; ok {
+			return id
+		}
+		p, err := a.model.GetProject(ctx, code)
+		if err != nil {
+			logging.Error("get project %s failed, err: %s", code, err.Error())
+			projectCache[code] = ""
+			return ""
+		}
+		projectCache[code] = p.ProjectID
+		return p.ProjectID
+	}
+	list, err := loadRetDatasFromCluster(ctx, req.ClusterID, namespaces, variablesMap, quotaMap, otherQuotasMap, existns, dbRecords, getProjectID)
 	if err != nil {
 		return err
 	}
@@ -109,10 +159,14 @@ func (a *SharedNamespaceAction) ListNamespaces(ctx context.Context,
 	resp.Data = retDatas
 
 	go func() {
+		// 集群视角无项目上下文，不做 bcs-cc 同步
+		if isClusterView {
+			return
+		}
 		// sync namespaces to bcs-cc
-		if err := common.SyncNamespace(ctx, req.GetProjectCode(), req.GetClusterID(), namespaces); err != nil {
+		if err := common.SyncNamespace(ctx, projectCode, req.GetClusterID(), namespaces); err != nil {
 			logging.Error("sync shared namespaces %s/%s failed, err:%s",
-				req.GetProjectCode(), req.GetClusterID(), err.Error())
+				projectCode, req.GetClusterID(), err.Error())
 		}
 	}()
 	return nil
@@ -227,12 +281,17 @@ func loadListRetDataFromDB(namespace nsm.Namespace) *proto.NamespaceData {
 	retData.ItsmTicketStatus = namespace.ItsmTicketStatus
 	retData.ItsmTicketURL = namespace.ItsmTicketURL
 	retData.ItsmTicketType = namespace.ItsmTicketType
+	retData.Source = namespace.Source
+	retData.UpdateTime = namespace.UpdateTime
+	retData.Allocatable = false
+	retData.DisableReason = "命名空间审批中，暂不可操作"
 	return retData
 }
 
 func loadRetDatasFromCluster(ctx context.Context, clusterID string, namespaces []corev1.Namespace,
 	variablesMap map[string][]*proto.VariableValue, quotaMap map[string]corev1.ResourceQuota,
-	otherQuotasMap map[string][]*proto.OtherQuota, existns map[string]nsm.Namespace) ([]*proto.NamespaceData, error) {
+	otherQuotasMap map[string][]*proto.OtherQuota, existns map[string]nsm.Namespace,
+	dbRecords map[string]nsm.Namespace, getProjectID func(string) string) ([]*proto.NamespaceData, error) {
 	retDatas := []*proto.NamespaceData{}
 	for _, namespace := range namespaces {
 		retData := &proto.NamespaceData{
@@ -257,6 +316,34 @@ func loadRetDatasFromCluster(ctx context.Context, clusterID string, namespaces [
 			retData.ItsmTicketSN = ns.ItsmTicketSN
 			retData.ItsmTicketStatus = ns.ItsmTicketStatus
 			retData.ItsmTicketURL = ns.ItsmTicketURL
+		}
+		// 来源/更新时间：无记录则留空
+		record, hasRecord := dbRecords[namespace.GetName()]
+		if hasRecord {
+			retData.Source = record.Source
+			retData.UpdateTime = record.UpdateTime
+		}
+		// 归属项目：优先取归属 annotation，无则用DB归属记录兜底；未分配/审批中为空
+		code := namespace.Annotations[config.GlobalConf.SharedClusterConfig.AnnoKeyProjCode]
+		if code == "" && hasRecord {
+			code = record.ProjectCode
+		}
+		if code != "" {
+			retData.ProjectCode = code
+			retData.ProjectID = getProjectID(code)
+		}
+		// 可操作判定：vcluster占用、系统命名空间、审批中的命名空间不可操作
+		if _, isVcluster := namespace.Annotations[constant.AnnotationKeyVcluster]; isVcluster {
+			retData.Allocatable = false
+			retData.DisableReason = "vcluster 占用的命名空间，不可分配"
+		} else if retData.IsSystem {
+			retData.Allocatable = false
+			retData.DisableReason = "系统命名空间，不可分配"
+		} else if hasRecord && record.ItsmTicketStatus == nsm.ItsmTicketStatusCreated {
+			retData.Allocatable = false
+			retData.DisableReason = "命名空间审批中，暂不可操作"
+		} else {
+			retData.Allocatable = true
 		}
 		// get managers
 		managers := []string{}

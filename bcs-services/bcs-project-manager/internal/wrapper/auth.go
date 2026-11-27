@@ -53,6 +53,12 @@ var NoNeedCheckResourceIDEndpoints = []string{
 	"BCSProject.CreateProject",
 }
 
+// ClusterViewEndpoints 支持集群视角projectIDOrCode = '-'调用的接口，
+// 权限校验时以集群所属项目回填 ProjectID
+var ClusterViewEndpoints = []string{
+	"Namespace.ListNamespaces",
+}
+
 // NewAuthHeaderAdapter 转换旧的请求头，适配新的鉴权中间件
 func NewAuthHeaderAdapter(fn server.HandlerFunc) server.HandlerFunc {
 	return func(ctx context.Context, req server.Request, rsp interface{}) (err error) {
@@ -203,6 +209,19 @@ func CheckUserPerm(ctx context.Context, req server.Request, user middleauth.Auth
 		if e := resourceID.check(); e != nil {
 			return false, e
 		}
+	}
+
+	// 集群视角查询projectIDOrCode = '-'权限回填：
+	// 用集群所属项目回填 ProjectID 后再走IAM校验，避免空projectID校验失败
+	if resourceID.ProjectID == "" && resourceID.ClusterID != "" &&
+		stringx.StringInSlice(req.Method(), ClusterViewEndpoints) {
+		cluster, err := clustermanager.GetCluster(ctx, resourceID.ClusterID, true)
+		if err != nil {
+			logging.Error("get cluster %s from cluster-manager failed, err: %s",
+				resourceID.ClusterID, err.Error())
+			return false, errorx.NewReadableErr(errorx.PermDeniedErr, "校验用户权限失败")
+		}
+		resourceID.ProjectID = cluster.GetProjectID()
 	}
 
 	action, ok := auth.ActionPermissions[req.Method()]

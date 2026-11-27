@@ -21,7 +21,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/constant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/bcscc"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clientset"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/iam"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	nsm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/namespace"
@@ -75,11 +74,7 @@ func (a *SharedNamespaceAction) CreateNamespaceCallback(ctx context.Context,
 			logging.Error("create namespace in cluster %s failed, err: %s", req.GetClusterID(), err.Error())
 			return errorx.NewClusterErr(err.Error())
 		}
-		// 授权创建者命名空间编辑和查看权限
-		if e := iam.GrantNamespaceCreatorActions(ctx, ns.Creator, req.GetClusterID(), req.GetNamespace()); e != nil {
-			logging.Error("grant namespace %s/%s for creator %s permission failed, err: %s",
-				req.GetClusterID(), req.GetNamespace(), ns.Creator, e.Error())
-		}
+		// 创建完成后不自动授予创建者命名空间权限
 		// create quota in cluster
 		if ns.ResourceQuota != nil {
 			quota := &corev1.ResourceQuota{

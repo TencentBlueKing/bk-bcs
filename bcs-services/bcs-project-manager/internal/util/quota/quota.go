@@ -14,6 +14,7 @@
 package quota
 
 import (
+	"fmt"
 	"strconv"
 
 	corev1 "k8s.io/api/core/v1"
@@ -29,17 +30,65 @@ func ValidateResourceQuota(quota *proto.ResourceQuota) error {
 	if quota == nil {
 		return nil
 	}
-	if _, err := resource.ParseQuantity(quota.CpuLimits); err != nil {
-		return errorx.NewParamErr("invalid cpu limits")
+	if err := validateCpuQuantity(quota.CpuLimits, "cpu limits"); err != nil {
+		return err
 	}
-	if _, err := resource.ParseQuantity(quota.CpuRequests); err != nil {
-		return errorx.NewParamErr("invalid cpu requests")
+	if err := validateCpuQuantity(quota.CpuRequests, "cpu requests"); err != nil {
+		return err
 	}
-	if _, err := resource.ParseQuantity(quota.MemoryLimits); err != nil {
-		return errorx.NewParamErr("invalid memory limits")
+	if err := validateMemoryQuantity(quota.MemoryLimits, "memory limits"); err != nil {
+		return err
 	}
-	if _, err := resource.ParseQuantity(quota.MemoryRequests); err != nil {
-		return errorx.NewParamErr("invalid memory requests")
+	if err := validateMemoryQuantity(quota.MemoryRequests, "memory requests"); err != nil {
+		return err
+	}
+	return nil
+}
+
+// minCpuQuantity 命名空间 CPU 配额下限（核）
+var minCpuQuantity = resource.MustParse("1")
+
+// validateCpuQuantity cpu 必须能解析、大于 0，且不小于 1 核
+func validateCpuQuantity(value, name string) error {
+	q, err := resource.ParseQuantity(value)
+	if err != nil {
+		return errorx.NewParamErr(fmt.Sprintf("invalid %s", name))
+	}
+	if q.Sign() <= 0 {
+		return errorx.NewReadableErr(errorx.ParamErr, fmt.Sprintf("%s must be greater than 0", name))
+	}
+	if q.Cmp(minCpuQuantity) < 0 {
+		return errorx.NewReadableErr(errorx.ParamErr, fmt.Sprintf("%s must be at least 1", name))
+	}
+	return nil
+}
+
+// minMemoryQuantity 命名空间内存配额下限
+var minMemoryQuantity = resource.MustParse("1Gi")
+
+// validateMemoryQuantity memory 必须能解析、大于 0，且不小于 1Gi
+func validateMemoryQuantity(value, name string) error {
+	q, err := resource.ParseQuantity(value)
+	if err != nil {
+		return errorx.NewParamErr(fmt.Sprintf("invalid %s", name))
+	}
+	if q.Sign() <= 0 {
+		return errorx.NewReadableErr(errorx.ParamErr, fmt.Sprintf("%s must be greater than 0", name))
+	}
+	if q.Cmp(minMemoryQuantity) < 0 {
+		return errorx.NewReadableErr(errorx.ParamErr, fmt.Sprintf("%s must be at least 1Gi", name))
+	}
+	return nil
+}
+
+// validatePositiveQuantity quantity 必须能解析且大于 0
+func validatePositiveQuantity(value, name string) error {
+	q, err := resource.ParseQuantity(value)
+	if err != nil {
+		return errorx.NewParamErr(fmt.Sprintf("invalid %s", name))
+	}
+	if q.Sign() <= 0 {
+		return errorx.NewReadableErr(errorx.ParamErr, fmt.Sprintf("%s must be greater than 0", name))
 	}
 	return nil
 }

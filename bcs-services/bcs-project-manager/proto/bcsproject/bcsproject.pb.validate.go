@@ -4064,6 +4064,8 @@ func (m *CreateNamespaceRequest) validate(all bool) error {
 
 	}
 
+	// no validation rules for TargetProjectCode
+
 	if len(errors) > 0 {
 		return CreateNamespaceRequestMultiError(errors)
 	}
@@ -4311,6 +4313,633 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = CreateNamespaceResponseValidationError{}
+
+// Validate checks the field values on AllocateNamespaceRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *AllocateNamespaceRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on AllocateNamespaceRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// AllocateNamespaceRequestMultiError, or nil if none found.
+func (m *AllocateNamespaceRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *AllocateNamespaceRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for ProjectCode
+
+	// no validation rules for ClusterID
+
+	if utf8.RuneCountInString(m.GetNamespace()) > 63 {
+		err := AllocateNamespaceRequestValidationError{
+			field:  "Namespace",
+			reason: "value length must be at most 63 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_AllocateNamespaceRequest_Namespace_Pattern.MatchString(m.GetNamespace()) {
+		err := AllocateNamespaceRequestValidationError{
+			field:  "Namespace",
+			reason: "value does not match regex pattern \"^[a-z0-9]([-a-z0-9]*[a-z0-9])?$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for TargetProjectCode
+
+	if all {
+		switch v := interface{}(m.GetQuota()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, AllocateNamespaceRequestValidationError{
+					field:  "Quota",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, AllocateNamespaceRequestValidationError{
+					field:  "Quota",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetQuota()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return AllocateNamespaceRequestValidationError{
+				field:  "Quota",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for Overwrite
+
+	if len(errors) > 0 {
+		return AllocateNamespaceRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// AllocateNamespaceRequestMultiError is an error wrapping multiple validation
+// errors returned by AllocateNamespaceRequest.ValidateAll() if the designated
+// constraints aren't met.
+type AllocateNamespaceRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m AllocateNamespaceRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m AllocateNamespaceRequestMultiError) AllErrors() []error { return m }
+
+// AllocateNamespaceRequestValidationError is the validation error returned by
+// AllocateNamespaceRequest.Validate if the designated constraints aren't met.
+type AllocateNamespaceRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e AllocateNamespaceRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e AllocateNamespaceRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e AllocateNamespaceRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e AllocateNamespaceRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e AllocateNamespaceRequestValidationError) ErrorName() string {
+	return "AllocateNamespaceRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e AllocateNamespaceRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sAllocateNamespaceRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = AllocateNamespaceRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = AllocateNamespaceRequestValidationError{}
+
+var _AllocateNamespaceRequest_Namespace_Pattern = regexp.MustCompile("^[a-z0-9]([-a-z0-9]*[a-z0-9])?$")
+
+// Validate checks the field values on AllocateNamespaceResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *AllocateNamespaceResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on AllocateNamespaceResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// AllocateNamespaceResponseMultiError, or nil if none found.
+func (m *AllocateNamespaceResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *AllocateNamespaceResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	if all {
+		switch v := interface{}(m.GetData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, AllocateNamespaceResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, AllocateNamespaceResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return AllocateNamespaceResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for RequestID
+
+	if all {
+		switch v := interface{}(m.GetWebAnnotations()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, AllocateNamespaceResponseValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, AllocateNamespaceResponseValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetWebAnnotations()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return AllocateNamespaceResponseValidationError{
+				field:  "WebAnnotations",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return AllocateNamespaceResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// AllocateNamespaceResponseMultiError is an error wrapping multiple validation
+// errors returned by AllocateNamespaceResponse.ValidateAll() if the
+// designated constraints aren't met.
+type AllocateNamespaceResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m AllocateNamespaceResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m AllocateNamespaceResponseMultiError) AllErrors() []error { return m }
+
+// AllocateNamespaceResponseValidationError is the validation error returned by
+// AllocateNamespaceResponse.Validate if the designated constraints aren't met.
+type AllocateNamespaceResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e AllocateNamespaceResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e AllocateNamespaceResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e AllocateNamespaceResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e AllocateNamespaceResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e AllocateNamespaceResponseValidationError) ErrorName() string {
+	return "AllocateNamespaceResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e AllocateNamespaceResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sAllocateNamespaceResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = AllocateNamespaceResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = AllocateNamespaceResponseValidationError{}
+
+// Validate checks the field values on RecycleNamespaceRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *RecycleNamespaceRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on RecycleNamespaceRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// RecycleNamespaceRequestMultiError, or nil if none found.
+func (m *RecycleNamespaceRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *RecycleNamespaceRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for ProjectCode
+
+	// no validation rules for ClusterID
+
+	if utf8.RuneCountInString(m.GetNamespace()) > 63 {
+		err := RecycleNamespaceRequestValidationError{
+			field:  "Namespace",
+			reason: "value length must be at most 63 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_RecycleNamespaceRequest_Namespace_Pattern.MatchString(m.GetNamespace()) {
+		err := RecycleNamespaceRequestValidationError{
+			field:  "Namespace",
+			reason: "value does not match regex pattern \"^[a-z0-9]([-a-z0-9]*[a-z0-9])?$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for DeleteQuota
+
+	if len(errors) > 0 {
+		return RecycleNamespaceRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// RecycleNamespaceRequestMultiError is an error wrapping multiple validation
+// errors returned by RecycleNamespaceRequest.ValidateAll() if the designated
+// constraints aren't met.
+type RecycleNamespaceRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m RecycleNamespaceRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m RecycleNamespaceRequestMultiError) AllErrors() []error { return m }
+
+// RecycleNamespaceRequestValidationError is the validation error returned by
+// RecycleNamespaceRequest.Validate if the designated constraints aren't met.
+type RecycleNamespaceRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e RecycleNamespaceRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e RecycleNamespaceRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e RecycleNamespaceRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e RecycleNamespaceRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e RecycleNamespaceRequestValidationError) ErrorName() string {
+	return "RecycleNamespaceRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e RecycleNamespaceRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sRecycleNamespaceRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = RecycleNamespaceRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = RecycleNamespaceRequestValidationError{}
+
+var _RecycleNamespaceRequest_Namespace_Pattern = regexp.MustCompile("^[a-z0-9]([-a-z0-9]*[a-z0-9])?$")
+
+// Validate checks the field values on RecycleNamespaceResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *RecycleNamespaceResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on RecycleNamespaceResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// RecycleNamespaceResponseMultiError, or nil if none found.
+func (m *RecycleNamespaceResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *RecycleNamespaceResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	if all {
+		switch v := interface{}(m.GetData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, RecycleNamespaceResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, RecycleNamespaceResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return RecycleNamespaceResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for RequestID
+
+	if all {
+		switch v := interface{}(m.GetWebAnnotations()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, RecycleNamespaceResponseValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, RecycleNamespaceResponseValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetWebAnnotations()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return RecycleNamespaceResponseValidationError{
+				field:  "WebAnnotations",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return RecycleNamespaceResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// RecycleNamespaceResponseMultiError is an error wrapping multiple validation
+// errors returned by RecycleNamespaceResponse.ValidateAll() if the designated
+// constraints aren't met.
+type RecycleNamespaceResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m RecycleNamespaceResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m RecycleNamespaceResponseMultiError) AllErrors() []error { return m }
+
+// RecycleNamespaceResponseValidationError is the validation error returned by
+// RecycleNamespaceResponse.Validate if the designated constraints aren't met.
+type RecycleNamespaceResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e RecycleNamespaceResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e RecycleNamespaceResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e RecycleNamespaceResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e RecycleNamespaceResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e RecycleNamespaceResponseValidationError) ErrorName() string {
+	return "RecycleNamespaceResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e RecycleNamespaceResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sRecycleNamespaceResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = RecycleNamespaceResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = RecycleNamespaceResponseValidationError{}
 
 // Validate checks the field values on NamespaceCallbackRequest with the rules
 // defined in the proto definition for this message. If any rules are
@@ -6745,6 +7374,18 @@ func (m *NamespaceData) validate(all bool) error {
 		}
 
 	}
+
+	// no validation rules for Source
+
+	// no validation rules for UpdateTime
+
+	// no validation rules for Allocatable
+
+	// no validation rules for DisableReason
+
+	// no validation rules for ProjectCode
+
+	// no validation rules for ProjectID
 
 	if len(errors) > 0 {
 		return NamespaceDataMultiError(errors)

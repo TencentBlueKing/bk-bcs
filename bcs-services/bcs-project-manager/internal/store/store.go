@@ -46,9 +46,12 @@ type ProjectModel interface {
 		projectCode, clusterID, namespace, stagingType string) (*nsm.Namespace, error)
 	CreateNamespace(ctx context.Context, ns *nsm.Namespace) error
 	ListNamespaces(ctx context.Context) ([]nsm.Namespace, error)
+	ListNamespacesByCluster(ctx context.Context, clusterID string) ([]nsm.Namespace, error)
 	ListNamespacesByItsmTicketType(ctx context.Context,
 		projectCode, clusterID string, types []string) ([]nsm.Namespace, error)
 	UpdateNamespace(ctx context.Context, ns entity.M) (*nsm.Namespace, error)
+	TransferNamespace(ctx context.Context,
+		oldProjectCode, newProjectCode, clusterID, name string, quota *nsm.Quota, updater string) (*nsm.Namespace, error)
 	DeleteNamespace(ctx context.Context, projectCode, clusterID, namespace string) error
 
 	CreateVariableDefinition(ctx context.Context, entity *vdm.VariableDefinition) error
