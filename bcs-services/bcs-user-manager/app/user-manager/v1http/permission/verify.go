@@ -32,23 +32,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/sqlstore"
-	util "github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/config"
 )
-
-// iamTenantID 选择本次鉴权的租户。优先用资源所属项目的租户，IAM V4 不接受 default。
-func iamTenantID(ctx context.Context, projectTenantID string) string {
-	if id := strings.TrimSpace(projectTenantID); id != "" && id != util.DefaultTenantID {
-		return id
-	}
-	if id := strings.TrimSpace(util.GetTenantIDFromContext(ctx)); id != "" && id != util.DefaultTenantID {
-		return id
-	}
-	if id := strings.TrimSpace(projectTenantID); id != "" {
-		return id
-	}
-	return util.GetTenantIDFromContext(ctx)
-}
 
 var (
 	// ErrServerNotInited err server not init
@@ -286,7 +271,8 @@ func (cli *PermVerifyClient) checkResourceType(resource ClusterResource, req *pa
 }
 
 // verifyUserNamespaceScopedPermission
-func (cli *PermVerifyClient) verifyUserNamespaceScopedPermission(ctx context.Context, user *models.BcsUser, action string,
+func (cli *PermVerifyClient) verifyUserNamespaceScopedPermission(
+	ctx context.Context, user *models.BcsUser, action string,
 	resource ClusterResource) (bool, error) {
 
 	actionID := ""

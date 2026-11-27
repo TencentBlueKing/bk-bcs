@@ -31,7 +31,6 @@ require (
 	github.com/prometheus/client_golang v1.19.0
 	github.com/robfig/cron v1.2.0
 	github.com/signalfx/splunk-otel-go/instrumentation/github.com/jinzhu/gorm/splunkgorm v1.5.0
-	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.10.0
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.44.0
 	google.golang.org/grpc v1.62.1
@@ -120,6 +119,7 @@ require (
 	github.com/signalfx/splunk-otel-go v1.4.0 // indirect
 	github.com/signalfx/splunk-otel-go/instrumentation/database/sql/splunksql v1.4.0 // indirect
 	github.com/signalfx/splunk-otel-go/instrumentation/internal v1.4.0 // indirect
+	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/skeema/knownhosts v1.3.0 // indirect
 	github.com/smartystreets/assertions v1.2.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
