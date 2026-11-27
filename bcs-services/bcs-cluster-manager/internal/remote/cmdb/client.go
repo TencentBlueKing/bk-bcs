@@ -1271,7 +1271,8 @@ func (c *Client) AddHostFromCmpy(ctx context.Context, svrIds []string, ips []str
 // AddHostToBusinessIdle 添加主机到业务空闲机
 // AddHostToBusinessIdle adds the given hosts to the idle module of the business,
 // and returns the created hostIDs on success.
-func (c *Client) AddHostToBusinessIdle(ctx context.Context, bizID int, hostList []AddHostToBusinessIdleHostInfo) ([]int64, error) {
+func (c *Client) AddHostToBusinessIdle(
+	ctx context.Context, bizID int, hostList []AddHostToBusinessIdleHostInfo) ([]int64, error) {
 	if c == nil {
 		return nil, ErrServerNotInit
 	}

@@ -347,47 +347,6 @@ func checkIfWhiteImageOsNames(opt *cloudprovider.ClusterGroupOption) bool {
 	return utils.StringInSlice(osName, cloud.ConfInfo.WhiteImageOsName)
 }
 
-// clusterSupportNodeNum cluster support node num
-// Deprecated: surplusNodeNum is calculated based on GrBcsMaxClusterCidrNum count
-// TKE removed the CIDR count limit, Use clusterSupportNodeNumV2 instead
-func clusterSupportNodeNum(tkeCls *tke.Cluster, cluster *proto.Cluster) (uint32, uint32, uint32) {
-	var (
-		ipNum          uint32
-		clusterCidrNum uint32
-	)
-	cidrs, err := business.GetCidrsFromCluster(tkeCls)
-	if err != nil {
-		blog.Errorf("clusterSupportNodeNum failed: %v", err)
-		return 0, 0, 0
-	}
-	for i := range cidrs {
-		if utils.StringInSlice(cidrs[i].Type, []string{utils.ClusterCIDR, utils.MultiClusterCIDR}) {
-			clusterCidrNum++
-			num, _ := cidrs[i].GetIPNum()
-			ipNum += num
-		}
-	}
-
-	// 已经存在的节点数量
-	clusterNodeNum := utils.Uint64PtrToUint64(tkeCls.ClusterNodeNum)
-	if utils.StringPtrToString(tkeCls.ClusterType) == icommon.ClusterManageTypeIndependent {
-		clusterNodeNum += utils.Uint64PtrToUint64(tkeCls.ClusterMaterNodeNum)
-	}
-
-	// 集群可添加节点数
-	// nolint: lll
-	maxClusterNodeNum := float64(uint64(ipNum)-utils.Uint64PtrToUint64(tkeCls.ClusterNetworkSettings.MaxClusterServiceNum)) /
-		float64(utils.Uint64PtrToUint64(tkeCls.ClusterNetworkSettings.MaxNodePodNum))
-
-	// 剩余可支持的节点数量
-	step := getClusterCidrStep(cluster)
-
-	surplusNodeNum := float64((business.GrBcsMaxClusterCidrNum-clusterCidrNum)*step) /
-		float64(utils.Uint64PtrToUint64(tkeCls.ClusterNetworkSettings.MaxNodePodNum))
-
-	return uint32(clusterNodeNum), uint32(maxClusterNodeNum) - uint32(clusterNodeNum), uint32(surplusNodeNum)
-}
-
 // clusterSupportNodeNumV2 cluster support node num
 // calculates node count based on actual remaining VPC overlay IPs
 func clusterSupportNodeNumV2(tkeCls *tke.Cluster, cluster *proto.Cluster,
@@ -1297,22 +1256,4 @@ func getTkeClusterNetworkType(cluster *tke.Cluster) string {
 	}
 
 	return ""
-}
-
-// getSurplusCidrList xxx
-func getSurplusCidrList(mulList []string, step uint32) []uint32 {
-	cidrList := make([]uint32, 0)
-
-	for i := len(mulList); i < utils.MultiClusterCIDRCnt; i++ {
-		cidrList = append(cidrList, step)
-	}
-
-	return cidrList
-}
-
-// getSurplusCidrNum xxx
-func getSurplusCidrNum(mulList []string, step uint32) uint32 {
-	surplusCidrCnt := utils.MultiClusterCIDRCnt - len(mulList)
-
-	return step * uint32(surplusCidrCnt)
 }
