@@ -2983,6 +2983,11 @@
           },
           "description": "命名空间变量列表",
           "title": "variables"
+        },
+        "targetProjectCode": {
+          "type": "string",
+          "description": "目标归属项目编码, 共享集群由集群所属项目创建命名空间时必填, 须在集群可见范围内",
+          "title": "targetProjectCode"
         }
       },
       "description": "创建命名空间请求",

@@ -1237,6 +1237,10 @@ message CreateNamespaceRequest {
     title: "variables",
     description: "命名空间变量列表"
   }];
+  string targetProjectCode = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "targetProjectCode",
+    description: "目标归属项目编码, 共享集群由集群所属项目创建命名空间时必填, 须在集群可见范围内"
+  }];
 }
 
 message CreateNamespaceResponse {

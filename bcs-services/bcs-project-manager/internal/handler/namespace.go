@@ -21,11 +21,14 @@ import (
 	spb "google.golang.org/protobuf/types/known/structpb"
 
 	na "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/actions/namespace"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/actions/namespace/shared"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/auth"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
 	nsm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/namespace"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/convert"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/tenant"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
 )
@@ -73,6 +76,15 @@ func (p *NamespaceHandler) CreateNamespace(ctx context.Context,
 	authUser := tenant.GetAuthAndTenantInfoFromCtx(ctx)
 	ctx = tenant.WithTenantIdFromContext(ctx, authUser.ResourceTenantId)
 
+	// 共享集群管理页创建：显式指定归属项目时，由集群所属项目免审批直建并写入归属
+	if req.GetTargetProjectCode() != "" {
+		sharedAction := shared.NewSharedNamespaceAction(p.model)
+		return sharedAction.CreateNamespace(ctx, req, resp)
+	}
+	// 共享集群所属项目视角创建命名空间时，归属项目(targetProjectCode)必填
+	if err := p.validateTargetProjectRequired(ctx, req); err != nil {
+		return err
+	}
 	action, err := na.NewNamespaceFactory(p.model).Action(ctx, req.GetClusterID(), req.GetProjectCode())
 	if err != nil {
 		logging.Error("get namespace client for cluster %s from client factory failed, err: %s",
@@ -80,6 +92,28 @@ func (p *NamespaceHandler) CreateNamespace(ctx context.Context,
 		return err
 	}
 	return action.CreateNamespace(ctx, req, resp)
+}
+
+// validateTargetProjectRequired 共享集群所属项目视角创建命名空间时，归属项目必填
+func (p *NamespaceHandler) validateTargetProjectRequired(ctx context.Context,
+	req *proto.CreateNamespaceRequest) error {
+	cluster, err := clustermanager.GetCluster(ctx, req.GetClusterID(), true)
+	if err != nil {
+		// 集群获取失败交由后续创建链路处理
+		return nil
+	}
+	if !cluster.GetIsShared() {
+		return nil
+	}
+	project, pErr := p.model.GetProject(ctx, req.GetProjectCode())
+	if pErr != nil {
+		// 项目校验交由后续创建链路处理
+		return nil
+	}
+	if project.ProjectID == cluster.GetProjectID() {
+		return errorx.NewReadableErr(errorx.ParamErr, "共享集群创建命名空间必须指定归属项目")
+	}
+	return nil
 }
 
 // AllocateNamespace implement for AllocateNamespace interface
